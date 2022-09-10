@@ -120,7 +120,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         P075_data->loadDisplayLines(event->TaskIndex);
 
         for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++) {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P075_data->displayLines[varNr], P75_Nchars - 1);
+          addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), P075_data->displayLines[varNr], P75_Nchars - 1);
         }
       }
 
@@ -313,7 +313,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
           log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
           log  = F("NEXTION075 : WRITE = ");
           log += nextionArguments;
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, log);
+          #endif
           SendStatus(event, log); // Reply (echo) to sender. This will print message on browser.
         }
 

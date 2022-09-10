@@ -202,12 +202,12 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       {
         if (varNr == 0) {
           addFormTextBox(String(F("Temperature source ")),
-                         String(F("Plugin_109_template")) + (varNr + 1),
+                         getPluginCustomArgName(F("Plugin_109_template"), varNr),
                          P109_deviceTemplate[varNr],
                          P109_Nchars);
         } else {
-          addFormTextBox(String(F("Line ")) + (varNr + 1),
-                         String(F("Plugin_109_template")) + (varNr + 1),
+          addFormTextBox(getPluginCustomArgName(F("Line "), varNr),
+                         getPluginCustomArgName(F("Plugin_109_template"), varNr),
                          P109_deviceTemplate[varNr],
                          P109_Nchars);
         }
@@ -248,8 +248,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
       for (byte varNr = 0; varNr < P109_Nlines; varNr++)
       {
-        argName  = F("Plugin_109_template");
-        argName += varNr + 1;
+        const String argName  = getPluginCustomArgName(F("Plugin_109_template"), varNr);
         strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
         P109_deviceTemplate[varNr][sizeof(P109_deviceTemplate[varNr]) - 1] = 0;
       }

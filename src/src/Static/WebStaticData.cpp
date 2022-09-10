@@ -1,21 +1,39 @@
 #include "../Static/WebStaticData.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+#include "../Globals/Settings.h"
 #include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/LoadFromFS.h"
 
 String generate_external_URL(const String& fname) {
-    String url;
-    url.reserve(80 + fname.length());
-    url = F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20211224/static/");
-    url += fname;
-    return url;
+  String url;
+  url.reserve(80 + fname.length());
+  url = get_CDN_url_prefix();
+  url += fname;
+  return url;
+}
+
+void serve_CDN_CSS(const __FlashStringHelper * fname) {
+  addHtml(F("<link"));
+  addHtmlAttribute(F("rel"), F("stylesheet"));
+  addHtmlAttribute(F("type"), F("text/css"));
+  addHtmlAttribute(F("href"), generate_external_URL(fname));
+  addHtml('/', '>');
+}
+
+void serve_CDN_JS(const __FlashStringHelper * fname) {
+  addHtml(F("<script"));
+  addHtml(F(" defer"));
+  addHtmlAttribute(F("src"), generate_external_URL(fname));
+  addHtml('>');
+  html_add_script_end();
 }
 
 
 void serve_CSS() {
-  const String cssFile = F("esp.css");
+  const String cssFile(F("esp.css"));
   if (fileExists(cssFile))
   {
     addHtml(F("<style>"));
@@ -24,17 +42,29 @@ void serve_CSS() {
     return;
   }
   #ifndef WEBSERVER_CSS
-  addHtml(F("<link"));
-  addHtmlAttribute(F("rel"), F("stylesheet"));
-  addHtmlAttribute(F("type"), F("text/css"));
-  addHtmlAttribute(F("href"), generate_external_URL(F("espeasy_default.css")));
-  addHtml('/');
-  addHtml('>');
+//  serve_CDN_CSS(F("espeasy_default.min.css"));
+  serve_CDN_CSS(F("esp_auto.min.css"));
+  #if FEATURE_AUTO_DARK_MODE
+  if (Settings.EnableAutomaticDarkMode()) {
+    serve_CDN_CSS(F("esp_auto_dark.min.css"));
+  }
+  #endif
   #else
   addHtml(F("<style>"));
 
   // Send CSS in chunks
+  #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
   TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
+  #else
+    #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
+    TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESP_AUTO_MIN_CSS));
+    #if FEATURE_AUTO_DARK_MODE
+    if (Settings.EnableAutomaticDarkMode()) {
+      TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESP_AUTO_DARK_MIN_CSS));
+    }
+    #endif
+    #endif
+  #endif
   addHtml(F("</style>"));
   #endif
 }
@@ -86,11 +116,7 @@ void serve_JS(JSfiles_e JSfile) {
     if (!fileExists(fname))
     {
         #ifndef WEBSERVER_INCLUDE_JS
-        addHtml(F("<script"));
-        addHtml(F(" defer"));
-        addHtmlAttribute(F("src"), generate_external_URL(url));
-        addHtml('>');
-        html_add_script_end();
+        serve_CDN_JS(url);
         return;
         #else
         html_add_script(true);
