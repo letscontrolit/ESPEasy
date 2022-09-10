@@ -101,9 +101,11 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   url += F("&apikey=");
   url += getControllerPass(element.controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
 
+#ifndef BUILD_NO_DEBUG
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
     serialPrintln(url);
   }
+#endif
 
   int httpCode = -1;
   send_via_http(
