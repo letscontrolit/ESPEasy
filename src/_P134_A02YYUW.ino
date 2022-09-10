@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2022-09-10 tonhuisman: Remove TESTING tag, code improvements
  * 2022-08-01 tonhuisman: Implement P134_data_struct to enable multi-instance use, set TESTING tag
  *                        Transform error numbers to meaningful text
  * 2022-07-18 tonhuisman: Migrate plugin to ESPEasy mega branch as P134
@@ -14,7 +15,7 @@
  **/
 # define PLUGIN_134
 # define PLUGIN_ID_134          134
-# define PLUGIN_NAME_134        "Distance - A02YYUW [TESTING]"
+# define PLUGIN_NAME_134        "Distance - A02YYUW"
 # define PLUGIN_VALUENAME1_134  "Distance"
 
 # include "./src/PluginStructs/P134_data_struct.h"

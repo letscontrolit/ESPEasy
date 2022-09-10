@@ -26,10 +26,10 @@ P134_data_struct::P134_data_struct(uint8_t config_port,
 {
   const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(_config_port);
 
-  P134_Serial = new ESPeasySerial(port, _config_pin1, _config_pin2);
+  P134_Serial = new (std::nothrow) ESPeasySerial(port, _config_pin1, _config_pin2);
 
   if (P134_Serial != nullptr) {
-    P134_Serial->begin(9600);
+    P134_Serial->begin(P134_SERIAL_BAUD_RATE);
     P134_Serial->flush();
     addLog(LOG_LEVEL_INFO, F("A02YYUW: Initialization OK"));
     initialised = true;
@@ -53,28 +53,28 @@ bool P134_data_struct::plugin_read(struct EventStruct *event)           {
   bool success = false;
 
   if (initialised) {
-    uint8_t  data[DISTANCE_DATA_SIZE] = { 0 };
-    int16_t  i                        = 0;
-    uint16_t measuredDistance         = MIN_DISTANCE;
+    uint8_t  data[P134_DISTANCE_DATA_SIZE] = { 0 };
+    int16_t  i                             = 0;
+    uint16_t measuredDistance              = P134_MIN_DISTANCE;
     A02YYUW_status_e measurementStatus;
     P134_Serial->flush();
 
-    while (!P134_Serial->available() && i < SERIAL_AVAILABLE_CHECK_CYCLES) {
+    while (!P134_Serial->available() && i < P134_SERIAL_AVAILABLE_CHECK_CYCLES) {
       i++;
-      delay(SERIAL_AVAILABLE_CHECK_DELAY);
+      delay(P134_SERIAL_AVAILABLE_CHECK_DELAY);
     }
     i = 0;
 
-    while (P134_Serial->available() && i < DISTANCE_DATA_SIZE) {
+    while (P134_Serial->available() && i < P134_DISTANCE_DATA_SIZE) {
       data[i] = P134_Serial->read();
       i++;
 
-      if (data[0] != SERIAL_HEAD_DATA) {
+      if (data[0] != P134_SERIAL_HEAD_DATA) {
         i = 0;
       }
     }
 
-    if (i != DISTANCE_DATA_SIZE) {
+    if (i != P134_DISTANCE_DATA_SIZE) {
       measurementStatus = A02YYUW_status_e::STATUS_ERROR_SERIAL;
     } else {
       if (!(((data[0] + data[1] + data[2]) & 0xFF) == data[3])) {
@@ -82,10 +82,10 @@ bool P134_data_struct::plugin_read(struct EventStruct *event)           {
       } else {
         measuredDistance = ((data[1] << 8) + data[2]);
 
-        if (measuredDistance < MIN_DISTANCE) {
+        if (measuredDistance < P134_MIN_DISTANCE) {
           measurementStatus = A02YYUW_status_e::STATUS_ERROR_MIN_LIMIT;
         }
-        else if (measuredDistance > MAX_DISTANCE) {
+        else if (measuredDistance > P134_MAX_DISTANCE) {
           measurementStatus = A02YYUW_status_e::STATUS_ERROR_MAX_LIMIT;
         } else {
           measurementStatus = A02YYUW_status_e::STATUS_OK;
@@ -97,18 +97,15 @@ bool P134_data_struct::plugin_read(struct EventStruct *event)           {
       UserVar[event->BaseVarIndex] = static_cast<float>(measuredDistance);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("A02YYUW: Distance value = ");
-        log += measuredDistance;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("A02YYUW: Distance value = "), measuredDistance));
       }
       success = true;
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("A02YYUW: Error status = ");
-        log += static_cast<int8_t>(measurementStatus);
+        String log;
+        log += concat(F("A02YYUW: Error status = "), static_cast<int8_t>(measurementStatus));
         # ifndef LIMIT_BUILD_SIZE
-        log += F(", ");
-        log += toString(measurementStatus);
+        log += concat(F(", "), toString(measurementStatus));
         # endif // ifndef LIMIT_BUILD_SIZE
         addLogMove(LOG_LEVEL_ERROR, log);
       }

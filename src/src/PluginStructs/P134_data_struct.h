@@ -4,13 +4,13 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P134
 
-# define MIN_DISTANCE                   30
-# define MAX_DISTANCE                   4500
-# define SERIAL_BAUD_RATE               9600
-# define SERIAL_HEAD_DATA               0xFF
-# define SERIAL_AVAILABLE_CHECK_DELAY   50
-# define SERIAL_AVAILABLE_CHECK_CYCLES  10 // SERIAL_AVAILABLE_CHECK_DELAY * SERIAL_AVAILABLE_CHECK_CYCLES = 500ms
-# define DISTANCE_DATA_SIZE             4
+# define P134_MIN_DISTANCE                   30
+# define P134_MAX_DISTANCE                   4500
+# define P134_SERIAL_BAUD_RATE               9600
+# define P134_SERIAL_HEAD_DATA               0xFF
+# define P134_SERIAL_AVAILABLE_CHECK_DELAY   50
+# define P134_SERIAL_AVAILABLE_CHECK_CYCLES  10 // SERIAL_AVAILABLE_CHECK_DELAY * SERIAL_AVAILABLE_CHECK_CYCLES = 500ms
+# define P134_DISTANCE_DATA_SIZE             4
 
 enum class A02YYUW_status_e : int8_t {
   STATUS_OK              = 0,
