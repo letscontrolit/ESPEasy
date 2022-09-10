@@ -1723,7 +1723,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -1792,13 +1792,13 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.equals(F("win"))) {          // win: get current window id
+  if (command.equals(F("win"))) {     // win: get current window id
     #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
     string  = getWindow();
     success = true;
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   } else if (command.equals(F("iswin"))) { // iswin: check if windows exists
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW      // if feature enabled
     command = parseString(string, 2);
     int win = 0;
 
@@ -1807,11 +1807,11 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     } else {
       string = '0';
     }
-    success = true;                     // Always correct, just return 'false' if wrong
+    success = true;                          // Always correct, just return 'false' if wrong
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   } else if ((command.equals(F("width"))) || // width/height: get window width or height
              (command.equals(F("height")))) {
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW   // if feature enabled
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW        // if feature enabled
     uint16_t w = 0, h = 0;
     getWindowLimits(w, h);
 
@@ -1939,6 +1939,7 @@ void AdafruitGFX_helper::printText(const char     *string,
   int16_t  xText     = 0;
   int16_t  yText     = 0;
   uint16_t wText     = 0;
+  uint16_t wChar     = 0;
   uint16_t hText     = 0;
   int16_t  oTop      = 0;
   int16_t  oBottom   = 0;
@@ -1966,15 +1967,22 @@ void AdafruitGFX_helper::printText(const char     *string,
   _display->setTextSize(textSize);
 
   if (_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) {
-    _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText);   // Count length
+    # if ADAGFX_ENABLE_FRAMED_WINDOW
 
-    while ((newString.length() > 0) && (((_x - xOffset) + wText) > res_x)) {
+    if (0 == getWindow())                                                         // Only on Window 0
+    # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+    {
+      _display->getTextBounds(String('A'), 0, 0, &xText, &yText, &wChar, &hText); // Calculate ~1 char width
+    }
+    _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText);   // Calculate length
+
+    while ((newString.length() > 0) && (((_x - xOffset) + wText) > res_x + wChar)) {
       newString.remove(newString.length() - 1);                                   // Cut last character off
-      _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Re-count length
+      _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Re-calculate length
     }
   }
 
-  _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Count length
+  _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Calculate length
 
   if ((maxWidth > 0) && ((_x - xOffset) + maxWidth <= res_x)) {
     res_x = (_x - xOffset) + maxWidth;

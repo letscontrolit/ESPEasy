@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-09-10 tonhuisman: Enable printing partial characters falling off at the right edge of the screen, only when on Window 0
  * 2022-08-25 tonhuisman: Add invertDisplay() functionality, often used for monochrome displays
  * 2022-08-23 tonhuisman: Several small improvements, and a few bugfixes
  * 2022-08-20 tonhuisman: Add txl subcommand to display text on 1 or more lines, autoincrementing the line nr,
