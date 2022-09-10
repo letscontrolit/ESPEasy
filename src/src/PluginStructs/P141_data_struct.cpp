@@ -37,8 +37,7 @@ P141_data_struct::P141_data_struct(uint8_t             rotation,
 {
   updateFontMetrics();
   _commandTrigger.toLowerCase();
-  _commandTriggerCmd  = _commandTrigger;
-  _commandTriggerCmd += F("cmd");
+  _commandTriggerCmd = concat(_commandTrigger, F("cmd"));
 }
 
 /****************************************************************************
@@ -188,8 +187,11 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
 
     if (hasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
-
-      int yPos = 1;                       // Bound to the display
+      int yPos       = 0;                 // Bound to the display
+      int16_t  dum   = 0;
+      uint16_t udum  = 0;
+      uint16_t hText = 0;
+      pcd8544->getTextBounds(F("Ay"), 0, 0, &dum, &dum, &udum, &hText); // Measure font-height
 
       for (uint8_t x = 0; x < P141_Nlines; x++) {
         String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
@@ -202,7 +204,12 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
           gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
         }
         delay(0);
-        yPos += (_fontheight * _fontscaling);
+
+        if (15 == P141_CONFIG_FLAG_GET_LINESPACING) {
+          yPos += (_fontheight * _fontscaling);             // Auto, using font-height and scaling
+        } else {
+          yPos += hText + P141_CONFIG_FLAG_GET_LINESPACING; // Explicit distance
+        }
       }
       pcd8544->display();
       gfxHelper->setColumnRowMode(bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
@@ -266,7 +273,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
     else if (arg1.equals(F("inv")) &&          // Invert display
              (event->Par2 >= 0) && (event->Par2 <= 1)) {
       if (parseString(string, 3).isEmpty()) {  // No argument: flip previous state
-        _displayInverted != _displayInverted;
+        _displayInverted = !_displayInverted;
       } else {
         _displayInverted = (event->Par2 == 1); // Set state
       }
@@ -306,7 +313,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       // Hand it over after replacing variables
       success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols, gfxHelper));
 
-      updateFontMetrics();                  // Font or color may have changed
+      updateFontMetrics(); // Font or color may have changed
 
       if (success) {
         pcd8544->display();                 // Put on display
@@ -333,7 +340,7 @@ void P141_data_struct::displayOnOff(bool state) {
     # endif // if defined(ESP32)
   }
 
-  // pcd8544->enableDisplay(state); // Display on // Not supported for PCD8544
+  if (!state && pcd8544) { pcd8544->fillScreen(ADAGFX_BLACK); } // Can't turn off, clearing the display is the least bad alternative
   _displayTimer = (state ? _displayTimeout : 0);
 }
 
@@ -347,8 +354,7 @@ void P141_data_struct::registerButtonState(uint8_t newButtonState,
     DebounceCounter++;
   } else {
     ButtonLastState = 0xFF; // Reset
-    DebounceCounter = 0;
-    ButtonState     = false;
+    markButtonStateProcessed();
   }
 
   if ((ButtonLastState == newButtonState) &&

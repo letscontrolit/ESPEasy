@@ -8,6 +8,7 @@
 
 
 /** Changelog:
+ * 2022-09-10 tonhuisman: Add configurable line spacing for configured Lines (user request), clear screen when using the 'off' subcommand
  * 2022-08-25 tonhuisman: Remove strange option 'tft' for command trigger, as this has nothing to with a tft display
  *                        Clear screen with correct color on exit when inverted is active
  * 2022-08-23 tonhuisman: Add <trigger>cmd,inv[,0|1] subcommand for inverting the display, also an extra Config option
@@ -90,6 +91,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       // Truncate exceeding message
       set4BitToUL(lSettings, P141_CONFIG_FLAG_MODE,        static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage));
       set4BitToUL(lSettings, P141_CONFIG_FLAG_FONTSCALE,   1);
+      set4BitToUL(lSettings, P141_CONFIG_FLAG_LINESPACING, 15); // Auto
       set4BitToUL(lSettings, P141_CONFIG_FLAG_CMD_TRIGGER, static_cast<int>(P141_CommandTrigger::pcd8544));
       P141_CONFIG_FLAGS = lSettings;
 
@@ -163,20 +165,29 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       String strings[P141_Nlines];
       LoadCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
 
-      String   line;                                     // Default reserved length is plenty
       uint16_t remain = P141_Nlines * (P141_Nchars + 1); // DAT_TASKS_CUSTOM_SIZE;
 
       for (uint8_t varNr = 0; varNr < P141_Nlines; varNr++) {
-        line  = F("Line ");
-        line += (varNr + 1);
-        addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P141_Nchars);
+        addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P141_Nchars);
         remain -= (strings[varNr].length() + 1);
       }
-      String remainStr;
-      remainStr.reserve(15);
-      remainStr  = F("Remaining: ");
-      remainStr += remain;
-      addUnit(remainStr);
+      addUnit(concat(F("Remaining: "), remain));
+
+      {
+        String lineSpacings[16];
+        int    lineSpacingOptions[16];
+
+        for (uint8_t i = 0; i < 16; i++) {
+          if (15 == i) {
+            lineSpacings[i] = F("Auto, using font height * scaling");
+          } else {
+            lineSpacings[i] = i;
+          }
+          lineSpacingOptions[i] = i;
+        }
+        addFormSelector(F("Linespacing"), F("linespc"), 16, lineSpacings, lineSpacingOptions, P141_CONFIG_FLAG_GET_LINESPACING);
+        addUnit(F("px"));
+      }
 
       success = true;
       break;
@@ -200,6 +211,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P141_CONFIG_FLAG_MODE,        getFormItemInt(F("pmode")));          // Bit 4..7 Text print mode
       set4BitToUL(lSettings, P141_CONFIG_FLAG_ROTATION,    getFormItemInt(F("protate")));        // Bit 8..11 Rotation
       set4BitToUL(lSettings, P141_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("pfontscale")));     // Bit 12..15 Font scale
+      set4BitToUL(lSettings, P141_CONFIG_FLAG_LINESPACING, getFormItemInt(F("linespc")));        // Bit 16..19 Line spacing
       set4BitToUL(lSettings, P141_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("pcmdtrigger")));    // Bit 20..23 Command trigger
 
       bitWrite(lSettings, P141_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("pbackfill")));       // Bit 28 Back fill text (inv)

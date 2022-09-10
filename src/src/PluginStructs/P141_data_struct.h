@@ -34,7 +34,7 @@
 # define P141_CONFIG_FLAG_MODE          4                // Flag-offset to store 4 bits for Mode, uses bits 4, 5, 6 and 7
 # define P141_CONFIG_FLAG_ROTATION      8                // Flag-offset to store 4 bits for Rotation, uses bits 8, 9, 10 and 11
 # define P141_CONFIG_FLAG_FONTSCALE     12               // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
-// # define P141_CONFIG_FLAG_TYPE          16               // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 18 and 19
+# define P141_CONFIG_FLAG_LINESPACING   16               // Flag-offset to store 4 bits for Linespacing, uses bits 16, 17, 18 and 19
 # define P141_CONFIG_FLAG_CMD_TRIGGER   20               // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
 # define P141_CONFIG_FLAG_BACK_FILL     28               // Flag: Background fill when printing text
 # define P141_CONFIG_FLAG_INVERTED      29               // Flag: Invert display content
@@ -44,7 +44,7 @@
 # define P141_CONFIG_FLAG_GET_ROTATION      (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_ROTATION))
 # define P141_CONFIG_FLAG_GET_FONTSCALE     (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_FONTSCALE))
 
-// # define P141_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_TYPE))
+# define P141_CONFIG_FLAG_GET_LINESPACING   (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_LINESPACING))
 # define P141_CONFIG_FLAG_GET_CMD_TRIGGER   (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_CMD_TRIGGER))
 # define P141_CONFIG_GET_COLOR_FOREGROUND   (P141_CONFIG_COLORS & 0xFFFF)
 # define P141_CONFIG_GET_COLOR_BACKGROUND   ((P141_CONFIG_COLORS >> 16) & 0xFFFF)
