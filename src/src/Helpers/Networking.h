@@ -7,7 +7,7 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
-#if FEATURE_DOWNLOAD
+#if FEATURE_HTTP_CLIENT
 #ifdef ESP8266
 # include <ESP8266HTTPClient.h>
 #endif // ifdef ESP8266
