@@ -995,9 +995,12 @@ void WifiScan(bool async, uint8_t channel) {
 
 #ifdef ESP32
   RTC.clearLastWiFi();
-  WifiDisconnect();
+  if (WiFiConnected()) {
+    const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
+    WifiDisconnect();
+    WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
+  }
 #endif
-
 }
 
 // ********************************************************************************
@@ -1099,7 +1102,7 @@ void setAP(bool enable) {
 }
 
 // Only internal scope
-void setAPinternal(bool enable, int APchannel)
+void setAPinternal(bool enable)
 {
   if (enable) {
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!

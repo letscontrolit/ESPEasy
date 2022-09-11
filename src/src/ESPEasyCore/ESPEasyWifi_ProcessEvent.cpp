@@ -101,7 +101,7 @@ void handle_unprocessedNetworkEvents()
 
   if (active_network_medium == NetworkMedium_t::WIFI || active_network_medium == NetworkMedium_t::ESPEasyNOW_only) {
     if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents() || WiFiEventData.wifiConnectAttemptNeeded) {
-      if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
+      if (WiFi.status() >= WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
         if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
           WiFiEventData.last_wifi_connect_attempt_moment.clear();
         }
@@ -144,6 +144,16 @@ void handle_unprocessedNetworkEvents()
     {
       if (!WiFiEventData.WiFiServicesInitialized()) {
         WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
+        if (WiFiConnected()) {
+          if (!WiFiEventData.WiFiGotIP()) {
+            addLog(LOG_LEVEL_INFO, F("WiFi : Missed gotIP event"));
+            WiFiEventData.setWiFiGotIP();
+          }
+          if (!WiFiEventData.WiFiConnected()) {
+            addLog(LOG_LEVEL_INFO, F("WiFi : Missed connected event"));
+            WiFiEventData.setWiFiConnected();
+          }
+        }
         WiFiEventData.setWiFiServicesInitialized();
         CheckRunningServices();
       }
@@ -281,12 +291,25 @@ void processDisconnect() {
   
   #ifdef USES_ESPEASY_NOW
   if (use_EspEasy_now) {
-    mustRestartWiFi = true;
+//    mustRestartWiFi = true;
   }
   #endif
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
 
   WiFiEventData.processedDisconnect = true;
+
+  if (WiFi.status() > WL_DISCONNECTED) {
+    // In case of an error, where the status reports something like WL_NO_SHIELD
+    setWifiMode(WIFI_OFF);
+    initWiFi();
+    delay(100);
+    if (WiFiEventData.unprocessedWifiEvents()) {
+      handle_unprocessedNetworkEvents();
+    }
+    mustRestartWiFi = false;
+  }
+
+
   if (mustRestartWiFi) {
     WifiScan(false);
     delay(100);
@@ -615,7 +638,9 @@ void processScanDone() {
 
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
 
-  if (WiFi_AP_Candidates.addedKnownCandidate()) {
+  if (WiFi_AP_Candidates.addedKnownCandidate() || !NetworkConnected()) {
+    WiFiEventData.wifiConnectAttemptNeeded = true;
+    addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
     NetworkConnectRelaxed();
   }
   
@@ -625,19 +650,24 @@ void processScanDone() {
     if (!NetworkConnected() && (temp_disable_EspEasy_now_timer == 0 || timeOutReached(temp_disable_EspEasy_now_timer))) {
       if (WiFi_AP_Candidates.addedKnownCandidate()) {
         WiFi_AP_Candidates.force_reload();
+        if (!WiFiEventData.wifiConnectInProgress) {
   //        if (isESPEasy_now_only() || !ESPEasy_now_handler.active()) {
+          addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect (mesh)"));
+
           WifiDisconnect();
           setAP(false);
           ESPEasy_now_handler.end();
 
-          // Disable ESPEasy_now for 10 seconds to give opportunity to connect to WiFi.
+          // Disable ESPEasy_now for 20 seconds to give opportunity to connect to WiFi.
           WiFiEventData.wifiConnectAttemptNeeded = true;
-          temp_disable_EspEasy_now_timer = millis() + 10000;
-          setSTA(false);
+          temp_disable_EspEasy_now_timer = millis() + 20000;
+//          setSTA(false);
           setNetworkMedium(Settings.NetworkMedium);
           NetworkConnectRelaxed();
 //        }
+        }
       } else {
+        temp_disable_EspEasy_now_timer = 0;
         setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);
       }
     }

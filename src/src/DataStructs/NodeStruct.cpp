@@ -158,17 +158,18 @@ String NodeStruct::getSummary() const {
 
 bool NodeStruct::setESPEasyNow_mac(const MAC_address& received_mac)
 {
-  if (received_mac.all_zero()) return false;
-  if (received_mac == sta_mac) {
-    ESPEasyNowPeer   = 1;
-    useAP_ESPEasyNow = 0;
-    return true;
-  }
+  if (!received_mac.all_zero()) {
+    if (received_mac == sta_mac) {
+      ESPEasyNowPeer   = 1;
+      useAP_ESPEasyNow = 0;
+      return true;
+    }
 
-  if (received_mac == ap_mac) {
-    ESPEasyNowPeer   = 1;
-    useAP_ESPEasyNow = 1;
-    return true;
+    if (received_mac == ap_mac) {
+      ESPEasyNowPeer   = 1;
+      useAP_ESPEasyNow = 1;
+      return true;
+    }
   }
   return false;
 }
