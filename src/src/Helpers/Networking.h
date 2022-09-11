@@ -7,12 +7,14 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
+#if FEATURE_DOWNLOAD
 #ifdef ESP8266
 # include <ESP8266HTTPClient.h>
 #endif // ifdef ESP8266
 #ifdef ESP32
 # include <HTTPClient.h>
 #endif // ifdef ESP32
+#endif
 
 
 /*********************************************************************************************\
