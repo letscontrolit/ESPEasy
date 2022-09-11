@@ -364,9 +364,12 @@ void WiFiConnectRelaxed() {
     // Still need to process WiFi events
     return;
   }
+
+/*
   if (!WiFiEventData.wifiSetupConnect && wifiAPmodeActivelyUsed()) {
     return;
   }
+  */
 
 
   // FIXME TD-er: Should not try to prepare when a scan is still busy.
@@ -629,7 +632,7 @@ void SetWiFiTXpower(float dBm) {
 }
 
 void SetWiFiTXpower(float dBm, float rssi) {
-  return;
+  /*
   const WiFiMode_t cur_mode = WiFi.getMode();
   if (cur_mode == WIFI_OFF) {
     return;
@@ -746,6 +749,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
     }
   }
   #endif
+  */
 }
 #endif
 
@@ -813,6 +817,11 @@ WiFiConnectionProtocol getConnectionProtocol() {
 // ********************************************************************************
 void WifiDisconnect()
 {
+  // Prevent recursion
+  static bool processingDisconnect = false;
+  if (processingDisconnect) return;
+  processingDisconnect = true;
+  addLog(LOG_LEVEL_INFO, F("WiFi : WifiDisconnect()"));
   #ifdef ESP32
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
@@ -825,8 +834,10 @@ void WifiDisconnect()
   }
   #endif
   #ifdef ESP8266
+  WiFi.disconnect();
+  /*
   // Only call disconnect when STA is active
-  if (WifiIsSTA(WiFiMode())) {
+  if (WifiIsSTA(WiFi.getMode())) {
     wifi_station_disconnect();
   }
   station_config conf{};
@@ -834,6 +845,7 @@ void WifiDisconnect()
   ETS_UART_INTR_DISABLE();
   wifi_station_set_config_current(&conf);
   ETS_UART_INTR_ENABLE();
+  */
   #endif // if defined(ESP32)
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
@@ -841,6 +853,8 @@ void WifiDisconnect()
     RTC.clearLastWiFi();
   }
   delay(1);
+  processDisconnect();
+  processingDisconnect = false;
 }
 
 // ********************************************************************************
@@ -981,9 +995,12 @@ void WifiScan(bool async, uint8_t channel) {
 
 #ifdef ESP32
   RTC.clearLastWiFi();
-  WifiDisconnect();
+  if (WiFiConnected()) {
+    const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
+    WifiDisconnect();
+    WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
+  }
 #endif
-
 }
 
 // ********************************************************************************
@@ -1117,8 +1134,8 @@ void setAPinternal(bool enable)
         log += softAPSSID;
         log += F(" with address ");
         log += WiFi.softAPIP().toString();
-        log += F(" on channel: ");
-        log += WiFi.channel();
+        log += F(" ch: ");
+        log += channel;
         addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
@@ -1171,6 +1188,16 @@ void setWifiMode(WiFiMode_t wifimode) {
     return;
   }
 
+  int APchannel = 1;
+  if (WifiIsSTA(WiFi.getMode()) && WiFi.isConnected()) {
+    APchannel = WiFi.channel();
+  } else {
+    if (WiFiEventData.usedChannel != 0) {
+      APchannel = WiFiEventData.usedChannel;
+    }
+  }
+
+
   if (cur_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();
   }
@@ -1205,6 +1232,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 
   if (wifimode == WIFI_OFF) {
     WifiDisconnect();
+    processDisconnect();
     WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)
@@ -1251,6 +1279,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 #ifdef ESP8266
     SetWiFiTXpower();
 #endif
+/*
     if (WifiIsSTA(wifimode)) {
       if (WiFi.getAutoConnect()) {
         WiFi.setAutoConnect(false); 
@@ -1259,6 +1288,7 @@ void setWifiMode(WiFiMode_t wifimode) {
         WiFi.setAutoReconnect(false);
       }
     }
+*/
     delay(100); // Must allow for some time to init.
   }
   const bool new_mode_AP_enabled = WifiIsAP(wifimode);
@@ -1348,6 +1378,7 @@ bool wifiConnectTimeoutReached() {
 
 bool wifiAPmodeActivelyUsed()
 {
+  if (!WiFiEventData.processedDisconnectAPmode) return true;
   #ifdef USES_ESPEASY_NOW
   if (isESPEasy_now_only() &&
         last_network_medium_set_moment.timeoutReached(600 * 1000)) 
@@ -1364,8 +1395,8 @@ bool wifiAPmodeActivelyUsed()
     // AP not active or soon to be disabled in processDisableAPmode()
     return false;
   }
-
-  return WiFi.softAPgetStationNum() != 0;
+  if (WiFi.softAPgetStationNum() != 0) return true;
+  return !WiFiEventData.timerAPoff.timeReached();
 
   // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi
   // reconnect?
