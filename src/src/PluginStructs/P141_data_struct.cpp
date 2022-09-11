@@ -106,17 +106,9 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
       pcd8544->fillScreen(_bgcolor);             // fill screen with black color
       pcd8544->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
 
-      # ifdef P141_SHOW_SPLASH
-      uint16_t yPos = 0;
-      gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 2, ST77XX_WHITE, ST77XX_BLUE);
-      yPos += (2 * _fontheight);
-      gfxHelper->printText(String(F("PCD8544")).c_str(), 0, yPos, 1, ST77XX_BLUE,  ST77XX_WHITE);
-      delay(100); // Splash
-      # endif // ifdef P141_SHOW_SPLASH
-
       gfxHelper->setColumnRowMode(bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_USE_COL_ROW));
-      pcd8544->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
-      pcd8544->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+      pcd8544->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
+      pcd8544->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
       pcd8544->display();
       updateFontMetrics();
 
@@ -147,7 +139,9 @@ void P141_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P141_data_struct::plugin_exit(struct EventStruct *event) {
+  # ifdef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("PCD8544: Exit."));
+  # endif // ifdef BUILD_NO_DEBUG
 
   if ((nullptr != pcd8544) && bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     pcd8544->fillScreen(_displayInverted
@@ -213,10 +207,9 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
       }
       pcd8544->display();
       gfxHelper->setColumnRowMode(bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
-      int16_t curX, curY;
-      gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-      UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
-      UserVar[event->BaseVarIndex + 1] = curY;
+      # if P141_FEATURE_CURSOR_XY_VALUES
+      updateValues(event);
+      # endif // if P141_FEATURE_CURSOR_XY_VALUES
     }
   }
   return false; // Always return false, so no attempt to send to
@@ -301,8 +294,6 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
   }
   else if (pcd8544 && (cmd.equals(_commandTrigger) ||
                        (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
-    success = true;
-
     if (!bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_NO_WAKE)) { // Wake display?
       displayOnOff(true);
     }
@@ -313,19 +304,33 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       // Hand it over after replacing variables
       success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols, gfxHelper));
 
-      updateFontMetrics(); // Font or color may have changed
+      updateFontMetrics();  // Font or color may have changed
 
       if (success) {
-        pcd8544->display();                 // Put on display
-        int16_t curX, curY;
-        gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
-        UserVar[event->BaseVarIndex]     = curX;
-        UserVar[event->BaseVarIndex + 1] = curY;
+        pcd8544->display(); // Put on display
+        # if P141_FEATURE_CURSOR_XY_VALUES
+        updateValues(event);
+        # endif // if P141_FEATURE_CURSOR_XY_VALUES
       }
     }
   }
   return success;
 }
+
+# if P141_FEATURE_CURSOR_XY_VALUES
+
+/****************************************************************************
+ * updateValues: put x and y coordinates in Values 0 and 1
+ ***************************************************************************/
+void P141_data_struct::updateValues(struct EventStruct *event) {
+  int16_t curX, curY;
+
+  gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
+  UserVar[event->BaseVarIndex]     = curX;
+  UserVar[event->BaseVarIndex + 1] = curY;
+}
+
+# endif // if P141_FEATURE_CURSOR_XY_VALUES
 
 /****************************************************************************
  * displayOnOff: Turn display on or off

@@ -8,13 +8,19 @@
 # include <Adafruit_PCD8544.h>              // include Adafruit PCD8544 LCD library
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
-# include "../CustomBuild/StorageLayout.h"
 
-# define P141_Nlines            9           // The number of different lines which can be displayed
-# define P141_Nchars           60           // Allow space for variables and formatting
-# define P141_DebounceTreshold  5           // number of 20 msec (fifty per second) ticks before the button has settled
+# define P141_FEATURE_CURSOR_XY_VALUES  1   // Enable availability of CursorX and CursorY values
 
-// # define P141_SHOW_SPLASH                               // Enable to show splash (text)
+# ifdef LIMIT_BUILD_SIZE
+#  if P141_FEATURE_CURSOR_XY_VALUES
+#   undef P141_FEATURE_CURSOR_XY_VALUES
+#   define P141_FEATURE_CURSOR_XY_VALUES  0
+#  endif // if P141_FEATURE_CURSOR_XY_VALUES
+# endif // ifdef LIMIT_BUILD_SIZE
+
+# define P141_Nlines            9                        // The number of different lines which can be displayed
+# define P141_Nchars           60                        // Allow space for variables and formatting
+# define P141_DebounceTreshold  5                        // number of 20 msec (fifty per second) ticks before the button has settled
 
 # define P141_CS_PIN                    PIN(0)           // CS pin
 # define P141_DC_PIN                    PIN(1)           // DC pin
@@ -107,6 +113,9 @@ private:
   void displayOnOff(bool state);
   void updateFontMetrics();
   void cleanup();
+  # if P141_FEATURE_CURSOR_XY_VALUES
+  void updateValues(struct EventStruct *event);
+  # endif // if P141_FEATURE_CURSOR_XY_VALUES
 
   Adafruit_PCD8544   *pcd8544   = nullptr;
   AdafruitGFX_helper *gfxHelper = nullptr;

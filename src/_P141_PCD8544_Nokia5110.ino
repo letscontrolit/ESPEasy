@@ -8,6 +8,8 @@
 
 
 /** Changelog:
+ * 2022-09-11 tonhuisman: Disable some less needed features to reduce .bin size, remove Cursor X/Y Values for challenged builds
+ *                        remove unused Splash feature code (was already disabled)
  * 2022-09-10 tonhuisman: Add configurable line spacing for configured Lines (user request), clear screen when using the 'off' subcommand
  * 2022-08-25 tonhuisman: Remove strange option 'tft' for command trigger, as this has nothing to with a tft display
  *                        Clear screen with correct color on exit when inverted is active
@@ -40,10 +42,12 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
+      # if P141_FEATURE_CURSOR_XY_VALUES
+      Device[deviceCount].ValueCount = 2;
+      # endif // if P141_FEATURE_CURSOR_XY_VALUES
+      Device[deviceCount].SendDataOption = false;
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].TimerOptional  = true;
       break;
     }
 
@@ -55,8 +59,10 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
+      # if P141_FEATURE_CURSOR_XY_VALUES
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_141));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_141));
+      # endif // if P141_FEATURE_CURSOR_XY_VALUES
       break;
     }
 
@@ -165,13 +171,19 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       String strings[P141_Nlines];
       LoadCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
 
+      # ifndef LIMIT_BUILD_SIZE
       uint16_t remain = P141_Nlines * (P141_Nchars + 1); // DAT_TASKS_CUSTOM_SIZE;
+      # endif // ifndef LIMIT_BUILD_SIZE
 
       for (uint8_t varNr = 0; varNr < P141_Nlines; varNr++) {
         addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P141_Nchars);
+        # ifndef LIMIT_BUILD_SIZE
         remain -= (strings[varNr].length() + 1);
+        # endif // ifndef LIMIT_BUILD_SIZE
       }
+      # ifndef LIMIT_BUILD_SIZE
       addUnit(concat(F("Remaining: "), remain));
+      # endif // ifndef LIMIT_BUILD_SIZE
 
       {
         String lineSpacings[16];
@@ -179,7 +191,11 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
         for (uint8_t i = 0; i < 16; i++) {
           if (15 == i) {
+            # ifndef LIMIT_BUILD_SIZE
             lineSpacings[i] = F("Auto, using font height * scaling");
+            # else // ifndef LIMIT_BUILD_SIZE
+            lineSpacings[i] = F("Auto");
+            # endif // ifndef LIMIT_BUILD_SIZE
           } else {
             lineSpacings[i] = i;
           }
@@ -279,8 +295,10 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
         if (nullptr != P141_data) {
           success = P141_data->plugin_init(event); // Start the display
         }
+      # ifndef LIMIT_BUILD_SIZE
       } else {
-        addLog(LOG_LEVEL_ERROR, F("PCD8544: SPI not enabled, init cancelled."));
+        addLog(LOG_LEVEL_ERROR, F("PCD8544: SPI not enabled."));
+      # endif // ifndef LIMIT_BUILD_SIZE
       }
       break;
     }
