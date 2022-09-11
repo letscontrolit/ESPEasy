@@ -1855,6 +1855,35 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
+#ifndef FEATURE_DOMOTICZ_NO_HTTP
+  #define FEATURE_DOMOTICZ_NO_HTTP  0
+#endif
+
+#if FEATURE_DOMOTICZ_NO_HTTP  // Move Domoticz enabling logic together, without HTTP controllers
+  #ifndef FEATURE_DOMOTICZ
+    #define FEATURE_DOMOTICZ  1
+  #endif
+  // Disable HTTP related Controllers/features
+  #ifdef USES_C001
+    #undef USES_C001   // NO Domoticz HTTP
+  #endif
+  #ifdef USES_C008
+    #undef USES_C008   // NO Generic HTTP
+  #endif
+  #ifdef FEATURE_SEND_TO_HTTP
+    #undef FEATURE_SEND_TO_HTTP
+  #endif
+  #define FEATURE_SEND_TO_HTTP  0 // Disabled
+
+  // Enable other required components
+  #ifndef USES_C002
+    #define USES_C002   // Domoticz MQTT
+  #endif
+  #ifndef USES_P029
+    #define USES_P029   // Output
+  #endif
+#endif
+
 
 // Disable Homie plugin for now in the dev build to make it fit.
 #if defined(PLUGIN_BUILD_DEV) && defined(USES_C014)
@@ -2257,6 +2286,19 @@ To create/register a plugin, you have to :
 #define SHOW_SYSINFO_JSON 0
 #endif
 
+
+#ifndef FEATURE_SEND_TO_HTTP
+  #define FEATURE_SEND_TO_HTTP  1 // Enabled by default
+#endif
+
+#ifndef FEATURE_HTTP_CLIENT
+  #define FEATURE_HTTP_CLIENT   0 // Disable by default
+#endif
+
+#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
+  #undef FEATURE_HTTP_CLIENT
+  #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
+#endif
 
 #ifndef FEATURE_AUTO_DARK_MODE
   // #ifdef LIMIT_BUILD_SIZE
