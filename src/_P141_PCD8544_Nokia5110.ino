@@ -8,6 +8,7 @@
 
 
 /** Changelog:
+ * 2022-09-12 tonhuisman: Remove unneeded color settings, as we have the Inverted display option
  * 2022-09-11 tonhuisman: Disable some less needed features to reduce .bin size, remove Cursor X/Y Values for challenged builds
  *                        remove unused Splash feature code (was already disabled)
  * 2022-09-10 tonhuisman: Add configurable line spacing for configured Lines (user request), clear screen when using the 'off' subcommand
@@ -101,8 +102,6 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P141_CONFIG_FLAG_CMD_TRIGGER, static_cast<int>(P141_CommandTrigger::pcd8544));
       P141_CONFIG_FLAGS = lSettings;
 
-      P141_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
-
       break;
     }
 
@@ -162,12 +161,6 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Content"));
 
-      AdaGFXFormForeAndBackColors(F("pfgcolor"),
-                                  P141_CONFIG_GET_COLOR_FOREGROUND,
-                                  F("pbgcolor"),
-                                  P141_CONFIG_GET_COLOR_BACKGROUND,
-                                  AdaGFXColorDepth::Monochrome);
-
       String strings[P141_Nlines];
       LoadCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
 
@@ -185,25 +178,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       addUnit(concat(F("Remaining: "), remain));
       # endif // ifndef LIMIT_BUILD_SIZE
 
-      {
-        String lineSpacings[16];
-        int    lineSpacingOptions[16];
-
-        for (uint8_t i = 0; i < 16; i++) {
-          if (15 == i) {
-            # ifndef LIMIT_BUILD_SIZE
-            lineSpacings[i] = F("Auto, using font height * scaling");
-            # else // ifndef LIMIT_BUILD_SIZE
-            lineSpacings[i] = F("Auto");
-            # endif // ifndef LIMIT_BUILD_SIZE
-          } else {
-            lineSpacings[i] = i;
-          }
-          lineSpacingOptions[i] = i;
-        }
-        addFormSelector(F("Linespacing"), F("linespc"), 16, lineSpacings, lineSpacingOptions, P141_CONFIG_FLAG_GET_LINESPACING);
-        addUnit(F("px"));
-      }
+      AdaGFXFormLineSpacing(F("linespc"), P141_CONFIG_FLAG_GET_LINESPACING);
 
       success = true;
       break;
@@ -234,17 +209,6 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P141_CONFIG_FLAG_INVERTED,  isFormItemChecked(F("pinvert")));          // Bit 29 Invert display
       P141_CONFIG_FLAGS = lSettings;
 
-      String   color   = web_server.arg(F("pfgcolor"));
-      uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
-
-      if (!color.isEmpty()) {
-        fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
-      }
-      color = web_server.arg(F("pbgcolor"));
-      uint16_t bgcolor = AdaGFXparseColor(color);
-
-      P141_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
-
       String strings[P141_Nlines];
       String error;
 
@@ -254,7 +218,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       error = SaveCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
 
-      if (error.length() > 0) {
+      if (!error.isEmpty()) {
         addHtmlError(error);
       }
 
@@ -286,8 +250,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
                                                                P141_CONFIG_DISPLAY_TIMEOUT,
                                                                toString(static_cast<P141_CommandTrigger>(
                                                                           P141_CONFIG_FLAG_GET_CMD_TRIGGER)),
-                                                               P141_CONFIG_GET_COLOR_FOREGROUND,
-                                                               P141_CONFIG_GET_COLOR_BACKGROUND,
+                                                               ADAGFX_WHITE,
+                                                               ADAGFX_BLACK,
                                                                bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACK_FILL) == 0,
                                                                bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1));
         P141_data_struct *P141_data = static_cast<P141_data_struct *>(getPluginTaskData(event->TaskIndex));

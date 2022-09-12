@@ -30,7 +30,6 @@
 # define P141_CONFIG_CONTRAST           PCONFIG(2)       // Contrast
 # define P141_CONFIG_BACKLIGHT_PIN      PCONFIG(3)       // Backlight pin
 # define P141_CONFIG_BACKLIGHT_PERCENT  PCONFIG(4)       // Backlight percentage
-# define P141_CONFIG_COLORS             PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
 # define P141_CONFIG_FLAGS              PCONFIG_ULONG(0) // All flags
 # define P141_CONFIG_FLAG_NO_WAKE       0                // Flag: Don't wake display
@@ -52,8 +51,6 @@
 
 # define P141_CONFIG_FLAG_GET_LINESPACING   (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_LINESPACING))
 # define P141_CONFIG_FLAG_GET_CMD_TRIGGER   (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_CMD_TRIGGER))
-# define P141_CONFIG_GET_COLOR_FOREGROUND   (P141_CONFIG_COLORS & 0xFFFF)
-# define P141_CONFIG_GET_COLOR_BACKGROUND   ((P141_CONFIG_COLORS >> 16) & 0xFFFF)
 
 // Define the default values for both ESP32/lolin32 and D1 Mini
 # ifdef ESP32

@@ -107,8 +107,9 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
       pcd8544->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
 
       gfxHelper->setColumnRowMode(bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_USE_COL_ROW));
-      pcd8544->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
-      pcd8544->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
+      gfxHelper->setLineSpacing(P141_CONFIG_FLAG_GET_LINESPACING);
+      pcd8544->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
+      pcd8544->setCursor(0, 0);           // move cursor to position (0, 0) pixel
       pcd8544->display();
       updateFontMetrics();
 
