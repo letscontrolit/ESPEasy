@@ -201,7 +201,7 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
       if (_plugin_stats[taskVarIndex] != nullptr) {
         _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
         # if FEATURE_CHART_JS
-        const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#EFF2C0"), F("#A4BAB7") };
+        const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#0F4C5C"), F("#A4BAB7") };
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color = colors[taskVarIndex];
         # endif // if FEATURE_CHART_JS
       }

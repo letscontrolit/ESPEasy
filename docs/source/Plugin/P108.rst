@@ -26,6 +26,14 @@ Description
 
 
 
+Sensor
+^^^^^^
+
+See: :ref:`SerialHelper_page`
+
+
+**TODO**: Complete this documentation...
+
 .. Events
 .. ~~~~~~
 
