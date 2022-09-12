@@ -22,7 +22,8 @@ var commonPlugins = [
   //P007
   "analogout",
   //P009
-  "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse", "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "MonitorRange,MCP", "UnMonitorRange,MCP", "UnMonitor,MCP", "MCPGPIORange", "MCPGPIOPattern", "MCPMode", "MCPModeRange",
+  "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse", "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "MonitorRange,MCP",
+  "UnMonitorRange,MCP", "UnMonitor,MCP", "MCPGPIORange", "MCPGPIOPattern", "MCPMode", "MCPModeRange",
   //P012
   "LCDCmd", "LCD",
   //P019
@@ -272,10 +273,10 @@ function initCM() {
           if ((element.includes(":") || element.includes(",")) && stream.match(WinDB)) void (0)
         }
       }
-//P022 addition
+      //P022 addition
       if (/\w/.test(ch)) {
-          stream.eatWhile(/[\w]/);
-          if (stream.match(".gpio") || stream.match(".pulse")|| stream.match(".frq")) {
+        stream.eatWhile(/[\w]/);
+        if (stream.match(".gpio") || stream.match(".pulse") || stream.match(".frq") || stream.match(".pwm")) {
           return 'def';
         }
       }
