@@ -12,6 +12,8 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-09-12 tonhuisman: Add line-spacing option for Column/Row mode, default set to auto, optional 0..14 pixels line-spacing
+ *                        Add line spacing form selector function
  * 2022-09-10 tonhuisman: Enable printing partial characters falling off at the right edge of the screen, only when on Window 0
  * 2022-08-25 tonhuisman: Add invertDisplay() functionality, often used for monochrome displays
  * 2022-08-23 tonhuisman: Several small improvements, and a few bugfixes
@@ -373,6 +375,8 @@ String AdaGFXcolorToString(const uint16_t        & color,
 # if ADAGFX_SUPPORT_7COLOR
 uint16_t AdaGFXrgb565ToColor7(const uint16_t& color); // Convert rgb565 color to 7-color
 # endif // if ADAGFX_SUPPORT_7COLOR
+void     AdaGFXFormLineSpacing(const __FlashStringHelper *id,
+                               uint8_t                    selectedIndex);
 
 class AdafruitGFX_helper {
 public:
@@ -443,6 +447,10 @@ public:
 
   void setColumnRowMode(bool state) {                // When true, addressing for txp, txtfull commands is in columns/rows, default in
     _columnRowMode = state;                          // pixels NOT compatible with _x_compensation!
+  }
+
+  void setLineSpacing(int8_t lineSpacing) {          // Set inter-line spacing in Column/Row mode
+    _lineSpacing = lineSpacing & 0xF;                // Limited to 0..14 px, 15 = auto, based on fontheight * fontsize
   }
 
   String getTrigger() {                              // Returns the current trigger
@@ -530,6 +538,7 @@ private:
   bool _columnRowMode    = false;
   int8_t _rotation       = 0;
   bool _displayInverted  = false;
+  int8_t _lineSpacing    = 15; // Default fontheight * fontsize
 
   uint16_t _display_x;
   uint16_t _display_y;

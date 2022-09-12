@@ -324,6 +324,30 @@ void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
   addUnit(unit);
 }
 
+/*****************************************************************************************
+ * Show a selector for line-spacing setting, supported by Adafruit_GFX
+ ****************************************************************************************/
+void AdaGFXFormLineSpacing(const __FlashStringHelper *id,
+                           uint8_t                    selectedIndex) {
+  String lineSpacings[16];
+  int    lineSpacingOptions[16];
+
+  for (uint8_t i = 0; i < 16; i++) {
+    if (15 == i) {
+            # ifndef LIMIT_BUILD_SIZE
+      lineSpacings[i] = F("Auto, using font height * scaling");
+            # else // ifndef LIMIT_BUILD_SIZE
+      lineSpacings[i] = F("Auto");
+            # endif // ifndef LIMIT_BUILD_SIZE
+    } else {
+      lineSpacings[i] = i;
+    }
+    lineSpacingOptions[i] = i;
+  }
+  addFormSelector(F("Linespacing"), id, 16, lineSpacings, lineSpacingOptions, selectedIndex);
+  addUnit(F("px"));
+}
+
 /****************************************************************************
  * AdaGFXparseTemplate: Replace variables and adjust unicode special characters to Adafruit font
  ***************************************************************************/
@@ -1948,6 +1972,8 @@ void AdafruitGFX_helper::printText(const char     *string,
   uint16_t res_y     = _res_y;
   uint16_t xOffset   = 0;
   uint16_t yOffset   = 0;
+  uint16_t hChar1    = 0;
+  uint16_t wChar1    = 0;
   String   newString = string;
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
@@ -1957,22 +1983,29 @@ void AdafruitGFX_helper::printText(const char     *string,
   _y += yOffset;
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
+  _display->setTextSize(textSize);
+  _display->getTextBounds(String('A'), 0, 0, &xText, &yText, &wChar1, &hChar1); // Calculate ~1 char height
+
   if (_columnRowMode) {
-    _x = X * (_fontwidth * textSize); // We need this multiple times
-    _y = (Y * (_fontheight * textSize))  + (_heightOffset * textSize);
+    _x = X * (_fontwidth * textSize);                                           // We need this multiple times
+
+    if (15 == _lineSpacing) {
+      _y = (Y * (_fontheight * textSize))  + (_heightOffset * textSize);
+    } else {
+      _y = (Y * (hChar1 + _lineSpacing)); // Apply explicit line spacing
+    }
   }
 
   _display->setCursor(_x, _y);
   _display->setTextColor(color, bkcolor);
-  _display->setTextSize(textSize);
 
   if (_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) {
     # if ADAGFX_ENABLE_FRAMED_WINDOW
 
-    if (0 == getWindow())                                                         // Only on Window 0
+    if (0 == getWindow()) // Only on Window 0
     # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
     {
-      _display->getTextBounds(String('A'), 0, 0, &xText, &yText, &wChar, &hText); // Calculate ~1 char width
+      wChar = wChar1;
     }
     _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText);   // Calculate length
 
