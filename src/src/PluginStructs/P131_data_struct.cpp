@@ -353,7 +353,7 @@ void P131_data_struct::display_content(struct EventStruct *event,
         }
       }
       delay(0);
-      yPos += (_fontheight * _fontscaling);
+      yPos += P131_CONFIG_MATRIX_HEIGHT;
     }
     gfxHelper->setValidation(useVal);
     matrix->show();
