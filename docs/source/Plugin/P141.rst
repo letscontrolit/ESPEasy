@@ -139,13 +139,6 @@ The command is handled non-case sensitive. See below for available commands and 
 Content
 ^^^^^^^^
 
-* **Foreground color**
-* **Background color**
-
-These are the default colors, used to display the content as configured below (if any). The background color is also used as the Clear screen color.
-
-This monochrome display only supports colors **white** and **black**
-
 * **Line 1..9** Predefined content can be specified. The number of lines used depends on the font used, the font scaling that is set and the rotation.
 
 The usual variables, like ``[Taskname#Valuename]``, or ``%v1%``, system variables, formulas and functions can be used.
