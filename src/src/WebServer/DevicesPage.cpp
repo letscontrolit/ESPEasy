@@ -1266,22 +1266,27 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         html_TR_TD();
         addHtml(F("Send to Controller "));
         addHtml(getControllerSymbol(controllerNr));
+        addHtmlDiv(F("note"), wrap_braces(getCPluginNameFromCPluginID(Settings.Protocol[controllerNr])));
         html_TD();
+
+        addHtml(F("<table style='padding-left:0;'>")); // remove left padding 2x to align vertically with other inputs
+        html_TD(F("width:50px;padding-left:0"));
         addCheckBox(
           getPluginCustomArgName(F("TDSD"), controllerNr), // ="taskdevicesenddata"
           Settings.TaskDeviceSendData[controllerNr][taskIndex]);
 
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
 
-        if (validProtocolIndex(ProtocolIndex)) {
-          if (Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0))
-          {
-            addRowLabel(F("IDX"));
-            addNumericBox(
-              getPluginCustomArgName(F("TDID"), controllerNr), // ="taskdeviceid"
-              Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
-          }
+        if (validProtocolIndex(ProtocolIndex) && 
+            Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0)) {
+          html_TD();
+          addHtml(F("IDX:"));
+          html_TD();
+          addNumericBox(
+            getPluginCustomArgName(F("TDID"), controllerNr), // ="taskdeviceid"
+            Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
         }
+        html_end_table();
       }
     }
   }

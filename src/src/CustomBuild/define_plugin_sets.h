@@ -121,11 +121,8 @@ To create/register a plugin, you have to :
 
 #ifdef WEBSERVER_CSS
   #ifndef WEBSERVER_EMBED_CUSTOM_CSS
-    #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
-      #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
-    #endif
-    #ifndef EMBED_ESPEASY_AUTO_MIN_CSS
-      #define EMBED_ESPEASY_AUTO_MIN_CSS
+    #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS
+      #define EMBED_ESPEASY_DEFAULT_MIN_CSS
     #endif
   #endif
 #endif
@@ -265,13 +262,6 @@ To create/register a plugin, you have to :
   #define CONTROLLER_SET_COLLECTION
   #define NOTIFIER_SET_COLLECTION
   #define PLUGIN_BUILD_NORMAL     // add stable
-
-  #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
-    #undef EMBED_ESPEASY_AUTO_MIN_CSS
-    #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS
-      #define EMBED_ESPEASY_DEFAULT_MIN_CSS
-    #endif
-  #endif
 #endif
 
 #ifdef PLUGIN_BUILD_COLLECTION_B
@@ -458,9 +448,6 @@ To create/register a plugin, you have to :
         #ifndef WEBSERVER_EMBED_CUSTOM_CSS
           #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
             #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
-          #endif
-          #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
-            #undef EMBED_ESPEASY_AUTO_MIN_CSS
           #endif
         #endif
         #ifdef WEBSERVER_INCLUDE_JS
@@ -1917,10 +1904,6 @@ To create/register a plugin, you have to :
   #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
     #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
   #endif
-  #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
-    #undef EMBED_ESPEASY_AUTO_MIN_CSS
-  #endif
-
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
@@ -2034,9 +2017,6 @@ To create/register a plugin, you have to :
   #endif
   #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
     #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
-  #endif
-  #ifndef EMBED_ESPEASY_AUTO_MIN_CSS
-    #undef EMBED_ESPEASY_AUTO_MIN_CSS
   #endif
 #endif
 

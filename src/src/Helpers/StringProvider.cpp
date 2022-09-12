@@ -101,7 +101,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ENABLE_RAM_TRACKING:    return F("Enable RAM Tracker");
 #endif
 #if FEATURE_AUTO_DARK_MODE
-    case LabelType::ENABLE_AUTO_DARK_MODE:  return F("Enable Web auto-dark mode");
+    case LabelType::ENABLE_AUTO_DARK_MODE:  return F("Web light/dark mode");
 #endif // FEATURE_AUTO_DARK_MODE
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
@@ -305,7 +305,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ENABLE_RAM_TRACKING:        return jsonBool(Settings.EnableRAMTracking());
 #endif
 #if FEATURE_AUTO_DARK_MODE
-    case LabelType::ENABLE_AUTO_DARK_MODE:      return jsonBool(Settings.EnableAutomaticDarkMode());
+    case LabelType::ENABLE_AUTO_DARK_MODE:      return toString(Settings.getCssMode());
 #endif // FEATURE_AUTO_DARK_MODE
 
 
