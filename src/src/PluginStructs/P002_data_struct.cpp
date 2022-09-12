@@ -334,7 +334,7 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
     valueCount,
     xAxisValues);
 
-  const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#EFF2C0"), F("#A4BAB7") };
+  const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#0F4C5C"), F("#A4BAB7") };
 
   size_t current_attenuation = getAttenuation(event);
 
