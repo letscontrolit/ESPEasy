@@ -28,13 +28,7 @@ bool P109_data_struct::plugin_webform_load(struct EventStruct *event) {
   LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&_deviceTemplate), sizeof(_deviceTemplate));
 
   for (uint8_t varNr = 0; varNr < P109_Nlines; varNr++) {
-    String label = F("Line ");
-
-    if (varNr == 0) {
-      label = F("Temperature source ");
-    }
-    label += varNr + 1;
-    addFormTextBox(label,
+    addFormTextBox(concat(varNr == 0 ? F("Temperature source ") : F("Line "), varNr + 1),
                    getPluginCustomArgName(varNr + 1),
                    _deviceTemplate[varNr],
                    P109_Nchars);
@@ -58,7 +52,7 @@ bool P109_data_struct::plugin_webform_save(struct EventStruct *event) {
 
   String error = SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&_deviceTemplate), sizeof(_deviceTemplate));
 
-  if (error.length() > 0) {
+  if (!error.isEmpty()) {
     addHtmlError(error);
   }
 
@@ -98,18 +92,16 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
 
   OLedSetContrast(_display, P109_CONFIG_CONTRAST);
 
-  # ifndef LIMIT_BUILD_SIZE
+  # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String logstr = F("Thermo : Btn L:");
-    logstr += CONFIG_PIN1;
-    logstr += F("R:");
-    logstr += CONFIG_PIN2;
-    logstr += F("M:");
-    logstr += CONFIG_PIN3;
-    addLogMove(LOG_LEVEL_INFO, logstr);
+    String log;
+    log += concat(F("Thermo : Btn L:"), CONFIG_PIN1);
+    log += concat(F("R:"), CONFIG_PIN2);
+    log += concat(F("M:"), CONFIG_PIN3);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
-  # endif // ifndef LIMIT_BUILD_SIZE
+  # endif // ifndef BUILD_NO_DEBUG
 
   for (uint8_t pin = 0; pin < 3; pin++) {
     if (validGpio(PIN(pin))) {
@@ -123,11 +115,11 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
 
   fileName += _taskIndex + 1;
   fileName += F(".dat");
-  fs::File f = tryOpenFile(fileName, F("r"));
+  fs::File f = tryOpenFile(fileName, String('r'));
 
   if (!f) { // Not found? Then open previous default filename
     fileName = F("thermo.dat");
-    f        = tryOpenFile(fileName, F("r"));
+    f        = tryOpenFile(fileName, String('r'));
   }
 
   if (f) {
@@ -148,13 +140,15 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
     setHeatRelay(static_cast<uint8_t>(UserVar[event->BaseVarIndex + 1]));
   }
 
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String logstr = F("Thermo : Starting status S:");
-    logstr += toString(UserVar[event->BaseVarIndex]);
-    logstr += F(", R:");
-    logstr += toString(UserVar[event->BaseVarIndex + 1]);
-    addLogMove(LOG_LEVEL_INFO, logstr);
+    String log;
+    log += concat(F("Thermo : Starting status S:"), toString(UserVar[event->BaseVarIndex]));
+    log += concat(F(", R:"), toString(UserVar[event->BaseVarIndex + 1]));
+    addLogMove(LOG_LEVEL_INFO, log);
   }
+  # endif // ifndef BUILD_NO_DEBUG
 
   _changed    = 1;
   _buttons[0] = 0;
@@ -177,7 +171,6 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
  * De-initialize, pre-destructor
  *************************************************************************/
 bool P109_data_struct::plugin_exit(struct EventStruct *event) {
-  // TODO: Add 'clear on exit' option?
   _initialized = false;
 
   return true;
@@ -313,7 +306,9 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
         f.close();
         flashCount();
       }
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("Thermo : Save UserVars to SPIFFS"));
+      # endif // ifndef BUILD_NO_DEBUG
     }
   }
   return _initialized;
@@ -330,9 +325,8 @@ bool P109_data_struct::plugin_read(struct EventStruct *event) {
     if (UserVar[event->BaseVarIndex + 2] == 1) {
       String atempstr2 = _deviceTemplate[0];
       String atempstr  = parseTemplate(atempstr2);
-      atempstr.trim();
 
-      if ((atempstr.length() > 0) &&
+      if (!atempstr.isEmpty() &&
           (_prev_temp != P109_TEMP_STATE_UNSET)) { // do not switch until the first temperature data arrives
         float atemp = atempstr.toFloat();
 
@@ -397,17 +391,17 @@ bool P109_data_struct::plugin_write(struct EventStruct *event,
 
     if (!success && command.equals(F("thermo"))) {
       success = true;
-      String par1 = parseString(string, 3);
+      String par3 = parseString(string, 3);
 
       if (subcommand.equals(F("setpoint"))) {
-        setSetpoint(par1);
+        setSetpoint(par3);
       }
       else if (subcommand.equals(F("heating"))) {
-        setHeater(par1);
+        setHeater(par3);
         _changed = 1;
       }
       else if (subcommand.equals(F("mode"))) {
-        setMode(par1, parseString(string, 4));
+        setMode(par3, parseString(string, 4));
       } else {
         success = false;
       }
@@ -429,12 +423,10 @@ bool P109_data_struct::plugin_write(struct EventStruct *event,
 void P109_data_struct::display_header() {
   if (_showWiFiName && WiFiEventData.WiFiServicesInitialized()) {
     String newString = WiFi.SSID();
-    newString.trim();
     display_title(newString);
   } else {
     String dtime(F("%sysname%"));
     String newString = parseTemplate(dtime);
-    newString.trim();
     display_title(newString);
   }
   _showWiFiName = !_showWiFiName;
@@ -686,14 +678,17 @@ void P109_data_struct::setSetpoint(const String& sptemp) {
  * Set the heater relay state
  */
 void P109_data_struct::setHeatRelay(const uint8_t& state) {
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String logstr = F("Thermo : Set Relay");
+  # ifndef BUILD_NO_DEBUG
 
-    logstr += _relaypin;
-    logstr += '=';
-    logstr += state;
-    addLogMove(LOG_LEVEL_INFO, logstr);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("Thermo : Set Relay");
+
+    log += _relaypin;
+    log += '=';
+    log += state;
+    addLogMove(LOG_LEVEL_INFO, log);
   }
+  # endif // ifndef BUILD_NO_DEBUG
 
   if (_relaypin != -1) {
     pinMode(_relaypin, OUTPUT);
