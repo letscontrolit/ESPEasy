@@ -1,6 +1,7 @@
 #include "../Static/WebStaticData.h"
 
 #include "../CustomBuild/CompiletimeDefines.h"
+#include "../Globals/Settings.h"
 #include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -41,18 +42,13 @@ void serve_CSS() {
     return;
   }
   #ifndef WEBSERVER_CSS
-//  serve_CDN_CSS(F("espeasy_default.min.css"));
-  serve_CDN_CSS(F("esp_auto.min.css"));
+  serve_CDN_CSS(F("espeasy_default.min.css"));
   #else
   addHtml(F("<style>"));
 
   // Send CSS in chunks
   #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
   TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
-  #else
-    #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
-    TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_AUTO_MIN_CSS));
-    #endif
   #endif
   addHtml(F("</style>"));
   #endif

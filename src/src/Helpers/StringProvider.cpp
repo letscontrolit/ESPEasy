@@ -100,6 +100,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #ifndef BUILD_NO_RAM_TRACKER
     case LabelType::ENABLE_RAM_TRACKING:    return F("Enable RAM Tracker");
 #endif
+#if FEATURE_AUTO_DARK_MODE
+    case LabelType::ENABLE_AUTO_DARK_MODE:  return F("Web light/dark mode");
+#endif // FEATURE_AUTO_DARK_MODE
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -301,6 +304,9 @@ String getValue(LabelType::Enum label) {
 #ifndef BUILD_NO_RAM_TRACKER
     case LabelType::ENABLE_RAM_TRACKING:        return jsonBool(Settings.EnableRAMTracking());
 #endif
+#if FEATURE_AUTO_DARK_MODE
+    case LabelType::ENABLE_AUTO_DARK_MODE:      return toString(Settings.getCssMode());
+#endif // FEATURE_AUTO_DARK_MODE
 
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
@@ -329,8 +335,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
     case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
-    case LabelType::STA_MAC:                return WifiSTAmacAddress();
-    case LabelType::AP_MAC:                 return WifiSoftAPmacAddress();
+    case LabelType::STA_MAC:                return WifiSTAmacAddress().toString();
+    case LabelType::AP_MAC:                 return WifiSoftAPmacAddress().toString();
     case LabelType::SSID:                   return WiFi.SSID();
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
     case LabelType::CHANNEL:                return String(WiFi.channel());

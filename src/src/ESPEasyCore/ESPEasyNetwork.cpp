@@ -208,16 +208,16 @@ String createRFCCompliantHostname(const String& oldString) {
   return result;
 }
 
-String WifiSoftAPmacAddress() {
+MAC_address WifiSoftAPmacAddress() {
   MAC_address mac;
   WiFi.softAPmacAddress(mac.mac);
-  return mac.toString();
+  return mac;
 }
 
-String WifiSTAmacAddress() {
+MAC_address WifiSTAmacAddress() {
   MAC_address mac;
   WiFi.macAddress(mac.mac);
-  return mac.toString();
+  return mac;
 }
 
 void CheckRunningServices() {

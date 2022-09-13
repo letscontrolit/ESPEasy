@@ -260,6 +260,7 @@
 
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
+// #define FEATURE_AUTO_DARK_MODE           0 // Disable auto-dark mode
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
@@ -450,6 +451,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P131   // NeoMatrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
+// #define USES_P134   // A02YYUW
 
 // #define USES_P128   // NeoPixelBusFX
 // #define P128_USES_GRB  // Default
