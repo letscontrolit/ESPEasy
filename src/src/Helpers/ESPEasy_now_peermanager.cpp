@@ -9,6 +9,8 @@
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
 
+# include "../Helpers/StringConverter.h"
+
 
 ESPEasy_now_peermanager_t::ESPEasy_now_peermanager_t() {
   removeAllPeers();
@@ -65,13 +67,7 @@ bool ESPEasy_now_peermanager_t::addPeer(const MAC_address& mac, int channel, con
         activePeers.push_back(mac);
       } else {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log;
-          if (log.reserve(64)) {
-            log = F(ESPEASY_NOW_NAME);
-            log += F(": Failed to add peer ");
-            log += MAC_address(mac).toString();
-            addLog(LOG_LEVEL_ERROR, log);
-          }
+          addLog(LOG_LEVEL_ERROR, concat(F(ESPEASY_NOW_NAME ": Failed to add peer "),  MAC_address(mac).toString()));
         }
       }
     } else {

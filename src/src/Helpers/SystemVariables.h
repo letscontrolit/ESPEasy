@@ -26,6 +26,15 @@ public:
     ISMQTTIMP,
     ISNTP,
     ISWIFI,
+
+    #ifdef USES_ESPEASY_NOW
+    ESPEASY_NOW_ENABLED,
+    ESPEASY_NOW_CHANNEL,
+    ESPEASY_NOW_MQTT,
+    ESPEASY_NOW_DISTANCE,
+    ESPEASY_NOW_FORCED_CHANNEL,
+    #endif
+
     #if FEATURE_ETHERNET
     ETHWIFIMODE,
     ETHCONNECTED,
@@ -34,6 +43,7 @@ public:
     ETHSTATE,
     ETHSPEEDSTATE,
     #endif // if FEATURE_ETHERNET
+
     LCLTIME,
     LCLTIME_AM,
     LF,
@@ -106,7 +116,6 @@ public:
     ESP_CHIP_REVISION,
     ESP_CHIP_CORES,
     ESP_BOARD_NAME,
-
 
     // Keep UNKNOWN as last
     UNKNOWN

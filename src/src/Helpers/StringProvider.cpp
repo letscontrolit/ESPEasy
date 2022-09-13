@@ -20,6 +20,11 @@
 #include "../Globals/ESPEasy_now_state.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
+
+#if FEATURE_ESPEASY_P2P
+#include "../Globals/Nodes.h"
+#endif
+
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
@@ -151,14 +156,6 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::FORCE_WIFI_NOSLEEP:     return F("Force WiFi No Sleep");
     case LabelType::PERIODICAL_GRAT_ARP:    return F("Periodical send Gratuitous ARP");
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
-
-    #ifdef USES_ESPEASY_NOW
-    case LabelType::USE_ESPEASY_NOW:        return F("Enable " ESPEASY_NOW_NAME);
-    case LabelType::TEMP_DISABLE_ESPEASY_NOW: return F("Temporary disable " ESPEASY_NOW_NAME);
-    case LabelType::FORCE_ESPEASY_NOW_CHANNEL: return F("Force Channel " ESPEASY_NOW_NAME);
-    #endif
-
-
     case LabelType::BUILD_DESC:             return F("Build");
     case LabelType::GIT_BUILD:              return F("Git Build");
     case LabelType::SYSTEM_LIBRARIES:       return F("System Libraries");
@@ -212,6 +209,16 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
     case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
     case LabelType::OTA_POSSIBLE:           return F("OTA possible");
+
+#ifdef USES_ESPEASY_NOW
+    case LabelType::ESPEASY_NOW_ENABLED:        return F(ESPEASY_NOW_NAME " Enabled");
+    case LabelType::ESPEASY_NOW_CHANNEL:        return F(ESPEASY_NOW_NAME " Channel");
+    case LabelType::ESPEASY_NOW_MQTT:           return F(ESPEASY_NOW_NAME " Route to MQTT broker");
+    case LabelType::ESPEASY_NOW_DISTANCE:       return F(ESPEASY_NOW_NAME " Distance");
+    case LabelType::TEMP_DISABLE_ESPEASY_NOW:   return F(ESPEASY_NOW_NAME " Temporary disabled");
+    case LabelType::ESPEASY_NOW_FORCED_CHANNEL: return F(ESPEASY_NOW_NAME " Forced Channel");
+#endif
+
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
     case LabelType::ETH_IP_SUBNET:          return F("Eth IP Subnet");
@@ -380,12 +387,6 @@ String getValue(LabelType::Enum label) {
     case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
     case LabelType::CONNECTION_FAIL_THRESH: return String(Settings.ConnectionFailuresThreshold);
 
-    #ifdef USES_ESPEASY_NOW
-    case LabelType::USE_ESPEASY_NOW:        return jsonBool(Settings.UseESPEasyNow());
-    case LabelType::TEMP_DISABLE_ESPEASY_NOW: return jsonBool(temp_disable_EspEasy_now_timer != 0);
-    case LabelType::FORCE_ESPEASY_NOW_CHANNEL: return String(Settings.ForceESPEasyNOWchannel);
-    #endif
-
     case LabelType::BUILD_DESC:             return getSystemBuildString();
     case LabelType::GIT_BUILD:              
       { 
@@ -440,6 +441,17 @@ String getValue(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    break;
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
+
+#ifdef USES_ESPEASY_NOW
+    case LabelType::ESPEASY_NOW_ENABLED:        return jsonBool(Settings.UseESPEasyNow());
+    case LabelType::TEMP_DISABLE_ESPEASY_NOW:   return jsonBool(temp_disable_EspEasy_now_timer != 0);
+    case LabelType::ESPEASY_NOW_FORCED_CHANNEL: return String(Settings.ForceESPEasyNOWchannel);
+    case LabelType::ESPEASY_NOW_CHANNEL:        return String(WiFi.channel());  // FIXME TD-er: Must send intended channel and what to do when mesh is off?
+    case LabelType::ESPEASY_NOW_MQTT:           return jsonBool(Nodes.getDistance() < 255); // FIXME TD-er: update this when definition of "distance" no longer reflects presence of connected MQTT broker
+    case LabelType::ESPEASY_NOW_DISTANCE:       return String(Nodes.getDistance());
+#endif
+
+
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return NetworkLocalIP().toString();
     case LabelType::ETH_IP_SUBNET:          return NetworkSubnetMask().toString();

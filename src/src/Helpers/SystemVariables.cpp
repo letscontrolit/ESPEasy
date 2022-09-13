@@ -90,8 +90,15 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::GATEWAY:           label = LabelType::GATEWAY; break;
     case SystemVariables::CLIENTIP:          label = LabelType::CLIENT_IP; break;
 
-    #if FEATURE_ETHERNET
+    #ifdef USES_ESPEASY_NOW
+    case SystemVariables::ESPEASY_NOW_ENABLED:  label = LabelType::ESPEASY_NOW_ENABLED; break;
+    case SystemVariables::ESPEASY_NOW_CHANNEL:  label = LabelType::ESPEASY_NOW_CHANNEL; break;
+    case SystemVariables::ESPEASY_NOW_MQTT:     label = LabelType::ESPEASY_NOW_MQTT; break;
+    case SystemVariables::ESPEASY_NOW_DISTANCE: label = LabelType::ESPEASY_NOW_DISTANCE; break;
+    case SystemVariables::ESPEASY_NOW_FORCED_CHANNEL: label = LabelType::ESPEASY_NOW_FORCED_CHANNEL; break;
+    #endif
 
+    #if FEATURE_ETHERNET
     case SystemVariables::ETHWIFIMODE:       label = LabelType::ETH_WIFI_MODE; break; // 0=WIFI, 1=ETH
     case SystemVariables::ETHCONNECTED:      label = LabelType::ETH_CONNECTED; break; // 0=disconnected, 1=connected
     case SystemVariables::ETHDUPLEX:         label = LabelType::ETH_DUPLEX; break;
@@ -99,6 +106,7 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::ETHSTATE:          label = LabelType::ETH_STATE; break;
     case SystemVariables::ETHSPEEDSTATE:     label = LabelType::ETH_SPEED_STATE; break;
     #endif // if FEATURE_ETHERNET
+
     case SystemVariables::LCLTIME:           label = LabelType::LOCAL_TIME; break;
     case SystemVariables::MAC:               label = LabelType::STA_MAC; break;
     case SystemVariables::RSSI:              label = LabelType::WIFI_RSSI; break;
@@ -337,6 +345,15 @@ const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enum
     case Enum::ISMQTTIMP:          return F("%ismqttimp%");
     case Enum::ISNTP:              return F("%isntp%");
     case Enum::ISWIFI:             return F("%iswifi%");
+
+    #ifdef USES_ESPEASY_NOW
+    case Enum::ESPEASY_NOW_ENABLED:  return F("%mesh_enabled");
+    case Enum::ESPEASY_NOW_CHANNEL:  return F("%mesh_ch");
+    case Enum::ESPEASY_NOW_MQTT:     return F("%mesh_mqtt");
+    case Enum::ESPEASY_NOW_DISTANCE: return F("%mesh_dist");
+    case Enum::ESPEASY_NOW_FORCED_CHANNEL:  return F("%mesh_ch_forced");
+    #endif
+
     #if FEATURE_ETHERNET
     case Enum::ETHWIFIMODE:        return F("%ethwifimode%");
     case Enum::ETHCONNECTED:       return F("%ethconnected%");

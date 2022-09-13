@@ -4,6 +4,7 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 unsigned long ESPEasy_now_Node_statistics_t::getAge() const
@@ -36,10 +37,7 @@ void ESPEasy_now_Node_statistics_t::addRoute(uint8_t unit, const ESPEasy_now_tra
   last_update_route[last_route_index] = last_update;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(ESPEASY_NOW_NAME);
-    log += F(": addRoute: ");
-    log += route.toString();
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": addRoute: "), route.toString()));
   }
 }
 

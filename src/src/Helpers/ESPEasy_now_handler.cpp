@@ -284,13 +284,7 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
         // We need to give it some time to receive announcement messages and maybe even a traceroute
         if (timePassedSince(_last_started) > ESPEASY_NOW_CHANNEL_SEARCH_TIMEOUT) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log;
-            if (log.reserve(80)) {
-              log = F(ESPEASY_NOW_NAME);
-              log += F(": No peers with distance set on channel ");
-              log += _usedWiFiChannel;
-              addLog(LOG_LEVEL_INFO, log);
-            }
+            addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": No peers with distance set on channel "), _usedWiFiChannel));
           }
 
           end();
@@ -298,13 +292,7 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
       } else {
         if (channelChanged) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log;
-            if (log.reserve(64)) {
-              log = F(ESPEASY_NOW_NAME);
-              log += F(": Move to channel ");
-              log += ESPEasyNOW_channel;
-              addLog(LOG_LEVEL_INFO, log);
-            }
+            addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": Move to channel "), ESPEasyNOW_channel));
           }
         }
 
@@ -319,14 +307,7 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
       const bool traceroute_sent_timeout     = _last_traceroute_sent != 0 && (timePassedSince(_last_traceroute_sent) > ESPEASY_NOW_ACTIVITY_TIMEOUT);
       const bool first_traceroute_receive_timeout = _last_traceroute_received == 0 && (timePassedSince(_last_started) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
       if (traceroute_received_timeout || traceroute_sent_timeout || first_traceroute_receive_timeout) {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          if (log.reserve(64)) {
-            log = F(ESPEASY_NOW_NAME);
-            log += F(": Inactive due to not receiving trace routes");
-            addLog(LOG_LEVEL_INFO, log);
-          }
-        }
+        addLog(LOG_LEVEL_INFO, F(ESPEASY_NOW_NAME ": Inactive due to not receiving trace routes"));
         end();
         temp_disable_EspEasy_now_timer = millis() + 10000;
         WifiScan(true);
@@ -477,14 +458,7 @@ bool ESPEasy_now_handler_t::active() const
   const bool traceroute_sent_timeout     = _last_traceroute_sent != 0 && (timePassedSince(_last_traceroute_sent) > ESPEASY_NOW_ACTIVITY_TIMEOUT);
   const bool first_traceroute_receive_timeout = _last_traceroute_received == 0 && (timePassedSince(_last_started) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
   if (traceroute_received_timeout || traceroute_sent_timeout || first_traceroute_receive_timeout) {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-      if (log.reserve(64)) {
-        log = F(ESPEASY_NOW_NAME);
-        log += F(": Inactive due to not receiving trace routes");
-        addLog(LOG_LEVEL_INFO, log);
-      }
-    }
+    addLog(LOG_LEVEL_INFO, F(ESPEASY_NOW_NAME ": Inactive due to not receiving trace routes"));
 
     return false;
   }
@@ -536,12 +510,10 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(const WiFi_AP_Candidate& peer)
       tmpNodeInfo.setESPEasyNow_mac(peer_mac);
       if (Nodes.addNode(tmpNodeInfo)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F(ESPEASY_NOW_NAME ": Found node via WiFi scan: ");
-          log += peer_mac.toString();
-          log += F(" ");
+          String log = concat(F(ESPEASY_NOW_NAME ": Found node via WiFi scan: "), peer_mac.toString());
+          log += ' ';
           log += tmpNodeInfo.getRSSI();
-          log += F(" dBm ch: ");
-          log += tmpNodeInfo.channel;
+          log += concat(F(" dBm ch: "),  tmpNodeInfo.channel);
           addLog(LOG_LEVEL_INFO, log);
         }
 
@@ -566,13 +538,7 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
         WifiSTAmacAddress()    == receivedMAC) return handled;
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    if (log.reserve(75)) {
-      log = F(ESPEASY_NOW_NAME);
-      log += F(": received ");
-      log += message.getLogString();
-      addLog(LOG_LEVEL_INFO, log);
-    }
+    addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": received "),  message.getLogString()));
   }
 
   switch (message.getMessageType())
@@ -718,10 +684,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 
   if (!received.setESPEasyNow_mac(mac)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log;
-      log  = F(ESPEASY_NOW_NAME ": Received discovery message from MAC not stated in message: ");
-      log += mac.toString();
-      addLog(LOG_LEVEL_ERROR, log);
+      addLog(LOG_LEVEL_ERROR, concat(F(ESPEASY_NOW_NAME ": Received discovery message from MAC not stated in message: "),  mac.toString()));
     }
     return false;
   }
@@ -770,13 +733,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 
   if (received.distance == 255 && Nodes.getDistance() < 255) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-      if (log.reserve(80)) {
-        log  = F(ESPEASY_NOW_NAME);
-        log += F(": Send announce back to unit: ");
-        log += String(received.unit);
-        addLog(LOG_LEVEL_INFO, log);
-      }
+      addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": Send announce back to unit: "), received.unit));
     }
 
     sendDiscoveryAnnounce(received.ESPEasy_Now_MAC(), received.channel);
@@ -929,9 +886,7 @@ void ESPEasy_now_handler_t::sendNTPquery()
   if (!_best_NTP_candidate->getMac(mac)) { return; }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(ESPEASY_NOW_NAME ": Send NTP query to: ");
-    log += mac.toString();
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": Send NTP query to: "), mac.toString()));
   }
 
   _best_NTP_candidate->markSendTime();
@@ -1208,10 +1163,7 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
         #  ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-          String log;
-          log  = F(ESPEASY_NOW_NAME ": Received Queue state: ");
-          log += query.isFull() ? F("Full") : F("not Full");
-          addLog(LOG_LEVEL_DEBUG_MORE, log);
+          addLog(LOG_LEVEL_DEBUG_MORE, concat(F(ESPEASY_NOW_NAME ": Received Queue state: "),  query.isFull() ? F("Full") : F("not Full")));
         }
         #  endif // ifndef BUILD_NO_DEBUG
       }

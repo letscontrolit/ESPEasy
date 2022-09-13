@@ -68,6 +68,16 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::BSSID);
   addSysVar_enum_html(SystemVariables::WI_CH);
 
+
+#ifdef USES_ESPEASY_NOW
+  addTableSeparator(F(ESPEASY_NOW_NAME), 3, 3);
+  addSysVar_enum_html(SystemVariables::ESPEASY_NOW_ENABLED);
+  addSysVar_enum_html(SystemVariables::ESPEASY_NOW_CHANNEL);
+  addSysVar_enum_html(SystemVariables::ESPEASY_NOW_FORCED_CHANNEL);
+  addSysVar_enum_html(SystemVariables::ESPEASY_NOW_MQTT);
+  addSysVar_enum_html(SystemVariables::ESPEASY_NOW_DISTANCE);
+#endif
+
   #if FEATURE_ETHERNET
   addTableSeparator(F("Ethernet"), 3, 3);
   addSysVar_enum_html(SystemVariables::ETHWIFIMODE);
