@@ -174,6 +174,10 @@ To create/register a plugin, you have to :
   #undef FEATURE_SETTINGS_ARCHIVE
 #endif
 
+#ifndef FEATURE_NO_HTTP_CLIENT
+  #define FEATURE_NO_HTTP_CLIENT  0
+#endif
+
 
 /******************************************************************************\
  * BUILD Configs **************************************************************
@@ -373,7 +377,9 @@ To create/register a plugin, you have to :
 //    #define USES_C002   // Domoticz MQTT
 //    #define USES_C005   // Home Assistant (openHAB) MQTT
 //    #define USES_C006   // PiDome MQTT
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C008   // Generic HTTP
+  #endif
 //    #define USES_C009   // FHEM HTTP
 //    #define USES_C010   // Generic UDP
 //    #define USES_C013   // ESPEasy P2P network
@@ -1182,14 +1188,18 @@ To create/register a plugin, you have to :
 
 
 #ifdef CONTROLLER_SET_STABLE
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C001   // Domoticz HTTP
+  #endif
     #define USES_C002   // Domoticz MQTT
     #define USES_C003   // Nodo telnet
     #define USES_C004   // ThingSpeak
     #define USES_C005   // Home Assistant (openHAB) MQTT
     #define USES_C006   // PiDome MQTT
     #define USES_C007   // Emoncms
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C008   // Generic HTTP
+  #endif
     #define USES_C009   // FHEM HTTP
     #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
@@ -1832,7 +1842,7 @@ To create/register a plugin, you have to :
 #endif
 
 #if FEATURE_DOMOTICZ  // Move Domoticz enabling logic together
-    #ifndef USES_C001
+    #if !defined(USES_C001) && !FEATURE_NO_HTTP_CLIENT
       #define USES_C001   // Domoticz HTTP
     #endif
     #ifndef USES_C002
@@ -1843,33 +1853,12 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#ifndef FEATURE_DOMOTICZ_NO_HTTP
-  #define FEATURE_DOMOTICZ_NO_HTTP  0
-#endif
-
-#if FEATURE_DOMOTICZ_NO_HTTP  // Move Domoticz enabling logic together, without HTTP controllers
-  #ifndef FEATURE_DOMOTICZ
-    #define FEATURE_DOMOTICZ  1
-  #endif
+#if FEATURE_NO_HTTP_CLIENT  // Disable HTTP features
   // Disable HTTP related Controllers/features
-  #ifdef USES_C001
-    #undef USES_C001   // NO Domoticz HTTP
-  #endif
-  #ifdef USES_C008
-    #undef USES_C008   // NO Generic HTTP
-  #endif
   #ifdef FEATURE_SEND_TO_HTTP
     #undef FEATURE_SEND_TO_HTTP
   #endif
   #define FEATURE_SEND_TO_HTTP  0 // Disabled
-
-  // Enable other required components
-  #ifndef USES_C002
-    #define USES_C002   // Domoticz MQTT
-  #endif
-  #ifndef USES_P029
-    #define USES_P029   // Output
-  #endif
 #endif
 
 
