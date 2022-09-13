@@ -446,7 +446,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESPEASY_NOW_ENABLED:        return jsonBool(Settings.UseESPEasyNow());
     case LabelType::TEMP_DISABLE_ESPEASY_NOW:   return jsonBool(temp_disable_EspEasy_now_timer != 0);
     case LabelType::ESPEASY_NOW_FORCED_CHANNEL: return String(Settings.ForceESPEasyNOWchannel);
-    case LabelType::ESPEASY_NOW_CHANNEL:        return String(WiFi.channel());  // FIXME TD-er: Must send intended channel and what to do when mesh is off?
+    case LabelType::ESPEASY_NOW_CHANNEL:        return String(Nodes.getESPEasyNOW_channel());  // FIXME TD-er: Must send intended channel and what to do when mesh is off?
     case LabelType::ESPEASY_NOW_MQTT:           return jsonBool(Nodes.getDistance() < 255); // FIXME TD-er: update this when definition of "distance" no longer reflects presence of connected MQTT broker
     case LabelType::ESPEASY_NOW_DISTANCE:       return String(Nodes.getDistance());
 #endif

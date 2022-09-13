@@ -347,11 +347,11 @@ const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enum
     case Enum::ISWIFI:             return F("%iswifi%");
 
     #ifdef USES_ESPEASY_NOW
-    case Enum::ESPEASY_NOW_ENABLED:  return F("%mesh_enabled");
-    case Enum::ESPEASY_NOW_CHANNEL:  return F("%mesh_ch");
-    case Enum::ESPEASY_NOW_MQTT:     return F("%mesh_mqtt");
-    case Enum::ESPEASY_NOW_DISTANCE: return F("%mesh_dist");
-    case Enum::ESPEASY_NOW_FORCED_CHANNEL:  return F("%mesh_ch_forced");
+    case Enum::ESPEASY_NOW_ENABLED:         return F("%mesh_enabled");
+    case Enum::ESPEASY_NOW_CHANNEL:         return F("%mesh_ch");
+    case Enum::ESPEASY_NOW_MQTT:            return F("%mesh_mqtt");
+    case Enum::ESPEASY_NOW_DISTANCE:        return F("%mesh_dist");
+    case Enum::ESPEASY_NOW_FORCED_CHANNEL:  return F("%mesh_forced_ch");
     #endif
 
     #if FEATURE_ETHERNET

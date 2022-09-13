@@ -10,6 +10,7 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
+#include "../Globals/Nodes.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
@@ -1117,12 +1118,12 @@ void setAPinternal(bool enable)
     }
 
     int channel = 1;
-    if (WifiIsSTA(WiFi.getMode())) {
+    if (WifiIsSTA(WiFi.getMode()) && WiFiConnected()) {
       channel = WiFi.channel();
     } else {
       #ifdef USES_ESPEASY_NOW
-      if (Settings.UseESPEasyNow() && Settings.ForceESPEasyNOWchannel != 0) {
-        channel = Settings.ForceESPEasyNOWchannel;
+      if (Settings.UseESPEasyNow()) {
+        channel = Nodes.getESPEasyNOW_channel();
       }
       #endif
     }
@@ -1196,8 +1197,12 @@ void setWifiMode(WiFiMode_t wifimode) {
     if (WiFiEventData.usedChannel != 0) {
       APchannel = WiFiEventData.usedChannel;
     }
+    #ifdef USES_ESPEASY_NOW
+    else if (Settings.UseESPEasyNow()) {
+      APchannel = Nodes.getESPEasyNOW_channel();
+    }
+    #endif
   }
-
 
   if (cur_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();

@@ -548,7 +548,7 @@ void processProbeRequestAPmode() {
     // FIXME TD-er: Must create an answer for ESPEasy-NOW node discovery
     #ifdef USES_ESPEASY_NOW
     if (Settings.UseESPEasyNow()) {
-      ESPEasy_now_handler.sendDiscoveryAnnounce(mac, WiFiEventData.usedChannel);
+      ESPEasy_now_handler.sendDiscoveryAnnounce(mac, Nodes.getESPEasyNOW_channel());
     }
     #endif
   }

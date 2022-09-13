@@ -71,6 +71,9 @@ bool ESPEasy_now_peermanager_t::addPeer(const MAC_address& mac, int channel, con
         }
       }
     } else {
+      // Peer exists, but add it anyway to make sure the channel is updated.
+      WifiEspNow.addPeer(mac.mac, channel);
+
       // Move the MAC address to the back of the list as it is actively used
       if (activePeers.back() != mac) {
         auto it    = activePeers.begin();

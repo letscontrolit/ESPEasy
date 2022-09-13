@@ -773,7 +773,7 @@ void ESPEasy_now_handler_t::sendTraceRoute()
     // Since we're the end node, claim highest success rate
     thisTraceRoute.setSuccessRate_last_node(Settings.Unit, 255);
  
-    int channel = WiFiEventData.usedChannel;
+    int channel = Nodes.getESPEasyNOW_channel();
     if (channel == 0) {
       channel = WiFi.channel();
     }
@@ -787,7 +787,8 @@ void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& 
 {
   for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
     if (it->second.getAge() > ESPEASY_NOW_SINCE_LAST_BROADCAST) {
-      sendTraceRoute(it->second.ESPEasy_Now_MAC(), traceRoute, channel);
+      const int peer_channel = it->second.channel == 0 ? channel : it->second.channel;
+      sendTraceRoute(it->second.ESPEasy_Now_MAC(), traceRoute, peer_channel);
     }
   }
 
