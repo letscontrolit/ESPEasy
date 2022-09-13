@@ -141,7 +141,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
 
             if ((nullptr != P052_data) && P052_data->isInitialized()) {
               P052_data->modbus.writeSingleRegister(0x18, relaystatus);
-              addLog(LOG_LEVEL_INFO, String(F("Senseair command: relay=")) + param1);
+              addLog(LOG_LEVEL_INFO, concat(F("Senseair command: relay="), param1));
             }
           }
         }

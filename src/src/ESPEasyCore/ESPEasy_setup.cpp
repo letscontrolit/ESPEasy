@@ -138,7 +138,9 @@ void ESPEasy_setup()
 
   initWiFi();
 
+#ifndef BUILD_MINIMAL_OTA
   run_compiletime_checks();
+#endif
 #ifdef ESP8266
 
   //  ets_isr_attach(8, sw_watchdog_callback, nullptr);  // Set a callback for feeding the watchdog.
@@ -374,10 +376,11 @@ void ESPEasy_setup()
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
+# ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
   }
-
+#endif
 
   timermqtt_interval      = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();

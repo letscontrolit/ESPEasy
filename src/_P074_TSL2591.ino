@@ -187,16 +187,12 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
           UserVar[event->BaseVarIndex + 3] = ir;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("TSL2591: Lux: ");
-            log += toString(lux);
-            log += F(" Full: ");
-            log += String(full);
-            log += F(" Visible: ");
-            log += String(visible);
-            log += F(" IR: ");
-            log += String(ir);
-            log += F(" duration: ");
-            log += P074_data->duration;
+            String log;
+            log += concat(F("TSL2591: Lux: "), toString(lux));
+            log += concat(F(" Full: "), full);
+            log += concat(F(" Visible: "), visible);
+            log += concat(F(" IR: "), ir);
+            log += concat(F(" duration: "), P074_data->duration);
             addLogMove(LOG_LEVEL_INFO, log);
           }
 

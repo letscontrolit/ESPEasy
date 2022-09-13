@@ -26,6 +26,14 @@ Supported hardware
 
 |P020_usedby|
 
+Sensor
+^^^^^^
+
+See: :ref:`SerialHelper_page`
+
+
+**TODO**: Complete this documentation...
+
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
 

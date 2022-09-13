@@ -407,6 +407,15 @@ This should best only be enabled if the configuration, and other files like rule
 
 NB: If the OTA update is bigger than available flash + file-system size, the OTA update will fail, but as the file-system is already overwritten, any configuration and files are overwritten irreversibly!
 
+Web light/dark mode
+^^^^^^^^^^^^^^^^^^^
+
+Added: 2022-09-05
+
+When using Dark-mode as an Operating System or Web-browser setting, the ESPEasy Web interface defaults to using a Dark theme as well. For those that prefer to use non-dark mode, or use ESPEasy in dark mode while the OS/browser is not configured that way, this can be selected here.
+
+NB: If this option is not available, the regular non-dark mode will be used.
+
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
 
