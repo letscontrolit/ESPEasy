@@ -43,20 +43,18 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
-# define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
+# define ADAGFX_PARSE_MAX_ARGS        7     // Maximum number of arguments needed and supported (corrected)
 # ifndef ADAGFX_ARGUMENT_VALIDATION
-#  define ADAGFX_ARGUMENT_VALIDATION  1 // Validate command arguments
+#  define ADAGFX_ARGUMENT_VALIDATION  1     // Validate command arguments
 # endif // ifndef ADAGFX_ARGUMENT_VALIDATION
 # ifndef ADAGFX_USE_ASCIITABLE
-#  define ADAGFX_USE_ASCIITABLE       1 // Enable 'asciitable' command (useful for debugging/development)
+#  define ADAGFX_USE_ASCIITABLE       1     // Enable 'asciitable' command (useful for debugging/development)
 # endif // ifndef ADAGFX_USE_ASCIITABLE
 # ifndef ADAGFX_SUPPORT_7COLOR
-
-// #  define ADAGFX_SUPPORT_7COLOR       1  // Do we support 7-Color displays?
+#  define ADAGFX_SUPPORT_7COLOR       0     // Do we support 7-Color displays?
 # endif // ifndef ADAGFX_SUPPORT_7COLOR
 # ifndef ADAGFX_SUPPORT_8and16COLOR
-
-// #  define ADAGFX_SUPPORT_8and16COLOR  1  // Do we support 8 and 16-Color displays?
+#  define ADAGFX_SUPPORT_8and16COLOR  0     // Do we support 8 and 16-Color displays?
 # endif // ifndef ADAGFX_SUPPORT_8and16COLOR
 # ifndef ADAGFX_FONTS_INCLUDED
 #  define ADAGFX_FONTS_INCLUDED       1     // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
@@ -180,12 +178,14 @@
 #  ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#  ifndef ADAGFX_SUPPORT_7COLOR
+#  if !ADAGFX_SUPPORT_7COLOR
+#   undef ADAGFX_SUPPORT_7COLOR
 #   define ADAGFX_SUPPORT_7COLOR       1
-#  endif // ifndef ADAGFX_SUPPORT_7COLOR
-#  ifndef ADAGFX_SUPPORT_8and16COLOR
+#  endif // if !ADAGFX_SUPPORT_7COLOR
+#  if !ADAGFX_SUPPORT_8and16COLOR
+#   undef ADAGFX_SUPPORT_8and16COLOR
 #   define ADAGFX_SUPPORT_8and16COLOR  1
-#  endif // ifndef ADAGFX_SUPPORT_8and16COLOR
+#  endif // if !ADAGFX_SUPPORT_8and16COLOR
 # endif  // ifdef PLUGIN_SET_MAX
 
 # define ADAGFX_PARSE_PREFIX      F("~")              // Subcommand-trigger prefix and postfix strings
@@ -275,12 +275,12 @@ enum class AdaGFXColorDepth : uint16_t {
   EightColor   = 8u,          // 8 regular colors
   SixteenColor = 16u,         // 16 colors
   # endif // if ADAGFX_SUPPORT_8and16COLOR
-  FullColor    = 65535u       // 65535 colors (max. supported by RGB565)
+  FullColor = 65535u          // 65535 colors (max. supported by RGB565)
 };
 
 # if ADAGFX_ENABLE_BUTTON_DRAW
 
-// Only bits 0..3 can be used, masked with: 0x0F
+// Only bits 0..3 can be used, masked with: 0x0F, max possible values: 16
 // stored combined with Button_layout_e value
 enum class Button_type_e : uint8_t {
   None       = 0x00,
@@ -291,10 +291,9 @@ enum class Button_type_e : uint8_t {
   ArrowUp    = 0x05,
   ArrowRight = 0x06,
   ArrowDown  = 0x07,
-  Button_MAX = 8u // must be last value in enum, max possible values: 16
 };
 
-// Only bits 4..7 can be used, masked with: 0xF0
+// Only bits 4..7 can be used, masked with: 0xF0, max possible values: 16
 // stored combined with Button_type_e value
 enum class Button_layout_e : uint8_t {
   CenterAligned      = 0x00,
@@ -307,12 +306,11 @@ enum class Button_layout_e : uint8_t {
   RightBottomAligned = 0x70,
   LeftBottomAligned  = 0x80,
   NoCaption          = 0x90,
-  Bitmap             = 0xA0,
+  #  if ADAGFX_ENABLE_BMP_DISPLAY
+  Bitmap = 0xA0,
+  #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
   #  if ADAGFX_ENABLE_BUTTON_SLIDER
-  Slider        = 0xB0,
-  Alignment_MAX = 12u // options-count, max possible values: 16
-  #  else // if ADAGFX_ENABLE_BUTTON_SLIDER
-  Alignment_MAX = 11u // options-count, max possible values: 16
+  Slider = 0xB0,
   #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
 };
 
@@ -489,7 +487,7 @@ public:
                        const int16_t& h,
                        int16_t        windowId = -1,
                        const int8_t & rotation = -1);
-  bool deleteWindow(const uint8_t& windowId);
+  bool     deleteWindow(const uint8_t& windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   uint16_t getTextSize(const String& text,

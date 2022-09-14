@@ -5,9 +5,9 @@
 
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/Markup_Forms.h"
-# if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+# if FEATURE_SD && ADAGFX_ENABLE_BMP_DISPLAY
 #  include <SD.h>
-# endif // if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+# endif // if FEATURE_SD && ADAGFX_ENABLE_BMP_DISPLAY
 
 # if ADAGFX_FONTS_INCLUDED
 #  include "../Static/Fonts/Seven_Segment24pt7b.h"
@@ -116,7 +116,6 @@ const __FlashStringHelper* toString(const Button_type_e button) {
     case Button_type_e::ArrowUp: return F("Arrow, up");
     case Button_type_e::ArrowRight: return F("Arrow, right");
     case Button_type_e::ArrowDown: return F("Arrow, down");
-    case Button_type_e::Button_MAX: break;
   }
   return F("Unsupported!");
 }
@@ -136,11 +135,12 @@ const __FlashStringHelper* toString(const Button_layout_e layout) {
     case Button_layout_e::RightBottomAligned: return F("Right-Bottom-aligned");
     case Button_layout_e::LeftBottomAligned: return F("Left-Bottom-aligned");
     case Button_layout_e::NoCaption: return F("No Caption");
+    #  if ADAGFX_ENABLE_BMP_DISPLAY
     case Button_layout_e::Bitmap: return F("Bitmap image");
+    #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
     #  if ADAGFX_ENABLE_BUTTON_SLIDER
     case Button_layout_e::Slider: return F("Slide control");
     #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
-    case Button_layout_e::Alignment_MAX: break;
   }
   return F("Unsupported!");
 }
@@ -152,21 +152,20 @@ const __FlashStringHelper* toString(const Button_layout_e layout) {
  ****************************************************************************************/
 void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                              uint8_t                    selectedIndex) {
-  const int textModeCount                             = static_cast<int>(AdaGFXTextPrintMode::MAX);
-  const __FlashStringHelper *textModes[textModeCount] = { // Be sure to use all available modes from enum!
+  const __FlashStringHelper *textModes[] = { // Be sure to use all available modes from enum!
     toString(AdaGFXTextPrintMode::ContinueToNextLine),
     toString(AdaGFXTextPrintMode::TruncateExceedingMessage),
     toString(AdaGFXTextPrintMode::ClearThenTruncate),
     toString(AdaGFXTextPrintMode::TruncateExceedingCentered),
   };
-  const int textModeOptions[textModeCount] = {
+  const int textModeOptions[] = {
     static_cast<int>(AdaGFXTextPrintMode::ContinueToNextLine),
     static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage),
     static_cast<int>(AdaGFXTextPrintMode::ClearThenTruncate),
     static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingCentered),
   };
 
-  addFormSelector(F("Text print Mode"), id, textModeCount, textModes, textModeOptions, selectedIndex);
+  addFormSelector(F("Text print Mode"), id, sizeof(textModeOptions) / sizeof(int), textModes, textModeOptions, selectedIndex);
 }
 
 void AdaGFXFormColorDepth(const __FlashStringHelper *id,
@@ -1646,10 +1645,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             nParams[2] += w2 / 2;                     // A little margin from left
             nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
             break;
+          #  if ADAGFX_ENABLE_BMP_DISPLAY
           case Button_layout_e::Bitmap:
-          {                                           // Use ON/OFF caption to specify (full) bitmap filename
-            #  if ADAGFX_ENABLE_BMP_DISPLAY
-
+          {                 // Use ON/OFF caption to specify (full) bitmap filename
             if (!newString.isEmpty()) {
               int offX = 0; // Allow optional arguments for x and y offset values, usage:
               int offY = 0; // [x,[y,]]filename.bmp
@@ -1666,18 +1664,16 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                 }
               }
               success = showBmp(newString, nParams[2] + _xo + offX, nParams[3] + _yo + offY);
-            } else
-            #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
-            {
+            } else {
               success = false;
             }
             break;
           }
+          #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
           case Button_layout_e::NoCaption:
           #  if ADAGFX_ENABLE_BUTTON_SLIDER
           case Button_layout_e::Slider: // Nothing to do here (yet)
           #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
-          case Button_layout_e::Alignment_MAX:
             break;
         }
 
@@ -1685,7 +1681,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             #  if ADAGFX_ENABLE_BUTTON_SLIDER
             && (buttonLayout != Button_layout_e::Slider)
             #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
-            && (buttonLayout != Button_layout_e::Bitmap)) {
+            #  if ADAGFX_ENABLE_BMP_DISPLAY
+            && (buttonLayout != Button_layout_e::Bitmap)
+            #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+            ) {
           // Set position and colors, then print
           _display->setCursor(nParams[2] + _xo, nParams[3] + _yo);
           _display->setTextColor(textColor, textColor); // transparent bg results in button color
@@ -1921,13 +1920,13 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.equals(F("win"))) {          // win: get current window id
+  if (command.equals(F("win"))) {     // win: get current window id
     #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
     string  = getWindow();
     success = true;
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   } else if (command.equals(F("iswin"))) { // iswin: check if windows exists
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW      // if feature enabled
     command = parseString(string, 2);
     int win = 0;
 
@@ -1936,11 +1935,11 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     } else {
       string = '0';
     }
-    success = true;                     // Always correct, just return 'false' if wrong
+    success = true;                          // Always correct, just return 'false' if wrong
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   } else if ((command.equals(F("width"))) || // width/height: get window width or height
              (command.equals(F("height")))) {
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW   // if feature enabled
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW        // if feature enabled
     uint16_t w = 0, h = 0;
     getWindowLimits(w, h);
 
@@ -2044,7 +2043,6 @@ void AdafruitGFX_helper::drawButtonShape(const Button_type_e& buttonType,
       break;
     }
     case Button_type_e::None:
-    case Button_type_e::Button_MAX:
       break;
   }
 }
