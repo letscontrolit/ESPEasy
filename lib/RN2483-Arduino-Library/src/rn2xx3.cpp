@@ -34,7 +34,7 @@ bool rn2xx3::getAsyncMode() const {
 bool rn2xx3::autobaud()
 {
   // FIXME TD-er: Must fix this, as it is not working well.
-  String response = "";
+  String response;
 
   // Try a maximum of 10 times with a 1 second delay
   for (uint8_t i = 0; i < 10 && response.length() == 0; i++)
@@ -243,9 +243,9 @@ RN2xx3_datatypes::Model rn2xx3::moduleType()
   return _rn2xx3_handler.moduleType();
 }
 
-bool rn2xx3::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
+bool rn2xx3::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp, uint32_t rx2_freq)
 {
-  return _rn2xx3_handler.setFrequencyPlan(fp);
+  return _rn2xx3_handler.setFrequencyPlan(fp, rx2_freq);
 }
 
 bool rn2xx3::setTTNstack(RN2xx3_datatypes::TTN_stack_version version)

@@ -1,7 +1,8 @@
 #include "../WebServer/SysInfoPage.h"
 
-#if defined(WEBSERVER_SYSINFO) || defined(SHOW_SYSINFO_JSON)
+#if defined(WEBSERVER_SYSINFO) || SHOW_SYSINFO_JSON
 
+#include "../WebServer/AccessControl.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -52,7 +53,7 @@
 
 
 
-#ifdef SHOW_SYSINFO_JSON
+#if SHOW_SYSINFO_JSON
 // ********************************************************************************
 // Web Interface sysinfo page
 // ********************************************************************************
@@ -108,14 +109,14 @@ void handle_sysinfo_json() {
   json_close();
 
   json_open(false, F("boot"));
-  json_prop(F("last_cause"), getLastBootCauseString());
-  json_number(F("counter"), String(RTC.bootCounter));
-  json_prop(F("reset_reason"), getResetReasonString());
+  json_prop(F("last_cause"),    getLastBootCauseString());
+  json_number(F("counter"),     String(RTC.bootCounter));
+  json_prop(F("reset_reason"),  getResetReasonString());
   json_close();
 
   json_open(false, F("wifi"));
-  json_prop(F("type"), toString(getConnectionProtocol()));
-  json_number(F("rssi"), String(WiFi.RSSI()));
+  json_prop(F("type"),          toString(getConnectionProtocol()));
+  json_number(F("rssi"),        String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
   json_prop(F("ip"),            getValue(LabelType::IP_ADDRESS));
   json_prop(F("subnet"),        getValue(LabelType::IP_SUBNET));
@@ -148,13 +149,13 @@ void handle_sysinfo_json() {
 # endif // if FEATURE_ETHERNET
 
   json_open(false, F("firmware"));
-  json_prop(F("build"),       getSystemBuildString());
-  json_prop(F("notes"),       F(BUILD_NOTES));
-  json_prop(F("libraries"),   getSystemLibraryString());
-  json_prop(F("git_version"), getValue(LabelType::GIT_BUILD));
-  json_prop(F("plugins"),     getPluginDescriptionString());
-  json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
-  json_number(F("md5_check"), String(CRCValues.checkPassed()));
+  json_prop(F("build"),          getSystemBuildString());
+  json_prop(F("notes"),          F(BUILD_NOTES));
+  json_prop(F("libraries"),      getSystemLibraryString());
+  json_prop(F("git_version"),    getValue(LabelType::GIT_BUILD));
+  json_prop(F("plugins"),        getPluginDescriptionString());
+  json_prop(F("md5"),            String(CRCValues.compileTimeMD5[0], HEX));
+  json_number(F("md5_check"),    String(CRCValues.checkPassed()));
   json_prop(F("build_time"),     get_build_time());
   json_prop(F("filename"),       getValue(LabelType::BINARY_FILENAME));
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
@@ -162,46 +163,37 @@ void handle_sysinfo_json() {
   json_close();
 
   json_open(false, F("esp"));
-  json_prop(F("chip_id"), getValue(LabelType::ESP_CHIP_ID));
-  json_number(F("cpu"), getValue(LabelType::ESP_CHIP_FREQ));
-  json_prop(F("board"), get_board_name());
+  json_prop(F("chip_id"),        getValue(LabelType::ESP_CHIP_ID));
+  json_number(F("cpu"),          getValue(LabelType::ESP_CHIP_FREQ));
+#ifdef ESP32
+  json_number(F("xtal_freq"),    getValue(LabelType::ESP_CHIP_XTAL_FREQ));
+  json_number(F("abp_freq"),     getValue(LabelType::ESP_CHIP_APB_FREQ));
+#endif
+  json_prop(F("board"),          getValue(LabelType::ESP_BOARD_NAME));
   json_close();
-  json_open(false, F("storage"));
 
-  # if defined(ESP8266)
-  uint32_t flashChipId = getFlashChipId();
+  json_open(false, F("storage"));
 
   // Set to HEX may be something like 0x1640E0.
   // Where manufacturer is 0xE0 and device is 0x4016.
-  json_number(F("chip_id"), String(flashChipId));
-
-  if (flashChipVendorPuya())
-  {
+  json_number(F("chip_id"), getValue(LabelType::FLASH_CHIP_ID));
+  if (flashChipVendorPuya()) {
     if (puyaSupport()) {
       json_prop(F("vendor"), F("puya, supported"));
     } else {
       json_prop(F("vendor"), F("puya, error"));
     }
+  } else {
+    json_prop(F("vendor"),        getValue(LabelType::FLASH_CHIP_VENDOR));
   }
-  uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-  json_number(F("device"),    String(flashDevice));
-  # endif // if defined(ESP8266)
-  json_number(F("real_size"), String(getFlashRealSizeInBytes() / 1024));
-  json_number(F("ide_size"),  String(ESP.getFlashChipSize() / 1024));
+  json_number(F("device"),        getValue(LabelType::FLASH_CHIP_MODEL));
+  json_number(F("real_size"),     String(getFlashRealSizeInBytes() / 1024));
+  json_number(F("ide_size"),      String(ESP.getFlashChipSize() / 1024));
 
   // Please check what is supported for the ESP32
-  json_number(F("flash_speed"), getValue(LabelType::FLASH_CHIP_SPEED));
+  json_number(F("flash_speed"),   getValue(LabelType::FLASH_CHIP_SPEED));
 
-  FlashMode_t ideMode = ESP.getFlashChipMode();
-
-  switch (ideMode) {
-    case FM_QIO:   json_prop(F("mode"), F("QIO"));  break;
-    case FM_QOUT:  json_prop(F("mode"), F("QOUT")); break;
-    case FM_DIO:   json_prop(F("mode"), F("DIO"));  break;
-    case FM_DOUT:  json_prop(F("mode"), F("DOUT")); break;
-    default:
-      json_prop(F("mode"), F("Unknown")); break;
-  }
+  json_prop(F("mode"),            getFlashChipMode());
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
   json_number(F("flash_counter"), String(RTC.flashCounter));
@@ -411,9 +403,9 @@ void handle_sysinfo_Ethernet() {
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3);
 
-  # if FEATURE_ETHERNET
+  # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
   addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  # endif // if FEATURE_ETHERNET
+  # endif 
 
   addRowLabelValue(LabelType::IP_CONFIG);
   addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
@@ -489,6 +481,10 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
 #endif
   addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
+#ifdef USES_ESPEASY_NOW
+  addRowLabelValue(LabelType::USE_ESPEASY_NOW);
+  addRowLabelValue(LabelType::FORCE_ESPEASY_NOW_CHANNEL);
+#endif
   addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
 #endif
@@ -565,9 +561,14 @@ void handle_sysinfo_ESP_Board() {
     addHtml(')');
   }
 
-  addRowLabel(LabelType::ESP_CHIP_FREQ);
-  addHtmlInt(ESP.getCpuFreqMHz());
+  addRowLabelValue(LabelType::ESP_CHIP_FREQ);
   addHtml(F(" MHz"));
+#ifdef ESP32
+  addRowLabelValue(LabelType::ESP_CHIP_XTAL_FREQ);
+  addHtml(F(" MHz"));
+  addRowLabelValue(LabelType::ESP_CHIP_APB_FREQ);
+  addHtml(F(" MHz"));
+#endif
 
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
 
@@ -628,18 +629,7 @@ void handle_sysinfo_Storage() {
   addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
   addHtml(F(" MHz"));
 
-  FlashMode_t ideMode = ESP.getFlashChipMode();
-  addRowLabel(LabelType::FLASH_IDE_MODE);
-  {
-    switch (ideMode) {
-      case FM_QIO:   addHtml(F("QIO"));  break;
-      case FM_QOUT:  addHtml(F("QOUT")); break;
-      case FM_DIO:   addHtml(F("DIO"));  break;
-      case FM_DOUT:  addHtml(F("DOUT")); break;
-      default:
-        addHtml(F("Unknown")); break;
-    }
-  }
+  addRowLabelValue(LabelType::FLASH_IDE_MODE);
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
   {

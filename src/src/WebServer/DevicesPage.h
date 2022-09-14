@@ -6,16 +6,11 @@
 
 #ifdef WEBSERVER_DEVICES
 
-#include "../Globals/Nodes.h"
-#include "../Globals/Device.h"
-#include "../Globals/CPlugins.h"
-#include "../Globals/Plugins.h"
+#include "../DataTypes/DeviceIndex.h"
+#include "../DataTypes/TaskIndex.h"
+#include "../DataTypes/PluginID.h"
 
 #include "../Static/WebStaticData.h"
-
-#include "../Helpers/_Plugin_SensorTypeHelper.h"
-#include "../Helpers/I2C_Plugin_Helper.h"
-#include "../Helpers/StringGenerator_GPIO.h"
 
 
 void handle_devices();

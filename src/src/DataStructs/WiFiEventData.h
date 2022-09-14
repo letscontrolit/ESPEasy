@@ -20,6 +20,8 @@
 # include <ESP8266WiFiType.h>
 #endif // ifdef ESP8266
 
+#include <map>
+
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
 
@@ -56,6 +58,8 @@ struct WiFiEventData_t {
   void setAuthMode(uint8_t newMode);
 
   String ESPeasyWifiStatusToString() const;
+
+  uint32_t getSuggestedTimeout(int index, uint32_t minimum_timeout) const;
 
 
   // WiFi related data
@@ -113,6 +117,8 @@ struct WiFiEventData_t {
   bool performedClearWiFiCredentials = false;
 
   unsigned long connectionFailures = 0;
+
+  std::map<int, uint32_t> connectDurations;
 
 
 };

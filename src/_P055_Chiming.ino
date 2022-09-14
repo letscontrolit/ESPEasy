@@ -219,7 +219,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
 
         String command = parseString(string, 1);
 
-        if (command == F("chime"))
+        if (command.equals(F("chime")))
         {
           String param = parseStringToEndKeepCase(string, 2);
           if (param.length() > 0) {
@@ -227,7 +227,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
           }
           success = true;
         }
-        if (command == F("chimeplay"))
+        if (command.equals(F("chimeplay")))
         {
           String name = parseString(string, 2);
           if (name.length() > 0) {
@@ -237,7 +237,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
           }
           success = true;
         }
-        if (command == F("chimesave"))
+        if (command.equals(F("chimesave")))
         {
           String name = parseString(string, 2);
           String param = parseStringToEndKeepCase(string, 3);
@@ -316,11 +316,14 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
           if (! Plugin_055_IsEmptyFIFO())
           {
             char c = Plugin_055_ReadFIFO();
-
-            String log = F("Chime: Process '");
-            log += c;
-            log += '\'';
-            addLogMove(LOG_LEVEL_DEBUG, log);
+            # ifndef BUILD_NO_DEBUG
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              String log = F("Chime: Process '");
+              log += c;
+              log += '\'';
+              addLogMove(LOG_LEVEL_DEBUG, log);
+            }
+            #endif
 
             switch (c)
             {
