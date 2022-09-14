@@ -14,7 +14,6 @@ const __FlashStringHelper* toString(Touch_action_e action) {
     case Touch_action_e::DecrementGroup: return F("Previous Group");
     case Touch_action_e::IncrementPage: return F("Next Page (+10)");
     case Touch_action_e::DecrementPage: return F("Previous Page (-10)");
-    case Touch_action_e::TouchAction_MAX: break;
   }
   return F("Unsupported!");
 }
@@ -984,7 +983,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
   {
     String parsed;
     addRowLabel(F("Default On/Off button colors"));
-    html_table(EMPTY_STRING, false); // Sub-table
+    html_table(F("sub"), false); // Sub-table
     html_table_header(F("ON color"));
     html_table_header(F("OFF color"));
     html_table_header(F("Border color"));
@@ -1084,10 +1083,9 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     addFormSubHeader(F("Touch objects"));
 
     {
-      # if !TOUCH_FEATURE_EXTENDED_TOUCH
       addRowLabel(F("Object"));
-      # endif // if !TOUCH_FEATURE_EXTENDED_TOUCH
-      html_table(F("multi2row"), false); // Sub-table with alternating highlight per 2 rows
+
+      html_table(F("multirow tworow"), false); // Sub-table with alternating highlight per 2 rows
       html_table_header(F("&nbsp;#&nbsp;"));
       html_table_header(F("On"));
       html_table_header(F("Objectname"));
@@ -1158,7 +1156,9 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       toString(Button_layout_e::LeftBottomAligned),
       toString(Button_layout_e::RightBottomAligned),
       toString(Button_layout_e::NoCaption),
+      #  if ADAGFX_ENABLE_BMP_DISPLAY
       toString(Button_layout_e::Bitmap),
+      #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
       #  if ADAGFX_ENABLE_BUTTON_SLIDER
       toString(Button_layout_e::Slider),
       #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
@@ -1175,7 +1175,9 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       static_cast<int>(Button_layout_e::LeftBottomAligned),
       static_cast<int>(Button_layout_e::RightBottomAligned),
       static_cast<int>(Button_layout_e::NoCaption),
+      #  if ADAGFX_ENABLE_BMP_DISPLAY
       static_cast<int>(Button_layout_e::Bitmap),
+      #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
       #  if ADAGFX_ENABLE_BUTTON_SLIDER
       static_cast<int>(Button_layout_e::Slider),
       #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
@@ -1242,7 +1244,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       html_TD(); // (on/off) button (type)
       # if TOUCH_FEATURE_EXTENDED_TOUCH
       addSelector(getPluginCustomArgName(objectNr + 800),
-                  static_cast<int>(Button_type_e::Button_MAX),
+                  sizeof(buttonTypeValues) / sizeof(int),
                   buttonTypeOptions,
                   buttonTypeValues,
                   nullptr,
@@ -1253,7 +1255,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                   );
       html_TD(); // button alignment
       addSelector(getPluginCustomArgName(objectNr + 900),
-                  static_cast<int>(Button_layout_e::Alignment_MAX),
+                  sizeof(buttonLayoutValues) / sizeof(int),
                   buttonLayoutOptions,
                   buttonLayoutValues,
                   nullptr,
@@ -1314,7 +1316,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                  );
       html_TD(); // button action
       addSelector(getPluginCustomArgName(objectNr + 2000),
-                  static_cast<int>(Touch_action_e::TouchAction_MAX),
+                  sizeof(touchActionValues) / sizeof(int),
                   touchActionOptions,
                   touchActionValues,
                   nullptr,
@@ -2269,7 +2271,6 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
           eventCommand += -5;
           break;
         case Touch_action_e::Default:
-        case Touch_action_e::TouchAction_MAX:
           eventCommand += -1; // Ignore
           break;
       }
@@ -2314,7 +2315,6 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
             decrementButtonPage(event);
             break;
           case Touch_action_e::Default:
-          case Touch_action_e::TouchAction_MAX: // no action
             break;
         }
         String log = F("TOUCH event: ");

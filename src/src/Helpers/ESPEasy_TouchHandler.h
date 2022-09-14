@@ -236,7 +236,7 @@ struct tTouchObjects
   String captionOff;
 };
 
-// Touch actions
+// Touch actions, max 16!
 enum class Touch_action_e : uint8_t {
   Default         = 0u,
   ActivateGroup   = 1u,
@@ -244,7 +244,6 @@ enum class Touch_action_e : uint8_t {
   DecrementGroup  = 3u,
   IncrementPage   = 4u,
   DecrementPage   = 5u,
-  TouchAction_MAX = 6u // Last item is count, max 16!
 };
 
 # if TOUCH_FEATURE_SWIPE
