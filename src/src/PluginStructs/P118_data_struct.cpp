@@ -399,11 +399,18 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
 }
 
 void P118_data_struct::ITHOcheck() {
-  bool _dbgLog = _log && loglevelActiveFor(LOG_LEVEL_DEBUG);
+  bool _dbgLog = _log
+  # ifndef BUILD_NO_DEBUG
+                 && loglevelActiveFor(LOG_LEVEL_DEBUG)
+  # endif // ifndef BUILD_NO_DEBUG
+  ;
+
+  # ifndef BUILD_NO_DEBUG
 
   if (_dbgLog) {
     addLog(LOG_LEVEL_DEBUG, "ITHO: RF signal received"); // All logs statements contain if-statement to disable logging to
   }                                                      // reduce log clutter when many RF sources are present
+  # endif // ifndef BUILD_NO_DEBUG
 
   if (_rf->checkForNewPacket()) {
     IthoCommand cmd = _rf->getLastCommand();
@@ -605,9 +612,12 @@ void P118_data_struct::ITHOcheck() {
       }
     }
 
+    # ifndef BUILD_NO_DEBUG
+
     if (_dbgLog) {
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
+    # endif // ifndef BUILD_NO_DEBUG
   }
 }
 
