@@ -18,6 +18,7 @@
 #include "../Helpers/StringParser.h"
 
 
+#if FEATURE_SEND_TO_HTTP
 const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, const char *Line)
 {
   if (NetworkConnected()) {
@@ -102,3 +103,4 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
   }
   return return_command_failed();
 }
+#endif // FEATURE_SEND_TO_HTTP

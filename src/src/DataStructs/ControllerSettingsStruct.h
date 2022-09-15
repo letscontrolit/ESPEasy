@@ -109,7 +109,9 @@ struct ControllerSettingsStruct
 
   bool      checkHostReachable(bool quick);
 
+  #if FEATURE_HTTP_CLIENT
   bool      connectToHost(WiFiClient& client);
+  #endif // FEATURE_HTTP_CLIENT
 
   bool      beginPacket(WiFiUDP& client);
 
