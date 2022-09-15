@@ -121,11 +121,8 @@ To create/register a plugin, you have to :
 
 #ifdef WEBSERVER_CSS
   #ifndef WEBSERVER_EMBED_CUSTOM_CSS
-    #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
-      #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
-    #endif
-    #ifndef EMBED_ESPEASY_AUTO_MIN_CSS
-      #define EMBED_ESPEASY_AUTO_MIN_CSS
+    #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS
+      #define EMBED_ESPEASY_DEFAULT_MIN_CSS
     #endif
   #endif
 #endif
@@ -175,6 +172,10 @@ To create/register a plugin, you have to :
 
 #if defined(FEATURE_SETTINGS_ARCHIVE) && defined(FORCE_PRE_2_5_0)
   #undef FEATURE_SETTINGS_ARCHIVE
+#endif
+
+#ifndef FEATURE_NO_HTTP_CLIENT
+  #define FEATURE_NO_HTTP_CLIENT  0
 #endif
 
 
@@ -265,13 +266,6 @@ To create/register a plugin, you have to :
   #define CONTROLLER_SET_COLLECTION
   #define NOTIFIER_SET_COLLECTION
   #define PLUGIN_BUILD_NORMAL     // add stable
-
-  #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
-    #undef EMBED_ESPEASY_AUTO_MIN_CSS
-    #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS
-      #define EMBED_ESPEASY_DEFAULT_MIN_CSS
-    #endif
-  #endif
 #endif
 
 #ifdef PLUGIN_BUILD_COLLECTION_B
@@ -383,7 +377,9 @@ To create/register a plugin, you have to :
 //    #define USES_C002   // Domoticz MQTT
 //    #define USES_C005   // Home Assistant (openHAB) MQTT
 //    #define USES_C006   // PiDome MQTT
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C008   // Generic HTTP
+  #endif
 //    #define USES_C009   // FHEM HTTP
 //    #define USES_C010   // Generic UDP
 //    #define USES_C013   // ESPEasy P2P network
@@ -458,9 +454,6 @@ To create/register a plugin, you have to :
         #ifndef WEBSERVER_EMBED_CUSTOM_CSS
           #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
             #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
-          #endif
-          #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
-            #undef EMBED_ESPEASY_AUTO_MIN_CSS
           #endif
         #endif
         #ifdef WEBSERVER_INCLUDE_JS
@@ -1195,14 +1188,18 @@ To create/register a plugin, you have to :
 
 
 #ifdef CONTROLLER_SET_STABLE
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C001   // Domoticz HTTP
+  #endif
     #define USES_C002   // Domoticz MQTT
     #define USES_C003   // Nodo telnet
     #define USES_C004   // ThingSpeak
     #define USES_C005   // Home Assistant (openHAB) MQTT
     #define USES_C006   // PiDome MQTT
     #define USES_C007   // Emoncms
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C008   // Generic HTTP
+  #endif
     #define USES_C009   // FHEM HTTP
     #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
@@ -1288,6 +1285,7 @@ To create/register a plugin, you have to :
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
     #define USES_P105   // AHT10/20/21
+    #define USES_P134   // A02YYUW
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_B
@@ -1844,7 +1842,7 @@ To create/register a plugin, you have to :
 #endif
 
 #if FEATURE_DOMOTICZ  // Move Domoticz enabling logic together
-    #ifndef USES_C001
+    #if !defined(USES_C001) && !FEATURE_NO_HTTP_CLIENT
       #define USES_C001   // Domoticz HTTP
     #endif
     #ifndef USES_C002
@@ -1853,6 +1851,14 @@ To create/register a plugin, you have to :
     #ifndef USES_P029
       #define USES_P029   // Output
     #endif
+#endif
+
+#if FEATURE_NO_HTTP_CLIENT  // Disable HTTP features
+  // Disable HTTP related Controllers/features
+  #ifdef FEATURE_SEND_TO_HTTP
+    #undef FEATURE_SEND_TO_HTTP
+  #endif
+  #define FEATURE_SEND_TO_HTTP  0 // Disabled
 #endif
 
 
@@ -1916,10 +1922,6 @@ To create/register a plugin, you have to :
   #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
     #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
   #endif
-  #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
-    #undef EMBED_ESPEASY_AUTO_MIN_CSS
-  #endif
-
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
@@ -2033,9 +2035,6 @@ To create/register a plugin, you have to :
   #endif
   #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
     #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
-  #endif
-  #ifndef EMBED_ESPEASY_AUTO_MIN_CSS
-    #undef EMBED_ESPEASY_AUTO_MIN_CSS
   #endif
 #endif
 
@@ -2257,6 +2256,19 @@ To create/register a plugin, you have to :
 #define SHOW_SYSINFO_JSON 0
 #endif
 
+
+#ifndef FEATURE_SEND_TO_HTTP
+  #define FEATURE_SEND_TO_HTTP  1 // Enabled by default
+#endif
+
+#ifndef FEATURE_HTTP_CLIENT
+  #define FEATURE_HTTP_CLIENT   0 // Disable by default
+#endif
+
+#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
+  #undef FEATURE_HTTP_CLIENT
+  #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
+#endif
 
 #ifndef FEATURE_AUTO_DARK_MODE
   // #ifdef LIMIT_BUILD_SIZE
