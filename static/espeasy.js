@@ -79,7 +79,7 @@ var commonPlugins = [
   //P124
   "multirelay", "multirelay,on", "multirelay,off", "multirelay,set", "multirelay,get", "multirelay,loop",
   //P126
-  "ShiftOut", "ShiftOut,Set", "ShiftOut,SetNoUpdate", "ShiftOut,Update", "ShiftOut,SetAll", "ShiftOut,SetAllNoUpdate", "ShiftOut,SetAllLow", "ShiftOut,SetChipCount", "ShiftOut,SetHexBin",
+  "ShiftOut", "ShiftOut,Set", "ShiftOut,SetNoUpdate", "ShiftOut,Update", "ShiftOut,SetAll", "ShiftOut,SetAllNoUpdate", "ShiftOut,SetAllLow", "ShiftOut,SetAllHigh", "ShiftOut,SetChipCount", "ShiftOut,SetHexBin",
   //P127
   "cdmrst"
 ];
