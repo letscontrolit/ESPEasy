@@ -1747,7 +1747,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -1990,9 +1990,9 @@ void AdafruitGFX_helper::printText(const char     *string,
     _x = X * (_fontwidth * textSize);                                           // We need this multiple times
 
     if (15 == _lineSpacing) {
-      _y = (Y * (_fontheight * textSize))  + (_heightOffset * textSize);
+      _y = (Y * (_fontheight * textSize)) + (_heightOffset * textSize);
     } else {
-      _y = (Y * (hChar1 + _lineSpacing)); // Apply explicit line spacing
+      _y = (Y * (hChar1 + _lineSpacing)) + _heightOffset; // Apply explicit line spacing
     }
   }
 
