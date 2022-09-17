@@ -17,7 +17,9 @@
 
 # include "src/Helpers/ESPEasy_time_calc.h"
 
+#ifndef BUILD_NO_DEBUG
 # define P003_PULSE_STATS_DEFAULT_LOG_LEVEL  LOG_LEVEL_DEBUG
+#endif
 # define P003_PULSE_STATS_ADHOC_LOG_LEVEL    LOG_LEVEL_INFO
 
 # define PLUGIN_003
@@ -149,7 +151,9 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P003_data) {
         #ifdef PULSE_STATISTIC
+        #ifndef BUILD_NO_DEBUG
         P003_data->pulseHelper.setStatsLogLevel(P003_PULSE_STATS_DEFAULT_LOG_LEVEL);
+        #endif
         #endif
 
         // Restore the total counter from the unused 4th UserVar value.

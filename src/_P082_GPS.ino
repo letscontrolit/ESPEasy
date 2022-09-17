@@ -368,7 +368,9 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         if (P082_data->_lastSentence.substring(0,10).indexOf(F("TXT")) != -1) {
           addLog(LOG_LEVEL_INFO, P082_data->_lastSentence);
         } else {
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, P082_data->_lastSentence);
+          #endif
         }
 # endif // ifdef P082_SEND_GPS_TO_LOG
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis());

@@ -118,7 +118,12 @@ void handle_advanced() {
     Settings.EnableRulesCaching(isFormItemChecked(LabelType::ENABLE_RULES_CACHING));
 //    Settings.EnableRulesEventReorder(isFormItemChecked(LabelType::ENABLE_RULES_EVENT_REORDER)); // TD-er: Disabled for now
 
+#ifndef NO_HTTP_UPDATER
     Settings.AllowOTAUnlimited(isFormItemChecked(LabelType::ALLOW_OTA_UNLIMITED));
+#endif // NO_HTTP_UPDATER
+#if FEATURE_AUTO_DARK_MODE
+    Settings.setCssMode(getFormItemInt(getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE)));
+#endif // FEATURE_AUTO_DARK_MODE
 
     addHtmlError(SaveSettings());
 
@@ -246,6 +251,20 @@ void handle_advanced() {
   addFormNote(F("When enabled, OTA updating can overwrite the filesystem and settings!"));
   addFormNote(F("Requires reboot to activate"));
   # endif // ifndef NO_HTTP_UPDATER
+  #if FEATURE_AUTO_DARK_MODE
+  const __FlashStringHelper * cssModeNames[] = {
+    F("Auto"),
+    F("Light"),
+    F("Dark"),
+  };
+  const int cssModeOptions[] = { 0, 1, 2};
+    addFormSelector(getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+                    getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+                    sizeof(cssModeOptions) / sizeof(int),
+                    cssModeNames,
+                    cssModeOptions,
+                    Settings.getCssMode());
+  #endif // FEATURE_AUTO_DARK_MODE
 
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
@@ -384,6 +403,10 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
 
 void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {
+  #ifdef BUILD_NO_DEBUG
+  if (choice > LOG_LEVEL_INFO) choice = LOG_LEVEL_INFO;
+  #endif
+
   addRowLabel(getLabel(label));
   const __FlashStringHelper * options[LOG_LEVEL_NRELEMENTS + 1];
   int    optionValues[LOG_LEVEL_NRELEMENTS + 1] = { 0 };

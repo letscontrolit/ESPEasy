@@ -115,16 +115,14 @@ Sensor
 ^^^^^^
 
 Serial Port
-"""""""""""
+~~~~~~~~~~~
 
-The configuration of the serial port is the same as with any other sensor using a serial port.
-Only the TX pin on the ESP, connected to the RX pin on the GPS is optional.
-It only needs to be connected if commands have to be sent to the GPS.
+See: :ref:`SerialHelper_page`
 
 The baud rate is not selectable for this plugin, as every plugin on the market does have a default setting of 9600 baud.
 
 PPS pin
-"""""""
+~~~~~~~
 
 
 Current Sensor Data
@@ -140,7 +138,7 @@ Output Configuration
 ^^^^^^^^^^^^^^^^^^^^
 
 Value N
-"""""""
+~~~~~~~
 
 Each of the 4 task values can be set to a specific measurement value.
 
@@ -190,7 +188,7 @@ For a 3D position fix, at least 4 satellites must be tracked.
 If just the bare minimum of satellites is being tracked, the GPS receiver may loose its fix quite often.
 
 Access To All Measurement Values
-""""""""""""""""""""""""""""""""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Added: 2022/05/13
 
@@ -216,7 +214,7 @@ For example, to access the Longitude on a task named ``gps``, one can use ``[gps
 
 
 Distance Update Interval
-""""""""""""""""""""""""
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Normally a task may send new values every set "Interval", or when ``TaskRun`` is called from the rules.
 On mobile units, it may be useful to also trigger sending a new value every N travelled meters.
