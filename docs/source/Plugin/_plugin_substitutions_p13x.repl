@@ -37,6 +37,19 @@
 .. |P133_compileinfo| replace:: `.`
 .. |P133_usedlibraries| replace:: `https://github.com/RAKWireless/RAK12019_LTR390 (modified local copy)`
 
+.. |P134_name| replace:: :cyan:`A02YYUW`
+.. |P134_type| replace:: :cyan:`Distance`
+.. |P134_typename| replace:: :cyan:`Distance - A02YYUW`
+.. |P134_porttype| replace:: `.`
+.. |P134_status| replace:: :yellow:`COLLECTION A`
+.. |P134_github| replace:: P134_A02YYUW.ino
+.. _P134_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P134_A02YYUW.ino
+.. |P134_usedby| replace:: `.`
+.. |P134_shortinfo| replace:: `Ultrasonic distance sensor`
+.. |P134_maintainer| replace:: `tonhuisman`
+.. |P134_compileinfo| replace:: `.`
+.. |P134_usedlibraries| replace:: `ESPEasy Serial`
+
 .. |P135_name| replace:: :cyan:`CO2 SCD4x`
 .. |P135_type| replace:: :cyan:`Gases`
 .. |P135_typename| replace:: :cyan:`Gases - CO2 SCD4x`
