@@ -182,7 +182,7 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
 
     if (hasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
-      int yPos       = 0;                 // Bound to the display
+      uint8_t  yPos  = 1;                 // Bound to the display
       int16_t  dum   = 0;
       uint16_t udum  = 0;
       uint16_t hText = 0;
@@ -300,10 +300,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
     }
 
     if (nullptr != gfxHelper) {
-      String tmp = string;
-
-      // Hand it over after replacing variables
-      success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols, gfxHelper));
+      success = gfxHelper->processCommand(string);
 
       updateFontMetrics();  // Font or color may have changed
 
