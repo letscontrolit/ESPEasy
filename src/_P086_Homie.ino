@@ -180,7 +180,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String command = parseString(string, 1);
-        if (command == F("homievalueset"))
+        if (command.equals(F("homievalueset")))
         {
           const taskVarIndex_t taskVarIndex = event->Par2 - 1;
           const userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;

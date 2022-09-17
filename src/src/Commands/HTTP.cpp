@@ -18,6 +18,7 @@
 #include "../Helpers/StringParser.h"
 
 
+#if FEATURE_SEND_TO_HTTP
 const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, const char *Line)
 {
   if (NetworkConnected()) {
@@ -26,7 +27,7 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
 
     const String arg1 = parseStringKeepCase(Line, 2);
 
-    if (arg1.indexOf('/') != -1) {
+    if (arg1.indexOf(F("://")) != -1) {
       // Full url given
       path = splitURL(arg1, user, pass, host, port, file);
     } else {
@@ -72,12 +73,17 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
     }
 #endif // ifndef BUILD_NO_DEBUG
 
+    // Some servers don't give an ack.
+    // For these it is adviced to uncheck to wait for an acknowledgement.
+    // However the default timeout of 4000 msec is then way too long
+    const int timeout = Settings.SendToHttp_ack() 
+       ? CONTROLLER_CLIENTTIMEOUT_MAX : 1000;
+    // FIXME TD-er: Make sendToHttp timeout a setting.       
+
     int httpCode = -1;
-    WiFiClient client;
     send_via_http(
       F("SendToHTTP"),
-      client,
-      CONTROLLER_CLIENTTIMEOUT_MAX,
+      timeout,
       user,
       pass,
       host,
@@ -97,3 +103,4 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
   }
   return return_command_failed();
 }
+#endif // FEATURE_SEND_TO_HTTP

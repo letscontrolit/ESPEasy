@@ -107,7 +107,8 @@ void log_connecting_fail(const __FlashStringHelper *prefix, int controller_numbe
   }
 }
 
-bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number) {
+bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number, unsigned long connect_start_time) {
+  WiFiEventData.connectDurations[controller_number] = timePassedSince(connect_start_time);
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
@@ -125,26 +126,39 @@ bool count_connection_results(bool success, const __FlashStringHelper *prefix, i
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
 
-  if (!NetworkConnected()) { return false; }
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  if (!NetworkConnected()) { 
+    client.stop();
+    return false; 
+  }
+  // Ignoring the ACK from the server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
 
-  // See: https://github.com/espressif/arduino-esp32/pull/6676
-  client.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
-  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  client.setTimeout(ControllerSettings.ClientTimeout);                // in msec as it should be!
-  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  client.setTimeout(timeout); // in msec as it should be!
   delay(0);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
+
+  const unsigned long connect_start_time = millis();  
   bool success      = ControllerSettings.beginPacket(client);
+  if (!success) {
+    client.stop();
+  }
   const bool result = count_connection_results(
     success,
-    F("UDP  : "), controller_number);
+    F("UDP  : "), 
+    controller_number,
+    connect_start_time);
   STOP_TIMER(TRY_CONNECT_HOST_UDP);
   return result;
 }
 
+#if FEATURE_HTTP_CLIENT
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
 }
@@ -155,25 +169,47 @@ bool try_connect_host(int                        controller_number,
                       const __FlashStringHelper *loglabel) {
   START_TIMER;
 
-  if (!NetworkConnected()) { return false; }
+  if (!NetworkConnected()) { 
+    client.stop();
+    return false;
+  }
 
   // Use WiFiClient class to create TCP connections
   delay(0);
+
+  // Ignoring the ACK from the server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
+
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
-  client.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+  client.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+  Client *pClient = &client;
+  pClient->setTimeout(timeout);
   #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  client.setTimeout(ControllerSettings.ClientTimeout);                // in msec as it should be!
+  client.setTimeout(timeout);                // in msec as it should be!
   #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(loglabel, controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
+
+  const unsigned long connect_start_time = millis();
+
   const bool success = ControllerSettings.connectToHost(client);
+  if (!success) {
+    client.stop();
+  }
   const bool result  = count_connection_results(
     success,
-    loglabel, controller_number);
+    loglabel, 
+    controller_number,
+    connect_start_time);
   STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
 }
@@ -189,16 +225,24 @@ bool client_available(WiFiClient& client) {
 String send_via_http(int                             controller_number,
                      const ControllerSettingsStruct& ControllerSettings,
                      controllerIndex_t               controller_idx,
-                     WiFiClient                    & client,
                      const String                  & uri,
                      const String                  & HttpMethod,
                      const String                  & header,
                      const String                  & postStr,
                      int                           & httpCode) {
+
+  // Ignoring the ACK from the HTTP server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
+
+  const unsigned long connect_start_time = millis();
   const String result = send_via_http(
     get_formatted_Controller_number(controller_number),
-    client,
-    ControllerSettings.ClientTimeout,
+    timeout,
     getControllerUser(controller_idx, ControllerSettings),
     getControllerPass(controller_idx, ControllerSettings),
     ControllerSettings.getHost(),
@@ -217,10 +261,12 @@ String send_via_http(int                             controller_number,
   count_connection_results(
     success,
     F("HTTP  : "),
-    controller_number);
+    controller_number,
+    connect_start_time);
 
   return result;
 }
+#endif // FEATURE_HTTP_CLIENT
 
 
 

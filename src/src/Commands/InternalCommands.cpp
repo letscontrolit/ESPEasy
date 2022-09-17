@@ -430,7 +430,9 @@ bool executeInternalCommand(command_case_data & data)
                                                                   // of
                                                                   // arguments?
       #endif
+        #if FEATURE_SEND_TO_HTTP
         COMMAND_CASE_A("sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
+        #endif // FEATURE_SEND_TO_HTTP
         COMMAND_CASE_A( "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         COMMAND_CASE_R("serialfloat", Command_SerialFloat,    0); // Diagnostic.h
@@ -598,13 +600,13 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   // Maybe ExecuteCommand can be scheduled?
   delay(0);
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     {
       String log = F("Command: ");
       log += cmd;
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
-#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
     {
       String parameters;
@@ -621,8 +623,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       parameters += TempEvent.Par5;
       addLogMove(LOG_LEVEL_DEBUG, parameters);
     }
-#endif // ifndef BUILD_NO_DEBUG
   }
+#endif // ifndef BUILD_NO_DEBUG
 
 
   if (tryInternal) {
@@ -662,6 +664,12 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       }
     }
     #endif
+
+    if (!handled) {
+      // Try a controller
+      handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
+
+    }
 
     if (handled) {
       SendStatus(&TempEvent, return_command_success());

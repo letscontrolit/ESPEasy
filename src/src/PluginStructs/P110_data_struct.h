@@ -7,11 +7,11 @@
 # define P110_DEBUG       // Enable debugging output (INFO loglevel)
 # define P110_DEBUG_DEBUG // Enable extended debugging output (DEBUG loglevel)
 
-# ifdef LIMIT_BUILD_SIZE
+# if defined(LIMIT_BUILD_SIZE) || !defined(BUILD_NO_DEBUG)
   #  ifdef P110_DEBUG_DEBUG
   #   undef P110_DEBUG_DEBUG
   #  endif // ifdef P110_DEBUG_DEBUG
-# endif // ifdef LIMIT_BUILD_SIZE
+# endif // if defined(LIMIT_BUILD_SIZE) || !defined(BUILD_NO_DEBUG)
 
 # include <Wire.h>
 # include <VL53L0X.h>

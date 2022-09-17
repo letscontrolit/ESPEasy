@@ -214,6 +214,7 @@
 // #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
+// #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
 
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -270,10 +271,11 @@
 
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
+// #define FEATURE_AUTO_DARK_MODE           0 // Disable auto-dark mode
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
-#define SHOW_SYSINFO_JSON   //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
+#define SHOW_SYSINFO_JSON 1  //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
 
 /*
  #######################################################################################################
@@ -460,6 +462,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P131   // NeoMatrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
+// #define USES_P134   // A02YYUW
 
 // #define USES_P128   // NeoPixelBusFX
 // #define P128_USES_GRB  // Default

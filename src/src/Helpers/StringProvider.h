@@ -62,6 +62,9 @@ struct LabelType {
 #ifndef BUILD_NO_RAM_TRACKER
     ENABLE_RAM_TRACKING,
 #endif
+#if FEATURE_AUTO_DARK_MODE
+    ENABLE_AUTO_DARK_MODE,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
@@ -130,6 +133,10 @@ struct LabelType {
 
     ESP_CHIP_ID,
     ESP_CHIP_FREQ,
+#ifdef ESP32
+    ESP_CHIP_XTAL_FREQ,
+    ESP_CHIP_APB_FREQ,
+#endif
     ESP_CHIP_MODEL,
     ESP_CHIP_REVISION,
     ESP_CHIP_CORES,

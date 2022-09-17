@@ -441,7 +441,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     if (web_server.args() > 0)
     {
       const String& rules = webArg(F("rules"));
-      isNew = webArg(F("IsNew")) == F("yes");
+      isNew = webArg(F("IsNew")).equals(F("yes"));
 
       // Overwrite verification
       if (isEdit && isNew) {
