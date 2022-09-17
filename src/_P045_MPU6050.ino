@@ -133,23 +133,23 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
           F("G-force Y"),
           F("G-force Z")
         };
-        addFormSelector(F("Function"), F("p045_function"), 10, options, nullptr, choice);
+        addFormSelector(F("Function"), F("pfunction"), 10, options, nullptr, choice);
       }
 
       if (choice == 0) {
         // If this is instance function 0, setup webform for additional vars
         // Show some user information about the webform and what the vars mean.
 
-        addFormNumericBox(F("Detection threshold X"), F("p045_threshold_x"), PCONFIG(2), 0, 65535);
-        addFormNumericBox(F("Detection threshold Y"), F("p045_threshold_y"), PCONFIG(3), 0, 65535);
-        addFormNumericBox(F("Detection threshold Z"), F("p045_threshold_z"), PCONFIG(4), 0, 65535);
+        addFormNumericBox(F("Detection threshold X"), F("pthld_x"), PCONFIG(2), 0, 65535);
+        addFormNumericBox(F("Detection threshold Y"), F("pthld_y"), PCONFIG(3), 0, 65535);
+        addFormNumericBox(F("Detection threshold Z"), F("pthld_z"), PCONFIG(4), 0, 65535);
         addFormNote(F("A Detection threshold value of 0 disables movement detection for that axis."));
 
-        addFormCheckBox(F("Detection on all 3 axes"), F("p045_multiaxes"), PCONFIG_LONG(2) == 0);
+        addFormCheckBox(F("Detection on all 3 axes"), F("pmultiaxes"), PCONFIG_LONG(2) == 0);
         addFormNote(F("When unchecked, movement detection will trigger on ANY axis"));
 
-        addFormNumericBox(F("Min. detection count"), F("p045_threshold_counter"), PCONFIG(5), 0, 999999);
-        addFormNumericBox(F("Detection window"),     F("p045_threshold_window"),  PCONFIG(6), 0, 999999);
+        addFormNumericBox(F("Min. detection count"), F("pthld_counter"), PCONFIG(5), 0, 999999);
+        addFormNumericBox(F("Detection window"),     F("pthld_window"),  PCONFIG(6), 0, 999999);
 
         addFormNote(F("Details are in the 'ReadTheDocs' documentation."));
       }
@@ -161,13 +161,13 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
     {
       // Save the vars
       PCONFIG(0)      = getFormItemInt(F("i2c_addr"));
-      PCONFIG(1)      = getFormItemInt(F("p045_function"));
-      PCONFIG(2)      = getFormItemInt(F("p045_threshold_x"));
-      PCONFIG(3)      = getFormItemInt(F("p045_threshold_y"));
-      PCONFIG(4)      = getFormItemInt(F("p045_threshold_z"));
-      PCONFIG(5)      = getFormItemInt(F("p045_threshold_counter"));
-      PCONFIG(6)      = getFormItemInt(F("p045_threshold_window"));
-      PCONFIG_LONG(2) = isFormItemChecked(F("p045_multiaxes")) ? 0 : 1; // Inverted setting, default is backward compatible, 3 axis
+      PCONFIG(1)      = getFormItemInt(F("pfunction"));
+      PCONFIG(2)      = getFormItemInt(F("pthld_x"));
+      PCONFIG(3)      = getFormItemInt(F("pthld_y"));
+      PCONFIG(4)      = getFormItemInt(F("pthld_z"));
+      PCONFIG(5)      = getFormItemInt(F("pthld_counter"));
+      PCONFIG(6)      = getFormItemInt(F("pthld_window"));
+      PCONFIG_LONG(2) = isFormItemChecked(F("pmultiaxes")) ? 0 : 1; // Inverted setting, default is backward compatible, 3 axis
 
       if (PCONFIG(6) < PCONFIG(5)) {
         PCONFIG(6) = PCONFIG(5);
