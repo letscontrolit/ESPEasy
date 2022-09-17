@@ -91,13 +91,15 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       // inverted flag!
       addFormCheckBox(F("Save 'Set Level' after change via <tt>config</tt> command"), F("psave_always"), P021_DONT_ALWAYS_SAVE == 0);
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
+      # endif // ifndef BUILD_NO_DEBUG
 
       addFormNumericBox(F("Auto-save interval"), F("pautosave"), P021_AUTOSAVE_TIMER / 60, 0, 1440); // Present in minutes
       addUnit(F("minutes"));
-      # ifndef LIMIT_BUILD_SIZE
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Interval to check if 'Set Level' is changed via <tt>config</tt> command and saves it. Max. 24h, 0 = Off"));
-      # endif // ifndef LIMIT_BUILD_SIZE
+      # endif // ifndef BUILD_NO_DEBUG
 
       // we need to restore our original taskvalues!
       LoadTaskSettings(event->TaskIndex);
