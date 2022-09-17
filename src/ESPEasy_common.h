@@ -38,7 +38,8 @@
 # define SUPPORT_ARP
 #endif
 
-#include "src/DataStructs/NodeStruct.h"
+//#include "src/DataStructs/NodeStruct.h"
+#include "src/DataTypes/NodeTypeID.h"
 #include "src/Globals/RamTracker.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/Helpers/ESPEasy_math.h"
@@ -74,6 +75,7 @@
   #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
 #endif
 #if defined(ESP32)
+  #include <WiFi.h>
 
   #ifdef ESP32S2
     #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32S2_STD

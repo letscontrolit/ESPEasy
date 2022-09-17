@@ -120,7 +120,6 @@ bool P094_data_struct::loop() {
               valid = false;
             }
           }
-
           if (valid) {
             fullSentenceReceived = true;
           }
@@ -131,7 +130,11 @@ bool P094_data_struct::loop() {
           // Ignore LF
           break;
         default:
-          sentence_part += c;
+          if (c >= 32 && c < 127) {
+            sentence_part += c;
+          } else {
+            current_sentence_errored = true;
+          }
           break;
       }
 
@@ -338,7 +341,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
               if (log.reserve(64)) {
-                log  = F("CUL Reader: ");
+                log += F("CUL Reader: ");
                 log += P094_FilterValueType_toString(valueType_index[f]);
                 log += F(":  in:");
                 log += inputString;

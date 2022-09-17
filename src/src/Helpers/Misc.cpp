@@ -290,7 +290,11 @@ void SendValueLogger(taskIndex_t TaskIndex)
   featureSD = true;
   # endif // if FEATURE_SD
 
-  if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (featureSD 
+      # ifndef BUILD_NO_DEBUG
+      || loglevelActiveFor(LOG_LEVEL_DEBUG)
+      #endif
+  ) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
 
     if (validDeviceIndex(DeviceIndex)) {
@@ -311,7 +315,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
         logger += formatUserVarNoCheck(TaskIndex, varNr);
         logger += F("\r\n");
       }
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, logger);
+      #endif
     }
   }
 #endif // if !defined(BUILD_NO_DEBUG) || FEATURE_SD
