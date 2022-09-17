@@ -868,7 +868,6 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         _line++;
       }
       printText(sParams[idx + 1].c_str(), _column, _line - 1, _fontscaling, _fgcolor, _bgcolor);
-      addLog(LOG_LEVEL_INFO, sParams[idx + 1]);
       idx += 2;
     }
     setColumnRowMode(currentColRowState);
