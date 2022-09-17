@@ -10,7 +10,9 @@
 
 # include <vector>
 
+# ifndef BUILD_NO_DEBUG
 # define P131_DEBUG_LOG  // Enable for some (extra) logging
+#endif
 
 # define P131_Nlines  16 // The number of different lines which can be displayed
 # define P131_Nchars  50

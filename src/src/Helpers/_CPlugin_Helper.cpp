@@ -158,6 +158,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   return result;
 }
 
+#if FEATURE_HTTP_CLIENT
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
 }
@@ -265,6 +266,7 @@ String send_via_http(int                             controller_number,
 
   return result;
 }
+#endif // FEATURE_HTTP_CLIENT
 
 
 

@@ -154,8 +154,10 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         if (P077_data->processSerialData()) {
         # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
+        # endif
 
           if (CseReceived(event)) {
+            # ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
               String log = F("CSE: adjustment ");
               log += P077_data->adjustment;
@@ -188,8 +190,8 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
               log += P077_data->cf_pulses;
               addLogMove(LOG_LEVEL_DEBUG, log);
             }
+            # endif // ifndef BUILD_NO_DEBUG
           }
-        # endif // ifndef BUILD_NO_DEBUG
 
           // new packet received, update values
           UserVar[event->BaseVarIndex]     = P077_data->energy_voltage;
