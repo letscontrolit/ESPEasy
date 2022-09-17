@@ -17,7 +17,7 @@
  * 2022-08-23 tonhuisman: Add <trigger>cmd,inv[,0|1] subcommand for inverting the display, also an extra Config option
  *                        is added to set 'Invert display' as the default.
  * 2022-08-20 tonhuisman: Migrate/rewrite from ESPEasy PluginPlayground _P208_Nokia_LCD_5110.ino, now based
- *                        on Plugin 116 PCD8544
+ *                        on Plugin 116 ST77xx
  */
 
 # define PLUGIN_141
@@ -95,11 +95,12 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       uint32_t lSettings = 0;
 
-      // Truncate exceeding message
-      set4BitToUL(lSettings, P141_CONFIG_FLAG_MODE,        static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage));
+      // Clear then Truncate exceeding message
+      set4BitToUL(lSettings, P141_CONFIG_FLAG_MODE,        static_cast<int>(AdaGFXTextPrintMode::ClearThenTruncate));
       set4BitToUL(lSettings, P141_CONFIG_FLAG_FONTSCALE,   1);
       set4BitToUL(lSettings, P141_CONFIG_FLAG_LINESPACING, 15); // Auto
       set4BitToUL(lSettings, P141_CONFIG_FLAG_CMD_TRIGGER, static_cast<int>(P141_CommandTrigger::pcd8544));
+      bitWrite(lSettings, P141_CONFIG_FLAG_BACK_FILL, 1);       // No back-fill
       P141_CONFIG_FLAGS = lSettings;
 
       break;

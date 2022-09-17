@@ -110,7 +110,7 @@ Available options:
 * *Clear then truncate exceeding message* Clear from the current cursor position to the end of the display, then display the provided message, but any excess at the right border of the display is discarded.
 * *Truncate, centered when MaxWidth set*: Like *Truncate exceeding message*, but can center the content when a max. width for the text is provided.
 
-Default setting is *Truncate exceeding message*.
+Default setting is *Clear then truncate exceeding message*.
 
 * **Font scaling** The scaling factor for the currently active font. Select a factor between 1 and 10.
 
@@ -134,7 +134,7 @@ The command is handled non-case sensitive. See below for available commands and 
 
 * **Text Coordinates in col/row** When checked, the coordinates for the ``txp``, ``txz`` and ``txtfull`` subcommands will be handled in cursor columns & rows, instead of pixels. Column and row are calculated from the current font size and font scaling settings.
 
-* **Background-fill for text** When checked, for any text-line sent to the screen, the entire background (including top and bottom lines) will have the provided background color, *unless* transparent is used (Background color == Foreground color). Default checked.
+* **Background-fill for text** When checked, for any text-line sent to the screen, the entire background (including top and bottom lines) will have the provided background color, *unless* transparent is used (Background color == Foreground color). Default unchecked.
 
 Content
 ^^^^^^^^
