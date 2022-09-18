@@ -131,9 +131,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     switch (_device) {
       case ST77xx_type_e::ST7735s_128x128:
 
-        if (initRoptions == 0xFF) {
-          initRoptions = INITR_144GREENTAB; // 128x128px
-        }
+        initRoptions = INITR_144GREENTAB; // 128x128px
 
       // fall through
       case ST77xx_type_e::ST7735s_128x160:

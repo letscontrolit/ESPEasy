@@ -128,8 +128,8 @@ void PanasonicCKPHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t op
   // Note that the argument to 'timer.after' has to be explicitly cast into 'long'
   panasonicCancelTimer = timer.after(2L*60L*1000L, sendPanasonicCKPCancelTimer);
 
-  Serial.print(F("'Timer cancel' timer ID: "));
-  Serial.println(panasonicCancelTimer);
+  LOG(F("'Timer cancel' timer ID: "));
+  LOGLN(panasonicCancelTimer);
 */
 }
 
@@ -255,7 +255,7 @@ void PanasonicCKPHeatpumpIR::sendPanasonicCKPOnOffTimerCancel(IRSender& IR, bool
 // Send the Panasonic CKP timer cancel
 void PanasonicCKPHeatpumpIR::sendPanasonicCKPCancelTimer(IRSender& IR)
 {
-  Serial.println(F("Sending Panasonic CKP timer cancel"));
+  LOGLN(F("Sending Panasonic CKP timer cancel"));
 
   sendPanasonicCKPOnOffTimerCancel(IR, false, true);
 }
