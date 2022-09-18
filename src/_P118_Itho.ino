@@ -35,6 +35,7 @@
 //                               Orcon code can be partially disabled by setting P118_FEATURE_ORCON 0 in P118_data_struc.h
 //                               Support for orcon must be enabled in settings, to avoid possible interference with Itho.
 //                               Re-enabled timer support for Orcon, as it is only a status update, NOT a ventilator update
+//      tonhuisman, 18-09-2022 - Hide Debug log option in device configuration when Debug log is not available.
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
@@ -274,8 +275,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       addFormTextBox(F("Unit ID remote 2"), F("pID2"), PLUGIN_118_ExtraSettings.ID2, 8);
       addFormTextBox(F("Unit ID remote 3"), F("pID3"), PLUGIN_118_ExtraSettings.ID3, 8);
 
+      # ifndef BUILD_NO_DEBUG
       addFormCheckBox(F("Enable RF DEBUG log"),        F("plog"),   P118_CONFIG_LOG);    // Makes RF logging optional to reduce clutter in
                                                                                          // the log
+      # endif // ifndef BUILD_NO_DEBUG
       addFormCheckBox(F("Enable minimal RF INFO log"), F("prflog"), P118_CONFIG_RF_LOG); // Log only the received Device ID's at INFO level
 
       addFormNumericBox(F("Device ID byte 1"), F("pdevid1"), P118_CONFIG_DEVID1, 0, 255);
@@ -300,7 +303,9 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       strcpy(PLUGIN_118_ExtraSettings.ID3, web_server.arg(F("pID3")).c_str());
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&PLUGIN_118_ExtraSettings), sizeof(PLUGIN_118_ExtraSettings));
 
-      P118_CONFIG_LOG    = isFormItemChecked(F("plog"));
+      # ifndef BUILD_NO_DEBUG
+      P118_CONFIG_LOG = isFormItemChecked(F("plog"));
+      # endif // ifndef BUILD_NO_DEBUG
       P118_CONFIG_RF_LOG = isFormItemChecked(F("prflog"));
 
       P118_CONFIG_DEVID1 = getFormItemInt(F("pdevid1"), 10);

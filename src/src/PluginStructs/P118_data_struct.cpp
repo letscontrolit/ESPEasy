@@ -253,7 +253,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon standBy"));
-        success = true;
         break;
       }
       case 101: // Fan low
@@ -266,7 +265,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon low speed"));
-        success = true;
         break;
       }
       case 102: // Fan medium
@@ -279,7 +277,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon medium speed"));
-        success = true;
         break;
       }
       case 103: // Fan high
@@ -292,7 +289,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon high speed"));
-        success = true;
         break;
       }
       case 104: // Fan auto
@@ -305,7 +301,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon auto speed"));
-        success = true;
         break;
       }
       case 110: //  Timer 12*60 minutes @ speed 0
@@ -318,7 +313,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon Timer 0"));
-        success = true;
         break;
       }
       case 111: //  Timer 60 minutes @ speed 1
@@ -331,7 +325,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon Timer 1"));
-        success = true;
         break;
       }
       case 112: //  Timer 13*60 minutes @ speed 2
@@ -344,7 +337,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon Timer 2"));
-        success = true;
         break;
       }
       case 113: //  Timer 60 minutes @ speed 3
@@ -357,7 +349,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon Timer 3"));
-        success = true;
         break;
       }
       case 114:
@@ -370,7 +361,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         _LastIDindex = 0;
         _rf->initReceive();
         PluginWriteLog(F("Orcon Auto CO2"));
-        success = true;
         break;
       }
       # else // if P118_FEATURE_ORCON
@@ -385,12 +375,13 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
       case 113:
       case 114:
         PluginWriteLog(F("Orcon support not included!"));
+        success = false;
         break;
       # endif // if P118_FEATURE_ORCON
       default:
       {
         PluginWriteLog(F("INVALID"));
-        success = true;
+        success = false;
         break;
       }
     }
@@ -646,7 +637,11 @@ void P118_data_struct::PublishData(struct EventStruct *event) {
 }
 
 void P118_data_struct::PluginWriteLog(const String& command) {
-  String log = F("Send Itho command for: ");
+  String log = F("Send Itho"
+                 # if P118_FEATURE_ORCON
+                 "/Orcon"
+                 # endif // if P118_FEATURE_ORCON
+                 " command for: ");
 
   log += command;
 

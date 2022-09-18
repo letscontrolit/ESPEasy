@@ -72,7 +72,7 @@ Remote RF Controls
 
 * **Unit ID remote 1..3**: ID of another remote that controls your Itho fan. When set it allows the plugin to monitor for commands and act on them. The ID consist out of 3 numbers separated by ','. Up to 3 remotes are supported. After the controller is joined with the ventilation unit, and enabling the **Enable minimal RF INFO log** option below, these ID's can be extracted from the logs at the INFO level by pressing a button on the remote. Most remotes will repeat a command ca. 3 times, in case there is disturbance in communication, so that should be easily recognizable.
 
-* **Enable RF DEBUG log**: When enabled all recieved RF packages will be shown in the ESPEasy log at DEBUG level. Useful to determine the ID of other remotes and the messages they send. Disable when not necessary to reduce writing to the log.
+* **Enable RF DEBUG log**: When enabled all recieved RF packages will be shown in the ESPEasy log at DEBUG level. Useful to determine the ID of other remotes and the messages they send. Disable when not necessary to reduce writing to the log. (Only available when Debug logging is available in the build.)
 
 * **Enable minimal RF INFO lgo**: When enabled, this will write the ID and raw command sent from any device using the same frequency and protocol. Can be used to determine entries for **Unit ID remote 1..3**. Disable when not necessary to reduce writing to the log.
 
