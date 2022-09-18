@@ -119,6 +119,15 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
+#ifdef WEBSERVER_CSS
+  #ifndef WEBSERVER_EMBED_CUSTOM_CSS
+    #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS
+      #define EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #endif
+  #endif
+#endif
+
+
 #ifndef PLUGIN_BUILD_CUSTOM
     #ifndef FEATURE_SSDP
         #define FEATURE_SSDP  1
@@ -161,9 +170,12 @@ To create/register a plugin, you have to :
     #endif // ifndef FEATURE_SETTINGS_ARCHIVE
 #endif
 
-#if FEATURE_SETTINGS_ARCHIVE && defined(FORCE_PRE_2_5_0)
+#if defined(FEATURE_SETTINGS_ARCHIVE) && defined(FORCE_PRE_2_5_0)
   #undef FEATURE_SETTINGS_ARCHIVE
-  #define FEATURE_SETTINGS_ARCHIVE  0
+#endif
+
+#ifndef FEATURE_NO_HTTP_CLIENT
+  #define FEATURE_NO_HTTP_CLIENT  0
 #endif
 
 
@@ -302,6 +314,9 @@ To create/register a plugin, you have to :
     #define  PLUGIN_SET_STABLE
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
+    #ifndef FEATURE_ESPEASY_P2P
+      #define FEATURE_ESPEASY_P2P 1
+    #endif
 
     #ifndef FEATURE_I2CMULTIPLEXER
         #define FEATURE_I2CMULTIPLEXER  1
@@ -328,15 +343,16 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
     // Disable ESPEasy p2p for minimal OTA builds.
-    #if FEATURE_ESPEASY_P2P
+    #ifdef FEATURE_ESPEASY_P2P
       #undef FEATURE_ESPEASY_P2P
-      #define FEATURE_ESPEASY_P2P 0
     #endif
+    #define FEATURE_ESPEASY_P2P 0
 
     #ifdef FEATURE_MDNS
       #undef FEATURE_MDNS
     #endif
     #define FEATURE_MDNS 0
+
     #ifndef DISABLE_SC16IS752_Serial
       #define DISABLE_SC16IS752_Serial
     #endif
@@ -361,7 +377,9 @@ To create/register a plugin, you have to :
 //    #define USES_C002   // Domoticz MQTT
 //    #define USES_C005   // Home Assistant (openHAB) MQTT
 //    #define USES_C006   // PiDome MQTT
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C008   // Generic HTTP
+  #endif
 //    #define USES_C009   // FHEM HTTP
 //    #define USES_C010   // Generic UDP
 //    #define USES_C013   // ESPEasy P2P network
@@ -371,15 +389,15 @@ To create/register a plugin, you have to :
 
     #define PLUGIN_SET_NONE
 
-    #if FEATURE_SETTINGS_ARCHIVE
+    #ifdef FEATURE_SETTINGS_ARCHIVE
         #undef FEATURE_SETTINGS_ARCHIVE
-        #define FEATURE_SETTINGS_ARCHIVE  0
     #endif // if FEATURE_SETTINGS_ARCHIVE
+    #define FEATURE_SETTINGS_ARCHIVE  0
 
-    #if FEATURE_TIMING_STATS
+    #ifdef FEATURE_TIMING_STATS
         #undef FEATURE_TIMING_STATS
-        #define FEATURE_TIMING_STATS  0
     #endif
+    #define FEATURE_TIMING_STATS  0
 
     #ifndef USES_P001
         #define USES_P001   // switch
@@ -401,14 +419,14 @@ To create/register a plugin, you have to :
 //        #define USES_P005   // DHT
     #endif
 
-    #if FEATURE_SERVO
+    #ifdef FEATURE_SERVO
       #undef FEATURE_SERVO
-      #define FEATURE_SERVO 0
     #endif
-    #if FEATURE_RTTTL
+    #define FEATURE_SERVO 0
+    #ifdef FEATURE_RTTTL
       #undef FEATURE_RTTTL
-      #define FEATURE_RTTTL 0
     #endif
+    #define FEATURE_RTTTL 0
 #endif
 
 
@@ -432,6 +450,11 @@ To create/register a plugin, you have to :
         #endif
         #ifdef WEBSERVER_CSS
             #undef WEBSERVER_CSS
+        #endif
+        #ifndef WEBSERVER_EMBED_CUSTOM_CSS
+          #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+            #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+          #endif
         #endif
         #ifdef WEBSERVER_INCLUDE_JS
             #undef WEBSERVER_INCLUDE_JS
@@ -467,20 +490,20 @@ To create/register a plugin, you have to :
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
     #endif
-    #if FEATURE_I2C_DEVICE_SCAN
+    #ifdef FEATURE_I2C_DEVICE_SCAN
         #undef FEATURE_I2C_DEVICE_SCAN
-        #define FEATURE_I2C_DEVICE_SCAN     0   // turn feature off in OTA builds
     #endif // if FEATURE_I2C_DEVICE_SCAN
+    #define FEATURE_I2C_DEVICE_SCAN     0   // turn feature off in OTA builds
     #ifdef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
         #undef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
     #endif
-    #if FEATURE_EXT_RTC
+    #ifdef FEATURE_EXT_RTC
         #undef FEATURE_EXT_RTC
-        #define FEATURE_EXT_RTC 0
     #endif
+    #define FEATURE_EXT_RTC 0
 #endif
 
 
@@ -1165,14 +1188,18 @@ To create/register a plugin, you have to :
 
 
 #ifdef CONTROLLER_SET_STABLE
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C001   // Domoticz HTTP
+  #endif
     #define USES_C002   // Domoticz MQTT
     #define USES_C003   // Nodo telnet
     #define USES_C004   // ThingSpeak
     #define USES_C005   // Home Assistant (openHAB) MQTT
     #define USES_C006   // PiDome MQTT
     #define USES_C007   // Emoncms
+  #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C008   // Generic HTTP
+  #endif
     #define USES_C009   // FHEM HTTP
     #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
@@ -1195,6 +1222,11 @@ To create/register a plugin, you have to :
     #endif
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
+    #endif
+    
+    // Do not include large blobs but fetch them from CDN
+    #ifndef WEBSERVER_USE_CDN_JS_CSS
+      #define WEBSERVER_USE_CDN_JS_CSS
     #endif
   #endif
 #endif
@@ -1256,6 +1288,7 @@ To create/register a plugin, you have to :
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
     #define USES_P105   // AHT10/20/21
+    #define USES_P134   // A02YYUW
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_B
@@ -1317,6 +1350,15 @@ To create/register a plugin, you have to :
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "Energy"
   #endif
+  #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+    // #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Energy plugins
+    #ifndef P036_LIMIT_BUILD_SIZE
+      #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+    #endif
+    #ifndef P037_LIMIT_BUILD_SIZE
+      #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+    #endif
+  #endif
    #ifndef USES_P025
      #define USES_P025   // ADS1115
    #endif
@@ -1362,7 +1404,9 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "Display"
   #endif
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
-     #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+     #ifndef PLUGIN_BUILD_MAX_ESP32
+       #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+     #endif
    #endif
    #if !defined(FEATURE_SD)
      #define FEATURE_SD 1
@@ -1446,11 +1490,15 @@ To create/register a plugin, you have to :
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_PLUGIN_STATS
+  #endif
+  #ifdef ESP8266
     #define FEATURE_PLUGIN_STATS  0
   #endif
   #if FEATURE_CHART_JS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_CHART_JS
+  #endif
+  #ifdef ESP8266
     #define FEATURE_CHART_JS  0
   #endif
   #if !defined(USES_P138) && defined(ESP32)
@@ -1783,13 +1831,20 @@ To create/register a plugin, you have to :
 #endif
 */
 
+#ifdef USES_C013
+  #ifdef FEATURE_ESPEASY_P2P
+    #undef FEATURE_ESPEASY_P2P
+  #endif
+  #define FEATURE_ESPEASY_P2P 1
+#endif
+
 #if defined(USES_C018)
   #define FEATURE_PACKED_RAW_DATA 1
 #endif
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
-  #define FEATURE_MODBUS  1
+//  #define FEATURE_MODBUS  1
 #endif
 
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
@@ -1799,7 +1854,7 @@ To create/register a plugin, you have to :
 #endif
 
 #if FEATURE_DOMOTICZ  // Move Domoticz enabling logic together
-    #ifndef USES_C001
+    #if !defined(USES_C001) && !FEATURE_NO_HTTP_CLIENT
       #define USES_C001   // Domoticz HTTP
     #endif
     #ifndef USES_C002
@@ -1808,6 +1863,14 @@ To create/register a plugin, you have to :
     #ifndef USES_P029
       #define USES_P029   // Output
     #endif
+#endif
+
+#if FEATURE_NO_HTTP_CLIENT  // Disable HTTP features
+  // Disable HTTP related Controllers/features
+  #ifdef FEATURE_SEND_TO_HTTP
+    #undef FEATURE_SEND_TO_HTTP
+  #endif
+  #define FEATURE_SEND_TO_HTTP  0 // Disabled
 #endif
 
 
@@ -1838,17 +1901,23 @@ To create/register a plugin, you have to :
   #ifdef USES_C016
     #undef USES_C016  // Cache controller
   #endif
-  #if FEATURE_SD
+  #ifdef FEATURE_SD
     #undef FEATURE_SD  // Unlikely on 1M units
-    #define FEATURE_SD 0
-    #define NO_GLOBAL_SD
   #endif
+  #define FEATURE_SD 0
+  #define NO_GLOBAL_SD
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
-  #if FEATURE_EXT_RTC
+  #ifdef FEATURE_EXT_RTC
     #undef FEATURE_EXT_RTC
-    #define FEATURE_EXT_RTC 0
+  #endif
+  #define FEATURE_EXT_RTC 0
+#endif
+
+#ifdef PLUGIN_BUILD_MAX_ESP32
+  #ifdef LIMIT_BUILD_SIZE
+    #undef LIMIT_BUILD_SIZE
   #endif
 #endif
 
@@ -1862,38 +1931,40 @@ To create/register a plugin, you have to :
   #ifndef WEBSERVER_USE_CDN_JS_CSS
     #define WEBSERVER_USE_CDN_JS_CSS
   #endif
-
+  #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+  #endif
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
   #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
     #define BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   #endif
-  #if FEATURE_I2CMULTIPLEXER
+  #ifdef FEATURE_I2CMULTIPLEXER
     #undef FEATURE_I2CMULTIPLEXER
-    #define FEATURE_I2CMULTIPLEXER  0
   #endif
-  #if FEATURE_SETTINGS_ARCHIVE
+  #define FEATURE_I2CMULTIPLEXER  0
+  #ifdef FEATURE_SETTINGS_ARCHIVE
     #undef FEATURE_SETTINGS_ARCHIVE
-    #define FEATURE_SETTINGS_ARCHIVE  0
   #endif
+  #define FEATURE_SETTINGS_ARCHIVE  0
 
-  #if FEATURE_SERVO
+  #ifdef FEATURE_SERVO
     #undef FEATURE_SERVO
-    #define FEATURE_SERVO 0
   #endif
-  #if FEATURE_RTTTL
+  #define FEATURE_SERVO 0
+  #ifdef FEATURE_RTTTL
     #undef FEATURE_RTTTL
-    #define FEATURE_RTTTL 0
   #endif
-  #if FEATURE_TOOLTIPS
+  #define FEATURE_RTTTL 0
+  #ifdef FEATURE_TOOLTIPS
     #undef FEATURE_TOOLTIPS
-    #define FEATURE_TOOLTIPS  0
   #endif
-  #if FEATURE_BLYNK
+  #define FEATURE_TOOLTIPS  0
+  #ifdef FEATURE_BLYNK
     #undef FEATURE_BLYNK
-    #define FEATURE_BLYNK 0
   #endif
+  #define FEATURE_BLYNK 0
   #if !defined(PLUGIN_SET_COLLECTION) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
       #undef USES_P076   // HWL8012   in POW r1
@@ -1920,22 +1991,24 @@ To create/register a plugin, you have to :
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
   #endif
-  #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
+  #if defined(FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES) && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
     #undef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+  #endif
+  #ifndef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
     #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 0
   #endif
-  #if FEATURE_SSDP
+  #ifdef FEATURE_SSDP
     #undef FEATURE_SSDP
-    #define FEATURE_SSDP  0
   #endif
-  #if FEATURE_PLUGIN_STATS
+  #define FEATURE_SSDP  0
+  #ifdef FEATURE_PLUGIN_STATS
     #undef FEATURE_PLUGIN_STATS
-    #define FEATURE_PLUGIN_STATS  0
   #endif
-  #if FEATURE_CHART_JS
+  #define FEATURE_PLUGIN_STATS  0
+  #ifdef FEATURE_CHART_JS
     #undef FEATURE_CHART_JS
-    #define FEATURE_CHART_JS  0
   #endif
+  #define FEATURE_CHART_JS  0
 #endif
 
 // Timing stats page needs timing stats
@@ -1971,6 +2044,9 @@ To create/register a plugin, you have to :
   #endif
   #ifdef WEBSERVER_INCLUDE_JS
     #undef WEBSERVER_INCLUDE_JS
+  #endif
+  #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
   #endif
 #endif
 
@@ -2052,6 +2128,166 @@ To create/register a plugin, you have to :
 // By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
 #ifdef WEBSERVER_NEW_UI
   #define SHOW_SYSINFO_JSON 1
+#endif
+
+#ifdef USES_ESPEASY_NOW
+  // ESPEasy-NOW needs the P2P feature
+  #ifdef FEATURE_ESPEASY_P2P
+    #undef FEATURE_ESPEASY_P2P
+  #endif
+  #define FEATURE_ESPEASY_P2P 1
+#endif
+
+
+
+
+
+
+// Make sure all features which have not been set exclusively will be disabled.
+// This should be done at the end of this file.
+// Keep them alfabetically sorted so it is easier to add new ones
+
+#ifndef FEATURE_BLYNK                         
+#define FEATURE_BLYNK                         0
+#endif
+
+#ifndef FEATURE_CHART_JS                      
+#define FEATURE_CHART_JS                      0
+#endif
+
+#ifndef FEATURE_CUSTOM_PROVISIONING           
+#define FEATURE_CUSTOM_PROVISIONING           0
+#endif
+
+#ifndef FEATURE_DNS_SERVER                    
+#define FEATURE_DNS_SERVER                    0
+#endif
+
+#ifndef FEATURE_DOMOTICZ                      
+#define FEATURE_DOMOTICZ                      0
+#endif
+
+#ifndef FEATURE_DOWNLOAD                      
+#define FEATURE_DOWNLOAD                      0
+#endif
+
+#ifndef FEATURE_ESPEASY_P2P                      
+#define FEATURE_ESPEASY_P2P                   0
+#endif
+
+#ifndef FEATURE_ETHERNET                      
+#define FEATURE_ETHERNET                      0
+#endif
+
+#ifndef FEATURE_EXT_RTC                       
+#define FEATURE_EXT_RTC                       0
+#endif
+
+#ifndef FEATURE_FHEM                          
+#define FEATURE_FHEM                          0
+#endif
+
+#ifndef FEATURE_HOMEASSISTANT_OPENHAB         
+#define FEATURE_HOMEASSISTANT_OPENHAB         0
+#endif
+
+#ifndef FEATURE_I2CMULTIPLEXER                
+#define FEATURE_I2CMULTIPLEXER                0
+#endif
+
+#ifndef FEATURE_I2C_DEVICE_SCAN               
+#define FEATURE_I2C_DEVICE_SCAN               0
+#endif
+
+#ifndef FEATURE_MDNS                          
+#define FEATURE_MDNS                          0
+#endif
+
+#ifndef FEATURE_MODBUS                        
+#define FEATURE_MODBUS                        0
+#endif
+
+#ifndef FEATURE_MQTT                        
+#define FEATURE_MQTT                          0
+#endif
+
+#ifndef FEATURE_NON_STANDARD_24_TASKS         
+#define FEATURE_NON_STANDARD_24_TASKS         0
+#endif
+
+#ifndef FEATURE_NOTIFIER                      
+#define FEATURE_NOTIFIER                      0
+#endif
+
+#ifndef FEATURE_PACKED_RAW_DATA               
+#define FEATURE_PACKED_RAW_DATA               0
+#endif
+
+#ifndef FEATURE_PLUGIN_STATS                  
+#define FEATURE_PLUGIN_STATS                  0
+#endif
+
+#ifndef FEATURE_REPORTING                     
+#define FEATURE_REPORTING                     0
+#endif
+
+#ifndef FEATURE_RTTTL                         
+#define FEATURE_RTTTL                         0
+#endif
+
+#ifndef FEATURE_SD                         
+#define FEATURE_SD                            0
+#endif
+
+#ifndef FEATURE_SERVO                         
+#define FEATURE_SERVO                         0
+#endif
+
+#ifndef FEATURE_SETTINGS_ARCHIVE              
+#define FEATURE_SETTINGS_ARCHIVE              0
+#endif
+
+#ifndef FEATURE_SSDP                          
+#define FEATURE_SSDP                          0
+#endif
+
+#ifndef FEATURE_TIMING_STATS                  
+#define FEATURE_TIMING_STATS                  0
+#endif
+
+#ifndef FEATURE_TOOLTIPS                      
+#define FEATURE_TOOLTIPS                      0
+#endif
+
+#ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 
+#define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 0
+#endif
+
+
+#ifndef SHOW_SYSINFO_JSON
+#define SHOW_SYSINFO_JSON 0
+#endif
+
+
+#ifndef FEATURE_SEND_TO_HTTP
+  #define FEATURE_SEND_TO_HTTP  1 // Enabled by default
+#endif
+
+#ifndef FEATURE_HTTP_CLIENT
+  #define FEATURE_HTTP_CLIENT   0 // Disable by default
+#endif
+
+#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
+  #undef FEATURE_HTTP_CLIENT
+  #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
+#endif
+
+#ifndef FEATURE_AUTO_DARK_MODE
+  // #ifdef LIMIT_BUILD_SIZE
+  //   #define FEATURE_AUTO_DARK_MODE            0
+  // #else
+    #define FEATURE_AUTO_DARK_MODE            1
+  // #endif
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

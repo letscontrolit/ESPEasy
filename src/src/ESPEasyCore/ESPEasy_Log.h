@@ -7,10 +7,14 @@
 #define LOG_LEVEL_NONE                      0
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2
+# ifndef BUILD_NO_DEBUG
 #define LOG_LEVEL_DEBUG                     3
 #define LOG_LEVEL_DEBUG_MORE                4
 #define LOG_LEVEL_DEBUG_DEV                 9 // use for testing/debugging only, not for regular use
 #define LOG_LEVEL_NRELEMENTS                5 // Update this and getLogLevelDisplayString() when new log levels are added
+#else
+#define LOG_LEVEL_NRELEMENTS                2 // Update this and getLogLevelDisplayString() when new log levels are added
+#endif
 
 #define LOG_TO_SERIAL         1
 #define LOG_TO_SYSLOG         2
