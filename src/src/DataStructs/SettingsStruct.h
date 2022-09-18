@@ -165,8 +165,8 @@ class SettingsStruct_tmpl
   void AllowTaskValueSetAllPlugins(bool value);
 
   #if FEATURE_AUTO_DARK_MODE
-  bool EnableAutomaticDarkMode() const;
-  void EnableAutomaticDarkMode(bool value);
+  uint8_t getCssMode() const;
+  void    setCssMode(uint8_t value);
   #endif // FEATURE_AUTO_DARK_MODE
 
 
