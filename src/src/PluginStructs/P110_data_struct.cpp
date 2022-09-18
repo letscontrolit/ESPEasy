@@ -63,10 +63,10 @@ long P110_data_struct::readDistance() {
 
   if (initPhase != P110_initPhases::Ready) { return dist; }
 
-  # if defined(P110_DEBUG) || defined(P110_DEBUG_DEBUG)
+  # if defined(P110_INFO_LOG) || defined(P110_DEBUG_LOG)
   String log;
-  # endif // if defined(P110_DEBUG) || defined(P110_DEBUG_DEBUG)
-  # ifdef P110_DEBUG_DEBUG
+  # endif // if defined(P110_INFO_LOG) || defined(P110_DEBUG_LOG)
+  # ifdef P110_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     log  = F("VL53L0X  : idx: 0x");
@@ -75,25 +75,25 @@ long P110_data_struct::readDistance() {
     log += String(initState, BIN);
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
-  # endif // P110_DEBUG_DEBUG
+  # endif // P110_DEBUG_LOG
 
   if (initState) {
     success = true;
     dist    = sensor.readRangeSingleMillimeters();
 
     if (sensor.timeoutOccurred()) {
-      # ifdef P110_DEBUG_DEBUG
+      # ifdef P110_DEBUG_LOG
       addLog(LOG_LEVEL_DEBUG, F("VL53L0X: TIMEOUT"));
-      # endif // P110_DEBUG_DEBUG
+      # endif // P110_DEBUG_LOG
       success = false;
     } else if (dist >= 8190) {
-      # ifdef P110_DEBUG_DEBUG
+      # ifdef P110_DEBUG_LOG
       addLog(LOG_LEVEL_DEBUG, F("VL53L0X: NO MEASUREMENT"));
-      # endif // P110_DEBUG_DEBUG
+      # endif // P110_DEBUG_LOG
       success = false;
     }
 
-    # ifdef P110_DEBUG
+    # ifdef P110_INFO_LOG
     log  = F("VL53L0X: Address: 0x");
     log += String(i2cAddress, HEX);
     log += F(" / Timing: ");
@@ -103,7 +103,7 @@ long P110_data_struct::readDistance() {
     log += F(" / Distance: ");
     log += dist;
     addLogMove(LOG_LEVEL_INFO, log);
-    # endif // P110_DEBUG
+    # endif // P110_INFO_LOG
   }
   return dist;
 }

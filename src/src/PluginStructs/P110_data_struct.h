@@ -4,14 +4,14 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P110
 
-# define P110_DEBUG       // Enable debugging output (INFO loglevel)
-# define P110_DEBUG_DEBUG // Enable extended debugging output (DEBUG loglevel)
+# define P110_INFO_LOG  // Enable debugging output (INFO loglevel)
+# define P110_DEBUG_LOG // Enable extended debugging output (DEBUG loglevel)
 
-# if defined(LIMIT_BUILD_SIZE) || !defined(BUILD_NO_DEBUG)
-  #  ifdef P110_DEBUG_DEBUG
-  #   undef P110_DEBUG_DEBUG
-  #  endif // ifdef P110_DEBUG_DEBUG
-# endif // if defined(LIMIT_BUILD_SIZE) || !defined(BUILD_NO_DEBUG)
+# if defined(LIMIT_BUILD_SIZE) || defined(BUILD_NO_DEBUG)
+  #  ifdef P110_DEBUG_LOG
+  #    undef P110_DEBUG_LOG
+  #  endif // ifdef P110_DEBUG_LOG
+# endif // if defined(LIMIT_BUILD_SIZE) || defined(BUILD_NO_DEBUG)
 
 # include <Wire.h>
 # include <VL53L0X.h>
