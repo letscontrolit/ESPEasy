@@ -93,7 +93,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       String log;
       String command = parseString(string, 1);
 
-      if (command == F("extgpio"))
+      if (command.equals(F("extgpio")))
       {
         success = true;
         portStatusStruct tempStatus;
@@ -121,7 +121,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
 
-      if (command == F("extpwm"))
+      if (command.equals(F("extpwm")))
       {
         success = true;
         uint8_t address = PLUGIN_011_I2C_ADDRESS;
@@ -154,7 +154,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
 
-      if (command == F("extpulse"))
+      if (command.equals(F("extpulse")))
       {
         success = true;
 
@@ -188,7 +188,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (command == F("extlongpulse"))
+      if (command.equals(F("extlongpulse")))
       {
         success = true;
 
@@ -221,8 +221,8 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (command == F("status")) {
-        if (parseString(string, 2) == F("ext"))
+      if (command.equals(F("status"))) {
+        if (parseString(string, 2).equals(F("ext")))
         {
           success = true;
           const uint32_t key = createKey(PLUGIN_ID_011, event->Par2); // WARNING: 'status' uses Par2 instead of Par1

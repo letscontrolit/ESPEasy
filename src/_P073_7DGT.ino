@@ -361,41 +361,41 @@ bool p073_plugin_write(struct EventStruct *event,
 
   const String text = parseStringToEndKeepCase(string, 2);
 
-  if (cmd.equals("7dn")) {
+  if (cmd.equals(F("7dn"))) {
     return p073_plugin_write_7dn(event, text);
-  } else if (cmd.equals("7dt")) {
+  } else if (cmd.equals(F("7dt"))) {
     return p073_plugin_write_7dt(event, text);
   # ifdef P073_7DDT_COMMAND
-  } else if (cmd.equals("7ddt")) {
+  } else if (cmd.equals(F("7ddt"))) {
     return p073_plugin_write_7ddt(event, text);
   # endif // ifdef P073_7DDT_COMMAND
-  } else if (cmd.equals("7dst")) {
+  } else if (cmd.equals(F("7dst"))) {
     return p073_plugin_write_7dst(event);
-  } else if (cmd.equals("7dsd")) {
+  } else if (cmd.equals(F("7dsd"))) {
     return p073_plugin_write_7dsd(event);
-  } else if (cmd.equals("7dtext")) {
+  } else if (cmd.equals(F("7dtext"))) {
     return p073_plugin_write_7dtext(event, text);
   # ifdef P073_EXTRA_FONTS
-  } else if (cmd.equals("7dfont")) {
+  } else if (cmd.equals(F("7dfont"))) {
     return p073_plugin_write_7dfont(event, text);
   # endif // P073_EXTRA_FONTS
   # ifdef P073_7DBIN_COMMAND
-  } else if (cmd.equals("7dbin")) {
+  } else if (cmd.equals(F("7dbin"))) {
     return p073_plugin_write_7dbin(event, text);
   # endif // P073_7DBIN_COMMAND
   } else {
     bool p073_validcmd  = false;
     bool p073_displayon = false;
 
-    if (cmd.equals("7don")) {
+    if (cmd.equals(F("7don"))) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
       p073_displayon = true;
       p073_validcmd  = true;
-    } else if (cmd.equals("7doff")) {
+    } else if (cmd.equals(F("7doff"))) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
       p073_displayon = false;
       p073_validcmd  = true;
-    } else if (cmd.equals("7db")) {
+    } else if (cmd.equals(F("7db"))) {
       if ((event->Par1 >= 0) && (event->Par1 < 16)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("7DGT : Brightness=");
@@ -820,13 +820,13 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
     String fontArg = parseString(text, 1);
     int    fontNr  = -1;
 
-    if ((fontArg == F("default")) || (fontArg == F("7dgt"))) {
+    if ((fontArg.equals(F("default"))) || (fontArg.equals(F("7dgt")))) {
       fontNr = 0;
-    } else if (fontArg == F("siekoo")) {
+    } else if (fontArg.equals(F("siekoo"))) {
       fontNr = 1;
-    } else if (fontArg == F("siekoo_upper")) {
+    } else if (fontArg.equals(F("siekoo_upper"))) {
       fontNr = 2;
-    } else if (fontArg == F("dseg7")) {
+    } else if (fontArg.equals(F("dseg7"))) {
       fontNr = 3;
     } else if (!validIntFromString(text, fontNr)) {
       fontNr = -1; // reset if invalid

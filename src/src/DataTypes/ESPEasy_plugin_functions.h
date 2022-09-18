@@ -85,6 +85,7 @@ public:
     CPLUGIN_FIFTY_PER_SECOND, // Called 50x per second (typical for checking new data instead of waiting)
     CPLUGIN_INIT_ALL,
     CPLUGIN_EXIT,
+    CPLUGIN_WRITE,            // Send commands to a controller.
 
 
     // new messages for autodiscover controller plugins (experimental) i.e. C014

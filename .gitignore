@@ -53,6 +53,7 @@ build_output/
 **/__tmpfile.cpp
 
 src/_Custom.h
+src/_*Custom.h
 
 dist/Espressif_flash_download_tool_v3.8.5/logs/
 
