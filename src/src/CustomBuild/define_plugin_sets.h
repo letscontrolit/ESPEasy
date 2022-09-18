@@ -1339,6 +1339,7 @@ To create/register a plugin, you have to :
     #define USES_P126  // 74HC595 Shift register
     #define USES_P129   // 74HC165 Input shiftregisters
     #define USES_P133   // LTR390 UV
+    #define USES_P135   // SCD4x
 #endif
 
 
