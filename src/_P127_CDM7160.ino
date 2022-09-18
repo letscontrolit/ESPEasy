@@ -69,9 +69,9 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P127_CONFIG_I2C_ADDRESS);
-        # ifndef BUILD_NO_DEBUG
+        # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("CAD0 High/open=0x69, Low=0x68"));
-        # endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef LIMIT_BUILD_SIZE
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
