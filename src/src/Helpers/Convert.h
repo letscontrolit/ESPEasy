@@ -24,6 +24,8 @@ String minutesToHourMinute(int minutes);
 
 String minutesToDayHourMinute(int minutes);
 
+String minutesToHourColonMinute(int minutes);
+
 String secondsToDayHourMinuteSecond(int seconds);
 
 String format_msec_duration(int64_t duration);
