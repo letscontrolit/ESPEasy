@@ -476,13 +476,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("SW  : GPIO=");
-                log += CONFIG_PIN1;
-                log += F(" State=");
-                log += state ? '1' : '0';
-                log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
-                log += output_value;
-                addLogMove(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO,
+                  concat(F("SW  : GPIO="),  CONFIG_PIN1) +
+                  concat(F(" State="),  state ? '1' : '0') +
+                  concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),  output_value));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -574,13 +571,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("SW  : LongPress: GPIO= ");
-                log += CONFIG_PIN1;
-                log += F(" State=");
-                log += state ? '1' : '0';
-                log += F(" Output value=");
-                log += output_value;
-                addLogMove(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, 
+                  concat(F("SW  : LongPress: GPIO= "), CONFIG_PIN1) +
+                  concat(F(" State="), state ? '1' : '0') +
+                  concat(F(" Output value="), output_value));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -609,11 +603,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
               # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("SW  : SafeButton: false positive detected. GPIO= ");
-              log += CONFIG_PIN1;
-              log += F(" State=");
-              log += tempUserVar;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, 
+                concat(F("SW  : SafeButton: false positive detected. GPIO= "),  CONFIG_PIN1) +
+                concat(F(" State="), tempUserVar));
             }
               # endif // ifndef BUILD_NO_DEBUG
 
@@ -668,9 +660,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SW   : State ");
-        log += UserVar[event->BaseVarIndex];
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("SW   : State "), static_cast<int>(UserVar[event->BaseVarIndex])));
       }
       # endif // ifndef BUILD_NO_DEBUG
       success = true;
@@ -679,7 +669,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command = parseString(string, 1);
+      const String command(parseString(string, 1));
 
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
 
@@ -689,9 +679,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
         // @giig1967g deprecated since 2019-11-26
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("inputswitchstate is deprecated");
-          log += string;
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, concat(F("inputswitchstate is deprecated"), string));
         }
 
         /*        portStatusStruct tempStatus;
