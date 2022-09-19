@@ -8,6 +8,7 @@
 
 
 /** Changelog:
+ * 2022-09-19 tonhuisman: Skip empty Lines (don't clear display line) on TaskRun/PLUGIN_READ
  * 2022-09-12 tonhuisman: Remove unneeded color settings, as we have the Inverted display option
  * 2022-09-11 tonhuisman: Disable some less needed features to reduce .bin size, remove Cursor X/Y Values for challenged builds
  *                        remove unused Splash feature code (was already disabled)

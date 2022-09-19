@@ -182,11 +182,10 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
 
     if (hasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
-      uint8_t  yPos  = 1;                 // Bound to the display
+      uint8_t  yPos  = 0;                 // Bound to the display
       int16_t  dum   = 0;
       uint16_t udum  = 0;
       uint16_t hText = 0;
-      pcd8544->getTextBounds(F("Ay"), 0, 0, &dum, &dum, &udum, &hText); // Measure font-height
 
       for (uint8_t x = 0; x < P141_Nlines; x++) {
         String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
@@ -195,15 +194,16 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
         updateFontMetrics();
         # endif // if ADAGFX_PARSE_SUBCOMMAND
 
-        if (yPos < _ypix) {
+        if ((yPos < _ypix) && !newString.isEmpty()) {
           gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
         }
         delay(0);
 
         if (15 == P141_CONFIG_FLAG_GET_LINESPACING) {
-          yPos += (_fontheight * _fontscaling);             // Auto, using font-height and scaling
+          yPos += (_fontheight * _fontscaling);                             // Auto, using font-height and scaling
         } else {
-          yPos += hText + P141_CONFIG_FLAG_GET_LINESPACING; // Explicit distance
+          pcd8544->getTextBounds(F("Ay"), 0, 0, &dum, &dum, &udum, &hText); // Measure current font-height
+          yPos += hText + P141_CONFIG_FLAG_GET_LINESPACING;                 // Explicit distance
         }
       }
       pcd8544->display();
