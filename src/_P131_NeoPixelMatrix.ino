@@ -221,7 +221,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
                      false,
                      false,
                      EMPTY_STRING,
-                     EMPTY_STRING);
+                     F(""));
 
           String   opts    = parseString(strings[varNr], 2);
           uint32_t optBits = 0;
@@ -248,7 +248,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           html_TD(); // Pixels per step, offset with -1
           addNumericBox(getPluginCustomArgName(varNr + 400), get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1, 1, P131_MAX_SCROLL_STEPS
                         # if FEATURE_TOOLTIPS
-                        , EMPTY_STRING, F("Scroll 1..16 pixels / step")
+                        , F(""), F("Scroll 1..16 pixels / step")
                         # endif // if FEATURE_TOOLTIPS
                         );
 
@@ -260,7 +260,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           html_TD(); // Speed 0.1 seconds per step
           addNumericBox(getPluginCustomArgName(varNr + 500), scrollSpeed, 1, P131_MAX_SCROLL_SPEED
                         # if FEATURE_TOOLTIPS
-                        , EMPTY_STRING, F("Scroll-speed in 0.1 seconds / step")
+                        , F(""), F("Scroll-speed in 0.1 seconds / step")
                         # endif // if FEATURE_TOOLTIPS
                         );
 

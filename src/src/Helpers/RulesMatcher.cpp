@@ -3,6 +3,7 @@
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
 
@@ -18,6 +19,7 @@ bool ruleMatch(String event, String rule) {
 
   rule.trim();
   parseTemplate(rule);
+  parseStandardConversions(rule, false);
 
   event.trim();
 

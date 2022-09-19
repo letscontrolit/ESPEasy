@@ -38,12 +38,14 @@ String Command_GetORSetBool(struct EventStruct *event,
                             bool               *value,
                             int                 arg);
 
+#if FEATURE_ETHERNET
 String Command_GetORSetETH(struct EventStruct *event,
                             const __FlashStringHelper * targetDescription,
                             const __FlashStringHelper * valueToString,
                             const char         *Line,
                             uint8_t            *value,
                             int                 arg);
+#endif
 
 String Command_GetORSetInt8_t(struct EventStruct *event,
                             const __FlashStringHelper * targetDescription,
