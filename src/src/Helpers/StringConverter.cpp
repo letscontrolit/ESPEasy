@@ -657,6 +657,10 @@ String to_internal_string(const String& input, char replaceSpace) {
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
+String parseString(const char * string, uint8_t indexFind, char separator, bool trimResult) {
+  return parseString(String(string), indexFind, separator, trimResult);
+}
+
 String parseString(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result = parseStringKeepCase(string, indexFind, separator, trimResult);
 
