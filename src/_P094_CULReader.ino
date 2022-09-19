@@ -404,7 +404,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
                 options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
                 optionValues[i] = filterValueType;
               }
-              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, nullptr, capture, false, true, EMPTY_STRING);
+              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, nullptr, capture, false, true, F(""));
             }
 
             break;
@@ -426,13 +426,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
               optionValues[i] = enumValue;
             }
-            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, nullptr, comparator, false, true, EMPTY_STRING);
+            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, nullptr, comparator, false, true, F(""));
             break;
           }
           case 3:
           {
             // Compare with
-            addTextBox(id, filter, 8, false, false, EMPTY_STRING, EMPTY_STRING);
+            addTextBox(id, filter, 8, false, false, EMPTY_STRING, F(""));
             break;
           }
         }

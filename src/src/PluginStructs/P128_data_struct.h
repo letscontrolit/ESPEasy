@@ -2384,10 +2384,10 @@ private:
   uint8_t sparking   = 120;
   uint8_t brightness = 31;
 
-  uint32_t counter20ms = 0;
-  uint32_t starttime[ARRAYSIZE];
-  uint32_t starttimerb = 0;
-  uint32_t maxtime     = 0;
+  uint32_t counter20ms          = 0;
+  uint32_t starttime[ARRAYSIZE] = { 0 };
+  uint32_t starttimerb          = 0;
+  uint32_t maxtime              = 0;
 
   P128_modetype mode     = P128_modetype::Off;
   P128_modetype savemode = P128_modetype::Off;
@@ -2419,7 +2419,7 @@ private:
   const __FlashStringHelper* P128_modeType_toString(P128_modetype modeType);
 
   /// random number seed
-  uint16_t rand16seed; // = RAND16_SEED; // leave uninitialized
+  uint16_t rand16seed; // = RAND16_SEED; // leave uninitialized //-V457
   uint8_t random8();
   uint8_t random8(uint8_t lim);
   uint8_t random8(uint8_t min,
@@ -2432,7 +2432,7 @@ private:
                        uint8_t scale);
 
   // Fire2012: Array of temperature readings at each simulation cell
-  byte heat[ARRAYSIZE];
+  byte heat[ARRAYSIZE] = { 0 };
   void     Fire2012(void);
   void     fire_flicker();
   void     Plugin_128_simpleclock();

@@ -54,7 +54,7 @@ private:
   uint8_t  getStatus();
 
   byte     _i2cAddress;
-  uint16_t _co2;
+  uint16_t _co2 = 0;
 };
 
 #endif // ifdef USES_P127

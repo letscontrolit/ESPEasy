@@ -290,7 +290,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO DO,SCD30");
       break;
     case 0x62:
-      result += F("Atlas EZO ORP");
+      result += F("Atlas EZO ORP,SCD4x");
       break;
     case 0x63:
       result += F("Atlas EZO pH");
