@@ -439,7 +439,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addres
                         )
 {
   addRowLabel_tr_id(F("I2C Address"), id);
-  do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false
+  do_addSelector_Head(id, F(""), EMPTY_STRING, false
                       #if FEATURE_TOOLTIPS
                       , tooltip
                       #endif // if FEATURE_TOOLTIPS
@@ -582,8 +582,8 @@ void addFormSelector_script(const __FlashStringHelper * label,
   addSelector_Foot();
 }
 
-void addFormSelector_script(const String  & label,
-                            const String  & id,
+void addFormSelector_script(const __FlashStringHelper * label,
+                            const __FlashStringHelper * id,
                             int             optionCount,
                             const String    options[],
                             const int       indices[],

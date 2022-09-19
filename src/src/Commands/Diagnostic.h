@@ -24,7 +24,6 @@ const __FlashStringHelper * Command_logentry(struct EventStruct *event, const ch
 const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, const char* Line);
 //void createLogPortStatus(std::map< uint32_t, portStatusStruct >::iterator it);
 //void debugPortStatus(std::map< uint32_t, portStatusStruct >::iterator it);
-void logPortStatus(const String& from);
 const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, const char* Line);
 #endif
 

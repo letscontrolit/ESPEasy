@@ -36,12 +36,14 @@ public:
 
   typedef struct gyroVelocity
   {
-    int x, y, z;
+    int x = 0;
+    int y = 0;
+    int z = 0;
   } gyroVelocity;
 
   gyroVelocity g; // gyro angular velocity readings
 
-  int offset[3];
+  int offset[3] = { 0 };
 
   uint8_t readWhoAmI();
   void    calibrate();
