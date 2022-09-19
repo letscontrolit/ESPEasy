@@ -273,7 +273,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
             addTextBox(getPluginCustomArgName(objectNr),
                       String(P099_data->StoredSettings.TouchObjects[objectNr].objectname),
                       P099_MaxObjectNameLength - 1,
-                      false, false, EMPTY_STRING, EMPTY_STRING);
+                      false, false, EMPTY_STRING, F(""));
             html_TD();
             addNumericBox(getPluginCustomArgName(objectNr + 100), P099_data->StoredSettings.TouchObjects[objectNr].top_left.x,     0, 65535);
             html_TD();
