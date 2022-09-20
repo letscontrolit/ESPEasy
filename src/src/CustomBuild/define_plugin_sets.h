@@ -1607,7 +1607,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_MAX
   // Features
   #ifndef USES_ESPEASY_NOW
-    #define USES_ESPEASY_NOW
+//    #define USES_ESPEASY_NOW
   #endif
   #ifndef FEATURE_SERVO
     #define FEATURE_SERVO 1
