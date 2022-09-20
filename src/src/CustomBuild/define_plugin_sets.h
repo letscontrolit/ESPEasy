@@ -331,6 +331,9 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_CHART_JS
         #define FEATURE_CHART_JS  1
     #endif
+    #ifndef FEATURE_RULES_EASY_COLOR_CODE
+        #define FEATURE_RULES_EASY_COLOR_CODE 1
+    #endif
 #endif
 
 #if FEATURE_FHEM
@@ -897,6 +900,10 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_CHART_JS
         #define FEATURE_CHART_JS  1
     #endif
+    #ifndef FEATURE_RULES_EASY_COLOR_CODE
+        #define FEATURE_RULES_EASY_COLOR_CODE 1
+    #endif
+
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -1998,6 +2005,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_CHART_JS
   #endif
   #define FEATURE_CHART_JS  0
+  #ifdef FEATURE_RULES_EASY_COLOR_CODE
+    #undef FEATURE_RULES_EASY_COLOR_CODE
+  #endif
+  #define FEATURE_RULES_EASY_COLOR_CODE 0
 #endif
 
 // Timing stats page needs timing stats
@@ -2143,6 +2154,11 @@ To create/register a plugin, you have to :
 #ifndef FEATURE_CHART_JS                      
 #define FEATURE_CHART_JS                      0
 #endif
+
+#ifndef FEATURE_RULES_EASY_COLOR_CODE
+#define FEATURE_RULES_EASY_COLOR_CODE         0
+#endif
+
 
 #ifndef FEATURE_CUSTOM_PROVISIONING           
 #define FEATURE_CUSTOM_PROVISIONING           0

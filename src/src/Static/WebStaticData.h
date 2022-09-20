@@ -11,6 +11,8 @@ String generate_external_URL(const String& fname);
 
 void serve_CSS();
 
+void serve_CDN_CSS(const __FlashStringHelper * fname);
+
 void serve_favicon();
 
 enum class JSfiles_e {
@@ -21,8 +23,13 @@ enum class JSfiles_e {
   Reboot,
   Toasting,
   SplitPasteInput,
-
+#if FEATURE_RULES_EASY_COLOR_CODE
+  EasyColorCode_codemirror,
+  EasyColorCode_espeasy,
+  EasyColorCode_cm_plugins,
+#endif
 };
+
 
 void serve_JS(JSfiles_e JSfile);
 

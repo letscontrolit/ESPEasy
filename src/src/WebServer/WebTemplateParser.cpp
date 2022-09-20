@@ -332,9 +332,15 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
   else if (varName.equals(F("js")))
   {
     html_add_JQuery_script();
+
     #if FEATURE_CHART_JS
     html_add_ChartJS_script();
     #endif // if FEATURE_CHART_JS
+
+    #if FEATURE_RULES_EASY_COLOR_CODE
+    html_add_Easy_color_code_script();
+    #endif
+    
     html_add_autosubmit_form();
     serve_JS(JSfiles_e::Toasting);
   }

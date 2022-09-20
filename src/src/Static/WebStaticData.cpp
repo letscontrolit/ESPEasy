@@ -23,10 +23,12 @@ void serve_CDN_CSS(const __FlashStringHelper * fname) {
   addHtml('/', '>');
 }
 
-void serve_CDN_JS(const __FlashStringHelper * fname) {
+void serve_CDN_JS(const __FlashStringHelper * fname, const __FlashStringHelper * script_arg) {
   addHtml(F("<script"));
   addHtml(F(" defer"));
   addHtmlAttribute(F("src"), generate_external_URL(fname));
+  addHtml(' ');
+  addHtml(script_arg);
   addHtml('>');
   html_add_script_end();
 }
@@ -67,6 +69,12 @@ void serve_favicon() {
 
 void serve_JS(JSfiles_e JSfile) {
     const __FlashStringHelper * url = F("");
+    const __FlashStringHelper * id = F("");
+    #if !defined(WEBSERVER_INCLUDE_JS)
+    bool useCDN = true;
+    #else
+    bool useCDN = false;
+    #endif
 
     switch (JSfile) {
         case JSfiles_e::UpdateSensorValuesDevicePage:
@@ -90,6 +98,22 @@ void serve_JS(JSfiles_e JSfile) {
         case JSfiles_e::SplitPasteInput:
           url = F("split_paste.js");
           break;
+#if FEATURE_RULES_EASY_COLOR_CODE
+        case JSfiles_e::EasyColorCode_codemirror:
+          url = F("codemirror.min.js");
+          useCDN = true;
+          break;
+        case JSfiles_e::EasyColorCode_espeasy:
+          url = F("espeasy.min.js");
+          useCDN = true;
+          break;
+        case JSfiles_e::EasyColorCode_cm_plugins:
+          url = F("cm-plugins.min.js");
+          id = F("id='anyword'");
+          useCDN = true;
+          break;
+#endif
+
     }
 
     // Work-around for shortening the filename when stored on SPIFFS file system
@@ -100,11 +124,13 @@ void serve_JS(JSfiles_e JSfile) {
 
     if (!fileExists(fname))
     {
-        #ifndef WEBSERVER_INCLUDE_JS
-        serve_CDN_JS(url);
-        return;
+        #if !defined(WEBSERVER_INCLUDE_JS) || FEATURE_RULES_EASY_COLOR_CODE
+        if (useCDN) {
+          serve_CDN_JS(url, id);
+          return;
+        }
         #else
-        html_add_script(true);
+        html_add_script_arg(id, true);
         switch (JSfile) {
           case JSfiles_e::UpdateSensorValuesDevicePage:
             #ifdef WEBSERVER_DEVICES
@@ -147,7 +173,7 @@ void serve_JS(JSfiles_e JSfile) {
         #endif
     }
     // Now stream the file directly from the file system.
-    html_add_script(false);
-    streamFromFS(fname);
+    html_add_script_arg(id, false);
+    streamFromFS(String(fname));
     html_add_script_end();
 }
