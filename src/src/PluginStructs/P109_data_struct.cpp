@@ -188,26 +188,7 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 
       if (_buttons[0] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
         _buttons[0] = current_time;
-
-        switch (int(UserVar[event->BaseVarIndex + 2])) {
-          case 0: { // off mode, no func
-            break;
-          }
-          case 1: { // auto mode, setpoint dec
-            setSetpoint(F("-0.5"));
-            break;
-          }
-          case 2: { // manual on mode, timer dec
-            UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] - P109_BUTTON_DEBOUNCE_TIME_MS;
-
-            if (UserVar[event->BaseVarIndex + 3] < 0) {
-              UserVar[event->BaseVarIndex + 3] = 5400;
-            }
-            _prev_timeout = P109_TIMEOUT_STATE_UNSET;
-            _changed      = 1;
-            break;
-          }
-        }
+        actionLeft(event);
       }
     }
 
@@ -216,26 +197,7 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 
       if (_buttons[1] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
         _buttons[1] = current_time;
-
-        switch (int(UserVar[event->BaseVarIndex + 2])) {
-          case 0: { // off mode, no func
-            break;
-          }
-          case 1: { // auto mode, setpoint inc
-            setSetpoint(F("+0.5"));
-            break;
-          }
-          case 2: { // manual on mode, timer dec
-            UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] + P109_BUTTON_DEBOUNCE_TIME_MS;
-
-            if (UserVar[event->BaseVarIndex + 3] > 5400) {
-              UserVar[event->BaseVarIndex + 3] = 60;
-            }
-            _prev_timeout = P109_TIMEOUT_STATE_UNSET;
-            _changed      = 1;
-            break;
-          }
-        }
+        actionRight(event);
       }
     }
 
@@ -244,26 +206,82 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 
       if (_buttons[2] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
         _buttons[2] = current_time;
-
-        switch (int(UserVar[event->BaseVarIndex + 2])) {
-          case 0: { // off mode, next
-            setMode(F("a"), F("0"));
-            break;
-          }
-          case 1: { // auto mode, next
-            setMode(F("m"), F("5"));
-            break;
-          }
-          case 2: { // manual on mode, next
-            setMode(F("x"), F("0"));
-            break;
-          }
-        }
+        actionMode(event);
       }
     }
   }
 
   return _initialized;
+}
+
+/**************************************************************************
+ * Left button action
+ *************************************************************************/
+void P109_data_struct::actionLeft(struct EventStruct *event) {
+  switch (int(UserVar[event->BaseVarIndex + 2])) {
+    case 0: { // off mode, no func
+      break;
+    }
+    case 1: { // auto mode, setpoint dec
+      setSetpoint(F("-0.5"));
+      break;
+    }
+    case 2: { // manual on mode, timer dec
+      UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] - P109_BUTTON_DEBOUNCE_TIME_MS;
+
+      if (UserVar[event->BaseVarIndex + 3] < 0) {
+        UserVar[event->BaseVarIndex + 3] = 5400;
+      }
+      _prev_timeout = P109_TIMEOUT_STATE_UNSET;
+      _changed      = 1;
+      break;
+    }
+  }
+}
+
+/**************************************************************************
+ * Right button action
+ *************************************************************************/
+void P109_data_struct::actionRight(struct EventStruct *event) {
+  switch (int(UserVar[event->BaseVarIndex + 2])) {
+    case 0: { // off mode, no func
+      break;
+    }
+    case 1: { // auto mode, setpoint inc
+      setSetpoint(F("+0.5"));
+      break;
+    }
+    case 2: { // manual on mode, timer dec
+      UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] + P109_BUTTON_DEBOUNCE_TIME_MS;
+
+      if (UserVar[event->BaseVarIndex + 3] > 5400) {
+        UserVar[event->BaseVarIndex + 3] = 60;
+      }
+      _prev_timeout = P109_TIMEOUT_STATE_UNSET;
+      _changed      = 1;
+      break;
+    }
+  }
+}
+
+/**************************************************************************
+ * Rotate mode
+ *************************************************************************/
+void P109_data_struct::actionMode(struct EventStruct *event) {
+  switch (int(UserVar[event->BaseVarIndex + 2])) {
+    case 0: { // off mode, next
+      setMode(F("a"), F("0"));
+      break;
+    }
+    case 1: { // auto mode, next
+      setMode(F("m"), F("5"));
+      break;
+    }
+    case 2: { // manual on mode, next
+      setMode(F("x"), F("0"));
+      break;
+    }
+  }
 }
 
 /**************************************************************************
@@ -307,7 +325,7 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
         flashCount();
       }
       # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("Thermo : Save UserVars to SPIFFS"));
+      addLog(LOG_LEVEL_INFO, concat(F("Thermo : Save UserVars to "), fileName));
       # endif // ifndef BUILD_NO_DEBUG
     }
   }
@@ -395,6 +413,15 @@ bool P109_data_struct::plugin_write(struct EventStruct *event,
 
       if (subcommand.equals(F("setpoint"))) {
         setSetpoint(par3);
+      }
+      else if (subcommand.equals(F("left"))) {    // Emulate Left button action
+        actionLeft(event);
+      }
+      else if (subcommand.equals(F("right"))) {   // Emulate Right button action
+        actionRight(event);
+      }
+      else if (subcommand.equals(F("modebtn"))) { // Emulate Mode button action
+        actionMode(event);
       }
       else if (subcommand.equals(F("heating"))) {
         setHeater(par3);

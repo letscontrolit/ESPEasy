@@ -89,6 +89,10 @@ private:
   bool _initialized  = false;
   bool _showWiFiName = true;
 
+  void actionLeft(struct EventStruct *event);
+  void actionRight(struct EventStruct *event);
+  void actionMode(struct EventStruct *event);
+
   void display_header();
   void display_time();
   void display_title(const String& title);

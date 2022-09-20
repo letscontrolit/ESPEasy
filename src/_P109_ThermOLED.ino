@@ -30,6 +30,9 @@
    - thermo,heating,[RELAY_STATUS]            Manually forcing relay status [off/on]
    - thermo,mode,[MODE],[TIMEOUT]             Set to either mode X/A/M, if M selected,
                                               then TIMEOUT can be specified in minutes
+   - thermo,left                              Emulate the Left button action
+   - thermo,right                             Emulate the Right button action
+   - thermo,modebtn                           Emulate the Mode button action
 
    Command Examples :
    -  /control?cmd=thermo,setpoint,23          Set target setpoint to 23 Celsius
@@ -40,6 +43,7 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
+   2022-09-20 tonhuisman: Add commands for emulating the Left, Right and Mode buttons
    2022-08-28 tonhuisman: Changelog reversed order to newest on top
                           Deduplicate code for displaying text on display
    2022-06-18 tonhuisman: Enable multi-instance use, implement OLed_helper functions,
