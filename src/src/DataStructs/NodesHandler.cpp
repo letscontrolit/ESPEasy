@@ -331,21 +331,25 @@ void NodesHandler::updateThisNode() {
   WiFi.macAddress(thisNode.sta_mac);
   WiFi.softAPmacAddress(thisNode.ap_mac);
   {
-    bool addIP = NetworkConnected();
+    const bool addIP = NetworkConnected();
     #ifdef USES_ESPEASY_NOW
     if (use_EspEasy_now) {
       thisNode.useAP_ESPEasyNow = 1;
     }
     #endif
     if (addIP) {
-      IPAddress localIP = NetworkLocalIP();
+      const IPAddress localIP = NetworkLocalIP();
 
       for (uint8_t i = 0; i < 4; ++i) {
         thisNode.ip[i] = localIP[i];
       }
     }
   }
+  #ifdef USES_ESPEASY_NOW
+  thisNode.channel = getESPEasyNOW_channel();
+  #else
   thisNode.channel = WiFiEventData.usedChannel;
+  #endif
   if (thisNode.channel == 0) {
     thisNode.channel = WiFi.channel();
   }
@@ -356,7 +360,7 @@ void NodesHandler::updateThisNode() {
   thisNode.nodeType = NODE_TYPE_ID;
 
   thisNode.webgui_portnumber = Settings.WebserverPort;
-  int load_int = getCPUload() * 2.55;
+  const int load_int = getCPUload() * 2.55;
 
   if (load_int > 255) {
     thisNode.load = 255;
@@ -553,7 +557,7 @@ uint8_t NodesHandler::getESPEasyNOW_channel() const
       return preferred->channel;
     }
   }
-  return 0;
+  return WiFiEventData.usedChannel;
 }
 #endif
 
