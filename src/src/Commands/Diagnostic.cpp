@@ -203,25 +203,17 @@ void debugPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
   createLogPortStatus(it);
 }
 
-void logPortStatus(const String& from) {
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
 
-    log  = F("PortStatus structure: Called from=");
-    log += from;
-    log += F(" Count=");
-    log += globalMapPortStatus.size();
-    addLogMove(LOG_LEVEL_INFO, log);
+const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, const char *Line)
+{
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLogMove(LOG_LEVEL_INFO, concat(F("PortStatus structure: Called from=Rules Count="), globalMapPortStatus.size()));
   }
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
     debugPortStatus(it);
   }
-}
 
-const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, const char *Line)
-{
-  logPortStatus("Rules");
   return return_command_success();
 }
 #endif // BUILD_NO_DIAGNOSTIC_COMMANDS

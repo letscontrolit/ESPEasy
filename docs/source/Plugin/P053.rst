@@ -250,7 +250,7 @@ Sensor
 
 **GPIO -> Reset** The pin to control the Reset signal. Not used when set to None.
 
-The serial settings depend on the type of **Serial Port** selected.
+See: :ref:`SerialHelper_page`
 
 Device
 ^^^^^^

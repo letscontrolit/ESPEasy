@@ -68,6 +68,10 @@ The Mitsubishi Heatpump plugin can be added as simple as selecting it from the l
 
 .. image:: P093_2.jpg
 
+
+See: :ref:`SerialHelper_page`
+
+
 Once we hit submit, the plugin will start sending messages through controller, i.e. MQTT with payload:
 
 ``{"roomTemperature":25.5,"wideVane":"|","power":"OFF","mode":"COOL","fan":"AUTO","vane":"AUTO","iSee":true,"operating":true,"compressorFrequency":5,"temperature":24.0}``

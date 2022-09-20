@@ -32,6 +32,12 @@ Supported hardware
 
 |P094_usedby|
 
+Sensor
+^^^^^^
+
+See: :ref:`SerialHelper_page`
+
+
 Commands available
 ^^^^^^^^^^^^^^^^^^
 

@@ -42,6 +42,10 @@ void wrap_html_tag(char tag, const String& text) {
   addHtml('>');
 }
 
+void html_B(const __FlashStringHelper * text) {
+  wrap_html_tag('b', text);
+}
+
 void html_B(const String& text) {
   wrap_html_tag('b', text);
 }
@@ -84,7 +88,7 @@ void html_TD() {
   addHtml(F("<TD>"));
 }
 
-void html_TD(const String& style) {
+void html_TD(const __FlashStringHelper * style) {
   addHtml(F("<TD style=\""));
   addHtml(style);
   addHtml(F(";\">"));
@@ -124,11 +128,11 @@ void html_table_class_normal() {
 }
 
 void html_table_class_multirow() {
-  html_table(F("multirow"), true);
+  html_table(F("multirow even"), true);
 }
 
 void html_table_class_multirow_noborder() {
-  html_table(F("multirow"), false);
+  html_table(F("multirow even"), false);
 }
 
 void html_table(const __FlashStringHelper * tableclass, bool boxed) {
