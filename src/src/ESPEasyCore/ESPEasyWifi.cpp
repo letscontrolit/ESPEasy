@@ -1138,7 +1138,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     delay(100);
   }
 
-  addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
+  addLog(LOG_LEVEL_INFO, concat(F("WIFI : Set WiFi to "), getWifiModeString(wifimode)));
 
   int retry = 2;
   while (!WiFi.mode(wifimode) && retry > 0) {
