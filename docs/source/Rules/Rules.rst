@@ -987,6 +987,32 @@ Complete rule used to parse this and set a variable in a dummy device:
  endon
 
 
+timeToMin/timeToSec
+^^^^^^^^^^^^^^^^^^^
+
+(Added: 2022-08-09)
+
+Convert a time-string to minutes/seconds.
+
+Usage:
+
+* ``{timeToMin:<startpos>:<endpos>:<string>}`` to convert a string, with hh:mm format, to minutes (0..1439)
+* ``{timeToSec:<startpos>:<endpos>:<string>}`` to convert a string, with hh:mm:ss format, to seconds (0..86399)
+
+The hour (hh), minute (mm) or seconds (ss) values *can* be provided in single-digit values, if applicable.
+
+The position arguments are the same as in Arduino ``String::substring`` , meaning the endpos is 1 position further than the last character you need.
+
+For example:
+
+.. code-block:: none
+ 
+ on Clock#Time=All,**:** do
+   logentry,"Minutes since midnight: {timeToMin:0:5:'%eventvalue2%'}"
+   logentry,"Seconds since midnight: {timeToSec:0:8:'%eventvalue2%:00'}" // Clock#Time doesn't include seconds, so we fake them
+ endon
+
+
 toBin / toHex
 ^^^^^^^^^^^^^
 

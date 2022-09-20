@@ -340,6 +340,9 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - Mins to dhm:  ``%c_m2dhm%(1900)``
      - Mins to dhm: ``1d07h40m``
      - Minutes to days/hours/minutes notation
+   * - Mins to hcm:  ``%c_m2hcm%(482)``
+     - Mins to hcm: ``08:02``
+     - Minutes to hours/colon/minutes (hh:mm) notation (days are ignored when value > 1440 minutes!)
    * - Secs to dhms: ``%c_s2dhms%(100000)``
      - Secs to dhms: ``1d03:46:40``
      - Seconds to days/hours/minutes/seconds notation

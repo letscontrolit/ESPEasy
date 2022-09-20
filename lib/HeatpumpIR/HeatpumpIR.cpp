@@ -13,6 +13,11 @@ void HeatpumpIR::send(IRSender&, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, ui
 {
 }
 
+// Send ambient temperature. This is a virtual function, i.e. never called
+void HeatpumpIR::send(IRSender&, uint8_t)
+{
+}
+
 // Heatpump model and info getters
 const char PROGMEM* HeatpumpIR::model()
 {
