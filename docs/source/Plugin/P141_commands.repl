@@ -15,12 +15,12 @@
     "
     | ``pcd8544cmd,on``
     ","
-    | Switch the display on.
+    | Switch the display on. And also turn on the backlight if that is connected and configured. Any content that was displayed when the display was turned off is *not* restored.
     "
     "
     | ``pcd8544cmd,off``
     ","
-    | Switch the display off. If the Backlight is connected and configured, that will also be turned off.
+    | Switch the display off. As this hardware doesn't have the option to be turned off, the display will be cleared. If the Backlight is connected and configured, that will also be turned off.
     "
     "
     | ``pcd8544cmd,clear``

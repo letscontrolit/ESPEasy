@@ -96,7 +96,7 @@ Available options:
 .. image:: P141_RotationOptions.png
    :alt: Rotation
 
-The available options rotate the display content in a clock-wise direction.
+The available options rotate the display content in a counter clock-wise direction.
 
 * **Text print Mode** Defines the handling of text when predefined text or text via the ``txt`` or ``txtfull`` subcommands (see below) is displayed.
 
@@ -149,7 +149,7 @@ Next to Line 9, the remaining capacity in characters is displayed.
 
 The total combination of lines * input length can not exceed 540 characters (sized dynamically). An error message will be shown after (trying to) save the settings, **any excess content will be discarded!**
 
-* **Linespacing** When using a font scale > 1 the whitespace between the lines can be quite big. To be able to fine-tune that, this option is available, allowing 0 .. 14 pixels fixed linespacing, or use the default 'Auto' setting that calculates the linespacing based on font height and scale. When using 0 or 1 pixels, possibly the characters 'hanging' below the baseline, like g, j, p and y may get partially overwritten by the next line!
+* **Linespacing** When using a font scale > 1 the whitespace between the lines can be quite big. To be able to fine-tune that, this option is available, allowing 0 .. 14 pixels fixed linespacing, or use the default 'Auto' setting that calculates the linespacing based on font height and scale.
 
 * **Interval** By default, Interval will be set to 0. If set to a non-zero value, the pre-configured content (if any) will be updated automatically using that interval (seconds). Depending on the **Text print Mode** setting, content that may have been draw from rules or external commands, may be erased.
 
