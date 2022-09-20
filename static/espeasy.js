@@ -22,12 +22,15 @@ var commonPlugins = [
   //P007
   "analogout",
   //P009
-  "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse", "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "MonitorRange,MCP", "UnMonitorRange,MCP", "UnMonitor,MCP", "MCPGPIORange", "MCPGPIOPattern", "MCPMode", "MCPModeRange",
+  "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse", "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "MonitorRange,MCP",
+  "UnMonitorRange,MCP", "UnMonitor,MCP", "MCPGPIORange", "MCPGPIOPattern", "MCPMode", "MCPModeRange",
   //P012
   "LCDCmd", "LCD",
   //P019
   "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF",
   "MonitorRange,PCF", "UnMonitorRange,PCF", "UnMonitor,PCF", "PCFGPIORange", "PCFGPIOpattern", "PCFMode", "PCFmodeRange",
+  //P022
+  "pcapwm", "pcafrq", "mode2",
   //P035
   "IRSEND", "IRSENDAC",
   //P036
@@ -40,6 +43,8 @@ var commonPlugins = [
   "Sensair_SetRelay",
   //P053
   "PMSX003", "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset",
+  //P059
+  "encwrite",
   //P065
   "Play", "Vol", "Eq", "Mode", "Repeat",
   //P067
@@ -74,7 +79,9 @@ var commonPlugins = [
   //P124
   "multirelay", "multirelay,on", "multirelay,off", "multirelay,set", "multirelay,get", "multirelay,loop",
   //P126
-  "ShiftOut", "ShiftOut,Set", "ShiftOut,SetNoUpdate", "ShiftOut,Update", "ShiftOut,SetAll", "ShiftOut,SetAllNoUpdate", "ShiftOut,SetAllLow", "ShiftOut,SetChipCount", "ShiftOut,SetHexBin",
+  "ShiftOut", "ShiftOut,Set", "ShiftOut,SetNoUpdate", "ShiftOut,Update", "ShiftOut,SetAll", "ShiftOut,SetAllNoUpdate", "ShiftOut,SetAllLow", "ShiftOut,SetAllHigh", "ShiftOut,SetChipCount", "ShiftOut,SetHexBin",
+  //P129
+  "ShiftIn", "ShiftIn,PinEvent", "ShiftIn,ChipEvent", "ShiftIn,SetChipCount", "ShiftIn,SampleFrequency", "ShiftIn,EventPerPin",
   //P127
   "cdmrst"
 ];
@@ -266,6 +273,13 @@ function initCM() {
         for (const element of EXTRAWORDS) {
           let WinDB = element.substring(1);
           if ((element.includes(":") || element.includes(",")) && stream.match(WinDB)) void (0)
+        }
+      }
+      //P022 addition
+      if (/\w/.test(ch)) {
+        stream.eatWhile(/[\w]/);
+        if (stream.match(".gpio") || stream.match(".pulse") || stream.match(".frq") || stream.match(".pwm")) {
+          return 'def';
         }
       }
 
