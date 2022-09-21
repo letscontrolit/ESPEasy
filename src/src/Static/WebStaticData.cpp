@@ -98,9 +98,7 @@ void serve_favicon() {
 void serve_JS(JSfiles_e JSfile) {
     const __FlashStringHelper * url = F("");
     const __FlashStringHelper * id = F("");
-    #if !defined(WEBSERVER_INCLUDE_JS)
-    bool useCDN = true;
-    #else
+    #if defined(WEBSERVER_INCLUDE_JS)
     bool useCDN = false;
     #endif
 
@@ -129,16 +127,22 @@ void serve_JS(JSfiles_e JSfile) {
 #if FEATURE_RULES_EASY_COLOR_CODE
         case JSfiles_e::EasyColorCode_codemirror:
           url = F("codemirror.min.js");
+          #if defined(WEBSERVER_INCLUDE_JS)
           useCDN = true;
+          #endif
           break;
         case JSfiles_e::EasyColorCode_espeasy:
           url = F("espeasy.min.js");
+          #if defined(WEBSERVER_INCLUDE_JS)
           useCDN = true;
+          #endif
           break;
         case JSfiles_e::EasyColorCode_cm_plugins:
           url = F("cm-plugins.min.js");
           id = F("id='anyword'");
+          #if defined(WEBSERVER_INCLUDE_JS)
           useCDN = true;
+          #endif
           break;
 #endif
 

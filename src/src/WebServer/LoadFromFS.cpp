@@ -144,7 +144,7 @@ bool loadFromFS(String path) {
 
   // prevent reloading stuff on every click
   if (static_file) {
-    web_server.sendHeader(F("Cache-Control"), F("public, max-age=31536000, stale-while-revalidate=2592000"));
+    web_server.sendHeader(F("Cache-Control"), F("public, max-age=31536000, immutable"));
 //    web_server.sendHeader(F("Cache-Control"), F("max-age=86400"));
     web_server.sendHeader(F("Age"),           F("100"));
     web_server.sendHeader(F("ETag"),          wrap_String(String(Cache.fileCacheClearMoment) + F("-a"), '"')); // added "-a" to the ETag to match the same encoding
