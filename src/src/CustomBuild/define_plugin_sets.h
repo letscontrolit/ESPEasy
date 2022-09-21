@@ -744,6 +744,7 @@ To create/register a plugin, you have to :
   #endif
   #define  PLUGIN_SET_COLLECTION
   #define  CONTROLLER_SET_STABLE
+  #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
   // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -774,6 +775,7 @@ To create/register a plugin, you have to :
   #define  PLUGIN_SET_COLLECTION
   #define  PLUGIN_SET_COLLECTION_B
   #define  CONTROLLER_SET_STABLE
+  #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
   // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -804,6 +806,7 @@ To create/register a plugin, you have to :
   #define  PLUGIN_SET_COLLECTION
   #define  PLUGIN_SET_COLLECTION_C
   #define  CONTROLLER_SET_STABLE
+  #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
   // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -834,6 +837,7 @@ To create/register a plugin, you have to :
   #define  PLUGIN_SET_COLLECTION
   #define  PLUGIN_SET_COLLECTION_D
   #define  CONTROLLER_SET_STABLE
+  #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
   // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -864,6 +868,7 @@ To create/register a plugin, you have to :
   #define  PLUGIN_SET_COLLECTION
   #define  PLUGIN_SET_COLLECTION_E
   #define  CONTROLLER_SET_STABLE
+  #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
   // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -1289,8 +1294,8 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
-    //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
+    //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P105   // AHT10/20/21
     #define USES_P134   // A02YYUW
 #endif
@@ -1509,6 +1514,7 @@ To create/register a plugin, you have to :
     //#define USES_C015   // Blynk
     #define USES_C017   // Zabbix
     // #define USES_C018 // TTN RN2483
+    // #define USES_C019   // ESPEasy-NOW
 #endif
 
 
@@ -1607,6 +1613,9 @@ To create/register a plugin, you have to :
 // Add all plugins, controllers and features that don't fit in the COLLECTION set
 #ifdef PLUGIN_SET_MAX
   // Features
+  #ifndef USES_ESPEASY_NOW
+//    #define USES_ESPEASY_NOW
+  #endif
   #ifndef FEATURE_SERVO
     #define FEATURE_SERVO 1
   #endif
@@ -1836,6 +1845,12 @@ To create/register a plugin, you have to :
 
 #if defined(USES_C018)
   #define FEATURE_PACKED_RAW_DATA 1
+#endif
+
+#if defined(USES_C019)
+  #ifndef USES_ESPEASY_NOW
+    #define USES_ESPEASY_NOW
+  #endif
 #endif
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
@@ -2124,6 +2139,24 @@ To create/register a plugin, you have to :
     #define FEATURE_RTTTL 1
   #endif
 #endif
+
+#ifdef USES_ESPEASY_NOW
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
+    // Will not fit on ESP8266 along with IR plugins included
+    #undef USES_ESPEASY_NOW
+  #endif
+#endif
+
+#if defined(USES_C019) && !defined(USES_ESPEASY_NOW)
+  // C019 depends on ESPEASY_NOW, so don't use it if ESPEasy_NOW is excluded
+  #undef USES_C019
+#endif
+
+#if defined(USES_C019) && !defined(FEATURE_PACKED_RAW_DATA)
+  #define FEATURE_PACKED_RAW_DATA  1
+#endif
+
+
 
 // By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
 #ifdef WEBSERVER_NEW_UI
