@@ -34,8 +34,37 @@ void serve_CDN_JS(const __FlashStringHelper * fname, const __FlashStringHelper *
 }
 
 
-void serve_CSS() {
-  const String cssFile(F("esp.css"));
+void serve_CSS(CSSfiles_e cssfile) {
+  const __FlashStringHelper * url = F("");
+  #if !defined(WEBSERVER_CSS)
+  bool useCDN = true;
+  #else
+  bool useCDN = false;
+  #endif
+
+  switch (cssfile) {
+    case CSSfiles_e::ESPEasy_default:
+      // Send CSS in chunks
+#if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
+      useCDN = false;
+#else
+      url = F("espeasy_default.min.css");
+#endif      
+      break;
+#if FEATURE_RULES_EASY_COLOR_CODE
+    case CSSfiles_e::EasyColorCode_codemirror:
+      url = F("codemirror.min.css");
+      useCDN = true;
+      break;
+#endif
+    default:
+      return;      
+  }
+
+  const String cssFile = 
+      (cssfile == CSSfiles_e::ESPEasy_default) ?
+      F("esp.css") : url;
+
   if (fileExists(cssFile))
   {
     addHtml(F("<style>"));
@@ -43,15 +72,15 @@ void serve_CSS() {
     addHtml(F("</style>"));
     return;
   }
-  #ifndef WEBSERVER_CSS
-  serve_CDN_CSS(F("espeasy_default.min.css"));
-  #else
-  addHtml(F("<style>"));
-
-  // Send CSS in chunks
-  #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
-  TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
+  #if !(defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)) || FEATURE_RULES_EASY_COLOR_CODE
+  if (useCDN) {
+    serve_CDN_CSS(url);
+    return;
+  }
   #endif
+  #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
+  addHtml(F("<style>"));
+  TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
   addHtml(F("</style>"));
   #endif
 }

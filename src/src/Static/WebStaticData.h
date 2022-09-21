@@ -9,10 +9,6 @@
 
 String generate_external_URL(const String& fname);
 
-void serve_CSS();
-
-void serve_CDN_CSS(const __FlashStringHelper * fname);
-
 void serve_favicon();
 
 enum class JSfiles_e {
@@ -30,6 +26,14 @@ enum class JSfiles_e {
 #endif
 };
 
+enum class CSSfiles_e {
+  ESPEasy_default,
+#if FEATURE_RULES_EASY_COLOR_CODE
+  EasyColorCode_codemirror,
+#endif
+};
+
+void serve_CSS(CSSfiles_e cssfile);
 
 void serve_JS(JSfiles_e JSfile);
 

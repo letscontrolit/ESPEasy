@@ -325,7 +325,10 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
   else if (varName.equals(F("css")))
   {
     serve_favicon();
-    serve_CSS();
+    serve_CSS(CSSfiles_e::ESPEasy_default);
+    #if FEATURE_RULES_EASY_COLOR_CODE
+    serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
+    #endif
   }
 
 
