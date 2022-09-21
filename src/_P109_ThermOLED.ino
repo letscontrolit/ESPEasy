@@ -43,6 +43,7 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
+   2022-09-21 tonhuisman: Adjust subcommands to leftbtn and rightbtn, to be consistent with modebtn
    2022-09-20 tonhuisman: Add commands for emulating the Left, Right and Mode buttons
    2022-08-28 tonhuisman: Changelog reversed order to newest on top
                           Deduplicate code for displaying text on display
