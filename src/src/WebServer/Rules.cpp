@@ -59,7 +59,7 @@ void handle_rules() {
   }
 
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
   addHtmlError(error);
 
   html_table_class_normal();
@@ -111,7 +111,7 @@ void handle_rules() {
 
   serve_JS(JSfiles_e::SaveRulesFile);
 
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 
   checkRuleSets();

@@ -31,7 +31,7 @@ void handle_sysvars() {
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   html_BR();
   addHtml(F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>"));
@@ -253,7 +253,7 @@ void handle_sysvars() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 

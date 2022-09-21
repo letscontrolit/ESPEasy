@@ -132,7 +132,20 @@ bool fileExists(const String& fname) {
     return search->second;
   }
   bool res = ESPEASY_FS.exists(patched_fname);
+  #if FEATURE_SD
+  if (!res) {
+    res = SD.exists(patched_fname);
+  }
+  #endif
   Cache.fileExistsMap[patched_fname] = res;
+  if (Cache.fileCacheClearMoment == 0) {
+    if (node_time.timeSource == timeSource_t::No_time_source) {
+      // use some random value as we don't have a time yet
+      Cache.fileCacheClearMoment = HwRandom();
+    } else {
+      Cache.fileCacheClearMoment = node_time.now();
+    }
+  }
   return res;
 }
 
@@ -149,7 +162,7 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
     if (mode.equals(F("r"))) {
       return f;
     }
-    Cache.fileExistsMap.clear();
+    clearFileCaches();
   }
   f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
   STOP_TIMER(TRY_OPEN_FILE);
@@ -157,7 +170,7 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
 }
 
 bool tryRenameFile(const String& fname_old, const String& fname_new) {
-  Cache.fileExistsMap.clear();
+  clearFileCaches();
   if (fileExists(fname_old) && !fileExists(fname_new)) {
     clearAllCaches();
     return ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));

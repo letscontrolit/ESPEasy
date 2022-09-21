@@ -4,15 +4,16 @@
 #include "../Globals/Settings.h"
 #include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/LoadFromFS.h"
 
 String generate_external_URL(const String& fname) {
-  String url;
-  url.reserve(80 + fname.length());
-  url = get_CDN_url_prefix();
-  url += fname;
-  return url;
+  if (fileExists(fname)) {
+    // Generate some URL indicating static files which will need to be served with some cache-control header
+    return concat(F("static_"), Cache.fileCacheClearMoment) + '_' + fname;
+  }
+  return concat(get_CDN_url_prefix(), fname);
 }
 
 void serve_CDN_CSS(const __FlashStringHelper * fname) {
@@ -61,15 +62,13 @@ void serve_CSS(CSSfiles_e cssfile) {
       return;      
   }
 
-  const String cssFile = 
+  const __FlashStringHelper * cssFile = 
       (cssfile == CSSfiles_e::ESPEasy_default) ?
       F("esp.css") : url;
 
-  if (fileExists(cssFile))
+  if (fileExists(String(cssFile)))
   {
-    addHtml(F("<style>"));
-    streamFromFS(cssFile);
-    addHtml(F("</style>"));
+    serve_CDN_CSS(cssFile);
     return;
   }
   #if !(defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)) || FEATURE_RULES_EASY_COLOR_CODE
@@ -153,56 +152,57 @@ void serve_JS(JSfiles_e JSfile) {
 
     if (!fileExists(fname))
     {
-        #if !defined(WEBSERVER_INCLUDE_JS) || FEATURE_RULES_EASY_COLOR_CODE
-        if (useCDN) {
-          serve_CDN_JS(url, id);
+        #if defined(WEBSERVER_INCLUDE_JS)
+        if (!useCDN) {
+          html_add_script_arg(id, true);
+          switch (JSfile) {
+            case JSfiles_e::UpdateSensorValuesDevicePage:
+              #ifdef WEBSERVER_DEVICES
+              TXBuffer.addFlashString((PGM_P)FPSTR(DATA_UPDATE_SENSOR_VALUES_DEVICE_PAGE_JS));
+              #endif
+              break;
+            case JSfiles_e::FetchAndParseLog:
+              #ifdef WEBSERVER_LOG
+              TXBuffer.addFlashString((PGM_P)FPSTR(DATA_FETCH_AND_PARSE_LOG_JS));
+              #endif
+              break;
+            case JSfiles_e::SaveRulesFile:
+              #ifdef WEBSERVER_RULES
+              TXBuffer.addFlashString((PGM_P)FPSTR(jsSaveRules));
+              #endif
+              break;
+            case JSfiles_e::GitHubClipboard:
+              #ifdef WEBSERVER_GITHUB_COPY
+              TXBuffer.addFlashString((PGM_P)FPSTR(DATA_GITHUB_CLIPBOARD_JS));
+              #endif
+              break;
+            case JSfiles_e::Reboot:
+              TXBuffer.addFlashString((PGM_P)FPSTR(DATA_REBOOT_JS));
+              break;
+            case JSfiles_e::Toasting:
+              TXBuffer.addFlashString((PGM_P)FPSTR(jsToastMessageBegin));
+              // we can push custom messages here in future releases...
+              addHtml(F("Submitted"));
+              TXBuffer.addFlashString((PGM_P)FPSTR(jsToastMessageEnd));
+              break;
+            case JSfiles_e::SplitPasteInput:
+              TXBuffer.addFlashString((PGM_P)FPSTR(jsSplitMultipleFields));
+              // After this, make sure to call it, like this:
+              // split('$', ".query-input")
+              break;
+#if FEATURE_RULES_EASY_COLOR_CODE
+            case JSfiles_e::EasyColorCode_codemirror:
+            case JSfiles_e::EasyColorCode_espeasy:
+            case JSfiles_e::EasyColorCode_cm_plugins:
+              break;
+#endif
+          }
+          html_add_script_end();
           return;
         }
-        #else
-        html_add_script_arg(id, true);
-        switch (JSfile) {
-          case JSfiles_e::UpdateSensorValuesDevicePage:
-            #ifdef WEBSERVER_DEVICES
-            TXBuffer.addFlashString((PGM_P)FPSTR(DATA_UPDATE_SENSOR_VALUES_DEVICE_PAGE_JS));
-            #endif
-            break;
-          case JSfiles_e::FetchAndParseLog:
-            #ifdef WEBSERVER_LOG
-            TXBuffer.addFlashString((PGM_P)FPSTR(DATA_FETCH_AND_PARSE_LOG_JS));
-            #endif
-            break;
-          case JSfiles_e::SaveRulesFile:
-            #ifdef WEBSERVER_RULES
-            TXBuffer.addFlashString((PGM_P)FPSTR(jsSaveRules));
-            #endif
-            break;
-          case JSfiles_e::GitHubClipboard:
-            #ifdef WEBSERVER_GITHUB_COPY
-            TXBuffer.addFlashString((PGM_P)FPSTR(DATA_GITHUB_CLIPBOARD_JS));
-            #endif
-            break;
-          case JSfiles_e::Reboot:
-            TXBuffer.addFlashString((PGM_P)FPSTR(DATA_REBOOT_JS));
-            break;
-          case JSfiles_e::Toasting:
-            TXBuffer.addFlashString((PGM_P)FPSTR(jsToastMessageBegin));
-            // we can push custom messages here in future releases...
-            addHtml(F("Submitted"));
-            TXBuffer.addFlashString((PGM_P)FPSTR(jsToastMessageEnd));
-            break;
-          case JSfiles_e::SplitPasteInput:
-            TXBuffer.addFlashString((PGM_P)FPSTR(jsSplitMultipleFields));
-            // After this, make sure to call it, like this:
-            // split('$', ".query-input")
-            break;
-
-        }
-        html_add_script_end();
-        return;
         #endif
+        serve_CDN_JS(url, id);
+    } else {
+      serve_CDN_JS(fname, id);
     }
-    // Now stream the file directly from the file system.
-    html_add_script_arg(id, false);
-    streamFromFS(String(fname));
-    html_add_script_end();
 }
