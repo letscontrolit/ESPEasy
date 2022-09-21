@@ -12,6 +12,9 @@ on:
     branches-ignore: '**'
     tags: 'mega-*'
 
+permissions:
+  contents: read
+
 jobs:
   generate-matrix:
     runs-on: ubuntu-20.04
@@ -125,6 +128,8 @@ jobs:
             return tagObj.data.message;
 
   release:
+    permissions:
+      contents: write # for ncipollo/release-action
     needs: [build, prepare-dist, prepare-notes]
     runs-on: ubuntu-20.04
     steps:
