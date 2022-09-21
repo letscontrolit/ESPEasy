@@ -1080,7 +1080,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
 
 #endif // ifdef ESP32
 
-bool webArg2ip(const String& arg, uint8_t *IP) {
+bool webArg2ip(const __FlashStringHelper * arg, uint8_t *IP) {
   return str2ip(webArg(arg), IP);
 }
 

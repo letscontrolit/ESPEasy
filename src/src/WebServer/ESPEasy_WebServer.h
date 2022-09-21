@@ -192,7 +192,7 @@ void getPartitionTableSVG(uint8_t         pType,
 
 #endif // ifdef ESP32
 
-bool webArg2ip(const String& arg,
+bool webArg2ip(const __FlashStringHelper * arg,
                uint8_t         *IP);
 
 
