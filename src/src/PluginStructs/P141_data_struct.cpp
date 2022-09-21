@@ -289,6 +289,13 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       } else {
         success = false;
       }
+    }
+    else if (arg1.equals(F("contrast")) && // Display contrast
+             (event->Par2 > 0) &&
+             (event->Par2 <= 100)) {
+      P141_CONFIG_CONTRAST = event->Par2;  // Set but don't store
+      _contrast            = event->Par2;  // Also set to current
+      pcd8544->setContrast(_contrast);
     } else {
       success = false;
     }
