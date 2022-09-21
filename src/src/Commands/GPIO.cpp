@@ -175,7 +175,7 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
   bool success = false;
 
   // Line[0]='l':longpulse; ='p':pcflongpulse; ='m':mcplongpulse
-  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, success);
+  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix(Line[0], pluginID, success);
 
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
@@ -388,7 +388,7 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
   bool success = false;
 
   // Line[0]='g':gpiotoggle; ='p':pcfgpiotoggle; ='m':mcpgpiotoggle
-  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, success);
+  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix(Line[0], pluginID, success);
 
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
@@ -446,7 +446,7 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
   bool success = false;
 
   // Line[0]='g':gpio; ='p':pcfgpio; ='m':mcpgpio
-  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, success);
+  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix(Line[0], pluginID, success);
 
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
@@ -1015,7 +1015,7 @@ bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *ev
   bool success = false;
 
   // Line[0]='g':gpio; ='p':pcfgpio; ='m':mcpgpio
-  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, success);
+  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix(Line[0], pluginID, success);
   const __FlashStringHelper * logPostfix = F(""); // = new char;
 
   if (success && checkValidPortRange(pluginID, pin))
