@@ -499,7 +499,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                         FontChoice[varNr], // selectedIndex,
                         false,             // reloadonchange,
                         true,              // enabled,
-                        EMPTY_STRING       // class name
+                        F("")              // class name
                         );
             html_TD();                     // alignment
             strID                  = F("AlignmentID");
@@ -513,7 +513,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                         AlignmentChoice[varNr], // selectedIndex,
                         false,                  // reloadonchange,
                         true,                   // enabled,
-                        EMPTY_STRING            // class name
+                        F("")                   // class name
                         );
           }
           html_end_table();
