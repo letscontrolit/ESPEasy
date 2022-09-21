@@ -292,7 +292,6 @@ void html_add_ChartJS_script() {
 
 #if FEATURE_RULES_EASY_COLOR_CODE
 void html_add_Easy_color_code_script() {
-  serve_CDN_CSS(F("codemirror.min.css"));
   serve_JS(JSfiles_e::EasyColorCode_codemirror);
   serve_JS(JSfiles_e::EasyColorCode_espeasy);
   serve_JS(JSfiles_e::EasyColorCode_cm_plugins);
