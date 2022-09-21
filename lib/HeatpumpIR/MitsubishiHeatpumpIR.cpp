@@ -292,7 +292,7 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
 
   // Set the temperature on the template message
   if (temperature == 10) {
-    Serial.println(F("Temp=10 maintenance mode"));
+    LOGLN(F("Temp=10 maintenance mode"));
     MitsubishiTemplate[7] = 0x00; // Maintenance mode
     MitsubishiTemplate[15] = 0x20; // This seems to be set to 0x20 on maintenance mode
   } else {
@@ -329,7 +329,7 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
 #ifdef IR_SEND_TIME
   if (_mitsubishiModel == MITSUBISHI_KJ) {
 #ifdef DEBUG
-    Serial.printf("Send time %02d:%02d day %d --> %x\n", sendHour, sendMinute, sendWeekday, (sendHour * 60 + sendMinute)/10);
+    LOGf("Send time %02d:%02d day %d --> %x\n", sendHour, sendMinute, sendWeekday, (sendHour * 60 + sendMinute)/10);
 #endif
     MitsubishiTemplate[10] = (uint8_t)((sendHour * 60 + sendMinute)/10);
     // Sunday is start if week , value 1
@@ -337,7 +337,7 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
   }
   else {
 #ifdef DEBUG
-    Serial.printf("Send time %02d:%02d --> %x\n", sendHour, sendMinute, (sendHour * 60 + sendMinute)/6);
+    LOGf("Send time %02d:%02d --> %x\n", sendHour, sendMinute, (sendHour * 60 + sendMinute)/6);
 #endif
     MitsubishiTemplate[10] = (uint8_t)((sendHour * 60 + sendMinute)/6);
   }
@@ -351,7 +351,7 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
     sprintf_P(pbyte, PSTR("[%02d]=%02x "), i, (int) MitsubishiTemplate[i]);
     strcat(IRPacket, pbyte);
   }
-  Serial.println(IRPacket);
+  LOGLN(IRPacket);
 #else
   // Calculate the checksum
   for (int i=0; i<17; i++) {

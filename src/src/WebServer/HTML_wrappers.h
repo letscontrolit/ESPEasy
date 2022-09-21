@@ -12,6 +12,7 @@ void wrap_html_tag(const __FlashStringHelper * tag, const String& text);
 void wrap_html_tag(const String& tag, const String& text);
 void wrap_html_tag(char tag, const String& text);
 
+void html_B(const __FlashStringHelper * text);
 void html_B(const String& text);
 
 void html_I(const String& text);
@@ -30,7 +31,7 @@ void html_TR_TD_height(int height);
 
 void html_TD();
 
-void html_TD(const String& style);
+void html_TD(const __FlashStringHelper * style);
 
 void html_TD(int td_cnt);
 

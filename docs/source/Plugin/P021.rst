@@ -60,6 +60,8 @@ There is 1 exception to the **Hysteresis**: If the Hysteresis is set to 0, the o
 
 * **Save 'Set Level' after change via config command** Via the config command, the **Set Level** value can be changed. To avoid wearing out the flash memory of the device by too often saving these settings, the default is now off, for existing tasks (after upgrade of ESPEasy), the old behavior of saving after each change is still active. The user should decide if saving the setting is actually required, or if that can be attained by carefully planning a save command or via a manual save.
 
+* **Auto-save interval**: Here a time in minutes can be set after which any changed 'Set Level' via the ``config,task,<taskname>,SetLevel,<value>`` command will be saved. This *requires* that the above setting **Save 'Set Level' after change via config command** is **disabled**! When used, a setting of ca. 30 minutes, or even longer when the Set Level is changed often, seems apropriate, unless the unit often reboots, but then that cause should be investigated and solved. The timer, when activated, should survive a warm reboot.
+
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 
@@ -86,6 +88,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |added|
+  2022-08-22: Auto-save interval option.
 
   |added|
   Major overhaul for 2.0 release.
