@@ -43,10 +43,9 @@ void P044_Task::startServer(uint16_t portnumber) {
     P1GatewayServer->begin();
 
     if (serverActive(P1GatewayServer)) {
-      addLog(LOG_LEVEL_INFO, String(F("P1   : WiFi server started at port ")) + portnumber);
+      addLog(LOG_LEVEL_INFO, concat(F("P1   : WiFi server started at port "), portnumber));
     } else {
-      addLog(LOG_LEVEL_ERROR, String(F("P1   : WiFi server start failed at port ")) +
-             portnumber + String(F(", retrying...")));
+      addLog(LOG_LEVEL_ERROR, concat(F("P1   : WiFi server start failed at port "), portnumber) + F(", retrying..."));
     }
   }
 }
@@ -202,26 +201,19 @@ unsigned int P044_Task::CRC16(const String& buf, int len)
        Returns false on a datagram start ('/'), end ('!') or invalid character
  */
 bool P044_Task::validP1char(char ch) {
-  if (isAlphaNumeric(ch))
-  {
-    return true;
-  }
-
-  switch (ch) {
-    case '.':
-    case ' ':
-    case '\\': // Single backslash, but escaped in C++
-    case '\r':
-    case '\n':
-    case '(':
-    case ')':
-    case '-':
-    case '*':
-    case ':':
-    case '_':
-      return true;
-  }
-  return false;
+  return
+    isAlphaNumeric(ch) ||
+    ch == '.' ||
+    ch == ' ' ||
+    ch == '\\'|| // Single backslash, but escaped in C++
+    ch == '\r'||
+    ch == '\n'||
+    ch == '(' ||
+    ch == ')' ||
+    ch == '-' ||
+    ch == '*' ||
+    ch == ':' ||
+    ch == '_';
 }
 
 void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin,
