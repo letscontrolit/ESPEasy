@@ -47,18 +47,29 @@ These displays are connected using the SPI interface, using at least 4 signal wi
 
 The text on most displays is somewhat confusing, as not the usual SPI names are used:
 
+.. image:: P141_DisplayConnections.png
+
 .. code-block:: none
+
+  - RST pin resets the display. It's an active low pin meaning; you can reset the display by pulling it low. You can also connect this pin to the Arduino reset so that it will reset the screen automatically.
+  - CE(Chip Enable) pin is used to select one of many connected devices sharing same SPI bus. It's an active low pin as well.
+  - D/C(Data/Command) pin tells the display whether the data it's receiving is a command or displayable data.
+  - DIN is a serial data pin for SPI interface.
+  - CLK is a serial clock pin for SPI interface.
+  - VCC pin supplies power for the LCD which we connect to the 3.3V volts pin on the Arduino.
+  - BL(Backlight) pin controls the backlight of the display. To control its brightness, you can add a potentiometer or connect this pin to any PWM-capable Arduino pin.
+  - GND should be connected to the ground of Arduino
 
   ESP         LCD
   --------    ------
-  3V3     --- VCC (the displays only support 3.3V)
-  GND     --- GND
+  (gpio)  --> RST (optional)
+  (gpio)  --> SCE (=CS/CE)
+  (gpio)  --> D/C
   MOSI    --> DIN(MOSI)
   CLK     --> SCLK
-  (gpio)  --> D/C
-  (gpio)  --> SCE (=CS)
-  (gpio)  --> RST (optional)
+  3V3     --- VCC (the displays only support 3.3V)
   (gpio)  --> LED (optional)
+  GND     --- GND
 
   (gpio) = configurable GPIO pin.
 
@@ -81,7 +92,7 @@ Actuator
 * **GPIO -> RST (optional)** Select the GPIO pin to use for the ``RST`` (reset) connection. If the display doesn't have a ``RST`` connection, or no free pin is available, it can be set to *None*.
 * **GPIO -> Backlight (optional)** Select the GPIO pin to use for controlling the backlight. To save power, the backlight can be dimmed, or turned off if the display is turned off. If set to *None* and the ``LED`` input connected to ``VCC``, the max. brightness is used for the backlight.
 * **Backlight percentage** The backlight can be controlled via PWM modulation on the Backlight (LED) pin of the display. This is set as a percentage between 1 and 100.
-* **Display Contrast**: The PCD8544 supports setting the contrast level, to get an optimally visible display content. This can be fine-tuned here. Range: 40..100%.
+* **Display Contrast**: The PCD8544 supports setting the contrast level, to get an optimally visible display content. This can be fine-tuned here. Range: 1..100%.
 * **Display button** A GPIO pin can be configured to wake the display on demand. This, combined with the **Display Timeout** setting, can preserve the lifetime of the display, and save some power.
 * **Inversed Logic** When checked, reverses the pin-state action of the **Display button** gpio. This allows an external circuit, f.e. an IR sensor, that may provide a *high* signal when activated, to wake the display.
 * **Display Timeout** Select the timeout in seconds to turn off the display after the last update or wake-up. Only used if the **Display button** is *also* configured.
