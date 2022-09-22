@@ -31,6 +31,8 @@ var commonPlugins = [
   "MonitorRange,PCF", "UnMonitorRange,PCF", "UnMonitor,PCF", "PCFGPIORange", "PCFGPIOpattern", "PCFMode", "PCFmodeRange",
   //P022
   "pcapwm", "pcafrq", "mode2",
+  //P023
+  "OLED", "OLEDCMD", "OLEDCMD,on", "OLEDCMD,off", "OLEDCMD,clear",
   //P035
   "IRSEND", "IRSENDAC",
   //P036
@@ -302,7 +304,7 @@ function initCM() {
           return "comment";
         }
         else {
-          return 'qualifier';
+          return 'operator';
         }
       }
 
@@ -312,7 +314,7 @@ function initCM() {
       }
 
       if (ch === '+' || ch === '=' || ch === '<' || ch === '>' || ch === '-' || ch === ',' || ch === '*' || ch === '!') {
-        return 'qualifier';
+        return 'operator';
       }
 
       if (ch == "%") {
