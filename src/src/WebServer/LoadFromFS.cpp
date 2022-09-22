@@ -15,12 +15,13 @@
 # include <SD.h>
 #endif // if FEATURE_SD
 
-bool match_ext(const String& path, const __FlashStringHelper *ext) {
-  return path.endsWith(ext) || path.endsWith(String(ext) + F(".gz"));
-}
-
 bool gzipEncoded(const String& path) {
   return path.endsWith(F(".gz"));
+}
+
+bool match_ext(const String& path, const __FlashStringHelper *ext) {
+  return path.endsWith(ext) || 
+        (gzipEncoded(path) && path.endsWith(concat(ext, F(".gz"))));
 }
 
 String fileFromUrl(String path) {
@@ -47,6 +48,76 @@ String fileFromUrl(String path) {
   return path;
 }
 
+bool isStaticFile_StripPrefix(String& path) {
+  // Strip any "static_xxx_" prepended for cache purposes
+  const int index_static = path.indexOf(F("static_"));
+  if (index_static != -1) {
+    const int index_1 = path.indexOf('_');
+    const int index_2 = path.indexOf('_', index_1 + 1);
+    if (index_1 > 0 && index_2 > index_1) {
+      path = fileFromUrl(path.substring(index_2 + 1));
+      return true;
+    }
+  }
+  if (path.equalsIgnoreCase(F("favicon.ico"))) {
+    return true;
+  }
+  return false;
+}
+
+bool reply_304_not_modified(const String& path) {
+/*
+  for (int i = web_server.headers(); i >= 0; --i) {
+    addLog(LOG_LEVEL_INFO, concat(F("header: "), web_server.headerName(i)) + ':' + web_server.header(i));
+  }
+*/
+  const String ifNoneMatch = stripQuotes(web_server.header(F("If-None-Match")));
+  unsigned int etag_num = 0;
+  if (validUIntFromString(ifNoneMatch, etag_num)) {
+    if (fileExists(path)) {
+      // call fileExists first, as this may update Cache.fileCacheClearMoment
+      if (Cache.fileCacheClearMoment == etag_num) {
+        // We have a request for the same file we served earlier.
+        // Reply with a 304 Not Modified
+        #ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_INFO, concat(F("Serve 304: "), etag_num));
+        #endif
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+const __FlashStringHelper* getDataType(String& path, bool& mustCheckCredentials)
+{
+  mustCheckCredentials = false;
+  const __FlashStringHelper* dataType = F("text/plain");
+  if (path.endsWith(F(".src"))) { 
+    // FIXME TD-er: is this still used by anyone? Better remove it.
+    path = path.substring(0, path.lastIndexOf(".")); 
+    mustCheckCredentials = true;
+  }
+  else if (match_ext(path, F(".html")) ||
+           match_ext(path, F(".htm"))) { dataType = F("text/html"); }
+  else if (match_ext(path, F(".css"))) { dataType = F("text/css"); }
+  else if (match_ext(path, F(".js")))  { dataType = F("application/javascript"); }
+  else if (match_ext(path, F(".png"))) { dataType = F("image/png"); }
+  else if (match_ext(path, F(".gif"))) { dataType = F("image/gif"); }
+  else if (match_ext(path, F(".jpg"))) { dataType = F("image/jpeg"); }
+  else if (path.endsWith(F(".ico")))   { dataType = F("image/x-icon"); }
+  else if (path.endsWith(F(".svg")))   { dataType = F("image/svg+xml"); }
+  else if (path.endsWith(F(".json")))  { dataType = F("application/json"); }
+  else if (path.endsWith(F(".txt")) ||
+           path.endsWith(F(".dat"))) {
+    mustCheckCredentials = true;
+    dataType             = F("application/octet-stream");
+  } else {
+    mustCheckCredentials = true;
+  }
+  return dataType;
+}
+
 // ********************************************************************************
 // Web Interface server web file from FS
 // ********************************************************************************
@@ -58,80 +129,31 @@ bool loadFromFS(String path) {
 
   statusLED(true);
 
-  const __FlashStringHelper* dataType = F("text/plain");
-  bool   mustCheckCredentials = false;
-  bool   static_file = false;
-  bool   serve_304 = false;  // Reply with a 304 Not Modified
-
   path = fileFromUrl(path);
 
-  {
-    // Strip any "static_xxx_" prepended for cache purposes
-    const int index_static = path.indexOf(F("static_"));
-    if (index_static != -1) {
-      const int index_1 = path.indexOf('_');
-      const int index_2 = path.indexOf('_', index_1 + 1);
-      if (index_1 > 0 && index_2 > index_1) {
-        path = fileFromUrl(path.substring(index_2 + 1));
-        static_file = true;
-/*
-        for (int i = web_server.headers(); i >= 0; --i) {
-          addLog(LOG_LEVEL_INFO, concat(F("header: "), web_server.headerName(i)) + ':' + web_server.header(i));
-        }
-*/
-        const String ifNoneMatch = stripQuotes(web_server.header(F("If-None-Match")));
-        unsigned int etag_num = 0;
-        if (validUIntFromString(ifNoneMatch, etag_num)) {
-          if (fileExists(path)) {
-            // call fileExists first, as this may update Cache.fileCacheClearMoment
-            if (Cache.fileCacheClearMoment == etag_num) {
-              // We have a request for the same file we served earlier.
-              // Reply with a 304 Not Modified
-              serve_304 = true;
-              #ifndef BUILD_NO_DEBUG
-              addLog(LOG_LEVEL_INFO, concat(F("Serve 304: "), etag_num));
-              #endif
-            }
-          }
-        }
-      }
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, concat(F("static_file: "), path));
-      #endif
-    }
+  // isStaticFile_StripPrefix may alter the path by stripping off the "static_" prefix.
+  // Thus do this before checking whether a file is present on the file system.
+  const bool static_file = isStaticFile_StripPrefix(path);
+#ifndef BUILD_NO_DEBUG
+  if (static_file) {
+    addLog(LOG_LEVEL_INFO, concat(F("static_file: "), path));
   }
+#endif
 
   if (!fileExists(path)) {
     return false;
   }
 
-  if (path.endsWith(F(".src"))) { path = path.substring(0, path.lastIndexOf(".")); }
-  else if (match_ext(path, F(".htm")) || match_ext(path, F(".html"))) { dataType = F("text/html"); }
-  else if (match_ext(path, F(".css"))) { dataType = F("text/css"); }
-  else if (match_ext(path, F(".js"))) { dataType = F("application/javascript"); }
-  else if (match_ext(path, F(".png"))) { dataType = F("image/png"); }
-  else if (match_ext(path, F(".gif"))) { dataType = F("image/gif"); }
-  else if (match_ext(path, F(".jpg"))) { dataType = F("image/jpeg"); }
-  else if (path.endsWith(F(".ico"))) { dataType = F("image/x-icon"); }
-  else if (path.endsWith(F(".svg"))) { dataType = F("image/svg+xml"); }
-  else if (path.endsWith(F(".json"))) { dataType = F("application/json"); }
-  else if (path.endsWith(F(".txt")) ||
-           path.endsWith(F(".dat"))) {
-    mustCheckCredentials = true;
-    dataType             = F("application/octet-stream");
-  }
 #ifdef WEBSERVER_CUSTOM
-  else if (path.endsWith(F(".esp"))) {
+  if (path.endsWith(F(".esp"))) {
     return handle_custom(path);
   }
 #endif // ifdef WEBSERVER_CUSTOM
-  else {
-    mustCheckCredentials = true;
-  }
 
-  if (mustCheckCredentials) {
-    if (!isLoggedIn()) { return false; }
-  }
+  bool   mustCheckCredentials = false;
+  const __FlashStringHelper* dataType = getDataType(path, mustCheckCredentials);
+  
+  const bool serve_304 = static_file && reply_304_not_modified(path);  // Reply with a 304 Not Modified
 
 #ifndef BUILD_NO_DEBUG
 
@@ -160,16 +182,7 @@ bool loadFromFS(String path) {
   if (serve_304) {
     web_server.send(304, dataType, F(""));
   } else {
-    fs::File f;
-
-    // Search flash file system first, then SD if present
-    f = tryOpenFile(path.c_str(), "r");
-    #if FEATURE_SD
-    if (!f) {
-      f = SD.open(path.c_str(), "r");
-    }
-    #endif // if FEATURE_SD
-
+    fs::File f = tryOpenFile(path.c_str(), "r");
     if (!f) {
       return false;
     }
@@ -188,16 +201,7 @@ size_t streamFromFS(String path, bool htmlEscape) {
 
   size_t bytesStreamed = 0;
 
-  fs::File f;
-
-  // Search flash file system first, then SD if present
-  f = tryOpenFile(path.c_str(), "r");
-  #if FEATURE_SD
-  if (!f) {
-    f = SD.open(path.c_str(), "r");
-  }
-  #endif // if FEATURE_SD
-
+  fs::File f = tryOpenFile(path.c_str(), "r");
   if (!f) {
     return bytesStreamed;
   }
@@ -227,9 +231,11 @@ size_t streamFromFS(String path, bool htmlEscape) {
     }
   }
 
+  // FIXME TD-er: Is this while loop still useful?
   while (f.available()) { 
     addHtml((char)f.read()); 
   }
+  
   statusLED(true);
 
   f.close();

@@ -8,6 +8,7 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../DataTypes/ESPEasyFileType.h"
+#include "../DataTypes/ESPEasyTimeSource.h"
 #include "../DataTypes/SPI_options.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -20,6 +21,7 @@
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Plugins.h"
@@ -165,6 +167,15 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
     clearFileCaches();
   }
   f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
+  #  if FEATURE_SD
+
+  if (!f) {
+    // FIXME TD-er: Should this fallback to SD only be done on "r" mode?
+    f = SD.open(fname.c_str(), mode.c_str());
+  }
+  #  endif // if FEATURE_SD
+
+
   STOP_TIMER(TRY_OPEN_FILE);
   return f;
 }
@@ -183,6 +194,11 @@ bool tryDeleteFile(const String& fname) {
   {
     clearAllCaches();
     bool res = ESPEASY_FS.remove(patch_fname(fname));
+    #if FEATURE_SD
+    if (!res) {
+      res = SD.remove(patch_fname(fname));
+    }
+    #endif
 
     // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.
