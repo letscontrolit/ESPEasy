@@ -62,6 +62,10 @@ void handle_rules() {
   sendHeadandTail_stdtemplate(_HEAD);
   addHtmlError(error);
 
+  #if FEATURE_RULES_EASY_COLOR_CODE
+  html_add_Easy_color_code_script();
+  #endif
+  
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
@@ -110,9 +114,6 @@ void handle_rules() {
   html_end_table();
 
   serve_JS(JSfiles_e::SaveRulesFile);
-  #if FEATURE_RULES_EASY_COLOR_CODE
-  html_add_Easy_color_code_script();
-  #endif
 
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
