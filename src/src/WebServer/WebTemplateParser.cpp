@@ -344,9 +344,14 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif // if FEATURE_CHART_JS
 
     #if FEATURE_RULES_EASY_COLOR_CODE
-    // Moved to Rules and Custom page
-    // html_add_Easy_color_code_script();
+    if (MENU_INDEX_RULES == navMenuIndex ||
+        MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {
+      html_add_Easy_color_code_script();
+    }
     #endif
+    if (MENU_INDEX_RULES == navMenuIndex) {
+      serve_JS(JSfiles_e::SaveRulesFile);
+    }
     
     html_add_autosubmit_form();
     serve_JS(JSfiles_e::Toasting);

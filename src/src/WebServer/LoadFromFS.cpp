@@ -1,5 +1,7 @@
 #include "../WebServer/LoadFromFS.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../Globals/Cache.h"
 #include "../Globals/RamTracker.h"
 
@@ -231,11 +233,9 @@ bool loadFromFS(String path) {
 
     //    web_server.sendHeader(F("Cache-Control"), F("max-age=86400"));
     web_server.sendHeader(F("Expires"),       F("-1"));
-    #ifdef SET_BUILD_TIME_RFC1123
     if (fileEmbedded && !fileExists(path)) {
-      web_server.sendHeader(F("Last-Modified"),get_build_date_RFC1123());
+      web_server.sendHeader(F("Last-Modified"), get_build_date_RFC1123());
     }
-    #endif
     web_server.sendHeader(F("Age"),           F("100"));
     web_server.sendHeader(F("ETag"),          wrap_String(String(Cache.fileCacheClearMoment) + F("-a"), '"')); // added "-a" to the ETag to
                                                                                                                // match the same encoding

@@ -23,9 +23,13 @@ void serve_CDN_CSS(const __FlashStringHelper * fname, bool isEmbedded) {
   addHtml('/', '>');
 }
 
-void serve_CDN_JS(const __FlashStringHelper * fname, const __FlashStringHelper * script_arg) {
+void serve_CDN_JS(const __FlashStringHelper * fname, 
+                  const __FlashStringHelper * script_arg, 
+                  bool useDefer) {
   addHtml(F("<script"));
-  addHtml(F(" defer"));
+  if (useDefer) {
+    addHtml(F(" defer"));
+  }
   addHtmlAttribute(F("src"), generate_external_URL(fname, false));
   addHtml(' ');
   addHtml(script_arg);
@@ -95,6 +99,7 @@ void serve_favicon() {
 void serve_JS(JSfiles_e JSfile) {
     const __FlashStringHelper * url = F("");
     const __FlashStringHelper * id = F("");
+    bool useDefer = true;
     #if defined(WEBSERVER_INCLUDE_JS)
     bool useCDN = false;
     #endif
@@ -124,12 +129,14 @@ void serve_JS(JSfiles_e JSfile) {
 #if FEATURE_RULES_EASY_COLOR_CODE
         case JSfiles_e::EasyColorCode_codemirror:
           url = F("codemirror.min.js");
+          useDefer = false;
           #if defined(WEBSERVER_INCLUDE_JS)
           useCDN = true;
           #endif
           break;
         case JSfiles_e::EasyColorCode_espeasy:
           url = F("espeasy.min.js");
+          useDefer = false;
           #if defined(WEBSERVER_INCLUDE_JS)
           useCDN = true;
           #endif
@@ -137,6 +144,7 @@ void serve_JS(JSfiles_e JSfile) {
         case JSfiles_e::EasyColorCode_cm_plugins:
           url = F("cm-plugins.min.js");
           id = F("id='anyword'");
+          useDefer = false;
           #if defined(WEBSERVER_INCLUDE_JS)
           useCDN = true;
           #endif
@@ -155,7 +163,7 @@ void serve_JS(JSfiles_e JSfile) {
     {
         #if defined(WEBSERVER_INCLUDE_JS)
         if (!useCDN) {
-          html_add_script_arg(id, true);
+          html_add_script_arg(id, useDefer);
           switch (JSfile) {
             case JSfiles_e::UpdateSensorValuesDevicePage:
               #ifdef WEBSERVER_DEVICES
@@ -202,8 +210,8 @@ void serve_JS(JSfiles_e JSfile) {
           return;
         }
         #endif
-        serve_CDN_JS(url, id);
+        serve_CDN_JS(url, id, useDefer);
     } else {
-      serve_CDN_JS(fname, id);
+      serve_CDN_JS(fname, id, useDefer);
     }
 }
