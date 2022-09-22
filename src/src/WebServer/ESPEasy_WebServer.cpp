@@ -13,7 +13,6 @@
 #include "../WebServer/DevicesPage.h"
 #include "../WebServer/DownloadPage.h"
 #include "../WebServer/FactoryResetPage.h"
-#include "../WebServer/Favicon.h"
 #include "../WebServer/FileList.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/HardwarePage.h"
@@ -234,7 +233,6 @@ void WebServerInit()
   #if FEATURE_SETTINGS_ARCHIVE
   web_server.on(F("/settingsarchive"), handle_settingsarchive);
   #endif // if FEATURE_SETTINGS_ARCHIVE
-  web_server.on(F("/favicon.ico"),     handle_favicon);
   #ifdef WEBSERVER_FILELIST
   web_server.on(F("/filelist"),        handle_filelist);
   #endif // ifdef WEBSERVER_FILELIST

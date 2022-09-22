@@ -123,6 +123,11 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
   return "";
 }
 
+bool fileExists(const __FlashStringHelper * fname)
+{
+  return fileExists(String(fname));
+}
+
 bool fileExists(const String& fname) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;

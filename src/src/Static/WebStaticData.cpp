@@ -8,25 +8,25 @@
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/LoadFromFS.h"
 
-String generate_external_URL(const String& fname) {
-  if (fileExists(fname)) {
+String generate_external_URL(const String& fname, bool isEmbedded) {
+  if (isEmbedded || fileExists(fname)) {
     // Generate some URL indicating static files which will need to be served with some cache-control header
     return concat(F("static_"), Cache.fileCacheClearMoment) + '_' + fname;
   }
   return concat(get_CDN_url_prefix(), fname);
 }
 
-void serve_CDN_CSS(const __FlashStringHelper * fname) {
+void serve_CDN_CSS(const __FlashStringHelper * fname, bool isEmbedded) {
   addHtml(F("<link"));
   addHtmlAttribute(F("rel"), F("stylesheet"));
-  addHtmlAttribute(F("href"), generate_external_URL(fname));
+  addHtmlAttribute(F("href"), generate_external_URL(fname, isEmbedded));
   addHtml('/', '>');
 }
 
 void serve_CDN_JS(const __FlashStringHelper * fname, const __FlashStringHelper * script_arg) {
   addHtml(F("<script"));
   addHtml(F(" defer"));
-  addHtmlAttribute(F("src"), generate_external_URL(fname));
+  addHtmlAttribute(F("src"), generate_external_URL(fname, false));
   addHtml(' ');
   addHtml(script_arg);
   addHtml('>');
@@ -65,21 +65,19 @@ void serve_CSS(CSSfiles_e cssfile) {
       (cssfile == CSSfiles_e::ESPEasy_default) ?
       F("esp.css") : url;
 
-  if (fileExists(String(cssFile)))
+  if (fileExists(cssFile))
   {
-    serve_CDN_CSS(cssFile);
+    serve_CDN_CSS(cssFile, false);
     return;
   }
   #if !(defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)) || FEATURE_RULES_EASY_COLOR_CODE
   if (useCDN) {
-    serve_CDN_CSS(url);
+    serve_CDN_CSS(url, false);
     return;
   }
   #endif
   #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
-  addHtml(F("<style>"));
-  TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
-  addHtml(F("</style>"));
+  serve_CDN_CSS(cssFile, true);
   #endif
 }
 
