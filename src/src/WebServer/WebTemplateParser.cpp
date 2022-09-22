@@ -341,7 +341,8 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif // if FEATURE_CHART_JS
 
     #if FEATURE_RULES_EASY_COLOR_CODE
-    html_add_Easy_color_code_script();
+    // Moved to Rules and Custom page
+    // html_add_Easy_color_code_script();
     #endif
     
     html_add_autosubmit_form();
