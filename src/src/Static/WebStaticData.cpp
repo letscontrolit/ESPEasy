@@ -19,7 +19,6 @@ String generate_external_URL(const String& fname) {
 void serve_CDN_CSS(const __FlashStringHelper * fname) {
   addHtml(F("<link"));
   addHtmlAttribute(F("rel"), F("stylesheet"));
-  addHtmlAttribute(F("type"), F("text/css"));
   addHtmlAttribute(F("href"), generate_external_URL(fname));
   addHtml('/', '>');
 }

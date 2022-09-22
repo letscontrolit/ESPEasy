@@ -330,7 +330,7 @@ void html_add_script_arg(const __FlashStringHelper * script_arg, bool defer) {
   if (defer) {
     addHtml(F(" defer"));
   }
-  addHtml(F(" type='text/JavaScript'>"));
+  addHtml('>');
 }
 
 void html_add_script_end() {
