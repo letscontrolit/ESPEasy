@@ -327,7 +327,10 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     serve_favicon();
     serve_CSS(CSSfiles_e::ESPEasy_default);
     #if FEATURE_RULES_EASY_COLOR_CODE
-    serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
+    if (MENU_INDEX_RULES == navMenuIndex ||
+        MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {
+      serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
+    }
     #endif
   }
 

@@ -47,6 +47,7 @@ bool handle_custom(const String& path) {
     if (!unit) { unit = btnunit; // unit element prevails, if not used then set to btnunit
     }
 
+    navMenuIndex = MENU_INDEX_CUSTOM_PAGE;
     if (unit && (unit != Settings.Unit))
     {
       auto it = Nodes.find(unit);

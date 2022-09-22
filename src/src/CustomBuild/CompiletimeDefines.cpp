@@ -51,6 +51,14 @@ const __FlashStringHelper* get_build_date() {
   return F(__DATE__);
 }
 
+const __FlashStringHelper * get_build_date_RFC1123() {
+  #ifdef SET_BUILD_TIME_RFC1123
+  return F(SET_BUILD_TIME_RFC1123);
+  #else
+  return F("-1");
+  #endif
+}
+
 const __FlashStringHelper* get_build_origin() {
   #if defined(CONTINUOUS_INTEGRATION)
   return F("GitHub Actions");
