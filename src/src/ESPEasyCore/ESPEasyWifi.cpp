@@ -10,6 +10,7 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
+#include "../Globals/Nodes.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
@@ -403,6 +404,7 @@ void AttemptWiFiConnect() {
     }
     WiFiEventData.markWiFiBegin();
     if (prepareWiFi()) {
+      setNetworkMedium(NetworkMedium_t::WIFI);
       RTC.clearLastWiFi();
       float tx_pwr = 0; // Will be set higher based on RSSI when needed.
       // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
@@ -1056,7 +1058,12 @@ void setAPinternal(bool enable)
       addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
     }
 
-    if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str())) {
+    int channel = 1;
+    if (WifiIsSTA(WiFi.getMode()) && WiFiConnected()) {
+      channel = WiFi.channel();
+    }
+
+    if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         eventQueue.add(F("WiFi#APmodeEnabled"));
         String log(F("WIFI : AP Mode ssid will be "));
@@ -1131,7 +1138,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     delay(100);
   }
 
-  addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
+  addLog(LOG_LEVEL_INFO, concat(F("WIFI : Set WiFi to "), getWifiModeString(wifimode)));
 
   int retry = 2;
   while (!WiFi.mode(wifimode) && retry > 0) {
