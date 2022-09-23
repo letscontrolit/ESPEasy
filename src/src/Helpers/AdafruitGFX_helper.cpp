@@ -289,8 +289,8 @@ void AdaGFXFormBacklight(const __FlashStringHelper *backlightPinId,
                          uint16_t                   backlightPercentage) {
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Backlight ")), backlightPinId, backlightPin);
 
-  addFormNumericBox(F("Backlight percentage"), backlightPercentageId, backlightPercentage, 1, 100);
-  addUnit(F("1-100%"));
+  addFormNumericBox(F("Backlight percentage"), backlightPercentageId, backlightPercentage, 0, 100);
+  addUnit(F("0-100%"));
 }
 
 /*****************************************************************************************

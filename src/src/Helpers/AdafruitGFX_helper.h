@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-09-23 tonhuisman: Allow backlight percentage from 0% instead of from 1% to be able to completely turn it off
  * 2022-09-12 tonhuisman: Add line-spacing option for Column/Row mode, default set to auto, optional 0..14 pixels line-spacing
  *                        Add line spacing form selector function
  * 2022-09-10 tonhuisman: Enable printing partial characters falling off at the right edge of the screen, only when on Window 0
