@@ -148,18 +148,18 @@ bool handle_custom(const String& path) {
   if (dataFile)
   {
     // Read the file per line and serve per line to reduce amount of memory needed.
-    uint32_t available = dataFile.available();
+    size_t available = dataFile.available();
     String line;
     line.reserve(128);
     while (available > 0) {
-      int32_t chunksize = 64;
+      size_t chunksize = 64;
       if (available < chunksize) {
         chunksize = available;
       }
       uint8_t buf[64] = {0};
-      const int read = dataFile.read(buf, chunksize);
+      const size_t read = dataFile.read(buf, chunksize);
       if (read == chunksize) {
-        for (int32_t i = 0; i < chunksize; ++i) {
+        for (size_t i = 0; i < chunksize; ++i) {
           const char c = (char)buf[i];
           line += c;
           if (c == '\n') {
