@@ -80,7 +80,7 @@
 .. |P117_type| replace:: :cyan:`Gases`
 .. |P117_typename| replace:: :cyan:`Gases - SCD30 CO2, Humidity, Temperature`
 .. |P117_porttype| replace:: `.`
-.. |P117_status| replace:: :yellow:`COLLECTION D`
+.. |P117_status| replace:: :yellow:`COLLECTION D` :yellow:`CLIMATE`
 .. |P117_github| replace:: _P117_SCD30.ino
 .. _P117_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P117_SCD30.ino
 .. |P117_usedby| replace:: `.`
@@ -93,7 +93,7 @@
 .. |P118_type| replace:: :cyan:`Communication`
 .. |P118_typename| replace:: :cyan:`Communication - Itho`
 .. |P118_porttype| replace:: `.`
-.. |P118_status| replace:: :yellow:`COLLECTION E`
+.. |P118_status| replace:: :yellow:`CLIMATE`
 .. |P118_github| replace:: _P118_Itho.ino
 .. _P118_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P118_Itho.ino
 .. |P118_usedby| replace:: `.`
