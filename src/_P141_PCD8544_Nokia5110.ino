@@ -8,6 +8,8 @@
 
 
 /** Changelog:
+ * 2022-09-23 tonhuisman: Allow backlight form 0% instead of from 1% to be able to completely turn it off
+ *                        Allow contrast setting from 0..100%.
  * 2022-09-21 tonhuisman: Allow contrast setting from 1..100%, add contrast subcommand
  * 2022-09-19 tonhuisman: Skip empty Lines (don't clear display line) on TaskRun/PLUGIN_READ
  * 2022-09-12 tonhuisman: Remove unneeded color settings, as we have the Inverted display option
@@ -113,8 +115,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       AdaGFXFormBacklight(F("pbacklight"), P141_CONFIG_BACKLIGHT_PIN,
                           F("pbackpercent"), P141_CONFIG_BACKLIGHT_PERCENT);
 
-      addFormNumericBox(F("Display Contrast"), F("pcontrast"), P141_CONFIG_CONTRAST, 1, 100);
-      addUnit(F("1-100%"));
+      addFormNumericBox(F("Display Contrast"), F("pcontrast"), P141_CONFIG_CONTRAST, 0, 100);
+      addUnit(F("0-100%"));
 
       AdaGFXFormDisplayButton(F("pbutton"), P141_CONFIG_BUTTON_PIN,
                               F("pbtnInverse"), bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERT_BUTTON),

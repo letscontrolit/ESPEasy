@@ -91,8 +91,8 @@ Actuator
 * **GPIO -> D/C** The GPIO pin to use for the ``D/C`` connection (Data/Command).
 * **GPIO -> RST (optional)** Select the GPIO pin to use for the ``RST`` (reset) connection. If the display doesn't have a ``RST`` connection, or no free pin is available, it can be set to *None*.
 * **GPIO -> Backlight (optional)** Select the GPIO pin to use for controlling the backlight. To save power, the backlight can be dimmed, or turned off if the display is turned off. If set to *None* and the ``LED`` input connected to ``VCC``, the max. brightness is used for the backlight.
-* **Backlight percentage** The backlight can be controlled via PWM modulation on the Backlight (LED) pin of the display. This is set as a percentage between 1 and 100.
-* **Display Contrast**: The PCD8544 supports setting the contrast level, to get an optimally visible display content. This can be fine-tuned here. Range: 1..100%.
+* **Backlight percentage** The backlight can be controlled via PWM modulation on the Backlight (LED) pin of the display. This is set as a percentage between 0 and 100%.
+* **Display Contrast**: The PCD8544 supports setting the contrast level, to get an optimally visible display content. This can be fine-tuned here. Range: 0..100%.
 * **Display button** A GPIO pin can be configured to wake the display on demand. This, combined with the **Display Timeout** setting, can preserve the lifetime of the display, and save some power.
 * **Inversed Logic** When checked, reverses the pin-state action of the **Display button** gpio. This allows an external circuit, f.e. an IR sensor, that may provide a *high* signal when activated, to wake the display.
 * **Display Timeout** Select the timeout in seconds to turn off the display after the last update or wake-up. Only used if the **Display button** is *also* configured.

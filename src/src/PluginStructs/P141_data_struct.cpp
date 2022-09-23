@@ -281,7 +281,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
     }
     else if (arg1.equals(F("backlight"))) {          // Backlight percentage
       if ((P141_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
-          (event->Par2 > 0) &&
+          (event->Par2 >= 0) &&
           (event->Par2 <= 100)) {
         P141_CONFIG_BACKLIGHT_PERCENT = event->Par2; // Set but don't store
         _backlightPercentage          = event->Par2; // Also set to current
@@ -291,7 +291,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       }
     }
     else if (arg1.equals(F("contrast")) && // Display contrast
-             (event->Par2 > 0) &&
+             (event->Par2 >= 0) &&
              (event->Par2 <= 100)) {
       P141_CONFIG_CONTRAST = event->Par2;  // Set but don't store
       _contrast            = event->Par2;  // Also set to current
