@@ -221,7 +221,7 @@ void handle_sysinfo() {
   navMenuIndex = MENU_INDEX_TOOLS;
   html_reset_copyTextCounter();
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   addHtml(printWebString);
   addHtml(F("<form>"));
@@ -277,7 +277,7 @@ void handle_sysinfo() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 

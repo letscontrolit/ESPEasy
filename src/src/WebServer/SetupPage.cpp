@@ -384,7 +384,7 @@ bool handle_setup_connectingStage(uint8_t refreshCount) {
     wait = 3;
   }
   addHtml(F("Please wait for <h1 id='countdown'>20..</h1>" 
-            "<script type='text/JavaScript'>"
+            "<script>"
             "function timedRefresh(timeoutPeriod) {"
             "var timer = setInterval(function() {"
             "if (timeoutPeriod > 0) {"
