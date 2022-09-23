@@ -1,6 +1,7 @@
 #include "../WebServer/404.h"
 
 #include "../WebServer/ESPEasy_WebServer.h"
+#include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Rules.h"
 
@@ -15,38 +16,53 @@
 void handleNotFound() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handleNotFound"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (captivePortal()) { // If captive portal redirect instead of displaying the error page.
     return;
   }
 
   // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
- if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
+  if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
-   return;
+    return;
   }
 
 #ifdef WEBSERVER_RULES
+
   if (handle_rules_edit(web_server.uri())) { return; }
-#endif
+#endif // ifdef WEBSERVER_RULES
 
   if (loadFromFS(web_server.uri())) { return; }
-  String message = F("URI: ");
-  message += web_server.uri();
-  message += F("\nMethod: ");
-  message += (web_server.method() == HTTP_GET) ? F("GET") : F("POST");
-  message += F("\nArguments: ");
-  message += web_server.args();
-  message += '\n';
+
+  TXBuffer.startStream(F("text/plain"), F(""), 404);
+  addHtml(F("URI: "));
+  addHtml(web_server.uri());
+  addHtml(F("\nMethod: "));
+  addHtml((web_server.method() == HTTP_GET) ? F("GET") : F("POST"));
+
+  addHtml(F("\nArguments: "));
+  addHtmlInt(web_server.args());
 
   for (uint8_t i = 0; i < web_server.args(); i++) {
-    message += F(" NAME:");
-    message += web_server.argName(i);
-    message += F("\n VALUE:");
-    message += webArg(i);
-    message += '\n';
+    addHtml('\n');
+    addHtml(F(" NAME:"));
+    addHtml(web_server.argName(i));
+    addHtml(F("\n VALUE:"));
+    addHtml(webArg(i));
   }
-  web_server.send(404, F("text/plain"), message);
+#ifndef BUILD_NO_DEBUG
+  addHtml(F("\nHeaders: "));
+  for (int i = web_server.headers(); i >= 0; --i) {
+    if (!web_server.headerName(i).isEmpty()) {
+      addHtml('\n');
+      addHtml(F(" NAME:"));
+      addHtml(web_server.headerName(i));
+      addHtml(F("\n VALUE:"));
+      addHtml(web_server.header(i));
+    }
+  }
+#endif
+  TXBuffer.endStream();
 }
