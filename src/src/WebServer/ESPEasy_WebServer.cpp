@@ -13,7 +13,6 @@
 #include "../WebServer/DevicesPage.h"
 #include "../WebServer/DownloadPage.h"
 #include "../WebServer/FactoryResetPage.h"
-#include "../WebServer/Favicon.h"
 #include "../WebServer/FileList.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/HardwarePage.h"
@@ -82,7 +81,7 @@ void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, siz
   safe_strncpy_webserver_arg(dest, String(arg), max_size);
 }
 
-void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
+void sendHeadandTail(const __FlashStringHelper * tmplName, bool Tail, bool rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
@@ -94,7 +93,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   }
   #endif // if FEATURE_TIMING_STATS
   {
-    const String fileName = String(tmplName) + F(".htm");
+    const String fileName = concat(tmplName, F(".htm"));
     fs::File f = tryOpenFile(fileName, "r");
 
     WebTemplateParser templateParser(Tail, rebooting);
@@ -122,7 +121,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   STOP_TIMER(HANDLE_SERVING_WEBPAGE);
 }
 
-void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
+void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 
   if (!Tail) {
@@ -234,7 +233,6 @@ void WebServerInit()
   #if FEATURE_SETTINGS_ARCHIVE
   web_server.on(F("/settingsarchive"), handle_settingsarchive);
   #endif // if FEATURE_SETTINGS_ARCHIVE
-  web_server.on(F("/favicon.ico"),     handle_favicon);
   #ifdef WEBSERVER_FILELIST
   web_server.on(F("/filelist"),        handle_filelist);
   #endif // ifdef WEBSERVER_FILELIST
@@ -314,6 +312,11 @@ void WebServerInit()
 
   web_server.onNotFound(handleNotFound);
 
+  // List of headers to be recorded
+  // "If-None-Match" is used to see whether we need to serve a static file, or simply can reply with a 304 (not modified)
+  const char * headerkeys[] = {"If-None-Match"};
+  const size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
+  web_server.collectHeaders(headerkeys, headerkeyssize );
   #if defined(ESP8266) || defined(ESP32)
   {
     # ifndef NO_HTTP_UPDATER

@@ -96,10 +96,17 @@ void html_add_JQuery_script();
 #if FEATURE_CHART_JS
 void html_add_ChartJS_script();
 #endif // if FEATURE_CHART_JS
+
+#if FEATURE_RULES_EASY_COLOR_CODE
+void html_add_Easy_color_code_script();
+#endif
+
 void html_add_autosubmit_form();
 
 void html_add_script(const __FlashStringHelper * script, bool defer);
 void html_add_script(const String& script, bool defer);
+
+void html_add_script_arg(const __FlashStringHelper * script_arg, bool defer);
 
 void html_add_script(bool defer);
 

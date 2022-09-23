@@ -47,6 +47,7 @@ bool handle_custom(const String& path) {
     if (!unit) { unit = btnunit; // unit element prevails, if not used then set to btnunit
     }
 
+    navMenuIndex = MENU_INDEX_CUSTOM_PAGE;
     if (unit && (unit != Settings.Unit))
     {
       auto it = Nodes.find(unit);
@@ -66,9 +67,15 @@ bool handle_custom(const String& path) {
     TXBuffer.startStream();
     sendHeadandTail(F("TmplDsh"), _HEAD);
     html_add_JQuery_script();
+
     #if FEATURE_CHART_JS
     html_add_ChartJS_script();
     #endif // if FEATURE_CHART_JS
+    
+    #if FEATURE_RULES_EASY_COLOR_CODE
+    html_add_Easy_color_code_script();
+    #endif
+
     html_add_autosubmit_form();
     html_add_form();
 

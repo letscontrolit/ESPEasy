@@ -145,7 +145,7 @@ void handle_filelist() {
   if (!clientIPallowed()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   String fdelete = webArg(F("delete"));
 
@@ -302,7 +302,7 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
     addHtml(F("filelist?delcache'>Delete Cache Files</a>"));
   }
   addHtml(F("<BR><BR>"));
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 
@@ -320,7 +320,7 @@ void handle_SDfilelist() {
   if (!clientIPallowed()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
 
   String fdelete;
@@ -466,7 +466,7 @@ void handle_SDfilelist() {
   html_end_form();
 
   // addHtml(F("<BR><a class='button link' href=\"/upload\">Upload</a>"));
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 
