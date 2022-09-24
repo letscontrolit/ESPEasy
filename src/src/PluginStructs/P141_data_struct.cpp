@@ -272,6 +272,9 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
         _displayInverted = (event->Par2 == 1); // Set state
       }
 
+      // Store in settings, but do not save
+      bitWrite(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED, _displayInverted);
+
       if (nullptr != gfxHelper) {
         gfxHelper->invertDisplay(_displayInverted);
       } else {

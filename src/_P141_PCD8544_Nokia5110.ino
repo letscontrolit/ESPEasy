@@ -8,6 +8,7 @@
 
 
 /** Changelog:
+ * 2022-09-24 tonhuisman: Store inverted setting when changed via inv subcommand (not saved)
  * 2022-09-23 tonhuisman: Allow backlight form 0% instead of from 1% to be able to completely turn it off
  *                        Allow contrast setting from 0..100%.
  * 2022-09-21 tonhuisman: Allow contrast setting from 1..100%, add contrast subcommand
