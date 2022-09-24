@@ -75,9 +75,7 @@ String Command_GetORSetIP(struct EventStruct *event,
       hasArgument = true;
 
       if (!str2ip(TmpStr1, IP)) {
-        String result = F("Invalid parameter: ");
-        result += TmpStr1;
-        return return_result(event, result);
+        return return_result(event, concat(F("Invalid parameter: "), TmpStr1));
       }
     }
   }
@@ -114,8 +112,7 @@ String Command_GetORSetString(struct EventStruct *event,
       hasArgument = true;
 
       if (TmpStr1.length() > len) {
-        String result = targetDescription;
-        result += F(" is too large. max size is ");
+        String result = concat(targetDescription, F(" is too large. max size is "));
         result += len;
         serialPrintln();
         return return_result(event, result);
@@ -167,6 +164,7 @@ String Command_GetORSetBool(struct EventStruct *event,
   return return_command_success();
 }
 
+#if FEATURE_ETHERNET
 String Command_GetORSetETH(struct EventStruct *event,
                             const __FlashStringHelper * targetDescription,
                             const __FlashStringHelper * valueToString,
@@ -211,6 +209,7 @@ String Command_GetORSetETH(struct EventStruct *event,
   }
   return return_result(event, result);
 }
+#endif
 
 String Command_GetORSetInt8_t(struct EventStruct *event,
                             const __FlashStringHelper * targetDescription,

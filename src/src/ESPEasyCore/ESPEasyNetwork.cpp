@@ -58,6 +58,8 @@ void NetworkConnectRelaxed() {
     setNetworkMedium(NetworkMedium_t::WIFI);
   }
 #endif
+  // Failed to start the Ethernet network, probably not present of wrong parameters.
+  // So set the runtime active medium to WiFi to try connecting to WiFi or at least start the AP.
   WiFiConnectRelaxed();
 }
 

@@ -288,7 +288,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0),
                    parseStringKeepCase(valueArray[filterOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
       }
       {
         html_TD();
@@ -297,7 +297,7 @@ bool P037_data_struct::webform_load(
         html_TD();
 
         addTextBox(getPluginCustomArgName(idx + 100 + 2), parseStringKeepCase(valueArray[filterOffset], 3, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
       }
@@ -402,7 +402,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0),
                    parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
       }
       {
         html_TD();
@@ -411,7 +411,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2),
                    parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         html_TD();
       }
       mapNr++;
@@ -439,14 +439,14 @@ bool P037_data_struct::webform_load(
         addHtmlInt(mapNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
       }
       {
         html_TD();
         addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         html_TD();
       }
       idx += 3;
