@@ -274,7 +274,7 @@ void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
   AdaGFXHtmlColorDepthDataList(F("adagfxFGBGcolors"), colorDepth);
   addRowLabel(F("Foreground color"));
   addTextBox(foregroundId, color, 11, false, false,
-             EMPTY_STRING, EMPTY_STRING
+             EMPTY_STRING, F("")
              # if FEATURE_TOOLTIPS
              , F("Foreground color")
              # endif // if FEATURE_TOOLTIPS
@@ -283,7 +283,7 @@ void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
   color = AdaGFXcolorToString(backgroundColor, colorDepth);
   addRowLabel(F("Background color"));
   addTextBox(backgroundId, color, 11, false, false,
-             EMPTY_STRING, EMPTY_STRING
+             EMPTY_STRING, F("")
              # if FEATURE_TOOLTIPS
              , F("Background color")
              # endif // if FEATURE_TOOLTIPS
