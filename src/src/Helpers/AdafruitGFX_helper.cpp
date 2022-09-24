@@ -2830,12 +2830,6 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
   // Open requested file on storage
   // Search flash file system first, then SD if present
   file = tryOpenFile(filename, "r");
-  #  if FEATURE_SD
-
-  if (!file) {
-    file = SD.open(filename.c_str(), "r");
-  }
-  #  endif // if FEATURE_SD
 
   if (!file) {
     addLog(LOG_LEVEL_ERROR, F("showBmp: file not found"));

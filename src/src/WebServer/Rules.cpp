@@ -59,7 +59,7 @@ void handle_rules() {
   }
 
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
   addHtmlError(error);
 
   html_table_class_normal();
@@ -109,9 +109,7 @@ void handle_rules() {
   addButton(fileName, F("Download to file"));
   html_end_table();
 
-  serve_JS(JSfiles_e::SaveRulesFile);
-
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 
   checkRuleSets();
@@ -554,6 +552,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
+  addHtml(F("<script>initCM();</script>"));
 
   html_TR_TD();
   {
