@@ -1226,7 +1226,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       addTextBox(getPluginCustomArgName(objectNr + 100),
                  TouchObjects[objectNr].objectName,
                  TOUCH_MaxObjectNameLength,
-                 false, false, EMPTY_STRING, EMPTY_STRING);
+                 false, false, EMPTY_STRING, F("wide"));
       html_TD(); // top-x
       addNumericBox(getPluginCustomArgName(objectNr + 200),
                     TouchObjects[objectNr].top_left.x, 0, 65535
@@ -1291,7 +1291,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                  false,
                  false,
                  EMPTY_STRING,
-                 F("wide")
+                 F("xwide")
                  #  if TOUCH_FEATURE_TOOLTIPS
                  , F("ON caption")
                  #  endif // if TOUCH_FEATURE_TOOLTIPS
@@ -1395,7 +1395,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                  false,
                  false,
                  EMPTY_STRING,
-                 F("wide")
+                 F("xwide")
                  #  if TOUCH_FEATURE_TOOLTIPS
                  , F("OFF caption")
                  #  endif // if TOUCH_FEATURE_TOOLTIPS
