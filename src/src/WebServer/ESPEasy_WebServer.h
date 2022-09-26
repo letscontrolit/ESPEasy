@@ -23,11 +23,11 @@ void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size);
 void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, size_t max_size);
 
 void sendHeadandTail(const __FlashStringHelper * tmplName,
-                     boolean       Tail      = false,
-                     boolean       rebooting = false);
+                     bool       Tail      = false,
+                     bool       rebooting = false);
 
-void   sendHeadandTail_stdtemplate(boolean Tail      = false,
-                                   boolean rebooting = false);
+void   sendHeadandTail_stdtemplate(bool Tail,
+                                   bool rebooting = false);
 
 
 void   WebServerInit();
@@ -191,7 +191,7 @@ void getPartitionTableSVG(uint8_t         pType,
 
 #endif // ifdef ESP32
 
-bool webArg2ip(const String& arg,
+bool webArg2ip(const __FlashStringHelper * arg,
                uint8_t         *IP);
 
 

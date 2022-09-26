@@ -385,7 +385,7 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
       }
       case 2: // Return "0"
       {
-        return F("0");
+        return String('0');
       }
     }
   }
@@ -411,7 +411,7 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
     if (it->second.ip[0] == 0) {
       return remoteNodeIP;
     }
-    remoteNodeIP = it->second.ip;
+    return it->second.IP();
   }
   return remoteNodeIP;
 }

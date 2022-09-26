@@ -49,3 +49,16 @@
 .. |P134_maintainer| replace:: `tonhuisman`
 .. |P134_compileinfo| replace:: `.`
 .. |P134_usedlibraries| replace:: `ESPEasy Serial`
+
+.. |P135_name| replace:: :cyan:`CO2 SCD4x`
+.. |P135_type| replace:: :cyan:`Gases`
+.. |P135_typename| replace:: :cyan:`Gases - CO2 SCD4x`
+.. |P135_porttype| replace:: `.`
+.. |P135_status| replace:: :yellow:`COLLECTION E`
+.. |P135_github| replace:: P135_SCD4x.ino
+.. _P135_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P135_SCD4x.ino
+.. |P135_usedby| replace:: `.`
+.. |P135_shortinfo| replace:: `CO2, Humidity and Temperature sensor`
+.. |P135_maintainer| replace:: `tonhuisman`
+.. |P135_compileinfo| replace:: `.`
+.. |P135_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library`

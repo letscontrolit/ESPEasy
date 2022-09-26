@@ -158,7 +158,7 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
 }
 
 bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex,
-                                      const String& newline,
+                                      const __FlashStringHelper * newline,
                                       String& description)
 {
   struct EventStruct TempEvent(taskIndex);
