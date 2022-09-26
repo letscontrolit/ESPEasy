@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-09-26 tonhuisman: Add nullptr checks, improved log/string handling
  * 2022-08-15 tonhuisman: Add Swipe and Slider support (to TouchHandler)
  * 2022-08-15 tonhuisman: UI improvement, settings table uses alternate color per 2 rows, code improvements
  * 2022-06-10 tonhuisman: Remove p123_ prefixes on Settings variables
@@ -105,6 +106,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
+      #ifdef PLUGIN_123_DEBUG
+      addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_WEBFORM_LOAD"));
+      #endif // ifdef PLUGIN_123_DEBUG
       {
         addRowLabel(F("Display task"));
         addTaskSelect(F("dsptask"), P123_CONFIG_DISPLAY_TASK);
@@ -113,7 +117,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
         #endif // ifndef P123_LIMIT_BUILD_SIZE
       }
 
-      uint16_t width_ = P123_CONFIG_X_RES;
+      uint16_t width_      = P123_CONFIG_X_RES;
       uint16_t height_     = P123_CONFIG_Y_RES;
       uint16_t rotation_   = P123_CONFIG_ROTATION;
       uint16_t colorDepth_ = P123_COLOR_DEPTH;
@@ -141,8 +145,8 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Touch minimum pressure"), F("threshold"), P123_CONFIG_THRESHOLD, 0, 255);
 
       {
+        P123_data_struct *P123_data = nullptr; // static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
         bool deleteP123_data        = false;
-        P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr == P123_data) {
           P123_data       = new (std::nothrow) P123_data_struct();
@@ -163,6 +167,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      #ifdef PLUGIN_123_DEBUG
+      addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_WEBFORM_SAVE"));
+      #endif // ifdef PLUGIN_123_DEBUG
       P123_CONFIG_DISPLAY_PREV = P123_CONFIG_DISPLAY_TASK;
       P123_CONFIG_THRESHOLD    = getFormItemInt(F("threshold"));
       P123_CONFIG_DISPLAY_TASK = getFormItemInt(F("dsptask"));
@@ -177,7 +184,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P123_data_struct *P123_data = nullptr; // static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
         bool deleteP123_data        = false;
 
         if (nullptr == P123_data) {
@@ -199,6 +206,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      #ifdef PLUGIN_123_DEBUG
+      addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_INIT"));
+      #endif // ifdef PLUGIN_123_DEBUG
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P123_data_struct());
       P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -208,7 +218,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
       success = true;
 
-      if (!(P123_data->init(event))) {
+      if (!P123_data->init(event)) {
         delete P123_data;
         success = false;
       }

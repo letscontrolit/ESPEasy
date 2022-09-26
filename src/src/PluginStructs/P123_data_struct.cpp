@@ -34,9 +34,10 @@ void P123_data_struct::reset() {
   addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen reset."));
   # endif // PLUGIN_123_DEBUG
 
-  delete touchscreen;
+  if (nullptr != touchscreen) { delete touchscreen; }
   touchscreen = nullptr;
-  delete touchHandler;
+
+  if (nullptr != touchHandler) { delete touchHandler; }
   touchHandler = nullptr;
 }
 
@@ -52,7 +53,8 @@ bool P123_data_struct::init(struct EventStruct *event) {
 
   touchscreen = new (std::nothrow) Adafruit_FT6206();
 
-  if (touchscreen != nullptr) {
+  if (nullptr != touchscreen) {
+    if (nullptr != touchHandler) { delete touchHandler; }
     touchHandler = new (std::nothrow) ESPEasy_TouchHandler(P123_CONFIG_DISPLAY_TASK,
                                                            static_cast<AdaGFXColorDepth>(P123_COLOR_DEPTH));
   }
@@ -62,11 +64,11 @@ bool P123_data_struct::init(struct EventStruct *event) {
 
     touchHandler->init(event);
 
-    # ifdef PLUGIN_123_DEBUG
+  # ifdef PLUGIN_123_DEBUG
     addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Plugin & touchscreen initialized."));
   } else {
     addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialization FAILED."));
-    # endif // PLUGIN_123_DEBUG
+  # endif // PLUGIN_123_DEBUG
   }
   return isInitialized();
 }
@@ -78,7 +80,10 @@ void P123_data_struct::displayButtonGroup(struct EventStruct *event,
                                           int16_t             buttonGroup,
                                           int8_t              mode) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  touchHandler->displayButtonGroup(event, buttonGroup, mode);
+
+  if (nullptr != touchHandler) {
+    touchHandler->displayButtonGroup(event, buttonGroup, mode);
+  }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
@@ -90,10 +95,12 @@ bool P123_data_struct::displayButton(struct EventStruct *event,
                                      int16_t             buttonGroup,
                                      int8_t              mode) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  return touchHandler->displayButton(event, buttonNr, buttonGroup, mode);
-  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
-  return false;
+
+  if (nullptr != touchHandler) {
+    return touchHandler->displayButton(event, buttonNr, buttonGroup, mode);
+  }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
 }
 
 /**
@@ -107,14 +114,20 @@ bool P123_data_struct::isInitialized() const {
  * Load the settings onto the webpage
  */
 bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
-  return touchHandler->plugin_webform_load(event);
+  if (nullptr != touchHandler) {
+    return touchHandler->plugin_webform_load(event);
+  }
+  return false;
 }
 
 /**
  * Save the settings from the web page to flash
  */
 bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
-  return touchHandler->plugin_webform_save(event);
+  if (nullptr != touchHandler) {
+    return touchHandler->plugin_webform_save(event);
+  }
+  return false;
 }
 
 /**
@@ -129,18 +142,14 @@ bool P123_data_struct::plugin_write(struct EventStruct *event,
   command    = parseString(string, 1);
   subcommand = parseString(string, 2);
 
-  if (command.equals(F("touch"))) {
+  if (isInitialized() && command.equals(F("touch"))) {
     # ifdef PLUGIN_123_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("P123 WRITE arguments Par1:");
-      log += event->Par1;
-      log += F(", 2: ");
-      log += event->Par2;
-      log += F(", 3: ");
-      log += event->Par3;
-      log += F(", 4: ");
-      log += event->Par4;
+      String log(concat(F("P123 WRITE arguments Par1:"), event->Par1));
+      log += concat(F(", 2: "), event->Par2);
+      log += concat(F(", 3: "), event->Par3);
+      log += concat(F(", 4: "), event->Par4);
       addLog(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef PLUGIN_123_DEBUG
@@ -162,7 +171,7 @@ bool P123_data_struct::plugin_write(struct EventStruct *event,
  * Every 1/50th second we check if the screen is touched
  */
 bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
-  if (isInitialized()) {
+  if (isInitialized() && touchHandler->touchEnabled()) {
     if (touched()) {
       int16_t x  = 0;
       int16_t y  = 0;
@@ -188,14 +197,19 @@ bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
  */
 bool P123_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
-  return touchHandler->plugin_get_config_value(event, string);
+  if (nullptr != touchHandler) {
+    return touchHandler->plugin_get_config_value(event, string);
+  }
+  return false;
 }
 
 /**
  * Load the touch objects from the settings, and initialize then properly where needed.
  */
 void P123_data_struct::loadTouchObjects(struct EventStruct *event) {
-  touchHandler->loadTouchObjects(event);
+  if (nullptr != touchHandler) {
+    touchHandler->loadTouchObjects(event);
+  }
 }
 
 /**
@@ -203,7 +217,7 @@ void P123_data_struct::loadTouchObjects(struct EventStruct *event) {
  */
 bool P123_data_struct::touched() {
   if (isInitialized()) {
-    return touchHandler->touchEnabled() && touchscreen->touched();
+    return touchscreen->touched();
   }
   return false;
 }
@@ -277,9 +291,7 @@ void P123_data_struct::setRotation(uint8_t n) {
   # ifdef PLUGIN_123_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("P123 DEBUG Rotation set: ");
-    log += n;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG Rotation set: "), n));
   }
   # endif // PLUGIN_123_DEBUG
 }
@@ -292,9 +304,7 @@ void P123_data_struct::setRotationFlipped(bool flipped) {
   # ifdef PLUGIN_123_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("P123 DEBUG RotationFlipped set: ");
-    log += flipped;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG RotationFlipped set: "), flipped));
   }
   # endif // PLUGIN_123_DEBUG
 }
@@ -308,7 +318,10 @@ bool P123_data_struct::isValidAndTouchedTouchObject(const int16_t& x,
                                                     const int16_t& y,
                                                     String       & selectedObjectName,
                                                     int8_t       & selectedObjectIndex) {
-  return touchHandler->isValidAndTouchedTouchObject(x, y, selectedObjectName, selectedObjectIndex);
+  if (nullptr != touchHandler) {
+    return touchHandler->isValidAndTouchedTouchObject(x, y, selectedObjectName, selectedObjectIndex);
+  }
+  return false;
 }
 
 /**
@@ -317,7 +330,10 @@ bool P123_data_struct::isValidAndTouchedTouchObject(const int16_t& x,
 int8_t P123_data_struct::getTouchObjectIndex(struct EventStruct *event,
                                              const String      & touchObject,
                                              bool                isButton) {
-  return touchHandler->getTouchObjectIndex(event, touchObject, isButton);
+  if (nullptr != touchHandler) {
+    return touchHandler->getTouchObjectIndex(event, touchObject, isButton);
+  }
+  return false;
 }
 
 /**
@@ -326,7 +342,10 @@ int8_t P123_data_struct::getTouchObjectIndex(struct EventStruct *event,
 bool P123_data_struct::setTouchObjectState(struct EventStruct *event,
                                            const String      & touchObject,
                                            bool                state) {
-  return touchHandler->setTouchObjectState(event, touchObject, state);
+  if (nullptr != touchHandler) {
+    return touchHandler->setTouchObjectState(event, touchObject, state);
+  }
+  return false;
 }
 
 /**
@@ -335,7 +354,10 @@ bool P123_data_struct::setTouchObjectState(struct EventStruct *event,
 bool P123_data_struct::setTouchButtonOnOff(struct EventStruct *event,
                                            const String      & touchObject,
                                            bool                state) {
-  return touchHandler->setTouchButtonOnOff(event, touchObject, state);
+  if (nullptr != touchHandler) {
+    return touchHandler->setTouchButtonOnOff(event, touchObject, state);
+  }
+  return false;
 }
 
 /**
@@ -343,7 +365,7 @@ bool P123_data_struct::setTouchButtonOnOff(struct EventStruct *event,
  */
 void P123_data_struct::scaleRawToCalibrated(int16_t& x,
                                             int16_t& y) {
-  if (touchHandler->isCalibrationActive()) {
+  if ((nullptr != touchHandler) && touchHandler->isCalibrationActive()) {
     int16_t lx = x - touchHandler->Touch_Settings.top_left.x;
 
     if (lx <= 0) {
@@ -374,7 +396,10 @@ void P123_data_struct::scaleRawToCalibrated(int16_t& x,
  * Get the current button group
  */
 int16_t P123_data_struct::getButtonGroup() {
-  return touchHandler->getButtonGroup();
+  if (nullptr != touchHandler) {
+    return touchHandler->getButtonGroup();
+  }
+  return 0;
 }
 
 /**
@@ -383,10 +408,12 @@ int16_t P123_data_struct::getButtonGroup() {
 bool P123_data_struct::validButtonGroup(int16_t buttonGroup,
                                         bool    ignoreZero) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  return touchHandler->validButtonGroup(buttonGroup, ignoreZero);
-  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
-  return false;
+
+  if (nullptr != touchHandler) {
+    return touchHandler->validButtonGroup(buttonGroup, ignoreZero);
+  }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
 }
 
 /**
@@ -395,10 +422,12 @@ bool P123_data_struct::validButtonGroup(int16_t buttonGroup,
 bool P123_data_struct::setButtonGroup(struct EventStruct *event,
                                       int16_t             buttonGroup) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  return touchHandler->setButtonGroup(event, buttonGroup);
-  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
-  return false;
+
+  if (nullptr != touchHandler) {
+    return touchHandler->setButtonGroup(event, buttonGroup);
+  }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
 }
 
 /**
@@ -406,10 +435,12 @@ bool P123_data_struct::setButtonGroup(struct EventStruct *event,
  */
 bool P123_data_struct::incrementButtonGroup(struct EventStruct *event) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  return touchHandler->incrementButtonGroup(event);
-  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
-  return false;
+
+  if (nullptr != touchHandler) {
+    return touchHandler->incrementButtonGroup(event);
+  }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
 }
 
 /**
@@ -417,10 +448,12 @@ bool P123_data_struct::incrementButtonGroup(struct EventStruct *event) {
  */
 bool P123_data_struct::decrementButtonGroup(struct EventStruct *event) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  return touchHandler->decrementButtonGroup(event);
-  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
-  return false;
+
+  if (nullptr != touchHandler) {
+    return touchHandler->decrementButtonGroup(event);
+  }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
 }
 
 /**
@@ -428,10 +461,12 @@ bool P123_data_struct::decrementButtonGroup(struct EventStruct *event) {
  */
 bool P123_data_struct::incrementButtonPage(struct EventStruct *event) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  return touchHandler->incrementButtonPage(event);
-  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
-  return false;
+
+  if (nullptr != touchHandler) {
+    return touchHandler->incrementButtonPage(event);
+  }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
 }
 
 /**
@@ -439,10 +474,12 @@ bool P123_data_struct::incrementButtonPage(struct EventStruct *event) {
  */
 bool P123_data_struct::decrementButtonPage(struct EventStruct *event) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  return touchHandler->decrementButtonPage(event);
-  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
-  return false;
+
+  if (nullptr != touchHandler) {
+    return touchHandler->decrementButtonPage(event);
+  }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
 }
 
 #endif // ifdef USES_P123
