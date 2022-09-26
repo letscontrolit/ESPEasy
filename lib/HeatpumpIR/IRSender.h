@@ -6,6 +6,14 @@
 
 #include <Arduino.h>
 
+#if defined(DEBUG) && (DEBUG > 0)
+#define LOG(...) Serial.print(__VA_ARGS__)
+#define LOGLN(...) Serial.println(__VA_ARGS__)
+#else
+#define LOG(...)
+#define LOGLN(...)
+#endif
+
 #if defined(ESP8266) || defined(ESP32)
 #include <IRsend.h>  // From IRremoteESP8266 library
 #include <stdint.h>

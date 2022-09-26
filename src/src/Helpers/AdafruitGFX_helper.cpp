@@ -801,7 +801,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if (subcommand.equals(F("txs")) && (argCount == 1)) // txs: Text size = font scaling, 1..10
   {
-    if ((nParams[0] >= 0) || (nParams[0] <= 10)) {
+    if ((nParams[0] >= 0) && (nParams[0] <= 10)) {
       _fontscaling = nParams[0];
       _display->setTextSize(_fontscaling);
       calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
@@ -1661,7 +1661,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -1730,13 +1730,13 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.equals(F("win"))) {          // win: get current window id
+  if (command.equals(F("win"))) {     // win: get current window id
     #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
     string  = getWindow();
     success = true;
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   } else if (command.equals(F("iswin"))) { // iswin: check if windows exists
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW      // if feature enabled
     command = parseString(string, 2);
     int win = 0;
 
@@ -1745,11 +1745,11 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     } else {
       string = '0';
     }
-    success = true;                     // Always correct, just return 'false' if wrong
+    success = true;                          // Always correct, just return 'false' if wrong
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   } else if ((command.equals(F("width"))) || // width/height: get window width or height
              (command.equals(F("height")))) {
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW   // if feature enabled
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW        // if feature enabled
     uint16_t w = 0, h = 0;
     getWindowLimits(w, h);
 
@@ -2111,9 +2111,9 @@ uint16_t AdaGFXparseColor(String                & s,
     # if ADAGFX_SUPPORT_8and16COLOR
 
     if (
-      # if ADAGFX_SUPPORT_7COLOR
+      #  if ADAGFX_SUPPORT_7COLOR
       (colorDepth >= AdaGFXColorDepth::SevenColor) &&
-      # endif // if ADAGFX_SUPPORT_7COLOR
+      #  endif // if ADAGFX_SUPPORT_7COLOR
       (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
       result = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
     } else
@@ -2187,6 +2187,7 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED),     colorDepth);
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK),    colorDepth);
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT),   colorDepth);
+      // Fall through
     case AdaGFXColorDepth::Monochrome:
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK),   colorDepth);
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE),   colorDepth);
@@ -2637,12 +2638,6 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
   // Open requested file on storage
   // Search flash file system first, then SD if present
   file = tryOpenFile(filename, "r");
-  #  if FEATURE_SD
-
-  if (!file) {
-    file = SD.open(filename.c_str(), "r");
-  }
-  #  endif // if FEATURE_SD
 
   if (!file) {
     addLog(LOG_LEVEL_ERROR, F("showBmp: file not found"));
@@ -2756,165 +2751,165 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
       // BMP rows are padded (if needed) to 4-byte boundary
       rowSize = ((depth * bmpWidth + 31) / 32) * 4;
 
-      if ((depth == 24) || (depth == 1)) {           // BGR or 1-bit bitmap format
-        if (dest) {                                  // Supported format, alloc OK, etc.
-          status = true;
+      if ((depth == 24) || (depth == 1)) { // BGR or 1-bit bitmap format
+        // if (dest) {                     // Supported format, alloc OK, etc.
+        status = true;
 
-          if ((loadWidth > 0) && (loadHeight > 0)) { // Clip top/left
-            _display->startWrite();                  // Start SPI (regardless of transact)
+        if ((loadWidth > 0) && (loadHeight > 0)) { // Clip top/left
+          _display->startWrite();                  // Start SPI (regardless of transact)
 
-            if (canTransact) {
-              _tft->setAddrWindow(x, y, loadWidth, loadHeight);
+          if (canTransact) {
+            _tft->setAddrWindow(x, y, loadWidth, loadHeight);
+          }
+
+          if ((depth >= 16) ||
+              (quantized = (uint16_t *)malloc(colors * sizeof(uint16_t)))) {
+            if (depth < 16) {
+              // Load and quantize color table
+              for (uint16_t c = 0; c < colors; c++) {
+                b = file.read();
+                g = file.read();
+                r = file.read();
+                (void)file.read(); // Ignore 4th byte
+                quantized[c] =     // -V757
+                               ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+              }
             }
 
-            if ((depth >= 16) ||
-                (quantized = (uint16_t *)malloc(colors * sizeof(uint16_t)))) {
-              if (depth < 16) {
-                // Load and quantize color table
-                for (uint16_t c = 0; c < colors; c++) {
-                  b = file.read();
-                  g = file.read();
-                  r = file.read();
-                  (void)file.read(); // Ignore 4th byte
-                  quantized[c] =
-                    ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-                }
+            for (row = 0; row < loadHeight; row++) { // For each scanline...
+              delay(0);                              // Keep ESP8266 happy
+
+              // Seek to start of scan line.  It might seem labor-intensive
+              // to be doing this on every line, but this method covers a
+              // lot of gritty details like cropping, flip and scanline
+              // padding. Also, the seek only takes place if the file
+              // position actually needs to change (avoids a lot of cluster
+              // math in SD library).
+              if (flip) { // Bitmap is stored bottom-to-top order (normal BMP)
+                bmpPos = offset + (bmpHeight - 1 - (row + loadY)) * rowSize;
+              } else {    // Bitmap is stored top-to-bottom
+                bmpPos = offset + (row + loadY) * rowSize;
               }
 
-              for (row = 0; row < loadHeight; row++) { // For each scanline...
-                delay(0);                              // Keep ESP8266 happy
+              if (depth == 24) {
+                bmpPos += loadX * 3;
+              } else {
+                bmpPos += loadX / 8;
+                bitIn   = 7 - (loadX & 7);
+              }
 
-                // Seek to start of scan line.  It might seem labor-intensive
-                // to be doing this on every line, but this method covers a
-                // lot of gritty details like cropping, flip and scanline
-                // padding. Also, the seek only takes place if the file
-                // position actually needs to change (avoids a lot of cluster
-                // math in SD library).
-                if (flip) { // Bitmap is stored bottom-to-top order (normal BMP)
-                  bmpPos = offset + (bmpHeight - 1 - (row + loadY)) * rowSize;
-                } else {    // Bitmap is stored top-to-bottom
-                  bmpPos = offset + (row + loadY) * rowSize;
+              if (file.position() != bmpPos) {        // Need seek?
+                if (transact && canTransact) {
+                  _tft->dmaWait();
+                  _tft->endWrite();                   // End TFT SPI transaction
+                }
+                file.seek(bmpPos);                    // Seek = SD transaction
+                srcidx = sizeof sdbuf;                // Force buffer reload
+              }
+
+              for (col = 0; col < loadWidth; col++) { // For each pixel...
+                if (srcidx >= sizeof sdbuf) {         // Time to load more?
+                  if (transact && canTransact) {
+                    _tft->dmaWait();
+                    _tft->endWrite();                 // End TFT SPI transact
+                  }
+                  file.read(sdbuf, sizeof sdbuf);     // Load from SD
+
+                  if (transact && canTransact) {
+                    _display->startWrite();           // Start TFT SPI transact
+                  }
+
+                  if (destidx) {                      // If buffered TFT data
+                    // Non-blocking writes (DMA) have been temporarily
+                    // disabled until this can be rewritten with two
+                    // alternating 'dest' buffers (else the nonblocking
+                    // data out is overwritten in the dest[] write below).
+                    // tft->writePixels(dest, destidx, false); // Write it
+                    delay(0);
+
+                    if (canTransact) {
+                      _tft->writePixels(dest, destidx, true); // Write it
+                    } else {
+                      // loop over buffer
+
+                      for (uint16_t p = 0; p < destidx; p++) {
+                        _display->drawPixel(x + p, y + drow, dest[p]);
+                      }
+                    }
+
+                    if (col % 33 == 0) { delay(0); }
+                    destidx = 0; // and reset dest index
+                  }
+
+                  srcidx = 0;    // Reset bmp buf index
                 }
 
                 if (depth == 24) {
-                  bmpPos += loadX * 3;
+                  // Convert each pixel from BMP to 565 format, save in dest
+                  b               = sdbuf[srcidx++];
+                  g               = sdbuf[srcidx++]; // -V3106
+                  r               = sdbuf[srcidx++]; // -V3106
+                  dest[destidx++] =
+                    ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
                 } else {
-                  bmpPos += loadX / 8;
-                  bitIn   = 7 - (loadX & 7);
-                }
+                  // Extract 1-bit color index
+                  uint8_t n = (sdbuf[srcidx] >> bitIn) & 1;
 
-                if (file.position() != bmpPos) {        // Need seek?
-                  if (transact && canTransact) {
-                    _tft->dmaWait();
-                    _tft->endWrite();                   // End TFT SPI transaction
-                  }
-                  file.seek(bmpPos);                    // Seek = SD transaction
-                  srcidx = sizeof sdbuf;                // Force buffer reload
-                }
-
-                for (col = 0; col < loadWidth; col++) { // For each pixel...
-                  if (srcidx >= sizeof sdbuf) {         // Time to load more?
-                    if (transact && canTransact) {
-                      _tft->dmaWait();
-                      _tft->endWrite();                 // End TFT SPI transact
-                    }
-                    file.read(sdbuf, sizeof sdbuf);     // Load from SD
-
-                    if (transact && canTransact) {
-                      _display->startWrite();           // Start TFT SPI transact
-                    }
-
-                    if (destidx) {                      // If buffered TFT data
-                      // Non-blocking writes (DMA) have been temporarily
-                      // disabled until this can be rewritten with two
-                      // alternating 'dest' buffers (else the nonblocking
-                      // data out is overwritten in the dest[] write below).
-                      // tft->writePixels(dest, destidx, false); // Write it
-                      delay(0);
-
-                      if (canTransact) {
-                        _tft->writePixels(dest, destidx, true); // Write it
-                      } else {
-                        // loop over buffer
-
-                        for (uint16_t p = 0; p < destidx; p++) {
-                          _display->drawPixel(x + p, y + drow, dest[p]);
-                        }
-                      }
-
-                      if (col % 33 == 0) { delay(0); }
-                      destidx = 0; // and reset dest index
-                    }
-
-                    srcidx = 0;    // Reset bmp buf index
-                  }
-
-                  if (depth == 24) {
-                    // Convert each pixel from BMP to 565 format, save in dest
-                    b               = sdbuf[srcidx++];
-                    g               = sdbuf[srcidx++];
-                    r               = sdbuf[srcidx++];
-                    dest[destidx++] =
-                      ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                  if (!bitIn) {
+                    srcidx++;
+                    bitIn = 7;
                   } else {
-                    // Extract 1-bit color index
-                    uint8_t n = (sdbuf[srcidx] >> bitIn) & 1;
-
-                    if (!bitIn) {
-                      srcidx++;
-                      bitIn = 7;
-                    } else {
-                      bitIn--;
-                    }
-
-                    // Look up in palette, store in tft dest buf
-                    dest[destidx++] = quantized[n];
+                    bitIn--;
                   }
-                  dcol++;
-                }                                           // end pixel loop
 
-                if (_tft) {                                 // Drawing to TFT?
-                  delay(0);
-
-                  if (destidx) {                            // Any remainders?
-                    // See notes above re: DMA
-                    _tft->writePixels(dest, destidx, true); // Write it
-                    destidx = 0;                            // and reset dest index
-                  }
-                  _tft->dmaWait();
-                  _tft->endWrite();                         // update display
-                } else {
-                  // loop over buffer
-                  if (destidx) {
-                    for (uint16_t p = 0; p < destidx; p++) {
-                      _display->drawPixel(x + p, y + drow, dest[p]);
-
-                      if (p % 100 == 0) { delay(0); }
-                    }
-                    destidx = 0; // and reset dest index
-                  }
+                  // Look up in palette, store in tft dest buf
+                  dest[destidx++] = quantized[n];
                 }
+                dcol++;
+              }                                           // end pixel loop
 
-                drow++;
-                dcol = 0;
-              } // end scanline loop
+              if (_tft) {                                 // Drawing to TFT?
+                delay(0);
 
-              if (quantized) {
-                free(quantized);  // Palette no longer needed
+                if (destidx) {                            // Any remainders?
+                  // See notes above re: DMA
+                  _tft->writePixels(dest, destidx, true); // Write it
+                  destidx = 0;                            // and reset dest index
+                }
+                _tft->dmaWait();
+                _tft->endWrite();                         // update display
+              } else {
+                // loop over buffer
+                if (destidx) {
+                  for (uint16_t p = 0; p < destidx; p++) {
+                    _display->drawPixel(x + p, y + drow, dest[p]);
+
+                    if (p % 100 == 0) { delay(0); }
+                  }
+                  destidx = 0; // and reset dest index
+                }
               }
-              delay(0);
-            } // end depth>24 or quantized malloc OK
-          }                       // end top/left clip
-        }                         // end malloc check
-      }       // end depth check
+
+              drow++;
+              dcol = 0;
+            }                  // end scanline loop
+
+            if (quantized) {
+              free(quantized); // Palette no longer needed
+            }
+            delay(0);
+          }                    // end depth>24 or quantized malloc OK
+        }                      // end top/left clip
+        // }                         // end malloc check
+      }                        // end depth check
     } // end planes/compression check
-  }   // end signature
+  }                            // end signature
 
   file.close();
   #  ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
   #  endif // ifndef BUILD_NO_DEBUG
-  return status;
+  return status; // -V680
 
   // }
 }
@@ -3011,8 +3006,8 @@ uint8_t AdafruitGFX_helper::defineWindow(const int16_t& x,
   int16_t result = getWindowIndex(windowId);
 
   if (result < 0) {
-    result = _windows.size();            // previous size
-    _windows.push_back(tWindowObject()); // add new
+    result = static_cast<int16_t>(_windows.size()); // previous size
+    _windows.push_back(tWindowObject());            // add new
 
     if (windowId < 0) {
       windowId = 0;

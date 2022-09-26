@@ -20,11 +20,11 @@
 # define P120_CS_PIN                      PIN(0)
 # define P120_AVERAGE_BUFFER              PCONFIG(2)
 # define P120_FREQUENCY                   PCONFIG(3)
-# define P120_FREQUENCY_10                0          // 10x per second
-# define P120_FREQUENCY_50                1          // 50x per second
+# define P120_FREQUENCY_10                0 // 10x per second
+# define P120_FREQUENCY_50                1 // 50x per second
 // First set of configuration flags
 # define P120_CONFIG_FLAGS1               PCONFIG_LONG(0)
-# define P120_FLAGS1_RANGE                0          // Range setting, size 2 bits
+# define P120_FLAGS1_RANGE                0 // Range setting, size 2 bits
 # define P120_RANGE_2G                      0
 # define P120_RANGE_4G                      1
 # define P120_RANGE_8G                      2
@@ -107,8 +107,8 @@ private:
 
   ADXL345 *adxl345 = nullptr;
 
-  uint8_t _i2c_addr;
-  int     _cs_pin;
+  uint8_t _i2c_addr = 0;
+  int     _cs_pin   = -1;
   uint8_t _aSize;
 
   std::vector<int>_XA;
