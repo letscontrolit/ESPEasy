@@ -11,6 +11,8 @@
 
 /*****
  * Changelog:
+ * 2022-09-26 tonhuisman: Fix issue with touch-disable option. Code optimizations, improved log/string handling
+ *                        Make Swipe feature part of Extended Touch feature
  * 2022-08-27 tonhuisman: Enable identifying an object using the <groupnr>.<objectnr> notation, where groupnr = 0..255, and objectnr
  *                        range starts at 1, in sequential order for the objects in that group
  *                        Add option to disable polling the touch-screen, to be able to only use the object/button draw features
@@ -64,7 +66,7 @@
  * buttongroup                  : Get current buttongroup
  * hasgroup,groupNr             : Check if group exists, ignores group 0
  * enabled,objectName|objectNr  : Check if object is enabled
- * state,objectName|objectNr    : Get current object state (buttons: on = 1, off = 0, sliders: value 0..100 (=percentage))
+ * state,objectName|objectNr    : Get current object state (buttons: on = 1, off = 0, sliders: value 0..100 (=percentage) or explicit value)
  * pagemode                     : Get the PageUp/PageDown mode, 0 = up=pgup, 1 = up=pgdown
  * swipedir,directionId         : Get the name for the direction provided in numeric form
  */
@@ -238,15 +240,15 @@ struct tTouchObjects
 
 // Touch actions, max 16!
 enum class Touch_action_e : uint8_t {
-  Default         = 0u,
-  ActivateGroup   = 1u,
-  IncrementGroup  = 2u,
-  DecrementGroup  = 3u,
-  IncrementPage   = 4u,
-  DecrementPage   = 5u,
+  Default        = 0u,
+  ActivateGroup  = 1u,
+  IncrementGroup = 2u,
+  DecrementGroup = 3u,
+  IncrementPage  = 4u,
+  DecrementPage  = 5u,
 };
 
-# if TOUCH_FEATURE_SWIPE
+# if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
 // Swipe actions, start at 12 o'çlock, clock-wise
 enum class Swipe_action_e : uint8_t {
@@ -261,13 +263,13 @@ enum class Swipe_action_e : uint8_t {
   LeftUp          = 8u,
   SwipeAction_MAX = 9u // Last item is count
 };
-# endif // if TOUCH_FEATURE_SWIPE
+# endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
 const __FlashStringHelper* toString(Touch_action_e action);
 
-# if TOUCH_FEATURE_SWIPE
+# if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 const __FlashStringHelper* toString(Swipe_action_e action);
-# endif // if TOUCH_FEATURE_SWIPE
+# endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
 class ESPEasy_TouchHandler {
 public:
@@ -322,10 +324,10 @@ public:
   # if TOUCH_FEATURE_EXTENDED_TOUCH
   bool validButtonGroup(const int16_t& group,
                         const bool   & ignoreZero = true);
-  #  if TOUCH_FEATURE_SWIPE
+  #  if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
   bool handleButtonSwipe(struct EventStruct *event,
                          const int16_t     & swipeValue);
-  #  endif // if TOUCH_FEATURE_SWIPE
+  #  endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
   bool setButtonGroup(struct EventStruct *event,
                       const int16_t     & buttonGroup);
   bool incrementButtonGroup(struct EventStruct *event);
@@ -342,7 +344,7 @@ public:
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
   bool touchEnabled() {
-    return _touchEnabled;
+    return !_touchIgnored;
   }
 
 private:
@@ -370,18 +372,18 @@ private:
 
   bool _settingsLoaded = false;
   bool _stillTouching  = false;
-  bool _touchEnabled   = true;
+  bool _touchIgnored   = false;
 
   // Used to generate events on touch-release
   int8_t _lastObjectIndex = -1;
   String _lastObjectName;
   tTouch_Point _last_point;
   tTouch_Point _last_point_z; // Only used to store z in the x member
-  # if TOUCH_FEATURE_SWIPE
+  # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
   Swipe_action_e _lastSwipe = Swipe_action_e::None;
   int16_t _last_delta_x;
   int16_t _last_delta_y;
-  # endif // if TOUCH_FEATURE_SWIPE
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
   struct tTouch_Globals
   {

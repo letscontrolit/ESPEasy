@@ -23,7 +23,7 @@ const __FlashStringHelper* toString(Touch_action_e action) {
 /****************************************************************************
  * toString: Display-value for the swipe action
  ***************************************************************************/
-# if TOUCH_FEATURE_SWIPE
+# if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 const __FlashStringHelper* toString(Swipe_action_e action) {
   switch (action) {
     case Swipe_action_e::Up: return F("Up");
@@ -40,7 +40,7 @@ const __FlashStringHelper* toString(Swipe_action_e action) {
   return F("Unknown");
 }
 
-# endif // if TOUCH_FEATURE_SWIPE
+# endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
 /**
  * Constructors
@@ -122,13 +122,13 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
     Touch_Settings.colorDisabled        = TOUCH_DEFAULT_COLOR_DISABLED;
     Touch_Settings.colorDisabledCaption = TOUCH_DEFAULT_COLOR_DISABLED_CAPTION;
   }
-  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-  # if TOUCH_FEATURE_SWIPE
+  #  if TOUCH_FEATURE_SWIPE
   Touch_Settings.swipeMinimal = parseStringToInt(settingsArray[TOUCH_CALIBRATION_START],
                                                  TOUCH_COMMON_SWIPE_MINIMAL, TOUCH_SETTINGS_SEPARATOR, TOUCH_DEF_SWIPE_MINIMAL);
   Touch_Settings.swipeMargin = parseStringToInt(settingsArray[TOUCH_CALIBRATION_START],
                                                 TOUCH_COMMON_SWIPE_MARGIN, TOUCH_SETTINGS_SEPARATOR, TOUCH_DEF_SWIPE_MARGIN);
-  # endif // if TOUCH_FEATURE_SWIPE
+  #  endif // if TOUCH_FEATURE_SWIPE
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
   settingsArray[TOUCH_CALIBRATION_START].clear(); // Free a little memory
 
@@ -216,7 +216,7 @@ void ESPEasy_TouchHandler::init(struct EventStruct *event) {
   }
 
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  _touchEnabled = bitRead(TOUCH_COMMON_FLAGS, TOUCH_FLAGS_IGNORE_TOUCH);
+  _touchIgnored = bitRead(Touch_Settings.flags, TOUCH_FLAGS_IGNORE_TOUCH);
 
   if (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_OBJECTNAME) &&
       bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT)) {
@@ -750,7 +750,7 @@ bool ESPEasy_TouchHandler::validButtonGroup(const int16_t& group,
          (!ignoreZero || group > 0 || (group == 0 && _buttonGroups.size() == 1));
 }
 
-#  if TOUCH_FEATURE_SWIPE
+#  if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
 /**
  * set button group page via the Swipe event
@@ -793,7 +793,7 @@ bool ESPEasy_TouchHandler::handleButtonSwipe(struct EventStruct *event,
   return success;
 }
 
-#  endif // if TOUCH_FEATURE_SWIPE
+#  endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
 /**
  * Set the desired button group, must be a known group, previous group will be erased and new group drawn
@@ -1069,7 +1069,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                       Touch_Settings.debounceMs, 0, 255);
     addUnit(F("0..255 msec."));
 
-    # if TOUCH_FEATURE_SWIPE
+    # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     addFormNumericBox(F("Minimal swipe movement"), F("swipemin"),
                       Touch_Settings.swipeMinimal, 1, 25);
     addUnit(F("1..25px"));
@@ -1077,7 +1077,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     addFormNumericBox(F("Maximum swipe margin"), F("swipemax"),
                       Touch_Settings.swipeMargin, 5, 250);
     addUnit(F("5..250px"));
-    # endif // if TOUCH_FEATURE_SWIPE
+    # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
   }
   {
     addFormSubHeader(F("Touch objects"));
@@ -1250,7 +1250,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                   nullptr,
                   get4BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTONTYPE), false, true, F("widenumber")
                   #  if TOUCH_FEATURE_TOOLTIPS
-                  , F("Buttontype")
+                  , F("Button")
                   #  endif // if TOUCH_FEATURE_TOOLTIPS
                   );
       html_TD(); // button alignment
@@ -1261,7 +1261,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                   nullptr,
                   get4BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTONALIGN) << 4, false, true, F("widenumber")
                   #  if TOUCH_FEATURE_TOOLTIPS
-                  , F("Button alignment")
+                  , F("Layout")
                   #  endif // if TOUCH_FEATURE_TOOLTIPS
                   );
       # else // if TOUCH_FEATURE_EXTENDED_TOUCH
@@ -1336,8 +1336,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       # if TOUCH_FEATURE_EXTENDED_TOUCH
       {
         #  if TOUCH_FEATURE_TOOLTIPS
-        String buttonGroupToolTip = F("Button-group [0..");
-        buttonGroupToolTip += TOUCH_MAX_BUTTON_GROUPS;
+        String buttonGroupToolTip(concat(F("Button-group [0.."), TOUCH_MAX_BUTTON_GROUPS));
         buttonGroupToolTip += ']';
         #  endif // if TOUCH_FEATURE_TOOLTIPS
         addNumericBox(getPluginCustomArgName(objectNr + 1600),
@@ -1509,13 +1508,13 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   config    += TOUCH_SETTINGS_SEPARATOR;
   colorInput = webArg(getPluginCustomArgName(3005)); // Default Disabled Caption Color
   config    += toStringNoZero(AdaGFXparseColor(colorInput, _colorDepth, false));
-  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-  # if TOUCH_FEATURE_SWIPE
+  #  if TOUCH_FEATURE_SWIPE
   config += TOUCH_SETTINGS_SEPARATOR;
   config += toStringNoZero(getFormItemInt(F("swipemin")));
   config += TOUCH_SETTINGS_SEPARATOR;
   config += toStringNoZero(getFormItemInt(F("swipemax")));
-  # endif // if TOUCH_FEATURE_SWIPE
+  #  endif // if TOUCH_FEATURE_SWIPE
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
   settingsArray[TOUCH_CALIBRATION_START] = config;
   saveSize                              += config.length() + 1;
@@ -1636,8 +1635,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
 
     if (loglevelActiveFor(LOG_LEVEL_INFO) &&
         !config.isEmpty()) {
-      String log = F("Save object #");
-      log += objectNr;
+      String log(concat(F("Save object #"), objectNr));
       log += F(" settings: ");
       config.replace(TOUCH_SETTINGS_SEPARATOR, ',');
       log += config;
@@ -1654,9 +1652,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   error = SaveCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("TOUCH Save settings size: ");
-    log += saveSize;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("TOUCH Save settings size: "), saveSize));
   }
 
   if (!error.isEmpty()) {
@@ -1692,23 +1688,16 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
 
   if (success &&
       Touch_Settings.logEnabled &&
-      loglevelActiveFor(LOG_LEVEL_INFO)) { // REQUIRED for calibration and setting up objects, so do not make this optional!
+      loglevelActiveFor(LOG_LEVEL_INFO)) {          // REQUIRED for calibration and setting up objects, so do not make this optional!
     String log;
     log.reserve(72);
-    log  = F("Touch calibration rx= ");    // Space before the logged values for readability
-    log += rx;
-    log += F(", ry= ");
-    log += ry;
-    log += F("; z= "); // Always log the z value even if not used.
-    log += z;
-    log += F(", x= ");
-    log += x;
-    log += F(", y= ");
-    log += y;
-    log += F("; ox= ");
-    log += ox;
-    log += F(", oy= ");
-    log += oy;
+    log  = concat(F("Touch calibration rx= "), rx); // Space before the logged values for readability
+    log += concat(F(", ry= "), ry);
+    log += concat(F("; z= "), z);                   // Always log the z value even if not used.
+    log += concat(F(", x= "), x);
+    log += concat(F(", y= "), y);
+    log += concat(F("; ox= "), ox);
+    log += concat(F(", oy= "), oy);
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
@@ -1735,7 +1724,7 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
       int8_t selectedObjectIndex = -1;
 
       if (isValidAndTouchedTouchObject(x, y, selectedObjectName, selectedObjectIndex)) {
-        # if TOUCH_FEATURE_SWIPE
+        # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
         int16_t delta_x = x - _last_point.x;
         int16_t delta_y = y - _last_point.y;
 
@@ -1774,23 +1763,20 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
           #  ifdef TOUCH_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log = F("Touch Swiped, direction: ");
-            log += toString(swipe);
-            log += F(", dx: ");
-            log += delta_x;
-            log += F(", dy: ");
-            log += delta_y;
+            String log = concat(F("Touch Swiped, direction: "), toString(swipe));
+            log += concat(F(", dx: "), delta_x);
+            log += concat(F(", dy: "), delta_y);
             addLogMove(LOG_LEVEL_DEBUG, log);
           }
           #  endif // ifdef TOUCH_DEBUG
         }
-        # endif // if TOUCH_FEATURE_SWIPE
+        # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
         // Not touched yet or too long ago
         if (
-          # if TOUCH_FEATURE_SWIPE
+          # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
           (swipe == Swipe_action_e::None) &&
-          # endif // if TOUCH_FEATURE_SWIPE
+          # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
           ((TouchObjects[selectedObjectIndex].TouchTimers == 0) ||
            (TouchObjects[selectedObjectIndex].TouchTimers < (millis() - (1.5 * Touch_Settings.debounceMs)))
           )) {
@@ -1800,20 +1786,20 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
           // Debouncing time elapsed? Swiping/sliding passes through without debounce
 
           if (
-            # if TOUCH_FEATURE_SWIPE
+            # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
             (swipe != Swipe_action_e::None) ||
-            # endif // if TOUCH_FEATURE_SWIPE
+            # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
             (TouchObjects[selectedObjectIndex].TouchTimers <= millis())) {
             TouchObjects[selectedObjectIndex].TouchTimers = 0;
 
             if (
-              # if TOUCH_FEATURE_SWIPE
+              # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
               (swipe == Swipe_action_e::None) &&
-              # endif // if TOUCH_FEATURE_SWIPE
+              # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
               (selectedObjectIndex > -1) && bitRead(TouchObjects[selectedObjectIndex].flags, TOUCH_OBJECT_FLAG_BUTTON)) {
               // Button touched
               _lastObjectIndex = selectedObjectIndex; // Handle on release
-            # if TOUCH_FEATURE_SWIPE
+            # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
             } else if ((swipe != Swipe_action_e::None) &&
                        (selectedObjectIndex > -1) && bitRead(TouchObjects[selectedObjectIndex].flags, TOUCH_OBJECT_FLAG_SLIDER)) {
               // Handle slider immediately to move/set absolute position
@@ -1855,24 +1841,23 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               } else {
                 _lastObjectIndex = selectedObjectIndex; // Update on touch-release
               }
-            # endif // if TOUCH_FEATURE_SWIPE
+            # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
             } else {                                    // Generic touch event
               _lastObjectIndex = -2;                    // Update on touch-release
               _lastObjectName  = selectedObjectName;
 
-              String log = F("Swiped/touched, object: ");
-              log += _lastObjectName;
+              String log(concat(F("Swiped/touched, object: "), _lastObjectName));
               log += ':';
               log += toString(swipe);
 
-              # if TOUCH_FEATURE_SWIPE
+              # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
               if (swipe != Swipe_action_e::None) {
                 _lastSwipe = swipe;
               }
               _last_delta_x = delta_x;
               _last_delta_y = delta_y;
-              # endif // if TOUCH_FEATURE_SWIPE
+              # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
               addLogMove(LOG_LEVEL_INFO, log);
             }
           }
@@ -1906,10 +1891,10 @@ void ESPEasy_TouchHandler::releaseTouch(struct EventStruct *event) {
     eventCommand  = getTaskDeviceName(event->TaskIndex);
     eventCommand += '#';
 
-    # if TOUCH_FEATURE_SWIPE
+    # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
     if (_lastSwipe == Swipe_action_e::None)
-    # endif // if TOUCH_FEATURE_SWIPE
+    # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     {
       eventCommand += _lastObjectName;
       eventCommand += '='; // Add arguments
@@ -1919,10 +1904,9 @@ void ESPEasy_TouchHandler::releaseTouch(struct EventStruct *event) {
       eventCommand += ',';
       eventCommand += _last_point_z.x;
     }
-    # if TOUCH_FEATURE_SWIPE
+    # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     else {
-      eventCommand += F("Swiped");
-      eventCommand += '='; // Add arguments
+      eventCommand += F("Swiped="); // Add arguments
       eventCommand += static_cast<int>(_lastSwipe);
       eventCommand += ',';
       eventCommand += _last_delta_x;
@@ -1930,7 +1914,7 @@ void ESPEasy_TouchHandler::releaseTouch(struct EventStruct *event) {
       eventCommand += _last_delta_y;
       _lastSwipe    = Swipe_action_e::None;
     }
-    # endif // if TOUCH_FEATURE_SWIPE
+    # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     eventQueue.addMove(std::move(eventCommand));
     _lastObjectIndex = -1; // Handle only once
   }
@@ -1974,33 +1958,29 @@ bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
-        success |= setTouchObjectState(event, arguments, true);
-        arg++;
-        arguments = parseString(string, arg);
+        success  |= setTouchObjectState(event, arguments, true);
+        arguments = parseString(string, ++arg);
       }
     } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName>[,...] : Disable enabled objectname(s)
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
-        success |= setTouchObjectState(event, arguments, false);
-        arg++;
-        arguments = parseString(string, arg);
+        success  |= setTouchObjectState(event, arguments, false);
+        arguments = parseString(string, ++arg);
       }
     } else if (subcommand.equals(F("on"))) { // touch,on,<buttonObjectName>[,...] : Switch TouchButton(s) on
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
-        success |= setTouchButtonOnOff(event, arguments, true);
-        arg++;
-        arguments = parseString(string, arg);
+        success  |= setTouchButtonOnOff(event, arguments, true);
+        arguments = parseString(string, ++arg);
       }
     } else if (subcommand.equals(F("off"))) { // touch,off,<buttonObjectName>[,...] : Switch TouchButton(s) off
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
-        success |= setTouchButtonOnOff(event, arguments, false);
-        arg++;
-        arguments = parseString(string, arg);
+        success  |= setTouchButtonOnOff(event, arguments, false);
+        arguments = parseString(string, ++arg);
       }
     } else if (subcommand.equals(F("toggle"))) { // touch,toggle,<buttonObjectName>[,...] : Switch TouchButton(s) to the other state
       arguments = parseString(string, arg);
@@ -2011,17 +1991,16 @@ bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
         if (state > -1) {
           success |= setTouchButtonOnOff(event, arguments, state == 0);
         }
-        arg++;
-        arguments = parseString(string, arg);
+        arguments = parseString(string, ++arg);
       }
     } else if (subcommand.equals(F("set"))) { // touch,set,<objectName>,<value> : Set TouchObject value
       arguments = parseString(string, arg);
       success   = setTouchObjectValue(event, arguments, event->Par3);
     # if TOUCH_FEATURE_EXTENDED_TOUCH
-    #  if TOUCH_FEATURE_SWIPE
+    #  if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     } else if (subcommand.equals(F("swipe"))) {        // touch,swipe,<swipeValue> : Switch button group via swipe value
       success = handleButtonSwipe(event, event->Par2);
-    #  endif // if TOUCH_FEATURE_SWIPE
+    #  endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     } else if (subcommand.equals(F("setgrp"))) {       // touch,setgrp,<group> : Activate button group
       success = setButtonGroup(event, event->Par2);
     } else if (subcommand.equals(F("incgrp"))) {       // touch,incgrp : increment group and Activate
@@ -2096,8 +2075,7 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
   } else if (command.equals(F("pagemode"))) {
     string  = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
     success = true;
-  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-  # if TOUCH_FEATURE_SWIPE
+  #  if TOUCH_FEATURE_SWIPE
   } else if (command.equals(F("swipedir"))) {
     int state;
 
@@ -2105,7 +2083,8 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
       string  = toString(static_cast<Swipe_action_e>(state));
       success = true;
     }
-  # endif // if TOUCH_FEATURE_SWIPE
+  #  endif // if TOUCH_FEATURE_SWIPE
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   }
   return success;
 }
@@ -2317,9 +2296,7 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
           case Touch_action_e::Default:
             break;
         }
-        String log = F("TOUCH event: ");
-        log += toString(action);
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("TOUCH event: "), toString(action)));
       }
     }
   }
