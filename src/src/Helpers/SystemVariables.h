@@ -125,7 +125,8 @@ public:
   // Return UNKNOWN when nothing needs to be replaced.
   static Enum nextReplacementEnum(const String& str, Enum last_tested);
 
-  static const __FlashStringHelper * toString(Enum enumval);
+  static String toString(Enum enumval);
+  static const __FlashStringHelper * toFlashString(Enum enumval);
 
   static String getSystemVariable(Enum enumval);
 

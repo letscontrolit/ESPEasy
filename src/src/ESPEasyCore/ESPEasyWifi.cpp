@@ -1128,7 +1128,6 @@ void setAPinternal(bool enable)
       #endif
     }
 
-
     if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         eventQueue.add(F("WiFi#APmodeEnabled"));
@@ -1220,7 +1219,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     delay(100);
   }
 
-  addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
+  addLog(LOG_LEVEL_INFO, concat(F("WIFI : Set WiFi to "), getWifiModeString(wifimode)));
 
   int retry = 2;
   while (!WiFi.mode(wifimode) && retry > 0) {

@@ -39,6 +39,7 @@ Welcome to ESP Easy's documentation!
    Reference/Command.rst
    Reference/Events.rst
    Reference/GPIO.rst
+   Plugin/SerialHelper.rst
    Reference/SystemVariable.rst
    Reference/URLs.rst
    Reference/RTC.rst

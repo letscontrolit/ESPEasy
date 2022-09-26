@@ -204,6 +204,7 @@
 // #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
+// #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
 
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -451,6 +452,9 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P131   // NeoMatrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
+// #define USES_P134   // A02YYUW
+// #define USES_P135   // SCD4x
+// #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
 
 // #define USES_P128   // NeoPixelBusFX
 // #define P128_USES_GRB  // Default

@@ -115,6 +115,7 @@ bool ControllerSettingsStruct::checkHostReachable(bool quick) {
   return hostReachable(getIP());
 }
 
+#if FEATURE_HTTP_CLIENT
 bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
@@ -134,6 +135,7 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   }
   return false;
 }
+#endif // FEATURE_HTTP_CLIENT
 
 bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   if (!checkHostReachable(true)) {

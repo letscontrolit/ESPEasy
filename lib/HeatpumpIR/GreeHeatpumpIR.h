@@ -14,6 +14,11 @@
 #define GREE_AIRCON1_ZERO_SPACE 540
 #define GREE_AIRCON1_MSG_SPACE  19000
 
+// Timing specific for YAC features (I-Feel mode)
+#define GREE_YAC_HDR_MARK   6000
+#define GREE_YAC_HDR_SPACE  3000
+#define GREE_YAC_BIT_MARK   650
+
 // Power state
 #define GREE_AIRCON1_POWER_OFF  0x00
 #define GREE_AIRCON1_POWER_ON   0x08
@@ -44,21 +49,22 @@
 #define GREE_VDIR_MDOWN  0x05
 #define GREE_VDIR_DOWN   0x06
 
-// Not available in this model.
+// Only available on YAC
 // Horizontal air directions. Note that these cannot be set on all heat pumps
-#define GREE_HDIR_AUTO   0
-#define GREE_HDIR_MANUAL 0
-#define GREE_HDIR_SWING  0
-#define GREE_HDIR_MIDDLE 0
-#define GREE_HDIR_LEFT   0
-#define GREE_HDIR_MLEFT  0
-#define GREE_HDIR_MRIGHT 0
-#define GREE_HDIR_RIGHT  0
+#define GREE_HDIR_AUTO   0x00
+#define GREE_HDIR_MANUAL 0x00
+#define GREE_HDIR_SWING  0x01
+#define GREE_HDIR_LEFT   0x02
+#define GREE_HDIR_MLEFT  0x03
+#define GREE_HDIR_MIDDLE 0x04
+#define GREE_HDIR_MRIGHT 0x05
+#define GREE_HDIR_RIGHT  0x06
 
 // Gree model codes
 #define GREE_GENERIC 0
 #define GREE_YAN     1
 #define GREE_YAA     2
+#define GREE_YAC     3
 
 
 class GreeHeatpumpIR : public HeatpumpIR
@@ -70,9 +76,10 @@ class GreeHeatpumpIR : public HeatpumpIR
   public:
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd , uint8_t fanSpeedCmd , uint8_t temperatureCmd , uint8_t swingVCmd , uint8_t swingHCmd, bool turboMode);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd , uint8_t fanSpeedCmd , uint8_t temperatureCmd , uint8_t swingVCmd , uint8_t swingHCmd, bool turboMode, bool iFeelMode);
 
   private:
-    void sendGree(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH, bool turboMode);
+    void sendGree(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH, bool turboMode, bool iFeelMode);
 };
 
 class GreeGenericHeatpumpIR : public GreeHeatpumpIR
@@ -87,7 +94,10 @@ class GreeYANHeatpumpIR : public GreeHeatpumpIR
     GreeYANHeatpumpIR();
 
   public:
-    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool turboMode);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool turboMode)
+    {
+      GreeHeatpumpIR::send(IR, powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd, turboMode);
+    }
 };
 
 class GreeYAAHeatpumpIR : public GreeHeatpumpIR
@@ -96,7 +106,23 @@ class GreeYAAHeatpumpIR : public GreeHeatpumpIR
     GreeYAAHeatpumpIR();
 
   public:
-    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool turboMode);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool turboMode)
+    {
+      GreeHeatpumpIR::send(IR, powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd, turboMode);
+    }
+};
+
+class GreeYACHeatpumpIR : public GreeHeatpumpIR
+{
+  public:
+    GreeYACHeatpumpIR();
+
+  public:
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool turboMode, bool iFeelMode)
+    {
+      GreeHeatpumpIR::send(IR, powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd, turboMode, iFeelMode);
+    }
+    void send(IRSender& IR, uint8_t currentTemperature);
 };
 
 #endif

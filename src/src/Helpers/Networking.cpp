@@ -411,7 +411,7 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
     if (it->second.ip[0] == 0) {
       return remoteNodeIP;
     }
-    return IPAddress(it->second.ip);
+    return it->second.IP();
   }
   return remoteNodeIP;
 }
@@ -980,6 +980,7 @@ bool hostReachable(const IPAddress& ip) {
    */
 }
 
+#if FEATURE_HTTP_CLIENT
 bool connectClient(WiFiClient& client, const char *hostname, uint16_t port, uint32_t timeout_ms) {
   IPAddress ip;
 
@@ -1019,6 +1020,7 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 #endif // if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
   return connected;
 }
+#endif // FEATURE_HTTP_CLIENT
 
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms) {
   START_TIMER;
@@ -1210,6 +1212,7 @@ String extractParam(const String& authReq, const String& param, const char delim
   return authReq.substring(_begin + param.length(), authReq.indexOf(delimit, _begin + param.length()));
 }
 
+#if FEATURE_HTTP_CLIENT
 String getCNonce(const int len) {
   static const char alphanum[] = "0123456789"
                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -1512,6 +1515,7 @@ String send_via_http(const String& logIdentifier,
   client.stop(); 
   return response;
 }
+#endif // FEATURE_HTTP_CLIENT
 
 #if FEATURE_DOWNLOAD
 
