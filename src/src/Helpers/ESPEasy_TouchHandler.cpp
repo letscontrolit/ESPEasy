@@ -1846,11 +1846,13 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               _lastObjectIndex = -2;                    // Update on touch-release
               _lastObjectName  = selectedObjectName;
 
+              # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
+              #  if TOUCH_DEBUG
               String log(concat(F("Swiped/touched, object: "), _lastObjectName));
               log += ':';
               log += toString(swipe);
-
-              # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
+              addLogMove(LOG_LEVEL_INFO, log);
+              #  endif // if TOUCH_DEBUG
 
               if (swipe != Swipe_action_e::None) {
                 _lastSwipe = swipe;
@@ -1858,7 +1860,6 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               _last_delta_x = delta_x;
               _last_delta_y = delta_y;
               # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
-              addLogMove(LOG_LEVEL_INFO, log);
             }
           }
           _last_point.x   = x; // Save last touchpoint
