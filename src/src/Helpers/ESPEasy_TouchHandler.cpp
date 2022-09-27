@@ -1847,12 +1847,12 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               _lastObjectName  = selectedObjectName;
 
               # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
-              #  if TOUCH_DEBUG
+              #  ifdef TOUCH_DEBUG
               String log(concat(F("Swiped/touched, object: "), _lastObjectName));
               log += ':';
               log += toString(swipe);
               addLogMove(LOG_LEVEL_INFO, log);
-              #  endif // if TOUCH_DEBUG
+              #  endif // ifdef TOUCH_DEBUG
 
               if (swipe != Swipe_action_e::None) {
                 _lastSwipe = swipe;
