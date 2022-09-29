@@ -233,6 +233,7 @@ void handle_unprocessedNetworkEvents()
 void processDisconnect() {
   if (WiFiEventData.processingDisconnect.isSet()) {
     if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000 || WiFiEventData.processedDisconnect) {
+      WiFiEventData.processedDisconnect = true;
       WiFiEventData.processingDisconnect.clear();
     }
   }
