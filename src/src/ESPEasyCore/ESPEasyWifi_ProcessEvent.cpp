@@ -253,6 +253,7 @@ void handle_unprocessedNetworkEvents()
 void processDisconnect() {
   if (WiFiEventData.processingDisconnect.isSet()) {
     if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000 || WiFiEventData.processedDisconnect) {
+      WiFiEventData.processedDisconnect = true;
       WiFiEventData.processingDisconnect.clear();
     }
   }
@@ -296,21 +297,24 @@ void processDisconnect() {
   #endif
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
 
-  WiFiEventData.processedDisconnect = true;
-
   if (WiFi.status() > WL_DISCONNECTED) {
     // In case of an error, where the status reports something like WL_NO_SHIELD
+    addLog(LOG_LEVEL_ERROR, F("WIFI : WiFi.status() > WL_DISCONNECTED, reset WiFi"));
     setWifiMode(WIFI_OFF);
     initWiFi();
     delay(100);
     if (WiFiEventData.unprocessedWifiEvents()) {
-      handle_unprocessedNetworkEvents();
+      WiFiEventData.processedDisconnect = true;
+      WiFiEventData.processingDisconnect.clear();
     }
     mustRestartWiFi = false;
   }
+  WiFiEventData.processedDisconnect = true;
+  WiFiEventData.processingDisconnect.clear();
 
 
   if (mustRestartWiFi) {
+    addLog(LOG_LEVEL_ERROR, F("WIFI : Must restart WiFi"));
     WifiScan(false);
     delay(100);
     setWifiMode(WIFI_OFF);
@@ -640,7 +644,8 @@ void processScanDone() {
 
   if (WiFi_AP_Candidates.addedKnownCandidate() || !NetworkConnected()) {
     WiFiEventData.wifiConnectAttemptNeeded = true;
-    addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
+    if (WiFi_AP_Candidates.addedKnownCandidate())
+      addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
     NetworkConnectRelaxed();
   }
   

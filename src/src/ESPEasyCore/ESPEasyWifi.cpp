@@ -1184,24 +1184,15 @@ const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode)
 
 void setWifiMode(WiFiMode_t wifimode) {
   const WiFiMode_t cur_mode = WiFi.getMode();
-
   if (cur_mode == wifimode) {
     return;
   }
-
-  int APchannel = 1;
-  if (WifiIsSTA(WiFi.getMode()) && WiFi.isConnected()) {
-    APchannel = WiFi.channel();
-  } else {
-    if (WiFiEventData.usedChannel != 0) {
-      APchannel = WiFiEventData.usedChannel;
-    }
-    #ifdef USES_ESPEASY_NOW
-    else if (Settings.UseESPEasyNow()) {
-      APchannel = Nodes.getESPEasyNOW_channel();
-    }
-    #endif
+  static WiFiMode_t processing_wifi_mode = cur_mode;
+  if (processing_wifi_mode == wifimode) {
+    // Prevent loops
+    return;
   }
+  processing_wifi_mode = wifimode;
 
   if (cur_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();
@@ -1217,6 +1208,9 @@ void setWifiMode(WiFiMode_t wifimode) {
     WiFi.forceSleepWake(); // Make sure WiFi is really active.
     #endif
     delay(100);
+  } else {
+    WifiDisconnect();
+    processDisconnect();
   }
 
   addLog(LOG_LEVEL_INFO, concat(F("WIFI : Set WiFi to "), getWifiModeString(wifimode)));
@@ -1236,8 +1230,6 @@ void setWifiMode(WiFiMode_t wifimode) {
 
 
   if (wifimode == WIFI_OFF) {
-    WifiDisconnect();
-    processDisconnect();
     WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)
