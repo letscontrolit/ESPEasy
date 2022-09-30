@@ -45,6 +45,7 @@
 // #define P240_BAUDRATE           PCONFIG_LONG(0)
 // #define P240_BAUDRATE_LABEL     PCONFIG_LABEL(0)
 
+// States for statemachine used to decode received message
 typedef enum {
     PM1006_HEADER,
     PM1006_LENGTH,
@@ -210,7 +211,8 @@ boolean Plugin_240(uint8_t function, struct EventStruct *event, String& string)
       int8_t rxPin = serialHelper_getRxPin(event);
       int8_t txPin = serialHelper_getTxPin(event);
       easySerial = new (std::nothrow) ESPeasySerial(serialHelper_getSerialType(event), rxPin, txPin);
-      if (easySerial != nullptr) {
+      if (easySerial != nullptr) 
+      {
         easySerial->begin(9600);
         success = true;
       }
