@@ -27,7 +27,7 @@ bool P109_data_struct::plugin_webform_load(struct EventStruct *event) {
 
   LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&_deviceTemplate), sizeof(_deviceTemplate));
 
-  for (uint8_t varNr = 0; varNr < P109_Nlines; varNr++) {
+  for (int varNr = 0; varNr < P109_Nlines; varNr++) {
     addFormTextBox(concat(varNr == 0 ? F("Temperature source ") : F("Line "), varNr + 1),
                    getPluginCustomArgName(varNr + 1),
                    _deviceTemplate[varNr],
@@ -96,9 +96,9 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log += concat(F("Thermo : Btn L:"), CONFIG_PIN1);
-    log += concat(F("R:"), CONFIG_PIN2);
-    log += concat(F("M:"), CONFIG_PIN3);
+    log += concat(F("Thermo : Btn L:"), static_cast<int>(CONFIG_PIN1));
+    log += concat(F("R:"), static_cast<int>(CONFIG_PIN2));
+    log += concat(F("M:"), static_cast<int>(CONFIG_PIN3));
     addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
