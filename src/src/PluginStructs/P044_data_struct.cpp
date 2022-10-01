@@ -48,9 +48,9 @@ void P044_Task::startServer(uint16_t portnumber) {
     P1GatewayServer->begin();
 
     if (serverActive(P1GatewayServer)) {
-      # ifndef P036_LIMIT_BUILD_SIZE
+      # ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, concat(F("P1   : WiFi server started at port "), static_cast<int>(portnumber)));
-      # endif // ifndef P036_LIMIT_BUILD_SIZE
+      # endif // ifndef LIMIT_BUILD_SIZE
     } else {
       addLog(LOG_LEVEL_ERROR, concat(F("P1   : WiFi server start failed at port "), static_cast<int>(portnumber)) + F(", retrying..."));
     }
