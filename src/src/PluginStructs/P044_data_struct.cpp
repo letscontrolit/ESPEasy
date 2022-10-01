@@ -2,15 +2,15 @@
 
 #ifdef USES_P044
 
-#include "../ESPEasyCore/Serial.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../ESPEasyCore/Serial.h"
+# include "../ESPEasyCore/ESPEasyNetwork.h"
 
-#include "../Globals/EventQueue.h"
+# include "../Globals/EventQueue.h"
 
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Misc.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Misc.h"
 
-#define P044_RX_WAIT              PCONFIG(0)
+# define P044_RX_WAIT              PCONFIG(0)
 
 
 P044_Task::P044_Task() {
@@ -23,11 +23,11 @@ P044_Task::~P044_Task() {
 }
 
 bool P044_Task::serverActive(WiFiServer *server) {
-#if defined(ESP8266)
+  # if defined(ESP8266)
   return nullptr != server && server->status() != CLOSED;
-#elif defined(ESP32)
+  # elif defined(ESP32)
   return nullptr != server && *server;
-#endif // if defined(ESP8266)
+  # endif // if defined(ESP8266)
 }
 
 void P044_Task::startServer(uint16_t portnumber) {
@@ -78,15 +78,15 @@ bool P044_Task::hasClientConnected() {
     if (P1GatewayClient) { P1GatewayClient.stop(); }
     P1GatewayClient = P1GatewayServer->available();
 
-    #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
     // See: https://github.com/espressif/arduino-esp32/pull/6676
     P1GatewayClient.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
     Client *pClient = &P1GatewayClient;
     pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-    #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-    P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
-    #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT); // in msec as it should be!
+    # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
     addLog(LOG_LEVEL_INFO, F("P1   : Client connected!"));
   }
@@ -157,11 +157,12 @@ bool P044_Task::checkDatagram() const {
 
   const int checksumStartIndex = endChar + 1;
 
-  #ifdef PLUGIN_044_DEBUG
-    for (unsigned int cnt = 0; cnt < serial_buffer.length(); ++cnt) {
-      serialPrint(serial_buffer.substring(cnt, 1));
-    }
-  #endif
+  # ifdef PLUGIN_044_DEBUG
+
+  for (unsigned int cnt = 0; cnt < serial_buffer.length(); ++cnt) {
+    serialPrint(serial_buffer.substring(cnt, 1));
+  }
+  # endif // ifdef PLUGIN_044_DEBUG
 
   // calculate the CRC and check if it equals the hexadecimal one attached to the datagram
   unsigned int crc = CRC16(serial_buffer, checksumStartIndex);
@@ -224,14 +225,14 @@ void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t
     P1EasySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin);
 
     if (nullptr != P1EasySerial) {
-#if defined(ESP8266)
+      # if defined(ESP8266)
       P1EasySerial->begin(baud, (SerialConfig)config);
-#elif defined(ESP32)
+      # elif defined(ESP32)
       P1EasySerial->begin(baud, config);
-#endif // if defined(ESP8266)
-# ifndef BUILD_NO_DEBUG
+      # endif // if defined(ESP8266)
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Serial opened"));
-#endif
+      # endif // ifndef BUILD_NO_DEBUG
     }
   }
   state = ParserState::WAITING;
@@ -241,9 +242,9 @@ void P044_Task::serialEnd() {
   if (nullptr != P1EasySerial) {
     delete P1EasySerial;
     P1EasySerial = nullptr;
-# ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Serial closed"));
-#endif
+    # endif // ifndef BUILD_NO_DEBUG
   }
 }
 
@@ -271,9 +272,9 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
   if (done) {
     P1GatewayClient.print(serial_buffer);
     P1GatewayClient.flush();
-# ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
-#endif
+    # endif // ifndef BUILD_NO_DEBUG
     blinkLED();
 
     if (Settings.UseRules)
@@ -288,10 +289,10 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
 
 bool P044_Task::handleChar(char ch) {
   if (serial_buffer.length() >= P044_DATAGRAM_MAX_SIZE - 2) { // room for cr/lf
-# ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Buffer overflow, discarded input."));
-#endif
-    state = ParserState::WAITING;                             // reset
+    # endif // ifndef BUILD_NO_DEBUG
+    state = ParserState::WAITING; // reset
   }
 
   bool done    = false;
@@ -320,9 +321,9 @@ bool P044_Task::handleChar(char ch) {
           done = true;
         }
       } else if (ch == P044_DATAGRAM_START_CHAR) {
-# ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
-#endif
+        # endif // ifndef BUILD_NO_DEBUG
         state = ParserState::WAITING; // reset
         return handleChar(ch);
       } else {
@@ -346,15 +347,15 @@ bool P044_Task::handleChar(char ch) {
 
   if (invalid) {
     // input is not a datagram char
-# ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
-#endif
+    # endif // ifndef BUILD_NO_DEBUG
 
-    #ifdef PLUGIN_044_DEBUG
-      serialPrint(F("faulty char>"));
-      serialPrint(String(ch));
-      serialPrintln("<");
-    #endif
+    # ifdef PLUGIN_044_DEBUG
+    serialPrint(F("faulty char>"));
+    serialPrint(String(ch));
+    serialPrintln("<");
+    # endif // ifdef PLUGIN_044_DEBUG
     state = ParserState::WAITING; // reset
   }
 
@@ -367,13 +368,13 @@ bool P044_Task::handleChar(char ch) {
       addChar('\r');
       addChar('\n');
     } else if (CRCcheck) {
-# ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
-#endif
+      # endif // ifndef BUILD_NO_DEBUG
     } else {
-# ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid datagram, dropped data"));
-#endif
+      # endif // ifndef BUILD_NO_DEBUG
     }
     state = ParserState::WAITING; // prepare for next one
   }
@@ -394,4 +395,4 @@ bool P044_Task::isInit() const {
   return nullptr != P1GatewayServer && nullptr != P1EasySerial;
 }
 
-#endif
+#endif // ifdef USES_P044

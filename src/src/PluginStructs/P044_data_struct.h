@@ -5,15 +5,15 @@
 
 #ifdef USES_P044
 
-#include <ESPeasySerial.h>
+# include <ESPeasySerial.h>
 
 // #define PLUGIN_044_DEBUG  // extra logging in serial out
 
-#define P044_STATUS_LED                    12
-#define P044_CHECKSUM_LENGTH               4
-#define P044_DATAGRAM_START_CHAR           '/'
-#define P044_DATAGRAM_END_CHAR             '!'
-#define P044_DATAGRAM_MAX_SIZE             2048u
+# define P044_STATUS_LED                    12
+# define P044_CHECKSUM_LENGTH               4
+# define P044_DATAGRAM_START_CHAR           '/'
+# define P044_DATAGRAM_END_CHAR             '!'
+# define P044_DATAGRAM_MAX_SIZE             2048u
 
 
 struct P044_Task : public PluginTaskData_base {
@@ -70,10 +70,10 @@ struct P044_Task : public PluginTaskData_base {
   static bool validP1char(char ch);
 
   void        serialBegin(const ESPEasySerialPort port,
-                          int16_t       rxPin,
-                          int16_t       txPin,
-                          unsigned long baud,
-                          uint8_t          config);
+                          int16_t                 rxPin,
+                          int16_t                 txPin,
+                          unsigned long           baud,
+                          uint8_t                 config);
 
   void serialEnd();
 
@@ -98,5 +98,5 @@ struct P044_Task : public PluginTaskData_base {
   size_t         maxMessageSize    = P044_DATAGRAM_MAX_SIZE / 4;
 };
 
-#endif
-#endif
+#endif // ifdef USES_P044
+#endif // ifndef PLUGINSTRUCTS_P044_DATA_STRUCT_H
