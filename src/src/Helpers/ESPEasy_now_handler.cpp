@@ -284,7 +284,7 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
         // We need to give it some time to receive announcement messages and maybe even a traceroute
         if (timePassedSince(_last_started) > ESPEASY_NOW_CHANNEL_SEARCH_TIMEOUT) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": No peers with distance set on channel "), _usedWiFiChannel));
+            addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": No peers with distance set on channel "), static_cast<int>(_usedWiFiChannel)));
           }
 
           end();
@@ -292,7 +292,7 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
       } else {
         if (channelChanged) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": Move to channel "), ESPEasyNOW_channel));
+            addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": Move to channel "), static_cast<int>(ESPEasyNOW_channel)));
           }
         }
 
@@ -513,7 +513,7 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(const WiFi_AP_Candidate& peer)
           String log = concat(F(ESPEASY_NOW_NAME ": Found node via WiFi scan: "), peer_mac.toString());
           log += ' ';
           log += tmpNodeInfo.getRSSI();
-          log += concat(F(" dBm ch: "),  tmpNodeInfo.channel);
+          log += concat(F(" dBm ch: "),  static_cast<int>(tmpNodeInfo.channel));
           addLog(LOG_LEVEL_INFO, log);
         }
 
@@ -733,7 +733,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 
   if (received.distance == 255 && Nodes.getDistance() < 255) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": Send announce back to unit: "), received.unit));
+      addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": Send announce back to unit: "), static_cast<int>(received.unit)));
     }
 
     sendDiscoveryAnnounce(received.ESPEasy_Now_MAC(), received.channel);

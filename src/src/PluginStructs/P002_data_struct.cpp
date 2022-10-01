@@ -700,7 +700,7 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   // Store nr of lines that were saved, so no 'old' data will be read when nr of multi-point items has changed.
   lines[P002_SAVED_NR_LINES] = String(nr_lines);
 
-  if (web_server.hasArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA))) {
+  if (hasArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA))) {
     lines[P002_LINE_INDEX_FORMULA] = webArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA));
   }
 

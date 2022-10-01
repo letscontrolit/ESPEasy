@@ -52,7 +52,7 @@ void handle_devices() {
 
   pluginID_t taskdevicenumber;
 
-  if (web_server.hasArg(F("del"))) {
+  if (hasArg(F("del"))) {
     taskdevicenumber = 0;
   }
   else {
@@ -186,7 +186,7 @@ void handle_devices() {
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-    addLogMove(LOG_LEVEL_DEBUG_DEV, concat(F("DEBUG: String size:"), TXBuffer.sentBytes));
+    addLogMove(LOG_LEVEL_DEBUG_DEV, concat(F("DEBUG: String size:"), static_cast<int>(TXBuffer.sentBytes)));
   }
 # endif // ifndef BUILD_NO_DEBUG
   sendHeadandTail_stdtemplate(_TAIL);
@@ -266,7 +266,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     if (multipleMuxPortsOption == 1) {
       uint8_t selectedPorts = 0;
 
-      for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
+      for (int x = 0; x < I2CMultiplexerMaxChannels(); ++x) {
         bitWrite(selectedPorts, x, isFormItemChecked(concat(F("taskdeviceflag1ch"), x)));
       }
       Settings.I2C_Multiplexer_Channel[taskIndex] = selectedPorts;
@@ -490,11 +490,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       html_add_button_prefix();
     }
     {
-      addHtml(concat(F("devices?index="), x + 1));
-      addHtml(concat(F("&page="), page));
+      addHtml(concat(F("devices?index="), static_cast<int>(x + 1)));
+      addHtml(concat(F("&page="), static_cast<int>(page)));
       addHtml('\'', '>');
       addHtml(pluginID_set ? F("Edit") : F("Add"));
-      addHtml(concat(F("</a><TD>"), x + 1));
+      addHtml(concat(F("</a><TD>"), static_cast<int>(x + 1)));
       html_TD();
     }
 
@@ -582,7 +582,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               if (validProtocolIndex(ProtocolIndex)) {
                 if (Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0))
                 {
-                  addHtml(concat(F(" ("), Settings.TaskDeviceID[controllerNr][x]));
+                  addHtml(concat(F(" ("), static_cast<int>(Settings.TaskDeviceID[controllerNr][x])));
                   addHtml(')');
 
                   if (Settings.TaskDeviceID[controllerNr][x] == 0) {
@@ -783,7 +783,7 @@ void format_I2C_port_description(taskIndex_t x)
         }
       }
     } else { // Single channel
-      mux  = concat(F("<BR>Multiplexer channel "), Settings.I2C_Multiplexer_Channel[x]);
+      mux  = concat(F("<BR>Multiplexer channel "), static_cast<int>(Settings.I2C_Multiplexer_Channel[x]));
     }
     addHtml(mux);
   }
@@ -869,7 +869,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     // show selected device name and delete button
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
 
-    addHelpButton(concat(F("Plugin"), Settings.TaskDeviceNumber[taskIndex]));
+    addHelpButton(concat(F("Plugin"), static_cast<int>(Settings.TaskDeviceNumber[taskIndex])));
     addRTDPluginButton(Settings.TaskDeviceNumber[taskIndex]);
 
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
@@ -1136,7 +1136,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
       html_table_header(F("Channel"));
       html_table_header(F("Enable"));
 
-      for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
+      for (int x = 0; x < I2CMultiplexerMaxChannels(); x++) {
         if (x % 2 == 0) { html_TR(); } // Start a new row for every 2 channels
         html_TD();
         addHtml(concat(F("Channel "), x));
@@ -1153,7 +1153,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
       i2c_mux_portchoices[mux_opt] = -1;
       uint8_t mux_max = I2CMultiplexerMaxChannels();
 
-      for (int8_t x = 0; x < mux_max; x++) {
+      for (int x = 0; x < mux_max; x++) {
         mux_opt++;
         i2c_mux_portoptions[mux_opt] = concat(F("Channel "), x);
         i2c_mux_portchoices[mux_opt] = x;

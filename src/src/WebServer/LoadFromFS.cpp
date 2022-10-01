@@ -136,7 +136,7 @@ bool reply_304_not_modified(const String& path) {
 #ifndef BUILD_NO_DEBUG
 
   if (res) {
-    addLog(LOG_LEVEL_INFO, concat(F("Serve 304: "), etag_num) + ' ' + path);
+    addLog(LOG_LEVEL_INFO, concat(F("Serve 304: "), String(etag_num)) + ' ' + path);
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -229,24 +229,24 @@ bool loadFromFS(String path) {
 
   // prevent reloading stuff on every click
   if (static_file) {
-    web_server.sendHeader(F("Cache-Control"), F("public, max-age=31536000, immutable"));
+    sendHeader(F("Cache-Control"), F("public, max-age=31536000, immutable"));
 
-    //    web_server.sendHeader(F("Cache-Control"), F("max-age=86400"));
-    web_server.sendHeader(F("Expires"),       F("-1"));
+    //    sendHeader(F("Cache-Control"), F("max-age=86400"));
+    sendHeader(F("Expires"),       F("-1"));
     if (fileEmbedded && !fileExists(path)) {
-      web_server.sendHeader(F("Last-Modified"), get_build_date_RFC1123());
+      sendHeader(F("Last-Modified"), get_build_date_RFC1123());
     }
-    web_server.sendHeader(F("Age"),           F("100"));
-    web_server.sendHeader(F("ETag"),          wrap_String(String(Cache.fileCacheClearMoment) + F("-a"), '"')); // added "-a" to the ETag to
+    sendHeader(F("Age"),           F("100"));
+    sendHeader(F("ETag"),          wrap_String(String(Cache.fileCacheClearMoment) + F("-a"), '"')); // added "-a" to the ETag to
                                                                                                                // match the same encoding
   } else {
-    web_server.sendHeader(F("Cache-Control"), F("no-cache"));
-    web_server.sendHeader(F("ETag"),          F("\"2.0.0\""));
+    sendHeader(F("Cache-Control"), F("no-cache"));
+    sendHeader(F("ETag"),          F("\"2.0.0\""));
   }
-  web_server.sendHeader(F("Vary"), "*");
+  sendHeader(F("Vary"), "*");
 
   if (path.endsWith(F(".dat"))) {
-    web_server.sendHeader(F("Content-Disposition"), F("attachment;"));
+    sendHeader(F("Content-Disposition"), F("attachment;"));
   }
 
   if (serve_304) {

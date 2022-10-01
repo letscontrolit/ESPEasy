@@ -31,12 +31,9 @@ String Command_useNTP(struct EventStruct *event, const char *Line)
   if (HasArgv(Line, 2)) {
     Settings.UseNTP(event->Par1);
   } else {
-    serialPrintln();
-    String result = F("UseNTP:");
-    result += boolToString(Settings.UseNTP());
-    return return_result(event, result);
+    return return_result(event, concat(F("UseNTP:"), boolToString(Settings.UseNTP())));
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 String Command_TimeZone(struct EventStruct *event, const char *Line)
@@ -44,12 +41,9 @@ String Command_TimeZone(struct EventStruct *event, const char *Line)
   if (HasArgv(Line, 2)) {
     Settings.TimeZone = event->Par1;
   } else {
-    serialPrintln();
-    String result = F("TimeZone:");
-    result += Settings.TimeZone;
-    return return_result(event, result);
+    return return_result(event, concat(F("TimeZone:"), static_cast<int>(Settings.TimeZone)));
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 String Command_DST(struct EventStruct *event, const char *Line)
@@ -57,12 +51,9 @@ String Command_DST(struct EventStruct *event, const char *Line)
   if (HasArgv(Line, 2)) {
     Settings.DST = event->Par1;
   } else  {
-    serialPrintln();
-    String result = F("DST:");
-    result += boolToString(Settings.DST);
-    return return_result(event, result);
+    return return_result(event, concat(F("DST:"),  boolToString(Settings.DST)));
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 String Command_DateTime(struct EventStruct *event, const char *Line)
@@ -93,9 +84,7 @@ String Command_DateTime(struct EventStruct *event, const char *Line)
     node_time.setExternalTimeSource(makeTime(newtime), timeSource_t::Manual_set);
   } else  {
     // serialPrintln();
-    String result = F("Datetime:");
-    result += node_time.getDateTimeString('-', ':', ' ');
-    return return_result(event, result);
+    return return_result(event, concat(F("Datetime:"), node_time.getDateTimeString('-', ':', ' ')));
   }
-  return return_command_success();
+  return return_command_success_str();
 }

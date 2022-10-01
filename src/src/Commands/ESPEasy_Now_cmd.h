@@ -6,12 +6,12 @@
 #ifdef USES_ESPEASY_NOW
 
 #include "../Globals/ESPEasy_now_state.h"
+#include <Arduino.h>
 
-class String;
 
-String Command_ESPEasy_Now_Disable(struct EventStruct *event,
+const __FlashStringHelper * Command_ESPEasy_Now_Disable(struct EventStruct *event,
                                    const char         *Line);
-String Command_ESPEasy_Now_Enable(struct EventStruct *event,
+const __FlashStringHelper * Command_ESPEasy_Now_Enable(struct EventStruct *event,
                                   const char         *Line);
 
 #endif // ifdef USES_ESPEASY_NOW

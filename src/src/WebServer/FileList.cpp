@@ -155,7 +155,7 @@ void handle_filelist() {
   }
   # ifdef USES_C016
 
-  if (web_server.hasArg(F("delcache"))) {
+  if (hasArg(F("delcache"))) {
     while (C016_deleteOldestCacheBlock()) {
       delay(1);
     }

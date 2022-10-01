@@ -1295,10 +1295,9 @@ const __FlashStringHelper* getDeviceModelTypeString(DeviceModel model)
 }
 
 String getDeviceModelString(DeviceModel model) {
-  String result = getDeviceModelBrandString(model);
-
-  result += getDeviceModelTypeString(model);
-  return result;
+  return concat(
+    getDeviceModelBrandString(model), 
+    getDeviceModelTypeString(model));
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
