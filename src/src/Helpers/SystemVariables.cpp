@@ -329,6 +329,11 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
 
 String SystemVariables::toString(Enum enumval)
 {
+  if (enumval == Enum::SUNRISE || enumval == Enum::SUNSET) {
+    // These need variables, so only prepend a %, not wrap.
+    return String('%') + SystemVariables::toFlashString(enumval);
+  }
+
   return wrap_String(SystemVariables::toFlashString(enumval), '%');
 }
 
