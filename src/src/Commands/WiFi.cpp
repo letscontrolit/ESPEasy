@@ -108,16 +108,12 @@ String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
     if ((mode >= WIFI_OFF) && (mode < WIFI_MODE_MAX)) {
       setWifiMode(mode);
     } else {
-      serialPrintln();
       return return_result(event, F("Wifi Mode: invalid arguments"));
     }
   } else {
-    serialPrintln();
-    String result = F("WiFi Mode:");
-    result += getWifiModeString(WiFi.getMode());
-    return return_result(event, result);
+    return return_result(event, concat(F("WiFi Mode:"),  getWifiModeString(WiFi.getMode())));
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 const __FlashStringHelper * Command_Wifi_AllowAP(struct EventStruct *event, const char* Line)

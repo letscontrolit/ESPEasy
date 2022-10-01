@@ -385,13 +385,13 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P095_CONFIG_FLAG_TYPE,        getFormItemInt(F("dsptype")));         // Bit 20..24 Hardwaretype
       P095_CONFIG_FLAGS = lSettings;
 
-      String   color   = web_server.arg(F("pfgcolor"));
+      String   color   = webArg(F("pfgcolor"));
       uint16_t fgcolor = ADAGFX_WHITE;                                                                  // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color);                                                              // Reduce to rgb565
       }
-      color = web_server.arg(F("pbgcolor"));
+      color = webArg(F("pbgcolor"));
       uint16_t bgcolor = AdaGFXparseColor(color);
 
       P095_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
@@ -399,7 +399,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       String strings[P095_Nlines];
 
       for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
-        strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
+        strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
       String error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);

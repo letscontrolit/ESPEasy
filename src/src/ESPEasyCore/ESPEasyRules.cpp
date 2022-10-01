@@ -477,7 +477,7 @@ void parse_string_commands(String& line) {
             if (cmd_s_lower.equals(F("timetosec"))) {
               replacement = timeSeconds;
             } else { // timetomin
-              replacement = toString(round(timeSeconds / 60), 0);
+              replacement = timeSeconds / 60;
             }
           }
         }

@@ -89,7 +89,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
         options[1] = F("Off");
         options[2] = F("On");
  
-        for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+        for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
         	addFormTextBox(
             concat(F("Day,Time "), x + 1), 
@@ -111,7 +111,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+        for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
           const String plugin1 = webArg(concat(F("p043_clock"), x));
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
