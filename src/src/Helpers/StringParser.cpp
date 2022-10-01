@@ -303,7 +303,7 @@ void transformValue(
       if (validDoubleFromString(value, valFloat))
       {
         // to be used for binary values (0 or 1)
-        logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1;
+        logicVal = lround(static_cast<float>(valFloat)) == 0 ? 0 : 1;
       } else {
         if (value.length() > 0) {
           logicVal = 1;

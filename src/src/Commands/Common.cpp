@@ -57,7 +57,7 @@ String return_result(struct EventStruct *event, const String& result)
   serialPrintln(result);
 
   if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
-    return return_command_success();
+    return return_command_success_str();
   }
   return result;
 }
@@ -102,7 +102,7 @@ String Command_GetORSetIP(struct EventStruct *event,
     }
     return return_result(event, result);
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 String Command_GetORSetString(struct EventStruct *event,
@@ -135,7 +135,7 @@ String Command_GetORSetString(struct EventStruct *event,
     result += target;
     return return_result(event, result);
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 String Command_GetORSetBool(struct EventStruct *event,
@@ -167,7 +167,7 @@ String Command_GetORSetBool(struct EventStruct *event,
   if (hasArgument) {
     return return_result(event, concat(targetDescription, boolToString(*value)));
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 #if FEATURE_ETHERNET
@@ -244,5 +244,5 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
     result += *value;
     return return_result(event, result);
   }
-  return return_command_success();
+  return return_command_success_str();
 }
