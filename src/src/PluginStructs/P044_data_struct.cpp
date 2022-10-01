@@ -10,11 +10,15 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Misc.h"
 
-# define P044_RX_WAIT              PCONFIG(0)
 
-
-P044_Task::P044_Task() {
+P044_Task::P044_Task(struct EventStruct *event) {
   clearBuffer();
+
+  if (P044_LED_ENABLED & 0x80) {
+    _ledPin = P044_LED_PIN;                      // Default pin (12) is already initialized in P044_Task
+  }
+  _ledEnabled  = (P044_LED_ENABLED & 0x7f) == 0; // Inverted setting and strip off new-settings bit
+  _ledInverted = P044_LED_INVERTED == 1;
 }
 
 P044_Task::~P044_Task() {
@@ -25,9 +29,10 @@ P044_Task::~P044_Task() {
 bool P044_Task::serverActive(WiFiServer *server) {
   # if defined(ESP8266)
   return nullptr != server && server->status() != CLOSED;
-  # elif defined(ESP32)
-  return nullptr != server && *server;
   # endif // if defined(ESP8266)
+  # if defined(ESP32)
+  return nullptr != server && *server;
+  # endif // if defined(ESP32)
 }
 
 void P044_Task::startServer(uint16_t portnumber) {
@@ -43,9 +48,11 @@ void P044_Task::startServer(uint16_t portnumber) {
     P1GatewayServer->begin();
 
     if (serverActive(P1GatewayServer)) {
-      addLog(LOG_LEVEL_INFO, concat(F("P1   : WiFi server started at port "), portnumber));
+      # ifndef P036_LIMIT_BUILD_SIZE
+      addLog(LOG_LEVEL_INFO, concat(F("P1   : WiFi server started at port "), static_cast<int>(portnumber)));
+      # endif // ifndef P036_LIMIT_BUILD_SIZE
     } else {
-      addLog(LOG_LEVEL_ERROR, concat(F("P1   : WiFi server start failed at port "), portnumber) + F(", retrying..."));
+      addLog(LOG_LEVEL_ERROR, concat(F("P1   : WiFi server start failed at port "), static_cast<int>(portnumber)) + F(", retrying..."));
     }
   }
 }
@@ -56,7 +63,9 @@ void P044_Task::checkServer() {
     P1GatewayServer->begin();
 
     if (serverActive(P1GatewayServer)) {
+      # ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("P1   : WiFi server started"));
+      # endif // ifndef LIMIT_BUILD_SIZE
     }
   }
 }
@@ -66,7 +75,9 @@ void P044_Task::stopServer() {
     if (P1GatewayClient) { P1GatewayClient.stop(); }
     clientConnected = false;
     P1GatewayServer->close();
+    # ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("P1   : WiFi server closed"));
+    # endif // ifndef LIMIT_BUILD_SIZE
     delete P1GatewayServer;
     P1GatewayServer = nullptr;
   }
@@ -88,7 +99,9 @@ bool P044_Task::hasClientConnected() {
     P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT); // in msec as it should be!
     # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
+    # ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("P1   : Client connected!"));
+    # endif // ifndef LIMIT_BUILD_SIZE
   }
 
   if (P1GatewayClient.connected())
@@ -100,7 +113,9 @@ bool P044_Task::hasClientConnected() {
     if (clientConnected) // there was a client connected before...
     {
       clientConnected = false;
+      # ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("P1   : Client disconnected!"));
+      # endif // ifndef LIMIT_BUILD_SIZE
     }
   }
   return clientConnected;
@@ -115,13 +130,15 @@ void P044_Task::discardClientIn() {
 }
 
 void P044_Task::blinkLED() {
-  blinkLEDStartTime = millis();
-  digitalWrite(P044_STATUS_LED, 1);
+  if (_ledEnabled) {
+    blinkLEDStartTime = millis();
+    digitalWrite(_ledPin, _ledInverted ? 0 : 1);
+  }
 }
 
 void P044_Task::checkBlinkLED() {
-  if ((blinkLEDStartTime > 0) && (timePassedSince(blinkLEDStartTime) >= 500)) {
-    digitalWrite(P044_STATUS_LED, 0);
+  if (_ledEnabled && (blinkLEDStartTime > 0) && (timePassedSince(blinkLEDStartTime) >= 500)) {
+    digitalWrite(_ledPin, _ledInverted ? 1 : 0);
     blinkLEDStartTime = 0;
   }
 }
@@ -206,9 +223,9 @@ bool P044_Task::validP1char(char ch) {
     isAlphaNumeric(ch) ||
     ch == '.' ||
     ch == ' ' ||
-    ch == '\\'|| // Single backslash, but escaped in C++
-    ch == '\r'||
-    ch == '\n'||
+    ch == '\\' || // Single backslash, but escaped in C++
+    ch == '\r' ||
+    ch == '\n' ||
     ch == '(' ||
     ch == ')' ||
     ch == '-' ||
@@ -256,9 +273,14 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
 
   do {
     if (P1EasySerial->available()) {
-      digitalWrite(P044_STATUS_LED, 1);
+      if (_ledEnabled) {
+        digitalWrite(_ledPin, _ledInverted ? 0 : 1);
+      }
       done = handleChar(P1EasySerial->read());
-      digitalWrite(P044_STATUS_LED, 0);
+
+      if (_ledEnabled) {
+        digitalWrite(_ledPin, _ledInverted ? 1 : 0);
+      }
 
       if (done) { break; }
       timeOut = RXWait; // if serial received, reset timeout counter

@@ -9,6 +9,16 @@
 
 // #define PLUGIN_044_DEBUG  // extra logging in serial out
 
+# define P044_WIFI_SERVER_PORT      ExtraTaskSettings.TaskDevicePluginConfigLong[0]
+# define P044_BAUDRATE              ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+# define P044_RX_WAIT               PCONFIG(0)
+# define P044_SERIAL_CONFIG         PCONFIG(1)
+# define P044_RESET_TARGET_PIN      CONFIG_PIN1
+# define P044_LED_PIN               CONFIG_PIN2
+# define P044_LED_ENABLED           PCONFIG(2)
+# define P044_LED_INVERTED          PCONFIG(3)
+
+
 # define P044_STATUS_LED                    12
 # define P044_CHECKSUM_LENGTH               4
 # define P044_DATAGRAM_START_CHAR           '/'
@@ -23,7 +33,7 @@ struct P044_Task : public PluginTaskData_base {
     CHECKSUM
   };
 
-  P044_Task();
+  P044_Task(struct EventStruct *event);
 
   ~P044_Task();
 
@@ -96,6 +106,10 @@ struct P044_Task : public PluginTaskData_base {
   ESPeasySerial *P1EasySerial      = nullptr;
   unsigned long  blinkLEDStartTime = 0;
   size_t         maxMessageSize    = P044_DATAGRAM_MAX_SIZE / 4;
+
+  int8_t _ledPin      = P044_STATUS_LED; // Former default
+  bool   _ledEnabled  = true;            // Former default
+  bool   _ledInverted = false;
 };
 
 #endif // ifdef USES_P044

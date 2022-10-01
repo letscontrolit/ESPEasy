@@ -10,7 +10,9 @@
 //    P1 wifi gateway shield (see http://www.esp8266thingies.nl for print design and kits)
 //    See also http://domoticx.com/p1-poort-slimme-meter-hardware/
 // #######################################################################################################
+
 /** Changelog:
+ * 2022-10-01 tonhuisman: Add Led configuration options (Enabled, Pin, Inverted), changed device configuration
  * 2022-10-01 tonhuisman: Format source using Uncrustify
  */
 
@@ -23,13 +25,6 @@
 # define PLUGIN_NAME_044       "Communication - P1 Wifi Gateway"
 
 
-# define P044_WIFI_SERVER_PORT     ExtraTaskSettings.TaskDevicePluginConfigLong[0]
-# define P044_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
-# define P044_RX_WAIT              PCONFIG(0)
-# define P044_SERIAL_CONFIG        PCONFIG(1)
-# define P044_RESET_TARGET_PIN     CONFIG_PIN1
-
-
 boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -39,7 +34,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number    = PLUGIN_ID_044;
-      Device[deviceCount].Type        = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].Type        = DEVICE_TYPE_CUSTOM2;
       Device[deviceCount].Custom      = true;
       Device[deviceCount].TimerOption = false;
       break;
@@ -51,19 +46,59 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P044_LED_PIN = P044_STATUS_LED; // Former default
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = concat(F("RST: "), formatGpioLabel(P044_RESET_TARGET_PIN, false));
+      string += event->String1;
+      string += concat(F("LED: "), formatGpioLabel((P044_LED_ENABLED & 0x7f) == 0 ? P044_LED_PIN : -1, false));
+
+      if ((P044_LED_INVERTED == 1) && ((P044_LED_ENABLED & 0x7f) == 0)) {
+        string += F(" (inv)");
+      }
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       LoadTaskSettings(event->TaskIndex);
-      addFormNumericBox(F("TCP Port"),  F("p044_port"), P044_WIFI_SERVER_PORT, 0);
-      addFormNumericBox(F("Baud Rate"), F("p044_baud"), P044_BAUDRATE,         0);
 
-      uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
-      serialHelper_serialconfig_webformLoad(event, serialConfChoice);
+      { // Serial settings
+        addFormSubHeader(F("Serial"));
 
-      // FIXME TD-er: Why isn't this using the normal pin selection functions?
-      addFormPinSelect(PinSelectPurpose::Generic, F("Reset target after boot"), F("taskdevicepin1"), P044_RESET_TARGET_PIN);
+        uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
+        serialHelper_serialconfig_webformLoad(event, serialConfChoice);
 
-      addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), P044_RX_WAIT, 0);
+        addFormNumericBox(F("Baud Rate"), F("pbaud"), P044_BAUDRATE, 0, 115200);
+      }
+
+      { // Device settings
+        addFormSubHeader(F("Device"));
+
+        addFormNumericBox(F("TCP Port"), F("pport"), P044_WIFI_SERVER_PORT, 0, 65535);
+        # ifndef LIMIT_BUILD_SIZE
+        addUnit(F("0..65535"));
+        # endif // ifndef LIMIT_BUILD_SIZE
+
+        // FIXME TD-er: Why isn't this using the normal pin selection functions?
+        addFormPinSelect(PinSelectPurpose::Generic, F("Reset target after boot"), F("taskdevicepin1"), P044_RESET_TARGET_PIN);
+
+        addFormNumericBox(F("RX Receive Timeout (mSec)"), F("prxwait"), P044_RX_WAIT, 0);
+      }
+
+      { // Led settings
+        addFormSubHeader(F("Led"));
+
+        addFormCheckBox(F("Led enabled"), F("pled"), (P044_LED_ENABLED & 0x7f) == 0);
+        addFormPinSelect(PinSelectPurpose::Generic, F("Led pin"), F("taskdevicepin2"), P044_LED_PIN);
+        addFormCheckBox(F("Led inverted"), F("pledinv"), P044_LED_INVERTED == 1);
+      }
 
       success = true;
       break;
@@ -72,9 +107,11 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       LoadTaskSettings(event->TaskIndex);
-      P044_WIFI_SERVER_PORT = getFormItemInt(F("p044_port"));
-      P044_BAUDRATE         = getFormItemInt(F("p044_baud"));
-      P044_RX_WAIT          = getFormItemInt(F("p044_rxwait"));
+      P044_WIFI_SERVER_PORT = getFormItemInt(F("pport"));
+      P044_BAUDRATE         = getFormItemInt(F("pbaud"));
+      P044_RX_WAIT          = getFormItemInt(F("prxwait"));
+      P044_LED_ENABLED      = 0x80 + (isFormItemChecked(F("pled")) ? 0 : 1); // Invert + set 8th bit to confirm new settings have been saved
+      P044_LED_INVERTED     = isFormItemChecked(F("pledinv")) ? 1 : 0;
       P044_SERIAL_CONFIG    = serialHelper_serialconfig_webformSave();
 
       success = true;
@@ -83,8 +120,10 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      pinMode(P044_STATUS_LED, OUTPUT);
-      digitalWrite(P044_STATUS_LED, 0);
+      if (((P044_LED_ENABLED & 0x7f) == 1) && (P044_LED_PIN != -1)) {
+        pinMode(P044_LED_PIN, OUTPUT);
+        digitalWrite(P044_LED_PIN, P044_LED_INVERTED == 1 ? 1 : 0);
+      }
 
       LoadTaskSettings(event->TaskIndex);
 
@@ -100,7 +139,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
         // It was already created and initialzed
         // So don't recreate to keep the webserver running.
       } else {
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P044_Task());
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P044_Task(event));
         task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
       }
 
@@ -134,7 +173,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
       if (P044_BAUDRATE == 115200) {
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
+        addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 5 meter, CRC on"));
         # endif // ifndef BUILD_NO_DEBUG
         task->CRCcheck = true;
       } else {
@@ -158,11 +197,10 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
     {
       P044_Task *task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
+      if (nullptr != task) {
+        task->checkServer();
+        success = true;
       }
-      task->checkServer();
-      success = true;
       break;
     }
 
@@ -170,15 +208,13 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
     {
       P044_Task *task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
+      if (nullptr != task) {
+        if (task->hasClientConnected()) {
+          task->discardClientIn();
+        }
+        task->checkBlinkLED();
+        success = true;
       }
-
-      if (task->hasClientConnected()) {
-        task->discardClientIn();
-      }
-      task->checkBlinkLED();
-      success = true;
       break;
     }
 
@@ -186,16 +222,14 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
     {
       P044_Task *task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
+      if (nullptr != task) {
+        if (task->hasClientConnected()) {
+          task->handleSerialIn(event);
+        } else {
+          task->discardSerialIn();
+        }
+        success = true;
       }
-
-      if (task->hasClientConnected()) {
-        task->handleSerialIn(event);
-      } else {
-        task->discardSerialIn();
-      }
-      success = true;
       break;
     }
   }
