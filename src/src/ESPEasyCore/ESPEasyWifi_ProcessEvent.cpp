@@ -429,13 +429,7 @@ void processGotIP() {
   const LongTermTimer::Duration dhcp_duration = WiFiEventData.lastConnectMoment.timeDiff(WiFiEventData.lastGetIPmoment);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI : ");
-
-    if (useStaticIP()) {
-      log += F("Static IP: ");
-    } else {
-      log += F("DHCP IP: ");
-    }
+    String log = concat(F("WIFI : "), useStaticIP() ? F("Static IP: ") : F("DHCP IP: "));
     log += formatIP(ip);
     log += ' ';
     log += wrap_braces(NetworkGetHostname());
@@ -460,9 +454,7 @@ void processGotIP() {
     ip[3] = Settings.IP_Octet;
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("IP   : Fixed IP octet:");
-      log += formatIP(ip);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Fixed IP octet:"), formatIP(ip)));
     }
     WiFi.config(ip, gw, subnet, NetworkDnsIP(0), NetworkDnsIP(1));
   }

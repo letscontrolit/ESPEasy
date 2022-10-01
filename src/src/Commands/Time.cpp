@@ -68,17 +68,14 @@ String Command_DateTime(struct EventStruct *event, const char *Line)
     newtime.tm_mon  = mnth - 1; // tm_mon starts at 0
     newtime.tm_mday = d;
 
+    int h, m, s = 0;
+
     if (GetArgv(Line, TmpStr1, 3)) {
-      int h, m, s;
       sscanf(TmpStr1.c_str(), "%2d:%2d:%2d", &h, &m, &s);
-      newtime.tm_hour = h;
-      newtime.tm_min  = m;
-      newtime.tm_sec  = s;
-    } else {
-      newtime.tm_hour = 0;
-      newtime.tm_min  = 0;
-      newtime.tm_sec  = 0;
     }
+    newtime.tm_hour = h;
+    newtime.tm_min  = m;
+    newtime.tm_sec  = s;
 
     // Please note the time set in this command is in UTC time, not local time.
     node_time.setExternalTimeSource(makeTime(newtime), timeSource_t::Manual_set);

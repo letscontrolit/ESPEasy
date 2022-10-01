@@ -677,8 +677,8 @@ String P002_data_struct::webformSave(struct EventStruct *event)
     const float out2 = getFormItemFloat(F("p002_out2"));
 
 
-    P002_CALIBRATION_POINT1 = roundf(adc1);
-    P002_CALIBRATION_POINT2 = roundf(adc2);
+    P002_CALIBRATION_POINT1 = lround(adc1);
+    P002_CALIBRATION_POINT2 = lround(adc2);
     P002_CALIBRATION_VALUE1 = mapADCtoFloat(
       P002_CALIBRATION_POINT1,
       adc1, adc2,
