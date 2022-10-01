@@ -477,9 +477,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLogMove(LOG_LEVEL_INFO,
-                  concat(F("SW  : GPIO="),  CONFIG_PIN1) +
+                  concat(F("SW  : GPIO="),  static_cast<int>(CONFIG_PIN1)) +
                   concat(F(" State="),  state ? '1' : '0') +
-                  concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),  output_value));
+                  concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),  static_cast<int>(output_value)));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -572,9 +572,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLogMove(LOG_LEVEL_INFO, 
-                  concat(F("SW  : LongPress: GPIO= "), CONFIG_PIN1) +
+                  concat(F("SW  : LongPress: GPIO= "), static_cast<int>(CONFIG_PIN1)) +
                   concat(F(" State="), state ? '1' : '0') +
-                  concat(F(" Output value="), output_value));
+                  concat(F(" Output value="), static_cast<int>(output_value)));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 

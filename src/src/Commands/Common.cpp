@@ -26,6 +26,16 @@ const __FlashStringHelper * return_command_failed()
   return F("\nFailed");
 }
 
+String return_command_success_str()
+{
+  return return_command_success();
+}
+
+String return_command_failed_str()
+{
+  return return_command_failed();
+}
+
 const __FlashStringHelper * return_incorrect_nr_arguments()
 {
   return F("Too many arguments, try using quotes!");
@@ -43,6 +53,7 @@ const __FlashStringHelper * return_not_connected()
 
 String return_result(struct EventStruct *event, const String& result)
 {
+  serialPrintln();
   serialPrintln(result);
 
   if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
@@ -81,7 +92,6 @@ String Command_GetORSetIP(struct EventStruct *event,
   }
 
   if (!hasArgument) {
-    serialPrintln();
     String result = targetDescription;
 
     if (useStaticIP()) {
@@ -114,7 +124,6 @@ String Command_GetORSetString(struct EventStruct *event,
       if (TmpStr1.length() > len) {
         String result = concat(targetDescription, F(" is too large. max size is "));
         result += len;
-        serialPrintln();
         return return_result(event, result);
       }
       safe_strncpy(target, TmpStr1, len);
@@ -122,7 +131,6 @@ String Command_GetORSetString(struct EventStruct *event,
   }
 
   if (hasArgument) {
-    serialPrintln();
     String result = targetDescription;
     result += target;
     return return_result(event, result);
@@ -157,9 +165,7 @@ String Command_GetORSetBool(struct EventStruct *event,
   }
 
   if (hasArgument) {
-    String result = targetDescription;
-    result += boolToString(*value);
-    return return_result(event, result);
+    return return_result(event, concat(targetDescription, boolToString(*value)));
   }
   return return_command_success();
 }

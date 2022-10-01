@@ -249,7 +249,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       for (byte varNr = 0; varNr < P109_Nlines; varNr++)
       {
         const String argName  = getPluginCustomArgName(F("Plugin_109_template"), varNr);
-        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
+        strncpy(P109_deviceTemplate[varNr], webArg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
         P109_deviceTemplate[varNr][sizeof(P109_deviceTemplate[varNr]) - 1] = 0;
       }
 

@@ -233,7 +233,7 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx
   uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
-    const String id = concat(F("dallas_addr"), var_index);
+    const String id = concat(F("dallas_addr"), static_cast<int>(var_index));
     const int selection = getFormItemInt(id, -1);
 
     if (selection != -1) {

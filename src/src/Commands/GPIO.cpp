@@ -60,9 +60,7 @@ const __FlashStringHelper * Command_GPIO_Monitor(struct EventStruct *event, cons
   if (gpio_monitor_helper(event->Par2, event, Line)) {
     return return_command_success();
   }
-  else {
-    return return_command_failed();
-  }
+  return return_command_failed();
 }
 
 const __FlashStringHelper * Command_GPIO_MonitorRange(struct EventStruct *event, const char *Line)
@@ -842,8 +840,8 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         createAndSetPortStatus_Mode_State(key, mode, state);
         String log;
         log += data.logPrefix;
-        log += concat(F(": port#"), currentPin);
-        log += concat(F(": set to "), state);
+        log += concat(F(": port#"), static_cast<int>(currentPin));
+        log += concat(F(": set to "), static_cast<int>(state));
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }

@@ -242,13 +242,13 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P116_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("p116_backfill")));         // Bit 28 Back fill text (inv)
       P116_CONFIG_FLAGS = lSettings;
 
-      String   color   = web_server.arg(F("p116_foregroundcolor"));
+      String   color   = webArg(F("p116_foregroundcolor"));
       uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
       }
-      color = web_server.arg(F("p116_backgroundcolor"));
+      color = webArg(F("p116_backgroundcolor"));
       uint16_t bgcolor = AdaGFXparseColor(color);
 
       P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
@@ -257,7 +257,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       String error;
 
       for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
-        strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
+        strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
       error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
