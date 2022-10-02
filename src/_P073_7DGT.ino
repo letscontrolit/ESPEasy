@@ -532,7 +532,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
         P073_data->FillBufferWithDash();
       } else {
         if ((p073_temptemp < 100) && (p073_temptemp > -10)) {
-          p073_temptemp    = round(p073_temptemp * 10.0);
+          p073_temptemp    = roundf(p073_temptemp * 10.0f);
           p073_tempflagdot = true;
         }
         P073_data->FillBufferWithTemp(p073_temptemp);
@@ -551,7 +551,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
     }
     case P073_MAX7219_8DGT:
     {
-      p073_temptemp = round(p073_temptemp * 10.);
+      p073_temptemp = roundf(p073_temptemp * 10.0f);
       P073_data->FillBufferWithTemp(p073_temptemp);
 
       # ifdef P073_DEBUG
@@ -629,7 +629,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
         p073_lefttemp = -101.0f * hideFactor; // Triggers on -100
       } else {
         if ((p073_lefttemp < 100.0f * hideFactor) && (p073_lefttemp > -10.0f * hideFactor)) {
-          p073_lefttemp = round(p073_lefttemp * 10.0f);
+          p073_lefttemp = roundf(p073_lefttemp * 10.0f);
           firstDot      = P073_data->hideDegree ? 2 : 1;
           firstDecimals = true;
         }
@@ -639,7 +639,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
         p073_righttemp = -101.0f * hideFactor;
       } else {
         if ((p073_righttemp < 100.0f * hideFactor) && (p073_righttemp > -10.0f * hideFactor)) {
-          p073_righttemp = round(p073_righttemp * 10.0f);
+          p073_righttemp = roundf(p073_righttemp * 10.0f);
           secondDot      = P073_data->hideDegree ? 6 : 5;
           secondDecimals = true;
         }

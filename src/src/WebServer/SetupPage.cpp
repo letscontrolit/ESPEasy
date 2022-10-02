@@ -59,7 +59,7 @@ void handle_setup() {
     sendHeadandTail(F("TmplAP"));
   }
 
-  const bool clearButtonPressed = web_server.hasArg(F("performclearcredentials"));
+  const bool clearButtonPressed = hasArg(F("performclearcredentials"));
   const bool clearWiFiCredentials = 
     isFormItemChecked(F("clearcredentials")) && clearButtonPressed;
 
@@ -87,7 +87,7 @@ void handle_setup() {
           passwordGiven = !password.isEmpty();
         }
         const bool emptyPassAllowed = isFormItemChecked(F("emptypass"));
-        const bool performRescan = web_server.hasArg(F("performrescan"));
+        const bool performRescan = hasArg(F("performrescan"));
         if (performRescan) {
           WiFiEventData.lastScanMoment.clear();
           WifiScan(false);

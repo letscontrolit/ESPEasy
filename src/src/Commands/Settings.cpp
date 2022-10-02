@@ -23,14 +23,11 @@
 String Command_Settings_Build(struct EventStruct *event, const char* Line)
 {
 	if (HasArgv(Line, 2)) {
-		Settings.Build = event->Par1;
+	  Settings.Build = event->Par1;
 	} else {
-		serialPrintln();
-		String result = F("Build:");
-		result += Settings.Build;
-    return return_result(event, result);
+      return return_result(event, concat(F("Build:"), static_cast<int>(Settings.Build)));
 	}
-	return return_command_success();
+	return return_command_success_str();
 }
 
 String Command_Settings_Unit(struct EventStruct *event, const char* Line)
@@ -38,12 +35,9 @@ String Command_Settings_Unit(struct EventStruct *event, const char* Line)
 	if (HasArgv(Line, 2)) {
 		Settings.Unit = event->Par1;
 	}else  {
-		serialPrintln();
-		String result = F("Unit:");
-		result += Settings.Unit;
-    return return_result(event, result);
+      return return_result(event, concat(F("Unit:"), static_cast<int>(Settings.Unit)));
 	}
-	return return_command_success();
+	return return_command_success_str();
 }
 
 String Command_Settings_Name(struct EventStruct *event, const char* Line)
@@ -65,7 +59,7 @@ String Command_Settings_Password(struct EventStruct *event, const char* Line)
 				      );
 }
 
-String Command_Settings_Password_Clear(struct EventStruct *event, const char* Line)
+const __FlashStringHelper *  Command_Settings_Password_Clear(struct EventStruct *event, const char* Line)
 {
 	const String storedPassword = SecuritySettings.getPassword();
 	if (storedPassword.length() > 0) {
