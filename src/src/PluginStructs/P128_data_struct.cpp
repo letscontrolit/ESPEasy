@@ -1403,15 +1403,15 @@ void P128_data_struct::Plugin_128_simpleclock() {
 
 
   for (int i = 0; i < pixelCount; i++) {
-    if (round((((float)Seconds + ((float)counter20ms - (float)maxtime) / 50.0) * (float)pixelCount) / 60.0) == i) {
+    if (lround((((float)Seconds + ((float)counter20ms - (float)maxtime) / 50.0) * (float)pixelCount) / 60.0) == i) {
       if (rgb_s_off  == false) {
         Plugin_128_pixels->SetPixelColor(i, rgb_s);
       }
     }
-    else if (round((((float)Minutes * 60.0) + (float)Seconds) / 60.0 * (float)pixelCount / 60.0) == i) {
+    else if (lround((((float)Minutes * 60.0) + (float)Seconds) / 60.0 * (float)pixelCount / 60.0) == i) {
       Plugin_128_pixels->SetPixelColor(i, rgb_m);
     }
-    else if (round(((float)Hours + (float)Minutes / 60) * (float)pixelCount / 12.0)  == i) {
+    else if (lround(((float)Hours + (float)Minutes / 60) * (float)pixelCount / 12.0)  == i) {
       Plugin_128_pixels->SetPixelColor(i,                                 rgb_h);
       Plugin_128_pixels->SetPixelColor((i + 1) % pixelCount,              rgb_h);
       Plugin_128_pixels->SetPixelColor((i - 1 + pixelCount) % pixelCount, rgb_h);

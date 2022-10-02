@@ -174,9 +174,8 @@ const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, co
 void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
 {  
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("PortStatus detail: ");
-
-    log += F("Port=");
+    String log;
+    log += F("PortStatus detail: Port=");
     log += getPortFromKey(it->first);
     log += F(" State=");
     log += it->second.state;
@@ -207,7 +206,7 @@ void debugPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
 const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, const char *Line)
 {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, concat(F("PortStatus structure: Called from=Rules Count="), globalMapPortStatus.size()));
+    addLogMove(LOG_LEVEL_INFO, concat(F("PortStatus structure: Called from=Rules Count="), static_cast<int>(globalMapPortStatus.size())));
   }
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {

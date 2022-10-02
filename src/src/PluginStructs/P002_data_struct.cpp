@@ -677,8 +677,8 @@ String P002_data_struct::webformSave(struct EventStruct *event)
     const float out2 = getFormItemFloat(F("p002_out2"));
 
 
-    P002_CALIBRATION_POINT1 = roundf(adc1);
-    P002_CALIBRATION_POINT2 = roundf(adc2);
+    P002_CALIBRATION_POINT1 = lround(adc1);
+    P002_CALIBRATION_POINT2 = lround(adc2);
     P002_CALIBRATION_VALUE1 = mapADCtoFloat(
       P002_CALIBRATION_POINT1,
       adc1, adc2,
@@ -700,7 +700,7 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   // Store nr of lines that were saved, so no 'old' data will be read when nr of multi-point items has changed.
   lines[P002_SAVED_NR_LINES] = String(nr_lines);
 
-  if (web_server.hasArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA))) {
+  if (hasArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA))) {
     lines[P002_LINE_INDEX_FORMULA] = webArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA));
   }
 

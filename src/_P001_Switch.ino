@@ -378,7 +378,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         //        {
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
         // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-        if (round(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+        if (lround(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
   # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
@@ -477,9 +477,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLogMove(LOG_LEVEL_INFO,
-                  concat(F("SW  : GPIO="),  CONFIG_PIN1) +
+                  concat(F("SW  : GPIO="),  static_cast<int>(CONFIG_PIN1)) +
                   concat(F(" State="),  state ? '1' : '0') +
-                  concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),  output_value));
+                  concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),  static_cast<int>(output_value)));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -572,9 +572,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLogMove(LOG_LEVEL_INFO, 
-                  concat(F("SW  : LongPress: GPIO= "), CONFIG_PIN1) +
+                  concat(F("SW  : LongPress: GPIO= "), static_cast<int>(CONFIG_PIN1)) +
                   concat(F(" State="), state ? '1' : '0') +
-                  concat(F(" Output value="), output_value));
+                  concat(F(" Output value="), static_cast<int>(output_value)));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -597,7 +597,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             // Create EVENT with value = 4 for SafeButton false positive detection
-            const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+            const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
             UserVar[event->BaseVarIndex] = SAFE_BUTTON_EVENT;
 
               # ifndef BUILD_NO_DEBUG

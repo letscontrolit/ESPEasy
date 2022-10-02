@@ -268,7 +268,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
           if ((P131_CONFIG_TILE_HEIGHT > 1) && (varNr == P131_CONFIG_TILE_HEIGHT - 1)) {
             html_TD();
-            addUnit(concat(F("Remaining: "), remain));
+            addUnit(concat(F("Remaining: "), static_cast<int>(remain)));
           }
         }
         html_end_table();
@@ -313,13 +313,13 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_BRIGHTNESS, getFormItemInt(F("brightness")));
       set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_MAXBRIGHT,  getFormItemInt(F("maxbright")));
 
-      String   color   = web_server.arg(F("fgcolor"));
+      String   color   = webArg(F("fgcolor"));
       uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
       }
-      color = web_server.arg(F("bgcolor"));
+      color = webArg(F("bgcolor"));
       const uint16_t bgcolor = AdaGFXparseColor(color);
 
       P131_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
@@ -330,7 +330,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t varNr = 0; varNr < prevLines; varNr++) {
         error.clear();
-        error += wrapWithQuotes(web_server.arg(getPluginCustomArgName(varNr)));
+        error += wrapWithQuotes(webArg(getPluginCustomArgName(varNr)));
         error += ',';
         uint32_t optBits = 0;
         bitWrite(optBits, P131_OPTBITS_SCROLL,      isFormItemChecked(getPluginCustomArgName(varNr + 100)));
