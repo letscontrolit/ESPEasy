@@ -33,9 +33,9 @@
 #include <vector>
 
 unsigned char ROM_NO[8];
-uint8_t LastDiscrepancy;
-uint8_t LastFamilyDiscrepancy;
-uint8_t LastDeviceFlag;
+uint8_t LastDiscrepancy = 0;
+uint8_t LastFamilyDiscrepancy = 0;
+uint8_t LastDeviceFlag = 0;  
 
 int64_t usec_release   = 0;
 int64_t presence_start = 0;
@@ -45,18 +45,16 @@ int64_t presence_end   = 0;
 // References to 1-wire family codes:
 // http://owfs.sourceforge.net/simple_family.html
 // https://github.com/owfs/owfs-doc/wiki/1Wire-Device-List
-String Dallas_getModel(uint8_t family) {
-  String model;
-
+const __FlashStringHelper * Dallas_getModel(uint8_t family) {
   switch (family) {
-    case 0x28: model = F("DS18B20"); break;
-    case 0x3b: model = F("DS1825");  break;
-    case 0x22: model = F("DS1822");  break;
-    case 0x10: model = F("DS1820 / DS18S20");  break;
-    case 0x1D: model = F("DS2423");  break; // 4k RAM with counter
-    case 0x01: model = F("DS1990A"); break; // Serial Number iButton
+    case 0x28: return F("DS18B20"); 
+    case 0x3b: return F("DS1825"); 
+    case 0x22: return F("DS1822"); 
+    case 0x10: return F("DS1820 / DS18S20");
+    case 0x1D: return F("DS2423");   // 4k RAM with counter
+    case 0x01: return F("DS1990A");  // Serial Number iButton
   }
-  return model;
+  return F("");
 }
 
 String Dallas_format_address(const uint8_t addr[]) {
@@ -153,16 +151,14 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
   }
 
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
-    String id = F("dallas_addr");
-    id += String(var_index);
     String rowLabel = F("Device Address");
 
     if (nrVariables > 1) {
       rowLabel += ' ';
-      rowLabel += String(var_index + 1);
+      rowLabel += (var_index + 1);
     }
     addRowLabel(rowLabel);
-    addSelector_Head(id);
+    addSelector_Head(concat(F("dallas_addr"), static_cast<int>(var_index)));
     addSelector_Item(F("- None -"), -1, false); // Empty choice
     uint8_t tmpAddress[8];
 
@@ -179,7 +175,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
         option += it->second;
       }
 
-      bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
+      const bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0);
       addSelector_Item(option, index, selected);
     }
     addSelector_Foot();
@@ -233,11 +229,10 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx
   uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
-    const String id = concat(F("dallas_addr"), static_cast<int>(var_index));
-    const int selection = getFormItemInt(id, -1);
+    const int selection = getFormItemInt(concat(F("dallas_addr"), static_cast<int>(var_index)), -1);
 
     if (selection != -1) {
-      Dallas_scan(getFormItemInt(id), addr, gpio_pin_rx, gpio_pin_tx);
+      Dallas_scan(selection, addr, gpio_pin_rx, gpio_pin_tx);
       Dallas_plugin_set_addr(addr, TaskIndex, var_index);
     }
   }
@@ -415,6 +410,7 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
   return true;
 }
 
+#ifdef USES_P080
 bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   // maybe this is needed to trigger the reading
@@ -464,11 +460,13 @@ bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_p
   addLogMove(LOG_LEVEL_INFO, log);
   return found;
 }
+#endif
 
 /*********************************************************************************************\
    Dallas read DS2423 counter
    Taken from https://github.com/jbechter/arduino-onewire-DS2423
 \*********************************************************************************************/
+#ifdef USES_P100
 #define DS2423_READ_MEMORY_COMMAND 0xa5
 #define DS2423_PAGE_ONE 0xc0
 #define DS2423_PAGE_TWO 0xe0
@@ -518,6 +516,7 @@ bool Dallas_readCounter(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, 
     return false;
   }
 }
+#endif
 
 /*********************************************************************************************\
 * Dallas Get Resolution
@@ -538,11 +537,7 @@ uint8_t Dallas_getResolution(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gp
     ScratchPad[i] = Dallas_read(gpio_pin_rx, gpio_pin_tx);
   }
 
-  if (!Dallas_crc8(ScratchPad)) {
-    return 0;
-  }
-  else
-  {
+  if (Dallas_crc8(ScratchPad)) {
     switch (ScratchPad[4])
     {
       case 0x7F: // 12 bit
