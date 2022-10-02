@@ -145,7 +145,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Touch minimum pressure"), F("threshold"), P123_CONFIG_THRESHOLD, 0, 255);
 
       {
-        P123_data_struct *P123_data = nullptr; // static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
         bool deleteP123_data        = false;
 
         if (nullptr == P123_data) {

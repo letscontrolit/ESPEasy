@@ -51,18 +51,22 @@ bool P123_data_struct::init(struct EventStruct *event) {
 
   reset();
 
-  touchscreen = new (std::nothrow) Adafruit_FT6206();
+  touchHandler = new (std::nothrow) ESPEasy_TouchHandler(static_cast<taskIndex_t>(P123_CONFIG_DISPLAY_TASK),
+                                                         static_cast<AdaGFXColorDepth>(P123_COLOR_DEPTH));
 
-  if (nullptr != touchscreen) {
-    if (nullptr != touchHandler) { delete touchHandler; }
-    touchHandler = new (std::nothrow) ESPEasy_TouchHandler(P123_CONFIG_DISPLAY_TASK,
-                                                           static_cast<AdaGFXColorDepth>(P123_COLOR_DEPTH));
-  }
-
-  if (isInitialized()) {
-    touchscreen->begin(P123_CONFIG_THRESHOLD);
-
+  if (nullptr != touchHandler) {
     touchHandler->init(event);
+
+    if (touchHandler->touchEnabled()) {
+      touchscreen = new (std::nothrow) Adafruit_FT6206();
+
+      if (nullptr != touchscreen) {
+        if (!touchscreen->begin(P123_CONFIG_THRESHOLD)) {
+          delete touchscreen;
+          touchscreen = nullptr;
+        }
+      }
+    }
 
   # ifdef PLUGIN_123_DEBUG
     addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Plugin & touchscreen initialized."));
@@ -70,7 +74,7 @@ bool P123_data_struct::init(struct EventStruct *event) {
     addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialization FAILED."));
   # endif // PLUGIN_123_DEBUG
   }
-  return isInitialized();
+  return nullptr != touchHandler;
 }
 
 /**
@@ -291,7 +295,7 @@ void P123_data_struct::setRotation(uint8_t n) {
   # ifdef PLUGIN_123_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG Rotation set: "), n));
+    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG Rotation set: "), static_cast<int>(n)));
   }
   # endif // PLUGIN_123_DEBUG
 }
@@ -304,7 +308,7 @@ void P123_data_struct::setRotationFlipped(bool flipped) {
   # ifdef PLUGIN_123_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG RotationFlipped set: "), flipped));
+    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG RotationFlipped set: "), boolToString(flipped)));
   }
   # endif // PLUGIN_123_DEBUG
 }
