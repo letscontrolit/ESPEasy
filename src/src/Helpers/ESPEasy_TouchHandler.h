@@ -277,7 +277,7 @@ public:
   ESPEasy_TouchHandler();
   ESPEasy_TouchHandler(const taskIndex_t     & displayTask,
                        const AdaGFXColorDepth& colorDepth);
-  virtual ~ESPEasy_TouchHandler() {}
+  virtual ~ESPEasy_TouchHandler();
 
   void loadTouchObjects(struct EventStruct *event);
   void init(struct EventStruct *event);
@@ -364,7 +364,7 @@ private:
                          int16_t     & highRange);
 
   bool _deduplicate            = false;
-  uint16_t _displayTask        = 0u;
+  taskIndex_t _displayTask     = INVALID_TASK_INDEX;
   AdaGFXColorDepth _colorDepth = AdaGFXColorDepth::FullColor;
   int16_t _buttonGroup         = 0;
 
