@@ -11,6 +11,8 @@ uint64_t P008_data_struct::castHexAsDec(uint64_t hexValue) {
   uint64_t result = 0;
   uint8_t  digit;
 
+  uint64_t factor = 1;
+
   for (int i = 0; i < 8; i++) {
     digit = (hexValue & 0x0000000F);
 
@@ -18,14 +20,15 @@ uint64_t P008_data_struct::castHexAsDec(uint64_t hexValue) {
       digit = 0;     // Cast by dropping any non-decimal input
     }
 
-    if (digit > 0) { // Avoid 'expensive' pow operation if not used
-      result += (digit * static_cast<uint64_t>(pow(10, i)));
+    if (digit > 0) {
+      result += (digit * factor);
     }
     hexValue >>= 4;
 
     if (hexValue == 0) {
       break; // Stop when no more to process
     }
+    factor *= 10;
   }
   return result;
 }
