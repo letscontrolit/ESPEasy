@@ -23,11 +23,11 @@ void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size);
 void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, size_t max_size);
 
 void sendHeadandTail(const __FlashStringHelper * tmplName,
-                     boolean       Tail      = false,
-                     boolean       rebooting = false);
+                     bool       Tail      = false,
+                     bool       rebooting = false);
 
-void   sendHeadandTail_stdtemplate(boolean Tail      = false,
-                                   boolean rebooting = false);
+void   sendHeadandTail_stdtemplate(bool Tail,
+                                   bool rebooting = false);
 
 
 void   WebServerInit();
@@ -194,21 +194,5 @@ void getPartitionTableSVG(uint8_t         pType,
 bool webArg2ip(const __FlashStringHelper * arg,
                uint8_t         *IP);
 
-
-// Separate wrapper to get web_server.arg()
-// 1) To allow to have a __FlashStringHelper call -> reduce build size
-// 2) ESP32 does not return a const String &, but a temporary copy, thus we _must_ copy before using it.
-
-#ifdef ESP8266
-const String& webArg(const __FlashStringHelper * arg);
-const String& webArg(const String& arg);
-const String& webArg(int i);
-#endif 
-
-#ifdef ESP32
-String webArg(const __FlashStringHelper * arg);
-String webArg(const String& arg);
-String webArg(int i);
-#endif 
 
 #endif // ifndef WEBSERVER_ESPEASY_WEBSERVER_H

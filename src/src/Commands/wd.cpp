@@ -29,14 +29,12 @@ String Command_WD_Read(EventStruct *event, const char* Line)
   if ( Wire.requestFrom(static_cast<uint8_t>(event->Par1), static_cast<uint8_t>(1)) == 1 )
   {
     uint8_t value = Wire.read();
-    serialPrintln();
-    String result = F("I2C Read address ");
-    result += formatToHex(event->Par1);
-    result += F(" Value ");
-    result += formatToHex(value);
-    return return_result(event, result);
+    return return_result(
+      event, 
+      concat(F("I2C Read address "),  formatToHex(event->Par1)) 
+    + concat(F(" Value "), formatToHex(value)));
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 #endif

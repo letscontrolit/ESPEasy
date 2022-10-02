@@ -12,6 +12,11 @@ void clearTaskCaches()
   Cache.clearTaskCaches();
 }
 
+void clearFileCaches()
+{
+  Cache.clearFileCaches();
+}
+
 void updateActiveTaskUseSerial0()
 {
   Cache.updateActiveTaskUseSerial0();

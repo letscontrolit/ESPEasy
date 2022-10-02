@@ -13,7 +13,6 @@
 #include "../WebServer/DevicesPage.h"
 #include "../WebServer/DownloadPage.h"
 #include "../WebServer/FactoryResetPage.h"
-#include "../WebServer/Favicon.h"
 #include "../WebServer/FileList.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/HardwarePage.h"
@@ -73,7 +72,7 @@
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
-  if (web_server.hasArg(arg)) { 
+  if (hasArg(arg)) { 
     safe_strncpy(dest, webArg(arg).c_str(), max_size); 
   }
 }
@@ -82,7 +81,7 @@ void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, siz
   safe_strncpy_webserver_arg(dest, String(arg), max_size);
 }
 
-void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
+void sendHeadandTail(const __FlashStringHelper * tmplName, bool Tail, bool rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
@@ -94,7 +93,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   }
   #endif // if FEATURE_TIMING_STATS
   {
-    const String fileName = String(tmplName) + F(".htm");
+    const String fileName = concat(tmplName, F(".htm"));
     fs::File f = tryOpenFile(fileName, "r");
 
     WebTemplateParser templateParser(Tail, rebooting);
@@ -122,7 +121,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   STOP_TIMER(HANDLE_SERVING_WEBPAGE);
 }
 
-void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
+void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 
   if (!Tail) {
@@ -174,7 +173,7 @@ bool captivePortal() {
       redirectURL += F("/setup");
     }
     #endif
-    web_server.sendHeader(F("Location"), redirectURL, true);
+    sendHeader(F("Location"), redirectURL, true);
     web_server.send(302, F("text/plain"), EMPTY_STRING);   // Empty content inhibits Content-length header so we have to close the socket ourselves.
     web_server.client().stop(); // Stop is needed because we sent no content length
     return true;
@@ -234,7 +233,6 @@ void WebServerInit()
   #if FEATURE_SETTINGS_ARCHIVE
   web_server.on(F("/settingsarchive"), handle_settingsarchive);
   #endif // if FEATURE_SETTINGS_ARCHIVE
-  web_server.on(F("/favicon.ico"),     handle_favicon);
   #ifdef WEBSERVER_FILELIST
   web_server.on(F("/filelist"),        handle_filelist);
   #endif // ifdef WEBSERVER_FILELIST
@@ -314,6 +312,11 @@ void WebServerInit()
 
   web_server.onNotFound(handleNotFound);
 
+  // List of headers to be recorded
+  // "If-None-Match" is used to see whether we need to serve a static file, or simply can reply with a 304 (not modified)
+  const char * headerkeys[] = {"If-None-Match"};
+  const size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
+  web_server.collectHeaders(headerkeys, headerkeyssize );
   #if defined(ESP8266) || defined(ESP32)
   {
     # ifndef NO_HTTP_UPDATER
@@ -1080,37 +1083,3 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
 bool webArg2ip(const __FlashStringHelper * arg, uint8_t *IP) {
   return str2ip(webArg(arg), IP);
 }
-
-#ifdef ESP8266
-const String& webArg(const __FlashStringHelper * arg)
-{
-  return web_server.arg(String(arg));
-}
-
-const String& webArg(const String& arg)
-{
-  return web_server.arg(arg);
-}
-
-const String& webArg(int i)
-{
-  return web_server.arg(i);
-}
-#endif
-
-#ifdef ESP32
-String webArg(const __FlashStringHelper * arg)
-{
-  return web_server.arg(String(arg));
-}
-
-String webArg(const String& arg)
-{
-  return web_server.arg(arg);
-}
-
-String webArg(int i)
-{
-  return web_server.arg(i);
-}
-#endif

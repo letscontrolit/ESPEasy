@@ -121,8 +121,8 @@ void pluginWebformShowValue(taskIndex_t   taskIndex,
   }
 
   pluginWebformShowValue(
-    label, concat(F("valuename_"), taskIndex) + '_' + varNr,
-    value, concat(F("value_"), taskIndex) + '_' + varNr,
+    label, concat(F("valuename_"), static_cast<int>(taskIndex)) + '_' + varNr,
+    value, concat(F("value_"), static_cast<int>(taskIndex)) + '_' + varNr,
     addTrailingBreak);
 }
 
