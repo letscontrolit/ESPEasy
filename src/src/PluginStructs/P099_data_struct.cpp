@@ -280,7 +280,7 @@ void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
         lx = StoredSettings.Calibration.bottom_right.x;
       }
       float x_fact = static_cast<float>(StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / static_cast<float>(_ts_x_res);
-      x = static_cast<uint16_t>(round(lx / x_fact));
+      x = static_cast<uint16_t>(lround(lx / x_fact));
     }
     uint16_t ly = y - StoredSettings.Calibration.top_left.y;
     if (ly <= 0) {
@@ -290,7 +290,7 @@ void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
         ly = StoredSettings.Calibration.bottom_right.y;
       }
       float y_fact = (StoredSettings.Calibration.bottom_right.y - StoredSettings.Calibration.top_left.y) / _ts_y_res;
-      y = static_cast<uint16_t>(round(ly / y_fact));
+      y = static_cast<uint16_t>(lround(ly / y_fact));
     }
   }
 }

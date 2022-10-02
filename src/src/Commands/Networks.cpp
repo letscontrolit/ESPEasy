@@ -6,6 +6,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
 #include "../WebServer/AccessControl.h"
 
 
@@ -15,9 +16,7 @@
 
 String Command_AccessInfo_Ls(struct EventStruct *event, const char* Line)
 {
-  String result = F("Allowed IP range : ");
-  result += describeAllowedIPrange();
-  return return_result(event, result);
+  return return_result(event, concat(F("Allowed IP range : "), describeAllowedIPrange()));
 }
 
 String Command_AccessInfo_Clear (struct EventStruct *event, const char* Line)
@@ -131,7 +130,7 @@ String Command_ETH_Disconnect (struct EventStruct *event, const char* Line)
   setNetworkMedium(NetworkMedium_t::Ethernet);
   ETHConnectRelaxed();
 
-  return return_command_success();
+  return return_command_success_str();
 }
 
 #endif // if FEATURE_ETHERNET
