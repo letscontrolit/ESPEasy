@@ -69,12 +69,12 @@ bool P123_data_struct::init(struct EventStruct *event) {
     }
 
   # ifdef PLUGIN_123_DEBUG
-    addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Plugin & touchscreen initialized."));
+    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG Plugin"), nullptr != touchscreen ? F(" & touchscreen") : F("")) + F(" initialized."));
   } else {
     addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialization FAILED."));
   # endif // PLUGIN_123_DEBUG
   }
-  return nullptr != touchHandler;
+  return isInitialized();
 }
 
 /**
@@ -111,7 +111,7 @@ bool P123_data_struct::displayButton(struct EventStruct *event,
  * Properly initialized? then true
  */
 bool P123_data_struct::isInitialized() const {
-  return touchscreen != nullptr && touchHandler != nullptr;
+  return touchHandler != nullptr && (!touchHandler->touchEnabled() || touchscreen != nullptr);
 }
 
 /**
