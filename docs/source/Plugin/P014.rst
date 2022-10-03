@@ -24,6 +24,44 @@ Used libraries: |P014_usedlibraries|
 Supported hardware
 ------------------
 
+**SI7013:**
+===========
+
+Has support for humidity, temperature and ADC values 
+
+* ± 3% RH (max), 0–80% RH  (0 to 100% RH operating range)
+* ±0.4 °C (max), –10 to 85 °C (–40 to +125 °C operating range)
+* Operating Voltage (1.9 to 3.6 V)
+* Low Power Consumption: 150 μA active current ; 60 nA standby current
+* Analog To Digital converter builtin.
+
+Datasheet: <https://www.silabs.com/sensors/humidity/si7006-13-20-21-34/device.si7013-a20-gm1>
+Direct link: <https://www.silabs.com/documents/public/data-sheets/Si7013-A20.pdf>
+
+If using the SI7013 to measure ADC make sure you implement one of the two thermistor (thermistor can we replaced with LRD for light level measurements) circuit diagrams:
+ * Figure 5. Typical Application Circuit for Thermistor Interface with AD0 = 1
+ * Figure 6. Typical Application Circuit for Thermistor Interface with AD0 = 0
+Do not use the single ended circuit as the Vout is connected directly to ground:
+ * Figure 7. Typical Application Circuit for Single Ended 0 to 3 V Measurement (!DO NOT USE THIS CIRCUIT!)
+
+**SI7020 and SI7021:**
+======================
+
+* Si7020: ± 4% RH (max), 0–80% RH (0 to 100% RH operating range)
+* Si7021: ± 3% RH (max), 0–80% RH (0 to 100% RH operating range)
+* ±0.4 °C (max), –10 to 85 °C (–40 to +125 °C operating range)
+* Operating voltage (1.9 to 3.6 V)
+* Low Power Consumption: 150 µA active current ; 60 nA standby current
+* No ADC builtin.
+  
+
+
+**Note:**
+The plugin reads the CHIP ID to determine if the ADC is available.
+
+SHT20 and HTU21D devices while using the same reading protocol do not have a CHIP ID capability and not able to detect them.
+
+
 |P014_usedby|
 
 .. Commands available
@@ -38,6 +76,11 @@ Supported hardware
 
 Change log
 ----------
+.. versionchanged:: 3.0
+  ...
+
+  |added|
+  Another major overhaul and currently supporting: SI7013,SI7020,SI7021
 
 .. versionchanged:: 2.0
   ...
