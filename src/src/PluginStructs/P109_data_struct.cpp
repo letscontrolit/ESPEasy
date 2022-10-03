@@ -85,8 +85,16 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   }
 
   if (nullptr == _display) {
-    return false;   // Premature exit
+    return false; // Premature exit
   }
+
+  if (P109_GET_TASKNAME_IN_TITLE == 1) {
+    _title = getTaskDeviceName(event->TaskIndex);
+  } else {
+    _title = Settings.getHostname();
+  }
+  _alternateTitle = !P109_GET_ALTERNATE_HEADER;
+
   _display->init(); // call to local override of init function
   _display->displayOn();
 
@@ -344,13 +352,13 @@ bool P109_data_struct::plugin_write(struct EventStruct *event,
       if (subcommand.equals(F("setpoint"))) {
         setSetpoint(par3);
       }
-      else if (subcommand.equals(F("leftbtn"))) {  // Emulate Left button action
+      else if (subcommand.equals(F("down"))) {    // Emulate Left button action
         actionLeft(event);
       }
-      else if (subcommand.equals(F("rightbtn"))) { // Emulate Right button action
+      else if (subcommand.equals(F("up"))) {      // Emulate Right button action
         actionRight(event);
       }
-      else if (subcommand.equals(F("modebtn"))) {  // Emulate Mode button action
+      else if (subcommand.equals(F("modebtn"))) { // Emulate Mode button action
         actionMode(event);
       }
       else if (subcommand.equals(F("heating"))) {
@@ -448,13 +456,11 @@ void P109_data_struct::actionMode(struct EventStruct *event) {
  * Display header, alternating between WiFi AP SSID and Sysname
  */
 void P109_data_struct::display_header() {
-  if (_showWiFiName && WiFiEventData.WiFiServicesInitialized()) {
-    String newString = WiFi.SSID();
-    display_title(newString);
+  if (_alternateTitle && _showWiFiName && WiFiEventData.WiFiServicesInitialized()) {
+    // String newString = ;
+    display_title(WiFi.SSID());
   } else {
-    String dtime(F("%sysname%"));
-    String newString = parseTemplate(dtime);
-    display_title(newString);
+    display_title(_title);
   }
   _showWiFiName = !_showWiFiName;
 

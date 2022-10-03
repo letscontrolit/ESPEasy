@@ -50,6 +50,12 @@ const char flameimg[] PROGMEM = {
 # define P109_CONFIG_RELAYPIN           PCONFIG(4)
 # define P109_CONFIG_HYSTERESIS         PCONFIG_FLOAT(0)
 
+# define P109_FLAGS                     PCONFIG_ULONG(0)
+# define P109_FLAG_TASKNAME_IN_TITLE    0
+# define P109_FLAG_ALTERNATE_HEADER     1
+# define P109_GET_TASKNAME_IN_TITLE     bitRead(P109_FLAGS, P109_FLAG_TASKNAME_IN_TITLE)
+# define P109_GET_ALTERNATE_HEADER      bitRead(P109_FLAGS, P109_FLAG_ALTERNATE_HEADER)
+
 struct P109_data_struct : public PluginTaskData_base {
   P109_data_struct();
   ~P109_data_struct();
@@ -83,6 +89,9 @@ private:
   uint8_t _changed       = 0;
   uint8_t _saveneeded    = 0;
   int8_t  _relaypin      = -1;
+
+  String _title;
+  bool   _alternateTitle = true;
 
   char _deviceTemplate[P109_Nlines][P109_Nchars];
 

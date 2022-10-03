@@ -43,6 +43,9 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
+   2022-10-03 tonhuisman: On request changed the leftbtn and rightbtn commands to thermo,down and thermo,up to be more descriptive
+                          Add option for alternating sysname/SSID in title (or just the sysname)
+                          Add option for show taskname instead of sysname in title
    2022-09-21 tonhuisman: Adjust subcommands to leftbtn and rightbtn, to be consistent with modebtn
    2022-09-20 tonhuisman: Add commands for emulating the Left, Right and Mode buttons
    2022-08-28 tonhuisman: Changelog reversed order to newest on top
@@ -71,15 +74,15 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_109;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      Device[++deviceCount].Number         = PLUGIN_ID_109;
+      Device[deviceCount].Type             = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_QUAD;
+      Device[deviceCount].Ports            = 0;
+      Device[deviceCount].FormulaOption    = true;
+      Device[deviceCount].ValueCount       = 4;
+      Device[deviceCount].SendDataOption   = true;
+      Device[deviceCount].TimerOption      = true;
+      Device[deviceCount].GlobalSyncOption = true;
       break;
     }
 
@@ -145,11 +148,11 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button left"),  F("taskdevicepin1"), CONFIG_PIN1);
-      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button right"), F("taskdevicepin2"), CONFIG_PIN2);
-      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button mode"),  F("taskdevicepin3"), CONFIG_PIN3);
+      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button left/down"), F("taskdevicepin1"), CONFIG_PIN1);
+      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button right/up"),  F("taskdevicepin2"), CONFIG_PIN2);
+      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button mode"),      F("taskdevicepin3"), CONFIG_PIN3);
 
-      addFormPinSelect(PinSelectPurpose::Generic_output, F("Relay"),        F("heatrelay"),      P109_CONFIG_RELAYPIN);
+      addFormPinSelect(PinSelectPurpose::Generic_output, F("Relay"),            F("heatrelay"),      P109_CONFIG_RELAYPIN);
 
       OLedFormContrast(F("contrast"), P109_CONFIG_CONTRAST);
 
@@ -157,6 +160,12 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options4[] = { F("0.2"), F("0.5"), F("1") };
         const int optionValues4[]             = { 2, 5, 10 };
         addFormSelector(F("Hysteresis"), F("hyst"), 3, options4, optionValues4, static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
+      }
+
+      {
+        addFormCheckBox(F("Alternate Sysname/SSID in title"), F("palt"),  P109_GET_ALTERNATE_HEADER == 0); // Inverted!
+
+        addFormCheckBox(F("Use Taskname instead of Sysname"), F("ptask"), P109_GET_TASKNAME_IN_TITLE == 1);
       }
 
       success = true;
@@ -171,6 +180,10 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       P109_CONFIG_CONTRAST    = getFormItemInt(F("contrast"));
       P109_CONFIG_RELAYPIN    = getFormItemInt(F("heatrelay"));
       P109_CONFIG_HYSTERESIS  = (getFormItemInt(F("hyst")) / 10.0f);
+      uint32_t lSettings = 0u;
+      bitWrite(lSettings, P109_FLAG_TASKNAME_IN_TITLE, isFormItemChecked(F("ptask")));
+      bitWrite(lSettings, P109_FLAG_ALTERNATE_HEADER,  !isFormItemChecked(F("palt"))); // Inverted
+      P109_FLAGS = lSettings;
 
       {
         P109_data_struct *P109_data = new (std::nothrow) P109_data_struct();
