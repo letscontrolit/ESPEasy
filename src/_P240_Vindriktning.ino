@@ -327,7 +327,9 @@ bool P240_process_rx(char c)
     case PM1006_CHECK:
         rxChecksum += c;
         rxState = PM1006_HEADER;
+#ifdef PLUGIN_240_DEBUG
         P240_dump();
+#endif
         return ((rxChecksum&0xFF) == 0);
 
     default:
@@ -337,6 +339,7 @@ bool P240_process_rx(char c)
     return false;
 }
 
+#ifdef PLUGIN_240_DEBUG
 // Function P240_to_hex
 // Helper to convert uint8/char to HEX representation
 char * P240_to_hex(char c, char * ptr)
@@ -367,5 +370,5 @@ void P240_dump()
   log += (rxChecksum & 0xFF);
   addLogMove(LOG_LEVEL_INFO, log);
 }
-
+#endif // PLUGIN_240_DEBUG
 #endif
