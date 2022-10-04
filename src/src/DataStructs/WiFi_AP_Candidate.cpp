@@ -47,7 +47,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   #endif // ifdef ESP8266
   #ifdef ESP32
   isHidden = ssid.isEmpty();
-  wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(WiFi.getScanInfoByIndex(i));
+  wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(WiFi.getScanInfoByIndex(networkItem));
   if (it) {
     phy_11b = it->phy_11b;
     phy_11g = it->phy_11g;
