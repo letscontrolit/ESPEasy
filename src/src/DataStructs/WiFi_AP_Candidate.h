@@ -17,7 +17,9 @@ struct WiFi_AP_Candidate {
   // Construct using index from WiFi scan result
   WiFi_AP_Candidate(uint8_t networkItem);
   #ifdef ESP8266
+  #if FEATURE_ESP8266_DIRECT_WIFI_SCAN
   WiFi_AP_Candidate(const bss_info& ap);
+  #endif
   #endif
 
 
@@ -52,18 +54,25 @@ struct WiFi_AP_Candidate {
 
   String             encryption_type() const;
 
+  bool               phy_known() const;
+
   String  ssid;
   String  key;
 
   unsigned long last_seen = 0;
-  int32_t rssi     = 0;
-  int32_t channel  = 0;
-  MAC_address bssid;
-  uint8_t    index    = 0;     // Index of the matching credentials
-  uint8_t    enc_type = 0;     // Encryption used (e.g. WPA2)
-  bool    isHidden = false; // Hidden SSID
-  bool    lowPriority = false; // Try as last attempt
-  bool    isEmergencyFallback = false;
+  int32_t       rssi     = 0;
+  int32_t       channel  = 0;
+  MAC_address   bssid;
+  uint8_t       index    = 0;     // Index of the matching credentials
+  uint8_t       enc_type = 0;     // Encryption used (e.g. WPA2)
+  bool          isHidden = false; // Hidden SSID
+  bool          lowPriority = false; // Try as last attempt
+  bool          isEmergencyFallback = false;
+  bool          phy_11b = false;
+  bool          phy_11g = false;
+  bool          phy_11n = false;
+  bool          wps = false;
+
 };
 
 #endif // ifndef DATASTRUCTS_WIFI_AP_CANDIDATES_H

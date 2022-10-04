@@ -355,6 +355,7 @@ void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& eve
   WiFiEventData.setAuthMode(event.newMode);
 }
 
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
 void onWiFiScanDone(void *arg, STATUS status) {
   if (status == OK) {
     auto *head = reinterpret_cast<bss_info *>(arg);
@@ -365,17 +366,26 @@ void onWiFiScanDone(void *arg, STATUS status) {
     }
     WiFi_AP_Candidates.after_process_WiFiscan();
     WiFiEventData.lastGetScanMoment.setNow();
-    WiFiEventData.processedScanDone = true;
+//    WiFiEventData.processedScanDone = true;
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WiFi : Scan finished, found: ");
+      String log = F("WiFi : Scan finished (ESP8266), found: ");
       log += scanCount;
       addLogMove(LOG_LEVEL_INFO, log);
     }
+    WiFi_AP_Candidates.load_knownCredentials();
+    if (WiFi_AP_Candidates.addedKnownCandidate() || !NetworkConnected()) {
+      WiFiEventData.wifiConnectAttemptNeeded = true;
+      if (WiFi_AP_Candidates.addedKnownCandidate())
+        addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
+      NetworkConnectRelaxed();
+    }
+
   }
 
   WiFiMode_t mode = WiFi.getMode();
   WiFi.mode(WIFI_OFF);
   WiFi.mode(mode);
 }
+#endif
 
 #endif // ifdef ESP8266

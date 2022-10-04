@@ -2328,4 +2328,18 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_ESP8266_DIRECT_WIFI_SCAN
+  // Feature still in development, do not yet use.
+  #define FEATURE_ESP8266_DIRECT_WIFI_SCAN    0
+#endif
+
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
+  #ifdef ESP32
+    // ESP8266 only feature
+    #undef FEATURE_ESP8266_DIRECT_WIFI_SCAN
+    #define FEATURE_ESP8266_DIRECT_WIFI_SCAN    0
+  #endif
+#endif
+
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

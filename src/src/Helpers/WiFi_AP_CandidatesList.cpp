@@ -97,6 +97,7 @@ void WiFi_AP_CandidatesList::purge_expired() {
   }
 }
 
+#if !FEATURE_ESP8266_DIRECT_WIFI_SCAN
 void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   // Append or update found APs from scan.
   for (uint8_t i = 0; i < scancount; ++i) {
@@ -107,12 +108,15 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
 
   after_process_WiFiscan();
 }
+#endif
 
 #ifdef ESP8266
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
 void WiFi_AP_CandidatesList::process_WiFiscan(const bss_info& ap) {
   WiFi_AP_Candidate tmp(ap);
   scanned_new.push_back(tmp);
 }
+#endif
 #endif
 
 void WiFi_AP_CandidatesList::after_process_WiFiscan() {
@@ -212,6 +216,11 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
 int8_t WiFi_AP_CandidatesList::scanComplete() const {
   size_t found = 0;
   for (auto scan = scanned.begin(); scan != scanned.end(); ++scan) {
+    if (!scan->expired()) {
+      ++found;
+    }
+  }
+  for (auto scan = scanned_new.begin(); scan != scanned_new.end(); ++scan) {
     if (!scan->expired()) {
       ++found;
     }

@@ -320,6 +320,9 @@ bool WiFiConnected() {
       WiFiEventData.wifiConnectAttemptNeeded = true;
     //}
     WiFiEventData.wifiConnectInProgress = false;
+    if (!WiFiEventData.WiFiDisconnected()) {
+      WifiDisconnect();
+    }
   }
   delay(0);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
@@ -335,6 +338,7 @@ void WiFiConnectRelaxed() {
     // Scan is still active, so do not yet connect.
     return;
   }
+
   if (WiFiEventData.unprocessedWifiEvents()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("WiFi : Connecting not possible, unprocessed WiFi events: ");
@@ -356,11 +360,6 @@ void WiFiConnectRelaxed() {
     return;
   }
 
-
-  if (WiFiEventData.unprocessedWifiEvents()) {
-    // Still need to process WiFi events
-    return;
-  }
   if (!WiFiEventData.wifiSetupConnect && wifiAPmodeActivelyUsed()) {
     return;
   }
@@ -389,6 +388,12 @@ void AttemptWiFiConnect() {
     WiFiEventData.wifiSetupConnect     = false;
     if (WiFiEventData.timerAPoff.isSet()) {
       WiFiEventData.timerAPoff.setMillisFromNow(WIFI_RECONNECT_WAIT + WIFI_AP_OFF_TIMER_DURATION);
+    }
+  }
+
+  if (WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
+    if (WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() < 1000) {
+      return;
     }
   }
 
@@ -451,7 +456,7 @@ bool prepareWiFi() {
       addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
       WiFiEventData.warnedNoValidWiFiSettings = true;
     }
-    WiFiEventData.last_wifi_connect_attempt_moment.clear();
+//    WiFiEventData.last_wifi_connect_attempt_moment.clear();
     WiFiEventData.wifi_connect_attempt     = 1;
     WiFiEventData.wifiConnectAttemptNeeded = false;
 
@@ -820,9 +825,6 @@ bool WiFiScanAllowed() {
     processScanDone(); 
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
-    handle_unprocessedNetworkEvents();
-  }
-  if (WiFiEventData.unprocessedWifiEvents()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("WiFi : Scan not allowed, unprocessed WiFi events: ");
       if (!WiFiEventData.processedConnect) {
@@ -851,9 +853,11 @@ bool WiFiScanAllowed() {
   if (WiFiEventData.wifiConnectInProgress) {
     return false;
   }
-  if (NetworkConnected() && WiFi_AP_Candidates.getBestCandidate().usable()) {
-    addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not needed, good candidate present"));
-    return false;
+  if (WiFiEventData.lastScanMoment.isSet()) {
+    if (NetworkConnected() && WiFi_AP_Candidates.getBestCandidate().usable()) {
+      addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not needed, good candidate present"));
+      return false;
+    }
   }
 
   if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {
@@ -908,7 +912,7 @@ void WifiScan(bool async, uint8_t channel) {
     }
     --nrScans;
 #ifdef ESP8266
-    /*
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
     {
       static bool FIRST_SCAN = true;
 
@@ -917,7 +921,7 @@ void WifiScan(bool async, uint8_t channel) {
       config.ssid = nullptr;
       config.bssid = nullptr;
       config.channel = channel;
-      config.show_hidden = 1;
+      config.show_hidden = show_hidden ? 1 : 0;;
       config.scan_type = WIFI_SCAN_TYPE_ACTIVE;
       if (FIRST_SCAN) {
         config.scan_time.active.min = 100;
@@ -928,10 +932,17 @@ void WifiScan(bool async, uint8_t channel) {
       }
       FIRST_SCAN = false;
       wifi_station_scan(&config, &onWiFiScanDone);
+      if (!async) {
+        // will resume when SYSTEM_EVENT_SCAN_DONE event is fired
+        do {
+          delay(0);
+        } while (!WiFiEventData.processedScanDone);
+      }
  
     }
-    */
+#else
     WiFi.scanNetworks(async, show_hidden, channel);
+#endif
 #endif
 #ifdef ESP32
     const bool passive = false;

@@ -108,8 +108,10 @@ void handle_unprocessedNetworkEvents()
       // WiFi connection is not yet available, so introduce some extra delays to
       // help the background tasks managing wifi connections
       delay(0);
-
-      NetworkConnectRelaxed();
+      
+      if (!WiFiEventData.wifiConnectInProgress) {
+        NetworkConnectRelaxed();
+      }
 
       if (!WiFiEventData.processedConnect) {
         #ifndef BUILD_NO_DEBUG
@@ -268,8 +270,16 @@ void processDisconnect() {
   // FIXME TD-er: Ignoring the actual setting for now as it seems to be more reliable to always restart WiFi.
   bool mustRestartWiFi = true; //Settings.WiFiRestart_connection_lost();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
-    mustRestartWiFi = true;
+    if (!WiFi_AP_Candidates.getBestCandidate().usable())
+      mustRestartWiFi = true;
   }
+  
+  #ifdef USES_ESPEASY_NOW
+  if (use_EspEasy_now) {
+//    mustRestartWiFi = true;
+  }
+  #endif
+  //WifiDisconnect(); // Needed or else node may not reconnect reliably.
 
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
   if (mustRestartWiFi) {
@@ -278,10 +288,8 @@ void processDisconnect() {
     setWifiMode(WIFI_OFF);
     initWiFi();
     delay(100);
-    if (WiFiEventData.unprocessedWifiEvents()) {
-      handle_unprocessedNetworkEvents();
-    }
   }
+  delay(500);
   logConnectionStatus();
   WiFiEventData.processedDisconnect = true;
   WiFiEventData.processingDisconnect.clear();
@@ -294,6 +302,11 @@ void processConnect() {
     return;
   }
   WiFiEventData.processedConnect = true;
+  if (WiFi.status() == WL_DISCONNECTED) {
+    // Apparently not really connected
+    return;
+  }
+
   WiFiEventData.setWiFiConnected();
   ++WiFiEventData.wifi_reconnects;
 
@@ -512,6 +525,7 @@ void processDisableAPmode() {
 }
 
 void processScanDone() {
+  // FIXME TD-er: This is only being called on ESP32 as scan results are processed immediately on ESP8266
   WiFi_AP_Candidates.load_knownCredentials();
   if (WiFiEventData.processedScanDone) { return; }
 
@@ -547,9 +561,17 @@ void processScanDone() {
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
+#if !FEATURE_ESP8266_DIRECT_WIFI_SCAN
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
+#endif
+  WiFi_AP_Candidates.load_knownCredentials();
 
-  NetworkConnectRelaxed();
+  if (WiFi_AP_Candidates.addedKnownCandidate() && !NetworkConnected()) {
+    WiFiEventData.wifiConnectAttemptNeeded = true;
+    if (WiFi_AP_Candidates.addedKnownCandidate())
+      addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
+    NetworkConnectRelaxed();
+  }
 }
 
 

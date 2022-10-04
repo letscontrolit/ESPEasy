@@ -60,7 +60,7 @@ bool WiFiEventData_t::unprocessedWifiEvents() const {
 void WiFiEventData_t::clearAll() {
   markWiFiTurnOn();
   lastGetScanMoment.clear();
-  last_wifi_connect_attempt_moment.clear();
+//  last_wifi_connect_attempt_moment.clear();
   timerAPstart.clear();
 
   lastWiFiResetMoment.setNow();
@@ -70,7 +70,7 @@ void WiFiEventData_t::clearAll() {
 
 void WiFiEventData_t::markWiFiTurnOn() {
   setWiFiDisconnected();
-  lastDisconnectMoment.clear();
+//  lastDisconnectMoment.clear();
   lastConnectMoment.clear();
   lastGetIPmoment.clear();
   wifi_considered_stable    = false;
