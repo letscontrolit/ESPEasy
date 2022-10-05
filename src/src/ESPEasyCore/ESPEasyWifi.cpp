@@ -364,11 +364,9 @@ void WiFiConnectRelaxed() {
     return;
   }
 
-/*
   if (!WiFiEventData.wifiSetupConnect && wifiAPmodeActivelyUsed()) {
     return;
   }
-  */
 
 
   // FIXME TD-er: Should not try to prepare when a scan is still busy.
