@@ -44,6 +44,9 @@ struct WiFi_AP_CandidatesList {
   bool                     getNext(bool scanAllowed);
 
   const WiFi_AP_Candidate& getCurrent() const;
+  
+  // Decrease attemptsLeft
+  void                     markAttempt();
 
   WiFi_AP_Candidate        getBestCandidate() const;
 
@@ -96,6 +99,8 @@ private:
 
   bool _mustLoadCredentials = true;
   bool _addedKnownCandidate = false;
+public:
+  int  attemptsLeft = 1;
 };
 
 #endif // ifndef HELPERS_WIFI_AP_CANDIDATESLIST_H

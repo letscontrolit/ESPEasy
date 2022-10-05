@@ -22,6 +22,12 @@
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
   if (wifiSetupConnect) return true;
+  if (wifiConnectInProgress) {
+    if (last_wifi_connect_attempt_moment.isSet() && 
+       !last_wifi_connect_attempt_moment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+      return false;
+    }
+  } 
   if (lastDisconnectMoment.isSet()) {
     // TODO TD-er: Make this time more dynamic.
     if (!lastDisconnectMoment.timeoutReached(1000)) {
@@ -62,7 +68,7 @@ bool WiFiEventData_t::unprocessedWifiEvents() {
 void WiFiEventData_t::clearAll() {
   markWiFiTurnOn();
   lastGetScanMoment.clear();
-//  last_wifi_connect_attempt_moment.clear();
+  last_wifi_connect_attempt_moment.clear();
   timerAPstart.clear();
 
   lastWiFiResetMoment.setNow();
@@ -104,7 +110,7 @@ void WiFiEventData_t::markWiFiBegin() {
   usedChannel = 0;
   ++wifi_connect_attempt;
   if (!timerAPstart.isSet()) {
-    timerAPstart.setMillisFromNow(WIFI_RECONNECT_WAIT);
+    timerAPstart.setMillisFromNow(3 * WIFI_RECONNECT_WAIT);
   }
   #ifdef USES_ESPEASY_NOW
   temp_disable_EspEasy_now_timer = millis() + WIFI_RECONNECT_WAIT;
@@ -134,10 +140,12 @@ void WiFiEventData_t::setWiFiDisconnected() {
 
 void WiFiEventData_t::setWiFiGotIP() {
   bitSet(wifiStatus, ESPEASY_WIFI_GOT_IP);
+  processedGotIP = true;
 }
 
 void WiFiEventData_t::setWiFiConnected() {
   bitSet(wifiStatus, ESPEASY_WIFI_CONNECTED);
+  processedConnect = true;
 }
 
 void WiFiEventData_t::setWiFiServicesInitialized() {
@@ -170,6 +178,13 @@ void WiFiEventData_t::markLostIP() {
 }
 
 void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
+/*
+  #if defined(ESP32)
+  if ((WiFi.getMode() & WIFI_MODE_STA) == 0) return;
+  #else // if defined(ESP32)
+  if ((WiFi.getMode() & WIFI_STA) == 0) return;
+  #endif // if defined(ESP32)
+*/
   lastDisconnectMoment.setNow();
   usedChannel = 0;
 
