@@ -99,7 +99,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (uint8_t varNr = 0; varNr < 8; varNr++)
+        for (int varNr = 0; varNr < 8; varNr++)
         {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
         }

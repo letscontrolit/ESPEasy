@@ -359,7 +359,7 @@ void handle_rules_delete() {
 
   if (removed)
   {
-    web_server.sendHeader(F("Location"), F("/rules"), true);
+    sendHeader(F("Location"), F("/rules"), true);
     web_server.send(302, F("text/plain"), EMPTY_STRING);
   }
   else
@@ -449,7 +449,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         isAddNew    = true;
         isOverwrite = true;
       }
-      else if (!web_server.hasArg(F("rules")))
+      else if (!hasArg(F("rules")))
       {
         error = F("Data was not saved, rules argument missing or corrupted");
         addLog(LOG_LEVEL_ERROR, error);
@@ -476,7 +476,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         }
 
         if (isAddNew) {
-          web_server.sendHeader(F("Location"), F("/rules"), true);
+          sendHeader(F("Location"), F("/rules"), true);
           web_server.send(302, F("text/plain"), EMPTY_STRING);
           return true;
         }
@@ -584,10 +584,10 @@ bool Rule_Download(const String& path)
   String filename = path + String(F(".txt"));
   filename.replace(RULE_FILE_SEPARAROR, '_');
   String str = String(F("attachment; filename=")) + filename;
-  web_server.sendHeader(F("Content-Disposition"), str);
-  web_server.sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
-  web_server.sendHeader(F("Vary"),                "*");
-  web_server.sendHeader(F("ETag"),                F("\"2.0.0\""));
+  sendHeader(F("Content-Disposition"), str);
+  sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
+  sendHeader(F("Vary"),                "*");
+  sendHeader(F("ETag"),                F("\"2.0.0\""));
 
   web_server.streamFile(dataFile, F("application/octet-stream"));
   dataFile.close();
@@ -595,7 +595,7 @@ bool Rule_Download(const String& path)
 }
 
 void Goto_Rules_Root() {
-  web_server.sendHeader(F("Location"), F("/rules"), true);
+  sendHeader(F("Location"), F("/rules"), true);
   web_server.send(302, F("text/plain"), EMPTY_STRING);
 }
 
