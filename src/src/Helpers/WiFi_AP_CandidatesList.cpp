@@ -1,6 +1,7 @@
 #include "../Helpers/WiFi_AP_CandidatesList.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
@@ -37,6 +38,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
+  _addedKnownCandidate = false;
 
   {
     // Add the known SSIDs
@@ -85,6 +87,7 @@ void WiFi_AP_CandidatesList::force_reload() {
 
 void WiFi_AP_CandidatesList::begin_sync_scan() {
   candidates.clear();
+  _addedKnownCandidate = false;
 }
 
 void WiFi_AP_CandidatesList::purge_expired() {
@@ -210,6 +213,7 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
   }
 
   candidates.clear();
+  _addedKnownCandidate = false;
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
 
@@ -319,6 +323,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 
             if (tmp.usable()) {
               candidates.push_back(tmp);
+              _addedKnownCandidate = true;
 
               // Check all knowns as we may have several AP's with the same SSID and different passwords.
             }
@@ -427,8 +432,10 @@ void WiFi_AP_CandidatesList::purge_unusable() {
       it = candidates.erase(it);
     }
   }
+  if (candidates.size() > 1) {
   candidates.sort();
   candidates.unique();
+  }
 }
 
 bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& key) const {

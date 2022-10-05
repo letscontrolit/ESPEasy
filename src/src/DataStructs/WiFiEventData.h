@@ -33,6 +33,7 @@ struct WiFiEventData_t {
 
   void clearAll();
   void markWiFiTurnOn();
+  void clear_processed_flags();
   void markWiFiBegin();
 
   bool WiFiDisconnected() const;

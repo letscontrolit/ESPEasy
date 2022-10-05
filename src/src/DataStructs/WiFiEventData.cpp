@@ -74,7 +74,11 @@ void WiFiEventData_t::markWiFiTurnOn() {
   lastConnectMoment.clear();
   lastGetIPmoment.clear();
   wifi_considered_stable    = false;
+  
+  clear_processed_flags();
+}
 
+void WiFiEventData_t::clear_processed_flags() {
   // Mark all flags to default to prevent handling old events.
   processedConnect          = true;
   processedDisconnect       = true;
@@ -135,6 +139,7 @@ void WiFiEventData_t::setWiFiServicesInitialized() {
     #endif
     bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
     wifiConnectInProgress = false;
+    wifiConnectAttemptNeeded = false;
   }
 }
 
