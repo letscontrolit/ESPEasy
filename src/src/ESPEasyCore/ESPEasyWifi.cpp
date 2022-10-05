@@ -292,14 +292,18 @@ bool WiFiConnected() {
   }
 
   if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeReached()) {
-    // Timer reached, so enable AP mode.
-    if (!WifiIsAP(WiFi.getMode())) {
-      if (!Settings.DoNotStartAP()) {
-        WifiScan(false);
-        setAP(true);
+    if (WiFiEventData.timerAPoff.isSet() && !WiFiEventData.timerAPoff.timeReached()) {
+      // Timer reached, so enable AP mode.
+      if (!WifiIsAP(WiFi.getMode())) {
+        if (!Settings.DoNotStartAP()) {
+          WifiScan(false);
+          setAP(true);
+        }
       }
+    } else {
+      WiFiEventData.timerAPstart.clear();
+      WiFiEventData.timerAPoff.clear();
     }
-    WiFiEventData.timerAPstart.clear();
   }
 
 
@@ -356,6 +360,7 @@ void WiFiConnectRelaxed() {
       }
       
       addLogMove(LOG_LEVEL_ERROR, log);
+      logConnectionStatus();
     }
     return;
   }
@@ -392,10 +397,16 @@ void AttemptWiFiConnect() {
   }
 
   if (WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
-    if (WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() < 1000) {
+    if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(DEFAULT_WIFI_CONNECTION_TIMEOUT)) {
       return;
     }
   }
+
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    return;
+  }
+
+  setSTA(true);
 
   if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
     const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
@@ -581,6 +592,7 @@ void initWiFi()
   // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
   // those WiFi connections will take a long time to make or sometimes will not work at all.
   WiFi.disconnect(true);
+  WifiScan(false);
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)
@@ -596,6 +608,7 @@ void initWiFi()
   APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
   APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
 #endif
+  delay(100);
 }
 
 // ********************************************************************************
@@ -797,7 +810,7 @@ void WifiDisconnect()
   #endif
   #ifdef ESP8266
   // Only call disconnect when STA is active
-  if (WifiIsSTA(WiFiMode())) {
+  if (WifiIsSTA(WiFi.getMode())) {
     wifi_station_disconnect();
   }
   station_config conf{};
@@ -812,6 +825,7 @@ void WifiDisconnect()
     RTC.clearLastWiFi();
   }
   delay(1);
+  processDisconnect();
 }
 
 // ********************************************************************************
@@ -824,6 +838,14 @@ bool WiFiScanAllowed() {
   if (!WiFiEventData.processedScanDone) { 
     processScanDone(); 
   }
+  if (!WiFiEventData.processedDisconnect) {
+    processDisconnect();
+  }
+
+  if (WiFiEventData.wifiConnectInProgress) {
+    return false;
+  }
+
   if (WiFiEventData.unprocessedWifiEvents()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("WiFi : Scan not allowed, unprocessed WiFi events: ");
@@ -841,6 +863,7 @@ bool WiFiScanAllowed() {
       }
       
       addLogMove(LOG_LEVEL_ERROR, log);
+      logConnectionStatus();
     }
     return false;
   }
@@ -876,6 +899,7 @@ bool WiFiScanAllowed() {
 
 
 void WifiScan(bool async, uint8_t channel) {
+  setSTA(true);
   if (!WiFiScanAllowed()) {
     return;
   }
@@ -1128,10 +1152,10 @@ const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode)
 
 void setWifiMode(WiFiMode_t new_mode) {
   const WiFiMode_t cur_mode = WiFi.getMode();
+  static WiFiMode_t processing_wifi_mode = cur_mode;
   if (cur_mode == new_mode) {
     return;
   }
-  static WiFiMode_t processing_wifi_mode = cur_mode;
   if (processing_wifi_mode == new_mode) {
     // Prevent loops
     return;
@@ -1154,6 +1178,7 @@ void setWifiMode(WiFiMode_t new_mode) {
     delay(100);
   } else {
     WifiDisconnect();
+//    delay(100);
     processDisconnect();
     WiFiEventData.clear_processed_flags();
   }
@@ -1316,12 +1341,31 @@ bool wifiAPmodeActivelyUsed()
 
 void setConnectionSpeed() {
   #ifdef ESP8266
+  WiFiPhyMode_t phyMode = WIFI_PHY_MODE_11G;
+  const bool forcedByAPmode = WifiIsAP(WiFi.getMode());
+  if (!forcedByAPmode) {
+    // ESP8266 only supports 802.11g mode when running in STA+AP
+//    const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
 
-  if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.wifi_connect_attempt > 10)) {
-    WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+    bool useAlternate = WiFi_AP_Candidates.attemptsLeft == 0;
+    if (Settings.ForceWiFi_bg_mode() == useAlternate) {
+      phyMode = WIFI_PHY_MODE_11N;
+    }
   } else {
-    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+    // No need to perform a next attempt.
+    WiFi_AP_Candidates.markAttempt();
   }
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = concat(F("WIFI : Set to 802.11"), (WIFI_PHY_MODE_11G == phyMode) ? 'g' : 'n');
+    if (forcedByAPmode) {
+      log += (F(" (AP+STA mode)"));
+    }
+    if (Settings.ForceWiFi_bg_mode()) {
+      log += F(" Force B/G mode");
+    }
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
+  WiFi.setPhyMode(phyMode);
   #endif // ifdef ESP8266
 
   // Does not (yet) work, so commented out.

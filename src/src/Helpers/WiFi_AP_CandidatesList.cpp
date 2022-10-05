@@ -38,7 +38,9 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
+//  attemptsLeft = 1;
   _addedKnownCandidate = false;
+//  addFromRTC();
 
   {
     // Add the known SSIDs
@@ -127,6 +129,7 @@ void WiFi_AP_CandidatesList::after_process_WiFiscan() {
   scanned_new.unique();
   _mustLoadCredentials = true;
   WiFi.scanDelete();
+  attemptsLeft = 1;
 }
 
 bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
@@ -137,12 +140,12 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
       return false;
     }
     loadCandidatesFromScanned();
+    attemptsLeft = 1;
     if (candidates.empty()) { return false; }
   }
 
-  bool mustPop = true;
-
   currentCandidate = candidates.front();
+  bool mustPop = true;
 
   if (currentCandidate.isHidden) {
     // Iterate over the known credentials to try them all
@@ -160,24 +163,33 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
   }
 
   if (mustPop) {
-    if (currentCandidate.isHidden) {
-      // We tried to connect to hidden SSIDs in 1 run, so pop all hidden candidates.
-      for (auto cand_it = candidates.begin(); cand_it != candidates.end() && cand_it->isHidden; ) {
-        cand_it = candidates.erase(cand_it);
+    if (attemptsLeft == 0) {
+      if (currentCandidate.isHidden) {
+        // We tried to connect to hidden SSIDs in 1 run, so pop all hidden candidates.
+        for (auto cand_it = candidates.begin(); cand_it != candidates.end() && cand_it->isHidden; ) {
+          cand_it = candidates.erase(cand_it);
+        }
+      } else {
+        if (!candidates.empty()) {
+          candidates.pop_front();
+        }
       }
-    } else {
-      if (!candidates.empty()) {
-        candidates.pop_front();
-      }
-    }
 
-    known_it = known.begin();
+      known_it = known.begin();
+      attemptsLeft = 1;
+    } else {
+      markAttempt();
+    }
   }
   return currentCandidate.usable();
 }
 
 const WiFi_AP_Candidate& WiFi_AP_CandidatesList::getCurrent() const {
   return currentCandidate;
+}
+
+void WiFi_AP_CandidatesList::markAttempt() {
+  if (attemptsLeft > 0) attemptsLeft--;
 }
 
 WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestCandidate() const {
@@ -433,8 +445,8 @@ void WiFi_AP_CandidatesList::purge_unusable() {
     }
   }
   if (candidates.size() > 1) {
-  candidates.sort();
-  candidates.unique();
+    candidates.sort();
+    candidates.unique();
   }
 }
 
