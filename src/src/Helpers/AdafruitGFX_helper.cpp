@@ -773,8 +773,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   int     argCount   = 0;
   bool    loop       = true;
 
-  while (loop) {                                                  // Process all provided arguments
-    sParams.push_back(parseStringKeepCase(string, argCount + 3)); // 0-offset + 1st and 2nd argument used by trigger/subcommand
+  while (loop) { // Process all provided arguments
+    // 0-offset + 1st and 2nd argument used by trigger/subcommand, don't trim off spaces
+    sParams.push_back(parseStringKeepCase(string, argCount + 3, ',', false));
     nParams.push_back(0);
     validIntFromString(sParams[argCount], nParams[argCount]);
 
@@ -1746,7 +1747,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -2289,10 +2290,11 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
   switch (colorDepth) {
     case AdaGFXColorDepth::BlackWhiteRed:
     case AdaGFXColorDepth::BlackWhite2Greyscales:
-      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED),     colorDepth);
-      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK),    colorDepth);
-      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT),   colorDepth);
-      // Fall through
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED),   colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK),  colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT), colorDepth);
+
+    // Fall through
     case AdaGFXColorDepth::Monochrome:
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK),   colorDepth);
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE),   colorDepth);
