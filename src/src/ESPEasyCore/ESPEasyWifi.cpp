@@ -517,7 +517,7 @@ bool checkAndResetWiFi() {
       break;
     case STATION_IDLE:
     case STATION_CONNECTING:
-      if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+      if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(DEFAULT_WIFI_CONNECTION_TIMEOUT)) {
         return false;
       }
       break;
@@ -529,7 +529,7 @@ bool checkAndResetWiFi() {
       return false;
     //}
   }
-  if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+  if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(DEFAULT_WIFI_CONNECTION_TIMEOUT)) {
     return false;
   }
   #endif
@@ -1190,22 +1190,22 @@ const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode)
   return F("Unknown");
 }
 
-void setWifiMode(WiFiMode_t wifimode) {
+void setWifiMode(WiFiMode_t new_mode) {
   const WiFiMode_t cur_mode = WiFi.getMode();
-  if (cur_mode == wifimode) {
+  if (cur_mode == new_mode) {
     return;
   }
   static WiFiMode_t processing_wifi_mode = cur_mode;
-  if (processing_wifi_mode == wifimode) {
+  if (processing_wifi_mode == new_mode) {
     // Prevent loops
     return;
   }
-  processing_wifi_mode = wifimode;
+  processing_wifi_mode = new_mode;
 
   if (cur_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();
   }
-  if (wifimode != WIFI_OFF) {
+  if (new_mode != WIFI_OFF) {
     #if defined(ESP32)
     // Needs to be set before calling WiFi.mode() on ESP32
     WiFi.hostname(NetworkCreateRFCCompliantHostname());
@@ -1219,25 +1219,26 @@ void setWifiMode(WiFiMode_t wifimode) {
   } else {
     WifiDisconnect();
     processDisconnect();
+    WiFiEventData.clear_processed_flags();
   }
 
-  addLog(LOG_LEVEL_INFO, concat(F("WIFI : Set WiFi to "), getWifiModeString(wifimode)));
+  addLog(LOG_LEVEL_INFO, concat(F("WIFI : Set WiFi to "), getWifiModeString(new_mode)));
 
   int retry = 2;
-  while (!WiFi.mode(wifimode) && retry > 0) {
+  while (!WiFi.mode(new_mode) && retry > 0) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
     delay(100);
     --retry;
   }
   retry = 2;
-  while (WiFi.getMode() != wifimode && retry > 0) {
+  while (WiFi.getMode() != new_mode && retry > 0) {
     addLog(LOG_LEVEL_INFO, F("WIFI : mode not yet set"));
     delay(100);
     --retry;
   }
 
 
-  if (wifimode == WIFI_OFF) {
+  if (new_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)
@@ -1250,7 +1251,7 @@ void setWifiMode(WiFiMode_t wifimode) {
   } else {
     // Only set power mode when AP is not enabled
     // When AP is enabled, the sleep mode is already set to WIFI_NONE_SLEEP
-    if (!WifiIsAP(wifimode)) {
+    if (!WifiIsAP(new_mode)) {
       if (Settings.WifiNoneSleep()) {
         #ifdef ESP8266
         WiFi.setSleepMode(WIFI_NONE_SLEEP);
@@ -1296,7 +1297,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 */
     delay(100); // Must allow for some time to init.
   }
-  const bool new_mode_AP_enabled = WifiIsAP(wifimode);
+  const bool new_mode_AP_enabled = WifiIsAP(new_mode);
 
   if (WifiIsAP(cur_mode) && !new_mode_AP_enabled) {
     eventQueue.add(F("WiFi#APmodeDisabled"));
@@ -1367,7 +1368,7 @@ bool wifiConnectTimeoutReached() {
   if (WifiIsAP(WiFi.getMode())) {
     // FIXME TD-er: What to do here when using ESPEasy-NOW mode?
     // Initial setup of WiFi, may take much longer since accesspoint is still active.
-    return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(20000);
+    return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(2 * DEFAULT_WIFI_CONNECTION_TIMEOUT);
   }
 
   // wait until it connects + add some device specific random offset to prevent

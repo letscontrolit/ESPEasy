@@ -45,7 +45,6 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   known.clear();
   candidates.clear();
   _addedKnownCandidate = false;
-//  addFromRTC();
 
   {
     // Add the known SSIDs

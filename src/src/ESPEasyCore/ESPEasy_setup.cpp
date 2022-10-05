@@ -135,6 +135,7 @@ void ESPEasy_setup()
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
   initWiFi();
+  WiFiEventData.clearAll();
 
 #ifndef BUILD_MINIMAL_OTA
   run_compiletime_checks();
@@ -318,6 +319,7 @@ void ESPEasy_setup()
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
     WiFi_AP_Candidates.load_knownCredentials();
+    setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
       WiFiEventData.wifiSetup = true;
       RTC.clearLastWiFi(); // Must scan all channels
