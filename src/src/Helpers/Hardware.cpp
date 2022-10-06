@@ -497,7 +497,11 @@ int lastADCvalue = 0;
 
 int espeasy_analogRead(int pin) {
   if (!WiFiEventData.wifiConnectInProgress) {
-    lastADCvalue = analogRead(A0);
+    #if FEATURE_ADC_VCC
+      lastADCvalue = ESP.getVcc();
+    #else
+      lastADCvalue = analogRead(A0);
+    #endif // if FEATURE_ADC_VCC
   }
   return lastADCvalue;
 }

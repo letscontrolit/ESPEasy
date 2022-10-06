@@ -607,6 +607,29 @@ To create/register a plugin, you have to :
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	  // CSE7766   in POW R2
     #define USES_P081   // Cron
+    #ifdef ESP8266_4M
+      #define FEATURE_ADC_VCC 1
+      #define USES_P002   // ADC with FEATURE_ADC_VCC=1 to measure ESP3v3
+      #define CONTROLLER_SET_ALL
+      #ifndef FEATURE_PLUGIN_STATS
+          #define FEATURE_PLUGIN_STATS  1
+      #endif
+      #ifndef FEATURE_CHART_JS
+          #define FEATURE_CHART_JS  1
+      #endif
+      #ifndef FEATURE_RULES_EASY_COLOR_CODE
+          #define FEATURE_RULES_EASY_COLOR_CODE 1
+      #endif
+      #ifndef FEATURE_SETTINGS_ARCHIVE
+        #define FEATURE_SETTINGS_ARCHIVE  1
+      #endif
+      #ifndef SHOW_SYSINFO_JSON
+        #define SHOW_SYSINFO_JSON 1
+      #endif
+      #define FEATURE_MDNS  1
+      #define FEATURE_CUSTOM_PROVISIONING 1
+      #define FEATURE_DOWNLOAD 1
+    #endif
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_S2x

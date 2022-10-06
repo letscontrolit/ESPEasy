@@ -34,7 +34,7 @@ LED strips (sometimes called stripes) using the WS281x type (and clones) of mult
 |P128_usedby|
 
 Power consumption
-~~~~~~~~~~~~~~~~~
+-----------------
 
 .. include:: NeoPixel_Power.rst
 

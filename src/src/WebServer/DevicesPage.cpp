@@ -627,7 +627,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             {
               # ifdef ESP8266
               #  if FEATURE_ADC_VCC
-              addHtml(F("ADC (VDD)"));
+              addHtml(F("ADC (VCC)"));
               #  else // if FEATURE_ADC_VCC
               addHtml(F("ADC (TOUT)"));
               #  endif // if FEATURE_ADC_VCC
