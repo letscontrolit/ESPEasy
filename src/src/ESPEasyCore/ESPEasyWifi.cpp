@@ -495,7 +495,15 @@ bool prepareWiFi() {
     return false;
   }
   WiFiEventData.warnedNoValidWiFiSettings = false;
+  #ifdef USES_ESPEASY_NOW
+  if (Settings.UseESPEasyNow()) {
+    setWifiMode(WIFI_AP_STA);
+  } else {
+    setSTA(true);
+  }
+  #else
   setSTA(true);
+  #endif
 
   #if defined(ESP8266)
   wifi_station_set_hostname(NetworkCreateRFCCompliantHostname().c_str());
