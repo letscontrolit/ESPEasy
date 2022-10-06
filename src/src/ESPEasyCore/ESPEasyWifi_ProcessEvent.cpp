@@ -97,12 +97,16 @@ void handle_unprocessedNetworkEvents()
         WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
         if (WiFiConnected()) {
           if (!WiFiEventData.WiFiGotIP()) {
-            addLog(LOG_LEVEL_INFO, F("WiFi : Missed gotIP event"));
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("WiFi : Missed gotIP event"));
+            #endif
             WiFiEventData.processedGotIP = false;
             processGotIP();
           }
           if (!WiFiEventData.WiFiConnected()) {
-            addLog(LOG_LEVEL_INFO, F("WiFi : Missed connected event"));
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("WiFi : Missed connected event"));
+            #endif
             WiFiEventData.processedConnect = false;
             processConnect();
           }
@@ -627,7 +631,9 @@ void processScanDone() {
     case -1: // WIFI_SCAN_RUNNING
       // FIXME TD-er: Set timeout...
       if (WiFiEventData.lastGetScanMoment.timeoutReached(5000)) {
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_ERROR, F("WiFi : Scan Running Timeout"));
+        #endif
         WiFiEventData.processedScanDone = true;
       }
       return;
@@ -639,12 +645,13 @@ void processScanDone() {
 
   WiFiEventData.lastGetScanMoment.setNow();
   WiFiEventData.processedScanDone = true;
-
+# ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WiFi : Scan finished, found: ");
     log += scanCompleteStatus;
     addLogMove(LOG_LEVEL_INFO, log);
   }
+#endif
 
 #if !FEATURE_ESP8266_DIRECT_WIFI_SCAN
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
@@ -654,8 +661,11 @@ void processScanDone() {
   if (WiFi_AP_Candidates.addedKnownCandidate() && !NetworkConnected()) {
     if (!WiFiEventData.wifiConnectInProgress) {
       WiFiEventData.wifiConnectAttemptNeeded = true;
-      if (WiFi_AP_Candidates.addedKnownCandidate())
+      # ifndef BUILD_NO_DEBUG
+      if (WiFi_AP_Candidates.addedKnownCandidate()) {
         addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
+      }
+      #endif
 
       setSTA(false);
       NetworkConnectRelaxed();
