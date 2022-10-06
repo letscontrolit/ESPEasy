@@ -318,13 +318,17 @@ bool WiFiConnected() {
     }
   }
 
-  if (wifiConnectTimeoutReached() && !WiFiEventData.wifiSetup) {
+  const bool timeoutReached = WiFiEventData.last_wifi_connect_attempt_moment.isSet() && 
+                              WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(2 * DEFAULT_WIFI_CONNECTION_TIMEOUT);
+
+  if (timeoutReached && !WiFiEventData.wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
     //if (!wifiAPmodeActivelyUsed()) {
       WiFiEventData.wifiConnectAttemptNeeded = true;
     //}
     WiFiEventData.wifiConnectInProgress = false;
     if (!WiFiEventData.WiFiDisconnected()) {
+      addLog(LOG_LEVEL_INFO, F("WiFi : wifiConnectTimeoutReached"));
       WifiDisconnect();
     }
   }
@@ -797,6 +801,15 @@ WiFiConnectionProtocol getConnectionProtocol() {
 // ********************************************************************************
 void WifiDisconnect()
 {
+  if (!WiFiEventData.processedDisconnect || 
+       WiFiEventData.processingDisconnect.isSet()) {
+    return;
+  }
+  // Prevent recursion
+  static bool processingDisconnect = false;
+  if (processingDisconnect) return;
+  processingDisconnect = true;
+  addLog(LOG_LEVEL_INFO, F("WiFi : WifiDisconnect()"));
   #ifdef ESP32
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
@@ -824,8 +837,11 @@ void WifiDisconnect()
   if (!Settings.UseLastWiFiFromRTC()) {
     RTC.clearLastWiFi();
   }
-  delay(1);
+  delay(100);
+  WiFiEventData.processingDisconnect.clear();
+  WiFiEventData.processedDisconnect = false;
   processDisconnect();
+  processingDisconnect = false;
 }
 
 // ********************************************************************************
@@ -982,7 +998,13 @@ void WifiScan(bool async, uint8_t channel) {
 
 #ifdef ESP32
   RTC.clearLastWiFi();
-  WifiDisconnect();
+  if (WiFiConnected()) {
+    addLog(LOG_LEVEL_INFO, F("WiFi : Disconnect after scan"));
+
+    const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
+    WifiDisconnect();
+    WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
+  }
 #endif
 
 }
@@ -1294,37 +1316,6 @@ bool WifiIsSTA(WiFiMode_t wifimode)
 
 bool useStaticIP() {
   return Settings.IP[0] != 0 && Settings.IP[0] != 255;
-}
-
-bool wifiConnectTimeoutReached() {
-  // For the first attempt, do not wait to start connecting.
-  if (WiFiEventData.wifi_connect_attempt == 0) { return true; }
-  if (!WiFiEventData.wifiConnectInProgress) { return true; }
-
-  if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
-    // No attempt made
-    return true;
-  }
-
-  if (WiFiEventData.lastDisconnectMoment.isSet()) {
-    // Connection attempt was already ended.
-    return true;
-  }
-
-  if (WifiIsAP(WiFi.getMode())) {
-    // Initial setup of WiFi, may take much longer since accesspoint is still active.
-    return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(2 * DEFAULT_WIFI_CONNECTION_TIMEOUT);
-  }
-
-  // wait until it connects + add some device specific random offset to prevent
-  // all nodes overloading the access point when turning on at the same time.
-  #if defined(ESP8266)
-  const unsigned int randomOffset_in_msec = (WiFiEventData.wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getChipId() & 0xF));
-  #endif // if defined(ESP8266)
-  #if defined(ESP32)
-  const unsigned int randomOffset_in_msec = (WiFiEventData.wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
-  #endif // if defined(ESP32)
-  return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_msec);
 }
 
 bool wifiAPmodeActivelyUsed()

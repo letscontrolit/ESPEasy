@@ -60,16 +60,16 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       // ESP32 WiFi ready
       break;
     case ARDUINO_EVENT_WIFI_STA_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi : STA Started"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Started"));
       break;
     case ARDUINO_EVENT_WIFI_STA_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi : STA Stopped"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Stopped"));
       break;
     case ARDUINO_EVENT_WIFI_AP_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP Started"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Started"));
       break;
     case ARDUINO_EVENT_WIFI_AP_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP Stopped"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Stopped"));
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
       // ESP32 station lost IP and the IP is reset to 0
@@ -82,13 +82,13 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       WiFiEventData.markLostIP();
       addLog(LOG_LEVEL_INFO, 
         active_network_medium == NetworkMedium_t::Ethernet ?
-        F("ETH : Lost IP") : F("WiFi : Lost IP"));
+        F("ETH : Event Lost IP") : F("WiFi : Event Lost IP"));
       break;
 
     case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
       // Receive probe request packet in soft-AP interface
       // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP got probed"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
       break;
 
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE:
@@ -193,16 +193,16 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       // ESP32 WiFi ready
       break;
     case SYSTEM_EVENT_STA_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi : STA Started"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Started"));
       break;
     case SYSTEM_EVENT_STA_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi : STA Stopped"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Stopped"));
       break;
     case SYSTEM_EVENT_AP_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP Started"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Started"));
       break;
     case SYSTEM_EVENT_AP_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP Stopped"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Stopped"));
       break;
     case SYSTEM_EVENT_STA_LOST_IP:
       // ESP32 station lost IP and the IP is reset to 0
@@ -215,13 +215,13 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       WiFiEventData.markLostIP();
       addLog(LOG_LEVEL_INFO, 
         active_network_medium == NetworkMedium_t::Ethernet ?
-        F("ETH : Lost IP") : F("WiFi : Lost IP"));
+        F("ETH : Event Lost IP") : F("WiFi : Event Lost IP"));
       break;
 
     case SYSTEM_EVENT_AP_PROBEREQRECVED:
       // Receive probe request packet in soft-AP interface
       // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP got probed"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
       break;
 
     case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
