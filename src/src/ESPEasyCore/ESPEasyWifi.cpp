@@ -322,13 +322,17 @@ bool WiFiConnected() {
     }
   }
 
-  if (wifiConnectTimeoutReached() && !WiFiEventData.wifiSetup) {
+  const bool timeoutReached = WiFiEventData.last_wifi_connect_attempt_moment.isSet() && 
+                              WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(2 * DEFAULT_WIFI_CONNECTION_TIMEOUT);
+
+  if (timeoutReached && !WiFiEventData.wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
     //if (!wifiAPmodeActivelyUsed()) {
       WiFiEventData.wifiConnectAttemptNeeded = true;
     //}
     WiFiEventData.wifiConnectInProgress = false;
     if (!WiFiEventData.WiFiDisconnected()) {
+      addLog(LOG_LEVEL_INFO, F("WiFi : wifiConnectTimeoutReached"));
       WifiDisconnect();
     }
   }
@@ -838,6 +842,10 @@ WiFiConnectionProtocol getConnectionProtocol() {
 // ********************************************************************************
 void WifiDisconnect()
 {
+  if (!WiFiEventData.processedDisconnect || 
+       WiFiEventData.processingDisconnect.isSet()) {
+    return;
+  }
   // Prevent recursion
   static bool processingDisconnect = false;
   if (processingDisconnect) return;
@@ -855,8 +863,6 @@ void WifiDisconnect()
   }
   #endif
   #ifdef ESP8266
-  WiFi.disconnect();
-  /*
   // Only call disconnect when STA is active
   if (WifiIsSTA(WiFi.getMode())) {
     wifi_station_disconnect();
@@ -866,15 +872,17 @@ void WifiDisconnect()
   ETS_UART_INTR_DISABLE();
   wifi_station_set_config_current(&conf);
   ETS_UART_INTR_ENABLE();
-  */
   #endif // if defined(ESP32)
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
   if (!Settings.UseLastWiFiFromRTC()) {
     RTC.clearLastWiFi();
   }
-  delay(1);
+  delay(100);
+  WiFiEventData.processingDisconnect.clear();
+  WiFiEventData.processedDisconnect = false;
   processDisconnect();
+  processingDisconnect = false;
 }
 
 // ********************************************************************************
@@ -1032,6 +1040,8 @@ void WifiScan(bool async, uint8_t channel) {
 #ifdef ESP32
   RTC.clearLastWiFi();
   if (WiFiConnected()) {
+    addLog(LOG_LEVEL_INFO, F("WiFi : Disconnect after scan"));
+
     const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
     WifiDisconnect();
     WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
@@ -1312,8 +1322,7 @@ void setWifiMode(WiFiMode_t new_mode) {
 #ifdef ESP8266
     SetWiFiTXpower();
 #endif
-/*
-    if (WifiIsSTA(wifimode)) {
+    if (WifiIsSTA(new_mode)) {
       if (WiFi.getAutoConnect()) {
         WiFi.setAutoConnect(false); 
       }
@@ -1321,7 +1330,6 @@ void setWifiMode(WiFiMode_t new_mode) {
         WiFi.setAutoReconnect(false);
       }
     }
-*/
     delay(100); // Must allow for some time to init.
   }
   const bool new_mode_AP_enabled = WifiIsAP(new_mode);
@@ -1375,38 +1383,6 @@ bool WifiIsSTA(WiFiMode_t wifimode)
 
 bool useStaticIP() {
   return Settings.IP[0] != 0 && Settings.IP[0] != 255;
-}
-
-bool wifiConnectTimeoutReached() {
-  // For the first attempt, do not wait to start connecting.
-  if (WiFiEventData.wifi_connect_attempt == 0) { return true; }
-  if (!WiFiEventData.wifiConnectInProgress) { return true; }
-
-  if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
-    // No attempt made
-    return true;
-  }
-
-  if (WiFiEventData.lastDisconnectMoment.isSet()) {
-    // Connection attempt was already ended.
-    return true;
-  }
-
-  if (WifiIsAP(WiFi.getMode())) {
-    // FIXME TD-er: What to do here when using ESPEasy-NOW mode?
-    // Initial setup of WiFi, may take much longer since accesspoint is still active.
-    return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(2 * DEFAULT_WIFI_CONNECTION_TIMEOUT);
-  }
-
-  // wait until it connects + add some device specific random offset to prevent
-  // all nodes overloading the access point when turning on at the same time.
-  #if defined(ESP8266)
-  const unsigned int randomOffset_in_msec = (WiFiEventData.wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getChipId() & 0xF));
-  #endif // if defined(ESP8266)
-  #if defined(ESP32)
-  const unsigned int randomOffset_in_msec = (WiFiEventData.wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
-  #endif // if defined(ESP32)
-  return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_msec);
 }
 
 bool wifiAPmodeActivelyUsed()

@@ -20,6 +20,9 @@
 #define CONNECT_TIMEOUT_MAX                  4000   // in milliSeconds
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
+  if (WiFi.status() == WL_IDLE_STATUS) {
+    return false;
+  }
   if (!wifiConnectAttemptNeeded) return false;
   if (wifiSetupConnect) return true;
   if (wifiConnectInProgress) {

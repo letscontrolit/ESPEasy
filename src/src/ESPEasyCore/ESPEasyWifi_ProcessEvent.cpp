@@ -166,6 +166,7 @@ void handle_unprocessedNetworkEvents()
       }
 
       if (!WiFiEventData.wifiConnectInProgress) {
+        WiFiEventData.wifiConnectAttemptNeeded = true;
         NetworkConnectRelaxed();
       }
     }
@@ -309,6 +310,11 @@ void processDisconnect() {
       mustRestartWiFi = true;
   }
   
+  if (WiFi.status() == WL_IDLE_STATUS) {
+    mustRestartWiFi = true;
+  }
+
+
   #ifdef USES_ESPEASY_NOW
   if (use_EspEasy_now) {
 //    mustRestartWiFi = true;
@@ -653,6 +659,9 @@ void processScanDone() {
 
       setSTA(false);
       NetworkConnectRelaxed();
+#ifdef USES_ESPEASY_NOW
+      temp_disable_EspEasy_now_timer = millis() + 20000;
+#endif
     }
   }
   
