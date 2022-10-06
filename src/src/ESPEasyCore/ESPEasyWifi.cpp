@@ -328,7 +328,9 @@ bool WiFiConnected() {
     //}
     WiFiEventData.wifiConnectInProgress = false;
     if (!WiFiEventData.WiFiDisconnected()) {
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("WiFi : wifiConnectTimeoutReached"));
+      #endif
       WifiDisconnect();
     }
   }
@@ -348,6 +350,7 @@ void WiFiConnectRelaxed() {
   }
 
   if (WiFiEventData.unprocessedWifiEvents()) {
+    # ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("WiFi : Connecting not possible, unprocessed WiFi events: ");
       if (!WiFiEventData.processedConnect) {
@@ -366,6 +369,7 @@ void WiFiConnectRelaxed() {
       addLogMove(LOG_LEVEL_ERROR, log);
       logConnectionStatus();
     }
+    #endif
     return;
   }
 
@@ -535,6 +539,7 @@ bool checkAndResetWiFi() {
     return false;
   }
   #endif
+  # ifndef BUILD_NO_DEBUG
   String log = F("WiFi : WiFiConnected() out of sync: ");
   log += WiFiEventData.ESPeasyWifiStatusToString();
   log += F(" RSSI: ");
@@ -543,10 +548,13 @@ bool checkAndResetWiFi() {
   log += F(" status: ");
   log += SDKwifiStatusToString(status);
   #endif
+  #endif
 
   // Call for reset first, to make sure a syslog call will not try to send.
   resetWiFi();
+  # ifndef BUILD_NO_DEBUG
   addLogMove(LOG_LEVEL_INFO, log);
+  #endif
   return true;
 }
 
@@ -809,7 +817,9 @@ void WifiDisconnect()
   static bool processingDisconnect = false;
   if (processingDisconnect) return;
   processingDisconnect = true;
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("WiFi : WifiDisconnect()"));
+  #endif
   #ifdef ESP32
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
@@ -863,6 +873,7 @@ bool WiFiScanAllowed() {
   }
 
   if (WiFiEventData.unprocessedWifiEvents()) {
+    # ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("WiFi : Scan not allowed, unprocessed WiFi events: ");
       if (!WiFiEventData.processedConnect) {
@@ -881,6 +892,7 @@ bool WiFiScanAllowed() {
       addLogMove(LOG_LEVEL_ERROR, log);
       logConnectionStatus();
     }
+    #endif
     return false;
   }
   /*
@@ -894,7 +906,9 @@ bool WiFiScanAllowed() {
   }
   if (WiFiEventData.lastScanMoment.isSet()) {
     if (NetworkConnected() && WiFi_AP_Candidates.getBestCandidate().usable()) {
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not needed, good candidate present"));
+      #endif
       return false;
     }
   }
@@ -929,6 +943,7 @@ void WifiScan(bool async, uint8_t channel) {
 
   START_TIMER;
   WiFiEventData.lastScanMoment.setNow();
+  # ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     if (channel == 0) {
       addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan all channels"));
@@ -939,6 +954,7 @@ void WifiScan(bool async, uint8_t channel) {
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }
+  #endif
   bool show_hidden         = true;
   WiFiEventData.processedScanDone = false;
   WiFiEventData.lastGetScanMoment.setNow();
@@ -999,7 +1015,9 @@ void WifiScan(bool async, uint8_t channel) {
 #ifdef ESP32
   RTC.clearLastWiFi();
   if (WiFiConnected()) {
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("WiFi : Disconnect after scan"));
+    #endif
 
     const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
     WifiDisconnect();

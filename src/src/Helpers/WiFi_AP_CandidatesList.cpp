@@ -345,6 +345,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       ++scan;
     }
   }
+  # ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const WiFi_AP_Candidate bestCandidate = getBestCandidate();
     if (bestCandidate.usable()) {
@@ -353,6 +354,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }
+  #endif
   candidates.sort();
   candidates.unique();
   addFromRTC();
