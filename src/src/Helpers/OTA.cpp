@@ -84,7 +84,7 @@ void ArduinoOTAInit()
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     if (Settings.UseSerial) {
-      Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
+      ESPEASY_SERIAL_CONSOLE_PORT.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
     }
   });
 

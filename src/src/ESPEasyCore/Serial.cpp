@@ -25,15 +25,15 @@ void initSerial()
   }
 
   // make sure previous serial buffers are flushed before resetting baudrate
-  Serial.flush();
-  Serial.begin(Settings.BaudRate);
+  ESPEASY_SERIAL_CONSOLE_PORT.flush();
+  ESPEASY_SERIAL_CONSOLE_PORT.begin(Settings.BaudRate);
 
-  // Serial.setDebugOutput(true);
+  // ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(true);
 }
 
 void serial()
 {
-  if (Serial.available())
+  if (ESPEASY_SERIAL_CONSOLE_PORT.available())
   {
     String dummy;
 
@@ -44,14 +44,14 @@ void serial()
 
   if (!Settings.UseSerial || activeTaskUseSerial0()) { return; }
 
-  while (Serial.available())
+  while (ESPEASY_SERIAL_CONSOLE_PORT.available())
   {
     delay(0);
-    SerialInByte = Serial.read();
+    SerialInByte = ESPEASY_SERIAL_CONSOLE_PORT.read();
 
     if (SerialInByte == 255) // binary data...
     {
-      Serial.flush();
+      ESPEASY_SERIAL_CONSOLE_PORT.flush();
       return;
     }
 
@@ -68,7 +68,7 @@ void serial()
         break;
       }
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
-      Serial.write('>');
+      ESPEASY_SERIAL_CONSOLE_PORT.write('>');
       serialPrintln(InputBuffer_Serial);
       ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
       SerialInByteCounter   = 0;
@@ -134,7 +134,7 @@ void addNewlineToSerialBuffer() {
 
 void process_serialWriteBuffer() {
   if (serialWriteBuffer.size() == 0) { return; }
-  size_t snip = Serial.availableForWrite();
+  size_t snip = ESPEASY_SERIAL_CONSOLE_PORT.availableForWrite();
 
   if (snip > 0) {
     size_t bytes_to_write = serialWriteBuffer.size();
@@ -144,7 +144,7 @@ void process_serialWriteBuffer() {
     while (bytes_to_write > 0 && !serialWriteBuffer.empty()) {
       const char c = serialWriteBuffer.front();
       if (Settings.UseSerial) {
-        Serial.write(c);
+        ESPEASY_SERIAL_CONSOLE_PORT.write(c);
       }
       serialWriteBuffer.pop_front();
       --bytes_to_write;

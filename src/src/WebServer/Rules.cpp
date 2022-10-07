@@ -13,6 +13,7 @@
 #include "../WebServer/Markup_Forms.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
+#include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -175,8 +176,8 @@ void handle_rules_new() {
     [/*&buffer,*/ &count, endIdx](fileInfo fi)
     {
 #  ifdef WEBSERVER_RULES_DEBUG
-      Serial.print(F("Start generation of: "));
-      Serial.println(fi.Name);
+      ESPEASY_SERIAL_CONSOLE_PORT.print(F("Start generation of: "));
+      ESPEASY_SERIAL_CONSOLE_PORT.println(fi.Name);
 #  endif // ifdef WEBSERVER_RULES_DEBUG
 
       if (fi.isDirectory)
@@ -227,8 +228,8 @@ void handle_rules_new() {
       }
       addHtml(F("</TD></TR>"));
 #  ifdef WEBSERVER_RULES_DEBUG
-      Serial.print(F("End generation of: "));
-      Serial.println(fi.Name);
+      ESPEASY_SERIAL_CONSOLE_PORT.print(F("End generation of: "));
+      ESPEASY_SERIAL_CONSOLE_PORT.println(fi.Name);
 #  endif // ifdef WEBSERVER_RULES_DEBUG
 
       return count < endIdx;
@@ -275,7 +276,7 @@ void handle_rules_backup() {
   }
   # ifdef WEBSERVER_NEW_RULES
   #  ifdef WEBSERVER_RULES_DEBUG
-  Serial.println(F("handle rules backup"));
+  ESPEASY_SERIAL_CONSOLE_PORT.println(F("handle rules backup"));
   #  endif // ifdef WEBSERVER_RULES_DEBUG
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
@@ -347,9 +348,9 @@ void handle_rules_delete() {
   fileName = fileName.substring(0, fileName.length() - 4);
   bool removed = false;
   #  ifdef WEBSERVER_RULES_DEBUG
-  Serial.println(F("handle_rules_delete"));
-  Serial.print(F("File name: "));
-  Serial.println(fileName);
+  ESPEASY_SERIAL_CONSOLE_PORT.println(F("handle_rules_delete"));
+  ESPEASY_SERIAL_CONSOLE_PORT.print(F("File name: "));
+  ESPEASY_SERIAL_CONSOLE_PORT.println(fileName);
   #  endif // ifdef WEBSERVER_RULES_DEBUG
 
   if (fileName.length() > 0)
@@ -392,8 +393,8 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
   bool handle = false;
 
   # ifdef WEBSERVER_RULES_DEBUG
-  Serial.println(originalUri);
-  Serial.println(F("handle_rules_edit"));
+  ESPEASY_SERIAL_CONSOLE_PORT.println(originalUri);
+  ESPEASY_SERIAL_CONSOLE_PORT.println(F("handle_rules_edit"));
   # endif // ifdef WEBSERVER_RULES_DEBUG
 
   if (isAddNew || (originalUri.startsWith(F("/rules/"))
@@ -431,8 +432,8 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       eventName = FileNameToEvent(fileName);
     }
       #  ifdef WEBSERVER_RULES_DEBUG
-    Serial.print(F("File name: "));
-    Serial.println(fileName);
+    ESPEASY_SERIAL_CONSOLE_PORT.print(F("File name: "));
+    ESPEASY_SERIAL_CONSOLE_PORT.println(fileName);
       #  endif // ifdef WEBSERVER_RULES_DEBUG
     bool isEdit = fileExists(fileName);
 
@@ -501,16 +502,16 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     bool isReadOnly = !isOverwrite && ((isEdit && !isAddNew && !isNew) || (isAddNew && isNew));
       #  ifdef WEBSERVER_RULES_DEBUG
-    Serial.print(F("Is Overwrite: "));
-    Serial.println(isOverwrite);
-    Serial.print(F("Is edit: "));
-    Serial.println(isEdit);
-    Serial.print(F("Is addnew: "));
-    Serial.println(isAddNew);
-    Serial.print(F("Is New: "));
-    Serial.println(isNew);
-    Serial.print(F("Is Read Only: "));
-    Serial.println(isReadOnly);
+    ESPEASY_SERIAL_CONSOLE_PORT.print(F("Is Overwrite: "));
+    ESPEASY_SERIAL_CONSOLE_PORT.println(isOverwrite);
+    ESPEASY_SERIAL_CONSOLE_PORT.print(F("Is edit: "));
+    ESPEASY_SERIAL_CONSOLE_PORT.println(isEdit);
+    ESPEASY_SERIAL_CONSOLE_PORT.print(F("Is addnew: "));
+    ESPEASY_SERIAL_CONSOLE_PORT.println(isAddNew);
+    ESPEASY_SERIAL_CONSOLE_PORT.print(F("Is New: "));
+    ESPEASY_SERIAL_CONSOLE_PORT.println(isNew);
+    ESPEASY_SERIAL_CONSOLE_PORT.print(F("Is Read Only: "));
+    ESPEASY_SERIAL_CONSOLE_PORT.println(isReadOnly);
       #  endif // ifdef WEBSERVER_RULES_DEBUG
 
     addFormTextBox(F("Event name")            // Label
@@ -571,8 +572,8 @@ void Rule_showRuleTextArea(const String& fileName) {
 bool Rule_Download(const String& path)
 {
   # ifdef WEBSERVER_RULES_DEBUG
-  Serial.print(F("Rule_Download path: "));
-  Serial.println(path);
+  ESPEASY_SERIAL_CONSOLE_PORT.print(F("Rule_Download path: "));
+  ESPEASY_SERIAL_CONSOLE_PORT.println(path);
   # endif // ifdef WEBSERVER_RULES_DEBUG
   fs::File dataFile = tryOpenFile(path, "r");
 
@@ -609,8 +610,8 @@ bool EnumerateFileAndDirectory(String          & rootPath
 
   # ifdef ESP8266
   fs::Dir dir = ESPEASY_FS.openDir(rootPath);
-  Serial.print(F("Enumerate files of "));
-  Serial.println(rootPath);
+  ESPEASY_SERIAL_CONSOLE_PORT.print(F("Enumerate files of "));
+  ESPEASY_SERIAL_CONSOLE_PORT.println(rootPath);
 
   while (next && dir.next()) {
     // Skip files

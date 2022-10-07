@@ -90,13 +90,13 @@ void updateLogLevelCache() {
   const bool useSerial = Settings.UseSerial && !activeTaskUseSerial0();
   if (log_to_serial_disabled) {
     if (useSerial) {
-      Serial.setDebugOutput(false);
+      ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(false);
     }
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
 #ifndef BUILD_NO_DEBUG
     if (useSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
-      Serial.setDebugOutput(true);
+      ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(true);
     }
 #endif
   }
