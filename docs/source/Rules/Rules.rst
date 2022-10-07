@@ -11,6 +11,7 @@ Rules can be used to create very simple flows to control devices on your ESP.
 .. note::
    To assist writing rules, one may prefer to use an editor like Notepad++ which supports user defined languages to colorize the text.
    See the ``Misc/Notepad++`` folder for a Notepad++ language definition which can be used to colorize rules.
+   Another option is the `ESPeasy Code Editor <https://raw.githack.com/chromoxdor/EasyColorCode/main/colorcode.html>`_ , an online editor with rules highlighting and hinting.
 
 Enable Rules
 ------------
