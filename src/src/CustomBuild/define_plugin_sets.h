@@ -1892,7 +1892,7 @@ To create/register a plugin, you have to :
 
 // VCC builds need a bit more, disable timing stats to make it fit.
 #ifndef PLUGIN_BUILD_CUSTOM
-  #if FEATURE_ADC_VCC && !(defined(PLUGIN_SET_MAX) || (defined(LIMIT_BUILD_SIZE) && (LIMIT_BUILD_SIZE == 0)))
+  #if FEATURE_ADC_VCC && !(defined(PLUGIN_SET_MAX) || defined(NO_LIMIT_BUILD_SIZE))
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
     #endif
@@ -1926,14 +1926,10 @@ To create/register a plugin, you have to :
   #define FEATURE_EXT_RTC 0
 #endif
 
-#ifdef PLUGIN_BUILD_MAX_ESP32
+#if defined(PLUGIN_BUILD_MAX_ESP32) || defined(NO_LIMIT_BUILD_SIZE)
   #ifdef LIMIT_BUILD_SIZE
     #undef LIMIT_BUILD_SIZE
   #endif
-#endif
-
-#if defined(LIMIT_BUILD_SIZE) && (LIMIT_BUILD_SIZE == 0) // Set to 0 with the intent to undef
-  #undef LIMIT_BUILD_SIZE
 #endif
 
 // Disable some diagnostic parts to make builds fit.
