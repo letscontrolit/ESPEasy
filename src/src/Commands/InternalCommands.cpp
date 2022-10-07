@@ -643,6 +643,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     }
 
     if (handled) {
+//      addLog(LOG_LEVEL_INFO, F("executeInternalCommand accepted"));
       return true;
     }
   }
@@ -657,6 +658,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     // alter the string.
     String tmpAction(action);
     bool   handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
+//    if (handled) addLog(LOG_LEVEL_INFO, F("PLUGIN_WRITE accepted"));
     
     #ifndef BUILD_NO_DEBUG
     if (!tmpAction.equals(action)) {
@@ -673,7 +675,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     if (!handled) {
       // Try a controller
       handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
-
+//      if (handled) addLog(LOG_LEVEL_INFO, F("CPLUGIN_WRITE accepted"));
     }
 
     if (handled) {
@@ -685,6 +687,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   if (tryRemoteConfig) {
     if (remoteConfig(&TempEvent, action)) {
       SendStatus(&TempEvent, return_command_success());
+//      addLog(LOG_LEVEL_INFO, F("remoteConfig accepted"));
+
       return true;
     }
   }
