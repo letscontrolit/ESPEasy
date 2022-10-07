@@ -1892,7 +1892,7 @@ To create/register a plugin, you have to :
 
 // VCC builds need a bit more, disable timing stats to make it fit.
 #ifndef PLUGIN_BUILD_CUSTOM
-  #if FEATURE_ADC_VCC && !(defined(PLUGIN_SET_MAX) || (defined(LIMIT_BUILD_SIZE) && LIMIT_BUILD_SIZE == 0))
+  #if FEATURE_ADC_VCC && !(defined(PLUGIN_SET_MAX) || (defined(LIMIT_BUILD_SIZE) && (LIMIT_BUILD_SIZE == 0)))
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
     #endif
@@ -1932,7 +1932,7 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#if defined(LIMIT_BUILD_SIZE) && LIMIT_BUILD_SIZE == 0 // Set to 0 with the intent to undef
+#if defined(LIMIT_BUILD_SIZE) && (LIMIT_BUILD_SIZE == 0) // Set to 0 with the intent to undef
   #undef LIMIT_BUILD_SIZE
 #endif
 
