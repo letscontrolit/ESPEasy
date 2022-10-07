@@ -258,13 +258,31 @@ const __FlashStringHelper * getMiscStatsName_F(int stat) {
 
 String getMiscStatsName(int stat) {
   if (stat >= C001_DELAY_QUEUE && stat <= C025_DELAY_QUEUE) {
-    String result;
-    result.reserve(16);
-    result  = F("Delay queue ");
-    result += get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1));
-    return result;
+    return concat(
+      F("Delay queue "), 
+      get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1)));
   }
   return getMiscStatsName_F(stat);
+}
+
+void stopTimerTask(int T, int F, uint64_t statisticsTimerStart)
+{
+  if (mustLogFunction(F)) pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
+}
+
+void stopTimerController(int T, CPlugin::Function F, uint64_t statisticsTimerStart)
+{
+  if (mustLogCFunction(F)) controllerStats[(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart));
+}
+
+void stopTimer(int L, uint64_t statisticsTimerStart)
+{
+  if (Settings.EnableTimingStats()) { miscStats[L].add(usecPassedSince(statisticsTimerStart)); }
+}
+
+void addMiscTimerStat(int L, int64_t T)
+{
+  if (Settings.EnableTimingStats()) { miscStats[L].add(T); }
 }
 
 #endif // if FEATURE_TIMING_STATS
