@@ -491,8 +491,8 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   deepSleep_wakeTime               = 0;
   CustomCSS                        = false;
   WDI2CAddress                     = 0;
-  UseRules                         = DEFAULT_USE_RULES;
-  UseSerial                        = DEFAULT_USE_SERIAL;
+  UseRules                         = false;
+  UseSerial                        = true;
   UseSSDP                          = false;
   WireClockStretchLimit            = 0;
   I2C_clockSpeed                   = 400000;

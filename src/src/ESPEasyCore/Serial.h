@@ -43,11 +43,5 @@ void serialPrintln();
    void serialPrintln(unsigned long value);
  */
 
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  #define ESPEASY_SERIAL_CONSOLE_PORT
-#else
-  // Using the standard Serial0 HW serial port.
-  #define ESPEASY_SERIAL_CONSOLE_PORT Serial
-#endif
 
 #endif // ifndef ESPEASYCORE_SERIAL_H
