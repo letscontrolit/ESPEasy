@@ -50,7 +50,7 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_040_init = true;
-        ESPEASY_SERIAL_CONSOLE_PORT.begin(9600);
+        Serial.begin(9600);
         success = true;
         break;
       }
@@ -77,12 +77,12 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
           uint8_t bytesread = 0;
           uint8_t tempbyte = 0;
 
-          if ((val = ESPEASY_SERIAL_CONSOLE_PORT.read()) == 2)
+          if ((val = Serial.read()) == 2)
           { // check for header
             bytesread = 0;
             while (bytesread < 12) {                        // read 10 digit code + 2 digit checksum
-              if ( ESPEASY_SERIAL_CONSOLE_PORT.available() > 0) {
-                val = ESPEASY_SERIAL_CONSOLE_PORT.read();
+              if ( Serial.available() > 0) {
+                val = Serial.read();
                 if ((val == 0x0D) || (val == 0x0A) || (val == 0x03) || (val == 0x02)) {
                   // if header or stop bytes before the 10 digit reading
                   break;

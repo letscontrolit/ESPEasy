@@ -96,8 +96,8 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       disableSerialLog();        // disable logging on serial port (used for CSE7766
                                  // communication)
       Settings.BaudRate = 4800;  // set BaudRate for CSE7766
-      ESPEASY_SERIAL_CONSOLE_PORT.flush();
-      ESPEASY_SERIAL_CONSOLE_PORT.begin(Settings.BaudRate, SERIAL_8E1);
+      Serial.flush();
+      Serial.begin(Settings.BaudRate, SERIAL_8E1);
       success = true;
       break;
     }
@@ -214,7 +214,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
             log += '/';
             log += P077_data->count_max;
             log += '/';
-            log += ESPEASY_SERIAL_CONSOLE_PORT.available();
+            log += Serial.available();
             addLogMove(LOG_LEVEL_DEBUG, log);
             log  = F("CSE: nr ");
             log += P077_data->count_pkt;

@@ -127,7 +127,7 @@ void preinit();
 void preinit() {
   system_phy_set_powerup_option(3);
   // Global WiFi constructors are not called yet
-  // (global class instances like WiFi, Serial.... are not yet initialized)..
+  // (global class instances like WiFi, Serial... are not yet initialized)..
   // No global object methods or C++ exceptions can be called in here!
   // The below is a static class method, which is similar to a function, so it's ok.
   #ifndef CORE_POST_3_0_0

@@ -16,7 +16,6 @@
 
 #include "src/ESPEasyCore/Controller.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
-#include "src/ESPEasyCore/Serial.h"
 
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"

@@ -234,13 +234,13 @@ String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
 void emergencyReset()
 {
   // Direct Serial is allowed here, since this is only an emergency task.
-  ESPEASY_SERIAL_CONSOLE_PORT.begin(115200);
-  ESPEASY_SERIAL_CONSOLE_PORT.write(0xAA);
-  ESPEASY_SERIAL_CONSOLE_PORT.write(0x55);
+  Serial.begin(115200);
+  Serial.write(0xAA);
+  Serial.write(0x55);
   delay(1);
 
-  if (ESPEASY_SERIAL_CONSOLE_PORT.available() == 2) {
-    if ((ESPEASY_SERIAL_CONSOLE_PORT.read() == 0xAA) && (ESPEASY_SERIAL_CONSOLE_PORT.read() == 0x55))
+  if (Serial.available() == 2) {
+    if ((Serial.read() == 0xAA) && (Serial.read() == 0x55))
     {
       serialPrintln(F("\n\n\rSystem will reset to factory defaults in 10 seconds..."));
       delay(10000);
