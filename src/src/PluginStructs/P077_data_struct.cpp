@@ -106,8 +106,8 @@ bool P077_data_struct::processSerialData() {
   long t_start = millis();
   bool found   = false;
 
-  while (Serial.available() > 0 && !found) {
-    uint8_t serial_in_byte = Serial.read();
+  while (ESPEASY_SERIAL_CONSOLE_PORT.available() > 0 && !found) {
+    uint8_t serial_in_byte = ESPEASY_SERIAL_CONSOLE_PORT.read();
     count_bytes++;
     checksum -= serial_in_buffer[2];             // substract from checksum data to be removed
     memmove(serial_in_buffer, serial_in_buffer + 1,

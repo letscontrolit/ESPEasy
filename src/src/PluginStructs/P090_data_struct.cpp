@@ -229,7 +229,7 @@ CCS811Core::status CCS811::begin(void)
   delay(200);
 
   // returnError = setDriveMode(1); //Read every second
-  //    Serial.println();
+  //    ESPEASY_SERIAL_CONSOLE_PORT.println();
 
   return returnError;
 } // CCS811::begin
@@ -346,11 +346,11 @@ CCS811Core::status CCS811::enableInterrupts(void)
     return returnError;
   }
 
-  //    Serial.println(value, HEX);
+  //    ESPEASY_SERIAL_CONSOLE_PORT.println(value, HEX);
   value |= (1 << 3); // Set INTERRUPT bit
   writeRegister(CSS811_MEAS_MODE, value);
 
-  //    Serial.println(value, HEX);
+  //    ESPEASY_SERIAL_CONSOLE_PORT.println(value, HEX);
   return returnError;
 }
 
@@ -466,14 +466,14 @@ CCS811Core::status CCS811::readNTC(void)
 
   vrefCounts = (static_cast<uint16_t>(data[CSS811_NTC + 0]) << 8) | data[CSS811_NTC + 1];
 
-  // Serial.print("vrefCounts: ");
-  // Serial.println(vrefCounts);
+  // ESPEASY_SERIAL_CONSOLE_PORT.print("vrefCounts: ");
+  // ESPEASY_SERIAL_CONSOLE_PORT.println(vrefCounts);
   ntcCounts = (static_cast<uint16_t>(data[CSS811_NTC + 2]) << 8) | data[CSS811_NTC + 3];
 
-  // Serial.print("ntcCounts: ");
-  // Serial.println(ntcCounts);
-  // Serial.print("sum: ");
-  // Serial.println(ntcCounts + vrefCounts);
+  // ESPEASY_SERIAL_CONSOLE_PORT.print("ntcCounts: ");
+  // ESPEASY_SERIAL_CONSOLE_PORT.println(ntcCounts);
+  // ESPEASY_SERIAL_CONSOLE_PORT.print("sum: ");
+  // ESPEASY_SERIAL_CONSOLE_PORT.println(ntcCounts + vrefCounts);
   resistance = (static_cast<float>(ntcCounts) * refResistance / static_cast<float>(vrefCounts));
 
   // Code from Milan Malesevic and Zoran Stupic, 2011,

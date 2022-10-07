@@ -163,7 +163,7 @@ void ESPEasy_setup()
   checkRAM(F("setup"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
-  Serial.begin(115200);
+  ESPEASY_SERIAL_CONSOLE_PORT.begin(115200);
 
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
@@ -378,7 +378,7 @@ void ESPEasy_setup()
 
 # ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
-    Serial.setDebugOutput(true);
+    ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(true);
   }
 #endif
 
