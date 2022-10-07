@@ -2341,5 +2341,8 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 0
+#endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
