@@ -1,6 +1,6 @@
 #include "../PluginStructs/P044_data_struct.h"
 
-#ifdef USES_P044
+#ifdef USES_P044_ORG
 
 # include "../ESPEasyCore/Serial.h"
 # include "../ESPEasyCore/ESPEasyNetwork.h"

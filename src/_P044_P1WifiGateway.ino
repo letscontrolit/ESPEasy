@@ -1,5 +1,5 @@
 #include "_Plugin_Helper.h"
-#ifdef USES_P044
+#ifdef USES_P044_ORG
 
 // #################################### Plugin 044: P1WifiGateway ########################################
 //
@@ -12,6 +12,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-10-08 tonhuisman: Disable plugin-code and merge all functionality into P020 as it was originally a modified copy of that plugin
+ *                        *** This code is deprecated ***
  * 2022-10-01 tonhuisman: Add Led configuration options (Enabled, Pin, Inverted), changed device configuration
  * 2022-10-01 tonhuisman: Format source using Uncrustify
  */
@@ -67,6 +69,13 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      # ifdef USES_P020
+      String msg;
+      msg.reserve(132);
+      msg += F("This plugin is deprecated and will be removed in a future release. Please use P020 - ");
+      msg += getPluginNameFromPluginID(20);
+      addFormNote(msg);
+      # endif // ifdef USES_P020
       LoadTaskSettings(event->TaskIndex);
 
       { // Serial settings

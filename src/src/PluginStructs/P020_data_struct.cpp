@@ -10,12 +10,14 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Misc.h"
 
-# define P020_RX_WAIT              PCONFIG(4)
-# define P020_RX_BUFFER            PCONFIG(7)
-
-
-P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
+P020_Task::P020_Task(struct EventStruct *event) : _taskIndex(event->TaskIndex) {
   clearBuffer();
+
+  if (P020_GET_LED_ENABLED) {
+    _ledPin = P020_LED_PIN; // Default pin (12) is already initialized in P020_Task
+  }
+  _ledEnabled  = P020_GET_LED_ENABLED == 1;
+  _ledInverted = P020_GET_LED_INVERTED == 1;
 }
 
 P020_Task::~P020_Task() {
@@ -80,15 +82,15 @@ bool P020_Task::hasClientConnected() {
     if (ser2netClient) { ser2netClient.stop(); }
     ser2netClient = ser2netServer->available();
 
-    #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
     // See: https://github.com/espressif/arduino-esp32/pull/6676
     ser2netClient.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
     Client *pClient = &ser2netClient;
     pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-    #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-    ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
-    #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT); // in msec as it should be!
+    # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
     sendConnectedEvent(true);
     addLog(LOG_LEVEL_INFO, F("Ser2Net   : Client connected!"));
@@ -119,8 +121,11 @@ void P020_Task::discardClientIn() {
 }
 
 void P020_Task::clearBuffer() {
-  serial_buffer = String();
-  serial_buffer.reserve(P020_DATAGRAM_MAX_SIZE);
+  serial_buffer    = String();
+  _maxDataGramSize = serial_processing == P020_Events::P1WiFiGateway
+                    ? P020_P1_DATAGRAM_MAX_SIZE
+                    : P020_DATAGRAM_MAX_SIZE;
+  serial_buffer.reserve(_maxDataGramSize);
 }
 
 void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, unsigned long baud, uint8_t config) {
@@ -156,10 +161,10 @@ void P020_Task::serialEnd() {
 void P020_Task::handleClientIn(struct EventStruct *event) {
   int count      = ser2netClient.available();
   int bytes_read = 0;
-  uint8_t net_buf[P020_DATAGRAM_MAX_SIZE];
+  uint8_t net_buf[_maxDataGramSize];
 
   if (count > 0) {
-    if (count > P020_DATAGRAM_MAX_SIZE) { count = P020_DATAGRAM_MAX_SIZE; }
+    if (count > _maxDataGramSize) { count = _maxDataGramSize; }
     bytes_read = ser2netClient.read(net_buf, count);
     ser2netSerial->write(net_buf, bytes_read);
     ser2netSerial->flush();             // Waits for the transmission of outgoing serial data to
@@ -172,18 +177,37 @@ void P020_Task::handleClientIn(struct EventStruct *event) {
 
 void P020_Task::handleSerialIn(struct EventStruct *event) {
   if (nullptr == ser2netSerial) { return; }
-  int RXWait  = P020_RX_WAIT;
-  int timeOut = RXWait;
+  int  RXWait  = P020_RX_WAIT;
+  int  timeOut = RXWait;
+  bool done    = false;
 
   do {
     if (ser2netSerial->available()) {
-      if (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER)) {
+      if ((serial_processing != P020_Events::P1WiFiGateway) // P1 handling without this check
+          && (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER))) {
         # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
         # endif // ifndef BUILD_NO_DEBUG
         ser2netSerial->read();
       }
-      else { serial_buffer += (char)ser2netSerial->read(); }
+      else {
+        if (_ledEnabled) {
+          digitalWrite(_ledPin, _ledInverted ? 0 : 1);
+        }
+
+        if (serial_processing == P020_Events::P1WiFiGateway) {
+          done = handleP1Char(ser2netSerial->read());
+        } else {
+          addChar((char)ser2netSerial->read());
+        }
+
+
+        if (_ledEnabled) {
+          digitalWrite(_ledPin, _ledInverted ? 1 : 0);
+        }
+      }
+
+      if (done) { break; }
       timeOut = RXWait; // if serial received, reset timeout counter
     } else {
       if (timeOut <= 0) { break; }
@@ -196,6 +220,9 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
     if (ser2netClient.connected()) { // Only send out if a client is connected
       ser2netClient.print(serial_buffer);
     }
+
+    blinkLED();
+
     rulesEngine(serial_buffer);
     ser2netClient.flush();
     clearBuffer();
@@ -219,7 +246,7 @@ void P020_Task::rulesEngine(const String& message) {
   int NewLinePos    = 0;
   uint16_t StartPos = 0;
 
-  NewLinePos = message.indexOf('\n', StartPos);
+  NewLinePos = handleMultiLine ? message.indexOf('\n', StartPos) : message.length();
 
   do {
     if (NewLinePos < 0) {
@@ -238,15 +265,15 @@ void P020_Task::rulesEngine(const String& message) {
     }
 
     switch (serial_processing) {
-      case 0: { break; }
-      case 1: { // Generic
+      case P020_Events::None: { break; }
+      case P020_Events::Generic: { // Generic
         if (NewLinePos > StartPos) {
           eventString  = F("!Serial#");
           eventString += message.substring(StartPos, NewLinePos);
         }
         break;
       }
-      case 2: {                          // RFLink
+      case P020_Events::RFLink: {        // RFLink
         StartPos += 6;                   // RFLink, strip 20;xx; from incoming message
 
         if (message.substring(StartPos, NewLinePos)
@@ -262,6 +289,10 @@ void P020_Task::rulesEngine(const String& message) {
         }
         break;
       }
+      case P020_Events::P1WiFiGateway: // P1 WiFi Gateway
+        eventString  = getTaskDeviceName(_taskIndex);
+        eventString += F("#Data");
+        break;
     } // switch
 
     // Skip CR/LF
@@ -298,6 +329,198 @@ void P020_Task::sendConnectedEvent(bool connected)
     RuleEvent += (connected ? 1 : 0);
     eventQueue.addMove(std::move(RuleEvent));
   }
+}
+
+void P020_Task::blinkLED() {
+  if (_ledEnabled) {
+    _blinkLEDStartTime = millis();
+    digitalWrite(_ledPin, _ledInverted ? 0 : 1);
+  }
+}
+
+void P020_Task::checkBlinkLED() {
+  if (_ledEnabled && (_blinkLEDStartTime > 0) && (timePassedSince(_blinkLEDStartTime) >= 500)) {
+    digitalWrite(_ledPin, _ledInverted ? 1 : 0);
+    _blinkLEDStartTime = 0;
+  }
+}
+
+void P020_Task::addChar(char ch) {
+  serial_buffer += ch;
+}
+
+/*  checkDatagram
+    checks whether the P020_CHECKSUM of the data received from P1 matches the P020_CHECKSUM
+    attached to the telegram
+ */
+bool P020_Task::checkDatagram() const {
+  int endChar = serial_buffer.length() - 1;
+
+  if (_CRCcheck) {
+    endChar -= P020_CHECKSUM_LENGTH;
+  }
+
+  if ((endChar < 0) || (serial_buffer[0] != P020_DATAGRAM_START_CHAR) ||
+      (serial_buffer[endChar] != P020_DATAGRAM_END_CHAR)) {
+    return false;
+  }
+
+  if (!_CRCcheck) {
+    return true;
+  }
+
+  const int checksumStartIndex = endChar + 1;
+
+  # if PLUGIN_020_DEBUG
+
+  for (unsigned int cnt = 0; cnt < serial_buffer.length(); ++cnt) {
+    serialPrint(serial_buffer.substring(cnt, 1));
+  }
+  # endif // if PLUGIN_020_DEBUG
+
+  // calculate the CRC and check if it equals the hexadecimal one attached to the datagram
+  unsigned int crc = CRC16(serial_buffer, checksumStartIndex);
+  return strtoul(serial_buffer.substring(checksumStartIndex).c_str(), nullptr, 16) == crc;
+}
+
+/*
+   CRC16
+      based on code written by Jan ten Hove
+     https://github.com/jantenhove/P1-Meter-ESP8266
+ */
+unsigned int P020_Task::CRC16(const String& buf, int len) {
+  unsigned int crc = 0;
+
+  for (int pos = 0; pos < len; pos++) {
+    crc ^= static_cast<const unsigned int>(buf[pos]); // XOR byte into least sig. byte of crc
+
+    for (int i = 8; i != 0; i--) {                    // Loop over each bit
+      if ((crc & 0x0001) != 0) {                      // If the LSB is set
+        crc >>= 1;                                    // Shift right and XOR 0xA001
+        crc  ^= 0xA001;
+      } else {                                        // Else LSB is not set
+        crc >>= 1;                                    // Just shift right
+      }
+    }
+  }
+
+  return crc;
+}
+
+/*
+   validP1char
+       Checks if the character is valid as part of the P1 datagram contents and/or checksum.
+       Returns false on a datagram start ('/'), end ('!') or invalid character
+ */
+bool P020_Task::validP1char(char ch) {
+  return
+    isAlphaNumeric(ch) ||
+    ch == '.' ||
+    ch == ' ' ||
+    ch == '\\' || // Single backslash, but escaped in C++
+    ch == '\r' ||
+    ch == '\n' ||
+    ch == '(' ||
+    ch == ')' ||
+    ch == '-' ||
+    ch == '*' ||
+    ch == ':' ||
+    ch == '_';
+}
+
+bool P020_Task::handleP1Char(char ch) {
+  if (serial_buffer.length() >= _maxDataGramSize - 2) { // room for cr/lf
+    # ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Buffer overflow, discarded input."));
+    # endif // ifndef BUILD_NO_DEBUG
+    state = ParserState::WAITING; // reset
+  }
+
+  bool done    = false;
+  bool invalid = false;
+
+  switch (state) {
+    case ParserState::WAITING:
+
+      if (ch == P020_DATAGRAM_START_CHAR)  {
+        clearBuffer();
+        addChar(ch);
+        state = ParserState::READING;
+      } // else ignore data
+      break;
+    case ParserState::READING:
+
+      if (validP1char(ch)) {
+        addChar(ch);
+      } else if (ch == P020_DATAGRAM_END_CHAR) {
+        addChar(ch);
+
+        if (_CRCcheck) {
+          checkI = 0;
+          state  = ParserState::CHECKSUM;
+        } else {
+          done = true;
+        }
+      } else if (ch == P020_DATAGRAM_START_CHAR) {
+        # ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
+        # endif // ifndef BUILD_NO_DEBUG
+        state = ParserState::WAITING; // reset
+        return handleP1Char(ch);
+      } else {
+        invalid = true;
+      }
+      break;
+    case ParserState::CHECKSUM:
+
+      if (validP1char(ch)) {
+        addChar(ch);
+        ++checkI;
+
+        if (checkI == P020_CHECKSUM_LENGTH) {
+          done = true;
+        }
+      } else {
+        invalid = true;
+      }
+      break;
+  } // switch
+
+  if (invalid) {
+    // input is not a datagram char
+    # ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
+    # endif // ifndef BUILD_NO_DEBUG
+
+    # if PLUGIN_020_DEBUG
+    serialPrint(F("faulty char>"));
+    serialPrint(String(ch));
+    serialPrintln("<");
+    # endif // if PLUGIN_020_DEBUG
+    state = ParserState::WAITING; // reset
+  }
+
+  if (done) {
+    done = checkDatagram();
+
+    if (done) {
+      // add the cr/lf pair to the datagram ahead of reading both
+      // from serial as the datagram has already been validated
+      addChar('\r');
+      addChar('\n');
+    } else if (_CRCcheck) {
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
+      # endif // ifndef BUILD_NO_DEBUG
+    } else {
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid datagram, dropped data"));
+      # endif // ifndef BUILD_NO_DEBUG
+    }
+    state = ParserState::WAITING; // prepare for next one
+  }
+
+  return done;
 }
 
 #endif // ifdef USES_P020

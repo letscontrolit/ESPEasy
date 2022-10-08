@@ -3,7 +3,7 @@
 
 #include "../../_Plugin_Helper.h"
 
-#ifdef USES_P044
+#ifdef USES_P044_ORG
 
 # include <ESPeasySerial.h>
 

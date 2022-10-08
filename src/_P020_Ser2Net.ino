@@ -1,12 +1,16 @@
 #include "_Plugin_Helper.h"
-#ifdef USES_P020
+#if defined(USES_P020) || defined(USES_P044)
 
 // #######################################################################################################
 // #################################### Plugin 020: Ser2Net ##############################################
+// #################################### Plugin 044: P1WifiGateway ########################################
 // #######################################################################################################
 
 /************
  * Changelog:
+ * 2022-10-08 tonhuisman: Merged code from P044 into this plugin, and use a global flag to emulate P044 with P020
+ *                        When USES_P044 is enabled, also USES_P020 will be enabled!
+ *                        Add Led settings, similar to P044
  * 2022-05-28 tonhuisman: Add option to generate events for all lines of a multi-line message
  * 2022-05-26 tonhuisman: Add option to allow processing without webclient connected.
  * No older changelog available.
@@ -22,33 +26,23 @@
 # define PLUGIN_NAME_020       "Communication - Serial Server"
 # define PLUGIN_VALUENAME1_020 "Ser2Net"
 
+# define PLUGIN_ID_020_044     44
+# define PLUGIN_NAME_020_044   "Communication - P1 Wifi Gateway"
 
-# define P020_SERVER_PORT          ExtraTaskSettings.TaskDevicePluginConfigLong[0]
-# define P020_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+bool P020_Emulate_P044 = false; // Global flag
+# ifdef USES_P044
 
-// #define P020_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
-# define P020_RX_WAIT              PCONFIG(4)
-# define P020_SERIAL_CONFIG        PCONFIG(1)
-# define P020_SERIAL_PROCESSING    PCONFIG(5)
-# define P020_RESET_TARGET_PIN     PCONFIG(6)
-# define P020_RX_BUFFER            PCONFIG(7)
+// Emulate P044 using P020 with a global flag
+boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string) {
+  P020_Emulate_P044 = true;
 
-# define P020_FLAGS                     PCONFIG_LONG(0)
-# define P020_FLAG_IGNORE_CLIENT        0
-# define P020_FLAG_MULTI_LINE           1
-# define P020_IGNORE_CLIENT_CONNECTED   bitRead(P020_FLAGS, P020_FLAG_IGNORE_CLIENT)
-# define P020_HANDLE_MULTI_LINE         bitRead(P020_FLAGS, P020_FLAG_MULTI_LINE)
+  boolean result = Plugin_020(function, event, string);
 
+  P020_Emulate_P044 = false;
+  return result;
+}
 
-# define P020_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
-# define P020_NR_OUTPUT_OPTIONS  1
-# define P020_QUERY1_CONFIG_POS  3
-
-# define P020_DEFAULT_SERVER_PORT 1234
-# define P020_DEFAULT_BAUDRATE   115200
-# define P020_DEFAULT_RESET_TARGET_PIN -1
-# define P020_DEFAULT_RX_BUFFER 256
-
+# endif // ifdef USES_P044
 
 boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -58,7 +52,13 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_020;
+      if (P020_Emulate_P044) {
+        Device[++deviceCount].Number       = PLUGIN_ID_020_044;
+        Device[deviceCount].SendDataOption = false;
+      } else {
+        Device[++deviceCount].Number       = PLUGIN_ID_020;
+        Device[deviceCount].SendDataOption = true;
+      }
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING;
       Device[deviceCount].Ports              = 0;
@@ -66,25 +66,38 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
       Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = false;
       Device[deviceCount].GlobalSyncOption   = false;
       break;
     }
     case PLUGIN_GET_DEVICENAME:
     {
-      string = F(PLUGIN_NAME_020);
+      string = P020_Emulate_P044 ? F(PLUGIN_NAME_020_044) : F(PLUGIN_NAME_020);
       break;
     }
 
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P020_BAUDRATE         = P020_DEFAULT_BAUDRATE;
-      P020_SERVER_PORT      = P020_DEFAULT_SERVER_PORT;
-      P020_RESET_TARGET_PIN = P020_DEFAULT_RESET_TARGET_PIN;
-      P020_RX_BUFFER        = P020_DEFAULT_RX_BUFFER;
-      success               = true;
+      if (P020_Emulate_P044) {
+        CONFIG_PORT            = static_cast<int>(ESPEasySerialPort::serial0); // P044 Serial port
+        CONFIG_PIN1            = 3;                                            // P044 RX pin
+        CONFIG_PIN2            = 1;                                            // P044 TX pin
+        P020_BAUDRATE          = P020_DEFAULT_P044_BAUDRATE;
+        P020_SERVER_PORT       = P020_DEFAULT_P044_SERVER_PORT;
+        P020_RESET_TARGET_PIN  = P020_DEFAULT_RESET_TARGET_PIN;
+        P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing (only)
+        P020_LED_PIN           = P020_STATUS_LED;
+        bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);
+        bitSet(P020_FLAGS, P020_FLAG_P044_MODE_SAVED);                         // Inital config, no conversion needed
+      } else {
+        P020_BAUDRATE         = P020_DEFAULT_BAUDRATE;
+        P020_SERVER_PORT      = P020_DEFAULT_SERVER_PORT;
+        P020_RESET_TARGET_PIN = P020_DEFAULT_RESET_TARGET_PIN;
+        P020_RX_BUFFER        = P020_DEFAULT_RX_BUFFER;
+        P020_LED_PIN          = -1;
+      }
+      success = true;
       break;
     }
 
@@ -104,38 +117,95 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("RST: ");
-      string += formatGpioLabel(P020_RESET_TARGET_PIN, false);
+      string  = concat(F("RST: "), formatGpioLabel(P020_RESET_TARGET_PIN, false));
+      string += event->String1;
+      string += concat(F("LED: "), formatGpioLabel(P020_GET_LED_ENABLED ? P020_LED_PIN : -1, false));
+
+      if ((P020_GET_LED_INVERTED == 1) && (P020_GET_LED_ENABLED)) {
+        string += F(" (inv)");
+      }
       success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_PRE_SERIAL_PARAMS:
+    {
+      if (P020_Emulate_P044 && !P020_GET_P044_MODE_SAVED) {
+        addFormNote(F("Settings migrated from previous plugin version."));
+
+        // Convert existing P044 settings to P020 settings
+        P020_RX_WAIT = PCONFIG(0); // No conflict
+        // P020_SERIAL_CONFIG    = PCONFIG(1); // No need to convert
+        P020_RESET_TARGET_PIN = CONFIG_PIN1;
+
+        // 'Conflicting' stuff, set defaults to: Serial0, RX=gpio-3 and TX=gpio-1
+        CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);            // P044 Serial port
+        CONFIG_PIN1 = 3;                                                       // P044 RX pin
+        CONFIG_PIN2 = 1;                                                       // P044 TX pin
+
+        // Former P044 defaults
+        bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);                             // Led enabled...
+        P020_LED_PIN           = P020_STATUS_LED;                              // ...and connected to GPIO-12
+        P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing
+      }
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("TCP Port"),  F("p020_port"), P020_SERVER_PORT, 0);
-      addFormNumericBox(F("Baud Rate"), F("p020_baud"), P020_BAUDRATE,    0);
+      addFormNumericBox(F("TCP Port"), F("pport"), P020_SERVER_PORT, 0);
+      # ifndef LIMIT_BUILD_SIZE
+      addUnit(F("0..65535"));
+      # endif // ifndef LIMIT_BUILD_SIZE
+
+      addFormNumericBox(F("Baud Rate"), F("pbaud"), P020_BAUDRATE, 0);
       uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
-        const __FlashStringHelper *options[3] = {
-          F("None"),
-          F("Generic"),
-          F("RFLink")
-        };
-        addFormSelector(F("Event processing"), F("p020_events"), 3, options, nullptr, P020_SERIAL_PROCESSING);
-        addFormCheckBox(F("Process events without client"), F("p020_ignoreclient"), P020_IGNORE_CLIENT_CONNECTED);
+        if (!P020_Emulate_P044) {
+          const __FlashStringHelper *options[] = {
+            F("None"),
+            F("Generic"),
+            F("RFLink"),
+            F("P1 WiFi Gateway")
+          };
+          const int optionValues[] = {
+            static_cast<int>(P020_Events::None),
+            static_cast<int>(P020_Events::Generic),
+            static_cast<int>(P020_Events::RFLink),
+            static_cast<int>(P020_Events::P1WiFiGateway),
+          };
+          addFormSelector(F("Event processing"), F("pevents"),
+                          sizeof(optionValues) / sizeof(int), options, optionValues,
+                          P020_SERIAL_PROCESSING);
+        }
+        addFormCheckBox(F("Process events without client"), F("pignoreclient"), P020_IGNORE_CLIENT_CONNECTED);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("When enabled, will process serial data without a network client connected."));
         # endif // ifndef LIMIT_BUILD_SIZE
-        addFormCheckBox(F("Multiple lines processing"), F("p020_multiline"), P020_HANDLE_MULTI_LINE);
-      }
-      addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0, 20);
-      addFormPinSelect(PinSelectPurpose::Generic, F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);
 
-      addFormNumericBox(F("RX buffer size (bytes)"), F("p020_rx_buffer"), P020_RX_BUFFER, 256, 1024);
-      # ifndef LIMIT_BUILD_SIZE
-      addFormNote(F("Standard RX buffer 256B; higher values could be unstable; energy meters could require 1024B"));
-      # endif // ifndef LIMIT_BUILD_SIZE
+        if (!P020_Emulate_P044) { // Not appropriate for P1 WiFi Gateway
+          addFormCheckBox(F("Multiple lines processing"), F("pmultiline"), P020_HANDLE_MULTI_LINE);
+        }
+      }
+      {
+        addFormNumericBox(F("RX Receive Timeout (mSec)"), F("prxwait"), P020_RX_WAIT, 0, 200);
+        addFormPinSelect(PinSelectPurpose::Generic, F("Reset target after init"), F("presetpin"), P020_RESET_TARGET_PIN);
+
+        if (!P020_Emulate_P044) {
+          addFormNumericBox(F("RX buffer size (bytes)"), F("prx_buffer"), P020_RX_BUFFER, 256, 1024);
+          # ifndef LIMIT_BUILD_SIZE
+          addFormNote(F("Standard RX buffer 256B; higher values could be unstable; energy meters could require 1024B"));
+          # endif // ifndef LIMIT_BUILD_SIZE
+        }
+      }
+      { // Led settings
+        addFormSubHeader(F("Led"));
+
+        addFormCheckBox(F("Led enabled"), F("pled"), P020_GET_LED_ENABLED);
+        addFormPinSelect(PinSelectPurpose::Generic, F("Led pin"), F("pledpin"), P020_LED_PIN);
+        addFormCheckBox(F("Led inverted"), F("pledinv"), P020_GET_LED_INVERTED == 1);
+      }
 
       success = true;
       break;
@@ -143,16 +213,32 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P020_SERVER_PORT       = getFormItemInt(F("p020_port"));
-      P020_BAUDRATE          = getFormItemInt(F("p020_baud"));
-      P020_SERIAL_CONFIG     = serialHelper_serialconfig_webformSave();
-      P020_SERIAL_PROCESSING = getFormItemInt(F("p020_events"));
-      P020_RX_WAIT           = getFormItemInt(F("p020_rxwait"));
-      P020_RESET_TARGET_PIN  = getFormItemInt(F("p020_resetpin"));
-      P020_RX_BUFFER         = getFormItemInt(F("p020_rx_buffer"));
+      P020_SERVER_PORT      = getFormItemInt(F("pport"));
+      P020_BAUDRATE         = getFormItemInt(F("pbaud"));
+      P020_SERIAL_CONFIG    = serialHelper_serialconfig_webformSave();
+      P020_RX_WAIT          = getFormItemInt(F("prxwait"));
+      P020_RESET_TARGET_PIN = getFormItemInt(F("presetpin"));
 
-      bitWrite(P020_FLAGS, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("p020_ignoreclient")));
-      bitWrite(P020_FLAGS, P020_FLAG_MULTI_LINE,    isFormItemChecked(F("p020_multiline")));
+      if (P020_Emulate_P044) {
+        P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Force P1 WiFi Gateway processing
+      } else {
+        P020_SERIAL_PROCESSING = getFormItemInt(F("pevents"));
+        P020_RX_BUFFER         = getFormItemInt(F("prx_buffer"));
+      }
+      P020_LED_PIN = getFormItemInt(F("pledpin"));
+
+      uint32_t lSettings = 0u;
+      bitWrite(lSettings, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("pignoreclient")));
+      bitWrite(lSettings, P020_FLAG_LED_ENABLED,   isFormItemChecked(F("pled")));
+      bitWrite(lSettings, P020_FLAG_LED_INVERTED,  isFormItemChecked(F("pledinv")));
+
+      if (P020_Emulate_P044) {
+        bitSet(lSettings, P020_FLAG_P044_MODE_SAVED); // Set to P044 configuration done on every save
+      } else {
+        bitWrite(lSettings, P020_FLAG_MULTI_LINE, isFormItemChecked(F("pmultiline")));
+      }
+
+      P020_FLAGS = lSettings;
 
       success = true;
       break;
@@ -161,6 +247,11 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       LoadTaskSettings(event->TaskIndex);
+
+      if (P020_GET_LED_ENABLED && validGpio(P020_LED_PIN)) {
+        pinMode(P020_LED_PIN, OUTPUT);
+        digitalWrite(P020_LED_PIN, P020_GET_LED_INVERTED ? 1 : 0);
+      }
 
       if ((P020_SERVER_PORT == 0) || (P020_BAUDRATE == 0)) {
         clearPluginTaskData(event->TaskIndex);
@@ -174,22 +265,19 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         // It was already created and initialzed
         // So don't recreate to keep the webserver running.
       } else {
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P020_Task(event->TaskIndex));
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P020_Task(event));
         task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
       }
 
       if (nullptr == task) {
         break;
       }
-      task->handleMultiLine = P020_HANDLE_MULTI_LINE;
+      task->handleMultiLine = P020_HANDLE_MULTI_LINE && static_cast<P020_Events>(P020_SERIAL_PROCESSING) != P020_Events::P1WiFiGateway;
 
-      // int rxPin =-1;
-      // int txPin =-1;
       int rxPin                    = CONFIG_PIN1;
       int txPin                    = CONFIG_PIN2;
       const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
 
-      // const ESPEasySerialPort port= ESPEasySerialPort::serial0;
       if ((rxPin < 0) && (txPin < 0)) {
         ESPeasySerialType::getSerialTypePins(port, rxPin, txPin);
         CONFIG_PIN1 = rxPin;
@@ -199,20 +287,15 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       # ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("Ser2net: TaskIndex=");
-        log += event->TaskIndex;
-        log += F(" port=");
-        log += CONFIG_PORT;
-        log += F(" rxPin=");
-        log += rxPin;
-        log += F(" txPin=");
-        log += txPin;
-        log += F(" BAUDRATE=");
-        log += P020_BAUDRATE;
-        log += F(" SERVER_PORT=");
-        log += P020_SERVER_PORT;
-        log += F(" SERIAL_PROCESSING=");
-        log += P020_SERIAL_PROCESSING;
+        String log;
+        log.reserve(100);
+        log  = concat(F("Ser2net: TaskIndex="), static_cast<int>(event->TaskIndex));
+        log += concat(F(" port="), static_cast<int>(CONFIG_PORT));
+        log += concat(F(" rxPin="), static_cast<int>(rxPin));
+        log += concat(F(" txPin="), static_cast<int>(txPin));
+        log += concat(F(" BAUDRATE="), static_cast<int>(P020_BAUDRATE));
+        log += concat(F(" SERVER_PORT="), static_cast<int>(P020_SERVER_PORT));
+        log += concat(F(" SERIAL_PROCESSING="), static_cast<int>(P020_SERIAL_PROCESSING));
         addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifndef LIMIT_BUILD_SIZE
@@ -232,11 +315,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log;
-          log.reserve(38);
-          log += F("Ser2net  : P020_RESET_TARGET_PIN : ");
-          log += P020_RESET_TARGET_PIN;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, concat(F("Ser2net  : P020_RESET_TARGET_PIN : "), static_cast<int>(P020_RESET_TARGET_PIN)));
         }
         # endif // ifndef BUILD_NO_DEBUG
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);
@@ -246,8 +325,23 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         pinMode(P020_RESET_TARGET_PIN, INPUT_PULLUP);
       }
 
-      task->serial_processing = P020_SERIAL_PROCESSING;
-      success                 = true;
+      task->serial_processing = static_cast<P020_Events>(P020_SERIAL_PROCESSING);
+
+      task->blinkLED();
+
+      if (task->serial_processing == P020_Events::P1WiFiGateway) {
+        task->_CRCcheck = P020_BAUDRATE == 115200;
+        # ifndef BUILD_NO_DEBUG
+
+        if (task->_CRCcheck) {
+          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 5 meter, CRC on"));
+        } else {
+          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC off"));
+        }
+        # endif // ifndef BUILD_NO_DEBUG
+      }
+
+      success = true;
       break;
     }
 
@@ -261,11 +355,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
     {
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
+      if (nullptr != task) {
+        task->checkServer();
+        success = true;
       }
-      task->checkServer();
-      success = true;
       break;
     }
 
@@ -273,19 +366,18 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
     {
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
-      }
+      if (nullptr != task) {
+        bool hasClient = task->hasClientConnected();
 
-      bool hasClient = task->hasClientConnected();
-
-      if (P020_IGNORE_CLIENT_CONNECTED || hasClient) {
-        if (hasClient) {
-          task->handleClientIn(event);
+        if (P020_IGNORE_CLIENT_CONNECTED || hasClient) {
+          if (hasClient) {
+            task->handleClientIn(event);
+          }
+          task->handleSerialIn(event); // in case of second serial connected, PLUGIN_SERIAL_IN is not called anymore
         }
-        task->handleSerialIn(event); // in case of second serial connected, PLUGIN_SERIAL_IN is not called anymore
+        task->checkBlinkLED();
+        success = true;
       }
-      success = true;
       break;
     }
 
@@ -293,38 +385,35 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
     {
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
+      if (nullptr != task) {
+        if (P020_IGNORE_CLIENT_CONNECTED || task->hasClientConnected()) {
+          task->handleSerialIn(event);
+        } else {
+          task->discardSerialIn();
+        }
+        success = true;
       }
-
-      if (P020_IGNORE_CLIENT_CONNECTED || task->hasClientConnected()) {
-        task->handleSerialIn(event);
-      } else {
-        task->discardSerialIn();
-      }
-      success = true;
       break;
     }
 
     case PLUGIN_WRITE:
     {
-      String command  = parseString(string, 1);
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
-      }
+      if (nullptr != task) {
+        String command = parseString(string, 1);
 
-      if (command.equals(F("serialsend"))) {
-        task->ser2netSerial->write(string.substring(11).c_str());
-        task->ser2netSerial->flush();
-        success = true;
-      }
+        if (command.equals(F("serialsend"))) {
+          task->ser2netSerial->write(string.substring(11).c_str());
+          task->ser2netSerial->flush();
+          success = true;
+        }
 
-      if ((command.equals(F("ser2netclientsend"))) && (task->hasClientConnected())) {
-        task->ser2netClient.print(string.substring(18));
-        task->ser2netClient.flush();
-        success = true;
+        if ((command.equals(F("ser2netclientsend"))) && (task->hasClientConnected())) {
+          task->ser2netClient.print(string.substring(18));
+          task->ser2netClient.flush();
+          success = true;
+        }
       }
       break;
     }
@@ -332,4 +421,4 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif // USES_P020
+#endif // if defined(USES_P020) || defined(USES_P044)
