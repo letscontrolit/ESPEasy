@@ -221,10 +221,12 @@ void handle_unprocessedNetworkEvents()
 
           if (!WiFi.getAutoConnect()) {
             WiFi.setAutoConnect(true);
+            delay(1);
           }
         } else {
           if (WiFi.getAutoConnect()) {
             WiFi.setAutoConnect(false);
+            delay(1);
           }
         }
       }
@@ -610,7 +612,7 @@ void processScanDone() {
       }
       #endif
 
-      setSTA(false);
+//      setSTA(false);
       NetworkConnectRelaxed();
 #ifdef USES_ESPEASY_NOW
       temp_disable_EspEasy_now_timer = millis() + 20000;

@@ -446,6 +446,7 @@ void AttemptWiFiConnect() {
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
       }
+      delay(1);
     } else {
       WiFiEventData.wifiConnectInProgress = false;
     }
@@ -603,7 +604,8 @@ void initWiFi()
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
   // those WiFi connections will take a long time to make or sometimes will not work at all.
-  WiFi.disconnect(true);
+  WiFi.disconnect(false);
+  delay(1);
   WifiScan(false);
   setWifiMode(WIFI_OFF);
 
@@ -822,6 +824,7 @@ void WifiDisconnect()
   #endif
   #ifdef ESP32
   WiFi.disconnect();
+  delay(1);
   WiFi.removeEvent(wm_event_id);
   {
     const IPAddress ip;

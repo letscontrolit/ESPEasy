@@ -335,6 +335,7 @@ void ESPEasy_setup()
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
     WifiScan(false);
+    setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("WifiScan()"));
