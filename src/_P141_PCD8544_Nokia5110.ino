@@ -8,6 +8,7 @@
 
 
 /** Changelog:
+ * 2022-10-08 tonhuisman: Enable PLUGIN_GET_CONFIG_VALUE event to get runtime info from plugin
  * 2022-09-24 tonhuisman: Store inverted setting when changed via inv subcommand (not saved)
  * 2022-09-23 tonhuisman: Allow backlight form 0% instead of from 1% to be able to completely turn it off
  *                        Allow contrast setting from 0..100%.
@@ -336,6 +337,18 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+    # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P141_data_struct *P141_data = static_cast<P141_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P141_data) {
+        success = P141_data->plugin_get_config_value(event, string); // GetConfig operation, handle variables, fully delegated to
+                                                                     // AdafruitGFX_helper
+      }
+      break;
+    }
+    # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
   }
   return success;
 }

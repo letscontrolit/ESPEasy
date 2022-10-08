@@ -97,6 +97,10 @@ public:
                     const String      & string);
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_once_a_second(struct EventStruct *event);
+  # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string);
+  # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
 
   void registerButtonState(uint8_t newButtonState,
                            bool    bPin3Invers);

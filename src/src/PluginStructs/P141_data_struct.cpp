@@ -340,6 +340,23 @@ void P141_data_struct::updateValues(struct EventStruct *event) {
 
 # endif // if P141_FEATURE_CURSOR_XY_VALUES
 
+# if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
+/****************************************************************************
+ * plugin_get_config_value: Retrieve values like [<taskname>#<valuename>]
+ ***************************************************************************/
+bool P141_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  bool success = false;
+
+  if (gfxHelper != nullptr) {
+    success = gfxHelper->pluginGetConfigValue(string);
+  }
+  return success;
+}
+
+# endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
 /****************************************************************************
  * displayOnOff: Turn display on or off
  ***************************************************************************/
