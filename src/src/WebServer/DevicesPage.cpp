@@ -1079,8 +1079,11 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
 
-  serialHelper_webformLoad(&TempEvent);
   String webformLoadString;
+
+  PluginCall(PLUGIN_WEBFORM_PRE_SERIAL_PARAMS, &TempEvent, webformLoadString);
+
+  serialHelper_webformLoad(&TempEvent);
 
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }
