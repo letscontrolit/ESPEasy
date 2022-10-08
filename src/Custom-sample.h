@@ -92,6 +92,7 @@
 #define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
 
 #define DEFAULT_PORT        8080                                            // Enter your Server port value
+#define DEFAULT_CONTROLLER_TIMEOUT  100                                     // Default timeout in msec
 
 #define DEFAULT_PROTOCOL    0                                               // Protocol used for controller communications
                                                                             //   0 = Stand-alone (no controller set)
