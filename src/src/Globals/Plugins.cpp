@@ -709,6 +709,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_VALUES:
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    case PLUGIN_WEBFORM_PRE_SERIAL_PARAMS:
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     #if FEATURE_PLUGIN_STATS
@@ -733,7 +734,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             Function == PLUGIN_WEBFORM_LOAD ||
             Function == PLUGIN_SET_DEFAULTS ||
             Function == PLUGIN_INIT_VALUE_RANGES ||
-            Function == PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS
+            Function == PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS ||
+            Function == PLUGIN_WEBFORM_PRE_SERIAL_PARAMS
         ) {
           LoadTaskSettings(event->TaskIndex);
         }
