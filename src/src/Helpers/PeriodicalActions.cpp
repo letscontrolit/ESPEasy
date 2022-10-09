@@ -153,17 +153,7 @@ void runOncePerSecond()
         event += F("Clock#Time=");
         event += node_time.weekday_str();
         event += ',';
-
-        if (node_time.hour() < 10) {
-          event += '0';
-        }
-        event += node_time.hour();
-        event += ':';
-
-        if (node_time.minute() < 10) {
-          event += '0';
-        }
-        event += node_time.minute();
+        event += node_time.getTimeString(':', false);
 
         // TD-er: Do not add to the eventQueue, but execute right now.
         rulesProcessing(event);

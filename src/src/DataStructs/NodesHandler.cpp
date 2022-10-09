@@ -75,6 +75,13 @@ bool NodesHandler::addNode(const NodeStruct& node)
     }
     _nodes_mutex.unlock();
   }
+  if (!node_time.systemTimePresent()) {
+    uint32_t unixTime;
+    if (_ntp_candidate.getUnixTime(unixTime)) {
+      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP);
+    }
+  }
+
   return isNewNode;
 }
 
