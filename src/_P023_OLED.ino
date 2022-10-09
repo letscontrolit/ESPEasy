@@ -6,6 +6,10 @@
 // #################################### Plugin 023: OLED SSD1306 display #################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2022-10-09 tonhuisman: Deduplicate code by moving the OLed I2C Address check to OLed_helper
+ * 2022-10: Start changelog, latest on top.
+ */
 
 # include "src/PluginStructs/P023_data_struct.h"
 
@@ -56,13 +60,8 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x3C, 0x3D };
+      success = OLedI2CAddressCheck(function, event->Par1, F("i2c_addr"), PCONFIG(0));
 
-      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
-      } else {
-        success = intArrayContains(2, i2cAddressValues, event->Par1);
-      }
       break;
     }
 
