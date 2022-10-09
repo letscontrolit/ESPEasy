@@ -81,6 +81,16 @@ void ESPEasy_time::restoreFromRTC()
 }
 
 void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
+    #ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("Time : Set Ext. Time Source: ");
+      log += toString(timeSource);
+      log += F(" time: ");
+      log += static_cast<uint32_t>(time);
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+    #endif
   if (source == timeSource_t::No_time_source ||
       source == timeSource_t::Manual_set ||
       time > get_build_unixtime()) {
@@ -181,6 +191,8 @@ unsigned long ESPEasy_time::now() {
           if (syncInterval <= 3600) {
             syncInterval = random(3600, 4000);
           }
+        } else if (timeSource == timeSource_t::No_time_source) {
+          syncInterval = 60;
         } else {
           syncInterval = 3600;
         }

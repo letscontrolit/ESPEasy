@@ -6,7 +6,7 @@
 # include "../DataStructs/NodeStruct.h"
 
 struct NTP_candidate_struct {
-  void set(const NodeStruct& node);
+  bool set(const NodeStruct& node);
 
   void clear();
 
