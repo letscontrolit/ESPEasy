@@ -1,8 +1,10 @@
 #include "../DataStructs/NTP_candidate.h"
 
-#include "../CustomBuild/CompiletimeDefines.h"
-#include "../DataTypes/ESPEasyTimeSource.h"
-#include "../Helpers/ESPEasy_time_calc.h"
+#if FEATURE_ESPEASY_P2P
+
+# include "../CustomBuild/CompiletimeDefines.h"
+# include "../DataTypes/ESPEasyTimeSource.h"
+# include "../Helpers/ESPEasy_time_calc.h"
 
 
 void NTP_candidate_struct::set(const NodeStruct& node)
@@ -42,3 +44,5 @@ bool NTP_candidate_struct::getUnixTime(uint32_t& unix_time) const
   unix_time += seconds_passed;
   return false;
 }
+
+#endif // if FEATURE_ESPEASY_P2P
