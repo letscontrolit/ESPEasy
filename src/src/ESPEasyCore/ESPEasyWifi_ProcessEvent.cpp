@@ -109,6 +109,10 @@ void handle_unprocessedNetworkEvents()
         }        
         WiFiEventData.setWiFiServicesInitialized();
         CheckRunningServices();
+        // First try to get the time, since that may be used in logs
+        if (Settings.UseNTP()) {
+          node_time.initTime();
+        }
       }
     }
   }
@@ -466,10 +470,6 @@ void processGotIP() {
     WiFi.config(ip, gw, subnet, NetworkDnsIP(0), NetworkDnsIP(1));
   }
 
-  // First try to get the time, since that may be used in logs
-  if (node_time.systemTimePresent()) {
-    node_time.initTime();
-  }
 #if FEATURE_MQTT
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;

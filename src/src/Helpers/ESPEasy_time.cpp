@@ -2,6 +2,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../DataTypes/TimeSource.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -63,7 +65,14 @@ void ESPEasy_time::restoreFromRTC()
 
   if (firstCall && RTC.lastSysTime != 0 && RTC.deepSleepState != 1) {
     firstCall = false;
-    setExternalTimeSource(RTC.lastSysTime, timeSource_t::Restore_RTC_time_source);
+    // Check to see if we have some kind of believable timestamp
+    // It should not be before the build time
+    // Still it makes sense to restore RTC time to get some kind of continuous logging when no time source is available.
+    // ToDo TD-er: Fix this when time travel appears to be possible
+    setExternalTimeSource(RTC.lastSysTime, 
+      RTC.lastSysTime < get_build_unixtime() 
+        ? timeSource_t::No_time_source 
+        : timeSource_t::Restore_RTC_time_source);
     // Do not add the current uptime as offset. This will be done when calling now()
     lastSyncTime = 0;
     initTime();
@@ -71,10 +80,14 @@ void ESPEasy_time::restoreFromRTC()
 }
 
 void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
-  timeSource         = source;
-  externalUnixTime_d = time;
-  lastSyncTime       = millis();
-  initTime();
+  if (source == timeSource_t::No_time_source ||
+      source == timeSource_t::Manual_set ||
+      time > get_build_unixtime()) {
+    timeSource         = source;
+    externalUnixTime_d = time;
+    lastSyncTime       = millis();
+    initTime();
+  }
 }
 
 uint32_t ESPEasy_time::getUnixTime() const
@@ -224,15 +237,18 @@ bool ESPEasy_time::reportNewMinute()
 {
   now();
 
+  int cur_min = tm.tm_min;
+
   if (!systemTimePresent()) {
-    return false;
+    // Use millis() to compute some "minute"
+    cur_min = (millis() / 60000) % 60;
   }
 
-  if (tm.tm_min == PrevMinutes)
+  if (cur_min == PrevMinutes)
   {
     return false;
   }
-  PrevMinutes = tm.tm_min;
+  PrevMinutes = cur_min;
   return true;
 }
 
@@ -240,7 +256,6 @@ bool ESPEasy_time::systemTimePresent() const {
   switch (timeSource) {
     case timeSource_t::No_time_source: 
       break;
-    case timeSource_t::NTP_time_source:  
     case timeSource_t::Restore_RTC_time_source: 
     case timeSource_t::External_RTC_time_source:
     case timeSource_t::GPS_time_source:
@@ -248,8 +263,11 @@ bool ESPEasy_time::systemTimePresent() const {
     case timeSource_t::ESP_now_peer:
     case timeSource_t::Manual_set:
       return true;
+    case timeSource_t::NTP_time_source:
+      return getUnixTime() > get_build_unixtime();
+
   }
-  return nextSyncTime > 0 || Settings.UseNTP() || externalUnixTime_d > 0.0;
+  return nextSyncTime > 0 || externalUnixTime_d > get_build_unixtime();
 }
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
