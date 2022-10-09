@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2022-10-09 tonhuisman: Check P044 migration on PLUGIN_INIT too, still needs a manual save (from UI or by save command)
  * 2022-10-08 tonhuisman: Merged code from P044 into this plugin, and use a global flag to emulate P044 with P020
  *                        When USES_P044 is enabled, also USES_P020 will be enabled!
  *                        Add Led settings, similar to P044
@@ -40,6 +41,27 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string) 
 
   P020_Emulate_P044 = false;
   return result;
+}
+
+bool P020_ConvertP044Settings(struct EventStruct *event) {
+  if (P020_Emulate_P044 && !P020_GET_P044_MODE_SAVED) {
+    // Convert existing P044 settings to P020 settings
+    P020_RX_WAIT = PCONFIG(0); // No conflict
+    // P020_SERIAL_CONFIG    = PCONFIG(1); // No need to convert
+    P020_RESET_TARGET_PIN = CONFIG_PIN1;
+
+    // 'Conflicting' stuff, set defaults to: Serial0, RX=gpio-3 and TX=gpio-1
+    CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);            // P044 Serial port
+    CONFIG_PIN1 = 3;                                                       // P044 RX pin
+    CONFIG_PIN2 = 1;                                                       // P044 TX pin
+
+    // Former P044 defaults
+    bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);                             // Led enabled...
+    P020_LED_PIN           = P020_STATUS_LED;                              // ...and connected to GPIO-12
+    P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing
+    return true;
+  }
+  return false;
 }
 
 # endif // ifdef USES_P044
@@ -128,28 +150,16 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # ifdef USES_P044
     case PLUGIN_WEBFORM_PRE_SERIAL_PARAMS:
     {
-      if (P020_Emulate_P044 && !P020_GET_P044_MODE_SAVED) {
+      // P044 Settings to convert?
+      if (P020_Emulate_P044 && P020_ConvertP044Settings(event)) {
         addFormNote(F("Settings migrated from previous plugin version."));
-
-        // Convert existing P044 settings to P020 settings
-        P020_RX_WAIT = PCONFIG(0); // No conflict
-        // P020_SERIAL_CONFIG    = PCONFIG(1); // No need to convert
-        P020_RESET_TARGET_PIN = CONFIG_PIN1;
-
-        // 'Conflicting' stuff, set defaults to: Serial0, RX=gpio-3 and TX=gpio-1
-        CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);            // P044 Serial port
-        CONFIG_PIN1 = 3;                                                       // P044 RX pin
-        CONFIG_PIN2 = 1;                                                       // P044 TX pin
-
-        // Former P044 defaults
-        bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);                             // Led enabled...
-        P020_LED_PIN           = P020_STATUS_LED;                              // ...and connected to GPIO-12
-        P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing
       }
       break;
     }
+    # endif // ifdef USES_P044
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -246,6 +256,15 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # ifdef USES_P044
+
+      // P044 Settings to convert?
+      if (P020_Emulate_P044 && P020_ConvertP044Settings(event)) {
+        addLog(LOG_LEVEL_INFO, F("P1   : Automatic settings conversion, please save settings manually."));
+        bitSet(P020_FLAGS, P020_FLAG_P044_MODE_SAVED); // Set to P044 configuration done on next save
+      }
+      # endif // ifdef USES_P044
+
       LoadTaskSettings(event->TaskIndex);
 
       if (P020_GET_LED_ENABLED && validGpio(P020_LED_PIN)) {

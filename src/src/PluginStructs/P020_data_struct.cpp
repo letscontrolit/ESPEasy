@@ -159,8 +159,8 @@ void P020_Task::serialEnd() {
 }
 
 void P020_Task::handleClientIn(struct EventStruct *event) {
-  int count      = ser2netClient.available();
-  int bytes_read = 0;
+  size_t  count      = ser2netClient.available();
+  size_t  bytes_read = 0;
   uint8_t net_buf[_maxDataGramSize];
 
   if (count > 0) {
