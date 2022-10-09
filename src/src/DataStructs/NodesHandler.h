@@ -115,7 +115,7 @@ public:
 
 #endif // ifdef USES_ESPEASY_NOW
 
-  bool getUnixTime(uint32_t &unix_time) const {
+  bool getUnixTime(double &unix_time) const {
     return _ntp_candidate.getUnixTime(unix_time);
   }
 
