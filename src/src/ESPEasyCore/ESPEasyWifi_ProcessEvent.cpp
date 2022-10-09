@@ -83,6 +83,40 @@ void handle_unprocessedNetworkEvents()
     EthEventData.setEthServicesInitialized();
   }
 #endif // if FEATURE_ETHERNET
+  if (active_network_medium == NetworkMedium_t::WIFI) {
+    const bool should_be_initialized = (WiFiEventData.WiFiGotIP() && WiFiEventData.WiFiConnected()) || NetworkConnected();
+    if (WiFiEventData.WiFiServicesInitialized() != should_be_initialized)
+    {
+      if (!WiFiEventData.WiFiServicesInitialized()) {
+        WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
+        if (WiFiConnected()) {
+          if (!WiFiEventData.WiFiGotIP()) {
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("WiFi : Missed gotIP event"));
+            #endif
+            WiFiEventData.processedGotIP = false;
+            processGotIP();
+          }
+          if (!WiFiEventData.WiFiConnected()) {
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("WiFi : Missed connected event"));
+            #endif
+            WiFiEventData.processedConnect = false;
+            processConnect();
+          }
+          // Apparently we are connected, so no need to process any late disconnect event
+          WiFiEventData.processedDisconnect = true;
+        }        
+        WiFiEventData.setWiFiServicesInitialized();
+        CheckRunningServices();
+        // First try to get the time, since that may be used in logs
+        if (Settings.UseNTP()) {
+          node_time.initTime();
+        }
+      }
+    }
+  }
+
   if (WiFiEventData.unprocessedWifiEvents()) {
     // Process disconnect events before connect events.
     if (!WiFiEventData.processedDisconnect) {
@@ -416,10 +450,6 @@ void processGotIP() {
     WiFi.config(ip, gw, subnet, NetworkDnsIP(0), NetworkDnsIP(1));
   }
 
-  // First try to get the time, since that may be used in logs
-  if (node_time.systemTimePresent()) {
-    node_time.initTime();
-  }
 #if FEATURE_MQTT
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
