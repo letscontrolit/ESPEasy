@@ -60,7 +60,8 @@ bool NodesHandler::addNode(const NodeStruct& node)
   }
   {
     _nodes_mutex.lock();
-    _nodes[node.unit]             = node;
+    _nodes[node.unit] = node;
+    _ntp_candidate.set(node);
     _nodes[node.unit].lastUpdated = millis();
     if (node.getRSSI() >= 0 && rssi < 0) {
       _nodes[node.unit].setRSSI(rssi);
@@ -378,6 +379,9 @@ void NodesHandler::updateThisNode() {
       thisNode.lastUpdated = timePassedSince(node_time.lastSyncTime);
       break;
     }
+  }
+  if (node_time.systemTimePresent()) {
+    thisNode.unix_time = node_time.getUnixTime();
   }
   #ifdef USES_ESPEASY_NOW
   if (Settings.UseESPEasyNow()) {

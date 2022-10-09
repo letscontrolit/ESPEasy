@@ -6,6 +6,8 @@
 
 #include "../DataStructs/MAC_address.h"
 #include "../DataStructs/NodeStruct.h"
+#include "../DataStructs/NTP_candidate.h"
+
 
 #ifdef USES_ESPEASY_NOW
 # include "../DataStructs/ESPEasy_now_traceroute.h"
@@ -113,6 +115,11 @@ public:
 
 #endif // ifdef USES_ESPEASY_NOW
 
+  bool getUnixTime(uint32_t &unix_time) const {
+    return _ntp_candidate.getUnixTime(unix_time);
+  }
+
+
 private:
 
   void setRSSI(NodeStruct *node,
@@ -124,6 +131,9 @@ private:
 
   NodesMap _nodes;
   ESPEasy_Mutex _nodes_mutex;
+
+  NTP_candidate_struct _ntp_candidate;
+  
 
 #ifdef USES_ESPEASY_NOW
   ESPEasy_now_Node_statisticsMap _nodeStats;

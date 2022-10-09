@@ -96,6 +96,7 @@ struct __attribute__((__packed__)) NodeStruct
   // When sending system info, this value contains the time since last time sync.
   // When kept as node info, this is the last time stamp the node info was updated.
   unsigned long lastUpdated = (1 << 30);
+  uint32_t unix_time = 0;
 };
 typedef std::map<uint8_t, NodeStruct> NodesMap;
 #endif
