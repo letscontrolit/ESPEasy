@@ -11,6 +11,7 @@
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
+#include "../Globals/Nodes.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
@@ -134,6 +135,14 @@ unsigned long ESPEasy_time::now() {
           unixTime_d = tmp_unixtime;
           timeSource = timeSource_t::External_RTC_time_source;
           updatedTime = true;
+        } else {
+#if FEATURE_ESPEASY_P2P
+          if (Nodes.getUnixTime(tmp_unixtime)) {
+            unixTime_d = tmp_unixtime;
+            timeSource = timeSource_t::ESPEASY_p2p_UDP;
+            updatedTime = true;
+          }
+#endif
         }
       }
     }
@@ -261,6 +270,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case timeSource_t::GPS_time_source:
     case timeSource_t::GPS_PPS_time_source:
     case timeSource_t::ESP_now_peer:
+    case timeSource_t::ESPEASY_p2p_UDP:
     case timeSource_t::Manual_set:
       return true;
     case timeSource_t::NTP_time_source:
