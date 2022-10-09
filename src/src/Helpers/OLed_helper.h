@@ -8,6 +8,7 @@
  * Helper with OLed related functions
  *
  * Changelog:
+ * 2022-10-09 tonhuisman: Deduplicate code by moving the OLed I2C Address check to OLed_helper
  * 2022-06-20 tonhuisman: Add optional values list to OLedFormController selector
  * 2022-06-18 tonhuisman: Created helper with FormSelectors for Controller, Rotation, Contrast and Sizes
  *                        and generic function OLedSetContrast
@@ -31,5 +32,9 @@ void OLedFormSizes(const __FlashStringHelper *id,
                    bool                       reloadOnChange = false);
 void OLedSetContrast(OLEDDisplay   *_display,
                      const uint8_t& OLED_contrast);
+bool OLedI2CAddressCheck(uint8_t                    function,
+                         int                        checkI2cAddress,
+                         const __FlashStringHelper *id,
+                         int8_t                     deviceAddress);
 
 #endif // ifndef HELPERS_OLED_HELPER_H

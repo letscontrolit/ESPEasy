@@ -95,3 +95,21 @@ void OLedSetContrast(OLEDDisplay   *_display,
   _display->displayOn();
   _display->setContrast(contrast, precharge, comdetect);
 }
+
+/**************************************************************************
+ * Handle PLUGIN_WEBFORM_SHOW_I2C_PARAMS and PLUGIN_HAS_I2C_ADDRESS plugin events
+ *************************************************************************/
+bool OLedI2CAddressCheck(uint8_t                    function,
+                         int                        checkI2cAddress,
+                         const __FlashStringHelper *id,
+                         int8_t                     deviceAddress) {
+  bool success                     = false;
+  const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
+
+  if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+    addFormSelectorI2C(id, 2, i2cAddressValues, deviceAddress);
+  } else {
+    success = intArrayContains(2, i2cAddressValues, checkI2cAddress);
+  }
+  return success;
+}
