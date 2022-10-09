@@ -85,7 +85,7 @@ void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Time : Set Ext. Time Source: ");
-      log += toString(timeSource);
+      log += toString(source);
       log += F(" time: ");
       log += static_cast<uint32_t>(time);
       addLogMove(LOG_LEVEL_INFO, log);
