@@ -43,6 +43,11 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
+   2022-10-09 tonhuisman: ** Structural behavior change: **
+                          - Saving of the thermo<tasknr>.dat file is reduced to the absolute minimum, only if the setpoint is different
+                            from the last saved value, and we're not in manual mode, it will be saved, but only after 30 seconds.
+                          - The relay is only actuated/released 5 seconds after the setpoint has been changed
+   2022-10-09 tonhuisman: Deduplicate code by moving the OLed I2C Address check to OLed_helper
    2022-10-03 tonhuisman: On request changed the leftbtn and rightbtn commands to thermo,down and thermo,up to be more descriptive
                           Add option for alternating sysname/SSID in title (or just the sysname)
                           Add option for show taskname instead of sysname in title
@@ -104,13 +109,8 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
+      success = OLedI2CAddressCheck(function, event->Par1, F("pi2caddr"), P109_CONFIG_I2CADDRESS);
 
-      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("pi2caddr"), 2, i2cAddressValues, P109_CONFIG_I2CADDRESS);
-      } else {
-        success = intArrayContains(2, i2cAddressValues, event->Par1);
-      }
       break;
     }
 

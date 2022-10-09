@@ -42,6 +42,8 @@ const char flameimg[] PROGMEM = {
 # define P109_MODE_STATE_UNSET          255
 # define P109_MODE_STATE_INITIAL        1
 # define P109_BUTTON_DEBOUNCE_TIME_MS   300
+# define P109_DEFAULT_SETPOINT_DELAY    5 + 1 // Seconds + 1 before the relay state is changed after the setpoint is changed
+# define P109_DELAY_BETWEEN_SAVE        30000 // 30 seconds
 
 # define P109_CONFIG_I2CADDRESS         PCONFIG(0)
 # define P109_CONFIG_ROTATION           PCONFIG(1)
@@ -74,12 +76,13 @@ private:
 
   OLEDDisplay *_display = nullptr;
 
-  uint32_t _lastsavetime = 0;
+  uint32_t _lastchangetime = 0;
   uint32_t _buttons[3];
 
   float _prev_temp     = P109_TEMP_STATE_UNSET;
   float _prev_setpoint = P109_SETPOINT_STATE_UNSET;
   float _prev_timeout  = P109_TIMEOUT_STATE_UNSET;
+  float _save_setpoint = P109_SETPOINT_STATE_UNSET;
 
   int8_t  _lastWiFiState = P109_WIFI_STATE_UNSET;
   uint8_t _prev_heating  = P109_HEATING_STATE_UNSET;
@@ -88,7 +91,9 @@ private:
   uint8_t _varIndex      = 0;
   uint8_t _changed       = 0;
   uint8_t _saveneeded    = 0;
+  uint8_t _setpointDelay = 0;
   int8_t  _relaypin      = -1;
+  String  _last_heater;
 
   String _title;
   bool   _alternateTitle = true;
@@ -101,6 +106,8 @@ private:
   void actionLeft(struct EventStruct *event);
   void actionRight(struct EventStruct *event);
   void actionMode(struct EventStruct *event);
+
+  void check_auto_mode(struct EventStruct *event);
 
   void display_header();
   void display_time();

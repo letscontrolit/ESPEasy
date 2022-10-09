@@ -2,6 +2,8 @@
 
 #ifdef USES_P109
 
+# include "../src/src/Globals/ESPEasy_time.h"
+
 /**************************************************************************
  * Constructor
  *************************************************************************/
@@ -105,8 +107,8 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log += concat(F("Thermo : Btn L:"), static_cast<int>(CONFIG_PIN1));
-    log += concat(F("R:"), static_cast<int>(CONFIG_PIN2));
-    log += concat(F("M:"), static_cast<int>(CONFIG_PIN3));
+    log += concat(F(", R:"), static_cast<int>(CONFIG_PIN2));
+    log += concat(F(", M:"), static_cast<int>(CONFIG_PIN3));
     addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
@@ -119,9 +121,8 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
 
   _prev_temp = P109_TEMP_STATE_UNSET;
 
-  String fileName = F("thermo"); // Settings per task index
-
-  fileName += _taskIndex + 1;
+  String fileName;
+  fileName += concat(F("thermo"), static_cast<int>(_taskIndex + 1)); // Settings per task index
   fileName += F(".dat");
   fs::File f = tryOpenFile(fileName, String('r'));
 
@@ -134,31 +135,27 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
     f.read(reinterpret_cast<uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
     f.close();
   }
-  _lastsavetime = millis();
+  _save_setpoint  = UserVar[event->BaseVarIndex];
+  _prev_setpoint  = UserVar[event->BaseVarIndex];
 
   if (UserVar[event->BaseVarIndex] < 1) {
     UserVar[event->BaseVarIndex]     = P109_SETPOINT_STATE_INITIAL; // setpoint
     UserVar[event->BaseVarIndex + 2] = P109_MODE_STATE_INITIAL;     // mode (X=0,A=1,M=2)
   }
 
-  // UserVar[event->BaseVarIndex + 1] = 0; // heating (0=off,1=heating in progress)
-  // UserVar[event->BaseVarIndex + 3] = 0; // timeout (manual on for minutes)
-
-  if (_relaypin != -1) {
-    setHeatRelay(static_cast<uint8_t>(UserVar[event->BaseVarIndex + 1]));
-  }
-
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log += concat(F("Thermo : Starting status S:"), toString(UserVar[event->BaseVarIndex]));
-    log += concat(F(", R:"), toString(UserVar[event->BaseVarIndex + 1]));
+    log.reserve(48);
+    log += F("Thermo : Starting status S:");
+    log += formatUserVarNoCheck(event, 0);
+    log += concat(F(", R:"), static_cast<int>(UserVar[event->BaseVarIndex + 1]));
     addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  _changed    = 1;
+  _changed    = 0; // No need to save, settings have just been restored
   _buttons[0] = 0;
   _buttons[1] = 0;
   _buttons[2] = 0;
@@ -171,6 +168,8 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   display_page();
   _display->display();
   _initialized = true;
+
+  check_auto_mode(event);
 
   return _initialized;
 }
@@ -240,20 +239,34 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
         UserVar[event->BaseVarIndex + 3] = 0;
         setMode(F("a"), F("0")); // heater to auto
         display_setpoint_temp(1);
+        check_auto_mode(event);  // Check now to avoid a double save
+      }
+    }
+
+    if (_setpointDelay > 0) {
+      _setpointDelay--;
+
+      if ((_setpointDelay == 0) && !_last_heater.isEmpty()) {
+        setHeater(_last_heater); // Last requested status, applied after delay
       }
     }
 
     if (_changed == 1) {
       sendData(event);
-      _saveneeded = 1;
-      _changed    = 0;
+      bool isSpDif = !essentiallyEqual(UserVar[event->BaseVarIndex], _save_setpoint);
+
+      // Don't save when in manual mode
+      _saveneeded     = (isSpDif && UserVar[event->BaseVarIndex + 2] != 2) ? 1 : 0;
+      _changed        = 0;
+      _lastchangetime = millis(); // Let's wait before actually saving
     }
 
-    if ((_saveneeded == 1) && ((_lastsavetime + 30000) < millis())) {
-      _saveneeded   = 0;
-      _lastsavetime = millis();
-      String fileName = F("thermo");
-      fileName += _taskIndex + 1;
+    if ((_saveneeded == 1) && ((_lastchangetime + P109_DELAY_BETWEEN_SAVE) < millis())) {
+      _saveneeded    = 0;
+      _save_setpoint = UserVar[event->BaseVarIndex]; // Save this for next save-check
+
+      String fileName;
+      fileName += concat(F("thermo"), static_cast<int>(_taskIndex + 1));
       fileName += F(".dat");
       fs::File f = tryOpenFile(fileName, F("w"));
 
@@ -263,7 +276,11 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
         flashCount();
       }
       # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, concat(F("Thermo : Save UserVars to "), fileName));
+      String log;
+      log.reserve(fileName.length() + 36);
+      log += F("Thermo : (delayed) Save UserVars to ");
+      log += fileName;
+      addLog(LOG_LEVEL_INFO, log);
       # endif // ifndef BUILD_NO_DEBUG
     }
   }
@@ -278,31 +295,7 @@ bool P109_data_struct::plugin_read(struct EventStruct *event) {
     //      Update display
     display_header();
 
-    if (UserVar[event->BaseVarIndex + 2] == 1) {
-      String atempstr2 = _deviceTemplate[0];
-      String atempstr  = parseTemplate(atempstr2);
-
-      if (!atempstr.isEmpty() &&
-          (_prev_temp != P109_TEMP_STATE_UNSET)) { // do not switch until the first temperature data arrives
-        float atemp = atempstr.toFloat();
-
-        if (atemp != 0.0f) {
-          if ((UserVar[event->BaseVarIndex] > atemp) &&
-              (UserVar[event->BaseVarIndex + 1] < 1)) {
-            setHeater(F("1"));
-            _changed = 1;
-          } else if (((atemp - P109_CONFIG_HYSTERESIS) >= UserVar[event->BaseVarIndex]) &&
-                     (UserVar[event->BaseVarIndex + 1] > 0)) {
-            setHeater(F("0"));
-            _changed = 1;
-          } else {
-            display_heat();
-          }
-        }
-      } else {
-        display_heat();
-      }
-    }
+    check_auto_mode(event);
 
     display_current_temp();
     display_timeout();
@@ -310,6 +303,38 @@ bool P109_data_struct::plugin_read(struct EventStruct *event) {
     _display->display();
   }
   return _initialized;
+}
+
+void P109_data_struct::check_auto_mode(struct EventStruct *event) {
+  if (UserVar[event->BaseVarIndex + 2] == 1) {
+    String atempstr2 = _deviceTemplate[0];
+    String atempstr  = parseTemplate(atempstr2);
+
+    if (!atempstr.isEmpty() &&
+        (_prev_temp != P109_TEMP_STATE_UNSET)) { // do not switch until the first temperature data arrives
+      float atemp = atempstr.toFloat();
+
+      if (atemp != 0.0f) {
+        if ((UserVar[event->BaseVarIndex] > atemp) &&
+            (UserVar[event->BaseVarIndex + 1] < 1)) {
+          if (_prev_heating != 1) {
+            _changed = 1;
+          }
+          setHeater(F("1"));
+        } else if (((atemp - P109_CONFIG_HYSTERESIS) >= UserVar[event->BaseVarIndex]) &&
+                   (UserVar[event->BaseVarIndex + 1] > 0)) {
+          if (_prev_heating != 0) {
+            _changed = 1;
+          }
+          setHeater(F("0"));
+        } else {
+          display_heat();
+        }
+      }
+    } else {
+      display_heat();
+    }
+  }
 }
 
 /**************************************************************************
@@ -351,6 +376,7 @@ bool P109_data_struct::plugin_write(struct EventStruct *event,
 
       if (subcommand.equals(F("setpoint"))) {
         setSetpoint(par3);
+        check_auto_mode(event);
       }
       else if (subcommand.equals(F("down"))) {    // Emulate Left button action
         actionLeft(event);
@@ -362,8 +388,12 @@ bool P109_data_struct::plugin_write(struct EventStruct *event,
         actionMode(event);
       }
       else if (subcommand.equals(F("heating"))) {
+        int prev = UserVar[event->BaseVarIndex + 1];
         setHeater(par3);
-        _changed = 1;
+
+        if (prev != UserVar[event->BaseVarIndex + 1]) {
+          _changed = 1; // Only if actually changed
+        }
       }
       else if (subcommand.equals(F("mode"))) {
         setMode(par3, parseString(string, 4));
@@ -401,7 +431,6 @@ void P109_data_struct::actionLeft(struct EventStruct *event) {
         UserVar[event->BaseVarIndex + 3] = 5400;
       }
       _prev_timeout = P109_TIMEOUT_STATE_UNSET;
-      _changed      = 1;
       break;
     }
   }
@@ -426,7 +455,6 @@ void P109_data_struct::actionRight(struct EventStruct *event) {
         UserVar[event->BaseVarIndex + 3] = 60;
       }
       _prev_timeout = P109_TIMEOUT_STATE_UNSET;
-      _changed      = 1;
       break;
     }
   }
@@ -473,8 +501,7 @@ void P109_data_struct::display_header() {
  * Display the current time
  */
 void P109_data_struct::display_time() {
-  String dtime(F("%systime%"));
-  String newString = parseTemplate(dtime);
+  String newString = node_time.getTimeString(':', false); // Avoid the overhead of calling parseTemplate()
 
   _display->setTextAlignment(TEXT_ALIGN_LEFT);
   displayBigText(0, 0, 28, 13, getDialog_plain_12(), 0, 0, newString.substring(0, 5));
@@ -549,9 +576,9 @@ void P109_data_struct::display_current_temp() {
 
   if (atempstr.length() > 0) {
     float atemp = atempstr.toFloat();
-    atemp = (round(atemp * 10.0f)) / 10.0f;
+    atemp = (roundf(atemp * 10.0f)) / 10.0f;
 
-    if (_prev_temp != atemp) {
+    if (!essentiallyEqual(_prev_temp, atemp)) {
       tmpString = toString(atemp, 1);
       displayBigText(3, 19, 47, 25, getArialMT_Plain_24(), 3, 19, tmpString.substring(0, 5));
 
@@ -565,14 +592,19 @@ void P109_data_struct::display_current_temp() {
  */
 void P109_data_struct::display_setpoint_temp(const uint8_t& force) {
   if (UserVar[_varIndex + 2] == 1) {
-    float stemp = (round(UserVar[_varIndex] * 10.0f)) / 10.0f;
+    float stemp = (roundf(UserVar[_varIndex] * 10.0f)) / 10.0f;
+    bool  isDif = !essentiallyEqual(_prev_setpoint, stemp);
 
-    if ((!essentiallyEqual(_prev_setpoint, stemp)) || (force == 1)) {
+    if (isDif || (force == 1)) {
       String tmpString = toString(stemp, 1);
       displayBigText(86, 35, 41, 21, getDialog_plain_18(), 86, 35, tmpString.substring(0, 5));
 
       _prev_setpoint = stemp;
-      _changed       = 1;
+
+      if (isDif) {
+        _changed       = 1;
+        _setpointDelay = P109_DEFAULT_SETPOINT_DELAY; // Start delay
+      }
     }
   }
 }
@@ -583,19 +615,7 @@ void P109_data_struct::display_setpoint_temp(const uint8_t& force) {
 void P109_data_struct::display_timeout() {
   if (UserVar[_varIndex + 2] == 2) {
     if (_prev_timeout >= (UserVar[_varIndex + 3] + 60.0f)) {
-      // TODO: Start
-      float  timeinmin = UserVar[_varIndex + 3] / 60.0f;
-      String thour     = toString((static_cast<int>(timeinmin / 60.0f)), 0);
-      thour += ':';
-      String thour2 = toString((static_cast<int>(timeinmin) % 60), 0);
-
-      if (thour2.length() < 2) {
-        thour += '0';
-      }
-      thour += thour2;
-
-      // TODO: replace above lines after merge of: https://github.com/letscontrolit/ESPEasy/pull/4184
-      // String thour = minutesToHourColonMinute(static_cast<int>(UserVar[_varIndex + 3] / 60.0f));
+      String thour = minutesToHourColonMinute(static_cast<int>(UserVar[_varIndex + 3] / 60.0f));
       displayBigText(86, 35, 41, 21, getDialog_plain_18(), 86, 35, thour.substring(0, 5));
 
       _prev_timeout = UserVar[_varIndex + 3];
@@ -608,20 +628,10 @@ void P109_data_struct::display_timeout() {
  */
 void P109_data_struct::display_mode() {
   if (_prev_mode != UserVar[_varIndex + 2]) {
-    String tmpString;
+    String   tmpString = F("XAM");
+    uint16_t xamIdx    = min(static_cast<int>(UserVar[_varIndex + 2]), 2);
 
-    switch (static_cast<int>(UserVar[_varIndex + 2])) {
-      case 0:
-        tmpString = 'X';
-        break;
-      case 1:
-        tmpString = 'A';
-        break;
-      case 2:
-        tmpString = 'M';
-        break;
-    }
-    displayBigText(61, 49, 12, 17, getArialMT_Plain_16(), 61, 49, tmpString.substring(0, 5));
+    displayBigText(61, 49, 12, 17, getArialMT_Plain_16(), 61, 49, tmpString.substring(xamIdx, xamIdx + 1));
 
     _prev_mode = UserVar[_varIndex + 2];
   }
@@ -664,12 +674,6 @@ void P109_data_struct::display_heat() {
 void P109_data_struct::display_page() {
   // init with full clear
 
-  _prev_temp     = P109_TEMP_STATE_UNSET;
-  _prev_setpoint = P109_SETPOINT_STATE_UNSET;
-  _prev_heating  = P109_HEATING_STATE_UNSET;
-  _prev_mode     = P109_MODE_STATE_UNSET;
-  _prev_timeout  = P109_TIMEOUT_STATE_UNSET;
-
   String tstr      = F("{D}C");
   String newString = parseTemplate(tstr);
 
@@ -694,7 +698,7 @@ void P109_data_struct::display_page() {
  * Change the setpoint value, and update the display
  */
 void P109_data_struct::setSetpoint(const String& sptemp) {
-  float stemp = (round(UserVar[_varIndex] * 10.0f)) / 10.0f;
+  float stemp = (roundf(UserVar[_varIndex] * 10.0f)) / 10.0f;
 
   if ((sptemp.charAt(0) == '+') || (sptemp.charAt(0) == 'p'))  {
     stemp = stemp + sptemp.substring(1).toFloat();
@@ -711,19 +715,19 @@ void P109_data_struct::setSetpoint(const String& sptemp) {
  * Set the heater relay state
  */
 void P109_data_struct::setHeatRelay(const uint8_t& state) {
-  # ifndef BUILD_NO_DEBUG
+  if (validGpio(_relaypin)) {
+    # ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("Thermo : Set Relay");
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
 
-    log += _relaypin;
-    log += '=';
-    log += state;
-    addLogMove(LOG_LEVEL_INFO, log);
-  }
-  # endif // ifndef BUILD_NO_DEBUG
+      log += concat(F("Thermo : Set Relay"), static_cast<int>(_relaypin));
+      log += '=';
+      log += state;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
+    # endif // ifndef BUILD_NO_DEBUG
 
-  if (_relaypin != -1) {
     pinMode(_relaypin, OUTPUT);
     digitalWrite(_relaypin, state);
   }
@@ -733,15 +737,18 @@ void P109_data_struct::setHeatRelay(const uint8_t& state) {
  * Change the heater state and update the display
  */
 void P109_data_struct::setHeater(const String& heater) {
-  if ((heater.charAt(0) == '1') || (heater.equals(F("on"))) ||
-      ((heater.length() == 0) && (UserVar[_varIndex + 1] == 0))) {
-    UserVar[_varIndex + 1] = 1;
-    setHeatRelay(HIGH);
-  } else {
-    UserVar[_varIndex + 1] = 0;
-    setHeatRelay(LOW);
+  if (_setpointDelay == 0) {
+    if ((heater.charAt(0) == '1') || (heater.equals(F("on"))) ||
+        ((heater.length() == 0) && (UserVar[_varIndex + 1] == 0))) {
+      UserVar[_varIndex + 1] = 1;
+      setHeatRelay(HIGH);
+    } else {
+      UserVar[_varIndex + 1] = 0;
+      setHeatRelay(LOW);
+    }
+    display_heat();
   }
-  display_heat();
+  _last_heater = heater;
 }
 
 /**
@@ -767,7 +774,8 @@ void P109_data_struct::setMode(const String& amode,
   } else {
     UserVar[_varIndex + 2] = 0;
   }
-  _changed = 1;
+
+  // _changed = 1;
   display_mode();
 }
 
