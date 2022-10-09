@@ -10,9 +10,10 @@ struct NTP_candidate_struct {
 
   void clear();
 
-  bool getUnixTime(uint32_t& unix_time) const;
+  bool getUnixTime(double& unix_time_d) const;
 
-  uint32_t _unix_time       = 0;
+  uint32_t _unix_time_sec   = 0;
+  uint32_t _unix_time_frac  = 0;
   int32_t  _time_wander     = -1;
   uint32_t _received_moment = 0;
 };

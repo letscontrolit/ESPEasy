@@ -83,12 +83,12 @@ void ESPEasy_time::restoreFromRTC()
 void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
     #ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Time : Set Ext. Time Source: ");
       log += toString(timeSource);
       log += F(" time: ");
       log += static_cast<uint32_t>(time);
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     #endif
   if (source == timeSource_t::No_time_source ||
@@ -104,6 +104,16 @@ void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
 uint32_t ESPEasy_time::getUnixTime() const
 {
   return static_cast<uint32_t>(sysTime);
+}
+
+uint32_t ESPEasy_time::getUnixTime(uint32_t& unix_time_frac) const
+{
+  const uint32_t seconds(getUnixTime());
+  double tmp(sysTime);
+  tmp -= seconds;
+  tmp *= 4294967295.0;
+  unix_time_frac = tmp;
+  return seconds;
 }
 
 void ESPEasy_time::initTime()
@@ -147,8 +157,9 @@ unsigned long ESPEasy_time::now() {
           updatedTime = true;
         } else {
 #if FEATURE_ESPEASY_P2P
-          if (Nodes.getUnixTime(tmp_unixtime)) {
-            unixTime_d = tmp_unixtime;
+          double tmp_unixtime_d;
+          if (Nodes.getUnixTime(tmp_unixtime_d)) {
+            unixTime_d = tmp_unixtime_d;
             timeSource = timeSource_t::ESPEASY_p2p_UDP;
             updatedTime = true;
           }
@@ -276,8 +287,8 @@ bool ESPEasy_time::reportNewMinute()
 bool ESPEasy_time::systemTimePresent() const {
   switch (timeSource) {
     case timeSource_t::No_time_source: 
-      break;
     case timeSource_t::Restore_RTC_time_source: 
+      break;
     case timeSource_t::External_RTC_time_source:
     case timeSource_t::GPS_time_source:
     case timeSource_t::GPS_PPS_time_source:

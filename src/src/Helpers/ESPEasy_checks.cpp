@@ -113,7 +113,7 @@ void run_compiletime_checks() {
   check_size<NotificationStruct,                    3u>();
   #endif // if FEATURE_NOTIFIER
   #if FEATURE_ESPEASY_P2P
-  check_size<NodeStruct,                            60u>();
+  check_size<NodeStruct,                            66u>();
   #endif
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
