@@ -139,9 +139,11 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = concat(F("RST: "), formatGpioLabel(P020_RESET_TARGET_PIN, false));
+      string  = F("RST: ");
+      string += formatGpioLabel(P020_RESET_TARGET_PIN, false);
       string += event->String1;
-      string += concat(F("LED: "), formatGpioLabel(P020_GET_LED_ENABLED ? P020_LED_PIN : -1, false));
+      string += F("LED: ");
+      string += formatGpioLabel(P020_GET_LED_ENABLED ? P020_LED_PIN : -1, false);
 
       if ((P020_GET_LED_INVERTED == 1) && (P020_GET_LED_ENABLED)) {
         string += F(" (inv)");
