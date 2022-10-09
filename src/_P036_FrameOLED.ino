@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2022-10-09
+// CHG: Deduplicate code by moving the OLed I2C Address check to OLed_helper
 // @tonhuisman: 2022-02-13
 // CHG: Tweak font metrics for 4-lines display to not need to use an 8px font (height 10 pix).
 // DEL: Removed the extra fonts added earlier in this change, including the mono-spaced font
@@ -160,13 +162,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
+      success = OLedI2CAddressCheck(function, event->Par1, F("i2c_addr"), P036_ADR);
 
-      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P036_ADR);
-      } else {
-        success = intArrayContains(2, i2cAddressValues, event->Par1);
-      }
       break;
     }
 
