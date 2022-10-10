@@ -274,6 +274,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
     if (getGpioInfo(gpio, pinnr, input, output, warning)) {
       bool includeI2C = true;
       bool includeSPI = true;
+      bool includeSerial = true;
       #if FEATURE_ETHERNET
       bool includeEthernet = true;
       #endif // if FEATURE_ETHERNET
@@ -319,13 +320,27 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
+          
+        case PinSelectPurpose::Serial_input:
+          includeSerial = false;
+          if (!input) {
+            return;
+          }
+          break;
+
+        case PinSelectPurpose::Serial_output:
+          includeSerial = false;
+          if (!output) {
+            return;
+          }
+          break;
       }
 
       if (includeI2C && Settings.isI2C_pin(gpio)) {
         disabled = true;
       }
 
-      if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+      if (includeSerial && (Settings.UseSerial && ((gpio == 1) || (gpio == 3)))) {
         disabled = true;
       }
 

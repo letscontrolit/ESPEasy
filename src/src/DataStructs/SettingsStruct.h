@@ -356,7 +356,11 @@ class SettingsStruct_tmpl
   int8_t        SPI_SCLK_pin = -1;
   int8_t        SPI_MISO_pin = -1;
   int8_t        SPI_MOSI_pin = -1;
-  int8_t        alignmentFiller0 = 0;  // Should be reused, just added to keep up with alignment
+  uint8_t       console_serial_port = 2; // ESPEasySerialPort::serial0
+  int8_t        console_serial_rxpin = 3;
+  int8_t        console_serial_txpin = 1;  
+  int8_t        alignment_filler1 = 0; // can be reused
+  int8_t        alignment_filler2 = 0; // can be reused
 };
 
 /*

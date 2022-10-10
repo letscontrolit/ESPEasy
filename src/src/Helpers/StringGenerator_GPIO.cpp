@@ -142,11 +142,16 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
 
 const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 {
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  // FIXME TD-er: Must extend this check
+
+  #else
   if (Settings.UseSerial) {
     if (gpio == 1) { return F("TX0"); }
 
     if (gpio == 3) { return F("RX0"); }
   }
+  #endif
   bool includeI2C = true;
   bool includeSPI = true;
 

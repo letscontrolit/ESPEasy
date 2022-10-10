@@ -14,6 +14,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/_Plugin_Helper_serial.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
 
@@ -53,6 +54,16 @@ void handle_advanced() {
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.SyslogPort     = getFormItemInt(F("syslogport"));
     Settings.UseSerial      = isFormItemChecked(F("useserial"));
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+    Settings.console_serial_rxpin = getFormItemInt(F("taskdevicepin1"), Settings.console_serial_rxpin);
+    Settings.console_serial_txpin = getFormItemInt(F("taskdevicepin2"), Settings.console_serial_txpin);
+
+    serialHelper_webformSave(
+      Settings.console_serial_port, 
+      Settings.console_serial_rxpin,
+      Settings.console_serial_txpin);
+#endif
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
@@ -200,15 +211,38 @@ void handle_advanced() {
 #endif // if FEATURE_SD
 
 
-  addFormSubHeader(F("Serial Settings"));
+  addFormSubHeader(F("Serial Console Settings"));
 
   addFormCheckBox(F("Enable Serial Port Console"), F("useserial"), Settings.UseSerial);
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  serialHelper_webformLoad(
+    static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
+    Settings.console_serial_rxpin, 
+    Settings.console_serial_txpin, 
+    true);
+
+  // Show serial port selection
+  addFormPinSelect(
+    PinSelectPurpose::Serial_input, 
+    formatGpioName_RX(false),                   
+    F("taskdevicepin1"), 
+    Settings.console_serial_rxpin);
+  addFormPinSelect(
+    PinSelectPurpose::Serial_output, 
+    formatGpioName_TX(false),                   
+    F("taskdevicepin2"), 
+    Settings.console_serial_txpin);
+
+  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+#endif
+
   addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 
   addFormSubHeader(F("Inter-ESPEasy Network"));
   if (Settings.UDPPort != 8266 ) addFormNote(F("Preferred P2P port is 8266"));
-  addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
+  addFormNumericBox(F("ESPEasy p2p UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
   // TODO sort settings in groups or move to other pages/groups
   addFormSubHeader(F("Special and Experimental Settings"));

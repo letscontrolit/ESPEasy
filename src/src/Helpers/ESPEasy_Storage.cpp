@@ -358,7 +358,6 @@ String BuildFixes()
   // Use get_build_nr() value for settings transitions.
   // This value will also be shown when building using PlatformIO, when showing the  Compile time defines 
 
-
   Settings.Build = get_build_nr();
   return SaveSettings();
 }
@@ -497,6 +496,7 @@ String SaveSettings()
         memcpy(Settings.md5, tmp_md5, 16);
     */
     Settings.validate();
+    initSerial();
     err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings));
   }
 
@@ -594,7 +594,17 @@ String LoadSettings()
   if (err.length()) {
     return err;
   }
+  if (Settings.StructSize != 0 && Settings.StructSize < sizeof(SettingsStruct)) {
+    // Struct has increased, set all new data to 0 just to be sure.
+    uint8_t * tmp = reinterpret_cast<uint8_t *>(&Settings);
+    const int wipe_length = sizeof(SettingsStruct) - Settings.StructSize;
+    memset(tmp + Settings.StructSize, 0, wipe_length);
+    #ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_DEBUG, concat(F("Settings : Wipe last "), wipe_length) + F(" bytes"));
+    #endif
+  }
   Settings.validate();
+  initSerial();
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 

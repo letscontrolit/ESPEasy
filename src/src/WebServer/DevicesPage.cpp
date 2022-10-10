@@ -1047,7 +1047,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       if (Device[DeviceIndex].isSerial())
       {
         // Pin1 = GPIO <--- TX
-        purpose = PinSelectPurpose::Generic_input;
+        purpose = PinSelectPurpose::Serial_input;
       } else if (Device[DeviceIndex].isSPI())
       {
         // All selectable SPI pins are output only
@@ -1060,9 +1060,13 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     if (Device[DeviceIndex].usesTaskDevicePin(2)) {
       PinSelectPurpose purpose = PinSelectPurpose::Generic;
 
-      if (Device[DeviceIndex].isSerial() || Device[DeviceIndex].isSPI())
+      if (Device[DeviceIndex].isSerial())
       {
         // Serial Pin2 = GPIO ---> RX
+        purpose = PinSelectPurpose::Serial_output;
+      }
+      if (Device[DeviceIndex].isSPI())
+      {
         // SPI only needs output pins
         purpose = PinSelectPurpose::Generic_output;
       }

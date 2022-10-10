@@ -9,6 +9,9 @@
 
 #include "../Helpers/Memory.h"
 
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#include "../Helpers/_Plugin_Helper_serial.h"
+#endif
 
 /********************************************************************************************\
  * Get data from Serial Interface
@@ -18,11 +21,71 @@ uint8_t SerialInByte;
 int  SerialInByteCounter = 0;
 char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+uint8_t console_serial_port = 2; // ESPEasySerialPort::serial0
+int8_t  console_serial_rxpin = 3;
+int8_t  console_serial_txpin = 1;
+
+ESPeasySerial* console_serial_ptr = new (std::nothrow) ESPeasySerial(
+  static_cast<ESPEasySerialPort>(console_serial_port), 
+  console_serial_rxpin, 
+  console_serial_txpin, 
+  false, 
+  64);
+ESPeasySerial& ESPEASY_SERIAL_CONSOLE_PORT = *console_serial_ptr;
+
+#endif
+
+
 void initSerial()
 {
-  if (log_to_serial_disabled || !Settings.UseSerial || activeTaskUseSerial0()) {
+  if (log_to_serial_disabled || !Settings.UseSerial) {
     return;
   }
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  // FIXME TD-er: Must detect whether we should swap software serial on pin 3&1 for HW serial if Serial0 is not being used anymore.
+  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(Settings.console_serial_port);
+  if (port == ESPEasySerialPort::serial0 || port == ESPEasySerialPort::serial0_swap) {
+    if (activeTaskUseSerial0()) {
+      return;
+    }
+  }
+#else
+  if (activeTaskUseSerial0()) {
+    return;
+  }
+#endif
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  if (Settings.console_serial_port != console_serial_port ||
+      Settings.console_serial_rxpin != console_serial_rxpin ||
+      Settings.console_serial_txpin != console_serial_txpin) {
+    // Update cached values
+    console_serial_port  = Settings.console_serial_port;
+    console_serial_rxpin = Settings.console_serial_rxpin;
+    console_serial_txpin = Settings.console_serial_txpin;
+
+    if (console_serial_ptr != nullptr) {
+      console_serial_ptr->flush();
+      console_serial_ptr->end();
+      delete console_serial_ptr;
+      console_serial_ptr = nullptr;
+    }
+    console_serial_ptr = new (std::nothrow) ESPeasySerial(
+      static_cast<ESPEasySerialPort>(console_serial_port), 
+      console_serial_rxpin, 
+      console_serial_txpin, 
+      false, 
+      64);
+    if (console_serial_ptr == nullptr) {
+      addLog(LOG_LEVEL_ERROR, F("Serial : Cannot initialize console port, please reboot"));
+      return;
+    }
+    ESPEASY_SERIAL_CONSOLE_PORT = *console_serial_ptr;
+  }
+
+#endif
 
   // make sure previous serial buffers are flushed before resetting baudrate
   ESPEASY_SERIAL_CONSOLE_PORT.flush();
@@ -134,7 +197,8 @@ void addNewlineToSerialBuffer() {
 
 void process_serialWriteBuffer() {
   if (serialWriteBuffer.size() == 0) { return; }
-  size_t snip = ESPEASY_SERIAL_CONSOLE_PORT.availableForWrite();
+  // FIXME TD-er: Implement availableForWrite() on ESPEasySerial
+  size_t snip = 64; //ESPEASY_SERIAL_CONSOLE_PORT.availableForWrite();
 
   if (snip > 0) {
     size_t bytes_to_write = serialWriteBuffer.size();

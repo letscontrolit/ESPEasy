@@ -3,11 +3,32 @@
 
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#include <ESPeasySerial.h>
+#endif
+
+
 #define INPUT_BUFFER_SIZE          128
 
 extern uint8_t SerialInByte;
 extern int  SerialInByteCounter;
 extern char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+// Cache the used settings, so we can check whether to change the console serial
+extern  uint8_t console_serial_port;
+extern  int8_t  console_serial_rxpin;
+extern  int8_t  console_serial_txpin;
+
+extern ESPeasySerial* console_serial_ptr;
+extern ESPeasySerial& ESPEASY_SERIAL_CONSOLE_PORT;
+
+#else
+  // Using the standard Serial0 HW serial port.
+  #define ESPEASY_SERIAL_CONSOLE_PORT Serial
+#endif
+
+
 
 void initSerial();
 
@@ -43,11 +64,5 @@ void serialPrintln();
    void serialPrintln(unsigned long value);
  */
 
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  #define ESPEASY_SERIAL_CONSOLE_PORT
-#else
-  // Using the standard Serial0 HW serial port.
-  #define ESPEASY_SERIAL_CONSOLE_PORT Serial
-#endif
 
 #endif // ifndef ESPEASYCORE_SERIAL_H

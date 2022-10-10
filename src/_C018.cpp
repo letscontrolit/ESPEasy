@@ -571,7 +571,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       success = init_c018_delay_queue(event->ControllerIndex);
 
       if (success) {
-        C018_init(event);
+        success = C018_init(event);
       }
       break;
     }
@@ -707,8 +707,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       serialHelper_webformLoad(port, rxpin, txpin, true);
 
       // Show serial port selection
-      addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_RX(false),                   F("taskdevicepin1"), rxpin);
-      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_TX(false),                   F("taskdevicepin2"), txpin);
+      addFormPinSelect(PinSelectPurpose::Serial_input, formatGpioName_RX(false),                   F("taskdevicepin1"), rxpin);
+      addFormPinSelect(PinSelectPurpose::Serial_output, formatGpioName_TX(false),                   F("taskdevicepin2"), txpin);
 
       html_add_script(F("document.getElementById('serPort').onchange();"), false);
 

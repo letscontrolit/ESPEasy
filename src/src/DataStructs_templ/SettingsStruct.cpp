@@ -370,6 +370,23 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
   if ((I2C_clockSpeed == 0) || (I2C_clockSpeed > 3400000)) { I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED; }
   if (WebserverPort == 0) { WebserverPort = 80;}
   if (SyslogPort == 0) { SyslogPort = 514; }
+
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  if (console_serial_port == 0 && UseSerial) {
+    console_serial_port = 2; // ESPEasySerialPort::serial0
+  }
+  if (console_serial_port == 2) {
+    // Set default RX/TX pins for Serial0
+    console_serial_rxpin = 3;
+    console_serial_txpin = 1;
+#ifdef ESP8266
+  } else if (console_serial_port == 3) {
+    // Set default RX/TX pins for Serial0_swapped
+    console_serial_rxpin = 13;
+    console_serial_txpin = 15;
+#endif
+  }
+  #endif
 }
 
 template<unsigned int N_TASKS>
