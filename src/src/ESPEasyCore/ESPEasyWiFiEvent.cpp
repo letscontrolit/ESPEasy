@@ -359,7 +359,8 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
     WiFi.persistent(false);
-    WiFi.disconnect(true);
+    WiFi.disconnect(false);
+    delay(0);
   }
 }
 
@@ -423,8 +424,10 @@ void onWiFiScanDone(void *arg, STATUS status) {
   }
 
   WiFiMode_t mode = WiFi.getMode();
-  //WiFi.mode(WIFI_OFF);
-  WiFi.mode(mode);
+  setWifiMode(WIFI_OFF);
+  delay(1);
+  setWifiMode(mode);
+  delay(1);
 }
 #endif
 
