@@ -103,6 +103,8 @@ private:
   bool _initialized  = false;
   bool _showWiFiName = true;
 
+  void saveThermoSettings(struct EventStruct *event);
+
   void actionLeft(struct EventStruct *event);
   void actionRight(struct EventStruct *event);
   void actionMode(struct EventStruct *event);

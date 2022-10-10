@@ -43,6 +43,9 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
+   2022-10-10 tonhuisman: Save pending thermo-settings on plugin exit (while waiting for the 30 seconds to have passed)
+                          Always force Auto mode on plugin start, and timeout 0, reset timeout to 0 on mode change
+                          Display timeout only up to 9:59 hours, longer timeout values are truncated!
    2022-10-09 tonhuisman: ** Structural behavior change: **
                           - Saving of the thermo<tasknr>.dat file is reduced to the absolute minimum, only if the setpoint is different
                             from the last saved value, and we're not in manual mode, it will be saved, but only after 30 seconds.

@@ -135,13 +135,14 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
     f.read(reinterpret_cast<uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
     f.close();
   }
-  _save_setpoint  = UserVar[event->BaseVarIndex];
-  _prev_setpoint  = UserVar[event->BaseVarIndex];
+  _save_setpoint = UserVar[event->BaseVarIndex];
+  _prev_setpoint = UserVar[event->BaseVarIndex];
 
   if (UserVar[event->BaseVarIndex] < 1) {
-    UserVar[event->BaseVarIndex]     = P109_SETPOINT_STATE_INITIAL; // setpoint
-    UserVar[event->BaseVarIndex + 2] = P109_MODE_STATE_INITIAL;     // mode (X=0,A=1,M=2)
+    UserVar[event->BaseVarIndex] = P109_SETPOINT_STATE_INITIAL; // setpoint
   }
+  UserVar[event->BaseVarIndex + 2] = P109_MODE_STATE_INITIAL;   // mode (X=0,A=1,M=2)
+  UserVar[event->BaseVarIndex + 3] = 0;                         // Reset
 
   # ifndef BUILD_NO_DEBUG
 
@@ -178,6 +179,9 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
  * De-initialize, pre-destructor
  *************************************************************************/
 bool P109_data_struct::plugin_exit(struct EventStruct *event) {
+  if (_saveneeded == 1) { // Can't wait for timeout any longer
+    saveThermoSettings(event);
+  }
   _initialized = false;
 
   return true;
@@ -265,26 +269,34 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
       _saveneeded    = 0;
       _save_setpoint = UserVar[event->BaseVarIndex]; // Save this for next save-check
 
-      String fileName;
-      fileName += concat(F("thermo"), static_cast<int>(_taskIndex + 1));
-      fileName += F(".dat");
-      fs::File f = tryOpenFile(fileName, F("w"));
-
-      if (f) {
-        f.write(reinterpret_cast<const uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
-        f.close();
-        flashCount();
-      }
-      # ifndef BUILD_NO_DEBUG
-      String log;
-      log.reserve(fileName.length() + 36);
-      log += F("Thermo : (delayed) Save UserVars to ");
-      log += fileName;
-      addLog(LOG_LEVEL_INFO, log);
-      # endif // ifndef BUILD_NO_DEBUG
+      saveThermoSettings(event);
     }
   }
   return _initialized;
+}
+
+/**************************************************************************
+ * Save thermo settings unconditionally
+ *************************************************************************/
+void P109_data_struct::saveThermoSettings(struct EventStruct *event) {
+  String fileName;
+
+  fileName += concat(F("thermo"), static_cast<int>(event->TaskIndex + 1));
+  fileName += F(".dat");
+  fs::File f = tryOpenFile(fileName, F("w"));
+
+  if (f) {
+    f.write(reinterpret_cast<const uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
+    f.close();
+    flashCount();
+  }
+  # ifndef BUILD_NO_DEBUG
+  String log;
+  log.reserve(fileName.length() + 36);
+  log += F("Thermo : (delayed) Save UserVars to ");
+  log += fileName;
+  addLog(LOG_LEVEL_INFO, log);
+  # endif // ifndef BUILD_NO_DEBUG
 }
 
 /**************************************************************************
@@ -616,7 +628,7 @@ void P109_data_struct::display_timeout() {
   if (UserVar[_varIndex + 2] == 2) {
     if (_prev_timeout >= (UserVar[_varIndex + 3] + 60.0f)) {
       String thour = minutesToHourColonMinute(static_cast<int>(UserVar[_varIndex + 3] / 60.0f));
-      displayBigText(86, 35, 41, 21, getDialog_plain_18(), 86, 35, thour.substring(0, 5));
+      displayBigText(86, 35, 41, 21, getDialog_plain_18(), 89, 35, thour.substring(1, 5));
 
       _prev_timeout = UserVar[_varIndex + 3];
     }
@@ -690,7 +702,7 @@ void P109_data_struct::display_page() {
   _display->drawVerticalLine(109, 19, 10);
 
   display_mode();
-  display_setpoint_temp();
+  display_setpoint_temp(1);
   display_current_temp();
 }
 
@@ -756,6 +768,8 @@ void P109_data_struct::setHeater(const String& heater) {
  */
 void P109_data_struct::setMode(const String& amode,
                                const String& atimeout) {
+  UserVar[_varIndex + 3] = 0.0f; // Reset timeout
+
   if ((amode[0] == '0') || (amode[0] == 'x')) {
     UserVar[_varIndex + 2] = 0;
     setHeater(F("0"));
