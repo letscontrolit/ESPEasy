@@ -202,7 +202,7 @@ void handle_advanced() {
 
   addFormSubHeader(F("Serial Settings"));
 
-  addFormCheckBox(F("Enable Serial port"), F("useserial"), Settings.UseSerial);
+  addFormCheckBox(F("Enable Serial Port Console"), F("useserial"), Settings.UseSerial);
   addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 
