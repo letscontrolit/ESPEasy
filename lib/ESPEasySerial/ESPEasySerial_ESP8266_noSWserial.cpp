@@ -286,8 +286,5 @@ bool ESPeasySerial::listen() {
   return false;
 }
 
-void ESPeasySerial::perform_work() {
-}
-
 
 #endif // DISABLE_SOFTWARE_SERIAL

@@ -76,7 +76,7 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
   switch (_serialtype) {
     case ESPEasySerialPort::software:
     {
-      _swserial = new SoftwareSerial(receivePin, transmitPin, inverse_logic);
+      _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic);
       break;
     }
     case ESPEasySerialPort::sc16is752:
@@ -105,13 +105,7 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
 
   if (isSWserial()) {
     if (_swserial != nullptr) {
-      _swserial->begin(
-        baud, 
-        SerialConfig_to_SoftwareSerialConfig(config),
-        _receivePin,
-        _transmitPin,
-        _inverse_logic,
-        _buffSize);
+      _swserial->begin(baud);
     }
   } else if (isI2Cserial()) {
 #ifndef DISABLE_SC16IS752_Serial
@@ -308,11 +302,12 @@ int ESPeasySerial::availableForWrite() {
   }
 
   if (isSWserial()) {
-    return _swserial->availableForWrite();
+    // FIXME TD-er: Implement availableForWrite
+    return 1;
   } else if (isI2Cserial()) {
 #ifndef DISABLE_SC16IS752_Serial
     // FIXME TD-er: Implement availableForWrite
-    return 64; //_i2cserial->availableForWrite();
+    return 4; //_i2cserial->availableForWrite();
 #else
     return 0;
 #endif
@@ -485,13 +480,6 @@ bool ESPeasySerial::stopListening() {
   return false;
 }
 
-void ESPeasySerial::perform_work() {
-  if (isValid() && isSWserial()) {
-# ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-    return _swserial->perform_work();
-# endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-  }
-}
 #endif // ESP8266
 
 

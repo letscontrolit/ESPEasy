@@ -38,7 +38,7 @@
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-# include <SoftwareSerial.h>
+# include <ESPEasySoftwareSerial.h>
 # include "ESPEasySerialConfig.h"
 #endif 
 
@@ -224,10 +224,6 @@ public:
 
   String getLogString() const;
 
-  // Run the internal processing and event engine. Can be iteratively called
-  // from loop, or otherwise scheduled.
-  void   perform_work();
-
   using Print::write;
 
   int getRxPin() const {
@@ -272,7 +268,7 @@ private:
     return _serialtype == ESPEasySerialPort::software;
   }
 
-  SoftwareSerial *_swserial = nullptr;
+  ESPeasySoftwareSerial *_swserial = nullptr;
 #else // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
   bool isSWserial() const {
     return false;

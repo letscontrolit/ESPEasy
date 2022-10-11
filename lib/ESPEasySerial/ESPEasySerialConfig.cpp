@@ -1,5 +1,6 @@
 #include "ESPEasySerialConfig.h"
 
+/*
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
 SoftwareSerialConfig SerialConfig_to_SoftwareSerialConfig(SerialConfig config)
 {
@@ -32,3 +33,4 @@ SoftwareSerialConfig SerialConfig_to_SoftwareSerialConfig(SerialConfig config)
   return SWSERIAL_8N1;
 }
 #endif
+*/

@@ -404,8 +404,5 @@ bool ESPeasySerial::listen() {
   return true;
 }
 
-void ESPeasySerial::perform_work() {
-}
-
 
 #endif // ESP32
