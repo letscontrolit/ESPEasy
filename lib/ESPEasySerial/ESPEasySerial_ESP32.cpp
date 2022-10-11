@@ -78,8 +78,50 @@ ESPeasySerial::ESPeasySerial(
   int transmitPin, 
   bool inverse_logic,
   unsigned int buffSize)
-  : _receivePin(receivePin), _transmitPin(transmitPin), _inverse_logic(inverse_logic)
+  : 
+#ifndef DISABLE_SC16IS752_Serial
+  _i2cserial(nullptr),
+#endif
+  _receivePin(receivePin),
+  _transmitPin(transmitPin),
+  _inverse_logic(inverse_logic)
 {
+  resetConfig(port, receivePin, transmitPin, inverse_logic, buffSize);
+}
+
+ESPeasySerial::~ESPeasySerial() {
+  flush();
+  end();
+
+#ifndef DISABLE_SC16IS752_Serial
+  if (_i2cserial != nullptr) {
+    delete _i2cserial;
+  }
+#endif
+}
+
+void ESPeasySerial::resetConfig(
+  ESPEasySerialPort port, 
+  int receivePin, 
+  int transmitPin, 
+  bool inverse_logic,
+  unsigned int buffSize)
+{
+#ifndef DISABLE_SC16IS752_Serial
+  if (_i2cserial != nullptr) {
+    _i2cserial->end();
+    delete _i2cserial;
+  }
+#endif
+#ifndef DISABLE_SC16IS752_Serial
+  _i2cserial = nullptr;
+#endif
+
+  _receivePin = receivePin;
+  _transmitPin = transmitPin;
+  _inverse_logic = inverse_logic;
+  _buffSize = buffSize;
+
   switch (port) {
     case  ESPEasySerialPort::serial0:
     case  ESPEasySerialPort::serial1:
@@ -106,16 +148,6 @@ ESPeasySerial::ESPeasySerial(
   }
 #endif
 
-}
-
-ESPeasySerial::~ESPeasySerial() {
-  end();
-
-#ifndef DISABLE_SC16IS752_Serial
-  if (_i2cserial != nullptr) {
-    delete _i2cserial;
-  }
-#endif
 }
 
 void ESPeasySerial::begin(unsigned long baud, uint32_t config
@@ -299,6 +331,23 @@ int ESPeasySerial::available(void) {
   return getHW()->available();
 }
 
+int ESPeasySerial::availableForWrite(void) {
+  if (!isValid()) {
+    return 0;
+  }
+
+  if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
+    // FIXME TD-er: Implement availableForWrite
+    return 64; // _i2cserial->availableForWrite();
+#else
+    return 0;
+#endif
+  } else {
+    return getHW()->availableForWrite();
+  }
+}
+
 void ESPeasySerial::flush(void) {
   if (!isValid()) {
     return;
@@ -320,6 +369,13 @@ int ESPeasySerial::baudRate(void) {
     return _baud;
   }
   return getHW()->baudRate();
+}
+
+void ESPeasySerial::setDebugOutput(bool enable) {
+  if (!isValid() || isI2Cserial()) {
+    return;
+  }
+  getHW()->setDebugOutput(enable);
 }
 
 bool ESPeasySerial::isTxEnabled(void) {
@@ -347,5 +403,9 @@ bool ESPeasySerial::isRxEnabled(void) {
 bool ESPeasySerial::listen() {
   return true;
 }
+
+void ESPeasySerial::perform_work() {
+}
+
 
 #endif // ESP32

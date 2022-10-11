@@ -16,15 +16,26 @@ ESPeasySerial::ESPeasySerial(
   bool         forceSWserial)
   : _receivePin(receivePin), _transmitPin(transmitPin)
 {
+  resetConfig(port, receivePin, transmitPin, inverse_logic, buffSize, forceSWserial);
+}
+
+ESPeasySerial::~ESPeasySerial() {
+  flush();
+  end();
+}
+
+void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
+{
+  _receivePin = receivePin;
+  _transmitPin = transmitPin;
+  _inverse_logic = inverse_logic;
+  _buffSize = buffSize;
+
   _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
 
   if (isValid()) {
     getHW()->pins(transmitPin, receivePin);
   }
-}
-
-ESPeasySerial::~ESPeasySerial() {
-  end();
 }
 
 void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
@@ -147,6 +158,13 @@ int ESPeasySerial::available(void) {
   return getHW()->available();
 }
 
+int ESPeasySerial::availableForWrite() {
+  if (!isValid()) {
+    return 0;
+  }
+  return getHW()->availableForWrite();
+}
+
 void ESPeasySerial::flush(void) {
   if (!isValid()) {
     return;
@@ -267,5 +285,9 @@ unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
 bool ESPeasySerial::listen() {
   return false;
 }
+
+void ESPeasySerial::perform_work() {
+}
+
 
 #endif // DISABLE_SOFTWARE_SERIAL

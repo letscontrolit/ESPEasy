@@ -1,6 +1,6 @@
 {
     "name": "ESPeasySerial",
-    "version": "2.0.15",
+    "version": "2.1.1",
     "keywords": [
       "serial", "io", "softwareserial", "hardwareserial"
     ],

@@ -37,9 +37,10 @@
   # endif // ifndef DISABLE_SOFTWARE_SERIAL
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
 
-#ifndef DISABLE_SOFTWARE_SERIAL
-# include <ESPEasySoftwareSerial.h>
-#endif // ifndef DISABLE_SOFTWARE_SERIAL
+#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
+# include <SoftwareSerial.h>
+# include "ESPEasySerialConfig.h"
+#endif 
 
 #ifdef ESP32
   # define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 2, sc16is752
@@ -82,6 +83,7 @@
 
 
 
+
 class ESPeasySerial : public Stream {
 public:
 
@@ -99,6 +101,14 @@ public:
                 unsigned int buffSize      = 64,
                 bool         forceSWserial = false);
   virtual ~ESPeasySerial();
+
+  // Same parameters as the constructor, to allow to reconfigure the ESPEasySerial object to be another type of port.
+  void resetConfig(ESPEasySerialPort         port, 
+                int          receivePin,
+                int          transmitPin,
+                bool         inverse_logic = false,
+                unsigned int buffSize      = 64,
+                bool         forceSWserial = false);
 
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud,
@@ -124,6 +134,14 @@ public:
                 unsigned int buffSize      = 64);
   virtual ~ESPeasySerial();
 
+  // Same parameters as the constructor, to allow to reconfigure the ESPEasySerial object to be another type of port.
+  void resetConfig(ESPEasySerialPort port, 
+                int  receivePin,
+                int  transmitPin,
+                bool inverse_logic = false,
+                unsigned int buffSize      = 64);
+
+
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud,
              uint32_t      config     = SERIAL_8N1,
@@ -138,6 +156,7 @@ public:
   size_t write(uint8_t val) override;
   int    read(void) override;
   int    available(void) override;
+  int    availableForWrite(void);
   void   flush(void) override;
 
 #if defined(ESP8266)
@@ -175,9 +194,9 @@ public:
                           size_t size) override;
   size_t        readBytes(uint8_t *buffer,
                           size_t   size) override;
+#endif
 
   void          setDebugOutput(bool);
-#endif
 
   bool          isTxEnabled(void);
   bool          isRxEnabled(void);
@@ -205,6 +224,9 @@ public:
 
   String getLogString() const;
 
+  // Run the internal processing and event engine. Can be iteratively called
+  // from loop, or otherwise scheduled.
+  void   perform_work();
 
   using Print::write;
 
@@ -250,7 +272,7 @@ private:
     return _serialtype == ESPEasySerialPort::software;
   }
 
-  ESPeasySoftwareSerial *_swserial = nullptr;
+  SoftwareSerial *_swserial = nullptr;
 #else // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
   bool isSWserial() const {
     return false;
@@ -266,6 +288,7 @@ private:
   int _transmitPin;
   unsigned long _baud = 0;
   bool _inverse_logic = false;
+  unsigned int _buffSize = 64;
 };
 
 #endif // ifndef ESPeasySerial_h
