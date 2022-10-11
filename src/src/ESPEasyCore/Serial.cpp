@@ -228,11 +228,6 @@ void process_serialWriteBuffer() {
         --bytes_to_write;
       }
     }
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-    else {
-      ESPEASY_SERIAL_CONSOLE_PORT.perform_work();
-    }
-#endif
     bytes_to_write = serialWriteBuffer.size();
     if (bytes_to_write == 0) return;
   }
