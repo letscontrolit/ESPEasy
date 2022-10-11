@@ -20,8 +20,7 @@ extern  uint8_t console_serial_port;
 extern  int8_t  console_serial_rxpin;
 extern  int8_t  console_serial_txpin;
 
-extern ESPeasySerial* console_serial_ptr;
-extern ESPeasySerial& ESPEASY_SERIAL_CONSOLE_PORT;
+extern ESPeasySerial ESPEASY_SERIAL_CONSOLE_PORT;
 
 #else
   // Using the standard Serial0 HW serial port.

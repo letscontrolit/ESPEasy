@@ -400,6 +400,9 @@ void ESPEasy_setup()
   #endif // if FEATURE_NOTIFIER
 
   PluginInit();
+
+  initSerial(); // Plugins may have altered serial, so re-init serial
+  
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("PluginInit()"));
   #endif

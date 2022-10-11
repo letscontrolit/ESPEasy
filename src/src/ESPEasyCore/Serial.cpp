@@ -7,6 +7,7 @@
 #include "../Globals/Logging.h" //  For serialWriteBuffer
 #include "../Globals/Settings.h"
 
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Memory.h"
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
@@ -26,23 +27,23 @@ uint8_t console_serial_port = 2; // ESPEasySerialPort::serial0
 int8_t  console_serial_rxpin = 3;
 int8_t  console_serial_txpin = 1;
 
-ESPeasySerial* console_serial_ptr = new (std::nothrow) ESPeasySerial(
+ESPeasySerial ESPEASY_SERIAL_CONSOLE_PORT(
   static_cast<ESPEasySerialPort>(console_serial_port), 
   console_serial_rxpin, 
   console_serial_txpin, 
   false, 
   64);
-ESPeasySerial& ESPEASY_SERIAL_CONSOLE_PORT = *console_serial_ptr;
 
 #endif
 
 
 void initSerial()
 {
-  if (log_to_serial_disabled || !Settings.UseSerial) {
+  updateActiveTaskUseSerial0();
+  if (!Settings.UseSerial) {
     return;
   }
-
+  
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   // FIXME TD-er: Must detect whether we should swap software serial on pin 3&1 for HW serial if Serial0 is not being used anymore.
   const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(Settings.console_serial_port);
@@ -57,32 +58,39 @@ void initSerial()
   }
 #endif
 
+  if (log_to_serial_disabled) {
+    return;
+  }
+
+
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   if (Settings.console_serial_port != console_serial_port ||
       Settings.console_serial_rxpin != console_serial_rxpin ||
       Settings.console_serial_txpin != console_serial_txpin) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Serial : Change serial console port from: ");
+      log += ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(console_serial_port));
+      log += F(" to: ");
+      log += ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(Settings.console_serial_port));
+      addLogMove(LOG_LEVEL_INFO, log);      
+    }
+    process_serialWriteBuffer();
+
     // Update cached values
     console_serial_port  = Settings.console_serial_port;
     console_serial_rxpin = Settings.console_serial_rxpin;
     console_serial_txpin = Settings.console_serial_txpin;
 
-    if (console_serial_ptr != nullptr) {
-      console_serial_ptr->flush();
-      console_serial_ptr->end();
-      delete console_serial_ptr;
-      console_serial_ptr = nullptr;
-    }
-    console_serial_ptr = new (std::nothrow) ESPeasySerial(
+    ESPEASY_SERIAL_CONSOLE_PORT.resetConfig(
       static_cast<ESPEasySerialPort>(console_serial_port), 
       console_serial_rxpin, 
       console_serial_txpin, 
       false, 
-      64);
-    if (console_serial_ptr == nullptr) {
-      addLog(LOG_LEVEL_ERROR, F("Serial : Cannot initialize console port, please reboot"));
-      return;
-    }
-    ESPEASY_SERIAL_CONSOLE_PORT = *console_serial_ptr;
+      64
+      #ifdef ESP8266
+      , activeTaskUseSerial0()
+      #endif
+      );
   }
 
 #endif
@@ -104,8 +112,12 @@ void serial()
       return;
     }
   }
-
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  // FIXME TD-er: Must add check whether SW serial may be using the same pins as Serial0
+  if (!Settings.UseSerial) { return; }
+#else
   if (!Settings.UseSerial || activeTaskUseSerial0()) { return; }
+#endif
 
   while (ESPEASY_SERIAL_CONSOLE_PORT.available())
   {
@@ -196,23 +208,33 @@ void addNewlineToSerialBuffer() {
 }
 
 void process_serialWriteBuffer() {
-  if (serialWriteBuffer.size() == 0) { return; }
-  // FIXME TD-er: Implement availableForWrite() on ESPEasySerial
-  size_t snip = 64; //ESPEASY_SERIAL_CONSOLE_PORT.availableForWrite();
+  size_t bytes_to_write = serialWriteBuffer.size();
+  if (bytes_to_write == 0) { return; }
+  const uint32_t timeout = millis() + 5; // Allow for max 5 msec loop
 
-  if (snip > 0) {
-    size_t bytes_to_write = serialWriteBuffer.size();
+  while (!timeOutReached(timeout)) {
+    size_t snip = ESPEASY_SERIAL_CONSOLE_PORT.availableForWrite();
 
-    if (snip < bytes_to_write) { bytes_to_write = snip; }
+    if (snip > 0) {
 
-    while (bytes_to_write > 0 && !serialWriteBuffer.empty()) {
-      const char c = serialWriteBuffer.front();
-      if (Settings.UseSerial) {
-        ESPEASY_SERIAL_CONSOLE_PORT.write(c);
+      if (snip < bytes_to_write) { bytes_to_write = snip; }
+
+      while (bytes_to_write > 0 && !serialWriteBuffer.empty()) {
+        const char c = serialWriteBuffer.front();
+        if (Settings.UseSerial) {
+          ESPEASY_SERIAL_CONSOLE_PORT.write(c);
+        }
+        serialWriteBuffer.pop_front();
+        --bytes_to_write;
       }
-      serialWriteBuffer.pop_front();
-      --bytes_to_write;
     }
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+    else {
+      ESPEASY_SERIAL_CONSOLE_PORT.perform_work();
+    }
+#endif
+    bytes_to_write = serialWriteBuffer.size();
+    if (bytes_to_write == 0) return;
   }
 }
 
