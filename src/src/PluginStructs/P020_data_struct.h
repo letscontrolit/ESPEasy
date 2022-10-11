@@ -26,11 +26,13 @@
 # define P020_FLAG_MULTI_LINE           1
 # define P020_FLAG_LED_ENABLED          2
 # define P020_FLAG_LED_INVERTED         3
+# define P020_FLAG_P1_EVENT_DATA        4
 # define P020_FLAG_P044_MODE_SAVED      8
 # define P020_IGNORE_CLIENT_CONNECTED   bitRead(P020_FLAGS, P020_FLAG_IGNORE_CLIENT)
 # define P020_HANDLE_MULTI_LINE         bitRead(P020_FLAGS, P020_FLAG_MULTI_LINE)
 # define P020_GET_LED_ENABLED           bitRead(P020_FLAGS, P020_FLAG_LED_ENABLED)
 # define P020_GET_LED_INVERTED          bitRead(P020_FLAGS, P020_FLAG_LED_INVERTED)
+# define P020_GET_P1_EVENT_DATA         bitRead(P020_FLAGS, P020_FLAG_P1_EVENT_DATA)
 # define P020_GET_P044_MODE_SAVED       bitRead(P020_FLAGS, P020_FLAG_P044_MODE_SAVED)
 
 # define P020_DEFAULT_SERVER_PORT           1234
@@ -137,6 +139,7 @@ struct P020_Task : public PluginTaskData_base {
   bool          _ledInverted       = false;
   bool          _ledEnabled        = false;
   bool          _CRCcheck          = false;
+  bool          _P1EventData       = false;
   size_t        _maxDataGramSize   = P020_DATAGRAM_MAX_SIZE;
   ParserState   state              = ParserState::WAITING;
 };

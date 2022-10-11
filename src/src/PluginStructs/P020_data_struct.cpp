@@ -292,6 +292,11 @@ void P020_Task::rulesEngine(const String& message) {
       case P020_Events::P1WiFiGateway: // P1 WiFi Gateway
         eventString  = getTaskDeviceName(_taskIndex);
         eventString += F("#Data");
+
+        if (_P1EventData) {
+          eventString += '=';
+          eventString += message; // Include entire message, may cause memory overflow!
+        }
         break;
     } // switch
 

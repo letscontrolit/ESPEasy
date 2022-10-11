@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2022-10-11 tonhuisman: Add option for including the message in P1 #data event
  * 2022-10-09 tonhuisman: Check P044 migration on PLUGIN_INIT too, still needs a manual save (from UI or by save command)
  * 2022-10-08 tonhuisman: Merged code from P044 into this plugin, and use a global flag to emulate P044 with P020
  *                        When USES_P044 is enabled, also USES_P020 will be enabled!
@@ -191,6 +192,11 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
                           sizeof(optionValues) / sizeof(int), options, optionValues,
                           P020_SERIAL_PROCESSING);
         }
+        addFormCheckBox(F("P1 #data event with message"), F("pp1event"), P020_GET_P1_EVENT_DATA);
+        # ifndef LIMIT_BUILD_SIZE
+        addFormNote(F("When enabled, passes the entire message in the event. <B>Warning:</B> can cause memory overflow issues!"));
+        # endif // ifndef LIMIT_BUILD_SIZE
+
         addFormCheckBox(F("Process events without client"), F("pignoreclient"), P020_IGNORE_CLIENT_CONNECTED);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("When enabled, will process serial data without a network client connected."));
@@ -243,6 +249,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("pignoreclient")));
       bitWrite(lSettings, P020_FLAG_LED_ENABLED,   isFormItemChecked(F("pled")));
       bitWrite(lSettings, P020_FLAG_LED_INVERTED,  isFormItemChecked(F("pledinv")));
+      bitWrite(lSettings, P020_FLAG_P1_EVENT_DATA, isFormItemChecked(F("pp1event")));
 
       if (P020_Emulate_P044) {
         bitSet(lSettings, P020_FLAG_P044_MODE_SAVED); // Set to P044 configuration done on every save
@@ -347,6 +354,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
 
       task->serial_processing = static_cast<P020_Events>(P020_SERIAL_PROCESSING);
+      task->_P1EventData      = P020_GET_P1_EVENT_DATA;
 
       task->blinkLED();
 
