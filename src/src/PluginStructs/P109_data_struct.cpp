@@ -141,6 +141,7 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   if (UserVar[event->BaseVarIndex] < 1) {
     UserVar[event->BaseVarIndex] = P109_SETPOINT_STATE_INITIAL; // setpoint
   }
+  UserVar[event->BaseVarIndex + 1] = 0.5f;                      // Unitialize relay state
   UserVar[event->BaseVarIndex + 2] = P109_MODE_STATE_INITIAL;   // mode (X=0,A=1,M=2)
   UserVar[event->BaseVarIndex + 3] = 0;                         // Reset
 
@@ -328,13 +329,13 @@ void P109_data_struct::check_auto_mode(struct EventStruct *event) {
 
       if (atemp != 0.0f) {
         if ((UserVar[event->BaseVarIndex] > atemp) &&
-            (UserVar[event->BaseVarIndex + 1] < 1)) {
+            (UserVar[event->BaseVarIndex + 1] < 1.0f)) {
           if (_prev_heating != 1) {
             _changed = 1;
           }
           setHeater(F("1"));
         } else if (((atemp - P109_CONFIG_HYSTERESIS) >= UserVar[event->BaseVarIndex]) &&
-                   (UserVar[event->BaseVarIndex + 1] > 0)) {
+                   (UserVar[event->BaseVarIndex + 1] > 0.0f)) {
           if (_prev_heating != 0) {
             _changed = 1;
           }

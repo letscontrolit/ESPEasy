@@ -43,6 +43,7 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
+   2022-10-11 tonhuisman: Fix initialization issue for relay state when switching tasks
    2022-10-10 tonhuisman: Save pending thermo-settings on plugin exit (while waiting for the 30 seconds to have passed)
                           Always force Auto mode on plugin start, and timeout 0, reset timeout to 0 on mode change
                           Display timeout only up to 9:59 hours, longer timeout values are truncated!
