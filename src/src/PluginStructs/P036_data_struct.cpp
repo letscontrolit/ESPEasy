@@ -708,7 +708,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   String log;
   # endif // ifdef P036_FONT_CALC_LOG
 
-  iMaxHeightForFont = round(iHeight / (iLinesPerFrame * 1.0f)); // no extra space between lines
+  iMaxHeightForFont = lround(iHeight / (iLinesPerFrame * 1.0f)); // no extra space between lines
   // Fonts already have their own extra space, no need to add an extra pixel space
 
 # ifdef P036_FONT_CALC_LOG
