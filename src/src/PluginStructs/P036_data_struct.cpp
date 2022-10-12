@@ -1271,7 +1271,7 @@ void P036_data_struct::display_scrolling_lines() {
       if (ScrollingLines.SLine[i].Width != 0) {
         // scroll this line
         ScrollingLines.SLine[i].fPixSum -= ScrollingLines.SLine[i].dPix;
-        iCurrentLeft                     = round(ScrollingLines.SLine[i].fPixSum);
+        iCurrentLeft                     = lround(ScrollingLines.SLine[i].fPixSum);
 
         if (iCurrentLeft != ScrollingLines.SLine[i].CurrentLeft) {
           // still scrolling

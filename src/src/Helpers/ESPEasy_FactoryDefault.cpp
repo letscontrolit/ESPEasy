@@ -173,8 +173,6 @@ void ResetFactory()
     strcpy_P(SecuritySettings.WifiSSID2, PSTR(DEFAULT_SSID2));
     strcpy_P(SecuritySettings.WifiKey2,  PSTR(DEFAULT_KEY2));
     strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
-    SecuritySettings.WifiSSID2[0] = 0;
-    SecuritySettings.WifiKey2[0]  = 0;
   }
   strcpy_P(SecuritySettings.Password, PSTR(DEFAULT_ADMIN_PASS));
 
@@ -281,6 +279,7 @@ void ResetFactory()
       ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
       ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
       ControllerSettings.Port = DEFAULT_PORT;
+      ControllerSettings.ClientTimeout = DEFAULT_CONTROLLER_TIMEOUT;
       setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
       setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
 

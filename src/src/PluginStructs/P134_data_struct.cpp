@@ -97,13 +97,13 @@ bool P134_data_struct::plugin_read(struct EventStruct *event)           {
       UserVar[event->BaseVarIndex] = static_cast<float>(measuredDistance);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLogMove(LOG_LEVEL_INFO, concat(F("A02YYUW: Distance value = "), measuredDistance));
+        addLogMove(LOG_LEVEL_INFO, concat(F("A02YYUW: Distance value = "), static_cast<int>(measuredDistance)));
       }
       success = true;
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log;
-        log += concat(F("A02YYUW: Error status = "), static_cast<int8_t>(measurementStatus));
+        log += concat(F("A02YYUW: Error status = "), static_cast<int>(measurementStatus));
         # ifndef LIMIT_BUILD_SIZE
         log += concat(F(", "), toString(measurementStatus));
         # endif // ifndef LIMIT_BUILD_SIZE
