@@ -95,6 +95,11 @@ int getRoomLeft() {
   return roomLeft;
 }
 
+void addToSerialBuffer(const __FlashStringHelper * line)
+{
+  addToSerialBuffer(String(line));
+}
+
 void addToSerialBuffer(const String& line) {
   process_serialWriteBuffer(); // Try to make some room first.
   {
@@ -111,6 +116,7 @@ void addToSerialBuffer(const String& line) {
       ++it;
     }
   }
+  process_serialWriteBuffer();
 }
 
 void addNewlineToSerialBuffer() {
@@ -149,25 +155,21 @@ void process_serialWriteBuffer() {
 // For now, only send it to the serial buffer and try to process it.
 // Later we may want to wrap it into a log.
 void serialPrint(const __FlashStringHelper * text) {
-  addToSerialBuffer(String(text));
-  process_serialWriteBuffer();
+  addToSerialBuffer(text);
 }
 
 void serialPrint(const String& text) {
   addToSerialBuffer(text);
-  process_serialWriteBuffer();
 }
 
 void serialPrintln(const __FlashStringHelper * text) {
-  addToSerialBuffer(String(text));
-  addNewlineToSerialBuffer();
-  process_serialWriteBuffer();
+  addToSerialBuffer(text);
+  serialPrintln();
 }
 
 void serialPrintln(const String& text) {
   addToSerialBuffer(text);
-  addNewlineToSerialBuffer();
-  process_serialWriteBuffer();
+  serialPrintln();
 }
 
 void serialPrintln() {

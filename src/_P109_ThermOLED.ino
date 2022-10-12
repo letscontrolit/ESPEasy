@@ -249,7 +249,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       for (byte varNr = 0; varNr < P109_Nlines; varNr++)
       {
         const String argName  = getPluginCustomArgName(F("Plugin_109_template"), varNr);
-        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
+        strncpy(P109_deviceTemplate[varNr], webArg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
         P109_deviceTemplate[varNr][sizeof(P109_deviceTemplate[varNr]) - 1] = 0;
       }
 
@@ -746,7 +746,7 @@ void P109_display_current_temp() {
 
   if (atempstr.length() > 0) {
     float atemp = atempstr.toFloat();
-    atemp = (round(atemp * 10)) / 10.0f;
+    atemp = (roundf(atemp * 10)) / 10.0f;
 
     if (Plugin_109_prev_temp != atemp) {
       P109_display->setColor(BLACK);
@@ -762,7 +762,7 @@ void P109_display_current_temp() {
 
 void P109_display_setpoint_temp(byte force) {
   if (UserVar[Plugin_109_varindex + 2] == 1) {
-    float stemp = (round(UserVar[Plugin_109_varindex] * 10)) / 10.0f;
+    float stemp = (roundf(UserVar[Plugin_109_varindex] * 10)) / 10.0f;
 
     if ((Plugin_109_prev_setpoint != stemp) || (force == 1)) {
       P109_display->setColor(BLACK);
@@ -877,7 +877,7 @@ void P109_display_page() {
 }
 
 void P109_setSetpoint(String sptemp) {
-  float stemp = (round(UserVar[Plugin_109_varindex] * 10)) / 10.0f;
+  float stemp = (roundf(UserVar[Plugin_109_varindex] * 10)) / 10.0f;
 
   if ((sptemp.charAt(0) == '+') || (sptemp.charAt(0) == 'p'))  {
     stemp = stemp + sptemp.substring(1).toFloat();

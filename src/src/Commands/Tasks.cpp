@@ -175,7 +175,7 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
-  const int    result       = round(UserVar[uservarIndex]);
+  const int    result       = lround(UserVar[uservarIndex]);
 
   if ((result == 0) || (result == 1)) {
     UserVar[uservarIndex] = (result == 0) ? 1.0f : 0.0f;
