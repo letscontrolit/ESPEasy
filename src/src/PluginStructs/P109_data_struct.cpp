@@ -251,6 +251,15 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
     if (_setpointDelay > 0) {
       _setpointDelay--;
 
+      if (_setpointDelay == 0) { // TODO: Remove this logging
+        String log = F("HeaterDelay: setHeater: '");
+        log += _last_heater;
+        log += F("' delayed: ");
+        log += toString(millis() - _setHeaterStarted),
+        log += F(" ms");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+
       if ((_setpointDelay == 0) && !_last_heater.isEmpty()) {
         setHeater(_last_heater); // Last requested status, applied after delay
       }
@@ -617,6 +626,8 @@ void P109_data_struct::display_setpoint_temp(const uint8_t& force) {
       if (isDif) {
         _changed       = 1;
         _setpointDelay = P109_DEFAULT_SETPOINT_DELAY; // Start delay
+
+        _setHeaterStarted = millis();
       }
     }
   }
