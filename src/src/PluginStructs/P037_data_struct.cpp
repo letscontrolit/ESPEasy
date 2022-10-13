@@ -502,19 +502,19 @@ bool P037_data_struct::webform_save(
     String argName = F("template");
     argName += (varNr + 1);
 
-    mqttTopics[varNr] = web_server.arg(argName);
+    mqttTopics[varNr] = webArg(argName);
 
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) {
       argName               = F("attribute");
       argName              += (varNr + 1);
-      jsonAttributes[varNr] = web_server.arg(argName);
+      jsonAttributes[varNr] = webArg(argName);
     }
     # endif // P037_JSON_SUPPORT
   }
 
-  globalTopicPrefix = web_server.arg(F("topicprefix"));
+  globalTopicPrefix = webArg(F("topicprefix"));
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   String left, right;
@@ -532,10 +532,10 @@ bool P037_data_struct::webform_save(
 
   for (uint8_t mappingOffset = P037_START_MAPPINGS; mappingOffset <= P037_END_MAPPINGS; mappingOffset++) {
     left.clear();
-    left +=  web_server.arg(getPluginCustomArgName(idx + 0));
+    left +=  webArg(getPluginCustomArgName(idx + 0));
     left.trim();
     right.clear();
-    right += web_server.arg(getPluginCustomArgName(idx + 2));
+    right += webArg(getPluginCustomArgName(idx + 2));
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()) {
@@ -575,9 +575,9 @@ bool P037_data_struct::webform_save(
   idx = 0;
 
   for (uint8_t filterOffset = P037_START_FILTERS; filterOffset <= P037_END_FILTERS; filterOffset++) {
-    left =  web_server.arg(getPluginCustomArgName(idx + 100 + 0));
+    left =  webArg(getPluginCustomArgName(idx + 100 + 0));
     left.trim();
-    right = web_server.arg(getPluginCustomArgName(idx + 100 + 2));
+    right = webArg(getPluginCustomArgName(idx + 100 + 2));
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()

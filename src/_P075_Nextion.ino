@@ -119,7 +119,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
 
-        for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++) {
+        for (int varNr = 0; varNr < P75_Nlines; varNr++) {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), P075_data->displayLines[varNr], P75_Nchars - 1);
         }
       }

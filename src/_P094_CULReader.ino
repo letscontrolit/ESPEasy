@@ -388,7 +388,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
             if (newLine) {
               // Label + first parameter
               ++filterSet;
-              addRowLabel_tr_id(concat(F("Filter "), filterSet), id);
+              addRowLabel_tr_id(concat(F("Filter "), static_cast<int>(filterSet)), id);
             } else {
               html_B(F("AND"));
               html_BR();

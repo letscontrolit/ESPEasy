@@ -25,7 +25,7 @@ void handleNotFound() {
   // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
   if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {
-    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+    web_server.send_P(200, (PGM_P)F("text/html"), (PGM_P)F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
 
@@ -45,6 +45,7 @@ void handleNotFound() {
   addHtml(F("\nArguments: "));
   addHtmlInt(web_server.args());
 
+#ifndef BUILD_NO_DEBUG
   for (uint8_t i = 0; i < web_server.args(); i++) {
     addHtml('\n');
     addHtml(F(" NAME:"));
@@ -52,7 +53,6 @@ void handleNotFound() {
     addHtml(F("\n VALUE:"));
     addHtml(webArg(i));
   }
-#ifndef BUILD_NO_DEBUG
   addHtml(F("\nHeaders: "));
   for (int i = web_server.headers(); i >= 0; --i) {
     if (!web_server.headerName(i).isEmpty()) {
