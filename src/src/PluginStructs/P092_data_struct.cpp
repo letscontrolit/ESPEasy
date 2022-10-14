@@ -10,14 +10,14 @@
 // #define DLbus_DEBUG
 
 // Flags for pulse width (bit 0 is the content!)
-#define DLbus_FlagSingleWidth                 0x02
-#define DLbus_FlagDoubleWidth                 0x04
-#define DLbus_FlagShorterThanSingleWidth      0x10
-#define DLbus_FlagBetweenDoubleSingleWidth    0x20
-#define DLbus_FlagLongerThanDoubleWidth       0x40
-#define DLbus_FlagLongerThanTwiceDoubleWidth  0x80
-#define DLbus_FlagsWrongTiming                (DLbus_FlagLongerThanTwiceDoubleWidth | DLbus_FlagLongerThanDoubleWidth | \
-                                               DLbus_FlagBetweenDoubleSingleWidth | DLbus_FlagShorterThanSingleWidth)
+# define DLbus_FlagSingleWidth                 0x02
+# define DLbus_FlagDoubleWidth                 0x04
+# define DLbus_FlagShorterThanSingleWidth      0x10
+# define DLbus_FlagBetweenDoubleSingleWidth    0x20
+# define DLbus_FlagLongerThanDoubleWidth       0x40
+# define DLbus_FlagLongerThanTwiceDoubleWidth  0x80
+# define DLbus_FlagsWrongTiming                (DLbus_FlagLongerThanTwiceDoubleWidth | DLbus_FlagLongerThanDoubleWidth | \
+                                                DLbus_FlagBetweenDoubleSingleWidth | DLbus_FlagShorterThanSingleWidth)
 
 // Helper for ISR call
 DLBus *DLBus::__instance                         = nullptr;
@@ -66,8 +66,8 @@ void DLBus::AddToErrorLog(const String& string)
 void DLBus::attachDLBusInterrupt(void)
 {
   ISR_Receiving = false;
-  IsISRset = true;
-  IsNoData = false;
+  IsISRset      = true;
+  IsNoData      = false;
   attachInterrupt(digitalPinToInterrupt(ISR_DLB_Pin), ISR, CHANGE);
 }
 
@@ -90,15 +90,15 @@ void IRAM_ATTR DLBus::ISR(void)
 
 void IRAM_ATTR DLBus::ISR_PinChanged(void)
 {
-//  long TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
-  uint32_t _now = micros();
-  int32_t TimeDiff = (int32_t)(_now - ISR_TimeLastBitChange);
+  //  long TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
+  uint32_t _now     = micros();
+  int32_t  TimeDiff = (int32_t)(_now - ISR_TimeLastBitChange);
 
-//  ISR_TimeLastBitChange = micros();                           // save last pin change time
-  ISR_TimeLastBitChange = _now;                           // save last pin change time
+  //  ISR_TimeLastBitChange = micros();                           // save last pin change time
+  ISR_TimeLastBitChange = _now;             // save last pin change time
 
   if (ISR_Receiving) {
-    uint8_t val = digitalRead(ISR_DLB_Pin);               // read state
+    uint8_t val = digitalRead(ISR_DLB_Pin); // read state
 
     // check pulse width
     if (TimeDiff >= 2 * ISR_MinDoublePulseWidth) {
@@ -146,9 +146,9 @@ boolean DLBus::CheckTimings(void) {
   uint8_t WrongTimeCnt = 0;
   int     i;
 
-#ifdef DLbus_DEBUG
+# ifdef DLbus_DEBUG
   uint16_t WrongTimingArray[5][6];
-#endif // DLbus_DEBUG
+# endif // DLbus_DEBUG
 
   //  AddToInfoLog(F("Receive stopped."));
 
@@ -161,28 +161,28 @@ boolean DLBus::CheckTimings(void) {
     if (rawval & DLbus_FlagsWrongTiming) {
       // wrong DLbus_time_diff
       if (ISR_PulseCount > 0) {
-#ifdef DLbus_DEBUG
+# ifdef DLbus_DEBUG
         WrongTimingArray[WrongTimeCnt][0] = i;
         WrongTimingArray[WrongTimeCnt][1] = ISR_PulseCount;
         WrongTimingArray[WrongTimeCnt][2] = BitNumber;
         WrongTimingArray[WrongTimeCnt][3] = rawval;
-#endif // DLbus_DEBUG
+# endif // DLbus_DEBUG
 
         if ((rawval == DLbus_FlagLongerThanTwiceDoubleWidth) && (*(ISR_PtrChangeBitStream + i - 1) == (DLbus_FlagDoubleWidth | 0x01))) {
           // Add two additional short pulses (low and high), previous bit is High and contains DLbus_FlagDoubleWidth
           ProcessBit(0);
           ProcessBit(1);
-#ifdef DLbus_DEBUG
+# ifdef DLbus_DEBUG
           WrongTimingArray[WrongTimeCnt][4] = DLbus_FlagSingleWidth;
           WrongTimingArray[WrongTimeCnt][5] = DLbus_FlagSingleWidth + 1;
-#endif // DLbus_DEBUG
+# endif // DLbus_DEBUG
         }
-#ifdef DLbus_DEBUG
+# ifdef DLbus_DEBUG
         else {
           WrongTimingArray[WrongTimeCnt][4] = 0xff;
           WrongTimingArray[WrongTimeCnt][5] = 0xff;
         }
-#endif // DLbus_DEBUG
+# endif // DLbus_DEBUG
         WrongTimeCnt++;
 
         if (WrongTimeCnt >= 5) {
@@ -207,7 +207,7 @@ boolean DLBus::CheckTimings(void) {
 
   //  AddToInfoLog(F("DLbus_ChangeBitStream copied."));
 
-#ifdef DLbus_DEBUG
+# ifdef DLbus_DEBUG
 
   if (WrongTimeCnt > 0) {
     if (IsLogLevelInfo) {
@@ -240,7 +240,7 @@ boolean DLBus::CheckTimings(void) {
       }
     }
   }
-#endif // DLbus_DEBUG
+# endif // DLbus_DEBUG
   return true;
 }
 
@@ -478,7 +478,6 @@ P092_data_struct::~P092_data_struct() {
     delete DLbus_Data;
     DLbus_Data = nullptr;
   }
-
 }
 
 bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092pinmode) {
@@ -492,10 +491,10 @@ bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092p
   DLbus_Data->IsLogLevelInfo = loglevelActiveFor(LOG_LEVEL_INFO);
   DLbus_Data->ISR_DLB_Pin    = pin1;
 
-  //interrupt is detached in PLUGIN_WEBFORM_SAVE and attached in PLUGIN_ONCE_A_SECOND
-  //to ensure that new interrupt is attached after new pin is configured, setting
-  //IsISRset to false is done here.
-  DLbus_Data->IsISRset       = false;
+  // interrupt is detached in PLUGIN_WEBFORM_SAVE and attached in PLUGIN_ONCE_A_SECOND
+  // to ensure that new interrupt is attached after new pin is configured, setting
+  // IsISRset to false is done here.
+  DLbus_Data->IsISRset = false;
 
   switch (P092pinmode) {
     case eP092pinmode::ePPM_InputPullUp:
@@ -503,7 +502,13 @@ bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092p
       addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin with pullup"));
 #endif // ifndef P092_LIMIT_BUILD_SIZE
       pinMode(pin1, INPUT_PULLUP);
-    break;
+      break;
+    # ifdef INPUT_PULLDOWN
+    case eP092pinmode::ePPM_InputPullDown:
+      addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin with pulldown"));
+      pinMode(pin1, INPUT_PULLDOWN);
+      break;
+    # endif // ifdef INPUT_PULLDOWN
     default:
 # ifndef P092_LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin"));
@@ -511,8 +516,8 @@ bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092p
       pinMode(pin1, INPUT);
   }
 
-// on a CHANGE on the data pin P092_Pin_changed is called
-//DLbus_Data->attachDLBusInterrupt();
+  // on a CHANGE on the data pin P092_Pin_changed is called
+  // DLbus_Data->attachDLBusInterrupt();
   return true;
 }
 
@@ -545,14 +550,21 @@ void P092_data_struct::Plugin_092_SetIndices(int P092DeviceIndex) {
   P092_DataSettings.IdxCRC         = 30;
 
   switch (P092DeviceIndex) {
-    case 31: // UVR31
-      P092_DataSettings.DataBytes                 = 8;
+    case 31:                       // UVR31
+    case 42:                       // UVR42
+
+      if (P092DeviceIndex == 31) { // UVR31
+        P092_DataSettings.DataBytes   = 8;
+        P092_DataSettings.DeviceByte0 = 0x30;
+      } else {                     // UVR42
+        P092_DataSettings.DataBytes   = 10;
+        P092_DataSettings.DeviceByte0 = 0x10;
+      }
       P092_DataSettings.DLbus_MinPulseWidth       = P092_min_width_50;
       P092_DataSettings.DLbus_MaxPulseWidth       = P092_max_width_50;
       P092_DataSettings.DLbus_MinDoublePulseWidth = P092_double_min_width_50;
       P092_DataSettings.DLbus_MaxDoublePulseWidth = P092_double_max_width_50;
 
-      P092_DataSettings.DeviceByte0    = 0x30;
       P092_DataSettings.DeviceByte1    = 0;
       iDeviceBytes                     = 1;
       P092_DataSettings.MaxExtSensors  = 0;
@@ -663,7 +675,7 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
   if (DLbus_Data->ISR_PulseCount == 0) {
     // nothing received
     DLbus_Data->ISR_Receiving = false;
-    DLbus_Data->IsNoData = true;  // stop receiving until next PLUGIN_092_READ
+    DLbus_Data->IsNoData      = true; // stop receiving until next PLUGIN_092_READ
     addLog(LOG_LEVEL_ERROR, F("## StartReceiving: Error: Nothing received! No DL bus connected!"));
   }
 }
