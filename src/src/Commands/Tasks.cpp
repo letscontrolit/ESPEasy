@@ -51,7 +51,7 @@ bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *
     String taskName;
     taskIndex_t tmpTaskIndex = taskIndex;
     if ((event->Par1 <= 0 || event->Par1 >= INVALID_TASK_INDEX) && GetArgv(Line, taskName, 2)) {
-      tmpTaskIndex = findTaskIndexByName(taskName);
+      tmpTaskIndex = findTaskIndexByName(taskName, true);
       if (tmpTaskIndex != INVALID_TASK_INDEX) {
         event->Par1 = tmpTaskIndex + 1;
       }
