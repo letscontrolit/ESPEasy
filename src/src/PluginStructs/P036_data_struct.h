@@ -24,20 +24,20 @@
 // # define P036_CHECK_INDIVIDUAL_FONT // /Enable to add extra logging for individual font calculation
 
 # ifndef P036_LIMIT_BUILD_SIZE
-#  define P036_SEND_EVENTS           // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
-#  define P036_ENABLE_LINECOUNT      // Enable the linecount subcommand
+#  define P036_SEND_EVENTS       // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
+#  define P036_ENABLE_LINECOUNT  // Enable the linecount subcommand
 # endif // ifndef P036_LIMIT_BUILD_SIZE
-# define P036_ENABLE_HIDE_FOOTER     // Enable the Hide indicator (footer) option
-# define P036_ENABLE_LEFT_ALIGN      // Enable the Left-align content option and leftalign subcommand
+# define P036_ENABLE_HIDE_FOOTER // Enable the Hide indicator (footer) option
+# define P036_ENABLE_LEFT_ALIGN  // Enable the Left-align content option and leftalign subcommand
 
-# define P36_Nlines 12               // The number of different lines which can be displayed - each line is 64 chars max
-# define P36_NcharsV0 32             // max chars per line up to 22.11.2019 (V0)
-# define P36_NcharsV1 64             // max chars per line from 22.11.2019 (V1)
-# define P36_MaxSizesCount 3         // number of different OLED sizes
+# define P36_Nlines 12           // The number of different lines which can be displayed - each line is 64 chars max
+# define P36_NcharsV0 32         // max chars per line up to 22.11.2019 (V0)
+# define P36_NcharsV1 64         // max chars per line from 22.11.2019 (V1)
+# define P36_MaxSizesCount 3     // number of different OLED sizes
 # ifdef P036_LIMIT_BUILD_SIZE
 #  define P36_MaxFontCount 3     // number of different fonts
 # else // ifdef P036_LIMIT_BUILD_SIZE
-# define P36_MaxFontCount 5          // number of different fonts
+#  define P36_MaxFontCount 5     // number of different fonts
 # endif // ifdef P036_LIMIT_BUILD_SIZE
 
 # define P36_MaxDisplayWidth 128
@@ -185,10 +185,10 @@ enum class eAlignment {
 
 typedef struct {
   String  Content;
-  uint8_t FontType              = 0;
-  uint8_t ModifyLayout          = 0; // Bit 2-0 eModifyFont, Bit 5-3 eAlignment
-  uint8_t FontSpace             = 0;
-  uint8_t reserved              = 0;
+  uint8_t FontType     = 0;
+  uint8_t ModifyLayout = 0; // Bit 2-0 eModifyFont, Bit 5-3 eAlignment
+  uint8_t FontSpace    = 0;
+  uint8_t reserved     = 0;
 } tDisplayLines;
 
 struct tDisplayLines_storage {
@@ -198,7 +198,7 @@ struct tDisplayLines_storage {
     FontType(memory.FontType),
     ModifyLayout(memory.ModifyLayout),
     FontSpace(memory.FontSpace),
-    reserved(memory.reserved) 
+    reserved(memory.reserved)
   {
     safe_strncpy(Content, memory.Content, P36_NcharsV1);
     ZERO_TERMINATE(Content);
@@ -271,13 +271,13 @@ public:
     DisplayLinesV1.resize(P36_Nlines);
   }
 
-  void loadDisplayLines(taskIndex_t taskIndex,
-                        uint8_t     LoadVersion);
-  
+  void   loadDisplayLines(taskIndex_t taskIndex,
+                          uint8_t     LoadVersion);
+
   String saveDisplayLines(taskIndex_t taskIndex);
 
   // CustomTaskSettings
-  std::vector<tDisplayLines> DisplayLinesV1; // holds the CustomTaskSettings for V1
+  std::vector<tDisplayLines>DisplayLinesV1; // holds the CustomTaskSettings for V1
 };
 
 struct P036_data_struct : public PluginTaskData_base {
@@ -331,28 +331,28 @@ struct P036_data_struct : public PluginTaskData_base {
                                ePageScrollSpeed lscrollspeed  = ePageScrollSpeed::ePSS_Instant);
 
   // Draw scrolling line (1pix/s)
-  void                       display_scrolling_lines();
+  void          display_scrolling_lines();
 
   // Draw Signal Strength Bars, return true when there was an update.
-  bool                       display_wifibars();
+  bool          display_wifibars();
 
   // Perform the actual write to the display.
-  void                       update_display();
+  void          update_display();
 
   // get pixel positions
-  int16_t                    GetHeaderHeight();
-  int16_t                    GetIndicatorTop();
-  tFontSettings              CalculateFontSettings(uint8_t _defaultLines);
+  int16_t       GetHeaderHeight();
+  int16_t       GetIndicatorTop();
+  tFontSettings CalculateFontSettings(uint8_t _defaultLines);
 
-  void                       P036_JumpToPage(struct EventStruct *event,
-                                             uint8_t             nextFrame);
+  void          P036_JumpToPage(struct EventStruct *event,
+                                uint8_t             nextFrame);
 
-  void                       P036_JumpToPageOfLine(struct EventStruct *event,
-                                                   uint8_t             LineNo);
-  void                       P036_DisplayPage(struct EventStruct *event);
+  void          P036_JumpToPageOfLine(struct EventStruct *event,
+                                      uint8_t             LineNo);
+  void          P036_DisplayPage(struct EventStruct *event);
 
   // Perform some specific changes for OLED display
-  String                     P36_parseTemplate(String& tmpString,
+  String        P36_parseTemplate(String& tmpString,
                                   uint8_t lineIdx);
 
   void                       registerButtonState(uint8_t newButtonState,
@@ -409,7 +409,7 @@ struct P036_data_struct : public PluginTaskData_base {
   OLEDDISPLAY_TEXT_ALIGNMENT textAlignment = TEXT_ALIGN_CENTER;
 
   tLineSettings LineSettings[P36_Nlines];
-  uint16_t                CalcPixLength(uint8_t LineNo);
+  uint16_t CalcPixLength(uint8_t LineNo);
 
 private:
 
@@ -419,7 +419,7 @@ private:
                                                           uint8_t FrameNo,
                                                           int8_t  MaxHeight,
                                                           uint8_t IdxForBiggestFont);
-  void CalcMaxPageCount(void);
+  void     CalcMaxPageCount(void);
   uint16_t TrimStringTo255Chars(tScrollingPageLines *ScrollingPageLine);
   void     DrawScrollingPageLine(tScrollingPageLines       *ScrollingPageLine,
                                  uint16_t                   Width,

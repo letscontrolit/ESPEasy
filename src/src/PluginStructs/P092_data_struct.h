@@ -86,7 +86,7 @@ private:
   static DLBus *__instance;
 # ifndef P092_LIMIT_BUILD_SIZE
   void        AddToInfoLog(const String& string);
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   void        AddToErrorLog(const String& string);
 };
 #endif // ifndef DLBus_H

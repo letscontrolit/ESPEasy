@@ -16,7 +16,7 @@
 
 # ifndef P036_LIMIT_BUILD_SIZE
 #  include <Dialog_Plain_12_font.h>
-# include <Dialog_Plain_18_font.h>
+#  include <Dialog_Plain_18_font.h>
 # endif // ifdef P036_LIMIT_BUILD_SIZE
 # include <OLED_SSD1306_SH1106_images.h>
 
@@ -38,9 +38,9 @@ void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersi
     for (int i = 0; i < P36_Nlines; ++i) {
       tDisplayLines_storage tmp;
       LoadCustomTaskSettings(
-        taskIndex, 
-        reinterpret_cast<uint8_t *>(&tmp), 
-        sizeof(tDisplayLines_storage), 
+        taskIndex,
+        reinterpret_cast<uint8_t *>(&tmp),
+        sizeof(tDisplayLines_storage),
         i * sizeof(tDisplayLines_storage));
       DisplayLinesV1[i] = tmp.get();
     }
@@ -63,8 +63,8 @@ String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
         tmp->lines[i].reserved     = DisplayLinesV1[i].reserved;
       }
       error = SaveCustomTaskSettings(
-        taskIndex, 
-        reinterpret_cast<uint8_t *>(tmp), 
+        taskIndex,
+        reinterpret_cast<uint8_t *>(tmp),
         sizeof(tDisplayLines_storage_full));
       delete tmp;
       return error;
@@ -77,10 +77,10 @@ String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
   for (int i = 0; i < P36_Nlines && error.length() == 0; ++i) {
     tDisplayLines_storage tmp(DisplayLinesV1[i]);
     RTC.flashDayCounter = flashCounter;
-    error = SaveCustomTaskSettings(
-      taskIndex, 
-      reinterpret_cast<uint8_t *>(&tmp), 
-      sizeof(tDisplayLines_storage), 
+    error               = SaveCustomTaskSettings(
+      taskIndex,
+      reinterpret_cast<uint8_t *>(&tmp),
+      sizeof(tDisplayLines_storage),
       i * sizeof(tDisplayLines_storage));
   }
   return error;
@@ -142,15 +142,15 @@ const __FlashStringHelper * tFontSettings::FontName() const {
 // The same as when using the DRAM_ATTR attribute used for interrupt code.
 // This is very precious memory, so we must find something other way to define this.
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { getArialMT_Plain_24(), 24,  28                                           }, // 9643
+  { getArialMT_Plain_24(), 24,  28                                               }, // 9643
 # ifndef P036_LIMIT_BUILD_SIZE
-  { getDialog_plain_18(),  19,  22                                           },
+  { getDialog_plain_18(),  19,  22                                               },
 # endif // ifndef P036_LIMIT_BUILD_SIZE
-  { getArialMT_Plain_16(), 16,  19                                           }, // 5049
+  { getArialMT_Plain_16(), 16,  19                                               }, // 5049
 # ifndef P036_LIMIT_BUILD_SIZE
-  { getDialog_plain_12(),  13,  15                                           }, // 3707
+  { getDialog_plain_12(),  13,  15                                               }, // 3707
 # endif // ifndef P036_LIMIT_BUILD_SIZE
-  { getArialMT_Plain_10(), 10,  13                                           }, // 2731
+  { getArialMT_Plain_10(), 10,  13                                               }, // 2731
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -1393,7 +1393,7 @@ void P036_data_struct::P036_JumpToPage(struct EventStruct *event, uint8_t nextFr
 
 void P036_data_struct::P036_JumpToPageOfLine(struct EventStruct *event, uint8_t LineNo)
 {
-  CalcMaxPageCount();        // Update max page count and DisplayedPageNo
+  CalcMaxPageCount(); // Update max page count and DisplayedPageNo
   P036_JumpToPage(event, LineSettings[LineNo].DisplayedPageNo);
 }
 
@@ -1478,7 +1478,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
           // jump to a displayed page from PlugIn
           if (LineSettings[i].DisplayedPageNo == nextFrameToDisplay) {
             frameCounter = LineSettings[i].frame;
-            lineCounter = i;
+            lineCounter  = i;
             break;
           }
         }
@@ -1682,10 +1682,10 @@ void P036_data_struct::CalcMaxPageCount(void) {
     uint8_t iFrame = 0;
 
     for (uint8_t i = 0; i < P36_Nlines; i++) {
-      if (LineContent->DisplayLinesV1[i].Content[0] != 0) { // line is not empty
+      if (LineContent->DisplayLinesV1[i].Content[0] != 0) {   // line is not empty
         LineSettings[i].DisplayedPageNo = MaxFramesToDisplay; // current MaxFramesToDisplay is the number of the shown page
       } else {
-        LineSettings[i].DisplayedPageNo = 0xff; // line is not shown
+        LineSettings[i].DisplayedPageNo = 0xff;               // line is not shown
       }
 
       if (LineSettings[i].frame != iFrame) { continue; } // line is not yet on the next page
@@ -1694,19 +1694,19 @@ void P036_data_struct::CalcMaxPageCount(void) {
         if ((i + k) >= P36_Nlines) { break; }
 
         if ((LineSettings[i + k].frame) != iFrame) { // line is already on the next page
-          iFrame++; // next frame to check
+          iFrame++;                                  // next frame to check
           break;
-        }     
+        }
 
         if (LineContent->DisplayLinesV1[i + k].Content[0] != 0) { // line is not empty
-          iFrame++; // next frame to check
+          iFrame++;                                               // next frame to check
 
           if (MaxFramesToDisplay == 0xFF) {
             MaxFramesToDisplay = 0;
           } else {
             MaxFramesToDisplay++;
           }
-          LineSettings[i+k].DisplayedPageNo = MaxFramesToDisplay; // current MaxFramesToDisplay is the number of the shown page
+          LineSettings[i + k].DisplayedPageNo = MaxFramesToDisplay; // current MaxFramesToDisplay is the number of the shown page
           break;
         }
       }
@@ -1718,7 +1718,7 @@ void P036_data_struct::CalcMaxPageCount(void) {
 
       if (log1.reserve(140)) { // estimated
         log1.clear();
-        log1  = F("CalcMaxPageCount: MaxFramesToDisplay:"); log1 += MaxFramesToDisplay;
+        log1 = F("CalcMaxPageCount: MaxFramesToDisplay:"); log1 += MaxFramesToDisplay;
         addLog(LOG_LEVEL_INFO, log1);
 
         for (uint8_t i = 0; i < P36_Nlines; i++) {

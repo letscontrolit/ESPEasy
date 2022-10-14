@@ -23,9 +23,13 @@
          UVR1611, UVR61-3 and ESR21
 
     @tonhuisman 2022-09-24 Optimizations, suppress some logging for stressed builds
+
+    @uwekaditz 2022-09-04 CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed 
+    @uwekaditz 2022-05-04 CHG: Logging reduced for LIMIT_BUILD_SIZE
+
     @tonhuisman 2022-03-26 Add support for UVR42 (Very similar to an UVR31, has 1 extra sensor value and 1 extra digital value)
 
-    @uwekaditz 2020-12-028 documentation for UVR61-3 (v8.3 or higher)
+    @uwekaditz 2020-12-28 documentation for UVR61-3 (v8.3 or higher)
 
     @uwekaditz 2020-10-28 P092_data->init() is always done if P092_init == false, not depending on P092_data == nullptr
     CHG: changes variable name DeviceIndex to P092DeviceIndex
@@ -130,26 +134,15 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
             choice = static_cast<uint8_t>(eP092pinmode::ePPM_InputPullUp);
           }
         }
-        # ifdef INPUT_PULLDOWN
-        #  define Opcount  3
-        # else // ifdef INPUT_PULLDOWN
-        #  define Opcount  2
-        # endif // ifdef INPUT_PULLDOWN
         const __FlashStringHelper *options[] = {
           F("Input"),
-          F("Input pullup"),
-          # ifdef INPUT_PULLDOWN
-          F("Input pulldown"),
-          # endif // ifdef INPUT_PULLDOWN
+          F("Input pullup")
         };
         const int optionValues[] = {
           static_cast<int>(eP092pinmode::ePPM_Input),
-          static_cast<int>(eP092pinmode::ePPM_InputPullUp),
-          # ifdef INPUT_PULLDOWN
-          static_cast<int>(eP092pinmode::ePPM_InputPullDown),
-          # endif // ifdef INPUT_PULLDOWN
+          static_cast<int>(eP092pinmode::ePPM_InputPullUp)
         };
-        addFormSelector(F("Pin mode"), F("ppinmode"), Opcount, options, optionValues, choice);
+        addFormSelector(F("Pin mode"), F("ppinmode"), 2, options, optionValues, choice);
       }
       {
         const __FlashStringHelper *Devices[P092_DLbus_DeviceCount] = {
@@ -408,18 +401,18 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PLUGIN_092_INIT Task:"), event->TaskIndex));
       }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (P092_init) {
 # ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("INIT -> Already done!"));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
       }
       else {
         if (P092_data == nullptr) {
-          # ifndef LIMIT_BUILD_SIZE
+# ifndef P092_LIMIT_BUILD_SIZE
           addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
-          # endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
           P092_data = new (std::nothrow) P092_data_struct();
           initPluginTaskData(event->TaskIndex, P092_data);
@@ -428,18 +421,17 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_ERROR, F("## P092_init: Create P092_data_struct failed!"));
             return false;
           }
-        # ifndef LIMIT_BUILD_SIZE
         }
         else {
 # ifndef P092_LIMIT_BUILD_SIZE
           addLog(LOG_LEVEL_INFO, F("P092_data_struct -> Already created"));
-        # endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
         }
         P092_data_struct *P092_data = static_cast<P092_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      # ifndef LIMIT_BUILD_SIZE
+# ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
-      # endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
         if (!P092_data->init(CONFIG_PIN1, PCONFIG(0), static_cast<eP092pinmode>(PCONFIG(2)))) {
           addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
@@ -472,9 +464,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       if (!P092_data->DLbus_Data->IsISRset) {
         // on a CHANGE on the data pin P092_Pin_changed is called
         P092_data->DLbus_Data->attachDLBusInterrupt();
-        # ifndef LIMIT_BUILD_SIZE
-        addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
-        # endif // ifndef LIMIT_BUILD_SIZE
+# ifndef P092_LIMIT_BUILD_SIZE
+       addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
+# endif // ifndef P092_LIMIT_BUILD_SIZE
       }
 
       if (P092_data->DLbus_Data->ISR_Receiving) {
@@ -497,11 +489,11 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         if (success) {
           P092_data->P092_LastReceived = millis();
-
+# ifndef P092_LIMIT_BUILD_SIZE
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, concat(F("Received data OK TI:"), event->TaskIndex));
           }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
         }
         P092_data->P092_ReceivedOK = success;
       }
@@ -520,12 +512,11 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-    # ifndef LIMIT_BUILD_SIZE
-
+# ifndef P092_LIMIT_BUILD_SIZE
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PLUGIN_092_READ Task:"), event->TaskIndex));
       }
-      # endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (!NetworkConnected()) {
         // too busy for DLbus while wifi connect is running
@@ -569,7 +560,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       success = P092_data->P092_ReceivedOK;
 
       if (!P092_data->P092_ReceivedOK) {
+# ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("P092_read: Still receiving DL-Bus bits!"));
+# endif // ifndef P092_LIMIT_BUILD_SIZE
         success = true;
       }
       else {
