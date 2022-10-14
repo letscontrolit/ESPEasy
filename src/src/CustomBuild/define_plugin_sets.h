@@ -1415,7 +1415,7 @@ To create/register a plugin, you have to :
        #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
      #endif
    #endif
-   #if !defined(FEATURE_SD)
+   #if !defined(FEATURE_SD) && !defined(ESP8266)
      #define FEATURE_SD 1
    #endif
    #ifndef USES_P012
@@ -1463,6 +1463,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+  #ifndef USES_P141
+    #define USES_P141   // PCD8544 Nokia 5110
+  #endif
 #endif
 
 // Collection of all NeoPixel plugins
@@ -1766,6 +1769,24 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
 //    #define USES_P135   //
   #endif
+  #ifndef USES_P136
+//    #define USES_P136   //
+  #endif
+  #ifndef USES_P137
+//    #define USES_P137   //
+  #endif
+  #ifndef USES_P138
+//    #define USES_P138   //
+  #endif
+  #ifndef USES_P139
+//    #define USES_P139   //
+  #endif
+  #ifndef USES_P140
+//    #define USES_P140   //
+  #endif
+  #ifndef USES_P141
+    #define USES_P141   // PCD8544 Nokia 5110
+  #endif
 
   // Controllers
   #ifndef USES_C015
@@ -1824,7 +1845,7 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
-#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) // Add any plugin that uses AdafruitGFX_Helper
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) // Add any plugin that uses AdafruitGFX_Helper
   #ifndef PLUGIN_USES_ADAFRUITGFX
     #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
   #endif
