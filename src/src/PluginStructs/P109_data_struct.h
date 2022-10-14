@@ -95,8 +95,6 @@ private:
   int8_t  _relaypin      = -1;
   String  _last_heater;
 
-  uint32_t _setHeaterStarted = 0;
-
   String _title;
   bool   _alternateTitle = true;
 
