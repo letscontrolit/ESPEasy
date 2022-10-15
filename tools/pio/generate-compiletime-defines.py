@@ -4,6 +4,7 @@ import os
 import platform
 import shutil
 from datetime import date
+import datetime
 import json
 
 
@@ -14,6 +15,9 @@ def compute_version_date():
     return 20200 + delta.days
 
 
+def create_RFC1123_build_date():
+    return datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+
 def create_binary_filename():
     today = date.today()
     d1 = today.strftime("%Y%m%d")
@@ -22,6 +26,38 @@ def create_binary_filename():
 
 def get_board_name():
     return env.BoardConfig().get("name").replace('"', "")
+
+
+def get_cdn_url_prefix():
+    try:
+        from pygit2 import Repository
+        import re
+        try:
+            repo = Repository('.')
+            try:
+                # Test to see if the current checkout is a tag
+                regex = re.compile('^refs/tags/mega-{0}'.format(repo.head.shorthand))
+                tags = [r for r in repo.references if regex.match(r)]
+                tag = tags[0]
+                tag = tag.replace('refs/tags/','@')
+                return "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy{0}/static/".format(tag)
+            except:
+                # Not currently on a tag, thus use the last tag.
+                regex = re.compile('^refs/tags/mega')
+                tags = [r for r in repo.references if regex.match(r)]
+                tags.sort()
+                tags.reverse()
+                tag = tags[0]
+                # work-around to allow users to use files not yet available on a tagged version
+                if '20220809' in tag:
+                    return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+                    
+                tag = tag.replace('refs/tags/','@')
+                return "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy{0}/static/".format(tag)
+        except:
+            return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+    except ImportError:
+        return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
 
 
 def get_git_description():
@@ -67,7 +103,9 @@ def gen_compiletime_defines(node):
         + [("SET_BOARD_NAME", '\\"%s\\"' % get_board_name())]
         + [("SET_BUILD_PLATFORM", '\\"%s\\"' % platform.platform())]
         + [("SET_BUILD_GIT_HEAD", '\\"%s\\"' % get_git_description())]
-        + [("SET_BUILD_VERSION", compute_version_date())],
+        + [("SET_BUILD_CDN_URL",  '\\"%s\\"' % get_cdn_url_prefix())]
+        + [("SET_BUILD_VERSION", compute_version_date())]
+        + [("SET_BUILD_TIME_RFC1123", '\\"%s\\"' % create_RFC1123_build_date())],
         CCFLAGS=env["CCFLAGS"]
     )
 
@@ -80,7 +118,9 @@ print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
 print("\u001b[33m BOARD_NAME:     \u001b[0m  {}".format(get_board_name()))
 print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
 print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
+print("\u001b[33m CDN_URL:        \u001b[0m  {}".format(get_cdn_url_prefix()))
 print("\u001b[33m BUILD_VERSION:  \u001b[0m  {}".format(compute_version_date()))
+print("\u001b[33m BUILD_RFC1123:  \u001b[0m  {}".format(create_RFC1123_build_date()))
 
 print("\u001b[32m ------------------------------- \u001b[0m")
 print("\u001b[32m Flash configuration \u001b[0m")

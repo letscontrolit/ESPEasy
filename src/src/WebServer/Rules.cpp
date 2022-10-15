@@ -59,7 +59,7 @@ void handle_rules() {
   }
 
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
   addHtmlError(error);
 
   html_table_class_normal();
@@ -109,9 +109,7 @@ void handle_rules() {
   addButton(fileName, F("Download to file"));
   html_end_table();
 
-  serve_JS(JSfiles_e::SaveRulesFile);
-
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 
   checkRuleSets();
@@ -361,7 +359,7 @@ void handle_rules_delete() {
 
   if (removed)
   {
-    web_server.sendHeader(F("Location"), F("/rules"), true);
+    sendHeader(F("Location"), F("/rules"), true);
     web_server.send(302, F("text/plain"), EMPTY_STRING);
   }
   else
@@ -441,7 +439,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     if (web_server.args() > 0)
     {
       const String& rules = webArg(F("rules"));
-      isNew = webArg(F("IsNew")) == F("yes");
+      isNew = webArg(F("IsNew")).equals(F("yes"));
 
       // Overwrite verification
       if (isEdit && isNew) {
@@ -451,7 +449,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         isAddNew    = true;
         isOverwrite = true;
       }
-      else if (!web_server.hasArg(F("rules")))
+      else if (!hasArg(F("rules")))
       {
         error = F("Data was not saved, rules argument missing or corrupted");
         addLog(LOG_LEVEL_ERROR, error);
@@ -478,7 +476,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         }
 
         if (isAddNew) {
-          web_server.sendHeader(F("Location"), F("/rules"), true);
+          sendHeader(F("Location"), F("/rules"), true);
           web_server.send(302, F("text/plain"), EMPTY_STRING);
           return true;
         }
@@ -554,6 +552,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
+  addHtml(F("<script>initCM();</script>"));
 
   html_TR_TD();
   {
@@ -585,10 +584,10 @@ bool Rule_Download(const String& path)
   String filename = path + String(F(".txt"));
   filename.replace(RULE_FILE_SEPARAROR, '_');
   String str = String(F("attachment; filename=")) + filename;
-  web_server.sendHeader(F("Content-Disposition"), str);
-  web_server.sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
-  web_server.sendHeader(F("Vary"),                "*");
-  web_server.sendHeader(F("ETag"),                F("\"2.0.0\""));
+  sendHeader(F("Content-Disposition"), str);
+  sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
+  sendHeader(F("Vary"),                "*");
+  sendHeader(F("ETag"),                F("\"2.0.0\""));
 
   web_server.streamFile(dataFile, F("application/octet-stream"));
   dataFile.close();
@@ -596,7 +595,7 @@ bool Rule_Download(const String& path)
 }
 
 void Goto_Rules_Root() {
-  web_server.sendHeader(F("Location"), F("/rules"), true);
+  sendHeader(F("Location"), F("/rules"), true);
   web_server.send(302, F("text/plain"), EMPTY_STRING);
 }
 

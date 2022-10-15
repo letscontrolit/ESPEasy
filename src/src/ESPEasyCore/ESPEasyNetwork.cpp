@@ -58,6 +58,8 @@ void NetworkConnectRelaxed() {
     setNetworkMedium(NetworkMedium_t::WIFI);
   }
 #endif
+  // Failed to start the Ethernet network, probably not present of wrong parameters.
+  // So set the runtime active medium to WiFi to try connecting to WiFi or at least start the AP.
   WiFiConnectRelaxed();
 }
 
@@ -208,16 +210,16 @@ String createRFCCompliantHostname(const String& oldString) {
   return result;
 }
 
-String WifiSoftAPmacAddress() {
+MAC_address WifiSoftAPmacAddress() {
   MAC_address mac;
   WiFi.softAPmacAddress(mac.mac);
-  return mac.toString();
+  return mac;
 }
 
-String WifiSTAmacAddress() {
+MAC_address WifiSTAmacAddress() {
   MAC_address mac;
   WiFi.macAddress(mac.mac);
-  return mac.toString();
+  return mac;
 }
 
 void CheckRunningServices() {

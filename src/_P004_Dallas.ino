@@ -28,18 +28,6 @@
 # define P004_SENSOR_TYPE_INDEX  2
 # define P004_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P004_SENSOR_TYPE_INDEX)))
 
-String Plugin_004_valuename(uint8_t value_nr, bool displayString) {
-  String name = F("Temperature");
-
-  if (value_nr != 0) {
-    name += String(value_nr + 1);
-  }
-
-  if (!displayString) {
-    name.toLowerCase();
-  }
-  return name;
-}
 
 boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -77,7 +65,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         if (i < P004_NR_OUTPUT_VALUES) {
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_004_valuename(i, false),
+            Plugin_valuename(F("Temperature"), i, false),
             sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
           ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
         } else {

@@ -31,7 +31,7 @@ void handle_sysvars() {
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   html_BR();
   addHtml(F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>"));
@@ -244,6 +244,7 @@ void handle_sysvars() {
   addSysVar_html(F("Mins to days: %c_m2day%(1900)"));
   addSysVar_html(F("Mins to dh:   %c_m2dh%(1900)"));
   addSysVar_html(F("Mins to dhm:  %c_m2dhm%(1900)"));
+  addSysVar_html(F("Mins to hcm:  %c_m2hcm%(482)"));
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
   addFormSeparator(3);
   addSysVar_html(F("To HEX: %c_2hex%(100000)"));
@@ -252,7 +253,7 @@ void handle_sysvars() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 

@@ -466,7 +466,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       String error;
 
       for (uint8_t varNr = 0; varNr < P096_Nlines; varNr++) {
-        strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
+        strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
       error = SaveCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);

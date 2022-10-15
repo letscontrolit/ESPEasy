@@ -1,6 +1,8 @@
 #include "../Commands/Servo.h"
 
 #include "../Commands/Common.h"
+#if FEATURE_SERVO
+
 #include "../DataStructs/EventStructCommandWrapper.h"
 #include "../DataStructs/PinMode.h"
 #include "../DataStructs/PortStatusStruct.h"
@@ -10,10 +12,10 @@
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/PortStatus.h"
+#include "../Helpers/StringConverter.h"
 
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
-#if FEATURE_SERVO
 # include <Servo.h>
 ServoPinMap_t ServoPinMap;
 #endif // if FEATURE_SERVO
@@ -38,8 +40,7 @@ const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char 
     // So the next command should be part of each command:
     tempStatus = globalMapPortStatus[key];
 
-    String log = F("Servo : GPIO ");
-    log += event->Par2;
+    String log = concat(F("Servo : GPIO "), event->Par2);
 
     // SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
     if (event->Par3 >= 9000) {
@@ -58,8 +59,7 @@ const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char 
       tempStatus.monitor = 0;
       tempStatus.command = 0;
       savePortStatus(key, tempStatus);
-      log += F(" Servo detached");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, concat(log, F(" Servo detached")));
       return return_command_success();
 
     }

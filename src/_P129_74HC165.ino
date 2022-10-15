@@ -130,7 +130,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
       event->Par1 = min(static_cast<uint8_t>(VARS_PER_TASK),
-                        static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0)));
+                        static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f)));
       success = true;
       break;
     }
@@ -139,7 +139,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     {
       event->sensorType = static_cast<Sensor_VType>(
         min(static_cast<uint8_t>(VARS_PER_TASK),
-            static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0))));
+            static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f))));
       event->idx = 0;
       success    = true;
       break;
@@ -296,7 +296,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         }
 
         for (uint8_t j = 0; j < 8; j++) {
-          bitWrite(bits, off * 8 + (7 - j), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1)));
+          bitWrite(bits, static_cast<uint64_t>(off * 8 + (7 - j)), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1)));
         }
         PCONFIG_ULONG(i / 4) = bits;
 
@@ -405,7 +405,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         state.reserve(40);
         String abcd             = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
         const uint16_t endCheck = P129_CONFIG_CHIP_COUNT + 4; // 4(.0) = nr of bytes in an uint32_t.
-        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0)));
+        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f)));
         uint8_t dotInsert;
         uint8_t dotOffset;
 

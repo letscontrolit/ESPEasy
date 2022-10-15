@@ -256,9 +256,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no port defined yet)
       if ((state != -1) && (CONFIG_PORT >= 0)) {
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
-        if (round(P009_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+        if (lround(P009_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."));
+          #endif
           PCONFIG_LONG(3) = 1;
         }
 
@@ -413,7 +415,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             // Create EVENT with value = 4 for SafeButton false positive detection
-            const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+            const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
             UserVar[event->BaseVarIndex] = 4;
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {

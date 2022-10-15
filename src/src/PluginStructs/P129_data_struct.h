@@ -4,9 +4,9 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P129
 
-# ifndef LIMIT_BUILD_SIZE
+# ifndef BUILD_NO_DEBUG
 #  define P129_DEBUG_LOG // Enable for some (extra) logging
-# endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef BUILD_NO_DEBUG
 
 # define P129_CONFIG_CHIP_COUNT       PCONFIG(0)
 # define P129_CONFIG_DATA_PIN         PIN(0)
@@ -98,7 +98,7 @@ private:
   uint8_t _chipCount;
 
   uint8_t readBuffer[P129_MAX_CHIP_COUNT] = { 0 };
-  uint8_t prevBuffer[P129_MAX_CHIP_COUNT]; // To compare to
+  uint8_t prevBuffer[P129_MAX_CHIP_COUNT] = { 0 }; // To compare to
 };
 
 #endif // ifdef USES_P129

@@ -145,7 +145,7 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
       P049_data_struct *P049_data =
         static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P049_data) {
+      if (nullptr != P049_data) {
         success = P049_data->plugin_write(event, string);
       }
 

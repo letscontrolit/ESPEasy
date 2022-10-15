@@ -446,6 +446,9 @@ void parse_string_commands(String& line) {
       uint64_t iarg1, iarg2 = 0;
       double   fresult = 0.0;
       int64_t  iresult = 0;
+      int startpos, endpos = -1;
+      const bool arg1valid = validIntFromString(arg1, startpos);
+      const bool arg2valid = validIntFromString(arg2, endpos);
 
       if (parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         const bool trimTrailingZeros = true;
@@ -455,12 +458,30 @@ void parse_string_commands(String& line) {
       } else if (cmd_s_lower.equals(F("substring"))) {
         // substring arduino style (first char included, last char excluded)
         // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
-        int startpos, endpos = -1;
 
-        if (validIntFromString(arg1, startpos)
-            && validIntFromString(arg2, endpos)) {
+        if (arg1valid
+            && arg2valid) {
           replacement = arg3.substring(startpos, endpos);
         }
+      // #ifndef LIMIT_BUILD_SIZE
+      } else if (cmd_s_lower.equals(F("timetomin")) || cmd_s_lower.equals(F("timetosec"))) {
+        // time to minutes, transform a substring hh:mm to minutes
+        // time to seconds, transform a substring hh:mm:ss to seconds
+        // syntax similar to substring
+
+        if (arg1valid
+            && arg2valid) {
+          int timeSeconds = 0;
+          String timeString;
+          if(timeStringToSeconds(arg3.substring(startpos, endpos), timeSeconds, timeString)) {
+            if (cmd_s_lower.equals(F("timetosec"))) {
+              replacement = timeSeconds;
+            } else { // timetomin
+              replacement = timeSeconds / 60;
+            }
+          }
+        }
+      // #endif // ifndef LIMIT_BUILD_SIZE
       } else if (cmd_s_lower.equals(F("strtol"))) {
         // string to long integer (from cstdlib)
         // Syntax like 1234{strtol:16:38}7890
@@ -840,7 +861,7 @@ void processMatchedRule(String& action, const String& event,
     }
   }
 
-  if ((lcAction == F("else")) && !fakeIfBlock) // in case of an "else" block of
+  if ((lcAction.equals(F("else"))) && !fakeIfBlock) // in case of an "else" block of
                                                // actions, set ifBranche to
                                                // false
   {
@@ -858,7 +879,7 @@ void processMatchedRule(String& action, const String& event,
 #endif // ifndef BUILD_NO_DEBUG
   }
 
-  if (lcAction == F("endif")) // conditional block ends here
+  if (lcAction.equals(F("endif"))) // conditional block ends here
   {
     if (fakeIfBlock) {
       fakeIfBlock--;

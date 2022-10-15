@@ -269,7 +269,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P050_data->tcs.begin()) {
+# ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
+#endif
 
         uint16_t r, g, b, c;
         float value4 = 0.0f;
@@ -475,7 +477,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
         success = true;
       } else {
+# ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("No TCS34725 found"));
+#endif
         success = false;
       }
 

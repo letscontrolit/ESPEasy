@@ -652,10 +652,11 @@ const __FlashStringHelper* getFlashChipMode() {
 #ifdef ESP8266
 
   switch (ESP.getFlashChipMode()) {
-    case FM_QIO:   return F("QIO");
-    case FM_QOUT:  return F("QOUT");
-    case FM_DIO:   return F("DIO");
-    case FM_DOUT:  return F("DOUT");
+    case FM_QIO:     return F("QIO");
+    case FM_QOUT:    return F("QOUT");
+    case FM_DIO:     return F("DIO");
+    case FM_DOUT:    return F("DOUT");
+    case FM_UNKNOWN: break;
   }
   return F("Unknown");
 #else // ifdef ESP8266
@@ -1290,10 +1291,9 @@ const __FlashStringHelper* getDeviceModelTypeString(DeviceModel model)
 }
 
 String getDeviceModelString(DeviceModel model) {
-  String result = getDeviceModelBrandString(model);
-
-  result += getDeviceModelTypeString(model);
-  return result;
+  return concat(
+    getDeviceModelBrandString(model), 
+    getDeviceModelTypeString(model));
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {

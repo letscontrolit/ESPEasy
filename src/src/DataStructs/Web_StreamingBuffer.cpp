@@ -187,16 +187,16 @@ void Web_StreamingBuffer::checkFull() {
   }
 }
 
-void Web_StreamingBuffer::startStream() {
-  startStream(false, F("text/html"), F(""));
+void Web_StreamingBuffer::startStream(int httpCode) {
+  startStream(false, F("text/html"), F(""), httpCode);
 }
 
-void Web_StreamingBuffer::startStream(const __FlashStringHelper * origin) {
-  startStream(false, F("text/html"), origin);
+void Web_StreamingBuffer::startStream(const __FlashStringHelper * origin, int httpCode) {
+  startStream(false, F("text/html"), origin, httpCode);
 }
 
-void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin) {
-  startStream(false, content_type, origin);
+void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin, int httpCode) {
+  startStream(false, content_type, origin, httpCode);
 }
 
 
@@ -206,7 +206,8 @@ void Web_StreamingBuffer::startJsonStream() {
 
 void Web_StreamingBuffer::startStream(bool allowOriginAll, 
                                       const __FlashStringHelper * content_type, 
-                                      const __FlashStringHelper * origin) {
+                                      const __FlashStringHelper * origin,
+                                      int httpCode) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -220,13 +221,13 @@ void Web_StreamingBuffer::startStream(bool allowOriginAll,
   
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
-    web_server.send(200, F("text/plain"), F("Low memory. Cannot display webpage :-("));
+    web_server.send_P(200, (PGM_P)F("text/plain"), (PGM_P)F("Low memory. Cannot display webpage :-("));
       #if defined(ESP8266)
     tcpCleanup();
       #endif // if defined(ESP8266)
     return;
   } else {
-    sendHeaderBlocking(allowOriginAll, content_type, origin);
+    sendHeaderBlocking(allowOriginAll, content_type, origin, httpCode);
   }
 }
 
@@ -355,7 +356,8 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 
 void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll, 
                                              const String& content_type, 
-                                             const String& origin) {
+                                             const String& origin,
+                                             int httpCode) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -368,14 +370,14 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
 
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  web_server.sendHeader(F("Accept-Ranges"),     F("none"));
-  web_server.sendHeader(F("Cache-Control"),     F("no-cache"));
-  web_server.sendHeader(F("Transfer-Encoding"), F("chunked"));
+  sendHeader(F("Accept-Ranges"),     F("none"));
+  sendHeader(F("Cache-Control"),     F("no-cache"));
+  sendHeader(F("Transfer-Encoding"), F("chunked"));
 
   if (allowOriginAll) {
-    web_server.sendHeader(F("Access-Control-Allow-Origin"), "*");
+    sendHeader(F("Access-Control-Allow-Origin"), "*");
   }
-  web_server.send(200, content_type, EMPTY_STRING);
+  web_server.send(httpCode, content_type, EMPTY_STRING);
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   unsigned int timeout          = 0;
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
@@ -390,7 +392,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   if (origin.length() > 0) {
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
-  web_server.send(200, content_type, EMPTY_STRING);
+  web_server.send(httpCode, content_type, EMPTY_STRING);
 
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
