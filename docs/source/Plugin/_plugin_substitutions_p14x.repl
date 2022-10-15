@@ -1,0 +1,12 @@
+.. |P141_name| replace:: :cyan:`PCD8544 Nokia 5110 LCD`
+.. |P141_type| replace:: :cyan:`Display`
+.. |P141_typename| replace:: :cyan:`Display - PCD8544 Nokia 5110 LCD`
+.. |P141_porttype| replace:: `.`
+.. |P141_status| replace:: :yellow:`DISPLAY`
+.. |P141_github| replace:: P141_PCD8544_Nokia5110.ino
+.. _P141_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P141_PCD8544_Nokia5110.ino
+.. |P141_usedby| replace:: `.`
+.. |P141_shortinfo| replace:: `Nokia 5110 monochrome LCD`
+.. |P141_maintainer| replace:: `tonhuisman`
+.. |P141_compileinfo| replace:: `.`
+.. |P141_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_NeoMatrix`

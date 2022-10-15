@@ -115,7 +115,7 @@ private:
 # define P092_double_max_width_50    (P092_double_pulse_width_50 + (P092_pulse_width_50 * P092_percentage_variance / 100))
 
 # define P092_DLbus_OptionCount 8
-# define P092_DLbus_DeviceCount 5
+# define P092_DLbus_DeviceCount 6
 
 
 struct P092_data_struct : public PluginTaskData_base {

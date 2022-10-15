@@ -12,7 +12,17 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-10-05 tonhuisman: No longer trim off spaces from arguments to commands
+ * 2022-09-23 tonhuisman: Allow backlight percentage from 0% instead of from 1% to be able to completely turn it off
+ * 2022-09-12 tonhuisman: Add line-spacing option for Column/Row mode, default set to auto, optional 0..14 pixels line-spacing
+ *                        Add line spacing form selector function
+ * 2022-09-10 tonhuisman: Enable printing partial characters falling off at the right edge of the screen, only when on Window 0
+ * 2022-08-25 tonhuisman: Add invertDisplay() functionality, often used for monochrome displays
+ * 2022-08-23 tonhuisman: Several small improvements, and a few bugfixes
  * 2022-08-22 tonhuisman: Improve drawing of slider when using a range, so a reverse range (40,-10) is displayed 'flipped'
+ * 2022-08-20 tonhuisman: Add txl subcommand to display text on 1 or more lines, autoincrementing the line nr,
+ *                        always in row/column mode.
+ *                        Improved argument parsing to allow up to 2 empty arguments between filled arguments
  * 2022-08-16 tonhuisman: Add drawing of Slide/Gauge controls via btn subcommand, horizontal or vertical depending on width/height ratio
  * 2022-08-15 tonhuisman: Add initial support for slide/gauge controls
  * 2022-06-07 tonhuisman: Code improvements in initialization, move offset calculation to printText() function
@@ -387,6 +397,8 @@ String AdaGFXcolorToString(const uint16_t        & color,
 # if ADAGFX_SUPPORT_7COLOR
 uint16_t AdaGFXrgb565ToColor7(const uint16_t& color); // Convert rgb565 color to 7-color
 # endif // if ADAGFX_SUPPORT_7COLOR
+void     AdaGFXFormLineSpacing(const __FlashStringHelper *id,
+                               uint8_t                    selectedIndex);
 
 class AdafruitGFX_helper {
 public:
@@ -446,20 +458,24 @@ public:
                       uint16_t& ypix);
   void getColors(uint16_t& fgcolor,
                  uint16_t& bgcolor);
-  void getCursorXY(int16_t& currentX,                 // Get last known (text)cursor position, recalculates to col/row if that
-                   int16_t& currentY);                // setting is acive
+  void getCursorXY(int16_t& currentX,                // Get last known (text)cursor position, recalculates to col/row if that
+                   int16_t& currentY);               // setting is acive
 
-  void setTxtfullCompensation(uint8_t compensation) { // Set to 1 for backward comp. with P095/P096 txtfull subcommands, uses offset -1
-    _p095_compensation = compensation;
+  void setTxtfullCompensation(uint8_t compensation); // Set to 1 for backward comp. with P095/P096 txtfull subcommands, uses offset -1
+                                                     // Set to 2 for extra offset of +1 on y axis
+                                                     // Set to 3 for extra offset of +1 on x axis
+
+  void setRotation(uint8_t m);                       // Set the helper-rotation the same as the display object rotation
+
+  void setColumnRowMode(bool state) {                // When true, addressing for txp, txtfull commands is in columns/rows, default in
+    _columnRowMode = state;                          // pixels NOT compatible with _x_compensation!
   }
 
-  void setRotation(uint8_t m);        // Set the helper-rotation the same as the display object rotation
-
-  void setColumnRowMode(bool state) { // When true, addressing for txp, txtfull commands is in columns/rows, default in pixels
-    _columnRowMode = state;           // NOT compatible with _p095_compensation!
+  void setLineSpacing(int8_t lineSpacing) {          // Set inter-line spacing in Column/Row mode
+    _lineSpacing = lineSpacing & 0xF;                // Limited to 0..14 px, 15 = auto, based on fontheight * fontsize
   }
 
-  String getTrigger() {               // Returns the current trigger
+  String getTrigger() {                              // Returns the current trigger
     return _trigger;
   }
 
@@ -498,6 +514,8 @@ public:
     return _useValidation;
   }
 
+  void invertDisplay(bool i);
+
 private:
 
   void initialize();
@@ -533,13 +551,16 @@ private:
   uint16_t _textrows;
   int16_t _lastX;
   int16_t _lastY;
-  uint8_t _fontwidth         = 6; // Default font characteristics
-  uint8_t _fontheight        = 10;
-  int8_t _heightOffset       = 0;
-  bool _isProportional       = false;
-  uint8_t _p095_compensation = 0;
-  bool _columnRowMode        = false;
-  int8_t _rotation           = 0;
+  uint8_t _fontwidth     = 6; // Default font characteristics
+  uint8_t _fontheight    = 10;
+  int8_t _heightOffset   = 0;
+  bool _isProportional   = false;
+  int8_t _x_compensation = 0;
+  int8_t _y_compensation = 0;
+  bool _columnRowMode    = false;
+  int8_t _rotation       = 0;
+  bool _displayInverted  = false;
+  int8_t _lineSpacing    = 15; // Default fontheight * fontsize
 
   uint16_t _display_x;
   uint16_t _display_y;
