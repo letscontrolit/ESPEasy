@@ -255,9 +255,9 @@ bool isTransformString(char c, bool logicVal, String& strValue)
       return false;
   }
   if (value_ch != '\0') {
-    strValue = value;
-  } else {
     strValue = value_ch;
+  } else {
+    strValue = value;
   }
   return true;
 }
