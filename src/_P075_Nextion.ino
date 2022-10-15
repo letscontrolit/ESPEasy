@@ -7,15 +7,19 @@
 // #######################################################################################################
 // ################################### Plugin 075: Nextion <info@sensorio.cz>  ###########################
 // ###################################   Created on the work of  majklovec     ###########################
-// ###################################    Revisions by BertB and ThomasB       ###########################
-// ###################################    Last Revision: Oct-03-2018 (TB)      ###########################
+// ###################################  Revisions by BertB, ThomasB and others ###########################
+// ###################################    Last Revision: 2022-09-27            ###########################
 // #######################################################################################################
 //
-// Updated: Oct-03-2018, ThomasB.
-// Added P075_DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
-// Added SendStatus() to post log message on browser to acknowledge HTTP write.
-// Added reserve() to minimize string memory allocations.
-//
+
+/** Changelog:
+ * 2022-09-27 tonhuisman: Use Changelog formatted updates
+ *                        Extend nr. of lines available for text/commands to 20, minor code improvements
+ * Updated: Oct-03-2018, ThomasB.
+ * Added P075_DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
+ * Added SendStatus() to post log message on browser to acknowledge HTTP write.
+ * Added reserve() to minimize string memory allocations.
+ */
 
 // *****************************************************************************************************
 // Defines start here
@@ -26,11 +30,11 @@
 
 // Plug-In defines
 # define PLUGIN_075
-# define PLUGIN_ID_075 75
-# define PLUGIN_NAME_075 "Display - Nextion"
-# define PLUGIN_DEFAULT_NAME "NEXTION"
-# define PLUGIN_VALUENAME1_075 "idx"
-# define PLUGIN_VALUENAME2_075 "value"
+# define PLUGIN_ID_075          75
+# define PLUGIN_NAME_075        "Display - Nextion"
+# define PLUGIN_DEFAULT_NAME    "NEXTION"
+# define PLUGIN_VALUENAME1_075  "idx"
+# define PLUGIN_VALUENAME2_075  "value"
 
 
 // *****************************************************************************************************
@@ -40,8 +44,6 @@
 boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-
-  //  static boolean AdvHwSerial = false;                   // Web GUI checkbox flag; false = softserial mode, true = hardware UART serial.
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
@@ -79,7 +81,6 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
-      //      AdvHwSerial = PCONFIG(0);
       serialHelper_getGpioNames(event);
       break;
     }
@@ -112,14 +113,14 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       //    Data += String(datax);
       //    addFormNote(Data);
 
-      addFormSubHeader(""); // Blank line, vertical space.
+      addFormSubHeader(F("")); // Blank line, vertical space.
       addFormHeader(F("Nextion Command Statements (Optional)"));
       P075_data_struct *P075_data = static_cast<P075_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
 
-        for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++) {
+        for (int varNr = 0; varNr < P75_Nlines; varNr++) {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), P075_data->displayLines[varNr], P75_Nchars - 1);
         }
       }
@@ -168,18 +169,20 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       //        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
       P075_BaudRate      = getFormItemInt(F("p075_baud"));
       P075_IncludeValues = isFormItemChecked(F("IncludeValues"));
-      P075_data_struct *P075_data = static_cast<P075_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P075_data) {
-        P075_data->loadDisplayLines(event->TaskIndex);
-      }
+      /* Task will be stopped and restarted, so no reason to reload the display here
+         P075_data_struct *P075_data = static_cast<P075_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+         if (nullptr != P075_data) {
+         P075_data->loadDisplayLines(event->TaskIndex);
+         }
+       */
       success = true;
       break;
     }
 
 
     case PLUGIN_INIT: {
-      //      AdvHwSerial   = PCONFIG(0);
       uint8_t BaudCode = P075_BaudRate;
 
       if (BaudCode > P075_B115200) { BaudCode = P075_B9600; }
@@ -264,10 +267,8 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
             # ifdef P075_DEBUG_LOG
             String log;
             log.reserve(P75_Nchars + 50); // Prevent re-allocation
-            log  = F("NEXTION075 : Cmd Statement Line-");
-            log += String(x + 1);
-            log += F(" Sent: ");
-            log += newString;
+            log += concat(F("NEXTION075 : Cmd Statement Line-"), x + 1);
+            log += concat(F(" Sent: "), newString);
             addLogMove(LOG_LEVEL_INFO, log);
             # endif // ifdef P075_DEBUG_LOG
           }
@@ -275,22 +276,20 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
         // At Interval timer, send idx & value data only if user enabled "values" interval mode.
         if (P075_IncludeValues) {
-            # ifdef P075_DEBUG_LOG
+          # ifdef P075_DEBUG_LOG
           String log;
           log.reserve(120); // Prevent re-allocation
-          log  = F("NEXTION075: Interval values data enabled, resending idx=");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          log += F(", value=");
-          log += formatUserVarNoCheck(event->TaskIndex, 1);
+          log += concat(F("NEXTION075: Interval values data enabled, resending idx="), formatUserVarNoCheck(event->TaskIndex, 0));
+          log += concat(F(", value="), formatUserVarNoCheck(event->TaskIndex, 1));
           addLogMove(LOG_LEVEL_INFO, log);
-            # endif // ifdef P075_DEBUG_LOG
+          # endif // ifdef P075_DEBUG_LOG
 
           success = true;
         }
         else {
-            # ifdef P075_DEBUG_LOG
+          # ifdef P075_DEBUG_LOG
           addLog(LOG_LEVEL_INFO, F("NEXTION075: Interval values data disabled, idx & value not resent"));
-            # endif // ifdef P075_DEBUG_LOG
+          # endif // ifdef P075_DEBUG_LOG
 
           success = false;
         }
@@ -311,11 +310,10 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         {
           String log;
           log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
-          log  = F("NEXTION075 : WRITE = ");
-          log += nextionArguments;
+          log += concat(F("NEXTION075 : WRITE = "), nextionArguments);
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, log);
-          #endif
+          # endif // ifndef BUILD_NO_DEBUG
           SendStatus(event, log); // Reply (echo) to sender. This will print message on browser.
         }
 
@@ -371,8 +369,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         if (charCount >= RXBUFFWARN) {
           String log;
           log.reserve(70); // Prevent re-allocation
-          log += F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, ");
-          log += String(charCount);
+          log += concat(F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, "), charCount);
           log += F(" bytes");
           addLogMove(LOG_LEVEL_INFO, log);
         }
@@ -444,8 +441,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
               # ifdef P075_DEBUG_LOG
               String log;
               log.reserve(50); // Prevent re-allocation
-              log  = F("NEXTION075 : Code = ");
-              log += tmpString;
+              log += concat(F("NEXTION075 : Code = "), tmpString);
               addLogMove(LOG_LEVEL_INFO, log);
               # endif // ifdef P075_DEBUG_LOG
 
@@ -488,19 +484,19 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
                 validFloatFromString(Svalue, UserVar[event->BaseVarIndex + 1]);
                 sendData(event);
 
-                  # ifdef P075_DEBUG_LOG
+                # ifdef P075_DEBUG_LOG
                 String log;
                 log.reserve(80); // Prevent re-allocation
-                log  = F("NEXTION075 : Pipe Command Sent: ");
+                log += F("NEXTION075 : Pipe Command Sent: ");
                 log += __buffer;
                 log += formatUserVarNoCheck(event->TaskIndex, 0);
                 addLogMove(LOG_LEVEL_INFO, log);
-                  # endif // ifdef P075_DEBUG_LOG
+                # endif // ifdef P075_DEBUG_LOG
               }
               else {
-                  # ifdef P075_DEBUG_LOG
+                # ifdef P075_DEBUG_LOG
                 addLog(LOG_LEVEL_INFO, F("NEXTION075 : Unknown Pipe Command, skipped"));
-                  # endif // ifdef P075_DEBUG_LOG
+                # endif // ifdef P075_DEBUG_LOG
               }
             }
           }

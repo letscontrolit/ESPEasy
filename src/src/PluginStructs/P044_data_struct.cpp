@@ -43,9 +43,9 @@ void P044_Task::startServer(uint16_t portnumber) {
     P1GatewayServer->begin();
 
     if (serverActive(P1GatewayServer)) {
-      addLog(LOG_LEVEL_INFO, concat(F("P1   : WiFi server started at port "), portnumber));
+      addLog(LOG_LEVEL_INFO, concat(F("P1   : WiFi server started at port "), static_cast<int>(portnumber)));
     } else {
-      addLog(LOG_LEVEL_ERROR, concat(F("P1   : WiFi server start failed at port "), portnumber) + F(", retrying..."));
+      addLog(LOG_LEVEL_ERROR, concat(F("P1   : WiFi server start failed at port "), static_cast<int>(portnumber)) + F(", retrying..."));
     }
   }
 }

@@ -420,9 +420,9 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      strcpy(PLUGIN_118_ExtraSettings.ID1, web_server.arg(F("PLUGIN_118_ID1")).c_str());
-      strcpy(PLUGIN_118_ExtraSettings.ID2, web_server.arg(F("PLUGIN_118_ID2")).c_str());
-      strcpy(PLUGIN_118_ExtraSettings.ID3, web_server.arg(F("PLUGIN_118_ID3")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID1, webArg(F("PLUGIN_118_ID1")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID2, webArg(F("PLUGIN_118_ID2")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID3, webArg(F("PLUGIN_118_ID3")).c_str());
       SaveCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
 
       PCONFIG(0)     = isFormItemChecked(F("p118_log"));

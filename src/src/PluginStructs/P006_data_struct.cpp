@@ -80,8 +80,8 @@ int32_t P006_data_struct::readPressure(void)
   UP = readRawPressure();
 
   // do temperature calculations
-  X1 = (UT - (int32_t)(ac6)) * ((int32_t)(ac5)) / pow(2, 15);
-  X2 = ((int32_t)mc * pow(2, 11)) / (X1 + (int32_t)md);
+  X1 = (UT - (int32_t)(ac6)) * ((int32_t)(ac5)) / 32768.0f /*pow(2, 15)*/;
+  X2 = ((int32_t)mc * 2048.0f /*pow(2, 11)*/) / (X1 + (int32_t)md);
   B5 = X1 + X2;
 
   // do pressure calcs
@@ -121,10 +121,10 @@ float P006_data_struct::readTemperature(void)
   UT = readRawTemperature();
 
   // step 1
-  X1    = (UT - (int32_t)ac6) * ((int32_t)ac5) / pow(2, 15);
-  X2    = ((int32_t)mc * pow(2, 11)) / (X1 + (int32_t)md);
+  X1    = (UT - (int32_t)ac6) * ((int32_t)ac5) / 32768.0f /*pow(2, 15)*/;
+  X2    = ((int32_t)mc * 2048.0f /*pow(2, 11)*/) / (X1 + (int32_t)md);
   B5    = X1 + X2;
-  temp  = (B5 + 8) / pow(2, 4);
+  temp  = (B5 + 8) / 16.0f /*pow(2, 4)*/;
   temp /= 10;
 
   return temp;

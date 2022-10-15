@@ -189,10 +189,10 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log;
             log += concat(F("TSL2591: Lux: "), toString(lux));
-            log += concat(F(" Full: "), full);
-            log += concat(F(" Visible: "), visible);
-            log += concat(F(" IR: "), ir);
-            log += concat(F(" duration: "), P074_data->duration);
+            log += concat(F(" Full: "), static_cast<int>(full));
+            log += concat(F(" Visible: "), static_cast<int>(visible));
+            log += concat(F(" IR: "), static_cast<int>(ir));
+            log += concat(F(" duration: "), static_cast<int>(P074_data->duration));
             addLogMove(LOG_LEVEL_INFO, log);
           }
 
