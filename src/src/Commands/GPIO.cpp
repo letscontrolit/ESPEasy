@@ -18,7 +18,9 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"
 
-#include <core_esp8266_waveform.h>
+#ifdef ESP8266
+# include <core_esp8266_waveform.h>
+#endif 
 
 // Forward declarations of functions used in this module
 // Normally those would be declared in the .h file as private members
