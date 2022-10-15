@@ -18,6 +18,7 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"
 
+#include <core_esp8266_waveform.h>
 
 // Forward declarations of functions used in this module
 // Normally those would be declared in the .h file as private members
@@ -163,7 +164,9 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
 
 const __FlashStringHelper * Command_GPIO_LongPulse(struct EventStruct *event, const char *Line)
 {
-  event->Par3 = event->Par3 * 1000;
+  event->Par3 *= 1000;
+  event->Par4 *= 1000;
+  event->Par5 *= 1000;
   return Command_GPIO_LongPulse_Ms(event, Line);
 }
 
@@ -177,17 +180,58 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
 
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
+    // Event parameters
+    // Par1: pin nr
+    // Par2: state
+    // Par3: duration of  state
+    // Par4: duration of !state
+    // Par5: repeat count (only when Par4 > 0)
+    //       -1 = repeat indefinately
+    //        0 = only once
+    //        N = Repeat N times
     const uint32_t key = createKey(pluginID, event->Par1);
     createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, event->Par2);
     GPIO_Write(pluginID, event->Par1, event->Par2);
 
-    Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, !event->Par2);
+    int repeatInterval = 0;
+    int repeatCount = 0;
+    if (event->Par4 > 0 && event->Par5 != 0) {
+      // Compute repeat interval
+      repeatInterval = event->Par3 + event->Par4;
+      repeatCount    = event->Par5;
+
+      // Schedule switching pin to given state for repeat
+      Scheduler.setGPIOTimer(
+        repeatInterval,   // msecFromNow
+        pluginID,    
+        event->Par1,   // Pin/port nr
+        event->Par2,   // pin state
+        repeatInterval,
+        repeatCount);
+    }
+
+
+    // Schedule switching pin back to original state
+    Scheduler.setGPIOTimer(
+      event->Par3,   // msecFromNow
+      pluginID,    
+      event->Par1,   // Pin/port nr
+      !event->Par2,  // pin state
+      repeatInterval,
+      repeatCount);
+
 
     String log = logPrefix;
     log += F(" : port ");
     log += event->Par1;
-    log += F(". Pulse set for ");
+    log += F(". Pulse H:");
     log += event->Par3;
+    if (event->Par4 > 0 && event->Par5 != 0) {
+      log += F(" L:");
+      log += event->Par4;
+      log += F(" #:");
+      log += event->Par5;
+    }
     log += F(" ms");
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
@@ -198,6 +242,53 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     return return_command_failed();
   }
 }
+
+#ifdef ESP8266
+const __FlashStringHelper * Command_GPIO_Wave_Ms(struct EventStruct *event, const char* Line)
+{
+  event->Par2 *= 1000;
+  event->Par3 *= 1000;
+  event->Par4 *= 1000;
+  return Command_GPIO_Wave_usec(event, Line);
+}
+
+const __FlashStringHelper * Command_GPIO_Wave_usec(struct EventStruct *event, const char* Line)
+{
+  pluginID_t pluginID = INVALID_PLUGIN_ID;
+  bool success = false;
+
+  // Line[0]='l':longpulse; ='p':pcflongpulse; ='m':mcplongpulse
+  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix('g', pluginID, success);
+
+  if (success && checkValidPortRange(pluginID, event->Par1))
+  {
+    const uint32_t key = createKey(pluginID, event->Par1);
+    createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, event->Par2);
+    pinMode(event->Par1, OUTPUT);
+
+
+    // FIXME TD-er: Find analog way to start a waveform on ESP32
+    success = startWaveform(event->Par1, event->Par2, event->Par3, event->Par4);
+
+    String log = logPrefix;
+    log += F(" : port ");
+    log += event->Par1;
+    log += F(". Wave H:");
+    log += event->Par2 / 1000;
+    log += F(" L:");
+    log += event->Par3/1000;
+    log += F(" Dur: ");
+    log += event->Par4 / 1000;
+    log += F(" ms");
+    addLog(LOG_LEVEL_INFO, log);
+    SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
+
+    if (success) return return_command_success();
+  }
+  logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
+  return return_command_failed();
+}
+#endif
 
 const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char *Line)
 {

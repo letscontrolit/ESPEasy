@@ -23,6 +23,11 @@
     insert(item);
   }
 
+  void msecTimerHandlerStruct::remove(unsigned long id) {
+    timer_id_couple item(id, 0);
+    remove(item);
+  }
+
   // Check if timeout has been reached and also return its set timer.
   // Return 0 if no item has reached timeout moment.
   unsigned long msecTimerHandlerStruct::getNextId(unsigned long& timer) {
@@ -131,6 +136,13 @@
     // It should be a relative light operation, to insert into a sorted list.
     // Perhaps it is better to use std::set ????
     // Keep in mind: order is based on timer, uniqueness is based on id.
+  }
+
+  void msecTimerHandlerStruct::remove(const timer_id_couple& item) {
+    if (item._id == 0) { return; }
+
+    // Make sure only one is present with the same id.
+    _timer_ids.remove_if(match_id(item._id));
   }
 
   void msecTimerHandlerStruct::recordIdle() {

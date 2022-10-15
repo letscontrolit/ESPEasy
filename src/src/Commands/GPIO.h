@@ -17,6 +17,10 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
 const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_LongPulse(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line);
+#ifdef ESP8266
+const __FlashStringHelper * Command_GPIO_Wave_Ms(struct EventStruct *event, const char* Line);
+const __FlashStringHelper * Command_GPIO_Wave_usec(struct EventStruct *event, const char* Line);
+#endif
 const __FlashStringHelper * Command_GPIO_Monitor(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char* Line);

@@ -99,6 +99,32 @@ Supported hardware: |P000_usedby_GPIO|
   Frequencies above 30 kHz are not stable and will likely crash the ESP.
   "
   "
+  ``Wave_mS,<GPIO>,<msec low>,<msec high>,<duration in msec>``
+
+  ``Wave_uS,<GPIO>,<usec low>,<usec high>,<duration in usec>``
+
+  GPIO: 0 ... 16
+
+  High: The duration of the 'high' state in either msec or usec.
+
+  Low: The duration of the 'low' state in either msec or usec.
+
+  Duration: 0 or total duration of repeating the wave form.
+  ","
+  **To send a non-blocking (repeating) pulse to a pin.**
+  ``Wave_mS`` is the same as ``Wave_uS``. The only difference is the time base in milliseconds or micro seconds.
+
+  Duration of 0 means continous repeating the wave form.
+
+  For duration > 0, the total duration is rounded up to the period defined by the high and low times.
+
+  Example: ``wave_ms,2,1000,1000`` will blink the on board LED at 0.5 Hz.
+
+  Added: 2022/10/15
+
+  N.B. Currently only implemented for ESP8266, not yet for ESP32
+  "
+  "
   ``Servo,<servo ID>,<GPIO>,<position>``
 
   GPIO: 0 ... **15**

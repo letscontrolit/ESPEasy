@@ -333,8 +333,8 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_A(       "logentry", Command_logentry,         -1); // Diagnostic.h
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
-      COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    3);    // GPIO.h
-      COMMAND_CASE_A(   "longpulse_ms", Command_GPIO_LongPulse_Ms, 3);    // GPIO.h
+      COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    5);    // GPIO.h
+      COMMAND_CASE_A(   "longpulse_ms", Command_GPIO_LongPulse_Ms, 5);    // GPIO.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(  "logportstatus", Command_logPortStatus,     0); // Diagnostic.h
       COMMAND_CASE_A(         "lowmem", Command_Lowmem,            0); // Diagnostic.h
@@ -482,6 +482,11 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'w': {
+#ifdef ESP8266
+      COMMAND_CASE_A(   "wave_ms", Command_GPIO_Wave_Ms, 4);    // GPIO.h
+      COMMAND_CASE_A(   "wave_us", Command_GPIO_Wave_usec, 4);    // GPIO.h
+#endif
+
       #ifndef LIMIT_BUILD_SIZE
       COMMAND_CASE_R("wdconfig", Command_WD_Config, 3);               // WD.h
       COMMAND_CASE_R(  "wdread", Command_WD_Read,   2);               // WD.h
