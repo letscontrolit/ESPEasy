@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // Keep value assigned as it is used in scripts and stored in the Settings.TaskDevicePort
-enum class ESPEasySerialPort {
+enum class ESPEasySerialPort : uint8_t {
   not_set      = 0,
   sc16is752    = 1,
   serial0      = 2,
@@ -17,5 +17,7 @@ enum class ESPEasySerialPort {
 };
 
 const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort serType);
+
+bool isHWserial(ESPEasySerialPort serType);
 
 #endif // ifndef ESPEASY_SERIAL_ESPEASYSERIALPORT_H

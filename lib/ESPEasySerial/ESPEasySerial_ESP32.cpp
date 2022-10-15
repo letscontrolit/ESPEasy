@@ -72,34 +72,6 @@ void setPinsCache(ESPEasySerialPort port,
 
 // End of messy work-around.
 
-ESPeasySerial::ESPeasySerial(
-  ESPEasySerialPort port, 
-  int receivePin, 
-  int transmitPin, 
-  bool inverse_logic,
-  unsigned int buffSize)
-  : 
-#ifndef DISABLE_SC16IS752_Serial
-  _i2cserial(nullptr),
-#endif
-  _receivePin(receivePin),
-  _transmitPin(transmitPin),
-  _inverse_logic(inverse_logic)
-{
-  resetConfig(port, receivePin, transmitPin, inverse_logic, buffSize);
-}
-
-ESPeasySerial::~ESPeasySerial() {
-  flush();
-  end();
-
-#ifndef DISABLE_SC16IS752_Serial
-  if (_i2cserial != nullptr) {
-    delete _i2cserial;
-  }
-#endif
-}
-
 void ESPeasySerial::resetConfig(
   ESPEasySerialPort port, 
   int receivePin, 
@@ -116,7 +88,7 @@ void ESPeasySerial::resetConfig(
 #ifndef DISABLE_SC16IS752_Serial
   _i2cserial = nullptr;
 #endif
-
+  _preferredSerialtype = port;
   _receivePin = receivePin;
   _transmitPin = transmitPin;
   _inverse_logic = inverse_logic;

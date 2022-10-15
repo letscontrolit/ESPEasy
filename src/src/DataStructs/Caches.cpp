@@ -45,13 +45,14 @@ void Caches::updateActiveTaskUseSerial0() {
       if ((Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL) ||
           (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1)) {
         switch (ESPeasySerialType::getSerialType(
-                  ESPEasySerialPort::not_set,
+                  static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[task]),
                   Settings.TaskDevicePin1[task],
                   Settings.TaskDevicePin2[task]))
         {
           case ESPEasySerialPort::serial0_swap:
           case ESPEasySerialPort::serial0:
             activeTaskUseSerial0 = true;
+            break;
           default:
             break;
         }

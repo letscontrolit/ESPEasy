@@ -13,36 +13,9 @@ bool ESPeasySerial::_serial0_swap_active = false;
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
 
-ESPeasySerial::ESPeasySerial(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
-  : 
-#ifndef DISABLE_SC16IS752_Serial
-  _i2cserial(nullptr),
-#endif
-  _swserial(nullptr),
-  _receivePin(receivePin),
-  _transmitPin(transmitPin),
-  _inverse_logic(inverse_logic),
-  _buffSize(buffSize)
-{
-  resetConfig(port, receivePin, transmitPin, inverse_logic, buffSize, forceSWserial);
-}
-
-ESPeasySerial::~ESPeasySerial() {
-  flush();
-  end();
-
-  if (_swserial != nullptr) {
-    delete _swserial;
-  }
-#ifndef DISABLE_SC16IS752_Serial
-  if (_i2cserial != nullptr) {
-    delete _i2cserial;
-  }
-#endif
-}
-
 void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
 {
+  const bool wasValid = isValid();
   if (_swserial != nullptr) {
     _swserial->end();
     delete _swserial;
@@ -56,13 +29,15 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
 #ifndef DISABLE_SC16IS752_Serial
   _i2cserial = nullptr;
 #endif
+  _preferredSerialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
+  _serialtype = _preferredSerialtype;
   _swserial = nullptr;
   _receivePin = receivePin;
   _transmitPin = transmitPin;
   _inverse_logic = inverse_logic;
   _buffSize = buffSize;
+  _forceSWserial = forceSWserial;
 
-  _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
   if (forceSWserial) {
     switch (_serialtype) {
       case ESPEasySerialPort::sc16is752:
@@ -72,6 +47,34 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
         break;
     }    
   }
+
+  if (_isLowerPriority) {
+    // This is the lower priority one, check whether we have a conflict
+        
+    // First check if we have a conflict when using the preferred one.
+    if (nullptr == find_conflicting_ESPeasySerial(_preferredSerialtype, _receivePin, _transmitPin)) {
+      // No conflict, so use the preferred one.
+      _serialtype = _preferredSerialtype;
+    } else {
+      if (nullptr != find_conflicting_ESPeasySerial(_serialtype, _receivePin, _transmitPin)) {
+        if (isHWserial(_serialtype)) {
+          // It is a hardware serial port, see if software serial might work
+          _serialtype = ESPEasySerialPort::not_set;
+          if (nullptr == find_conflicting_ESPeasySerial(ESPEasySerialPort::software, _receivePin, _transmitPin)) {
+            _serialtype = ESPEasySerialPort::software;
+          }
+        } else {
+          // Another conflict, so cannot continue
+          _serialtype = ESPEasySerialPort::not_set;
+        }
+      }
+    }
+  } else {
+    // Higher priority one, so must claim.
+//    update_instance();
+  }
+
+
 
   switch (_serialtype) {
     case ESPEasySerialPort::software:
@@ -96,12 +99,16 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
       }
       break;
   }
-
+  if (wasValid && isValid()) {
+    begin(_baud, _config, _mode);
+  }
 }
 
 
 void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
   _baud = baud;
+  _config = config;
+  _mode = mode;
 
   if (isSWserial()) {
     if (_swserial != nullptr) {
@@ -221,7 +228,16 @@ size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
   }
 
   if (isSWserial()) {
-    return _swserial->write(buffer, size);
+    // Not implemented in SoftwareSerial
+    size_t count = 0;
+
+    for (size_t i = 0; i < size; ++i) {
+      size_t written = _swserial->write(buffer[i]);
+
+      if (written == 0) { return count; }
+      count += written;
+    }
+    return count;
   } else if (isI2Cserial()) {
 #ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->write(buffer, size);
@@ -262,7 +278,17 @@ size_t ESPeasySerial::readBytes(char *buffer, size_t size)  {
   }
 
   if (isSWserial()) {
-    return _swserial->readBytes(buffer, size);
+    // Not implemented in SoftwareSerial
+    size_t count = 0;
+
+    for (size_t i = 0; i < size; ++i) {
+      int read = _swserial->read();
+
+      if (read < 0) { return count; }
+      buffer[i] = static_cast<char>(read & 0xFF);
+      ++count;
+    }
+    return count;
   } else if (isI2Cserial()) {
 #ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->readBytes(buffer, size);

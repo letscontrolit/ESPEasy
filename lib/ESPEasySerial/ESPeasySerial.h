@@ -83,7 +83,6 @@
 
 
 
-
 class ESPeasySerial : public Stream {
 public:
 
@@ -242,6 +241,17 @@ public:
     return _serialtype != ESPEasySerialPort::sc16is752;
   }
 
+  ESPEasySerialPort getSerialPortType() const {
+    return _serialtype;
+  }
+
+  void setLowPriority() { _isLowerPriority = true; }
+
+  bool isLowerPriority() const { return _isLowerPriority; }
+
+  void resolveConflict();
+
+
 private:
 
   const HardwareSerial* getHW() const;
@@ -279,12 +289,38 @@ private:
   static bool _serial0_swap_active;
 #endif // ESP8266
 
+public:
+  void update_instance();
+
+private:
+
+  void register_instance();
+  void deregister_instance();
+
+  ESPeasySerial* find_conflicting_ESPeasySerial(ESPEasySerialPort port, int rx, int tx);
+
+  // Actual serial type
   ESPEasySerialPort _serialtype = ESPEasySerialPort::MAX_SERIAL_TYPE;
+  // Preferred serial type
+  ESPEasySerialPort _preferredSerialtype = ESPEasySerialPort::MAX_SERIAL_TYPE;
   int _receivePin;
   int _transmitPin;
   unsigned long _baud = 0;
   bool _inverse_logic = false;
   unsigned int _buffSize = 64;
+  #ifdef ESP8266
+  bool _forceSWserial = false;
+  #endif
+
+#ifdef ESP8266
+  SerialConfig _config;
+  SerialMode _mode;
+#endif
+
+  // Low priority instance must try to resolve any conflict
+  bool _isLowerPriority = false;
+
 };
+
 
 #endif // ifndef ESPeasySerial_h

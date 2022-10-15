@@ -7,29 +7,15 @@
 // No SoftwareSerial
 // Only support HW serial on Serial 0 .. 1
 // ****************************************
-ESPeasySerial::ESPeasySerial(
-  ESPEasySerialPort port, 
-  int receivePin, 
-  int transmitPin, 
-  bool inverse_logic, 
-  unsigned int buffSize,
-  bool         forceSWserial)
-  : _receivePin(receivePin), _transmitPin(transmitPin)
-{
-  resetConfig(port, receivePin, transmitPin, inverse_logic, buffSize, forceSWserial);
-}
-
-ESPeasySerial::~ESPeasySerial() {
-  flush();
-  end();
-}
 
 void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
 {
+  _preferredSerialtype = port;
   _receivePin = receivePin;
   _transmitPin = transmitPin;
   _inverse_logic = inverse_logic;
   _buffSize = buffSize;
+  _forceSWserial = false;
 
   _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
 

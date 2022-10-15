@@ -34,8 +34,34 @@ ESPeasySerial ESPEASY_SERIAL_CONSOLE_PORT(
   false, 
   64);
 
-#endif
 
+// Check to see if console port may have a conflict with given parameters
+// If there is a conflict, disable console port.
+void checkSerialConflict(ESPEasySerialPort port, 
+                         int receivePin,
+                         int transmitPin)
+{
+  bool consolePortConflict = false;
+  if (port == ESPEasySerialPort::software) {
+    consolePortConflict = 
+      receivePin == console_serial_rxpin ||
+      transmitPin == console_serial_txpin ||
+      receivePin == console_serial_txpin ||
+      transmitPin == console_serial_rxpin;
+  } else {
+    if (static_cast<ESPEasySerialPort>(console_serial_port) == port) {
+      consolePortConflict = true;
+    }
+  }
+  if (consolePortConflict) {
+    ESPEASY_SERIAL_CONSOLE_PORT.end();
+    console_serial_port = static_cast<uint8_t>(ESPEasySerialPort::not_set);
+    console_serial_rxpin = -1;
+    console_serial_txpin = -1;
+    ESPEASY_SERIAL_CONSOLE_PORT.resetConfig(ESPEasySerialPort::not_set, -1, -1);
+  }
+}
+#endif
 
 void initSerial()
 {
@@ -64,22 +90,42 @@ void initSerial()
 
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+//  if (ESPEASY_SERIAL_CONSOLE_PORT.getSerialPortType() == ESPEasySerialPort::not_set)
+/*
   if (Settings.console_serial_port != console_serial_port ||
       Settings.console_serial_rxpin != console_serial_rxpin ||
       Settings.console_serial_txpin != console_serial_txpin) {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("Serial : Change serial console port from: ");
-      log += ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(console_serial_port));
-      log += F(" to: ");
-      log += ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(Settings.console_serial_port));
-      addLogMove(LOG_LEVEL_INFO, log);      
-    }
-    process_serialWriteBuffer();
 
+    const uint8_t current_console_serial_port = console_serial_port;
     // Update cached values
     console_serial_port  = Settings.console_serial_port;
     console_serial_rxpin = Settings.console_serial_rxpin;
     console_serial_txpin = Settings.console_serial_txpin;
+
+    #ifdef ESP8266
+    bool forceSWSerial = static_cast<ESPEasySerialPort>(Settings.console_serial_port) == ESPEasySerialPort::software;
+    if (activeTaskUseSerial0()) {
+      if (ESPEasySerialPort::sc16is752 != static_cast<ESPEasySerialPort>(console_serial_port)) {
+        forceSWSerial = true;
+        console_serial_port = static_cast<uint8_t>(ESPEasySerialPort::software);
+      }
+    }
+    #endif
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Serial : Change serial console port from: ");
+      log += ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(current_console_serial_port));
+      log += F(" to: ");
+      log += ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(console_serial_port));
+    #ifdef ESP8266
+      if (forceSWSerial) {
+        log += F(" (force SW serial)");
+      }
+    #endif
+      addLogMove(LOG_LEVEL_INFO, log);      
+    }
+    process_serialWriteBuffer();
+
 
     ESPEASY_SERIAL_CONSOLE_PORT.resetConfig(
       static_cast<ESPEasySerialPort>(console_serial_port), 
@@ -88,11 +134,11 @@ void initSerial()
       false, 
       64
       #ifdef ESP8266
-      , activeTaskUseSerial0()
+      , forceSWSerial
       #endif
       );
   }
-
+*/
 #endif
 
   // make sure previous serial buffers are flushed before resetting baudrate
@@ -209,10 +255,9 @@ void addNewlineToSerialBuffer() {
 
 void process_serialWriteBuffer() {
   size_t bytes_to_write = serialWriteBuffer.size();
-  if (bytes_to_write == 0) { return; }
   const uint32_t timeout = millis() + 5; // Allow for max 5 msec loop
 
-  while (!timeOutReached(timeout)) {
+  while (bytes_to_write != 0 && !timeOutReached(timeout)) {
     size_t snip = ESPEASY_SERIAL_CONSOLE_PORT.availableForWrite();
 
     if (snip > 0) {
@@ -229,7 +274,6 @@ void process_serialWriteBuffer() {
       }
     }
     bytes_to_write = serialWriteBuffer.size();
-    if (bytes_to_write == 0) return;
   }
 }
 

@@ -101,6 +101,7 @@ void ESPEasy_setup()
 {
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   // Init serial as first call to make sure the object exists.
+  //ESPEASY_SERIAL_CONSOLE_PORT.setLowPriority();
   initSerial();
 #endif
 #if defined(ESP8266_DISABLE_EXTRA4K) || defined(USE_SECOND_HEAP)

@@ -27,7 +27,11 @@ extern ESPeasySerial ESPEASY_SERIAL_CONSOLE_PORT;
   #define ESPEASY_SERIAL_CONSOLE_PORT Serial
 #endif
 
-
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+void checkSerialConflict(ESPEasySerialPort port, 
+                         int receivePin,
+                         int transmitPin);
+#endif
 
 void initSerial();
 

@@ -169,6 +169,10 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
                   false);
   #endif // ifdef ESP32
 
+  #if defined(DISABLE_SOFTWARE_SERIAL) || !defined(ESP8266)
+  allowSoftwareSerial = false;
+  #endif
+
   String options[NR_ESPEASY_SERIAL_TYPES];
   int    ids[NR_ESPEASY_SERIAL_TYPES];
   String attr[NR_ESPEASY_SERIAL_TYPES];
