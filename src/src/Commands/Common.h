@@ -10,6 +10,8 @@ class IPAddress;
 
 const __FlashStringHelper * return_command_success();
 const __FlashStringHelper * return_command_failed();
+String return_command_success_str();
+String return_command_failed_str();
 const __FlashStringHelper * return_incorrect_nr_arguments();
 const __FlashStringHelper * return_incorrect_source();
 const __FlashStringHelper * return_not_connected();

@@ -2,13 +2,13 @@
 
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
-#include "../ESPEasyCore/Serial.h"
-#include "../Globals/Settings.h"
-
-
 
 
 #if FEATURE_SD
+
+#include "../ESPEasyCore/Serial.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
 
 #include <SD.h>
 
@@ -55,9 +55,7 @@ String Command_SD_Remove(struct EventStruct *event, const char* Line)
   // FIXME TD-er: This one is not using parseString* function
   String fname = Line;
   fname = fname.substring(9);
-  String result = F("Removing:");
-  result += fname;
   SD.remove((char*)fname.c_str());
-  return return_result(event, result);
+  return return_result(event, concat(F("Removing:"), fname));
 }
 #endif
