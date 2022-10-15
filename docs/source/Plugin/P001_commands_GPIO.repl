@@ -38,33 +38,60 @@ Supported hardware: |P000_usedby_GPIO|
   "
   ``LongPulse,<GPIO>,<state>,<duration>``
 
-  GPIO: 0 ... 16
+  ``LongPulse,<GPIO>,<state>,<duration high>,<duration low>``
+
+  ``LongPulse,<GPIO>,<state>,<duration high>,<duration low>,<nr of repeats>``
+
+  GPIO: All GPIO pins with output capabilities
 
   State: 1/0
 
-  Duration: 1 ... 999 S
+  Duration low/high: 1 ... 999 S
+
+  Nr of Repeats: ``-1`` = continous repeat, ``0`` = only single pulse
   ","
   **To send a *long* pulse to a certain pin.**.
   A long pulse is basically the same as the plain pulse.  Duration is defined in seconds, which makes it more suitable for longer duration.
   This command is not blocking, but will send 2 events to start and stop the pulse. This may have some variation depending on the system load of the module.
   Variation is typically up-to 10 msec, but may be up-to a second, depending on active plugins and controllers performing blocking operations.
+
+  Changed: 2022/10/15
+
+  - Added ``<duration low>`` and repeat functionality
+  - On ESP8266 it now uses the way more accurate ``startWaveform`` function for high/low durations upto 15 seconds.
+
+  Example: ``longpulse,2,1,1,1,-1`` Continuous blinking of the onboard LED at 0.5 Hz. (50% duty cycle)
   "
   "
   ``LongPulse_mS,<GPIO>,<state>,<duration>``
 
-  GPIO: 0 ... 16
+  ``LongPulse_mS,<GPIO>,<state>,<duration high>,<duration low>``
+
+  ``LongPulse_mS,<GPIO>,<state>,<duration high>,<duration low>,<nr of repeats>``
+
+  GPIO: All GPIO pins with output capabilities
 
   State: 1/0
 
-  Duration: 10 ... 15000 msec
+  Duration low/high: 1 ... 15000 msec
+
+  Nr of Repeats: ``-1`` = continous repeat, ``0`` = only single pulse
   ","
-  **To send a *long* pulse to a certain pin.**
+  **To send a (non blocking) *long* pulse to a certain pin.**
+
   A ``LongPulse_mS`` is the same as the regular ``LongPulse``. The only difference is the time base in milliseconds rather than in seconds.
+
+  Changed: 2022/10/15
+
+  - Added ``<duration low>`` and repeat functionality
+  - On ESP8266 it now uses the way more accurate ``startWaveform`` function for high/low durations upto 15 seconds.
+
+  Example: ``longpulse_ms,2,1,500,500,-1`` Continuous blinking of the onboard LED at 1 Hz. (50% duty cycle)
   "
   "
   ``Pulse,<GPIO>,<state>,<duration>``
 
-  GPIO: 0 ... 16
+  GPIO: All GPIO pins with output capabilities
 
   State: 1/0
 
@@ -81,7 +108,9 @@ Supported hardware: |P000_usedby_GPIO|
 
   ``PWM,<GPIO>,<duty>,<duration>,<frequency>``
 
-  GPIO: 0 ... **15**
+  ESP8266 GPIO: 0 ... **15**
+
+  ESP32 GPIO: All GPIO pins with output capabilities
 
   Duty: 0 ... 1023
 
@@ -97,32 +126,6 @@ Supported hardware: |P000_usedby_GPIO|
 
   Frequency (in Hz) will be set to 1000 Hz when not given.
   Frequencies above 30 kHz are not stable and will likely crash the ESP.
-  "
-  "
-  ``Wave_mS,<GPIO>,<msec low>,<msec high>,<duration in msec>``
-
-  ``Wave_uS,<GPIO>,<usec low>,<usec high>,<duration in usec>``
-
-  GPIO: 0 ... 16
-
-  High: The duration of the 'high' state in either msec or usec.
-
-  Low: The duration of the 'low' state in either msec or usec.
-
-  Duration: 0 or total duration of repeating the wave form.
-  ","
-  **To send a non-blocking (repeating) pulse to a pin.**
-  ``Wave_mS`` is the same as ``Wave_uS``. The only difference is the time base in milliseconds or micro seconds.
-
-  Duration of 0 means continous repeating the wave form.
-
-  For duration > 0, the total duration is rounded up to the period defined by the high and low times.
-
-  Example: ``wave_ms,2,1000,1000`` will blink the on board LED at 0.5 Hz.
-
-  Added: 2022/10/15
-
-  N.B. Currently only implemented for ESP8266, not yet for ESP32
   "
   "
   ``Servo,<servo ID>,<GPIO>,<position>``

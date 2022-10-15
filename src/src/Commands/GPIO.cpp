@@ -204,18 +204,18 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
       // Max time high or low is roughly 53 sec @ 80 MHz or half @160 MHz.
       // This is not available on ESP32.
 
-     const uint8_t pin = event->Par1;
-     uint32_t timeHighUS = event->Par3 * 1000;
-     uint32_t timeLowUS  = event->Par4 * 1000;
+      const uint8_t pin = event->Par1;
+      uint32_t timeHighUS = event->Par3 * 1000;
+      uint32_t timeLowUS  = event->Par4 * 1000;
 
-     if (event->Par2 == 0) {
-       std::swap(timeHighUS, timeLowUS);
-     }
-     uint32_t runTimeUS = 0;
-     if (event->Par5 > 0) {
-       // Must set slightly lower than expected duration as it will be rounded up.
-       runTimeUS = event->Par5 * (timeHighUS + timeLowUS) - ((timeHighUS + timeLowUS) / 2);
-     }
+      if (event->Par2 == 0) {
+        std::swap(timeHighUS, timeLowUS);
+      }
+      uint32_t runTimeUS = 0;
+      if (event->Par5 > 0) {
+        // Must set slightly lower than expected duration as it will be rounded up.
+        runTimeUS = event->Par5 * (timeHighUS + timeLowUS) - ((timeHighUS + timeLowUS) / 2);
+      }
 
       pinMode(event->Par1, OUTPUT);
       usingWaveForm = startWaveform(
@@ -278,53 +278,6 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     return return_command_failed();
   }
 }
-
-#ifdef ESP8266
-const __FlashStringHelper * Command_GPIO_Wave_Ms(struct EventStruct *event, const char* Line)
-{
-  event->Par2 *= 1000;
-  event->Par3 *= 1000;
-  event->Par4 *= 1000;
-  return Command_GPIO_Wave_usec(event, Line);
-}
-
-const __FlashStringHelper * Command_GPIO_Wave_usec(struct EventStruct *event, const char* Line)
-{
-  pluginID_t pluginID = INVALID_PLUGIN_ID;
-  bool success = false;
-
-  // Line[0]='l':longpulse; ='p':pcflongpulse; ='m':mcplongpulse
-  const __FlashStringHelper * logPrefix = getPluginIDAndPrefix('g', pluginID, success);
-
-  if (success && checkValidPortRange(pluginID, event->Par1))
-  {
-    const uint32_t key = createKey(pluginID, event->Par1);
-    createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, event->Par2);
-    pinMode(event->Par1, OUTPUT);
-
-
-    // FIXME TD-er: Find analog way to start a waveform on ESP32
-    success = startWaveform(event->Par1, event->Par2, event->Par3, event->Par4);
-
-    String log = logPrefix;
-    log += F(" : port ");
-    log += event->Par1;
-    log += F(". Wave H:");
-    log += event->Par2 / 1000;
-    log += F(" L:");
-    log += event->Par3/1000;
-    log += F(" Dur: ");
-    log += event->Par4 / 1000;
-    log += F(" ms");
-    addLog(LOG_LEVEL_INFO, log);
-    SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
-
-    if (success) return return_command_success();
-  }
-  logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-  return return_command_failed();
-}
-#endif
 
 const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char *Line)
 {

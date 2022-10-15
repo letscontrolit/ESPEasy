@@ -482,11 +482,6 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'w': {
-#ifdef ESP8266
-      COMMAND_CASE_A(   "wave_ms", Command_GPIO_Wave_Ms, 4);    // GPIO.h
-      COMMAND_CASE_A(   "wave_us", Command_GPIO_Wave_usec, 4);    // GPIO.h
-#endif
-
       #ifndef LIMIT_BUILD_SIZE
       COMMAND_CASE_R("wdconfig", Command_WD_Config, 3);               // WD.h
       COMMAND_CASE_R(  "wdread", Command_WD_Read,   2);               // WD.h
