@@ -189,36 +189,72 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     //       -1 = repeat indefinately
     //        0 = only once
     //        N = Repeat N times
+    Scheduler.clearGPIOTimer(pluginID, event->Par1);
     const uint32_t key = createKey(pluginID, event->Par1);
     createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, event->Par2);
-    GPIO_Write(pluginID, event->Par1, event->Par2);
 
-    int repeatInterval = 0;
-    int repeatCount = 0;
-    if (event->Par4 > 0 && event->Par5 != 0) {
-      // Compute repeat interval
-      repeatInterval = event->Par3 + event->Par4;
-      repeatCount    = event->Par5;
+    #ifdef ESP8266
+    bool usingWaveForm = 
+        event->Par3 > 0 && event->Par3 < 15000 &&
+        event->Par4 > 0 && event->Par4 < 15000 &&
+        event->Par5 != 0;
+        
+    if (usingWaveForm) {
+      // Preferred is to use the ESP8266 waveform function.
+      // Max time high or low is roughly 53 sec @ 80 MHz or half @160 MHz.
+      // This is not available on ESP32.
 
-      // Schedule switching pin to given state for repeat
+     const uint8_t pin = event->Par1;
+     uint32_t timeHighUS = event->Par3 * 1000;
+     uint32_t timeLowUS  = event->Par4 * 1000;
+
+     if (event->Par2 == 0) {
+       std::swap(timeHighUS, timeLowUS);
+     }
+     uint32_t runTimeUS = 0;
+     if (event->Par5 > 0) {
+       // Must set slightly lower than expected duration as it will be rounded up.
+       runTimeUS = event->Par5 * (timeHighUS + timeLowUS) - ((timeHighUS + timeLowUS) / 2);
+     }
+
+      pinMode(event->Par1, OUTPUT);
+      usingWaveForm = startWaveform(
+        pin, timeHighUS, timeLowUS, runTimeUS);
+    }
+    #else
+    // waveform function not available on ESP32
+    const bool usingWaveForm = false;
+    #endif
+
+    if (!usingWaveForm) {
+      int repeatInterval = 0;
+      int repeatCount = 0;
+      GPIO_Write(pluginID, event->Par1, event->Par2);
+      if (event->Par4 > 0 && event->Par5 != 0) {
+        // Compute repeat interval
+        repeatInterval = event->Par3 + event->Par4;
+        repeatCount    = event->Par5;
+
+        // Schedule switching pin to given state for repeat
+        Scheduler.setGPIOTimer(
+          repeatInterval,   // msecFromNow
+          pluginID,    
+          event->Par1,   // Pin/port nr
+          event->Par2,   // pin state
+          repeatInterval,
+          repeatCount);
+      }
+
+
+      // Schedule switching pin back to original state
       Scheduler.setGPIOTimer(
-        repeatInterval,   // msecFromNow
+        event->Par3,   // msecFromNow
         pluginID,    
         event->Par1,   // Pin/port nr
-        event->Par2,   // pin state
+        !event->Par2,  // pin state
         repeatInterval,
         repeatCount);
     }
-
-
-    // Schedule switching pin back to original state
-    Scheduler.setGPIOTimer(
-      event->Par3,   // msecFromNow
-      pluginID,    
-      event->Par1,   // Pin/port nr
-      !event->Par2,  // pin state
-      repeatInterval,
-      repeatCount);
 
 
     String log = logPrefix;

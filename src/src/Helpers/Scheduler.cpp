@@ -971,8 +971,6 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id, unsigned long lastt
     setNextTimeInterval(newTimer, it->second.getInterval());
     setNewTimerAt(mixedTimerId, newTimer);
     it->second.markNextRecurring();
-  } else {
-    systemTimers.erase(mixedTimerId);
   }
 
   uint8_t GPIOType      = static_cast<uint8_t>((id) & 0xFF);
@@ -1004,6 +1002,9 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id, unsigned long lastt
   }
 
 
+  if (!it->second.isRecurring()) {
+    Scheduler.clearGPIOTimer(pluginID, pinNumber);
+  }
 
   const uint32_t key = createKey(pluginID, pinNumber);
 
