@@ -8,6 +8,7 @@
 #ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_peermanager.h"
 #include "../Globals/ESPEasy_now_state.h"
+#include "../Globals/EventQueue.h"
 #endif
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
