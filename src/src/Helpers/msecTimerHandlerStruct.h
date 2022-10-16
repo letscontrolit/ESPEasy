@@ -16,6 +16,8 @@ struct msecTimerHandlerStruct {
   void registerAt(unsigned long id,
                   unsigned long timer);
 
+  void remove(unsigned long id);
+
   // Check if timeout has been reached and also return its set timer.
   // Return 0 if no item has reached timeout moment.
   unsigned long getNextId(unsigned long& timer);
@@ -34,6 +36,8 @@ struct msecTimerHandlerStruct {
 private:
 
   void insert(const timer_id_couple& item);
+
+  void remove(const timer_id_couple& item);
 
   void recordIdle();
 

@@ -516,8 +516,12 @@ To create/register a plugin, you have to :
             #define WEBSERVER_SYSINFO_MINIMAL
         #endif
 
-
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
+
+
+    // FEATURE_GPIO_USE_ESP8266_WAVEFORM needs about 200 bytes
+    //#define FEATURE_GPIO_USE_ESP8266_WAVEFORM 0
+
 
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
@@ -1484,9 +1488,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P104
     #define USES_P104   // MAX7219 dot matrix
    #endif
-  //  #ifndef USES_P109
-  //    #define USES_P109   // ThermoOLED
-  //  #endif
+   #if !defined(USES_P109) && defined(ESP32)
+     #define USES_P109   // ThermoOLED
+   #endif
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
@@ -2373,6 +2377,14 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_FHEM                          
 #define FEATURE_FHEM                          0
+#endif
+
+#ifndef FEATURE_GPIO_USE_ESP8266_WAVEFORM
+ #ifdef ESP8266
+  #define FEATURE_GPIO_USE_ESP8266_WAVEFORM   1
+ #else
+  #define FEATURE_GPIO_USE_ESP8266_WAVEFORM   0
+ #endif
 #endif
 
 #ifndef FEATURE_HOMEASSISTANT_OPENHAB         
