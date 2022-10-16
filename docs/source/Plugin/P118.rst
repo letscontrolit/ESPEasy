@@ -24,7 +24,7 @@ Used libraries: |P118_usedlibraries|
 Description
 -----------
 
-This plugin enables communication with an Itho RFT fan (and some Duco fans) through a CC1101 868 MHz transceiver. It allows controlling the fan speed by simulating a Itho remote, and can also monitor for commands send by other remotes.
+This plugin enables communication with an Itho RFT fan (and some Duco fans) through a CC1101 868 MHz transceiver. It allows controlling the fan speed by simulating an Itho remote, and can also monitor for commands sent by other remotes.
 
 Wiring
 ------
@@ -32,7 +32,7 @@ Wiring
 .. image:: P118_CC1101.jpg
   :alt: CC1101 868 MHz transceiver
 
-The CC1101 transceiver is controlled via SPI and also requires another pin for the interrupt to let the ESP know a data packet arrived. Make sure to enable SPI under the ESPEasy hardware configuration.
+The CC1101 transceiver is controlled via SPI and also requires an pin for the interrupt to let the ESP know a data packet has arrived. Make sure to enable SPI under the ESPEasy hardware configuration.
 
 .. code-block:: none
 
@@ -63,17 +63,27 @@ Configuration
 Sensor
 ^^^^^^
 
-* **GPIO <- Interrupt pin** Input interrupt pin of the ESPEasy, should be connected to CC1101 GDO2. Don't use ESP boot related pints (GPIO0, GPIO2, GPIO15) or GPIO16 (no interrupt support).
+* **GPIO <- Interrupt pin (CC1101 GDO2)**: Input interrupt pin of the ESPEasy, should be connected to CC1101 GDO2. Don't use ESP boot related pints (GPIO0, GPIO2, GPIO15) or GPIO16 (no interrupt support). When this setting is set to ``- None -`` it will be iognored, but receiving the messages sent from other controllers is not possible. Sending commands to the ITHO ventilation unit is still possible.
 
-Device Settings
-^^^^^^^^^^^^^^^
+* **GPIO -> CS pin (CC1101 CSN)**: The output pin to connect to the CS/CSN line of the CC1101 controller. The previous fixed setting of GPIO 15 is filled by default, but can be changed if multiple tranceiver units can be connected to the ESP.
 
-* **Unit ID remote X** ID of another remote that controls your Itho fan. When set it allows the plugin to monitor for commands and act on them. The ID consist out of 3 numbers separated by ','. Up to 3 remotes are supported,
+Remote RF Controls
+^^^^^^^^^^^^^^^^^^
 
-* **Enable RF receive log** When enabled all recieved RF packages will be shown in the ESPEasy log under debug. Useful to determine the ID of other remotes. Disable when not necessary to reduce writing to the log.
+* **Unit ID remote 1..3**: ID of another remote that controls your Itho fan. When set it allows the plugin to monitor for commands and act on them. The ID consist out of 3 numbers separated by ','. Up to 3 remotes are supported. After the controller is joined with the ventilation unit, and enabling the **Enable minimal RF INFO log** option below, these ID's can be extracted from the logs at the INFO level by pressing a button on the remote. Most remotes will repeat a command ca. 3 times, in case there is disturbance in communication, so that should be easily recognizable.
 
-* **Device ID byte X** ID of the ESPEasy plugin, defaults to 10,87,81. The plugin acts as a remote and can have a unique ID. Can be changed from default if you have interference with neighbours. After a change you should again join the ESP with the fan.
+* **Enable RF DEBUG log**: When enabled all recieved RF packages will be shown in the ESPEasy log at DEBUG level. Useful to determine the ID of other remotes and the messages they send. Disable when not necessary to reduce writing to the log. (Only available when Debug logging is available in the build.)
 
+* **Enable minimal RF INFO lgo**: When enabled, this will write the ID and raw command sent from any device using the same frequency and protocol. Can be used to determine entries for **Unit ID remote 1..3**. Disable when not necessary to reduce writing to the log.
+
+* **Device ID byte 1..3**: Device ID of the ESPEasy plugin, defaults to 10,87,81. The plugin acts as a remote and can have a unique ID. Can be changed from default if you have interference with neighbours. After a change you should again join the ESP with the fan.
+
+* **Enable Orcon support**: Enables the extra protocol for the Orcon brand of ventilation units, that use the same protocol, but with a different command set. To avoid possible interference, it is disabled by default.
+
+Data Acquisition
+^^^^^^^^^^^^^^^^
+
+This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
 
 Values
 ^^^^^^
@@ -131,12 +141,15 @@ Change log
 ----------
 
 .. versionchanged:: 2.0
-  ...
+	.
 
   |added|
-  2021-12-26 Initial release version.
+	2022-08-18: Add support for Orcon devices.
 
+  |added|
+	2022-08-10: Made multi-instance compatible, CS pin configurable and interrupt pin usage optional.
 
-
+  |added|
+	2021-12-26 Initial release version.
 
 

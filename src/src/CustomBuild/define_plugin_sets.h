@@ -310,6 +310,35 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifdef PLUGIN_CLIMATE_COLLECTION
+  #ifdef PLUGIN_BUILD_NORMAL
+    #undef PLUGIN_BUILD_NORMAL
+  #endif
+  #define PLUGIN_SET_NONE // Specifically configured below
+  #define CONTROLLER_SET_STABLE
+  #define NOTIFIER_SET_STABLE
+  #ifndef FEATURE_ESPEASY_P2P
+    #define FEATURE_ESPEASY_P2P 1
+  #endif
+
+  #ifndef FEATURE_I2CMULTIPLEXER
+    #define FEATURE_I2CMULTIPLEXER  1
+  #endif
+  #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
+  #endif
+  #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+  #ifndef FEATURE_PLUGIN_STATS
+    #define FEATURE_PLUGIN_STATS  1
+  #endif
+  #ifndef FEATURE_CHART_JS
+    #define FEATURE_CHART_JS  1
+  #endif
+  #ifndef FEATURE_RULES_EASY_COLOR_CODE
+    #define FEATURE_RULES_EASY_COLOR_CODE 1
+  #endif
+#endif
+
 #ifdef PLUGIN_BUILD_NORMAL
     #define  PLUGIN_SET_STABLE
     #define  CONTROLLER_SET_STABLE
@@ -487,8 +516,12 @@ To create/register a plugin, you have to :
             #define WEBSERVER_SYSINFO_MINIMAL
         #endif
 
-
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
+
+
+    // FEATURE_GPIO_USE_ESP8266_WAVEFORM needs about 200 bytes
+    //#define FEATURE_GPIO_USE_ESP8266_WAVEFORM 0
+
 
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
@@ -918,6 +951,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef PLUGIN_DISPLAY_COLLECTION
         #define PLUGIN_DISPLAY_COLLECTION
+    #endif
+    #ifndef PLUGIN_CLIMATE_COLLECTION
+      #define PLUGIN_CLIMATE_COLLECTION
     #endif
     #ifndef PLUGIN_NEOPIXEL_COLLECTION
         #define PLUGIN_NEOPIXEL_COLLECTION
@@ -1357,11 +1393,6 @@ To create/register a plugin, you have to :
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
     #define USES_P117  // SCD30
-      // Disable Itho when using second heap as it no longer fits.
-      // Disable Itho for ESP32 as it does not (yet) work on ESP32 IDF4.4
-    #if !defined(USE_SECOND_HEAP) && !defined(ESP32)
-      #define USES_P118  // Itho ventilation control
-    #endif
     #define USES_P124  // I2C MultiRelay
     #define USES_P127  // CDM7160
 #endif
@@ -1488,6 +1519,109 @@ To create/register a plugin, you have to :
    #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
+  #endif
+#endif
+
+// Collection of all climate plugins.
+#ifdef PLUGIN_CLIMATE_COLLECTION
+  #ifndef PLUGIN_DESCR
+    #define PLUGIN_DESCR  "Climate"
+  #endif
+
+  // Features and plugins cherry picked from stable set
+  #ifndef FEATURE_SERVO
+    #define FEATURE_SERVO 1
+  #endif
+  #define FEATURE_RTTTL 1
+
+  #define USES_P001   // Switch
+  #define USES_P002   // ADC
+  #define USES_P003   // Pulse
+  #define USES_P004   // Dallas
+  #define USES_P005   // DHT
+  #define USES_P006   // BMP085
+
+  #define USES_P011   // PME
+  #define USES_P012   // LCD
+  #define USES_P014   // SI7021
+  #define USES_P018   // Dust
+
+  #define USES_P021   // Level
+  #define USES_P023   // OLED
+  #define USES_P024   // MLX90614
+  #define USES_P026   // SysInfo
+  #define USES_P028   // BME280
+  #define USES_P029   // Output
+
+  #define USES_P031   // SHT1X
+  #define USES_P032   // MS5611
+  #define USES_P033   // Dummy
+  #define USES_P034   // DHT12
+  #define USES_P036   // FrameOLED
+  #define USES_P037   // MQTTImport
+  #define USES_P038   // NeoPixel
+  #define USES_P039   // Environment - Thermocouple
+
+  #define USES_P043   // ClkOutput
+  #define USES_P044   // P1WifiGateway
+  #define USES_P049   // MHZ19
+
+  #define USES_P052   // SenseAir
+  #define USES_P053   // PMSx003
+  #define USES_P056   // SDS011-Dust
+  #define USES_P059   // Encoder
+
+  #define USES_P073   // 7DGT
+
+  // Enable extra climate-related plugins (CO2/Temp/Hum)
+  #ifndef USES_P047
+    #define USES_P047 // Soil Moisture
+  #endif
+  #ifndef USES_P049
+    #define USES_P049 // MH-Z19
+  #endif
+  #ifndef USES_P051
+    #define USES_P051 // AM2320
+  #endif
+  #ifndef USES_P068
+    #define USES_P068 // SHT3x
+  #endif
+  #ifndef USES_P069
+    #define USES_P069 // LM75
+  #endif
+  #ifndef USES_P072
+    #define USES_P072 // HCD1080
+  #endif
+  #ifndef USES_P081
+    #define USES_P081 // Cron
+  #endif
+  #ifndef USES_P083
+    #define USES_P083 // SGP30
+  #endif
+  #ifndef USES_P090
+    #define USES_P090 // CCS811
+  #endif
+  #ifndef USES_P103
+    #define USES_P103 // Atlas EZO
+  #endif
+  #ifndef USES_P105
+    #define USES_P105 // AHT10/20/21
+  #endif
+  #ifndef USES_P106
+    #define USES_P106 // BME680
+  #endif
+  #ifndef USES_P117
+    #define USES_P117 // SCD30
+  #endif
+  // Disable Itho when using second heap as it no longer fits.
+  #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
+    #define USES_P118 // Itho ventilation control
+  #endif
+  #ifndef USES_P127
+    #define USES_P127 // CDM7160
+  #endif
+  #ifndef USES_P135
+    #define USES_P135 // SCD4x
   #endif
 #endif
 
@@ -1738,8 +1872,7 @@ To create/register a plugin, you have to :
     #define USES_P117   // SCD30
   #endif
   #ifndef USES_P118
-    // Does not (yet) work well on ESP32 with IDF 4.4
-    // #define USES_P118   // Itho ventilation coontrol
+    #define USES_P118   // Itho ventilation coontrol
   #endif
   #ifndef USES_P119
     #define USES_P119   // ITG3205 Gyro
@@ -2288,6 +2421,14 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_FHEM                          
 #define FEATURE_FHEM                          0
+#endif
+
+#ifndef FEATURE_GPIO_USE_ESP8266_WAVEFORM
+ #ifdef ESP8266
+  #define FEATURE_GPIO_USE_ESP8266_WAVEFORM   1
+ #else
+  #define FEATURE_GPIO_USE_ESP8266_WAVEFORM   0
+ #endif
 #endif
 
 #ifndef FEATURE_HOMEASSISTANT_OPENHAB         

@@ -309,20 +309,20 @@ size_t streamFromFS(String path, bool htmlEscape) {
     return bytesStreamed;
   }
 
-  int available = f.available();
+  size_t available = f.available();
   String escaped;
 
   while (available > 0) {
-    int32_t chunksize = 64;
+    size_t chunksize = 64;
 
     if (available < chunksize) {
       chunksize = available;
     }
     uint8_t   buf[64] = { 0 };
-    const int read    = f.read(buf, chunksize);
+    const size_t read = f.read(buf, chunksize);
 
     if (read == chunksize) {
-      for (int32_t i = 0; i < chunksize; ++i) {
+      for (size_t i = 0; i < chunksize; ++i) {
         const char c = (char)buf[i];
 
         if (htmlEscape && htmlEscapeChar(c, escaped)) {

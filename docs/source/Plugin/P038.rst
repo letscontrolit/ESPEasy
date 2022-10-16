@@ -47,7 +47,7 @@ Configuration
 * **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 Actuator
-^^^^^^^^
+~~~~~~~~
 
 * **GPIO -> DIN**: Select the GPIO pin that the LED stripe is connected to.
 
@@ -64,7 +64,7 @@ Actuator
 
 
 Commands available
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 .. include:: P038_commands.repl
 
