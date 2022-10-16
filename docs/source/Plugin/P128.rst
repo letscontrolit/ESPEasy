@@ -49,7 +49,7 @@ Configuration
 * **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 Actuator
-^^^^^^^^
+~~~~~~~~
 
 * **GPIO -> Stripe data**: Select the GPIO pin the stripe is connected to (Only available on ESP32!)
 
@@ -63,14 +63,14 @@ Due to the design of the used library and the methods used, on ESP8266 only GPIO
 * **Max brightness**: The maximum brightness allowed for the stripe. Range: 1..255. This is also the initial brightness set during initialization. Can *not* be overridden by the ``dim`` subcommand, and also the maximum value for the ``rainbow`` subcommand.
 
 Data Aquisition
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
 
 **Interval** By default, Interval will be set to 0 sec. This is optional. When set, the **Values** will be sent to any configured controllers, and events generated to be handled in rules.
 
 Values
-^^^^^^
+~~~~~~
 
 The value names are fixed and not configurable. These names are:
 
