@@ -126,6 +126,17 @@ If it is still needed to have multiple sensors in the same task, one can still s
           Parasite powered sensors are not supported in this mode.
 
 
+Auto Select Sensor
+""""""""""""""""""
+
+(Added 2022-10-16)
+
+This allows for "auto configuration" only when using a single sensor on the configured pin(s).
+During init of the task, the task will scan the 1-Wire bus and just pick the first found sensor (the one with the lowest address).
+
+Typical use case is to allow for easy replacing the sensor without the need to reconfigure the task.
+
+
 Device address
 """"""""""""""
 
