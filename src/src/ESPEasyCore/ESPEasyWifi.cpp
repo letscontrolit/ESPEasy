@@ -1367,6 +1367,7 @@ void setConnectionSpeed() {
     // No need to perform a next attempt.
     WiFi_AP_Candidates.markAttempt();
   }
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = concat(F("WIFI : Set to 802.11"), (WIFI_PHY_MODE_11G == phyMode) ? 'g' : 'n');
     if (forcedByAPmode) {
@@ -1377,6 +1378,7 @@ void setConnectionSpeed() {
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }
+  #endif
   WiFi.setPhyMode(phyMode);
   #endif // ifdef ESP8266
 

@@ -1986,9 +1986,30 @@ To create/register a plugin, you have to :
   #ifndef WEBSERVER_USE_CDN_JS_CSS
     #define WEBSERVER_USE_CDN_JS_CSS
   #endif
+  #ifdef WEBSERVER_CSS
+      #undef WEBSERVER_CSS
+  #endif
+  #ifndef WEBSERVER_EMBED_CUSTOM_CSS
+    #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+      #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #endif
+  #endif
+  #ifdef WEBSERVER_INCLUDE_JS
+      #undef WEBSERVER_INCLUDE_JS
+  #endif
   #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
     #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
   #endif
+
+  #ifdef WEBSERVER_GITHUB_COPY
+    #undef WEBSERVER_GITHUB_COPY
+  #endif
+  #ifdef WEBSERVER_CUSTOM
+    // TD-er: Removing WEBSERVER_CUSTOM does free up another 1.7k
+//    #undef WEBSERVER_CUSTOM
+  #endif
+
+
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
