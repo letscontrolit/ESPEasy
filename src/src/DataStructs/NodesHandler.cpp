@@ -442,6 +442,11 @@ void NodesHandler::updateThisNode() {
     // Since we're the end node, claim highest success rate
     updateSuccessRate(thisNode.unit, 255);
   }
+  if (thisNode.distance != lastDistance) {
+    if (Settings.UseRules) {
+      eventQueue.addMove(std::move(concat(F("nodep2p#distance="), thisNode.distance)));
+    }
+  }
   #else
   addNode(thisNode);
   #endif
