@@ -2178,6 +2178,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_RULES_EASY_COLOR_CODE
   #endif
   #define FEATURE_RULES_EASY_COLOR_CODE 0
+  #if FEATURE_EXT_RTC
+    #undef FEATURE_EXT_RTC
+    #define FEATURE_EXT_RTC 0
+  #endif
 #endif
 
 // Timing stats page needs timing stats
