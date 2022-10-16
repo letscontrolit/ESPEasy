@@ -592,6 +592,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
         tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command  
       }
       savePortStatus(key, tempStatus);
+      Scheduler.clearGPIOTimer(PLUGIN_PCF, event->Par1);
       if (function == PLUGIN_TASKTIMER_IN) {
         GPIO_PCF_Write(event->Par1, event->Par2);
       } else {
