@@ -67,7 +67,7 @@
 .. |P127_type| replace:: :cyan:`Gases`
 .. |P127_typename| replace:: :cyan:`Gases - CO2 CDM7160`
 .. |P127_porttype| replace:: `.`
-.. |P127_status| replace:: :yellow:`COLLECTION D`
+.. |P127_status| replace:: :yellow:`COLLECTION D` :yellow:`CLIMATE`
 .. |P127_github| replace:: P127_CDM7160.ino
 .. _P127_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P127_CDM7160.ino
 .. |P127_usedby| replace:: `.`
