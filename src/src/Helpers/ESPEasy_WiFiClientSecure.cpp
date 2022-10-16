@@ -425,7 +425,7 @@ int ESPEasy_WiFiClientSecure::cert_to_pem(const mbedtls_x509_crt *crt, String& p
     2* crt->raw.len;
 
   std::vector<unsigned char> pem_buf;
-  pem_buf.resize(buffer_size);
+  pem_buf.resize(buffer_size, 0u);
   int ret = mbedtls_pem_write_buffer(
           pem_begin_crt.c_str(), pem_end_crt.c_str(), 
           crt->raw.p, crt->raw.len,

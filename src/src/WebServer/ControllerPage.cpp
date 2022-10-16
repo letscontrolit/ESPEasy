@@ -464,10 +464,14 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                 addFormSubHeader(F("Peer Certificate"));
 
                 {
-                  addRowLabel(F("Certificate Info"));
-                  addHtml(F("<textarea readonly rows='10' wrap='on'>"));
-                  addHtml(mqtt_tls->getPeerCertificateInfo());
-                  addHtml(F("</textarea>"));
+                  addFormTextArea(
+                    F("Certificate Info"), 
+                    F("certinfo"), 
+                    mqtt_tls->getPeerCertificateInfo(),
+                    0,
+                    10,
+                    0,
+                    true);
                 }
                 {
                   String fingerprint;
