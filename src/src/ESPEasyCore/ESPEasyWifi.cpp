@@ -1303,19 +1303,6 @@ void setConnectionSpeed() {
   } else {
     WiFi.setPhyMode(WIFI_PHY_MODE_11G);
   }
-  #ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = concat(F("WIFI : Set to 802.11"), (WIFI_PHY_MODE_11G == phyMode) ? 'g' : 'n');
-    if (forcedByAPmode) {
-      log += (F(" (AP+STA mode)"));
-    }
-    if (Settings.ForceWiFi_bg_mode()) {
-      log += F(" Force B/G mode");
-    }
-    addLogMove(LOG_LEVEL_INFO, log);
-  }
-  #endif
-  WiFi.setPhyMode(phyMode);
   #endif // ifdef ESP8266
 
   // Does not (yet) work, so commented out.
