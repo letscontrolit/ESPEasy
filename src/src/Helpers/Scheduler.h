@@ -214,13 +214,14 @@ public:
 
   void setGPIOTimer(unsigned long msecFromNow,
                     pluginID_t    pluginID,
-                    int           Par1,
-                    int           Par2 = 0,
-                    int           Par3 = 0,
-                    int           Par4 = 0,
-                    int           Par5 = 0);
+                    int           pinnr,
+                    int           state = 0,
+                    int           repeatInterval = 0,
+                    int           recurringCount = 0);
 
-  void process_gpio_timer(unsigned long id);
+  void clearGPIOTimer(pluginID_t pluginID, int pinnr);
+
+  void process_gpio_timer(unsigned long id, unsigned long lasttimer);
 
   /*********************************************************************************************\
   * Task Device Timer
