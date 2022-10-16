@@ -18,7 +18,7 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"
 
-#ifdef ESP8266
+#if FEATURE_GPIO_USE_ESP8266_WAVEFORM
 # include <core_esp8266_waveform.h>
 #endif 
 
@@ -195,7 +195,7 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     const uint32_t key = createKey(pluginID, event->Par1);
     createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, event->Par2);
 
-    #ifdef ESP8266
+    #if FEATURE_GPIO_USE_ESP8266_WAVEFORM
     bool usingWaveForm = 
         event->Par3 > 0 && event->Par3 < 15000 &&
         event->Par4 > 0 && event->Par4 < 15000 &&
