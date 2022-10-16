@@ -255,9 +255,9 @@ bool isTransformString(char c, bool logicVal, String& strValue)
       return false;
   }
   if (value_ch != '\0') {
-    strValue = value;
-  } else {
     strValue = value_ch;
+  } else {
+    strValue = value;
   }
   return true;
 }
@@ -561,7 +561,7 @@ void transformValue(
 
 // Find the first (enabled) task with given name
 // Return INVALID_TASK_INDEX when not found, else return taskIndex
-taskIndex_t findTaskIndexByName(const String& deviceName)
+taskIndex_t findTaskIndexByName(const String& deviceName, bool allowDisabled)
 {
   // cache this, since LoadTaskSettings does take some time.
   #ifdef USE_SECOND_HEAP
@@ -578,7 +578,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 
   for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
   {
-    if (Settings.TaskDeviceEnabled[taskIndex]) {
+    if (Settings.TaskDeviceEnabled[taskIndex] || allowDisabled) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
 
       if (!taskDeviceName.isEmpty())

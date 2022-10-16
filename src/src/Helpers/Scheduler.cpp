@@ -297,7 +297,7 @@ void ESPEasy_Scheduler::handle_schedule() {
       process_task_device_timer(id, timer);
       break;
     case SchedulerTimerType_e::GPIO_timer:
-      process_gpio_timer(id);
+      process_gpio_timer(id, timer);
       break;
 
     case SchedulerTimerType_e::SystemEventQueue:
@@ -885,7 +885,13 @@ unsigned long ESPEasy_Scheduler::createGPIOTimerId(uint8_t GPIOType, uint8_t pin
   return mixed & mask;
 }
 
-void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
+void ESPEasy_Scheduler::setGPIOTimer(
+  unsigned long msecFromNow, 
+  pluginID_t pluginID, 
+  int        pinnr,
+  int        state,
+  int        repeatInterval,
+  int        recurringCount)
 {
   uint8_t GPIOType = GPIO_TYPE_INVALID;
 
@@ -903,12 +909,68 @@ void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t plugi
 
   if (GPIOType != GPIO_TYPE_INVALID) {
     // Par1 & Par2 & GPIOType form a unique key
-    const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::GPIO_timer, createGPIOTimerId(GPIOType, Par1, Par2));
+    const unsigned long mixedTimerId = getMixedId(
+      SchedulerTimerType_e::GPIO_timer, 
+      createGPIOTimerId(GPIOType, pinnr, state));
+
+    const systemTimerStruct timer_data(
+      recurringCount, 
+      repeatInterval, 
+      state);
+    systemTimers[mixedTimerId] = timer_data;
     setNewTimerAt(mixedTimerId, millis() + msecFromNow);
   }
 }
 
-void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
+void ESPEasy_Scheduler::clearGPIOTimer(pluginID_t pluginID, int pinnr)
+{
+  uint8_t GPIOType = GPIO_TYPE_INVALID;
+
+  switch (pluginID) {
+    case PLUGIN_GPIO:
+      GPIOType = GPIO_TYPE_INTERNAL;
+      break;
+    case PLUGIN_PCF:
+      GPIOType = GPIO_TYPE_PCF;
+      break;
+    case PLUGIN_MCP:
+      GPIOType = GPIO_TYPE_MCP;
+      break;
+  }
+
+  if (GPIOType != GPIO_TYPE_INVALID) {
+    // Par1 & Par2 & GPIOType form a unique key
+    for (int state = 0; state <= 1; ++state) {
+      const unsigned long mixedTimerId = getMixedId(
+        SchedulerTimerType_e::GPIO_timer, 
+        createGPIOTimerId(GPIOType, pinnr, state));
+      auto it = systemTimers.find(mixedTimerId);
+      if (it != systemTimers.end()) {
+        systemTimers.erase(it);
+      }
+      msecTimerHandler.remove(mixedTimerId);
+    }
+  }
+}
+
+void ESPEasy_Scheduler::process_gpio_timer(unsigned long id, unsigned long lasttimer) {
+ const unsigned long mixedTimerId = getMixedId(
+    SchedulerTimerType_e::GPIO_timer, id);
+
+  auto it = systemTimers.find(mixedTimerId);
+  if (it == systemTimers.end()) {
+    return;
+  }
+
+  // Reschedule before sending the event, as it may get rescheduled in handling the timer event.
+  if (it->second.isRecurring()) {
+    // Recurring timer
+    unsigned long newTimer = lasttimer;
+    setNextTimeInterval(newTimer, it->second.getInterval());
+    setNewTimerAt(mixedTimerId, newTimer);
+    it->second.markNextRecurring();
+  }
+
   uint8_t GPIOType      = static_cast<uint8_t>((id) & 0xFF);
   uint8_t pinNumber     = static_cast<uint8_t>((id >> 8) & 0xFF);
   uint8_t pinStateValue = static_cast<uint8_t>((id >> 16) & 0xFF);
@@ -935,6 +997,11 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
 #endif
     default:
       return;
+  }
+
+
+  if (!it->second.isRecurring()) {
+    Scheduler.clearGPIOTimer(pluginID, pinNumber);
   }
 
   const uint32_t key = createKey(pluginID, pinNumber);

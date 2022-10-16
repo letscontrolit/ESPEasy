@@ -3,7 +3,7 @@
     :widths: 20, 30
 
     "
-    Generic variables, available for all ``AdafruitGFX_Helper`` enabled plugins, currently: :ref:`P095_page`, :ref:`P096_page`, :ref:`P116_page` and :ref:`P131_page`.
+    Generic variables, available for all ``AdafruitGFX_Helper`` enabled plugins, currently: :ref:`P095_page`, :ref:`P096_page`, :ref:`P116_page`, :ref:`P131_page` and :ref:`P141_page`.
     ","
     Generic notes:
 

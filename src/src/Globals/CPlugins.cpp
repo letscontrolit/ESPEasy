@@ -109,8 +109,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
         if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
           protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
           event->ControllerIndex = x;
-          String dummy;
-          success = CPluginCall(ProtocolIndex, Function, event, dummy);
+          String command;
+          if (Function == CPlugin::Function::CPLUGIN_WRITE) command = str;
+          const bool success = CPluginCall(ProtocolIndex, Function, event, command);
           if (success && Function == CPlugin::Function::CPLUGIN_WRITE) {
             return success;
           }
