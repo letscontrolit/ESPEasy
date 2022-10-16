@@ -128,7 +128,7 @@ void handle_unprocessedNetworkEvents()
 
       if (!WiFiEventData.processedDHCPTimeout) {
         #ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
+        addLog(LOG_LEVEL_INFO, F("WIFI : DHCP timeout, Calling disconnect()"));
         #endif // ifndef BUILD_NO_DEBUG
         WiFiEventData.processedDHCPTimeout = true;
         WifiDisconnect();
