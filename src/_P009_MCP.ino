@@ -512,6 +512,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TASKTIMER_IN:
     case PLUGIN_DEVICETIMER_IN:
     {
+      Scheduler.clearGPIOTimer(PLUGIN_MCP, event->Par1);
       GPIO_MCP_Write(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
