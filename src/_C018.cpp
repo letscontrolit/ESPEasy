@@ -535,7 +535,6 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
       Protocol[++protocolCount].Number       = CPLUGIN_ID_018;
-      Protocol[protocolCount].usesMQTT       = false;
       Protocol[protocolCount].usesAccount    = true;
       Protocol[protocolCount].usesPassword   = true;
       Protocol[protocolCount].defaultPort    = 1;

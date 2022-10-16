@@ -1231,6 +1231,7 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
    Handle certificate files on the file system.
    The content will be stripped from unusable character like quotes, spaces etc.
  \*********************************************************************************************/
+#if FEATURE_MQTT_TLS
 static inline bool is_base64(char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
@@ -1277,7 +1278,6 @@ bool cleanupCertificate(String & certificate, bool &changed)
   certificate = std::move(newCert);
   return true;
 }
-
 
 String SaveCertificate(const String& fname, const String& certificate)
 {
@@ -1334,7 +1334,7 @@ String LoadCertificate(const String& fname, String& certificate, bool cleanup)
 
   return EMPTY_STRING;
 }
-
+#endif
 
 /********************************************************************************************\
    Init a file with zeros on file system

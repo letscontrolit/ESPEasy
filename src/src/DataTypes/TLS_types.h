@@ -1,7 +1,9 @@
 #ifndef DATATYPES_TLS_TYPES_H
 #define DATATYPES_TLS_TYPES_H
 
+#include "../../ESPEasy_common.h"
 
+#if FEATURE_MQTT_TLS
 #include <stdint.h>
 #include <Arduino.h>
 
@@ -16,6 +18,6 @@ enum class TLS_types {
 };
 
 const __FlashStringHelper* toString(TLS_types tls_type);
-
+#endif
 
 #endif // ifndef DATATYPES_TLS_TYPES_H

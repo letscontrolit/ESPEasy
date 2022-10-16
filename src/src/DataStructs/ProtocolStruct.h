@@ -35,7 +35,9 @@ struct ProtocolStruct
   bool     needsNetwork         : 1; // Whether it needs a network connection to work
   bool     allowsExpire         : 1; // Whether queued messages may be removed from the queue after some time
   bool     allowLocalSystemTime : 1; // Allow switching between Unix time and local time (including timezone and DST)
+#if FEATURE_MQTT_TLS
   bool     usesTLS              : 1; // May offer TLS related settings and options
+#endif
 };
 
 typedef std::vector<ProtocolStruct> ProtocolVector;

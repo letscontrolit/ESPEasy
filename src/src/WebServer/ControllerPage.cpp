@@ -145,7 +145,9 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
 
   ControllerSettings.reset();
   ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
+#if FEATURE_MQTT_TLS  
   ControllerSettings.TLStype(TLS_types::NoTLS);
+#endif
 
   // Load some templates from the controller.
   struct EventStruct TempEvent;
@@ -332,7 +334,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           if (Protocol[ProtocolIndex].usesPort) {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
           }
-          #if FEATURE_MQTT
+          #if FEATURE_MQTT_TLS
           if (Protocol[ProtocolIndex].usesMQTT && Protocol[ProtocolIndex].usesTLS) {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE);
             addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
@@ -406,7 +408,11 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           #endif // if FEATURE_MQTT
 
 
-          if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
+          if (Protocol[ProtocolIndex].usesTemplate 
+          #if FEATURE_MQTT
+             || Protocol[ProtocolIndex].usesMQTT
+          #endif
+             )
           {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);

@@ -1,5 +1,6 @@
 #include "../DataTypes/TLS_types.h"
 
+#if FEATURE_MQTT_TLS
 const __FlashStringHelper* toString(TLS_types tls_type)
 {
   switch (tls_type) {
@@ -11,3 +12,4 @@ const __FlashStringHelper* toString(TLS_types tls_type)
   }
   return F("No TLS");
 }
+#endif

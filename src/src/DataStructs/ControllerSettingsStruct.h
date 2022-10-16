@@ -64,10 +64,12 @@ struct ControllerSettingsStruct
     CONTROLLER_HOSTNAME,
     CONTROLLER_IP,
     CONTROLLER_PORT,
+#if FEATURE_MQTT_TLS
     CONTROLLER_MQTT_TLS_TYPE,
     CONTROLLER_MQTT_TLS_STORE_FINGERPRINT,
     CONTROLLER_MQTT_TLS_STORE_CERT,
     CONTROLLER_MQTT_TLS_STORE_CACERT,
+#endif
     CONTROLLER_USER,
     CONTROLLER_PASS,
     CONTROLLER_MIN_SEND_INTERVAL,
@@ -79,16 +81,20 @@ struct ControllerSettingsStruct
     CONTROLLER_USE_LOCAL_SYSTEM_TIME,
     CONTROLLER_CHECK_REPLY,
     CONTROLLER_CLIENT_ID,
+#if FEATURE_MQTT
     CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT,
     CONTROLLER_RETAINFLAG,
+#endif
     CONTROLLER_SUBSCRIBE,
     CONTROLLER_PUBLISH,
+#if FEATURE_MQTT
     CONTROLLER_LWT_TOPIC,
     CONTROLLER_LWT_CONNECT_MESSAGE,
     CONTROLLER_LWT_DISCONNECT_MESSAGE,
     CONTROLLER_SEND_LWT,
     CONTROLLER_WILL_RETAIN,
     CONTROLLER_CLEAN_SESSION,
+#endif
     CONTROLLER_TIMEOUT,
     CONTROLLER_SAMPLE_SET_INITIATOR,
     CONTROLLER_SEND_BINARY,
@@ -122,6 +128,7 @@ struct ControllerSettingsStruct
 
   String    getHostPortString() const;
 
+#if FEATURE_MQTT
   // VariousFlags defaults to 0, keep in mind when adding bit lookups.
   bool      mqtt_cleanSession() const;
   void      mqtt_cleanSession(bool value);
@@ -137,6 +144,7 @@ struct ControllerSettingsStruct
 
   bool      mqtt_retainFlag() const;
   void      mqtt_retainFlag(bool value);
+#endif
 
   bool      useExtendedCredentials() const;
   void      useExtendedCredentials(bool value);
@@ -153,12 +161,13 @@ struct ControllerSettingsStruct
   bool      useLocalSystemTime() const;
   void      useLocalSystemTime(bool value);
 
-
+#if FEATURE_MQTT_TLS
   TLS_types TLStype() const;
   void      TLStype(TLS_types tls_type);
 
   String    getCertificateFilename() const;
   String    getCertificateFilename(TLS_types tls_type) const;
+#endif
   
 
   bool         UseDNS;

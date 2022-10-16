@@ -214,6 +214,7 @@ bool ControllerSettingsStruct::updateIPcache() {
   return false;
 }
 
+#if FEATURE_MQTT
 bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
   return bitRead(VariousFlags, 1);
@@ -263,6 +264,7 @@ void ControllerSettingsStruct::mqtt_retainFlag(bool value)
 {
   bitWrite(VariousFlags, 5, value);
 }
+#endif
 
 bool ControllerSettingsStruct::useExtendedCredentials() const
 {
@@ -314,6 +316,7 @@ void ControllerSettingsStruct::useLocalSystemTime(bool value)
   bitWrite(VariousFlags, 11, value);
 }
 
+#if FEATURE_MQTT_TLS
 TLS_types ControllerSettingsStruct::TLStype() const
 {
   // Store it in bits 12, 13, 14, 15
@@ -364,3 +367,4 @@ String ControllerSettingsStruct::getCertificateFilename(TLS_types tls_type) cons
   
   return certFile;
 }
+#endif
