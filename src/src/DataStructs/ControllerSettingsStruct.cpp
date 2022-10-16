@@ -317,16 +317,12 @@ void ControllerSettingsStruct::useLocalSystemTime(bool value)
 TLS_types ControllerSettingsStruct::TLStype() const
 {
   // Store it in bits 12, 13, 14, 15
-  const TLS_types tls_type = static_cast<TLS_types>((VariousFlags >> 12) & 0xF);
-  return tls_type;
+  return static_cast<TLS_types>(get4BitFromUL(VariousFlags, 12));
 }
 
 void  ControllerSettingsStruct::TLStype(TLS_types tls_type)
 {
-  const uint32_t mask = ~(0xF);
-  VariousFlags &= mask; // Clear the bits
-  const uint32_t tls_type_val = static_cast<uint32_t>(tls_type) << 12;
-  VariousFlags |= tls_type_val;
+  set4BitToUL(VariousFlags, 12, static_cast<uint8_t>(tls_type));
 }
 
 String ControllerSettingsStruct::getCertificateFilename() const

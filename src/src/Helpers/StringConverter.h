@@ -14,6 +14,10 @@ class IPAddress;
 
 // -V::569
 
+
+unsigned int count_newlines(const String& str);
+
+
 /********************************************************************************************\
    Concatenate using code which results in the smallest compiled code
  \*********************************************************************************************/

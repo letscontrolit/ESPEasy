@@ -9,6 +9,7 @@
 
 #include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../../ESPEasy_common.h"
@@ -810,15 +811,22 @@ void addTextArea(const String  & id,
                  #endif // if FEATURE_TOOLTIPS
                  )
 {
+  if (rows < 0) {
+    rows = count_newlines(value) + 1;
+  }
   addHtml(F("<textarea "));
-  addHtmlAttribute(F("class"),     F("wide"));
+//  addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("text"));
   addHtmlAttribute(F("name"),      id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
   }
-  addHtmlAttribute(F("rows"),      rows);
-  addHtmlAttribute(F("cols"),      columns);
+  if (rows > 0) {
+    addHtmlAttribute(F("rows"),      rows);
+  }
+  if (columns > 0) {
+    addHtmlAttribute(F("cols"),      columns);
+  }
 
   if (readonly) {
     addHtml(F(" readonly "));

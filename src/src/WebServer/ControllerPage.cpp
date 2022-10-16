@@ -465,12 +465,12 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
                 {
                   addFormTextArea(
-                    F("Certificate Info"), 
-                    F("certinfo"), 
+                    F("Certificate Info"),
+                    F("certinfo"),
                     mqtt_tls->getPeerCertificateInfo(),
-                    0,
-                    10,
-                    0,
+                    -1,
+                    -1,
+                    -1,
                     true);
                 }
                 {
@@ -510,13 +510,23 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                         addRowLabel(label);
                       }
                       if (error == 0) {
-                        addHtml(F("<textarea readonly rows='10' wrap='on'>"));
-                        addHtml(mqtt_tls->getPeerCertificateInfo(chain));
-                        addHtml(F("</textarea>"));
+                        addTextArea(
+                          F("peerCertInfo"),
+                          mqtt_tls->getPeerCertificateInfo(chain),
+                          -1,
+                          -1,
+                          -1,
+                          true,
+                          false);
 
-                        addHtml(F("<textarea readonly rows='10' wrap='on'>"));
-                        addHtml(pem);
-                        addHtml(F("</textarea>"));
+                        addTextArea(
+                          F("pem"),
+                          pem,
+                          -1,
+                          -1,
+                          -1,
+                          true,
+                          false);
                       } else {
                         addHtmlInt(error);
                       }

@@ -27,6 +27,17 @@
 
 // -V::569
 
+unsigned int count_newlines(const String& str)
+{
+  unsigned int count = 0;
+  const size_t strlength = str.length();
+  size_t pos = 0;
+  while (pos < strlength) {
+    if (str[pos] == '\n') ++count;
+    ++pos;
+  }
+  return count;
+}
 
 /********************************************************************************************\
    Convert a char string to integer
