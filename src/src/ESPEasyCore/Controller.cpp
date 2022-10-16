@@ -25,7 +25,7 @@
 #include "../Globals/Protocol.h"
 
 #include "../Helpers/_CPlugin_Helper.h"
-#include "../Helpers/Memory.h"
+//#include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/PeriodicalActions.h"
@@ -502,9 +502,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    String log = F("MQTT : Connected to broker with client ID: ");
-    log += clientid;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("MQTT : Connected to broker with client ID: "), clientid));
   }
 
   #if FEATURE_MQTT_TLS
@@ -526,9 +524,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   MQTTclient.subscribe(subscribeTo.c_str());
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    String log  = F("Subscribed to: ");
-    log += subscribeTo;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("Subscribed to: "),  subscribeTo));
   }
 
   updateMQTTclient_connected();

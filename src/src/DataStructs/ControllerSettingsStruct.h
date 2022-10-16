@@ -13,7 +13,9 @@
 #include <WiFiUdp.h>
 
 #include "../../ESPEasy_common.h"
+#if FEATURE_MQTT_TLS
 #include "../DataTypes/TLS_types.h"
+#endif
 #include "../Globals/Plugins.h"
 
 // Minimum delay between messages for a controller to send in msec.
