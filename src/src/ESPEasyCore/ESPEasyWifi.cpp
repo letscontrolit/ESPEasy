@@ -593,6 +593,7 @@ void resetWiFi() {
   }
   FeedSW_watchdog();
   WiFiEventData.clearAll();
+  WiFi_AP_Candidates.force_reload();
   WifiDisconnect();
 
   // Send this log only after WifiDisconnect() or else sending to syslog may cause issues
