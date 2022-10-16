@@ -190,7 +190,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
-    # ifdef USE_MQTT_TLS
+    # if FEATURE_MQTT_TLS
     if (mqtt_tls != nullptr) {
       delete mqtt_tls;
       mqtt_tls = nullptr;
@@ -205,7 +205,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   delay(0);
   uint16_t mqttPort = ControllerSettings.Port;
 
-#ifdef USE_MQTT_TLS
+#if FEATURE_MQTT_TLS
   mqtt_tls_last_errorstr.clear();
   mqtt_tls_last_error = 0;
   const TLS_types TLS_type = ControllerSettings.TLStype();
@@ -431,7 +431,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   uint8_t controller_number = Settings.Protocol[controller_idx];
 
   count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, connect_start_time);
-  #ifdef USE_MQTT_TLS
+  #if FEATURE_MQTT_TLS
   if (mqtt_tls != nullptr)
   {
     char buf[128] = {0};
@@ -481,7 +481,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   #endif
 
   if (!MQTTresult) {
-    #ifdef USE_MQTT_TLS
+    #if FEATURE_MQTT_TLS
     if ((mqtt_tls_last_error != 0) && loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("MQTT : TLS error code: ");
       log += mqtt_tls_last_error;
@@ -492,7 +492,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     #endif
 
     MQTTclient.disconnect();
-    #ifdef USE_MQTT_TLS
+    #if FEATURE_MQTT_TLS
     mqtt_tls->stop();
     #endif
 
@@ -507,7 +507,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
-  #ifdef USE_MQTT_TLS
+  #if FEATURE_MQTT_TLS
   #ifdef ESP32
   if (mqtt_tls != nullptr && loglevelActiveFor(LOG_LEVEL_INFO))
   {
@@ -841,7 +841,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
   }
 }
 
-#ifdef USE_MQTT_TLS
+#if FEATURE_MQTT_TLS
 bool GetTLSfingerprint(String& fp) 
 {
   #ifdef ESP32

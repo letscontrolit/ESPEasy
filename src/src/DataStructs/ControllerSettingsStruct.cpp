@@ -78,8 +78,8 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(LWTMessageConnect);
   ZERO_TERMINATE(LWTMessageDisconnect);
 
-  #ifdef USES_MQTT
-    #ifdef USE_MQTT_TLS
+  #if FEATURE_MQTT
+    #if FEATURE_MQTT_TLS
     if (TLStype() == TLS_types::NoTLS) {
       if (Port == 8883) {
         Port = 1883;

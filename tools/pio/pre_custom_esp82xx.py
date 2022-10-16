@@ -56,7 +56,7 @@ else:
     "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
-    "-DUSE_MQTT_TLS",
+    "-DFEATURE_MQTT_TLS=0",
 #    "-DFEATURE_MDNS=1",
 #    "-DFEATURE_SD=1",
     "-DFEATURE_EXT_RTC=1",

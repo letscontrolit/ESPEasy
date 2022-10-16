@@ -2294,11 +2294,16 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_MQTT_TLS
+#define FEATURE_MQTT_TLS 0
+#endif
+
 #ifdef ESP8266
 // It just doesn't work on ESP8266, too slow, too high memory requirements
 //#if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M)
-  #ifdef USE_MQTT_TLS
-    #undef USE_MQTT_TLS
+  #if FEATURE_MQTT_TLS
+    #undef FEATURE_MQTT_TLS
+    #define FEATURE_MQTT_TLS 0
   #endif
 #endif
 

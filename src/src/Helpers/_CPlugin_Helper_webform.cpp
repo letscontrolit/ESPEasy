@@ -125,7 +125,7 @@ void addControllerEnabledForm(controllerIndex_t controllerindex) {
 }
 
 void addCertificateFileNote(const ControllerSettingsStruct& ControllerSettings, const String& description, TLS_types tls_type) {
-  #ifdef USE_MQTT_TLS
+  #if FEATURE_MQTT_TLS
   const String certFile = ControllerSettings.getCertificateFilename(tls_type);
   if (!certFile.isEmpty())
   {
@@ -181,7 +181,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
     {
-      #ifdef USE_MQTT_TLS
+      #if FEATURE_MQTT_TLS
       const int choice = static_cast<int>(ControllerSettings.TLStype());
       #define NR_MQTT_TLS_TYPES 4
       const __FlashStringHelper * options[NR_MQTT_TLS_TYPES] = {
@@ -206,7 +206,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
     {
-      #ifdef USE_MQTT_TLS
+      #if FEATURE_MQTT_TLS
       const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename(TLS_types::TLS_FINGERPRINT));
       addFormCheckBox(displayName, internalName, false, saveDisabled);
       addCertificateFileNote(ControllerSettings, F("Store fingerprint in"), TLS_types::TLS_FINGERPRINT);
@@ -217,7 +217,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       // fall through
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:
     {
-      #ifdef USE_MQTT_TLS
+      #if FEATURE_MQTT_TLS
       /*
       const TLS_types tls_type =  (varType == ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT) ?
          TLS_types::TLS_CA_CERT : TLS_types::TLS_CERT;
@@ -390,7 +390,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       break;
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
     {
-      #ifdef USE_MQTT_TLS
+      #if FEATURE_MQTT_TLS
       const int current = static_cast<int>(ControllerSettings.TLStype());
       const TLS_types tls_type = static_cast<TLS_types>(getFormItemInt(internalName, current));
       ControllerSettings.TLStype(tls_type);
@@ -400,7 +400,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
 
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
     {
-      #ifdef USE_MQTT_TLS
+      #if FEATURE_MQTT_TLS
       if (isFormItemChecked(internalName)) {
         String fingerprint;
         if (GetTLSfingerprint(fingerprint)) {
@@ -419,7 +419,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     // fall through
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:
     {
-      #ifdef USE_MQTT_TLS
+      #if FEATURE_MQTT_TLS
       if (isFormItemChecked(internalName)) {
         String cacert;
         if (GetTLS_Certificate(cacert, true)) {

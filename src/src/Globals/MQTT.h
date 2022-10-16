@@ -10,17 +10,17 @@
 # include <WiFiClient.h>
 # include <PubSubClient.h>
 
-# ifdef USE_MQTT_TLS
+# if FEATURE_MQTT_TLS
 # ifdef ESP32
 #  include "../Helpers/ESPEasy_WiFiClientSecure.h"
 # else
 #  include <WiFiClientSecure.h>
 # endif
-# endif // ifdef USE_MQTT_TLS
+# endif // if FEATURE_MQTT_TLS
 
 // MQTT client
 extern WiFiClient mqtt;
-# ifdef USE_MQTT_TLS
+# if FEATURE_MQTT_TLS
 extern String  mqtt_tls_last_errorstr;
 extern int32_t mqtt_tls_last_error;
 #  ifdef ESP32
@@ -35,7 +35,7 @@ extern BearSSL::X509List mqtt_X509List;
 extern String mqtt_rootCA;
 extern String mqtt_fingerprint;
 
-# endif  // ifdef USE_MQTT_TLS
+# endif  // if FEATURE_MQTT_TLS
 extern PubSubClient MQTTclient;
 extern bool MQTTclient_should_reconnect;
 extern bool MQTTclient_must_send_LWT_connected;

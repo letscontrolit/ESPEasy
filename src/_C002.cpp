@@ -37,7 +37,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesExtCreds = true;
       Protocol[protocolCount].defaultPort  = 1883;
       Protocol[protocolCount].usesID       = true;
-      #ifdef USE_MQTT_TLS
+      #if FEATURE_MQTT_TLS
       Protocol[protocolCount].usesTLS      = true;
       #endif
       break;
