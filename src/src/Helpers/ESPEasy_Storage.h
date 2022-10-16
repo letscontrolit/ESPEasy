@@ -29,6 +29,7 @@ String appendLineToFile(const String& fname, const String& line);
 
 String appendToFile(const String& fname, const uint8_t *data, unsigned int size);
 
+bool fileExists(const __FlashStringHelper * fname);
 bool fileExists(const String& fname);
 
 int fileSize(const String& fname);

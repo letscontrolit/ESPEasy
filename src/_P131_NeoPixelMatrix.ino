@@ -114,34 +114,34 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("Matrix"));
 
-        addFormNumericBox(F("Matrix width"),  F("matrixwidth"),
+        addFormNumericBox(F("Matrix width"),  F("mxwidth"),
                           P131_CONFIG_MATRIX_WIDTH, 1, 100);
-        addFormNumericBox(F("Matrix height"), F("matrixheight"),
+        addFormNumericBox(F("Matrix height"), F("mxheight"),
                           P131_CONFIG_MATRIX_HEIGHT, 1, 100);
 
-        addFormSelector(F("Matrix start-pixel"), F("matrixstart"), 4, optionsTop, optionValuesTop,
+        addFormSelector(F("Matrix start-pixel"), F("mxstart"), 4, optionsTop, optionValuesTop,
                         get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP));
 
-        addFormSelector(F("Matrix Rows/Columns mode"), F("matrixrowcol"), 2, optionsRowCol, optionValuesZeroOne,
+        addFormSelector(F("Matrix Rows/Columns mode"), F("mxrowcol"), 2, optionsRowCol, optionValuesZeroOne,
                         bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC));
 
-        addFormSelector(F("Matrix flow direction"), F("matrixprozig"), 2, optionsProZig, optionValuesZeroOne,
+        addFormSelector(F("Matrix flow direction"), F("mxprozig"), 2, optionsProZig, optionValuesZeroOne,
                         bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ));
 
         addFormSubHeader(F("Multiple matrices: Tiles"));
 
-        addFormNumericBox(F("Tile matrix width"),  F("tilewidth"),
+        addFormNumericBox(F("Tile matrix width"),  F("tlwidth"),
                           P131_CONFIG_TILE_WIDTH, 1, 32);
-        addFormNumericBox(F("Tile matrix height"), F("tileheight"),
+        addFormNumericBox(F("Tile matrix height"), F("tlheight"),
                           P131_CONFIG_TILE_HEIGHT, 1, P131_Nlines);
 
-        addFormSelector(F("Tile start-matrix"), F("tilestart"), 4, optionsTop, optionValuesTop,
+        addFormSelector(F("Tile start-matrix"), F("tlstart"), 4, optionsTop, optionValuesTop,
                         get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP));
 
-        addFormSelector(F("Tile Rows/Columns mode"), F("tilerowcol"), 2, optionsRowCol, optionValuesZeroOne,
+        addFormSelector(F("Tile Rows/Columns mode"), F("tlrowcol"), 2, optionsRowCol, optionValuesZeroOne,
                         bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC));
 
-        addFormSelector(F("Tile flow direction"), F("tileprozig"), 2, optionsProZig, optionValuesZeroOne,
+        addFormSelector(F("Tile flow direction"), F("tlprozig"), 2, optionsProZig, optionValuesZeroOne,
                         bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ));
       }
 
@@ -174,7 +174,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P131_CommandTrigger::neo)
         };
         addFormSelector(F("Write Command trigger"),
-                        F("commandtrigger"),
+                        F("cmdtrigger"),
                         static_cast<int>(P131_CommandTrigger::MAX),
                         commandTriggers,
                         commandTriggerOptions,
@@ -221,7 +221,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
                      false,
                      false,
                      EMPTY_STRING,
-                     EMPTY_STRING);
+                     F(""));
 
           String   opts    = parseString(strings[varNr], 2);
           uint32_t optBits = 0;
@@ -248,7 +248,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           html_TD(); // Pixels per step, offset with -1
           addNumericBox(getPluginCustomArgName(varNr + 400), get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1, 1, P131_MAX_SCROLL_STEPS
                         # if FEATURE_TOOLTIPS
-                        , EMPTY_STRING, F("Scroll 1..16 pixels / step")
+                        , F(""), F("Scroll 1..16 pixels / step")
                         # endif // if FEATURE_TOOLTIPS
                         );
 
@@ -260,19 +260,15 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           html_TD(); // Speed 0.1 seconds per step
           addNumericBox(getPluginCustomArgName(varNr + 500), scrollSpeed, 1, P131_MAX_SCROLL_SPEED
                         # if FEATURE_TOOLTIPS
-                        , EMPTY_STRING, F("Scroll-speed in 0.1 seconds / step")
+                        , F(""), F("Scroll-speed in 0.1 seconds / step")
                         # endif // if FEATURE_TOOLTIPS
                         );
 
           remain -= (strings[varNr].length() + 1);
 
           if ((P131_CONFIG_TILE_HEIGHT > 1) && (varNr == P131_CONFIG_TILE_HEIGHT - 1)) {
-            String remainStr;
-            remainStr.reserve(15);
-            remainStr  = F("Remaining: ");
-            remainStr += remain;
             html_TD();
-            addUnit(remainStr);
+            addUnit(concat(F("Remaining: "), static_cast<int>(remain)));
           }
         }
         html_end_table();
@@ -285,27 +281,27 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       const uint8_t prevLines = P131_CONFIG_TILE_HEIGHT;
-      P131_CONFIG_MATRIX_WIDTH  = getFormItemInt(F("matrixwidth"));
-      P131_CONFIG_MATRIX_HEIGHT = getFormItemInt(F("matrixheight"));
-      P131_CONFIG_TILE_WIDTH    = getFormItemInt(F("tilewidth"));
-      P131_CONFIG_TILE_HEIGHT   = getFormItemInt(F("tileheight"));
+      P131_CONFIG_MATRIX_WIDTH  = getFormItemInt(F("mxwidth"));
+      P131_CONFIG_MATRIX_HEIGHT = getFormItemInt(F("mxheight"));
+      P131_CONFIG_TILE_WIDTH    = getFormItemInt(F("tlwidth"));
+      P131_CONFIG_TILE_HEIGHT   = getFormItemInt(F("tlheight"));
 
       // Bits are already in the correct order/configuration to be passed on to the constructor
       // Matrix bits
-      set2BitToUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP, getFormItemInt(F("matrixstart")) & 0x03);
-      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC, getFormItemInt(F("matrixrowcol")));
-      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ, getFormItemInt(F("matrixprozig")));
+      set2BitToUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP, getFormItemInt(F("mxstart")) & 0x03);
+      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC, getFormItemInt(F("mxrowcol")));
+      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ, getFormItemInt(F("mxprozig")));
 
       // Tile bits
-      set2BitToUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP, getFormItemInt(F("tilestart")) & 0x03);
-      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC, getFormItemInt(F("tilerowcol")));
-      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ, getFormItemInt(F("tileprozig")));
+      set2BitToUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP, getFormItemInt(F("tlstart")) & 0x03);
+      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC, getFormItemInt(F("tlrowcol")));
+      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ, getFormItemInt(F("tlprozig")));
 
       // Other settings
       set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_MODE,        getFormItemInt(F("tpmode")));
       set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_ROTATION,    getFormItemInt(F("rotate")));
       set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("fontscale")));
-      set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("commandtrigger")));
+      set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("cmdtrigger")));
 
       bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("clearOnExit")));
       bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_STRIP_TYPE,    getFormItemInt(F("striptype")) == 1);
@@ -317,13 +313,13 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_BRIGHTNESS, getFormItemInt(F("brightness")));
       set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_MAXBRIGHT,  getFormItemInt(F("maxbright")));
 
-      String   color   = web_server.arg(F("fgcolor"));
+      String   color   = webArg(F("fgcolor"));
       uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
       }
-      color = web_server.arg(F("bgcolor"));
+      color = webArg(F("bgcolor"));
       const uint16_t bgcolor = AdaGFXparseColor(color);
 
       P131_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
@@ -334,7 +330,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t varNr = 0; varNr < prevLines; varNr++) {
         error.clear();
-        error += wrapWithQuotes(web_server.arg(getPluginCustomArgName(varNr)));
+        error += wrapWithQuotes(webArg(getPluginCustomArgName(varNr)));
         error += ',';
         uint32_t optBits = 0;
         bitWrite(optBits, P131_OPTBITS_SCROLL,      isFormItemChecked(getPluginCustomArgName(varNr + 100)));

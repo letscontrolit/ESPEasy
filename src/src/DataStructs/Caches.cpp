@@ -13,7 +13,7 @@
 
 void Caches::clearAllCaches()
 {
-  fileExistsMap.clear();
+  clearFileCaches();
   clearTaskCaches();
   WiFi_AP_Candidates.clearCache();
   rulesHelper.closeAllFiles();
@@ -24,6 +24,12 @@ void Caches::clearTaskCaches() {
   taskIndexValueName.clear();
   extraTaskSettings_cache.clear();
   updateActiveTaskUseSerial0();
+}
+
+void Caches::clearFileCaches()
+{
+  fileExistsMap.clear();
+  fileCacheClearMoment = 0;
 }
 
 void Caches::updateActiveTaskUseSerial0() {

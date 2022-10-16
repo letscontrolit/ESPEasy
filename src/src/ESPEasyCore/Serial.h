@@ -13,6 +13,7 @@ void initSerial();
 
 void serial();
 
+void addToSerialBuffer(const __FlashStringHelper * line);
 void addToSerialBuffer(const String& line);
 
 void addNewlineToSerialBuffer();

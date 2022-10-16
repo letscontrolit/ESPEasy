@@ -1,5 +1,7 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 
+#include "../WebServer/common.h"
+
 #include "../WebServer/404.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/AdvancedConfigPage.h"
@@ -11,7 +13,6 @@
 #include "../WebServer/DevicesPage.h"
 #include "../WebServer/DownloadPage.h"
 #include "../WebServer/FactoryResetPage.h"
-#include "../WebServer/Favicon.h"
 #include "../WebServer/FileList.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/HardwarePage.h"
@@ -58,6 +59,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -70,7 +72,7 @@
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
-  if (web_server.hasArg(arg)) { 
+  if (hasArg(arg)) { 
     safe_strncpy(dest, webArg(arg).c_str(), max_size); 
   }
 }
@@ -79,7 +81,7 @@ void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, siz
   safe_strncpy_webserver_arg(dest, String(arg), max_size);
 }
 
-void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
+void sendHeadandTail(const __FlashStringHelper * tmplName, bool Tail, bool rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
@@ -91,7 +93,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   }
   #endif // if FEATURE_TIMING_STATS
   {
-    const String fileName = String(tmplName) + F(".htm");
+    const String fileName = concat(tmplName, F(".htm"));
     fs::File f = tryOpenFile(fileName, "r");
 
     WebTemplateParser templateParser(Tail, rebooting);
@@ -119,7 +121,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   STOP_TIMER(HANDLE_SERVING_WEBPAGE);
 }
 
-void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
+void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 
   if (!Tail) {
@@ -171,7 +173,7 @@ bool captivePortal() {
       redirectURL += F("/setup");
     }
     #endif
-    web_server.sendHeader(F("Location"), redirectURL, true);
+    sendHeader(F("Location"), redirectURL, true);
     web_server.send(302, F("text/plain"), EMPTY_STRING);   // Empty content inhibits Content-length header so we have to close the socket ourselves.
     web_server.client().stop(); // Stop is needed because we sent no content length
     return true;
@@ -231,7 +233,6 @@ void WebServerInit()
   #if FEATURE_SETTINGS_ARCHIVE
   web_server.on(F("/settingsarchive"), handle_settingsarchive);
   #endif // if FEATURE_SETTINGS_ARCHIVE
-  web_server.on(F("/favicon.ico"),     handle_favicon);
   #ifdef WEBSERVER_FILELIST
   web_server.on(F("/filelist"),        handle_filelist);
   #endif // ifdef WEBSERVER_FILELIST
@@ -311,6 +312,11 @@ void WebServerInit()
 
   web_server.onNotFound(handleNotFound);
 
+  // List of headers to be recorded
+  // "If-None-Match" is used to see whether we need to serve a static file, or simply can reply with a 304 (not modified)
+  const char * headerkeys[] = {"If-None-Match"};
+  const size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
+  web_server.collectHeaders(headerkeys, headerkeyssize );
   #if defined(ESP8266) || defined(ESP32)
   {
     # ifndef NO_HTTP_UPDATER
@@ -380,8 +386,12 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
 
     if (!parser.isTail()) {
       #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-      parser.process(F("<body><header class='apheader'>"
-                "<h1>Welcome to ESP Easy Mega AP</h1>"));
+      parser.process(F("<body"
+                       #if FEATURE_AUTO_DARK_MODE
+                       " data-theme='auto'"
+                       #endif // FEATURE_AUTO_DARK_MODE
+                       "><header class='apheader'>"
+                       "<h1>Welcome to ESP Easy Mega AP</h1>"));
       #else
       parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
       #endif
@@ -395,7 +405,11 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
     if (!parser.isTail()) {
-      parser.process(F("<body>"));
+      parser.process(F("<body"
+                       #if FEATURE_AUTO_DARK_MODE
+                       " data-theme='auto'"
+                       #endif // FEATURE_AUTO_DARK_MODE
+                       ">"));
     }
     getWebPageTemplateDefaultHeader(parser, F("{{name}}"), false);
     getWebPageTemplateDefaultContentSection(parser);
@@ -404,18 +418,31 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   else if (tmplName.equals(F("TmplDsh")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
-    parser.process(F(
-      "<body>"
-      "{{content}}"
-      "</body></html>"
-      ));
+    parser.process(F("<body"));
+    #if FEATURE_AUTO_DARK_MODE
+    if (0 == Settings.getCssMode()) {
+      parser.process(F(" data-theme='auto'"));
+    } else if (2 == Settings.getCssMode()) {
+      parser.process(F(" data-theme='dark'"));
+    }
+    #endif // FEATURE_AUTO_DARK_MODE
+    parser.process(F(">"
+                     "{{content}}"
+                     "</body></html>"));
   }
   else // all other template names e.g. TmplStd
   {
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
     if (!parser.isTail()) {
-      parser.process(F("<body class='bodymenu'>"
-                "<span class='message' id='rbtmsg'></span>"));
+      parser.process(F("<body class='bodymenu'"));
+      #if FEATURE_AUTO_DARK_MODE
+      if (0 == Settings.getCssMode()) {
+        parser.process(F(" data-theme='auto'"));
+      } else if (2 == Settings.getCssMode()) {
+        parser.process(F(" data-theme='dark'"));
+      }
+      #endif // FEATURE_AUTO_DARK_MODE
+      parser.process(F("><span class='message' id='rbtmsg'></span>"));
     }
     getWebPageTemplateDefaultHeader(parser, F("{{name}} {{logo}}"), true);
     getWebPageTemplateDefaultContentSection(parser);
@@ -743,10 +770,10 @@ bool isLoggedIn(bool mustProvideLogin)
 
 String getControllerSymbol(uint8_t index)
 {
-  String ret = F("<p style='font-size:20px; background: #00000000;'>&#");
+  String ret = F("<span style='font-size:20px; background: #00000000;'>&#");
 
   ret += 10102 + index;
-  ret += F(";</p>");
+  ret += F(";</span>");
   return ret;
 }
 
@@ -800,10 +827,10 @@ void createSvgRect(const String& classname,
   if (!classname.isEmpty()) {
     addSVG_param(F("class"), classname);
   }
-  addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
+  addSVG_param(F("fill"), formatToHex(fillColor, F("#"), 3));
 
   if (!approximatelyEqual(strokeWidth, 0)) {
-    addSVG_param(F("stroke"),       formatToHex(strokeColor, F("#")));
+    addSVG_param(F("stroke"),       formatToHex(strokeColor, F("#"), 3));
     addSVG_param(F("stroke-width"), strokeWidth);
   }
   addSVG_param(F("x"),      xoffset);
@@ -834,11 +861,11 @@ void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size
 }
 
 void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
-  addHtml(F("<text style=\"line-height:1.25\" x=\""));
+  addHtml(F("<text x=\""));
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
   addHtml(toString(textYoffset, 2));
-  addHtml(F("\" stroke-width=\".3\" font-family=\"sans-serif\" font-size=\"8\" letter-spacing=\"0\" word-spacing=\"0\">\n"));
+  addHtml(F("\" >\n"));
   addHtml(F("<tspan x=\""));
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
@@ -862,6 +889,19 @@ void write_SVG_image_header(int width, int height, bool useViewbox) {
     addHtml(F(" viewBox=\"0 0 100 100\""));
   }
   addHtml('>');
+  addHtml(F("<style>text{line-height:1.25;stroke-width:.3;font-family:sans-serif;font-size:8;letter-spacing:0;word-spacing:0;"));
+  #if FEATURE_AUTO_DARK_MODE
+  if (2 == Settings.getCssMode()) { // Dark
+    addHtml(F("fill:#c3c3c3;"));    // Copied from espeasy_default.css var(--c4) in dark section
+  }
+  addHtml('}');
+  if (0 == Settings.getCssMode()) { // Auto
+    addHtml(F("@media(prefers-color-scheme:dark){text{fill:#c3c3c3;}}")); // ditto
+  }
+  #else // FEATURE_AUTO_DARK_MODE
+  addHtml('}'); // close 'text' style
+  #endif // FEATURE_AUTO_DARK_MODE
+  addHtml(F("</style>"));
 }
 
 /*
@@ -890,8 +930,8 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
   const int bar_height_step = 100 / nbars;
 
   for (int i = 0; i < nbars; ++i) {
-    unsigned int color = i < nbars_filled ? 0x0 : 0xa1a1a1; // Black/Grey
-    int barHeight      = (i + 1) * bar_height_step;
+    const unsigned int color = i < nbars_filled ? 0x07d : 0xBFa1a1a1; // Blue/Grey75%
+    const int barHeight      = (i + 1) * bar_height_step;
     createSvgRect_noStroke(i < nbars_filled ? F("bar_highlight") : F("bar_dimmed"), color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
   }
   addHtml(F("</svg>\n"));
@@ -1040,40 +1080,6 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
 
 #endif // ifdef ESP32
 
-bool webArg2ip(const String& arg, uint8_t *IP) {
+bool webArg2ip(const __FlashStringHelper * arg, uint8_t *IP) {
   return str2ip(webArg(arg), IP);
 }
-
-#ifdef ESP8266
-const String& webArg(const __FlashStringHelper * arg)
-{
-  return web_server.arg(String(arg));
-}
-
-const String& webArg(const String& arg)
-{
-  return web_server.arg(arg);
-}
-
-const String& webArg(int i)
-{
-  return web_server.arg(i);
-}
-#endif
-
-#ifdef ESP32
-String webArg(const __FlashStringHelper * arg)
-{
-  return web_server.arg(String(arg));
-}
-
-String webArg(const String& arg)
-{
-  return web_server.arg(arg);
-}
-
-String webArg(int i)
-{
-  return web_server.arg(i);
-}
-#endif

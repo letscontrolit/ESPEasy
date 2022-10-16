@@ -12,11 +12,11 @@
 #define CC1101_DATA_LEN          CC1101_BUFFER_LEN - 3
 
 
-class CC1101Packet
-{
-	public:
-		uint8_t length = 0;
-		uint8_t data[128] = {0};
+class CC1101Packet {
+public:
+
+  uint8_t length    = 0;
+  uint8_t data[128] = { 0 };
 };
 
 

@@ -6,7 +6,6 @@
 # include "src/ESPEasyCore/Controller.h"
 # include "src/ESPEasyCore/ESPEasyGPIO.h"
 # include "src/Helpers/_Plugin_Helper_webform.h"
-# include "src/Helpers/Audio.h"
 # include "src/Helpers/PortStatus.h"
 # include "src/Helpers/Scheduler.h"
 
@@ -378,7 +377,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         //        {
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
         // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-        if (round(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+        if (lround(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
   # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
@@ -476,13 +475,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("SW  : GPIO=");
-                log += CONFIG_PIN1;
-                log += F(" State=");
-                log += state ? '1' : '0';
-                log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
-                log += output_value;
-                addLogMove(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO,
+                  concat(F("SW  : GPIO="),  static_cast<int>(CONFIG_PIN1)) +
+                  concat(F(" State="),  state ? '1' : '0') +
+                  concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),  static_cast<int>(output_value)));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -574,13 +570,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("SW  : LongPress: GPIO= ");
-                log += CONFIG_PIN1;
-                log += F(" State=");
-                log += state ? '1' : '0';
-                log += F(" Output value=");
-                log += output_value;
-                addLogMove(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, 
+                  concat(F("SW  : LongPress: GPIO= "), static_cast<int>(CONFIG_PIN1)) +
+                  concat(F(" State="), state ? '1' : '0') +
+                  concat(F(" Output value="), static_cast<int>(output_value)));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -603,17 +596,15 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             // Create EVENT with value = 4 for SafeButton false positive detection
-            const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+            const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
             UserVar[event->BaseVarIndex] = SAFE_BUTTON_EVENT;
 
               # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("SW  : SafeButton: false positive detected. GPIO= ");
-              log += CONFIG_PIN1;
-              log += F(" State=");
-              log += tempUserVar;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, 
+                concat(F("SW  : SafeButton: false positive detected. GPIO= "),  CONFIG_PIN1) +
+                concat(F(" State="), tempUserVar));
             }
               # endif // ifndef BUILD_NO_DEBUG
 
@@ -668,9 +659,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SW   : State ");
-        log += UserVar[event->BaseVarIndex];
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("SW   : State "), static_cast<int>(UserVar[event->BaseVarIndex])));
       }
       # endif // ifndef BUILD_NO_DEBUG
       success = true;
@@ -679,7 +668,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command = parseString(string, 1);
+      const String command(parseString(string, 1));
 
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
 
@@ -689,9 +678,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
         // @giig1967g deprecated since 2019-11-26
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("inputswitchstate is deprecated");
-          log += string;
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, concat(F("inputswitchstate is deprecated"), string));
         }
 
         /*        portStatusStruct tempStatus;

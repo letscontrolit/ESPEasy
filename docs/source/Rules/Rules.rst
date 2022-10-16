@@ -11,6 +11,7 @@ Rules can be used to create very simple flows to control devices on your ESP.
 .. note::
    To assist writing rules, one may prefer to use an editor like Notepad++ which supports user defined languages to colorize the text.
    See the ``Misc/Notepad++`` folder for a Notepad++ language definition which can be used to colorize rules.
+   Another option is the `ESPeasy Code Editor <https://raw.githack.com/chromoxdor/EasyColorCode/main/colorcode.html>`_ , an online editor with rules highlighting and hinting.
 
 Enable Rules
 ------------
@@ -984,6 +985,32 @@ Complete rule used to parse this and set a variable in a dummy device:
  // Room temperature
  on !Serial#T1018* do
    TaskValueSet 2,1,{strtol:16:{substring:13:15:%eventvalue%}}.{strtol:16:{substring:15:17:%eventvalue%}}*100/255
+ endon
+
+
+timeToMin/timeToSec
+^^^^^^^^^^^^^^^^^^^
+
+(Added: 2022-08-09)
+
+Convert a time-string to minutes/seconds.
+
+Usage:
+
+* ``{timeToMin:<startpos>:<endpos>:<string>}`` to convert a string, with hh:mm format, to minutes (0..1439)
+* ``{timeToSec:<startpos>:<endpos>:<string>}`` to convert a string, with hh:mm:ss format, to seconds (0..86399)
+
+The hour (hh), minute (mm) or seconds (ss) values *can* be provided in single-digit values, if applicable.
+
+The position arguments are the same as in Arduino ``String::substring`` , meaning the endpos is 1 position further than the last character you need.
+
+For example:
+
+.. code-block:: none
+ 
+ on Clock#Time=All,**:** do
+   logentry,"Minutes since midnight: {timeToMin:0:5:'%eventvalue2%'}"
+   logentry,"Seconds since midnight: {timeToSec:0:8:'%eventvalue2%:00'}" // Clock#Time doesn't include seconds, so we fake them
  endon
 
 

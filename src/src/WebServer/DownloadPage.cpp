@@ -22,7 +22,7 @@ void handle_download()
   navMenuIndex = MENU_INDEX_TOOLS;
 
   //  TXBuffer.startStream();
-  //  sendHeadandTail_stdtemplate();
+  //  sendHeadandTail_stdtemplate(_HEAD);
 
 
   fs::File dataFile = tryOpenFile(getFileName(FileType::CONFIG_DAT), "r");
@@ -45,7 +45,7 @@ void handle_download()
   }
   str += F(".dat");
 
-  web_server.sendHeader(F("Content-Disposition"), str);
+  sendHeader(F("Content-Disposition"), str);
   web_server.streamFile(dataFile, F("application/octet-stream"));
   dataFile.close();
 }

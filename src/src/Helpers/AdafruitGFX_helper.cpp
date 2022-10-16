@@ -289,8 +289,8 @@ void AdaGFXFormBacklight(const __FlashStringHelper *backlightPinId,
                          uint16_t                   backlightPercentage) {
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Backlight ")), backlightPinId, backlightPin);
 
-  addFormNumericBox(F("Backlight percentage"), backlightPercentageId, backlightPercentage, 1, 100);
-  addUnit(F("1-100%"));
+  addFormNumericBox(F("Backlight percentage"), backlightPercentageId, backlightPercentage, 0, 100);
+  addUnit(F("0-100%"));
 }
 
 /*****************************************************************************************
@@ -322,6 +322,30 @@ void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
   unit += maxScale;
   unit += 'x';
   addUnit(unit);
+}
+
+/*****************************************************************************************
+ * Show a selector for line-spacing setting, supported by Adafruit_GFX
+ ****************************************************************************************/
+void AdaGFXFormLineSpacing(const __FlashStringHelper *id,
+                           uint8_t                    selectedIndex) {
+  String lineSpacings[16];
+  int    lineSpacingOptions[16];
+
+  for (uint8_t i = 0; i < 16; i++) {
+    if (15 == i) {
+            # ifndef LIMIT_BUILD_SIZE
+      lineSpacings[i] = F("Auto, using font height * scaling");
+            # else // ifndef LIMIT_BUILD_SIZE
+      lineSpacings[i] = F("Auto");
+            # endif // ifndef LIMIT_BUILD_SIZE
+    } else {
+      lineSpacings[i] = i;
+    }
+    lineSpacingOptions[i] = i;
+  }
+  addFormSelector(F("Linespacing"), id, 16, lineSpacings, lineSpacingOptions, selectedIndex);
+  addUnit(F("px"));
 }
 
 /****************************************************************************
@@ -676,6 +700,49 @@ void AdafruitGFX_helper::getCursorXY(int16_t& currentX,
 }
 
 /****************************************************************************
+ * setTxtfullCompensation: x and/or y values defined here are subtracted from x and y position
+ * - set to 1 for x-1/y-1 pixel for P095 and P096
+ * - set to 2 for y+1 pixel
+ * - set to 3 for x+1 pixel
+ ***************************************************************************/
+void AdafruitGFX_helper::setTxtfullCompensation(uint8_t compensation) {
+  switch (compensation) {
+    case 1: // P095
+    {
+      _x_compensation = 1;
+      _y_compensation = 1;
+      break;
+    }
+    case 2:
+    {
+      _x_compensation = 0;
+      _y_compensation = -1;
+      break;
+    }
+    case 3:
+    {
+      _x_compensation = -1;
+      _y_compensation = 0;
+      break;
+    }
+    default:
+    {
+      _x_compensation = 0;
+      _y_compensation = 0;
+      break;
+    }
+  }
+}
+
+/****************************************************************************
+ * invertDisplay(): Store display-inverted state and proxy to _display
+ ***************************************************************************/
+void AdafruitGFX_helper::invertDisplay(bool i) {
+  _displayInverted = i;
+  _display->invertDisplay(_displayInverted);
+}
+
+/****************************************************************************
  * processCommand: Parse string to <command>,<subcommand>[,<arguments>...] and execute that command
  ***************************************************************************/
 bool AdafruitGFX_helper::processCommand(const String& string) {
@@ -702,14 +769,22 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   String log;
   std::vector<String> sParams;
   std::vector<int>    nParams;
-  int  argCount = 0;
-  bool loop     = true;
+  uint8_t emptyCount = 0;
+  int     argCount   = 0;
+  bool    loop       = true;
 
-  while (loop) {                                                  // Process all provided arguments
-    sParams.push_back(parseStringKeepCase(string, argCount + 3)); // 0-offset + 1st and 2nd argument used by trigger/subcommand
+  while (loop) { // Process all provided arguments
+    // 0-offset + 1st and 2nd argument used by trigger/subcommand, don't trim off spaces
+    sParams.push_back(parseStringKeepCase(string, argCount + 3, ',', false));
     nParams.push_back(0);
     validIntFromString(sParams[argCount], nParams[argCount]);
-    loop = !sParams[argCount].isEmpty();
+
+    if (sParams[argCount].isEmpty()) {
+      emptyCount++;
+    } else {
+      emptyCount = 0;                                           // Reset empty counter
+    }
+    loop = emptyCount < 3 || argCount <= ADAGFX_PARSE_MAX_ARGS; // Keep picking up arguments until we have the last 3 empty
 
     # ifndef BUILD_NO_DEBUG
 
@@ -722,18 +797,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
     # endif // ifndef BUILD_NO_DEBUG
 
-    if (loop) { argCount++; }
+    argCount++;
   }
-  { // Guarantee minimal nParams/sParams size
-    int args = argCount;
-
-    while (args <= ADAGFX_PARSE_MAX_ARGS) {
-      sParams.push_back(EMPTY_STRING);
-      nParams.push_back(0);
-      args++;
-    }
-  }
-  success = true; // If we get this far, we'll flip the flag if something wrong is found
+  argCount -= emptyCount; // Not counting the empty arguments
+  success   = true;       // If we get this far, we'll flip the flag if something wrong is found
 
   # ifndef BUILD_NO_DEBUG
 
@@ -766,7 +833,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       if (_columnRowMode) {
         _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
       } else {
-        _display->setCursor(nParams[0] + _xo - _p095_compensation, nParams[1] + _yo - _p095_compensation);
+        _display->setCursor(nParams[0] + _xo - _x_compensation, nParams[1] + _yo - _y_compensation);
       }
     }
   }
@@ -784,8 +851,27 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       } else {
         _display->setCursor(nParams[0] + _xo, nParams[1] + _yo);
       }
-      _display->println(parseStringToEndKeepCase(string, 5));                   // Print entire rest of provided line
+      _display->println(parseStringToEndKeepCase(string, 5)); // Print entire rest of provided line
     }
+  }
+  else if (subcommand.equals(F("txl")) && (argCount >= 2))    // txl: Text at line(s)
+  {
+    uint8_t _line              = 0;
+    uint8_t _column            = 0;
+    uint8_t idx                = 0;
+    bool    currentColRowState = _columnRowMode;
+    setColumnRowMode(true); // this command is by default set to Column/Row mode
+
+    while (idx < argCount && !sParams[idx + 1].isEmpty()) {
+      if (nParams[idx] > 0) {
+        _line = nParams[idx];
+      } else {
+        _line++;
+      }
+      printText(sParams[idx + 1].c_str(), _column, _line - 1, _fontscaling, _fgcolor, _bgcolor);
+      idx += 2;
+    }
+    setColumnRowMode(currentColRowState);
   }
   else if (subcommand.equals(F("txc")) && ((argCount == 1) || (argCount == 2))) // txc: Textcolor, fg and opt. bg colors
   {
@@ -801,7 +887,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if (subcommand.equals(F("txs")) && (argCount == 1)) // txs: Text size = font scaling, 1..10
   {
-    if ((nParams[0] >= 0) || (nParams[0] <= 10)) {
+    if ((nParams[0] >= 0) && (nParams[0] <= 10)) {
       _fontscaling = nParams[0];
       _display->setTextSize(_fontscaling);
       calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
@@ -815,14 +901,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[2].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     _fontscaling,
                     _fgcolor,
                     _fgcolor); // transparent bg
@@ -832,14 +918,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[3].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     nParams[2],
                     _fgcolor,
                     _fgcolor); // transparent bg
@@ -849,15 +935,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           uint16_t color = AdaGFXparseColor(sParams[3], _colorDepth);
           printText(sParams[4].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     nParams[2],
                     color,
                     color); // transparent bg
@@ -867,14 +953,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[5].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     nParams[2],
                     AdaGFXparseColor(sParams[3], _colorDepth),
                     AdaGFXparseColor(sParams[4], _colorDepth));
@@ -885,7 +971,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -897,8 +983,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
           }
           printText(sParams[argCount - 1].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     nParams[2],
                     AdaGFXparseColor(sParams[3], _colorDepth),
                     AdaGFXparseColor(sParams[4], _colorDepth),
@@ -1661,7 +1747,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -1693,9 +1779,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         #  ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("AdaGFX defined window id: ");
-          log += win;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("AdaGFX defined window id: "), static_cast<int>(win)));
         }
         #  endif // ifndef BUILD_NO_DEBUG
 
@@ -1730,13 +1814,13 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.equals(F("win"))) {          // win: get current window id
+  if (command.equals(F("win"))) {     // win: get current window id
     #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
     string  = getWindow();
     success = true;
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   } else if (command.equals(F("iswin"))) { // iswin: check if windows exists
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW      // if feature enabled
     command = parseString(string, 2);
     int win = 0;
 
@@ -1745,11 +1829,11 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     } else {
       string = '0';
     }
-    success = true;                     // Always correct, just return 'false' if wrong
+    success = true;                          // Always correct, just return 'false' if wrong
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   } else if ((command.equals(F("width"))) || // width/height: get window width or height
              (command.equals(F("height")))) {
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW   // if feature enabled
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW        // if feature enabled
     uint16_t w = 0, h = 0;
     getWindowLimits(w, h);
 
@@ -1792,6 +1876,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
 /****************************************************************************
  * draw a button shape with provided color, can also clear a previously drawn button
  ***************************************************************************/
+# if ADAGFX_ENABLE_BUTTON_DRAW
 void AdafruitGFX_helper::drawButtonShape(const Button_type_e& buttonType,
                                          const int          & x,
                                          const int          & y,
@@ -1858,6 +1943,8 @@ void AdafruitGFX_helper::drawButtonShape(const Button_type_e& buttonType,
   }
 }
 
+# endif // if ADAGFX_ENABLE_BUTTON_DRAW
+
 /****************************************************************************
  * printText: Print text on display at a specific pixel or column/row location
  ***************************************************************************/
@@ -1874,6 +1961,7 @@ void AdafruitGFX_helper::printText(const char     *string,
   int16_t  xText     = 0;
   int16_t  yText     = 0;
   uint16_t wText     = 0;
+  uint16_t wChar     = 0;
   uint16_t hText     = 0;
   int16_t  oTop      = 0;
   int16_t  oBottom   = 0;
@@ -1882,6 +1970,8 @@ void AdafruitGFX_helper::printText(const char     *string,
   uint16_t res_y     = _res_y;
   uint16_t xOffset   = 0;
   uint16_t yOffset   = 0;
+  uint16_t hChar1    = 0;
+  uint16_t wChar1    = 0;
   String   newString = string;
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
@@ -1891,25 +1981,39 @@ void AdafruitGFX_helper::printText(const char     *string,
   _y += yOffset;
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
+  _display->setTextSize(textSize);
+  _display->getTextBounds(String('A'), 0, 0, &xText, &yText, &wChar1, &hChar1); // Calculate ~1 char height
+
   if (_columnRowMode) {
-    _x = X * (_fontwidth * textSize); // We need this multiple times
-    _y = (Y * (_fontheight * textSize))  + (_heightOffset * textSize);
+    _x = X * (_fontwidth * textSize);                                           // We need this multiple times
+
+    if (15 == _lineSpacing) {
+      _y = (Y * (_fontheight * textSize)) + (_heightOffset * textSize);
+    } else {
+      _y = (Y * (hChar1 + _lineSpacing)) + _heightOffset; // Apply explicit line spacing
+    }
   }
 
   _display->setCursor(_x, _y);
   _display->setTextColor(color, bkcolor);
-  _display->setTextSize(textSize);
 
   if (_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) {
-    _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText);   // Count length
+    # if ADAGFX_ENABLE_FRAMED_WINDOW
 
-    while ((newString.length() > 0) && (((_x - xOffset) + wText) > res_x)) {
+    if (0 == getWindow()) // Only on Window 0
+    # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+    {
+      wChar = wChar1;
+    }
+    _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText);   // Calculate length
+
+    while ((newString.length() > 0) && (((_x - xOffset) + wText) > res_x + wChar)) {
       newString.remove(newString.length() - 1);                                   // Cut last character off
-      _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Re-count length
+      _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Re-calculate length
     }
   }
 
-  _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Count length
+  _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Calculate length
 
   if ((maxWidth > 0) && ((_x - xOffset) + maxWidth <= res_x)) {
     res_x = (_x - xOffset) + maxWidth;
@@ -2111,9 +2215,9 @@ uint16_t AdaGFXparseColor(String                & s,
     # if ADAGFX_SUPPORT_8and16COLOR
 
     if (
-      # if ADAGFX_SUPPORT_7COLOR
+      #  if ADAGFX_SUPPORT_7COLOR
       (colorDepth >= AdaGFXColorDepth::SevenColor) &&
-      # endif // if ADAGFX_SUPPORT_7COLOR
+      #  endif // if ADAGFX_SUPPORT_7COLOR
       (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
       result = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
     } else
@@ -2184,9 +2288,11 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
   switch (colorDepth) {
     case AdaGFXColorDepth::BlackWhiteRed:
     case AdaGFXColorDepth::BlackWhite2Greyscales:
-      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED),     colorDepth);
-      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK),    colorDepth);
-      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT),   colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED),   colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK),  colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT), colorDepth);
+
+    // Fall through
     case AdaGFXColorDepth::Monochrome:
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK),   colorDepth);
       AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE),   colorDepth);
@@ -2637,12 +2743,6 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
   // Open requested file on storage
   // Search flash file system first, then SD if present
   file = tryOpenFile(filename, "r");
-  #  if FEATURE_SD
-
-  if (!file) {
-    file = SD.open(filename.c_str(), "r");
-  }
-  #  endif // if FEATURE_SD
 
   if (!file) {
     addLog(LOG_LEVEL_ERROR, F("showBmp: file not found"));
@@ -2756,165 +2856,165 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
       // BMP rows are padded (if needed) to 4-byte boundary
       rowSize = ((depth * bmpWidth + 31) / 32) * 4;
 
-      if ((depth == 24) || (depth == 1)) {           // BGR or 1-bit bitmap format
-        if (dest) {                                  // Supported format, alloc OK, etc.
-          status = true;
+      if ((depth == 24) || (depth == 1)) { // BGR or 1-bit bitmap format
+        // if (dest) {                     // Supported format, alloc OK, etc.
+        status = true;
 
-          if ((loadWidth > 0) && (loadHeight > 0)) { // Clip top/left
-            _display->startWrite();                  // Start SPI (regardless of transact)
+        if ((loadWidth > 0) && (loadHeight > 0)) { // Clip top/left
+          _display->startWrite();                  // Start SPI (regardless of transact)
 
-            if (canTransact) {
-              _tft->setAddrWindow(x, y, loadWidth, loadHeight);
+          if (canTransact) {
+            _tft->setAddrWindow(x, y, loadWidth, loadHeight);
+          }
+
+          if ((depth >= 16) ||
+              (quantized = (uint16_t *)malloc(colors * sizeof(uint16_t)))) {
+            if (depth < 16) {
+              // Load and quantize color table
+              for (uint16_t c = 0; c < colors; c++) {
+                b = file.read();
+                g = file.read();
+                r = file.read();
+                (void)file.read(); // Ignore 4th byte
+                quantized[c] =     // -V757
+                               ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+              }
             }
 
-            if ((depth >= 16) ||
-                (quantized = (uint16_t *)malloc(colors * sizeof(uint16_t)))) {
-              if (depth < 16) {
-                // Load and quantize color table
-                for (uint16_t c = 0; c < colors; c++) {
-                  b = file.read();
-                  g = file.read();
-                  r = file.read();
-                  (void)file.read(); // Ignore 4th byte
-                  quantized[c] =
-                    ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-                }
+            for (row = 0; row < loadHeight; row++) { // For each scanline...
+              delay(0);                              // Keep ESP8266 happy
+
+              // Seek to start of scan line.  It might seem labor-intensive
+              // to be doing this on every line, but this method covers a
+              // lot of gritty details like cropping, flip and scanline
+              // padding. Also, the seek only takes place if the file
+              // position actually needs to change (avoids a lot of cluster
+              // math in SD library).
+              if (flip) { // Bitmap is stored bottom-to-top order (normal BMP)
+                bmpPos = offset + (bmpHeight - 1 - (row + loadY)) * rowSize;
+              } else {    // Bitmap is stored top-to-bottom
+                bmpPos = offset + (row + loadY) * rowSize;
               }
 
-              for (row = 0; row < loadHeight; row++) { // For each scanline...
-                delay(0);                              // Keep ESP8266 happy
+              if (depth == 24) {
+                bmpPos += loadX * 3;
+              } else {
+                bmpPos += loadX / 8;
+                bitIn   = 7 - (loadX & 7);
+              }
 
-                // Seek to start of scan line.  It might seem labor-intensive
-                // to be doing this on every line, but this method covers a
-                // lot of gritty details like cropping, flip and scanline
-                // padding. Also, the seek only takes place if the file
-                // position actually needs to change (avoids a lot of cluster
-                // math in SD library).
-                if (flip) { // Bitmap is stored bottom-to-top order (normal BMP)
-                  bmpPos = offset + (bmpHeight - 1 - (row + loadY)) * rowSize;
-                } else {    // Bitmap is stored top-to-bottom
-                  bmpPos = offset + (row + loadY) * rowSize;
+              if (file.position() != bmpPos) {        // Need seek?
+                if (transact && canTransact) {
+                  _tft->dmaWait();
+                  _tft->endWrite();                   // End TFT SPI transaction
+                }
+                file.seek(bmpPos);                    // Seek = SD transaction
+                srcidx = sizeof sdbuf;                // Force buffer reload
+              }
+
+              for (col = 0; col < loadWidth; col++) { // For each pixel...
+                if (srcidx >= sizeof sdbuf) {         // Time to load more?
+                  if (transact && canTransact) {
+                    _tft->dmaWait();
+                    _tft->endWrite();                 // End TFT SPI transact
+                  }
+                  file.read(sdbuf, sizeof sdbuf);     // Load from SD
+
+                  if (transact && canTransact) {
+                    _display->startWrite();           // Start TFT SPI transact
+                  }
+
+                  if (destidx) {                      // If buffered TFT data
+                    // Non-blocking writes (DMA) have been temporarily
+                    // disabled until this can be rewritten with two
+                    // alternating 'dest' buffers (else the nonblocking
+                    // data out is overwritten in the dest[] write below).
+                    // tft->writePixels(dest, destidx, false); // Write it
+                    delay(0);
+
+                    if (canTransact) {
+                      _tft->writePixels(dest, destidx, true); // Write it
+                    } else {
+                      // loop over buffer
+
+                      for (uint16_t p = 0; p < destidx; p++) {
+                        _display->drawPixel(x + p, y + drow, dest[p]);
+                      }
+                    }
+
+                    if (col % 33 == 0) { delay(0); }
+                    destidx = 0; // and reset dest index
+                  }
+
+                  srcidx = 0;    // Reset bmp buf index
                 }
 
                 if (depth == 24) {
-                  bmpPos += loadX * 3;
+                  // Convert each pixel from BMP to 565 format, save in dest
+                  b               = sdbuf[srcidx++];
+                  g               = sdbuf[srcidx++]; // -V3106
+                  r               = sdbuf[srcidx++]; // -V3106
+                  dest[destidx++] =
+                    ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
                 } else {
-                  bmpPos += loadX / 8;
-                  bitIn   = 7 - (loadX & 7);
-                }
+                  // Extract 1-bit color index
+                  uint8_t n = (sdbuf[srcidx] >> bitIn) & 1;
 
-                if (file.position() != bmpPos) {        // Need seek?
-                  if (transact && canTransact) {
-                    _tft->dmaWait();
-                    _tft->endWrite();                   // End TFT SPI transaction
-                  }
-                  file.seek(bmpPos);                    // Seek = SD transaction
-                  srcidx = sizeof sdbuf;                // Force buffer reload
-                }
-
-                for (col = 0; col < loadWidth; col++) { // For each pixel...
-                  if (srcidx >= sizeof sdbuf) {         // Time to load more?
-                    if (transact && canTransact) {
-                      _tft->dmaWait();
-                      _tft->endWrite();                 // End TFT SPI transact
-                    }
-                    file.read(sdbuf, sizeof sdbuf);     // Load from SD
-
-                    if (transact && canTransact) {
-                      _display->startWrite();           // Start TFT SPI transact
-                    }
-
-                    if (destidx) {                      // If buffered TFT data
-                      // Non-blocking writes (DMA) have been temporarily
-                      // disabled until this can be rewritten with two
-                      // alternating 'dest' buffers (else the nonblocking
-                      // data out is overwritten in the dest[] write below).
-                      // tft->writePixels(dest, destidx, false); // Write it
-                      delay(0);
-
-                      if (canTransact) {
-                        _tft->writePixels(dest, destidx, true); // Write it
-                      } else {
-                        // loop over buffer
-
-                        for (uint16_t p = 0; p < destidx; p++) {
-                          _display->drawPixel(x + p, y + drow, dest[p]);
-                        }
-                      }
-
-                      if (col % 33 == 0) { delay(0); }
-                      destidx = 0; // and reset dest index
-                    }
-
-                    srcidx = 0;    // Reset bmp buf index
-                  }
-
-                  if (depth == 24) {
-                    // Convert each pixel from BMP to 565 format, save in dest
-                    b               = sdbuf[srcidx++];
-                    g               = sdbuf[srcidx++];
-                    r               = sdbuf[srcidx++];
-                    dest[destidx++] =
-                      ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                  if (!bitIn) {
+                    srcidx++;
+                    bitIn = 7;
                   } else {
-                    // Extract 1-bit color index
-                    uint8_t n = (sdbuf[srcidx] >> bitIn) & 1;
-
-                    if (!bitIn) {
-                      srcidx++;
-                      bitIn = 7;
-                    } else {
-                      bitIn--;
-                    }
-
-                    // Look up in palette, store in tft dest buf
-                    dest[destidx++] = quantized[n];
+                    bitIn--;
                   }
-                  dcol++;
-                }                                           // end pixel loop
 
-                if (_tft) {                                 // Drawing to TFT?
-                  delay(0);
-
-                  if (destidx) {                            // Any remainders?
-                    // See notes above re: DMA
-                    _tft->writePixels(dest, destidx, true); // Write it
-                    destidx = 0;                            // and reset dest index
-                  }
-                  _tft->dmaWait();
-                  _tft->endWrite();                         // update display
-                } else {
-                  // loop over buffer
-                  if (destidx) {
-                    for (uint16_t p = 0; p < destidx; p++) {
-                      _display->drawPixel(x + p, y + drow, dest[p]);
-
-                      if (p % 100 == 0) { delay(0); }
-                    }
-                    destidx = 0; // and reset dest index
-                  }
+                  // Look up in palette, store in tft dest buf
+                  dest[destidx++] = quantized[n];
                 }
+                dcol++;
+              }                                           // end pixel loop
 
-                drow++;
-                dcol = 0;
-              } // end scanline loop
+              if (_tft) {                                 // Drawing to TFT?
+                delay(0);
 
-              if (quantized) {
-                free(quantized);  // Palette no longer needed
+                if (destidx) {                            // Any remainders?
+                  // See notes above re: DMA
+                  _tft->writePixels(dest, destidx, true); // Write it
+                  destidx = 0;                            // and reset dest index
+                }
+                _tft->dmaWait();
+                _tft->endWrite();                         // update display
+              } else {
+                // loop over buffer
+                if (destidx) {
+                  for (uint16_t p = 0; p < destidx; p++) {
+                    _display->drawPixel(x + p, y + drow, dest[p]);
+
+                    if (p % 100 == 0) { delay(0); }
+                  }
+                  destidx = 0; // and reset dest index
+                }
               }
-              delay(0);
-            } // end depth>24 or quantized malloc OK
-          }                       // end top/left clip
-        }                         // end malloc check
-      }       // end depth check
+
+              drow++;
+              dcol = 0;
+            }                  // end scanline loop
+
+            if (quantized) {
+              free(quantized); // Palette no longer needed
+            }
+            delay(0);
+          }                    // end depth>24 or quantized malloc OK
+        }                      // end top/left clip
+        // }                         // end malloc check
+      }                        // end depth check
     } // end planes/compression check
-  }   // end signature
+  }                            // end signature
 
   file.close();
   #  ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
   #  endif // ifndef BUILD_NO_DEBUG
-  return status;
+  return status; // -V680
 
   // }
 }
@@ -3011,8 +3111,8 @@ uint8_t AdafruitGFX_helper::defineWindow(const int16_t& x,
   int16_t result = getWindowIndex(windowId);
 
   if (result < 0) {
-    result = _windows.size();            // previous size
-    _windows.push_back(tWindowObject()); // add new
+    result = static_cast<int16_t>(_windows.size()); // previous size
+    _windows.push_back(tWindowObject());            // add new
 
     if (windowId < 0) {
       windowId = 0;

@@ -131,10 +131,10 @@ void MitsubishiMSCHeatpumpIR::sendMitsubishiMSC(IRSender& IR, uint8_t powerMode,
   for (int i=0; i<templateSize; i++) {
     checksum += MitsubishiTemplate[i];
     sprintf_P(pbyte, PSTR(",%02x"),(int) MitsubishiTemplate[i]);
-    Serial.print(pbyte);
+    LOG(pbyte);
   }
 
-  Serial.println("");
+  LOGLN("");
 #endif
 
   // 38 kHz PWM frequency

@@ -541,6 +541,9 @@ bool GPIO_Write(pluginID_t pluginID, int port, uint8_t value, uint8_t pinMode)
     default:
       success=false;
   }
+  if (success) {
+    Scheduler.clearGPIOTimer(pluginID, port);
+  }
   return success;
 }
 

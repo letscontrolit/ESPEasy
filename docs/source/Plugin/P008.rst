@@ -67,6 +67,8 @@ Change log
 .. versionchanged:: 2.0
   ...
 
+  |improved| 2022-08-02 Make plugin multi-instance compatible.
+
   |improved| 2021-11-20 Correct reverted GPIO/interrupt handlers with optional backward compatibility mode.
 
   |added| 2021-08-23 Extended selection of received bits to 26..64 bit range.

@@ -27,6 +27,8 @@ struct Caches {
 
   void    clearTaskCaches();
 
+  void    clearFileCaches();
+
   void    updateActiveTaskUseSerial0();
 
   uint8_t getTaskDeviceValueDecimals(taskIndex_t TaskIndex,
@@ -59,6 +61,8 @@ private:
   ExtraTaskSettingsMap extraTaskSettings_cache;
 
 public:
+
+  uint32_t fileCacheClearMoment = 0;
 
   bool activeTaskUseSerial0 = false;
 };

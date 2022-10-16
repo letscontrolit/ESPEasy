@@ -15,6 +15,25 @@ class IPAddress;
 // -V::569
 
 /********************************************************************************************\
+   Concatenate using code which results in the smallest compiled code
+ \*********************************************************************************************/
+
+template <typename T>
+String concat(const __FlashStringHelper * str, const T &val) {
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
+template <typename T>
+String concat(const String& str, const T &val) {
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
+
+/********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
 
@@ -216,6 +235,11 @@ String to_internal_string(const String& input,
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
+String parseString(const char *  string,
+                   uint8_t       indexFind,
+                   char          separator = ',',
+                   bool          trimResult = true);
+
 String parseString(const String& string,
                    uint8_t       indexFind,
                    char          separator = ',',

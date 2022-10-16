@@ -119,7 +119,7 @@ void handle_config() {
     for (int peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
       String id = F("peer");
       id += String(peer);
-      String peer_mac  = web_server.arg(id);
+      String peer_mac  = webArg(id);
       if (peer_mac.length() == 0) {
         peer_mac = F("00:00:00:00:00:00");
       }

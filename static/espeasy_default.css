@@ -1,6 +1,83 @@
+:root {
+	--bg1: #eee;
+	--bg2: #cacaca;
+	--bg3: #07d;
+	--c1: #fff;
+	--bdc1: silver;
+	--bg4: #e8e8e8;
+	--bg5: #dbff0075;
+	--c2: #444;
+	--bg6: #fff;
+	--bdc2: #444 #444 #fff;
+	--c3: #000;
+	--bg7: #bdbdbd;
+	--bg8: #029b34;
+	--c4: inherit;
+	--c5: #07d;
+	--bg10: #07d;
+	--bg11: #f8f8f8;
+	--c6: #fff;
+	--ro: 0deg;
+	--iv: 0;
+}
+
+[data-theme="dark"] {
+	--bg1: #444;
+	--bg2: #2e2e2e;
+	--bg3: #00000085;
+	--c1: #dfdfdf;
+	--bdc1: #545454;
+	--bg4: #2e2e2e;
+	--bg5: #553044;
+	--c2: #fff;
+	--bg6: #222;
+	--bdc2: transparent;
+	--c3: #fff;
+	--bg7: #00000030;
+	--bg8: #30553d;
+	--c4: #c3c3c3;
+	--c5: #c3c3c3;
+	--bg10: #44607a;
+	--bg11: #44607a;
+	--c6: #c3c3c3;
+	--ro: 180deg;
+	--iv: 1;
+}
+
+@media (prefers-color-scheme:dark) {
+	[data-theme="auto"] {
+		--bg1: #444;
+		--bg2: #2e2e2e;
+		--bg3: #00000085;
+		--c1: #dfdfdf;
+		--bdc1: #545454;
+		--bg4: #2e2e2e;
+		--bg5: #553044;
+		--c2: #fff;
+		--bg6: #222;
+		--bdc2: transparent;
+		--c3: #fff;
+		--bg7: #00000030;
+		--bg8: #30553d;
+		--bg9: #222;
+		--c4: #c3c3c3;
+		--c5: #c3c3c3;
+		--bg10: #44607a;
+		--bg11: #44607a;
+		--c6: #c3c3c3;
+		--ro: 180deg;
+		--iv: 1;
+	}
+}
+
+* :not(font, a),
+.closebtn,
+.div_r,
 h1,
-h6 {
-	color: #07d
+h6,
+.wide,
+textarea {
+	color: var(--c4)
 }
 
 .checkmark:after,
@@ -22,7 +99,6 @@ h6 {
 
 .closebtn,
 .div_r {
-	color: #fff;
 	float: right
 }
 
@@ -39,7 +115,7 @@ h1 {
 }
 
 h3 {
-	background-color: #cacaca;
+	background-color: var(--bg2);
 	margin: -5px;
 	padding: 6px
 }
@@ -58,12 +134,17 @@ xmp {
 }
 
 .button {
-	background-color: #07d;
 	border: 0;
 	border-radius: 5px;
-	color: #fff;
+	color: var(--c6);
 	margin: 4px;
 	padding: 4px 16px
+}
+
+input,
+select,
+.checkmark {
+	background-color: var(--bg1)
 }
 
 .button.help,
@@ -106,7 +187,6 @@ textarea {
 input,
 select,
 textarea {
-	background-color: #eee;
 	margin: 4px;
 	padding: 4px 8px
 }
@@ -147,7 +227,6 @@ textarea {
 }
 
 .checkmark {
-	background-color: #eee;
 	height: 25px;
 	left: 0;
 	position: absolute;
@@ -163,6 +242,10 @@ textarea {
 	top: 3px;
 	transform: rotate(45deg);
 	width: 5px
+}
+
+#toastmessage {
+	background-color: var(--bg3)
 }
 
 #toastmessage,
@@ -207,11 +290,11 @@ textarea {
 textarea {
 	font-family: 'Lucida Console', Monaco, monospace;
 	height: 60vh;
-	width: -webkit-fill-available
+	width: -webkit-fill-available;
+	width: -moz-available
 }
 
 #toastmessage {
-	background-color: #07d;
 	border-radius: 5px;
 	bottom: 30%;
 	color: #fff;
@@ -236,11 +319,6 @@ textarea {
 	cursor: pointer;
 	opacity: 0;
 	position: absolute
-}
-
-.container input:checked~.checkmark,
-.container2 input:checked~.dotmark {
-	background-color: #07d
 }
 
 .container input:checked~.checkmark:after,
@@ -310,7 +388,8 @@ tbody {
 .multirow th,
 .normal th {
 	background-color: #444;
-	color: #fff;
+	border-color: var(--bdc1);
+	color: var(--c1);
 	padding: 5px;
 	width: 100vw
 }
@@ -335,38 +414,43 @@ tbody {
 }
 
 .multirow td {
-	border-color: silver;
+	border-color: var(--bdc1);
 	height: 30px;
 	padding: 4px;
 	text-align: center
 }
 
-.multirow tr:nth-child(odd) {
-	background-color: #e8e8e8
+.tworow td,
+.tworow th {
+	text-align: left
 }
 
 .sub {
+	border-spacing: 0;
 	max-width: 100px;
 	display: block
 }
 
-.highlight td {
-	background-color: #dbff0075
+textarea,
+.even tr:nth-child(2n),
+.tworow tr:nth-child(4n+3),
+.tworow tr:nth-child(4n+4) {
+	background-color: var(--bg4)
 }
 
 .apheader,
 .headermenu {
-	background-color: #f8f8f8;
 	padding: 8px 12px;
 	width: 100vw
 }
 
 .note {
-	color: #444;
+	color: #7b7b7b;
 	font-style: italic
 }
 
 .headermenu {
+	background-color: var(--bg11);
 	border-bottom: .1px solid #444;
 	height: 100px;
 	position: fixed;
@@ -375,7 +459,6 @@ tbody {
 }
 
 .bodymenu {
-	background-color: #fff;
 	height: 100vh;
 	padding-top: 100px
 }
@@ -394,23 +477,23 @@ a.menu {
 }
 
 .menu {
+	color: var(--c2);
 	border: solid transparent 1px;
 	border-radius: 5px 5px 0 0;
-	color: #444;
 	padding: 10px 10px 8px;
 	white-space: nowrap
 }
 
 .menu.active {
-	background-color: #fff;
-	border-color: #444 #444 #fff;
-	border-width: .1px;
-	color: #000
+	background-color: var(--bg6);
+	border-color: var(--bdc2);
+	color: var(--c3);
+	border-width: .1px
 }
 
 .menu:hover {
-	background: #bdbdbd;
-	color: #000
+	background: var(--bg7);
+	color: var(--c3)
 }
 
 .menu_button {
@@ -426,7 +509,7 @@ a.menu {
 }
 
 .div_r {
-	background-color: #029b34;
+	background-color: var(--bg8);
 	border-radius: 4px;
 	margin: 2px;
 	padding: 1px 10px
@@ -437,6 +520,10 @@ a.menu {
 	color: #fff;
 	margin-bottom: 15px;
 	padding: 20px
+}
+
+.highlight td {
+	background-color: var(--bg5)
 }
 
 .div_br {
@@ -471,6 +558,32 @@ section {
 footer {
 	padding: 0 5px;
 	word-break: break-all
+}
+
+
+body {
+	background-color: var(--bg6)
+}
+
+.closebtn,
+.div_r {
+	color: var(--c6)
+}
+
+a,
+h1,
+h6 {
+	color: var(--c5)
+}
+
+.button,
+.container input:checked~.checkmark,
+.container2 input:checked~.dotmark {
+	background-color: var(--bg10)
+}
+
+canvas {
+	filter: invert(var(--iv)) hue-rotate(var(--ro));
 }
 
 @media screen and (max-width:780px) {

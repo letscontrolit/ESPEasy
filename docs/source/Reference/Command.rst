@@ -721,6 +721,15 @@ P131 :ref:`P131_page`
 
 See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
 
+P135 :ref:`P135_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P135_commands.repl
+
+P141 :ref:`P141_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P141_commands.repl
 
 .. .. *** Insert regular plugin commands above this remark! ***
 

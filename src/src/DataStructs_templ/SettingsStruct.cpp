@@ -6,6 +6,7 @@
 #include "../DataTypes/SPI_options.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
+#include "../Helpers/Misc.h"
 
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
@@ -316,6 +317,18 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::SendToHTTP_follow_redirects(bool value) {
   bitWrite(VariousBits1, 27, value);
 }
+
+#if FEATURE_AUTO_DARK_MODE
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getCssMode() const {
+  return get2BitFromUL(VariousBits1, 28); // Also occupies bit 29!
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setCssMode(uint8_t value) {
+  set2BitToUL(VariousBits1, 28, value); // Also occupies bit 29!
+}
+#endif // FEATURE_AUTO_DARK_MODE
 
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {

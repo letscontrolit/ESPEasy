@@ -34,10 +34,10 @@ void P036_data_struct::reset() {
 // The same as when using the DRAM_ATTR attribute used for interrupt code.
 // This is very precious memory, so we must find something other way to define this.
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { getArialMT_Plain_24(), 24,    28                 }, // 9643
-  { getArialMT_Plain_16(), 16,    19                 }, // 5049
-  { getDialog_plain_12(),  13,    15                 }, // 3707
-  { getArialMT_Plain_10(), 10,    13                 }, // 2731
+  { getArialMT_Plain_24(), 24,  28                       }, // 9643
+  { getArialMT_Plain_16(), 16,  19                       }, // 5049
+  { getDialog_plain_12(),  13,  15                       }, // 3707
+  { getArialMT_Plain_10(), 10,  13                       }, // 2731
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -184,30 +184,7 @@ void P036_data_struct::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersi
 }
 
 void P036_data_struct::setContrast(uint8_t OLED_contrast) {
-  if (!isInitialized()) {
-    return;
-  }
-  char contrast  = 100;
-  char precharge = 241;
-  char comdetect = 64;
-
-  switch (OLED_contrast) {
-    case P36_CONTRAST_OFF:
-      display->displayOff();
-      return;
-    case P36_CONTRAST_LOW:
-      contrast = 10; precharge = 5; comdetect = 0;
-      break;
-    case P36_CONTRAST_MED:
-      contrast = P36_CONTRAST_MED; precharge = 0x1F; // comdetect = 64;
-      break;
-    case P36_CONTRAST_HIGH:
-    default:
-      contrast = P36_CONTRAST_HIGH; precharge = 241; // comdetect = 64;
-      break;
-  }
-  display->displayOn();
-  display->setContrast(contrast, precharge, comdetect);
+  OLedSetContrast(display, OLED_contrast);
 }
 
 void P036_data_struct::setOrientationRotated(bool rotated) {
@@ -502,7 +479,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   # endif // ifdef P036_FONT_CALC_LOG
 
   while (iFontIndex < 0) {
-    iMaxHeightForFont = round(iHeight / (iLinesPerFrame * 1.0f)); // no extra space between lines
+    iMaxHeightForFont = lround(iHeight / (iLinesPerFrame * 1.0f)); // no extra space between lines
     // Fonts already have their own extra space, no need to add an extra pixel space
 
     # ifdef P036_FONT_CALC_LOG
@@ -953,7 +930,7 @@ void P036_data_struct::display_scrolling_lines() {
       if (ScrollingLines.Line[i].Width != 0) {
         // scroll this line
         ScrollingLines.Line[i].fPixSum -= ScrollingLines.Line[i].dPix;
-        iCurrentLeft                    = round(ScrollingLines.Line[i].fPixSum);
+        iCurrentLeft                    = lround(ScrollingLines.Line[i].fPixSum);
 
         if (iCurrentLeft != ScrollingLines.Line[i].CurrentLeft) {
           // still scrolling

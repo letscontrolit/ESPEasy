@@ -288,7 +288,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0),
                    parseStringKeepCase(valueArray[filterOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
       }
       {
         html_TD();
@@ -297,7 +297,7 @@ bool P037_data_struct::webform_load(
         html_TD();
 
         addTextBox(getPluginCustomArgName(idx + 100 + 2), parseStringKeepCase(valueArray[filterOffset], 3, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
       }
@@ -402,7 +402,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0),
                    parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
       }
       {
         html_TD();
@@ -411,7 +411,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2),
                    parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         html_TD();
       }
       mapNr++;
@@ -439,14 +439,14 @@ bool P037_data_struct::webform_load(
         addHtmlInt(mapNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
       }
       {
         html_TD();
         addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         html_TD();
       }
       idx += 3;
@@ -502,19 +502,19 @@ bool P037_data_struct::webform_save(
     String argName = F("template");
     argName += (varNr + 1);
 
-    mqttTopics[varNr] = web_server.arg(argName);
+    mqttTopics[varNr] = webArg(argName);
 
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) {
       argName               = F("attribute");
       argName              += (varNr + 1);
-      jsonAttributes[varNr] = web_server.arg(argName);
+      jsonAttributes[varNr] = webArg(argName);
     }
     # endif // P037_JSON_SUPPORT
   }
 
-  globalTopicPrefix = web_server.arg(F("topicprefix"));
+  globalTopicPrefix = webArg(F("topicprefix"));
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   String left, right;
@@ -532,10 +532,10 @@ bool P037_data_struct::webform_save(
 
   for (uint8_t mappingOffset = P037_START_MAPPINGS; mappingOffset <= P037_END_MAPPINGS; mappingOffset++) {
     left.clear();
-    left +=  web_server.arg(getPluginCustomArgName(idx + 0));
+    left +=  webArg(getPluginCustomArgName(idx + 0));
     left.trim();
     right.clear();
-    right += web_server.arg(getPluginCustomArgName(idx + 2));
+    right += webArg(getPluginCustomArgName(idx + 2));
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()) {
@@ -575,9 +575,9 @@ bool P037_data_struct::webform_save(
   idx = 0;
 
   for (uint8_t filterOffset = P037_START_FILTERS; filterOffset <= P037_END_FILTERS; filterOffset++) {
-    left =  web_server.arg(getPluginCustomArgName(idx + 100 + 0));
+    left =  webArg(getPluginCustomArgName(idx + 100 + 0));
     left.trim();
-    right = web_server.arg(getPluginCustomArgName(idx + 100 + 2));
+    right = webArg(getPluginCustomArgName(idx + 100 + 2));
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()
