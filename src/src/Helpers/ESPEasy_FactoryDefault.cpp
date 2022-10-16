@@ -280,6 +280,7 @@ void ResetFactory()
       ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
       ControllerSettings.Port = DEFAULT_PORT;
       ControllerSettings.ClientTimeout = DEFAULT_CONTROLLER_TIMEOUT;
+      ControllerSettings.enableESPEasyNowFallback(DEFAULT_CONTROLLER_FALLBACK_MESH);
       setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
       setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
 

@@ -93,6 +93,7 @@
 
 #define DEFAULT_PORT        8080                                            // Enter your Server port value
 #define DEFAULT_CONTROLLER_TIMEOUT  100                                     // Default timeout in msec
+#define DEFAULT_CONTROLLER_FALLBACK_MESH          false                     // Let the (MQTT) controller use the mesh as a fallback route when there's no network connection
 
 #define DEFAULT_PROTOCOL    0                                               // Protocol used for controller communications
                                                                             //   0 = Stand-alone (no controller set)
