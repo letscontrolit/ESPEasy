@@ -2190,6 +2190,25 @@ To create/register a plugin, you have to :
     #undef FEATURE_RULES_EASY_COLOR_CODE
   #endif
   #define FEATURE_RULES_EASY_COLOR_CODE 0
+  #if FEATURE_EXT_RTC
+    #undef FEATURE_EXT_RTC
+    #define FEATURE_EXT_RTC 0
+  #endif
+
+  #ifdef FEATURE_DNS_SERVER
+    #undef FEATURE_DNS_SERVER
+  #endif
+  #define FEATURE_DNS_SERVER 0
+
+  #ifdef FEATURE_MDNS
+    #undef FEATURE_MDNS
+  #endif
+  #define FEATURE_MDNS 0
+
+  #ifdef FEATURE_ARDUINO_OTA
+    #undef FEATURE_ARDUINO_OTA
+  #endif
+  #define FEATURE_ARDUINO_OTA 0
 #endif
 
 // Timing stats page needs timing stats
@@ -2274,8 +2293,10 @@ To create/register a plugin, you have to :
 #endif
 
 #if FEATURE_ARDUINO_OTA
-  #ifndef FEATURE_MDNS
-    #define FEATURE_MDNS  1
+  #ifndef LIMIT_BUILD_SIZE
+    #ifndef FEATURE_MDNS
+      #define FEATURE_MDNS  1
+    #endif
   #endif
 #endif
 
