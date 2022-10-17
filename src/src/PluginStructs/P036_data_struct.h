@@ -293,7 +293,7 @@ struct P036_data_struct : public PluginTaskData_base {
                                    p036_resolution Disp_resolution,
                                    bool            Rotated,
                                    uint8_t         Contrast,
-                                   uint8_t         DisplayTimer,
+                                   uint16_t        DisplayTimer,
                                    uint8_t         NrLines);
 
   bool isInitialized() const;
@@ -383,7 +383,7 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t ButtonLastState = 0;     // Last state checked (debouncing in progress)
   uint8_t DebounceCounter = 0;     // debounce counter
   uint8_t RepeatCounter   = 0;     // Repeat delay counter when holding button pressed
-  uint8_t displayTimer    = 0;     // counter for display OFF
+  uint16_t displayTimer   = 0;     // counter for display OFF
   // frame header
   uint16_t       HeaderCount              = 0;
   eHeaderContent HeaderContent            = eHeaderContent::eSSID;

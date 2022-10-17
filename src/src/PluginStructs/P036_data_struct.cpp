@@ -186,7 +186,7 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
                             p036_resolution Disp_resolution,
                             bool            Rotated,
                             uint8_t         Contrast,
-                            uint8_t         DisplayTimer,
+                            uint16_t        DisplayTimer,
                             uint8_t         NrLines) {
   reset();
 

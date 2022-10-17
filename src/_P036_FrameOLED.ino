@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-10-17
+// CHG: Display timeout is now a uint16_t value (max 65535s for display off)
 // @tonhuisman: 2022-10-09
 // CHG: Deduplicate code by moving the OLed I2C Address check to OLed_helper
 // @uwekaditz: 2022-09-04
@@ -313,7 +315,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON));
 
-      addFormNumericBox(F("Display Timeout"), F("p036_timer"), P036_TIMER);
+      addFormNumericBox(F("Display Timeout"), F("p036_timer"), P036_TIMER, 0, 65535);
 
       OLedFormContrast(F("p036_contrast"), P036_CONTRAST);
 
