@@ -288,8 +288,6 @@ textarea {
 
 textarea {
 	font-family: 'Lucida Console', Monaco, monospace;
-	height: fit-content;
-	max-height: 60vh;
 	width: -webkit-fill-available;
 	width: -moz-available
 }
