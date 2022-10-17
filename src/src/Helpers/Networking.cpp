@@ -1274,6 +1274,7 @@ String getDigestAuth(const String& authReq,
   return authorization;
 }
 
+#ifndef BUILD_NO_DEBUG
 void log_http_result(const HTTPClient& http,
                      const String    & logIdentifier,
                      const String    & host,
@@ -1319,6 +1320,7 @@ void log_http_result(const HTTPClient& http,
     addLogMove(loglevel, log);
   }
 }
+#endif
 
 int http_authenticate(const String& logIdentifier,
                       WiFiClient  & client,
@@ -1464,7 +1466,9 @@ int http_authenticate(const String& logIdentifier,
     event += httpCode;
     eventQueue.addMove(std::move(event));
   }
+#ifndef BUILD_NO_DEBUG
   log_http_result(http, logIdentifier, host, HttpMethod, httpCode, EMPTY_STRING);
+#endif
   return httpCode;
 }
 
@@ -1503,10 +1507,11 @@ String send_via_http(const String& logIdentifier,
 
   if ((httpCode > 0) && must_check_reply) {
     response = http.getString();
-
+#ifndef BUILD_NO_DEBUG
     if (!response.isEmpty()) {
       log_http_result(http, logIdentifier, host, HttpMethod, httpCode, response);
     }
+#endif
   }
   http.end();
   // http.end() does not call client.stop() if it is no longer connected.
