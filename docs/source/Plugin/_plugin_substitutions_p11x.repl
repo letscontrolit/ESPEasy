@@ -80,7 +80,7 @@
 .. |P117_type| replace:: :cyan:`Gases`
 .. |P117_typename| replace:: :cyan:`Gases - SCD30 CO2, Humidity, Temperature`
 .. |P117_porttype| replace:: `.`
-.. |P117_status| replace:: :yellow:`COLLECTION D`
+.. |P117_status| replace:: :yellow:`COLLECTION D` :yellow:`CLIMATE`
 .. |P117_github| replace:: _P117_SCD30.ino
 .. _P117_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P117_SCD30.ino
 .. |P117_usedby| replace:: `.`
@@ -93,14 +93,14 @@
 .. |P118_type| replace:: :cyan:`Communication`
 .. |P118_typename| replace:: :cyan:`Communication - Itho`
 .. |P118_porttype| replace:: `.`
-.. |P118_status| replace:: :yellow:`COLLECTION D`
+.. |P118_status| replace:: :yellow:`CLIMATE`
 .. |P118_github| replace:: _P118_Itho.ino
 .. _P118_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P118_Itho.ino
 .. |P118_usedby| replace:: `.`
 .. |P118_shortinfo| replace:: `Itho RFT fan control using a CC1101 transceiver`
 .. |P118_maintainer| replace:: `svollebregt`
 .. |P118_compileinfo| replace:: `.`
-.. |P118_usedlibraries| replace:: `https://github.com/arjenhiemstra/IthoEcoFanRFT/tree/master/Master (currently using v2.0.0 due to v2.1.0 recieve issues i.c.w. plugin)`
+.. |P118_usedlibraries| replace:: `https://github.com/arjenhiemstra/IthoEcoFanRFT/tree/master/Master (currently using a local adapted version of v2.0.0, due to v2.1.0 recieve issues i.c.w. plugin)`
 
 .. |P119_name| replace:: :cyan:`ITG3205`
 .. |P119_type| replace:: :cyan:`Gyro`

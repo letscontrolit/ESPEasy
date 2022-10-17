@@ -28,7 +28,7 @@
 .. |P012_type| replace:: :cyan:`Display`
 .. |P012_typename| replace:: :cyan:`Display - LCD2004`
 .. |P012_porttype| replace:: `.`
-.. |P012_status| replace:: :green:`NORMAL` :yellow:`DISPLAY`
+.. |P012_status| replace:: :green:`NORMAL` :yellow:`DISPLAY` :yellow:`CLIMATE`
 .. |P012_github| replace:: P012_LCD.ino
 .. _P012_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P012_LCD.ino
 .. |P012_usedby| replace:: `.`
@@ -54,7 +54,7 @@
 .. |P014_type| replace:: :cyan:`Environment`
 .. |P014_typename| replace:: :cyan:`Environment - SI7021/HTU21D`
 .. |P014_porttype| replace:: `.`
-.. |P014_status| replace:: :green:`NORMAL`
+.. |P014_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P014_github| replace:: P014_SI7021.ino
 .. _P014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P014_SI7021.ino
 .. |P014_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P018_type| replace:: :cyan:`Dust`
 .. |P018_typename| replace:: :cyan:`Dust - Sharp GP2Y10`
 .. |P018_porttype| replace:: `.`
-.. |P018_status| replace:: :green:`NORMAL`
+.. |P018_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P018_github| replace:: P018_Dust.ino
 .. _P018_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P018_Dust.ino
 .. |P018_usedby| replace:: `.`
@@ -119,7 +119,7 @@
 .. |P019_type| replace:: :cyan:`Switch input`
 .. |P019_typename| replace:: :cyan:`Switch input - PCF8574`
 .. |P019_porttype| replace:: `.`
-.. |P019_status| replace:: :green:`NORMAL`
+.. |P019_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P019_github| replace:: P019_PCF8574.ino
 .. _P019_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P019_PCF8574.ino
 .. |P019_usedby| replace:: `.`

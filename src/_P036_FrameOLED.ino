@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2022-10-09
+// CHG: Deduplicate code by moving the OLed I2C Address check to OLed_helper
 // @uwekaditz: 2022-09-04
 // CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed 
 // @uwekaditz: 2022-09-02
@@ -225,13 +227,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
+      success = OLedI2CAddressCheck(function, event->Par1, F("i2c_addr"), P036_ADR);
 
-      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P036_ADR);
-      } else {
-        success = intArrayContains(2, i2cAddressValues, event->Par1);
-      }
       break;
     }
 
@@ -254,29 +251,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // Use number 5 to remain compatible with existing configurations,
       // but the item should be one of the first choices.
-      {
-        const __FlashStringHelper *options[2] = {
-          F("SSD1306 (128x64 dot controller)"),
-          F("SH1106 (132x64 dot controller)")
-        };
-        const int optionValues[2] = { 1, 2 };
-        addFormSelector(F("Controller"), F("p036_controller"), 2, options, optionValues, P036_CONTROLLER);
-      }
+      OLedFormController(F("p036_controller"), nullptr, P036_CONTROLLER);
 
       {
-        const __FlashStringHelper *options[P36_MaxSizesCount] = { F("128x64"), F("128x32"), F("64x48") };
-        const int optionValues[P36_MaxSizesCount]                   =
+        const int optionValues[P36_MaxSizesCount] =
         { static_cast<int>(p036_resolution::pix128x64),
           static_cast<int>(p036_resolution::pix128x32),
           static_cast<int>(p036_resolution::pix64x48) };
-        addFormSelector(F("Size"), F("p036_size"), P36_MaxSizesCount, options, optionValues, nullptr, P036_RESOLUTION, true);
+        OLedFormSizes(F("p036_size"), optionValues, P036_RESOLUTION, true);
       }
 
-      {
-        const __FlashStringHelper *options[2] = { F("Normal"), F("Rotated") };
-        const int optionValues[2]             = { 1, 2 };
-        addFormSelector(F("Rotation"), F("p036_rotate"), 2, options, optionValues, P036_ROTATE);
-      }
+      OLedFormRotation(F("p036_rotate"), P036_ROTATE);
 
       {
         p036_resolution tOLEDIndex = static_cast<p036_resolution>(P036_RESOLUTION);
@@ -330,14 +315,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Display Timeout"), F("p036_timer"), P036_TIMER);
 
-      {
-        uint8_t choice = P036_CONTRAST;
-
-        if (choice == 0) { choice = P36_CONTRAST_HIGH; }
-        const __FlashStringHelper *options[3] = { F("Low"), F("Medium"), F("High") };
-        const int optionValues[3]             = { P36_CONTRAST_LOW, P36_CONTRAST_MED, P36_CONTRAST_HIGH };
-        addFormSelector(F("Contrast"), F("p036_contrast"), 3, options, optionValues, choice);
-      }
+      OLedFormContrast(F("p036_contrast"), P036_CONTRAST);
 
       addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"),
                       !bitRead(P036_FLAGS_0, P036_FLAG_SCROLL_WITHOUTWIFI)); // Bit 24
@@ -1061,7 +1039,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           if (para1.equals(F("low"))) {
             success = true;
-            P036_data->setContrast(P36_CONTRAST_LOW);
+            P036_data->setContrast(OLED_CONTRAST_LOW);
             # ifdef P036_SEND_EVENTS
 
             if (sendEvents) {
@@ -1077,7 +1055,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           if (para1.equals(F("med"))) {
             success = true;
-            P036_data->setContrast(P36_CONTRAST_MED);
+            P036_data->setContrast(OLED_CONTRAST_MED);
             # ifdef P036_SEND_EVENTS
 
             if (sendEvents) {
@@ -1093,7 +1071,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           if (para1.equals(F("high"))) {
             success = true;
-            P036_data->setContrast(P36_CONTRAST_HIGH);
+            P036_data->setContrast(OLED_CONTRAST_HIGH);
             # ifdef P036_SEND_EVENTS
 
             if (sendEvents) {

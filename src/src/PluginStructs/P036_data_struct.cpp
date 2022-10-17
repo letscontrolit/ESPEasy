@@ -142,15 +142,15 @@ const __FlashStringHelper * tFontSettings::FontName() const {
 // The same as when using the DRAM_ATTR attribute used for interrupt code.
 // This is very precious memory, so we must find something other way to define this.
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { getArialMT_Plain_24(), 24,  28                                               }, // 9643
+  { getArialMT_Plain_24(), 24,  28                     }, // 9643
 # ifndef P036_LIMIT_BUILD_SIZE
-  { getDialog_plain_18(),  19,  22                                               },
+  { getDialog_plain_18(),  19,  22                     },
 # endif // ifndef P036_LIMIT_BUILD_SIZE
-  { getArialMT_Plain_16(), 16,  19                                               }, // 5049
+  { getArialMT_Plain_16(), 16,  19                     }, // 5049
 # ifndef P036_LIMIT_BUILD_SIZE
-  { getDialog_plain_12(),  13,  15                                               }, // 3707
+  { getDialog_plain_12(),  13,  15                     }, // 3707
 # endif // ifndef P036_LIMIT_BUILD_SIZE
-  { getArialMT_Plain_10(), 10,  13                                               }, // 2731
+  { getArialMT_Plain_10(), 10,  13                     }, // 2731
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -275,30 +275,7 @@ bool P036_data_struct::isInitialized() const {
 }
 
 void P036_data_struct::setContrast(uint8_t OLED_contrast) {
-  if (!isInitialized()) {
-    return;
-  }
-  char contrast  = 100;
-  char precharge = 241;
-  char comdetect = 64;
-
-  switch (OLED_contrast) {
-    case P36_CONTRAST_OFF:
-      display->displayOff();
-      return;
-    case P36_CONTRAST_LOW:
-      contrast = P36_CONTRAST_LOW; precharge = 5; comdetect = 64;
-      break;
-    case P36_CONTRAST_MED:
-      contrast = P36_CONTRAST_MED; precharge = 0x1F; // comdetect = 64;
-      break;
-    case P36_CONTRAST_HIGH:
-    default:
-      contrast = P36_CONTRAST_HIGH; precharge = 241; // comdetect = 64;
-      break;
-  }
-  display->displayOn();
-  display->setContrast(contrast, precharge, comdetect);
+  OLedSetContrast(display, OLED_contrast);
 }
 
 void P036_data_struct::setOrientationRotated(bool rotated) {

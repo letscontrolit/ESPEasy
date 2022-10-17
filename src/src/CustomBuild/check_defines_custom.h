@@ -126,11 +126,11 @@
 # define FEATURE_MDNS  1
 #endif // if defined(FEATURE_MDNS) && (2-FEATURE_MDNS-2 == 4)
 
-#if FEATURE_NOTIFIER
+#ifdef USES_NOTIFIER
 # warning "Custom.h has '#define USES_NOTIFIER' to be replaced with '#define FEATURE_NOTIFIER 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
 # define FEATURE_NOTIFIER  1
 # undef USES_NOTIFIER
-#endif // if FEATURE_NOTIFIER
+#endif // ifdef USES_NOTIFIER
 
 #ifdef USES_MODBUS
 # warning "Custom.h has '#define USES_MODBUS' to be replaced with '#define FEATURE_MODBUS 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"

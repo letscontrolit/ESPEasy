@@ -3,6 +3,7 @@
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P036
+# include "../Helpers/OLed_helper.h"
 
 # include <SSD1306.h>
 # include <SH1106Wire.h>
@@ -46,12 +47,6 @@
 # define P36_HeaderHeight 12
 # define P036_IndicatorTop     56
 # define P036_IndicatorHeight   8
-
-# define P36_CONTRAST_OFF  0x01
-# define P36_CONTRAST_LOW  0x70
-# define P36_CONTRAST_MED  0xCF
-# define P36_CONTRAST_HIGH 0xFF
-
 
 # define P36_WIFI_STATE_UNSET          -2
 # define P36_WIFI_STATE_NOT_CONNECTED  -1
