@@ -136,8 +136,8 @@ private:
   uint32_t       debug_counter            = 0;
 
   bool                   valueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = {0};
-  P094_Filter_Value_Type valueType_index[P094_NR_FILTERS] = {0};
-  P094_Filter_Comp       filter_comp[P094_NR_FILTERS] = {0};
+  P094_Filter_Value_Type valueType_index[P094_NR_FILTERS];
+  P094_Filter_Comp       filter_comp[P094_NR_FILTERS];
 };
 
 
