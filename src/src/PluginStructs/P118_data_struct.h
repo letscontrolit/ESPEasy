@@ -50,9 +50,9 @@
 
 // This extra settings struct is needed because the default settingsstruct doesn't support strings
 struct PLUGIN_118_ExtraSettingsStruct {
-  char ID1[9];
-  char ID2[9];
-  char ID3[9];
+  char ID1[9] = { 0 };
+  char ID2[9] = { 0 };
+  char ID3[9] = { 0 };
 };
 
 struct P118_data_struct : public PluginTaskData_base {
