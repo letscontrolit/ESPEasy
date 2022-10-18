@@ -188,7 +188,7 @@ public:
   struct tm sunRise;
   struct tm sunSet;
   timeSource_t timeSource = timeSource_t::No_time_source;
-  float timeWander = 0.0f;  // Clock instability in msec/second
+  float timeWander = 0.0f;  // Clock instability in ppm
   uint32_t lastTimeWanderCalculation = 0;
 
   uint8_t PrevMinutes = 0;
