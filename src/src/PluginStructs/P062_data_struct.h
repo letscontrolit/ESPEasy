@@ -72,7 +72,7 @@ private:
   int8_t           _i2c_addr            = -1;
   bool             _use_scancode        = false;
   bool             _keepCalibrationData = false;
-  uint8_t          _sensitivity;
+  uint8_t          _sensitivity = 0;
 };
 
 #endif // ifdef USES_P062

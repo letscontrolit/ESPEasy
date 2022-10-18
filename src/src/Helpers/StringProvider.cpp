@@ -262,7 +262,7 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-', ':', ' ');
     case LabelType::TIME_SOURCE:            return toString(node_time.timeSource);
-    case LabelType::TIME_WANDER:            return String(node_time.timeWander, 3);
+    case LabelType::TIME_WANDER:            return String(node_time.timeWander, 1);
     case LabelType::UPTIME:                 return String(getUptimeMinutes());
     case LabelType::LOAD_PCT:               return toString(getCPUload(), 2);
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());

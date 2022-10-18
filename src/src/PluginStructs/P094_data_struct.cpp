@@ -13,7 +13,7 @@
 
 
 P094_data_struct::P094_data_struct() :  easySerial(nullptr) {
-  for (size_t i = 0; i < P094_NR_FILTERS; ++i) {
+  for (int i = 0; i < P094_NR_FILTERS; ++i) {
     valueType_index[i] = P094_Filter_Value_Type::P094_not_used;
     filter_comp[i] = P094_Filter_Comp::P094_Equal_OR;
   }
