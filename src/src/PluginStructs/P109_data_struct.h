@@ -42,7 +42,7 @@ const char flameimg[] PROGMEM = {
 # define P109_MODE_STATE_UNSET          255
 # define P109_MODE_STATE_INITIAL        1
 # define P109_BUTTON_DEBOUNCE_TIME_MS   300
-# define P109_DEFAULT_SETPOINT_DELAY    5 + 1 // Seconds + 1 before the relay state is changed after the setpoint is changed
+# define P109_DEFAULT_SETPOINT_DELAY    (5 + 1) // Seconds + 1 before the relay state is changed after the setpoint is changed
 # define P109_DELAY_BETWEEN_SAVE        30000 // 30 seconds
 
 # define P109_CONFIG_I2CADDRESS         PCONFIG(0)
@@ -77,7 +77,7 @@ private:
   OLEDDisplay *_display = nullptr;
 
   uint32_t _lastchangetime = 0;
-  uint32_t _buttons[3];
+  uint32_t _buttons[3] = { 0 };
 
   float _prev_temp     = P109_TEMP_STATE_UNSET;
   float _prev_setpoint = P109_SETPOINT_STATE_UNSET;
