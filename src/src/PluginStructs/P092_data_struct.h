@@ -53,7 +53,7 @@ public:
 
   // identification bytes for each DL bus device
   uint8_t DeviceBytes[2] = { 0 };
-  uint8_t ByteStream[DLbus_MaxDataBits / 8 + 1]; // every bit gets sorted into a bitmap
+  uint8_t ByteStream[DLbus_MaxDataBits / 8 + 1] = { 0 }; // every bit gets sorted into a bitmap
   boolean IsLogLevelInfo = false;
   boolean IsNoData = false;           // no data received (DL bus not connected), stop receiving until next call to PLUGIN_READ
   boolean IsISRset = false;           // ISR set flag, used for setting the ISR after network connected

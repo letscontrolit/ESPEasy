@@ -62,13 +62,17 @@ String Command_DateTime(struct EventStruct *event, const char *Line)
 
   if (GetArgv(Line, TmpStr1, 2)) {
     struct tm newtime;
-    int yr, mnth, d;
+    int yr = 1970;
+    int mnth = 1;
+    int d = 1;
     sscanf(TmpStr1.c_str(), "%4d-%2d-%2d", &yr, &mnth, &d);
     newtime.tm_year = yr - 1900;
     newtime.tm_mon  = mnth - 1; // tm_mon starts at 0
     newtime.tm_mday = d;
 
-    int h, m, s = 0;
+    int h = 0;
+    int m = 0;
+    int s = 0;
 
     if (GetArgv(Line, TmpStr1, 3)) {
       sscanf(TmpStr1.c_str(), "%2d:%2d:%2d", &h, &m, &s);
