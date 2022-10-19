@@ -400,8 +400,9 @@ void ESPEasy_setup()
   logMemUsageAfter(F("PluginInit()"));
   #endif
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log  = F("INFO : Plugins: ");
-    log += deviceCount + 1;
+    String log;
+    log.reserve(80);
+    log += concat(F("INFO : Plugins: "), deviceCount + 1);
     log += ' ';
     log += getPluginDescriptionString();
     log += F(" (");
@@ -411,7 +412,7 @@ void ESPEasy_setup()
   }
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
-    addLog(LOG_LEVEL_ERROR, String(F("Programming error! - Increase PLUGIN_MAX (")) + deviceCount + ')');
+    addLog(LOG_LEVEL_ERROR, concat(F("Programming error! - Increase PLUGIN_MAX ("), deviceCount) + ')');
   }
 
   clearAllCaches();
