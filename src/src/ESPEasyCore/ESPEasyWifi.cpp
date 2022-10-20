@@ -342,7 +342,17 @@ bool WiFiConnected() {
 
 void WiFiConnectRelaxed() {
   if (!WiFiEventData.WiFiConnectAllowed() || WiFiEventData.wifiConnectInProgress) {
-    return; // already connected or connect attempt in progress need to disconnect first
+    if (WiFiEventData.wifiConnectInProgress) {
+      if (WiFiEventData.last_wifi_connect_attempt_moment.isSet()) { 
+        if (WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+          WiFiEventData.wifiConnectInProgress = false;
+        }
+      }
+    }
+
+    if (WiFiEventData.wifiConnectInProgress) {
+      return; // already connected or connect attempt in progress need to disconnect first
+    }
   }
   if (!WiFiEventData.processedScanDone) {
     // Scan is still active, so do not yet connect.
@@ -461,6 +471,9 @@ void AttemptWiFiConnect() {
         const bool async = false;
         WifiScan(async);
       }
+      // Limit nr of attempts as we don't have any AP candidates.
+      WiFiEventData.last_wifi_connect_attempt_moment.setMillisFromNow(60000);
+      WiFiEventData.timerAPstart.setNow();
     }
   }
 
@@ -1366,6 +1379,10 @@ void setConnectionSpeed() {
   } else {
     // No need to perform a next attempt.
     WiFi_AP_Candidates.markAttempt();
+  }
+
+  if (WiFi.getPhyMode() == phyMode) {
+    return;
   }
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

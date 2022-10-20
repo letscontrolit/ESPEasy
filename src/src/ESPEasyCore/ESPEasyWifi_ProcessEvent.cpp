@@ -556,6 +556,10 @@ void processDisableAPmode() {
 
   if (!WifiIsAP(WiFi.getMode())) {
     WiFiEventData.timerAPoff.clear();
+    if (WiFiEventData.wifiConnectAttemptNeeded) {
+      // Force a reconnect cycle
+      WifiDisconnect();
+    }
   }
 }
 
@@ -618,6 +622,9 @@ void processScanDone() {
       temp_disable_EspEasy_now_timer = millis() + 20000;
 #endif
     }
+  }
+  if (!NetworkConnected()) {
+    WiFiEventData.timerAPstart.setNow();
   }
 
 }
