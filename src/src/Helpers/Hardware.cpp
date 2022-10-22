@@ -35,18 +35,18 @@
   # include <soc/rtc.h>
 
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
-    #  if CONFIG_IDF_TARGET_ESP32     // ESP32/PICO-D4
-      #   include <esp32/rom/spi_flash.h>
-      #   include <esp32/spiram.h>
-    #  elif CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2
+    #  if CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
       #   include <esp32s2/rom/spi_flash.h>
       #   include <esp32s2/spiram.h>
     #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
       #   include <esp32c3/rom/spi_flash.h>
       #   include <esp32c3/spiram.h>
-    #  else // if CONFIG_IDF_TARGET_ESP32
+    #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
+      #   include <esp32/rom/spi_flash.h>
+      #   include <esp32/spiram.h>
+    #  else // if CONFIG_IDF_TARGET_ESP32S2
       #   error Target CONFIG_IDF_TARGET is not supported
-    #  endif // if CONFIG_IDF_TARGET_ESP32
+    #  endif // if CONFIG_IDF_TARGET_ESP32S2
   # else // ESP32 Before IDF 4.0
     #  include <rom/spi_flash.h>
   # endif    // if ESP_IDF_VERSION_MAJOR > 3
@@ -666,20 +666,7 @@ const __FlashStringHelper* getFlashChipMode() {
   const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
 
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
-    #  if CONFIG_IDF_TARGET_ESP32     // ESP32/PICO-D4
-      if (spi_ctrl & SPI_FREAD_QIO) {  
-        return F("QIO");
-      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
-        return F("QOUT");
-      } else if (spi_ctrl & SPI_FREAD_DIO) {
-        return F("DIO");
-      } else if (spi_ctrl & SPI_FREAD_DUAL) {
-        return F("DOUT");
-      } else if (spi_ctrl & SPI_FASTRD_MODE) {
-        return F("Fast");
-      }
-      return F("Slow");
-    #  elif CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2
+    #  if CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
       if (spi_ctrl & SPI_FREAD_OCT) {  
         return F("OCT");
       } else if (spi_ctrl & SPI_FREAD_QUAD) { 
@@ -695,7 +682,20 @@ const __FlashStringHelper* getFlashChipMode() {
         return F("DIO");
       }
       return F("DOUT");
-    #  endif // if CONFIG_IDF_TARGET_ESP32
+    #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
+      if (spi_ctrl & SPI_FREAD_QIO) {  
+        return F("QIO");
+      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
+        return F("QOUT");
+      } else if (spi_ctrl & SPI_FREAD_DIO) {
+        return F("DIO");
+      } else if (spi_ctrl & SPI_FREAD_DUAL) {
+        return F("DOUT");
+      } else if (spi_ctrl & SPI_FASTRD_MODE) {
+        return F("Fast");
+      }
+      return F("Slow");
+    #  endif // if CONFIG_IDF_TARGET_ESP32S2
   # else // ESP32 Before IDF 4.0
     if (spi_ctrl & (BIT(24))) {  
       return F("QIO");
