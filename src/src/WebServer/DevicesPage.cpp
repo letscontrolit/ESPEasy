@@ -1073,7 +1073,14 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     }
 
     if (Device[DeviceIndex].usesTaskDevicePin(3)) {
-      addFormPinSelect(PinSelectPurpose::Generic, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
+      PinSelectPurpose purpose = PinSelectPurpose::Generic;
+
+      if (Device[DeviceIndex].isSPI())
+      {
+        // SPI only needs output pins
+        purpose = PinSelectPurpose::Generic_output;
+      }
+      addFormPinSelect(purpose, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
     }
   }
 }

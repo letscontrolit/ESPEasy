@@ -159,6 +159,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
       includeI2C = false;
       break;
     case PinSelectPurpose::SPI:
+    case PinSelectPurpose::SPI_MISO:
       includeSPI = false;
       break;
     case PinSelectPurpose::Ethernet:
