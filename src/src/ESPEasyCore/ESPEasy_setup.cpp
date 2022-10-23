@@ -117,7 +117,7 @@ void ESPEasy_setup()
   psramInit();
 #endif
 
-#ifdef CONFIG_IDF_TARGET_ESP32
+#if CONFIG_IDF_TARGET_ESP32
   // restore GPIO16/17 if no PSRAM is found
   if (!FoundPSRAM()) {
     // test if the CPU is not pico
@@ -128,7 +128,7 @@ void ESPEasy_setup()
       gpio_reset_pin(GPIO_NUM_17);
     }
   }
-#endif  // CONFIG_IDF_TARGET_ESP32
+#endif  // if CONFIG_IDF_TARGET_ESP32
   initADC();
 #endif  // ESP32
 #ifndef BUILD_NO_RAM_TRACKER

@@ -821,7 +821,7 @@ const __FlashStringHelper* getChipModel() {
   bool single_core = (1 == chip_info.cores);
 
   if (chip_model < 2) { // ESP32
-# ifdef CONFIG_IDF_TARGET_ESP32
+# if CONFIG_IDF_TARGET_ESP32
 
     /* esptool:
         def get_pkg_version(self):
@@ -864,7 +864,7 @@ const __FlashStringHelper* getChipModel() {
         return F("ESP32-PICO-V3-02");                    // Max 240MHz, Dual core, LGA 7*7, 8MB embedded flash, 2MB embedded PSRAM,
                                                          // ESP32-PICO-MINI-02, ESP32-PICO-DevKitM-2
     }
-# endif // CONFIG_IDF_TARGET_ESP32
+# endif // if CONFIG_IDF_TARGET_ESP32
     return F("ESP32");
   }
   else if (2 == chip_model) { // ESP32-S2
@@ -1070,7 +1070,7 @@ bool CanUsePSRAM() {
 # ifdef HAS_PSRAM_FIX
   return true;
 # endif // ifdef HAS_PSRAM_FIX
-# ifdef CONFIG_IDF_TARGET_ESP32
+# if CONFIG_IDF_TARGET_ESP32
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
 
@@ -1086,7 +1086,7 @@ bool CanUsePSRAM() {
   }
 #  endif // ESP_IDF_VERSION_MAJOR < 4
 
-# endif // CONFIG_IDF_TARGET_ESP32
+# endif // if CONFIG_IDF_TARGET_ESP32
   return true;
 }
 
