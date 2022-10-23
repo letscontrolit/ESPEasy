@@ -35,12 +35,12 @@
 
   #ifndef MAX_GPIO
     #if ESP_IDF_VERSION_MAJOR > 3       // IDF 4+
-      #if CONFIG_IDF_TARGET_ESP32       // ESP32/PICO-D4
-        #define MAX_GPIO  39
-      #elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
+      #if CONFIG_IDF_TARGET_ESP32S2     // ESP32-S2
         #define MAX_GPIO  46
       #elif CONFIG_IDF_TARGET_ESP32C3   // ESP32-C3
         // FIXME TD-er: Implement ESP32C3 support
+      #elif CONFIG_IDF_TARGET_ESP32     // ESP32/PICO-D4
+        #define MAX_GPIO  39
       #else
         #error Target CONFIG_IDF_TARGET is not supported
       #endif
@@ -84,7 +84,7 @@
 #ifndef DEVICES_MAX
   // TODO TD-er: This should be set automatically by counting the number of included plugins.
   # ifdef ESP32
-    # define DEVICES_MAX                      130
+    # define DEVICES_MAX                      140
   #else
     #if defined(PLUGIN_BUILD_COLLECTION) || defined(PLUGIN_BUILD_DEV)
       #  define DEVICES_MAX                      95

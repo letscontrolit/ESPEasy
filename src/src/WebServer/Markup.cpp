@@ -281,7 +281,11 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 
       switch (purpose) {
         case PinSelectPurpose::SPI:
+        case PinSelectPurpose::SPI_MISO:
           includeSPI = false;
+          if (purpose == PinSelectPurpose::SPI && !output) {
+            return;
+          }
           break;
         case PinSelectPurpose::Ethernet:
           #if FEATURE_ETHERNET

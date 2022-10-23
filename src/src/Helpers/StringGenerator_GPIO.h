@@ -24,6 +24,7 @@ enum class PinSelectPurpose {
   Generic_bidir,
   I2C,
   SPI,
+  SPI_MISO,
   Ethernet
 
 };
