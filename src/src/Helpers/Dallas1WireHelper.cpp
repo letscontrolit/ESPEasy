@@ -51,6 +51,7 @@ const __FlashStringHelper * Dallas_getModel(uint8_t family) {
     case 0x3b: return F("DS1825"); 
     case 0x22: return F("DS1822"); 
     case 0x10: return F("DS1820 / DS18S20");
+    case 0x42: return F("DS28EA00");
     case 0x1D: return F("DS2423");   // 4k RAM with counter
     case 0x01: return F("DS1990A");  // Serial Number iButton
   }
@@ -388,7 +389,10 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
     return false;
   }
 
-  if ((ROM[0] == 0x28) || (ROM[0] == 0x3b) || (ROM[0] == 0x22)) // DS18B20 or DS1825 or DS1822
+  if ( (ROM[0] == 0x28)  // DS18B20
+    || (ROM[0] == 0x3b)  // DS1825
+    || (ROM[0] == 0x22)  // DS1822
+    || (ROM[0] == 0x42)) // DS28EA00
   {
     DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
 

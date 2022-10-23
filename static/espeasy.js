@@ -73,6 +73,8 @@ var commonPlugins = [
   "WakeOnLan",
   //P104
   "DotMatrix", "DotMatrix,clear", "DotMatrix,update", "DotMatrix,size", "DotMatrix,txt", "DotMatrix,settxt", "DotMatrix,content", "DotMatrix,alignment", "DotMatrix,anim.in", "DotMatrix,anim.out", "DotMatrix,speed", "DotMatrix,pause", "DotMatrix,font", "DotMatrix,layout", "DotMatrix,inverted", "DotMatrix,specialeffect", "DotMatrix,offset", "DotMatrix,brightness", "DotMatrix,repeat", "DotMatrix,setbar", "DotMatrix,bar",
+  //P109
+  "Thermo", "Thermo,Up", "Thermo,Down", "Thermo,Mode", "Thermo,ModeBtn", "Thermo,Setpoint",
   //P115
   "Max1704xclearalert",
   //P116
