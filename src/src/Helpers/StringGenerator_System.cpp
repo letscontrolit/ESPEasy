@@ -125,16 +125,16 @@ String getResetReasonString(uint8_t icore) {
 
 /*
   switch (reason) {
-  #if CONFIG_IDF_TARGET_ESP32
-    case POWERON_RESET:
-    case SW_CPU_RESET:
-    case DEEPSLEEP_RESET:
-    case SW_RESET:
-  #elif CONFIG_IDF_TARGET_ESP32S2
+  #if CONFIG_IDF_TARGET_ESP32S2
     case POWERON_RESET:
     case RTC_SW_CPU_RESET:
     case DEEPSLEEP_RESET:
     case RTC_SW_SYS_RESET:
+  #elif CONFIG_IDF_TARGET_ESP32
+    case POWERON_RESET:
+    case SW_CPU_RESET:
+    case DEEPSLEEP_RESET:
+    case SW_RESET:
   #endif
   }
 */
