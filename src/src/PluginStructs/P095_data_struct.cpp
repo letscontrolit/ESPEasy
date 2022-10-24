@@ -175,6 +175,7 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       gfxHelper->setRotation(_rotation);
       gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
       gfxHelper->setTxtfullCompensation(!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095) ? 0 : 1);
+      gfxHelper->invertDisplay(P095_CONFIG_FLAG_GET_INVERTDISPLAY);
     }
     updateFontMetrics();
     tft->fillScreen(_bgcolor);             // fill screen with background color
