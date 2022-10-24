@@ -659,6 +659,16 @@ To create/register a plugin, you have to :
       #ifndef SHOW_SYSINFO_JSON
         #define SHOW_SYSINFO_JSON 1
       #endif
+      #ifndef FEATURE_TIMING_STATS                  
+        #define FEATURE_TIMING_STATS 1
+      #endif
+      #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 
+        #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
+      #endif
+      #ifdef BUILD_NO_DEBUG
+        #undef BUILD_NO_DEBUG
+      #endif
+      
       #define FEATURE_MDNS  1
       #define FEATURE_CUSTOM_PROVISIONING 1
       #define FEATURE_DOWNLOAD 1
