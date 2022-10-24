@@ -1768,6 +1768,9 @@ To create/register a plugin, you have to :
   #ifndef SHOW_SYSINFO_JSON
     #define SHOW_SYSINFO_JSON 1
   #endif
+  #ifndef FEATURE_I2C_DEVICE_SCAN
+    #define FEATURE_I2C_DEVICE_SCAN   1
+  #endif
 
   // Plugins
   #ifndef USES_P016
