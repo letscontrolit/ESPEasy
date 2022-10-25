@@ -185,6 +185,22 @@ bool P082_data_struct::loop() {
           if (available == 0) {
             available = easySerial->available();
           }
+          if (c == '$') {
+            _start_prev_sentence = _start_sentence;
+            _start_sentence = millis();
+            const unsigned long baudrate = easySerial->getBaudRate();
+            if (baudrate != 0) {
+              // Subtract the time (msec) taken to send the nr of bytes present in the serial buffer
+              // Assume 10 bits per byte. (8N1)
+              _start_sentence -= (available * 10000) / baudrate;
+            }
+            const int32_t max_sentence_duration = (160 * 10000) / baudrate;
+            if (timeDiff(_start_prev_sentence, _start_sentence) > max_sentence_duration) {
+              _start_sequence = _start_sentence;
+              // Debug accuracy of computing the time stability
+//              addLog(LOG_LEVEL_INFO, concat(F("GPS  : Start Sequence: "), _start_sequence));
+            }
+          }
         }
       }
     }
@@ -226,8 +242,17 @@ double P082_data_struct::distanceSinceLast(unsigned int maxAge_msec) {
 // Return the GPS time stamp, which is in UTC.
 // @param age is the time in msec since the last update of the time +
 // additional centiseconds given by the GPS.
-bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps_sync) {
+bool P082_data_struct::getDateTime(
+    struct tm& dateTime, 
+    uint32_t& age, 
+    bool& updated,
+    bool& pps_sync) {
+  updated = false;
   if (!isInitialized()) {
+    return false;
+  }
+
+  if (!gps->time.isUpdated() || !gps->date.isUpdated()) {
     return false;
   }
 
@@ -236,7 +261,7 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
     _pps_time = 0;
     pps_sync = true;
 
-    if ((age > 1000) || (gps->time.age() > age)) {
+    if ((age > P082_TIMESTAMP_AGE) || (gps->time.age() > age)) {
       return false;
     }
   } else {
@@ -252,7 +277,12 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
     return false;
   }
 
-  if (!gps->date.isValid() || !gps->time.isValid()) {
+  if (!gps->time.isValid()) {
+    gps->time.value(); // Clear the 'updated' state
+    return false;
+  }
+  if (!gps->date.isValid()) {
+    gps->date.value(); // Clear the 'updated' state
     return false;
   }
   dateTime.tm_year = gps->date.year() - 1900;
@@ -263,10 +293,22 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
   dateTime.tm_min  = gps->time.minute();
   dateTime.tm_sec  = gps->time.second();
 
+  const uint32_t reported_time = gps->time.value();
+  const uint32_t reported_date = gps->date.value();
+  updated = reported_time != _last_time;
+
+  _last_time = reported_time;
+  _last_date = reported_date;
   // FIXME TD-er: Must the offset in centisecond be added when pps_sync active?
   if (!pps_sync) {
+    // Don't use the "commit" time when the sentence was read, but use the timestamp when the first sentence of a NMEA sequence was received.
+    const long time_since_start_seq = timePassedSince(_start_sequence);
+    if (time_since_start_seq < P082_TIMESTAMP_AGE) {
+      age = time_since_start_seq;
+    }
     age += (gps->time.centisecond() * 10);
   }
+
   return true;
 }
 
