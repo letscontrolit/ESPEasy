@@ -944,6 +944,7 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_RULES_EASY_COLOR_CODE
         #define FEATURE_RULES_EASY_COLOR_CODE 1
     #endif
+    #define FEATURE_MQTT_TLS 1
 
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
@@ -1770,6 +1771,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef FEATURE_I2C_DEVICE_SCAN
     #define FEATURE_I2C_DEVICE_SCAN   1
+  #endif
+  #ifndef FEATURE_MQTT_TLS
+    #define FEATURE_MQTT_TLS 1
   #endif
 
   // Plugins
