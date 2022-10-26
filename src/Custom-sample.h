@@ -443,6 +443,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P115   // MAX1704x
 // #define USES_P116   // ST77xx
 // #define USES_P117   // SCD30
+// #define USES_P118   // Itho
 // #define USES_P119   // ITG3205 Gyro
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P123   // FT6206

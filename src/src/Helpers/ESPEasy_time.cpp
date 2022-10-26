@@ -128,8 +128,9 @@ unsigned long ESPEasy_time::now() {
       const double time_offset = unixTime_d - sysTime - (timePassedSince(prevMillis) / 1000.0);
 
       if (statusNTPInitialized && time_offset < 1.0) {
-        // Clock instability in msec/second
+        // Clock instability in ppm
         timeWander = ((time_offset * 1000000.0) / timePassedSince(lastTimeWanderCalculation));
+        timeWander *= 1000.0f;
       }
 
       prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
@@ -173,8 +174,8 @@ unsigned long ESPEasy_time::now() {
           log += F(" Time adjusted by ");
           log += doubleToString(time_offset * 1000.0);
           log += F(" msec. Wander: ");
-          log += doubleToString(timeWander, 3);
-          log += F(" msec/second");
+          log += doubleToString(timeWander, 1);
+          log += F(" ppm");
           log += F(" Source: ");
           log += toString(timeSource);
         }

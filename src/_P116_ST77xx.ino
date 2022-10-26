@@ -78,6 +78,26 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("CS: ");
+      string += formatGpioLabel(PIN(0), false);
+      string += event->String1; // contains the NewLine sequence
+      string += F("DC: ");
+      string += formatGpioLabel(PIN(1), false);
+      string += event->String1;
+      string += F("RES: ");
+      string += formatGpioLabel(PIN(2), false);
+      string += event->String1;
+      string += F("Btn: ");
+      string += formatGpioLabel(P116_CONFIG_BUTTON_PIN, false);
+      string += event->String1;
+      string += F("Bckl: ");
+      string += formatGpioLabel(P116_CONFIG_BACKLIGHT_PIN, false);
+      success = true;
+      break;
+    }
+
     case PLUGIN_SET_DEFAULTS:
     {
       # ifdef ESP32

@@ -8,7 +8,12 @@
  * Constructor
  *************************************************************************/
 P109_data_struct::P109_data_struct():
-  _display(nullptr), _taskIndex(0), _varIndex(0) {}
+  _display(nullptr), _taskIndex(0), _varIndex(0) 
+{
+  for (int i = 0; i < P109_Nlines; ++i) {
+    ZERO_FILL(_deviceTemplate[i]);
+  }
+}
 
 /**************************************************************************
  * Destructor

@@ -255,7 +255,7 @@ private:
   ESPeasySerial  _serial;
   State          _state;
   bool           _fastBaudRate;
-  uint8_t        _readBuffer[READ_BUFFER_LEN];
+  uint8_t        _readBuffer[READ_BUFFER_LEN] = { 0 };
   uint8_t        _readPos;
   unsigned long  _writeTimeout;
   Values         _currentValues;

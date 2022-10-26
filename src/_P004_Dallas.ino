@@ -28,6 +28,10 @@
 # define P004_SENSOR_TYPE_INDEX  2
 # define P004_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P004_SENSOR_TYPE_INDEX)))
 
+// Used to easily replace a sensor, without configuring.
+// Can only be used for a single instance of this plugin and a single sensor.
+# define P004_SCAN_ON_INIT       PCONFIG(3)
+
 
 boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -118,6 +122,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
+        addFormCheckBox(F("Auto Select Sensor"), F("autoselect"), P004_SCAN_ON_INIT, P004_NR_OUTPUT_VALUES > 1);
+        addFormNote(F("Auto Select can only be used for 1 Dallas sensor per GPIO pin."));
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
         {
@@ -189,6 +195,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
         Dallas_setResolution(savedAddress, res, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX);
       }
+      P004_SCAN_ON_INIT       = isFormItemChecked(F("autoselect"));
       P004_ERROR_STATE_OUTPUT = getFormItemInt(F("p004_err"));
       success                 = true;
       break;
@@ -215,13 +222,23 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t addr[8];
-      Dallas_plugin_get_addr(addr, event->TaskIndex);
-
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
       if(Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
+      }
+
+      uint8_t addr[8] = {0};
+
+      if (P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT) {
+        Dallas_reset_search();
+        if (!Dallas_search(addr, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX)) {
+          addr[0] = 0;
+        }
+      }
+
+      if (addr[0] == 0) {
+        Dallas_plugin_get_addr(addr, event->TaskIndex);
       }
 
       if ((addr[0] != 0) && (validGpio(Plugin_004_DallasPin_RX)) && (validGpio(Plugin_004_DallasPin_TX))) {

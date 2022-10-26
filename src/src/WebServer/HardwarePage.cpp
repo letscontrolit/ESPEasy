@@ -185,7 +185,7 @@ void handle_hardware() {
     addFormSelector_script(F("Init SPI"), F("initspi"), 4, spi_options, spi_index, nullptr, Settings.InitSPI, F("spiOptionChanged(this)"));
     // User-defined pins
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("CLK")),  F("spipinsclk"), Settings.SPI_SCLK_pin);
-    addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_input(F("MISO")),  F("spipinmiso"), Settings.SPI_MISO_pin);
+    addFormPinSelect(PinSelectPurpose::SPI_MISO, formatGpioName_input(F("MISO")),  F("spipinmiso"), Settings.SPI_MISO_pin);
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("MOSI")), F("spipinmosi"), Settings.SPI_MOSI_pin);
     html_add_script(F("document.getElementById('initspi').onchange();"), false); // Initial trigger onchange script
     addFormNote(F("Changing SPI settings requires to press the hardware-reset button or power off-on!"));

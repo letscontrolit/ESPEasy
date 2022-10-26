@@ -15,7 +15,7 @@
 .. |P021_type| replace:: :cyan:`Regulator`
 .. |P021_typename| replace:: :cyan:`Regulator - Level Control`
 .. |P021_porttype| replace:: `.`
-.. |P021_status| replace:: :green:`NORMAL`
+.. |P021_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P021_github| replace:: P021_Level.ino
 .. _P021_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P021_Level.ino
 .. |P021_usedby| replace:: `.`
@@ -41,7 +41,7 @@
 .. |P023_type| replace:: :cyan:`Display`
 .. |P023_typename| replace:: :cyan:`Display - OLED SSD1306`
 .. |P023_porttype| replace:: `.`
-.. |P023_status| replace:: :green:`NORMAL` :yellow:`DISPLAY`
+.. |P023_status| replace:: :green:`NORMAL` :yellow:`DISPLAY` :yellow:`CLIMATE`
 .. |P023_github| replace:: P023_OLED.ino
 .. _P023_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P023_OLED.ino
 .. |P023_usedby| replace:: `.`
@@ -54,7 +54,7 @@
 .. |P024_type| replace:: :cyan:`Environment`
 .. |P024_typename| replace:: :cyan:`Environment - MLX90614`
 .. |P024_porttype| replace:: `.`
-.. |P024_status| replace:: :green:`NORMAL`
+.. |P024_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P024_github| replace:: P024_MLX90614.ino
 .. _P024_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P024_MLX90614.ino
 .. |P024_usedby| replace:: :ref:`P024_MLX90614_page`
@@ -80,7 +80,7 @@
 .. |P026_type| replace:: :cyan:`Generic`
 .. |P026_typename| replace:: :cyan:`Generic - System Info`
 .. |P026_porttype| replace:: `.`
-.. |P026_status| replace:: :green:`NORMAL`
+.. |P026_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P026_github| replace:: P026_Sysinfo.ino
 .. _P026_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P026_Sysinfo.ino
 .. |P026_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P028_type| replace:: :cyan:`Environment`
 .. |P028_typename| replace:: :cyan:`Environment - BMx280`
 .. |P028_porttype| replace:: `.`
-.. |P028_status| replace:: :green:`NORMAL`
+.. |P028_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P028_github| replace:: P028_BME280.ino
 .. _P028_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P028_BME280.ino
 .. |P028_usedby| replace:: :ref:`P028_page`
@@ -119,7 +119,7 @@
 .. |P029_type| replace:: :cyan:`Output`
 .. |P029_typename| replace:: :cyan:`Output - Domoticz MQTT Helper`
 .. |P029_porttype| replace:: `.`
-.. |P029_status| replace:: :green:`NORMAL`
+.. |P029_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P029_github| replace:: P029_Output.ino
 .. _P029_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P029_Output.ino
 .. |P029_usedby| replace:: `.`

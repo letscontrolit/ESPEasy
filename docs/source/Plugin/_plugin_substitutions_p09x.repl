@@ -2,7 +2,7 @@
 .. |P090_type| replace:: :cyan:`Gases`
 .. |P090_typename| replace:: :cyan:`Gases - CCS811 TVOC/eCO2`
 .. |P090_porttype| replace:: `.`
-.. |P090_status| replace:: :yellow:`COLLECTION A`
+.. |P090_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P090_github| replace:: P090_CCS811.ino
 .. _P090_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P090_CCS811.ino
 .. |P090_usedby| replace:: `.`
