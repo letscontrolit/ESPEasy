@@ -537,18 +537,14 @@ void TinyGPSDate::commit()
 
 void TinyGPSTime::commit()
 {
+   const uint32_t oldtime = time;
    time = newTime;
+   if (second() > 60 || minute() > 59 || hour() > 23) {
+     valid = false;
+     time = oldtime;
+     return;
+   }
    lastCommitTime = millis();
-   valid = false;
-   if (second() > 60) {
-     return;
-   }
-   if (minute() > 59) {
-     return;
-   }
-   if (hour() > 23) {
-     return;
-   }
    updated = true;
    valid = true;
 }
