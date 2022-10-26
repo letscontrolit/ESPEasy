@@ -25,10 +25,11 @@
 #define FT62XX_REG_CHIPID 0xA3      //!< Chip selecting
 #define FT62XX_REG_VENDID 0xA8      //!< FocalTech's panel ID
 
-#define FT62XX_VENDID 0x11  //!< FocalTech's panel ID
+#define FT62XX_VENDID 0x11  //!< FocalTech's vendor ID
 #define FT6206_CHIPID 0x06  //!< Chip selecting
 #define FT6236_CHIPID 0x36  //!< Chip selecting
 #define FT6236U_CHIPID 0x64 //!< Chip selecting
+#define FT5316_CHIPID 0x0A  //!< Chip selecting
 
 // calibrated for Adafruit 2.8" ctp screen
 #define FT62XX_DEFAULT_THRESHOLD 128 //!< Default threshold for touch detection
@@ -73,6 +74,7 @@ private:
 
   void readData(void);
   uint8_t touches;
+  uint8_t _id = 0;
   uint16_t touchX[2], touchY[2], touchID[2];
 };
 

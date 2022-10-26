@@ -85,9 +85,9 @@ boolean Adafruit_FT6206::begin(uint8_t thresh) {
   if (readRegister8(FT62XX_REG_VENDID) != FT62XX_VENDID) {
     return false;
   }
-  uint8_t id = readRegister8(FT62XX_REG_CHIPID);
-  if ((id != FT6206_CHIPID) && (id != FT6236_CHIPID) &&
-      (id != FT6236U_CHIPID)) {
+  _id = readRegister8(FT62XX_REG_CHIPID);
+  if ((_id != FT6206_CHIPID) && (_id != FT6236_CHIPID) &&
+      (_id != FT6236U_CHIPID) && (_id != FT5316_CHIPID)) {
     return false;
   }
 
@@ -101,6 +101,15 @@ boolean Adafruit_FT6206::begin(uint8_t thresh) {
 */
 /**************************************************************************/
 uint8_t Adafruit_FT6206::touched(void) {
+  if (_id == FT5316_CHIPID) {
+    uint8_t val = readRegister8(FT62XX_REG_MODE);
+    if (val) {
+      // wrong mode
+      val = 0;
+      writeRegister8(FT62XX_REG_MODE, val);
+    }
+  }
+  
   uint8_t n = readRegister8(FT62XX_REG_NUMTOUCHES);
   if (n > 2) {
     n = 0;
