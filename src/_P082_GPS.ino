@@ -364,6 +364,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P082_data) && P082_data->loop()) {
+        P082_setSystemTime(event);
 # ifdef P082_SEND_GPS_TO_LOG
         if (P082_data->_lastSentence.substring(0,10).indexOf(F("TXT")) != -1) {
           addLog(LOG_LEVEL_INFO, P082_data->_lastSentence);
@@ -445,10 +446,6 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_DB_MAX),      P082_data->gps->satellitesStats.getBestSNR());
         P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_CHKSUM_FAIL), P082_data->gps->failedChecksum());
 
-
-        if (curFixStatus) {
-          P082_setSystemTime(event);
-        }
         P082_logStats(event);
 
         if (success) {
@@ -719,9 +716,10 @@ void P082_html_show_stats(struct EventStruct *event) {
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
   uint32_t  age;
+  bool updated;
   bool pps_sync;
 
-  if (P082_data->getDateTime(dateTime, age, pps_sync)) {
+  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
     dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
     addHtml(formatDateTimeString(dateTime));
   } else {
@@ -759,25 +757,30 @@ void P082_setSystemTime(struct EventStruct *event) {
     return;
   }
 
-  // Set the externalTimesource 10 seconds earlier to make sure no call is made
-  // to NTP (if set)
-  if (node_time.nextSyncTime > (node_time.getUnixTime() + 10)) {
+  if (timeSource_t::GPS_time_source == node_time.timeSource &&
+      P082_data->_last_setSystemTime != 0 &&
+      timePassedSince(P082_data->_last_setSystemTime) < 3600000) 
+  {
+    // Only update the system time every hour from the same time source.
     return;
   }
 
   struct tm dateTime;
   uint32_t  age;
+  bool updated;
   bool pps_sync;
 
   P082_data->_pps_time = P082_pps_time; // Must copy the interrupt gathered time first.
 
-  if (P082_data->getDateTime(dateTime, age, pps_sync)) {
-    // Use floating point precision to use the time since last update from GPS
-    // and the given offset in centisecond.
-    double time = makeTime(dateTime);
-    time += static_cast<double>(age) / 1000.0;
-    node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
-    node_time.initTime();
+  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
+    if (updated) {
+      // Use floating point precision to use the time since last update from GPS
+      // and the given offset in centisecond.
+      double time = makeTime(dateTime);
+      time += static_cast<double>(age) / 1000.0;
+      node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
+      P082_data->_last_setSystemTime = millis();
+    }
   }
   P082_pps_time = 0;
 }
