@@ -273,6 +273,10 @@ bool P082_data_struct::getDateTime(
     return false;
   }
 
+  if (!gps->time.isUpdated() || !gps->date.isUpdated()) {
+    return false;
+  }
+
   if (gps->date.age() > P082_TIMESTAMP_AGE) {
     return false;
   }
