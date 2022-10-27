@@ -36,7 +36,12 @@ public:
   void          setExternalTimeSource(double       time,
                                       timeSource_t source);
 
+  // Get unix time in seconds
   uint32_t      getUnixTime() const;
+
+  // Get unix time in seconds
+  // @param unix_time_frac  The fractional part
+  uint32_t      getUnixTime(uint32_t& unix_time_frac) const;
 
   void          initTime();
 

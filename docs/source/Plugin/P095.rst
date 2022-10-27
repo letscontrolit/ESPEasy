@@ -84,6 +84,7 @@ Actuator
 * **Inversed Logic** When checked, reverses the pin-state action of the **Display button** gpio. This allows an external circuit, f.e. an IR sensor, that may provide a *high* signal when activated, to wake the display.
 * **Display Timeout** Select the timeout in seconds to turn off the display after the last update or wake-up. Only used if the **Display button** is *also* configured.
 * **TFT Display model** Select the hardware model that is connected. Currently there are only preset resolutions available.
+* **Invert display** Default value for Invert display, some displays have foreground and background colors swapped (f.e. M5Stack Core2 using ILI9342C), this option is applied at plugin initialization.
 
 Available options:
 
