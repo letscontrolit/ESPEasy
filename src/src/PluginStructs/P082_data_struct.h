@@ -108,6 +108,10 @@ struct P082_data_struct : public PluginTaskData_base {
   bool setDynamicModel(P082_DynamicModel model);
 #endif
 
+# if FEATURE_PLUGIN_STATS
+  bool webformLoad_show_stats(struct EventStruct *event, uint8_t var_index, P082_query query_type);
+# endif // if FEATURE_PLUGIN_STATS
+
 private:
 #ifdef P082_USE_U_BLOX_SPECIFIC
   // Compute checksum
@@ -134,15 +138,14 @@ public:
   double _distance = 0.0;
 
 
-
-  unsigned long _pps_time         = 0;
-  unsigned long _last_measurement = 0;
-  uint32_t _last_time = 0;
-  uint32_t _last_date = 0;
-  uint32_t _last_setSystemTime = 0;
-  uint32_t _start_sentence = 0;
-  uint32_t _start_prev_sentence = 0;
-  uint32_t _start_sequence = 0;
+  unsigned long _pps_time            = 0;
+  unsigned long _last_measurement    = 0;
+  uint32_t      _last_time           = 0;
+  uint32_t      _last_date           = 0;
+  uint32_t      _last_setSystemTime  = 0;
+  uint32_t      _start_sentence      = 0;
+  uint32_t      _start_prev_sentence = 0;
+  uint32_t      _start_sequence      = 0;
 # ifdef P082_SEND_GPS_TO_LOG
   String _lastSentence;
   String _currentSentence;

@@ -315,6 +315,24 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+# if FEATURE_PLUGIN_STATS
+    case PLUGIN_WEBFORM_LOAD_SHOW_STATS:
+    {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P082_data) {
+        for (uint8_t i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
+          const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
+          if (P082_data->webformLoad_show_stats(event, i, static_cast<P082_query>(PCONFIG(pconfigIndex)))) {
+            success = true; // Something added
+          }
+        }
+      }
+      break;
+    }
+# endif // if FEATURE_PLUGIN_STATS
+
     case PLUGIN_INIT: {
       if (P082_TIMEOUT < 100) {
         P082_TIMEOUT = P082_DEFAULT_FIX_TIMEOUT;
