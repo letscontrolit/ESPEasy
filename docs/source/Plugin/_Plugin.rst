@@ -93,6 +93,8 @@ For example using just like normal task value data:
 
 * ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
+* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
 * ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
 * ``[bme#temp.min]`` See ``[bme#temp.max]`` 
 
