@@ -3,7 +3,7 @@
 #ifdef USES_P082
 
 
-// Needed also here for PlatformIO's library finder as the .h file 
+// Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
@@ -161,7 +161,7 @@ bool P082_data_struct::loop() {
                     done = true;
                     break;
                   default:
-                    done = true;                    
+                    done = true;
                     break;
                 }
               }
@@ -221,8 +221,8 @@ bool P082_data_struct::storeCurPos(unsigned int maxAge_msec) {
   }
 
   _distance += distanceSinceLast(maxAge_msec);
-  _last_lat = gps->location.lat();
-  _last_lng = gps->location.lng();
+  _last_lat  = gps->location.lat();
+  _last_lng  = gps->location.lng();
   return true;
 }
 
@@ -243,11 +243,12 @@ double P082_data_struct::distanceSinceLast(unsigned int maxAge_msec) {
 // @param age is the time in msec since the last update of the time +
 // additional centiseconds given by the GPS.
 bool P082_data_struct::getDateTime(
-    struct tm& dateTime, 
-    uint32_t& age, 
-    bool& updated,
-    bool& pps_sync) {
+  struct tm& dateTime,
+  uint32_t & age,
+  bool     & updated,
+  bool     & pps_sync) {
   updated = false;
+
   if (!isInitialized()) {
     return false;
   }
@@ -257,9 +258,9 @@ bool P082_data_struct::getDateTime(
   }
 
   if (_pps_time != 0) {
-    age      = timePassedSince(_pps_time);
+    age       = timePassedSince(_pps_time);
     _pps_time = 0;
-    pps_sync = true;
+    pps_sync  = true;
 
     if ((age > P082_TIMESTAMP_AGE) || (gps->time.age() > age)) {
       return false;
@@ -370,7 +371,7 @@ bool P082_data_struct::setDynamicModel(P082_DynamicModel model) {
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
@@ -406,12 +407,97 @@ bool P082_data_struct::writeToGPS(const uint8_t* data, size_t size) {
       if (size != easySerial->write(data, size)) {
         addLog(LOG_LEVEL_ERROR, F("GPS  : Written less bytes than expected"));
         return false;
-      } 
+      }
       return true;
     }
   }
   addLog(LOG_LEVEL_ERROR, F("GPS  : Cannot send to GPS"));
   return false;
 }
+
+# if FEATURE_PLUGIN_STATS
+bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t var_index, P082_query query_type)
+{
+  bool somethingAdded = false;
+
+  const PluginStats *stats = getPluginStats(var_index);
+
+
+  if (stats != nullptr) {
+    if (stats->webformLoad_show_avg(event)) {
+      somethingAdded = true;
+    }
+
+    bool   show_custom = false;
+    double dist_p2p    = 0.0;
+    double dist_stddev = 0.0;
+
+    if (gps != nullptr) {
+      switch (query_type) {
+        case P082_query::P082_QUERY_LAT:
+          show_custom = true;
+          // Compute distance between min and max peak
+          dist_p2p            = gps->distanceBetween(
+            stats->getPeakLow(),  _last_lng,
+            stats->getPeakHigh(), _last_lng);
+          dist_stddev         = gps->distanceBetween(
+            _last_lat,                            _last_lng,
+            _last_lat + stats->getSampleStdDev(), _last_lng);
+          break;
+        case P082_query::P082_QUERY_LONG:
+          show_custom = true;
+          // Compute distance between min and max peak
+          dist_p2p            = gps->distanceBetween(
+            _last_lat, stats->getPeakLow(),
+            _last_lat, stats->getPeakHigh());
+          // Compute distance for std.dev
+          dist_stddev         = gps->distanceBetween(
+            _last_lat, _last_lng,
+            _last_lat, _last_lng + stats->getSampleStdDev());
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Only show standard deviation in meters, which is more useful than std. dev in degrees.
+    if (somethingAdded) {
+      if (show_custom) {
+        stats->webformLoad_show_val(
+          event,
+          F(" std. dev"),
+          dist_stddev,
+          F("m"));
+      } else {
+        stats->webformLoad_show_stdev(event);
+      }
+    }
+
+    if (stats->webformLoad_show_peaks(event, !show_custom)) {
+      somethingAdded = true;
+
+      if (show_custom) {
+        stats->webformLoad_show_val(
+          event,
+          F(" Peak-to-peak coordinates"),
+          stats->getPeakHigh() - stats->getPeakLow(),
+          F("deg"));
+        stats->webformLoad_show_val(
+          event,
+          F(" Peak-to-peak distance"),
+          dist_p2p,
+          F("m"));
+      }
+    }
+
+    if (somethingAdded) {
+      addFormSeparator(4);
+    }
+  }
+  return somethingAdded;
+}
+
+# endif // if FEATURE_PLUGIN_STATS
+
 
 #endif // ifdef USES_P082
