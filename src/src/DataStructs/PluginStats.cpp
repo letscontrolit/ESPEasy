@@ -373,15 +373,15 @@ bool PluginStats_array::plugin_write_base(struct EventStruct *event, const Strin
   const bool clearSamples = cmd.equals(F("clearsamples")); // Command: "taskname.clearSamples"
 
   if (resetPeaks || clearSamples) {
-    success = true;
-
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
       if (_plugin_stats[i] != nullptr) {
         if (resetPeaks) {
+          success = true;
           _plugin_stats[i]->resetPeaks();
         }
 
         if (clearSamples) {
+          success = true;
           _plugin_stats[i]->clearSamples();
         }
       }

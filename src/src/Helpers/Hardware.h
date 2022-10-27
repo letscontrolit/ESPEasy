@@ -29,7 +29,12 @@
 # endif  // if CONFIG_IDF_TARGET_ESP32
 #endif  // ifdef ESP32
 #ifdef ESP8266
+  #if FEATURE_ADC_VCC
+  // Vcc in units of 1/1024 V
+  # define MAX_ADC_VALUE 4095
+  #else
   # define MAX_ADC_VALUE 1023
+  #endif
 #endif // ifdef ESP8266
 
 
