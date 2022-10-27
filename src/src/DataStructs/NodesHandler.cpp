@@ -60,7 +60,8 @@ bool NodesHandler::addNode(const NodeStruct& node)
   }
   {
     _nodes_mutex.lock();
-    _nodes[node.unit]             = node;
+    _nodes[node.unit] = node;
+    _ntp_candidate.set(node);
     _nodes[node.unit].lastUpdated = millis();
     if (node.getRSSI() >= 0 && rssi < 0) {
       _nodes[node.unit].setRSSI(rssi);
@@ -74,6 +75,13 @@ bool NodesHandler::addNode(const NodeStruct& node)
     }
     _nodes_mutex.unlock();
   }
+  if (!node_time.systemTimePresent() || node_time.timeSource == timeSource_t::Restore_RTC_time_source) {
+    double unixTime;
+    if (_ntp_candidate.getUnixTime(unixTime)) {
+      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP);
+    }
+  }
+
   return isNewNode;
 }
 
@@ -379,6 +387,12 @@ void NodesHandler::updateThisNode() {
       break;
     }
   }
+  if (node_time.systemTimePresent()) {
+    // NodeStruct is a packed struct, so we cannot directly use its members as a reference.
+    uint32_t unix_time_frac = 0;
+    thisNode.unix_time_sec = node_time.getUnixTime(unix_time_frac);
+    thisNode.unix_time_frac = unix_time_frac;
+  }
   #ifdef USES_ESPEASY_NOW
   if (Settings.UseESPEasyNow()) {
     thisNode.ESPEasyNowPeer = 1;
@@ -448,6 +462,7 @@ void NodesHandler::updateThisNode() {
 }
 
 const NodeStruct * NodesHandler::getThisNode() {
+  node_time.now();
   updateThisNode();
   MAC_address this_mac;
   WiFi.macAddress(this_mac.mac);
