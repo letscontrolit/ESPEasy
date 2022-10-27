@@ -7,6 +7,9 @@
 
 #include <Arduino.h>
 
+# ifdef LIMIT_BUILD_SIZE
+#  define P092_LIMIT_BUILD_SIZE
+# endif // ifdef LIMIT_BUILD_SIZE
 
 /*********************************************************************************************\
    DLBus subs to get values from the receiving bitstream
@@ -31,8 +34,7 @@
 
 enum class eP092pinmode {
   ePPM_Input          = 1,
-  ePPM_InputPullUp    = 2,
-  ePPM_InputPullDown  = 3
+  ePPM_InputPullUp    = 2
 };
 
 class DLBus {
@@ -82,7 +84,9 @@ private:
   void        Trim(int start_bit);
   boolean     CheckDevice(void);
   static DLBus *__instance;
+# ifndef P092_LIMIT_BUILD_SIZE
   void        AddToInfoLog(const String& string);
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   void        AddToErrorLog(const String& string);
 };
 #endif // ifndef DLBus_H

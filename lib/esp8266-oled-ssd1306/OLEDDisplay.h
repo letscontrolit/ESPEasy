@@ -176,19 +176,19 @@ class OLEDDisplay : public Print {
     /* Text functions */
 
     // Draws a string at the given location
-    void drawString(int16_t x, int16_t y, String text);
+    void drawString(int16_t x, int16_t y, const String& text);
 
     // Draws a String with a maximum width at the given location.
     // If the given String is wider than the specified width
     // The text will be wrapped to the next line at a space or dash
-    void drawStringMaxWidth(int16_t x, int16_t y, uint16_t maxLineWidth, String text);
+    void drawStringMaxWidth(int16_t x, int16_t y, uint16_t maxLineWidth, const String& text);
 
     // Returns the width of the const char* with the current
     // font settings
     uint16_t getStringWidth(const char* text, uint16_t length);
 
     // Convencience method for the const char version
-    uint16_t getStringWidth(String text);
+    uint16_t getStringWidth(const String& text);
 
     // Specifies relative to which anchor point
     // the text is rendered. Available constants:
@@ -276,7 +276,7 @@ class OLEDDisplay : public Print {
     void sendInitCommands();
 
     // converts utf8 characters to extended ascii
-    static char* utf8ascii(String s);
+    static char* utf8ascii(const String& s);
     static uint8_t utf8ascii(uint8_t ascii);
 
     void inline drawInternal(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const char *data, uint16_t offset, uint16_t bytesInData) __attribute__((always_inline));
