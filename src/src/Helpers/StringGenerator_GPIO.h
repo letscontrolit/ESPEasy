@@ -11,19 +11,20 @@
 #define HTML_SYMBOL_I_O     "&#8660;"
 
 
-enum gpio_direction {
+enum class gpio_direction : uint8_t {
   gpio_input,
   gpio_output,
   gpio_bidirectional
 };
 
-enum class PinSelectPurpose {
+enum class PinSelectPurpose : uint8_t {
   Generic,
   Generic_input,
   Generic_output,
   Generic_bidir,
   I2C,
   SPI,
+  SPI_MISO,
   Ethernet,
   Serial_input,
   Serial_output

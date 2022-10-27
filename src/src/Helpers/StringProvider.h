@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 struct LabelType {
-  enum Enum : short {
+  enum Enum : uint8_t {
     UNIT_NR,
     UNIT_NAME,
     HOST_NAME,

@@ -9,9 +9,9 @@
 \*********************************************************************************************/
 const __FlashStringHelper* formatGpioDirection(gpio_direction direction) {
   switch (direction) {
-    case gpio_input:         return F("&larr; ");
-    case gpio_output:        return F("&rarr; ");
-    case gpio_bidirectional: return F("&#8644; ");
+    case gpio_direction::gpio_input:         return F("&larr; ");
+    case gpio_direction::gpio_output:        return F("&rarr; ");
+    case gpio_direction::gpio_bidirectional: return F("&#8644; ");
   }
   return F("");
 }
@@ -49,41 +49,41 @@ String formatGpioName(const __FlashStringHelper * label, gpio_direction directio
 }
 
 String formatGpioName_input(const __FlashStringHelper * label) {
-  return formatGpioName(label, gpio_input, false);
+  return formatGpioName(label, gpio_direction::gpio_input, false);
 }
 
 String formatGpioName_output(const __FlashStringHelper * label) {
-  return formatGpioName(label, gpio_output, false);
+  return formatGpioName(label, gpio_direction::gpio_output, false);
 }
 
 String formatGpioName_bidirectional(const __FlashStringHelper * label) {
-  return formatGpioName(label, gpio_bidirectional, false);
+  return formatGpioName(label, gpio_direction::gpio_bidirectional, false);
 }
 
 String formatGpioName_input_optional(const __FlashStringHelper * label) {
-  return formatGpioName(label, gpio_input, true);
+  return formatGpioName(label, gpio_direction::gpio_input, true);
 }
 
 String formatGpioName_output_optional(const __FlashStringHelper * label) {
-  return formatGpioName(label, gpio_output, true);
+  return formatGpioName(label, gpio_direction::gpio_output, true);
 }
 
 // RX/TX are the only signals which are crossed, so they must be labelled like this:
 // "GPIO <-- TX" and "GPIO --> RX"
 String formatGpioName_TX(bool optional) {
-  return formatGpioName(F("RX"), gpio_output, optional);
+  return formatGpioName(F("RX"), gpio_direction::gpio_output, optional);
 }
 
 String formatGpioName_RX(bool optional) {
-  return formatGpioName(F("TX"), gpio_input, optional);
+  return formatGpioName(F("TX"), gpio_direction::gpio_input, optional);
 }
 
 String formatGpioName_TX_HW(bool optional) {
-  return formatGpioName(F("RX (HW)"), gpio_output, optional);
+  return formatGpioName(F("RX (HW)"), gpio_direction::gpio_output, optional);
 }
 
 String formatGpioName_RX_HW(bool optional) {
-  return formatGpioName(F("TX (HW)"), gpio_input, optional);
+  return formatGpioName(F("TX (HW)"), gpio_direction::gpio_input, optional);
 }
 
 #ifdef ESP32
@@ -160,6 +160,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
       includeI2C = false;
       break;
     case PinSelectPurpose::SPI:
+    case PinSelectPurpose::SPI_MISO:
       includeSPI = false;
       break;
     case PinSelectPurpose::Serial_input:

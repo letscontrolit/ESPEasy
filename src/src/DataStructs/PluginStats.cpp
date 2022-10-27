@@ -12,6 +12,7 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   _nrDecimals(nrDecimals)
 
 {
+  _errorValueIsNaN = isnan(_errorValue);
   resetPeaks();
 }
 
@@ -45,19 +46,41 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
   }
   PluginStatsBuffer_t::index_t samplesUsed = 0;
 
-  const bool errorValueIsNaN = isnan(_errorValue);
-
   for (; i < _samples.size(); ++i) {
-    if (!isnan(_samples[i])) {
-      if (errorValueIsNaN || !essentiallyEqual(_errorValue, _samples[i])) {
-        ++samplesUsed;
-        sum += _samples[i];
-      }
+    if (usableValue(_samples[i])) {
+      ++samplesUsed;
+      sum += _samples[i];
     }
   }
 
   if (samplesUsed == 0) { return _errorValue; }
   return sum / samplesUsed;
+}
+
+float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const
+{
+  float variance = 0.0f;
+  const float average = getSampleAvg(lastNrSamples);
+  if (!usableValue(average)) { return 0.0f; }
+
+  PluginStatsBuffer_t::index_t i = 0;
+
+  if (lastNrSamples < _samples.size()) {
+    i = _samples.size() - lastNrSamples;
+  }
+  PluginStatsBuffer_t::index_t samplesUsed = 0;
+
+  for (; i < _samples.size(); ++i) {
+    if (usableValue(_samples[i])) {
+      ++samplesUsed;
+      const float diff = _samples[i] - average;
+      variance += diff * diff;
+    }
+  }
+  if (samplesUsed < 2) { return 0.0f; }
+
+  variance /= samplesUsed;
+  return sqrtf(variance);
 }
 
 float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
@@ -98,6 +121,22 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
         }
       }
     }
+  } else if (command.startsWith(F("stddev"))) {
+    if (command.equals(F("stddev"))) { // [taskname#valuename.stddev] Std deviation of the last N kept samples
+      value   = getSampleStdDev();
+      success = true;
+    } else {
+      // Check for "stddevN", where N is the number of most recent samples to use.
+      int nrSamples = 0;
+
+      if (validIntFromString(command.substring(3), nrSamples)) {
+        if (nrSamples > 0) {
+          // [taskname#valuename.stddevN] Std. deviation over N most recent samples
+          value   = getSampleStdDev(nrSamples);
+          success = true;
+        }
+      }
+    }
   }
 
   if (success) {
@@ -111,6 +150,8 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
   bool somethingAdded = false;
 
   if (webformLoad_show_avg(event)) { somethingAdded = true; }
+
+  if (webformLoad_show_stdev(event)) { somethingAdded = true; }
 
   if (webformLoad_show_peaks(event)) { somethingAdded = true; }
 
@@ -134,16 +175,49 @@ bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
   return false;
 }
 
-bool PluginStats::webformLoad_show_peaks(struct EventStruct *event) const
+bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
 {
-  if (hasPeaks()) {
+  const float stdDev = getSampleStdDev();
+  if (usableValue(stdDev) && getNrSamples() > 1) {
+    addRowLabel(getLabel() +  F(" std. dev"));
+    addHtmlFloat(stdDev, _nrDecimals);
+    addHtml(' ', '(');
+    addHtmlInt(getNrSamples());
+    addHtml(F(" samples)"));
+    return true;
+  }
+  return false;
+}
+
+bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include_peak_to_peak) const
+{
+  if (hasPeaks() && getNrSamples() > 1) {
     addRowLabel(getLabel() +  F(" Peak Low/High"));
     addHtmlFloat(getPeakLow(), _nrDecimals);
     addHtml('/');
     addHtmlFloat(getPeakHigh(), _nrDecimals);
+
+    if (include_peak_to_peak) {
+      addRowLabel(getLabel() +  F(" Peak-to-peak"));
+      addHtmlFloat(getPeakHigh() - getPeakLow(), _nrDecimals);
+    }
     return true;
   }
   return false;
+}
+
+void PluginStats::webformLoad_show_val(
+  struct EventStruct *event,
+  const String      & label,
+  double              value,
+  const String      & unit) const
+{
+  addRowLabel(getLabel() + label);
+  addHtmlFloat(value, _nrDecimals);
+
+  if (!unit.isEmpty()) {
+    addUnit(unit);
+  }
 }
 
 # if FEATURE_CHART_JS
@@ -169,6 +243,16 @@ void PluginStats::plot_ChartJS_dataset() const
 }
 
 # endif // if FEATURE_CHART_JS
+
+bool PluginStats::usableValue(float value) const
+{
+  if (!isnan(value)) {
+    if (_errorValueIsNaN || !essentiallyEqual(_errorValue, value)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 PluginStats_array::PluginStats_array()
 {
@@ -289,15 +373,15 @@ bool PluginStats_array::plugin_write_base(struct EventStruct *event, const Strin
   const bool clearSamples = cmd.equals(F("clearsamples")); // Command: "taskname.clearSamples"
 
   if (resetPeaks || clearSamples) {
-    success = true;
-
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
       if (_plugin_stats[i] != nullptr) {
         if (resetPeaks) {
+          success = true;
           _plugin_stats[i]->resetPeaks();
         }
 
         if (clearSamples) {
+          success = true;
           _plugin_stats[i]->clearSamples();
         }
       }
@@ -312,7 +396,9 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
 
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_plugin_stats[i] != nullptr) {
-      if (_plugin_stats[i]->webformLoad_show_stats(event)) { somethingAdded = true; }
+      if (_plugin_stats[i]->webformLoad_show_stats(event)) {
+        somethingAdded = true;
+      }
     }
   }
   return somethingAdded;

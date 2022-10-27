@@ -15,7 +15,7 @@
 .. |P081_type| replace:: :cyan:`Generic`
 .. |P081_typename| replace:: :cyan:`Generic - CRON`
 .. |P081_porttype| replace:: `.`
-.. |P081_status| replace:: :yellow:`COLLECTION`
+.. |P081_status| replace:: :yellow:`COLLECTION` :yellow:`CLIMATE`
 .. |P081_github| replace:: P081_Cron.ino
 .. _P081_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P081_Cron.ino
 .. |P081_usedby| replace:: `.`
@@ -38,10 +38,10 @@
 .. |P082_usedlibraries| replace:: https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2
 
 .. |P083_name| replace:: :cyan:`SGP30`
-.. |P083_type| replace:: :cyan:`Gasses`
-.. |P083_typename| replace:: :cyan:`Gasses - SGP30`
+.. |P083_type| replace:: :cyan:`Gases`
+.. |P083_typename| replace:: :cyan:`Gases - SGP30`
 .. |P083_porttype| replace:: `.`
-.. |P083_status| replace:: :yellow:`COLLECTION A`
+.. |P083_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P083_github| replace:: P083_SGP30.ino
 .. _P083_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P083_SGP30.ino
 .. |P083_usedby| replace:: `.`

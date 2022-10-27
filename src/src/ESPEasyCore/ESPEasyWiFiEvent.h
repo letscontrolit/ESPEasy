@@ -62,7 +62,9 @@ void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
 
 void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event);
 
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
 void onWiFiScanDone(void *arg, STATUS status);
+#endif
 
 #endif
 

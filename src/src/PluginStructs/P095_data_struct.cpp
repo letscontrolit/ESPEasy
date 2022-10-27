@@ -147,7 +147,9 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       if (nullptr == tft) {
         log += F("in");
       }
-      log += F("valid, commands: ");
+      log += F("valid, display: ");
+      log += ILI9xxx_type_toString(static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE));
+      log += F(", commands: ");
       log += _commandTrigger;
       log += '/';
       log += _commandTriggerCmd;
@@ -175,6 +177,7 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       gfxHelper->setRotation(_rotation);
       gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
       gfxHelper->setTxtfullCompensation(!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095) ? 0 : 1);
+      gfxHelper->invertDisplay(P095_CONFIG_FLAG_GET_INVERTDISPLAY);
     }
     updateFontMetrics();
     tft->fillScreen(_bgcolor);             // fill screen with background color
