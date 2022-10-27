@@ -191,6 +191,13 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), P002_CALIBRATION_ENABLED);
 
+#ifdef ESP8266
+#if FEATURE_ADC_VCC
+  addFormNote(F("Measuring ESP VCC, not A0. Unit is 1/1024 V. See documentation."));
+#endif
+#endif
+
+
   webformLoad_2p_calibPoint(
     F("Point 1"),
     F("p002_adc1"),

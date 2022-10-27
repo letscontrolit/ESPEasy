@@ -379,10 +379,11 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   const bool addJS   = true;
   const bool addMeta = true;
 
+/*
   if (tmplName.equals(F("TmplAP")))
   {
 
-    getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
+    getWebPageTemplateDefaultHead(parser, addMeta, !addJS);
 
     if (!parser.isTail()) {
       #ifndef WEBPAGE_TEMPLATE_AP_HEADER
@@ -401,7 +402,9 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-  else if (tmplName.equals(F("TmplMsg")))
+  else 
+  */
+  if (tmplName.equals(F("TmplMsg")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
     if (!parser.isTail()) {

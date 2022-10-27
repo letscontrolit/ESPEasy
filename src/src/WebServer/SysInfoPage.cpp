@@ -37,6 +37,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/StringProvider.h"
 
 #include "../Static/WebStaticData.h"
 
@@ -238,7 +239,7 @@ void handle_sysinfo() {
   addHtml(F("<TH>")); // Needed to get the copy button on the same header line.
   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard"));
 
-  TXBuffer += githublogo;
+  TXBuffer.addFlashString((PGM_P)FPSTR(githublogo));
   serve_JS(JSfiles_e::GitHubClipboard);
 
   # else // ifdef WEBSERVER_GITHUB_COPY

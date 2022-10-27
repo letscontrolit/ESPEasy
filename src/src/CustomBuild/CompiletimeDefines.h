@@ -10,6 +10,7 @@ uint16_t get_build_nr();
 const __FlashStringHelper * get_binary_filename();
 const __FlashStringHelper * get_build_time();
 const __FlashStringHelper * get_build_date();
+uint32_t                    get_build_unixtime();
 const __FlashStringHelper * get_build_date_RFC1123();
 const __FlashStringHelper * get_build_origin();
 const __FlashStringHelper * get_build_platform();

@@ -97,6 +97,8 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:
     case CPlugin::Function::CPLUGIN_WRITE:
+    {
+      bool success = Function != CPlugin::Function::CPLUGIN_WRITE;
 
       if (Function == CPlugin::Function::CPLUGIN_INIT_ALL) {
         Function = CPlugin::Function::CPLUGIN_INIT;
@@ -114,7 +116,8 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
           }
         }
       }
-      return true;
+      return success;
+    }
 
     // calls to specific controller
     case CPlugin::Function::CPLUGIN_INIT:
