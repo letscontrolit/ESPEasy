@@ -147,7 +147,9 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       if (nullptr == tft) {
         log += F("in");
       }
-      log += F("valid, commands: ");
+      log += F("valid, display: ");
+      log += ILI9xxx_type_toString(static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE));
+      log += F(", commands: ");
       log += _commandTrigger;
       log += '/';
       log += _commandTriggerCmd;
