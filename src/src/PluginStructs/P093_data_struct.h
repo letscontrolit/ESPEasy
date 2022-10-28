@@ -5,7 +5,10 @@
 #ifdef USES_P093
 
 
+#ifndef BUILD_NO_DEBUG
 # define PLUGIN_093_DEBUG
+#endif
+
 
 /*
  *

@@ -2438,8 +2438,8 @@ private:
 #if STATIC_ZONES
   MD_PZone _Z[MAX_ZONES]; ///< Fixed number of zones - static zone allocation
 #else // if STATIC_ZONES
-  MD_PZone *_Z;           ///< Zones buffers - dynamic zone allocation
+  MD_PZone *_Z = nullptr;           ///< Zones buffers - dynamic zone allocation
 #endif // if STATIC_ZONES
   uint8_t _numModules;    ///< Number of display modules [0..numModules-1]
-  uint8_t _numZones;      ///< Max number of zones in the display [0..numZones-1]
+  uint8_t _numZones = 0;      ///< Max number of zones in the display [0..numZones-1]
 };

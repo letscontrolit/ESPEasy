@@ -7,6 +7,13 @@
 #include "../Helpers/Misc.h"
 
 
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif // if defined(ESP8266)
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif // if defined(ESP32)
+
 #define WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     3
 #define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4
 #define WIFI_CREDENTIALS_FALLBACK_SSID_INDEX 5
@@ -16,6 +23,13 @@ WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   candidates.clear();
   known_it = known.begin();
   load_knownCredentials();
+}
+
+WiFi_AP_CandidatesList::~WiFi_AP_CandidatesList() {
+  candidates.clear();
+  known.clear();
+  scanned.clear();
+  scanned_new.clear();
 }
 
 void WiFi_AP_CandidatesList::load_knownCredentials() {

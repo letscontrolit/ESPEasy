@@ -67,6 +67,10 @@
 #include "IthoCC1101.h"
 #include "IthoPacket.h"
 
+#ifndef BUILD_NO_DEBUG
+#define P118_DEBUG_LOG
+#endif
+
 // This extra settings struct is needed because the default settingsstruct doesn't support strings
 struct PLUGIN__ExtraSettingsStruct
 {       char ID1[9];
@@ -416,9 +420,9 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      strcpy(PLUGIN_118_ExtraSettings.ID1, web_server.arg(F("PLUGIN_118_ID1")).c_str());
-      strcpy(PLUGIN_118_ExtraSettings.ID2, web_server.arg(F("PLUGIN_118_ID2")).c_str());
-      strcpy(PLUGIN_118_ExtraSettings.ID3, web_server.arg(F("PLUGIN_118_ID3")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID1, webArg(F("PLUGIN_118_ID1")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID2, webArg(F("PLUGIN_118_ID2")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID3, webArg(F("PLUGIN_118_ID3")).c_str());
       SaveCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
 
       PCONFIG(0)     = isFormItemChecked(F("p118_log"));
@@ -460,10 +464,12 @@ void PLUGIN_118_ITHOcheck()
 
     // int index = PLUGIN_118_RFRemoteIndex(Id);
     // IF id is know index should be >0
+#ifdef P118_DEBUG_LOG
     String log2;
-
+#endif
     if (index > 0)
     {
+#ifdef P118_DEBUG_LOG
       if (PLUGIN_118_Log) {
         log2 += F("Command received from remote-ID: ");
         log2 += Id;
@@ -471,83 +477,96 @@ void PLUGIN_118_ITHOcheck()
 
         // addLog(LOG_LEVEL_DEBUG, log);
       }
-
+#endif
       switch (cmd)
       {
         case IthoUnknown:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("unknown"); }
+#endif
           break;
         case IthoStandby:
         case DucoStandby:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("standby"); }
+#endif
           PLUGIN_118_State       = 0;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoLow:
         case DucoLow:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("low"); }
+#endif
           PLUGIN_118_State       = 1;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoMedium:
         case DucoMedium:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("medium"); }
+#endif
           PLUGIN_118_State       = 2;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoHigh:
         case DucoHigh:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("high"); }
+#endif
           PLUGIN_118_State       = 3;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoFull:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("full"); }
+#endif
           PLUGIN_118_State       = 4;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoTimer1:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += +F("timer1"); }
+#endif
           PLUGIN_118_State       = 13;
           PLUGIN_118_Timer       = PLUGIN_118_Time1;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoTimer2:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("timer2"); }
+#endif
           PLUGIN_118_State       = 23;
           PLUGIN_118_Timer       = PLUGIN_118_Time2;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoTimer3:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("timer3"); }
+#endif
           PLUGIN_118_State       = 33;
           PLUGIN_118_Timer       = PLUGIN_118_Time3;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoJoin:
-
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("join"); }
+#endif
           break;
         case IthoLeave:
 
+#ifdef P118_DEBUG_LOG
           if (PLUGIN_118_Log) { log2 += F("leave"); }
+#endif
           break;
       }
     }
+#ifdef P118_DEBUG_LOG    
     else {
       if (PLUGIN_118_Log) {
         log2 += F("Device-ID: ");
@@ -559,6 +578,7 @@ void PLUGIN_118_ITHOcheck()
     if (PLUGIN_118_Log) { 
       addLogMove(LOG_LEVEL_DEBUG, log2);
     }
+#endif
   }
 }
 

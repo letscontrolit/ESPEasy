@@ -5,7 +5,7 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Numerical.h"
 # include "../WebServer/Markup_Forms.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/Markup.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../ESPEasyCore/ESPEasyRules.h"
@@ -333,7 +333,7 @@ void P104_data_struct::loadSettings() {
     while (zoneIndex < expectedZones) {
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
-      if (zones[zoneIndex].text == F("\"\"")) { // Special case
+      if (zones[zoneIndex].text.equals(F("\"\""))) { // Special case
         zones[zoneIndex].text.clear();
       }
 
@@ -2262,7 +2262,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                    false,
                    false,
                    EMPTY_STRING,
-                   EMPTY_STRING);
+                   F(""));
 
         html_TD(); // Content
         addSelector(getPluginCustomArgName(index + P104_OFFSET_CONTENT),
@@ -2273,7 +2273,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].content,
                     false,
                     true,
-                    EMPTY_STRING);
+                    F(""));
 
         html_TD(); // Alignment
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ALIGNMENT),
@@ -2284,7 +2284,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].alignment,
                     false,
                     true,
-                    EMPTY_STRING);
+                    F(""));
 
         {
           html_TD(); // Animation In (without None by passing the second element index)
@@ -2306,7 +2306,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         html_TD();                   // Speed In
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SPEED), zones[zone].speed, 0, P104_MAX_SPEED_PAUSE_VALUE
                       # ifdef P104_USE_TOOLTIPS
-                      , EMPTY_STRING // classname
+                      , F("") // classname
                       , F("Speed")   // title
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
@@ -2320,7 +2320,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].font,
                     false,
                     true,
-                    EMPTY_STRING
+                    F("")
                     # ifdef P104_USE_TOOLTIPS
                     , F("Font") // title
                     # endif // ifdef P104_USE_TOOLTIPS
@@ -2335,7 +2335,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].inverted,
                     false,
                     true,
-                    EMPTY_STRING
+                    F("")
                     # ifdef P104_USE_TOOLTIPS
                     , F("Inverted") // title
                     # endif // ifdef P104_USE_TOOLTIPS
@@ -2375,7 +2375,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       zones[zone].animationOut,
                       false,
                       true,
-                      EMPTY_STRING
+                      F("")
                       # ifdef P104_USE_TOOLTIPS
                       , F("Animation Out")
                       # endif // ifdef P104_USE_TOOLTIPS
@@ -2385,7 +2385,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         html_TD();                   // Pause after Animation In
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_PAUSE), zones[zone].pause, 0, P104_MAX_SPEED_PAUSE_VALUE
                       # ifdef P104_USE_TOOLTIPS
-                      , EMPTY_STRING // classname
+                      , F("") // classname
                       , F("Pause")   // title
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
@@ -2399,7 +2399,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].layout,
                     false,
                     true,
-                    EMPTY_STRING
+                    F("")
                     # ifdef P104_USE_TOOLTIPS
                     , F("Layout") // title
                     # endif // ifdef P104_USE_TOOLTIPS
@@ -2414,7 +2414,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].specialEffect,
                     false,
                     true,
-                    EMPTY_STRING
+                    F("")
                     # ifdef P104_USE_TOOLTIPS
                     , F("Special Effects") // title
                     # endif // ifdef P104_USE_TOOLTIPS
@@ -2434,7 +2434,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       -1,
                       P104_MAX_REPEATDELAY_VALUE                     // max delay 86400 sec. = 24 hours
                       # ifdef P104_USE_TOOLTIPS
-                      , EMPTY_STRING                                 // classname
+                      , F("")                                 // classname
                       , F("Repeat after this delay (sec), -1 = off") // tooltip
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
@@ -2452,7 +2452,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     P104_ACTION_NONE, // Always start with None
                     true,
                     true,
-                    EMPTY_STRING);
+                    F(""));
         # endif // ifdef P104_USE_ZONE_ACTIONS
 
         delay(0);

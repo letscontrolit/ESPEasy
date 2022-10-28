@@ -236,9 +236,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   I2CMultiplexerOff();
   #endif // if FEATURE_I2CMULTIPLEXER
 
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectHighClockSpeed();  // Reset
-  }
+  I2CSelectHighClockSpeed();  // Reset
 }
 
 // Add an event to the event queue.
@@ -430,7 +428,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       int dotPos = command.indexOf('.');                      // Find first period
       if (Function == PLUGIN_WRITE                            // Only applicable on PLUGIN_WRITE function
         && dotPos > -1) {                                     // First precondition is just a quick check for a period (fail-fast strategy)
-        String arg0 = parseString(command, 1);                // Get first argument
+        const String arg0 = parseString(command, 1);                // Get first argument
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = parseString(arg0, 1, '.');    // Extract taskname prefix
@@ -520,9 +518,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     {
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str);
-
-        if (retval) {
+        if (PluginCallForTask(taskIndex, Function, &TempEvent, str)) {
           #ifndef BUILD_NO_RAM_TRACKER
           checkRAM(F("PluginCallUDP"), taskIndex);
           #endif
@@ -592,6 +588,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_LOAD:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
+    case PLUGIN_TASKTIMER_IN:
     {
       // FIXME TD-er: Code duplication with PluginCallForTask
       if (!validTaskIndex(event->TaskIndex)) {

@@ -1,8 +1,10 @@
 #include "../WebServer/JSON.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
+
+#include "../CustomBuild/CompiletimeDefines.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
@@ -16,6 +18,7 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy-Globals.h"
@@ -118,7 +121,7 @@ void handle_json()
   {
     const String view = webArg(F("view"));
 
-    if (view == F("sensorupdate")) {
+    if (view.equals(F("sensorupdate"))) {
       showSystem = false;
       showWifi   = false;
       #if FEATURE_ETHERNET
@@ -194,6 +197,10 @@ void handle_json()
         LabelType::PSRAM_MAX_FREE_BLOCK,
         #endif // BOARD_HAS_PSRAM
     #endif // ifdef ESP32
+        LabelType::ESP_CHIP_MODEL,
+    #ifdef ESP32
+        LabelType::ESP_CHIP_REVISION,
+    #endif // ifdef ESP32
 
         LabelType::SUNRISE,
         LabelType::SUNSET,
@@ -248,6 +255,10 @@ void handle_json()
 #ifdef SUPPORT_ARP
         LabelType::PERIODICAL_GRAT_ARP,
 #endif // ifdef SUPPORT_ARP
+#ifdef USES_ESPEASY_NOW
+        LabelType::USE_ESPEASY_NOW,
+        LabelType::FORCE_ESPEASY_NOW_CHANNEL,
+#endif
         LabelType::CONNECTION_FAIL_THRESH,
 #ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
         LabelType::WIFI_TX_MAX_PWR,
@@ -295,7 +306,7 @@ void handle_json()
     if (showNodes) {
       bool comma_between = false;
 
-      for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+      for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
       {
         if (it->second.ip[0] != 0)
         {
@@ -309,21 +320,21 @@ void handle_json()
           addHtml('{');
           stream_next_json_object_value(F("nr"), it->first);
           stream_next_json_object_value(F("name"),
-                                        (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
+                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.Name);
 
           if (it->second.build) {
-            stream_next_json_object_value(F("build"), it->second.build);
+            stream_next_json_object_value(F("build"), formatSystemBuildNr(it->second.build));
           }
 
           if (it->second.nodeType) {
-            String platform = getNodeTypeDisplayString(it->second.nodeType);
-
-            if (platform.length() > 0) {
-              stream_next_json_object_value(F("platform"), platform);
-            }
+            stream_next_json_object_value(F("platform"), it->second.getNodeTypeDisplayString());
           }
-          stream_next_json_object_value(F("ip"), it->second.ip.toString());
-          stream_last_json_object_value(F("age"), it->second.age);
+          const int8_t rssi = it->second.getRSSI();
+          if (rssi < 0) {
+            stream_next_json_object_value(F("rssi"), rssi);
+          }
+          stream_next_json_object_value(F("ip"), it->second.IP().toString());
+          stream_last_json_object_value(F("age"), it->second.getAge());
         } // if node info exists
       }   // for loop
 
@@ -507,7 +518,7 @@ void handle_nodes_list_json() {
   json_init();
   json_open(true);
 
-  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+  for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
   {
     if (it->second.ip[0] != 0)
     {
@@ -519,12 +530,12 @@ void handle_nodes_list_json() {
       }
 
       json_number(F("first"), String(it->first));
-      json_prop(F("name"), isThisUnit ? Settings.Name : it->second.nodeName);
+      json_prop(F("name"), isThisUnit ? Settings.Name : it->second.getNodeName());
 
-      if (it->second.build) { json_prop(F("build"), String(it->second.build)); }
-      json_prop(F("type"), getNodeTypeDisplayString(it->second.nodeType));
+      if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
+      json_prop(F("type"), it->second.getNodeTypeDisplayString());
       json_prop(F("ip"),   it->second.ip.toString());
-      json_number(F("age"), String(it->second.age));
+      json_number(F("age"), String(it->second.getAge() / 1000)); // time in seconds
       json_close();
     }
   }

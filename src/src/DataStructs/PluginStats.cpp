@@ -76,14 +76,14 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
 
   float value;
 
-  if (command == F("min")) {        // [taskname#valuename.min] Lowest value seen since value reset
+  if (command.equals(F("min"))) {        // [taskname#valuename.min] Lowest value seen since value reset
     value   = getPeakLow();
     success = true;
-  } else if (command == F("max")) { // [taskname#valuename.max] Highest value seen since value reset
+  } else if (command.equals(F("max"))) { // [taskname#valuename.max] Highest value seen since value reset
     value   = getPeakHigh();
     success = true;
   } else if (command.startsWith(F("avg"))) {
-    if (command == F("avg")) { // [taskname#valuename.avg] Average value of the last N kept samples
+    if (command.equals(F("avg"))) { // [taskname#valuename.avg] Average value of the last N kept samples
       value   = getSampleAvg();
       success = true;
     } else {
@@ -201,7 +201,7 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
       if (_plugin_stats[taskVarIndex] != nullptr) {
         _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
         # if FEATURE_CHART_JS
-        const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#EFF2C0"), F("#A4BAB7") };
+        const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#0F4C5C"), F("#A4BAB7") };
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color = colors[taskVarIndex];
         # endif // if FEATURE_CHART_JS
       }

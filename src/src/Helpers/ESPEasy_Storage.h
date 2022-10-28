@@ -4,7 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <FS.h>
+#include "../Helpers/FS_Helper.h"
 
 #include "../DataStructs/ProvisioningStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
@@ -29,6 +29,7 @@ String appendLineToFile(const String& fname, const String& line);
 
 String appendToFile(const String& fname, const uint8_t *data, unsigned int size);
 
+bool fileExists(const __FlashStringHelper * fname);
 bool fileExists(const String& fname);
 
 fs::File tryOpenFile(const String& fname, const String& mode);

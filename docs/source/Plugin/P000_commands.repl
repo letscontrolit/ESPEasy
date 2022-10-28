@@ -380,11 +380,29 @@
     "
     SendToHTTP","
     :green:`Rules`","
-    Send command to other network device using HTTP
+    Send command to other network device using HTTP (not HTTPS!)
 
-    ``SendToHTTP,<IP address>,<Portnumber>,<command>``
+    ``<host>`` can be either domain name or IP.
 
-    ``SendToHTTP,<domain>,<Portnumber>,</url>``"
+    ``<uri>`` is everything after the ``<host>`` in a normal url. 
+
+    Syntax:
+
+    ``SendToHTTP,<host>,<Portnumber>,<uri>``
+
+    ``SendToHTTP,<user>:<pass>@<host>,<Portnumber>,<uri>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<host>/</url>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<user>:<pass>@<host>/</url>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<host>:<Portnumber>/</url>``  Added: 2022/07/23
+    
+    ``SendToHTTP,http://<user>:<pass>@<host>:<Portnumber>/</url>``  Added: 2022/07/23
+
+    Example:
+
+    ``sendtohttp,192.168.10.114,80,'control?cmd=event,poff'``"
     "
     SendToUDP","
     :green:`Rules`","

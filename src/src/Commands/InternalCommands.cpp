@@ -342,6 +342,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'm': {
+#ifdef USES_P009
       if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
@@ -354,6 +355,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(   "mcpmoderange", Command_GPIO_ModeRange,    3); // Gpio.h   
         COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
+#endif
       COMMAND_CASE_A(          "monitor", Command_GPIO_Monitor,      2); // GPIO.h
       COMMAND_CASE_A(     "monitorrange", Command_GPIO_MonitorRange, 3); // GPIO.h   
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -374,6 +376,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'p': {
+#ifdef USES_P019
       if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "pcfgpio", Command_GPIO,                 2); // Gpio.h
         COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange,   -1); // Gpio.h
@@ -386,6 +389,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(   "pcfmoderange", Command_GPIO_ModeRange,       3); // Gpio.h   ************
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
+#endif
       COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
@@ -426,7 +430,9 @@ bool executeInternalCommand(command_case_data & data)
                                                                   // of
                                                                   // arguments?
       #endif
+        #if FEATURE_SEND_TO_HTTP
         COMMAND_CASE_A("sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
+        #endif // FEATURE_SEND_TO_HTTP
         COMMAND_CASE_A( "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         COMMAND_CASE_R("serialfloat", Command_SerialFloat,    0); // Diagnostic.h
@@ -594,13 +600,13 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   // Maybe ExecuteCommand can be scheduled?
   delay(0);
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     {
       String log = F("Command: ");
       log += cmd;
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
-#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
     {
       String parameters;
@@ -617,8 +623,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       parameters += TempEvent.Par5;
       addLogMove(LOG_LEVEL_DEBUG, parameters);
     }
-#endif // ifndef BUILD_NO_DEBUG
   }
+#endif // ifndef BUILD_NO_DEBUG
 
 
   if (tryInternal) {
@@ -658,6 +664,12 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       }
     }
     #endif
+
+    if (!handled) {
+      // Try a controller
+      handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
+
+    }
 
     if (handled) {
       SendStatus(&TempEvent, return_command_success());

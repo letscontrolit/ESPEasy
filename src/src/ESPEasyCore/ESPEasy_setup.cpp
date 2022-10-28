@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -27,7 +28,7 @@
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringGenerator_System.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 
 #ifdef USE_RTOS_MULTITASKING
@@ -137,7 +138,9 @@ void ESPEasy_setup()
 
   initWiFi();
 
+#ifndef BUILD_MINIMAL_OTA
   run_compiletime_checks();
+#endif
 #ifdef ESP8266
 
   //  ets_isr_attach(8, sw_watchdog_callback, nullptr);  // Set a callback for feeding the watchdog.
@@ -192,6 +195,10 @@ void ESPEasy_setup()
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("\n\n\rINIT : Booting version: ");
+    log += getValue(LabelType::BINARY_FILENAME);
+    log += F(", (");
+    log += get_build_origin();
+    log += F(") ");
     log += getValue(LabelType::GIT_BUILD);
     log += F(" (");
     log += getSystemLibraryString();
@@ -359,7 +366,7 @@ void ESPEasy_setup()
   #endif
 
 
-  if (Settings.Build != BUILD) {
+  if (Settings.Build != get_build_nr()) {
     BuildFixes();
   }
 
@@ -369,10 +376,11 @@ void ESPEasy_setup()
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
+# ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
   }
-
+#endif
 
   timermqtt_interval      = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();

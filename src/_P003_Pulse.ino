@@ -17,7 +17,9 @@
 
 # include "src/Helpers/ESPEasy_time_calc.h"
 
+#ifndef BUILD_NO_DEBUG
 # define P003_PULSE_STATS_DEFAULT_LOG_LEVEL  LOG_LEVEL_DEBUG
+#endif
 # define P003_PULSE_STATS_ADHOC_LOG_LEVEL    LOG_LEVEL_INFO
 
 # define PLUGIN_003
@@ -149,7 +151,9 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P003_data) {
         #ifdef PULSE_STATISTIC
+        #ifndef BUILD_NO_DEBUG
         P003_data->pulseHelper.setStatsLogLevel(P003_PULSE_STATS_DEFAULT_LOG_LEVEL);
+        #endif
         #endif
 
         // Restore the total counter from the unused 4th UserVar value.
@@ -248,8 +252,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         const String command      = parseString(string, 1);
         bool   mustCallPluginRead = false;
 
-        const bool cmd_resetpulsecounter    = command == F("resetpulsecounter");
-        const bool cmd_setpulsecountertotal = command == F("setpulsecountertotal");
+        const bool cmd_resetpulsecounter    = command.equals(F("resetpulsecounter"));
+        const bool cmd_setpulsecountertotal = command.equals(F("setpulsecountertotal"));
 
         if (cmd_resetpulsecounter || cmd_setpulsecountertotal)
         {
@@ -290,7 +294,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
           success = true;
         }
-        else if (command == F("logpulsestatistic"))
+        else if (command.equals(F("logpulsestatistic")))
         {
           # ifdef PULSE_STATISTIC
 
@@ -303,8 +307,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           //       i = increase the log level for regular statstic logs to "info"
 
           const String subcommand = parseString(string, 2);
-          const bool sub_i = subcommand == F("i");
-          const bool sub_r = subcommand == F("r");
+          const bool sub_i = subcommand.equals(F("i"));
+          const bool sub_r = subcommand.equals(F("r"));
 
           if ((sub_i) || (sub_r) || (subcommand.isEmpty())) {
             P003_data->pulseHelper.doStatisticLogging(P003_PULSE_STATS_ADHOC_LOG_LEVEL);
@@ -341,7 +345,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       P003_data_struct *P003_data =
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));

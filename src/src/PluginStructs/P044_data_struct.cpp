@@ -43,10 +43,9 @@ void P044_Task::startServer(uint16_t portnumber) {
     P1GatewayServer->begin();
 
     if (serverActive(P1GatewayServer)) {
-      addLog(LOG_LEVEL_INFO, String(F("P1   : WiFi server started at port ")) + portnumber);
+      addLog(LOG_LEVEL_INFO, concat(F("P1   : WiFi server started at port "), static_cast<int>(portnumber)));
     } else {
-      addLog(LOG_LEVEL_ERROR, String(F("P1   : WiFi server start failed at port ")) +
-             portnumber + String(F(", retrying...")));
+      addLog(LOG_LEVEL_ERROR, concat(F("P1   : WiFi server start failed at port "), static_cast<int>(portnumber)) + F(", retrying..."));
     }
   }
 }
@@ -78,7 +77,17 @@ bool P044_Task::hasClientConnected() {
   {
     if (P1GatewayClient) { P1GatewayClient.stop(); }
     P1GatewayClient = P1GatewayServer->available();
-    P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+
+    #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+    // See: https://github.com/espressif/arduino-esp32/pull/6676
+    P1GatewayClient.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
+    Client *pClient = &P1GatewayClient;
+    pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+    #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
+    #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
     addLog(LOG_LEVEL_INFO, F("P1   : Client connected!"));
   }
 
@@ -192,26 +201,19 @@ unsigned int P044_Task::CRC16(const String& buf, int len)
        Returns false on a datagram start ('/'), end ('!') or invalid character
  */
 bool P044_Task::validP1char(char ch) {
-  if (isAlphaNumeric(ch))
-  {
-    return true;
-  }
-
-  switch (ch) {
-    case '.':
-    case ' ':
-    case '\\': // Single backslash, but escaped in C++
-    case '\r':
-    case '\n':
-    case '(':
-    case ')':
-    case '-':
-    case '*':
-    case ':':
-    case '_':
-      return true;
-  }
-  return false;
+  return
+    isAlphaNumeric(ch) ||
+    ch == '.' ||
+    ch == ' ' ||
+    ch == '\\'|| // Single backslash, but escaped in C++
+    ch == '\r'||
+    ch == '\n'||
+    ch == '(' ||
+    ch == ')' ||
+    ch == '-' ||
+    ch == '*' ||
+    ch == ':' ||
+    ch == '_';
 }
 
 void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin,
@@ -227,7 +229,9 @@ void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t
 #elif defined(ESP32)
       P1EasySerial->begin(baud, config);
 #endif // if defined(ESP8266)
+# ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Serial opened"));
+#endif
     }
   }
   state = ParserState::WAITING;
@@ -237,7 +241,9 @@ void P044_Task::serialEnd() {
   if (nullptr != P1EasySerial) {
     delete P1EasySerial;
     P1EasySerial = nullptr;
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Serial closed"));
+#endif
   }
 }
 
@@ -265,8 +271,9 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
   if (done) {
     P1GatewayClient.print(serial_buffer);
     P1GatewayClient.flush();
-
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
+#endif
     blinkLED();
 
     if (Settings.UseRules)
@@ -281,7 +288,9 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
 
 bool P044_Task::handleChar(char ch) {
   if (serial_buffer.length() >= P044_DATAGRAM_MAX_SIZE - 2) { // room for cr/lf
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Buffer overflow, discarded input."));
+#endif
     state = ParserState::WAITING;                             // reset
   }
 
@@ -311,7 +320,9 @@ bool P044_Task::handleChar(char ch) {
           done = true;
         }
       } else if (ch == P044_DATAGRAM_START_CHAR) {
+# ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
+#endif
         state = ParserState::WAITING; // reset
         return handleChar(ch);
       } else {
@@ -335,7 +346,9 @@ bool P044_Task::handleChar(char ch) {
 
   if (invalid) {
     // input is not a datagram char
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
+#endif
 
     #ifdef PLUGIN_044_DEBUG
       serialPrint(F("faulty char>"));
@@ -354,9 +367,13 @@ bool P044_Task::handleChar(char ch) {
       addChar('\r');
       addChar('\n');
     } else if (CRCcheck) {
+# ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
+#endif
     } else {
+# ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid datagram, dropped data"));
+#endif
     }
     state = ParserState::WAITING; // prepare for next one
   }

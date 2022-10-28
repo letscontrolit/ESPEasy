@@ -6,7 +6,6 @@
 # include "src/ESPEasyCore/Controller.h"
 # include "src/ESPEasyCore/ESPEasyGPIO.h"
 # include "src/Helpers/_Plugin_Helper_webform.h"
-# include "src/Helpers/Audio.h"
 # include "src/Helpers/PortStatus.h"
 # include "src/Helpers/Scheduler.h"
 
@@ -60,6 +59,23 @@
 # define P001_LP_MIN_INT    PCONFIG_FLOAT(2)
 # define P001_SAFE_BTN      PCONFIG_FLOAT(3)
 
+// TD-er: Needed to fix a mistake in earlier fixes.
+uint8_t P001_getSwitchType(struct EventStruct *event) {
+  uint8_t choice = PCONFIG(0);
+
+  switch (choice) {
+    case 2: // Old implementation for Dimmer
+    case PLUGIN_001_TYPE_DIMMER:
+      choice = PLUGIN_001_TYPE_DIMMER;
+      break;
+    case 1: // Old implementation for switch
+    case PLUGIN_001_TYPE_SWITCH:
+    default:
+      choice = PLUGIN_001_TYPE_SWITCH;
+      break;
+  }
+  return choice;
+}
 
 boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -229,10 +245,13 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         // used to track if LP has fired
         PCONFIG(6) = 0;
 
-        // store millis for debounce, doubleclick and long press
-        PCONFIG_LONG(0) = millis(); // debounce timer
-        PCONFIG_LONG(1) = millis(); // doubleclick timer
-        PCONFIG_LONG(2) = millis(); // longpress timer
+        {
+          // store millis for debounce, doubleclick and long press
+          const unsigned long cur_millis = millis();
+          PCONFIG_LONG(0) = cur_millis; // debounce timer
+          PCONFIG_LONG(1) = cur_millis; // doubleclick timer
+          PCONFIG_LONG(2) = cur_millis; // longpress timer
+        }
 
         // set minimum value for doubleclick MIN interval speed
         if (P001_DC_MAX_INT < SWITCH_DOUBLECLICK_MIN_INTERVAL) {
@@ -358,7 +377,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         //        {
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
         // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-        if (round(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+        if (lround(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
   # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
@@ -456,13 +475,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("SW  : GPIO=");
-                log += CONFIG_PIN1;
-                log += F(" State=");
-                log += state ? '1' : '0';
-                log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
-                log += output_value;
-                addLogMove(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO,
+                  concat(F("SW  : GPIO="),  static_cast<int>(CONFIG_PIN1)) +
+                  concat(F(" State="),  state ? '1' : '0') +
+                  concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),  static_cast<int>(output_value)));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -554,13 +570,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("SW  : LongPress: GPIO= ");
-                log += CONFIG_PIN1;
-                log += F(" State=");
-                log += state ? '1' : '0';
-                log += F(" Output value=");
-                log += output_value;
-                addLogMove(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, 
+                  concat(F("SW  : LongPress: GPIO= "), static_cast<int>(CONFIG_PIN1)) +
+                  concat(F(" State="), state ? '1' : '0') +
+                  concat(F(" Output value="), static_cast<int>(output_value)));
               }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -583,17 +596,15 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             // Create EVENT with value = 4 for SafeButton false positive detection
-            const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+            const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
             UserVar[event->BaseVarIndex] = SAFE_BUTTON_EVENT;
 
               # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("SW  : SafeButton: false positive detected. GPIO= ");
-              log += CONFIG_PIN1;
-              log += F(" State=");
-              log += tempUserVar;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, 
+                concat(F("SW  : SafeButton: false positive detected. GPIO= "),  CONFIG_PIN1) +
+                concat(F(" State="), tempUserVar));
             }
               # endif // ifndef BUILD_NO_DEBUG
 
@@ -648,9 +659,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SW   : State ");
-        log += UserVar[event->BaseVarIndex];
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("SW   : State "), static_cast<int>(UserVar[event->BaseVarIndex])));
       }
       # endif // ifndef BUILD_NO_DEBUG
       success = true;
@@ -659,19 +668,17 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command = parseString(string, 1);
+      const String command(parseString(string, 1));
 
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
 
 
-      if (command == F("inputswitchstate")) {
+      if (command.equals(F("inputswitchstate"))) {
         success = true;
 
         // @giig1967g deprecated since 2019-11-26
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("inputswitchstate is deprecated");
-          log += string;
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, concat(F("inputswitchstate is deprecated"), string));
         }
 
         /*        portStatusStruct tempStatus;
@@ -689,7 +696,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       digitalWrite(event->Par1, event->Par2);
 
@@ -710,24 +717,6 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
-}
-
-// TD-er: Needed to fix a mistake in earlier fixes.
-uint8_t P001_getSwitchType(struct EventStruct *event) {
-  uint8_t choice = PCONFIG(0);
-
-  switch (choice) {
-    case 2: // Old implementation for Dimmer
-    case PLUGIN_001_TYPE_DIMMER:
-      choice = PLUGIN_001_TYPE_DIMMER;
-      break;
-    case 1: // Old implementation for switch
-    case PLUGIN_001_TYPE_SWITCH:
-    default:
-      choice = PLUGIN_001_TYPE_SWITCH;
-      break;
-  }
-  return choice;
 }
 
 #endif // USES_P001

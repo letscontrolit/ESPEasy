@@ -2,11 +2,13 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/StorageLayout.h"
 
 #include "../DataStructs/TimingStats.h"
 
 #include "../DataTypes/ESPEasyFileType.h"
+#include "../DataTypes/ESPEasyTimeSource.h"
 #include "../DataTypes/SPI_options.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -19,6 +21,7 @@
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Plugins.h"
@@ -99,7 +102,7 @@ String flashGuard()
     return log;
   }
   flashCount();
-  return String();
+  return EMPTY_STRING;
 }
 
 // use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
@@ -120,6 +123,11 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
   return "";
 }
 
+bool fileExists(const __FlashStringHelper * fname)
+{
+  return fileExists(String(fname));
+}
+
 bool fileExists(const String& fname) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
@@ -131,7 +139,20 @@ bool fileExists(const String& fname) {
     return search->second;
   }
   bool res = ESPEASY_FS.exists(patched_fname);
+  #if FEATURE_SD
+  if (!res) {
+    res = SD.exists(patched_fname);
+  }
+  #endif
   Cache.fileExistsMap[patched_fname] = res;
+  if (Cache.fileCacheClearMoment == 0) {
+    if (node_time.timeSource == timeSource_t::No_time_source) {
+      // use some random value as we don't have a time yet
+      Cache.fileCacheClearMoment = HwRandom();
+    } else {
+      Cache.fileCacheClearMoment = node_time.now();
+    }
+  }
   return res;
 }
 
@@ -145,18 +166,27 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
   bool exists = fileExists(fname);
 
   if (!exists) {
-    if (mode == F("r")) {
+    if (mode.equals(F("r"))) {
       return f;
     }
-    Cache.fileExistsMap.clear();
+    clearFileCaches();
   }
   f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
+  #  if FEATURE_SD
+
+  if (!f) {
+    // FIXME TD-er: Should this fallback to SD only be done on "r" mode?
+    f = SD.open(fname.c_str(), mode.c_str());
+  }
+  #  endif // if FEATURE_SD
+
+
   STOP_TIMER(TRY_OPEN_FILE);
   return f;
 }
 
 bool tryRenameFile(const String& fname_old, const String& fname_new) {
-  Cache.fileExistsMap.clear();
+  clearFileCaches();
   if (fileExists(fname_old) && !fileExists(fname_new)) {
     clearAllCaches();
     return ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
@@ -169,6 +199,11 @@ bool tryDeleteFile(const String& fname) {
   {
     clearAllCaches();
     bool res = ESPEASY_FS.remove(patch_fname(fname));
+    #if FEATURE_SD
+    if (!res) {
+      res = SD.remove(patch_fname(fname));
+    }
+    #endif
 
     // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.
@@ -319,8 +354,12 @@ String BuildFixes()
   }
   #endif
 
+  // Starting 2022/08/18
+  // Use get_build_nr() value for settings transitions.
+  // This value will also be shown when building using PlatformIO, when showing the  Compile time defines 
 
-  Settings.Build = BUILD;
+
+  Settings.Build = get_build_nr();
   return SaveSettings();
 }
 
@@ -465,9 +504,11 @@ String SaveSettings()
     return err;
   }
 
+#ifndef BUILD_MINIMAL_OTA
   // Must check this after saving, or else it is not possible to fix multiple
   // issues which can only corrected on different pages.
   if (!SettingsCheck(err)) { return err; }
+#endif
 
   //  }
 
@@ -914,10 +955,11 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                           TaskIndex,
                           reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                           sizeof(struct ExtraTaskSettingsStruct));
-
+#ifndef BUILD_MINIMAL_OTA
   if (err.isEmpty()) {
     err = checkTaskSettings(TaskIndex);
   }
+#endif
   return err;
 }
 
@@ -927,10 +969,10 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
 String LoadTaskSettings(taskIndex_t TaskIndex)
 {
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
-    return String(); // already loaded
+    return EMPTY_STRING; // already loaded
   }
   if (!validTaskIndex(TaskIndex)) {
-    return String(); // Un-initialized task index.
+    return EMPTY_STRING; // Un-initialized task index.
   }
   ExtraTaskSettings.clear();
   #ifndef BUILD_NO_RAM_TRACKER
@@ -1205,7 +1247,7 @@ String InitFile(const String& fname, int datasize)
   }
 
   // OK
-  return String();
+  return EMPTY_STRING;
 }
 
 String InitFile(SettingsType::Enum settingsType)
@@ -1337,7 +1379,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   #endif
 
   // OK
-  return String();
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
@@ -1388,7 +1430,7 @@ String ClearInFile(const char *fname, int index, int datasize)
   }
 
   // OK
-  return String();
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
@@ -1421,7 +1463,7 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
   STOP_TIMER(LOADFILE_STATS);
   delay(0);
 
-  return String();
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\

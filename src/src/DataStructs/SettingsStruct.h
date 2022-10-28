@@ -164,6 +164,11 @@ class SettingsStruct_tmpl
   bool AllowTaskValueSetAllPlugins() const;
   void AllowTaskValueSetAllPlugins(bool value);
 
+  #if FEATURE_AUTO_DARK_MODE
+  uint8_t getCssMode() const;
+  void    setCssMode(uint8_t value);
+  #endif // FEATURE_AUTO_DARK_MODE
+
 
   void validate();
 
@@ -184,8 +189,6 @@ class SettingsStruct_tmpl
   void clearUnitNameSettings();
 
   void clearMisc();
-
-  void clearAll();
 
   void clearTask(taskIndex_t task);
 

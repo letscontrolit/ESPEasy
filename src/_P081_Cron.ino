@@ -163,7 +163,7 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
             P081_setCronExecTimes(event, last_exec_time, next_exec_time);
 
             # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + ESPEasy_time::getDateTimeString(*gmtime(&next_exec_time)));
+            addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + formatDateTimeString(*gmtime(&next_exec_time)));
             # endif // ifndef BUILD_NO_DEBUG
 
             if (function != PLUGIN_TIME_CHANGE) {

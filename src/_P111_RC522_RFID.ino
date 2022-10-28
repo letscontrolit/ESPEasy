@@ -135,7 +135,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       // Reset card id on timeout
       if (PCONFIG(0) == 0
@@ -199,7 +199,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
             addLogMove(LOG_LEVEL_INFO, log);
           }
 
-          if (new_key && !removedTag) { // Removal event sent from PLUGIN_TIMER_IN, if any
+          if (new_key && !removedTag) { // Removal event sent from PLUGIN_TASKTIMER_IN, if any
             sendData(event);
           }
           Scheduler.setPluginTaskTimer(PCONFIG_LONG(1), event->TaskIndex, event->Par1);

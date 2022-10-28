@@ -1,5 +1,6 @@
 #include "../DataStructs/ESPEasy_packed_raw_data.h"
 
+#if FEATURE_PACKED_RAW_DATA
 
 uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset) {
   offset = 0;
@@ -89,3 +90,5 @@ String LoRa_addFloat(float value, PackedData_enum datatype) {
   LoRa_intToBytes((value + offset) * factor, byteSize, &data[0], cursor);
   return LoRa_base16Encode(data, cursor);
 }
+
+#endif

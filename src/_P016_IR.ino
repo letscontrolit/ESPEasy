@@ -383,9 +383,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           const String P016_HEX_INPUT_PATTERN = F("(0x)?[0-9a-fA-F]{0,16}"); // 16 nibbles = 64 bit, 0x prefix is allowed but not added by
                                                                              // default
-          addRowLabel(F("Code - command map"));
-
-          html_table(EMPTY_STRING);
+          addRowLabel(F("Code:"));
+          html_table(F("sub"));
           html_table_header(F("&nbsp;#&nbsp;"));
           html_table_header(F("Decode type"));
           html_table_header(F("Repeat"));
@@ -412,7 +411,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             html_TD();
             {                      // Decode type
               addSelector(getPluginCustomArgName(rowCnt + 0), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
-                          static_cast<int>(line.CodeDecodeType), false, true, EMPTY_STRING);
+                          static_cast<int>(line.CodeDecodeType), false, true, F(""));
             }
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(line.CodeFlags, P16_FLAGS_REPEAT));
@@ -422,12 +421,12 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             if (line.Code > 0) {
               strCode = uint64ToString(line.Code, 16); // convert code to hex for display
             }
-            addTextBox(getPluginCustomArgName(rowCnt + 2), strCode, P16_Cchars - 1, false, false, P016_HEX_INPUT_PATTERN, EMPTY_STRING);
+            addTextBox(getPluginCustomArgName(rowCnt + 2), strCode, P16_Cchars - 1, false, false, P016_HEX_INPUT_PATTERN, F(""));
 
             html_TD();
             {
               addSelector(getPluginCustomArgName(rowCnt + 3), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
-                          static_cast<int>(line.AlternativeCodeDecodeType), false, true, EMPTY_STRING);
+                          static_cast<int>(line.AlternativeCodeDecodeType), false, true, F(""));
             }
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(line.AlternativeCodeFlags, P16_FLAGS_REPEAT));
@@ -437,7 +436,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             if (line.AlternativeCode > 0) {
               strCode = uint64ToString(line.AlternativeCode, 16); // convert code to hex for display
             }
-            addTextBox(getPluginCustomArgName(rowCnt + 5), strCode, P16_Cchars - 1, false, false, P016_HEX_INPUT_PATTERN, EMPTY_STRING);
+            addTextBox(getPluginCustomArgName(rowCnt + 5), strCode, P16_Cchars - 1, false, false, P016_HEX_INPUT_PATTERN, F(""));
 
             html_TR();                                                   // Separate row for the command input
 
@@ -745,7 +744,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             (typeToString(results.decode_type).length() > 1)) // be sent
         {
           IRAcUtils::decodeToState(&results, &state);
-          StaticJsonDocument<300> doc;
+          DynamicJsonDocument doc(300);
 
           // Checks if a particular state is something else than the default and only then it adds it to the JSON document
           doc[F("protocol")] = typeToString(state.protocol);

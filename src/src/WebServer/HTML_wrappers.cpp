@@ -6,6 +6,7 @@
 
 #include "../Helpers/StringConverter.h"
 
+#include "../Globals/Settings.h"
 
 // ********************************************************************************
 // HTML string re-use to keep the executable smaller
@@ -39,6 +40,10 @@ void wrap_html_tag(char tag, const String& text) {
   addHtml('<', '/');
   addHtml(tag);
   addHtml('>');
+}
+
+void html_B(const __FlashStringHelper * text) {
+  wrap_html_tag('b', text);
 }
 
 void html_B(const String& text) {
@@ -83,7 +88,7 @@ void html_TD() {
   addHtml(F("<TD>"));
 }
 
-void html_TD(const String& style) {
+void html_TD(const __FlashStringHelper * style) {
   addHtml(F("<TD style=\""));
   addHtml(style);
   addHtml(F(";\">"));
@@ -123,11 +128,11 @@ void html_table_class_normal() {
 }
 
 void html_table_class_multirow() {
-  html_table(F("multirow"), true);
+  html_table(F("multirow even"), true);
 }
 
 void html_table_class_multirow_noborder() {
-  html_table(F("multirow"), false);
+  html_table(F("multirow even"), false);
 }
 
 void html_table(const __FlashStringHelper * tableclass, bool boxed) {
@@ -285,6 +290,13 @@ void html_add_ChartJS_script() {
 }
 #endif // if FEATURE_CHART_JS
 
+#if FEATURE_RULES_EASY_COLOR_CODE
+void html_add_Easy_color_code_script() {
+  serve_JS(JSfiles_e::EasyColorCode_codemirror);
+  serve_JS(JSfiles_e::EasyColorCode_espeasy);
+  serve_JS(JSfiles_e::EasyColorCode_cm_plugins);
+}
+#endif
 
 void html_add_autosubmit_form() {
   addHtml(F("<script><!--\n"
@@ -306,12 +318,19 @@ void html_add_script(const String& script, bool defer) {
 }
 
 void html_add_script(bool defer) {
+  html_add_script_arg(F(""), defer);
+}
+
+void html_add_script_arg(const __FlashStringHelper * script_arg, bool defer) {
   addHtml(F("<script"));
+
+  addHtml(' ');
+  addHtml(script_arg);
 
   if (defer) {
     addHtml(F(" defer"));
   }
-  addHtml(F(" type='text/JavaScript'>"));
+  addHtml('>');
 }
 
 void html_add_script_end() {

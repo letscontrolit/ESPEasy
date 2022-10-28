@@ -2,7 +2,7 @@
 
 #if FEATURE_SETTINGS_ARCHIVE
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -34,7 +34,7 @@ void handle_settingsarchive() {
   html_TR();
   addFormHeader(F("Settings Archive"));
 
-  if (web_server.hasArg(F("savepref")) || web_server.hasArg(F("download"))) {
+  if (hasArg(F("savepref")) || hasArg(F("download"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
       const FileType::Enum ft = static_cast<FileType::Enum>(i);
@@ -62,11 +62,11 @@ void handle_settingsarchive() {
       if (AllocatedProvisioningSettings()) {
         ProvisioningSettings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
         if (ResetFactoryDefaultPreference.saveURL()) {
-          ProvisioningSettings.setUrl(web_server.arg(F("url")));
+          ProvisioningSettings.setUrl(webArg(F("url")));
         }
         if (ResetFactoryDefaultPreference.storeCredentials()) {
-          ProvisioningSettings.setUser(web_server.arg(F("user")));
-          ProvisioningSettings.setPass(web_server.arg(F("pass")));
+          ProvisioningSettings.setUser(webArg(F("user")));
+          ProvisioningSettings.setPass(webArg(F("pass")));
         }
       }
       error = saveProvisioningSettings(ProvisioningSettings);
@@ -79,7 +79,7 @@ void handle_settingsarchive() {
 
   bool showOptions = true;
 
-  if (web_server.hasArg(F("download"))) {
+  if (hasArg(F("download"))) {
     // Try downloading files.
     // Don't use the ProvisioningSettings, as not all may be stored.
     const String url  = webArg(F("url"));
@@ -115,7 +115,7 @@ void handle_settingsarchive() {
       addSubmitButton(F("Reboot"), F("reboot"), F("red"));
       addFormNote(F("If settings files are updated you MUST reboot first!"));
     }
-  } else if (web_server.hasArg(F("reboot"))) {
+  } else if (hasArg(F("reboot"))) {
     showOptions = false;
     reboot(ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings);
   }
@@ -140,14 +140,14 @@ void handle_settingsarchive() {
         }
         #endif
 
-        if (web_server.arg(F("url")).length() != 0) {
-          url = web_server.arg(F("url"));
+        if (webArg(F("url")).length() != 0) {
+          url = webArg(F("url"));
         }
-        if (web_server.arg(F("user")).length() != 0) {
-          user = web_server.arg(F("user"));
+        if (webArg(F("user")).length() != 0) {
+          user = webArg(F("user"));
         }
-        if (web_server.arg(F("pass")).length() != 0) {
-          pass = web_server.arg(F("pass"));
+        if (webArg(F("pass")).length() != 0) {
+          pass = webArg(F("pass"));
         }
       }
 

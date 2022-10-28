@@ -85,7 +85,7 @@ const __FlashStringHelper * getPluginFunctionName(int function) {
     case PLUGIN_SERIAL_IN:             return F("SERIAL_IN");
     case PLUGIN_UDP_IN:                return F("UDP_IN");
     case PLUGIN_CLOCK_IN:              return F("CLOCK_IN");
-    case PLUGIN_TIMER_IN:              return F("TIMER_IN");
+    case PLUGIN_TASKTIMER_IN:          return F("TASKTIMER_IN");
     case PLUGIN_FIFTY_PER_SECOND:      return F("FIFTY_PER_SECOND");
     case PLUGIN_SET_CONFIG:            return F("SET_CONFIG");
     case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES");
@@ -93,6 +93,7 @@ const __FlashStringHelper * getPluginFunctionName(int function) {
     case PLUGIN_GET_CONFIG_VALUE:      return F("GET_CONFIG");
     case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
+
   }
   return F("Unknown");
 }
@@ -119,7 +120,7 @@ bool mustLogFunction(int function) {
     case PLUGIN_SERIAL_IN:             return true;
     case PLUGIN_UDP_IN:                return true;
     case PLUGIN_CLOCK_IN:              return false;
-    case PLUGIN_TIMER_IN:              return true;
+    case PLUGIN_TASKTIMER_IN:          return true;
     case PLUGIN_FIFTY_PER_SECOND:      return true;
     case PLUGIN_SET_CONFIG:            return false;
     case PLUGIN_GET_DEVICEGPIONAMES:   return false;
@@ -149,6 +150,7 @@ const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function) 
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return F("CPLUGIN_FIFTY_PER_SECOND");
     case CPlugin::Function::CPLUGIN_INIT_ALL:                  return F("CPLUGIN_INIT_ALL");
     case CPlugin::Function::CPLUGIN_EXIT:                      return F("CPLUGIN_EXIT");
+    case CPlugin::Function::CPLUGIN_WRITE:                     return F("CPLUGIN_WRITE");
 
     case CPlugin::Function::CPLUGIN_GOT_CONNECTED:
     case CPlugin::Function::CPLUGIN_GOT_INVALID:
@@ -180,6 +182,7 @@ bool mustLogCFunction(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return true;
     case CPlugin::Function::CPLUGIN_INIT_ALL:                  return false;
     case CPlugin::Function::CPLUGIN_EXIT:                      return false;
+    case CPlugin::Function::CPLUGIN_WRITE:                     return true;
 
     case CPlugin::Function::CPLUGIN_GOT_CONNECTED:
     case CPlugin::Function::CPLUGIN_GOT_INVALID:
@@ -207,7 +210,7 @@ const __FlashStringHelper * getMiscStatsName_F(int stat) {
     case SENSOR_SEND_TASK:        return F("SensorSendTask()");
     case SEND_DATA_STATS:         return F("sendData()");
     case COMPUTE_FORMULA_STATS:   return F("Compute formula");
-    case PROC_SYS_TIMER:          return F("proc_system_timer()");
+    case PLUGIN_CALL_DEVICETIMER_IN:     return F("PLUGIN_DEVICETIMER_IN");
     case SET_NEW_TIMER:           return F("setNewTimerAt()");
     case TIME_DIFF_COMPUTE:       return F("timeDiff()");
     case MQTT_DELAY_QUEUE:        return F("Delay queue MQTT");

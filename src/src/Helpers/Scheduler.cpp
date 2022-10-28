@@ -63,14 +63,14 @@ String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
 
 const __FlashStringHelper * ESPEasy_Scheduler::toString(ESPEasy_Scheduler::SchedulerTimerType_e timerType) {
   switch (timerType) {
-    case SchedulerTimerType_e::SystemEventQueue:       return F("SystemEventQueue");
-    case SchedulerTimerType_e::ConstIntervalTimer:     return F("Const Interval");
-    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:      return F("PLUGIN_TIMER_IN");
-    case SchedulerTimerType_e::TaskDeviceTimer:        return F("PLUGIN_READ");
-    case SchedulerTimerType_e::GPIO_timer:             return F("GPIO_timer");
-    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e: return F("PLUGIN_ONLY_TIMER_IN");
-    case SchedulerTimerType_e::RulesTimer:             return F("Rules#Timer");
-    case SchedulerTimerType_e::IntendedReboot:         return F("Intended Reboot");
+    case SchedulerTimerType_e::SystemEventQueue:        return F("SystemEventQueue");
+    case SchedulerTimerType_e::ConstIntervalTimer:      return F("Const Interval");
+    case SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e:   return F("PLUGIN_TASKTIMER_IN");
+    case SchedulerTimerType_e::TaskDeviceTimer:         return F("PLUGIN_READ");
+    case SchedulerTimerType_e::GPIO_timer:              return F("GPIO_timer");
+    case SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e: return F("PLUGIN_DEVICETIMER_IN");
+    case SchedulerTimerType_e::RulesTimer:              return F("Rules#Timer");
+    case SchedulerTimerType_e::IntendedReboot:          return F("Intended Reboot");
   }
   return F("unknown");
 }
@@ -164,19 +164,21 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
       return result;
     }
     case SchedulerTimerType_e::ConstIntervalTimer:
+    {
       result +=  toString(static_cast<ESPEasy_Scheduler::IntervalTimer_e>(id));
       return result;
-    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:
+    }
+    case SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e:
     {
-      const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
+      const taskIndex_t taskIndex = ((1 << 8) - 1) & id;
 
-      if (validDeviceIndex(deviceIndex)) {
-        idStr = getPluginNameFromDeviceIndex(deviceIndex);
+      if (validTaskIndex(taskIndex)) {
+        idStr = getTaskDeviceName(taskIndex);
       }
       result += idStr;
       return result;
     }
-    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e:
+    case SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e:
     {
       const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
 
@@ -282,10 +284,10 @@ void ESPEasy_Scheduler::handle_schedule() {
     case SchedulerTimerType_e::ConstIntervalTimer:
       process_interval_timer(static_cast<ESPEasy_Scheduler::IntervalTimer_e>(id), timer);
       break;
-    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:
+    case SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e:
       process_plugin_task_timer(id);
       break;
-    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e:
+    case SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e:
       process_plugin_timer(id);
       break;
     case SchedulerTimerType_e::RulesTimer:
@@ -599,22 +601,21 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
 /*********************************************************************************************\
 * Plugin Task Timer
 \*********************************************************************************************/
-unsigned long ESPEasy_Scheduler::createPluginTaskTimerId(deviceIndex_t deviceIndex, int Par1) {
+unsigned long ESPEasy_Scheduler::createPluginTaskTimerId(taskIndex_t taskIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
-  const unsigned long mixed = (Par1 << 8) + deviceIndex;
+  const unsigned long mixed = (Par1 << 8) + taskIndex;
 
   return mixed & mask;
 }
 
 void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
-  // plugin number and par1 form a unique key that can be used to restart a timer
-  // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.
-  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-
-  if (!validDeviceIndex(deviceIndex)) { return; }
-
-  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TIMER_IN_e, createPluginTaskTimerId(deviceIndex, Par1));
+  // taskIndex and par1 form a unique key that can be used to restart a timer
+  if (!validTaskIndex(taskIndex)) return;
+  if (!Settings.TaskDeviceEnabled[taskIndex]) return;
+  const unsigned long mixedTimerId = getMixedId(
+    SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e, 
+    createPluginTaskTimerId(taskIndex, Par1));
 
   systemTimerStruct timer_data;
 
@@ -633,14 +634,10 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   HeapSelectDram ephemeral;
   #endif
 
-  START_TIMER;
-
-  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TIMER_IN_e, id);
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e, id);
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return; }
-
-  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
 
   struct EventStruct TempEvent(it->second.TaskIndex);
 
@@ -665,14 +662,10 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
    */
   systemTimers.erase(mixedTimerId);
 
-  if (validDeviceIndex(deviceIndex)) {
-    if (validUserVarIndex(TempEvent.BaseVarIndex)) {
-      // checkDeviceVTypeForTask(&TempEvent);
-      String dummy;
-      Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
-    }
+  {
+    String dummy;
+    PluginCall(PLUGIN_TASKTIMER_IN, &TempEvent, dummy);
   }
-  STOP_TIMER(PROC_SYS_TIMER);
 }
 
 /*********************************************************************************************\
@@ -803,8 +796,8 @@ bool ESPEasy_Scheduler::resume_rules_timer(unsigned long timerIndex) {
 
 /*********************************************************************************************\
 * Plugin Timer
-* Essentially calling PLUGIN_ONLY_TIMER_IN
-* Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
+* Essentially calling PLUGIN_DEVICETIMER_IN
+* Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
 \*********************************************************************************************/
 unsigned long ESPEasy_Scheduler::createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
@@ -821,10 +814,10 @@ void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t plu
 
   if (!validDeviceIndex(deviceIndex)) { return; }
 
-  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e, createPluginTimerId(deviceIndex, Par1));
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e, createPluginTimerId(deviceIndex, Par1));
   systemTimerStruct   timer_data;
 
-  // PLUGIN_ONLY_TIMER_IN does not address a task, so don't set TaskIndex
+  // PLUGIN_DEVICETIMER_IN does not address a task, so don't set TaskIndex
   timer_data.Par1            = Par1;
   timer_data.Par2            = Par2;
   timer_data.Par3            = Par3;
@@ -840,14 +833,14 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
   #endif
 
   START_TIMER;
-  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e, id);
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e, id);
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return; }
 
   struct EventStruct TempEvent;
 
-  // PLUGIN_ONLY_TIMER_IN does not address a task, so don't set TaskIndex
+  // PLUGIN_DEVICETIMER_IN does not address a task, so don't set TaskIndex
 
   // extract deviceID from timer id:
   const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
@@ -876,9 +869,9 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 
   if (validDeviceIndex(deviceIndex)) {
     String dummy;
-    Plugin_ptr[deviceIndex](PLUGIN_ONLY_TIMER_IN, &TempEvent, dummy);
+    Plugin_ptr[deviceIndex](PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
   }
-  STOP_TIMER(PROC_SYS_TIMER);
+  STOP_TIMER(PLUGIN_CALL_DEVICETIMER_IN);
 }
 
 /*********************************************************************************************\
@@ -922,9 +915,7 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
   uint8_t pinNumber     = static_cast<uint8_t>((id >> 8) & 0xFF);
   uint8_t pinStateValue = static_cast<uint8_t>((id >> 16) & 0xFF);
 
-  bool success = true;
-
-  uint8_t pluginID;
+  uint8_t pluginID = PLUGIN_GPIO;
 
   switch (GPIOType)
   {
@@ -932,35 +923,37 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
       GPIO_Internal_Write(pinNumber, pinStateValue);
       pluginID = PLUGIN_GPIO;
       break;
+#ifdef USES_P009
     case GPIO_TYPE_MCP:
       GPIO_MCP_Write(pinNumber, pinStateValue);
       pluginID = PLUGIN_MCP;
       break;
+#endif
+#ifdef USES_P019
     case GPIO_TYPE_PCF:
       GPIO_PCF_Write(pinNumber, pinStateValue);
       pluginID = PLUGIN_PCF;
       break;
+#endif
     default:
-      success = false;
+      return;
   }
 
-  if (success) {
-    const uint32_t key = createKey(pluginID, pinNumber);
+  const uint32_t key = createKey(pluginID, pinNumber);
 
-    // WARNING: operator [] creates an entry in the map if key does not exist
-    portStatusStruct tempStatus = globalMapPortStatus[key];
+  // WARNING: operator [] creates an entry in the map if key does not exist
+  portStatusStruct tempStatus = globalMapPortStatus[key];
 
-    tempStatus.mode    = PIN_MODE_OUTPUT;
-    tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
+  tempStatus.mode    = PIN_MODE_OUTPUT;
+  tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
 
-    if (tempStatus.state != pinStateValue) {
-      tempStatus.state        = pinStateValue;
-      tempStatus.output       = pinStateValue;
-      tempStatus.forceEvent   = 1;
-      tempStatus.forceMonitor = 1;
-    }
-    savePortStatus(key, tempStatus);
+  if (tempStatus.state != pinStateValue) {
+    tempStatus.state        = pinStateValue;
+    tempStatus.output       = pinStateValue;
+    tempStatus.forceEvent   = 1;
+    tempStatus.forceMonitor = 1;
   }
+  savePortStatus(key, tempStatus);
 }
 
 /*********************************************************************************************\

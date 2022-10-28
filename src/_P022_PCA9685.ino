@@ -211,7 +211,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((command == F("pcapwm")) || (instanceCommand && (command == F("pwm"))))
+      if ((command.equals(F("pcapwm"))) || (instanceCommand && (command.equals(F("pwm")))))
       {
         success = true;
 
@@ -297,7 +297,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((command == F("pcafrq")) || (instanceCommand && (command == F("frq"))))
+      if ((command.equals(F("pcafrq"))) || (instanceCommand && (command.equals(F("frq")))))
       {
         success = true;
 
@@ -336,7 +336,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (instanceCommand && (command == F("mode2")))
+      if (instanceCommand && (command.equals(F("mode2"))))
       {
         success = true;
 
@@ -360,9 +360,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (command == F("status"))
+      if (command.equals(F("status")))
       {
-        if (parseString(string, 2) == F("pca"))
+        if (parseString(string, 2).equals(F("pca")))
         {
           if (!P022_data->p022_is_init(address))
           {
@@ -378,12 +378,12 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (instanceCommand && (command == F("gpio")))
+      if (instanceCommand && (command.equals(F("gpio"))))
       {
         success = true;
         log     = formatToHex(address, F("PCA 0x"), 2);
         log    += F(": GPIO ");
-        const bool allPins = parseString(string, 2) == F("all");
+        const bool allPins = parseString(string, 2).equals(F("all"));
 
         if (((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS)) ||
             allPins)
@@ -437,7 +437,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (instanceCommand && (command == F("pulse")))
+      if (instanceCommand && (command.equals(F("pulse"))))
       {
         success = true;
         log     = formatToHex(address, F("PCA 0x"), 2);
@@ -470,7 +470,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           if (event->Par3 > 0)
           {
-            if (parseString(string, 5) == F("auto"))
+            if (parseString(string, 5).equals(F("auto")))
             {
               autoreset = -1;
               log      += F(" with autoreset infinity");
@@ -516,7 +516,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       P022_data_struct *P022_data =
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));

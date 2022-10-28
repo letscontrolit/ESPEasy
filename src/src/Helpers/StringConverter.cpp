@@ -27,6 +27,7 @@
 
 // -V::569
 
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -656,6 +657,10 @@ String to_internal_string(const String& input, char replaceSpace) {
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
+String parseString(const char * string, uint8_t indexFind, char separator, bool trimResult) {
+  return parseString(String(string), indexFind, separator, trimResult);
+}
+
 String parseString(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result = parseStringKeepCase(string, indexFind, separator, trimResult);
 
@@ -1108,6 +1113,7 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2day%"),  toString(minutesToDay(data.arg1), 2))
   SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(data.arg1))
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
+  SMART_CONV(F("%c_m2hcm%"),  minutesToHourColonMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
   SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
   #undef SMART_CONV

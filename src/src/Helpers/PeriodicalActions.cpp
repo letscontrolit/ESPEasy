@@ -28,6 +28,7 @@
 #include "../Globals/Statistics.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
@@ -392,7 +393,11 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 
 
 void logTimerStatistics() {
-  uint8_t loglevel = LOG_LEVEL_DEBUG;
+# ifndef BUILD_NO_DEBUG
+  const uint8_t loglevel = LOG_LEVEL_DEBUG;
+#else
+  const uint8_t loglevel = LOG_LEVEL_NONE;
+#endif
   updateLoopStats_30sec(loglevel);
 #ifndef BUILD_NO_DEBUG
 //  logStatistics(loglevel, true);

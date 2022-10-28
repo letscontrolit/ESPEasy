@@ -347,8 +347,8 @@ void addFormSelector_script(const __FlashStringHelper * label,
                             );
 
 
-void addFormSelector_script(const String& label,
-                            const String& id,
+void addFormSelector_script(const __FlashStringHelper * label,
+                            const __FlashStringHelper * id,
                             int           optionCount,
                             const String  options[],
                             const int     indices[],

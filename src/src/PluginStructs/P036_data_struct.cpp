@@ -502,7 +502,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   # endif // ifdef P036_FONT_CALC_LOG
 
   while (iFontIndex < 0) {
-    iMaxHeightForFont = round(iHeight / (iLinesPerFrame * 1.0f)); // no extra space between lines
+    iMaxHeightForFont = lround(iHeight / (iLinesPerFrame * 1.0f)); // no extra space between lines
     // Fonts already have their own extra space, no need to add an extra pixel space
 
     # ifdef P036_FONT_CALC_LOG
@@ -855,7 +855,7 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
     return 0;
   }
 
-  // page scrolling (using PLUGIN_TIMER_IN)
+  // page scrolling (using PLUGIN_TASKTIMER_IN)
   display->setColor(BLACK);
 
   // We allow 12 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!
@@ -953,7 +953,7 @@ void P036_data_struct::display_scrolling_lines() {
       if (ScrollingLines.Line[i].Width != 0) {
         // scroll this line
         ScrollingLines.Line[i].fPixSum -= ScrollingLines.Line[i].dPix;
-        iCurrentLeft                    = round(ScrollingLines.Line[i].fPixSum);
+        iCurrentLeft                    = lround(ScrollingLines.Line[i].fPixSum);
 
         if (iCurrentLeft != ScrollingLines.Line[i].CurrentLeft) {
           // still scrolling

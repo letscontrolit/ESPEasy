@@ -256,9 +256,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no port defined yet)
       if ((state != -1) && (CONFIG_PORT >= 0)) {
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
-        if (round(P009_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+        if (lround(P009_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."));
+          #endif
           PCONFIG_LONG(3) = 1;
         }
 
@@ -413,7 +415,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             // Create EVENT with value = 4 for SafeButton false positive detection
-            const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+            const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
             UserVar[event->BaseVarIndex] = 4;
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -507,7 +509,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
+    case PLUGIN_DEVICETIMER_IN:
     {
       GPIO_MCP_Write(event->Par1, event->Par2);
 
@@ -518,27 +521,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
       tempStatus = globalMapPortStatus[key];
 
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
-      savePortStatus(key, tempStatus);
-      break;
-    }
-
-    case PLUGIN_ONLY_TIMER_IN:
-    {
-      GPIO_MCP_Write(event->Par1, event->Par2);
-
-      // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-      portStatusStruct tempStatus;
-
-      // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-      tempStatus = globalMapPortStatus[key];
-
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
+      tempStatus.state        = event->Par2;
+      tempStatus.mode         = PIN_MODE_OUTPUT;
+      tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command
       savePortStatus(key, tempStatus);
       break;
     }
