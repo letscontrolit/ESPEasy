@@ -631,7 +631,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             {
               # ifdef ESP8266
               #  if FEATURE_ADC_VCC
-              addHtml(F("ADC (VDD)"));
+              addHtml(F("ADC (VCC)"));
               #  else // if FEATURE_ADC_VCC
               addHtml(F("ADC (TOUT)"));
               #  endif // if FEATURE_ADC_VCC
@@ -1073,7 +1073,14 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     }
 
     if (Device[DeviceIndex].usesTaskDevicePin(3)) {
-      addFormPinSelect(PinSelectPurpose::Generic, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
+      PinSelectPurpose purpose = PinSelectPurpose::Generic;
+
+      if (Device[DeviceIndex].isSPI())
+      {
+        // SPI only needs output pins
+        purpose = PinSelectPurpose::Generic_output;
+      }
+      addFormPinSelect(purpose, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
     }
   }
 }

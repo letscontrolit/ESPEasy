@@ -6,6 +6,7 @@
 
 bool loadFromFS(String path);
 
+void serve_CSS_inline();
 
 // Send the content of a file directly to the webserver, like addHtml()
 // Return is nr bytes streamed.

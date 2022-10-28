@@ -131,7 +131,6 @@ void setWifiMode(WiFiMode_t wifimode);
 bool WifiIsAP(WiFiMode_t wifimode);
 bool WifiIsSTA(WiFiMode_t wifimode);
 bool useStaticIP();
-bool wifiConnectTimeoutReached();
 bool wifiAPmodeActivelyUsed();
 void setConnectionSpeed();
 void setupStaticIPconfig();
