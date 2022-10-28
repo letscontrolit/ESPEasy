@@ -36,7 +36,12 @@ public:
   void          setExternalTimeSource(double       time,
                                       timeSource_t source);
 
+  // Get unix time in seconds
   uint32_t      getUnixTime() const;
+
+  // Get unix time in seconds
+  // @param unix_time_frac  The fractional part
+  uint32_t      getUnixTime(uint32_t& unix_time_frac) const;
 
   void          initTime();
 
@@ -183,7 +188,7 @@ public:
   struct tm sunRise;
   struct tm sunSet;
   timeSource_t timeSource = timeSource_t::No_time_source;
-  float timeWander = 0.0f;  // Clock instability in msec/second
+  float timeWander = 0.0f;  // Clock instability in ppm
   uint32_t lastTimeWanderCalculation = 0;
 
   uint8_t PrevMinutes = 0;

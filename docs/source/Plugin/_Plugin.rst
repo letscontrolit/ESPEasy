@@ -93,6 +93,8 @@ For example using just like normal task value data:
 
 * ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
+* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
 * ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
 * ``[bme#temp.min]`` See ``[bme#temp.max]`` 
 
@@ -218,7 +220,7 @@ There are different released versions of ESP Easy:
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
-:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` are specialized builds holding all Energy-, Display-, Infra Red- (extended) and NeoPixel related plugins.
+:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
 
@@ -360,6 +362,7 @@ There are different released versions of ESP Easy:
    ":ref:`P133_page`","|P133_status|","P133"
    ":ref:`P134_page`","|P134_status|","P134"
    ":ref:`P135_page`","|P135_status|","P135"
+   ":ref:`P141_page`","|P141_status|","P141"
 
 
 Internal GPIO handling

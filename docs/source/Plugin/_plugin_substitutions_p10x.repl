@@ -41,7 +41,7 @@
 .. |P103_type| replace:: :cyan:`Environment`
 .. |P103_typename| replace:: :cyan:`Environment - Atlas Scientific EZO pH`
 .. |P103_porttype| replace:: `.`
-.. |P103_status| replace:: :yellow:`MAX`
+.. |P103_status| replace:: :yellow:`MAX` :yellow:`CLIMATE`
 .. |P103_github| replace:: P103_Atlas_EZO_pH.ino 
 .. _P103_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P103_Atlas_EZO_pH.ino 
 .. |P103_usedby| replace:: `.`
@@ -79,7 +79,7 @@
 .. |P105_type| replace:: :cyan:`Environment`
 .. |P105_typename| replace:: :cyan:`Environment - AHT10/20/21`
 .. |P105_porttype| replace:: `.`
-.. |P105_status| replace:: :yellow:`COLLECTION A`
+.. |P105_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P105_github| replace:: P105_AHT.ino
 .. _P105_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P105_AHT.ino
 .. |P105_usedby| replace:: `.`
@@ -96,7 +96,7 @@
 .. |P106_type| replace:: :cyan:`Environment`
 .. |P106_typename| replace:: :cyan:`Environment - BME680`
 .. |P106_porttype| replace:: `.`
-.. |P106_status| replace:: :yellow:`COLLECTION B`
+.. |P106_status| replace:: :yellow:`COLLECTION B` :yellow:`CLIMATE`
 .. |P106_github| replace:: P106_BME680.ino
 .. _P106_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P106_BME680.ino
 .. |P106_usedby| replace:: `.`

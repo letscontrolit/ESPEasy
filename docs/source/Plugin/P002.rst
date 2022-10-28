@@ -41,9 +41,35 @@ Range and Calibration
 
 2022/07/11: Added support for Attenuation selection + Factory calibration 
 
+ESP8266 
+^^^^^^^
 
 The ESP8266 ADC has a fixed range of 0...1V.
-However, almost all boards do have some resistors to act as a voltage divider to extend this range to 3.6V
+
+.. note:: On ``VCC`` builds, the ADC reports in units of 1/1024 Volt.
+
+Some boards, like the NodeMCU or Wemos D1 mini, have some resistors connected to pin A0 to act as a voltage divider to extend this range to 3.6V
+Due to these resistors, you may need to correct with roughly 10%.
+
+These resistors do affect the reading on ``VCC`` builds too.
+
+Some VCC build 2-point calibration examples
+"""""""""""""""""""""""""""""""""""""""""""
+
+Board with resistors to pin A0 (NodeMCU or Wemos D1 mini):
+
+* Point 1: ``0`` => ``0.0``
+* Point 2: ``1000`` => ``1.0977``
+
+Board without resistors to pin A0 (e.g. Sonoff boards):
+
+* Point 1: ``0`` => ``0.0``
+* Point 2: ``1024`` => ``1.0``
+
+.. note:: These calibration values are typical examples, but may differ upto 5% per board due to component tolerances.
+
+ESP32
+^^^^^
 
 All ESP32 versions allow for changing the range per pin (channel) by setting some attentuation resistor active.
 The default active attentuation is 11 dB, which allows for a maximum input voltage of 3.1V
@@ -87,8 +113,6 @@ N.B. The initial chart on the setup page of an Analog Input task will only show 
 With ``Apply Factory Calibration`` checked, the Analog Input plugin in ESPEasy will perform the reading in mV.
 
 .. note:: Even though the various attenuation settings seem to have their own calibration, there is still some difference in reported measured voltage in mV per attentuation setting.
-
-
 
 
 Oversampling
@@ -163,6 +187,7 @@ When entered in the 2-point calibration fields, the page will reload with these 
 
 * 241 mV => 9.0041
 * 565 mV => 19.9832
+
 
 
 

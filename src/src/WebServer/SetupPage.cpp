@@ -52,12 +52,13 @@ void handle_setup() {
   const bool connected = NetworkConnected();
 
 
-  if (connected) {
-    navMenuIndex = MENU_INDEX_TOOLS;
+//  if (connected) {
+    navMenuIndex = MENU_INDEX_SETUP;
     sendHeadandTail_stdtemplate(_HEAD);
-  } else {
+/*  } else {
     sendHeadandTail(F("TmplAP"));
   }
+  */
 
   const bool clearButtonPressed = hasArg(F("performclearcredentials"));
   const bool clearWiFiCredentials = 
@@ -216,12 +217,12 @@ void handle_setup() {
 
     html_end_form();
   }
-  if (connected) {
+//  if (connected) {
     sendHeadandTail_stdtemplate(_TAIL);
-  } else {
+/*  } else {
     sendHeadandTail(F("TmplAP"), true);
   }
-
+*/
   TXBuffer.endStream();
   delay(10);
   if (clearWiFiCredentials) {

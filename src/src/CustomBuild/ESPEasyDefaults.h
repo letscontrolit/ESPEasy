@@ -131,6 +131,9 @@
 #ifndef DEFAULT_CONTROLLER_PASS
 #define DEFAULT_CONTROLLER_PASS    ""                                       // Default controller Password
 #endif
+#ifndef DEFAULT_CONTROLLER_TIMEOUT
+#define DEFAULT_CONTROLLER_TIMEOUT 100
+#endif
 
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #ifndef DEFAULT_PUB
@@ -173,10 +176,20 @@
 #endif
 
 #ifndef DEFAULT_PIN_I2C_SDA
+#ifdef ESP8266
 #define DEFAULT_PIN_I2C_SDA              4
 #endif
+#ifdef ESP32
+#define DEFAULT_PIN_I2C_SDA              -1                // Undefined
+#endif
+#endif
 #ifndef DEFAULT_PIN_I2C_SCL
+#ifdef ESP8266
 #define DEFAULT_PIN_I2C_SCL              5
+#endif
+#ifdef ESP32
+#define DEFAULT_PIN_I2C_SCL              -1                // Undefined
+#endif
 #endif
 #ifndef DEFAULT_I2C_CLOCK_SPEED
 #define DEFAULT_I2C_CLOCK_SPEED          400000            // Use 100 kHz if working with old I2C chips

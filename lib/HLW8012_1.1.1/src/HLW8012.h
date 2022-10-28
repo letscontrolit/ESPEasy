@@ -108,16 +108,16 @@ class HLW8012 {
 
     private:
 
-        unsigned char _cf_pin;
-        unsigned char _cf1_pin;
-        unsigned char _sel_pin;
+        unsigned char _cf_pin = 0;
+        unsigned char _cf1_pin = 0;
+        unsigned char _sel_pin = 0;
 
         double _current_resistor = R_CURRENT;
         double _voltage_resistor = R_VOLTAGE;
 
-        double _current_multiplier; // Unit: us/A
-        double _voltage_multiplier; // Unit: us/V
-        double _power_multiplier;   // Unit: us/W
+        double _current_multiplier = 0.0; // Unit: us/A
+        double _voltage_multiplier = 0.0; // Unit: us/V
+        double _power_multiplier = 0.0;   // Unit: us/W
 
         unsigned long _pulse_timeout = PULSE_TIMEOUT;    //Unit: us
         volatile unsigned long _voltage_pulse_width = 0; //Unit: us
@@ -130,7 +130,7 @@ class HLW8012 {
         unsigned int _power = 0;
 
         unsigned char _current_mode = HIGH;
-        volatile unsigned char _mode;
+        volatile unsigned char _mode = 0;
 
         bool _use_interrupts = true;
         volatile unsigned long _last_cf_interrupt = 0;

@@ -191,6 +191,13 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), P002_CALIBRATION_ENABLED);
 
+#ifdef ESP8266
+#if FEATURE_ADC_VCC
+  addFormNote(F("Measuring ESP VCC, not A0. Unit is 1/1024 V. See documentation."));
+#endif
+#endif
+
+
   webformLoad_2p_calibPoint(
     F("Point 1"),
     F("p002_adc1"),
@@ -287,12 +294,16 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
   bool somethingAdded = false;
 
-  if (getPluginStats(0) != nullptr) {
-    if (getPluginStats(0)->webformLoad_show_avg(event)) { somethingAdded = true; }
+  const PluginStats* stats = getPluginStats(0);
 
-    if (getPluginStats(0)->hasPeaks()) {
-      formatADC_statistics(F("ADC Peak Low"),  getPluginStats(0)->getPeakLow(),  true);
-      formatADC_statistics(F("ADC Peak High"), getPluginStats(0)->getPeakHigh(), true);
+  if (stats != nullptr) {
+    if (stats->webformLoad_show_avg(event)) { somethingAdded = true; }
+
+    if (stats->webformLoad_show_stdev(event)) { somethingAdded = true; }
+
+    if (stats->hasPeaks()) {
+      formatADC_statistics(F("ADC Peak Low"),  stats->getPeakLow(),  true);
+      formatADC_statistics(F("ADC Peak High"), stats->getPeakHigh(), true);
       somethingAdded = true;
     }
   }
