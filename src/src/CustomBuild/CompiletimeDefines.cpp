@@ -52,12 +52,14 @@ const __FlashStringHelper* get_build_date() {
 }
 
 uint32_t get_build_unixtime() {
+/*
   #ifdef SET_BUILD_UNIXTIME
   return SET_BUILD_UNIXTIME;
   #else
+  */
   // Return some Unix time which we know is in the (somewhat recent) past
   return 1664582400; // Sat Oct 01 2022 00:00:00 GMT+0000
-  #endif
+//  #endif
 }
 
 const __FlashStringHelper * get_build_date_RFC1123() {

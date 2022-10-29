@@ -147,23 +147,25 @@ unsigned long ESPEasy_time::now() {
     if (!isExternalTimeSource(timeSource) 
         || timeSource_t::NTP_time_source == timeSource 
         || timePassedSince(lastSyncTime) > static_cast<long>(1000 * syncInterval)) {
-      if (getNtpTime(unixTime_d)) {
+      if (!updatedTime && getNtpTime(unixTime_d)) {
         updatedTime = true;
       } else {
         uint32_t tmp_unixtime = 0;;
-        if (ExtRTC_get(tmp_unixtime)) {
+        #if FEATURE_ESPEASY_P2P
+        double tmp_unixtime_d;
+        if (!updatedTime && Nodes.getUnixTime(tmp_unixtime_d)) {
+          unixTime_d = tmp_unixtime_d;
+          timeSource = timeSource_t::ESPEASY_p2p_UDP;
+          updatedTime = true;
+        }
+        #endif
+
+        if (!updatedTime && 
+            timeSource >= timeSource_t::External_RTC_time_source &&
+            ExtRTC_get(tmp_unixtime)) {
           unixTime_d = tmp_unixtime;
           timeSource = timeSource_t::External_RTC_time_source;
           updatedTime = true;
-        } else {
-#if FEATURE_ESPEASY_P2P
-          double tmp_unixtime_d;
-          if (Nodes.getUnixTime(tmp_unixtime_d)) {
-            unixTime_d = tmp_unixtime_d;
-            timeSource = timeSource_t::ESPEASY_p2p_UDP;
-            updatedTime = true;
-          }
-#endif
         }
       }
     }
@@ -766,8 +768,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
 
 bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
 {
-  if (timeSource == timeSource_t::External_RTC_time_source || 
-      !isExternalTimeSource(timeSource)) {
+  if (timeSource >= timeSource_t::External_RTC_time_source) {
     // Do not adjust the external RTC time if we already used it as a time source.
     return true;
   }

@@ -75,7 +75,10 @@ bool NodesHandler::addNode(const NodeStruct& node)
     }
     _nodes_mutex.unlock();
   }
-  if (!node_time.systemTimePresent() || node_time.timeSource == timeSource_t::Restore_RTC_time_source) {
+  
+  // Check whether the current time source is considered "worse" than received from p2p node.
+  if (!node_time.systemTimePresent() || 
+      node_time.timeSource >= timeSource_t::ESPEASY_p2p_UDP) {
     double unixTime;
     if (_ntp_candidate.getUnixTime(unixTime)) {
       node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP);
