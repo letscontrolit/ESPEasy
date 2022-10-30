@@ -187,6 +187,7 @@ unsigned long ESPEasy_time::now() {
     }
 
     if (updatedTime) {
+      START_TIMER;
       const double time_offset = unixTime_d - sysTime - (timePassedSince(prevMillis) / 1000.0);
 
       if (statusNTPInitialized && (time_offset < 1.0)) {
@@ -201,7 +202,9 @@ unsigned long ESPEasy_time::now() {
       timeSynced = true;
 
       sysTime = unixTime_d;
-      ExtRTC_set(sysTime);
+      // External RTC only stores with second resolution.
+      // Thus to limit the error to +/- 500 ms, round the sysTime instead of just casting it.
+      ExtRTC_set(round(sysTime));
       {
         const unsigned long abs_time_offset_ms = std::abs(time_offset) * 1000;
 
@@ -255,6 +258,7 @@ unsigned long ESPEasy_time::now() {
         ESPEasy_now_handler.sendNTPbroadcast();
         #endif // ifdef USES_ESPEASY_NOW
       }
+      STOP_TIMER(SYSTIME_UPDATED);
     }
   }
   RTC.lastSysTime = static_cast<unsigned long>(sysTime);
@@ -336,7 +340,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       return false;
     }
   }
-
+  START_TIMER;
   IPAddress timeServerIP;
   String    log = F("NTP  : NTP host ");
 
@@ -367,6 +371,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   if (!hostReachable(timeServerIP)) {
     log += F(" unreachable");
     addLogMove(LOG_LEVEL_INFO, log);
+    STOP_TIMER(NTP_FAIL);
     return false;
   }
 
@@ -401,6 +406,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   if (udp.beginPacket(timeServerIP, 123) == 0) { // NTP requests are to port 123
     FeedSW_watchdog();
     udp.stop();
+    STOP_TIMER(NTP_FAIL);
     return false;
   }
   udp.write(packetBuffer, NTP_PACKET_SIZE);
@@ -431,6 +437,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           nextSyncTime = sysTime + 120;
         }
         udp.stop();
+        STOP_TIMER(NTP_FAIL);
         return false;
       }
 
@@ -455,6 +462,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           nextSyncTime = sysTime + 60;
         }
         udp.stop();
+        STOP_TIMER(NTP_FAIL);
         return false;
       }
       uint32_t txTm = secsSince1900 - 2208988800UL;
@@ -499,6 +507,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       timeSource      = timeSource_t::NTP_time_source;
       lastNTPSyncTime = millis();
       CheckRunningServices(); // FIXME TD-er: Sometimes services can only be started after NTP is successful
+      STOP_TIMER(NTP_SUCCESS);
       return true;
     }
     delay(10);
@@ -514,6 +523,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
 #endif // ifndef BUILD_NO_DEBUG
   udp.stop();
+  STOP_TIMER(NTP_FAIL);
   return false;
 }
 
