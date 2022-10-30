@@ -292,6 +292,9 @@ void handle_sysinfo_basicInfo() {
     addRowLabelValue(LabelType::TIME_WANDER);
     addUnit(F("ppm"));
   }
+  if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
+    addRowLabelValue(LabelType::EXT_RTC_UTC_TIME);
+  }
 
   addRowLabel(LabelType::UPTIME);
   {

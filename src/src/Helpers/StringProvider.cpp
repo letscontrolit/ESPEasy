@@ -49,6 +49,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::LOCAL_TIME:             return F("Local Time");
     case LabelType::TIME_SOURCE:            return F("Time Source");
     case LabelType::TIME_WANDER:            return F("Time Wander");
+    case LabelType::EXT_RTC_UTC_TIME:       return F("UTC time stored in RTC");
     case LabelType::UPTIME:                 return F("Uptime");
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
@@ -247,6 +248,21 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-', ':', ' ');
     case LabelType::TIME_SOURCE:            return toString(node_time.timeSource);
     case LabelType::TIME_WANDER:            return String(node_time.timeWander, 1);
+    case LabelType::EXT_RTC_UTC_TIME:
+    {
+      if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
+        // Try to read the stored time in the ext. time source to allow to check if it is working properly.
+        uint32_t unixtime;
+        if (node_time.ExtRTC_get(unixtime)) {
+          struct tm RTC_time;
+          breakTime(unixtime, RTC_time);
+          return formatDateTimeString(RTC_time);
+        } else {
+          return F("Not Set");
+        }
+      }
+      return String('-');
+    }
     case LabelType::UPTIME:                 return String(getUptimeMinutes());
     case LabelType::LOAD_PCT:               return toString(getCPUload(), 2);
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());

@@ -162,6 +162,7 @@ void handle_json()
         LabelType::LOCAL_TIME,
         LabelType::TIME_SOURCE,
         LabelType::TIME_WANDER,
+        LabelType::EXT_RTC_UTC_TIME,
         LabelType::ISNTP,
         LabelType::UNIT_NR,
         LabelType::UNIT_NAME,

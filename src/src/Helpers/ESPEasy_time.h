@@ -17,7 +17,8 @@ public:
 
   struct tm   addSeconds(const struct tm& ts,
                          int              seconds,
-                         bool             toLocalTime) const;
+                         bool             toLocalTime,
+                         bool             fromLocalTime = false) const;
 
   // Restore the last known system time
   // This may be useful to get some idea of what time it is.
@@ -96,43 +97,43 @@ static String weekday_str(int wday);
 // Get current year.
 int year() const 
 {
-  return 1900 + tm.tm_year;
+  return 1900 + local_tm.tm_year;
 }
 
 // Get current month
 uint8_t month() const 
 {
-  return tm.tm_mon + 1; // tm_mon starts at 0
+  return local_tm.tm_mon + 1; // tm_mon starts at 0
 }
 
 // Get current day of the month
 uint8_t day() const 
 {
-  return tm.tm_mday;
+  return local_tm.tm_mday;
 }
 
 // Get current hour
 uint8_t hour() const 
 {
-  return tm.tm_hour;
+  return local_tm.tm_hour;
 }
 
 // Get current minute
 uint8_t minute() const 
 {
-  return tm.tm_min;
+  return local_tm.tm_min;
 }
 
 // Get current second
 uint8_t second() const 
 {
-  return tm.tm_sec;
+  return local_tm.tm_sec;
 }
 
 // day of week, sunday is day 1
 int weekday() const 
 {
-  return tm.tm_wday;
+  return local_tm.tm_wday;
 }
 
 String weekday_str() const;
@@ -171,12 +172,15 @@ private:
   struct tm getSunRise(int secOffset) const;
   struct tm getSunSet(int secOffset) const;
 
+public:
   bool ExtRTC_get(uint32_t &unixtime);
+
+private:
   bool ExtRTC_set(uint32_t unixtime);
 
 public:
 
-  struct tm tm;
+  struct tm local_tm;  // local time
   uint32_t syncInterval = 3600; // time sync will be attempted after this many seconds
   double sysTime = 0.0;         // Use high resolution double to get better sync between nodes when using NTP
   uint32_t prevMillis = 0;

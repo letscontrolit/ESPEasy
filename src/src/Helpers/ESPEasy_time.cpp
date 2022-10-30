@@ -34,15 +34,18 @@
 
 
 ESPEasy_time::ESPEasy_time() {
-  memset(&tm,      0, sizeof(tm));
-  memset(&tsRise,  0, sizeof(tm));
-  memset(&tsSet,   0, sizeof(tm));
-  memset(&sunRise, 0, sizeof(tm));
-  memset(&sunSet,  0, sizeof(tm));
+  memset(&local_tm, 0, sizeof(tm));
+  memset(&tsRise,   0, sizeof(tm));
+  memset(&tsSet,    0, sizeof(tm));
+  memset(&sunRise,  0, sizeof(tm));
+  memset(&sunSet,   0, sizeof(tm));
 }
 
-struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLocalTime) const {
+struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLocalTime, bool fromLocalTime) const {
   unsigned long time = makeTime(ts);
+  if (fromLocalTime) {
+    time = time_zone.fromLocal(time);
+  }
 
   time += seconds;
 
@@ -240,7 +243,7 @@ unsigned long ESPEasy_time::now() {
   }
   RTC.lastSysTime = static_cast<unsigned long>(sysTime);
   uint32_t localSystime = time_zone.toLocal(sysTime);
-  breakTime(localSystime, tm);
+  breakTime(localSystime, local_tm);
 
   if (timeSynced) {
     calcSunRiseAndSet();
@@ -272,7 +275,7 @@ bool ESPEasy_time::reportNewMinute()
 {
   now();
 
-  int cur_min = tm.tm_min;
+  int cur_min = local_tm.tm_min;
 
   if (!systemTimePresent()) {
     // Use millis() to compute some "minute"
@@ -502,28 +505,28 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
  \*********************************************************************************************/
 String ESPEasy_time::getDateString(char delimiter) const
 {
-  return formatDateString(tm, delimiter);
+  return formatDateString(local_tm, delimiter);
 }
 
 
 String ESPEasy_time::getTimeString(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return formatTimeString(tm, delimiter, false, show_seconds, hour_prefix);
+  return formatTimeString(local_tm, delimiter, false, show_seconds, hour_prefix);
 }
 
 String ESPEasy_time::getTimeString_ampm(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return formatTimeString(tm, delimiter, true, show_seconds, hour_prefix);
+  return formatTimeString(local_tm, delimiter, true, show_seconds, hour_prefix);
 }
 
 
 
 String ESPEasy_time::getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) const {
-  return formatDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, false);
+  return formatDateTimeString(local_tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, false);
 }
 
 String ESPEasy_time::getDateTimeString_ampm(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) const {
-  return formatDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, true);
+  return formatDateTimeString(local_tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, true);
 }
 
 
@@ -650,7 +653,7 @@ int ESPEasy_time::dayOfYear(int year, int month, int day) {
 }
 
 void ESPEasy_time::calcSunRiseAndSet() {
-  int   doy  = dayOfYear(tm.tm_year, tm.tm_mon + 1, tm.tm_mday);
+  int   doy  = dayOfYear(local_tm.tm_year, local_tm.tm_mon + 1, local_tm.tm_mday);
   float eqt  = equationOfTime(doy);
   float dec  = sunDeclination(doy);
   float da   = diurnalArc(dec, Settings.Latitude);
@@ -661,9 +664,9 @@ void ESPEasy_time::calcSunRiseAndSet() {
   tsRise.tm_min  = (rise - static_cast<int>(rise)) * 60.0f;
   tsSet.tm_hour  = set;
   tsSet.tm_min   = (set - static_cast<int>(set)) * 60.0f;
-  tsRise.tm_mday = tsSet.tm_mday = tm.tm_mday;
-  tsRise.tm_mon  = tsSet.tm_mon = tm.tm_mon;
-  tsRise.tm_year = tsSet.tm_year = tm.tm_year;
+  tsRise.tm_mday = tsSet.tm_mday = local_tm.tm_mday;
+  tsRise.tm_mon  = tsSet.tm_mon = local_tm.tm_mon;
+  tsRise.tm_year = tsSet.tm_year = local_tm.tm_year;
 
   // Now apply the longitude
   int secOffset_longitude = -1.0f * (Settings.Longitude / 15.0f) * 3600;
@@ -770,6 +773,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
 {
   if (timeSource >= timeSource_t::External_RTC_time_source) {
     // Do not adjust the external RTC time if we already used it as a time source.
+    // or the new time source is worse than the external RTC time souce.
     return true;
   }
   #if FEATURE_EXT_RTC
