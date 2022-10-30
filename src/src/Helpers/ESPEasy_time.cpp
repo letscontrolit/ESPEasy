@@ -87,20 +87,26 @@ void ESPEasy_time::restoreFromRTC()
 }
 
 void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
-  #ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("Time : Set Ext. Time Source: ");
-    log += toString(source);
-    log += F(" time: ");
-    log += static_cast<uint32_t>(time);
-    addLogMove(LOG_LEVEL_INFO, log);
+  if (timeSource < source) 
+  {
+    // New time source is potentially worse than the current one.
+    if (computeExpectedWander(timeSource, lastSyncTime) <
+        computeExpectedWander(source, millis())) { return; }
   }
-  #endif // ifndef BUILD_NO_DEBUG
 
   if ((source == timeSource_t::No_time_source) ||
       (source == timeSource_t::Manual_set) ||
       (time > get_build_unixtime())) {
+#ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Time : Set Ext. Time Source: ");
+      log += toString(source);
+      log += F(" time: ");
+      log += static_cast<uint32_t>(time);
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
+#endif // ifndef BUILD_NO_DEBUG
     timeSource         = source;
     externalUnixTime_d = time;
     lastSyncTime       = millis();
