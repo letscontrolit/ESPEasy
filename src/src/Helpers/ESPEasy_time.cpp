@@ -156,7 +156,7 @@ unsigned long ESPEasy_time::now() {
     if (!isExternalTimeSource(timeSource)
         || (timeSource_t::NTP_time_source == timeSource)
         || (timePassedSince(lastSyncTime) > static_cast<long>(1000 * syncInterval))) {
-      if (!updatedTime && getNtpTime(unixTime_d)) {
+      if (getNtpTime(unixTime_d)) {
         updatedTime = true;
       } else {
         uint32_t tmp_unixtime = 0;
