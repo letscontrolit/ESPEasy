@@ -2567,6 +2567,10 @@ To create/register a plugin, you have to :
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
 #endif
 
+#ifndef FEATURE_PLUGIN_PRIORITY
+  #define FEATURE_PLUGIN_PRIORITY   0 // Disable by default
+#endif
+
 #if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
   #undef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
@@ -2593,5 +2597,10 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+
+#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_P138)*/)
+  #undef FEATURE_PLUGIN_PRIORITY
+  #define FEATURE_PLUGIN_PRIORITY   1
+#endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

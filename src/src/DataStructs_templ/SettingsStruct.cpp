@@ -331,6 +331,44 @@ void SettingsStruct_tmpl<N_TASKS>::setCssMode(uint8_t value) {
 #endif // FEATURE_AUTO_DARK_MODE
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isTaskEnableReadonly(taskIndex_t taskIndex) const {
+  if (validTaskIndex(taskIndex)) {
+    return bitRead(VariousTaskBits[taskIndex], 0);
+  }
+  return false;
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setTaskEnableReadonly(taskIndex_t taskIndex, bool value) {
+  if (validTaskIndex(taskIndex)) {
+    bitWrite(VariousTaskBits[taskIndex], 0, value);
+  }
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isPowerManagerTask(taskIndex_t taskIndex) const {
+  if (validTaskIndex(taskIndex)) {
+    return bitRead(VariousTaskBits[taskIndex], 1);
+  }
+  return false;
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setPowerManagerTask(taskIndex_t taskIndex, bool value) {
+  if (validTaskIndex(taskIndex)) {
+    bitWrite(VariousTaskBits[taskIndex], 1, value);
+  }
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isPriorityTask(taskIndex_t taskIndex) const {
+  if (validTaskIndex(taskIndex)) {
+    return isPowerManagerTask(taskIndex); // Add more?
+  }
+  return false;
+}
+
+template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
   return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);
 }
@@ -558,7 +596,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
   TaskDeviceSendDataFlags[task]  = 0;
-  OLD_TaskDeviceGlobalSync[task]= 0;
+  VariousTaskBits[task]         = 0;
   TaskDeviceDataFeed[task]      = 0;
   TaskDeviceTimer[task]         = 0;
   TaskDeviceEnabled[task]       = false;

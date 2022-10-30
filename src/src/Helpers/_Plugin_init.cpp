@@ -20,7 +20,7 @@
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
 // *INDENT-ON*
 
-void PluginInit()
+void PluginInit(bool priorityOnly)
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
@@ -1066,11 +1066,13 @@ void PluginInit()
 #endif
 
   String dummy;
-  PluginCall(PLUGIN_DEVICE_ADD, nullptr, dummy);
-    // Set all not supported plugins to disabled.
-  for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-    if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex])) {
-      Settings.TaskDeviceEnabled[taskIndex] = false;
+  if (deviceCount == -1) {
+    PluginCall(PLUGIN_DEVICE_ADD, nullptr, dummy);
+      // Set all not supported plugins to disabled.
+    for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
+      if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex])) {
+        Settings.TaskDeviceEnabled[taskIndex] = false;
+      }
     }
   }
 
@@ -1078,11 +1080,13 @@ void PluginInit()
   logMemUsageAfter(F("PLUGIN_DEVICE_ADD"));
 #endif
 
-  PluginCall(PLUGIN_INIT_ALL, nullptr, dummy);
-#ifndef BUILD_NO_RAM_TRACKER
-  logMemUsageAfter(F("PLUGIN_INIT_ALL"));
-#endif
+  if (!priorityOnly) {
+    PluginCall(PLUGIN_INIT_ALL, nullptr, dummy);
+    #ifndef BUILD_NO_RAM_TRACKER
+    logMemUsageAfter(F("PLUGIN_INIT_ALL"));
+    #endif
 
-  sortDeviceIndexArray(); // Used in device selector dropdown.
+    sortDeviceIndexArray(); // Used in device selector dropdown.
+  }
 }
 

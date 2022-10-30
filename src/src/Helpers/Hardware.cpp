@@ -175,6 +175,11 @@ void hardwareInit()
 
   initI2C();
 
+  #if FEATURE_PLUGIN_PRIORITY
+  String dummy;
+  PluginCall(PLUGIN_PRIORITY_INIT_ALL, nullptr, dummy);
+  #endif // if FEATURE_PLUGIN_PRIORITY
+
   // SPI Init
   if (Settings.isSPI_valid())
   {
