@@ -130,7 +130,6 @@ void I2C_AXP192::setLDOVoltage(uint8_t  number,
 void I2C_AXP192::setDCDC1(int16_t voltage) {
   if (voltage < 0) { return; }
   uint8_t add = 0x12;
-  uint8_t val;
 
   if ((voltage < 700) || (3500 < voltage)) {
     // Disable
@@ -148,7 +147,6 @@ void I2C_AXP192::setDCDC1(int16_t voltage) {
 void I2C_AXP192::setDCDC2(int16_t voltage) {
   if (voltage < 0) { return; }
   uint8_t add = 0x12;
-  uint8_t val;
 
   if ((voltage < 700) || (2750 < voltage)) {
     // Disable
@@ -166,7 +164,6 @@ void I2C_AXP192::setDCDC2(int16_t voltage) {
 void I2C_AXP192::setDCDC3(int16_t voltage) {
   if (voltage < 0) { return; }
   uint8_t add = 0x12;
-  uint8_t val;
 
   if ((voltage < 700) || (3500 < voltage)) {
     // Disable
@@ -184,7 +181,6 @@ void I2C_AXP192::setDCDC3(int16_t voltage) {
 void I2C_AXP192::setLDO2(int16_t voltage) {
   if (voltage < 0) { return; }
   uint8_t add = 0x12;
-  uint8_t val;
 
   if ((voltage < 1800) || (3300 < voltage)) {
     // Disable
@@ -202,7 +198,6 @@ void I2C_AXP192::setLDO2(int16_t voltage) {
 void I2C_AXP192::setLDO3(int16_t voltage) {
   if (voltage < 0) { return; }
   uint8_t add = 0x12;
-  uint8_t val;
 
   if ((voltage < 1800) || (3300 < voltage)) {
     // Disable
