@@ -777,7 +777,7 @@ void P082_setSystemTime(struct EventStruct *event) {
 
   if (timeSource_t::GPS_time_source == node_time.timeSource &&
       P082_data->_last_setSystemTime != 0 &&
-      timePassedSince(P082_data->_last_setSystemTime) < 3600000) 
+      timePassedSince(P082_data->_last_setSystemTime) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL) 
   {
     // Only update the system time every hour from the same time source.
     return;

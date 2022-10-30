@@ -78,7 +78,9 @@ bool NodesHandler::addNode(const NodeStruct& node)
   
   // Check whether the current time source is considered "worse" than received from p2p node.
   if (!node_time.systemTimePresent() || 
-      node_time.timeSource >= timeSource_t::ESPEASY_p2p_UDP) {
+      node_time.timeSource > timeSource_t::ESPEASY_p2p_UDP ||
+      ((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) &&
+       (timePassedSince(node_time.lastSyncTime) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL) )) {
     double unixTime;
     if (_ntp_candidate.getUnixTime(unixTime)) {
       node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP);

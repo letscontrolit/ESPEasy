@@ -13,16 +13,25 @@ bool NTP_candidate_struct::set(const NodeStruct& node)
   if (node.unix_time_sec < get_build_unixtime()) { return false; }
   const timeSource_t timeSource = static_cast<timeSource_t>(node.timeSource);
 
-  if (!isExternalTimeSource(timeSource)) { return false; }
-  const unsigned long time_wander = computeExpectedWander(timeSource, node.lastUpdated);
+  if (timeSource == timeSource_t::No_time_source) { return false; }
 
-  if (timePassedSince(_received_moment) > 3600000) { clear(); }
+  // Only allow time from p2p nodes who only got it via p2p themselves as "last resource"
+  const unsigned long p2p_source_penalty =
+    isExternalTimeSource(timeSource)  ? 0 : 1000000;
+  const unsigned long time_wander_other =
+    p2p_source_penalty + computeExpectedWander(timeSource, node.lastUpdated);
 
-  if ((_time_wander < 0) || (time_wander < static_cast<unsigned long>(_time_wander))) {
-    _time_wander     = time_wander;
+  if (timePassedSince(_received_moment) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL) { clear(); }
+
+  if ((_time_wander < 0) || (time_wander_other < static_cast<unsigned long>(_time_wander))) {
+    _time_wander     = time_wander_other;
     _unix_time_sec   = node.unix_time_sec;
     _unix_time_frac  = node.unix_time_frac;
     _received_moment = millis();
+
+    if (_first_received_moment == 0) {
+      _first_received_moment = _received_moment;
+    }
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -43,15 +52,21 @@ bool NTP_candidate_struct::set(const NodeStruct& node)
 
 void NTP_candidate_struct::clear()
 {
-  _unix_time_sec   = 0;
-  _unix_time_frac  = 0;
-  _time_wander     = -1;
-  _received_moment = 0;
+  _unix_time_sec         = 0;
+  _unix_time_frac        = 0;
+  _time_wander           = -1;
+  _received_moment       = 0;
+  _first_received_moment = 0;
 }
 
 bool NTP_candidate_struct::getUnixTime(double& unix_time_d) const
 {
   if ((_unix_time_sec == 0) || (_time_wander < 0) || (_received_moment == 0)) {
+    return false;
+  }
+
+  if (timePassedSince(_first_received_moment) < 30000) {
+    // Make sure to allow for enough time to collect the "best" option.
     return false;
   }
 
