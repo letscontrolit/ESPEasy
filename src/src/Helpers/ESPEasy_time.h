@@ -15,10 +15,10 @@ public:
 
   ESPEasy_time();
 
-  struct tm   addSeconds(const struct tm& ts,
-                         int              seconds,
-                         bool             toLocalTime,
-                         bool             fromLocalTime = false) const;
+  struct tm addSeconds(const struct tm& ts,
+                       int              seconds,
+                       bool             toLocalTime,
+                       bool             fromLocalTime = false) const;
 
   // Restore the last known system time
   // This may be useful to get some idea of what time it is.
@@ -32,13 +32,14 @@ public:
   // This way the unit can do things based on local time even when NTP servers may not respond.
   // Do not use this when booting from deep sleep.
   // Only call this once during boot.
-  void restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState);
+  void restoreLastKnownUnixTime(unsigned long lastSysTime,
+                                uint8_t       deepSleepState);
 
-  void          setExternalTimeSource(double       time,
-                                      timeSource_t source);
+  void setExternalTimeSource(double       time,
+                             timeSource_t source);
 
   // Get unix time in seconds
-  uint32_t      getUnixTime() const;
+  uint32_t getUnixTime() const;
 
   // Get unix time in seconds
   // @param unix_time_frac  The fractional part
@@ -56,96 +57,97 @@ public:
 
   bool          getNtpTime(double& unixTime_d);
 
-   /********************************************************************************************\
+  /********************************************************************************************\
      Date/Time string formatters
    \*********************************************************************************************/
 
 public:
 
+  // Format the current Date separated by the given delimiter
+  // Default date format example: 20161231 (YYYYMMDD)
+  String getDateString(char delimiter = '\0') const;
 
-// Format the current Date separated by the given delimiter
-// Default date format example: 20161231 (YYYYMMDD)
-String getDateString(char delimiter = '\0') const;
+  // Formats the current Time
+  // Default time format example: 235959 (HHMMSS)
+  String getTimeString(char delimiter    = '\0',
+                       bool show_seconds = true,
+                       char hour_prefix  = '\0') const;
 
-// Formats the current Time
-// Default time format example: 235959 (HHMMSS)
-String getTimeString(char delimiter = '\0', bool show_seconds = true, char hour_prefix = '\0') const;
-
-String getTimeString_ampm(char delimiter = '\0', bool show_seconds = true, char hour_prefix = '\0') const;
-
-
-
-String getDateTimeString(char dateDelimiter = '-', char timeDelimiter = ':',  char dateTimeDelimiter = ' ') const;
-String getDateTimeString_ampm(char dateDelimiter = '-', char timeDelimiter = ':',  char dateTimeDelimiter = ' ') const;
+  String getTimeString_ampm(char delimiter    = '\0',
+                            bool show_seconds = true,
+                            char hour_prefix  = '\0') const;
 
 
-
-/********************************************************************************************\
-   Get current time/date
- \*********************************************************************************************/
-
-// Get the year given a Unix time stamp
-static int year(unsigned long t);
-
-// Get the weekday, given a Unix time stamp
-static int weekday(unsigned long t);
-
-// Convert a weekday number (Sun = 1 ... Sat = 7) to a 3 letter string
-static String weekday_str(int wday); 
+  String getDateTimeString(char dateDelimiter          = '-',
+                           char timeDelimiter          = ':',
+                           char dateTimeDelimiter      = ' ') const;
+  String getDateTimeString_ampm(char dateDelimiter     = '-',
+                                char timeDelimiter     = ':',
+                                char dateTimeDelimiter = ' ') const;
 
 
-// Get current year.
-int year() const 
-{
-  return 1900 + local_tm.tm_year;
-}
+  /********************************************************************************************\
+     Get current time/date
+   \*********************************************************************************************/
 
-// Get current month
-uint8_t month() const 
-{
-  return local_tm.tm_mon + 1; // tm_mon starts at 0
-}
+  // Get the year given a Unix time stamp
+  static int    year(unsigned long t);
 
-// Get current day of the month
-uint8_t day() const 
-{
-  return local_tm.tm_mday;
-}
+  // Get the weekday, given a Unix time stamp
+  static int    weekday(unsigned long t);
 
-// Get current hour
-uint8_t hour() const 
-{
-  return local_tm.tm_hour;
-}
-
-// Get current minute
-uint8_t minute() const 
-{
-  return local_tm.tm_min;
-}
-
-// Get current second
-uint8_t second() const 
-{
-  return local_tm.tm_sec;
-}
-
-// day of week, sunday is day 1
-int weekday() const 
-{
-  return local_tm.tm_wday;
-}
-
-String weekday_str() const;
+  // Convert a weekday number (Sun = 1 ... Sat = 7) to a 3 letter string
+  static String weekday_str(int wday);
 
 
+  // Get current year.
+  int year() const
+  {
+    return 1900 + local_tm.tm_year;
+  }
+
+  // Get current month
+  uint8_t month() const
+  {
+    return local_tm.tm_mon + 1; // tm_mon starts at 0
+  }
+
+  // Get current day of the month
+  uint8_t day() const
+  {
+    return local_tm.tm_mday;
+  }
+
+  // Get current hour
+  uint8_t hour() const
+  {
+    return local_tm.tm_hour;
+  }
+
+  // Get current minute
+  uint8_t minute() const
+  {
+    return local_tm.tm_min;
+  }
+
+  // Get current second
+  uint8_t second() const
+  {
+    return local_tm.tm_sec;
+  }
+
+  // day of week, sunday is day 1
+  int weekday() const
+  {
+    return local_tm.tm_wday;
+  }
+
+  String weekday_str() const;
 
 
-
-
-/********************************************************************************************\
-   Sunrise/Sunset calculations
- \*********************************************************************************************/
+  /********************************************************************************************\
+     Sunrise/Sunset calculations
+   \*********************************************************************************************/
 
 public:
 
@@ -173,14 +175,16 @@ private:
   struct tm getSunSet(int secOffset) const;
 
 public:
-  bool ExtRTC_get(uint32_t &unixtime);
+
+  bool ExtRTC_get(uint32_t& unixtime);
 
 private:
+
   bool ExtRTC_set(uint32_t unixtime);
 
 public:
 
-  struct tm local_tm;  // local time
+  struct tm local_tm;           // local time
   uint32_t syncInterval = 3600; // time sync will be attempted after this many seconds
   double sysTime = 0.0;         // Use high resolution double to get better sync between nodes when using NTP
   uint32_t prevMillis = 0;
@@ -191,8 +195,8 @@ public:
   struct tm tsRise, tsSet;
   struct tm sunRise;
   struct tm sunSet;
-  timeSource_t timeSource = timeSource_t::No_time_source;
-  float timeWander = 0.0f;  // Clock instability in ppm
+  timeSource_t timeSource            = timeSource_t::No_time_source;
+  float timeWander                   = 0.0f; // Clock instability in ppm
   uint32_t lastTimeWanderCalculation = 0;
 
   uint8_t PrevMinutes = 0;
