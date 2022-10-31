@@ -57,10 +57,11 @@ void P137_CheckPredefinedParameters(struct EventStruct *event) {
       case P137_PredefinedDevices_e::M5Stack_Core2: // M5Stack Core2
       {
         P137_REG_DCDC2_LDO2     = (P137_valueToSetting(-1, P137_CONST_MAX_DCDC2) << 16) | P137_valueToSetting(3300, P137_CONST_MAX_LDO);
-        P137_REG_DCDC3_LDO3     = (P137_valueToSetting(-1, P137_CONST_MAX_DCDC) << 16) | P137_valueToSetting(0, P137_CONST_MAX_LDO);
+        P137_REG_DCDC3_LDO3     = (P137_valueToSetting(0, P137_CONST_MAX_DCDC) << 16) | P137_valueToSetting(0, P137_CONST_MAX_LDO);
         P137_REG_LDOIO          =  P137_valueToSetting(3300, P137_CONST_MAX_LDOIO);
         P137_CONFIG_DISABLEBITS = 0b0101000000; // NC pins disabled
-        // Specials: GPIO4 High = Enable TFT
+        // Specials: GPIO1 High = LED off, GPIO4 High = Enable TFT
+        P137_SET_GPIO_FLAGS(1, static_cast<uint8_t>(P137_GPIOBootState_e::Output_high));
         P137_SET_GPIO_FLAGS(4, static_cast<uint8_t>(P137_GPIOBootState_e::Output_high));
         break;
       }
@@ -136,18 +137,18 @@ const __FlashStringHelper* toString(const P137_PredefinedDevices_e device) {
 // Constructor
 // **************************************************************************/
 P137_data_struct::P137_data_struct(struct EventStruct *event) {
-  axp192 = new (std::nothrow) I2C_AXP192();                   // Default address and I2C Wire object
+  axp192 = new (std::nothrow) I2C_AXP192();                // Default address and I2C Wire object
 
-  if (isInitialized()) {                                      // Functions based on:
-    I2C_AXP192_InitDef initDef = {                            // M5Stack StickC / M5Stack Core2
-      .EXTEN  = true,                                         // Enable ESP Power
-      .BACKUP = true,                                         // Enable RTC power
-      .DCDC1  = 3300,                                         // ESP Power      / ESP Power (Fixed)
-      .DCDC2  = P137_GET_CONFIG_DCDC2,                        // Unused         / Unused
-      .DCDC3  = P137_GET_CONFIG_DCDC3,                        // Unused         / LCD Backlight
-      .LDO2   = P137_GET_CONFIG_LDO2,                         // Backlight power (3000 mV) / Periferal VDD
-      .LDO3   = P137_GET_CONFIG_LDO3,                         // TFT Power (3000 mV)       / Vibration motor
-      .LDOIO  = P137_GET_CONFIG_LDOIO,                        // LDOIO voltage (2800 mV)
+  if (isInitialized()) {                                   // Functions based on:
+    I2C_AXP192_InitDef initDef = {                         // M5Stack StickC / M5Stack Core2
+      .EXTEN  = true,                                      // Enable ESP Power
+      .BACKUP = true,                                      // Enable RTC power
+      .DCDC1  = 3300,                                      // ESP Power      / ESP Power (Fixed)
+      .DCDC2  = P137_GET_CONFIG_DCDC2,                     // Unused         / Unused
+      .DCDC3  = P137_GET_CONFIG_DCDC3,                     // Unused         / LCD Backlight
+      .LDO2   = P137_GET_CONFIG_LDO2,                      // Backlight power (3000 mV) / Periferal VDD
+      .LDO3   = P137_GET_CONFIG_LDO3,                      // TFT Power (3000 mV)       / Vibration motor
+      .LDOIO  = P137_GET_CONFIG_LDOIO,                     // LDOIO voltage (2800 mV)
       .GPIO0  = static_cast<int>(P137_GET_FLAG_GPIO0 - 1), // Microphone power / Bus pwr enable
       .GPIO1  = static_cast<int>(P137_GET_FLAG_GPIO1 - 1), // Unused / Sys Led (green)
       .GPIO2  = static_cast<int>(P137_GET_FLAG_GPIO2 - 1), // Unused / Speaker enable
