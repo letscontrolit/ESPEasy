@@ -60,16 +60,24 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       // ESP32 WiFi ready
       break;
     case ARDUINO_EVENT_WIFI_STA_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi : STA Started"));
+    # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Started"));
+    #endif
       break;
     case ARDUINO_EVENT_WIFI_STA_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi : STA Stopped"));
+    # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Stopped"));
+    #endif
       break;
     case ARDUINO_EVENT_WIFI_AP_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP Started"));
+    # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Started"));
+    #endif
       break;
     case ARDUINO_EVENT_WIFI_AP_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP Stopped"));
+    # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Stopped"));
+    #endif
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
       // ESP32 station lost IP and the IP is reset to 0
@@ -80,15 +88,19 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       else
       #endif // if FEATURE_ETHERNET
       WiFiEventData.markLostIP();
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, 
         active_network_medium == NetworkMedium_t::Ethernet ?
-        F("ETH : Lost IP") : F("WiFi : Lost IP"));
+        F("ETH : Event Lost IP") : F("WiFi : Event Lost IP"));
+      #endif
       break;
 
     case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
       // Receive probe request packet in soft-AP interface
       // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP got probed"));
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
+      #endif
       break;
 
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE:
@@ -193,16 +205,24 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       // ESP32 WiFi ready
       break;
     case SYSTEM_EVENT_STA_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi : STA Started"));
+    # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Started"));
+    #endif
       break;
     case SYSTEM_EVENT_STA_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi : STA Stopped"));
+    # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Stopped"));
+    #endif
       break;
     case SYSTEM_EVENT_AP_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP Started"));
+    # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Started"));
+    #endif
       break;
     case SYSTEM_EVENT_AP_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP Stopped"));
+    # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Stopped"));
+    #endif
       break;
     case SYSTEM_EVENT_STA_LOST_IP:
       // ESP32 station lost IP and the IP is reset to 0
@@ -213,15 +233,19 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       else
       #endif // if FEATURE_ETHERNET
       WiFiEventData.markLostIP();
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, 
         active_network_medium == NetworkMedium_t::Ethernet ?
-        F("ETH : Lost IP") : F("WiFi : Lost IP"));
+        F("ETH : Event Lost IP") : F("WiFi : Event Lost IP"));
+      #endif
       break;
 
     case SYSTEM_EVENT_AP_PROBEREQRECVED:
       // Receive probe request packet in soft-AP interface
       // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
-      addLog(LOG_LEVEL_INFO, F("WiFi : AP got probed"));
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
+      #endif
       break;
 
     case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
@@ -331,7 +355,8 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
     WiFi.persistent(false);
-    WiFi.disconnect(true);
+    WiFi.disconnect(false);
+    delay(0);
   }
 }
 
@@ -355,6 +380,7 @@ void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& eve
   WiFiEventData.setAuthMode(event.newMode);
 }
 
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
 void onWiFiScanDone(void *arg, STATUS status) {
   if (status == OK) {
     auto *head = reinterpret_cast<bss_info *>(arg);
@@ -365,17 +391,33 @@ void onWiFiScanDone(void *arg, STATUS status) {
     }
     WiFi_AP_Candidates.after_process_WiFiscan();
     WiFiEventData.lastGetScanMoment.setNow();
-    WiFiEventData.processedScanDone = true;
+//    WiFiEventData.processedScanDone = true;
+# ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WiFi : Scan finished, found: ");
+      String log = F("WiFi : Scan finished (ESP8266), found: ");
       log += scanCount;
       addLogMove(LOG_LEVEL_INFO, log);
     }
+#endif
+    WiFi_AP_Candidates.load_knownCredentials();
+    if (WiFi_AP_Candidates.addedKnownCandidate() || !NetworkConnected()) {
+      WiFiEventData.wifiConnectAttemptNeeded = true;
+      # ifndef BUILD_NO_DEBUG
+      if (WiFi_AP_Candidates.addedKnownCandidate()) {
+        addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
+      }
+      #endif
+      NetworkConnectRelaxed();
+    }
+
   }
 
   WiFiMode_t mode = WiFi.getMode();
-  WiFi.mode(WIFI_OFF);
-  WiFi.mode(mode);
+  setWifiMode(WIFI_OFF);
+  delay(1);
+  setWifiMode(mode);
+  delay(1);
 }
+#endif
 
 #endif // ifdef ESP8266
