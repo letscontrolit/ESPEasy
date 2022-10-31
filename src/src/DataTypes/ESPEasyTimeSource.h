@@ -7,7 +7,8 @@
 
 class String;
 
-#define EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL 360000
+#define EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC 3600000
+#define EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_SEC 3600
 
 // Time Source type, sort by priority.
 // Enum values are sent via NodeStruct, so only add new ones and don't change existing values

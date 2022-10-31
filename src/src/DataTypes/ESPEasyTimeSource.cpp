@@ -60,15 +60,14 @@ unsigned long computeExpectedWander(timeSource_t  timeSource,
       expectedWander_ms += 10;
       break;
     }
-    case timeSource_t::External_RTC_time_source:
     case timeSource_t::NTP_time_source:
     {
       expectedWander_ms += 30;
       break;
     }
 
-    case  timeSource_t::ESP_now_peer:
-    case  timeSource_t::ESPEASY_p2p_UDP:
+    case timeSource_t::ESP_now_peer:
+    case timeSource_t::ESPEASY_p2p_UDP:
     {
       // expected wander is 144 per hour.
       // Using a 'penalty' of 300 makes it only preferrable over NTP after +/- 2 hour.
@@ -76,6 +75,7 @@ unsigned long computeExpectedWander(timeSource_t  timeSource,
       break;
     }
 
+    case timeSource_t::External_RTC_time_source:
     case timeSource_t::Restore_RTC_time_source:
     {
       expectedWander_ms += 2000;

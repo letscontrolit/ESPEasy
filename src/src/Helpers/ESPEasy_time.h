@@ -184,20 +184,21 @@ private:
 
 public:
 
-  struct tm local_tm;           // local time
-  uint32_t syncInterval = 3600; // time sync will be attempted after this many seconds
-  double sysTime = 0.0;         // Use high resolution double to get better sync between nodes when using NTP
+  struct tm local_tm;               // local time
+  uint32_t syncInterval = 3600;     // time sync will be attempted after this many seconds
+  double sysTime = 0.0;             // Use high resolution double to get better sync between nodes when using NTP
   uint32_t prevMillis = 0;
-  uint32_t nextSyncTime = 0;
-  uint32_t lastSyncTime = 0;
-  uint32_t lastNTPSyncTime = 0;
+  uint32_t nextSyncTime = 0;        // Next time to allow time sync against UNIX time (thus seconds)
+  uint32_t lastSyncTime_ms = 0;
+  uint32_t lastNTPSyncTime_ms = 0;
   double externalUnixTime_d = -1.0; // Used to set time from a source other than NTP.
   struct tm tsRise, tsSet;
   struct tm sunRise;
   struct tm sunSet;
-  timeSource_t timeSource            = timeSource_t::No_time_source;
-  float timeWander                   = 0.0f; // Clock instability in ppm
-  uint32_t lastTimeWanderCalculation = 0;
+  timeSource_t timeSource               = timeSource_t::No_time_source;
+  timeSource_t extTimeSource            = timeSource_t::No_time_source;
+  float timeWander                      = 0.0f; // Clock instability in ppm
+  uint32_t lastTimeWanderCalculation_ms = 0;
 
   uint8_t PrevMinutes = 0;
 };
