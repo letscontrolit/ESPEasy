@@ -82,8 +82,9 @@ bool NodesHandler::addNode(const NodeStruct& node)
       ((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) &&
        (timePassedSince(node_time.lastSyncTime_ms) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) )) {
     double unixTime;
-    if (_ntp_candidate.getUnixTime(unixTime)) {
-      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP);
+    uint8_t unit;
+    if (_ntp_candidate.getUnixTime(unixTime, unit)) {
+      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP, unit);
     }
   }
 

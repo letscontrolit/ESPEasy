@@ -36,7 +36,8 @@ public:
                                 uint8_t       deepSleepState);
 
   void setExternalTimeSource(double       time,
-                             timeSource_t source);
+                             timeSource_t source,
+                             uint8_t      unitnr = 0);
 
   // Get unix time in seconds
   uint32_t getUnixTime() const;
@@ -200,7 +201,8 @@ public:
   float timeWander                      = 0.0f; // Clock instability in ppm
   uint32_t lastTimeWanderCalculation_ms = 0;
 
-  uint8_t PrevMinutes = 0;
+  uint8_t PrevMinutes         = 0;
+  uint8_t timeSource_p2p_unit = 0;
 };
 
 

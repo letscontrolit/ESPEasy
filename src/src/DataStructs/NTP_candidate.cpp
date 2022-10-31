@@ -28,6 +28,7 @@ bool NTP_candidate_struct::set(const NodeStruct& node)
     _unix_time_sec   = node.unix_time_sec;
     _unix_time_frac  = node.unix_time_frac;
     _received_moment = millis();
+    _unit            = node.unit;
 
     if (_first_received_moment == 0) {
       _first_received_moment = _received_moment;
@@ -59,7 +60,7 @@ void NTP_candidate_struct::clear()
   _first_received_moment = 0;
 }
 
-bool NTP_candidate_struct::getUnixTime(double& unix_time_d) const
+bool NTP_candidate_struct::getUnixTime(double& unix_time_d, uint8_t& unit) const
 {
   if ((_unix_time_sec == 0) || (_time_wander < 0) || (_received_moment == 0)) {
     return false;
@@ -69,6 +70,8 @@ bool NTP_candidate_struct::getUnixTime(double& unix_time_d) const
     // Make sure to allow for enough time to collect the "best" option.
     return false;
   }
+
+  unit = _unit;
 
   unix_time_d = static_cast<double>(_unix_time_sec);
 

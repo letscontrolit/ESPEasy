@@ -86,7 +86,7 @@ void ESPEasy_time::restoreFromRTC()
   }
 }
 
-void ESPEasy_time::setExternalTimeSource(double time, timeSource_t new_timeSource) {
+void ESPEasy_time::setExternalTimeSource(double time, timeSource_t new_timeSource, uint8_t unitnr) {
   if (new_timeSource == timeSource) {
     // Update from the same type of time source
     if (timePassedSince(lastSyncTime_ms) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) {
@@ -116,9 +116,10 @@ void ESPEasy_time::setExternalTimeSource(double time, timeSource_t new_timeSourc
       addLogMove(LOG_LEVEL_INFO, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
-    extTimeSource      = new_timeSource;
-    externalUnixTime_d = time;
-    lastSyncTime_ms    = millis();
+    extTimeSource       = new_timeSource;
+    externalUnixTime_d  = time;
+    lastSyncTime_ms     = millis();
+    timeSource_p2p_unit = unitnr;
     initTime();
   }
 }
@@ -180,7 +181,7 @@ unsigned long ESPEasy_time::now() {
         #if FEATURE_ESPEASY_P2P
         double tmp_unixtime_d;
 
-        if (!updatedTime && Nodes.getUnixTime(tmp_unixtime_d)) {
+        if (!updatedTime && Nodes.getUnixTime(tmp_unixtime_d, timeSource_p2p_unit)) {
           unixTime_d   = tmp_unixtime_d;
           timeSource   = timeSource_t::ESPEASY_p2p_UDP;
           updatedTime  = true;
@@ -201,6 +202,8 @@ unsigned long ESPEasy_time::now() {
 
     // Clear the external time source so it has to be set again with updated values.
     extTimeSource = timeSource_t::No_time_source;
+
+    if (timeSource != timeSource_t::ESPEASY_p2p_UDP) { timeSource_p2p_unit = 0; }
 
     if (updatedTime) {
       START_TIMER;
