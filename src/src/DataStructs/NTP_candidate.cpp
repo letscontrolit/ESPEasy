@@ -4,6 +4,7 @@
 
 # include "../CustomBuild/CompiletimeDefines.h"
 # include "../DataTypes/ESPEasyTimeSource.h"
+# include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_time_calc.h"
 # include "../Helpers/StringConverter.h"
 
