@@ -79,23 +79,26 @@ class HLW8012 {
             unsigned long pulse_timeout = PULSE_TIMEOUT);
 
         void setMode(hlw8012_mode_t mode);
+
+private:
         hlw8012_mode_t getMode();
         hlw8012_mode_t toggleMode();
 
-        double getCurrent();
-        unsigned int getVoltage();
-        unsigned int getActivePower();
-        unsigned int getApparentPower();
-        double getPowerFactor();
-        unsigned int getReactivePower();
-        unsigned long getEnergy(); //in Ws
+public:
+        float getCurrent();
+        float getVoltage();
+        float getActivePower();
+        float getApparentPower();
+        float getPowerFactor();
+        float getReactivePower();
+        float getEnergy(); //in Ws
         void resetEnergy();
 
         void setResistors(double current, double voltage_upstream, double voltage_downstream);
 
-        void expectedCurrent(double current);
-        void expectedVoltage(unsigned int current);
-        void expectedActivePower(unsigned int power);
+        void expectedCurrent(float current);
+        void expectedVoltage(float current);
+        void expectedActivePower(float power);
 
         double getCurrentMultiplier() { return _current_multiplier; };
         double getVoltageMultiplier() { return _voltage_multiplier; };
@@ -112,22 +115,21 @@ class HLW8012 {
         unsigned char _cf1_pin = 0;
         unsigned char _sel_pin = 0;
 
-        double _current_resistor = R_CURRENT;
-        double _voltage_resistor = R_VOLTAGE;
+        float _current_resistor = R_CURRENT;
+        float _voltage_resistor = R_VOLTAGE;
 
-        double _current_multiplier = 0.0; // Unit: us/A
-        double _voltage_multiplier = 0.0; // Unit: us/V
-        double _power_multiplier = 0.0;   // Unit: us/W
+        float _current_multiplier = 0.0; // Unit: us/A
+        float _voltage_multiplier = 0.0; // Unit: us/V
+        float _power_multiplier = 0.0;   // Unit: us/W
 
         unsigned long _pulse_timeout = PULSE_TIMEOUT;    //Unit: us
         volatile unsigned long _voltage_pulse_width = 0; //Unit: us
         volatile unsigned long _current_pulse_width = 0; //Unit: us
         volatile unsigned long _power_pulse_width = 0;   //Unit: us
-        volatile unsigned long _pulse_count = 0;
 
-        double _current = 0;
-        unsigned int _voltage = 0;
-        unsigned int _power = 0;
+        float _current = 0;
+        float _voltage = 0;
+        float _power = 0;
 
         unsigned char _current_mode = HIGH;
         volatile unsigned char _mode = 0;
@@ -136,6 +138,8 @@ class HLW8012 {
         volatile unsigned long _last_cf_interrupt = 0;
         volatile unsigned long _last_cf1_interrupt = 0;
         volatile unsigned long _first_cf1_interrupt = 0;
+        volatile unsigned long _cf_pulse_count = 0;
+        volatile unsigned long _cf1_pulse_count = 0;
 
         void _checkCFSignal();
         void _checkCF1Signal();
