@@ -87,7 +87,7 @@ time_t P081_getCurrentTime()
   node_time.now();
 
   // FIXME TD-er: Why work on a deepcopy of tm?
-  struct tm current = node_time.tm;
+  struct tm current = node_time.local_tm;
 
   return mktime((struct tm *)&current);
 }

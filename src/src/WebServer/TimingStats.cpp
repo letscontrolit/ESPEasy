@@ -43,7 +43,7 @@ void handle_timingstats() {
   const float timespan = timeSinceLastReset / 1000.0f;
   addFormHeader(F("Statistics"));
   addRowLabel(F("Start Period"));
-  struct tm startPeriod = node_time.addSeconds(node_time.tm, -1.0f * timespan, false);
+  struct tm startPeriod = node_time.addSeconds(node_time.local_tm, -1.0f * timespan, true, true);
   addHtml(formatDateTimeString(startPeriod, '-', ':', ' ', false));
   addRowLabelValue(LabelType::LOCAL_TIME);
   addRowLabel(F("Time span"));
