@@ -25,7 +25,7 @@
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
 
-#define WIFI_PROCESS_EVENTS_TIMEOUT          10000  // in milliSeconds
+#define WIFI_PROCESS_EVENTS_TIMEOUT          20000  // in milliSeconds
 
 struct WiFiEventData_t {
   bool WiFiConnectAllowed() const;
