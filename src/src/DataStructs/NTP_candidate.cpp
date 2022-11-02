@@ -10,6 +10,8 @@
 
 bool NTP_candidate_struct::set(const NodeStruct& node)
 {
+  if (node.unit == Settings.Unit) { return false; }
+
   if (node.unix_time_sec < get_build_unixtime()) { return false; }
   const timeSource_t timeSource = static_cast<timeSource_t>(node.timeSource);
 
