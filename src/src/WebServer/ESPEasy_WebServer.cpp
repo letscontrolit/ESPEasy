@@ -72,7 +72,7 @@
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
-  if (web_server.hasArg(arg)) { 
+  if (hasArg(arg)) { 
     safe_strncpy(dest, webArg(arg).c_str(), max_size); 
   }
 }
@@ -173,7 +173,7 @@ bool captivePortal() {
       redirectURL += F("/setup");
     }
     #endif
-    web_server.sendHeader(F("Location"), redirectURL, true);
+    sendHeader(F("Location"), redirectURL, true);
     web_server.send(302, F("text/plain"), EMPTY_STRING);   // Empty content inhibits Content-length header so we have to close the socket ourselves.
     web_server.client().stop(); // Stop is needed because we sent no content length
     return true;
@@ -379,10 +379,11 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   const bool addJS   = true;
   const bool addMeta = true;
 
+/*
   if (tmplName.equals(F("TmplAP")))
   {
 
-    getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
+    getWebPageTemplateDefaultHead(parser, addMeta, !addJS);
 
     if (!parser.isTail()) {
       #ifndef WEBPAGE_TEMPLATE_AP_HEADER
@@ -401,7 +402,9 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-  else if (tmplName.equals(F("TmplMsg")))
+  else 
+  */
+  if (tmplName.equals(F("TmplMsg")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
     if (!parser.isTail()) {
@@ -1083,37 +1086,3 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
 bool webArg2ip(const __FlashStringHelper * arg, uint8_t *IP) {
   return str2ip(webArg(arg), IP);
 }
-
-#ifdef ESP8266
-const String& webArg(const __FlashStringHelper * arg)
-{
-  return web_server.arg(String(arg));
-}
-
-const String& webArg(const String& arg)
-{
-  return web_server.arg(arg);
-}
-
-const String& webArg(int i)
-{
-  return web_server.arg(i);
-}
-#endif
-
-#ifdef ESP32
-String webArg(const __FlashStringHelper * arg)
-{
-  return web_server.arg(String(arg));
-}
-
-String webArg(const String& arg)
-{
-  return web_server.arg(arg);
-}
-
-String webArg(int i)
-{
-  return web_server.arg(i);
-}
-#endif

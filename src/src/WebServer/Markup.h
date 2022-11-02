@@ -232,7 +232,8 @@ void addNumericBox(const String& id,
                    int           min,
                    int           max,
                    const __FlashStringHelper * classname,
-                   const String& tooltip = EMPTY_STRING);
+                   const String& tooltip = EMPTY_STRING,
+                   bool disabled = false);
 #endif // if FEATURE_TOOLTIPS
 
 void addFloatNumberBox(const String& id,
@@ -249,11 +250,13 @@ void addFloatNumberBox(const String& id,
 void addNumericBox(const __FlashStringHelper *id,
                    int                        value,
                    int                        min,
-                   int                        max);
+                   int                        max,
+                   bool                       disabled = false);
 void addNumericBox(const String& id,
                    int           value,
                    int           min,
-                   int           max);
+                   int           max,
+                   bool          disabled = false);
 
 // ********************************************************************************
 // Add Textbox

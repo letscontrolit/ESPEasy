@@ -51,7 +51,7 @@ bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *
     String taskName;
     taskIndex_t tmpTaskIndex = taskIndex;
     if ((event->Par1 <= 0 || event->Par1 >= INVALID_TASK_INDEX) && GetArgv(Line, taskName, 2)) {
-      tmpTaskIndex = findTaskIndexByName(taskName);
+      tmpTaskIndex = findTaskIndexByName(taskName, true);
       if (tmpTaskIndex != INVALID_TASK_INDEX) {
         event->Par1 = tmpTaskIndex + 1;
       }
@@ -137,13 +137,41 @@ const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event
     // This is a command so no guarantee the taskIndex is correct in the event
     event->setTaskIndex(taskIndex);
 
-    if (setTaskEnableStatus(event, enable)) {
-      return return_command_success();
+    #if FEATURE_PLUGIN_PRIORITY
+    if (!Settings.isPriorityTask(event->TaskIndex))
+    #endif // if FEATURE_PLUGIN_PRIORITY
+    {
+      if (setTaskEnableStatus(event, enable)) {
+        return return_command_success();
+      }
     }
     return return_command_failed();
   }
   return F("INVALID_PARAMETERS");
 }
+
+#if FEATURE_PLUGIN_PRIORITY
+const __FlashStringHelper * Command_PriorityTask_DisableTask(struct EventStruct *event, const char *Line)
+{
+  taskIndex_t  taskIndex;
+  unsigned int varNr;
+
+  if (validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+    // This is a command so no guarantee the taskIndex is correct in the event
+    event->setTaskIndex(taskIndex);
+
+    if (Settings.isPowerManagerTask(event->TaskIndex))
+    {
+      Settings.setPowerManagerTask(event->TaskIndex, false);
+      return return_command_success();
+    }
+    // Handle other Priotiry task options
+    Settings.setTaskEnableReadonly(event->TaskIndex, false);
+    return return_command_failed();
+  }
+  return F("INVALID_PARAMETERS");
+}
+#endif // if FEATURE_PLUGIN_PRIORITY
 
 const __FlashStringHelper * Command_Task_Disable(struct EventStruct *event, const char *Line)
 {
@@ -154,6 +182,13 @@ const __FlashStringHelper * Command_Task_Enable(struct EventStruct *event, const
 {
   return Command_Task_EnableDisable(event, true, Line);
 }
+
+#if FEATURE_PLUGIN_PRIORITY
+const __FlashStringHelper * Command_PriorityTask_Disable(struct EventStruct *event, const char *Line)
+{
+  return Command_PriorityTask_DisableTask(event, Line);
+}
+#endif
 
 const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 {
@@ -175,7 +210,7 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
-  const int    result       = round(UserVar[uservarIndex]);
+  const int    result       = lround(UserVar[uservarIndex]);
 
   if ((result == 0) || (result == 1)) {
     UserVar[uservarIndex] = (result == 0) ? 1.0f : 0.0f;

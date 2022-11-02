@@ -34,7 +34,7 @@ void SwitchWebformLoad(
 
   addFormSubHeader(F("Advanced event management"));
 
-  addFormNumericBox(F("De-bounce (ms)"), F("sw_debounce"), round(debounce_ms), 0, 250);
+  addFormNumericBox(F("De-bounce (ms)"), F("sw_debounce"), lround(debounce_ms), 0, 250);
 
   // set minimum value for doubleclick MIN max speed
   if (doubleClickMaxInterval < SWITCH_DOUBLECLICK_MIN_INTERVAL) {
@@ -56,7 +56,7 @@ void SwitchWebformLoad(
 
   addFormNumericBox(F("Doubleclick max. interval (ms)"),
                     F("sw_dcmaxinterval"),
-                    round(doubleClickMaxInterval),
+                    lround(doubleClickMaxInterval),
                     SWITCH_DOUBLECLICK_MIN_INTERVAL,
                     SWITCH_DOUBLECLICK_MAX_INTERVAL);
 
@@ -80,11 +80,11 @@ void SwitchWebformLoad(
 
   addFormNumericBox(F("Longpress min. interval (ms)"),
                     F("sw_lpmininterval"),
-                    round(longPressMinInterval_ms),
+                    lround(longPressMinInterval_ms),
                     SWITCH_LONGPRESS_MIN_INTERVAL,
                     SWITCH_LONGPRESS_MAX_INTERVAL);
 
-  addFormCheckBox(F("Use Safe Button (slower)"), F("sw_sb"), round(useSafeButton));
+  addFormCheckBox(F("Use Safe Button (slower)"), F("sw_sb"), lround(useSafeButton));
 
   // TO-DO: add Extra-Long Press event
   // addFormCheckBox(F("Extra-Longpress event (20 & 21)"), F("sw_elp"), PCONFIG_LONG(1));

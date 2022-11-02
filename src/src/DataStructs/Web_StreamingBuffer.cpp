@@ -103,25 +103,18 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
 
   int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
   if (flush_step < 1) { flush_step = 0; }
-/*
+
+  /*
   // This part does act strange on 1 heap builds
   // See: https://github.com/letscontrolit/ESPEasy/pull/3680#issuecomment-1031716163
   if (length < static_cast<unsigned int>(flush_step)) {
     // Just use the faster String operator to copy flash strings.
-    this->buf += str;
+    // Very likely casting it to FPSTR first does fix the crashes, but it does not yield any noticable speed improvements
+    this->buf += FPSTR(str); 
     return *this;
   }
-*/
-  // FIXME TD-er: Not sure what happens, but streaming large flash chunks does cause allocation issues.
-  const bool stream_P = ESP.getFreeHeap() > 4000 && 
-                        length > (CHUNKED_BUFFER_SIZE >> 2) &&
-                        length < (2 * CHUNKED_BUFFER_SIZE);
-
-  if (stream_P && ((this->buf.length() + length) > CHUNKED_BUFFER_SIZE)) {
-    // Do not copy to the internal buffer, but stream immediately.
-    flush();
-    web_server.sendContent_P(str);
-  } else {
+  */
+  {
     // Copy to internal buffer and send in chunks
     unsigned int pos          = 0;
     while (pos < length) {
@@ -221,7 +214,7 @@ void Web_StreamingBuffer::startStream(bool allowOriginAll,
   
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
-    web_server.send(200, F("text/plain"), F("Low memory. Cannot display webpage :-("));
+    web_server.send_P(200, (PGM_P)F("text/plain"), (PGM_P)F("Low memory. Cannot display webpage :-("));
       #if defined(ESP8266)
     tcpCleanup();
       #endif // if defined(ESP8266)
@@ -370,12 +363,12 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
 
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  web_server.sendHeader(F("Accept-Ranges"),     F("none"));
-  web_server.sendHeader(F("Cache-Control"),     F("no-cache"));
-  web_server.sendHeader(F("Transfer-Encoding"), F("chunked"));
+  sendHeader(F("Accept-Ranges"),     F("none"));
+  sendHeader(F("Cache-Control"),     F("no-cache"));
+  sendHeader(F("Transfer-Encoding"), F("chunked"));
 
   if (allowOriginAll) {
-    web_server.sendHeader(F("Access-Control-Allow-Origin"), "*");
+    sendHeader(F("Access-Control-Allow-Origin"), "*");
   }
   web_server.send(httpCode, content_type, EMPTY_STRING);
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)

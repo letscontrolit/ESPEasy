@@ -117,7 +117,7 @@ void ESPEasy_setup()
   psramInit();
 #endif
 
-#ifdef CONFIG_IDF_TARGET_ESP32
+#if CONFIG_IDF_TARGET_ESP32
   // restore GPIO16/17 if no PSRAM is found
   if (!FoundPSRAM()) {
     // test if the CPU is not pico
@@ -128,7 +128,7 @@ void ESPEasy_setup()
       gpio_reset_pin(GPIO_NUM_17);
     }
   }
-#endif  // CONFIG_IDF_TARGET_ESP32
+#endif  // if CONFIG_IDF_TARGET_ESP32
   initADC();
 #endif  // ESP32
 #ifndef BUILD_NO_RAM_TRACKER
@@ -137,6 +137,7 @@ void ESPEasy_setup()
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
   initWiFi();
+  WiFiEventData.clearAll();
 
 #ifndef BUILD_MINIMAL_OTA
   run_compiletime_checks();
@@ -320,6 +321,7 @@ void ESPEasy_setup()
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
     WiFi_AP_Candidates.load_knownCredentials();
+    setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
       WiFiEventData.wifiSetup = true;
       RTC.clearLastWiFi(); // Must scan all channels
@@ -332,7 +334,8 @@ void ESPEasy_setup()
     // Always perform WiFi scan
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
-    WifiScan(true);
+    WifiScan(false);
+    setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("WifiScan()"));
@@ -400,8 +403,9 @@ void ESPEasy_setup()
   logMemUsageAfter(F("PluginInit()"));
   #endif
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log  = F("INFO : Plugins: ");
-    log += deviceCount + 1;
+    String log;
+    log.reserve(80);
+    log += concat(F("INFO : Plugins: "), deviceCount + 1);
     log += ' ';
     log += getPluginDescriptionString();
     log += F(" (");
@@ -411,7 +415,7 @@ void ESPEasy_setup()
   }
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
-    addLog(LOG_LEVEL_ERROR, String(F("Programming error! - Increase PLUGIN_MAX (")) + deviceCount + ')');
+    addLog(LOG_LEVEL_ERROR, concat(F("Programming error! - Increase PLUGIN_MAX ("), deviceCount) + ')');
   }
 
   clearAllCaches();

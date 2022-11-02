@@ -38,6 +38,7 @@
 # define P095_CONFIG_FLAG_COMPAT_P095   4               // Flag: Compatibility -1 offset like original P095
 # define P095_CONFIG_FLAG_BACK_FILL     5               // Flag: Background fill when printing text
 # define P095_CONFIG_FLAG_SHOW_SPLASH   6               // Flag: Show splash during startup of the plugin
+# define P095_CONFIG_FLAG_INVERTDISPLAY 7               // Flag: Swap foreground and background colors/invertDisplay() (M5Stack Core2)
 # define P095_CONFIG_FLAG_CMD_TRIGGER   8               // Flag-offset to store 4 bits for Command trigger, uses bits 8, 9, 10 and 11
 # define P095_CONFIG_FLAG_FONTSCALE     12              // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
 # define P095_CONFIG_FLAG_MODE          16              // Flag-offset to store 4 bits for Mode, uses bits 16, 17, 18 and 19
@@ -51,6 +52,7 @@
 # define P095_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_MODE))
 # define P095_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_TYPE))
 # define P095_CONFIG_FLAG_GET_SHOW_SPLASH   (!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_SHOW_SPLASH)) // Inverted setting, default on
+# define P095_CONFIG_FLAG_GET_INVERTDISPLAY (bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_INVERTDISPLAY))
 
 # ifdef ESP32
 

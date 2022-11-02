@@ -117,12 +117,14 @@ void addFormNumericBox(LabelType::Enum label, int value, int min, int max
                        #if FEATURE_TOOLTIPS
                        , const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
+                       , bool disabled
                        )
 {
   addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max
                     #if FEATURE_TOOLTIPS
                     , tooltip
                     #endif // if FEATURE_TOOLTIPS
+                    , disabled
                     );
 }
 
@@ -135,12 +137,15 @@ void addFormNumericBox(const __FlashStringHelper * label,
                        ,
                        const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
+                       ,
+                       bool disabled
                        )
 {
   addFormNumericBox(String(label), String(id), value, min, max
                     #if FEATURE_TOOLTIPS
                     , tooltip
                     #endif // if FEATURE_TOOLTIPS
+                    , disabled
                     );
 
 }
@@ -149,6 +154,7 @@ void addFormNumericBox(const String& label, const String& id, int value, int min
                        #if FEATURE_TOOLTIPS
                        , const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
+                       , bool disabled
                        )
 {
   addRowLabel_tr_id(label, id);
@@ -156,6 +162,7 @@ void addFormNumericBox(const String& label, const String& id, int value, int min
                 #if FEATURE_TOOLTIPS
                 , F("widenumber"), tooltip
                 #endif // if FEATURE_TOOLTIPS
+                , disabled
                 );
 }
 

@@ -222,20 +222,20 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("MAX1704x");
       break;
     case 0x38:
-      result +=  F("PCF8574A,AHT10/20/21");
+      result +=  F("LCD,PCF8574A,AHT10/20/21,VEML6070");
       break;
     case 0x3A:
     case 0x3B:
     case 0x3E:
     case 0x3F:
-      result +=  F("PCF8574A");
+      result +=  F("LCD,PCF8574A");
       break;
     case 0x39:
-      result +=  F("PCF8574A,TSL2561,APDS9960,AHT10");
+      result +=  F("LCD,PCF8574A,TSL2561,APDS9960,AHT10");
       break;
     case 0x3C:
     case 0x3D:
-      result +=  F("PCF8574A,OLED");
+      result +=  F("LCD,PCF8574A,OLED");
       break;
     case 0x40:
       result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080");
@@ -302,7 +302,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO EC");
       break;
     case 0x68:
-      result +=  F("DS1307,DS3231,PCF8523,ITG3205,CDM7160");
+      result +=  F("MPU6050,DS1307,DS3231,PCF8523,ITG3205,CDM7160");
       break;
     case 0x69:
       result +=  F("ITG3205,CDM7160");

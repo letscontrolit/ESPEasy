@@ -12,7 +12,7 @@
 #include "../Static/WebStaticData.h"
 
 #include "../WebServer/HTML_wrappers.h"
-
+#include "../WebServer/LoadFromFS.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -301,7 +301,6 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
 #endif // if !FEATURE_NOTIFIER
 
       addHtml(F("<a "));
-
       addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
       addHtmlAttribute(F("href"),  getGpMenuURL(i));
       addHtml('>');
@@ -325,7 +324,12 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
   else if (varName.equals(F("css")))
   {
     serve_favicon();
-    serve_CSS(CSSfiles_e::ESPEasy_default);
+    if (MENU_INDEX_SETUP == navMenuIndex) {
+      // Serve embedded CSS
+      serve_CSS_inline();
+    } else {
+      serve_CSS(CSSfiles_e::ESPEasy_default);
+    }
     #if FEATURE_RULES_EASY_COLOR_CODE
     if (MENU_INDEX_RULES == navMenuIndex ||
         MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {

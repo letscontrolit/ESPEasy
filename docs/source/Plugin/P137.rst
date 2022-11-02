@@ -38,6 +38,8 @@ Configuration
 
 * **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
 
+.. include:: PriorityTask.rst
+
 I2C Options 
 ^^^^^^^^^^^^
 
@@ -85,7 +87,11 @@ Available options:
 
 * *LDO3 voltage*: The voltage at the LDO3 output.
 
-* *GPIO0 voltage*: The voltage at the GPIO0 (on AXP192, not ESP!) output.
+* *LDOIO voltage*: The voltage at the GPIO (on AXP192, not ESP!) outputs.
+
+* *DCDC2 voltage*: The voltage at the DCDC2 output.
+
+* *DCDC3 voltage*: The voltage at the DCDC3 output.
 
 .. note:: Not all options hold usable values for all boards, some may even be not connected. Check the board documentation for available values.
 
@@ -94,11 +100,37 @@ Available options:
 Hardware outputs AXP192
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The **LDO2**, **LDO3** and **GPIO0** outputs of the AXP192 can be set at a predefined value. When setting a value below 1800 mV, the output will be turned off. Above 3300 mV is not supported/allowed. Stepsize/resolution is ca. 100 mV.
+* **Predefined device configuration** The plugin provides presets for some specific devices:
+
+.. image:: P137_PredefinedDeviceOptions.png
+
+* *Select an option to set default values* This option will always be selected when opening the page.
+
+* *M5Stack StickC* Settings for the M5Stack StickC hardware.
+
+* *M5Stack Core2 (Default)* Settings for the M5Stack Core and Core2, and derived special models, hardware. This is the default predefined configuration.
+
+* *User defined* To be able to configure are available output pins the User defined option is available, f.e. when using a custom designed, or not yet supported, hardware setup.
+
+When available, new predefined devices will be added. The User defined option will stay the last option.
+
+The **LDO2**, **LDO3**, **LDOIO**, **DCDC2** and **DCDC3** outputs of the AXP192 can be set at a predefined value. When setting a value below 1800 mV, or 700 mV for the DCDC pins, the output will be turned off. Above 3300 mV is not supported/allowed, except for the DCDC3 pin that allows up to 3500 mV. Stepsize/resolution is ca. 100 mV.
 
 .. warning:: Check board documentation for what each output is actually connected to, and the allowed voltage range for that output.
 
-.. note:: AXP192 output pins ``DCDC1`` .. ``DCDC3`` are usually hardwired to specific functions of the board and/or should not be changed, and ``GPIO1`` .. ``GPIO4`` are often unused, *and* currently not implemented in the used library, so are not (yet) available for configuration.
+For the available GPIO pins (on AXP192, *not* ESP!), the initial state can be selected. The available options are:
+
+.. image:: P137_InitialStateOptions.png
+
+* *Default* Doesn't set the state of the GPIO pin.
+
+* *Output, low* Sets the state to low level (0 V).
+
+* *Output, high* Sets the state to high level.
+
+* *Input* Not supported yet.
+
+* *PWM* Not supported yet.
 
 Data Acquisition
 ^^^^^^^^^^^^^^^^

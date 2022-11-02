@@ -30,15 +30,24 @@
 # define  CDM7160_FLAG_HPAE  0x04
 # define  CDM7160_FLAG_PWME  0x01
 
+enum class P127_initPhases : uint8_t {
+  Ready      = 0x00,
+  InitDelay1 = 0x01,
+  InitDelay2 = 0x02,
+  Undefined  = 0xFF
+};
+
 
 struct P127_data_struct : public PluginTaskData_base {
-  P127_data_struct(int8_t i2caddr);
-  bool     init(uint16_t alt);
+  P127_data_struct(const int8_t   i2caddr,
+                   const uint16_t alt);
+  bool     init();
   bool     checkData();
   uint16_t readData();
   bool     setReset(void);
   uint8_t  getAltitude();
   uint8_t  getCompensation();
+  bool     plugin_fifty_per_second();
 
 private:
 
@@ -53,8 +62,12 @@ private:
   bool     clearAltitude(void);
   uint8_t  getStatus();
 
-  byte     _i2cAddress;
-  uint16_t _co2 = 0;
+  int32_t         timeToWait = 0;
+  P127_initPhases initPhase  = P127_initPhases::Undefined;
+
+  int8_t   _i2cAddress;
+  uint16_t _alt;
+  uint16_t _co2;
 };
 
 #endif // ifdef USES_P127

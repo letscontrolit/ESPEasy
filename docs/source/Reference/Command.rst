@@ -731,6 +731,10 @@ P137 :ref:`P137_page`
 
 .. include:: ../Plugin/P137_commands.repl
 
+P141 :ref:`P141_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P141_commands.repl
 
 .. .. *** Insert regular plugin commands above this remark! ***
 

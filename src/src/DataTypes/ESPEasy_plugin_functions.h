@@ -55,7 +55,8 @@
 #define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 43 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
 #define PLUGIN_INIT_VALUE_RANGES           44 // Initialize the ranges of values, called just before PLUGIN_INIT
 #define PLUGIN_READ_ERROR_OCCURED          45 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
-
+#define PLUGIN_PRIORITY_INIT_ALL           46 // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
+#define PLUGIN_PRIORITY_INIT               47 // Pre-initialize a singe plugins that is set to PowerManager priority
 
 
 
