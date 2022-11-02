@@ -37,6 +37,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/StringProvider.h"
 
 #include "../Static/WebStaticData.h"
 
@@ -291,6 +292,9 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
+      addRowLabelValue(LabelType::EXT_RTC_UTC_TIME);
+    }
     addRowLabelValue(LabelType::TIME_SOURCE);
     addRowLabelValue(LabelType::TIME_WANDER);
     addUnit(F("ppm"));

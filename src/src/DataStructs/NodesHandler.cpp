@@ -61,7 +61,8 @@ bool NodesHandler::addNode(const NodeStruct& node)
   }
   {
     _nodes_mutex.lock();
-    _nodes[node.unit]             = node;
+    _nodes[node.unit] = node;
+    _ntp_candidate.set(node);
     _nodes[node.unit].lastUpdated = millis();
     if (node.getRSSI() >= 0 && rssi < 0) {
       _nodes[node.unit].setRSSI(rssi);
@@ -75,6 +76,19 @@ bool NodesHandler::addNode(const NodeStruct& node)
     }
     _nodes_mutex.unlock();
   }
+
+  // Check whether the current time source is considered "worse" than received from p2p node.
+  if (!node_time.systemTimePresent() || 
+      node_time.timeSource > timeSource_t::ESPEASY_p2p_UDP ||
+      ((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) &&
+       (timePassedSince(node_time.lastSyncTime_ms) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) )) {
+    double unixTime;
+    uint8_t unit;
+    if (_ntp_candidate.getUnixTime(unixTime, unit)) {
+      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP, unit);
+    }
+  }
+
   return isNewNode;
 }
 
@@ -376,9 +390,15 @@ void NodesHandler::updateThisNode() {
       break;
     default:
     {
-      thisNode.lastUpdated = timePassedSince(node_time.lastSyncTime);
+      thisNode.lastUpdated = timePassedSince(node_time.lastSyncTime_ms);
       break;
     }
+  }
+  if (node_time.systemTimePresent()) {
+    // NodeStruct is a packed struct, so we cannot directly use its members as a reference.
+    uint32_t unix_time_frac = 0;
+    thisNode.unix_time_sec = node_time.getUnixTime(unix_time_frac);
+    thisNode.unix_time_frac = unix_time_frac;
   }
   #ifdef USES_ESPEASY_NOW
   if (Settings.UseESPEasyNow()) {
@@ -454,6 +474,7 @@ void NodesHandler::updateThisNode() {
 }
 
 const NodeStruct * NodesHandler::getThisNode() {
+  node_time.now();
   updateThisNode();
   MAC_address this_mac;
   WiFi.macAddress(this_mac.mac);

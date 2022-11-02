@@ -35,6 +35,12 @@ bool NodeStruct::validate() {
     setRSSI(0);
     lastUpdated = 0;
   }
+  if (build < 20253) {
+    version = 0;
+    dummy = 0;
+    unix_time_frac = 0;
+    unix_time_sec = 0;
+  }
 
   // FIXME TD-er: Must make some sanity checks to see if it is a valid message
   return valid();

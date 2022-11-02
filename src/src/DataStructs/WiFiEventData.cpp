@@ -15,13 +15,17 @@
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 #define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
-#define WIFI_PROCESS_EVENTS_TIMEOUT          10000  // in milliSeconds
 
 #define CONNECT_TIMEOUT_MAX                  4000   // in milliSeconds
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (WiFi.status() == WL_IDLE_STATUS) {
-    return false;
+    // FIXME TD-er: What to do now? Set a timer?
+    //return false;
+    if (last_wifi_connect_attempt_moment.isSet() && 
+       !last_wifi_connect_attempt_moment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+      return false;
+    }
   }
   if (!wifiConnectAttemptNeeded) return false;
   if (wifiSetupConnect) return true;
@@ -158,6 +162,7 @@ void WiFiEventData_t::setWiFiServicesInitialized() {
     #endif
     bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
     wifiConnectInProgress = false;
+    wifiConnectAttemptNeeded = false;
 
     #ifdef USES_ESPEASY_NOW
     temp_disable_EspEasy_now_timer = millis() + WIFI_RECONNECT_WAIT;

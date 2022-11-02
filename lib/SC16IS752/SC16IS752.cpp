@@ -28,7 +28,7 @@
 
 #ifdef __AVR__
  # define WIRE Wire
-#elif ESP8266 // ESP8266
+#elif defined(ESP8266) || defined(ESP32) // ESP8266/ESP32
  # define WIRE Wire
 #else // Arduino Due
  # define WIRE Wire1

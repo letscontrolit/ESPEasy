@@ -115,6 +115,11 @@ void handle_unprocessedNetworkEvents()
         }        
         WiFiEventData.setWiFiServicesInitialized();
         CheckRunningServices();
+
+        // First try to get the time, since that may be used in logs
+        if (Settings.UseNTP()) {
+          node_time.initTime();
+        }
       }
     }
   }
@@ -150,9 +155,9 @@ void handle_unprocessedNetworkEvents()
       }
 
       if (!WiFiEventData.processedDHCPTimeout) {
-//        #ifndef BUILD_NO_DEBUG
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("WIFI : DHCP timeout, Calling disconnect()"));
-//        #endif // ifndef BUILD_NO_DEBUG
+        #endif // ifndef BUILD_NO_DEBUG
         WiFiEventData.processedDHCPTimeout = true;
         WifiDisconnect();
       }
@@ -270,16 +275,6 @@ void handle_unprocessedNetworkEvents()
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void processDisconnect() {
-  if (WiFiEventData.processingDisconnect.isSet()) {
-    if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000 || WiFiEventData.processedDisconnect) {
-      WiFiEventData.processedDisconnect = true;
-      WiFiEventData.processingDisconnect.clear();
-    }
-  }
-
-  if (WiFiEventData.processedDisconnect || 
-      WiFiEventData.processingDisconnect.isSet()) { return; }
-
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Disconnected! Reason: '");
     log += getLastDisconnectReason();
@@ -295,10 +290,15 @@ void processDisconnect() {
   }
   logConnectionStatus();
 
-  addLog(LOG_LEVEL_INFO, F("WiFi : processDisconnect()"));
-  WiFiEventData.processingDisconnect.setNow();
-  WiFiEventData.setWiFiDisconnected();
-  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
+  if (WiFiEventData.processingDisconnect.isSet()) {
+    if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000 || WiFiEventData.processedDisconnect) {
+      WiFiEventData.processedDisconnect = true;
+      WiFiEventData.processingDisconnect.clear();
+    }
+  }
+
+  if (WiFiEventData.processedDisconnect || 
+      WiFiEventData.processingDisconnect.isSet()) { return; }
 
   if (Settings.UseRules) {
     eventQueue.add(F("WiFi#Disconnected"));
@@ -480,10 +480,6 @@ void processGotIP() {
     WiFi.config(ip, gw, subnet, NetworkDnsIP(0), NetworkDnsIP(1));
   }
 
-  // First try to get the time, since that may be used in logs
-  if (node_time.systemTimePresent()) {
-    node_time.initTime();
-  }
 #if FEATURE_MQTT
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
@@ -613,6 +609,10 @@ void processDisableAPmode() {
 
   if (!WifiIsAP(WiFi.getMode())) {
     WiFiEventData.timerAPoff.clear();
+    if (WiFiEventData.wifiConnectAttemptNeeded) {
+      // Force a reconnect cycle
+      WifiDisconnect();
+    }
   }
 }
 
@@ -706,6 +706,11 @@ void processScanDone() {
     }
   }
   #endif
+
+  if (!NetworkConnected()) {
+    WiFiEventData.timerAPstart.setNow();
+  }
+
 }
 
 

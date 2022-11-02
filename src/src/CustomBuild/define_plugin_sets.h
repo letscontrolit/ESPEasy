@@ -640,6 +640,39 @@ To create/register a plugin, you have to :
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	  // CSE7766   in POW R2
     #define USES_P081   // Cron
+    #ifdef ESP8266_4M
+      #define FEATURE_ADC_VCC 1
+      #define USES_P002   // ADC with FEATURE_ADC_VCC=1 to measure ESP3v3
+      #define CONTROLLER_SET_ALL
+      #ifndef FEATURE_PLUGIN_STATS
+          #define FEATURE_PLUGIN_STATS  1
+      #endif
+      #ifndef FEATURE_CHART_JS
+          #define FEATURE_CHART_JS  1
+      #endif
+      #ifndef FEATURE_RULES_EASY_COLOR_CODE
+          #define FEATURE_RULES_EASY_COLOR_CODE 1
+      #endif
+      #ifndef FEATURE_SETTINGS_ARCHIVE
+        #define FEATURE_SETTINGS_ARCHIVE  1
+      #endif
+      #ifndef SHOW_SYSINFO_JSON
+        #define SHOW_SYSINFO_JSON 1
+      #endif
+      #ifndef FEATURE_TIMING_STATS                  
+        #define FEATURE_TIMING_STATS 1
+      #endif
+      #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 
+        #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
+      #endif
+      #ifdef BUILD_NO_DEBUG
+        #undef BUILD_NO_DEBUG
+      #endif
+      
+      #define FEATURE_MDNS  1
+      #define FEATURE_CUSTOM_PROVISIONING 1
+      #define FEATURE_DOWNLOAD 1
+    #endif
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_S2x
@@ -2099,9 +2132,30 @@ To create/register a plugin, you have to :
   #ifndef WEBSERVER_USE_CDN_JS_CSS
     #define WEBSERVER_USE_CDN_JS_CSS
   #endif
+  #ifdef WEBSERVER_CSS
+      #undef WEBSERVER_CSS
+  #endif
+  #ifndef WEBSERVER_EMBED_CUSTOM_CSS
+    #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+      #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #endif
+  #endif
+  #ifdef WEBSERVER_INCLUDE_JS
+      #undef WEBSERVER_INCLUDE_JS
+  #endif
   #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
     #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
   #endif
+
+  #ifdef WEBSERVER_GITHUB_COPY
+    #undef WEBSERVER_GITHUB_COPY
+  #endif
+  #ifdef WEBSERVER_CUSTOM
+    // TD-er: Removing WEBSERVER_CUSTOM does free up another 1.7k
+//    #undef WEBSERVER_CUSTOM
+  #endif
+
+
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif

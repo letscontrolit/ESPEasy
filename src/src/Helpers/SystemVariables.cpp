@@ -228,7 +228,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
 }
 
 #define SMART_REPL_T(T, S) \
-  if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
+  while (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 
 void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 {
@@ -246,8 +246,12 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
     switch (enumval)
     {
-      case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
-      case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
+      case SUNRISE:           
+        SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); 
+        break;
+      case SUNSET:            
+        SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); 
+        break;
       case UNKNOWN:
 
         // Do not replace

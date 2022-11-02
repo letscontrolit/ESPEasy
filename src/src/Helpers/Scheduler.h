@@ -20,7 +20,7 @@ public:
   //   Timers used in the scheduler
   // ********************************************************************************
 
-  enum class IntervalTimer_e {
+  enum class IntervalTimer_e : uint8_t {
     TIMER_20MSEC,
     TIMER_100MSEC,
     TIMER_1SEC,
@@ -58,21 +58,21 @@ public:
 
   static String toString(IntervalTimer_e timer);
 
-  enum class SchedulerTimerType_e {
-    SystemEventQueue       = 0, // Not really a timer.
-    ConstIntervalTimer     = 1,
-    PLUGIN_TASKTIMER_IN_e  = 2, // Called with a previously defined event at a specific time, set via setPluginTaskTimer
-    TaskDeviceTimer        = 3, // Essentially calling PLUGIN_READ
-    GPIO_timer             = 4,
-    PLUGIN_DEVICETIMER_IN_e = 5, // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
-    RulesTimer             = 6,
-    IntendedReboot         = 15 // Used to show intended reboot
+  enum class SchedulerTimerType_e : uint8_t {
+    SystemEventQueue       = 0u, // Not really a timer.
+    ConstIntervalTimer     = 1u,
+    PLUGIN_TASKTIMER_IN_e  = 2u, // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+    TaskDeviceTimer        = 3u, // Essentially calling PLUGIN_READ
+    GPIO_timer             = 4u,
+    PLUGIN_DEVICETIMER_IN_e = 5u, // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
+    RulesTimer             = 6u,
+    IntendedReboot         = 15u // Used to show intended reboot
   };
 
   static const __FlashStringHelper* toString(SchedulerTimerType_e timerType);
 
 
-  enum class PluginPtrType {
+  enum class PluginPtrType : uint8_t {
     TaskPlugin,
     ControllerPlugin
 #if FEATURE_NOTIFIER
@@ -82,7 +82,7 @@ public:
 
   static const __FlashStringHelper* toString(PluginPtrType pluginType);
 
-  enum class IntendedRebootReason_e {
+  enum class IntendedRebootReason_e : uint8_t {
     DeepSleep,
     DelayedReboot,
     ResetFactory,

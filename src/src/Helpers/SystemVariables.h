@@ -9,7 +9,7 @@ class SystemVariables {
 
 public:
 
-  enum Enum {
+  enum Enum : uint8_t {
     // For optmization, keep enums sorted alfabetically
     BOOT_CAUSE,
     BSSID,
@@ -123,12 +123,12 @@ public:
 
   // Find the next thing to replace.
   // Return UNKNOWN when nothing needs to be replaced.
-  static Enum nextReplacementEnum(const String& str, Enum last_tested);
+  static SystemVariables::Enum nextReplacementEnum(const String& str, SystemVariables::Enum last_tested);
 
-  static String toString(Enum enumval);
-  static const __FlashStringHelper * toFlashString(Enum enumval);
+  static String toString(SystemVariables::Enum enumval);
+  static const __FlashStringHelper * toFlashString(SystemVariables::Enum enumval);
 
-  static String getSystemVariable(Enum enumval);
+  static String getSystemVariable(SystemVariables::Enum enumval);
 
   static void parseSystemVariables(String& s, boolean useURLencode);
 

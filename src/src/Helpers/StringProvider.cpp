@@ -56,6 +56,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::LOCAL_TIME:             return F("Local Time");
     case LabelType::TIME_SOURCE:            return F("Time Source");
     case LabelType::TIME_WANDER:            return F("Time Wander");
+    case LabelType::EXT_RTC_UTC_TIME:       return F("UTC time stored in RTC");
     case LabelType::UPTIME:                 return F("Uptime");
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
@@ -261,8 +262,33 @@ String getValue(LabelType::Enum label) {
 
 
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-', ':', ' ');
-    case LabelType::TIME_SOURCE:            return toString(node_time.timeSource);
+    case LabelType::TIME_SOURCE:
+    {
+      if (((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) ||
+           (node_time.timeSource == timeSource_t::ESP_now_peer)) &&
+          (node_time.timeSource_p2p_unit != 0))
+      {
+        return concat(toString(node_time.timeSource), ' ') +
+               wrap_braces(String(node_time.timeSource_p2p_unit));
+      }
+      return toString(node_time.timeSource);
+    }
     case LabelType::TIME_WANDER:            return String(node_time.timeWander, 1);
+    case LabelType::EXT_RTC_UTC_TIME:
+    {
+      if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
+        // Try to read the stored time in the ext. time source to allow to check if it is working properly.
+        uint32_t unixtime;
+        if (node_time.ExtRTC_get(unixtime)) {
+          struct tm RTC_time;
+          breakTime(unixtime, RTC_time);
+          return formatDateTimeString(RTC_time);
+        } else {
+          return F("Not Set");
+        }
+      }
+      return String('-');
+    }
     case LabelType::UPTIME:                 return String(getUptimeMinutes());
     case LabelType::LOAD_PCT:               return toString(getCPUload(), 2);
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
@@ -335,7 +361,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::WIFI_CONNECTION:        break;
     case LabelType::WIFI_RSSI:              return String(WiFi.RSSI());
     case LabelType::IP_CONFIG:              return String(useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(
-        LabelType::IP_CONFIG_DYNAMIC));
+                                                            LabelType::IP_CONFIG_DYNAMIC));
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
     case LabelType::IP_ADDRESS:             return NetworkLocalIP().toString();
@@ -373,7 +399,7 @@ String getValue(LabelType::Enum label) {
         return String(static_cast<int32_t>(EthEventData.lastConnectMoment.millisPassedSince() / 1000ll)) + F("000"); 
       }
       #endif // if FEATURE_ETHERNET
-      return String(static_cast<int32_t>(WiFiEventData.lastConnectMoment.millisPassedSince() / 1000ll)) + F("000"); 
+      return String(static_cast<int32_t>(WiFiEventData.lastConnectMoment.millisPassedSince() / 1000ll)) + F("000");
     case LabelType::LAST_DISCONNECT_REASON: return String(WiFiEventData.lastDisconnectReason);
     case LabelType::LAST_DISC_REASON_STR:   return getLastDisconnectReason();
     case LabelType::NUMBER_RECONNECTS:      return String(WiFiEventData.wifi_reconnects);
@@ -388,12 +414,13 @@ String getValue(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: return String(Settings.ConnectionFailuresThreshold);
 
     case LabelType::BUILD_DESC:             return getSystemBuildString();
-    case LabelType::GIT_BUILD:              
-      { 
-        const String res(F(BUILD_GIT));
-        if (!res.isEmpty()) return res;
-        return get_git_head();
-      }
+    case LabelType::GIT_BUILD:
+    {
+      const String res(F(BUILD_GIT));
+
+      if (!res.isEmpty()) { return res; }
+      return get_git_head();
+    }
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();

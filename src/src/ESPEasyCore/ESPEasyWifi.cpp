@@ -346,13 +346,24 @@ bool WiFiConnected() {
 
 void WiFiConnectRelaxed() {
   if (!WiFiEventData.WiFiConnectAllowed() || WiFiEventData.wifiConnectInProgress) {
-    return; // already connected or connect attempt in progress need to disconnect first
+    if (WiFiEventData.wifiConnectInProgress) {
+      if (WiFiEventData.last_wifi_connect_attempt_moment.isSet()) { 
+        if (WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+          WiFiEventData.wifiConnectInProgress = false;
+        }
+      }
+    }
+
+    if (WiFiEventData.wifiConnectInProgress) {
+      return; // already connected or connect attempt in progress need to disconnect first
+    }
   }
   if (!WiFiEventData.processedScanDone) {
     // Scan is still active, so do not yet connect.
     return;
   }
 
+  // FIXME TD-er: Still needed to process disconnect here?
   if (!WiFiEventData.processedDisconnect) {
     processDisconnect();
   }
@@ -469,10 +480,15 @@ void AttemptWiFiConnect() {
         const bool async = false;
         WifiScan(async);
       }
+      // Limit nr of attempts as we don't have any AP candidates.
+      WiFiEventData.last_wifi_connect_attempt_moment.setMillisFromNow(60000);
+      WiFiEventData.timerAPstart.setNow();
     } else {
+#ifdef USES_ESPEASY_NOW
       if (!WiFi_AP_Candidates.addedKnownCandidate()) {
         setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);
       }
+#endif
     }
   }
 
@@ -1077,6 +1093,12 @@ void WifiScan(bool async, uint8_t channel) {
     WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
   }
 #endif
+
+    const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
+    WifiDisconnect();
+    WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
+  }
+#endif
 }
 
 // ********************************************************************************
@@ -1457,6 +1479,11 @@ void setConnectionSpeed() {
     // No need to perform a next attempt.
     WiFi_AP_Candidates.markAttempt();
   }
+
+  if (WiFi.getPhyMode() == phyMode) {
+    return;
+  }
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = concat(F("WIFI : Set to 802.11"), (WIFI_PHY_MODE_11G == phyMode) ? 'g' : 'n');
     if (forcedByAPmode) {
@@ -1467,6 +1494,8 @@ void setConnectionSpeed() {
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }
+  #endif
+
   WiFi.setPhyMode(phyMode);
   #endif // ifdef ESP8266
 
