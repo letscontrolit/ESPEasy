@@ -114,11 +114,12 @@ bool P053_data_struct::initialized() const
 // Read 2 bytes from serial and make an uint16 of it. Additionally calculate
 // checksum for PMSx003. Assumption is that there is data available, otherwise
 // this function is blocking.
-void P053_data_struct::SerialRead16(uint16_t& value, uint16_t *checksum)
+void P053_data_struct::PacketRead16(uint16_t& value, uint16_t *checksum)
 {
   if (!initialized()) { return; }
-  const uint8_t data_high = _easySerial->read();
-  const uint8_t data_low  = _easySerial->read();
+  if (_packetPos > (PMSx003_PACKET_BUFFER_SIZE - 2)) return;
+  const uint8_t data_high = _packet[_packetPos++];
+  const uint8_t data_low  = _packet[_packetPos++];
 
   value  = data_low;
   value |= (data_high << 8);
@@ -165,23 +166,37 @@ uint8_t P053_data_struct::packetSize() const {
 
 bool P053_data_struct::packetAvailable()
 {
+  const uint8_t expectedSize = packetSize();
+  if (expectedSize == 0) return false;
   if (_easySerial != nullptr)
   {
-    // When there is enough data in the buffer, search through the buffer to
-    // find header (buffer may be out of sync)
-    if (!_easySerial->available()) { return false; }
-
-    while ((_easySerial->peek() != PMSx003_SIG1) && _easySerial->available()) {
-      _easySerial->read(); // Read until the buffer starts with the
-      // first uint8_t of a message, or buffer
-      // empty.
-    }
-
-    if (_easySerial->available() < packetSize()) {
-      return false; // Not enough yet for a complete packet
+    if (_packetPos < expectedSize) {
+      // When there is enough data in the buffer, search through the buffer to
+      // find header (buffer may be out of sync)
+      if (!_easySerial->available()) { return false; }
+      
+      if (_packetPos == 0) {
+        while ((_easySerial->peek() != PMSx003_SIG1) && _easySerial->available()) {
+          _easySerial->read(); // Read until the buffer starts with the
+          // first uint8_t of a message, or buffer
+          // empty.
+        }
+        if (_easySerial->peek() == PMSx003_SIG1) {
+          _packet[_packetPos++] = _easySerial->read();
+        }
+      }
+      if (_packetPos > 0) {
+        while (_packetPos < expectedSize) {
+          if (_easySerial->available() == 0) {
+            return false;
+          } else {
+            _packet[_packetPos++] = _easySerial->read();
+          }
+        }
+      }
     }
   }
-  return true;
+  return _packetPos >= expectedSize;
 }
 
 # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
@@ -229,15 +244,16 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   uint16_t checksum = 0, checksum2 = 0;
   uint16_t framelength   = 0;
   uint16_t packet_header = 0;
+  _packetPos = 0;
 
-  SerialRead16(packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
+  PacketRead16(packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
 
   if (packet_header != ((PMSx003_SIG1 << 8) | PMSx003_SIG2)) {
     // Not the start of the packet, stop reading.
     return false;
   }
 
-  SerialRead16(framelength, &checksum);
+  PacketRead16(framelength, &checksum);
 
   if ((framelength + 4) != packetSize()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -259,7 +275,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   uint16_t data[PMS_RECEIVE_BUFFER_SIZE] = { 0 }; // uint8_t data_low, data_high;
 
   for (uint8_t i = 0; i < frameData && i < PMS_RECEIVE_BUFFER_SIZE; i++) {
-    SerialRead16(data[i], &checksum);
+    PacketRead16(data[i], &checksum);
   }
 
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
@@ -339,7 +355,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   # endif      // ifndef BUILD_NO_DEBUG
 
   // Compare checksums
-  SerialRead16(checksum2, nullptr);
+  PacketRead16(checksum2, nullptr);
   SerialFlush(); // Make sure no data is lost due to full buffer.
 
   if (checksum != checksum2) {
@@ -664,6 +680,11 @@ void P053_data_struct::clearReceivedData() {
   }
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _values_received = 0;
+}
+
+void P053_data_struct::clearPacket() {
+  _packetPos = 0;
+  ZERO_FILL(_packet);
 }
 
 const __FlashStringHelper * P053_data_struct::getEventString(uint8_t index) {
