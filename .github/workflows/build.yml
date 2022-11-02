@@ -80,6 +80,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install binutils build-essential libffi-dev python-dev libgit2-dev
+          pip3 install --upgrade pip
           pip install -r requirements.txt
           platformio update
       - name: Build and archive

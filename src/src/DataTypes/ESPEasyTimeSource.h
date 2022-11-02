@@ -7,6 +7,9 @@
 
 class String;
 
+#define EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC 3600000
+#define EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_SEC 3600
+
 // Time Source type, sort by priority.
 // Enum values are sent via NodeStruct, so only add new ones and don't change existing values
 // typical time wander of an ESP module is 40 ppm, or 0.04 msec/sec, or roughly 3.5 seconds per 24h.

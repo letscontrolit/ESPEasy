@@ -465,6 +465,12 @@ Rules engine specific:
 ``%eventvalueN%`` - substitutes the N-th event value (everything that comes after
 the '=' sign).
 
+.. note:: 
+
+  Whenever an event is generated that includes values, these are kept with the event until it is executed. This ensures that when the event is processed, the values *at the moment the event happened* are passed for processing.
+
+  To avoid using 'unexpected' values, especially on for sensors with fast-changing values, it is **strongly advised** to use the ``%eventvalueN%`` variables over the ``[<taskname>#<value>]`` notation that will retrieve the *current* value from the task. A next event will handle the later, updated, values.
+
 For historic reasons, ``%eventvalue%`` without a number, can also be used to access the first event value.
 Thus it will be the same when using ``%eventvalue1%``.
 
