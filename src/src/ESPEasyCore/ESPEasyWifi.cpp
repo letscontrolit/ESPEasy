@@ -1093,12 +1093,6 @@ void WifiScan(bool async, uint8_t channel) {
     WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
   }
 #endif
-
-    const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
-    WifiDisconnect();
-    WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
-  }
-#endif
 }
 
 // ********************************************************************************

@@ -28,9 +28,6 @@ public:
 
   void                 reset(bool success);
 
-  static unsigned long computeExpectedWander(timeSource_t  timeSource,
-                                             unsigned long timePassedSinceLastTimeSync);
-
   bool                 hasLowerWander() const;
 
   bool                 isBroadcast() const;

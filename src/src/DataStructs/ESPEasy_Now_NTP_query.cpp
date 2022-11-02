@@ -30,60 +30,6 @@ bool ESPEasy_Now_NTP_query::getMac(MAC_address& mac) const
   return true;
 }
 
-// Only use peers if there is no external source available.
-// A network without external synced source may drift as a whole
-// All nodes in the network may be in sync with each other, but get out of sync with the rest of the world.
-// Therefore use a strong bias for external synced nodes.
-// But also must make sure the same NTP synced node will be held responsible for the entire network.
-unsigned long ESPEasy_Now_NTP_query::computeExpectedWander(timeSource_t  timeSource,
-                                                           unsigned long timePassedSinceLastTimeSync)
-{
-  unsigned long expectedWander_ms = timePassedSinceLastTimeSync / TIME_WANDER_FACTOR;
-
-  switch (timeSource) {
-    case timeSource_t::GPS_PPS_time_source:
-    {
-      expectedWander_ms += 1;
-      break;
-    }
-    case timeSource_t::GPS_time_source:
-    {
-      // Not sure about the wander here, as GPS does not have a drift.
-      // But the moment a message is received from a second's start may differ.
-      expectedWander_ms += 10;
-      break;
-    }
-    case timeSource_t::External_RTC_time_source:
-    case timeSource_t::NTP_time_source:
-    {
-      expectedWander_ms += 10;
-      break;
-    }
-
-    case  timeSource_t::ESP_now_peer:
-    {
-      expectedWander_ms += 100;
-      break;
-    }
-
-    case timeSource_t::Restore_RTC_time_source:
-    {
-      expectedWander_ms += 2000;
-      break;
-    }
-    case timeSource_t::Manual_set:
-    {
-      expectedWander_ms += 10000;
-      break;
-    }
-    case timeSource_t::No_time_source:
-    {
-      // Cannot sync from it.
-      return 1 << 30;
-    }
-  }
-  return expectedWander_ms;
-}
 
 void ESPEasy_Now_NTP_query::find_best_NTP(const MAC_address& mac,
                                           timeSource_t       timeSource,
@@ -163,7 +109,7 @@ void ESPEasy_Now_NTP_query::reset(bool success)
 
 bool ESPEasy_Now_NTP_query::hasLowerWander() const
 {
-  const long timePassed                  = timePassedSince(node_time.lastSyncTime);
+  const long timePassed                  = timePassedSince(node_time.lastSyncTime_ms);
   unsigned long currentExpectedWander_ms = computeExpectedWander(node_time.timeSource, timePassed);
 
   if (node_time.timeSource < _timeSource) {
@@ -209,7 +155,7 @@ void ESPEasy_Now_NTP_query::createReply(unsigned long queryReceiveTimestamp)
   node_time.now();
   _timeSource        = node_time.timeSource;
   _unixTime_d        = node_time.sysTime;
-  _expectedWander_ms = computeExpectedWander(node_time.timeSource, timePassedSince(node_time.lastSyncTime));
+  _expectedWander_ms = computeExpectedWander(node_time.timeSource, timePassedSince(node_time.lastSyncTime_ms));
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
