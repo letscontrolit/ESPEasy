@@ -239,7 +239,7 @@ void handle_sysinfo() {
   addHtml(F("<TH>")); // Needed to get the copy button on the same header line.
   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard"));
 
-  TXBuffer += githublogo;
+  TXBuffer.addFlashString((PGM_P)FPSTR(githublogo));
   serve_JS(JSfiles_e::GitHubClipboard);
 
   # else // ifdef WEBSERVER_GITHUB_COPY
@@ -288,6 +288,9 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
+      addRowLabelValue(LabelType::EXT_RTC_UTC_TIME);
+    }
     addRowLabelValue(LabelType::TIME_SOURCE);
     addRowLabelValue(LabelType::TIME_WANDER);
     addUnit(F("ppm"));

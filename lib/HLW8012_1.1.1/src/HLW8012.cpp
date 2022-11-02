@@ -88,7 +88,8 @@ double HLW8012::getCurrent() {
         _current_pulse_width = pulseIn(_cf1_pin, HIGH, _pulse_timeout);
     }
 
-    _current = (_current_pulse_width > 0) ? _current_multiplier / _current_pulse_width / 2 : 0;
+    const unsigned int current_pulse_width = _current_pulse_width;
+    _current = (current_pulse_width > 0) ? _current_multiplier / current_pulse_width / 2 : 0;
     return _current;
 
 }
@@ -99,7 +100,8 @@ unsigned int HLW8012::getVoltage() {
     } else if (_mode != _current_mode) {
         _voltage_pulse_width = pulseIn(_cf1_pin, HIGH, _pulse_timeout);
     }
-    _voltage = (_voltage_pulse_width > 0) ? _voltage_multiplier / _voltage_pulse_width / 2 : 0;
+    const unsigned int voltage_pulse_width = _voltage_pulse_width;
+    _voltage = (voltage_pulse_width > 0) ? _voltage_multiplier / voltage_pulse_width / 2 : 0;
     return _voltage;
 }
 
@@ -109,7 +111,8 @@ unsigned int HLW8012::getActivePower() {
     } else {
         _power_pulse_width = pulseIn(_cf_pin, HIGH, _pulse_timeout);
     }
-    _power = (_power_pulse_width > 0) ? _power_multiplier / _power_pulse_width / 2 : 0;
+    const unsigned int power_pulse_width = _power_pulse_width;
+    _power = (power_pulse_width > 0) ? _power_multiplier / power_pulse_width / 2 : 0;
     return _power;
 }
 
@@ -184,7 +187,7 @@ void HLW8012::setResistors(double current, double voltage_upstream, double volta
 }
 
 void IRAM_ATTR HLW8012::cf_interrupt() {
-    unsigned long now = micros();
+    const unsigned long now = micros();
     _power_pulse_width = now - _last_cf_interrupt;
     _last_cf_interrupt = now;
     _pulse_count++;
@@ -192,7 +195,7 @@ void IRAM_ATTR HLW8012::cf_interrupt() {
 
 void IRAM_ATTR HLW8012::cf1_interrupt() {
 
-    unsigned long now = micros();
+    const unsigned long now = micros();
 
     if ((now - _first_cf1_interrupt) > _pulse_timeout) {
 
