@@ -146,6 +146,9 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (P014_I2C_ADDRESS == 0) {
+        P014_I2C_ADDRESS = SI70xx_I2C_ADDRESS; // Use default address if not (yet) set
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P014_data_struct());
       P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
 
