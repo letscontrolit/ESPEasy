@@ -8,7 +8,8 @@
 // ######################## Plugin 014 SI70xx I2C Temperature Humidity Sensor  ###########################
 // #######################################################################################################
 // 12-10-2015 Charles-Henri Hallard, see my projects and blog at https://hallard.me
-// 07-22-2022 MFD, Adding support for SI7013 with ADC 
+// 07-22-2022 MFD, Adding support for SI7013 with ADC
+// 10-28-2022 MFD, fixing support for HTU21D (as this sensor does not have the command read temperature from humidity) 
 
 
 // SI70xx Sensor resolution
@@ -55,6 +56,7 @@
 #define CHIP_ID_SI7013  13 //  0x0D=13=Si7013
 #define CHIP_ID_SI7020  20 //  0x14=20=Si7020
 #define CHIP_ID_SI7021  21 //  0x15=21=Si7021
+#define CHIP_ID_HTU21D  50 //  as measured by the plugin (the datasheet does not have this info)
 
 #define SI70xx_RESET_DELAY            50 //delay in miliseconds for the reset to settle down
 #define SI70xx_MEASUREMENT_TIMEOUT   100 
@@ -104,9 +106,11 @@ struct P014_data_struct : public PluginTaskData_base {
     bool    requestADC(uint8_t i2caddr);
     bool    readADC(uint8_t i2caddr, uint8_t filter_power);
     bool    readHumidity(uint8_t i2caddr, uint8_t resolution);
+    bool    readTemperatureFromHumidity(uint8_t i2caddr, uint8_t resolution);
     bool    readTemperature(uint8_t i2caddr, uint8_t resolution);
     bool    startInit(uint8_t i2caddr);
     bool    finalizeInit(uint8_t i2caddr, uint8_t resolution);
+    int16_t convertRawTemperature(uint16_t raw, uint8_t resolution);
 
 public:
    P014_data_struct();
