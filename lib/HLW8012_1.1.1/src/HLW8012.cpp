@@ -91,7 +91,7 @@ float HLW8012::getCurrent() {
     }
 
     const unsigned int current_pulse_width = _current_pulse_width;
-    _current = (current_pulse_width > 0) ? _current_multiplier / static_cast<float>(current_pulse_width) / 2.0f : 0;
+    _current = (current_pulse_width > 0) ? _current_multiplier / static_cast<float>(current_pulse_width) / 2.0f : 0.0f;
     return _current;
 
 }
@@ -103,7 +103,7 @@ float HLW8012::getVoltage() {
         _voltage_pulse_width = pulseIn(_cf1_pin, HIGH, _pulse_timeout);
     }
     const unsigned int voltage_pulse_width = _voltage_pulse_width;
-    _voltage = (voltage_pulse_width > 0) ? _voltage_multiplier / static_cast<float>(voltage_pulse_width) / 2.0f : 0;
+    _voltage = (voltage_pulse_width > 0) ? _voltage_multiplier / static_cast<float>(voltage_pulse_width) / 2.0f : 0.0f;
     return _voltage;
 }
 
@@ -114,12 +114,12 @@ float HLW8012::getActivePower() {
         _power_pulse_width = pulseIn(_cf_pin, HIGH, _pulse_timeout);
     }
     const unsigned int power_pulse_width = _power_pulse_width;
-    _power = (power_pulse_width > 0) ? _power_multiplier / static_cast<float>(power_pulse_width) / 2.0f : 0;
+    _power = (power_pulse_width > 0) ? _power_multiplier / static_cast<float>(power_pulse_width) / 2.0f : 0.0f;
     return _power;
 }
 
 float HLW8012::getApparentPower() {
-    double current = getCurrent();
+    float current = getCurrent();
     unsigned int voltage = getVoltage();
     return voltage * current;
 }
@@ -135,11 +135,11 @@ float HLW8012::getReactivePower() {
 }
 
 float HLW8012::getPowerFactor() {
-    unsigned int active = getActivePower();
-    unsigned int apparent = getApparentPower();
-    if (active > apparent) return 1;
-    if (apparent == 0) return 0;
-    return (double) active / apparent;
+    const float active = getActivePower();
+    const float apparent = getApparentPower();
+    if (active > apparent) return 1.0f;
+    if (apparent == 0) return 0.0f;
+    return active / apparent;
 }
 
 float HLW8012::getEnergy() {
@@ -181,7 +181,7 @@ void HLW8012::resetMultipliers() {
     _calculateDefaultMultipliers();
 }
 
-void HLW8012::setResistors(double current, double voltage_upstream, double voltage_downstream) {
+void HLW8012::setResistors(float current, float voltage_upstream, float voltage_downstream) {
     if (voltage_downstream > 0) {
         _current_resistor = current;
         _voltage_resistor = (voltage_upstream + voltage_downstream) / voltage_downstream;

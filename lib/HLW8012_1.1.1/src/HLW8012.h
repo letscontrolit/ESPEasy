@@ -80,11 +80,9 @@ class HLW8012 {
 
         void setMode(hlw8012_mode_t mode);
 
-private:
         hlw8012_mode_t getMode();
         hlw8012_mode_t toggleMode();
 
-public:
         float getCurrent();
         float getVoltage();
         float getActivePower();
@@ -94,19 +92,19 @@ public:
         float getEnergy(); //in Ws
         void resetEnergy();
 
-        void setResistors(double current, double voltage_upstream, double voltage_downstream);
+        void setResistors(float current, float voltage_upstream, float voltage_downstream);
 
         void expectedCurrent(float current);
         void expectedVoltage(float current);
         void expectedActivePower(float power);
 
-        double getCurrentMultiplier() { return _current_multiplier; };
-        double getVoltageMultiplier() { return _voltage_multiplier; };
-        double getPowerMultiplier() { return _power_multiplier; };
+        float getCurrentMultiplier() { return _current_multiplier; };
+        float getVoltageMultiplier() { return _voltage_multiplier; };
+        float getPowerMultiplier() { return _power_multiplier; };
 
-        void setCurrentMultiplier(double current_multiplier) { _current_multiplier = current_multiplier; };
-        void setVoltageMultiplier(double voltage_multiplier) { _voltage_multiplier = voltage_multiplier; };
-        void setPowerMultiplier(double power_multiplier) { _power_multiplier = power_multiplier; };
+        void setCurrentMultiplier(float current_multiplier) { _current_multiplier = current_multiplier; };
+        void setVoltageMultiplier(float voltage_multiplier) { _voltage_multiplier = voltage_multiplier; };
+        void setPowerMultiplier(float power_multiplier) { _power_multiplier = power_multiplier; };
         void resetMultipliers();
 
     private:
