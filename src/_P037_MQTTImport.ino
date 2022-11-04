@@ -11,6 +11,8 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
+ *                         features were added
  * 2022-08-12, tonhuisman: Introduce plugin-specific P037_LIMIT_BUILD_SIZE feature-flag
  * 2022-04-09, tonhuisman: Add features Deduplicate Events, and Max event-queue size
  * 2022-04-09, tonhuisman: Bugfix sending (extra) events only when enabled
@@ -47,8 +49,8 @@
 # define P037_MAX_QUEUEDEPTH      150
 
 
-bool MQTT_unsubscribe_037(struct EventStruct *event);
-bool MQTTSubscribe_037(struct EventStruct *event);
+bool   MQTT_unsubscribe_037(struct EventStruct *event);
+bool   MQTTSubscribe_037(struct EventStruct *event);
 
 # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
 String P037_getMQTTLastTopicPart(const String& topic) {
@@ -83,6 +85,7 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
     result = false;
   }
 # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("MQTT: Event added: ");
 
@@ -93,7 +96,7 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
     }
     addLog(LOG_LEVEL_DEBUG, log);
   }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
   return result;
 }
 
@@ -133,15 +136,21 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P037_SEND_EVENTS = 1; // Enable events by default, as the original plugin did...
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Options"));
 
       # if P037_JSON_SUPPORT
-      addFormSelector_YesNo(F("Parse JSON messages"), F("p037_parse_json"), P037_PARSE_JSON,     true);
+      addFormSelector_YesNo(F("Parse JSON messages"), F("p037_parse_json"),     P037_PARSE_JSON,     true);
       # endif // if P037_JSON_SUPPORT
       # if P037_FILTER_SUPPORT
-      addFormSelector_YesNo(F("Apply filters"),       F("p037_apply_filters"), P037_APPLY_FILTERS,  true);
+      addFormSelector_YesNo(F("Apply filters"),       F("p037_apply_filters"),  P037_APPLY_FILTERS,  true);
       # endif // if P037_FILTER_SUPPORT
       # if P037_MAPPING_SUPPORT
       addFormSelector_YesNo(F("Apply mappings"),      F("p037_apply_mappings"), P037_APPLY_MAPPINGS, true);
@@ -331,7 +340,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       }
 
       LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
-      String unparsedPayload; // To keep an unprocessed copy
+      String unparsedPayload;             // To keep an unprocessed copy
 
       bool checkJson = false;
 
@@ -441,14 +450,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         #   endif // P037_FILTER_PER_TOPIC
         #  endif  // if P037_JSON_SUPPORT
       }
-# ifndef BUILD_NO_DEBUG
+#  ifndef BUILD_NO_DEBUG
+
       if (matchedTopic && P037_data->hasFilters() && // Single log statement
           loglevelActiveFor(LOG_LEVEL_DEBUG)) {      // Reduce standard logging
         String log = F("IMPT : MQTT filter result: ");
         log += processData ? F("true") : F("false");
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
-#endif
+#  endif // ifndef BUILD_NO_DEBUG
       # endif // if P037_FILTER_SUPPORT
 
       if (!processData) { // Nothing to do? then clean up
@@ -691,7 +701,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-bool MQTT_unsubscribe_037(struct EventStruct *event) 
+bool MQTT_unsubscribe_037(struct EventStruct *event)
 {
   P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -704,6 +714,7 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
   for (uint8_t x = 0; x < VARS_PER_TASK; x++)
   {
     String tmp = P037_data->getFullMQTTTopic(x);
+
     if (topic.equalsIgnoreCase(tmp)) {
       // Don't unsubscribe from the same topic twice
       continue;
@@ -713,15 +724,18 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
     // We must check whether other MQTT import tasks are enabled which may be subscribed to the same topic.
     // Only if we're the only one (left) being subscribed to that topic, unsubscribe
     bool canUnsubscribe = true;
+
     for (taskIndex_t task = 0; task < INVALID_TASK_INDEX && canUnsubscribe; ++task) {
       if (task != event->TaskIndex) {
-        if (Settings.TaskDeviceEnabled[task] && 
-            Settings.TaskDeviceNumber[task] == PLUGIN_ID_037) 
+        if (Settings.TaskDeviceEnabled[task] &&
+            (Settings.TaskDeviceNumber[task] == PLUGIN_ID_037))
         {
           P037_data_struct *P037_data_other = static_cast<P037_data_struct *>(getPluginTaskData(task));
+
           if (nullptr != P037_data_other) {
             if (P037_data_other->shouldSubscribeToMQTTtopic(topic)) {
               canUnsubscribe = false;
+
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("IMPT : Cannot unsubscribe topic: ");
                 log += topic;
@@ -738,7 +752,8 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
         }
       }
     }
-    if (canUnsubscribe && topic.length() > 0 && MQTTclient.unsubscribe(topic.c_str())) {
+
+    if (canUnsubscribe && (topic.length() > 0) && MQTTclient.unsubscribe(topic.c_str())) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("IMPT : [");
         log += getTaskDeviceName(event->TaskIndex);
@@ -769,7 +784,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
   for (uint8_t x = 0; x < VARS_PER_TASK; x++)
   {
     String subscribeTo = P037_data->getFullMQTTTopic(x);
-    
+
     if (!subscribeTo.isEmpty())
     {
       parseSystemVariables(subscribeTo, false);
@@ -822,7 +837,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   if (tmpSub.equals(F("#"))) { return true; // If the subscription is for '#' then all topics are accepted
   }
 
-  if (tmpSub.endsWith(F("/#"))) {      // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
+  if (tmpSub.endsWith(F("/#"))) {           // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
     bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));
 
     if (tmpSub.indexOf('+') == -1) {
