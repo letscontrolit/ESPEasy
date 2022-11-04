@@ -42,9 +42,5 @@ extern WiFiEventData_t WiFiEventData;
 extern EthernetEventData_t EthEventData;
 #endif
 
-#ifdef ESP32
-extern WiFiEventId_t wm_event_id;
-#endif // ifdef ESP32
-
 
 #endif // GLOBALS_ESPEASYWIFIEVENT_H

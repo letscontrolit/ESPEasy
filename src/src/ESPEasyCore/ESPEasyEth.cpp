@@ -7,6 +7,7 @@
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
+#include "../ESPEasyCore/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
@@ -135,6 +136,21 @@ MAC_address ETHMacAddress() {
   return mac;
 }
 
+void removeEthEventHandler()
+{
+  WiFi.removeEvent(EthEventData.wm_event_id);
+  EthEventData.wm_event_id = 0;
+}
+
+void registerEthEventHandler()
+{
+  if (EthEventData.wm_event_id != 0) {
+    removeEthEventHandler();
+  }
+  EthEventData.wm_event_id = WiFi.onEvent(WiFiEvent);
+}
+
+
 bool ETHConnectRelaxed() {
   if (EthEventData.ethInitSuccess) {
     return EthLinkUp();
@@ -147,17 +163,13 @@ bool ETHConnectRelaxed() {
     return false;
   }
   // Re-register event listener
-  #if defined(ESP32)
-  removeWiFiEventHandler();
-  #endif
+  removeEthEventHandler();
 
   ethPower(true);
   EthEventData.markEthBegin();
 
   // Re-register event listener
-  #if defined(ESP32)
-  registerWiFiEventHandler();
-  #endif
+  registerEthEventHandler();
 
   if (!EthEventData.ethInitSuccess) {
     ethResetGPIOpins();

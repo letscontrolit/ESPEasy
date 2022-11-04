@@ -21,7 +21,3 @@ WiFiEventData_t WiFiEventData;
 EthernetEventData_t EthEventData;
 #endif
 
-
-#ifdef ESP32
-WiFiEventId_t wm_event_id;
-#endif // ifdef ESP32

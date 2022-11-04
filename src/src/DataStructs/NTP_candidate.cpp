@@ -20,7 +20,7 @@ bool NTP_candidate_struct::set(const NodeStruct& node)
 
   // Only allow time from p2p nodes who only got it via p2p themselves as "last resource"
   const unsigned long p2p_source_penalty =
-    isExternalTimeSource(timeSource)  ? 0 : 2000;
+    isExternalTimeSource(timeSource)  ? 0 : 10000;
   const unsigned long time_wander_other =
     p2p_source_penalty + computeExpectedWander(timeSource, node.lastUpdated);
 

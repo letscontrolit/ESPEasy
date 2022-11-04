@@ -24,11 +24,13 @@
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_checks.h"
@@ -513,6 +515,15 @@ String SaveSettings()
   //  }
 
   err = SaveSecuritySettings();
+  if (!NetworkConnected()) {
+    if (SecuritySettings.hasWiFiCredentials() && active_network_medium == NetworkMedium_t::WIFI) {
+      WiFiEventData.wifiConnectAttemptNeeded = true;
+      WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+      resetWiFi();
+      AttemptWiFiConnect();
+    }
+  }
+
   return err;
 }
 
