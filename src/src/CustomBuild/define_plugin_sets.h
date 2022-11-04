@@ -2598,7 +2598,7 @@ To create/register a plugin, you have to :
 #endif
 
 
-#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_P138)*/)
+#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)
   #undef FEATURE_PLUGIN_PRIORITY
   #define FEATURE_PLUGIN_PRIORITY   1
 #endif
