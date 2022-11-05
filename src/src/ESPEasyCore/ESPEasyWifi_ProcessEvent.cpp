@@ -671,6 +671,9 @@ void processEthernetGotIP() {
   if (EthEventData.processedGotIP || !EthEventData.ethInitSuccess) {
     return;
   }
+  if (ethUseStaticIP()) {
+    ethSetupStaticIPconfig();
+  } 
   const IPAddress ip       = NetworkLocalIP();
 
   if (!ip) { 
@@ -699,7 +702,7 @@ void processEthernetGotIP() {
       log = F("ETH MAC: ");
       log += NetworkMacAddress().toString();
       log += ' ';
-      if (useStaticIP()) {
+      if (ethUseStaticIP()) {
         log += F("Static");
       } else {
         log += F("DHCP");

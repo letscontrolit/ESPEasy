@@ -38,6 +38,9 @@ void ethSetupStaticIPconfig() {
   const IPAddress subnet = Settings.ETH_Subnet;
   const IPAddress dns    = Settings.ETH_DNS;
 
+  EthEventData.dns0_cache = dns;
+
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("ETH IP   : Static IP : ");
     log += formatIP(ip);

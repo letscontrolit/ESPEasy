@@ -1358,7 +1358,7 @@ bool WifiIsSTA(WiFiMode_t wifimode)
   #endif // if defined(ESP32)
 }
 
-bool useStaticIP() {
+bool WiFiUseStaticIP() {
   return Settings.IP[0] != 0 && Settings.IP[0] != 255;
 }
 
