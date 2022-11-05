@@ -2,18 +2,16 @@
 
 #if FEATURE_TIMING_STATS
 
-#include "../DataTypes/ESPEasy_plugin_functions.h"
-#include "../Globals/CPlugins.h"
-#include "../Helpers/_CPlugin_Helper.h"
-#include "../Helpers/StringConverter.h"
+# include "../DataTypes/ESPEasy_plugin_functions.h"
+# include "../Globals/CPlugins.h"
+# include "../Helpers/_CPlugin_Helper.h"
+# include "../Helpers/StringConverter.h"
 
 
 std::map<int, TimingStats> pluginStats;
 std::map<int, TimingStats> controllerStats;
 std::map<int, TimingStats> miscStats;
 unsigned long timingstats_last_reset(0);
-
-
 
 
 TimingStats::TimingStats() : _timeTotal(0.0f), _count(0), _maxVal(0), _minVal(4294967295) {}
@@ -64,7 +62,7 @@ bool TimingStats::thresholdExceeded(const uint64_t& threshold) const {
 /********************************************************************************************\
    Functions used for displaying timing stats
  \*********************************************************************************************/
-const __FlashStringHelper * getPluginFunctionName(int function) {
+const __FlashStringHelper* getPluginFunctionName(int function) {
   switch (function) {
     case PLUGIN_INIT_ALL:              return F("INIT_ALL");
     case PLUGIN_INIT:                  return F("INIT");
@@ -93,13 +91,13 @@ const __FlashStringHelper * getPluginFunctionName(int function) {
     case PLUGIN_GET_CONFIG_VALUE:      return F("GET_CONFIG");
     case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
-
   }
   return F("Unknown");
 }
 
 bool mustLogFunction(int function) {
-  if (!Settings.EnableTimingStats()) return false;
+  if (!Settings.EnableTimingStats()) { return false; }
+
   switch (function) {
     case PLUGIN_INIT_ALL:              return false;
     case PLUGIN_INIT:                  return false;
@@ -132,7 +130,7 @@ bool mustLogFunction(int function) {
   return false;
 }
 
-const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function) {
+const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function) {
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return F("CPLUGIN_PROTOCOL_ADD");
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return F("CPLUGIN_PROTOCOL_TEMPLATE");
@@ -158,13 +156,13 @@ const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function) 
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
     case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
       break;
-
   }
   return F("Unknown");
 }
 
 bool mustLogCFunction(CPlugin::Function function) {
-  if (!Settings.EnableTimingStats()) return false;
+  if (!Settings.EnableTimingStats()) { return false; }
+
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return false;
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return false;
@@ -190,66 +188,67 @@ bool mustLogCFunction(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
     case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
       break;
-
   }
   return false;
 }
 
 // Return flash string type to reduce bin size
-const __FlashStringHelper * getMiscStatsName_F(int stat) {
+const __FlashStringHelper* getMiscStatsName_F(int stat) {
   switch (stat) {
-    case LOADFILE_STATS:          return F("Load File");
-    case SAVEFILE_STATS:          return F("Save File");
-    case LOOP_STATS:              return F("Loop");
-    case PLUGIN_CALL_50PS:        return F("Plugin call 50 p/s");
-    case PLUGIN_CALL_10PS:        return F("Plugin call 10 p/s");
-    case PLUGIN_CALL_10PSU:       return F("Plugin call 10 p/s U");
-    case PLUGIN_CALL_1PS:         return F("Plugin call  1 p/s");
-    case CPLUGIN_CALL_50PS:       return F("CPlugin call 50 p/s");
-    case CPLUGIN_CALL_10PS:       return F("CPlugin call 10 p/s");
-    case SENSOR_SEND_TASK:        return F("SensorSendTask()");
-    case SEND_DATA_STATS:         return F("sendData()");
-    case COMPUTE_FORMULA_STATS:   return F("Compute formula");
-    case PLUGIN_CALL_DEVICETIMER_IN:     return F("PLUGIN_DEVICETIMER_IN");
-    case SET_NEW_TIMER:           return F("setNewTimerAt()");
-    case TIME_DIFF_COMPUTE:       return F("timeDiff()");
-    case MQTT_DELAY_QUEUE:        return F("Delay queue MQTT");
-    case TRY_CONNECT_HOST_TCP:    return F("try_connect_host() (TCP)");
-    case TRY_CONNECT_HOST_UDP:    return F("try_connect_host() (UDP)");
-    case HOST_BY_NAME_STATS:      return F("hostByName()");
-    case CONNECT_CLIENT_STATS:    return F("connectClient()");
-    case LOAD_CUSTOM_TASK_STATS:  return F("LoadCustomTaskSettings()");
-    case WIFI_ISCONNECTED_STATS:  return F("WiFi.isConnected()");
-    case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
-    case LOAD_TASK_SETTINGS:      return F("LoadTaskSettings()");
-    case TRY_OPEN_FILE:           return F("TryOpenFile()");
-    case FS_GC_SUCCESS:           return F("ESPEASY_FS GC success");
-    case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
-    case RULES_PROCESSING:        return F("rulesProcessing()");
-    case RULES_PARSE_LINE:        return F("parseCompleteNonCommentLine()");
-    case RULES_PROCESS_MATCHED:   return F("processMatchedRule()");
-    case RULES_MATCH:             return F("rulesMatch()");
-    case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
-    case SAVE_TO_RTC:             return F("saveToRTC()");
-    case BACKGROUND_TASKS:        return F("backgroundtasks()");
+    case LOADFILE_STATS:             return F("Load File");
+    case SAVEFILE_STATS:             return F("Save File");
+    case LOOP_STATS:                 return F("Loop");
+    case PLUGIN_CALL_50PS:           return F("Plugin call 50 p/s");
+    case PLUGIN_CALL_10PS:           return F("Plugin call 10 p/s");
+    case PLUGIN_CALL_10PSU:          return F("Plugin call 10 p/s U");
+    case PLUGIN_CALL_1PS:            return F("Plugin call  1 p/s");
+    case CPLUGIN_CALL_50PS:          return F("CPlugin call 50 p/s");
+    case CPLUGIN_CALL_10PS:          return F("CPlugin call 10 p/s");
+    case SENSOR_SEND_TASK:           return F("SensorSendTask()");
+    case SEND_DATA_STATS:            return F("sendData()");
+    case COMPUTE_FORMULA_STATS:      return F("Compute formula");
+    case PLUGIN_CALL_DEVICETIMER_IN: return F("PLUGIN_DEVICETIMER_IN");
+    case SET_NEW_TIMER:              return F("setNewTimerAt()");
+    case TIME_DIFF_COMPUTE:          return F("timeDiff()");
+    case MQTT_DELAY_QUEUE:           return F("Delay queue MQTT");
+    case TRY_CONNECT_HOST_TCP:       return F("try_connect_host() (TCP)");
+    case TRY_CONNECT_HOST_UDP:       return F("try_connect_host() (UDP)");
+    case HOST_BY_NAME_STATS:         return F("hostByName()");
+    case CONNECT_CLIENT_STATS:       return F("connectClient()");
+    case LOAD_CUSTOM_TASK_STATS:     return F("LoadCustomTaskSettings()");
+    case WIFI_ISCONNECTED_STATS:     return F("WiFi.isConnected()");
+    case WIFI_NOTCONNECTED_STATS:    return F("WiFi.isConnected() (fail)");
+    case LOAD_TASK_SETTINGS:         return F("LoadTaskSettings()");
+    case TRY_OPEN_FILE:              return F("TryOpenFile()");
+    case FS_GC_SUCCESS:              return F("ESPEASY_FS GC success");
+    case FS_GC_FAIL:                 return F("ESPEASY_FS GC fail");
+    case RULES_PROCESSING:           return F("rulesProcessing()");
+    case RULES_PARSE_LINE:           return F("parseCompleteNonCommentLine()");
+    case RULES_PROCESS_MATCHED:      return F("processMatchedRule()");
+    case RULES_MATCH:                return F("rulesMatch()");
+    case GRAT_ARP_STATS:             return F("sendGratuitousARP()");
+    case SAVE_TO_RTC:                return F("saveToRTC()");
+    case BACKGROUND_TASKS:           return F("backgroundtasks()");
     case PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
-    case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
-    case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
-    case PARSE_TEMPLATE_PADDED:   return F("parseTemplate_padded()");
-    case PARSE_SYSVAR:            return F("parseSystemVariables()");
-    case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
-    case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
-    case WIFI_SCAN_ASYNC:         return F("WiFi Scan Async");
-    case WIFI_SCAN_SYNC:          return F("WiFi Scan Sync (blocking)");
-    case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
+    case HANDLE_SCHEDULER_IDLE:      return F("handle_schedule() idle");
+    case HANDLE_SCHEDULER_TASK:      return F("handle_schedule() task");
+    case PARSE_TEMPLATE_PADDED:      return F("parseTemplate_padded()");
+    case PARSE_SYSVAR:               return F("parseSystemVariables()");
+    case PARSE_SYSVAR_NOCHANGE:      return F("parseSystemVariables() No change");
+    case HANDLE_SERVING_WEBPAGE:     return F("handle webpage");
+    case WIFI_SCAN_ASYNC:            return F("WiFi Scan Async");
+    case WIFI_SCAN_SYNC:             return F("WiFi Scan Sync (blocking)");
+    case NTP_SUCCESS:                return F("NTP Success");
+    case SYSTIME_UPDATED:            return F("Systime Set");
+    case C018_AIR_TIME:              return F("C018 LoRa TTN - Air Time");
   }
   return F("Unknown");
 }
 
 String getMiscStatsName(int stat) {
-  if (stat >= C001_DELAY_QUEUE && stat <= C025_DELAY_QUEUE) {
+  if ((stat >= C001_DELAY_QUEUE) && (stat <= C025_DELAY_QUEUE)) {
     return concat(
-      F("Delay queue "), 
+      F("Delay queue "),
       get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1)));
   }
   return getMiscStatsName_F(stat);
@@ -257,12 +256,12 @@ String getMiscStatsName(int stat) {
 
 void stopTimerTask(int T, int F, uint64_t statisticsTimerStart)
 {
-  if (mustLogFunction(F)) pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
+  if (mustLogFunction(F)) { pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
 }
 
 void stopTimerController(int T, CPlugin::Function F, uint64_t statisticsTimerStart)
 {
-  if (mustLogCFunction(F)) controllerStats[(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart));
+  if (mustLogCFunction(F)) { controllerStats[(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart)); }
 }
 
 void stopTimer(int L, uint64_t statisticsTimerStart)

@@ -921,6 +921,15 @@ bool hasIPaddr() {
 #endif // ifdef CORE_POST_2_5_0
 }
 
+bool useStaticIP() {
+  #if FEATURE_ETHERNET
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    return ethUseStaticIP();
+  }
+  #endif
+  return WiFiUseStaticIP();
+}
+
 // Check connection. Maximum timeout 500 msec.
 bool NetworkConnected(uint32_t timeout_ms) {
 

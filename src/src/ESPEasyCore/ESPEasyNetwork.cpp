@@ -12,6 +12,7 @@
 #include "../Helpers/MDNS_Helper.h"
 
 #if FEATURE_ETHERNET
+#include "../Globals/ESPEasyEthEvent.h"
 #include <ETH.h>
 #endif
 
