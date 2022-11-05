@@ -5,9 +5,6 @@
 #include "../../ESPEasy_common.h"
 
 #include "../DataStructs/WiFiEventData.h"
-#if FEATURE_ETHERNET
-#include "../DataStructs/EthernetEventData.h"
-#endif
 
 #include <Arduino.h>
 #include <IPAddress.h>
@@ -37,10 +34,6 @@ extern WiFiEventHandler APModeStationDisconnectedHandler;
 
 
 extern WiFiEventData_t WiFiEventData;
-
-#if FEATURE_ETHERNET
-extern EthernetEventData_t EthEventData;
-#endif
 
 
 #endif // GLOBALS_ESPEASYWIFIEVENT_H

@@ -5,7 +5,7 @@
 #  include <ETH.h>
 
 #include "../ESPEasyCore/ESPEasyEth.h"
-#include "../Globals/ESPEasyWiFiEvent.h" // EthEventData
+#include "../Globals/ESPEasyEthEvent.h"
 
 
 // ********************************************************************************

@@ -31,6 +31,10 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#if FEATURE_ETHERNET
+#include "../Globals/ESPEasyEthEvent.h"
+#endif
+
 
 // ********************************************************************************
 // Called from the loop() to make sure events are processed as soon as possible.
@@ -244,7 +248,8 @@ void handle_unprocessedNetworkEvents()
   // Check if DNS is still valid, as this may have been reset by the WiFi module turned off.
   if (EthEventData.EthServicesInitialized() && 
       active_network_medium == NetworkMedium_t::Ethernet &&
-      EthEventData.ethInitSuccess) {
+      EthEventData.ethInitSuccess &&
+      !ethUseStaticIP()) {
     const bool has_cache = !EthEventData.dns0_cache && !EthEventData.dns1_cache;
     if (has_cache) {
       const IPAddress dns0     = NetworkDnsIP(0);

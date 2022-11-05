@@ -2,8 +2,6 @@
 
 #include "../../ESPEasy_common.h"
 
-// FIXME TD-er: Rename this to ESPEasyNetworkEvent
-
 
 #ifdef ESP8266
 WiFiEventHandler stationConnectedHandler;
@@ -17,7 +15,4 @@ WiFiEventHandler APModeStationDisconnectedHandler;
 
 WiFiEventData_t WiFiEventData;
 
-#if FEATURE_ETHERNET
-EthernetEventData_t EthEventData;
-#endif
 

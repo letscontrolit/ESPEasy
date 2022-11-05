@@ -22,6 +22,10 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 
 
+#if FEATURE_ETHERNET
+#include "../Globals/ESPEasyEthEvent.h"
+#endif
+
 
 #ifdef ESP32
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
