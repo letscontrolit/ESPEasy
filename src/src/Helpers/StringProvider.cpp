@@ -17,6 +17,11 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
+
+#if FEATURE_ETHERNET
+#include "../Globals/ESPEasyEthEvent.h"
+#endif
+
 #include "../Globals/NetworkState.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"

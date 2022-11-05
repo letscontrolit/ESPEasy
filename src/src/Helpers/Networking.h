@@ -141,6 +141,8 @@ bool getSubnetRange(IPAddress& low, IPAddress& high);
 
 bool hasIPaddr();
 
+bool useStaticIP();
+
 // Check connection. Maximum timeout 500 msec.
 bool NetworkConnected(uint32_t timeout_ms);
 

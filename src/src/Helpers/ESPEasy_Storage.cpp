@@ -24,11 +24,13 @@
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_checks.h"
@@ -470,6 +472,40 @@ bool GarbageCollection() {
   #endif // ifdef CORE_POST_2_6_0
 }
 
+bool computeChecksum(
+  uint8_t checksum[16], 
+  uint8_t * data, 
+  size_t struct_size, 
+  size_t len_upto_md5,
+  bool updateChecksum)
+{
+  if (len_upto_md5 > struct_size) len_upto_md5 = struct_size;
+  MD5Builder md5;
+  md5.begin();
+
+  if (len_upto_md5 > 0) {
+    md5.add(data, len_upto_md5);
+  }
+  if ((len_upto_md5 + 16) < struct_size) {
+    data += len_upto_md5 + 16;
+    const int len_after_md5 = struct_size - 16 - len_upto_md5;
+    if (len_after_md5 > 0) {
+      md5.add(data, len_after_md5);
+    }
+  }
+  md5.calculate();
+  uint8_t    tmp_md5[16] = { 0 };
+  md5.getBytes(tmp_md5);
+  if (memcmp(tmp_md5, checksum, 16) != 0) {
+    // Data has changed, copy computed checksum
+    if (updateChecksum) {
+      memcpy(checksum, tmp_md5, 16);
+    }
+    return false;
+  }
+  return true;
+}
+
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
@@ -484,20 +520,21 @@ String SaveSettings()
 
     // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 
-    /*
-      MD5Builder md5;
-      uint8_t    tmp_md5[16] = { 0 };
-      memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
-      md5.begin();
-      md5.add(reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings)-16);
-      md5.calculate();
-      md5.getBytes(tmp_md5);
-      if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
-        // Settings have changed, save to file.
-        memcpy(Settings.md5, tmp_md5, 16);
-    */
     Settings.validate();
-    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings));
+
+    if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings)
+    /*
+    computeChecksum(
+        Settings.md5,
+        reinterpret_cast<uint8_t *>(&Settings),
+        sizeof(SettingsStruct),
+        offsetof(SettingsStruct, md5))
+    */
+        ) {
+      err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings));
+    } else {
+      addLog(LOG_LEVEL_INFO, F("Skip saving settings, not changed"));
+    }
   }
 
   if (err.length()) {
@@ -513,32 +550,35 @@ String SaveSettings()
   //  }
 
   err = SaveSecuritySettings();
+
   return err;
 }
 
 String SaveSecuritySettings() {
-  MD5Builder md5;
-  uint8_t    tmp_md5[16] = { 0 };
   String     err;
 
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
-  md5.begin();
-  md5.add(reinterpret_cast<uint8_t *>(&SecuritySettings), static_cast<uint16_t>(sizeof(SecuritySettings) - 16));
-  md5.calculate();
-  md5.getBytes(tmp_md5);
 
-  if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
+  if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SecurityStruct, SecuritySettings)) {
     // Settings have changed, save to file.
-    memcpy(SecuritySettings.md5, tmp_md5, 16);
     err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
-    if (WifiIsAP(WiFi.getMode())) {
-      // Security settings are saved, may be update of WiFi settings or hostname.
-      WiFiEventData.wifiSetupConnect         = true;
-      WiFiEventData.wifiConnectAttemptNeeded = true;
+    // Security settings are saved, may be update of WiFi settings or hostname.
+    if (!NetworkConnected()) {
+      if (SecuritySettings.hasWiFiCredentials() && active_network_medium == NetworkMedium_t::WIFI) {
+        WiFiEventData.wifiConnectAttemptNeeded = true;
+        WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+        resetWiFi();
+        AttemptWiFiConnect();
+      }
     }
+  } else {
+    addLog(LOG_LEVEL_INFO, F("Skip saving SecuritySettings, not changed"));
+
   }
+
+  // FIXME TD-er: How to check if these have changed?
   ExtendedControllerCredentials.save();
   afterloadSettings();
   return err;
@@ -586,8 +626,6 @@ String LoadSettings()
   checkRAM(F("LoadSettings"));
   #endif
   String  err;
-  uint8_t calculatedMd5[16];
-  MD5Builder md5;
 
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&Settings), sizeof(SettingsStruct));
 
@@ -596,33 +634,15 @@ String LoadSettings()
   }
   Settings.validate();
 
-  // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
-
-  /*
-     if (Settings.StructSize > 16) {
-      md5.begin();
-      md5.add(reinterpret_cast<const uint8_t *>(&Settings), Settings.StructSize -16);
-      md5.calculate();
-      md5.getBytes(calculatedMd5);
-     }
-     if (memcmp (calculatedMd5, Settings.md5,16)==0){
-      addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
-      if (memcmp(Settings.ProgmemMd5, CRCValues.runTimeMD5, 16)!=0)
-        addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
-     }
-     else{
-      addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
-     }
-   */
+  if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
+    addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
+  } else{
+    addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+  }
 
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
 
-  md5.begin();
-  md5.add(reinterpret_cast< uint8_t *>(&SecuritySettings), sizeof(SecuritySettings) - 16);
-  md5.calculate();
-  md5.getBytes(calculatedMd5);
-
-  if (memcmp(calculatedMd5, SecuritySettings.md5, 16) == 0) {
+  if (COMPUTE_STRUCT_CHECKSUM(SecurityStruct, SecuritySettings)) {
     addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
 
     if (memcmp(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16) != 0) {
@@ -1152,20 +1172,13 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *
  \*********************************************************************************************/
 String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 {
-  MD5Builder md5;
-  uint8_t    tmp_md5[16] = { 0 };
   String     err;
 
   ProvisioningSettings.validate();
   memcpy(ProvisioningSettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
-  md5.begin();
-  md5.add((uint8_t *)&ProvisioningSettings + 16, sizeof(ProvisioningSettings) - 16);
-  md5.calculate();
-  md5.getBytes(tmp_md5);
-
-  if (memcmp(tmp_md5, ProvisioningSettings.md5, 16) != 0) {
+  if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(ProvisioningStruct, ProvisioningSettings))
+  {
     // Settings have changed, save to file.
-    memcpy(ProvisioningSettings.md5, tmp_md5, 16);
     err = SaveToFile_trunc(getFileName(FileType::PROVISIONING_DAT, 0).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
   }
   return err;
@@ -1176,16 +1189,10 @@ String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
  \*********************************************************************************************/
 String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 {
-  uint8_t calculatedMd5[16] = { 0 };
-  MD5Builder md5;
-
   String err = LoadFromFile(getFileName(FileType::PROVISIONING_DAT, 0).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
-  md5.begin();
-  md5.add(((uint8_t *)&ProvisioningSettings) + 16, sizeof(ProvisioningSettings) - 16);
-  md5.calculate();
-  md5.getBytes(calculatedMd5);
 
-  if (memcmp(calculatedMd5, ProvisioningSettings.md5, 16) == 0) {
+  if (COMPUTE_STRUCT_CHECKSUM(ProvisioningStruct, ProvisioningSettings))
+  {
     addLog(LOG_LEVEL_INFO, F("CRC  : ProvisioningSettings CRC   ...OK "));
 
     if (memcmp(ProvisioningSettings.ProgmemMd5, CRCValues.runTimeMD5, 16) != 0) {

@@ -1,14 +1,13 @@
 #include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 
-// FIXME TD-er: Rename this to ESPEasyNetwork_ProcessEvent
-
 #include "../../ESPEasy-Globals.h"
 
-#include "../ESPEasyCore/ESPEasy_Log.h"
+#if FEATURE_ETHERNET
+#include "../ESPEasyCore/ESPEasyEth_ProcessEvent.h"
+#endif
 #include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
-#include "../ESPEasyCore/ESPEasyWiFiEvent.h"
+
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
@@ -17,19 +16,25 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
-#include "../Globals/Settings.h"
 #include "../Globals/Services.h"
+#include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
+
+#include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
-#include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
+
+// #include "../ESPEasyCore/ESPEasyEth.h"
+// #include "../ESPEasyCore/ESPEasyWiFiEvent.h"
+// #include "../ESPEasyCore/ESPEasy_Log.h"
+// #include "../Helpers/ESPEasy_time_calc.h"
+// #include "../Helpers/Misc.h"
+// #include "../Helpers/Scheduler.h"
 
 
 // ********************************************************************************
@@ -39,50 +44,9 @@
 void handle_unprocessedNetworkEvents()
 {
 #if FEATURE_ETHERNET
-  if (EthEventData.unprocessedEthEvents()) {
-    // Process disconnect events before connect events.
-    if (!EthEventData.processedDisconnect) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processDisconnect()"));
-      #endif // ifndef BUILD_NO_DEBUG
-      processEthernetDisconnected();
-    }
+  handle_unprocessedEthEvents();
+#endif
 
-    // Must process the Ethernet Connected event regardless the active network medium.
-    // It may happen by plugging in the cable while WiFi was active.
-    if (!EthEventData.processedConnect) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processConnect()"));
-      #endif // ifndef BUILD_NO_DEBUG
-      processEthernetConnected();
-    }
-  }
-
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
-    if (!EthEventData.EthServicesInitialized() || EthEventData.unprocessedEthEvents())
-    {
-      if (!EthEventData.unprocessedEthEvents() && EthEventData.EthConnectAllowed()) {
-        NetworkConnectRelaxed();
-      }
- 
-      if (!EthEventData.processedGotIP) {
-        #ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processGotIP()"));
-        #endif // ifndef BUILD_NO_DEBUG
-        processEthernetGotIP();
-      }
-
-      if (!EthEventData.processedDHCPTimeout) {
-        #ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("Eth  : DHCP timeout, Calling disconnect()"));
-        #endif // ifndef BUILD_NO_DEBUG
-        EthEventData.processedDHCPTimeout = true;
-        //WifiDisconnect();
-      }
-    }
-    EthEventData.setEthServicesInitialized();
-  }
-#endif // if FEATURE_ETHERNET
   if (active_network_medium == NetworkMedium_t::WIFI) {
     const bool should_be_initialized = (WiFiEventData.WiFiGotIP() && WiFiEventData.WiFiConnected()) || NetworkConnected();
     if (WiFiEventData.WiFiServicesInitialized() != should_be_initialized)
@@ -237,21 +201,7 @@ void handle_unprocessedNetworkEvents()
     }
   }
 #if FEATURE_ETHERNET
-  // Check if DNS is still valid, as this may have been reset by the WiFi module turned off.
-  if (EthEventData.EthServicesInitialized() && 
-      active_network_medium == NetworkMedium_t::Ethernet &&
-      EthEventData.ethInitSuccess) {
-    const bool has_cache = !EthEventData.dns0_cache && !EthEventData.dns1_cache;
-    if (has_cache) {
-      const IPAddress dns0     = NetworkDnsIP(0);
-      const IPAddress dns1     = NetworkDnsIP(1);
-
-      if (!dns0 && !dns1) {
-        addLog(LOG_LEVEL_ERROR, F("ETH  : DNS server was cleared, use cached DNS IP"));
-        ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
-      }
-    }
-  }
+  check_Eth_DNS_valid();
 #endif // if FEATURE_ETHERNET
 
 #if FEATURE_ESPEASY_P2P
@@ -632,127 +582,3 @@ void processScanDone() {
 
 
 
-#if FEATURE_ETHERNET
-
-void processEthernetConnected() {
-  if (EthEventData.processedConnect) return;
-  // FIXME TD-er: Must differentiate among reconnects for WiFi and Ethernet.
-  ++WiFiEventData.wifi_reconnects;
-  EthEventData.setEthConnected();
-  EthEventData.processedConnect = true;
-  if (Settings.UseRules)
-  {
-    eventQueue.add(F("Ethernet#LinkUp"));
-  }  
-  setNetworkMedium(Settings.NetworkMedium);
-}
-
-void processEthernetDisconnected() {
-  if (EthEventData.processedDisconnect) return;
-  EthEventData.setEthDisconnected();
-  EthEventData.processedDisconnect = true;
-  EthEventData.ethConnectAttemptNeeded = true;
-  if (Settings.UseRules)
-  {
-    eventQueue.add(F("ETHERNET#Disconnected"));
-  }
-}
-
-void processEthernetGotIP() {
-  if (EthEventData.processedGotIP || !EthEventData.ethInitSuccess) {
-    return;
-  }
-  const IPAddress ip       = NetworkLocalIP();
-
-  if (!ip) { 
-    return;
-  }
-
-  const IPAddress gw       = NetworkGatewayIP();
-  const IPAddress subnet   = NetworkSubnetMask();
-
-  IPAddress dns0     = NetworkDnsIP(0);
-  IPAddress dns1     = NetworkDnsIP(1);
-  const LongTermTimer::Duration dhcp_duration = EthEventData.lastConnectMoment.timeDiff(EthEventData.lastGetIPmoment);
-
-  if (!dns0 && !dns1) {
-    addLog(LOG_LEVEL_ERROR, F("ETH  : No DNS server received via DHCP, use cached DNS IP"));
-    ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
-  } else {
-    EthEventData.dns0_cache = dns0;
-    EthEventData.dns1_cache = dns1;
-  }
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO))
-  {
-    String log;
-    if (log.reserve(160)) {
-      log = F("ETH MAC: ");
-      log += NetworkMacAddress().toString();
-      log += ' ';
-      if (useStaticIP()) {
-        log += F("Static");
-      } else {
-        log += F("DHCP");
-      }
-      log += F(" IP: ");
-      log += ip.toString();
-      log += ' ';
-      log += wrap_braces(NetworkGetHostname());
-      log += F(" GW: ");
-      log += gw.toString();
-      log += F(" SN: ");
-      log += subnet.toString();
-      log += F(" DNS: ");
-      log += dns0.toString();
-      log += '/';
-      log += dns1.toString();
-
-      if (EthLinkUp()) {
-        if (EthFullDuplex()) {
-          log += F(" FULL_DUPLEX");
-        }
-        log += ' ';
-        log += EthLinkSpeed();
-        log += F("Mbps");
-      } else {
-        log += F(" Link Down");
-      }
-      
-      if ((dhcp_duration > 0ll) && (dhcp_duration < 30000000ll)) {
-        // Just log times when they make sense.
-        log += F("   duration: ");
-        log += static_cast<int32_t>(dhcp_duration / 1000);
-        log += F(" ms");
-      }
-
-      addLogMove(LOG_LEVEL_INFO, log);
-    }
-  }
-
-  // First try to get the time, since that may be used in logs
-  if (node_time.systemTimePresent()) {
-    node_time.initTime();
-  }
-#if FEATURE_MQTT
-  mqtt_reconnect_count        = 0;
-  MQTTclient_should_reconnect = true;
-  timermqtt_interval          = 100;
-  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
-  scheduleNextMQTTdelayQueue();
-#endif // if FEATURE_MQTT
-  Scheduler.sendGratuitousARP_now();
-
-  if (Settings.UseRules)
-  {
-    eventQueue.add(F("Ethernet#Connected"));
-  }
-  statusLED(true);
-  logConnectionStatus();
-
-  EthEventData.processedGotIP = true;
-  EthEventData.setEthGotIP();
-  CheckRunningServices();
-}
-
-#endif // if FEATURE_ETHERNET

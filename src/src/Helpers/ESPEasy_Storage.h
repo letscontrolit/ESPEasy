@@ -63,6 +63,31 @@ int  getPartionCount(uint8_t pType, uint8_t pSubType = 0xFF);
  \*********************************************************************************************/
 bool GarbageCollection();
 
+// Compute checksum of the data.
+// Skip the part where the checksum may be located in the data
+// @param checksum The expected checksum. Will contain checksum after call finished.
+// @retval true when checksum matches
+bool computeChecksum(
+  uint8_t checksum[16], 
+  uint8_t * data, 
+  size_t struct_size, 
+  size_t len_upto_md5,
+  bool updateChecksum = true);
+
+#define COMPUTE_STRUCT_CHECKSUM_UPDATE(STRUCT,OBJECT) \
+   computeChecksum(OBJECT.md5,\
+                   reinterpret_cast<uint8_t *>(&OBJECT),\
+                   sizeof(STRUCT),\
+                   offsetof(STRUCT, md5),\
+                   true)
+
+#define COMPUTE_STRUCT_CHECKSUM(STRUCT,OBJECT) \
+   computeChecksum(OBJECT.md5,\
+                   reinterpret_cast<uint8_t *>(&OBJECT),\
+                   sizeof(STRUCT),\
+                   offsetof(STRUCT, md5),\
+                   false)
+
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
