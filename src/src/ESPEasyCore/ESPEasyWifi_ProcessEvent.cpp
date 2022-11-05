@@ -59,6 +59,7 @@ void handle_unprocessedNetworkEvents()
   }
 
   if (active_network_medium == NetworkMedium_t::Ethernet) {
+    const bool EthServices_was_initialized = EthEventData.EthServicesInitialized();
     if (!EthEventData.EthServicesInitialized() || EthEventData.unprocessedEthEvents())
     {
       if (!EthEventData.unprocessedEthEvents() && EthEventData.EthConnectAllowed()) {
@@ -81,6 +82,9 @@ void handle_unprocessedNetworkEvents()
       }
     }
     EthEventData.setEthServicesInitialized();
+    if (!EthServices_was_initialized && EthEventData.setEthServicesInitialized()) {
+      registerEthEventHandler();
+    }
   }
 #endif // if FEATURE_ETHERNET
   if (active_network_medium == NetworkMedium_t::WIFI) {

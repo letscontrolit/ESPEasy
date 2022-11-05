@@ -7,7 +7,7 @@
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
-#include "../ESPEasyCore/ESPEasyWiFiEvent.h"
+#include "../ESPEasyCore/ESPEasyEthEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
@@ -147,7 +147,7 @@ void registerEthEventHandler()
   if (EthEventData.wm_event_id != 0) {
     removeEthEventHandler();
   }
-  EthEventData.wm_event_id = WiFi.onEvent(WiFiEvent);
+  EthEventData.wm_event_id = WiFi.onEvent(EthEvent);
 }
 
 

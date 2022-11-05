@@ -91,7 +91,7 @@ void EthernetEventData_t::setEthConnected() {
   setEthServicesInitialized();
 }
 
-void EthernetEventData_t::setEthServicesInitialized() {
+bool EthernetEventData_t::setEthServicesInitialized() {
   if (!unprocessedEthEvents() && !EthServicesInitialized()) {
     if (EthGotIP() && EthConnected()) {
       #ifndef BUILD_NO_DEBUG
@@ -99,8 +99,10 @@ void EthernetEventData_t::setEthServicesInitialized() {
       #endif
       bitSet(ethStatus, ESPEASY_ETH_SERVICES_INITIALIZED);
       ethConnectInProgress = false;
+      return true;
     }
   }
+  return false;
 }
 
 void EthernetEventData_t::markGotIP() {

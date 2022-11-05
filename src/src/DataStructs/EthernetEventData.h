@@ -38,7 +38,7 @@ struct EthernetEventData_t {
   void setEthDisconnected();
   void setEthGotIP();
   void setEthConnected();
-  void setEthServicesInitialized();
+  bool setEthServicesInitialized();
 
 
   void markGotIP();
