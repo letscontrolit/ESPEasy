@@ -14,7 +14,7 @@
 #define ESPEASY_WIFI_GOT_IP                  1
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
-#define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
+#define WIFI_RECONNECT_WAIT                  30000  // in milliSeconds
 
 #define CONNECT_TIMEOUT_MAX                  4000   // in milliSeconds
 
