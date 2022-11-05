@@ -654,7 +654,7 @@ void processEthernetDisconnected() {
   EthEventData.ethConnectAttemptNeeded = true;
   if (Settings.UseRules)
   {
-    eventQueue.add(F("ETHERNET#Disconnected"));
+    eventQueue.add(F("Ethernet#Disconnected"));
   }
 }
 
