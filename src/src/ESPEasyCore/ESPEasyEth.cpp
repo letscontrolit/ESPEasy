@@ -26,8 +26,8 @@ bool ethUseStaticIP() {
 }
 
 void ethSetupStaticIPconfig() {
+  const IPAddress IP_zero(0, 0, 0, 0); 
   if (!ethUseStaticIP()) { 
-    const IPAddress IP_zero(0, 0, 0, 0); 
     if (!ETH.config(IP_zero, IP_zero, IP_zero, IP_zero)) {
       addLog(LOG_LEVEL_ERROR, F("ETH  : Cannot set IP config"));
     }
@@ -39,6 +39,7 @@ void ethSetupStaticIPconfig() {
   const IPAddress dns    = Settings.ETH_DNS;
 
   EthEventData.dns0_cache = dns;
+  EthEventData.dns1_cache = IP_zero;
 
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -53,6 +54,7 @@ void ethSetupStaticIPconfig() {
     addLogMove(LOG_LEVEL_INFO, log);
   }
   ETH.config(ip, gw, subnet, dns);
+  ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
 }
 
 void ethSetDNS(const IPAddress& dns0, const IPAddress& dns1) 

@@ -1431,9 +1431,9 @@ void setConnectionSpeed() {
 }
 
 void setupStaticIPconfig() {
-  setUseStaticIP(useStaticIP());
+  setUseStaticIP(WiFiUseStaticIP());
 
-  if (!useStaticIP()) { return; }
+  if (!WiFiUseStaticIP()) { return; }
   const IPAddress ip     = Settings.IP;
   const IPAddress gw     = Settings.Gateway;
   const IPAddress subnet = Settings.Subnet;
