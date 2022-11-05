@@ -19,6 +19,11 @@
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasy_now_state.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
+
+#if FEATURE_ETHERNET
+#include "../Globals/ESPEasyEthEvent.h"
+#endif
+
 #include "../Globals/NetworkState.h"
 
 #if FEATURE_ESPEASY_P2P

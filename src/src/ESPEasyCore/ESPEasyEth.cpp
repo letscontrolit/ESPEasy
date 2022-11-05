@@ -8,7 +8,8 @@
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../ESPEasyCore/ESPEasyEthEvent.h"
+#include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
@@ -26,8 +27,8 @@ bool ethUseStaticIP() {
 }
 
 void ethSetupStaticIPconfig() {
+  const IPAddress IP_zero(0, 0, 0, 0); 
   if (!ethUseStaticIP()) { 
-    const IPAddress IP_zero(0, 0, 0, 0); 
     if (!ETH.config(IP_zero, IP_zero, IP_zero, IP_zero)) {
       addLog(LOG_LEVEL_ERROR, F("ETH  : Cannot set IP config"));
     }
@@ -37,6 +38,10 @@ void ethSetupStaticIPconfig() {
   const IPAddress gw     = Settings.ETH_Gateway;
   const IPAddress subnet = Settings.ETH_Subnet;
   const IPAddress dns    = Settings.ETH_DNS;
+
+  EthEventData.dns0_cache = dns;
+  EthEventData.dns1_cache = IP_zero;
+
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("ETH IP   : Static IP : ");
@@ -50,6 +55,7 @@ void ethSetupStaticIPconfig() {
     addLogMove(LOG_LEVEL_INFO, log);
   }
   ETH.config(ip, gw, subnet, dns);
+  ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
 }
 
 void ethSetDNS(const IPAddress& dns0, const IPAddress& dns1) 
@@ -136,6 +142,21 @@ MAC_address ETHMacAddress() {
   return mac;
 }
 
+void removeEthEventHandler()
+{
+  WiFi.removeEvent(EthEventData.wm_event_id);
+  EthEventData.wm_event_id = 0;
+}
+
+void registerEthEventHandler()
+{
+  if (EthEventData.wm_event_id != 0) {
+    removeEthEventHandler();
+  }
+  EthEventData.wm_event_id = WiFi.onEvent(EthEvent);
+}
+
+
 bool ETHConnectRelaxed() {
   if (EthEventData.ethInitSuccess) {
     return EthLinkUp();
@@ -148,17 +169,13 @@ bool ETHConnectRelaxed() {
     return false;
   }
   // Re-register event listener
-  #if defined(ESP32)
-  removeWiFiEventHandler();
-  #endif
+  removeEthEventHandler();
 
   ethPower(true);
   EthEventData.markEthBegin();
 
   // Re-register event listener
-  #if defined(ESP32)
-  registerWiFiEventHandler();
-  #endif
+  registerEthEventHandler();
 
   if (!EthEventData.ethInitSuccess) {
     ethResetGPIOpins();

@@ -623,12 +623,16 @@ void resetWiFi() {
 #ifdef ESP32
 void removeWiFiEventHandler()
 {
-  WiFi.removeEvent(wm_event_id);
+  WiFi.removeEvent(WiFiEventData.wm_event_id);
+  WiFiEventData.wm_event_id = 0;
 }
 
 void registerWiFiEventHandler()
 {
-  wm_event_id = WiFi.onEvent(WiFiEvent);
+  if (WiFiEventData.wm_event_id != 0) {
+    removeWiFiEventHandler();
+  }
+  WiFiEventData.wm_event_id = WiFi.onEvent(WiFiEvent);
 }
 #endif
 
@@ -651,11 +655,12 @@ void initWiFi()
   // those WiFi connections will take a long time to make or sometimes will not work at all.
   WiFi.disconnect(false);
   delay(1);
+  setSTA(true);
   WifiScan(false);
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)
-  wm_event_id = WiFi.onEvent(WiFiEvent);
+  registerWiFiEventHandler();
 #endif
 #ifdef ESP8266
   // WiFi event handlers
@@ -891,7 +896,7 @@ void WifiDisconnect()
   #ifdef ESP32
   WiFi.disconnect();
   delay(1);
-  WiFi.removeEvent(wm_event_id);
+  removeWiFiEventHandler();
   {
     const IPAddress ip;
     const IPAddress gw;
@@ -1332,6 +1337,11 @@ void setWifiMode(WiFiMode_t new_mode) {
     #endif // ifdef ESP8266
     delay(1);
   } else {
+    #ifdef ESP32
+    if (cur_mode == WIFI_OFF) {
+      registerWiFiEventHandler();
+    }
+    #endif
     // Only set power mode when AP is not enabled
     // When AP is enabled, the sleep mode is already set to WIFI_NONE_SLEEP
     if (!WifiIsAP(new_mode)) {
@@ -1427,7 +1437,7 @@ bool WifiIsSTA(WiFiMode_t wifimode)
   #endif // if defined(ESP32)
 }
 
-bool useStaticIP() {
+bool WiFiUseStaticIP() {
   return Settings.IP[0] != 0 && Settings.IP[0] != 255;
 }
 
@@ -1518,9 +1528,9 @@ void setConnectionSpeed() {
 }
 
 void setupStaticIPconfig() {
-  setUseStaticIP(useStaticIP());
+  setUseStaticIP(WiFiUseStaticIP());
 
-  if (!useStaticIP()) { return; }
+  if (!WiFiUseStaticIP()) { return; }
   const IPAddress ip     = Settings.IP;
   const IPAddress gw     = Settings.Gateway;
   const IPAddress subnet = Settings.Subnet;

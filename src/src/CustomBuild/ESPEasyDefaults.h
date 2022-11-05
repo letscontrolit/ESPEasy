@@ -88,7 +88,7 @@
 #endif
 
 #ifndef DEFAULT_WIFI_CONNECTION_TIMEOUT
-#define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
+#define DEFAULT_WIFI_CONNECTION_TIMEOUT  20000  // minimum timeout in ms for WiFi to be connected.
 #endif
 #ifndef DEFAULT_WIFI_FORCE_BG_MODE
 #define DEFAULT_WIFI_FORCE_BG_MODE       false  // when set, only allow to connect in 802.11B or G mode (not N)
