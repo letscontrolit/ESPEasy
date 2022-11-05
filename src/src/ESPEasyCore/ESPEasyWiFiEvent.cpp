@@ -86,11 +86,12 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
       // ESP32 station lost IP and the IP is reset to 0
       #if FEATURE_ETHERNET
-      /*
       if (active_network_medium == NetworkMedium_t::Ethernet) {
+        // DNS records are shared among WiFi and Ethernet (very bad design!)
+        // So we must restore the DNS records for Ethernet in case we started with WiFi and then plugged in Ethernet.
+        // As soon as WiFi is turned off, the DNS entry for Ethernet is cleared.
         EthEventData.markLostIP();
       }
-      */
       #endif // if FEATURE_ETHERNET
       WiFiEventData.markLostIP();
       # ifndef BUILD_NO_DEBUG

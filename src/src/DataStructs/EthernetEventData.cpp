@@ -119,6 +119,7 @@ void EthernetEventData_t::markLostIP() {
   bitClear(ethStatus, ESPEASY_ETH_GOT_IP);
   bitClear(ethStatus, ESPEASY_ETH_SERVICES_INITIALIZED);
   lastGetIPmoment.clear();
+  processedGotIP = false;
 }
 
 void EthernetEventData_t::markDisconnect() {
