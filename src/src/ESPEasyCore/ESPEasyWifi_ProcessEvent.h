@@ -1,5 +1,5 @@
-#ifndef ESPEASYWIFI_PROCESSEVENT_H
-#define ESPEASYWIFI_PROCESSEVENT_H
+#ifndef ESPEASYCORE_ESPEASYWIFI_PROCESSEVENT_H
+#define ESPEASYCORE_ESPEASYWIFI_PROCESSEVENT_H
 
 #include "../../ESPEasy_common.h"
 
@@ -12,10 +12,4 @@ void processConnectAPmode();
 void processDisableAPmode();
 void processScanDone();
 
-#if FEATURE_ETHERNET
-void processEthernetConnected();
-void processEthernetDisconnected();
-void processEthernetGotIP();
-#endif // if FEATURE_ETHERNET
-
-#endif //ESPEASYWIFI_PROCESSEVENT_H
+#endif // ifndef ESPEASYCORE_ESPEASYWIFI_PROCESSEVENT_H

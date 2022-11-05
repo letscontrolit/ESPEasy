@@ -13,6 +13,11 @@ struct ExtendedControllerCredentialsStruct
 {
   ExtendedControllerCredentialsStruct();
 
+  // Compute checksum of the data.
+  // @param checksum The expected checksum. Will contain checksum after call finished.
+  // @retval true when checksum matches
+  bool computeChecksum(uint8_t checksum[16]) const;
+
   String load();
   String save() const;
 
@@ -22,10 +27,9 @@ struct ExtendedControllerCredentialsStruct
   void setControllerUser(controllerIndex_t controller_idx, const String& user);
   void setControllerPass(controllerIndex_t controller_idx, const String& pass);
 
-  private:
+private:
 
   String _strings[CONTROLLER_MAX * 2];
-
 
   // TODO TD-er: Add extra WiFi credentials
 };

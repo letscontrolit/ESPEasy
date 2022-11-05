@@ -52,7 +52,7 @@ String fileFromUrl(String path) {
 }
 
 bool matchFilename(const String& path, const __FlashStringHelper *fname) {
-  return path.equalsIgnoreCase(fileFromUrl(fname));
+  return fileFromUrl(path).equalsIgnoreCase(fileFromUrl(fname));
 }
 
 // ********************************************************************************
@@ -101,6 +101,7 @@ void serveEmbedded(const String& path, const __FlashStringHelper* contentType, b
     return;
   }
 #endif // ifdef WEBSERVER_FAVICON
+  addLog(LOG_LEVEL_ERROR, concat(F("serveEmbedded failed: "), path));
 }
 
 
@@ -143,6 +144,10 @@ bool isStaticFile_StripPrefix(String& path) {
 // and therefore should be read from browser cache
 // ********************************************************************************
 bool reply_304_not_modified(const String& path) {
+  if (path.endsWith(F("favicon.ico"))) {
+    // No need in serving 304 for the favicon
+    return false;
+  }
   const String ifNoneMatch = stripQuotes(web_server.header(F("If-None-Match")));
   unsigned int etag_num    = 0;
   bool res                 = false;
@@ -240,7 +245,8 @@ bool loadFromFS(String path) {
   bool mustCheckCredentials = false;
   const __FlashStringHelper* contentType  = get_ContentType(path, mustCheckCredentials);
 
-  const bool serve_304 = static_file && reply_304_not_modified(path); // Reply with a 304 Not Modified
+  const bool serve_304 = static_file && 
+                         reply_304_not_modified(path); // Reply with a 304 Not Modified
 
 #ifndef BUILD_NO_DEBUG
 

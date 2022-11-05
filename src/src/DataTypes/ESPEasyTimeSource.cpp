@@ -62,6 +62,7 @@ unsigned long computeExpectedWander(timeSource_t  timeSource,
     }
     case timeSource_t::NTP_time_source:
     {
+      // Typical time needed to perform a NTP request to an online NTP server
       expectedWander_ms += 30;
       break;
     }
@@ -70,15 +71,22 @@ unsigned long computeExpectedWander(timeSource_t  timeSource,
     case timeSource_t::ESPEASY_p2p_UDP:
     {
       // expected wander is 144 per hour.
-      // Using a 'penalty' of 300 makes it only preferrable over NTP after +/- 2 hour.
-      expectedWander_ms += 300;
+      // Using a 'penalty' of 1000 makes it only preferrable over NTP after +/- 7 hour.
+      expectedWander_ms += 1000;
       break;
     }
 
     case timeSource_t::External_RTC_time_source:
+    {
+      // Will be off by +/- 500 msec
+      expectedWander_ms += 500;
+      break;
+    }
     case timeSource_t::Restore_RTC_time_source:
     {
-      expectedWander_ms += 2000;
+      // May be off by the time needed to reboot + some time since the last update of the RTC
+      // If a reboot was due to a watchdog reset, then it will be an additional 2 - 6 seconds.
+      expectedWander_ms += 5000;
       break;
     }
     case timeSource_t::Manual_set:
