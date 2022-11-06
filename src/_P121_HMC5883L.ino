@@ -90,7 +90,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormFloatNumberBox(F("Declination Angle"), F("pdecl"), PCONFIG_FLOAT(0), -180.0f, 180.0f, 2, 0.01f);
-      PCONFIG_FLOAT(1) = PCONFIG_FLOAT(0) * M_PI / 180.0; // convert from degree to radian
+      PCONFIG_FLOAT(1) = PCONFIG_FLOAT(0) * M_PI / 180.0f; // convert from degree to radian
       addUnit(F("degree"));
       success = true;
       break;
@@ -139,11 +139,11 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
         }
 
         if (heading < 0) {
-          heading += 2 * PI;
+          heading += 2.0f * PI;
         }
 
-        if (heading > 2 * PI) {
-          heading -= 2 * PI;
+        if (heading > 2.0f * PI) {
+          heading -= 2.0f * PI;
         }
 
         UserVar[event->BaseVarIndex + 3] = heading * 180.0f / M_PI;
