@@ -4,6 +4,7 @@
 
 #include "../CustomBuild/CompiletimeDefines.h"
 
+#include "../DataStructs/TimingStats.h"
 #include "../DataTypes/TimeSource.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -26,6 +27,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 
