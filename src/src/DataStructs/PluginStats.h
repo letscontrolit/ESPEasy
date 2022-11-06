@@ -6,6 +6,8 @@
 #if FEATURE_PLUGIN_STATS
 
 # include "../DataStructs/ChartJS_dataset_config.h"
+#include "../DataTypes/TaskIndex.h"
+
 
 # include <CircularBuffer.h>
 
