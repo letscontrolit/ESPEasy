@@ -24,6 +24,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
 
 #define ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE  35000
 
