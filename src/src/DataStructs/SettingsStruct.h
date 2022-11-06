@@ -351,7 +351,7 @@ class SettingsStruct_tmpl
   int8_t        SPI_SCLK_pin = -1;
   int8_t        SPI_MISO_pin = -1;
   int8_t        SPI_MOSI_pin = -1;
-  int8_t        alignmentFiller0 = 0;  // Should be reused, just added to keep up with alignment
+  int8_t        ForceESPEasyNOWchannel = 0;
 
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
