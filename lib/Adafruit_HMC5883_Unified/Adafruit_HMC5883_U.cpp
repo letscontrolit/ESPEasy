@@ -111,26 +111,30 @@ void Adafruit_HMC5883_Unified::read() {
   Wire.endTransmission();
   Wire.requestFrom((byte)HMC5883_ADDRESS_MAG, (byte)6);
 
-  // Wait around until enough data is available
-  while (Wire.available() < 6)
-    ;
-
-// Note high before low (different than accel)
-#if ARDUINO >= 100
-  uint8_t xhi = Wire.read();
-  uint8_t xlo = Wire.read();
-  uint8_t zhi = Wire.read();
-  uint8_t zlo = Wire.read();
-  uint8_t yhi = Wire.read();
-  uint8_t ylo = Wire.read();
-#else
-  uint8_t xhi = Wire.receive();
-  uint8_t xlo = Wire.receive();
-  uint8_t zhi = Wire.receive();
-  uint8_t zlo = Wire.receive();
-  uint8_t yhi = Wire.receive();
-  uint8_t ylo = Wire.receive();
-#endif
+  uint8_t xhi = 0;
+  uint8_t xlo = 0;
+  uint8_t zhi = 0;
+  uint8_t zlo = 0;
+  uint8_t yhi = 0;
+  uint8_t ylo = 0;
+  if (Wire.available() == 6) {
+    // Note high before low (different than accel)
+    #if ARDUINO >= 100
+    xhi = Wire.read();
+    xlo = Wire.read();
+    zhi = Wire.read();
+    zlo = Wire.read();
+    yhi = Wire.read();
+    ylo = Wire.read();
+    #else
+    xhi = Wire.receive();
+    xlo = Wire.receive();
+    zhi = Wire.receive();
+    zlo = Wire.receive();
+    yhi = Wire.receive();
+    ylo = Wire.receive();
+    #endif
+  }
 
   // Shift values to create properly formed integer (low byte first)
   _magData.x = (int16_t)(xlo | ((int16_t)xhi << 8));
