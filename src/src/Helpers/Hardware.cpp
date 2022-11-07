@@ -99,6 +99,9 @@ void hardwareInit()
           int8_t  state = -1;
           uint8_t mode  = PIN_MODE_UNDEFINED;
           int8_t  init  = 0;
+          #ifdef ESP32
+          gpio_reset_pin(static_cast<gpio_num_t>(gpio));
+          #endif
 
           switch (bootState)
           {
@@ -1435,6 +1438,8 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
 // ********************************************************************************
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
+  input = GPIO_IS_VALID_GPIO(gpio);
+  output = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
 
 # ifdef ESP32S2
 
@@ -1483,31 +1488,6 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-  /*
-   # if FEATURE_ETHERNET
-
-     // Check pins used for RMII Ethernet PHY
-     if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
-      switch (gpio) {
-        case 0:
-        case 21:
-        case 19:
-        case 22:
-        case 25:
-        case 26:
-        case 27:
-          warning = true;
-          break;
-      }
-
-
-      // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
-     }
-
-
-   # endif // if FEATURE_ETHERNET
-
-   */
 # else // ifdef ESP32S2
 
   // ESP32 classic
@@ -1582,7 +1562,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
 # endif    // ifdef ESP32S2
 
-  if (UsePSRAM()) {
+  if (FoundPSRAM()) {
     // PSRAM can use GPIO 16 and 17
     // There will be a high frequency signal on those pins (flash frequency)
     // which makes them unusable for other purposes.

@@ -1,6 +1,0 @@
-Adafruit_MPR121	KEYWORD1
-begin	KEYWORD2
-filteredData	KEYWORD2
-baselineData	KEYWORD2
-touched	KEYWORD2
-setThresholds	KEYWORD2
