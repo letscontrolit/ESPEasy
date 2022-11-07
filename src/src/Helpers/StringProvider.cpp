@@ -17,6 +17,11 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
+
+#if FEATURE_ETHERNET
+#include "../Globals/ESPEasyEthEvent.h"
+#endif
+
 #include "../Globals/NetworkState.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
@@ -26,6 +31,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"

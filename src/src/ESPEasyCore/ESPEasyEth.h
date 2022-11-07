@@ -21,5 +21,8 @@ void     ethPower(bool enable);
 void     ethResetGPIOpins();
 MAC_address ETHMacAddress();
 
+void removeEthEventHandler();
+void registerEthEventHandler();
+
 #endif // if FEATURE_ETHERNET
 #endif // ifndef ESPEASY_ETH_H
