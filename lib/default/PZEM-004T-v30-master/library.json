@@ -1,0 +1,25 @@
+{
+    "name": "PZEM-004T-v30",
+    "frameworks": "arduino",
+    "keywords": "peacefair, pzem, powermeter, v3",
+    "description": "Enables communication to Peacefair PZEM-004T v3.0 Power and Energy monitor",
+    "url": "https://github.com/mandulaj/PZEM-004T-v30",
+    "authors": [
+        {
+            "name": "Jakub Mandula"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mandulaj/PZEM-004T-v30"
+    },
+    "platforms": "*",
+    "version": "1.0.0",
+    "dependencies": [
+        {
+            "name": "EspSoftwareSerial",
+            "version": ">=3.2.0",
+            "platforms": "espressif8266"
+        }
+    ]
+}

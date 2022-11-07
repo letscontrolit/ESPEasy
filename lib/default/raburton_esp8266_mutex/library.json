@@ -1,0 +1,30 @@
+{
+    "name": "RABurton ESP8266 Mutex",
+    "version": "1.0.2",
+    "keywords": [
+      "esp8266", "mutex"
+    ],
+    "license": "MIT",
+    "description": "A mutex for the ESP8266.",
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/raburton/esp8266/tree/master/mutex"
+    },
+    "authors":
+    [
+      {
+        "name": "Richard A Burton",
+        "email": "richardaburton@gmail.com"
+      },
+      {
+        "name": "Gijs Noorlander",
+        "email": "gijs.noorlander@gmail.com",
+        "maintainer": true
+      }
+    ],
+    "frameworks": "arduino",
+    "platforms": [
+      "espressif8266"
+    ]
+}

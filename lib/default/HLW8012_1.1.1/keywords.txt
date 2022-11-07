@@ -1,0 +1,54 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+
+#######################################
+# Classes (KEYWORD1)
+#######################################
+
+HLW8012 KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin KEYWORD2
+setMode KEYWORD2
+getMode KEYWORD2
+toggleMode KEYWORD2
+
+cf_interrupt KEYWORD2
+cf1_interrupt KEYWORD2
+
+getCurrent KEYWORD2
+int getVoltage KEYWORD2
+int getActivePower KEYWORD2
+int getApparentPower KEYWORD2
+getPowerFactor KEYWORD2
+int getReactivePower KEYWORD2
+long getEnergy KEYWORD2
+resetEnergy KEYWORD2
+
+setResistors KEYWORD2
+
+expectedCurrent KEYWORD2
+expectedVoltage KEYWORD2
+expectedActivePower KEYWORD2
+
+getCurrentMultiplier KEYWORD2
+getVoltageMultiplier KEYWORD2
+getPowerMultiplier KEYWORD2
+
+setCurrentMultiplier KEYWORD2
+setVoltageMultiplier KEYWORD2
+setPowerMultiplier KEYWORD2
+resetMultipliers KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################

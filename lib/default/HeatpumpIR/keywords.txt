@@ -1,0 +1,57 @@
+HeatpumpIR	KEYWORD1
+PanasonicHeatpumpIR	KEYWORD1
+PanasonicCKPHeatpumpIR	KEYWORD1
+PanasonicDKEHeatpumpIR	KEYWORD1
+PanasonicJKEHeatpumpIR	KEYWORD1
+PanasonicNKEHeatpumpIR	KEYWORD1
+PanasonicLKEHeatpumpIR	KEYWORD1
+CarrierHeatpumpIR	KEYWORD1
+CarrierNQVHeatpumpIR	KEYWORD1
+ToshibaDaiseikaiHeatpumpIR	KEYWORD1
+CarrierMCAHeatpumpIR	KEYWORD1
+Qlima1HeatpumpIR	KEYWORD1
+Qlima2HeatpumpIR	KEYWORD1
+MideaHeatpumpIR	KEYWORD1
+FujitsuHeatpumpIR	KEYWORD1
+MitsubishiHeatpumpIR	KEYWORD1
+MitsubishiFDHeatpumpIR	KEYWORD1
+MitsubishiFEHeatpumpIR	KEYWORD1
+MitsubishiMSYHeatpumpIR	KEYWORD1
+MitsubishiSEZKDXXHeatpumpIR	KEYWORD1
+SamsungHeatpumpIR	KEYWORD1
+SamsungAQVHeatpumpIR	KEYWORD1
+SamsungFJMHeatpumpIR	KEYWORD1
+SharpHeatpumpIR	KEYWORD1
+DaikinHeatpumpIR	KEYWORD1
+MitsubishiHeavyHeatpumpIR	KEYWORD1
+MitsubishiHeavyZJHeatpumpIR	KEYWORD1
+MitsubishiHeavyZMHeatpumpIR	KEYWORD1
+HyundaiHeatpumpIR	KEYWORD1
+HisenseHeatpumpIR	KEYWORD1
+GreeHeatpumpIR	KEYWORD1
+GreeGenericHeatpumpIR	KEYWORD1
+GreeYANHeatpumpIR	KEYWORD1
+GreeYAAHeatpumpIR	KEYWORD1
+FuegoHeatpumpIR	KEYWORD1
+ToshibaHeatpumpIR	KEYWORD1
+IVTHeatpumpIR	KEYWORD1
+HitachiHeatpumpIR	KEYWORD1
+BalluHeatpumpIR	KEYWORD1
+AUXHeatpumpIR	KEYWORD1
+
+IRSender	KEYWORD1
+IRSenderPWM	KEYWORD1
+IRSenderBlaster	KEYWORD1
+IRSenderBitBang	KEYWORD1
+
+setFrequency	KEYWORD2
+sendIRByte	KEYWORD2
+bitReverse	KEYWORD2
+space	KEYWORD2
+mark	KEYWORD2
+
+send	KEYWORD2
+model	KEYWORD2
+info	KEYWORD2
+
+sendPanasonicCKPCancelTimer	KEYWORD2

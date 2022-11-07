@@ -1,0 +1,20 @@
+{
+	"name": "WakeOnLan",
+	"keywords": "esp8266, esp32, wol, wake-on-lan, esp8266-arduino, esp32-arduino, espressif, espressif8266, espressif32",
+	"description": "Generate and send Wake On Lan (WOL) packet over UDP protocol.",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/a7md0/WakeOnLan.git"
+	},
+	"authors": [
+		{
+			"name": "a7md0",
+			"email": "wakeapp@a7md0.dev",
+			"url": "https://github.com/a7md0",
+			"maintainer": true
+		}
+	],
+	"version": "1.1.6",
+	"frameworks": "arduino",
+	"platforms": "espressif32, espressif8266"
+}

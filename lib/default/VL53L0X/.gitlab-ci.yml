@@ -1,0 +1,11 @@
+image: $CI_REGISTRY_IMAGE/nixos/nix:2.3.6
+
+stages:
+  - ci
+
+ci:
+  stage: ci
+  tags:
+    - nix
+  script:
+    - nix-shell -I nixpkgs=channel:nixpkgs-unstable -p arduino-ci --run "arduino-ci"

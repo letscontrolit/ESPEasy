@@ -1,0 +1,69 @@
+#######################################
+# Syntax Coloring Map For ST_FlightSense_Sensor_Shields
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SFEVL53L1X					KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+init						KEYWORD2
+begin						KEYWORD2
+checkID						KEYWORD2
+sensorOn					KEYWORD2
+sensorOff					KEYWORD2
+getSoftwareVersion			KEYWORD2
+setI2CAddress				KEYWORD2
+getI2CAddress				KEYWORD2
+clearInterrupt				KEYWORD2
+setInterruptPolarityHigh	KEYWORD2
+setInterruptPolarityLow		KEYWORD2
+getInterruptPolarity		KEYWORD2
+startRanging				KEYWORD2
+stopRanging					KEYWORD2
+checkForDataReady			KEYWORD2
+setTimingBudgetInMs			KEYWORD2
+getTimingBudgetInMs			KEYWORD2
+setDistanceModeLong			KEYWORD2
+setDistanceModeShort		KEYWORD2
+getDistanceMode				KEYWORD2
+setIntermeasurementPeriod	KEYWORD2
+getIntermeasurementPeriod	KEYWORD2
+checkBootState				KEYWORD2
+getSensorID					KEYWORD2
+getDistance					KEYWORD2
+getSignalPerSpad			KEYWORD2
+getAmbientPerSpad			KEYWORD2
+getSignalRate				KEYWORD2
+getSpadNb					KEYWORD2
+getAmbientRate				KEYWORD2
+getRangeStatus				KEYWORD2
+setOffset					KEYWORD2
+getOffset					KEYWORD2
+setXTalk					KEYWORD2
+getXTalk					KEYWORD2
+setDistanceThreshold		KEYWORD2
+getDistanceThresholdWindow	KEYWORD2
+getDistanceThresholdLow		KEYWORD2
+getDistanceThresholdHig		KEYWORD2
+setROI						KEYWORD2
+getROIX						KEYWORD2
+getROIY						KEYWORD2
+setSignalThreshold			KEYWORD2
+getSignalThreshold			KEYWORD2
+setSigmaThreshold			KEYWORD2
+getSigmaThreshold			KEYWORD2
+startTemperatureUpdate		KEYWORD2
+calibrateOffset				KEYWORD2
+calibrateXTalk				KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+

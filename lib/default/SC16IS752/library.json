@@ -1,0 +1,29 @@
+{
+    "name": "SC16IS752",
+    "version": "1.0.2",
+    "keywords": [
+      "serial", "io", "sc16is752", "i2c", "uart"
+    ],
+    "description": "NXP SC16IS752 I2C UART bridge for ESP8266 and ESP32",
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/TD-er/SC16IS752/"
+    },
+    "authors":
+    [
+      {
+        "name": "Gijs Noorlander",
+        "email": "gijs.noorlander@gmail.com",
+        "maintainer": true
+      },
+      {
+        "name": "Tiequan Shao",
+        "email": "info@sandboxelectronics.com"
+      }
+    ],
+    "frameworks": "arduino",
+    "platforms": [
+      "espressif8266","espressif32"
+    ]
+}
