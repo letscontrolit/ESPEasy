@@ -101,6 +101,10 @@ void hardwareInit()
           uint8_t mode  = PIN_MODE_UNDEFINED;
           int8_t  init  = 0;
 
+          #ifdef ESP32
+          gpio_reset_pin(static_cast<gpio_num_t>(gpio));
+          #endif
+          
           switch (bootState)
           {
             case PinBootState::Default_state:
@@ -1440,6 +1444,9 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
 
+  input = GPIO_IS_VALID_GPIO(gpio);
+  output = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
+
 # ifdef ESP32S2
 
   // Input GPIOs:  0-21, 26, 33-46
@@ -1586,7 +1593,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
 # endif    // ifdef ESP32S2
 
-  if (UsePSRAM()) {
+  if (FoundPSRAM()) {
     // PSRAM can use GPIO 16 and 17
     // There will be a high frequency signal on those pins (flash frequency)
     // which makes them unusable for other purposes.
