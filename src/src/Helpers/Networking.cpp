@@ -7,6 +7,7 @@
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -919,6 +920,15 @@ bool hasIPaddr() {
 #else // ifdef CORE_POST_2_5_0
   return WiFi.isConnected();
 #endif // ifdef CORE_POST_2_5_0
+}
+
+bool useStaticIP() {
+  #if FEATURE_ETHERNET
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    return ethUseStaticIP();
+  }
+  #endif
+  return WiFiUseStaticIP();
 }
 
 // Check connection. Maximum timeout 500 msec.

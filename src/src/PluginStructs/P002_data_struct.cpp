@@ -36,9 +36,9 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
     _calib_out1           = P002_CALIBRATION_VALUE1;
     _calib_out2           = P002_CALIBRATION_VALUE2;
   }
-# ifndef LIMIT_BUILD_SIZE
   LoadTaskSettings(event->TaskIndex);
   _nrDecimals        = ExtraTaskSettings.TaskDeviceValueDecimals[0];
+# ifndef LIMIT_BUILD_SIZE
   _nrMultiPointItems = P002_NR_MULTIPOINT_ITEMS;
   _useMultipoint     = P002_MULTIPOINT_ENABLED;
 

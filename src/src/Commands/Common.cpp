@@ -11,6 +11,7 @@
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
+#include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 
