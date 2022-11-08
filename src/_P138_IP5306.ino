@@ -7,7 +7,8 @@
 
 /**
  * Changelog:
- * 2022-08-236 tonhuisman: Initial plugin development, using codewitch-honey-crisis/htcw_ip5306 library
+ * 2022-11-08 tonhuisman: Fix a few typos, cleanup some comments
+ * 2022-08-26 tonhuisman: Initial plugin development, using codewitch-honey-crisis/htcw_ip5306 library
  **/
 
 /**
@@ -94,7 +95,7 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
-      success =  event->Par1 == 0x75;
+      success = event->Par1 == 0x75;
       break;
     }
 
@@ -116,8 +117,6 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper *valOptions[] = {
           toString(P138_valueOptions_e::None),
-
-          // toString(P138_valueOptions_e::BatteryVoltage),
           toString(P138_valueOptions_e::BatteryCurrent),
           toString(P138_valueOptions_e::ChargeUnderVoltage),
           toString(P138_valueOptions_e::StopVoltage),
@@ -127,8 +126,6 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
         };
         const int valValues[] = {
           static_cast<int>(P138_valueOptions_e::None),
-
-          // static_cast<int>(P138_valueOptions_e::BatteryVoltage),
           static_cast<int>(P138_valueOptions_e::BatteryCurrent),
           static_cast<int>(P138_valueOptions_e::ChargeUnderVoltage),
           static_cast<int>(P138_valueOptions_e::StopVoltage),

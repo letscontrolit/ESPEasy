@@ -8,8 +8,6 @@
 const __FlashStringHelper* toString(const P138_valueOptions_e value, bool displayString) {
   switch (value) {
     case P138_valueOptions_e::None: return displayString ? F("None") : F("none");
-
-    // case P138_valueOptions_e::BatteryVoltage: return displayString ? F("Battery voltage") : F("batteryvoltage");
     case P138_valueOptions_e::BatteryCurrent: return displayString ? F("Battery current") : F("batterycurrent");
     case P138_valueOptions_e::ChargeUnderVoltage: return displayString ? F("Charge undervoltage") : F("chargeundervoltage");
     case P138_valueOptions_e::StopVoltage: return displayString ? F("Stop voltage") : F("stopvoltage");
@@ -24,7 +22,7 @@ const __FlashStringHelper* toString(const P138_valueOptions_e value, bool displa
 // Constructor
 // **************************************************************************/
 P138_data_struct::P138_data_struct(struct EventStruct *event) {
-  addLog(LOG_LEVEL_INFO, F("AXP192: Init."));
+  addLog(LOG_LEVEL_INFO, F("IP5306: Init."));
 
   _ip5306 = new (std::nothrow) arduino::ip5306(); // Default address and I2C Wire object
 }
