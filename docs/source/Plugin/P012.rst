@@ -132,9 +132,9 @@ The following example displays a running X across the screen, switching between 
   //Change speed 
   on changeSpeed do
     if [int#7] = [int#5]       // if current speed = speed1
-      let,7,[int#6]            // set to speed1
+      let,7,[int#6]            // set to speed2
      else
-      let,7,[int#5]            // set to speed2
+      let,7,[int#5]            // set to speed1
     endif
     loopTimerSet_ms,1,[int#7]  // set new timer to current speed
   endon
