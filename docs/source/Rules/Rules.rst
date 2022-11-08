@@ -2102,15 +2102,22 @@ The next script should be placed at the top of ``Rules Set 1`` as they are calle
     // %eventvalue1% = key
     // %eventvalue2% = lower limit index
     // %eventvalue3% = upper limit index
-    Let,997,(%eventvalue2%+%eventvalue3%)/2 // Compute "middle" index
-    Let,998,[int#997]+1
+  
     // [int#%v997%] is the key in the middle of our search range
+    Let,997,(%eventvalue2%+%eventvalue3%)/2 // Compute "middle" index
+    Let,998,[int#997]
+    if [int#998] < %eventvalue3%
+      Let,998,[int#998]+1
+    endif
     
-    If %eventvalue1% = [int#%v997%] or %eventvalue1% = [int#%v998%] 
+    // Compute the distance between upper and lower limit
+    let,996,%eventvalue3%-%eventvalue2%
+  
+    If %eventvalue1% = [int#%v997%] or %eventvalue1% = [int#%v998%]
       // Found it
       Event,OkTag=%eventvalue1%
     Else
-      If %eventvalue2%=%eventvalue3%
+      If %eventvalue2%=%eventvalue3% or [int#996]=1
         // Upper and lower limit are the same
         // So we have not found the key
         // No need to continue searching
@@ -2118,15 +2125,23 @@ The next script should be placed at the top of ``Rules Set 1`` as they are calle
         // When refering to an index, make sure to use the [int#<n>] notation, not the floating point version.
         If %eventvalue1% > [int#%v997%]
           // Check upper half
-          Asyncevent,checkID=%eventvalue1%,[int#997],%eventvalue3%
+          if [int#998] < %eventvalue3%
+            // We already checked #998, so increase its index
+            Let,998,[int#998]+1
+          endif
+          Asyncevent,checkID=%eventvalue1%,[int#998],%eventvalue3%
         Else
           // Check lower half
+          if [int#997] > %eventvalue2%
+            // We already checked #997, so decrease its index
+            Let,997,[int#997]-1
+          endif
           Asyncevent,checkID=%eventvalue1%,%eventvalue2%,[int#997]
         Endif
       Endif
     Endif
   Endon
-
+  
   On Turnstile_out#Tag Do // Out-going reader
     If [Turnstile_out#Tag]>0
       Event,readet=[Turnstile_out#Tag]
