@@ -93,6 +93,48 @@ Commands available
 
 .. include:: P012_commands.repl
 
+Rules Example
+^^^^^^^^^^^^^
+The following example displays a running X across the screen, switching between two speeds every screen loop completion.  
+
+.. code:: none
+
+  //Init variables
+  on System#Boot do
+   let,1,20                        //screen columns
+   let,2,4                         // screen lines
+   let,3,1                         // current line = 1
+   let,4,1                         // current column = 1
+   let,5,500                       // speed1 ms
+   let,6,250                       // speed2 ms
+   let,7,[int#5]                   // set current speed to speed1
+   loopTimerSet_ms,1,[int#7]       // start timer1 with current speed 
+   lcd,clean                       // clear screen
+  endon
+
+  //Screen loop
+  On Rules#Timer=1 do
+   lcd,[int#3],[int#4],            // clear screen old position
+   if [int#4] < [int#1]            // column < max columns
+      let,4,[int#4]+1              // increment clumn
+   else
+      let,4,1                      // reset column
+      if [int#3] < [int#2]         // line < max lines
+        let,3,[int#3]+1            // increment line
+      else
+        let,3,1                    // reset line  (sreen full loop finished)
+        if [int#7] = [int#5]       // if current spedd = speed1
+          let,7,[int#6]            // set to speed1
+         else
+          let,7,[int#5]            // set to speed2
+        endif
+        loopTimerSet_ms,1,[int#7]  // set new timer to current speed
+      endif
+   endif
+   lcd,[int#3],[int#4],X           // draw X on new position
+  endon
+
+
 Change log
 ----------
 
