@@ -116,14 +116,14 @@ The following example displays a running X across the screen, switching between 
   On Rules#Timer=1 do
    lcd,[int#3],[int#4],            // clear screen old position
    if [int#4] < [int#1]            // column < max columns
-      let,4,[int#4]+1              // increment clumn
+      let,4,[int#4]+1              // increment column
    else
       let,4,1                      // reset column
       if [int#3] < [int#2]         // line < max lines
         let,3,[int#3]+1            // increment line
       else
-        let,3,1                    // reset line  (sreen full loop finished)
-        if [int#7] = [int#5]       // if current spedd = speed1
+        let,3,1                    // reset line (screen full loop finished)
+        if [int#7] = [int#5]       // if current speed = speed1
           let,7,[int#6]            // set to speed1
          else
           let,7,[int#5]            // set to speed2
