@@ -175,6 +175,7 @@ private:
   struct tm getSunRise(int secOffset) const;
   struct tm getSunSet(int secOffset) const;
 
+#if FEATURE_EXT_RTC
 public:
 
   bool ExtRTC_get(uint32_t& unixtime);
@@ -182,6 +183,7 @@ public:
 private:
 
   bool ExtRTC_set(uint32_t unixtime);
+#endif
 
 public:
 
