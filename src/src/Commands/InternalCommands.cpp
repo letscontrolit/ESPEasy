@@ -275,6 +275,10 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R( "clearaccessblock", Command_AccessInfo_Clear,   0); // Network Command
       COMMAND_CASE_R(    "clearpassword", Command_Settings_Password_Clear,     1); // Settings.h
       COMMAND_CASE_R(      "clearrtcram", Command_RTC_Clear,          0); // RTC.h
+      #ifdef ESP8266
+      COMMAND_CASE_R(     "clearsdkwifi", Command_System_Erase_SDK_WiFiconfig,  0); // System.h
+      COMMAND_CASE_R(  "clearwifirfcall", Command_System_Erase_RFcal,  0); // System.h
+      #endif
       COMMAND_CASE_R(           "config", Command_Task_RemoteConfig, -1); // Tasks.h
       COMMAND_CASE_R("controllerdisable", Command_Controller_Disable, 1); // Controller.h
       COMMAND_CASE_R( "controllerenable", Command_Controller_Enable,  1); // Controller.h

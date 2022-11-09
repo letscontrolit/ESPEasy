@@ -98,6 +98,24 @@ extern esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
 /********************************************************************************************\
    Hardware information
  \*********************************************************************************************/
+#ifdef ESP8266
+enum class ESP8266_partition_type {
+  sketch,
+  ota,
+  fs,
+  eeprom,
+  rf_cal,
+  wifi
+};
+
+// Get info on the partition type
+// @retval The flash sector. (negative on unknown ptype)
+int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_t& size);
+
+
+#endif
+
+
 uint32_t                   getFlashChipId();
 
 uint32_t                   getFlashRealSizeInBytes();

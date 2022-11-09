@@ -33,6 +33,10 @@ void SecurityStruct::validate() {
   ZERO_TERMINATE(Password);
 }
 
+void SecurityStruct::forceSave() {
+  memset(md5, 0, 16);
+}
+
 void SecurityStruct::clearWiFiCredentials() {
   ZERO_FILL(WifiSSID);
   ZERO_FILL(WifiKey);

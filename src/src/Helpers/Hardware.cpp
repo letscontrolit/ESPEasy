@@ -14,6 +14,7 @@
 
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
@@ -599,6 +600,48 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 /********************************************************************************************\
    Hardware information
  \*********************************************************************************************/
+#ifdef ESP8266
+int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_t& size)
+{
+  address = 0;
+  size = -1;
+  const uint32_t addr_offset = 0x40200000;
+  const uint32_t realSize = getFlashRealSizeInBytes();
+  switch(ptype) {
+    case ESP8266_partition_type::sketch:
+      address = 0;
+      size = getSketchSize();
+      break;
+    case ESP8266_partition_type::ota:
+      address = getSketchSize();
+      size = getFreeSketchSpace();
+      break;
+    case ESP8266_partition_type::fs:
+      address = ((uint32_t)&_FS_start - addr_offset);
+      size = ((uint32_t)((uint32_t)&_FS_end - (uint32_t)&_FS_start));
+      break;
+    case ESP8266_partition_type::eeprom:
+      address = ((uint32_t)&_EEPROM_start - addr_offset);
+      size = realSize - address - 16384;
+      break;
+    case ESP8266_partition_type::rf_cal:
+      address = realSize - 16384;
+      size = 4096;
+      break;
+    case ESP8266_partition_type::wifi:
+      address = realSize - 12288;
+      size = 12288;
+      break;
+  }
+  if (size > 0)
+    return address / SPI_FLASH_SEC_SIZE;
+  return -1;
+}
+
+
+#endif
+
+
 uint32_t getFlashChipId() {
   // Cache since size does not change
   static uint32_t flashChipId = 0;

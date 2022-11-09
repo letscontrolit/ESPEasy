@@ -18,6 +18,8 @@ struct ExtendedControllerCredentialsStruct
   // @retval true when checksum matches
   bool computeChecksum(uint8_t checksum[16]) const;
 
+  void clear();
+
   String load();
   String save() const;
 

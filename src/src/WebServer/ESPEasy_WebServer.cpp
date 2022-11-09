@@ -1043,6 +1043,27 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 #endif // ifndef BUILD_MINIMAL_OTA
 
+
+void drawPartitionChartSVG(
+                          float yOffset, 
+                          uint32_t realSize, 
+                          uint32_t partitionAddress, 
+                          uint32_t partitionSize,
+                          unsigned int partitionColor,
+                          const String& label,
+                          const String& name)
+{
+  createSvgHorRectPath(0xcdcdcd,       0,                yOffset, realSize,      SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+  createSvgHorRectPath(partitionColor, partitionAddress, yOffset, partitionSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+  float textXoffset = SVG_BAR_WIDTH + 2;
+  float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
+  createSvgTextElement(formatHumanReadable(partitionSize, 1024),          textXoffset, textYoffset);
+  textXoffset = SVG_BAR_WIDTH + 60;
+  createSvgTextElement(label, textXoffset, textYoffset);
+  textXoffset = SVG_BAR_WIDTH + 130;
+  createSvgTextElement(name, textXoffset, textYoffset);
+}
+
 #ifdef ESP32
 
 # include <esp_partition.h>
@@ -1065,15 +1086,14 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   if (_mypartiterator) {
     do {
       _mypart = esp_partition_get(_mypartiterator);
-      createSvgHorRectPath(0xcdcdcd,       0,                yOffset, realSize,      SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
-      createSvgHorRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
-      float textXoffset = SVG_BAR_WIDTH + 2;
-      float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
-      createSvgTextElement(formatHumanReadable(_mypart->size, 1024),          textXoffset, textYoffset);
-      textXoffset = SVG_BAR_WIDTH + 60;
-      createSvgTextElement(_mypart->label,                                    textXoffset, textYoffset);
-      textXoffset = SVG_BAR_WIDTH + 130;
-      createSvgTextElement(getPartitionType(_mypart->type, _mypart->subtype), textXoffset, textYoffset);
+      drawPartitionChartSVG(
+        yOffset, 
+        realSize, 
+        _mypart->address, 
+        _mypart->size, 
+        partitionColor, 
+        _mypart->label,
+        getPartitionType(_mypart->type, _mypart->subtype));
       yOffset += SVG_BAR_HEIGHT;
     } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
@@ -1082,6 +1102,82 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
 }
 
 #endif // ifdef ESP32
+
+#ifdef ESP8266
+void getPartitionTableSVG() {
+  // sketch / OTA / FS / EEPROM / RFcal / wifi
+  const int nrPartitions = 6;
+  const int shiftY = 2;
+  write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
+  float yOffset = shiftY;
+
+  for (int i = 0; i < nrPartitions; ++i) {
+    const ESP8266_partition_type ptype = static_cast<ESP8266_partition_type>(i);
+    uint32_t partitionAddress = 0;
+    int32_t partitionSize = 0;
+    const int32_t partitionSector = getPartitionInfo(ptype, partitionAddress, partitionSize);
+
+    const __FlashStringHelper * label = F("");
+    String descr;
+    unsigned int partitionColor = 0xab56e6;
+    switch (ptype) {
+      case ESP8266_partition_type::sketch:
+        label = F("sketch");
+        partitionColor = 0xab56e6;
+        break;
+      case ESP8266_partition_type::ota:
+        label = F("ota");
+        partitionColor = 0x5856e6;
+        break;
+      case ESP8266_partition_type::fs:
+        label = F("fs");
+        partitionColor = 0xff7f00;
+        #ifdef USE_LITTLEFS
+        descr = F("LittleFS");
+        #else
+        descr = F("SPIFFS");
+        #endif
+        break;
+      case ESP8266_partition_type::eeprom:
+        label = F("eeprom");
+        descr = concat(F("sector:"), partitionSector);
+        partitionColor = 0x7fff00;
+        break;
+      case ESP8266_partition_type::rf_cal:
+        label = F("RFcal");
+        partitionColor = 0xff007f;
+        break;
+      case ESP8266_partition_type::wifi:
+        label = F("WiFi");
+        partitionColor = 0xff00ff;
+        break;
+
+    }
+
+    drawPartitionChartSVG(
+        yOffset, 
+        getFlashRealSizeInBytes(), 
+        partitionAddress, 
+        partitionSize, 
+        partitionColor, 
+        label,
+        descr);
+    yOffset += SVG_BAR_HEIGHT;
+
+/*
+    String debuglog = concat(F("partition: "), (i+1));
+    debuglog += concat(F(" FS_st: "), formatToHex((uint32_t)&_FS_start));
+    debuglog += concat(F(" FS_end: "), formatToHex((uint32_t)&_FS_end));
+    debuglog += concat(F(" EEPROM: "), formatToHex((uint32_t)&_EEPROM_start));
+    debuglog += concat(F(" addr: "), formatToHex(partitionAddress, 8));
+    debuglog += concat(F(" part.size: "), partitionSize);
+    debuglog += concat(F(" label: "), label);
+    addLog(LOG_LEVEL_INFO, debuglog);
+*/
+  }
+  addHtml(F("</svg>\n"));
+}
+#endif
 
 bool webArg2ip(const __FlashStringHelper * arg, uint8_t *IP) {
   return str2ip(webArg(arg), IP);

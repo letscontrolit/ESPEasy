@@ -475,6 +475,7 @@ void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
   saveUserVarToRTC();
   setWifiMode(WIFI_OFF);
   ESPEASY_FS.end();
+  process_serialWriteBuffer();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
   Scheduler.markIntendedReboot(reason);

@@ -38,15 +38,19 @@ using namespace fs;
 
 
 #if defined(ESP8266)
-  extern "C" {
-    #include <spi_flash.h>
-  }
   #ifdef CORE_POST_2_6_0
+  extern "C" {
+    #include <flash_hal.h>
+  }
     extern "C" uint32_t _FS_start;
     extern "C" uint32_t _FS_end;
     extern "C" uint32_t _FS_page;
     extern "C" uint32_t _FS_block;
+    extern "C" uint32_t _EEPROM_start;
   #else
+  extern "C" {
+    #include <spi_flash.h>
+  }
     extern "C" uint32_t _SPIFFS_start;
     extern "C" uint32_t _SPIFFS_end;
     extern "C" uint32_t _SPIFFS_page;

@@ -449,6 +449,31 @@ int getPartionCount(uint8_t pType, uint8_t pSubType) {
 
 #endif
 
+ #ifdef ESP8266
+bool clearPartition(ESP8266_partition_type ptype) {
+  uint32_t address;
+  int32_t size;
+  int32_t sector = getPartitionInfo(ESP8266_partition_type::rf_cal, address, size);
+  while (size > 0) {
+    if (!ESP.flashEraseSector(sector)) return false;
+    ++sector;
+    size -= SPI_FLASH_SEC_SIZE;
+
+  }
+  return true;
+}
+
+bool clearRFcalPartition() {
+  return clearPartition(ESP8266_partition_type::rf_cal);
+}
+
+bool clearWiFiSDKpartition() {
+  return clearPartition(ESP8266_partition_type::wifi);
+}
+
+#endif
+
+
 /********************************************************************************************\
    Garbage collection
  \*********************************************************************************************/
@@ -509,7 +534,7 @@ bool computeChecksum(
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
-String SaveSettings()
+String SaveSettings(bool forFactoryReset)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveSettings"));
@@ -549,23 +574,27 @@ String SaveSettings()
 
   //  }
 
-  err = SaveSecuritySettings();
+  err = SaveSecuritySettings(forFactoryReset);
 
   return err;
 }
 
-String SaveSecuritySettings() {
+String SaveSecuritySettings(bool forFactoryReset) {
   String     err;
 
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+
+  if (forFactoryReset) {
+    SecuritySettings.forceSave();
+  }
 
   if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SecurityStruct, SecuritySettings)) {
     // Settings have changed, save to file.
     err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
     // Security settings are saved, may be update of WiFi settings or hostname.
-    if (!NetworkConnected()) {
+    if (!forFactoryReset && !NetworkConnected()) {
       if (SecuritySettings.hasWiFiCredentials() && active_network_medium == NetworkMedium_t::WIFI) {
         WiFiEventData.wifiConnectAttemptNeeded = true;
         WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
@@ -575,12 +604,15 @@ String SaveSecuritySettings() {
     }
   } else {
     addLog(LOG_LEVEL_INFO, F("Skip saving SecuritySettings, not changed"));
-
   }
 
   // FIXME TD-er: How to check if these have changed?
+  if (forFactoryReset) {
+    ExtendedControllerCredentials.clear();
+  }
   ExtendedControllerCredentials.save();
-  afterloadSettings();
+  if (!forFactoryReset)
+    afterloadSettings();
   return err;
 }
 

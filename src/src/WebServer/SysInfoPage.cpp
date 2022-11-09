@@ -751,6 +751,14 @@ void handle_sysinfo_Storage() {
   //   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
   getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
   # endif // ifdef ESP32
+
+  #ifdef ESP8266
+  addTableSeparator(F("Partitions"), 2, 3);
+
+  addRowLabel(F("Partition Table"));
+
+  getPartitionTableSVG();
+  #endif
 }
 #endif
 

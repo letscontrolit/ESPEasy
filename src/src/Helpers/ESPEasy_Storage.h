@@ -57,6 +57,17 @@ int  getPartionCount(uint8_t pType, uint8_t pSubType = 0xFF);
 #endif
 
 /********************************************************************************************\
+   Low level clear RFcal and SDK WiFi parameters.
+ \*********************************************************************************************/
+ #ifdef ESP8266
+bool clearRFcalPartition();
+
+bool clearWiFiSDKpartition();
+
+#endif
+
+
+/********************************************************************************************\
    Garbage collection
  \*********************************************************************************************/
 bool GarbageCollection();
@@ -89,9 +100,9 @@ bool computeChecksum(
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
-String SaveSettings();
+String SaveSettings(bool forFactoryReset = false);
 
-String SaveSecuritySettings();
+String SaveSecuritySettings(bool forFactoryReset = false);
 
 void afterloadSettings();
 

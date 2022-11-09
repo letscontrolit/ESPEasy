@@ -10,6 +10,7 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -57,6 +58,7 @@ void ResetFactory()
   serialPrint(F("RESET: Resetting factory defaults... using "));
   serialPrint(getDeviceModelString(ResetFactoryDefaultPreference.getDeviceModel()));
   serialPrintln(F(" settings"));
+  process_serialWriteBuffer();
   delay(1000);
 
   if (readFromRTC())
@@ -84,10 +86,11 @@ void ResetFactory()
   saveToRTC();
 
   // always format on factory reset, in case of corrupt FS
-//  ESPEASY_FS.end();
+  ESPEASY_FS.end();
   serialPrintln(F("RESET: formatting..."));
   FS_format();
   serialPrintln(F("RESET: formatting done..."));
+  process_serialWriteBuffer();
 
   if (!ESPEASY_FS.begin())
   {
@@ -273,8 +276,8 @@ void ResetFactory()
     }
   }
 #endif // if DEFAULT_CONTROLLER
-
-  SaveSettings();
+  const bool forFactoryReset = true;
+  SaveSettings(forFactoryReset);
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory2"));
   #endif
