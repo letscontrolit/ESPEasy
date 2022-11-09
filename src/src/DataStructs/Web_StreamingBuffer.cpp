@@ -119,7 +119,7 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str, int length) 
   */
   {
     // Copy to internal buffer and send in chunks
-    unsigned int pos          = 0;
+    int pos          = 0;
     while (pos < length) {
       if (flush_step == 0) {
         flush();
