@@ -186,34 +186,20 @@ void ResetFactory()
   Settings.Build   = get_build_nr();
 
   //  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
-  Settings.Delay                   = DEFAULT_DELAY;
+//  Settings.Delay                   = DEFAULT_DELAY;
   Settings.Pin_i2c_sda             = gpio_settings.i2c_sda;
   Settings.Pin_i2c_scl             = gpio_settings.i2c_scl;
   Settings.Pin_status_led          = gpio_settings.status_led;
-  Settings.Pin_status_led_Inversed = DEFAULT_PIN_STATUS_LED_INVERSED;
+//  Settings.Pin_status_led_Inversed = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs               = -1;
   Settings.Pin_Reset               = DEFAULT_PIN_RESET_BUTTON;
   Settings.Protocol[0]             = DEFAULT_PROTOCOL;
-  Settings.deepSleep_wakeTime      = 0; // Sleep disabled
-  Settings.CustomCSS               = false;
-  Settings.InitSPI                 = DEFAULT_SPI;
-
-  for (taskIndex_t x = 0; x < TASKS_MAX; x++)
-  {
-    Settings.TaskDevicePin1[x]         = -1;
-    Settings.TaskDevicePin2[x]         = -1;
-    Settings.TaskDevicePin3[x]         = -1;
-    Settings.TaskDevicePin1PullUp[x]   = true;
-    Settings.TaskDevicePin1Inversed[x] = false;
-
-    for (controllerIndex_t y = 0; y < CONTROLLER_MAX; y++) {
-      Settings.TaskDeviceSendData[y][x] = true;
-    }
-    Settings.TaskDeviceTimer[x] = Settings.Delay;
-  }
+//  Settings.deepSleep_wakeTime      = 0; // Sleep disabled
+//  Settings.CustomCSS               = false;
+//  Settings.InitSPI                 = DEFAULT_SPI;
 
   // advanced Settings
-  Settings.UseRules                         = DEFAULT_USE_RULES;
+//  Settings.UseRules                         = DEFAULT_USE_RULES;
   Settings.ControllerEnabled[0]             = DEFAULT_CONTROLLER_ENABLED;
   Settings.MQTTRetainFlag_unused            = DEFAULT_MQTT_RETAIN;
   Settings.MessageDelay_unused              = DEFAULT_MQTT_DELAY;
@@ -227,8 +213,8 @@ void ResetFactory()
   Settings.Longitude = DEFAULT_LONGITUDE;
   #endif // ifdef DEFAULT_LONGITUDE
 
-  Settings.UseSerial = DEFAULT_USE_SERIAL;
-  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
+//  Settings.UseSerial = DEFAULT_USE_SERIAL;
+//  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
 
   Settings.ETH_Phy_Addr   = gpio_settings.eth_phyaddr;
   Settings.ETH_Pin_mdc    = gpio_settings.eth_mdc;
@@ -247,7 +233,7 @@ void ResetFactory()
           Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
           Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
    */
-  Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+//  Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
 
   Settings.JSONBoolWithoutQuotes(DEFAULT_JSON_BOOL_WITHOUT_QUOTES);
   Settings.EnableTimingStats(DEFAULT_ENABLE_TIMING_STATS);

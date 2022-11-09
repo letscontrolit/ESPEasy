@@ -54,7 +54,7 @@ class SettingsStruct_tmpl
 {
   public:
 
-  SettingsStruct_tmpl(); //-V730
+//  SettingsStruct_tmpl(); //-V730
 
   // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
   bool appendUnitToHostname() const;

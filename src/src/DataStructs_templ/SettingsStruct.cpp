@@ -1,6 +1,7 @@
 #include "../DataStructs/SettingsStruct.h"
 
 #include "../../ESPEasy_common.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/SPI_options.h"
@@ -11,6 +12,8 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
 
+/*
+  // All called from ResetFactory()
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) { //-V730
   clearMisc();
@@ -22,6 +25,7 @@ SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPrefere
   clearUnitNameSettings();
   clearNetworkSettings();
 }
+*/
 
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -446,14 +450,15 @@ void SettingsStruct_tmpl<N_TASKS>::clearUnitNameSettings() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
-  PID                      = 0;
-  Version                  = 0;
-  Build                    = 0;
+  PID                      = ESP_PROJECT_PID;
+  Version                  = VERSION;
+  Build                    = get_build_nr();
   IP_Octet                 = 0;
-  Delay                    = 0;
+  Delay                    = DEFAULT_DELAY;
   Pin_i2c_sda              = DEFAULT_PIN_I2C_SDA;
   Pin_i2c_scl              = DEFAULT_PIN_I2C_SCL;
   Pin_status_led           = DEFAULT_PIN_STATUS_LED;
+  Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Pin_sd_cs                = -1;
   ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
   ETH_Pin_mdc              = DEFAULT_ETH_PIN_MDC;
@@ -486,23 +491,22 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
     }
     #endif
   }
-  BaudRate                         = 0;
+  BaudRate                         = DEFAULT_SERIAL_BAUD;
   MessageDelay_unused              = 0;
   deepSleep_wakeTime               = 0;
   CustomCSS                        = false;
   WDI2CAddress                     = 0;
-  UseRules                         = false;
-  UseSerial                        = true;
+  UseRules                         = DEFAULT_USE_RULES;
+  UseSerial                        = DEFAULT_USE_SERIAL;
   UseSSDP                          = false;
   WireClockStretchLimit            = 0;
-  I2C_clockSpeed                   = 400000;
+  I2C_clockSpeed                   = DEFAULT_I2C_CLOCK_SPEED;
   WebserverPort                    = 80;
   SyslogPort                       = 514;
   GlobalSync                       = false;
   ConnectionFailuresThreshold      = 0;
   MQTTRetainFlag_unused            = false;
   InitSPI                          = DEFAULT_SPI;
-  Pin_status_led_Inversed          = false;
   deepSleepOnFail                  = false;
   UseValueLogger                   = false;
   ArduinoOTAEnable                 = false;
