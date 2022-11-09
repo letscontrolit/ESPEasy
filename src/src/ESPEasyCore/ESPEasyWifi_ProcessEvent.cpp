@@ -73,10 +73,6 @@ void handle_unprocessedNetworkEvents()
         }        
         WiFiEventData.setWiFiServicesInitialized();
         CheckRunningServices();
-        // First try to get the time, since that may be used in logs
-        if (Settings.UseNTP()) {
-          node_time.initTime();
-        }
       }
     }
   }
