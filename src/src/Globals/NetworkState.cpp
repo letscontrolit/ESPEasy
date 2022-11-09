@@ -8,7 +8,10 @@ NetworkMedium_t active_network_medium = DEFAULT_NETWORK_MEDIUM;
 
 bool webserverRunning(false);
 bool webserver_init(false);
+
+#if FEATURE_MDNS
 bool mDNS_init(false);
+#endif
 
 
 // NTP status

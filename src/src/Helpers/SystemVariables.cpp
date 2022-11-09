@@ -146,18 +146,17 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case BSSID:             return String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr());
     case CR:                return String('\r');
     case IP4:               return String(static_cast<int>(NetworkLocalIP()[3])); // 4th IP octet
+    case ISMQTT:            return String(
     #if FEATURE_MQTT
-    case ISMQTT:            return String(MQTTclient_connected ? 1 : 0);
-    #else // if FEATURE_MQTT
-    case ISMQTT:            return String('0');
-    #endif // if FEATURE_MQTT
-
+      MQTTclient_connected ? 1 : 
+    #endif
+      0);
+    
+    case ISMQTTIMP:         return String(
     #ifdef USES_P037
-    case ISMQTTIMP:         return String(P037_MQTTImport_connected ? 1 : 0);
-    #else // ifdef USES_P037
-    case ISMQTTIMP:         return String('0');
-    #endif // USES_P037
-
+      P037_MQTTImport_connected ? 1 : 
+    #endif
+      0);
 
     case ISNTP:             return String(statusNTPInitialized ? 1 : 0);
     case ISWIFI:            return String(WiFiEventData.wifiStatus); // 0=disconnected, 1=connected, 2=got ip, 4=services

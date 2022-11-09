@@ -2052,7 +2052,7 @@ To create/register a plugin, you have to :
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
-//  #define FEATURE_MODBUS  1
+  #define FEATURE_MODBUS  1
 #endif
 
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
@@ -2588,5 +2588,8 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef DISABLE_SC16IS752_SPI
+  #define DISABLE_SC16IS752_SPI
+#endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

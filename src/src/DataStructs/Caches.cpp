@@ -8,8 +8,9 @@
 #include "../Helpers/ESPEasy_Storage.h"
 
 
+#ifdef PLUGIN_USES_SERIAL
 #include <ESPeasySerial.h>
-
+#endif
 
 void Caches::clearAllCaches()
 {
@@ -34,6 +35,7 @@ void Caches::clearFileCaches()
 
 void Caches::updateActiveTaskUseSerial0() {
   activeTaskUseSerial0 = false;
+#ifdef PLUGIN_USES_SERIAL
 
   // Check to see if a task is enabled and using the pins we also use for receiving commands.
   // We're now receiving only from Serial0, so check if an enabled task is also using it.
@@ -58,6 +60,7 @@ void Caches::updateActiveTaskUseSerial0() {
       }
     }
   }
+#endif
 }
 
 uint8_t Caches::getTaskDeviceValueDecimals(taskIndex_t TaskIndex, uint8_t rel_index)

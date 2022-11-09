@@ -75,7 +75,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P026_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-          uint8_t choice             = PCONFIG(pconfigIndex);
+          const uint8_t choice       = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_026_valuename(choice, false),
@@ -163,7 +163,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
         UserVar[event->BaseVarIndex + i] = P026_get_value(PCONFIG(i));
       }
-
+      #ifndef LIMIT_BUILD_SIZE
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
         if (log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1)))
@@ -179,6 +179,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO, log);
         }
       }
+      #endif
       success = true;
       break;
     }

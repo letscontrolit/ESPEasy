@@ -200,7 +200,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
                   String newEvent = getTaskDeviceName(event->TaskIndex);
                   newEvent += '#';
                   newEvent += F("AlertTriggered");
-                  newEvent += ',';
+                  newEvent += '=';
                   newEvent += formatUserVarNoCheck(event, 0); // Voltage
                   newEvent += ',';
                   newEvent += formatUserVarNoCheck(event, 1); // State Of Charge

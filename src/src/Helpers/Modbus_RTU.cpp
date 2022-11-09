@@ -1,5 +1,6 @@
 #include "../Helpers/Modbus_RTU.h"
 
+#if FEATURE_MODBUS
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -775,3 +776,5 @@ void ModbusRTU_struct::startRead() {
     digitalWrite(_dere_pin, LOW);
   }
 }
+
+#endif

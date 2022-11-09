@@ -71,6 +71,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
+      #ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         for (uint8_t x = 0; x < getValueCountFromSensorType(static_cast < Sensor_VType > (PCONFIG(0))); x++)
@@ -82,6 +83,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO, log);
         }
       }
+      #endif
       success = true;
       break;
     }
@@ -98,6 +100,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
 
           if (string2float(parseString(string, 4), floatValue))
           {
+            #ifndef LIMIT_BUILD_SIZE
             if (loglevelActiveFor(LOG_LEVEL_INFO))
             {
               String log = F("Dummy: Index ");
@@ -108,6 +111,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
               log += floatValue;
               addLogMove(LOG_LEVEL_INFO, log);
             }
+            #endif
             UserVar[event->BaseVarIndex + event->Par2 - 1] = floatValue;
             success                                        = true;
           } else { // float conversion failed!

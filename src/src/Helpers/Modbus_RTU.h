@@ -1,6 +1,9 @@
 #ifndef HELPERS_MODBUS_RTU_H
 #define HELPERS_MODBUS_RTU_H
 
+#include "../../ESPEasy_common.h"
+
+#if FEATURE_MODBUS
 
 #include <Arduino.h>
 #include <ESPeasySerial.h>
@@ -217,5 +220,6 @@ private:
   ESPeasySerial *easySerial = nullptr;
 };
 
+#endif
 
 #endif // HELPERS_MODBUS_RTU_H

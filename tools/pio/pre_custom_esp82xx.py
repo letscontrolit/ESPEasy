@@ -65,7 +65,8 @@ else:
 
     "-DFEATURE_ESPEASY_P2P=1",
 
-    "-DFEATURE_SETTINGS_ARCHIVE=1"
+    "-DFEATURE_SETTINGS_ARCHIVE=1",
+    "-DDISABLE_SC16IS752_SPI"
   ]
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])

@@ -338,18 +338,18 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
               RuleEvent += '#';
 
               if (limitA_triggered) {
-                eventQueue.addMove(String(RuleEvent + F("limitA")));
+                eventQueue.addMove(concat(RuleEvent, F("limitA")));
               }
 
               if (limitB_triggered) {
-                eventQueue.addMove(String(RuleEvent + F("limitB")));
+                eventQueue.addMove(concat(RuleEvent, F("limitB")));
               }
 
               if (P098_data->state == P098_data_struct::State::StopPosReached) {
-                eventQueue.addMove(String(RuleEvent + F("positionReached")));
+                eventQueue.addMove(concat(RuleEvent, F("positionReached")));
               }
               if (P098_data->state == P098_data_struct::State::StopEncoderTimeout) {
-                eventQueue.addMove(String(RuleEvent + F("encoderTimeout")));
+                eventQueue.addMove(concat(RuleEvent, F("encoderTimeout")));
               }
             }
             P098_data->state = P098_data_struct::State::Idle;

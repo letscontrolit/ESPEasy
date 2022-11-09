@@ -168,7 +168,7 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
 
             if (function != PLUGIN_TIME_CHANGE) {
               if (Settings.UseRules) {
-                eventQueue.add(String(F("Cron#")) + getTaskDeviceName(event->TaskIndex));
+                eventQueue.addMove(concat(F("Cron#"), getTaskDeviceName(event->TaskIndex)));
               }
               success = true;
             }

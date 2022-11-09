@@ -1,5 +1,7 @@
 #include "../Helpers/_Plugin_Helper_serial.h"
 
+#ifdef PLUGIN_USES_SERIAL
+
 
 #include "../../_Plugin_Helper.h"
 
@@ -364,3 +366,5 @@ uint8_t serialHelper_convertOldSerialConfig(uint8_t newLocationConfig) {
   // Must truncate it to 1 uint8_t, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
   return static_cast<uint8_t>(SERIAL_8N1 & 0xFF); // Some default
 }
+
+#endif

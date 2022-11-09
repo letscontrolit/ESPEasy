@@ -93,7 +93,9 @@ void handle_sysvars() {
 
   addSysVar_enum_html(SystemVariables::ISWIFI);
   addSysVar_enum_html(SystemVariables::ISNTP);
+#if FEATURE_MQTT
   addSysVar_enum_html(SystemVariables::ISMQTT);
+#endif
 #ifdef USES_P037
   addSysVar_enum_html(SystemVariables::ISMQTTIMP);
 #endif // USES_P037

@@ -2,9 +2,12 @@
 #define HELPERS__PLUGIN_HELPER_SERIAL_H
 
 
+#include "../../ESPEasy_common.h"
+
+#ifdef PLUGIN_USES_SERIAL
+
 #include <ESPeasySerial.h>
 
-#include "../../ESPEasy_common.h"
 
 struct ESPeasySerialType;
 
@@ -50,7 +53,7 @@ uint8_t serialHelper_serialconfig_webformSave();
 // Used by some plugins, which used several TaskDevicePluginConfigLong
 uint8_t serialHelper_convertOldSerialConfig(uint8_t newLocationConfig);
 
-
+#endif
 
 
 #endif

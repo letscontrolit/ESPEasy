@@ -104,7 +104,9 @@ void handle_advanced() {
     Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
     Settings.UseLastWiFiFromRTC(isFormItemChecked(LabelType::WIFI_USE_LAST_CONN_FROM_RTC));
     Settings.JSONBoolWithoutQuotes(isFormItemChecked(LabelType::JSON_BOOL_QUOTES));
+#if FEATURE_TIMING_STATS
     Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
+#endif
     Settings.AllowTaskValueSetAllPlugins(isFormItemChecked(LabelType::TASKVALUESET_ALL_PLUGINS));
     Settings.EnableClearHangingI2Cbus(isFormItemChecked(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS));
 
@@ -242,9 +244,9 @@ void handle_advanced() {
   #endif // if defined(ESP32)
 
   addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
-  #if FEATURE_TIMING_STATS
+#if FEATURE_TIMING_STATS
   addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
-  #endif // if FEATURE_TIMING_STATS
+#endif // if FEATURE_TIMING_STATS
 #ifndef BUILD_NO_RAM_TRACKER
   addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
 #endif

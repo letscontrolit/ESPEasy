@@ -100,7 +100,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #endif // ifdef ESP32
 
     case LabelType::JSON_BOOL_QUOTES:           return F("JSON bool output without quotes");
+#if FEATURE_TIMING_STATS
     case LabelType::ENABLE_TIMING_STATISTICS:   return F("Collect Timing Statistics");
+#endif
     case LabelType::ENABLE_RULES_CACHING:       return F("Enable Rules Cache");
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return F("Optimize Rules Cache Event Order"); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return F("Allow TaskValueSet on all plugins");
@@ -225,7 +227,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ETH_SPEED_STATE:        return F("Eth Speed State");
     case LabelType::ETH_CONNECTED:          return F("Eth connected");
 #endif // if FEATURE_ETHERNET
+# if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     case LabelType::ETH_WIFI_MODE:          return F("Network Type");
+#endif
     case LabelType::SUNRISE:                return F("Sunrise");
     case LabelType::SUNSET:                 return F("Sunset");
     case LabelType::SUNRISE_S:              return F("Sunrise sec.");
@@ -331,7 +335,9 @@ String getValue(LabelType::Enum label) {
 
 
     case LabelType::JSON_BOOL_QUOTES:           return jsonBool(Settings.JSONBoolWithoutQuotes());
+#if FEATURE_TIMING_STATS
     case LabelType::ENABLE_TIMING_STATISTICS:   return jsonBool(Settings.EnableTimingStats());
+#endif
     case LabelType::ENABLE_RULES_CACHING:       return jsonBool(Settings.EnableRulesCaching());
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return jsonBool(Settings.EnableRulesEventReorder()); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return jsonBool(Settings.AllowTaskValueSetAllPlugins());
@@ -476,7 +482,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_SPEED_STATE:        return EthLinkUp() ? getEthLinkSpeedState() : F("Link Down");
     case LabelType::ETH_CONNECTED:          return ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"); // 0=disconnected, 1=connected
 #endif // if FEATURE_ETHERNET
+# if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     case LabelType::ETH_WIFI_MODE:          return toString(active_network_medium);
+#endif
     case LabelType::SUNRISE:                return node_time.getSunriseTimeString(':');
     case LabelType::SUNSET:                 return node_time.getSunsetTimeString(':');
     case LabelType::SUNRISE_S:              return String(node_time.sunRise.tm_hour * 3600 + node_time.sunRise.tm_min * 60 + node_time.sunRise.tm_sec);

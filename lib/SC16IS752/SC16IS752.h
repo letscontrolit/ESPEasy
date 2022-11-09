@@ -23,6 +23,10 @@
 #ifndef _SC16IS752_H_
 #define _SC16IS752_H_
 
+#ifndef DISABLE_SC16IS752_SPI
+  #define DISABLE_SC16IS752_SPI
+#endif
+
 #if ARDUINO >= 100
  # include "Arduino.h"
 #else // if ARDUINO >= 100
@@ -103,7 +107,9 @@
 // #define     SC16IS750_CRYSTCAL_FREQ (16000000UL)
 //#define     SC16IS750_DEBUG_PRINT   (1)
 #define     SC16IS750_PROTOCOL_I2C  (0)
+#ifndef DISABLE_SC16IS752_SPI
 #define     SC16IS750_PROTOCOL_SPI  (1)
+#endif
 
 #define     SC16IS752_CHANNEL_A                 0x00
 #define     SC16IS752_CHANNEL_B                 0x01

@@ -20,6 +20,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
 
 void updateLoopStats() {
   ++loopCounter;
@@ -84,7 +85,6 @@ void ESPEasy_loop()
       event += Settings.deepSleep_wakeTime;
       eventQueue.addMove(std::move(event));
     }
-
 
     RTC.bootFailedCount = 0;
     saveToRTC();

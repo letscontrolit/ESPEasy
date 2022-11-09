@@ -1085,6 +1085,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
 }
 
+#ifdef PLUGIN_USES_SERIAL
 void devicePage_show_serial_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
@@ -1094,6 +1095,7 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }
+#endif
 
 void devicePage_show_I2C_config(taskIndex_t taskIndex)
 {

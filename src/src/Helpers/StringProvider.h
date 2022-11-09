@@ -56,7 +56,9 @@ struct LabelType {
 #endif // ifdef ESP32
 
     JSON_BOOL_QUOTES,
+#if FEATURE_TIMING_STATS
     ENABLE_TIMING_STATISTICS,
+#endif
     ENABLE_RULES_CACHING,
 //    ENABLE_RULES_EVENT_REORDER, // TD-er: Disabled for now
     TASKVALUESET_ALL_PLUGINS,
@@ -174,7 +176,9 @@ struct LabelType {
     ETH_SPEED_STATE,
     ETH_CONNECTED,
 #endif // if FEATURE_ETHERNET
+# if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     ETH_WIFI_MODE,
+#endif
     SUNRISE,
     SUNSET,
     ISNTP,
