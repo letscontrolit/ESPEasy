@@ -64,7 +64,7 @@ Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const __FlashStringHelper* 
   return addFlashString((PGM_P)str);
 }
 
-Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
+Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str, int length) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -82,11 +82,12 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
     const char* cur_char = str;
     while (!done) {
       const uint8_t ch = mmu_get_uint8(cur_char++);
-      if (ch == 0) return *this;
+      if (length == 0 || ch == 0) return *this;
       if (this->buf.length() >= CHUNKED_BUFFER_SIZE) {
         flush();
       }
       this->buf += (char)ch;
+      --length;
     }
   }
   #endif
@@ -94,7 +95,9 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   ++flashStringCalls;
 
   if (lowMemorySkip) { return *this; }
-  const unsigned int length = strlen_P((PGM_P)str);
+  if (length < 0) {
+    length = strlen_P((PGM_P)str);
+  }
 
   if (length == 0) { return *this; }
   flashStringData += length;
