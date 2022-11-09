@@ -173,10 +173,12 @@ void handle_advanced() {
 
   addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP());
   addFormTextBox(F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
+  #if FEATURE_EXT_RTC
   addFormExtTimeSourceSelect(F("External Time Source"), F("exttimesource"), Settings.ExtTimeSource());
   if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
     addFormNote(concat(getLabel(LabelType::EXT_RTC_UTC_TIME), F(": ")) + getValue(LabelType::EXT_RTC_UTC_TIME));
   }
+  #endif
 
   addFormSubHeader(F("DST Settings"));
   addFormDstSelect(true,  Settings.DST_Start);

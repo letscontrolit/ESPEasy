@@ -67,13 +67,15 @@ struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLoca
 void ESPEasy_time::restoreFromRTC()
 {
   static bool firstCall = true;
-  uint32_t    unixtime  = 0;
 
+#if FEATURE_EXT_RTC
+  uint32_t    unixtime  = 0;
   if (ExtRTC_get(unixtime)) {
     setExternalTimeSource(unixtime, timeSource_t::External_RTC_time_source);
     firstCall = false;
     return;
   }
+#endif
 
   if (firstCall && (RTC.lastSysTime != 0) && (RTC.deepSleepState != 1)) {
     firstCall = false;
@@ -184,7 +186,6 @@ unsigned long ESPEasy_time::now() {
       if (getNtpTime(unixTime_d)) {
         updatedTime = true;
       } else {
-        uint32_t tmp_unixtime = 0;
         #if FEATURE_ESPEASY_P2P
         double tmp_unixtime_d;
 
@@ -196,6 +197,8 @@ unsigned long ESPEasy_time::now() {
         }
         #endif // if FEATURE_ESPEASY_P2P
 
+        #if FEATURE_EXT_RTC
+        uint32_t tmp_unixtime = 0;
         if (!updatedTime &&
             (timeSource > timeSource_t::External_RTC_time_source) && // No need to set from ext RTC more than once.
             ExtRTC_get(tmp_unixtime)) {
@@ -204,6 +207,7 @@ unsigned long ESPEasy_time::now() {
           updatedTime  = true;
           syncInterval = 120; // Allow sync in 2 minutes to see if we get some better options from p2p nodes.
         }
+        #endif
       }
     }
 
@@ -229,9 +233,11 @@ unsigned long ESPEasy_time::now() {
 
       sysTime = unixTime_d;
 
+      #if FEATURE_EXT_RTC
       // External RTC only stores with second resolution.
       // Thus to limit the error to +/- 500 ms, round the sysTime instead of just casting it.
       ExtRTC_set(round(sysTime));
+      #endif
       {
         const unsigned long abs_time_offset_ms = std::abs(time_offset) * 1000;
 
@@ -740,6 +746,7 @@ struct tm ESPEasy_time::getSunSet(int secOffset) const {
   return addSeconds(tsSet, secOffset, true);
 }
 
+#if FEATURE_EXT_RTC
 bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
 {
   unixtime = 0;
@@ -749,7 +756,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
       return false;
     case ExtTimeSource_e::DS1307:
     {
-        #if FEATURE_EXT_RTC
       I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
       RTC_DS1307 rtc;
 
@@ -763,12 +769,10 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
         break;
       }
       unixtime = rtc.now().unixtime();
-        #endif // if FEATURE_EXT_RTC
       break;
     }
     case ExtTimeSource_e::DS3231:
     {
-        #if FEATURE_EXT_RTC
       RTC_DS3231 rtc;
 
       if (!rtc.begin()) {
@@ -781,13 +785,11 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
         break;
       }
       unixtime = rtc.now().unixtime();
-        #endif // if FEATURE_EXT_RTC
       break;
     }
 
     case ExtTimeSource_e::PCF8523:
     {
-        #if FEATURE_EXT_RTC
       RTC_PCF8523 rtc;
 
       if (!rtc.begin()) {
@@ -800,12 +802,10 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
         break;
       }
       unixtime = rtc.now().unixtime();
-        #endif // if FEATURE_EXT_RTC
       break;
     }
     case ExtTimeSource_e::PCF8563:
     {
-        #if FEATURE_EXT_RTC
       RTC_PCF8563 rtc;
 
       if (!rtc.begin()) {
@@ -818,7 +818,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
         break;
       }
       unixtime = rtc.now().unixtime();
-        #endif // if FEATURE_EXT_RTC
       break;
     }
   }
@@ -832,7 +831,9 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot get time from external time source"));
   return false;
 }
+#endif
 
+#if FEATURE_EXT_RTC
 bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
 {
   if (timeSource >= timeSource_t::External_RTC_time_source) {
@@ -840,16 +841,13 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     // or the new time source is worse than the external RTC time souce.
     return true;
   }
-  #if FEATURE_EXT_RTC
   bool timeAdjusted = false;
-  #endif // if FEATURE_EXT_RTC
 
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
     case ExtTimeSource_e::DS1307:
     {
-        #if FEATURE_EXT_RTC
       I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
       RTC_DS1307 rtc;
 
@@ -857,25 +855,21 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
         rtc.adjust(DateTime(unixtime));
         timeAdjusted = true;
       }
-        #endif // if FEATURE_EXT_RTC
       break;
     }
     case ExtTimeSource_e::DS3231:
     {
-        #if FEATURE_EXT_RTC
       RTC_DS3231 rtc;
 
       if (rtc.begin()) {
         rtc.adjust(DateTime(unixtime));
         timeAdjusted = true;
       }
-        #endif // if FEATURE_EXT_RTC
       break;
     }
 
     case ExtTimeSource_e::PCF8523:
     {
-        #if FEATURE_EXT_RTC
       RTC_PCF8523 rtc;
 
       if (rtc.begin()) {
@@ -883,12 +877,10 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
         rtc.start();
         timeAdjusted = true;
       }
-        #endif // if FEATURE_EXT_RTC
       break;
     }
     case ExtTimeSource_e::PCF8563:
     {
-        #if FEATURE_EXT_RTC
       RTC_PCF8563 rtc;
 
       if (rtc.begin()) {
@@ -896,11 +888,9 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
         rtc.start();
         timeAdjusted = true;
       }
-        #endif // if FEATURE_EXT_RTC
       break;
     }
   }
-  #if FEATURE_EXT_RTC
 
   if (timeAdjusted) {
     addLogMove(LOG_LEVEL_INFO, concat(
@@ -908,7 +898,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
                  unixtime));
     return true;
   }
-  #endif // if FEATURE_EXT_RTC
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot set time to external time source"));
   return false;
 }
+#endif
