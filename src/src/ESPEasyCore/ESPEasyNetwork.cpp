@@ -3,6 +3,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
@@ -224,13 +225,18 @@ MAC_address WifiSTAmacAddress() {
 }
 
 void CheckRunningServices() {
-  set_mDNS();
+  // First try to get the time, since that may be used in logs
+  if (Settings.UseNTP() && node_time.timeSource > timeSource_t::NTP_time_source) {
+    node_time.lastNTPSyncTime_ms = 0;
+    node_time.initTime();
+  }
   #ifdef ESP8266
   if (active_network_medium == NetworkMedium_t::WIFI) 
   {
     SetWiFiTXpower();
   }
   #endif
+  set_mDNS();
 }
 
 #if FEATURE_ETHERNET

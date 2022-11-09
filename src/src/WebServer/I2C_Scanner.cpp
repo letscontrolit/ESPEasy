@@ -195,6 +195,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x1D:
       result +=  F("ADXL345");
       break;
+    case 0x1E:
+      result +=  F("HMC5883L");
+      break;
     case 0x20:
     case 0x21:
     case 0x22:
