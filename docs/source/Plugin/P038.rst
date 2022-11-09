@@ -55,6 +55,10 @@ Actuator
 
 * **Strip Type**: Select the type of the LEDs mounted on the strip:
 
+* **Initial brightness**: The brightness that the stripe is initially set to. Default is 0, the max. available brightness, and default before this setting was introduced. Range: 0..255.
+
+* **Maximum allowed brightness**: The brightness that is the maximum it can be set to, either from UI or via the ``NeoPixelBright`` command, to optionally help protect both the eyes and the power-supply powering the stripe. Default is 255. Range: 1..255.
+
 .. image:: P038_StripTypeOptions.png
   :alt: The Strip type options
 
