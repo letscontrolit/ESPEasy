@@ -290,9 +290,11 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    #if FEATURE_EXT_RTC
     if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
       addRowLabelValue(LabelType::EXT_RTC_UTC_TIME);
     }
+    #endif
     addRowLabelValue(LabelType::TIME_SOURCE);
     addRowLabelValue(LabelType::TIME_WANDER);
     addUnit(F("ppm"));
