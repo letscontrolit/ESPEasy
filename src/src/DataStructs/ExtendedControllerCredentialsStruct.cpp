@@ -52,6 +52,10 @@ String ExtendedControllerCredentialsStruct::load()
                     0,
                     _strings, CONTROLLER_MAX * 2, 0);
 
+  for (int i = 0; i < CONTROLLER_MAX * 2; ++i) {
+    _strings[i].trim();
+  }
+
   // Update the checksum after loading.
   computeChecksum(last_ExtendedControllerCredentialsStruct_md5);
 
