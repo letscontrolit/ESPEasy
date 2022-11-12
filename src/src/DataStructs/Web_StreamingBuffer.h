@@ -52,7 +52,7 @@ template <typename T>
   Web_StreamingBuffer& operator+=(PGM_P str);
   Web_StreamingBuffer& operator+=(const __FlashStringHelper* str);
 
-  Web_StreamingBuffer& addFlashString(PGM_P str);
+  Web_StreamingBuffer& addFlashString(PGM_P str, int length = -1);
   
 private:
   Web_StreamingBuffer& addString(const String& a);

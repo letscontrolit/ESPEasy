@@ -180,12 +180,22 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
           return true;
         }
         
-        if (!readTemperature(i2caddr,resolution)){
+        last_measurement_time = millis();
+  
+        if (chip_id == CHIP_ID_HTU21D){
+          if (!I2C_write8(i2caddr,SI70xx_CMD_MEASURE_TEMP)) { //HTU21D can't read temperature from humidity measurement
+            addLog(LOG_LEVEL_ERROR,F("SI70xx: startConv Failed!"));
+            return false;
+          }
+          state = P014_state::Wait_for_temperature_samples;
+          return false;
+        }
+
+        if (!readTemperatureFromHumidity(i2caddr,resolution)){
           state = P014_state::Ready; //we go back to request the reading again
           return true;
         }
 
-        last_measurement_time = millis();
         if (chip_id == CHIP_ID_SI7013){
           if(!enablePowerForADC(i2caddr)){
             state = P014_state::Ready; //we go back to request the reading again
@@ -198,7 +208,20 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
         return true;
     //break;
 
-    case P014_state ::RequestADC:
+    case P014_state::Wait_for_temperature_samples:
+        if (!timeOutReached(last_measurement_time + SI70xx_MEASUREMENT_DELAY)) {
+          return false;
+        }
+
+        if (!readTemperature(i2caddr,resolution)){
+          state = P014_state::Ready; //we go back to request the reading again
+          return true;
+        }
+
+        state = P014_state::New_Values_Available;
+        return true;
+
+    case P014_state::RequestADC:
         //make sure we wait for the power to stabilize
         if (!timeOutReached(last_measurement_time + SI70xx_MEASUREMENT_DELAY)) {
           return false;
@@ -504,7 +527,7 @@ bool P014_data_struct::readHumidity(uint8_t i2caddr, uint8_t resolution)
 
     // Comes back in three bytes, data(MSB) / data(LSB) / Checksum
     raw  = ((uint16_t) Wire.read()) << 8;
-    raw |= Wire.read();
+    raw |= Wire.read(); 
     uint8_t checksum = Wire.read();
 
 
@@ -533,12 +556,42 @@ bool P014_data_struct::readHumidity(uint8_t i2caddr, uint8_t resolution)
   return true;
 }
 
+bool P014_data_struct::readTemperature(uint8_t i2caddr, uint8_t resolution)
+{
+  uint16_t raw;
+  uint8_t bytes = Wire.requestFrom(i2caddr, 3u); //asking to read 3 bytes  
+  if ( bytes < 3 ) {
+    return false;
+  }
 
-bool P014_data_struct::readTemperature(uint8_t i2caddr, uint8_t resolution){
+  // Comes back in three bytes, data(MSB) / data(LSB) / Checksum
+  raw  = ((uint16_t) Wire.read()) << 8;
+  raw |= Wire.read();
+  
+  uint8_t checksum = Wire.read();
+
+  // Check CRC of data received
+  if(checkCRC(raw, checksum) != 0) {
+    addLog(LOG_LEVEL_ERROR,F("SI70xx : checksum error!"));
+    return false;
+  }
+
+  temperature =  convertRawTemperature(raw & 0xFFFC,resolution);
+  return true;
+}
+
+bool P014_data_struct::readTemperatureFromHumidity(uint8_t i2caddr, uint8_t resolution){
   // Temperature
   //Request a reading
   uint16_t   raw = I2C_read16_reg(i2caddr,SI70xx_CMD_READ_TEMP_FROM_HUM);
 
+  // save value
+  temperature =  convertRawTemperature(raw,resolution);
+  
+  return true;
+}
+
+int16_t P014_data_struct::convertRawTemperature(uint16_t raw, uint8_t resolution){
   // Convert raw value to Temperature (*100)
   // for 23.45C value will be 2345
   int16_t data =  ((17572 * (long)raw) >> 16) - 4685;
@@ -553,11 +606,7 @@ bool P014_data_struct::readTemperature(uint8_t i2caddr, uint8_t resolution){
     data *= 10;
   }
 
-  // save value
-  temperature =  data;
-  
-  return true;
+  return data;
 }
-
 
 #endif // ifdef USES_P014

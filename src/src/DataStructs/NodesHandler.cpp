@@ -75,10 +75,16 @@ bool NodesHandler::addNode(const NodeStruct& node)
     }
     _nodes_mutex.unlock();
   }
-  if (!node_time.systemTimePresent() || node_time.timeSource == timeSource_t::Restore_RTC_time_source) {
+
+  // Check whether the current time source is considered "worse" than received from p2p node.
+  if (!node_time.systemTimePresent() || 
+      node_time.timeSource > timeSource_t::ESPEASY_p2p_UDP ||
+      ((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) &&
+       (timePassedSince(node_time.lastSyncTime_ms) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) )) {
     double unixTime;
-    if (_ntp_candidate.getUnixTime(unixTime)) {
-      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP);
+    uint8_t unit;
+    if (_ntp_candidate.getUnixTime(unixTime, unit)) {
+      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP, unit);
     }
   }
 
@@ -383,7 +389,7 @@ void NodesHandler::updateThisNode() {
       break;
     default:
     {
-      thisNode.lastUpdated = timePassedSince(node_time.lastSyncTime);
+      thisNode.lastUpdated = timePassedSince(node_time.lastSyncTime_ms);
       break;
     }
   }
