@@ -1,0 +1,599 @@
+#include "../PluginStructs/P143_data_struct.h"
+
+#ifdef USES_P143
+
+/**************************************************************************
+ * toString for P143_DeviceType_e
+ *************************************************************************/
+const __FlashStringHelper* toString(P143_DeviceType_e device) {
+  switch (device) {
+    case P143_DeviceType_e::AdafruitEncoder: return F("Adafruit");
+    # if P143_FEATURE_INCLUDE_M5STACK
+    case P143_DeviceType_e::M5StackEncoder: return F("M5Stack");
+    # endif // if P143_FEATURE_INCLUDE_M5STACK
+    # if P143_FEATURE_INCLUDE_DFROBOT
+    case P143_DeviceType_e::DFRobotEncoder: return F("DFRobot");
+    # endif // if P143_FEATURE_INCLUDE_DFROBOT
+  }
+  return F("");
+}
+
+# if P143_FEATURE_COUNTER_COLORMAPPING
+
+/**************************************************************************
+ * toString for P143_CounterMapping_e
+ *************************************************************************/
+const __FlashStringHelper* toString(P143_CounterMapping_e counter) {
+  switch (counter) {
+    case P143_CounterMapping_e::None: return F("None");
+    case P143_CounterMapping_e::ColorMapping: return F("Color mapping");
+    case P143_CounterMapping_e::ColorGradient: return F("Color gradient");
+  }
+  return F("");
+}
+
+# endif // if P143_FEATURE_COUNTER_COLORMAPPING
+
+/**************************************************************************
+ * toString for P143_ButtonAction_e
+ *************************************************************************/
+const __FlashStringHelper* toString(P143_ButtonAction_e action) {
+  switch (action) {
+    case P143_ButtonAction_e::PushButton: return F("Pushbutton");
+    case P143_ButtonAction_e::PushButtonInverted: return F("Pushbutton (inverted)");
+    case P143_ButtonAction_e::ToggleSwitch: return F("Toggle switch");
+  }
+  return F("");
+}
+
+/*******************************************************************
+ * P143_CheckEncoderDefaultSettings: Helper to set config defaults after changing the Encoder type
+ ******************************************************************/
+void P143_CheckEncoderDefaultSettings(struct EventStruct *event) {
+  if (P143_ENCODER_TYPE != P143_PREVIOUS_TYPE) {
+    switch (static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE)) {
+      case P143_DeviceType_e::AdafruitEncoder:
+        P143_ADAFRUIT_COLOR_AND_BRIGHTNESS = 0x0000001E; // Black, with 30 (0x1E) brightness (1..255)
+        break;
+      # if P143_FEATURE_INCLUDE_M5STACK
+      case P143_DeviceType_e::M5StackEncoder:
+        // TODO
+        break;
+      # endif // if P143_FEATURE_INCLUDE_M5STACK
+      # if P143_FEATURE_INCLUDE_DFROBOT
+      case P143_DeviceType_e::DFRobotEncoder:
+        // TODO
+        break;
+      # endif // if P143_FEATURE_INCLUDE_DFROBOT
+    }
+    P143_PREVIOUS_TYPE = P143_ENCODER_TYPE; // It's now up to date
+  }
+}
+
+/**************************************************************************
+ * Constructor
+ *************************************************************************/
+P143_data_struct::P143_data_struct(struct EventStruct *event) {
+  _device          = static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE);
+  _i2cAddress      = P143_I2C_ADDR;
+  _encoderPosition = P143_INITIAL_POSITION;
+}
+
+/*****************************************************
+ * Destructor
+ ****************************************************/
+P143_data_struct::~P143_data_struct() {
+  switch (_device)
+  {
+    case P143_DeviceType_e::AdafruitEncoder:
+
+      delete Adafruit_Seesaw;
+      delete Adafruit_Spixel;
+      break;
+    # if P143_FEATURE_INCLUDE_M5STACK
+    case P143_DeviceType_e::M5StackEncoder:
+      break;
+    # endif // if P143_FEATURE_INCLUDE_M5STACK
+    # if P143_FEATURE_INCLUDE_DFROBOT
+    case P143_DeviceType_e::DFRobotEncoder:
+      break;
+    # endif // if P143_FEATURE_INCLUDE_DFROBOT
+  }
+}
+
+/**************************************************************************
+ * plugin_init Initialize sensor and prepare for reading
+ *************************************************************************/
+bool P143_data_struct::plugin_init(struct EventStruct *event) {
+  if (!_initialized) {
+    switch (_device) {
+      case P143_DeviceType_e::AdafruitEncoder:
+      {
+        Adafruit_Seesaw = new (std::nothrow) Adafruit_seesaw();
+        Adafruit_Spixel = new (std::nothrow) seesaw_NeoPixel(1, SEESAW_NEOPIX, NEO_GRB + NEO_KHZ800);
+
+        if ((nullptr != Adafruit_Seesaw) && (nullptr != Adafruit_Spixel)) {
+          _initialized = Adafruit_Seesaw->begin(_i2cAddress) && Adafruit_Spixel->begin(_i2cAddress);
+          uint32_t version = ((Adafruit_Seesaw->getVersion() >> 16) & 0xFFFF);
+
+          if (_initialized && (version != P143_ADAFRUIT_ENCODER_PRODUCTID)) { // Check Adafruit product ID
+            _initialized = false;
+          }
+
+          if (_initialized) {
+            // use a pin for the built in encoder switch
+            Adafruit_Seesaw->pinMode(SEESAW_SWITCH, INPUT_PULLUP);
+
+            // set starting position
+            Adafruit_Seesaw->setEncoderPosition(_encoderPosition);
+
+            // Enable interrupts on Switch pin
+            Adafruit_Seesaw->setGPIOInterrupts((uint32_t)1 << SEESAW_SWITCH, 1);
+            Adafruit_Seesaw->enableEncoderInterrupt();
+
+            // We only have 1 pixel available...
+            Adafruit_Spixel->setBrightness(P143_ADAFRUIT_BRIGHTNESS); // Set brightness before color!
+            _red   = P143_ADAFRUIT_COLOR_RED;
+            _green = P143_ADAFRUIT_COLOR_GREEN;
+            _blue  = P143_ADAFRUIT_COLOR_BLUE;
+            Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
+            Adafruit_Spixel->show();
+          }
+
+          // Set initial button state
+          _buttonState =
+            (P143_ButtonAction_e::PushButtonInverted == static_cast<P143_ButtonAction_e>(P143_PLUGIN_BUTTON_ACTION)) ? 0 : 1;
+        }
+        break;
+      }
+      # if P143_FEATURE_INCLUDE_M5STACK
+      case P143_DeviceType_e::M5StackEncoder:
+      {
+        // TODO
+        break;
+      }
+      # endif // if P143_FEATURE_INCLUDE_M5STACK
+      # if P143_FEATURE_INCLUDE_DFROBOT
+      case P143_DeviceType_e::DFRobotEncoder:
+      {
+        // TODO
+        break;
+      }
+      # endif // if P143_FEATURE_INCLUDE_DFROBOT
+    }
+
+    # if P143_FEATURE_COUNTER_COLORMAPPING
+
+    // Load color mapping data
+    LoadCustomTaskSettings(event->TaskIndex, _colorMapping, P143_STRINGS, 0);
+
+    for (int i = P143_STRINGS - 1; i >= 0; i--) {
+      _colorMapping[i].trim();
+
+      if ((_colorMaps == -1) && !_colorMapping[i].isEmpty()) {
+        _colorMaps = i;
+      }
+    }
+    # endif // if P143_FEATURE_COUNTER_COLORMAPPING
+
+    UserVar[event->BaseVarIndex + 1] = _buttonState;
+  }
+
+  return _initialized;
+}
+
+/**************************************************************************
+ * plugin_exit De-initialize and prepare for destructor
+ *************************************************************************/
+bool P143_data_struct::plugin_exit(struct EventStruct *event) {
+  if (_initialized) {
+    switch (_device) {
+      case P143_DeviceType_e::AdafruitEncoder:
+      {
+        // Stop interrupthandler
+        Adafruit_Seesaw->disableEncoderInterrupt();
+
+        // Turn off Neopixel 0 by setting the R/G/B color to black
+        Adafruit_Spixel->setPixelColor(0, 0, 0, 0);
+        Adafruit_Spixel->show();
+        break;
+      }
+      # if P143_FEATURE_INCLUDE_M5STACK
+      case P143_DeviceType_e::M5StackEncoder:
+      {
+        // TODO
+        break;
+      }
+      # endif // if P143_FEATURE_INCLUDE_M5STACK
+      # if P143_FEATURE_INCLUDE_DFROBOT
+      case P143_DeviceType_e::DFRobotEncoder:
+      {
+        // TODO
+        break;
+      }
+      # endif // if P143_FEATURE_INCLUDE_DFROBOT
+    }
+  }
+  return true;
+}
+
+/*****************************************************
+ * plugin_read
+ ****************************************************/
+bool P143_data_struct::plugin_read(struct EventStruct *event)           {
+  if (_initialized) {
+    // Last obtained values
+    UserVar[event->BaseVarIndex]     = _encoderPosition;
+    UserVar[event->BaseVarIndex + 1] = _buttonState;
+    return true;
+  }
+  return false;
+}
+
+/*****************************************************
+ * plugin_ten_per_second
+ ****************************************************/
+bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
+  bool result = false;
+
+  if (_initialized) {
+    int32_t current = _encoderPosition;
+    # if PLUGIN_143_DEBUG
+    int32_t oldPosition = _encoderPosition;
+    # endif // if PLUGIN_143_DEBUG
+
+    switch (_device) {
+      case P143_DeviceType_e::AdafruitEncoder:
+        current = Adafruit_Seesaw->getEncoderPosition();
+        break;
+      # if P143_FEATURE_INCLUDE_M5STACK
+      case P143_DeviceType_e::M5StackEncoder:
+        // TODO Read encoder
+        break;
+      # endif // if P143_FEATURE_INCLUDE_M5STACK
+      # if P143_FEATURE_INCLUDE_DFROBOT
+      case P143_DeviceType_e::DFRobotEncoder:
+        // TODO Read encoder
+        break;
+      # endif // if P143_FEATURE_INCLUDE_DFROBOT
+    }
+
+    // Check limits
+    if (P143_MINIMAL_POSITION != P143_MAXIMAL_POSITION) {
+      if ((current < P143_MINIMAL_POSITION) || (current > P143_MAXIMAL_POSITION)) {
+        int32_t orgCurrent = current;
+
+        // Have to check separately, as it's possible to move multiple steps within 1/10th second
+        if (current < P143_MINIMAL_POSITION) {
+          current = P143_MINIMAL_POSITION; // keep minimal value
+        }
+
+        if (current > P143_MAXIMAL_POSITION) {
+          current = P143_MAXIMAL_POSITION; // keep maximal value
+        }
+
+        // (Re)Set Encoder to current position if outside the set boundaries
+        if (current != orgCurrent) {
+          switch (_device) {
+            case P143_DeviceType_e::AdafruitEncoder:
+              Adafruit_Seesaw->setEncoderPosition(current);
+              break;
+            # if P143_FEATURE_INCLUDE_M5STACK
+            case P143_DeviceType_e::M5StackEncoder:
+              // TODO Set encoder position
+              break;
+            # endif // if P143_FEATURE_INCLUDE_M5STACK
+            # if P143_FEATURE_INCLUDE_DFROBOT
+            case P143_DeviceType_e::DFRobotEncoder:
+              // TODO Set encoder position
+              break;
+            # endif // if P143_FEATURE_INCLUDE_DFROBOT
+          }
+        }
+      }
+    }
+
+    if (current != _encoderPosition) {
+      // Generate event
+      if (Settings.UseRules) {
+        String taskEvent;
+        taskEvent.reserve(64);
+        taskEvent += getTaskDeviceName(event->TaskIndex);
+        taskEvent += '#';
+        taskEvent += getTaskValueName(event->TaskIndex, 0);
+        taskEvent += '=';
+        taskEvent += current;                    // Position
+        taskEvent += ',';
+        taskEvent += current - _encoderPosition; // Delta, positive = clock-wise
+        eventQueue.addMove(std::move(taskEvent));
+      }
+
+      // Set task value
+      _encoderPosition = current;
+
+      UserVar[event->BaseVarIndex] = _encoderPosition;
+
+      result = true;
+
+      // Calculate colormapping
+      # if P143_FEATURE_COUNTER_COLORMAPPING
+      int16_t iRed   = -1;
+      int16_t iGreen = -1;
+      int16_t iBlue  = -1;
+      int16_t pRed   = -1;
+      int16_t pGreen = -1;
+      int16_t pBlue  = -1;
+      int32_t iCount = INT32_MIN;
+      int32_t pCount = INT32_MIN;
+
+      P143_CounterMapping_e mapping = static_cast<P143_CounterMapping_e>(P143_PLUGIN_COUNTER_MAPPING);
+
+      switch (mapping) {
+        case P143_CounterMapping_e::ColorMapping:
+        {
+          for (int i = 0; i <= _colorMaps; i++) {
+            if (!_colorMapping[i].isEmpty()) {
+              if (iCount == INT32_MIN) {
+                if (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) {
+                  if (iCount < _encoderPosition) { // Reset, out of range
+                    iRed   = -1;
+                    iGreen = -1;
+                    iBlue  = -1;
+                    iCount = INT32_MIN;
+                  }
+                }
+              }
+            }
+          }
+          break;
+        }
+
+        case P143_CounterMapping_e::ColorGradient:
+        {
+          for (int i = 0; i <= _colorMaps; i++) {
+            if (!_colorMapping[i].isEmpty()) {
+              if (iCount == INT32_MIN) {
+                if (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) {
+                  if ((iCount > _encoderPosition) || !rangeCheck(iCount, P143_MINIMAL_POSITION, P143_MAXIMAL_POSITION)) {
+                    iRed   = -1;
+                    iGreen = -1;
+                    iBlue  = -1;
+                    iCount = INT32_MIN;
+                  }
+                }
+              }
+
+              if (pCount == INT32_MIN) {
+                if (parseColorMapLine(_colorMapping[i], pCount, pRed, pGreen, pBlue)) {
+                  if ((pCount < _encoderPosition) || !rangeCheck(pCount, P143_MINIMAL_POSITION, P143_MAXIMAL_POSITION)) {
+                    pRed   = -1;
+                    pGreen = -1;
+                    pBlue  = -1;
+                    pCount = INT32_MIN;
+                  }
+                }
+              }
+            }
+          }
+
+          // Calculate R/G/B gradient-values for current Counter within upper and lower range
+          if ((pCount != iCount) && (iRed > -1) && (iGreen > -1) && (iBlue > -1) && (pRed > -1) && (pGreen > -1) && (pBlue > -1)) {
+            iRed   = map(_encoderPosition, iCount, pCount, iRed, pRed);
+            iGreen = map(_encoderPosition, iCount, pCount, iGreen, pGreen);
+            iBlue  = map(_encoderPosition, iCount, pCount, iBlue, pBlue);
+          }
+
+          break;
+        }
+        case P143_CounterMapping_e::None:
+          // Do nothing
+          break;
+      }
+
+      // Updated Led color?
+      if ((iRed > -1) && (iGreen > -1) && (iBlue > -1)) {
+        #  if !defined(BUILD_NO_DEBUG) && PLUGIN_143_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("P143: Change color R:");
+          log += iRed;
+          log += F(", G:");
+          log += iGreen;
+          log += F(", B:");
+          log += iBlue;
+          #   ifdef LOG_LEVEL_DEBUG_DEV
+          log += F(", pR:"); // DEV-only from here
+          log += pRed;
+          log += F(", pG:");
+          log += pGreen;
+          log += F(", pB:");
+          log += pBlue;
+          log += F(", iC:");
+          log += iCount;
+          log += F(", pC:");
+          log += pCount;
+          #   endif // ifdef LOG_LEVEL_DEBUG_DEV
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+        #  endif // if !defined(BUILD_NO_DEBUG) && PLUGIN_143_DEBUG
+
+        switch (_device) {
+          case P143_DeviceType_e::AdafruitEncoder:
+          {
+            _red   = iRed;
+            _green = iGreen;
+            _blue  = iBlue;
+            Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
+            Adafruit_Spixel->show();
+            break;
+          }
+          #  if P143_FEATURE_INCLUDE_M5STACK
+          case P143_DeviceType_e::M5StackEncoder:
+          {
+            // TODO Set Led color
+            break;
+          }
+          #  endif // if P143_FEATURE_INCLUDE_M5STACK
+          #  if P143_FEATURE_INCLUDE_DFROBOT
+          case P143_DeviceType_e::DFRobotEncoder:
+          {
+            // TODO Set Led color
+            break;
+          }
+          #  endif // if P143_FEATURE_INCLUDE_DFROBOT
+        }
+      }
+      # endif // if P143_FEATURE_COUNTER_COLORMAPPING
+
+      # if PLUGIN_143_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("I2CEncoder : ");
+        log += toString(_device);
+        log += F(", Changed: ");
+        log += oldPosition;
+        log += F(" to: ");
+        log += _encoderPosition;
+        log += F(", delta: ");
+        log += _encoderPosition - oldPosition;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
+      # endif // if PLUGIN_143_DEBUG
+    }
+  }
+
+  return result;
+}
+
+# if P143_FEATURE_COUNTER_COLORMAPPING
+
+/*****************************************************
+ * parseColorMapLine, line prefixed with # is comment/disabled
+ ****************************************************/
+bool P143_data_struct::parseColorMapLine(const String& line,
+                                         int32_t     & count,
+                                         int16_t     & red,
+                                         int16_t     & green,
+                                         int16_t     & blue) {
+  bool   result = false;
+  String tmp    = parseString(line, 1);
+
+  if (!tmp.isEmpty() && !tmp.startsWith(F("#"))) {
+    count = tmp.toInt();
+
+    tmp = parseString(line, 2);
+
+    if (!tmp.isEmpty()) {
+      red = tmp.toInt();
+
+      tmp = parseString(line, 3);
+
+      if (!tmp.isEmpty()) {
+        green = tmp.toInt();
+
+        tmp = parseString(line, 4);
+
+        if (!tmp.isEmpty()) {
+          blue   = tmp.toInt();
+          result = true;
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+/*****************************************************
+ * rangeCheck
+ ****************************************************/
+bool P143_data_struct::rangeCheck(int32_t count,
+                                  int32_t min,
+                                  int32_t max) {
+  bool result = true;
+
+  if (min != max) {
+    if ((count < min) || (count > max)) {
+      result = false;
+    }
+  }
+  return result;
+}
+
+# endif // if P143_FEATURE_COUNTER_COLORMAPPING
+
+/*****************************************************
+ * plugin_fifty_per_second, handle button actions
+ ****************************************************/
+bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
+  if (_initialized) {
+    const uint8_t pressedState = 0; // button has this value if pressed
+    uint8_t button             = _buttonLast;
+    uint8_t state              = _buttonState;
+
+    if (!_buttonIgnore) {
+      switch (_device) {
+        case P143_DeviceType_e::AdafruitEncoder:
+          button = Adafruit_Seesaw->digitalRead(SEESAW_SWITCH);
+          break;
+        # if P143_FEATURE_INCLUDE_M5STACK
+        case P143_DeviceType_e::M5StackEncoder:
+          // TODO Read button
+          break;
+        # endif // if P143_FEATURE_INCLUDE_M5STACK
+        # if P143_FEATURE_INCLUDE_DFROBOT
+        case P143_DeviceType_e::DFRobotEncoder:
+          // TODO Read button
+          break;
+        # endif // if P143_FEATURE_INCLUDE_DFROBOT
+      }
+    } else {
+      _buttonIgnore--; // Count down the ignore time, 20 msec/step
+    }
+
+    if (button != _buttonLast) {
+      _buttonLast = button;
+
+      switch (static_cast<P143_ButtonAction_e>(P143_PLUGIN_BUTTON_ACTION)) {
+        case P143_ButtonAction_e::PushButton:
+          state = button;
+          break;
+        case P143_ButtonAction_e::PushButtonInverted:
+          state        = button == 0 ? 1 : 0;
+          _buttonState = state == 0 ? 1 : 0; // Changed
+          break;
+        case P143_ButtonAction_e::ToggleSwitch:
+
+          if (button == pressedState) {
+            state = _buttonState == 0 ? 1 : 0; // Toggle
+          }
+          break;
+      }
+      _buttonIgnore = 5; // * 20 milliseconds (50/sec)
+    }
+
+    if (state != _buttonState) {
+      // Generate event
+      if (Settings.UseRules) {
+        String taskEvent;
+        taskEvent.reserve(64);
+        taskEvent += getTaskDeviceName(event->TaskIndex);
+        taskEvent += '#';
+        taskEvent += getTaskValueName(event->TaskIndex, 1);
+        taskEvent += '=';
+        taskEvent += state; // New state
+        eventQueue.addMove(std::move(taskEvent));
+      }
+
+      // Set task value
+      _buttonState = state;
+
+      UserVar[event->BaseVarIndex + 1] = _buttonState;
+
+      return true;
+    }
+  }
+  return false;
+}
+
+#endif // ifdef USES_P143

@@ -1374,6 +1374,7 @@ To create/register a plugin, you have to :
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P105   // AHT10/20/21
     #define USES_P134   // A02YYUW
+    #define USES_P143   // I2C Rotary encoders
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_B
@@ -1536,6 +1537,9 @@ To create/register a plugin, you have to :
    #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
+  #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
   #endif
 #endif
 
@@ -1962,6 +1966,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
+  #endif
+  #ifndef USES_P142
+//    #define USES_P142   //
+  #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
   #endif
 
   // Controllers
