@@ -374,6 +374,7 @@ fi
 #rm -rf dist/Source 2>/dev/null
 
 mkdir -p ${TMP_DIST}/source
+cp -r boards ${TMP_DIST}/source/
 cp -r lib ${TMP_DIST}/source/
 cp -r src ${TMP_DIST}/source/
 cp -r misc ${TMP_DIST}/source/
