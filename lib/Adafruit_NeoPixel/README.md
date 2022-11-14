@@ -56,6 +56,10 @@ Compatibility notes: Port A is not supported on any AVR processors at this time
   - ESP8266 any speed
   - ESP32 any speed
   - Nordic nRF52 (Adafruit Feather nRF52), nRF51 (micro:bit)
+  - Infineon XMC1100 BootKit @ 32 MHz
+  - Infineon XMC1100 2Go @ 32 MHz
+  - Infineon XMC1300 BootKit  @ 32 MHz
+  - Infineon XMC4700 RelaxKit, XMC4800 RelaxKit, XMC4800 IoT Amazon FreeRTOS Kit @ 144 MHz
 
   Check forks for other architectures not listed here!
 
