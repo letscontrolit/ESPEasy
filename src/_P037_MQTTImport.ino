@@ -85,7 +85,7 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
   } else {
     result = false;
   }
-# ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("MQTT: Event added: ");
@@ -97,7 +97,7 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
     }
     addLog(LOG_LEVEL_DEBUG, log);
   }
-# endif // ifndef BUILD_NO_DEBUG
+  # endif // ifndef BUILD_NO_DEBUG
   return result;
 }
 
@@ -451,7 +451,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         #   endif // P037_FILTER_PER_TOPIC
         #  endif  // if P037_JSON_SUPPORT
       }
-#  ifndef BUILD_NO_DEBUG
+      #  ifndef BUILD_NO_DEBUG
 
       if (matchedTopic && P037_data->hasFilters() && // Single log statement
           loglevelActiveFor(LOG_LEVEL_DEBUG)) {      // Reduce standard logging
@@ -459,7 +459,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         log += processData ? F("true") : F("false");
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
-#  endif // ifndef BUILD_NO_DEBUG
+      #  endif // ifndef BUILD_NO_DEBUG
       # endif // if P037_FILTER_SUPPORT
 
       if (!processData) { // Nothing to do? then clean up
@@ -719,8 +719,7 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
 
   String topic;
 
-  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
-  {
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
     String tmp = P037_data->getFullMQTTTopic(x);
 
     if (topic.equalsIgnoreCase(tmp)) {
@@ -736,8 +735,7 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
     for (taskIndex_t task = 0; task < INVALID_TASK_INDEX && canUnsubscribe; ++task) {
       if (task != event->TaskIndex) {
         if (Settings.TaskDeviceEnabled[task] &&
-            (Settings.TaskDeviceNumber[task] == PLUGIN_ID_037))
-        {
+            (Settings.TaskDeviceNumber[task] == PLUGIN_ID_037)) {
           P037_data_struct *P037_data_other = static_cast<P037_data_struct *>(getPluginTaskData(task));
 
           if (nullptr != P037_data_other) {
@@ -789,12 +787,10 @@ bool MQTTSubscribe_037(struct EventStruct *event)
   P037_data->loadSettings();
 
   // Now loop over all import variables and subscribe to those that are not blank
-  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
-  {
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
     String subscribeTo = P037_data->getFullMQTTTopic(x);
 
-    if (!subscribeTo.isEmpty())
-    {
+    if (!subscribeTo.isEmpty()) {
       parseSystemVariables(subscribeTo, false);
 
       if (MQTTclient.subscribe(subscribeTo.c_str())) {
@@ -842,8 +838,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   // Test for multi-level wildcard (#) see: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718107 (for MQTT 3 and
   // MQTT 5)
 
-  if (tmpSub.equals(F("#"))) { return true; // If the subscription is for '#' then all topics are accepted
-  }
+  if (tmpSub.equals(F("#"))) { return true; } // If the subscription is for '#' then all topics are accepted
 
   if (tmpSub.endsWith(F("/#"))) {           // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
     bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));

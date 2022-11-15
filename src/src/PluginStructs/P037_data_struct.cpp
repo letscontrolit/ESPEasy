@@ -195,9 +195,7 @@ bool P037_data_struct::webform_load(
   }
   # endif // ifdef P037_JSON_SUPPORT
 
-  for (int varNr = 0; varNr < VARS_PER_TASK; varNr++)
-  {
-    // String id;
+  for (int varNr = 0; varNr < VARS_PER_TASK; varNr++) {
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) { // Add a column with the json attribute to use for value
