@@ -148,13 +148,13 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Options"));
 
       # if P037_JSON_SUPPORT
-      addFormSelector_YesNo(F("Parse JSON messages"), F("p037_parse_json"),     P037_PARSE_JSON,     true);
+      addFormSelector_YesNo(F("Parse JSON messages"), F("pjson"),     P037_PARSE_JSON,     true);
       # endif // if P037_JSON_SUPPORT
       # if P037_FILTER_SUPPORT
-      addFormSelector_YesNo(F("Apply filters"),       F("p037_apply_filters"),  P037_APPLY_FILTERS,  true);
+      addFormSelector_YesNo(F("Apply filters"),       F("pfilters"),  P037_APPLY_FILTERS,  true);
       # endif // if P037_FILTER_SUPPORT
       # if P037_MAPPING_SUPPORT
-      addFormSelector_YesNo(F("Apply mappings"),      F("p037_apply_mappings"), P037_APPLY_MAPPINGS, true);
+      addFormSelector_YesNo(F("Apply mappings"),      F("pmappings"), P037_APPLY_MAPPINGS, true);
       # endif // if P037_MAPPING_SUPPORT
       # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
       #  if !defined(P037_LIMIT_BUILD_SIZE)
@@ -171,7 +171,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # endif  // if !defined(P037_LIMIT_BUILD_SIZE)
 
       {
-        addFormCheckBox(F("Deduplicate events"), F("p037_deduplicate"), P037_DEDUPLICATE_EVENTS == 1);
+        addFormCheckBox(F("Deduplicate events"), F("pdedupe"), P037_DEDUPLICATE_EVENTS == 1);
         # if !defined(P037_LIMIT_BUILD_SIZE)
         addFormNote(F("When enabled will not (re-)generate events that are already in the queue."));
         # endif  // if !defined(P037_LIMIT_BUILD_SIZE)
@@ -182,9 +182,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         String toolTip = F("0..");
         toolTip += P037_MAX_QUEUEDEPTH;
         toolTip += F(" entries");
-        addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
+        addFormNumericBox(F("Max. # entries in event queue"), F("pquedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
         # else // if !defined(P037_LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
-        addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
+        addFormNumericBox(F("Max. # entries in event queue"), F("pquedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
         # endif // if !defined(P037_LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
         addUnit(F("0 = no check"));
         # if !defined(P037_LIMIT_BUILD_SIZE)
@@ -196,7 +196,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         String character = F(" ");
         character[0] = (P037_REPLACE_BY_COMMA == 0 ? 0x20 : static_cast<uint8_t>(P037_REPLACE_BY_COMMA));
         addRowLabel(F("To replace by comma in event"));
-        addTextBox(F("p037_replace_char"), character, 1, false, false, F("[!@$%^ &*;:.|/\\]"), F("widenumber"));
+        addTextBox(F("preplch"), character, 1, false, false, F("[!@$%^ &*;:.|/\\]"), F("widenumber"));
         addUnit(F("Single character only, limited to: <b>! @ $ % ^ & * ; : . | / \\</b> is replaced by: <b>,</b> "));
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
@@ -230,19 +230,19 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       # if P037_JSON_SUPPORT
-      P037_PARSE_JSON = getFormItemInt(F("p037_parse_json"));
+      P037_PARSE_JSON = getFormItemInt(F("pjson"));
       # endif // if P037_JSON_SUPPORT
       # if P037_MAPPING_SUPPORT
-      P037_APPLY_MAPPINGS = getFormItemInt(F("p037_apply_mappings"));
+      P037_APPLY_MAPPINGS = getFormItemInt(F("pmappings"));
       # endif // if P037_MAPPING_SUPPORT
       # if P037_FILTER_SUPPORT
-      P037_APPLY_FILTERS = getFormItemInt(F("p037_apply_filters"));
+      P037_APPLY_FILTERS = getFormItemInt(F("pfilters"));
       # endif // if P037_FILTER_SUPPORT
       P037_SEND_EVENTS        = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
-      P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("p037_deduplicate")) ? 1 : 0;
-      P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("p037_queuedepth"));
+      P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("pdedupe")) ? 1 : 0;
+      P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("pquedepth"));
       # if P037_REPLACE_BY_COMMA_SUPPORT
-      String character = webArg(F("p037_replace_char"));
+      String character = webArg(F("preplch"));
       P037_REPLACE_BY_COMMA = character[0];
 
       if (P037_REPLACE_BY_COMMA == 0x20) { // Space -> 0
