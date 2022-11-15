@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2022-11-14, tonhuisman: Add support for selecting JSON sub-attributes, using the . notation, like main.sub (1 level only)
  * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
  *                         features were added
  * 2022-08-12, tonhuisman: Introduce plugin-specific P037_LIMIT_BUILD_SIZE feature-flag
@@ -516,8 +517,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 jsonAttribute.trim();
 
                 if (!jsonAttribute.isEmpty()) {
-                  key             = jsonAttribute;
-                  Payload         = P037_data->doc[key].as<String>();
+                  key = jsonAttribute;
+
+                  if (key.indexOf('.') > -1) {
+                    String part1 = parseStringKeepCase(key, 1, '.');
+                    String part2 = parseStringKeepCase(key, 2, '.');
+                    Payload = P037_data->doc[part1][part2].as<String>();
+                  } else {
+                    Payload = P037_data->doc[key].as<String>();
+                  }
                   unparsedPayload = Payload;
                   int8_t jIndex = jsonIndex.toInt();
 
