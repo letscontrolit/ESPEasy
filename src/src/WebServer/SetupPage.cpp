@@ -52,14 +52,15 @@ void handle_setup() {
   const bool connected = NetworkConnected();
 
 
-  if (connected) {
-    navMenuIndex = MENU_INDEX_TOOLS;
+//  if (connected) {
+    navMenuIndex = MENU_INDEX_SETUP;
     sendHeadandTail_stdtemplate(_HEAD);
-  } else {
+/*  } else {
     sendHeadandTail(F("TmplAP"));
   }
+  */
 
-  const bool clearButtonPressed = web_server.hasArg(F("performclearcredentials"));
+  const bool clearButtonPressed = hasArg(F("performclearcredentials"));
   const bool clearWiFiCredentials = 
     isFormItemChecked(F("clearcredentials")) && clearButtonPressed;
 
@@ -87,7 +88,7 @@ void handle_setup() {
           passwordGiven = !password.isEmpty();
         }
         const bool emptyPassAllowed = isFormItemChecked(F("emptypass"));
-        const bool performRescan = web_server.hasArg(F("performrescan"));
+        const bool performRescan = hasArg(F("performrescan"));
         if (performRescan) {
           WiFiEventData.lastScanMoment.clear();
           WifiScan(false);
@@ -216,12 +217,12 @@ void handle_setup() {
 
     html_end_form();
   }
-  if (connected) {
+//  if (connected) {
     sendHeadandTail_stdtemplate(_TAIL);
-  } else {
+/*  } else {
     sendHeadandTail(F("TmplAP"), true);
   }
-
+*/
   TXBuffer.endStream();
   delay(10);
   if (clearWiFiCredentials) {

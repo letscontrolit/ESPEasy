@@ -10,13 +10,13 @@
 #define STACK_SIZE 10 // was 50
 #define TOKEN_MAX 20
 
-enum class CalculateReturnCode {
-  OK                           = 0,
-  ERROR_STACK_OVERFLOW         = 1,
-  ERROR_BAD_OPERATOR           = 2,
-  ERROR_PARENTHESES_MISMATCHED = 3,
-  ERROR_UNKNOWN_TOKEN          = 4,
-  ERROR_TOKEN_LENGTH_EXCEEDED  = 5
+enum class CalculateReturnCode : uint8_t{
+  OK                           = 0u,
+  ERROR_STACK_OVERFLOW         = 1u,
+  ERROR_BAD_OPERATOR           = 2u,
+  ERROR_PARENTHESES_MISMATCHED = 3u,
+  ERROR_UNKNOWN_TOKEN          = 4u,
+  ERROR_TOKEN_LENGTH_EXCEEDED  = 5u
 };
 
 bool isError(CalculateReturnCode returnCode);
@@ -26,9 +26,9 @@ bool isError(CalculateReturnCode returnCode);
    like: log, sin, cos, tan, etc.
  \*********************************************************************************************/
 
-enum class UnaryOperator  {
+enum class UnaryOperator : uint8_t {
   Not = '!',
-  Log = 192, // Start at some ASCII code we don't expect in the rules.
+  Log = 192u, // Start at some ASCII code we don't expect in the rules.
   Ln,        // Natural logarithm
   Abs,       // Absolute value
   Exp,       // exponential value, e^x

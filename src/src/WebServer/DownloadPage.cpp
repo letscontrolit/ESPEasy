@@ -45,7 +45,7 @@ void handle_download()
   }
   str += F(".dat");
 
-  web_server.sendHeader(F("Content-Disposition"), str);
+  sendHeader(F("Content-Disposition"), str);
   web_server.streamFile(dataFile, F("application/octet-stream"));
   dataFile.close();
 }

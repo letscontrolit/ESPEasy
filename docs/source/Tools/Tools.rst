@@ -94,7 +94,8 @@ The ``sysinfo`` page does show a lot of information about the system.
 * **Unit Number**: The assigned unit number of the node.
 * **Local Time**:	The local time as known by the node. This includes any set timezone and DST (Daylight Saving).
 * **Time Source**:	The origin of the current system time. (e.g. NTP / GPS / Manual set)
-* **Time Wander**:	Time drift of the crystal in msec/sec. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.
+* **UTC time stored in RTC**: When external RTC is configured and has a time set, the UTC time stored in this RTC will be shown. (Added: 2022/10/30)
+* **Time Wander**:	Time drift of the crystal in ppm. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.  (older ESPEasy builds used msec/sec as unit, but ppm is more relatable to crystal specs.)
 * **Uptime**:	Current uptime of the node
 * **Load**:	CPU load in percent. ``LC`` is the number of calls to the ``loop()`` function per second.
 * **CPU Eco Mode**:	Whether the ECO mode is enabled or not.

@@ -7,6 +7,9 @@
 
 #include <Arduino.h>
 
+# ifdef LIMIT_BUILD_SIZE
+#  define P092_LIMIT_BUILD_SIZE
+# endif // ifdef LIMIT_BUILD_SIZE
 
 /*********************************************************************************************\
    DLBus subs to get values from the receiving bitstream
@@ -31,8 +34,7 @@
 
 enum class eP092pinmode {
   ePPM_Input          = 1,
-  ePPM_InputPullUp    = 2,
-  ePPM_InputPullDown  = 3
+  ePPM_InputPullUp    = 2
 };
 
 class DLBus {
@@ -53,7 +55,7 @@ public:
 
   // identification bytes for each DL bus device
   uint8_t DeviceBytes[2] = { 0 };
-  uint8_t ByteStream[DLbus_MaxDataBits / 8 + 1]; // every bit gets sorted into a bitmap
+  uint8_t ByteStream[DLbus_MaxDataBits / 8 + 1] = { 0 }; // every bit gets sorted into a bitmap
   boolean IsLogLevelInfo = false;
   boolean IsNoData = false;           // no data received (DL bus not connected), stop receiving until next call to PLUGIN_READ
   boolean IsISRset = false;           // ISR set flag, used for setting the ISR after network connected
@@ -82,7 +84,9 @@ private:
   void        Trim(int start_bit);
   boolean     CheckDevice(void);
   static DLBus *__instance;
+# ifndef P092_LIMIT_BUILD_SIZE
   void        AddToInfoLog(const String& string);
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   void        AddToErrorLog(const String& string);
 };
 #endif // ifndef DLBus_H
@@ -115,7 +119,7 @@ private:
 # define P092_double_max_width_50    (P092_double_pulse_width_50 + (P092_pulse_width_50 * P092_percentage_variance / 100))
 
 # define P092_DLbus_OptionCount 8
-# define P092_DLbus_DeviceCount 5
+# define P092_DLbus_DeviceCount 6
 
 
 struct P092_data_struct : public PluginTaskData_base {

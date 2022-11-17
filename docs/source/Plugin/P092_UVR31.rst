@@ -69,4 +69,4 @@ Data acquisition
 * **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
 * **Interval**: How often should the task publish its value (20..60 seconds is normal).
 
-.. note:: Intervall not less than **20 seconds**! The reading of the DL bus happens twice per intervall.
+.. note:: Interval not less than **20 seconds**! The reading of the DL bus happens twice per interval.

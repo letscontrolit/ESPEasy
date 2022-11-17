@@ -160,6 +160,9 @@ void handle_json()
         LabelType::BUILD_TIME,
         LabelType::BINARY_FILENAME,
         LabelType::LOCAL_TIME,
+        #if FEATURE_EXT_RTC
+        LabelType::EXT_RTC_UTC_TIME,
+        #endif
         LabelType::TIME_SOURCE,
         LabelType::TIME_WANDER,
         LabelType::ISNTP,

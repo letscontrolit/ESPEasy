@@ -29,7 +29,7 @@
 .. |P072_type| replace:: :cyan:`Environment`
 .. |P072_typename| replace:: :cyan:`Environment - HDC1080 (I2C)`
 .. |P072_porttype| replace:: `.`
-.. |P072_status| replace:: :yellow:`COLLECTION A`
+.. |P072_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P072_github| replace:: P072_HDC1080.ino
 .. _P072_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P072_HDC1080.ino
 .. |P072_usedby| replace:: `.`
@@ -42,7 +42,7 @@
 .. |P073_type| replace:: :cyan:`Display`
 .. |P073_typename| replace:: :cyan:`Display - 7-segment display`
 .. |P073_porttype| replace:: `.`
-.. |P073_status| replace:: :green:`NORMAL`
+.. |P073_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P073_github| replace:: P073_7DGT.ino
 .. _P073_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P073_7DGT.ino
 .. |P073_usedby| replace:: `.`

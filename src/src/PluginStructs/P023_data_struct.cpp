@@ -1,5 +1,5 @@
-#include "../PluginStructs/P023_data_struct.h"
 #ifdef USES_P023
+#include "../PluginStructs/P023_data_struct.h"
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringParser.h"
@@ -205,7 +205,11 @@ const char Plugin_023_myFont[][8] PROGMEM = {
 };
 
 
-P023_data_struct::P023_data_struct(uint8_t _address,   uint8_t _type, P023_data_struct::Spacing _font_spacing, uint8_t _displayTimer,uint8_t _use_sh1106)
+P023_data_struct::P023_data_struct(uint8_t                   _address,
+                                   uint8_t                   _type,
+                                   P023_data_struct::Spacing _font_spacing,
+                                   uint8_t                   _displayTimer,
+                                   uint8_t                   _use_sh1106)
   :  address(_address), type(_type),  font_spacing(_font_spacing),  displayTimer(_displayTimer), use_sh1106(_use_sh1106)
 {}
 
@@ -215,8 +219,7 @@ void P023_data_struct::setDisplayTimer(uint8_t _displayTimer) {
 }
 
 void P023_data_struct::checkDisplayTimer() {
-  if (displayTimer > 0)
-  {
+  if (displayTimer > 0) {
     displayTimer--;
 
     if (displayTimer == 0) {
@@ -235,15 +238,13 @@ String P023_data_struct::parseTemplate(String& tmpString, uint8_t lineSize) {
   return result;
 }
 
-void P023_data_struct::resetDisplay()
-{
+void P023_data_struct::resetDisplay() {
   displayOff();
   clearDisplay();
   displayOn();
 }
 
-void P023_data_struct::StartUp_OLED()
-{
+void P023_data_struct::StartUp_OLED() {
   init_OLED();
   resetDisplay();
   displayOff();
@@ -252,35 +253,28 @@ void P023_data_struct::StartUp_OLED()
   displayOn();
 }
 
-void P023_data_struct::displayOn()
-{
+void P023_data_struct::displayOn() {
   sendCommand(0xaf); // display on
 }
 
-void P023_data_struct::displayOff()
-{
+void P023_data_struct::displayOff() {
   sendCommand(0xae); // display off
 }
 
-void P023_data_struct::clearDisplay()
-{
+void P023_data_struct::clearDisplay() {
   unsigned char i, k;
 
-  for (k = 0; k < 8; k++)
-  {
+  for (k = 0; k < 8; k++) {
     setXY(k, 0);
-    {
-      for (i = 0; i < 128; i++) // clear all COL
-      {
-        sendChar(0);            // clear all COL
-      }
+
+    for (i = 0; i < 128; i++) { // clear all COL
+      sendChar(0);              // clear all COL
     }
   }
 }
 
 // Actually this sends a byte, not a char to draw in the display.
-void P023_data_struct::sendChar(unsigned char data)
-{
+void P023_data_struct::sendChar(unsigned char data) {
   Wire.beginTransmission(address); // begin transmitting
   Wire.write(0x40);                // data mode
   Wire.write(data);
@@ -303,8 +297,7 @@ void P023_data_struct::sendChar(unsigned char data)
 // }
 
 
-void P023_data_struct::sendCommand(unsigned char com)
-{
+void P023_data_struct::sendCommand(unsigned char com) {
   Wire.beginTransmission(address); // begin transmitting
   Wire.write(0x80);                // command mode
   Wire.write(com);
@@ -313,16 +306,14 @@ void P023_data_struct::sendCommand(unsigned char com)
 
 // Set the cursor position in a 16 COL * 8 ROW map (128x64 pixels)
 // or 8 COL * 5 ROW map (64x48 pixels)
-void P023_data_struct::setXY(unsigned char row, unsigned char col)
-{
+void P023_data_struct::setXY(unsigned char row, unsigned char col) {
   unsigned char col_offset = 0;
 
   if (use_sh1106) {
-      col_offset = 0x02;    // offset of 2 when using SSH1106 controller
+    col_offset = 0x02; // offset of 2 when using SSH1106 controller
   }
 
-  switch (type)
-  {
+  switch (type) {
     case OLED_64x48:
       col += 4;
       break;
@@ -331,9 +322,9 @@ void P023_data_struct::setXY(unsigned char row, unsigned char col)
       row += 2;
   }
 
-  sendCommand(0xb0 + row);                              // set page address
-  sendCommand(0x00 + ((8 * col + col_offset) & 0x0f));  // set low col address
-  sendCommand(0x10 + (((8 * col) >> 4) & 0x0f));          // set high col address
+  sendCommand(0xb0 + row);                             // set page address
+  sendCommand(0x00 + ((8 * col + col_offset) & 0x0f)); // set low col address
+  sendCommand(0x10 + (((8 * col) >> 4) & 0x0f));       // set high col address
 }
 
 // Prints a string regardless the cursor position.
@@ -354,8 +345,7 @@ void P023_data_struct::setXY(unsigned char row, unsigned char col)
 
 // Prints a string in coordinates X Y, being multiples of 8.
 // This means we have 16 COLS (0-15) and 8 ROWS (0-7).
-void P023_data_struct::sendStrXY(const char *string, int X, int Y)
-{
+void P023_data_struct::sendStrXY(const char *string, int X, int Y) {
   setXY(X, Y);
   unsigned char i             = 0;
   unsigned char char_width    = 0;
@@ -369,10 +359,8 @@ void P023_data_struct::sendStrXY(const char *string, int X, int Y)
       break;
   }
 
-  while (*string && currentPixels < maxPixels) // Prevent display overflow on the character level
-  {
-    switch (font_spacing)
-    {
+  while (*string && currentPixels < maxPixels) { // Prevent display overflow on the character level
+    switch (font_spacing) {
       case Spacing::optimized:
         char_width = pgm_read_byte(&(Plugin_023_myFont_Size[*string - 0x20]));
         break;
@@ -380,8 +368,7 @@ void P023_data_struct::sendStrXY(const char *string, int X, int Y)
         char_width = 8;
     }
 
-    for (i = 0; i < char_width && currentPixels + i < maxPixels; i++) // Prevent display overflow on the pixel-level
-    {
+    for (i = 0; i < char_width && currentPixels + i < maxPixels; i++) { // Prevent display overflow on the pixel-level
       sendChar(pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
     }
     currentPixels += char_width;
@@ -389,13 +376,11 @@ void P023_data_struct::sendStrXY(const char *string, int X, int Y)
   }
 }
 
-void P023_data_struct::init_OLED()
-{
+void P023_data_struct::init_OLED() {
   unsigned char multiplex;
   unsigned char compins;
 
-  switch (type)
-  {
+  switch (type) {
     case OLED_128x32:
       multiplex = 0x1F;
       compins   = 0x02;
@@ -413,16 +398,17 @@ void P023_data_struct::init_OLED()
   sendCommand(0xD3);       // SETDISPLAYOFFSET
   sendCommand(0x00);       // no offset
   sendCommand(0x40 | 0x0); // SETSTARTLINE
+
   if (use_sh1106) {
-    sendCommand(0xAD);       // CHARGEPUMP mode SH1106
-    sendCommand(0x8B);       // CHARGEPUMP On SH1106
-    sendCommand(0x32);       // CHARGEPUMP voltage 8V SH1106
-    sendCommand(0x81);       // SETCONTRAS
-    sendCommand(0x80);       // SH1106
+    sendCommand(0xAD);     // CHARGEPUMP mode SH1106
+    sendCommand(0x8B);     // CHARGEPUMP On SH1106
+    sendCommand(0x32);     // CHARGEPUMP voltage 8V SH1106
+    sendCommand(0x81);     // SETCONTRAS
+    sendCommand(0x80);     // SH1106
   } else {
-    sendCommand(0x8D);       // CHARGEPUMP
+    sendCommand(0x8D);     // CHARGEPUMP
     sendCommand(0x14);
-    sendCommand(0x81);       // SETCONTRAS
+    sendCommand(0x81);     // SETCONTRAS
     sendCommand(0xCF);
   }
   sendCommand(0x20);       // MEMORYMODE

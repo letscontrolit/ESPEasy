@@ -286,10 +286,9 @@ textarea {
 	width: 8px
 }
 
-.logviewer,
 textarea {
 	font-family: 'Lucida Console', Monaco, monospace;
-	height: 60vh;
+	max-height: 60vh;
 	width: -webkit-fill-available;
 	width: -moz-available
 }
@@ -378,7 +377,8 @@ textarea {
 .logviewer {
 	background-color: #272727;
 	color: #f1f1f1;
-	overflow: auto
+	overflow: auto;
+	height: 60vh
 }
 
 tbody {

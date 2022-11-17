@@ -36,7 +36,7 @@ void handle_factoryreset() {
   addFormHeader(F("Factory Reset"));
 
 #ifndef LIMIT_BUILD_SIZE
-  if (web_server.hasArg(F("fdm"))) {
+  if (hasArg(F("fdm"))) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt(F("fdm")));
 
     if (modelMatchingFlashSize(model)) {
@@ -45,7 +45,7 @@ void handle_factoryreset() {
   }
 
 
-  if (web_server.hasArg(F("savepref"))) {
+  if (hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked(F("kun")));
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked(F("kw")));
@@ -57,7 +57,7 @@ void handle_factoryreset() {
   }
 #endif
 
-  if (web_server.hasArg(F("performfactoryreset"))) {
+  if (hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
     applyFactoryDefaultPref();
 
@@ -132,7 +132,7 @@ void handle_factoryreset_json() {
   TXBuffer.startJsonStream();
   addHtml('{');
 #ifndef LIMIT_BUILD_SIZE
-  if (web_server.hasArg(F("fdm"))) {
+  if (hasArg(F("fdm"))) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt(F("fdm")));
 
     if (modelMatchingFlashSize(model)) {
@@ -140,23 +140,23 @@ void handle_factoryreset_json() {
     }
   }
 
-  if (web_server.hasArg(F("kun"))) {
+  if (hasArg(F("kun"))) {
     ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked(F("kun")));
   }
 
-  if (web_server.hasArg(F("kw"))) {
+  if (hasArg(F("kw"))) {
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked(F("kw")));
   }
 
-  if (web_server.hasArg(F("knet"))) {
+  if (hasArg(F("knet"))) {
     ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked(F("knet")));
   }
 
-  if (web_server.hasArg(F("kntp"))) {
+  if (hasArg(F("kntp"))) {
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked(F("kntp")));
   }
 
-  if (web_server.hasArg(F("klog"))) {
+  if (hasArg(F("klog"))) {
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked(F("klog")));
   }
 #endif
@@ -164,12 +164,12 @@ void handle_factoryreset_json() {
   bool   performReset = false;
   bool   savePref     = false;
 
-  if (web_server.hasArg(F("savepref"))) {
+  if (hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     savePref = true;
   }
 
-  if (web_server.hasArg(F("performfactoryreset"))) {
+  if (hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
     performReset = true;
     savePref     = true;

@@ -18,6 +18,9 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"
 
+#if FEATURE_GPIO_USE_ESP8266_WAVEFORM
+# include <core_esp8266_waveform.h>
+#endif 
 
 // Forward declarations of functions used in this module
 // Normally those would be declared in the .h file as private members
@@ -60,9 +63,7 @@ const __FlashStringHelper * Command_GPIO_Monitor(struct EventStruct *event, cons
   if (gpio_monitor_helper(event->Par2, event, Line)) {
     return return_command_success();
   }
-  else {
-    return return_command_failed();
-  }
+  return return_command_failed();
 }
 
 const __FlashStringHelper * Command_GPIO_MonitorRange(struct EventStruct *event, const char *Line)
@@ -165,7 +166,9 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
 
 const __FlashStringHelper * Command_GPIO_LongPulse(struct EventStruct *event, const char *Line)
 {
-  event->Par3 = event->Par3 * 1000;
+  event->Par3 *= 1000;
+  event->Par4 *= 1000;
+  event->Par5 *= 1000;
   return Command_GPIO_LongPulse_Ms(event, Line);
 }
 
@@ -179,17 +182,94 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
 
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
+    // Event parameters
+    // Par1: pin nr
+    // Par2: state
+    // Par3: duration of  state
+    // Par4: duration of !state
+    // Par5: repeat count (only when Par4 > 0)
+    //       -1 = repeat indefinately
+    //        0 = only once
+    //        N = Repeat N times
+    Scheduler.clearGPIOTimer(pluginID, event->Par1);
     const uint32_t key = createKey(pluginID, event->Par1);
     createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, event->Par2);
-    GPIO_Write(pluginID, event->Par1, event->Par2);
 
-    Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, !event->Par2);
+    #if FEATURE_GPIO_USE_ESP8266_WAVEFORM
+    bool usingWaveForm = 
+        event->Par3 > 0 && event->Par3 < 15000 &&
+        event->Par4 > 0 && event->Par4 < 15000 &&
+        event->Par5 != 0;
+        
+    if (usingWaveForm) {
+      // Preferred is to use the ESP8266 waveform function.
+      // Max time high or low is roughly 53 sec @ 80 MHz or half @160 MHz.
+      // This is not available on ESP32.
+
+      const uint8_t pin = event->Par1;
+      uint32_t timeHighUS = event->Par3 * 1000;
+      uint32_t timeLowUS  = event->Par4 * 1000;
+
+      if (event->Par2 == 0) {
+        std::swap(timeHighUS, timeLowUS);
+      }
+      uint32_t runTimeUS = 0;
+      if (event->Par5 > 0) {
+        // Must set slightly lower than expected duration as it will be rounded up.
+        runTimeUS = event->Par5 * (timeHighUS + timeLowUS) - ((timeHighUS + timeLowUS) / 2);
+      }
+
+      pinMode(event->Par1, OUTPUT);
+      usingWaveForm = startWaveform(
+        pin, timeHighUS, timeLowUS, runTimeUS);
+    }
+    #else
+    // waveform function not available on ESP32
+    const bool usingWaveForm = false;
+    #endif
+
+    if (!usingWaveForm) {
+      int repeatInterval = 0;
+      int repeatCount = 0;
+      GPIO_Write(pluginID, event->Par1, event->Par2);
+      if (event->Par4 > 0 && event->Par5 != 0) {
+        // Compute repeat interval
+        repeatInterval = event->Par3 + event->Par4;
+        repeatCount    = event->Par5;
+
+        // Schedule switching pin to given state for repeat
+        Scheduler.setGPIOTimer(
+          repeatInterval,   // msecFromNow
+          pluginID,    
+          event->Par1,   // Pin/port nr
+          event->Par2,   // pin state
+          repeatInterval,
+          repeatCount);
+      }
+
+
+      // Schedule switching pin back to original state
+      Scheduler.setGPIOTimer(
+        event->Par3,   // msecFromNow
+        pluginID,    
+        event->Par1,   // Pin/port nr
+        !event->Par2,  // pin state
+        repeatInterval,
+        repeatCount);
+    }
+
 
     String log = logPrefix;
     log += F(" : port ");
     log += event->Par1;
-    log += F(". Pulse set for ");
+    log += F(". Pulse H:");
     log += event->Par3;
+    if (event->Par4 > 0 && event->Par5 != 0) {
+      log += F(" L:");
+      log += event->Par4;
+      log += F(" #:");
+      log += event->Par5;
+    }
     log += F(" ms");
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
@@ -842,8 +922,8 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         createAndSetPortStatus_Mode_State(key, mode, state);
         String log;
         log += data.logPrefix;
-        log += concat(F(": port#"), currentPin);
-        log += concat(F(": set to "), state);
+        log += concat(F(": port#"), static_cast<int>(currentPin));
+        log += concat(F(": set to "), static_cast<int>(state));
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }

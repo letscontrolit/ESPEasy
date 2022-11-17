@@ -52,7 +52,7 @@ String fileFromUrl(String path) {
 }
 
 bool matchFilename(const String& path, const __FlashStringHelper *fname) {
-  return path.equalsIgnoreCase(fileFromUrl(fname));
+  return fileFromUrl(path).equalsIgnoreCase(fileFromUrl(fname));
 }
 
 // ********************************************************************************
@@ -74,21 +74,46 @@ bool fileIsEmbedded(const String& path) {
   return false;
 }
 
-void serveEmbedded(const String& path, const String& contentType) {
+void do_serveEmbedded(const __FlashStringHelper* contentType, PGM_P content, int length, bool serve_inline) {
+  // Serve using our own Web_StreamingBuffer
+  // Serving via web_server.send_P may cause memory allocation issues when sending large flash strings.
+  if (!serve_inline) {
+    TXBuffer.startStream(contentType, F("*"), 200);
+  }
+  TXBuffer.addFlashString(content, length);
+  if (!serve_inline) {
+    TXBuffer.endStream();
+  }
+}
+
+void serveEmbedded(const String& path, const __FlashStringHelper* contentType, bool serve_inline) {
 #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
 
   if (matchFilename(path, F("esp.css"))) {
-    web_server.send_P(200, contentType.c_str(), (PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
+    do_serveEmbedded(contentType, (PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS), -1, serve_inline);
     return;
   }
 #endif // if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
 #ifdef WEBSERVER_FAVICON
 
   if (matchFilename(path, F("favicon.ico"))) {
-    web_server.send_P(200, contentType.c_str(), favicon_8b_ico, favicon_8b_ico_len);
+    do_serveEmbedded(contentType, (PGM_P)FPSTR(favicon_8b_ico), favicon_8b_ico_len, false);
     return;
   }
 #endif // ifdef WEBSERVER_FAVICON
+  addLog(LOG_LEVEL_ERROR, concat(F("serveEmbedded failed: "), path));
+}
+
+
+void serve_CSS_inline() {
+  const __FlashStringHelper* fname = F("esp.css");
+  addHtml(F("<style>"));
+  if (fileExists(fname)) {
+    streamFromFS(fname);
+  } else {
+    serveEmbedded(fname, F("text/css"), true);
+  }
+  addHtml(F("</style>"));
 }
 
 // ********************************************************************************
@@ -119,6 +144,10 @@ bool isStaticFile_StripPrefix(String& path) {
 // and therefore should be read from browser cache
 // ********************************************************************************
 bool reply_304_not_modified(const String& path) {
+  if (path.endsWith(F("favicon.ico"))) {
+    // No need in serving 304 for the favicon
+    return false;
+  }
   const String ifNoneMatch = stripQuotes(web_server.header(F("If-None-Match")));
   unsigned int etag_num    = 0;
   bool res                 = false;
@@ -136,7 +165,7 @@ bool reply_304_not_modified(const String& path) {
 #ifndef BUILD_NO_DEBUG
 
   if (res) {
-    addLog(LOG_LEVEL_INFO, concat(F("Serve 304: "), etag_num) + ' ' + path);
+    addLog(LOG_LEVEL_INFO, concat(F("Serve 304: "), String(etag_num)) + ' ' + path);
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -214,9 +243,10 @@ bool loadFromFS(String path) {
 #endif // ifdef WEBSERVER_CUSTOM
 
   bool mustCheckCredentials = false;
-  const String contentType  = get_ContentType(path, mustCheckCredentials);
+  const __FlashStringHelper* contentType  = get_ContentType(path, mustCheckCredentials);
 
-  const bool serve_304 = static_file && reply_304_not_modified(path); // Reply with a 304 Not Modified
+  const bool serve_304 = static_file && 
+                         reply_304_not_modified(path); // Reply with a 304 Not Modified
 
 #ifndef BUILD_NO_DEBUG
 
@@ -229,28 +259,28 @@ bool loadFromFS(String path) {
 
   // prevent reloading stuff on every click
   if (static_file) {
-    web_server.sendHeader(F("Cache-Control"), F("public, max-age=31536000, immutable"));
+    sendHeader(F("Cache-Control"), F("public, max-age=31536000, immutable"));
 
-    //    web_server.sendHeader(F("Cache-Control"), F("max-age=86400"));
-    web_server.sendHeader(F("Expires"),       F("-1"));
+    //    sendHeader(F("Cache-Control"), F("max-age=86400"));
+    sendHeader(F("Expires"),       F("-1"));
     if (fileEmbedded && !fileExists(path)) {
-      web_server.sendHeader(F("Last-Modified"), get_build_date_RFC1123());
+      sendHeader(F("Last-Modified"), get_build_date_RFC1123());
     }
-    web_server.sendHeader(F("Age"),           F("100"));
-    web_server.sendHeader(F("ETag"),          wrap_String(String(Cache.fileCacheClearMoment) + F("-a"), '"')); // added "-a" to the ETag to
+    sendHeader(F("Age"),           F("100"));
+    sendHeader(F("ETag"),          wrap_String(String(Cache.fileCacheClearMoment) + F("-a"), '"')); // added "-a" to the ETag to
                                                                                                                // match the same encoding
   } else {
-    web_server.sendHeader(F("Cache-Control"), F("no-cache"));
-    web_server.sendHeader(F("ETag"),          F("\"2.0.0\""));
+    sendHeader(F("Cache-Control"), F("no-cache"));
+    sendHeader(F("ETag"),          F("\"2.0.0\""));
   }
-  web_server.sendHeader(F("Vary"), "*");
+  sendHeader(F("Vary"), "*");
 
   if (path.endsWith(F(".dat"))) {
-    web_server.sendHeader(F("Content-Disposition"), F("attachment;"));
+    sendHeader(F("Content-Disposition"), F("attachment;"));
   }
 
   if (serve_304) {
-    web_server.send(304, contentType, EMPTY_STRING);
+    web_server.send(304, String(contentType), EMPTY_STRING);
   } else {
     if (fileExists(path)) {
       fs::File f = tryOpenFile(path.c_str(), "r");
@@ -258,14 +288,14 @@ bool loadFromFS(String path) {
       if (!f) {
         return false;
       }
-      web_server.streamFile(f, contentType);
+      web_server.streamFile(f, String(contentType));
       f.close();
     }
 
     if (!fileEmbedded) {
       return false;
     }
-    serveEmbedded(path, contentType);
+    serveEmbedded(path, contentType, false);
   }
 
   statusLED(true);
@@ -285,20 +315,20 @@ size_t streamFromFS(String path, bool htmlEscape) {
     return bytesStreamed;
   }
 
-  int available = f.available();
+  size_t available = f.available();
   String escaped;
 
   while (available > 0) {
-    int32_t chunksize = 64;
+    size_t chunksize = 64;
 
     if (available < chunksize) {
       chunksize = available;
     }
     uint8_t   buf[64] = { 0 };
-    const int read    = f.read(buf, chunksize);
+    const size_t read = f.read(buf, chunksize);
 
     if (read == chunksize) {
-      for (int32_t i = 0; i < chunksize; ++i) {
+      for (size_t i = 0; i < chunksize; ++i) {
         const char c = (char)buf[i];
 
         if (htmlEscape && htmlEscapeChar(c, escaped)) {
