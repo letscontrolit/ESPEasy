@@ -263,6 +263,7 @@ boolean Plugin_240(uint8_t function, struct EventStruct *event, String& string)
     {
       // code to be executed once a second. Tasks which do not require fast response can be added here
       success = true;
+      break;
     }
 
     case PLUGIN_TEN_PER_SECOND:
@@ -282,6 +283,7 @@ boolean Plugin_240(uint8_t function, struct EventStruct *event, String& string)
         }
       }
       success = true;
+      break;
     }
 
   } // switch
