@@ -6,6 +6,10 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-11-16 tonhuisman: Implement M5Stack encoder lower/upper limit _without_ setEncoder() available (by using offset method)
+ *                        see: https://github.com/m5stack/M5UnitEncoder_Firmware
+ * 2022-11-14 tonhuisman: Implement M5Stack I2C Encoder support, with 2x NeoPixel and pushbutton
+ * 2022-11-13 tonhuisman: Refactor color handling somewhat, so it can be called from init()
  * 2022-11-12 tonhuisman: Implement counter to color mapping, button support
  * 2022-11-10 tonhuisman: Implement Adafruit I2C Encoder support, with NeoPixel and pushbutton
  * 2022-11-04 tonhuisman: Initial plugin creation
@@ -165,10 +169,13 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
 
       switch (device) {
         case P143_DeviceType_e::AdafruitEncoder:
+        # if P143_FEATURE_INCLUDE_M5STACK
+        case P143_DeviceType_e::M5StackEncoder:
+        # endif // if P143_FEATURE_INCLUDE_M5STACK
         {
           {
-            addRowLabel(F("Neopixel initial color"));
-            addHtml(F("<table style='padding-left:0;'>")); // remove left padding 2x to align vertically with other inputs
+            addRowLabel(F("Neopixel 1 initial color"));
+            addHtml(F("<table style='padding:0;'>")); // remove left padding 2x to align vertically with other inputs
             html_TD(F("padding-left:0"));
             addHtml('R');
             addNumericBox(F("pred"), P143_ADAFRUIT_COLOR_RED, 0, 255);
@@ -180,18 +187,50 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
             addNumericBox(F("pblue"), P143_ADAFRUIT_COLOR_BLUE, 0, 255);
             addUnit(F("0..255"));
             html_end_table();
+            # if P143_FEATURE_INCLUDE_M5STACK
+
+            if (device == P143_DeviceType_e::M5StackEncoder) {
+              addRowLabel(F("Neopixel 2 initial color"));
+              addHtml(F("<table style='padding-left:0;'>")); // remove left padding 2x to align vertically with other inputs
+              html_TD(F("padding-left:0"));
+              addHtml('R');
+              addNumericBox(F("pred2"), P143_M5STACK2_COLOR_RED, 0, 255);
+              html_TD();
+              addHtml('G');
+              addNumericBox(F("pgreen2"), P143_M5STACK2_COLOR_GREEN, 0, 255);
+              html_TD();
+              addHtml('B');
+              addNumericBox(F("pblue2"), P143_M5STACK2_COLOR_BLUE, 0, 255);
+              addUnit(F("0..255"));
+              html_end_table();
+            }
+            # endif // if P143_FEATURE_INCLUDE_M5STACK
           }
-          addFormNumericBox(F("Initial brightness"), F("pbright"), P143_ADAFRUIT_BRIGHTNESS, 1, 255);
+          addFormNumericBox(F("Initial brightness"), F("pbright"), P143_NEOPIXEL_BRIGHTNESS, 1, 255);
           addUnit(F("1..255"));
+          # if P143_FEATURE_INCLUDE_M5STACK
+
+          if (device == P143_DeviceType_e::M5StackEncoder) {
+            const __FlashStringHelper *selectLedModeOptions[] = {
+              F("Both leds"),
+              F("Led 1 only"),
+              F("Led 2 only"),
+            };
+            const int selectLedModeValues[] = {
+              static_cast<int>(P143_M5StackLed_e::BothLeds),
+              static_cast<int>(P143_M5StackLed_e::Led1Only),
+              static_cast<int>(P143_M5StackLed_e::Led2Only),
+            };
+            addFormSelector(F("Color map Leds"),
+                            F("pledsel"),
+                            sizeof(selectLedModeValues) / sizeof(int),
+                            selectLedModeOptions,
+                            selectLedModeValues,
+                            P143_M5STACK_SELECTION);
+          }
+          # endif // if P143_FEATURE_INCLUDE_M5STACK
           break;
         }
-        # if P143_FEATURE_INCLUDE_M5STACK
-        case P143_DeviceType_e::M5StackEncoder:
-        {
-          // TODO
-          break;
-        }
-        # endif // if P143_FEATURE_INCLUDE_M5STACK
         # if P143_FEATURE_INCLUDE_DFROBOT
         case P143_DeviceType_e::DFRobotEncoder:
         {
@@ -278,10 +317,14 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       P143_MINIMAL_POSITION = getFormItemInt(F("pminpos"));
       P143_MAXIMAL_POSITION = getFormItemInt(F("pmaxpos"));
 
-      uint32_t lSettings = 0u;
+      uint32_t lSettings       = 0u;
+      P143_DeviceType_e device = static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE);
 
-      switch (static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE)) {
+      switch (device) {
         case P143_DeviceType_e::AdafruitEncoder:
+        # if P143_FEATURE_INCLUDE_M5STACK
+        case P143_DeviceType_e::M5StackEncoder:
+        # endif // if P143_FEATURE_INCLUDE_M5STACK
         {
           // Color settings
           set8BitToUL(lSettings, P143_ADAFRUIT_OFFSET_RED,        getFormItemInt(F("pred")) & 0xFF);
@@ -290,15 +333,20 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
           set8BitToUL(lSettings, P143_ADAFRUIT_OFFSET_BRIGHTNESS, getFormItemInt(F("pbright")) & 0xFF);
           P143_ADAFRUIT_COLOR_AND_BRIGHTNESS = lSettings;
 
+          # if P143_FEATURE_INCLUDE_M5STACK
+
+          if (device == P143_DeviceType_e::M5StackEncoder) {
+            lSettings = 0u;
+            set8BitToUL(lSettings, P143_M5STACK2_OFFSET_RED,   getFormItemInt(F("pred2")) & 0xFF);
+            set8BitToUL(lSettings, P143_M5STACK2_OFFSET_GREEN, getFormItemInt(F("pgreen2")) & 0xFF);
+            set8BitToUL(lSettings, P143_M5STACK2_OFFSET_BLUE,  getFormItemInt(F("pblue2")) & 0xFF);
+            set4BitToUL(lSettings, P143_M5STACK_OFFSET_SELECTION, getFormItemInt(F("pledsel")) & 0x0F); // 4 bit only
+            P143_M5STACK_COLOR_AND_SELECTION = lSettings;
+          }
+          # endif // if P143_FEATURE_INCLUDE_M5STACK
+
           break;
         }
-        # if P143_FEATURE_INCLUDE_M5STACK
-        case P143_DeviceType_e::M5StackEncoder:
-        {
-          // TODO
-          break;
-        }
-        # endif // if P143_FEATURE_INCLUDE_M5STACK
         # if P143_FEATURE_INCLUDE_DFROBOT
         case P143_DeviceType_e::DFRobotEncoder:
         {

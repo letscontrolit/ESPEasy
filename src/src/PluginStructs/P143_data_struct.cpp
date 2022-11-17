@@ -57,7 +57,8 @@ void P143_CheckEncoderDefaultSettings(struct EventStruct *event) {
         break;
       # if P143_FEATURE_INCLUDE_M5STACK
       case P143_DeviceType_e::M5StackEncoder:
-        // TODO
+        P143_ADAFRUIT_COLOR_AND_BRIGHTNESS = 0x0000001E; // Black, with 30 (0x1E) brightness (1..255)
+        P143_M5STACK_COLOR_AND_SELECTION   = 0x00000000; // Black, with both Leds using Color mapping
         break;
       # endif // if P143_FEATURE_INCLUDE_M5STACK
       # if P143_FEATURE_INCLUDE_DFROBOT
@@ -77,6 +78,9 @@ P143_data_struct::P143_data_struct(struct EventStruct *event) {
   _device          = static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE);
   _i2cAddress      = P143_I2C_ADDR;
   _encoderPosition = P143_INITIAL_POSITION;
+  _encoderMin      = P143_MINIMAL_POSITION;
+  _encoderMax      = P143_MAXIMAL_POSITION;
+  _brightness      = P143_NEOPIXEL_BRIGHTNESS;
 }
 
 /*****************************************************
@@ -110,7 +114,7 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
       case P143_DeviceType_e::AdafruitEncoder:
       {
         Adafruit_Seesaw = new (std::nothrow) Adafruit_seesaw();
-        Adafruit_Spixel = new (std::nothrow) seesaw_NeoPixel(1, SEESAW_NEOPIX, NEO_GRB + NEO_KHZ800);
+        Adafruit_Spixel = new (std::nothrow) seesaw_NeoPixel(1, P143_SEESAW_NEOPIX, NEO_GRB + NEO_KHZ800);
 
         if ((nullptr != Adafruit_Seesaw) && (nullptr != Adafruit_Spixel)) {
           _initialized = Adafruit_Seesaw->begin(_i2cAddress) && Adafruit_Spixel->begin(_i2cAddress);
@@ -122,34 +126,67 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
 
           if (_initialized) {
             // use a pin for the built in encoder switch
-            Adafruit_Seesaw->pinMode(SEESAW_SWITCH, INPUT_PULLUP);
+            Adafruit_Seesaw->pinMode(P143_SEESAW_SWITCH, INPUT_PULLUP);
 
             // set starting position
             Adafruit_Seesaw->setEncoderPosition(_encoderPosition);
 
             // Enable interrupts on Switch pin
-            Adafruit_Seesaw->setGPIOInterrupts((uint32_t)1 << SEESAW_SWITCH, 1);
+            Adafruit_Seesaw->setGPIOInterrupts((uint32_t)1 << P143_SEESAW_SWITCH, 1);
             Adafruit_Seesaw->enableEncoderInterrupt();
 
             // We only have 1 pixel available...
-            Adafruit_Spixel->setBrightness(P143_ADAFRUIT_BRIGHTNESS); // Set brightness before color!
+            Adafruit_Spixel->setBrightness(_brightness); // Set brightness before color!
             _red   = P143_ADAFRUIT_COLOR_RED;
             _green = P143_ADAFRUIT_COLOR_GREEN;
             _blue  = P143_ADAFRUIT_COLOR_BLUE;
             Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
             Adafruit_Spixel->show();
           }
-
-          // Set initial button state
-          _buttonState =
-            (P143_ButtonAction_e::PushButtonInverted == static_cast<P143_ButtonAction_e>(P143_PLUGIN_BUTTON_ACTION)) ? 0 : 1;
         }
         break;
       }
       # if P143_FEATURE_INCLUDE_M5STACK
       case P143_DeviceType_e::M5StackEncoder:
       {
-        // TODO
+        // Reset, only actually supported with upgraded firmware
+        I2C_write8_reg(_i2cAddress, P143_M5STACK_REG_MODE, 0x00);
+
+        // Check if we need to use the offset method
+        // - Read current counter
+        // - Write incremented value, only works with upgraded firmware
+        // - re-read and if not changed we use an offset to handle passing the set limits
+        int16_t encoderCount = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
+        encoderCount++;
+        I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, encoderCount << 8 || encoderCount >> 8);
+
+        if (encoderCount != I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER)) {
+          _useOffset       = true;
+          _previousEncoder = encoderCount - 1;
+          _offsetEncoder   = _previousEncoder - _encoderPosition;
+        } else {
+          // Don't need to use offset, set configured initial value
+          encoderCount = _encoderPosition;
+          I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, encoderCount << 8 || encoderCount >> 8);
+        }
+
+        _red   = P143_ADAFRUIT_COLOR_RED; // Also used for M5Stack Led 1
+        _green = P143_ADAFRUIT_COLOR_GREEN;
+        _blue  = P143_ADAFRUIT_COLOR_BLUE;
+
+        // Set LED initial state
+        uint8_t data[4];
+        data[0] = 1; // Led 1
+        data[1] = applyBrightness(_red);
+        data[2] = applyBrightness(_green);
+        data[3] = applyBrightness(_blue);
+        I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+        data[0] = 2; // Led 2
+        data[1] = applyBrightness(P143_M5STACK2_COLOR_RED);
+        data[2] = applyBrightness(P143_M5STACK2_COLOR_GREEN);
+        data[3] = applyBrightness(P143_M5STACK2_COLOR_BLUE);
+        I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+        _initialized = true;
         break;
       }
       # endif // if P143_FEATURE_INCLUDE_M5STACK
@@ -162,7 +199,14 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
       # endif // if P143_FEATURE_INCLUDE_DFROBOT
     }
 
+    // Set initial button state
+    _buttonState = (P143_ButtonAction_e::PushButtonInverted == static_cast<P143_ButtonAction_e>(P143_PLUGIN_BUTTON_ACTION)) ? 0 : 1;
+
+    UserVar[event->BaseVarIndex + 1] = _buttonState;
+
     # if P143_FEATURE_COUNTER_COLORMAPPING
+
+    _mapping = static_cast<P143_CounterMapping_e>(P143_PLUGIN_COUNTER_MAPPING);
 
     // Load color mapping data
     LoadCustomTaskSettings(event->TaskIndex, _colorMapping, P143_STRINGS, 0);
@@ -174,9 +218,23 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
         _colorMaps = i;
       }
     }
+
+    counterToColorMapping(event); // Update color
     # endif // if P143_FEATURE_COUNTER_COLORMAPPING
 
-    UserVar[event->BaseVarIndex + 1] = _buttonState;
+    String log = F("I2CEncoders: INIT, ");
+    log += toString(_device);
+
+    if (_useOffset) {
+      log += F("using Offset method, ");
+    }
+
+    if (!_initialized) {
+      log += F("FAILED.");
+    } else {
+      log += F("Success.");
+    }
+    addLogMove(_initialized ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, log);
   }
 
   return _initialized;
@@ -201,7 +259,10 @@ bool P143_data_struct::plugin_exit(struct EventStruct *event) {
       # if P143_FEATURE_INCLUDE_M5STACK
       case P143_DeviceType_e::M5StackEncoder:
       {
-        // TODO
+        // Turn off both LEDs
+        uint8_t data[4] = { 0 };
+
+        I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
         break;
       }
       # endif // if P143_FEATURE_INCLUDE_M5STACK
@@ -239,7 +300,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   if (_initialized) {
     int32_t current = _encoderPosition;
     # if PLUGIN_143_DEBUG
-    int32_t oldPosition = _encoderPosition;
+    _oldPosition = _encoderPosition;
     # endif // if PLUGIN_143_DEBUG
 
     switch (_device) {
@@ -248,7 +309,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         break;
       # if P143_FEATURE_INCLUDE_M5STACK
       case P143_DeviceType_e::M5StackEncoder:
-        // TODO Read encoder
+        current = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
         break;
       # endif // if P143_FEATURE_INCLUDE_M5STACK
       # if P143_FEATURE_INCLUDE_DFROBOT
@@ -257,20 +318,30 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         break;
       # endif // if P143_FEATURE_INCLUDE_DFROBOT
     }
+    const int32_t rawCurrent = current;
+
+    if (_useOffset) {
+      current -= _offsetEncoder;
+    }
+    const int32_t orgCurrent = current;
 
     // Check limits
-    if (P143_MINIMAL_POSITION != P143_MAXIMAL_POSITION) {
-      if ((current < P143_MINIMAL_POSITION) || (current > P143_MAXIMAL_POSITION)) {
-        int32_t orgCurrent = current;
-
+    if (_encoderMin != _encoderMax) {
+      if ((current < _encoderMin) || (current > _encoderMax)) {
         // Have to check separately, as it's possible to move multiple steps within 1/10th second
-        if (current < P143_MINIMAL_POSITION) {
-          current = P143_MINIMAL_POSITION; // keep minimal value
+        if (current < _encoderMin) {
+          if (_useOffset) {
+            _offsetEncoder = rawCurrent - _encoderMin;
+          }
+          current = _encoderMin; // keep minimal value
         }
-
-        if (current > P143_MAXIMAL_POSITION) {
-          current = P143_MAXIMAL_POSITION; // keep maximal value
+        else if (current > _encoderMax) {
+          if (_useOffset) {
+            _offsetEncoder = rawCurrent - _encoderMax;
+          }
+          current = _encoderMax; // keep maximal value
         }
+        _previousEncoder = current;
 
         // (Re)Set Encoder to current position if outside the set boundaries
         if (current != orgCurrent) {
@@ -280,7 +351,12 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
               break;
             # if P143_FEATURE_INCLUDE_M5STACK
             case P143_DeviceType_e::M5StackEncoder:
-              // TODO Set encoder position
+
+              // Set encoder position. NB: will only work if the encoder firmware is updated to v1.1
+              if (!_useOffset) {
+                int16_t down = current;
+                I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, down << 8 || down >> 8);
+              }
               break;
             # endif // if P143_FEATURE_INCLUDE_M5STACK
             # if P143_FEATURE_INCLUDE_DFROBOT
@@ -293,7 +369,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
     }
 
-    if (current != _encoderPosition) {
+    if (current /*- _offsetEncoder*/ != _encoderPosition) {
       // Generate event
       if (Settings.UseRules) {
         String taskEvent;
@@ -302,14 +378,14 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         taskEvent += '#';
         taskEvent += getTaskValueName(event->TaskIndex, 0);
         taskEvent += '=';
-        taskEvent += current;                    // Position
+        taskEvent += current /*- _offsetEncoder*/;                    // Position
         taskEvent += ',';
-        taskEvent += current - _encoderPosition; // Delta, positive = clock-wise
+        taskEvent += current /*- _offsetEncoder*/ - _encoderPosition; // Delta, positive = clock-wise
         eventQueue.addMove(std::move(taskEvent));
       }
 
       // Set task value
-      _encoderPosition = current;
+      _encoderPosition = current /*- _offsetEncoder*/;
 
       UserVar[event->BaseVarIndex] = _encoderPosition;
 
@@ -317,132 +393,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 
       // Calculate colormapping
       # if P143_FEATURE_COUNTER_COLORMAPPING
-      int16_t iRed   = -1;
-      int16_t iGreen = -1;
-      int16_t iBlue  = -1;
-      int16_t pRed   = -1;
-      int16_t pGreen = -1;
-      int16_t pBlue  = -1;
-      int32_t iCount = INT32_MIN;
-      int32_t pCount = INT32_MIN;
-
-      P143_CounterMapping_e mapping = static_cast<P143_CounterMapping_e>(P143_PLUGIN_COUNTER_MAPPING);
-
-      switch (mapping) {
-        case P143_CounterMapping_e::ColorMapping:
-        {
-          for (int i = 0; i <= _colorMaps; i++) {
-            if (!_colorMapping[i].isEmpty()) {
-              if (iCount == INT32_MIN) {
-                if (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) {
-                  if (iCount < _encoderPosition) { // Reset, out of range
-                    iRed   = -1;
-                    iGreen = -1;
-                    iBlue  = -1;
-                    iCount = INT32_MIN;
-                  }
-                }
-              }
-            }
-          }
-          break;
-        }
-
-        case P143_CounterMapping_e::ColorGradient:
-        {
-          for (int i = 0; i <= _colorMaps; i++) {
-            if (!_colorMapping[i].isEmpty()) {
-              if (iCount == INT32_MIN) {
-                if (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) {
-                  if ((iCount > _encoderPosition) || !rangeCheck(iCount, P143_MINIMAL_POSITION, P143_MAXIMAL_POSITION)) {
-                    iRed   = -1;
-                    iGreen = -1;
-                    iBlue  = -1;
-                    iCount = INT32_MIN;
-                  }
-                }
-              }
-
-              if (pCount == INT32_MIN) {
-                if (parseColorMapLine(_colorMapping[i], pCount, pRed, pGreen, pBlue)) {
-                  if ((pCount < _encoderPosition) || !rangeCheck(pCount, P143_MINIMAL_POSITION, P143_MAXIMAL_POSITION)) {
-                    pRed   = -1;
-                    pGreen = -1;
-                    pBlue  = -1;
-                    pCount = INT32_MIN;
-                  }
-                }
-              }
-            }
-          }
-
-          // Calculate R/G/B gradient-values for current Counter within upper and lower range
-          if ((pCount != iCount) && (iRed > -1) && (iGreen > -1) && (iBlue > -1) && (pRed > -1) && (pGreen > -1) && (pBlue > -1)) {
-            iRed   = map(_encoderPosition, iCount, pCount, iRed, pRed);
-            iGreen = map(_encoderPosition, iCount, pCount, iGreen, pGreen);
-            iBlue  = map(_encoderPosition, iCount, pCount, iBlue, pBlue);
-          }
-
-          break;
-        }
-        case P143_CounterMapping_e::None:
-          // Do nothing
-          break;
-      }
-
-      // Updated Led color?
-      if ((iRed > -1) && (iGreen > -1) && (iBlue > -1)) {
-        #  if !defined(BUILD_NO_DEBUG) && PLUGIN_143_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("P143: Change color R:");
-          log += iRed;
-          log += F(", G:");
-          log += iGreen;
-          log += F(", B:");
-          log += iBlue;
-          #   ifdef LOG_LEVEL_DEBUG_DEV
-          log += F(", pR:"); // DEV-only from here
-          log += pRed;
-          log += F(", pG:");
-          log += pGreen;
-          log += F(", pB:");
-          log += pBlue;
-          log += F(", iC:");
-          log += iCount;
-          log += F(", pC:");
-          log += pCount;
-          #   endif // ifdef LOG_LEVEL_DEBUG_DEV
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
-        #  endif // if !defined(BUILD_NO_DEBUG) && PLUGIN_143_DEBUG
-
-        switch (_device) {
-          case P143_DeviceType_e::AdafruitEncoder:
-          {
-            _red   = iRed;
-            _green = iGreen;
-            _blue  = iBlue;
-            Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
-            Adafruit_Spixel->show();
-            break;
-          }
-          #  if P143_FEATURE_INCLUDE_M5STACK
-          case P143_DeviceType_e::M5StackEncoder:
-          {
-            // TODO Set Led color
-            break;
-          }
-          #  endif // if P143_FEATURE_INCLUDE_M5STACK
-          #  if P143_FEATURE_INCLUDE_DFROBOT
-          case P143_DeviceType_e::DFRobotEncoder:
-          {
-            // TODO Set Led color
-            break;
-          }
-          #  endif // if P143_FEATURE_INCLUDE_DFROBOT
-        }
-      }
+      counterToColorMapping(event);
       # endif // if P143_FEATURE_COUNTER_COLORMAPPING
 
       # if PLUGIN_143_DEBUG
@@ -451,11 +402,11 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         String log = F("I2CEncoder : ");
         log += toString(_device);
         log += F(", Changed: ");
-        log += oldPosition;
+        log += _oldPosition;
         log += F(" to: ");
         log += _encoderPosition;
         log += F(", delta: ");
-        log += _encoderPosition - oldPosition;
+        log += _encoderPosition - _oldPosition;
         addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // if PLUGIN_143_DEBUG
@@ -466,6 +417,155 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 }
 
 # if P143_FEATURE_COUNTER_COLORMAPPING
+
+/*****************************************************
+ * counterToColorMapping
+ ****************************************************/
+void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
+  int16_t iRed   = -1;
+  int16_t iGreen = -1;
+  int16_t iBlue  = -1;
+  int16_t pRed   = -1;
+  int16_t pGreen = -1;
+  int16_t pBlue  = -1;
+  int32_t iCount = INT32_MIN;
+  int32_t pCount = INT32_MIN;
+
+  switch (_mapping) {
+    case P143_CounterMapping_e::ColorMapping:
+    {
+      for (int i = 0; i <= _colorMaps; i++) {
+        if (!_colorMapping[i].isEmpty()) {
+          if (iCount == INT32_MIN) {
+            if (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) {
+              if (iCount < _encoderPosition) { // Reset, out of range
+                iRed   = -1;
+                iGreen = -1;
+                iBlue  = -1;
+                iCount = INT32_MIN;
+              }
+            }
+          }
+        }
+      }
+      break;
+    }
+
+    case P143_CounterMapping_e::ColorGradient:
+    {
+      for (int i = 0; i <= _colorMaps; i++) {
+        if (!_colorMapping[i].isEmpty()) {
+          if (iCount == INT32_MIN) {
+            if (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) {
+              if ((iCount > _encoderPosition) || !rangeCheck(iCount, _encoderMin, _encoderMax)) {
+                iRed   = -1;
+                iGreen = -1;
+                iBlue  = -1;
+                iCount = INT32_MIN;
+              }
+            }
+          }
+
+          if (pCount == INT32_MIN) {
+            if (parseColorMapLine(_colorMapping[i], pCount, pRed, pGreen, pBlue)) {
+              if ((pCount < _encoderPosition) || !rangeCheck(pCount, _encoderMin, _encoderMax)) {
+                pRed   = -1;
+                pGreen = -1;
+                pBlue  = -1;
+                pCount = INT32_MIN;
+              }
+            }
+          }
+        }
+      }
+
+      // Calculate R/G/B gradient-values for current Counter within upper and lower range
+      if ((pCount != iCount) && (iRed > -1) && (iGreen > -1) && (iBlue > -1) && (pRed > -1) && (pGreen > -1) && (pBlue > -1)) {
+        iRed   = map(_encoderPosition, iCount, pCount, iRed, pRed);
+        iGreen = map(_encoderPosition, iCount, pCount, iGreen, pGreen);
+        iBlue  = map(_encoderPosition, iCount, pCount, iBlue, pBlue);
+      }
+
+      break;
+    }
+    case P143_CounterMapping_e::None:
+      // Do nothing
+      break;
+  }
+
+  // Updated Led color?
+  if ((iRed > -1) && (iGreen > -1) && (iBlue > -1)) {
+    #  if !defined(BUILD_NO_DEBUG) && PLUGIN_143_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("P143: Change color R:");
+      log += iRed;
+      log += F(", G:");
+      log += iGreen;
+      log += F(", B:");
+      log += iBlue;
+      #   ifdef LOG_LEVEL_DEBUG_DEV
+      log += F(", pR:"); // DEV-only from here
+      log += pRed;
+      log += F(", pG:");
+      log += pGreen;
+      log += F(", pB:");
+      log += pBlue;
+      log += F(", iC:");
+      log += iCount;
+      log += F(", pC:");
+      log += pCount;
+      #   endif // ifdef LOG_LEVEL_DEBUG_DEV
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+    #  endif // if !defined(BUILD_NO_DEBUG) && PLUGIN_143_DEBUG
+
+    switch (_device) {
+      case P143_DeviceType_e::AdafruitEncoder:
+      {
+        _red   = iRed;
+        _green = iGreen;
+        _blue  = iBlue;
+        Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
+        Adafruit_Spixel->show();
+        break;
+      }
+      #  if P143_FEATURE_INCLUDE_M5STACK
+      case P143_DeviceType_e::M5StackEncoder:
+      {
+        _red   = iRed;
+        _green = iGreen;
+        _blue  = iBlue;
+        uint8_t data[4];
+        data[0] = static_cast<uint8_t>(P143_M5STACK_SELECTION);
+        data[1] = applyBrightness(_red);
+        data[2] = applyBrightness(_green);
+        data[3] = applyBrightness(_blue);
+        I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+        break;
+      }
+      #  endif // if P143_FEATURE_INCLUDE_M5STACK
+      #  if P143_FEATURE_INCLUDE_DFROBOT
+      case P143_DeviceType_e::DFRobotEncoder:
+      {
+        // TODO Set Led color
+        break;
+      }
+      #  endif // if P143_FEATURE_INCLUDE_DFROBOT
+    }
+  }
+}
+
+/*****************************************************
+ * applyBrightness, calculate new color based on brightness, based on NeoPixel library setBrightness()
+ ****************************************************/
+uint8_t P143_data_struct::applyBrightness(uint8_t color) {
+  if (_brightness) {
+    color = (color * _brightness) >> 8;
+  }
+
+  return color;
+}
 
 /*****************************************************
  * parseColorMapLine, line prefixed with # is comment/disabled
@@ -534,11 +634,11 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
     if (!_buttonIgnore) {
       switch (_device) {
         case P143_DeviceType_e::AdafruitEncoder:
-          button = Adafruit_Seesaw->digitalRead(SEESAW_SWITCH);
+          button = Adafruit_Seesaw->digitalRead(P143_SEESAW_SWITCH);
           break;
         # if P143_FEATURE_INCLUDE_M5STACK
         case P143_DeviceType_e::M5StackEncoder:
-          // TODO Read button
+          button = I2C_read8_reg(_i2cAddress, P143_M5STACK_REG_BUTTON);
           break;
         # endif // if P143_FEATURE_INCLUDE_M5STACK
         # if P143_FEATURE_INCLUDE_DFROBOT

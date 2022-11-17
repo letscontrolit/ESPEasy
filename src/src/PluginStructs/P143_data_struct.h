@@ -6,13 +6,20 @@
 #ifdef USES_P143
 # include <Adafruit_seesaw.h>                      // Adafruit I2C Rotary encoder (using a SeeSaw board/controller)
 # include <seesaw_neopixel.h>                      // Adafruit NeoPixel on the Rotary encoder board
+# include "../Helpers/I2C_access.h"                // Core I2C support functions (M5Stack, DFRobot)
 
 # define PLUGIN_143_DEBUG                     1    // Set to 1 to enable, 0 to disable, extra log output (info)
 
 // Adafruit encoder specific
 # define P143_ADAFRUIT_ENCODER_PRODUCTID      4991 // ProductID is checked during initialization
-# define SEESAW_SWITCH                        24
-# define SEESAW_NEOPIX                        6
+# define P143_SEESAW_SWITCH                   24
+# define P143_SEESAW_NEOPIX                   6
+
+// M5Stack encoder specific
+# define P143_M5STACK_REG_MODE                0x00 // Firmware version v1.1 supported only
+# define P143_M5STACK_REG_ENCODER             0x10
+# define P143_M5STACK_REG_BUTTON              0x20
+# define P143_M5STACK_REG_LED                 0x30
 
 // Common
 # define P143_STRINGS                         10 // # of values
@@ -34,7 +41,17 @@
 # define P143_ADAFRUIT_COLOR_RED              (get8BitFromUL(P143_ADAFRUIT_COLOR_AND_BRIGHTNESS, P143_ADAFRUIT_OFFSET_RED))
 # define P143_ADAFRUIT_COLOR_GREEN            (get8BitFromUL(P143_ADAFRUIT_COLOR_AND_BRIGHTNESS, P143_ADAFRUIT_OFFSET_GREEN))
 # define P143_ADAFRUIT_COLOR_BLUE             (get8BitFromUL(P143_ADAFRUIT_COLOR_AND_BRIGHTNESS, P143_ADAFRUIT_OFFSET_BLUE))
-# define P143_ADAFRUIT_BRIGHTNESS             (get8BitFromUL(P143_ADAFRUIT_COLOR_AND_BRIGHTNESS, P143_ADAFRUIT_OFFSET_BRIGHTNESS))
+# define P143_NEOPIXEL_BRIGHTNESS             (get8BitFromUL(P143_ADAFRUIT_COLOR_AND_BRIGHTNESS, P143_ADAFRUIT_OFFSET_BRIGHTNESS))
+
+# define P143_M5STACK_COLOR_AND_SELECTION     PCONFIG_ULONG(1)
+# define P143_M5STACK2_OFFSET_RED             24
+# define P143_M5STACK2_OFFSET_GREEN           16
+# define P143_M5STACK2_OFFSET_BLUE            8
+# define P143_M5STACK_OFFSET_SELECTION        0
+# define P143_M5STACK2_COLOR_RED              (get8BitFromUL(P143_M5STACK_COLOR_AND_SELECTION, P143_M5STACK2_OFFSET_RED))
+# define P143_M5STACK2_COLOR_GREEN            (get8BitFromUL(P143_M5STACK_COLOR_AND_SELECTION, P143_M5STACK2_OFFSET_GREEN))
+# define P143_M5STACK2_COLOR_BLUE             (get8BitFromUL(P143_M5STACK_COLOR_AND_SELECTION, P143_M5STACK2_OFFSET_BLUE))
+# define P143_M5STACK_SELECTION               (get4BitFromUL(P143_M5STACK_COLOR_AND_SELECTION, P143_M5STACK_OFFSET_SELECTION))
 
 # define P143_PLUGIN_FLAGS                    PCONFIG_ULONG(3)
 # define P143_PLUGIN_OFFSET_COUNTER_MAPPING   0
@@ -46,7 +63,7 @@
  * Feature toggles
  ******************************************/
 # ifndef P143_FEATURE_INCLUDE_M5STACK
-#  define P143_FEATURE_INCLUDE_M5STACK        0
+#  define P143_FEATURE_INCLUDE_M5STACK        1
 # endif // ifndef P143_FEATURE_INCLUDE_M5STACK
 # ifndef P143_FEATURE_INCLUDE_DFROBOT
 #  define P143_FEATURE_INCLUDE_DFROBOT        0
@@ -88,6 +105,18 @@ enum class P143_ButtonAction_e : uint8_t { // Max 16 values!
   ToggleSwitch       = 2u,
 };
 
+# if P143_FEATURE_INCLUDE_M5STACK
+
+/*******************************************
+ * M5Stack encoder Led options
+ ******************************************/
+enum class P143_M5StackLed_e : uint8_t { // Max 16 values
+  BothLeds = 0u,
+  Led1Only = 1u,
+  Led2Only = 2u,
+};
+# endif // if P143_FEATURE_INCLUDE_M5STACK
+
 /*******************************************
  * Global support functions
  ******************************************/
@@ -126,9 +155,11 @@ private:
                          int16_t     & red,
                          int16_t     & green,
                          int16_t     & blue);
-  bool rangeCheck(int32_t count,
-                  int32_t min,
-                  int32_t max);
+  bool    rangeCheck(int32_t count,
+                     int32_t min,
+                     int32_t max);
+  void    counterToColorMapping(struct EventStruct *event);
+  uint8_t applyBrightness(uint8_t color);
 
   bool _initialized = false;
 
@@ -137,17 +168,25 @@ private:
 
   // Encoder
   int32_t _encoderPosition = 0;
+  int32_t _encoderMin      = 0;
+  int32_t _encoderMax      = 0;
+  int32_t _offsetEncoder   = 0;
+  int32_t _previousEncoder = 0;
+  bool    _useOffset       = false;
   uint8_t _buttonState     = 0;
   uint8_t _buttonLast      = 0;
   uint8_t _buttonIgnore    = 0;
-
   # if P143_FEATURE_COUNTER_COLORMAPPING
+  int32_t               _oldPosition = INT32_MIN;
+  P143_CounterMapping_e _mapping     = P143_CounterMapping_e::None;
+
   String _colorMapping[P143_STRINGS];
   int    _colorMaps = -1;
   # endif // if P143_FEATURE_COUNTER_COLORMAPPING
-  uint8_t _red   = 0;
-  uint8_t _green = 0;
-  uint8_t _blue  = 0;
+  uint8_t _red        = 0;
+  uint8_t _green      = 0;
+  uint8_t _blue       = 0;
+  uint8_t _brightness = 0;
 };
 
 #endif // ifdef USES_P143
