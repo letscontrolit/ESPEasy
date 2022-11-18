@@ -279,7 +279,9 @@ String getControllerUser(controllerIndex_t controller_idx, const ControllerSetti
   if (ControllerSettings.useExtendedCredentials()) {
     return ExtendedControllerCredentials.getControllerUser(controller_idx);
   }
-  return SecuritySettings.ControllerUser[controller_idx];
+  String res(SecuritySettings.ControllerUser[controller_idx]);
+  res.trim();
+  return res;
 }
 
 String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
@@ -289,7 +291,9 @@ String getControllerPass(controllerIndex_t controller_idx, const ControllerSetti
   if (ControllerSettings.useExtendedCredentials()) {
     return ExtendedControllerCredentials.getControllerPass(controller_idx);
   }
-  return SecuritySettings.ControllerPassword[controller_idx];
+  String res(SecuritySettings.ControllerPassword[controller_idx]);
+  res.trim();
+  return res;
 }
 
 void setControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value)
