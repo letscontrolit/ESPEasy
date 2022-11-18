@@ -265,29 +265,40 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
  *************************************************************************/
 bool P143_data_struct::plugin_exit(struct EventStruct *event) {
   if (_initialized) {
+    _initialized = false; // We don't want any unexpected events
+
     switch (_device) {
       case P143_DeviceType_e::AdafruitEncoder:
       {
         // Stop interrupthandler
         Adafruit_Seesaw->disableEncoderInterrupt();
 
-        // Turn off Neopixel 0 by setting the R/G/B color to black
-        Adafruit_Spixel->setPixelColor(0, 0, 0, 0);
-        Adafruit_Spixel->show();
+        if (P143_PLUGIN_EXIT_LED_OFF) {
+          // Turn off Neopixel 0 by setting the R/G/B color to black
+          Adafruit_Spixel->setPixelColor(0, 0, 0, 0);
+          Adafruit_Spixel->show();
+        }
         break;
       }
       # if P143_FEATURE_INCLUDE_M5STACK
       case P143_DeviceType_e::M5StackEncoder:
       {
-        // Turn off both LEDs
-        uint8_t data[4] = { 0 };
+        if (P143_PLUGIN_EXIT_LED_OFF) {
+          // Turn off both LEDs
+          uint8_t data[4] = { 0 };
 
-        I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+          I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+        }
         break;
       }
       # endif // if P143_FEATURE_INCLUDE_M5STACK
       # if P143_FEATURE_INCLUDE_DFROBOT
       case P143_DeviceType_e::DFRobotEncoder:
+
+        if (P143_PLUGIN_EXIT_LED_OFF) {
+          // Set encoder position to 0 will effectively turn off all LEDs
+          I2C_write16_reg(_i2cAddress, P143_DFROBOT_ENCODER_COUNT_MSB_REG, 0);
+        }
         break;
       # endif // if P143_FEATURE_INCLUDE_DFROBOT
     }

@@ -320,6 +320,8 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // if P143_FEATURE_COUNTER_COLORMAPPING
 
+      addFormCheckBox(F("Led(s) off on exit"), F("pexit"), P143_PLUGIN_EXIT_LED_OFF);
+
       success = true;
       break;
     }
@@ -384,6 +386,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // if P143_FEATURE_COUNTER_COLORMAPPING
       set4BitToUL(lSettings, P143_PLUGIN_OFFSET_BUTTON_ACTION, getFormItemInt(F("pbutton")) & 0x0F);
+      bitWrite(lSettings, P143_PLUGIN_OFFSET_EXIT_LED_OFF, isFormItemChecked(F("pexit")) == 0); // inverted!
       P143_PLUGIN_FLAGS = lSettings;
 
       # if P143_FEATURE_COUNTER_COLORMAPPING
