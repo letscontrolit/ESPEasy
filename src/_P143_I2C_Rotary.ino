@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-11-18 tonhuisman: Implement DFRobot I2C Encoder support, no direct led control, emulated negative count, with pushbutton
  * 2022-11-16 tonhuisman: Implement M5Stack encoder lower/upper limit _without_ setEncoder() available (by using offset method)
  *                        see: https://github.com/m5stack/M5UnitEncoder_Firmware
  * 2022-11-14 tonhuisman: Implement M5Stack I2C Encoder support, with 2x NeoPixel and pushbutton
@@ -234,7 +235,8 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
         # if P143_FEATURE_INCLUDE_DFROBOT
         case P143_DeviceType_e::DFRobotEncoder:
         {
-          // TODO
+          addFormNumericBox(F("Led vs. rotation gain"), F("pledgain"), P143_DFROBOT_LED_GAIN, P143_DFROBOT_MIN_GAIN, P143_DFROBOT_MAX_GAIN);
+          addFormNote(F("Range 1..51, 1 =&gt; 1 led/~2.5 turns, 51 =&gt; 1 led/detent"));
           break;
         }
         # endif // if P143_FEATURE_INCLUDE_DFROBOT
@@ -246,6 +248,13 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Lowest encoder position"),  F("pminpos"),  P143_MINIMAL_POSITION);
       addFormNumericBox(F("Highest encoder position"), F("pmaxpos"),  P143_MAXIMAL_POSITION);
       addFormNote(F("Not checked if Lowest = Highest."));
+      # if P143_FEATURE_INCLUDE_DFROBOT
+
+      if (device == P143_DeviceType_e::DFRobotEncoder) {
+        addFormNumericBox(F("Offset to position"), F("poffset"), P143_OFFSET_POSITION, 0, 1023);
+        addFormNote(F("Range: 0..1023. To enable negative counter values for DFRobot encoder."));
+      }
+      # endif // if P143_FEATURE_INCLUDE_DFROBOT
 
       {
         const __FlashStringHelper *selectButtonOptions[] = {
@@ -267,41 +276,47 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       }
 
       # if P143_FEATURE_COUNTER_COLORMAPPING
+      #  if P143_FEATURE_INCLUDE_DFROBOT
+
+      if (device != P143_DeviceType_e::DFRobotEncoder)
+      #  endif // if P143_FEATURE_INCLUDE_DFROBOT
       {
-        const __FlashStringHelper *selectCounterOptions[] = {
-          toString(P143_CounterMapping_e::None),
-          toString(P143_CounterMapping_e::ColorMapping),
-          toString(P143_CounterMapping_e::ColorGradient),
-        };
-        const int selectCounterValues[] = {
-          static_cast<int>(P143_CounterMapping_e::None),
-          static_cast<int>(P143_CounterMapping_e::ColorMapping),
-          static_cast<int>(P143_CounterMapping_e::ColorGradient),
-        };
-        addFormSelector(F("Counter color mapping"),
-                        F("pmap"),
-                        sizeof(selectCounterValues) / sizeof(int),
-                        selectCounterOptions,
-                        selectCounterValues,
-                        P143_PLUGIN_COUNTER_MAPPING);
-      }
-      {
-        String strings[P143_STRINGS];
-        LoadCustomTaskSettings(event->TaskIndex, strings, P143_STRINGS, 0);
-
-        addRowLabel(F("Colormap"));
-        html_table(EMPTY_STRING);
-
-        for (int varNr = 0; varNr < P143_STRINGS; varNr++) {
-          html_TR_TD();
-
-          // if (varNr < 9) { addHtml(F("&nbsp;")); }
-          addHtml('#');
-          addHtmlInt(varNr + 1);
-          html_TD();
-          addTextBox(getPluginCustomArgName(varNr), strings[varNr], P143_STRING_LEN, false, false, EMPTY_STRING, F("xwide"));
+        {
+          const __FlashStringHelper *selectCounterOptions[] = {
+            toString(P143_CounterMapping_e::None),
+            toString(P143_CounterMapping_e::ColorMapping),
+            toString(P143_CounterMapping_e::ColorGradient),
+          };
+          const int selectCounterValues[] = {
+            static_cast<int>(P143_CounterMapping_e::None),
+            static_cast<int>(P143_CounterMapping_e::ColorMapping),
+            static_cast<int>(P143_CounterMapping_e::ColorGradient),
+          };
+          addFormSelector(F("Counter color mapping"),
+                          F("pmap"),
+                          sizeof(selectCounterValues) / sizeof(int),
+                          selectCounterOptions,
+                          selectCounterValues,
+                          P143_PLUGIN_COUNTER_MAPPING);
         }
-        html_end_table();
+        {
+          String strings[P143_STRINGS];
+          LoadCustomTaskSettings(event->TaskIndex, strings, P143_STRINGS, 0);
+
+          addRowLabel(F("Colormap"));
+          html_table(EMPTY_STRING);
+
+          for (int varNr = 0; varNr < P143_STRINGS; varNr++) {
+            html_TR_TD();
+
+            // if (varNr < 9) { addHtml(F("&nbsp;")); }
+            addHtml('#');
+            addHtmlInt(varNr + 1);
+            html_TD();
+            addTextBox(getPluginCustomArgName(varNr), strings[varNr], P143_STRING_LEN, false, false, EMPTY_STRING, F("xwide"));
+          }
+          html_end_table();
+        }
       }
       # endif // if P143_FEATURE_COUNTER_COLORMAPPING
 
@@ -350,7 +365,8 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
         # if P143_FEATURE_INCLUDE_DFROBOT
         case P143_DeviceType_e::DFRobotEncoder:
         {
-          // TODO
+          P143_DFROBOT_LED_GAIN = getFormItemInt(F("pledgain"));
+          P143_OFFSET_POSITION  = getFormItemInt(F("poffset"));
           break;
         }
         # endif // if P143_FEATURE_INCLUDE_DFROBOT
@@ -359,23 +375,34 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       // Flags
       lSettings = 0u;
       # if P143_FEATURE_COUNTER_COLORMAPPING
-      set4BitToUL(lSettings, 0, getFormItemInt(F("pmap")) & 0x0F);
+      #  if P143_FEATURE_INCLUDE_DFROBOT
+
+      if (device != P143_DeviceType_e::DFRobotEncoder)
+      #  endif // if P143_FEATURE_INCLUDE_DFROBOT
+      {
+        set4BitToUL(lSettings, P143_PLUGIN_OFFSET_COUNTER_MAPPING, getFormItemInt(F("pmap")) & 0x0F);
+      }
       # endif // if P143_FEATURE_COUNTER_COLORMAPPING
-      set4BitToUL(lSettings, 4, getFormItemInt(F("pbutton")) & 0x0F);
+      set4BitToUL(lSettings, P143_PLUGIN_OFFSET_BUTTON_ACTION, getFormItemInt(F("pbutton")) & 0x0F);
       P143_PLUGIN_FLAGS = lSettings;
 
       # if P143_FEATURE_COUNTER_COLORMAPPING
+      #  if P143_FEATURE_INCLUDE_DFROBOT
 
-      // colormap
-      String strings[P143_STRINGS];
+      if (device != P143_DeviceType_e::DFRobotEncoder)
+      #  endif // if P143_FEATURE_INCLUDE_DFROBOT
+      {
+        // colormap
+        String strings[P143_STRINGS];
 
-      for (int varNr = 0; varNr < P143_STRINGS; varNr++) {
-        strings[varNr] = webArg(getPluginCustomArgName(varNr));
-      }
-      String error = SaveCustomTaskSettings(event->TaskIndex, strings, P143_STRINGS, 0);
+        for (int varNr = 0; varNr < P143_STRINGS; varNr++) {
+          strings[varNr] = webArg(getPluginCustomArgName(varNr));
+        }
+        String error = SaveCustomTaskSettings(event->TaskIndex, strings, P143_STRINGS, 0);
 
-      if (error.length() > 0) {
-        addHtmlError(error);
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
       }
       # endif // if P143_FEATURE_COUNTER_COLORMAPPING
 

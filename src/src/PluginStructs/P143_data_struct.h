@@ -4,11 +4,15 @@
 #include "../../_Plugin_Helper.h"
 
 #ifdef USES_P143
-# include <Adafruit_seesaw.h>                      // Adafruit I2C Rotary encoder (using a SeeSaw board/controller)
-# include <seesaw_neopixel.h>                      // Adafruit NeoPixel on the Rotary encoder board
-# include "../Helpers/I2C_access.h"                // Core I2C support functions (M5Stack, DFRobot)
+# include <Adafruit_seesaw.h>                    // Adafruit I2C Rotary encoder (using a SeeSaw board/controller)
+# include <seesaw_neopixel.h>                    // Adafruit NeoPixel on the Rotary encoder board
+# include "../Helpers/I2C_access.h"              // Core I2C support functions (M5Stack, DFRobot)
 
-# define PLUGIN_143_DEBUG                     1    // Set to 1 to enable, 0 to disable, extra log output (info)
+# ifdef LIMIT_BUILD_SIZE
+#  define PLUGIN_143_DEBUG                     0 // Set to 1 to enable, 0 to disable, extra log output (info)
+# else // ifdef LIMIT_BUILD_SIZE
+#  define PLUGIN_143_DEBUG                     1
+# endif // ifdef LIMIT_BUILD_SIZE
 
 // Adafruit encoder specific
 # define P143_ADAFRUIT_ENCODER_PRODUCTID      4991 // ProductID is checked during initialization
@@ -21,9 +25,22 @@
 # define P143_M5STACK_REG_BUTTON              0x20
 # define P143_M5STACK_REG_LED                 0x30
 
+// DFRobot encoder specific
+# define P143_DFROBOT_ENCODER_PID             0x01F6 // ProductID is checked during initialization
+# define P143_DFROBOT_ENCODER_PID_MSB_REG     0x00
+# define P143_DFROBOT_ENCODER_PID_LSB_REG     0x01
+# define P143_DFROBOT_ENCODER_COUNT_MSB_REG   0x08
+# define P143_DFROBOT_ENCODER_COUNT_LSB_REG   0x09
+# define P143_DFROBOT_ENCODER_KEY_STATUS_REG  0x0A
+# define P143_DFROBOT_ENCODER_GAIN_REG        0x0B
+# define P143_DFROBOT_MIN_GAIN                1
+# define P143_DFROBOT_MAX_GAIN                51
+
 // Common
 # define P143_STRINGS                         10 // # of values
 # define P143_STRING_LEN                      50 // Line length limit
+# define P143_OFFSET_MIN                      0
+# define P143_OFFSET_MAX                      1023
 
 
 # define P143_I2C_ADDR                        PCONFIG(0)
@@ -32,6 +49,8 @@
 # define P143_INITIAL_POSITION                PCONFIG(3)
 # define P143_MINIMAL_POSITION                PCONFIG(4)
 # define P143_MAXIMAL_POSITION                PCONFIG(5)
+# define P143_OFFSET_POSITION                 PCONFIG(6) // Offset for encoder that has 0..1023 range
+# define P143_DFROBOT_LED_GAIN                PCONFIG(7) // Range 1..51, 1 => 1 led/~2.5 turns, 51 => 1 led/detent
 
 # define P143_ADAFRUIT_COLOR_AND_BRIGHTNESS   PCONFIG_ULONG(0)
 # define P143_ADAFRUIT_OFFSET_RED             24
@@ -66,7 +85,7 @@
 #  define P143_FEATURE_INCLUDE_M5STACK        1
 # endif // ifndef P143_FEATURE_INCLUDE_M5STACK
 # ifndef P143_FEATURE_INCLUDE_DFROBOT
-#  define P143_FEATURE_INCLUDE_DFROBOT        0
+#  define P143_FEATURE_INCLUDE_DFROBOT        1
 # endif // ifndef P143_FEATURE_INCLUDE_DFROBOT
 # ifndef P143_FEATURE_COUNTER_COLORMAPPING
 #  define P143_FEATURE_COUNTER_COLORMAPPING   1
@@ -170,15 +189,24 @@ private:
   int32_t _encoderPosition = 0;
   int32_t _encoderMin      = 0;
   int32_t _encoderMax      = 0;
-  int32_t _offsetEncoder   = 0;
   int32_t _previousEncoder = 0;
-  bool    _useOffset       = false;
-  uint8_t _buttonState     = 0;
-  uint8_t _buttonLast      = 0;
-  uint8_t _buttonIgnore    = 0;
+  # if P143_FEATURE_INCLUDE_DFROBOT
+  int32_t _initialOffset = 0;
+  # endif // if P143_FEATURE_INCLUDE_DFROBOT
+  # if P143_FEATURE_INCLUDE_M5STACK
+  int32_t _offsetEncoder = 0;
+  bool    _useOffset     = false;
+  # endif // if P143_FEATURE_INCLUDE_M5STACK
+
+  uint8_t _buttonState  = 0;
+  uint8_t _buttonLast   = 0;
+  uint8_t _buttonIgnore = 0;
+
+  # if PLUGIN_143_DEBUG
+  int32_t _oldPosition = INT32_MIN;
+  # endif // if PLUGIN_143_DEBUG
   # if P143_FEATURE_COUNTER_COLORMAPPING
-  int32_t               _oldPosition = INT32_MIN;
-  P143_CounterMapping_e _mapping     = P143_CounterMapping_e::None;
+  P143_CounterMapping_e _mapping = P143_CounterMapping_e::None;
 
   String _colorMapping[P143_STRINGS];
   int    _colorMaps = -1;

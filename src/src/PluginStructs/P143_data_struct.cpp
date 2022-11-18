@@ -54,16 +54,19 @@ void P143_CheckEncoderDefaultSettings(struct EventStruct *event) {
     switch (static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE)) {
       case P143_DeviceType_e::AdafruitEncoder:
         P143_ADAFRUIT_COLOR_AND_BRIGHTNESS = 0x0000001E; // Black, with 30 (0x1E) brightness (1..255)
+        P143_OFFSET_POSITION               = 0;
         break;
       # if P143_FEATURE_INCLUDE_M5STACK
       case P143_DeviceType_e::M5StackEncoder:
         P143_ADAFRUIT_COLOR_AND_BRIGHTNESS = 0x0000001E; // Black, with 30 (0x1E) brightness (1..255)
         P143_M5STACK_COLOR_AND_SELECTION   = 0x00000000; // Black, with both Leds using Color mapping
+        P143_OFFSET_POSITION               = 0;
         break;
       # endif // if P143_FEATURE_INCLUDE_M5STACK
       # if P143_FEATURE_INCLUDE_DFROBOT
       case P143_DeviceType_e::DFRobotEncoder:
-        // TODO
+        P143_DFROBOT_LED_GAIN = P143_DFROBOT_MAX_GAIN;
+        P143_OFFSET_POSITION  = 0;
         break;
       # endif // if P143_FEATURE_INCLUDE_DFROBOT
     }
@@ -81,6 +84,9 @@ P143_data_struct::P143_data_struct(struct EventStruct *event) {
   _encoderMin      = P143_MINIMAL_POSITION;
   _encoderMax      = P143_MAXIMAL_POSITION;
   _brightness      = P143_NEOPIXEL_BRIGHTNESS;
+  # if P143_FEATURE_INCLUDE_DFROBOT
+  _initialOffset = P143_OFFSET_POSITION;
+  # endif // if P143_FEATURE_INCLUDE_DFROBOT
 }
 
 /*****************************************************
@@ -193,7 +199,15 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
       # if P143_FEATURE_INCLUDE_DFROBOT
       case P143_DeviceType_e::DFRobotEncoder:
       {
-        // TODO
+        _initialized =  P143_DFROBOT_ENCODER_PID == I2C_read16_reg(_i2cAddress, P143_DFROBOT_ENCODER_PID_MSB_REG);
+
+        if (_initialized) {
+          // Set encoder position
+          I2C_write16_reg(_i2cAddress, P143_DFROBOT_ENCODER_COUNT_MSB_REG, _initialOffset + _encoderPosition);
+
+          // Set led gain
+          I2C_write8_reg(_i2cAddress, P143_DFROBOT_ENCODER_GAIN_REG, P143_DFROBOT_LED_GAIN & 0xFF);
+        }
         break;
       }
       # endif // if P143_FEATURE_INCLUDE_DFROBOT
@@ -222,19 +236,25 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
     counterToColorMapping(event); // Update color
     # endif // if P143_FEATURE_COUNTER_COLORMAPPING
 
-    String log = F("I2CEncoders: INIT, ");
-    log += toString(_device);
+    if (loglevelActiveFor(_initialized ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR)) {
+      String log = F("I2CEncoders: INIT ");
+      log += toString(_device);
+      log += F(", ");
 
-    if (_useOffset) {
-      log += F("using Offset method, ");
-    }
+      # if P143_FEATURE_INCLUDE_M5STACK
 
-    if (!_initialized) {
-      log += F("FAILED.");
-    } else {
-      log += F("Success.");
+      if (_useOffset) {
+        log += F("using Offset method, ");
+      }
+      # endif // if P143_FEATURE_INCLUDE_M5STACK
+
+      if (!_initialized) {
+        log += F("FAILED.");
+      } else {
+        log += F("Success.");
+      }
+      addLogMove(_initialized ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, log);
     }
-    addLogMove(_initialized ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, log);
   }
 
   return _initialized;
@@ -268,10 +288,7 @@ bool P143_data_struct::plugin_exit(struct EventStruct *event) {
       # endif // if P143_FEATURE_INCLUDE_M5STACK
       # if P143_FEATURE_INCLUDE_DFROBOT
       case P143_DeviceType_e::DFRobotEncoder:
-      {
-        // TODO
         break;
-      }
       # endif // if P143_FEATURE_INCLUDE_DFROBOT
     }
   }
@@ -303,6 +320,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     _oldPosition = _encoderPosition;
     # endif // if PLUGIN_143_DEBUG
 
+    // Read encoder
     switch (_device) {
       case P143_DeviceType_e::AdafruitEncoder:
         current = Adafruit_Seesaw->getEncoderPosition();
@@ -314,15 +332,17 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       # endif // if P143_FEATURE_INCLUDE_M5STACK
       # if P143_FEATURE_INCLUDE_DFROBOT
       case P143_DeviceType_e::DFRobotEncoder:
-        // TODO Read encoder
+        current = static_cast<int16_t>(I2C_read16_reg(_i2cAddress, P143_DFROBOT_ENCODER_COUNT_MSB_REG)) - _initialOffset;
         break;
       # endif // if P143_FEATURE_INCLUDE_DFROBOT
     }
+    # if P143_FEATURE_INCLUDE_M5STACK
     const int32_t rawCurrent = current;
 
     if (_useOffset) {
       current -= _offsetEncoder;
     }
+    # endif // if P143_FEATURE_INCLUDE_M5STACK
     const int32_t orgCurrent = current;
 
     // Check limits
@@ -330,15 +350,21 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       if ((current < _encoderMin) || (current > _encoderMax)) {
         // Have to check separately, as it's possible to move multiple steps within 1/10th second
         if (current < _encoderMin) {
+          # if P143_FEATURE_INCLUDE_M5STACK
+
           if (_useOffset) {
             _offsetEncoder = rawCurrent - _encoderMin;
           }
+          # endif // if P143_FEATURE_INCLUDE_M5STACK
           current = _encoderMin; // keep minimal value
         }
         else if (current > _encoderMax) {
+          # if P143_FEATURE_INCLUDE_M5STACK
+
           if (_useOffset) {
             _offsetEncoder = rawCurrent - _encoderMax;
           }
+          # endif // if P143_FEATURE_INCLUDE_M5STACK
           current = _encoderMax; // keep maximal value
         }
         _previousEncoder = current;
@@ -361,7 +387,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
             # endif // if P143_FEATURE_INCLUDE_M5STACK
             # if P143_FEATURE_INCLUDE_DFROBOT
             case P143_DeviceType_e::DFRobotEncoder:
-              // TODO Set encoder position
+              I2C_write16_reg(_i2cAddress, P143_DFROBOT_ENCODER_COUNT_MSB_REG, _initialOffset + _encoderPosition);
               break;
             # endif // if P143_FEATURE_INCLUDE_DFROBOT
           }
@@ -369,7 +395,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
     }
 
-    if (current /*- _offsetEncoder*/ != _encoderPosition) {
+    if (current != _encoderPosition) {
       // Generate event
       if (Settings.UseRules) {
         String taskEvent;
@@ -378,14 +404,14 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         taskEvent += '#';
         taskEvent += getTaskValueName(event->TaskIndex, 0);
         taskEvent += '=';
-        taskEvent += current /*- _offsetEncoder*/;                    // Position
+        taskEvent += current;                    // Position
         taskEvent += ',';
-        taskEvent += current /*- _offsetEncoder*/ - _encoderPosition; // Delta, positive = clock-wise
+        taskEvent += current - _encoderPosition; // Delta, positive = clock-wise
         eventQueue.addMove(std::move(taskEvent));
       }
 
       // Set task value
-      _encoderPosition = current /*- _offsetEncoder*/;
+      _encoderPosition = current;
 
       UserVar[event->BaseVarIndex] = _encoderPosition;
 
@@ -547,10 +573,7 @@ void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
       #  endif // if P143_FEATURE_INCLUDE_M5STACK
       #  if P143_FEATURE_INCLUDE_DFROBOT
       case P143_DeviceType_e::DFRobotEncoder:
-      {
-        // TODO Set Led color
-        break;
-      }
+        break; // N/A
       #  endif // if P143_FEATURE_INCLUDE_DFROBOT
     }
   }
@@ -632,6 +655,7 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
     uint8_t state              = _buttonState;
 
     if (!_buttonIgnore) {
+      // Read button
       switch (_device) {
         case P143_DeviceType_e::AdafruitEncoder:
           button = Adafruit_Seesaw->digitalRead(P143_SEESAW_SWITCH);
@@ -643,7 +667,13 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
         # endif // if P143_FEATURE_INCLUDE_M5STACK
         # if P143_FEATURE_INCLUDE_DFROBOT
         case P143_DeviceType_e::DFRobotEncoder:
-          // TODO Read button
+          uint8_t press = I2C_read8_reg(_i2cAddress, P143_DFROBOT_ENCODER_KEY_STATUS_REG);
+
+          if ((press & 0x01) != 0) {
+            I2C_write8_reg(_i2cAddress, P143_DFROBOT_ENCODER_KEY_STATUS_REG, 0x00); // Reset
+            button = button ? 0 : 1;
+          }
+
           break;
         # endif // if P143_FEATURE_INCLUDE_DFROBOT
       }
