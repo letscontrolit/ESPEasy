@@ -479,8 +479,7 @@ bool P037_data_struct::webform_save(
 
   error.reserve(80); // Estimated
 
-  for (int varNr = 0; varNr < VARS_PER_TASK; varNr++)
-  {
+  for (int varNr = 0; varNr < VARS_PER_TASK; varNr++) {
     mqttTopics[varNr] = webArg(concat(F("template"), varNr + 1));
 
     # ifdef P037_JSON_SUPPORT
