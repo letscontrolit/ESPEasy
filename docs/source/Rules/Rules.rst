@@ -1749,7 +1749,6 @@ There are two flavors:
 
 SendTo:  SendTo <unit>,<command>
 
-(Command must be quoted if it contains commas or spaces.)
 
 Imagine you have two ESP Easy modules, ESP#1 and ESP#2
 In the Rules section of ESP#1 you have this:
@@ -1757,10 +1756,8 @@ In the Rules section of ESP#1 you have this:
 .. code-block:: none
 
  on demoEvent do
-   sendTo,2,'event,startwatering' //(to use the previous example.)
+   sendTo,2,event,startwatering //(to use the previous example.)
  endon
-
-(Command must be quoted because it contains commas.)
 
 And ESP#2 has the rules according to the previous example (givemesomewater)
 
@@ -1777,10 +1774,9 @@ It is also possible to directly order GPIO changes, like:
 .. code-block:: none
 
  on demoEvent do
-   sendTo,2,'GPIO,2,1'
+   sendTo,2,GPIO,2,1
  endon
 
-(Command must be quoted because it contains commas.)
 
 Publish
 
@@ -1853,7 +1849,7 @@ There is the following workaround:
 Added: 2022/07/23
 
 * ``SendToHTTP`` can now also be called with a full URL starting with ``http://``, so no longer the host, port and uri have to be separated. (it is still possible of course)
-* HTTP return value will be made available as **event** to be evaluated in the rules. Example event: ``http#hostname=404``
+* HTTP return value will be made available as event to be evaluated in the rules. Example event: ``http#hostname=404``
 * Calls made to a HTTP server can now also follow redirects. (GET and HEAD calls only) This has to be enabled in Tools->Advanced page.
 * Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
 * HTTP user credentials now can handle Basic Auth and Digest Auth.
