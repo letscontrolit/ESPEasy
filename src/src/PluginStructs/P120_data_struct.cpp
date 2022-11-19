@@ -92,6 +92,21 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
     _YA[_aUsed] = _y;
     _ZA[_aUsed] = _z;
 
+# if FEATURE_PLUGIN_STATS
+
+  if (getPluginStats(0) != nullptr) {
+    getPluginStats(0)->trackPeak(_x);
+  }
+  if (getPluginStats(1) != nullptr) {
+    getPluginStats(1)->trackPeak(_y);
+  }
+  if (getPluginStats(2) != nullptr) {
+    getPluginStats(2)->trackPeak(_z);
+  }
+
+# endif // if FEATURE_PLUGIN_STATS
+
+
     _aUsed++;
 
     if ((_aMax < _aUsed) && (_aUsed < _aSize)) {
