@@ -2,6 +2,9 @@
 
 #if defined(USES_P120) || defined(USES_P125)
 
+# define P120_RAD_TO_DEG        57.295779f // 180.0/M_PI
+
+
 // **************************************************************************/
 // Constructor I2C
 // **************************************************************************/
@@ -123,11 +126,25 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
 // **************************************************************************/
 // Average the measurements and return the results
 // **************************************************************************/
-bool P120_data_struct::read_data(struct EventStruct *event, int& X, int& Y, int& Z) {
+bool P120_data_struct::read_data(int& X, int& Y, int& Z) const {
+  float Xf, Yf, Zf;
+
+  if (read_data(Xf, Yf, Zf)) {
+    X = Xf;
+    Y = Yf;
+    Z = Zf;
+    return true;
+  }
   X = 0;
   Y = 0;
   Z = 0;
+  return false;
+}
 
+bool P120_data_struct::read_data(float& X,
+                                 float& Y,
+                                 float& Z) const
+{
   if (initialized()) {
     for (uint8_t n = 0; n <= _aMax; n++) {
       X += _XA[n];
@@ -155,8 +172,29 @@ bool P120_data_struct::read_data(struct EventStruct *event, int& X, int& Y, int&
       }
     }
     # endif // if PLUGIN_120_DEBUG
+    return true;
   }
-  return initialized();
+  X = 0.0f;
+  Y = 0.0f;
+  Z = 0.0f;
+  return false;
+}
+
+bool P120_data_struct::getPitchRoll(struct EventStruct *event, float& pitch, float& roll) const
+{
+  float X, Y, Z;
+
+  if (read_data(X, Y, Z)) {
+    roll  = atan2(-Y, Z);
+    pitch = atan2(X, sqrt(Y * Y + Z * Z));
+
+    if (!bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_ANGLE_IN_RAD)) {
+      roll  *= P120_RAD_TO_DEG;
+      pitch *= P120_RAD_TO_DEG;
+    }
+    return true;
+  }
+  return false;
 }
 
 // **************************************************************************/
@@ -171,8 +209,9 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
 
   if (initialized()) {
     uint8_t act = 0, freeFall = 0, singleTap = 0, doubleTap = 0;
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String  log = F("ADXL345: Initializing sensor for ");
+      String log = F("ADXL345: Initializing sensor for ");
 
       if (i2c_mode) {
         log += F("I2C");
@@ -260,26 +299,27 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
     return false;
   }
 
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
 
     if (log.reserve(25)) {
       if (i2c_mode) {
-        # ifdef USES_P120
+        #  ifdef USES_P120
         log  = F("ADXL345: Address: 0x");
         log += String(_i2c_addr, HEX);
-        # endif // ifdef USES_P120
+        #  endif // ifdef USES_P120
       } else {
-        # ifdef USES_P125
+        #  ifdef USES_P125
         log  = F("ADXL345: CS-pin: ");
         log += _cs_pin;
-        # endif // ifdef USES_P125
+        #  endif // ifdef USES_P125
       }
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
 
   return true;
 }
@@ -462,6 +502,8 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
                     bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY) == 1);
     addFormCheckBox(F("Events with raw measurements"), F("p120_raw_measurement"),
                     bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_EVENT_RAW_VALUES) == 1);
+    addFormCheckBox(F("Angles in radians"), F("p120_angle_rad"),
+                    bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_ANGLE_IN_RAD) == 1);
   }
 
   // Tap detection
@@ -558,6 +600,7 @@ bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
   bitWrite(flags, P120_FLAGS1_SEND_ACTIVITY,    isFormItemChecked(F("p120_send_activity")));
   bitWrite(flags, P120_FLAGS1_LOG_ACTIVITY,     isFormItemChecked(F("p120_log_activity")));
   bitWrite(flags, P120_FLAGS1_EVENT_RAW_VALUES, isFormItemChecked(F("p120_raw_measurement")));
+  bitWrite(flags, P120_FLAGS1_ANGLE_IN_RAD,     isFormItemChecked(F("p120_angle_rad")));
   set8BitToUL(flags, P120_FLAGS1_ACTIVITY_TRESHOLD,   getFormItemInt(F("p120_activity_treshold")));
   set8BitToUL(flags, P120_FLAGS1_INACTIVITY_TRESHOLD, getFormItemInt(F("p120_inactivity_treshold")));
   P120_CONFIG_FLAGS1 = flags;
@@ -583,8 +626,23 @@ bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
   return true;
 }
 
+bool P120_data_struct::plugin_webform_show_values(struct EventStruct *event) const
+{
+  if (initialized()) {
+    float pitch, roll;
+
+    if (getPitchRoll(event, pitch, roll)) {
+      uint8_t varNr = 3;
+      pluginWebformShowValue(event->TaskIndex, varNr++, F("pitch"), toString(pitch, 2));
+      pluginWebformShowValue(event->TaskIndex, varNr++, F("roll"),  toString(roll, 2), true);
+      return true;
+    }
+  }
+  return false;
+}
+
 // *******************************************************************
-// Set defaultss for the configuration interface
+// Set defaults for the configuration interface
 // *******************************************************************
 bool P120_data_struct::plugin_set_defaults(struct EventStruct *event) {
   bool success = false;
@@ -624,6 +682,26 @@ bool P120_data_struct::plugin_set_defaults(struct EventStruct *event) {
 
   success = true;
   return success;
+}
+
+bool P120_data_struct::plugin_get_config_value(struct EventStruct *event, String& string) const
+{
+  if (initialized()) {
+    const bool isPitch =  string.equalsIgnoreCase(F("pitch"));
+    const bool isRoll  =  string.equalsIgnoreCase(F("roll"));
+
+    if (isPitch || isRoll) {
+      float pitch, roll;
+
+      if (getPitchRoll(event, pitch, roll)) {
+        // FIXME TD-er: Use Cache.getTaskDeviceValueDecimals to determine nr decimals
+        const int nrDecimals = 2;
+        string = toString(isRoll ? roll : pitch, nrDecimals);
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 #endif // if defined(USES_P120) || defined(USES_P125)

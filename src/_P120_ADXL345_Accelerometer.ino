@@ -69,6 +69,17 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    {
+      P120_data_struct *P120_data =
+        static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P120_data) && P120_data->plugin_webform_show_values(event)) {
+        // success = true;
+      }
+      break;
+    }
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
@@ -150,18 +161,26 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P120_data_struct *P120_data =
+        static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P120_data) {
+        success = P120_data->plugin_get_config_value(event, string);
+      }
+      break;
+    }
+
     case PLUGIN_ONCE_A_SECOND:
     {
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P120_data) {
-        int X, Y, Z;
-
-        if (P120_data->read_data(event, X, Y, Z)) {
-          UserVar[event->BaseVarIndex]     = X;
-          UserVar[event->BaseVarIndex + 1] = Y;
-          UserVar[event->BaseVarIndex + 2] = Z;
-
+        if (P120_data->read_data(
+              UserVar[event->BaseVarIndex],        // X
+              UserVar[event->BaseVarIndex + 1],    // Y
+              UserVar[event->BaseVarIndex + 2])) { // Z
           success = true;
         }
       }

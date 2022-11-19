@@ -40,6 +40,7 @@
 # define P120_FLAGS1_SEND_ACTIVITY        10   // Send (in)activity events
 # define P120_FLAGS1_LOG_ACTIVITY         11   // Log activity at INFO level
 # define P120_FLAGS1_EVENT_RAW_VALUES     12   // Events use direct raw sensorvalues
+# define P120_FLAGS1_ANGLE_IN_RAD         13   // Whether to output angles in radians or degrees
 # define P120_FLAGS1_ACTIVITY_TRESHOLD    16   // Activity treshold, 8 bits
 # define P120_DEFAULT_ACTIVITY_TRESHOLD     75 // Default treshold: 75 * 62.5 mg = 4.6875 g
 # define P120_FLAGS1_INACTIVITY_TRESHOLD  24   // Inactivity treshold, 8 bits
@@ -79,18 +80,29 @@ public:
   ~P120_data_struct();
 
   bool read_sensor(struct EventStruct *event);
-  bool read_data(struct EventStruct *event,
-                 int               & X,
-                 int               & Y,
-                 int               & Z);
+  bool read_data(int& X,
+                 int& Y,
+                 int& Z) const;
 
-  bool initialized() {
+  bool read_data(float& X,
+                 float& Y,
+                 float& Z) const;
+
+  bool getPitchRoll(struct EventStruct *event,
+                    float             & pitch,
+                    float             & roll) const;
+
+  bool initialized() const {
     return adxl345 != nullptr;
   }
 
   bool plugin_webform_load(struct EventStruct *event);
   bool plugin_webform_save(struct EventStruct *event);
+  bool plugin_webform_show_values(struct EventStruct *event) const;
   bool plugin_set_defaults(struct EventStruct *event);
+
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string) const;
 
 private:
 
