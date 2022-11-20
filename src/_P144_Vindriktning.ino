@@ -3,7 +3,7 @@
 //#######################################################################################################
 /*
   Plugin is based upon various open sources on the internet. Plugin uses the serial lib to access a serial port
-  This plugin was written by Mark Flesch
+  This plugin was written by flashmark
 
   This plugin reads the particle concentration from the PM1006 sensor in the Ikea Vindriktning
   The original Ikea processor is controlling the PM1006 sensor, the plugin is eavesdropping the responses
@@ -20,9 +20,9 @@
 // Standard plugin defines
 #define PLUGIN_144
 #define PLUGIN_ID_144     144                   // plugin id
-#define PLUGIN_NAME_144   "Dust - Vindriktning" // "Plugin Name" is what will be dislpayed in the selection list
+#define PLUGIN_NAME_144   "Dust - PM1006(K) (Vindriktning)" // "Plugin Name" is what will be dislpayed in the selection list
 #define PLUGIN_VALUENAME1_144 "PM2.5"           // variable output of the plugin. The label is in quotation marks
-#define PLUGIN_144_DEBUG  true                  // set to true for extra log info in the debug
+#define PLUGIN_144_DEBUG  true                  // set to true for extra log info
 
 
 //   PIN/port configuration is stored in the following:
@@ -57,8 +57,10 @@ typedef enum {
   ESPeasySerial *P144_easySerial = nullptr;
   const int P144_bufferSize = 20;
   char P144_serialRxBuffer[P144_bufferSize];
+  #ifdef PLUGIN_144_DEBUG
   char P144_debugBuffer[3*P144_bufferSize];
-  int P144_rxBufferPtr = 0;
+  #endif
+  //int P144_rxBufferPtr = 0;
   int P144_rxChecksum = 0;
   int P144_index = 0;
   int P144_rxlen = 0;
@@ -80,7 +82,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      // This case defines the device characteristics, edit appropriately
+      // This case defines the device characteristics
 
       Device[++deviceCount].Number           = PLUGIN_ID_144;                    // Plugin ID number.   (PLUGIN_ID_xxx)
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;               // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
@@ -116,15 +118,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
-    {
-      // Called to show optinal extra UART parameters in the web interface (only called for SERIAL devices)
-      //addFormNumericBox(F("Baudrate"), P144_BAUDRATE_LABEL, P144_BAUDRATE, 2400, 115200);
-      //addUnit(F("baud"));
-      break;
-    }
-
-    case PLUGIN_GET_DEVICEGPIONAMES:
+       case PLUGIN_GET_DEVICEGPIONAMES:
     {
       serialHelper_getGpioNames(event, false, true); // TX optional
       break;
@@ -137,26 +131,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-
-    case PLUGIN_GET_DEVICEVALUECOUNT:
-    {
-      // This is only called when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
-      // The position in the config parameters used in this example is PCONFIG(Pxxx_OUTPUT_TYPE_INDEX)
-      // Must match the one used in case PLUGIN_GET_DEVICEVTYPE  (best to use a define for it)
-      // see P026_Sysinfo.ino for more examples.
-      break;
-    }
-
-    case PLUGIN_GET_DEVICEVTYPE:
-    {
-      // This is only called when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
-      // The position in the config parameters used in this example is PCONFIG(Pxxx_OUTPUT_TYPE_INDEX)
-      // Must match the one used in case PLUGIN_GET_DEVICEVALUECOUNT  (best to use a define for it)
-      // IDX is used here to mark the PCONFIG position used to store the Device VType.
-      // see P026_Sysinfo.ino for more examples.
-      break;
-    }
-
+    
     case PLUGIN_SET_DEFAULTS:
     {
       // Set a default config here, which will be called when a plugin is assigned to a task.
@@ -216,11 +191,13 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
         P144_easySerial->begin(9600);
         success = true;
       }
+      #ifdef PLUGIN_144_DEBUG
       String log = F("P144 : Init OK  ESP GPIO-pin RX:");
       log += rxPin;
       log += F(" TX:");
       log += txPin;
       addLogMove(LOG_LEVEL_INFO, log);
+      #endif
       break;
     }
 
@@ -229,10 +206,11 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       // code to be executed to read data
       // It is executed according to the delay configured on the device configuration page, only once
       UserVar[event->BaseVarIndex] = P144_pm25;
+      #ifdef PLUGIN_144_DEBUG
       String log = F("P144 : READ ");
       log += P144_pm25;
       addLogMove(LOG_LEVEL_INFO, log);
-
+      #endif
       // after the plugin has read data successfuly, set success and break
       success = true;
       break;
@@ -277,9 +255,11 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
         if (new_data) 
         {
           P144_pm25 = float((P144_serialRxBuffer[3] << 8) + P144_serialRxBuffer[4]);
+          #ifdef PLUGIN_144_DEBUG
           String log = F("P144 : Data ");
           log += P144_pm25;
           addLogMove(LOG_LEVEL_INFO, log);
+          #endif
         }
       }
       success = true;
