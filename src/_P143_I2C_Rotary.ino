@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-11-20 tonhuisman: Add support for button longpress, generates state 10/11 instead of 0/1 after a longpress (Pushbutton only)
+ *                        NOT supported on DFRobot encoder, as the button only signals button pressed state once, and no release signal
  * 2022-11-18 tonhuisman: Implement DFRobot I2C Encoder support, no direct led control, emulated negative count, with pushbutton
  * 2022-11-16 tonhuisman: Implement M5Stack encoder lower/upper limit _without_ setEncoder() available (by using offset method)
  *                        see: https://github.com/m5stack/M5UnitEncoder_Firmware
@@ -176,8 +178,8 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
         {
           {
             addRowLabel(F("Neopixel 1 initial color"));
-            addHtml(F("<table style='padding:0;'>")); // remove left padding 2x to align vertically with other inputs
-            html_TD(F("padding-left:0"));
+            addHtml(F("<table style='padding:0;'>")); // remove padding to align vertically with other inputs
+            html_TD(F("padding:0"));
             addHtml('R');
             addNumericBox(F("pred"), P143_ADAFRUIT_COLOR_RED, 0, 255);
             html_TD();
@@ -192,8 +194,8 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
 
             if (device == P143_DeviceType_e::M5StackEncoder) {
               addRowLabel(F("Neopixel 2 initial color"));
-              addHtml(F("<table style='padding-left:0;'>")); // remove left padding 2x to align vertically with other inputs
-              html_TD(F("padding-left:0"));
+              addHtml(F("<table style='padding:0;'>")); // remove padding to align vertically with other inputs
+              html_TD(F("padding:0"));
               addHtml('R');
               addNumericBox(F("pred2"), P143_M5STACK2_COLOR_RED, 0, 255);
               html_TD();
@@ -273,6 +275,23 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
                         selectButtonOptions,
                         selectButtonValues,
                         P143_PLUGIN_BUTTON_ACTION);
+
+        # if P143_FEATURE_INCLUDE_DFROBOT
+
+        if (device != P143_DeviceType_e::DFRobotEncoder) // Not supported by DFRobot
+        # endif // if P143_FEATURE_INCLUDE_DFROBOT
+        {
+          addFormCheckBox(F("Enable Pushbutton longpress"), F("plongenable"), P143_PLUGIN_ENABLE_LONGPRESS);
+          addFormNumericBox(F("Longpress min. interval"),
+                            F("plongpress"),
+                            P143_GET_LONGPRESS_INTERVAL,
+                            P143_LONGPRESS_MIN_INTERVAL,
+                            P143_LONGPRESS_MAX_INTERVAL);
+          addUnit(F("ms"));
+          # ifndef BUILD_NO_DEBUG
+          addFormNote(F("Range: 500..5000 ms. Longpress: State = 11 for Pushbutton, 10 for Pushbutton (inverted)."));
+          # endif // ifndef BUILD_NO_DEBUG
+        }
       }
 
       # if P143_FEATURE_COUNTER_COLORMAPPING
@@ -337,6 +356,14 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       uint32_t lSettings       = 0u;
       P143_DeviceType_e device = static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE);
 
+      # if P143_FEATURE_INCLUDE_DFROBOT
+
+      if (device != P143_DeviceType_e::DFRobotEncoder) // Not supported by DFRobot
+      # endif // if P143_FEATURE_INCLUDE_DFROBOT
+      {
+        P143_SET_LONGPRESS_INTERVAL = getFormItemInt(F("plongpress"));
+      }
+
       switch (device) {
         case P143_DeviceType_e::AdafruitEncoder:
         # if P143_FEATURE_INCLUDE_M5STACK
@@ -387,6 +414,13 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       # endif // if P143_FEATURE_COUNTER_COLORMAPPING
       set4BitToUL(lSettings, P143_PLUGIN_OFFSET_BUTTON_ACTION, getFormItemInt(F("pbutton")) & 0x0F);
       bitWrite(lSettings, P143_PLUGIN_OFFSET_EXIT_LED_OFF, isFormItemChecked(F("pexit")) == 0); // inverted!
+      # if P143_FEATURE_INCLUDE_DFROBOT
+
+      if (device != P143_DeviceType_e::DFRobotEncoder)                                          // Not supported by DFRobot
+      # endif // if P143_FEATURE_INCLUDE_DFROBOT
+      {
+        bitWrite(lSettings, P143_PLUGIN_OFFSET_LONGPRESS, isFormItemChecked(F("plongenable")) == 1);
+      }
       P143_PLUGIN_FLAGS = lSettings;
 
       # if P143_FEATURE_COUNTER_COLORMAPPING

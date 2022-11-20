@@ -42,6 +42,11 @@
 # define P143_OFFSET_MIN                      0
 # define P143_OFFSET_MAX                      1023
 
+# define P143_LONGPRESS_MIN_INTERVAL          500
+# define P143_LONGPRESS_MAX_INTERVAL          5000
+# define P143_DOUBLECLICK_MIN_INTERVAL        1000
+# define P143_DOUBLECLICK_MAX_INTERVAL        3000
+
 
 # define P143_I2C_ADDR                        PCONFIG(0)
 # define P143_ENCODER_TYPE                    PCONFIG(1)
@@ -51,6 +56,9 @@
 # define P143_MAXIMAL_POSITION                PCONFIG(5)
 # define P143_OFFSET_POSITION                 PCONFIG(6) // Offset for encoder that has 0..1023 range
 # define P143_DFROBOT_LED_GAIN                PCONFIG(7) // Range 1..51, 1 => 1 led/~2.5 turns, 51 => 1 led/detent
+
+# define P143_SET_LONGPRESS_INTERVAL          PCONFIG_FLOAT(0)
+# define P143_GET_LONGPRESS_INTERVAL          (static_cast<uint16_t>(P143_SET_LONGPRESS_INTERVAL))
 
 # define P143_ADAFRUIT_COLOR_AND_BRIGHTNESS   PCONFIG_ULONG(0)
 # define P143_ADAFRUIT_OFFSET_RED             24
@@ -75,10 +83,12 @@
 # define P143_PLUGIN_FLAGS                    PCONFIG_ULONG(3)
 # define P143_PLUGIN_OFFSET_COUNTER_MAPPING   0
 # define P143_PLUGIN_OFFSET_BUTTON_ACTION     4
-# define P143_PLUGIN_OFFSET_EXIT_LED_OFF      5
+# define P143_PLUGIN_OFFSET_EXIT_LED_OFF      8
+# define P143_PLUGIN_OFFSET_LONGPRESS         9
 # define P143_PLUGIN_COUNTER_MAPPING          (get4BitFromUL(P143_PLUGIN_FLAGS, P143_PLUGIN_OFFSET_COUNTER_MAPPING))
 # define P143_PLUGIN_BUTTON_ACTION            (get4BitFromUL(P143_PLUGIN_FLAGS, P143_PLUGIN_OFFSET_BUTTON_ACTION))
 # define P143_PLUGIN_EXIT_LED_OFF             (!bitRead(P143_PLUGIN_FLAGS, P143_PLUGIN_OFFSET_EXIT_LED_OFF))
+# define P143_PLUGIN_ENABLE_LONGPRESS         (bitRead(P143_PLUGIN_FLAGS, P143_PLUGIN_OFFSET_LONGPRESS))
 
 /*******************************************
  * Feature toggles
@@ -200,9 +210,13 @@ private:
   bool    _useOffset     = false;
   # endif // if P143_FEATURE_INCLUDE_M5STACK
 
-  uint8_t _buttonState  = 0;
-  uint8_t _buttonLast   = 0;
-  uint8_t _buttonIgnore = 0;
+  uint8_t  _buttonState     = 0xFF;
+  uint8_t  _buttonLast      = 0xFF;
+  uint8_t  _buttonIgnore    = 0;
+  uint16_t _buttonTime      = 0;
+  bool     _buttonDown      = false;
+  uint16_t _buttonLongPress = P143_LONGPRESS_MIN_INTERVAL;
+  bool     _enableLongPress = false;
 
   # if PLUGIN_143_DEBUG
   int32_t _oldPosition = INT32_MIN;

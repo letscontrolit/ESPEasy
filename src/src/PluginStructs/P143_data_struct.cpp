@@ -84,6 +84,8 @@ P143_data_struct::P143_data_struct(struct EventStruct *event) {
   _encoderMin      = P143_MINIMAL_POSITION;
   _encoderMax      = P143_MAXIMAL_POSITION;
   _brightness      = P143_NEOPIXEL_BRIGHTNESS;
+  _buttonLongPress = P143_GET_LONGPRESS_INTERVAL;
+  _enableLongPress = P143_PLUGIN_ENABLE_LONGPRESS;
   # if P143_FEATURE_INCLUDE_DFROBOT
   _initialOffset = P143_OFFSET_POSITION;
   # endif // if P143_FEATURE_INCLUDE_DFROBOT
@@ -665,35 +667,42 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
     uint8_t button             = _buttonLast;
     uint8_t state              = _buttonState;
 
-    if (!_buttonIgnore) {
-      // Read button
-      switch (_device) {
-        case P143_DeviceType_e::AdafruitEncoder:
-          button = Adafruit_Seesaw->digitalRead(P143_SEESAW_SWITCH);
-          break;
-        # if P143_FEATURE_INCLUDE_M5STACK
-        case P143_DeviceType_e::M5StackEncoder:
-          button = I2C_read8_reg(_i2cAddress, P143_M5STACK_REG_BUTTON);
-          break;
-        # endif // if P143_FEATURE_INCLUDE_M5STACK
-        # if P143_FEATURE_INCLUDE_DFROBOT
-        case P143_DeviceType_e::DFRobotEncoder:
-          uint8_t press = I2C_read8_reg(_i2cAddress, P143_DFROBOT_ENCODER_KEY_STATUS_REG);
+    // Read button
+    switch (_device) {
+      case P143_DeviceType_e::AdafruitEncoder:
+        button = Adafruit_Seesaw->digitalRead(P143_SEESAW_SWITCH);
+        break;
+      # if P143_FEATURE_INCLUDE_M5STACK
+      case P143_DeviceType_e::M5StackEncoder:
+        button = I2C_read8_reg(_i2cAddress, P143_M5STACK_REG_BUTTON);
+        break;
+      # endif // if P143_FEATURE_INCLUDE_M5STACK
+      # if P143_FEATURE_INCLUDE_DFROBOT
+      case P143_DeviceType_e::DFRobotEncoder:
+        uint8_t press = I2C_read8_reg(_i2cAddress, P143_DFROBOT_ENCODER_KEY_STATUS_REG);
 
-          if ((press & 0x01) != 0) {
-            I2C_write8_reg(_i2cAddress, P143_DFROBOT_ENCODER_KEY_STATUS_REG, 0x00); // Reset
-            button = button ? 0 : 1;
-          }
+        if ((press & 0x01) != 0) {
+          I2C_write8_reg(_i2cAddress, P143_DFROBOT_ENCODER_KEY_STATUS_REG, 0x00); // Reset
+          // Trigger immediately
+          button      = button ? 0 : 1;
+          _buttonDown = true;
+          _buttonTime = (60 / 20);
+        }
 
-          break;
-        # endif // if P143_FEATURE_INCLUDE_DFROBOT
-      }
-    } else {
-      _buttonIgnore--; // Count down the ignore time, 20 msec/step
+        break;
+      # endif // if P143_FEATURE_INCLUDE_DFROBOT
     }
 
-    if (button != _buttonLast) {
+    if ((button == pressedState) && _buttonDown) {
+      _buttonTime++; // increment 20 msec
+    } else if (button == pressedState) {
+      _buttonDown = true;
+      _buttonTime = 0;
+    }
+
+    if ((button != _buttonLast) && (_buttonTime >= (60 / 20))) { // Short-press = 60 msec
       _buttonLast = button;
+      _buttonDown = false;
 
       switch (static_cast<P143_ButtonAction_e>(P143_PLUGIN_BUTTON_ACTION)) {
         case P143_ButtonAction_e::PushButton:
@@ -708,12 +717,16 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
           if (button == pressedState) {
             state = _buttonState == 0 ? 1 : 0; // Toggle
           }
+          _buttonTime = 0;                     // Ignore long-press
           break;
       }
-      _buttonIgnore = 5; // * 20 milliseconds (50/sec)
     }
 
     if (state != _buttonState) {
+      if (_enableLongPress && (_buttonTime >= (_buttonLongPress / 20))) { // Long-press
+        state += 10;                                                      // Eventvalues similar to Switch plugin
+      }
+
       // Generate event
       if (Settings.UseRules) {
         String taskEvent;
