@@ -207,11 +207,11 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
           option += F(": ");
           option += formatGpioLabel(rxPin, false);
           option += ' ';
-          option += formatGpioDirection(gpio_input);
+          option += formatGpioDirection(gpio_direction::gpio_input);
           option += F("TX / ");
           option += formatGpioLabel(txPin, false);
           option += ' ';
-          option += formatGpioDirection(gpio_output);
+          option += formatGpioDirection(gpio_direction::gpio_output);
           option += F("RX");
           #endif // ifdef ESP8266
           break;

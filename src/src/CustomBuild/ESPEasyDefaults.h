@@ -83,7 +83,7 @@
 #endif
 
 #ifndef DEFAULT_WIFI_CONNECTION_TIMEOUT
-#define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
+#define DEFAULT_WIFI_CONNECTION_TIMEOUT  20000  // minimum timeout in ms for WiFi to be connected.
 #endif
 #ifndef DEFAULT_WIFI_FORCE_BG_MODE
 #define DEFAULT_WIFI_FORCE_BG_MODE       false  // when set, only allow to connect in 802.11B or G mode (not N)
@@ -176,10 +176,20 @@
 #endif
 
 #ifndef DEFAULT_PIN_I2C_SDA
+#ifdef ESP8266
 #define DEFAULT_PIN_I2C_SDA              4
 #endif
+#ifdef ESP32
+#define DEFAULT_PIN_I2C_SDA              -1                // Undefined
+#endif
+#endif
 #ifndef DEFAULT_PIN_I2C_SCL
+#ifdef ESP8266
 #define DEFAULT_PIN_I2C_SCL              5
+#endif
+#ifdef ESP32
+#define DEFAULT_PIN_I2C_SCL              -1                // Undefined
+#endif
 #endif
 #ifndef DEFAULT_I2C_CLOCK_SPEED
 #define DEFAULT_I2C_CLOCK_SPEED          400000            // Use 100 kHz if working with old I2C chips

@@ -6,6 +6,8 @@
 #if FEATURE_PLUGIN_STATS
 
 # include "../DataStructs/ChartJS_dataset_config.h"
+#include "../DataTypes/TaskIndex.h"
+
 
 # include <CircularBuffer.h>
 
@@ -70,18 +72,34 @@ public:
   // Compute average over last N stored values
   float getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
+  // Compute the standard deviation over all stored values
+  float getSampleStdDev() const {
+    return getSampleStdDev(_samples.size());
+  }
+
+  // Compute the standard deviation  over last N stored values
+  float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
+
+
   float operator[](PluginStatsBuffer_t::index_t index) const;
 
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
-  bool          plugin_get_config_value_base(struct EventStruct *event,
-                                             String            & string) const;
+  bool plugin_get_config_value_base(struct EventStruct *event,
+                                    String            & string) const;
 
-  bool          webformLoad_show_stats(struct EventStruct *event) const;
+  bool webformLoad_show_stats(struct EventStruct *event) const;
 
-  bool          webformLoad_show_avg(struct EventStruct *event) const;
-  bool          webformLoad_show_peaks(struct EventStruct *event) const;
+  bool webformLoad_show_avg(struct EventStruct *event) const;
+  bool webformLoad_show_stdev(struct EventStruct *event) const;
+  bool webformLoad_show_peaks(struct EventStruct *event,
+                              bool                include_peak_to_peak = true) const;
+  void webformLoad_show_val(
+    struct EventStruct *event,
+    const String      & label,
+    double              value,
+    const String      & unit) const;
 
 
   const String& getLabel() const {
@@ -121,11 +139,14 @@ public:
 
 private:
 
+  bool usableValue(float value) const;
+
   float _minValue;
   float _maxValue;
 
   PluginStatsBuffer_t _samples;
   float _errorValue;
+  bool _errorValueIsNaN;
 
   uint8_t _nrDecimals = 3u;
 };

@@ -38,7 +38,7 @@ var commonPlugins = [
   //P036
   "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign",
   //P038
-  "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV",
+  "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV", "NeoPixelBright",
   //P048
   "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper",
   //P052
@@ -73,6 +73,8 @@ var commonPlugins = [
   "WakeOnLan",
   //P104
   "DotMatrix", "DotMatrix,clear", "DotMatrix,update", "DotMatrix,size", "DotMatrix,txt", "DotMatrix,settxt", "DotMatrix,content", "DotMatrix,alignment", "DotMatrix,anim.in", "DotMatrix,anim.out", "DotMatrix,speed", "DotMatrix,pause", "DotMatrix,font", "DotMatrix,layout", "DotMatrix,inverted", "DotMatrix,specialeffect", "DotMatrix,offset", "DotMatrix,brightness", "DotMatrix,repeat", "DotMatrix,setbar", "DotMatrix,bar",
+  //P109
+  "Thermo", "Thermo,Up", "Thermo,Down", "Thermo,Mode", "Thermo,ModeBtn", "Thermo,Setpoint",
   //P115
   "Max1704xclearalert",
   //P116
@@ -318,8 +320,11 @@ function initCM() {
       }
 
       if (ch == "%") {
-        stream.eatWhile(/[^\s\%]/);
-        if (stream.match("%")) return 'hr';
+        if (/\d/.test(stream.next())) { return 'number'; }
+        else {
+          stream.eatWhile(/[^\s\%]/);
+          if (stream.match("%")) return 'hr';
+        }
       }
 
       if (ch == "[") {

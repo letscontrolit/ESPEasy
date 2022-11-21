@@ -51,6 +51,7 @@ const __FlashStringHelper * Dallas_getModel(uint8_t family) {
     case 0x3b: return F("DS1825"); 
     case 0x22: return F("DS1822"); 
     case 0x10: return F("DS1820 / DS18S20");
+    case 0x42: return F("DS28EA00");
     case 0x1D: return F("DS2423");   // 4k RAM with counter
     case 0x01: return F("DS1990A");  // Serial Number iButton
   }
@@ -388,7 +389,10 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
     return false;
   }
 
-  if ((ROM[0] == 0x28) || (ROM[0] == 0x3b) || (ROM[0] == 0x22)) // DS18B20 or DS1825 or DS1822
+  if ( (ROM[0] == 0x28)  // DS18B20
+    || (ROM[0] == 0x3b)  // DS1825
+    || (ROM[0] == 0x22)  // DS1822
+    || (ROM[0] == 0x42)) // DS28EA00
   {
     DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
 
@@ -629,7 +633,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   uint8_t retries = 125;
 
-  noInterrupts();
+  ISR_noInterrupts();
 
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
   // DEBUG code using logic analyzer for timings
@@ -732,7 +736,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
       delayMicroseconds(2);
     }
   }
-  interrupts();
+  ISR_interrupts();
 
   if (presence_end != 0) {
     const long presence_duration = presence_end - presence_start;
@@ -972,7 +976,7 @@ uint8_t DALLAS_IRAM_ATTR Dallas_read_bit_ISR(
   uint8_t r;
 
   {
-    noInterrupts();
+    ISR_noInterrupts();
     start = getMicros64();
     DIRECT_pinWrite(gpio_pin_tx, 0);
     if (gpio_pin_rx == gpio_pin_tx) {
@@ -995,7 +999,7 @@ uint8_t DALLAS_IRAM_ATTR Dallas_read_bit_ISR(
     }
     r = DIRECT_pinRead(gpio_pin_rx);
 
-    interrupts();
+    ISR_interrupts();
   }
   return r;
 }
@@ -1028,7 +1032,7 @@ void DALLAS_IRAM_ATTR Dallas_write_bit_ISR(uint8_t   v,
                                            long      high_time,
                                            uint64_t& start)
 {
-  noInterrupts();
+  ISR_noInterrupts();
   start     = getMicros64();
   DIRECT_pinWrite(gpio_pin_tx, 0);
 
@@ -1037,7 +1041,7 @@ void DALLAS_IRAM_ATTR Dallas_write_bit_ISR(uint8_t   v,
   }
   start = getMicros64();
   DIRECT_pinWrite(gpio_pin_tx, 1);
-  interrupts();
+  ISR_interrupts();
 }
 
 /*********************************************************************************************\

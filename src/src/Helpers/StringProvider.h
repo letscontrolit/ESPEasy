@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 struct LabelType {
-  enum Enum : short {
+  enum Enum : uint8_t {
     UNIT_NR,
     UNIT_NAME,
     HOST_NAME,
@@ -12,6 +12,9 @@ struct LabelType {
     LOCAL_TIME,
     TIME_SOURCE,
     TIME_WANDER,
+    #if FEATURE_EXT_RTC
+    EXT_RTC_UTC_TIME,
+    #endif
     UPTIME,
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400

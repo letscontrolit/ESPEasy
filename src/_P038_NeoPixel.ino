@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-11-06, tonhuisman:  Add Initial and Max brightness settings, and NeoPixelBright[,0..255] command, 0 = initial
+//                          Code optimizations
 // 2022-01-29, tonhuisman:  Resolve FIXME for GPIO selection, update comments
 // 2022-01-23, tonhuisman:  Some duplicate code unduplicated, some optimizations
 // 2022-01-10, tonhuisman:  Make plugin multi-instance compatible, by moving variables and code to P038_data_struct
@@ -76,13 +78,20 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Led Count"), F("p038_leds"), P038_CONFIG_LEDCOUNT, 1, 999);
+      addFormNumericBox(F("Led Count"), F("pleds"), P038_CONFIG_LEDCOUNT, 1, 999);
 
       {
         const __FlashStringHelper *options[] = { F("GRB"), F("GRBW") };
         int indices[]                        = { P038_STRIP_TYPE_RGB, P038_STRIP_TYPE_RGBW };
-        addFormSelector(F("Strip Type"), F("p038_strip"), 2, options, indices, P038_CONFIG_STRIPTYPE);
+        addFormSelector(F("Strip Type"), F("pstrip"), 2, options, indices, P038_CONFIG_STRIPTYPE);
       }
+
+      addFormNumericBox(F("Initial brightness"), F("ibright"), P038_CONFIG_BRIGHTNESS, 0, 255);
+      addUnit(F("0..255"));
+
+      if (P038_CONFIG_MAXBRIGHT == 0) { P038_CONFIG_MAXBRIGHT = 255; }
+      addFormNumericBox(F("Maximum allowed brightness"), F("maxbright"), P038_CONFIG_MAXBRIGHT, 1, 255);
+      addUnit(F("1..255"));
 
       success = true;
       break;
@@ -90,8 +99,10 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P038_CONFIG_LEDCOUNT  = getFormItemInt(F("p038_leds"));
-      P038_CONFIG_STRIPTYPE = getFormItemInt(F("p038_strip"));
+      P038_CONFIG_LEDCOUNT   = getFormItemInt(F("pleds"));
+      P038_CONFIG_STRIPTYPE  = getFormItemInt(F("pstrip"));
+      P038_CONFIG_BRIGHTNESS = getFormItemInt(F("ibright"));
+      P038_CONFIG_MAXBRIGHT  = getFormItemInt(F("maxbright"));
 
       success = true;
       break;
@@ -99,12 +110,17 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P038_data_struct(CONFIG_PIN1, P038_CONFIG_LEDCOUNT, P038_CONFIG_STRIPTYPE));
+      if (P038_CONFIG_MAXBRIGHT == 0) { P038_CONFIG_MAXBRIGHT = 255; }
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P038_data_struct(CONFIG_PIN1,
+                                                                               P038_CONFIG_LEDCOUNT,
+                                                                               P038_CONFIG_STRIPTYPE,
+                                                                               P038_CONFIG_BRIGHTNESS,
+                                                                               P038_CONFIG_MAXBRIGHT));
       P038_data_struct *P038_data = static_cast<P038_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P038_data) {
         success = P038_data->plugin_init(event);
-      }     
+      }
 
       break;
     }

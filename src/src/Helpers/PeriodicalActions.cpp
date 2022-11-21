@@ -15,6 +15,9 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
+#if FEATURE_ETHERNET
+#include "../Globals/ESPEasyEthEvent.h"
+#endif
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
@@ -146,24 +149,18 @@ void runOncePerSecond()
     PluginCall(PLUGIN_CLOCK_IN, 0, dummy);
     if (Settings.UseRules)
     {
-      String event;
-      event.reserve(21);
-      event  = F("Clock#Time=");
-      event += node_time.weekday_str();
-      event += ',';
+      // FIXME TD-er: What to do when the system time is not (yet) present?
+      if (node_time.systemTimePresent()) {
+        String event;
+        event.reserve(21);
+        event += F("Clock#Time=");
+        event += node_time.weekday_str();
+        event += ',';
+        event += node_time.getTimeString(':', false);
 
-      if (node_time.hour() < 10) {
-        event += '0';
+        // TD-er: Do not add to the eventQueue, but execute right now.
+        rulesProcessing(event);
       }
-      event += node_time.hour();
-      event += ':';
-
-      if (node_time.minute() < 10) {
-        event += '0';
-      }
-      event += node_time.minute();
-      // TD-er: Do not add to the eventQueue, but execute right now.
-      rulesProcessing(event);
     }
   }
 

@@ -367,7 +367,7 @@ void Internal_GPIO_pulseHelper::processStablePulse(int pinState, uint64_t pulseC
 
 void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_edgeCheck(Internal_GPIO_pulseHelper *self)
 {
-  noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
+  ISR_noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
 
   // legacy edge Mode types
   // KP: we use here P003_currentStableStartTime[taskID] to persist the PulseTime (pulseTimePrevious)
@@ -382,12 +382,12 @@ void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_edgeCheck(Internal_GPIO_pulseHelpe
     self->ISRdata.pulseTime              = timeSinceLastTrigger;
     self->ISRdata.currentStableStartTime = currentTime; // reset when counted to determine interval between counted pulses
   }
-  interrupts(); // enable interrupts again.
+  ISR_interrupts(); // enable interrupts again.
 }
 
 void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_pulseCheck(Internal_GPIO_pulseHelper *self)
 {
-  noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
+  ISR_noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
 
   // processing for new PULSE mode types
   #ifdef PULSE_STATISTIC
@@ -402,7 +402,7 @@ void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_pulseCheck(Internal_GPIO_pulseHelp
     self->ISRdata.initStepsFlags   = true; // PLUGIN_FIFTY_PER_SECOND is polling for this flag set
     self->ISRdata.triggerTimestamp = getMicros64();
   }
-  interrupts(); // enable interrupts again.
+  ISR_interrupts(); // enable interrupts again.
 }
 
 #ifdef PULSE_STATISTIC

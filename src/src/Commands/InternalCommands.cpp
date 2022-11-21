@@ -333,8 +333,8 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_A(       "logentry", Command_logentry,         -1); // Diagnostic.h
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
-      COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    3);    // GPIO.h
-      COMMAND_CASE_A(   "longpulse_ms", Command_GPIO_LongPulse_Ms, 3);    // GPIO.h
+      COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    5);    // GPIO.h
+      COMMAND_CASE_A(   "longpulse_ms", Command_GPIO_LongPulse_Ms, 5);    // GPIO.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(  "logportstatus", Command_logPortStatus,     0); // Diagnostic.h
       COMMAND_CASE_A(         "lowmem", Command_Lowmem,            0); // Diagnostic.h
@@ -638,6 +638,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     }
 
     if (handled) {
+//      addLog(LOG_LEVEL_INFO, F("executeInternalCommand accepted"));
       return true;
     }
   }
@@ -652,6 +653,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     // alter the string.
     String tmpAction(action);
     bool   handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
+//    if (handled) addLog(LOG_LEVEL_INFO, F("PLUGIN_WRITE accepted"));
     
     #ifndef BUILD_NO_DEBUG
     if (!tmpAction.equals(action)) {
@@ -668,7 +670,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     if (!handled) {
       // Try a controller
       handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
-
+//      if (handled) addLog(LOG_LEVEL_INFO, F("CPLUGIN_WRITE accepted"));
     }
 
     if (handled) {
@@ -680,6 +682,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   if (tryRemoteConfig) {
     if (remoteConfig(&TempEvent, action)) {
       SendStatus(&TempEvent, return_command_success());
+//      addLog(LOG_LEVEL_INFO, F("remoteConfig accepted"));
+
       return true;
     }
   }

@@ -15,7 +15,7 @@
 .. |P031_type| replace:: :cyan:`Environment`
 .. |P031_typename| replace:: :cyan:`Environment - SHT1X`
 .. |P031_porttype| replace:: `.`
-.. |P031_status| replace:: :green:`NORMAL`
+.. |P031_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P031_github| replace:: P031_SHT1X.ino
 .. _P031_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P031_SHT1X.ino
 .. |P031_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P032_type| replace:: :cyan:`Environment`
 .. |P032_typename| replace:: :cyan:`Environment - MS5611 (GY-63)`
 .. |P032_porttype| replace:: `.`
-.. |P032_status| replace:: :green:`NORMAL`
+.. |P032_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P032_github| replace:: P032_MS5611.ino
 .. _P032_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P032_MS5611.ino
 .. |P032_usedby| replace:: `.`
@@ -41,7 +41,7 @@
 .. |P033_type| replace:: :cyan:`Generic`
 .. |P033_typename| replace:: :cyan:`Generic - Dummy Device`
 .. |P033_porttype| replace:: `.`
-.. |P033_status| replace:: :green:`NORMAL`
+.. |P033_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P033_github| replace:: P033_Dummy.ino
 .. _P033_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P033_Dummy.ino
 .. |P033_usedby| replace:: `.`
@@ -54,7 +54,7 @@
 .. |P034_type| replace:: :cyan:`Environment`
 .. |P034_typename| replace:: :cyan:`Environment - DHT12 (I2C)`
 .. |P034_porttype| replace:: `.`
-.. |P034_status| replace:: :green:`NORMAL`
+.. |P034_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P034_github| replace:: P034_DHT12.ino
 .. _P034_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P034_DHT12.ino
 .. |P034_usedby| replace:: `.`
@@ -80,7 +80,7 @@
 .. |P036_type| replace:: :cyan:`Display`
 .. |P036_typename| replace:: :cyan:`Display - OLED SSD1306/SH1106 Framed`
 .. |P036_porttype| replace:: `.`
-.. |P036_status| replace:: :green:`NORMAL` :yellow:`DISPLAY`
+.. |P036_status| replace:: :green:`NORMAL` :yellow:`DISPLAY` :yellow:`CLIMATE`
 .. |P036_github| replace:: P036_FrameOLED.ino
 .. _P036_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P036_FrameOLED.ino
 .. |P036_usedby| replace:: `.`
@@ -93,7 +93,7 @@
 .. |P037_type| replace:: :cyan:`Generic`
 .. |P037_typename| replace:: :cyan:`Generic - MQTT Import`
 .. |P037_porttype| replace:: `.`
-.. |P037_status| replace:: :green:`NORMAL`
+.. |P037_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P037_github| replace:: P037_MQTTImport.ino
 .. _P037_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P037_MQTTImport.ino
 .. |P037_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P038_type| replace:: :cyan:`Output`
 .. |P038_typename| replace:: :cyan:`Output - NeoPixel (Basic)`
 .. |P038_porttype| replace:: `.`
-.. |P038_status| replace:: :green:`NORMAL` :yellow:`NEOPIXEL`
+.. |P038_status| replace:: :green:`NORMAL` :yellow:`NEOPIXEL` :yellow:`CLIMATE`
 .. |P038_github| replace:: P038_NeoPixel.ino
 .. _P038_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P038_NeoPixel.ino
 .. |P038_usedby| replace:: `NeoPixel RGB and RGBW LEDs and LED Strips`
@@ -119,7 +119,7 @@
 .. |P039_type| replace:: :cyan:`Environment`
 .. |P039_typename| replace:: :cyan:`Environment - Thermosensors`
 .. |P039_porttype| replace:: `.`
-.. |P039_status| replace:: :green:`NORMAL`
+.. |P039_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P039_github| replace:: P039_Thermosensors.ino
 .. _P039_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P039_Thermosensors.ino
 .. |P039_usedby| replace:: `.`
