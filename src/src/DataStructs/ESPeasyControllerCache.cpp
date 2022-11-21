@@ -36,7 +36,7 @@ void ControllerCache_struct::init() {
   }
 }
 
-bool ControllerCache_struct::isInitialized() {
+bool ControllerCache_struct::isInitialized() const {
   return _RTC_cache_handler != nullptr;
 }
 
@@ -64,14 +64,14 @@ void ControllerCache_struct::resetpeek() {
 }
 
 // Read data without marking it as being read.
-bool ControllerCache_struct::peek(uint8_t *data, unsigned int size) {
+bool ControllerCache_struct::peek(uint8_t *data, unsigned int size) const {
   if (_RTC_cache_handler == nullptr) {
     return false;
   }
   return _RTC_cache_handler->peek(data, size);
 }
 
-String ControllerCache_struct::getPeekCacheFileName(bool& islast) {
+String ControllerCache_struct::getPeekCacheFileName(bool& islast) const {
   if (_RTC_cache_handler == nullptr) {
     return "";
   }

@@ -138,7 +138,7 @@ bool RTC_cache_handler_struct::flush() {
       #ifdef RTC_STRUCT_DEBUG
       size_t filesize = fw.size();
       #endif // ifdef RTC_STRUCT_DEBUG
-      int bytesWriten = fw.write(&RTC_cache_data[0], RTC_cache.writePos);
+      int bytesWritten = fw.write(&RTC_cache_data[0], RTC_cache.writePos);
 
       delay(0);
       fw.flush();
@@ -147,7 +147,7 @@ bool RTC_cache_handler_struct::flush() {
         #endif // ifdef RTC_STRUCT_DEBUG
 
 
-      if ((bytesWriten < RTC_cache.writePos) /*|| (fw.size() == filesize)*/) {
+      if ((bytesWritten < RTC_cache.writePos) /*|| (fw.size() == filesize)*/) {
           #ifdef RTC_STRUCT_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -155,8 +155,8 @@ bool RTC_cache_handler_struct::flush() {
           log += filesize;
           log += F(" after: ");
           log += fw.size();
-          log += F(" writen: ");
-          log += bytesWriten;
+          log += F(" written: ");
+          log += bytesWritten;
           addLogMove(LOG_LEVEL_ERROR, log);
         }
           #endif // ifdef RTC_STRUCT_DEBUG
@@ -164,7 +164,7 @@ bool RTC_cache_handler_struct::flush() {
 
         if (!GarbageCollection()) {
           // Garbage collection was not able to remove anything
-          writeerror = true;
+          writeError = true;
         }
         return false;
       }
@@ -202,7 +202,7 @@ String RTC_cache_handler_struct::getReadCacheFileName(int& readPos) {
   // No file found
   RTC_cache.readPos = 0;
   readPos           = RTC_cache.readPos;
-  return "";
+  return EMPTY_STRING;
 }
 
 String RTC_cache_handler_struct::getPeekCacheFileName(bool& islast) {
@@ -232,7 +232,7 @@ bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
       // read and write file nr are not the same file, remove the read file nr.
       String fname = createCacheFilename(RTC_cache.readFileNr);
 
-      writeerror = false;
+      writeError = false;
 
       if (tryDeleteFile(fname)) {
           #ifdef RTC_STRUCT_DEBUG
@@ -264,7 +264,7 @@ bool RTC_cache_handler_struct::deleteAllCacheBlocks()
 
     if (nrCacheFiles > 1) {
       bool fileDeleted = false;
-      int count = 0;
+      int  count       = 0;
 
       for (int fileNr = RTC_cache.readFileNr; count < 25 && fileNr < RTC_cache.writeFileNr; ++fileNr)
       {
@@ -284,7 +284,7 @@ bool RTC_cache_handler_struct::deleteAllCacheBlocks()
       }
 
       if (fileDeleted) {
-        writeerror = false;
+        writeError = false;
         updateRTC_filenameCounters();
         return true;
       }
@@ -366,7 +366,7 @@ bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrB
         # endif // ifdef RTC_STRUCT_DEBUG
   }
   return true;
-  #endif // ifdef ESP8266
+  #endif        // ifdef ESP8266
 }
 
 uint32_t RTC_cache_handler_struct::getDataChecksum() {
@@ -448,7 +448,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
       initRTCcache_data();
 
       if (updateRTC_filenameCounters()) {
-        if (writeerror || (SpiffsFreeSpace() < ((2 * CACHE_FILE_MAX_SIZE) + SpiffsBlocksize()))) {
+        if (writeError || (SpiffsFreeSpace() < ((2 * CACHE_FILE_MAX_SIZE) + SpiffsBlocksize()))) {
           // Not enough room for another file, remove the oldest one.
           deleteOldestCacheBlock();
         }
