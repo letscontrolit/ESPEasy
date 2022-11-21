@@ -55,6 +55,8 @@ struct RTC_cache_handler_struct
 
   bool   deleteOldestCacheBlock();
 
+  bool   deleteAllCacheBlocks();
+
 private:
 
   bool     loadMetaData();

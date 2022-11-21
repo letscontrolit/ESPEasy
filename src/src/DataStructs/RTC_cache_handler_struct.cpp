@@ -4,25 +4,25 @@
 #include "../DataStructs/RTCStruct.h"
 #include "../Helpers/CRC_functions.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #ifdef ESP8266
-#include <user_interface.h>
-#endif
+# include <user_interface.h>
+#endif // ifdef ESP8266
 
 #ifdef ESP32
-  #include <soc/rtc.h>
+  # include <soc/rtc.h>
 
-  // For ESP32 the RTC mapped structure may not be a member of an object, 
-  // but must be declared 'static'
-  // This also means we can only have a single instance of this 
-  // RTC_cache_handler_struct.
-  RTC_NOINIT_ATTR RTC_cache_struct    RTC_cache;
-  RTC_NOINIT_ATTR uint8_t RTC_cache_data[RTC_CACHE_DATA_SIZE];
-#endif
-
-
+// For ESP32 the RTC mapped structure may not be a member of an object,
+// but must be declared 'static'
+// This also means we can only have a single instance of this
+// RTC_cache_handler_struct.
+RTC_NOINIT_ATTR RTC_cache_struct RTC_cache;
+RTC_NOINIT_ATTR uint8_t RTC_cache_data[RTC_CACHE_DATA_SIZE];
+#endif // ifdef ESP32
 
 
 /********************************************************************************************\
@@ -136,9 +136,9 @@ bool RTC_cache_handler_struct::flush() {
   if (prepareFileForWrite()) {
     if (RTC_cache.writePos > 0) {
       #ifdef RTC_STRUCT_DEBUG
-      size_t filesize    = fw.size();
-      #endif
-      int    bytesWriten = fw.write(&RTC_cache_data[0], RTC_cache.writePos);
+      size_t filesize = fw.size();
+      #endif // ifdef RTC_STRUCT_DEBUG
+      int bytesWriten = fw.write(&RTC_cache_data[0], RTC_cache.writePos);
 
       delay(0);
       fw.flush();
@@ -149,15 +149,16 @@ bool RTC_cache_handler_struct::flush() {
 
       if ((bytesWriten < RTC_cache.writePos) /*|| (fw.size() == filesize)*/) {
           #ifdef RTC_STRUCT_DEBUG
-          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-            String log = F("RTC  : error writing file. Size before: ");
-            log += filesize;
-            log += F(" after: ");
-            log += fw.size();
-            log += F(" writen: ");
-            log += bytesWriten;
-            addLogMove(LOG_LEVEL_ERROR, log);
-          }
+
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("RTC  : error writing file. Size before: ");
+          log += filesize;
+          log += F(" after: ");
+          log += fw.size();
+          log += F(" writen: ");
+          log += bytesWriten;
+          addLogMove(LOG_LEVEL_ERROR, log);
+        }
           #endif // ifdef RTC_STRUCT_DEBUG
         fw.close();
 
@@ -220,7 +221,7 @@ String RTC_cache_handler_struct::getPeekCacheFileName(bool& islast) {
   if (fileExists(fname)) {
     return fname;
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
@@ -232,14 +233,58 @@ bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
       String fname = createCacheFilename(RTC_cache.readFileNr);
 
       writeerror = false;
+
       if (tryDeleteFile(fname)) {
           #ifdef RTC_STRUCT_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("RTC  : Removed file from FS: ");
+          log += fname;
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+          #endif // ifdef RTC_STRUCT_DEBUG
+        updateRTC_filenameCounters();
+        return true;
+      }
+    }
+  }
+#ifdef RTC_STRUCT_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, F("RTC  : No Cache files found"));
+  }
+#endif // ifdef RTC_STRUCT_DEBUG
+  return false;
+}
+
+bool RTC_cache_handler_struct::deleteAllCacheBlocks()
+{
+  if (updateRTC_filenameCounters()) {
+    const int nrCacheFiles = RTC_cache.writeFileNr - RTC_cache.readFileNr;
+
+    if (nrCacheFiles > 1) {
+      bool fileDeleted = false;
+      int count = 0;
+
+      for (int fileNr = RTC_cache.readFileNr; count < 25 && fileNr < RTC_cache.writeFileNr; ++fileNr)
+      {
+        String fname = createCacheFilename(fileNr);
+
+        if (tryDeleteFile(fname)) {
+          ++count;
+          fileDeleted = true;
+          #ifdef RTC_STRUCT_DEBUG
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("RTC  : Removed file from FS: ");
-            log += fname;
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, concat(F("RTC  : Removed file from FS: "), fname));
           }
           #endif // ifdef RTC_STRUCT_DEBUG
+          backgroundtasks();
+        }
+      }
+
+      if (fileDeleted) {
+        writeerror = false;
         updateRTC_filenameCounters();
         return true;
       }
@@ -253,10 +298,11 @@ bool RTC_cache_handler_struct::loadMetaData()
   // No need to load on ESP32, as the data is already allocated to the RTC memory by the compiler
 
   #ifdef ESP8266
+
   if (!system_rtc_mem_read(RTC_BASE_CACHE, reinterpret_cast<uint8_t *>(&RTC_cache), sizeof(RTC_cache))) {
     return false;
   }
-  #endif
+  #endif // ifdef ESP8266
 
   return RTC_cache.checksumMetadata == calc_CRC32(reinterpret_cast<const uint8_t *>(&RTC_cache), sizeof(RTC_cache) - sizeof(uint32_t));
 }
@@ -267,15 +313,16 @@ bool RTC_cache_handler_struct::loadData()
 
   // No need to load on ESP32, as the data is already allocated to the RTC memory by the compiler
   #ifdef ESP8266
+
   if (!system_rtc_mem_read(RTC_BASE_CACHE + (sizeof(RTC_cache) / 4), reinterpret_cast<uint8_t *>(&RTC_cache_data[0]), RTC_CACHE_DATA_SIZE)) {
     return false;
   }
-  #endif
+  #endif // ifdef ESP8266
 
   if (RTC_cache.checksumData != getDataChecksum()) {
-        # ifdef RTC_STRUCT_DEBUG
+        #ifdef RTC_STRUCT_DEBUG
     addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error reading RTC cache data"));
-        # endif // ifdef RTC_STRUCT_DEBUG
+        #endif // ifdef RTC_STRUCT_DEBUG
     return false;
   }
   return RTC_cache.checksumData == getDataChecksum();
@@ -291,9 +338,10 @@ bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrB
   RTC_cache.checksumMetadata = calc_CRC32(reinterpret_cast<const uint8_t *>(&RTC_cache), sizeof(RTC_cache) - sizeof(uint32_t));
   #ifdef ESP32
   return true;
-  #endif
+  #endif // ifdef ESP32
 
   #ifdef ESP8266
+
   if (!system_rtc_mem_write(RTC_BASE_CACHE, reinterpret_cast<const uint8_t *>(&RTC_cache), sizeof(RTC_cache)) || !loadMetaData())
   {
         # ifdef RTC_STRUCT_DEBUG
@@ -318,19 +366,20 @@ bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrB
         # endif // ifdef RTC_STRUCT_DEBUG
   }
   return true;
-  #endif
+  #endif // ifdef ESP8266
 }
 
 uint32_t RTC_cache_handler_struct::getDataChecksum() {
   initRTCcache_data();
-  /*
-  size_t dataLength = RTC_cache.writePos;
 
-  if (dataLength > RTC_CACHE_DATA_SIZE) {
-    // Is this allowed to happen?
-    dataLength = RTC_CACHE_DATA_SIZE;
-  }
-  */
+  /*
+     size_t dataLength = RTC_cache.writePos;
+
+     if (dataLength > RTC_CACHE_DATA_SIZE) {
+     // Is this allowed to happen?
+     dataLength = RTC_CACHE_DATA_SIZE;
+     }
+   */
 
   // Only compute the checksum over the number of samples stored.
   return calc_CRC32(reinterpret_cast<const uint8_t *>(&RTC_cache_data[0]), /*dataLength*/ RTC_CACHE_DATA_SIZE);
@@ -338,10 +387,11 @@ uint32_t RTC_cache_handler_struct::getDataChecksum() {
 
 void RTC_cache_handler_struct::initRTCcache_data() {
   #ifdef ESP8266
+
   if (RTC_cache_data.size() != RTC_CACHE_DATA_SIZE) {
     RTC_cache_data.resize(RTC_CACHE_DATA_SIZE);
   }
-  #endif
+  #endif // ifdef ESP8266
 
   if (RTC_cache.writeFileNr == 0) {
     // RTC value not reliable
@@ -439,6 +489,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
 void RTC_cache_handler_struct::rtc_debug_log(const String& description, size_t nrBytes) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
+
     if (log.reserve(18 + description.length())) {
       log  = F("RTC  : ");
       log += description;

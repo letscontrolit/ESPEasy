@@ -31,6 +31,8 @@ struct ControllerCache_struct {
 
   bool   deleteOldestCacheBlock();
 
+  bool   deleteAllCacheBlocks();
+
   void   resetpeek();
 
   // Read data without marking it as being read.
