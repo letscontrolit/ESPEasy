@@ -18,8 +18,6 @@
 //
 // https://www.youtube.com/watch?v=5_V_DibOypE
 
-// #ifdef PLUGIN_BUILD_TESTING
-
 // Uncomment this to use ssl connection. This requires more device resources than unencrypted one.
 // Also it requires valid server thumbprint string to be entered in plugin settings.
 // #define CPLUGIN_015_SSL
@@ -38,7 +36,7 @@
   #ifdef ESP32
   #  include <BlynkSimpleEsp32_SSL.h>
   #endif
-  #  define CPLUGIN_NAME_015       "Blynk SSL [TESTING]"
+  #  define CPLUGIN_NAME_015       "Blynk SSL"
 
 // Current official blynk server thumbprint
   #  define CPLUGIN_015_DEFAULT_THUMBPRINT "FD C0 7D 8D 47 97 F7 E3 07 05 D3 4E E3 BB 8E 3D C0 EA BE 1C"
@@ -50,9 +48,14 @@
  #ifdef ESP32
  #  include <BlynkSimpleEsp32.h>
  #endif
- #  define CPLUGIN_NAME_015       "Blynk [TESTING]"
+ #  define CPLUGIN_NAME_015       "Blynk"
  #  define C015_LOG_PREFIX "BL: "
 # endif // ifdef CPLUGIN_015_SSL
+
+
+// Forward declarations:
+boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeout);
+boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings);
 
 
 static unsigned long _C015_LastConnectAttempt[CONTROLLER_MAX] = { 0, 0, 0 };
@@ -185,7 +188,6 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         // Now we try to append to the existing element
         // and thus preventing the need to create a long string only to copy it to a queue element.
         C015_queue_element& element = C015_DelayHandler->sendQueue.back();
-        LoadTaskSettings(event->TaskIndex);
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
@@ -197,8 +199,8 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
             formattedValue = String();
           }
 
-          String valueName     = ExtraTaskSettings.TaskDeviceValueNames[x];
-          String valueFullName = ExtraTaskSettings.TaskDeviceName;
+          const String valueName = getTaskValueName(event->TaskIndex, x);
+          String valueFullName   = getTaskDeviceName(event->TaskIndex);
           valueFullName += F(".");
           valueFullName += valueName;
           String vPinNumberStr = valueName.substring(1, 4);

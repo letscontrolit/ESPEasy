@@ -31,7 +31,7 @@
 
 #define PLUGIN_099
 #define PLUGIN_ID_099         99
-#define PLUGIN_NAME_099       "Touch - XPT2046 on a TFT display [TESTING]"
+#define PLUGIN_NAME_099       "Touch - XPT2046 on a TFT display"
 #define PLUGIN_VALUENAME1_099 "X"
 #define PLUGIN_VALUENAME2_099 "Y"
 #define PLUGIN_VALUENAME3_099 "Z"
@@ -204,10 +204,8 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
         bool tbUseCalibration = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION);
         {
-          const __FlashStringHelper * options4[2] = { F("No"), F("Yes") };
-          int optionValues4[2] = { 0, 1 };
           int choice4 = tbUseCalibration ? 1 : 0;
-          addFormSelector(F("Calibrate to screen resolution"), F("p099_use_calibration"), 2, options4, optionValues4, choice4, true);
+          addFormSelector_YesNo(F("Calibrate to screen resolution"), F("p099_use_calibration"), choice4, true);
         }
         if (tbUseCalibration) {
 
@@ -275,7 +273,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
             addTextBox(getPluginCustomArgName(objectNr),
                       String(P099_data->StoredSettings.TouchObjects[objectNr].objectname),
                       P099_MaxObjectNameLength - 1,
-                      false, false, EMPTY_STRING, EMPTY_STRING);
+                      false, false, EMPTY_STRING, F(""));
             html_TD();
             addNumericBox(getPluginCustomArgName(objectNr + 100), P099_data->StoredSettings.TouchObjects[objectNr].top_left.x,     0, 65535);
             html_TD();
@@ -406,15 +404,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr == P099_data) {
-        return success;
-      }
-      clearPluginTaskData(event->TaskIndex);
-      P099_data = nullptr;
       success = true;
-
       break;
     }
 

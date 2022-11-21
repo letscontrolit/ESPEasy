@@ -6,6 +6,7 @@
 
 #include "../Helpers/StringConverter.h"
 
+#include "../Globals/Settings.h"
 
 // ********************************************************************************
 // HTML string re-use to keep the executable smaller
@@ -39,6 +40,10 @@ void wrap_html_tag(char tag, const String& text) {
   addHtml('<', '/');
   addHtml(tag);
   addHtml('>');
+}
+
+void html_B(const __FlashStringHelper * text) {
+  wrap_html_tag('b', text);
 }
 
 void html_B(const String& text) {
@@ -83,6 +88,12 @@ void html_TD() {
   addHtml(F("<TD>"));
 }
 
+void html_TD(const __FlashStringHelper * style) {
+  addHtml(F("<TD style=\""));
+  addHtml(style);
+  addHtml(F(";\">"));
+}
+
 void html_TD(int td_cnt) {
   for (int i = 0; i < td_cnt; ++i) {
     html_TD();
@@ -117,11 +128,11 @@ void html_table_class_normal() {
 }
 
 void html_table_class_multirow() {
-  html_table(F("multirow"), true);
+  html_table(F("multirow even"), true);
 }
 
 void html_table_class_multirow_noborder() {
-  html_table(F("multirow"), false);
+  html_table(F("multirow even"), false);
 }
 
 void html_table(const __FlashStringHelper * tableclass, bool boxed) {
@@ -269,6 +280,24 @@ void html_add_form() {
   addHtml(F("<form name='frmselect' method='post'>"));
 }
 
+void html_add_JQuery_script() {
+  addHtml(F("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js\"></script>"));
+}
+
+#if FEATURE_CHART_JS
+void html_add_ChartJS_script() {
+  addHtml(F("<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>"));
+}
+#endif // if FEATURE_CHART_JS
+
+#if FEATURE_RULES_EASY_COLOR_CODE
+void html_add_Easy_color_code_script() {
+  serve_JS(JSfiles_e::EasyColorCode_codemirror);
+  serve_JS(JSfiles_e::EasyColorCode_espeasy);
+  serve_JS(JSfiles_e::EasyColorCode_cm_plugins);
+}
+#endif
+
 void html_add_autosubmit_form() {
   addHtml(F("<script><!--\n"
             "function dept_onchange(frmselect) {frmselect.submit();}"
@@ -289,12 +318,19 @@ void html_add_script(const String& script, bool defer) {
 }
 
 void html_add_script(bool defer) {
+  html_add_script_arg(F(""), defer);
+}
+
+void html_add_script_arg(const __FlashStringHelper * script_arg, bool defer) {
   addHtml(F("<script"));
+
+  addHtml(' ');
+  addHtml(script_arg);
 
   if (defer) {
     addHtml(F(" defer"));
   }
-  addHtml(F(" type='text/JavaScript'>"));
+  addHtml('>');
 }
 
 void html_add_script_end() {
@@ -359,6 +395,15 @@ void addHtmlInt(uint64_t int_val) {
   addHtml(ull2String(int_val));
 }
 
+void addHtmlFloat(const float& value, unsigned int nrDecimals) {
+  addHtml(toString(value, nrDecimals));
+}
+
+void addHtmlFloat(const double& value, unsigned int nrDecimals) {
+  addHtml(doubleToString(value, nrDecimals));
+}
+
+
 void addEncodedHtml(const __FlashStringHelper * html) {
   // FIXME TD-er: What about the function htmlStrongEscape ??
   addEncodedHtml(String(html));
@@ -372,12 +417,24 @@ void addEncodedHtml(const String& html) {
   addHtml(copy);
 }
 
+void addHtmlAttribute(char label, int value) {
+  addHtmlAttribute(String(label), value);
+}
+
+void addHtmlAttribute(char label, float value) {
+  addHtmlAttribute(String(label), toString(value, 2));
+}
+
 void addHtmlAttribute(const __FlashStringHelper * label, int value) {
   addHtml(' ');
   addHtml(label);
   addHtml('=');
   addHtmlInt(value);
   addHtml(' ');
+}
+
+void addHtmlAttribute(const __FlashStringHelper * label, float value) {
+  addHtmlAttribute(label, toString(value, 2));
 }
 
 void addHtmlAttribute(const String& label, int value) {
@@ -458,4 +515,24 @@ void addEnabled(boolean enabled)
     addHtml(F("off'>&#10060;"));
   }
   addHtml(F("</span>"));
+}
+
+void addGpioHtml(int8_t pin) {
+  if (pin == -1) { return; }
+  addHtml(formatGpioLabel(pin, false));
+
+  if (Settings.isSPI_pin(pin) ||
+      Settings.isI2C_pin(pin) ||
+      Settings.isEthernetPin(pin) ||
+      Settings.isEthernetPinOptional(pin)) {
+    addHtml(' ');
+    addHtml(F(HTML_SYMBOL_WARNING));
+  }
+}
+
+void Label_Gpio_toHtml(const __FlashStringHelper *label, const String& gpio_pin_descr) {
+  addHtml(label);
+  addHtml(':');
+  addHtml(F("&nbsp;"));
+  addHtml(gpio_pin_descr);
 }

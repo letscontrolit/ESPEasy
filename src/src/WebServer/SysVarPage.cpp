@@ -1,6 +1,9 @@
 #include "../WebServer/SysVarPage.h"
 
-#include "../WebServer/WebServer.h"
+
+#ifdef WEBSERVER_SYSVARS
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
@@ -11,7 +14,6 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/SystemVariables.h"
 
-#ifdef WEBSERVER_SYSVARS
 
 
 // ********************************************************************************
@@ -29,7 +31,7 @@ void handle_sysvars() {
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   html_BR();
   addHtml(F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>"));
@@ -66,7 +68,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::BSSID);
   addSysVar_enum_html(SystemVariables::WI_CH);
 
-#ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   addTableSeparator(F("Ethernet"), 3, 3);
   addSysVar_enum_html(SystemVariables::ETHWIFIMODE);
   addSysVar_enum_html(SystemVariables::ETHCONNECTED);
@@ -74,7 +76,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::ETHSPEED);
   addSysVar_enum_html(SystemVariables::ETHSTATE);
   addSysVar_enum_html(SystemVariables::ETHSPEEDSTATE);
- #endif
+  #endif // if FEATURE_ETHERNET
 
   addTableSeparator(F("System"), 3, 3);
   addSysVar_enum_html(SystemVariables::UNIT_sysvar);
@@ -87,7 +89,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::VCC);
 #endif // if FEATURE_ADC_VCC
 
-  addTableSeparator(F("System status"), 3, 3);
+  addTableSeparator(F("Services Status"), 3, 3);
 
   addSysVar_enum_html(SystemVariables::ISWIFI);
   addSysVar_enum_html(SystemVariables::ISNTP);
@@ -100,16 +102,27 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::LCLTIME);
   addSysVar_enum_html(SystemVariables::LCLTIME_AM);
   addSysVar_enum_html(SystemVariables::SYSTM_HM);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_0);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_SP);
   addSysVar_enum_html(SystemVariables::SYSTM_HM_AM);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_AM_0);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_AM_SP);
   addSysVar_enum_html(SystemVariables::SYSTIME);
   addSysVar_enum_html(SystemVariables::SYSTIME_AM);
+  addSysVar_enum_html(SystemVariables::SYSTIME_AM_0);
+  addSysVar_enum_html(SystemVariables::SYSTIME_AM_SP);
   addSysVar_enum_html(SystemVariables::SYSBUILD_DATE);
   addSysVar_enum_html(SystemVariables::SYSBUILD_TIME);
   addSysVar_enum_html(SystemVariables::SYSBUILD_FILENAME);
   addSysVar_enum_html(SystemVariables::SYSBUILD_DESCR);
   addSysVar_enum_html(SystemVariables::SYSBUILD_GIT);
   
-  addTableSeparator(F("System"), 3, 3);
+  addTableSeparator(F("System Time"), 3, 3);
+  addSysVar_enum_html(SystemVariables::UPTIME);
+  addSysVar_enum_html(SystemVariables::UPTIME_MS);
+  addSysVar_enum_html(SystemVariables::UNIXTIME);
+  addSysVar_enum_html(SystemVariables::UNIXDAY);
+  addSysVar_enum_html(SystemVariables::UNIXDAY_SEC);
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
   addSysVar_html(F("%sysmonth% // %sysmonth_0%"));
@@ -120,12 +133,8 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSSEC_D);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY_S);
-  addTableSeparator(F("System"), 3, 3);
-  addSysVar_enum_html(SystemVariables::UPTIME);
-  addSysVar_enum_html(SystemVariables::UPTIME_MS);
-  addSysVar_enum_html(SystemVariables::UNIXTIME);
-  addSysVar_enum_html(SystemVariables::UNIXDAY);
-  addSysVar_enum_html(SystemVariables::UNIXDAY_SEC);
+
+  addTableSeparator(F("Sunrise/Sunset"), 3, 3);
   addSysVar_html(F("%sunset%"));
   addSysVar_html(F("%sunset-1h%"));
   addSysVar_html(F("%sunrise%"));
@@ -134,6 +143,22 @@ void handle_sysvars() {
   addSysVar_html(F("%s_sunrise%"));
   addSysVar_html(F("%m_sunset%"));
   addSysVar_html(F("%m_sunrise%"));
+
+  addTableSeparator(F("ESP Board"), 3, 3);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_ID);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_FREQ);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_MODEL);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_REVISION);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_CORES);
+  addSysVar_enum_html(SystemVariables::ESP_BOARD_NAME);
+
+  addTableSeparator(F("Storage"), 3, 3);
+  addSysVar_enum_html(SystemVariables::FLASH_FREQ);
+  addSysVar_enum_html(SystemVariables::FLASH_SIZE);
+  addSysVar_enum_html(SystemVariables::FLASH_CHIP_VENDOR);
+  addSysVar_enum_html(SystemVariables::FLASH_CHIP_MODEL);
+  addSysVar_enum_html(SystemVariables::FS_SIZE);
+  addSysVar_enum_html(SystemVariables::FS_FREE);
 
   addTableSeparator(F("Custom Variables"), 3, 3);
 
@@ -219,6 +244,7 @@ void handle_sysvars() {
   addSysVar_html(F("Mins to days: %c_m2day%(1900)"));
   addSysVar_html(F("Mins to dh:   %c_m2dh%(1900)"));
   addSysVar_html(F("Mins to dhm:  %c_m2dhm%(1900)"));
+  addSysVar_html(F("Mins to hcm:  %c_m2hcm%(482)"));
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
   addFormSeparator(3);
   addSysVar_html(F("To HEX: %c_2hex%(100000)"));
@@ -227,7 +253,7 @@ void handle_sysvars() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 

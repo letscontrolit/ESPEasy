@@ -3,9 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifndef NETWORK_H
-#define NETWORK_H
-
 #include "../DataStructs/MAC_address.h"
 
 void setNetworkMedium(NetworkMedium_t medium);
@@ -21,17 +18,16 @@ String NetworkGetHostNameFromSettings(bool force_add_unitnr = false);
 String NetworkGetHostname();
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr = false);
 String createRFCCompliantHostname(const String& oldString);
-String WifiSoftAPmacAddress();
-String WifiSTAmacAddress();
+MAC_address WifiSoftAPmacAddress();
+MAC_address WifiSTAmacAddress();
 
 void CheckRunningServices();
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 bool EthFullDuplex();
 bool EthLinkUp();
 uint8_t EthLinkSpeed();
-#endif
+#endif // if FEATURE_ETHERNET
 
 
-#endif 
 #endif

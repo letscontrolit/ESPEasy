@@ -58,22 +58,23 @@
 # else // ifdef ESP32
 
 // Was: for D1 Mini with shield connection
-  #  define P116_TFT_CS        D3 //  0   // D0
-  #  define P116_TFT_DC        D2 //  4   // D8
+  #  define P116_TFT_CS        0  // D3
+  #  define P116_TFT_DC        4  // D2
   #  define P116_TFT_RST       -1 // D4 // -1
   #  define P116_BACKLIGHT_PIN -1 // D6 // 15 // D8 -> Blocks Wemos
 # endif // ifdef ESP32
 
 enum class ST77xx_type_e : uint8_t {
-  ST7735s_128x128 = 0,
-  ST7735s_128x160,
-  ST7735s_80x160,
-  ST7789vw_240x320,
-  ST7789vw_240x240,
-  ST7789vw_240x280,
-  ST7789vw_135x240,
-  ST7796s_320x480,
-  ST77xx_MAX // must be last value in enum
+  ST7735s_128x128   = 0,
+  ST7735s_128x160   = 1u,
+  ST7735s_80x160    = 2u,
+  ST7735s_80x160_M5 = 8u,
+  ST7789vw_240x320  = 3u,
+  ST7789vw_240x240  = 4u,
+  ST7789vw_240x280  = 5u,
+  ST7789vw_135x240  = 6u,
+  ST7796s_320x480   = 7u,
+  ST77xx_MAX        = 9u // must be last value in enum
 };
 
 enum class P116_CommandTrigger : uint8_t {

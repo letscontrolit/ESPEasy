@@ -9,7 +9,7 @@ class SystemVariables {
 
 public:
 
-  enum Enum {
+  enum Enum : uint8_t {
     // For optmization, keep enums sorted alfabetically
     BOOT_CAUSE,
     BSSID,
@@ -26,14 +26,14 @@ public:
     ISMQTTIMP,
     ISNTP,
     ISWIFI,
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
     ETHWIFIMODE,
     ETHCONNECTED,
     ETHDUPLEX,
     ETHSPEED,
     ETHSTATE,
     ETHSPEEDSTATE,
-    #endif
+    #endif // if FEATURE_ETHERNET
     LCLTIME,
     LCLTIME_AM,
     LF,
@@ -69,8 +69,14 @@ public:
     SYSSTACK,
     SYSTIME,
     SYSTIME_AM,
+    SYSTIME_AM_0,
+    SYSTIME_AM_SP,
     SYSTM_HM,
+    SYSTM_HM_0,
+    SYSTM_HM_SP,
     SYSTM_HM_AM,
+    SYSTM_HM_AM_0,
+    SYSTM_HM_AM_SP,
     SYSWEEKDAY,
     SYSWEEKDAY_S,
     SYSYEAR,
@@ -87,6 +93,20 @@ public:
     UPTIME_MS,
     VCC,
     WI_CH,
+    FLASH_FREQ,    // Frequency of the flash chip
+    FLASH_SIZE,    // Real size of the flash chip
+    FLASH_CHIP_VENDOR,
+    FLASH_CHIP_MODEL,
+    FS_SIZE,       // Size of the file system
+    FS_FREE,       // Free space (in bytes) on the file system
+
+    ESP_CHIP_ID,
+    ESP_CHIP_FREQ,
+    ESP_CHIP_MODEL,
+    ESP_CHIP_REVISION,
+    ESP_CHIP_CORES,
+    ESP_BOARD_NAME,
+
 
     // Keep UNKNOWN as last
     UNKNOWN
@@ -94,13 +114,14 @@ public:
 
   // Find the next thing to replace.
   // Return UNKNOWN when nothing needs to be replaced.
-  static Enum nextReplacementEnum(const String& str, Enum last_tested);
+  static SystemVariables::Enum nextReplacementEnum(const String& str, SystemVariables::Enum last_tested);
 
-  static const __FlashStringHelper * toString(Enum enumval);
+  static String toString(SystemVariables::Enum enumval);
+  static const __FlashStringHelper * toFlashString(SystemVariables::Enum enumval);
+
+  static String getSystemVariable(SystemVariables::Enum enumval);
 
   static void parseSystemVariables(String& s, boolean useURLencode);
-
-
 
 };
 

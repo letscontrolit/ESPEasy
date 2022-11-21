@@ -52,7 +52,7 @@ template <typename T>
   Web_StreamingBuffer& operator+=(PGM_P str);
   Web_StreamingBuffer& operator+=(const __FlashStringHelper* str);
 
-  Web_StreamingBuffer& addFlashString(PGM_P str);
+  Web_StreamingBuffer& addFlashString(PGM_P str, int length = -1);
   
 private:
   Web_StreamingBuffer& addString(const String& a);
@@ -62,11 +62,11 @@ public:
 
   void checkFull();
 
-  void startStream();
+  void startStream(int httpCode = 200);
 
-  void startStream(const __FlashStringHelper * origin);
+  void startStream(const __FlashStringHelper * origin, int httpCode = 200);
 
-  void startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin);
+  void startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin, int httpCode = 200);
 
   void startJsonStream();
 
@@ -74,7 +74,8 @@ private:
 
   void startStream(bool allowOriginAll, 
                    const __FlashStringHelper * content_type, 
-                   const __FlashStringHelper * origin);
+                   const __FlashStringHelper * origin,
+                   int httpCode = 200);
 
   void trackTotalMem();
 
@@ -89,7 +90,8 @@ private:
   void sendContentBlocking(String& data);
   void sendHeaderBlocking(bool          allowOriginAll,
                           const String& content_type,
-                          const String& origin);
+                          const String& origin,
+                          int httpCode);
 
 };
 

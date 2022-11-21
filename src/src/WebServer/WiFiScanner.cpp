@@ -1,6 +1,6 @@
 #include "../WebServer/WiFiScanner.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
@@ -8,6 +8,9 @@
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_handler.h"
+#endif
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -88,6 +91,9 @@ void handle_wifiscanner() {
       addHtml(it->toString(F("<TD>")));
       html_TD();
       getWiFi_RSSI_icon(it->rssi, 45);
+      #ifdef USES_ESPEASY_NOW
+        ESPEasy_now_handler.addPeerFromWiFiScan(*it);
+      #endif
     }
   }
 

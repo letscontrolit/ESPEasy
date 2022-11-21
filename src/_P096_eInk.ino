@@ -7,13 +7,14 @@
 
 # define PLUGIN_096
 # define PLUGIN_ID_096         96
-# define PLUGIN_NAME_096       "Display - eInk with Lolin ePaper screen [TESTING]"
+# define PLUGIN_NAME_096       "Display - eInk with Lolin ePaper screen"
 # define PLUGIN_VALUENAME1_096 "CursorX"
 # define PLUGIN_VALUENAME2_096 "CursorY"
 
 // #define PLUGIN_096_MAX_DISPLAY 1 // Unused
 
 /* README.MD
+
 
  ## INTRO
 
@@ -134,8 +135,8 @@ void Plugin_096_printText(const char    *string,
 # else // ifdef ESP32
 
 // for D1 Mini with shield connection
-  #  define EPD_CS D0
-  #  define EPD_DC D8
+  #  define EPD_CS  16 // D0
+  #  define EPD_DC  15 // D8
   #  define EPD_RST -1  // can set to -1 and share with microcontroller Reset!
   #  define EPD_BUSY -1 // can set to -1 to not use a pin (will wait a fixed delay)
 # endif // ifdef ESP32
@@ -255,7 +256,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormPinSelect(formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), PIN(3));
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), PIN(3));
 
       # if P096_USE_EXTENDED_SETTINGS
 
@@ -462,13 +463,13 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
       P096_CONFIG_FLAGS = lSettings;
 
-      String   color   = web_server.arg(F("p096_foregroundcolor"));
+      String   color   = webArg(F("p096_foregroundcolor"));
       uint16_t fgcolor = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK);             // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH)); // Reduce to rgb565
       }
-      color = web_server.arg(F("p096_backgroundcolor"));
+      color = webArg(F("p096_backgroundcolor"));
       uint16_t bgcolor = AdaGFXparseColor(color, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
 
       P096_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
@@ -477,7 +478,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       String error;
 
       for (uint8_t varNr = 0; varNr < P096_Nlines; varNr++) {
-        strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
+        strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
       error = SaveCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);

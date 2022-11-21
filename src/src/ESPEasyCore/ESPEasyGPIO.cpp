@@ -5,8 +5,6 @@
 // Central functions for GPIO handling
 // **************************************************************************/
 #include "../../_Plugin_Helper.h"
-#include "../Commands/GPIO.h"
-#include "../DataStructs/PinMode.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Helpers/Hardware.h"
@@ -88,6 +86,7 @@ bool GPIO_Read_Switch_State(int pin, uint8_t pinMode) {
   return digitalRead(pin) == HIGH;
 }
 
+#ifdef USES_P009
 //********************************************************************************
 // MCP23017 PIN read
 //********************************************************************************
@@ -289,7 +288,9 @@ bool setMCPOutputMode(uint8_t Par1)
   }
   return success;
 }
+#endif
 
+#ifdef USES_P019
 //********************************************************************************
 // PCF8574 read pin
 //********************************************************************************
@@ -408,6 +409,9 @@ bool setPCFInputMode(uint8_t pin)
   } else
     return false;  
 }
+#endif
+
+
 //*********************************************************
 // GPIO_Monitor10xSec:
 // What it does:
@@ -435,12 +439,16 @@ void GPIO_Monitor10xSec()
           eventString = F("GPIO");
           break;
         case PLUGIN_MCP:
+#ifdef USES_P009
           currentState = GPIO_MCP_Read(gpioPort);
           eventString = F("MCP");
+#endif
           break;
         case PLUGIN_PCF:
+#ifdef USES_P019
           currentState = GPIO_PCF_Read(gpioPort);
           eventString = F("PCF");
+#endif
           break;
         default:
           caseFound=false;
@@ -458,7 +466,7 @@ void GPIO_Monitor10xSec()
             it->second.state = currentState; //update state ONLY if task flag=false otherwise it will not be picked up by 10xSEC function
             // send event if not task, otherwise is sent in the task PLUGIN_TEN_PER_SECOND
             if (it->second.monitor) { 
-              sendMonitorEvent(String(eventString).c_str(), gpioPort, currentState);
+              sendMonitorEvent(eventString, gpioPort, currentState);
             }
           }
         }
@@ -469,7 +477,7 @@ void GPIO_Monitor10xSec()
 }
 
 // prefix should be either "GPIO", "PCF", "MCP"
-void sendMonitorEvent(const char* prefix, int port, int8_t state)
+void sendMonitorEvent(const __FlashStringHelper * prefix, int port, int8_t state)
 {
   String eventString = prefix;
   eventString += '#';
@@ -521,13 +529,20 @@ bool GPIO_Write(pluginID_t pluginID, int port, uint8_t value, uint8_t pinMode)
         success=false;
       break;
     case PLUGIN_MCP:
+#ifdef USES_P009
       GPIO_MCP_Write(port, value);
+#endif
       break;
     case PLUGIN_PCF:
+#ifdef USES_P019
       GPIO_PCF_Write(port, value);
+#endif
       break;
     default:
       success=false;
+  }
+  if (success) {
+    Scheduler.clearGPIOTimer(pluginID, port);
   }
   return success;
 }
@@ -541,10 +556,14 @@ bool GPIO_Read(pluginID_t pluginID, int port, int8_t &value)
       value = GPIO_Internal_Read(port);
       break;
     case PLUGIN_MCP:
+#ifdef USES_P009
       value = GPIO_MCP_Read(port);
+#endif
       break;
     case PLUGIN_PCF:
+#ifdef USES_P019
       value = GPIO_PCF_Read(port);
+#endif
       break;
     default:
       success=false;

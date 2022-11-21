@@ -1,13 +1,14 @@
 #include "../WebServer/CustomPage.h"
 
-#include "../WebServer/WebServer.h"
+#ifdef WEBSERVER_CUSTOM
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
 
 #include "../Commands/InternalCommands.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
@@ -17,8 +18,6 @@
 #include "../Helpers/StringParser.h"
 
 #include "../../_Plugin_Helper.h"
-
-#ifdef WEBSERVER_CUSTOM
 
 // ********************************************************************************
 // Web Interface custom page handler
@@ -38,6 +37,7 @@ bool handle_custom(const String& path) {
     return false;    // unknown file that does not exist...
   }
 
+  #if FEATURE_ESPEASY_P2P
   if (dashboardPage) // for the dashboard page, create a default unit dropdown selector
   {
     // handle page redirects to other unit's as requested by the unit dropdown selector
@@ -47,15 +47,16 @@ bool handle_custom(const String& path) {
     if (!unit) { unit = btnunit; // unit element prevails, if not used then set to btnunit
     }
 
+    navMenuIndex = MENU_INDEX_CUSTOM_PAGE;
     if (unit && (unit != Settings.Unit))
     {
-      NodesMap::iterator it = Nodes.find(unit);
+      auto it = Nodes.find(unit);
 
       if (it != Nodes.end()) {
         TXBuffer.startStream();
         sendHeadandTail(F("TmplDsh"), _HEAD);
         addHtml(F("<meta http-equiv=\"refresh\" content=\"0; URL=http://"));
-        addHtml(it->second.ip.toString());
+        addHtml(it->second.IP().toString());
         addHtml(F("/dashboard.esp\">"));
         sendHeadandTail(F("TmplDsh"), _TAIL);
         TXBuffer.endStream();
@@ -65,6 +66,16 @@ bool handle_custom(const String& path) {
 
     TXBuffer.startStream();
     sendHeadandTail(F("TmplDsh"), _HEAD);
+    html_add_JQuery_script();
+
+    #if FEATURE_CHART_JS
+    html_add_ChartJS_script();
+    #endif // if FEATURE_CHART_JS
+    
+    #if FEATURE_RULES_EASY_COLOR_CODE
+    html_add_Easy_color_code_script();
+    #endif
+
     html_add_autosubmit_form();
     html_add_form();
 
@@ -72,14 +83,14 @@ bool handle_custom(const String& path) {
     addSelector_Head_reloadOnChange(F("unit"));
     uint8_t choice = Settings.Unit;
 
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
     {
       if ((it->second.ip[0] != 0) || (it->first == Settings.Unit))
       {
         String name = String(it->first) + F(" - ");
 
         if (it->first != Settings.Unit) {
-          name += it->second.nodeName;
+          name += it->second.getNodeName();
         }
         else {
           name += Settings.Name;
@@ -92,10 +103,9 @@ bool handle_custom(const String& path) {
     // create <> navigation buttons
     uint8_t prev = Settings.Unit;
     uint8_t next = Settings.Unit;
-    NodesMap::iterator it;
 
     for (uint8_t x = Settings.Unit - 1; x > 0; x--) {
-      it = Nodes.find(x);
+      auto it = Nodes.find(x);
 
       if (it != Nodes.end()) {
         if (it->second.ip[0] != 0) { prev = x; break; }
@@ -103,7 +113,7 @@ bool handle_custom(const String& path) {
     }
 
     for (uint8_t x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
-      it = Nodes.find(x);
+      auto it = Nodes.find(x);
 
       if (it != Nodes.end()) {
         if (it->second.ip[0] != 0) { next = x; break; }
@@ -121,6 +131,7 @@ bool handle_custom(const String& path) {
     addHtmlInt(next);
     addHtml(F("'>&gt;</a>"));
   }
+  #endif
 
   // handle commands from a custom page
   String webrequest = webArg(F("cmd"));
@@ -137,18 +148,18 @@ bool handle_custom(const String& path) {
   if (dataFile)
   {
     // Read the file per line and serve per line to reduce amount of memory needed.
-    int available = dataFile.available();
+    size_t available = dataFile.available();
     String line;
     line.reserve(128);
     while (available > 0) {
-      uint32_t chunksize = 64;
-      if (available < static_cast<int>(chunksize)) {
+      size_t chunksize = 64;
+      if (available < chunksize) {
         chunksize = available;
       }
       uint8_t buf[64] = {0};
       const size_t read = dataFile.read(buf, chunksize);
       if (read == chunksize) {
-        for (uint32_t i = 0; i < chunksize; ++i) {
+        for (size_t i = 0; i < chunksize; ++i) {
           const char c = (char)buf[i];
           line += c;
           if (c == '\n') {
@@ -183,22 +194,22 @@ bool handle_custom(const String& path) {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
 
           if (validDeviceIndex(DeviceIndex)) {
-            LoadTaskSettings(x);
             html_TR_TD();
-            addHtml(ExtraTaskSettings.TaskDeviceName);
+            addHtml(getTaskDeviceName(x));
 
             const uint8_t valueCount = getValueCountForTask(x);
 
             for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
+              const String taskValueName = getTaskValueName(x, varNr);
               if ((varNr < valueCount) &&
-                  (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))
+                  (!taskValueName.isEmpty()))
               {
                 if (varNr > 0) {
                   html_TR_TD();
                 }
                 html_TD();
-                addHtml(ExtraTaskSettings.TaskDeviceValueNames[varNr]);
+                addHtml(taskValueName);
                 html_TD();
                 addHtml(formatUserVarNoCheck(x, varNr));
               }

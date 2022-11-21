@@ -3,6 +3,7 @@
 #include "ESPEasy_common.h"
 
 #include "src/CustomBuild/ESPEasyLimits.h"
+#include "src/DataStructs/PluginTaskData_base.h"
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
@@ -14,11 +15,10 @@
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { nullptr, };
 
+
 String PCONFIG_LABEL(int n) {
   if (n < PLUGIN_CONFIGVAR_MAX) {
-    String result = F("pconf_");
-    result += n;
-    return result;
+    return concat(F("pconf_"), n);
   }
   return F("error");
 }
@@ -55,6 +55,21 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   if (Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex]                     = data;
     Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
+
+#if FEATURE_PLUGIN_STATS
+    const uint8_t valueCount = getValueCountForTask(taskIndex);
+    LoadTaskSettings(taskIndex);
+    for (size_t i = 0; i < valueCount; ++i) {
+      if (ExtraTaskSettings.enabledPluginStats(i)) {
+        Plugin_task_data[taskIndex]->initPluginStats(i);
+      }
+    }
+#endif
+#if FEATURE_PLUGIN_FILTER
+// TODO TD-er: Implement init
+
+#endif
+
   } else if (data != nullptr) {
     delete data;
   }
@@ -76,10 +91,11 @@ bool pluginTaskData_initialized(taskIndex_t taskIndex) {
 }
 
 String getPluginCustomArgName(int varNr) {
-  String argName = F("pc_arg");
+  return getPluginCustomArgName(F("pc_arg"), varNr);
+}
 
-  argName += varNr + 1;
-  return argName;
+String getPluginCustomArgName(const __FlashStringHelper * label, int varNr) {
+  return concat(label, varNr + 1);
 }
 
 int getFormItemIntCustomArgName(int varNr) {
@@ -105,8 +121,8 @@ void pluginWebformShowValue(taskIndex_t   taskIndex,
   }
 
   pluginWebformShowValue(
-    label, String(F("valuename_")) + taskIndex + '_' + varNr,
-    value, String(F("value_")) + taskIndex + '_' + varNr,
+    label, concat(F("valuename_"), static_cast<int>(taskIndex)) + '_' + varNr,
+    value, concat(F("value_"), static_cast<int>(taskIndex)) + '_' + varNr,
     addTrailingBreak);
 }
 
@@ -142,7 +158,7 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
 }
 
 bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex,
-                                      const String& newline,
+                                      const __FlashStringHelper * newline,
                                       String& description)
 {
   struct EventStruct TempEvent(taskIndex);

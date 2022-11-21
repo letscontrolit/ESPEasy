@@ -1,27 +1,232 @@
 .. include:: ../Plugin/_plugin_substitutions.repl
 .. include:: _plugin_categories.repl
 
-#######
-Plugins
-#######
+############
+Devices Page
+############
 
-Similar to a smartphones "apps" the ESP Easy plugins extends the functionality of
-the core operating system. You can use as many plugins as you available tasks.
+ESPEasy supports lots of sensors and displays via "Plugins".
+A plugin is a piece of code tailored specifically to communicate with some hardware like a sensor.
+
+There are several builds made of ESPEasy which mainly differ in the plugins included during build.
+See below to check which build is needed to support specific sensors.
+
+In ESPEasy, one can setup a number of "Tasks".
+A task is an instance of a plugin and may yield upto 4 "task values". (typically measurements taken from the connected sensor)
+These task values can be sent to connected controllers to send the data to some other system, like a MQTT broker.
+
+There can be multiple instances of the same plugin, however this might not be implemented for all plugins yet.
+For example, it makes perfect sense to have multiple temperature sensors on a single ESPEasy node.
+
+
+The Devices page shows a list of all tasks, including the last task values.
+These task values may be updated live. The update interval depends on the lowest set task interval of any (enabled) task.
+
+Task Config Page
+================
+
+Via the "Edit" button on the "Devices Page", one can see and edit the configuration of a task.
+
+A typical layout of a task setup page.
+
+.. image:: Task_config_page_layout.png
+
+Each task needs to have an unique name and has to be enabled in order to actually start collecting task values.
+The reason to have unique task names is to make sure task values can be used elsewhere in the ESPEasy system. (e.g. showing a task value on a display)
+
+Sensor
+------
+
+Next section is about how to communicate with the device.
+Typically:
+
+* For I2C sensors: I2C address, I2C speed
+* For UART/Serial sensors: Serial port, type of serial port (hardware/software serial), baudrate, GPIO pins used.
+* GPIO pins for other sensor types, whether pull-up resistors should be enabled etc.
+
+
+Device Settings
+---------------
+
+Some other plugins support several variants of the same sensor. (e.g. PMSx003 plugin)
+This can then be configured here.
+
+A lot of sensors allow for some options to operate.
+For example in the shown screenshot above, one can set the voltage range.
+
+Output
+------
+
+Some sensors can collect more than 4 types of data.
+GPS is one of those, which can collect values like:
+
+* Longitude
+* Latitude
+* Altitude
+* Speed
+* Satellites tracked
+* HDOP
+* etc.
+
+These can then be selected to be output as task value.
+
+
+Statistics
+----------
+
+.. _Task Value Statistics:
+
+(Added: 2022/07/11)
+
+A chart is shown with the recorded task values for all task values which have 
+the "Stats" option is checked in the "Values" section at the bottom of the page.
+
+.. image:: Task_config_page_Statistics.png
+
+As can be seen in the screenshot taken from a "sysinfo" task, a dataset can be disabled in the chart by clicking on the item in the legend.
+This will scale the chart to fit the other data sets.
+For example the amount of free memory on an ESP32 is several orders of magnitude larger than the typical system load.
+
+Enabling "Stats" on a task value also extends how task values can be addressed within ESPEasy.
+
+For example using just like normal task value data:
+
+* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
+* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
+* ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
+* ``[bme#temp.min]`` See ``[bme#temp.max]`` 
+
+
+Commands on "Stats" data:
+
+* ``bme.resetpeaks`` Reset the recorded "max" and "min" value of all task values of that task.
+* ``bme.clearsamples`` Clear the recorded historic samples of all task values of that task.
+
+
+
+
+
+Data Acquisition
+----------------
+
+Each time a task is "run", it may collect some data.
+When successful, other parts of the ESPEasy system should be notified.
+
+If rules are enabled, a task may generate several events.
+Each event consists of the task name, value name and the new sample.
+
+For a task named "bme" with a task value "temperature", the events looks like this: ``bme#temperature=23.45``
+
+Please note the number of decimals as this will be discussed below.
+
+Such events will be generated for all task values of this task.
+
+To limit the number of events, one may also check the "Single event with all values" checkbox.
+This will then generate only a single event like this: ``bme#All=23.45,78.90,1001.23`` (the assumed order of task values: Temp/Humidity/Pressure)
+
+Below this checkbox is a number of options to send this data to a controller.
+This only shows controllers which are configured.
+Some controllers, like Domoticz MQTT and Domoticz HTTP, also require some IDX value to identify the sample origin.
+
+
+This Interval is the number of seconds between repeated calls to ``TaskRun``, which will perform a read of the sensor.
+
+Some plugins allow this to be set to ``0``, which then effectively disables repetitive calls to run this task.
+However, most plugins consider ``0`` to be the default of 60 seconds.
+
+A task can also be called to run via the command ``TaskRun`` from the rules.
+This can be useful to trigger a read based on an event.
+
+A nice use case can be to take samples on a number of sensors as soon as the GPS task sends new coordinates.
+Since a GPS task can be configured to send updates each N meters travelled, this allows for collecting samples at an equal distance spaced, regardless the driving speed.
+
+Values
+------
+
+At the bottom of the task config page, one can configure the task values.
+
+.. image:: Task_config_page_Values_section.png
+
+Task Value Name
+^^^^^^^^^^^^^^^
+
+Each task value has to have an unique name within that task.
+It does not have to be unique on the entire ESPEasy system, as long as the combination of task name and task value name is unique.
+
+For example ``bme#temp`` and ``bme2#temp`` are perfectly fine as each can be addressed.
+
+Formula
+^^^^^^^
+
+ESP Easy can use a simple formula to change the task value before it is processed further.
+
+A few samples will be provided here. Remember that this is just a simple build-in 'calculator' with only the basic stuff like add, substract, multiply, devide.
+
+On a successful "task run", the new task values will be processed by the formula.
+To refer to the new task value, use ``%value%`` in the formula.
+
+For example to convert a temperature from Celsius to Fahrenheit, one may use:
+
+.. code-block:: none
+
+  (%value%*9/5)+32
+
+For some very common conversions, see also the "Standard Conversions" section on the ``sysvars`` page in ESPEasy.
+This conversion from Celsius to Fahrenheit is so common, one may also use this in the formula field:
+
+.. code-block:: none
+
+  %c_c2f%(%value%)
+
+To use the previous task value in a formula, use ``%pvalue%``.
+
+It is also possible to refer to other task values and system variables. (added: 2021/08/06)
+
+.. note:: The syntax in the formula field is nearly the same as in the rules. Only the ``%value%`` and ``%pvalue%`` cannot be used in rules.
+
+
+Stats
+^^^^^
+
+(Added: 2022/07/11)
+
+This checkbox allows to collect some historic data of this task value.
+On ESP32 it will collect upto 64 samples. On ESP8266 this is limited to 16 samples due to memory.
+
+When checked, the last N samples of each checked task value will be shown in a chart in the "Statistics" section.
+
+
+
+Decimals
+^^^^^^^^
+
+The number of decimals set here will be used throughout ESPEasy whenever a task value has to be formatted.
+For example, when referring to a task value on a display via ``[bme#temperature]``, the value formatting will include the set number of decimals.
+
+See :ref:`Rules: Formatting refered values <Formatting values>` on how this can be customized.
+Just remember such formatting cannot "make up" more decimals than what was set here in the task setup.
+
 
 List of official plugins
 ========================
 
 There are different released versions of ESP Easy:
 
-:green:`NORMAL` is the stable release, you can consider these plugins reliable and you can use these in production.
+:green:`NORMAL` is the regular set of plugins, you can consider these plugins stable with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
 
-:yellow:`TESTING` (split into A/B/C/D/E sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this is split into 5 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
+:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like the I2C multiplexer feature, RTTTL, tooltips, and some DEBUG logging.
 
-.. comment :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
+:red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
-:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` are specialized builds holding all Energy-, Display- and Infra Red- (extended) related plugins.
+:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
+
+:gray:`RETIRED` plugin has been retired from ESPEasy (though the source code is still available). Not included in any build.
+
+2022-07-22: :yellow:`TESTING` builds renamed to :yellow:`COLLECTION`.
 
 .. csv-table::
    :header: "Plugin name", "Build set", "Plugin number"
@@ -149,8 +354,16 @@ There are different released versions of ESP Easy:
    ":ref:`P124_page`","|P124_status|","P124"
    ":ref:`P125_page`","|P125_status|","P125"
    ":ref:`P126_page`","|P126_status|","P126"
-   ":ref:`P127_page`","|P127_status|","P125"
+   ":ref:`P127_page`","|P127_status|","P127"
+   ":ref:`P128_page`","|P128_status|","P128"
+   ":ref:`P129_page`","|P129_status|","P129"
    ":ref:`P130_page`","|P130_status|","P130"
+   ":ref:`P131_page`","|P131_status|","P131"
+   ":ref:`P132_page`","|P132_status|","P132"
+   ":ref:`P133_page`","|P133_status|","P133"
+   ":ref:`P134_page`","|P134_status|","P134"
+   ":ref:`P135_page`","|P135_status|","P135"
+   ":ref:`P141_page`","|P141_status|","P141"
 
 
 Internal GPIO handling
@@ -247,6 +460,11 @@ Hardware
 Plugins: |Plugin_Hardware|
 
 Hardware: |P046_usedby|
+
+Input
+-----
+
+Plugins: |Plugin_Input|
 
 Keypad
 ------

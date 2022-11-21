@@ -1,7 +1,7 @@
 #include "../../ESPEasy_common.h"
 #include "../Globals/MQTT.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 
 
@@ -31,9 +31,11 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
   }
 
   // Command structure:  Publish,<topic>,<value>
-  String topic = parseStringKeepCase(Line, 2);
-  String value = tolerantParseStringKeepCase(Line, 3);
+  const String topic = parseStringKeepCase(Line, 2);
+  const String value = tolerantParseStringKeepCase(Line, 3);
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
+  #endif
 
   if ((topic.length() > 0) && (value.length() > 0)) {
 
@@ -117,4 +119,4 @@ const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, co
 }
 
 
-#endif // ifdef USES_MQTT
+#endif // if FEATURE_MQTT

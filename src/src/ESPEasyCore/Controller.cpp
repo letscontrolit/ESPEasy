@@ -43,7 +43,7 @@ void sendData(struct EventStruct *event)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendData"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  LoadTaskSettings(event->TaskIndex);
+//  LoadTaskSettings(event->TaskIndex);
 
   if (Settings.UseRules) {
     createRuleEvents(event);
@@ -53,7 +53,7 @@ void sendData(struct EventStruct *event)
     SendValueLogger(event->TaskIndex);
   }
 
-  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
+//  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
@@ -106,7 +106,7 @@ bool validUserVar(struct EventStruct *event) {
   return true;
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Handle incoming MQTT messages
@@ -195,7 +195,24 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
-  mqtt.setTimeout(ControllerSettings.ClientTimeout);
+
+  // Ignoring the ACK from the server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
+
+  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  // See: https://github.com/espressif/arduino-esp32/pull/6676
+  mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+  Client *pClient = &mqtt;
+  pClient->setTimeout(timeout);
+  #else
+  mqtt.setTimeout(timeout); // in msec as it should be!  
+  #endif
+  
   MQTTclient.setClient(mqtt);
 
   if (ControllerSettings.UseDNS) {
@@ -206,18 +223,21 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   MQTTclient.setCallback(incoming_mqtt_callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = getMQTTclientID(ControllerSettings);
+  const String clientid = getMQTTclientID(ControllerSettings);
 
-  String  LWTTopic             = getLWT_topic(ControllerSettings);
-  String  LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
-  bool    MQTTresult           = false;
-  uint8_t willQos              = 0;
-  bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
-  bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
+  const String  LWTTopic             = getLWT_topic(ControllerSettings);
+  const String  LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
+  bool          MQTTresult           = false;
+  const uint8_t willQos              = 0;
+  const bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
+  const bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
 
   if (MQTTclient_should_reconnect) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
   }
+
+  const unsigned long connect_start_time = millis();
+
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
   if (hasControllerCredentialsSet(controller_idx, ControllerSettings)) {
     MQTTresult =
@@ -241,10 +261,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   delay(0);
 
-
-  uint8_t controller_number = Settings.Protocol[controller_idx];
-
-  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
+  count_connection_results(MQTTresult, F("MQTT : Broker "), Settings.Protocol[controller_idx], connect_start_time);
 
   if (!MQTTresult) {
     MQTTclient.disconnect();
@@ -253,8 +270,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     return false;
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("MQTT : Connected to broker with client ID: ");
-
+    String log;
+    log += F("MQTT : Connected to broker with client ID: ");
     log += clientid;
     addLogMove(LOG_LEVEL_INFO, log);
   }
@@ -427,7 +444,7 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
   return LWTMessageDisconnect;
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -454,6 +471,11 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
   return false;
 }
 
+void SendStatus(struct EventStruct *event, const __FlashStringHelper * status)
+{
+  SendStatus(event, String(status));
+}
+
 void SendStatus(struct EventStruct *event, const String& status)
 {
   if (status.isEmpty()) { return; }
@@ -467,11 +489,11 @@ void SendStatus(struct EventStruct *event, const String& status)
         printWebString += status;
       }
       break;
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_MQTT:
       MQTTStatus(event, status);
       break;
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
       serialPrintln(status);
       break;
@@ -481,7 +503,7 @@ void SendStatus(struct EventStruct *event, const String& status)
   }
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 bool MQTT_queueFull(controllerIndex_t controller_idx) {
   if (MQTTDelayHandler == nullptr) {
     return true;
@@ -573,7 +595,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
   }
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 
 /*********************************************************************************************\
@@ -606,8 +628,6 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
 
-    LoadTaskSettings(TaskIndex);
-
     struct EventStruct TempEvent(TaskIndex);
     checkDeviceVTypeForTask(&TempEvent);
 
@@ -618,9 +638,9 @@ void SensorSendTask(taskIndex_t TaskIndex)
     if (Device[DeviceIndex].FormulaOption) {
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
-        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+        const String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
+        if (!formula.isEmpty())
         {
-          const String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
           if (formula.indexOf(F("%pvalue%")) != -1) {
             preValue[varNr] = formatUserVarNoCheck(&TempEvent, varNr);
           }
@@ -644,11 +664,11 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
         for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
-          if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+          String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
+          if (!formula.isEmpty())
           {
             // TD-er: Should we use the set nr of decimals here, or not round at all?
             // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
-            String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
             formula.replace(F("%pvalue%"), preValue[varNr]);
             formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
             double result = 0;

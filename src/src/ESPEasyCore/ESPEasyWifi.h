@@ -15,7 +15,7 @@
 
 #include "../Helpers/LongTermTimer.h"
 
-#define WIFI_RECONNECT_WAIT                 20000 // in milliSeconds
+#define WIFI_RECONNECT_WAIT                 30000 // in milliSeconds
 #define WIFI_AP_OFF_TIMER_DURATION         300000 // in milliSeconds
 #define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
 #define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
@@ -107,30 +107,36 @@ bool prepareWiFi();
 bool checkAndResetWiFi();
 void resetWiFi();
 void initWiFi();
+
+#ifdef ESP32
+void removeWiFiEventHandler();
+void registerWiFiEventHandler();
+#endif
+
+#ifdef ESP8266
 void SetWiFiTXpower();
 void SetWiFiTXpower(float dBm); // 0-20.5
 void SetWiFiTXpower(float dBm, float rssi);
+#endif
 float GetRSSIthreshold(float& maxTXpwr);
 WiFiConnectionProtocol getConnectionProtocol();
 void WifiDisconnect();
 bool WiFiScanAllowed();
 void WifiScan(bool async, uint8_t channel = 0);
-void WifiScan();
+void WiFiScan_log_to_serial();
 void setSTA(bool enable);
 void setAP(bool enable);
 const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode);
 void setWifiMode(WiFiMode_t wifimode);
 bool WifiIsAP(WiFiMode_t wifimode);
 bool WifiIsSTA(WiFiMode_t wifimode);
-bool useStaticIP();
-bool wifiConnectTimeoutReached();
+bool WiFiUseStaticIP();
 bool wifiAPmodeActivelyUsed();
 void setConnectionSpeed();
 void setupStaticIPconfig();
 String formatScanResult(int i, const String& separator);
 String formatScanResult(int i, const String& separator, int32_t& rssi);
 
-String ESPeasyWifiStatusToString();
 void logConnectionStatus();
 
 

@@ -1,9 +1,8 @@
 #include "../DataStructs/NotificationSettingsStruct.h"
 
-#include "../../ESPEasy_common.h"
+#if FEATURE_NOTIFIER
 
-
-NotificationSettingsStruct::NotificationSettingsStruct() : Port(0), Pin1(0), Pin2(0) {
+NotificationSettingsStruct::NotificationSettingsStruct() : Port(0), Pin1(-1), Pin2(-1) {
     ZERO_FILL(Server);
     ZERO_FILL(Domain);
     ZERO_FILL(Sender);
@@ -24,3 +23,5 @@ NotificationSettingsStruct::NotificationSettingsStruct() : Port(0), Pin1(0), Pin
     ZERO_TERMINATE(User);
     ZERO_TERMINATE(Pass);
   }
+
+#endif

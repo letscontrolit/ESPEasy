@@ -20,7 +20,7 @@ public:
   //   Timers used in the scheduler
   // ********************************************************************************
 
-  enum class IntervalTimer_e {
+  enum class IntervalTimer_e : uint8_t {
     TIMER_20MSEC,
     TIMER_100MSEC,
     TIMER_1SEC,
@@ -58,29 +58,31 @@ public:
 
   static String toString(IntervalTimer_e timer);
 
-  enum class SchedulerTimerType_e {
-    SystemEventQueue       = 0, // Not really a timer.
-    ConstIntervalTimer     = 1,
-    PLUGIN_TIMER_IN_e      = 2, // Called with a previously defined event at a specific time, set via setPluginTaskTimer
-    TaskDeviceTimer        = 3, // Essentially calling PLUGIN_READ
-    GPIO_timer             = 4,
-    PLUGIN_ONLY_TIMER_IN_e = 5, // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
-    RulesTimer             = 6,
-    IntendedReboot         = 15 // Used to show intended reboot
+  enum class SchedulerTimerType_e : uint8_t {
+    SystemEventQueue       = 0u, // Not really a timer.
+    ConstIntervalTimer     = 1u,
+    PLUGIN_TASKTIMER_IN_e  = 2u, // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+    TaskDeviceTimer        = 3u, // Essentially calling PLUGIN_READ
+    GPIO_timer             = 4u,
+    PLUGIN_DEVICETIMER_IN_e = 5u, // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
+    RulesTimer             = 6u,
+    IntendedReboot         = 15u // Used to show intended reboot
   };
 
   static const __FlashStringHelper* toString(SchedulerTimerType_e timerType);
 
 
-  enum class PluginPtrType {
+  enum class PluginPtrType : uint8_t {
     TaskPlugin,
-    ControllerPlugin,
-    NotificationPlugin
+    ControllerPlugin
+#if FEATURE_NOTIFIER
+    ,NotificationPlugin
+#endif
   };
 
   static const __FlashStringHelper* toString(PluginPtrType pluginType);
 
-  enum class IntendedRebootReason_e {
+  enum class IntendedRebootReason_e : uint8_t {
     DeepSleep,
     DelayedReboot,
     ResetFactory,
@@ -143,10 +145,11 @@ public:
                                               unsigned long   lasttimer);
 
   /*********************************************************************************************\
-  * Plugin Task Timer
+  * Plugin Task Timer  (PLUGIN_TASKTIMER_IN)
+  * Can be scheduled per combo taskIndex & Par1 (20 least significant bits)
   \*********************************************************************************************/
-  static unsigned long createPluginTaskTimerId(deviceIndex_t deviceIndex,
-                                               int           Par1);
+  static unsigned long createPluginTaskTimerId(taskIndex_t taskIndex,
+                                               int         Par1);
 
   void                 setPluginTaskTimer(unsigned long msecFromNow,
                                           taskIndex_t   taskIndex,
@@ -182,7 +185,9 @@ public:
 
 
   /*********************************************************************************************\
-  * Plugin Timer
+  * Plugin Timer  (PLUGIN_DEVICETIMER_IN)
+  * Does not reflect a specific task, but rather a plugin.
+  * Can be scheduled per combo deviceIndex & Par1 (20 least significant bits)
   \*********************************************************************************************/
   static unsigned long createPluginTimerId(deviceIndex_t deviceIndex,
                                            int           Par1);
@@ -209,13 +214,14 @@ public:
 
   void setGPIOTimer(unsigned long msecFromNow,
                     pluginID_t    pluginID,
-                    int           Par1,
-                    int           Par2 = 0,
-                    int           Par3 = 0,
-                    int           Par4 = 0,
-                    int           Par5 = 0);
+                    int           pinnr,
+                    int           state = 0,
+                    int           repeatInterval = 0,
+                    int           recurringCount = 0);
 
-  void process_gpio_timer(unsigned long id);
+  void clearGPIOTimer(pluginID_t pluginID, int pinnr);
+
+  void process_gpio_timer(unsigned long id, unsigned long lasttimer);
 
   /*********************************************************************************************\
   * Task Device Timer
@@ -252,12 +258,14 @@ public:
                                         uint8_t              Function,
                                         struct EventStruct&& event);
 
+#if FEATURE_MQTT
   void schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
                                                taskIndex_t   TaskIndex,
                                                uint8_t       Function,
                                                char         *c_topic,
                                                uint8_t      *b_payload,
                                                unsigned int  length);
+#endif
 
 
   // Note: the event will be moved
@@ -265,16 +273,20 @@ public:
                                        uint8_t              Function,
                                        struct EventStruct&& event);
 
+#if FEATURE_MQTT
   void schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
                                             CPlugin::Function Function,
                                             char             *c_topic,
                                             uint8_t          *b_payload,
                                             unsigned int      length);
+#endif
 
   // Note: The event will be moved
+#if FEATURE_NOTIFIER
   void schedule_notification_event_timer(uint8_t              NotificationProtocolIndex,
                                          NPlugin::Function    Function,
                                          struct EventStruct&& event);
+#endif
 
 
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,

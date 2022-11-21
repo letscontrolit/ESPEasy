@@ -6,13 +6,13 @@
 #include "../DataStructs/RTC_cache_handler_struct.h"
 
 struct ControllerCache_struct {
-  ControllerCache_struct();
+  ControllerCache_struct() = default;
 
   ~ControllerCache_struct();
 
   // Write a single sample set to the buffer
-  bool write(const uint8_t     *data,
-             unsigned int size);
+  bool write(const uint8_t *data,
+             unsigned int   size);
 
   // Read a single sample set, either from file or buffer.
   // May delete a file if it is all read and not written to.
@@ -24,20 +24,22 @@ struct ControllerCache_struct {
 
   void   init();
 
-  bool   isInitialized();
+  bool   isInitialized() const;
 
   // Clear all caches
   void   clearCache();
 
   bool   deleteOldestCacheBlock();
 
+  bool   deleteAllCacheBlocks();
+
   void   resetpeek();
 
   // Read data without marking it as being read.
   bool   peek(uint8_t     *data,
-              unsigned int size);
+              unsigned int size) const;
 
-  String getPeekCacheFileName(bool& islast);
+  String getPeekCacheFileName(bool& islast) const;
 
   int readFileNr = 0;
   int readPos    = 0;

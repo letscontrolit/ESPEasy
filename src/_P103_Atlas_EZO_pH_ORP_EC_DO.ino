@@ -16,7 +16,7 @@
 
 #define PLUGIN_103
 #define PLUGIN_ID_103 103
-#define PLUGIN_NAME_103 "Environment - Atlas EZO pH ORP EC DO [TESTING]"
+#define PLUGIN_NAME_103 "Environment - Atlas EZO pH ORP EC DO"
 #define PLUGIN_VALUENAME1_103 "SensorData"
 #define PLUGIN_VALUENAME2_103 "Voltage"
 #define UNKNOWN 0
@@ -99,19 +99,19 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       String version = boardInfo.substring(boardInfo.lastIndexOf(',') + 1);
       addHtml(board);
 
-      if (board == F("pH"))
+      if (board.equals(F("pH")))
       {
         board_type = PH;
       }
-      else if (board == F("ORP"))
+      else if (board.equals(F("ORP")))
       {
         board_type = ORP;
       }
-      else if (board == F("EC"))
+      else if (board.equals(F("EC")))
       {
         board_type = EC;
       }
-      else if (board == F("D.O."))
+      else if (board.equals(F("D.O.")))
       {
         board_type = DO;
       }
@@ -192,7 +192,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       addUnit('V');
 
       addRowLabel(F("Sensor Data"));
-      addHtml(toString(UserVar[event->BaseVarIndex]));
+      addHtmlFloat(UserVar[event->BaseVarIndex]);
       switch (board_type)
       {
       case PH:
@@ -557,16 +557,16 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
     }
     sensordata[sensor_bytes_received] = '\0';
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    switch (i2c_response_code)
     {
-      switch (i2c_response_code)
-      {
       case 1:
       {
         #ifndef BUILD_NO_DEBUG
-        String log = F("< success, answer = ");
-        log += sensordata;
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("< success, answer = ");
+          log += sensordata;
+          addLogMove(LOG_LEVEL_DEBUG, log);
+        }
         #endif
         break;
       }
@@ -588,7 +588,6 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
         addLog(LOG_LEVEL_DEBUG, F("< no data"));
         #endif
         return false;
-      }
     }
   }
 

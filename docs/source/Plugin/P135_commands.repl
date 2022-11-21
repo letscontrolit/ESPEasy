@@ -1,0 +1,38 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``scd4x,storesettings``
+    ","
+    | Saves the current Altitude and Temperature offset values in the sensor. After applying this command, the Device configuration for Altitude and Temp offset can be set to 0, so they won't be reset.
+    "
+    "
+    | ``scd4x,factoryreset[,resetcode]``
+    ","
+    | This command resets the sensor to factory default settings.
+
+    | To protect the carefully built up calibration, this command has to be applied twice, a first time to generate a reset code (output to the log at ERROR level), and a second time with that code included to actually apply the reset. **This reset will take about 2.5 seconds, blocking the entire ESPEsy unit, blocking any ESPEasy operation to run during that time!** so be careful when applying this command.
+
+    | After successful completion, this will be written to the log at INFO level, if unsuccessful it will report on ERROR log level.
+    "
+    "
+    | ``scd4x,selftest[,selftestcode]``
+    ","
+    | This command will initiate a selftest of the unit, that **will take up to 11 seconds to complete, blocking any ESPEasy operation to run during that time!**
+
+    | To protect the regular operation of ESPEasy, this command has to be applied twice, a first time to generate a selftest code (output to the log at ERROR level), and a second time with that code included to actually apply the selftest.
+
+    | After successful completion, this will be written to the log at INFO level, if unsuccessful it will report on ERROR log level.
+    "
+    "
+    | ``scd4x,setfrc,<co2level>``
+
+    | ``co2level`` range: **SCD40**: 400..2000 ppm, **SCD41**: 400..5000 ppm.
+    ","
+    | Force-reset the calibration to a specific CO2 level. This will take up to 1 second to execute, blocking any ESPEasy operation to run during that time.
+
+    | Before using this command, the sensor should have been running for *at least* 3 minutes, to stabilize the measurements.
+
+    | After successful execution, the applied correction will be logged at INFO level.
+    "

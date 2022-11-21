@@ -12,7 +12,7 @@
 #include "../Static/WebStaticData.h"
 
 #include "../WebServer/HTML_wrappers.h"
-
+#include "../WebServer/LoadFromFS.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -212,10 +212,10 @@ void WebTemplateParser::processVarName()
   if (!varName.length()) { return; }
   varName.toLowerCase();
 
-  if (varName == F("error")) {
+  if (varName.equals(F("error"))) {
     getErrorNotifications();
   }
-  else if (varName == F("meta")) {
+  else if (varName.equals(F("meta"))) {
     if (Rebooting) {
       addHtml(F("<meta http-equiv='refresh' content='10 url=/'>"));
     }
@@ -253,17 +253,17 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
   // (varValue.length()) ;serialPrint("after:  ");
   // varValue = "";
 
-  if (varName == F("name"))
+  if (varName.equals(F("name")))
   {
     addHtml(Settings.Name);
   }
 
-  else if (varName == F("unit"))
+  else if (varName.equals(F("unit")))
   {
     addHtmlInt(Settings.Unit);
   }
   
-  else if (varName == F("build"))
+  else if (varName.equals(F("build")))
   {
     #if BUILD_IN_WEBFOOTER
     // In the footer, show full build binary name, will be 'firmware.bin' when compiled using Arduino IDE.
@@ -271,7 +271,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif
   }
 
-  else if (varName == F("date"))
+  else if (varName.equals(F("date")))
   {
     #if BUILD_IN_WEBFOOTER
     // Add the compile-date
@@ -279,7 +279,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif
   }
 
-  else if (varName == F("menu"))
+  else if (varName.equals(F("menu")))
   {
     addHtml(F("<div class='menubar'>"));
 
@@ -293,15 +293,14 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
       }
-#ifndef USES_NOTIFIER
+#if !FEATURE_NOTIFIER
 
       if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
         continue;
       }
-#endif // ifndef USES_NOTIFIER
+#endif // if !FEATURE_NOTIFIER
 
       addHtml(F("<a "));
-
       addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
       addHtmlAttribute(F("href"),  getGpMenuURL(i));
       addHtml('>');
@@ -314,7 +313,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     addHtml(F("</div>"));
   }
 
-  else if (varName == F("logo"))
+  else if (varName.equals(F("logo")))
   {
     if (fileExists(F("esp.png")))
     {
@@ -322,25 +321,52 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     }
   }
 
-  else if (varName == F("css"))
+  else if (varName.equals(F("css")))
   {
     serve_favicon();
-    serve_CSS();
+    if (MENU_INDEX_SETUP == navMenuIndex) {
+      // Serve embedded CSS
+      serve_CSS_inline();
+    } else {
+      serve_CSS(CSSfiles_e::ESPEasy_default);
+    }
+    #if FEATURE_RULES_EASY_COLOR_CODE
+    if (MENU_INDEX_RULES == navMenuIndex ||
+        MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {
+      serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
+    }
+    #endif
   }
 
 
-  else if (varName == F("js"))
+  else if (varName.equals(F("js")))
   {
+    html_add_JQuery_script();
+
+    #if FEATURE_CHART_JS
+    html_add_ChartJS_script();
+    #endif // if FEATURE_CHART_JS
+
+    #if FEATURE_RULES_EASY_COLOR_CODE
+    if (MENU_INDEX_RULES == navMenuIndex ||
+        MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {
+      html_add_Easy_color_code_script();
+    }
+    #endif
+    if (MENU_INDEX_RULES == navMenuIndex) {
+      serve_JS(JSfiles_e::SaveRulesFile);
+    }
+    
     html_add_autosubmit_form();
     serve_JS(JSfiles_e::Toasting);
   }
 
-  else if (varName == F("error"))
+  else if (varName.equals(F("error")))
   {
     // print last error - not implemented yet
   }
 
-  else if (varName == F("debug"))
+  else if (varName.equals(F("debug")))
   {
     // print debug messages - not implemented yet
   }

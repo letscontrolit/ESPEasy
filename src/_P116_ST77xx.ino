@@ -8,6 +8,7 @@
 
 
 // History:
+// 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
 // 2021-11-16 tonhuisman: P116: Change state from Development to Testing
 // 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
 //                        as implemented by FT6206 touchscreen plugin. Added ST77xx_type_toResolution
@@ -27,7 +28,7 @@
 
 # define PLUGIN_116
 # define PLUGIN_ID_116         116
-# define PLUGIN_NAME_116       "Display - ST77xx TFT [TESTING]"
+# define PLUGIN_NAME_116       "Display - ST77xx TFT"
 # define PLUGIN_VALUENAME1_116 "CursorX"
 # define PLUGIN_VALUENAME2_116 "CursorY"
 
@@ -76,6 +77,26 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("CS: ");
+      string += formatGpioLabel(PIN(0), false);
+      string += event->String1; // contains the NewLine sequence
+      string += F("DC: ");
+      string += formatGpioLabel(PIN(1), false);
+      string += event->String1;
+      string += F("RES: ");
+      string += formatGpioLabel(PIN(2), false);
+      string += event->String1;
+      string += F("Btn: ");
+      string += formatGpioLabel(P116_CONFIG_BUTTON_PIN, false);
+      string += event->String1;
+      string += F("Bckl: ");
+      string += formatGpioLabel(P116_CONFIG_BACKLIGHT_PIN, false);
+      success = true;
+      break;
+    }
+
     case PLUGIN_SET_DEFAULTS:
     {
       # ifdef ESP32
@@ -121,6 +142,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7735s_128x128),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_128x160),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160),
+          ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160_M5),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280),
@@ -131,6 +153,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7735s_128x128),
           static_cast<int>(ST77xx_type_e::ST7735s_128x160),
           static_cast<int>(ST77xx_type_e::ST7735s_80x160),
+          static_cast<int>(ST77xx_type_e::ST7735s_80x160_M5),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280),
@@ -239,13 +262,13 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P116_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("p116_backfill")));         // Bit 28 Back fill text (inv)
       P116_CONFIG_FLAGS = lSettings;
 
-      String   color   = web_server.arg(F("p116_foregroundcolor"));
+      String   color   = webArg(F("p116_foregroundcolor"));
       uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
       }
-      color = web_server.arg(F("p116_backgroundcolor"));
+      color = webArg(F("p116_backgroundcolor"));
       uint16_t bgcolor = AdaGFXparseColor(color);
 
       P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
@@ -254,7 +277,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       String error;
 
       for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
-        strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
+        strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
       error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);

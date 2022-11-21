@@ -7,12 +7,12 @@
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef BUILD_NO_DEBUG
 # define P082_SEND_GPS_TO_LOG
 //# define P082_USE_U_BLOX_SPECIFIC // TD-er: Disabled for now, as it is not working reliable/predictable
 #endif
 
-# define P082_TIMESTAMP_AGE       1500
+# define P082_TIMESTAMP_AGE       1000
 # define P082_DEFAULT_FIX_TIMEOUT 2500 // TTL of fix status in ms since last update
 
 
@@ -33,6 +33,8 @@ enum class P082_query : uint8_t {
 };
 
 const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString);
+
+P082_query Plugin_082_from_valuename(const String& valuename);
 
 
 enum class P082_PowerMode : uint8_t {
@@ -91,6 +93,7 @@ struct P082_data_struct : public PluginTaskData_base {
   // additional centiseconds given by the GPS.
   bool getDateTime(struct tm& dateTime,
                    uint32_t & age,
+                   bool     & updated,
                    bool     & pps_sync);
 
   // Send command to GPS to put it in PMREQ backup mode (UBLOX only)
@@ -104,6 +107,10 @@ struct P082_data_struct : public PluginTaskData_base {
 
   bool setDynamicModel(P082_DynamicModel model);
 #endif
+
+# if FEATURE_PLUGIN_STATS
+  bool webformLoad_show_stats(struct EventStruct *event, uint8_t var_index, P082_query query_type);
+# endif // if FEATURE_PLUGIN_STATS
 
 private:
 #ifdef P082_USE_U_BLOX_SPECIFIC
@@ -131,9 +138,14 @@ public:
   double _distance = 0.0;
 
 
-
-  unsigned long _pps_time         = 0;
-  unsigned long _last_measurement = 0;
+  unsigned long _pps_time            = 0;
+  unsigned long _last_measurement    = 0;
+  uint32_t      _last_time           = 0;
+  uint32_t      _last_date           = 0;
+  uint32_t      _last_setSystemTime  = 0;
+  uint32_t      _start_sentence      = 0;
+  uint32_t      _start_prev_sentence = 0;
+  uint32_t      _start_sequence      = 0;
 # ifdef P082_SEND_GPS_TO_LOG
   String _lastSentence;
   String _currentSentence;

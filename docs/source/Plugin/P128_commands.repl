@@ -1,0 +1,181 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    " 
+    NB: The ``neopixelfx`` command can be abbreviated to ``nfx``.
+    ","
+    "
+    | For brevity the ``nfx`` command is used here.
+
+    | Led count == Number of pixels.
+    "
+    | ``nfx,off[,fadetime[,delay]]``
+    ","
+    | Switches the stripe off, using the optional fadetime and delay timings (milliseconds).
+    "
+    "
+    | ``nfx,on[,fadetime[,delay]]``
+    ","
+    | Restores the last state of the stripe, active before a ``nfx off`` command was applied, using the optional fadetime and delay timings (milliseconds).
+    "
+    "
+    | ``nfx,dim[,dimvalue]``
+    ","
+    | Set the brightness of the stripe, range ``0`` to ``255`` (max. brightness), set to 0 when not specified. If the provided dimvalue exceeds the configured Max brightness configuration setting, or is negative, it is ignored (invalid command).
+    "
+    "
+    | ``nfx,line,<startpixel>,<endpixel>,<color>``
+    ","
+    | Light up the pixels from startpixel (range: 1..number of pixels) to endpixel (range: number of pixels..startpixel) with the specified color. Color is to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,hsvline,<startpixel>.<endpixel>,<hue>,<saturation>,<brightness>``
+    ","
+    | Light up the pixels from startpixel (range: 1..number of pixels) to endpixel (range: number of pixels..startpixel) with the specified hsvcolor values.
+    "
+    "
+    | ``nfx,one,<pixel>,<color>``
+    ","
+    | Light up 1 pixel (range: 1..number of pixels) with the specified color. Color is to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,hsvone,<pixel>,<hue>,<saturation>,<brightness>``
+    ","
+    | Light up 1 pixel (range: 1..number of pixels) with the specified hsvcolor values.
+    "
+    "
+    | ``nfx,all,<color>[,fadetime[,delay]]``
+
+    | ``nfx,rgb,<color>[,fadetime[,delay]]``
+
+    | ``nfx,fade,<color>[,fadetime[,delay]]``
+    ","
+    | Light up all pixels with the specified color, using the optional fadetime and delay timings (milliseconds). Color is to be specified in a hex RRGGBB value.
+
+    | For the ``all`` and ``rgb`` subcommands, the delay is set to 0 if not specified. When using the ``fade`` subcommand, a previously set delay is used.
+    "
+    "
+    | ``nfx,hsv,<hue>,<saturation>,<brightness>[,fadetime[,delay]]``
+    ","
+    | Light up all pixels with the specified hsvcolor values, using the optional fadetime and delay timings (milliseconds).
+
+    | Delay is set to 0 if not specified.
+    "
+    "
+    | ``nfx,colorfade,<startcolor>,<endcolor>[,startpixel[,endpixel]]``
+    ","
+    | Change the color for all or specified start- to end-pixels, from startcolor to endcolor. Colors are to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,rainbow[,speed[,fadetime]]``
+    ","
+    | Run a rainbow effect color loop effect using speed and fadetime timings (in milliseconds).
+    "
+    "
+    | ``nfx,kitt,<color>[,speed]``
+    ","
+    | Run a ``kitt`` (from the TV-series Knight Rider) effect across the pixels, using an optional speed value (range: -50..50, default: 25, negative = reverse).
+    "
+    "
+    | ``nfx,comet,<color>[,speed]``
+    ","
+    | Run a comet effect across the pixels, using an optional speed value (range: -50..50, default: 25, negative = reverse).
+    "
+    "
+    | ``nfx,theatre,<color>[,backgroundcolor[,count[,speed]]]``
+    ","
+    | Run a theatre effect across the pixels, using optional backgroundcolor, count (default: 1) and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,scan,<color>[,backgroundcolor[,speed]]``
+    ","
+    | Run a scan effect across the pixels, using optional backgroundcolor and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,dualscan,<color>[,backgroundcolor[,speed]]``
+    ","
+    | Run a dual scan effect, 2 scans in opposite direction, across the pixels, using optional backgroundcolor and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,twinkle,<color>[,backgroundcolor[,speed]]``
+    ","
+    | Run a twinkle effect across the pixels, using optional backgroundcolor and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,twinklefade,<color>[,count[,speed]]``
+    ","
+    | Run a fading twinkle effect across the pixels, using optional count (default: 1) and speed values (range: -50..50, default: 25, negative = reverse). Color is to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,sparkle,<color>[,backgroundcolor[,speed]]``
+    ","
+    | Run a sparkle effect across the pixels, using optional backgroundcolor and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,wipe,<color>[,dotcolor[,speed]]``
+    ","
+    | Run a wipe effect across the pixels, using optional dotcolor and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,dualwipe[,dotcolor[,speed]]``
+    ","
+    | Run a dual wipe effect, in opposite direction, across the pixels, using optional dotcolor and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
+    "
+    "
+    | ``nfx,fire[,fps[,brightness[,cooling[,sparking]]]]``
+    ","
+    | Run a fire effect accross the pixels, with optional fps (default: 50), brightness (default: 31), cooling (range 20..100, default: 50) and sparking (range: 20..200, default: 120) values.
+    "
+    "
+    | ``nfx,fireflicker[,intensity[,speed]]``
+    ","
+    | Run a flickering fire effect across the pixels, with optional intensity (default: 3) and speed (range -50..50, default: 25, negative = reverse) values.
+    "
+    "
+    | ``nfx,faketv[,startpixel[,endpixel]]``
+    ","
+    | Run a fake TV effect on the pixels, optionally specifying a start- end end-pixel. Used for simulating an active TV-set, f.e. when not at home during the evening, to scare off potential burglars.
+    |
+    | NB: This effect may be excluded from the build for size reasons, by default it is **not** included in ESP8266 builds. It *can* be included in self-built Custom builds.
+    "
+    "
+    | ``nfx,simpleclock[,bigtickcolor[,smalltickcolor[,hourcolor[,minutecolor[,secondcolor (set 'off' to disable)[,backgroundcolor]]]]]]``
+    ","
+    | Display a simple clock on the pixels. TODO: Optional arguments and setup to be determined.
+    "
+    "
+    | ``nfx,stop``
+    ","
+    | Stops the effect.
+    "
+    "
+    | ``nfx,statusrequest``
+    ","
+    | Send back the status as a JSON message to the source it was requested from.
+    "
+    "
+    | ``nfx,fadetime,<time>``
+    ","
+    | Set the fade time per pixel in milliseconds.
+    "
+    "
+    | ``nfx,fadedelay,<delay>``
+    ","
+    | Set the fade delay to next pixel in milliseconds.
+    "
+    "
+    | ``nfx,speed,<speed>``
+    ","
+    | Set the default effect speed, range -50..50. Negative value will revert the direction.
+    "
+    "
+    | ``nfx,count,<count>``
+    ","
+    | Set the NeoPixel LED-count.
+    "
+    "
+    | ``nfx,bgcolor,<backgroundcolor>``
+    ","
+    | Sets the default background color. Backgroundcolor is to be specified in a hex RRGGBB value.
+    "

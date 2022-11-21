@@ -97,6 +97,8 @@ In some setups this may also make the counted values appear lower, since the sen
 When the smaller particles all stick together thus no small particles will be observed by the sensor, the reading may be (much) lower than it actually should be.
 Try to have the sensor running in environments with relatively low humidity (less than 80%).
 
+A very good video describing hazards of dust particles: `Sabine Hossenfelder - How bad is Diesel? <https://www.youtube.com/watch?v=apbS205t53w>`_
+
 Air Quality Index
 """""""""""""""""
 
@@ -108,6 +110,8 @@ For example the UK guidelines of average daily exposure on Wikipedia:
 Source: `Wikipedia - Air Quality Index <https://en.wikipedia.org/wiki/Air_quality_index#United_Kingdom>`_
 
 Such an Air Quality Index can then be used to indicate the maximum exposure (in days per year) which can be considered safe.
+
+A website to check your local air quality: `IQAir <https://www.iqair.com/>`
 
 Temperature/Humidity
 ^^^^^^^^^^^^^^^^^^^^
@@ -246,7 +250,7 @@ Sensor
 
 **GPIO -> Reset** The pin to control the Reset signal. Not used when set to None.
 
-The serial settings depend on the type of **Serial Port** selected.
+See: :ref:`SerialHelper_page`
 
 Device
 ^^^^^^

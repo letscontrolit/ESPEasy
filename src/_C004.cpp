@@ -90,12 +90,6 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c004_delay_queue(int controller_number, const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  WiFiClient client;
-
-  if (!try_connect_host(controller_number, client, ControllerSettings)) {
-    return false;
-  }
-
   String postDataStr = F("api_key=");
 
   postDataStr += getControllerPass(element.controller_idx, ControllerSettings); // used for API key
@@ -113,22 +107,23 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
       postDataStr += element.txt[x];
     }
   }
-  String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
-
-  if (ControllerSettings.UseDNS) {
-    hostName = ControllerSettings.HostName;
+  if (!ControllerSettings.UseDNS) {
+    // Patch the ControllerSettings to make sure we're using a hostname instead of an IP address
+    ControllerSettings.setHostname(F("api.thingspeak.com")); // PM_CZ: HTTP requests must contain host headers.
+    ControllerSettings.UseDNS = true;
   }
 
-  String postStr = do_create_http_request(
-    hostName, F("POST"),
+  int httpCode = -1;
+  send_via_http(
+    controller_number,
+    ControllerSettings,
+    element.controller_idx,
     F("/update"), // uri
-    EMPTY_STRING,           // auth_header
+    F("POST"),
     F("Content-Type: application/x-www-form-urlencoded\r\n"),
-    postDataStr.length());
-
-  postStr += postDataStr;
-
-  return send_via_http(controller_number, client, postStr, ControllerSettings.MustCheckReply);
+    postDataStr,
+    httpCode);
+  return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C004

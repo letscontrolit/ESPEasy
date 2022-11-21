@@ -7,9 +7,14 @@ void clearAllCaches()
   Cache.clearAllCaches();
 }
 
-void updateTaskCaches()
+void clearTaskCaches()
 {
-  Cache.updateTaskCaches();
+  Cache.clearTaskCaches();
+}
+
+void clearFileCaches()
+{
+  Cache.clearFileCaches();
 }
 
 void updateActiveTaskUseSerial0()

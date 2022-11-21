@@ -17,7 +17,7 @@
 # define PLUGIN_102
 # define PLUGIN_ID_102        102
 # define PLUGIN_102_DEBUG     true       // activate extra log info in the debug
-# define PLUGIN_NAME_102      "PZEM-004Tv30-Multiple [TESTING]"
+# define PLUGIN_NAME_102      "PZEM-004Tv30-Multiple"
 
 # define P102_PZEM_mode       PCONFIG(1) // 0=read value ; 1=reset energy; 2=programm address
 # define P102_PZEM_ADDR       PCONFIG(2)
@@ -219,6 +219,8 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+
+      // FIXME TD-er: This will fail if the set to be first taskindex is no longer enabled
       if (P102_PZEM_FIRST == event->TaskIndex) // If first PZEM, serial config available
       {
         int rxPin                    = CONFIG_PIN1;
@@ -235,25 +237,27 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
         P102_PZEM_sensor = new (std::nothrow) PZEM004Tv30(port, rxPin, txPin);
 
         // Sequence for changing PZEM address
-        if (P102_PZEM_ADDR_SET == 1) // if address programming confirmed
+        if (P102_PZEM_ADDR_SET == 1 && P102_PZEM_sensor != nullptr) // if address programming confirmed
         {
           P102_PZEM_sensor->setAddress(P102_PZEM_ADDR);
           P102_PZEM_mode     = 0;    // Back to read mode
           P102_PZEM_ADDR_SET = 3;    // Address programmed
         }
       }
-      P102_PZEM_sensor->init(P102_PZEM_ADDR);
+      if (P102_PZEM_sensor != nullptr) {
+        P102_PZEM_sensor->init(P102_PZEM_ADDR);
 
-      // Sequence for reseting PZEM energy
-      if (P102_PZEM_mode == 1)
-      {
-        P102_PZEM_sensor->resetEnergy();
-        P102_PZEM_mode     = 0; // Back to read mode
-        P102_PZEM_ADDR_SET = 4; // Energy reset done
+        // Sequence for reseting PZEM energy
+        if (P102_PZEM_mode == 1)
+        {
+          P102_PZEM_sensor->resetEnergy();
+          P102_PZEM_mode     = 0; // Back to read mode
+          P102_PZEM_ADDR_SET = 4; // Energy reset done
+        }
+
+        Plugin_102_init = true;
+        success         = true;
       }
-
-      Plugin_102_init = true;
-      success         = true;
       break;
     }
 
@@ -309,7 +313,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-#ifdef USES_PACKED_RAW_DATA
+#if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
       // Matching JS code:
@@ -337,7 +341,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-#endif // USES_PACKED_RAW_DATA
+#endif // if FEATURE_PACKED_RAW_DATA
 
 
 
@@ -347,7 +351,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       {
         String command = parseString(string, 1);
 
-        if ((command == F("resetenergy")) && (P102_PZEM_FIRST == event->TaskIndex))
+        if ((command.equals(F("resetenergy"))) && (P102_PZEM_FIRST == event->TaskIndex))
         {
           if ((event->Par1 >= 0) && (event->Par1 <= 247))
           {

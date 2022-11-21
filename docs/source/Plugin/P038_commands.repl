@@ -45,3 +45,10 @@
     | Set a group of LEDs to the provided H/S/V color value.
     | Start LED nr and Stop LED nr should be within range 1..<Led Count>.
     "
+    "
+    | ``NeoPixelBright[,<brightness>]``
+    ","
+    | Set the level of display brightness, range: 0..255. If no brightness or 0 is provided, the Initial brightness setting is used.
+
+    | The maximum brightness allowed is determined by the Maximum allowed brightness setting.
+    "

@@ -47,6 +47,7 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -152,7 +153,9 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 3]); // ir_broadband_ratio
 
         if (P015_SLEEP) {
+#ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG_MORE, F("TSL2561: sleeping..."));
+#endif
           P015_data->setPowerDown();
         }
       }

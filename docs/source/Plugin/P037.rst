@@ -31,7 +31,7 @@ Only numbers can be stored in variables (Plugin Generic - Dummy Device), so eith
 Device configuration
 --------------------
 
-NB: To save space it is possible that not all features are available in all builds. The screenshots are taken including all options.
+NB: To save space it is possible that not all features are available in all builds. All features are available in ``normal`` builds with 2MB or more flash size, ``max`` builds, and when self-building in a ``Custom`` build. The screenshots are taken including all options.
 
 The options that can be included or excluded are:
 
@@ -40,6 +40,8 @@ The options that can be included or excluded are:
 * Apply filters
 
 * Apply mappings
+
+* Character to replace by comma in event
 
 Initial setup after adding the plugin:
 
@@ -73,7 +75,7 @@ The event for such attribute looks like ``<topic>#<attribute>=<attribute_value>`
 
 In addition, for each accepted JSON attribute also an event is generated, like ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``. If Mappings are used, again the value after mapping is provided.
 
-NB: When receiving non-numeric values, like above, you must explicitly name the event **and** value to trigger on, (this is an ESPEasy limitation), for example:
+NB: When receiving non-numeric values, like above, you can use wild-card matching ``on <topic>* do`` or explicitly name the event **and** value to trigger on, for example:
 
 .. code-block:: none
 
@@ -178,6 +180,20 @@ Option: Generate events for accepted topics
 * **Generate events for accepted topics**: Enabling this option will generate an event for every incoming, and accepted if Filtering is used, non-JSON payload even when that has a non-numeric value. The event generated is: ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``.
 
 When this option is disabled it has the backward-compatible behavior of discarding that message as invalid.
+
+Option: Limit events being generated
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Deduplicate events**: Receiving many MQTT messages, especially in JSON format, can cause a lot of events to be generated. To somewhat limit the system-load, caused by the amount of events, new events can be de-duplicated while still in the event queue, meaning that an event that is already queued, will *not* be inserted in the queue, but discarded.
+
+* **Max. # events in event queue**: As a protection against event-overflow this configures a check for the queue-length, so if more than the selected number of events is still in the queue, new events will be discarded until some events are processed, and the remaining is less than this count. When set to 0 this check is disabled.
+
+Option: Modify separater character in events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **To replace by comma in event**: Select a character that is to be replaced by a comma, before it is put into the event-queue. There is a limited set of characters that can be replaced, to avoid ending up with malformed events.
+
+This can be used to 'transform' the content of a JSON message so the used separator is a comma, for easier use in rules.
 
 Topic Subscriptions
 -------------------

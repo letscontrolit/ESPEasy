@@ -20,9 +20,12 @@
 # include <ESP8266WiFiType.h>
 #endif // ifdef ESP8266
 
+#include <map>
+
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
 
+#define WIFI_PROCESS_EVENTS_TIMEOUT          20000  // in milliSeconds
 
 struct WiFiEventData_t {
   bool WiFiConnectAllowed() const;
@@ -31,6 +34,7 @@ struct WiFiEventData_t {
 
   void clearAll();
   void markWiFiTurnOn();
+  void clear_processed_flags();
   void markWiFiBegin();
 
   bool WiFiDisconnected() const;
@@ -54,6 +58,10 @@ struct WiFiEventData_t {
   void markDisconnectedAPmode(const uint8_t mac[6]);
 
   void setAuthMode(uint8_t newMode);
+
+  String ESPeasyWifiStatusToString() const;
+
+  uint32_t getSuggestedTimeout(int index, uint32_t minimum_timeout) const;
 
 
   // WiFi related data
@@ -90,6 +98,7 @@ struct WiFiEventData_t {
   MAC_address             lastMacConnectedAPmode;
   MAC_address             lastMacDisconnectedAPmode;
 
+
   // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
   // This can cause recursion, so a semaphore is needed here.
   LongTermTimer           processingDisconnect;
@@ -110,6 +119,12 @@ struct WiFiEventData_t {
   bool performedClearWiFiCredentials = false;
 
   unsigned long connectionFailures = 0;
+
+  std::map<int, uint32_t> connectDurations;
+
+#ifdef ESP32
+  WiFiEventId_t wm_event_id = 0;
+#endif // ifdef ESP32
 
 
 };

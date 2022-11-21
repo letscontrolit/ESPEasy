@@ -3,7 +3,6 @@
 
 # include "src/Commands/InternalCommands.h"
 # include "src/Globals/EventQueue.h"
-# include "src/Globals/ExtraTaskSettings.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "src/Helpers/StringParser.h"
 # include "_Plugin_Helper.h"
@@ -80,7 +79,6 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       String pubname         = CPlugin_005_pubname;
       bool   mqtt_retainFlag = CPlugin_005_mqtt_retainFlag;
 
-      LoadTaskSettings(event->TaskIndex);
       parseControllerVariables(pubname, event, false);
 
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
@@ -88,7 +86,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       for (uint8_t x = 0; x < valueCount; x++)
       {
         // MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
-        if (ExtraTaskSettings.TaskDeviceValueNames[x][0] == 0) {
+        if (getTaskValueName(event->TaskIndex, x).isEmpty()) {
           continue; // we skip values with empty labels
         }
         String tmppubname = pubname;
@@ -228,7 +226,49 @@ bool C005_parse_command(struct EventStruct *event) {
 
     if ((command.equals(F("event"))) || (command.equals(F("asyncevent")))) {
       if (Settings.UseRules) {
-        eventQueue.addMove(parseStringToEnd(cmd, 2));
+        // Need to sanitize the event a bit to allow for sending event values as MQTT messages.
+        // For example:
+        // Publish topic: espeasy_node/cmd_arg2/event/myevent/2
+        // Message: 1
+        // Actual event:  myevent=1,2
+
+        // Strip out the "event" or "asyncevent" part, leaving the actual event string
+        cmd = parseStringToEndKeepCase(cmd, 2);
+
+        {
+          // Get the first part upto a parameter separator
+          // Example: "myEvent,1,2,3", which needs to be converted to "myEvent=1,2,3"
+          // N.B. This may contain the first eventvalue too
+          // e.g. "myEvent=1,2,3" => "myEvent=1"
+          String eventName = parseStringKeepCase(cmd, 1);
+          String eventValues = parseStringToEndKeepCase(cmd, 2);
+          const int equal_pos = eventName.indexOf('=');
+          if (equal_pos != -1) {
+            // We found an '=' character, so the actual event name is everything before that char.
+            eventName = cmd.substring(0, equal_pos);
+            eventValues = cmd.substring(equal_pos + 1); // Rest of the event, after the '=' char
+          }
+          if (eventValues.startsWith(F(","))) {
+            // Need to reconstruct the event to get rid of calls like these:
+            // myevent=,1,2
+            eventValues = eventValues.substring(1);
+          }
+          // Now reconstruct the complete event
+          // Without event values: "myEvent" (no '=' char)
+          // With event values: "myEvent=1,2,3"
+
+          // Re-using the 'cmd' String as that has pre-allocated memory which is
+          // known to be large enough to hold the entire event.
+          cmd = eventName;
+          if (eventValues.length() > 0) {
+            // Only append an = if there are eventvalues.
+            cmd += '=';
+            cmd += eventValues;
+          }
+        }
+        // Check for duplicates, as sometimes a node may have multiple subscriptions to the same topic.
+        // Then it may add several of the same events in a burst.
+        eventQueue.addMove(std::move(cmd), true);
       }
     } else {
       ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());

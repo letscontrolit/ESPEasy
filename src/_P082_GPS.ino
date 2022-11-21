@@ -23,7 +23,7 @@
 
 # define PLUGIN_082
 # define PLUGIN_ID_082          82
-# define PLUGIN_NAME_082       "Position - GPS [TESTING]"
+# define PLUGIN_NAME_082       "Position - GPS"
 # define PLUGIN_VALUENAME1_082 "Longitude"
 # define PLUGIN_VALUENAME2_082 "Latitude"
 # define PLUGIN_VALUENAME3_082 "Altitude"
@@ -80,6 +80,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -147,6 +148,32 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       P082_QUERY4   = static_cast<uint8_t>(P082_QUERY4_DFLT);
 
       success = true;
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P082_data) && P082_data->isInitialized()) {
+        const P082_query query = Plugin_082_from_valuename(string);
+        if (query != P082_query::P082_NR_OUTPUT_OPTIONS) {
+          const float value = P082_data->_cache[static_cast<uint8_t>(query)];
+          int nrDecimals = 2;
+          if (query == P082_query::P082_QUERY_LONG || query == P082_query::P082_QUERY_LAT) {
+            nrDecimals = 6;
+          } else if (query == P082_query::P082_QUERY_SATVIS || 
+                     query == P082_query::P082_QUERY_SATUSE || 
+                     query == P082_query::P082_QUERY_FIXQ || 
+                     query == P082_query::P082_QUERY_CHKSUM_FAIL) {
+            nrDecimals = 0;
+          }
+
+          string = toString(value, nrDecimals);
+          success = true;
+        }
+      }
       break;
     }
 
@@ -288,6 +315,24 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+# if FEATURE_PLUGIN_STATS
+    case PLUGIN_WEBFORM_LOAD_SHOW_STATS:
+    {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P082_data) {
+        for (uint8_t i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
+          const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
+          if (P082_data->webformLoad_show_stats(event, i, static_cast<P082_query>(PCONFIG(pconfigIndex)))) {
+            success = true; // Something added
+          }
+        }
+      }
+      break;
+    }
+# endif // if FEATURE_PLUGIN_STATS
+
     case PLUGIN_INIT: {
       if (P082_TIMEOUT < 100) {
         P082_TIMEOUT = P082_DEFAULT_FIX_TIMEOUT;
@@ -337,11 +382,14 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P082_data) && P082_data->loop()) {
+        P082_setSystemTime(event);
 # ifdef P082_SEND_GPS_TO_LOG
         if (P082_data->_lastSentence.substring(0,10).indexOf(F("TXT")) != -1) {
           addLog(LOG_LEVEL_INFO, P082_data->_lastSentence);
         } else {
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, P082_data->_lastSentence);
+          #endif
         }
 # endif // ifdef P082_SEND_GPS_TO_LOG
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
@@ -416,10 +464,6 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_DB_MAX),      P082_data->gps->satellitesStats.getBestSNR());
         P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_CHKSUM_FAIL), P082_data->gps->failedChecksum());
 
-
-        if (curFixStatus) {
-          P082_setSystemTime(event);
-        }
         P082_logStats(event);
 
         if (success) {
@@ -494,7 +538,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
       break;
     }
-# ifdef USES_PACKED_RAW_DATA
+# if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
       P082_data_struct *P082_data =
@@ -523,7 +567,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
-# endif // USES_PACKED_RAW_DATA
+# endif // if FEATURE_PACKED_RAW_DATA
   }
   return success;
 }
@@ -567,7 +611,7 @@ void P082_logStats(struct EventStruct *event) {
   if (log.reserve(128)) {
     log  = F("GPS:");
     log += F(" Fix: ");
-    log += String(P082_data->hasFix(P082_TIMEOUT));
+    log += P082_data->hasFix(P082_TIMEOUT) ? 1 : 0;
     log += F(" #sat: ");
     log += P082_data->gps->satellites.value();
     log += F(" #SNR: ");
@@ -649,7 +693,7 @@ void P082_html_show_stats(struct EventStruct *event) {
     return;
   }
   addRowLabel(F("Fix"));
-  addHtmlInt(P082_data->hasFix(P082_TIMEOUT));
+  addEnabled(P082_data->hasFix(P082_TIMEOUT));
 
   addRowLabel(F("Fix Quality"));
 
@@ -685,16 +729,17 @@ void P082_html_show_stats(struct EventStruct *event) {
   P082_html_show_satStats(event, false, false);
 
   addRowLabel(F("HDOP"));
-  addHtml(toString(P082_data->gps->hdop.value() / 100.0f));
+  addHtmlFloat(P082_data->gps->hdop.value() / 100.0f);
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
   uint32_t  age;
+  bool updated;
   bool pps_sync;
 
-  if (P082_data->getDateTime(dateTime, age, pps_sync)) {
+  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
     dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
-    addHtml(ESPEasy_time::getDateTimeString(dateTime));
+    addHtml(formatDateTimeString(dateTime));
   } else {
     addHtml('-');
   }
@@ -730,24 +775,30 @@ void P082_setSystemTime(struct EventStruct *event) {
     return;
   }
 
-  // Set the externalTimesource 10 seconds earlier to make sure no call is made
-  // to NTP (if set)
-  if (node_time.nextSyncTime > (node_time.getUnixTime() + 10)) {
+  if (timeSource_t::GPS_time_source == node_time.timeSource &&
+      P082_data->_last_setSystemTime != 0 &&
+      timePassedSince(P082_data->_last_setSystemTime) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) 
+  {
+    // Only update the system time every hour from the same time source.
     return;
   }
 
   struct tm dateTime;
   uint32_t  age;
+  bool updated;
   bool pps_sync;
 
   P082_data->_pps_time = P082_pps_time; // Must copy the interrupt gathered time first.
 
-  if (P082_data->getDateTime(dateTime, age, pps_sync)) {
-    // Use floating point precision to use the time since last update from GPS
-    // and the given offset in centisecond.
-    double time = makeTime(dateTime);
-    time += static_cast<double>(age) / 1000.0;
-    node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
+  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
+    if (updated) {
+      // Use floating point precision to use the time since last update from GPS
+      // and the given offset in centisecond.
+      double time = makeTime(dateTime);
+      time += static_cast<double>(age) / 1000.0;
+      node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
+      P082_data->_last_setSystemTime = millis();
+    }
   }
   P082_pps_time = 0;
 }

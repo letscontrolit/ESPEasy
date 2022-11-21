@@ -7,7 +7,7 @@
 
 # define CPLUGIN_011
 # define CPLUGIN_ID_011         11
-# define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTING]"
+# define CPLUGIN_NAME_011       "Generic HTTP Advanced"
 
 # define C011_HTTP_METHOD_MAX_LEN          16
 # define C011_HTTP_URI_MAX_LEN             240
@@ -201,7 +201,6 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  WiFiClient client;
 
   if (!NetworkConnected()) { return false; }
 
@@ -211,7 +210,6 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
     controller_number,
     ControllerSettings,
     element.controller_idx,
-    client,
     element.uri,
     element.HttpMethod,
     element.header,
@@ -257,7 +255,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addLog(LOG_LEVEL_ERROR, F("No C011_DelayHandler"));
     return false;
   }
-  LoadTaskSettings(event->TaskIndex);
+  //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
   // Add a new element to the queue with the minimal payload
   bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));

@@ -12,6 +12,7 @@ const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
     case ST77xx_type_e::ST7735s_128x128: return F("ST7735 128 x 128px");
     case ST77xx_type_e::ST7735s_128x160: return F("ST7735 128 x 160px");
     case ST77xx_type_e::ST7735s_80x160: return F("ST7735 80 x 160px");
+    case ST77xx_type_e::ST7735s_80x160_M5: return F("ST7735 80 x 160px (Color inverted)");
     case ST77xx_type_e::ST7789vw_240x320: return F("ST7789 240 x 320px");
     case ST77xx_type_e::ST7789vw_240x240: return F("ST7789 240 x 240px");
     case ST77xx_type_e::ST7789vw_240x280: return F("ST7789 240 x 280px");
@@ -35,6 +36,7 @@ void ST77xx_type_toResolution(ST77xx_type_e device, uint16_t& x, uint16_t& y) {
       x = 128;
       y = 160;
       break;
+    case ST77xx_type_e::ST7735s_80x160_M5:
     case ST77xx_type_e::ST7735s_80x160:
       x = 80;
       y = 160;
@@ -129,15 +131,20 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     switch (_device) {
       case ST77xx_type_e::ST7735s_128x128:
 
-        if (initRoptions == 0xFF) {
-          initRoptions = INITR_144GREENTAB; // 128x128px
-        }
+        initRoptions = INITR_144GREENTAB; // 128x128px
 
       // fall through
       case ST77xx_type_e::ST7735s_128x160:
 
         if (initRoptions == 0xFF) {
           initRoptions = INITR_BLACKTAB; // 128x160px
+        }
+
+      // fall through
+      case ST77xx_type_e::ST7735s_80x160_M5:
+
+        if (initRoptions == 0xFF) {
+          initRoptions = INITR_GREENTAB160x80; // 80x160px ST7735sv, inverted (M5Stack StickC)
         }
 
       // fall through

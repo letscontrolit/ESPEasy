@@ -3,9 +3,9 @@
 
 #include "../WebServer/common.h"
 
-#ifdef USE_SETTINGS_ARCHIVE
+#if FEATURE_SETTINGS_ARCHIVE
 
-#include "../Helpers/StringProvider.h"
+#include "../DataTypes/ESPEasyFileType.h"
 
 // ********************************************************************************
 // Web Interface to manage archived settings
@@ -15,14 +15,13 @@ void handle_settingsarchive();
 // ********************************************************************************
 // download filetype selectors
 // ********************************************************************************
-bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr);
+void addDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr = 0);
 
-void addDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr);
+void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr = 0);
 
-void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr);
 
-bool tryDownloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr);
+bool tryDownloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr = 0);
 
-#endif // ifdef USE_SETTINGS_ARCHIVE
+#endif // if FEATURE_SETTINGS_ARCHIVE
 
 #endif

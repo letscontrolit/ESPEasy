@@ -31,6 +31,11 @@ Supported hardware
 
 A few examples of NeoPixel LEDs and strips (Image sourced from Aliexpress)
 
+Power consumption
+-----------------
+
+.. include:: NeoPixel_Power.rst
+
 Configuration
 -------------
 
@@ -42,13 +47,17 @@ Configuration
 * **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 Actuator
-^^^^^^^^
+~~~~~~~~
 
 * **GPIO -> DIN**: Select the GPIO pin that the LED stripe is connected to.
 
 * **Led Count**: The number of LEDs available. This is the amount of LEDs that will be allowed for the ``NeoPixel*`` commands to be set, and that will be set using the ``NeoPixelAll*`` commands.
 
 * **Strip Type**: Select the type of the LEDs mounted on the strip:
+
+* **Initial brightness**: The brightness that the stripe is initially set to. Default is 0, the max. available brightness, and default before this setting was introduced. Range: 0..255.
+
+* **Maximum allowed brightness**: The brightness that is the maximum it can be set to, either from UI or via the ``NeoPixelBright`` command, to optionally help protect both the eyes and the power-supply powering the stripe. Default is 255. Range: 1..255.
 
 .. image:: P038_StripTypeOptions.png
   :alt: The Strip type options
@@ -59,7 +68,7 @@ Actuator
 
 
 Commands available
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 .. include:: P038_commands.repl
 

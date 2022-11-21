@@ -8,6 +8,13 @@
 // Interact with a device connected to serial
 // Allows to redirect data to a controller
 //
+/**
+ * Changelog:
+ * 2022-07-08 tonhuisman: Allow baudrate lowest value to 300 (from 2400)
+ *                        Don't trim off pre/post white-space from string to send
+ * 2022-07-07 tonhuisman: Add selection for serial protocol configuration (databits, parity, nr. of stopbits)
+ * 2022-07 First recorded changelog
+ **/
 
 
 #include "src/PluginStructs/P087_data_struct.h"
@@ -16,11 +23,12 @@
 
 #define PLUGIN_087
 #define PLUGIN_ID_087           87
-#define PLUGIN_NAME_087         "Communication - Serial Proxy [TESTING]"
+#define PLUGIN_NAME_087         "Communication - Serial Proxy"
 
 
 #define P087_BAUDRATE           PCONFIG_LONG(0)
 #define P087_BAUDRATE_LABEL     PCONFIG_LABEL(0)
+#define P087_SERIAL_CONFIG      PCONFIG_LONG(1)
 
 #define P087_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P087_NR_OUTPUT_OPTIONS  1
@@ -131,8 +139,10 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 2400, 115200);
+      addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 300, 115200);
       addUnit(F("baud"));
+      uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P087_SERIAL_CONFIG);
+      serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       break;
     }
 
@@ -148,7 +158,8 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      P087_BAUDRATE = getFormItemInt(P087_BAUDRATE_LABEL);
+      P087_BAUDRATE      = getFormItemInt(P087_BAUDRATE_LABEL);
+      P087_SERIAL_CONFIG = serialHelper_serialconfig_webformSave();
 
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -178,7 +189,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
         return success;
       }
 
-      if (P087_data->init(port, serial_rx, serial_tx, P087_BAUDRATE)) {
+      if (P087_data->init(port, serial_rx, serial_tx, P087_BAUDRATE, static_cast<uint8_t>(P087_SERIAL_CONFIG))) {
         LoadCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0);
         P087_data->post_init();
         success = true;
@@ -230,7 +241,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P087_data)) {
-          String param1 = parseStringKeepCase(string, 2);
+          String param1 = parseStringKeepCase(string, 2, ',', false); // Don't trim off white-space
           parseSystemVariables(param1, false);
           P087_data->sendString(param1);
           addLogMove(LOG_LEVEL_INFO, param1);
@@ -339,13 +350,13 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, nullptr, static_cast<int>(comparator), false, true, EMPTY_STRING);
+          addSelector(id, 2, options, optionValues, nullptr, static_cast<int>(comparator), false, true, F(""));
           break;
         }
         case 2:
         {
           // Compare with
-          addTextBox(id, filter, 32, false, false, EMPTY_STRING, EMPTY_STRING);
+          addTextBox(id, filter, 32, false, false, EMPTY_STRING, F(""));
           break;
         }
       }

@@ -50,7 +50,6 @@
     See also ``AccessInfo``.
 
     ``ClearAccessBlock``"
-    
     "
     ClearPassword","
     :red:`Internal`","
@@ -68,9 +67,16 @@
     "
     Config","
     :red:`Internal`","
-    Remote config of a task.    TODO: Describe command syntax.
+    Remote config of a task. 
+    This allows for actually change the config as stored in the settings for a task.
 
-    ``Config``"
+    The syntax is like ``config,task,<taskname>,<actual config command>``
+
+    Right now only the ``Regulator - Level Control`` plugin (P021) supports this via its ``SetLevel`` command.
+
+    Later other config options might be added, like ``SetInterval`` or other generic options.
+
+    Example for the task named 'VoltageLevel': ``config,task,VoltageLevel,SetLevel,22``"
     "
     ControllerDisable","
     :red:`Internal`","
@@ -300,6 +306,36 @@
 
     ``Password,<new password>``"
     "
+    ProvisionConfig","
+    :red:`Internal`","
+    Fetch ``config.dat`` as configured in the Provisioning configuration (see Settings Archive)
+
+    ``ProvisionConfig``"
+    "
+    ProvisionSecurity","
+    :red:`Internal`","
+    Fetch ``security.dat`` as configured in the Provisioning configuration (see Settings Archive)
+
+    ``ProvisionSecurity``"
+    "
+    ProvisionNotification","
+    :red:`Internal`","
+    Fetch ``notification.dat`` as configured in the Provisioning configuration (see Settings Archive)
+
+    ``ProvisionNotification``"
+    "
+    ProvisionProvision","
+    :red:`Internal`","
+    Fetch ``provisioning.dat`` as configured in the Provisioning configuration (see Settings Archive)
+
+    ``ProvisionProvision``"
+    "
+    ProvisionRules","
+    :red:`Internal`","
+    Fetch ``rulesN.txt`` as configured in the Provisioning configuration (see Settings Archive)
+
+    ``ProvisionRules,1`` to fetch ``rules1.txt`` "
+    "
     Publish","
     :green:`Rules`","
     Send command using MQTT broker service
@@ -340,15 +376,39 @@
     :green:`Rules`","
     Send command to other ESP (using UDP)
 
-    ``SendTo,<unit nr>,<command>``"
+    ``SendTo,<unit nr>,<command>``
+    
+    If the ``<command>`` contains comma's or spaces, it should be quoted, like ``SendTo,<unit nr>,'<command>'``, the usual quotes can be used, double quotes, single quotes or backticks.
+    "
     "
     SendToHTTP","
     :green:`Rules`","
-    Send command to other network device using HTTP
+    Send command to other network device using HTTP (not HTTPS!)
 
-    ``SendToHTTP,<IP address>,<Portnumber>,<command>``
+    ``<host>`` can be either domain name or IP.
 
-    ``SendToHTTP,<domain>,<Portnumber>,</url>``"
+    ``<uri>`` is everything after the ``<host>`` in a normal url. 
+
+    Syntax:
+
+    ``SendToHTTP,<host>,<Portnumber>,<uri>``
+
+    ``SendToHTTP,<user>:<pass>@<host>,<Portnumber>,<uri>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<host>/</url>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<user>:<pass>@<host>/</url>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<host>:<Portnumber>/</url>``  Added: 2022/07/23
+    
+    ``SendToHTTP,http://<user>:<pass>@<host>:<Portnumber>/</url>``  Added: 2022/07/23
+
+    Example:
+
+    ``sendtohttp,192.168.10.114,80,'control?cmd=event,poff'``
+    
+    On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
+    "
     "
     SendToUDP","
     :green:`Rules`","

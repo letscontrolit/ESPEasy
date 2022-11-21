@@ -7,18 +7,26 @@
 
 # define PLUGIN_095
 # define PLUGIN_ID_095         95
-# define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341 [TESTING]"
+# define PLUGIN_NAME_095       "Display - TFT ILI934x/ILI948x"
 # define PLUGIN_VALUENAME1_095 "CursorX"
 # define PLUGIN_VALUENAME2_095 "CursorY"
 # define PLUGIN_095_MAX_DISPLAY 1
 
 
-# if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
-  #  define PLUGIN_095_FONT_INCLUDED // enable to use fonts in this plugin
-# endif // if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
-
 /**
  * Changelog:
+ * 2022-10-24 tonhuisman: Add Invert display option in settings to accomodate displays that swap foreground and background colors
+ *                        (f.e. M5Stack Core2 using ILI9342C), or just to invert the colors at user choice.
+ * 2022-07-20 tonhuisman: Made support for ILI9486/ILI9488 optional and excluded by default as these are not available as
+ *                        regular SPI devices (3/4 wire SPI)
+ *                        NOTE: Renumbered enum with display types.
+ * 2022-07-16 tonhuisman: Add support for some more ILI9481 sub-types (Again cloned from TFT_eSPI library)
+ *                        WARNING: ILI9481 does *NOT* support changing rotation and keep writing on the display!
+ *                                 Display memory is restructured by the rotation change, but the content is not adjusted.
+ * 2022-06-14 tonhuisman: Improved Splash handling, non-blocking delay, default 3 seconds
+ * 2022-06-11 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details. Code optimization
+ * 2022-05-17 tonhuisman: Add setting for Splash during plugin startup, default on, when compiled in
+ * 2022-01-09 tonhuisman: Add support for ILI9342 (M5Stack, 240x320), ILI9481, ILI9486 and ILI9488 (320x480) displays
  * 2021-11-16 tonhuisman: Add support for PLUGIN_GET_DISPLAY_PARAMETERS, removed commented old source
  * 2021-08-17 tonhuisman: Reformatted source using Uncrustify, small cleanups
  * 2021-08-16 tonhuisman: Initial refactoring into the use of AdafruitGFX_helper
@@ -211,72 +219,136 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_095));
       }
 
-      AdaGFXFormBacklight(F("p095_backlight"), P095_CONFIG_BACKLIGHT_PIN,
-                          F("p095_backpercentage"), P095_CONFIG_BACKLIGHT_PERCENT);
+      AdaGFXFormBacklight(F("backlight"), P095_CONFIG_BACKLIGHT_PIN,
+                          F("backpercentage"), P095_CONFIG_BACKLIGHT_PERCENT);
 
-      AdaGFXFormDisplayButton(F("p095_button"), P095_CONFIG_BUTTON_PIN,
-                              F("p095_buttonInverse"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_INVERT_BUTTON),
-                              F("p095_timer"), P095_CONFIG_DISPLAY_TIMEOUT);
+      AdaGFXFormDisplayButton(F("button"), P095_CONFIG_BUTTON_PIN,
+                              F("buttonInverse"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_INVERT_BUTTON),
+                              F("timer"), P095_CONFIG_DISPLAY_TIMEOUT);
+
+      {
+        const __FlashStringHelper *hardwareTypes[] = {
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9341_240x320),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9342_240x320),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CPT29_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_PVI35_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_AUO317_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMO35_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_RGB_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI7_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI8_320x480),
+          # ifdef P095_ENABLE_ILI948X
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9486_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9488_320x480),
+          # endif // ifdef P095_ENABLE_ILI948X
+        };
+        const int hardwareOptions[] = {
+          static_cast<int>(ILI9xxx_type_e::ILI9341_240x320),
+          static_cast<int>(ILI9xxx_type_e::ILI9342_240x320),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CPT29_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_PVI35_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_AUO317_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CMO35_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_RGB_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CMI7_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CMI8_320x480),
+          # ifdef P095_ENABLE_ILI948X
+          static_cast<int>(ILI9xxx_type_e::ILI9486_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9488_320x480),
+          # endif // ifdef P095_ENABLE_ILI948X
+        };
+        addFormSelector(F("TFT display model"),
+                        F("dsptype"),
+                        static_cast<int>(ILI9xxx_type_e::ILI9xxx_MAX),
+                        hardwareTypes,
+                        hardwareOptions,
+                        P095_CONFIG_FLAG_GET_TYPE);
+      }
+
+      addFormCheckBox(F("Invert display"), F("invert"), P095_CONFIG_FLAG_GET_INVERTDISPLAY);
 
       addFormSubHeader(F("Layout"));
 
-      AdaGFXFormRotation(F("p095_rotate"), P095_CONFIG_ROTATION);
+      AdaGFXFormRotation(F("rotate"), P095_CONFIG_ROTATION);
 
-      AdaGFXFormTextPrintMode(F("p095_mode"), P095_CONFIG_FLAG_GET_MODE);
+      AdaGFXFormTextPrintMode(F("tpmode"), P095_CONFIG_FLAG_GET_MODE);
 
-      AdaGFXFormFontScaling(F("p095_fontscale"), P095_CONFIG_FLAG_GET_FONTSCALE);
+      AdaGFXFormFontScaling(F("fontscale"), P095_CONFIG_FLAG_GET_FONTSCALE);
 
-      addFormCheckBox(F("Clear display on exit"), F("p095_clearOnExit"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT));
+      # ifdef P095_SHOW_SPLASH
+      addFormCheckBox(F("Show splash on start"),  F("splash"),      P095_CONFIG_FLAG_GET_SHOW_SPLASH);
+      # endif // ifdef P095_SHOW_SPLASH
+
+      addFormCheckBox(F("Clear display on exit"), F("clearOnExit"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT));
 
       {
         const __FlashStringHelper *commandTriggers[] = { // Be sure to use all options available in the enum (except MAX)!
           P095_CommandTrigger_toString(P095_CommandTrigger::tft),
-          P095_CommandTrigger_toString(P095_CommandTrigger::ili9341)
+          P095_CommandTrigger_toString(P095_CommandTrigger::ili9341),
+          P095_CommandTrigger_toString(P095_CommandTrigger::ili9342),
+          P095_CommandTrigger_toString(P095_CommandTrigger::ili9481),
+          # ifdef P095_ENABLE_ILI948X
+          P095_CommandTrigger_toString(P095_CommandTrigger::ili9486),
+          P095_CommandTrigger_toString(P095_CommandTrigger::ili9488),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         const int commandTriggerOptions[] = {
           static_cast<int>(P095_CommandTrigger::tft),
-          static_cast<int>(P095_CommandTrigger::ili9341)
+          static_cast<int>(P095_CommandTrigger::ili9341),
+          static_cast<int>(P095_CommandTrigger::ili9342),
+          static_cast<int>(P095_CommandTrigger::ili9481),
+          # ifdef P095_ENABLE_ILI948X
+          static_cast<int>(P095_CommandTrigger::ili9486),
+          static_cast<int>(P095_CommandTrigger::ili9488),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         addFormSelector(F("Write Command trigger"),
-                        F("p095_commandtrigger"),
+                        F("commandtrigger"),
                         static_cast<int>(P095_CommandTrigger::MAX),
                         commandTriggers,
                         commandTriggerOptions,
                         P095_CONFIG_FLAG_GET_CMD_TRIGGER);
+        # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
+        # endif // ifndef LIMIT_BUILD_SIZE
       }
 
       // Inverted state!
-      addFormCheckBox(F("Wake display on receiving text"), F("p095_NoDisplay"), !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE));
+      addFormCheckBox(F("Wake display on receiving text"), F("NoDisplay"), !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE));
+      # ifndef LIMIT_BUILD_SIZE
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
+      # endif // ifndef LIMIT_BUILD_SIZE
 
-      AdaGFXFormTextColRowMode(F("p095_colrow"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW) == 1);
+      AdaGFXFormTextColRowMode(F("colrow"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW) == 1);
 
-      AdaGFXFormOnePixelCompatibilityOption(F("p095_compat"), !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095)); // Inverse
+      AdaGFXFormOnePixelCompatibilityOption(F("compat"), !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095)); // Inverse
 
-      AdaGFXFormTextBackgroundFill(F("p095_backfill"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_BACK_FILL) == 0);      // Inverse
+      AdaGFXFormTextBackgroundFill(F("backfill"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_BACK_FILL) == 0);      // Inverse
 
       addFormSubHeader(F("Content"));
 
       if (P095_CONFIG_COLORS == 0) { // For migrating from older release task settings
         P095_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
       }
-      AdaGFXFormForeAndBackColors(F("p095_foregroundcolor"),
+      AdaGFXFormForeAndBackColors(F("pfgcolor"),
                                   P095_CONFIG_GET_COLOR_FOREGROUND,
-                                  F("p095_backgroundcolor"),
+                                  F("pbgcolor"),
                                   P095_CONFIG_GET_COLOR_BACKGROUND);
 
-      String strings[P095_Nlines];
-      LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
-
-      String   line; // Default reserved length is plenty
       uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
+      {
+        String strings[P095_Nlines];
+        LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
-      for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
-        line  = F("Line ");
-        line += (varNr + 1);
-        addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P095_Nchars);
-        remain -= (strings[varNr].length() + 1);
+
+        for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
+          String line = F("Line ");
+          line += (varNr + 1);
+          addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P095_Nchars);
+          remain -= (strings[varNr].length() + 1);
+        }
       }
       String remainStr;
       remainStr.reserve(15);
@@ -293,45 +365,49 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       P095_CONFIG_VERSION = 2; // mark config V2 as already saved (next time, will not convert 'invalid' values)
       // PIN(0)..(2) are already set
 
-      P095_CONFIG_ROTATION          = getFormItemInt(F("p095_rotate"));
-      P095_CONFIG_BUTTON_PIN        = getFormItemInt(F("p095_button"));
-      P095_CONFIG_DISPLAY_TIMEOUT   = getFormItemInt(F("p095_timer"));
-      P095_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("p095_backlight"));
-      P095_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("p095_backpercentage"));
+      P095_CONFIG_ROTATION          = getFormItemInt(F("rotate"));
+      P095_CONFIG_BUTTON_PIN        = getFormItemInt(F("button"));
+      P095_CONFIG_DISPLAY_TIMEOUT   = getFormItemInt(F("timer"));
+      P095_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("backlight"));
+      P095_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("backpercentage"));
 
       uint32_t lSettings = 0;
-      bitWrite(lSettings, P095_CONFIG_FLAG_NO_WAKE,       !isFormItemChecked(F("p095_NoDisplay")));    // Bit 0 NoDisplayOnReceivingText,
-                                                                                                       // reverse logic, default=checked!
-      bitWrite(lSettings, P095_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("p095_buttonInverse"))); // Bit 1 buttonInverse
-      bitWrite(lSettings, P095_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("p095_clearOnExit")));   // Bit 2 ClearOnExit
-      bitWrite(lSettings, P095_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("p095_colrow")));        // Bit 3 Col/Row addressing
-      bitWrite(lSettings, P095_CONFIG_FLAG_COMPAT_P095,   !isFormItemChecked(F("p095_compat")));       // Bit 4 Compat_P095 (inv)
-      bitWrite(lSettings, P095_CONFIG_FLAG_BACK_FILL,     !isFormItemChecked(F("p095_backfill")));     // Bit 5 Back fill text (inv)
+      bitWrite(lSettings, P095_CONFIG_FLAG_NO_WAKE,       !isFormItemChecked(F("NoDisplay")));    // Bit 0 NoDisplayOnReceivingText, reverse
+                                                                                                  // logic, default=checked!
+      bitWrite(lSettings, P095_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("buttonInverse"))); // Bit 1 buttonInverse
+      bitWrite(lSettings, P095_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("clearOnExit")));   // Bit 2 ClearOnExit
+      bitWrite(lSettings, P095_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("colrow")));        // Bit 3 Col/Row addressing
+      bitWrite(lSettings, P095_CONFIG_FLAG_COMPAT_P095,   !isFormItemChecked(F("compat")));       // Bit 4 Compat_P095 (inv)
+      bitWrite(lSettings, P095_CONFIG_FLAG_BACK_FILL,     !isFormItemChecked(F("backfill")));     // Bit 5 Back fill text (inv)
+      # ifdef P095_SHOW_SPLASH
+      bitWrite(lSettings, P095_CONFIG_FLAG_SHOW_SPLASH,   !isFormItemChecked(F("splash")));       // Bit 6 Show splash on startup (inv)
+      # endif // ifdef P095_SHOW_SPLASH
+      bitWrite(lSettings, P095_CONFIG_FLAG_INVERTDISPLAY, isFormItemChecked(F("invert")));        // Bit 7 invertDisplay()
 
-      set4BitToUL(lSettings, P095_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p095_commandtrigger")));  // Bit 8..11 Command trigger
-      set4BitToUL(lSettings, P095_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("p095_fontscale")));       // Bit 12..15 Font scale
-      set4BitToUL(lSettings, P095_CONFIG_FLAG_MODE,        getFormItemInt(F("p095_mode")));            // Bit 16..19 Text print mode
+      set4BitToUL(lSettings, P095_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("commandtrigger")));  // Bit 8..11 Command trigger
+      set4BitToUL(lSettings, P095_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("fontscale")));       // Bit 12..15 Font scale
+      set4BitToUL(lSettings, P095_CONFIG_FLAG_MODE,        getFormItemInt(F("tpmode")));          // Bit 16..19 Text print mode
+      set4BitToUL(lSettings, P095_CONFIG_FLAG_TYPE,        getFormItemInt(F("dsptype")));         // Bit 20..24 Hardwaretype
       P095_CONFIG_FLAGS = lSettings;
 
-      String   color   = web_server.arg(F("p095_foregroundcolor"));
+      String   color   = webArg(F("pfgcolor"));
       uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
       }
-      color = web_server.arg(F("p095_backgroundcolor"));
+      color = webArg(F("pbgcolor"));
       uint16_t bgcolor = AdaGFXparseColor(color);
 
       P095_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
 
       String strings[P095_Nlines];
-      String error;
 
       for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
-        strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
+        strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
-      error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
+      String error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
       if (error.length() > 0) {
         addHtmlError(error);
@@ -343,8 +419,11 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DISPLAY_PARAMETERS:
     {
-      event->Par1 = 240;                                           // X-resolution in pixels
-      event->Par2 = 320;                                           // Y-resolution in pixels
+      uint16_t _x, _y;
+      ILI9xxx_type_toResolution(static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE), _x, _y);
+
+      event->Par1 = _x;                                            // X-resolution in pixels
+      event->Par2 = _y;                                            // Y-resolution in pixels
       event->Par3 = P095_CONFIG_ROTATION;                          // Rotation (0..3: 0, 90, 180, 270 degrees)
       event->Par4 = static_cast<int>(AdaGFXColorDepth::FullColor); // Color depth
 
@@ -356,7 +435,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
     {
       if (Settings.InitSPI != 0) {
         initPluginTaskData(event->TaskIndex,
-                           new (std::nothrow) P095_data_struct(P095_CONFIG_ROTATION,
+                           new (std::nothrow) P095_data_struct(static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE),
+                                                               P095_CONFIG_ROTATION,
                                                                P095_CONFIG_FLAG_GET_FONTSCALE,
                                                                static_cast<AdaGFXTextPrintMode>(P095_CONFIG_FLAG_GET_MODE),
                                                                P095_CONFIG_BACKLIGHT_PIN,
@@ -394,12 +474,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       if (P095_CONFIG_BUTTON_PIN != -1) {
         P095_data_struct *P095_data = static_cast<P095_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr == P095_data) {
-          return success;
+        if (nullptr != P095_data) {
+          P095_data->registerButtonState(digitalRead(P095_CONFIG_BUTTON_PIN), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_INVERT_BUTTON));
+          success = true;
         }
-
-        P095_data->registerButtonState(digitalRead(P095_CONFIG_BUTTON_PIN), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_INVERT_BUTTON));
-        success = true;
       }
       break;
     }
@@ -443,8 +521,20 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
-  }
 
+    # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P095_data_struct *P095_data = static_cast<P095_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P095_data) {
+        success = P095_data->plugin_get_config_value(event, string); // GetConfig operation, handle variables, fully delegated to
+                                                                     // AdafruitGFX_helper
+      }
+      break;
+    }
+    # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
+  }
 
   return success;
 }

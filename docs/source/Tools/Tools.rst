@@ -94,7 +94,8 @@ The ``sysinfo`` page does show a lot of information about the system.
 * **Unit Number**: The assigned unit number of the node.
 * **Local Time**:	The local time as known by the node. This includes any set timezone and DST (Daylight Saving).
 * **Time Source**:	The origin of the current system time. (e.g. NTP / GPS / Manual set)
-* **Time Wander**:	Time drift of the crystal in msec/sec. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.
+* **UTC time stored in RTC**: When external RTC is configured and has a time set, the UTC time stored in this RTC will be shown. (Added: 2022/10/30)
+* **Time Wander**:	Time drift of the crystal in ppm. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.  (older ESPEasy builds used msec/sec as unit, but ppm is more relatable to crystal specs.)
 * **Uptime**:	Current uptime of the node
 * **Load**:	CPU load in percent. ``LC`` is the number of calls to the ``loop()`` function per second.
 * **CPU Eco Mode**:	Whether the ECO mode is enabled or not.
@@ -226,8 +227,11 @@ Rules Settings
 
 * Rules - Check to enable rules functionality (on next page load, extra Rules tab will appear)
 * Old Engine - Default checked.
+* Enable Rules Cache - Rules cache will keep track of where in the rules files each ``on ... do`` block is located. This significantly improves the time it takes to handle events. (Enabled by default, Added 2022/04/17)
+* Allow Rules Event Reorder - It is best to have the rules blocks for the most frequently occuring events placed at the top of the first rules file. (also for frequently happening events, which you don't want to act on) The cached event positions can be reordered in memory based on how often an event was matched.  (Enabled by default, Added 2022/04/17, disabled 2022/06/24)
 * Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
 * SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
+* SendToHTTP Follow Redirects - When checked, HTTP calls may follow redirects. Strict RFC2616, only requests using GET or HEAD methods will be redirected (using the same method), since the RFC requires end-user confirmation in other cases.
 
 Time Source
 -----------
@@ -249,6 +253,24 @@ Most modules sold with one of these RTC chips also have a battery socket to keep
 This allows ESPEasy to know the correct date and time after been powered off for a while, or deep sleep, without the need for working network to query a NTP server.
 
 N.B. these modules all use I2C, so they need to be connected to the configured I2C pins and those pins should be set.
+
+Procedure to configure a real time clock (RTC) chip:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Connect the RTC chip to the configured I2C pins, and boot up the ESPEasy unit.
+* From Tools/Advanced, enable the use of NTP, and set DST option in the DST settings and the Timezone offset, Latitude and Longitude in the Location settings **correctly**.
+* Select the used RTC chip from the list.
+* Submit the page to save the settings.
+* Reboot the unit.
+* The time will be retrieved using NTP once more, and set into the RTC chip.
+* Check on the Main tab if the time is displayed correctly.
+* On the Tools/Advanced page, the NTP setting can now be disabled, if so desired, as it won't be used anymore (unless the External Time Source is set to None).
+
+Besides using NTP to set the date/time to the RTC chip, other supported options are:
+
+* Using the ``DateTime`` command to set the date and time.
+* Having a GPS receiver connected, using the GPS plugin (:ref:`P082_page`), the ESPEasy date/time will be set when GPS date/time is valid, as that is more accurate than the RTC date/time. The RTC date/time will be used from boot, and be updated once the GPS has a fix, which may take some time, depending on conditions.
+
 
 DST Settings
 ------------
@@ -373,8 +395,27 @@ If this is the fix, where ESPEasy is not able to resolve the lockec I2C bus on i
 
 Default: unchecked
 
+Allow OTA without size-check
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Added: 2022-04-22
 
+On ESP's with 1MB or 2MB Flash, updates via OTA *may* be disabled because of a lack of free flash memory to store the new image during OTA update.
+
+Enabling this setting will allow OTA updates even when there is not enough free Flash space to perform the update by allowing to overwrite the file-system, probably trashing the settings and other files like rules.
+
+This should best only be enabled if the configuration, and other files like rules, can be restored from an external source, or be re-entered manually.
+
+NB: If the OTA update is bigger than available flash + file-system size, the OTA update will fail, but as the file-system is already overwritten, any configuration and files are overwritten irreversibly!
+
+Web light/dark mode
+^^^^^^^^^^^^^^^^^^^
+
+Added: 2022-09-05
+
+When using Dark-mode as an Operating System or Web-browser setting, the ESPEasy Web interface defaults to using a Dark theme as well. For those that prefer to use non-dark mode, or use ESPEasy in dark mode while the OS/browser is not configured that way, this can be selected here.
+
+NB: If this option is not available, the regular non-dark mode will be used.
 
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -821,12 +862,43 @@ Especially if the node is hard to reach for a proper clean setup.
 .. image:: images/SettingsArchive_download2.png
 
 After downloading the files, a summary is given.
+
 A returned error can be something like 404 (file not available) or 401 (not authorized).
 These are the standard HTTP error codes.
+The error will be ``-1`` if the host is unreachable.
+
+If a file already exists, the new file is downloaded with ``_tmp`` appended to the filename.
+If successful, the original file will be renamed to one with ``_bak`` appended to the filename and then the ``_tmp`` version is renamed to the original filename.
+However, if the ``_bak`` is present, it may fail to rename the original one, so the operation fails.
+The presence of the ``_bak`` file is also some protection to not being able to fetch a new version, unless the "Delete First" option is checked.
 
 If ''config.dat'' or ''security.dat'' was downloaded, it is very important to do a reboot and not try to change (and save) anything on the ESPeasy node.
 The old settings are still active in memory and if something will be saved, only the changed part may be saved.
 This would corrupt the settings file.
+
+
+With only ``FEATURE_SETTINGS_ARCHIVE`` defined during build, the URL and credentials cannot be stored.
+(2022/07/24: Renamed USE_SETTINGS_ARCHIVE to FEATURE_SETTINGS_ARCHIVE)
+For this the build must be made with ``FEATURE_CUSTOM_PROVISIONING`` defined.
+
+N.B. ``FEATURE_CUSTOM_PROVISIONING`` is added on 2022/05/13. (2022/07/24: Renamed from USE_CUSTOM_PROVISIONING to FEATURE_CUSTOM_PROVISIONING)
+
+
+URL with Settings
+^^^^^^^^^^^^^^^^^
+
+This holds the full URL without file name where the files must be fetched from.
+
+Since builds made after 2022/05/13, the URL may also contain system variables.
+This allows for an URL like: ``http://192.168.10.127/%mac%``
+
+System variables will be converted into an URL encoded form, which may end up like this:
+
+* ``http://192.168.10.127/A0%3a20%3aA6%3a14%3a84%3a81/rules4.txt`` MAC address: ``A0:20:A6:14:84:81``
+
+The URL will not be stored, unless the build is made with ``FEATURE_CUSTOM_PROVISIONING`` defined and the option is checked to save the URL. (option only present when ``FEATURE_CUSTOM_PROVISIONING`` defined)
+
+Using system variables may allow for multi stage setup of a node, as you could for example fetch a rule which may set a variable to a new value and thus new files may be fetched from a different URL.
 
 
 Side Effects on cloning
@@ -842,3 +914,47 @@ If the original node is configured to use static IP, the clone will use the same
 This can render both inaccessible.
 
 
+Provisioning
+============
+
+Added: 2022/05/13
+
+When the build is made with ``FEATURE_CUSTOM_PROVISIONING`` defined, this Settings Archive screen does allow for more settings helping deployment and remote administration of ESPEasy nodes.
+
+All Settings on the Settings Archive page can be stored in a file named ``provisioning.dat``.
+This file also can store the factory default settings like the device model to ease deployment of a large number of nodes.
+
+N.B. The ``FEATURE_SETTINGS_ARCHIVE`` define is needed to allow to edit the ``provisioning.dat`` file, but it is not needed to use the provisioning feature.
+
+
+.. image:: images/SettingsArchive_provisioning.png
+
+As can be seen, the URL and credentials can be stored.
+This will be stored in a file named ``provisioning.dat`` 
+Such a file may also be fetched from a server.
+
+The ``provisioning.dat`` file can also be automatically generated when performing a factory reset.
+For this the (custom) build must be prepared via a number of defined defaults.
+See the ``Custom-sample.h`` file for some examples.
+
+
+Allow Fetch by Command
+----------------------
+
+This checkbox allows provisioning via commands.
+These commands are not restricted, so they can also be given via HTTP or MQTT.
+
+However, they can only be executed when:
+
+* Allow Fetch by Command is enabled
+* the file to download is checked
+* URL (+ optional credentials) is stored
+
+The commands are:
+
+
+* ``ProvisionConfig`` Fetch ``config.dat``
+* ``ProvisionSecurity`` Fetch ``security.dat``
+* ``ProvisionNotification`` Fetch ``notification.dat``
+* ``ProvisionProvision`` Fetch ``provisioning.dat``
+* ``ProvisionRules,1`` Fetch ``rules1.txt``
