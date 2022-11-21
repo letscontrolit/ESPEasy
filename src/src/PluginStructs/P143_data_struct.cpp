@@ -183,17 +183,8 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
         _blue  = P143_ADAFRUIT_COLOR_BLUE;
 
         // Set LED initial state
-        uint8_t data[4];
-        data[0] = 1; // Led 1
-        data[1] = applyBrightness(_red);
-        data[2] = applyBrightness(_green);
-        data[3] = applyBrightness(_blue);
-        I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
-        data[0] = 2; // Led 2
-        data[1] = applyBrightness(P143_M5STACK2_COLOR_RED);
-        data[2] = applyBrightness(P143_M5STACK2_COLOR_GREEN);
-        data[3] = applyBrightness(P143_M5STACK2_COLOR_BLUE);
-        I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+        m5stack_setPixelColor(1, _red,                    _green,                    _blue);
+        m5stack_setPixelColor(2, P143_M5STACK2_COLOR_RED, P143_M5STACK2_COLOR_GREEN, P143_M5STACK2_COLOR_BLUE);
         _initialized = true;
         break;
       }
@@ -287,9 +278,7 @@ bool P143_data_struct::plugin_exit(struct EventStruct *event) {
       {
         if (P143_PLUGIN_EXIT_LED_OFF) {
           // Turn off both LEDs
-          uint8_t data[4] = { 0 };
-
-          I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+          m5stack_setPixelColor(0, 0, 0, 0);
         }
         break;
       }
@@ -319,6 +308,122 @@ bool P143_data_struct::plugin_read(struct EventStruct *event)           {
     return true;
   }
   return false;
+}
+
+/*****************************************************
+ * plugin_write
+ ****************************************************/
+bool P143_data_struct::plugin_write(struct EventStruct *event,
+                                    String            & string) {
+  bool success     = false;
+  const String cmd = parseString(string, 1);
+
+  if (_initialized && cmd.equals(F("i2cencoder"))) {
+    const String sub = parseString(string, 2);
+
+    if ((sub.equals(F("led1")) || sub.equals(F("led2"))) // led1,<r>,<g>,<b> (Adafruit and M5Stack)
+        && (event->Par2 >= 0) && (event->Par2 <= 255)    // led2,<r>,<g>,<b> (M5Stack only)
+        && (event->Par3 >= 0) && (event->Par3 <= 255) &&
+        (event->Par4 >= 0) && (event->Par4 <= 255)
+        # if P143_FEATURE_INCLUDE_DFROBOT
+        && _device != P143_DeviceType_e::DFRobotEncoder
+        # endif // if P143_FEATURE_INCLUDE_DFROBOT
+        ) {
+      const bool led1      = sub.equals(F("led1"));
+      uint32_t   lSettings = 0u;
+
+      if (led1) {
+        _red      = event->Par2;
+        _green    = event->Par3;
+        _blue     = event->Par4;
+        lSettings = P143_ADAFRUIT_COLOR_AND_BRIGHTNESS;
+        set8BitToUL(lSettings, P143_ADAFRUIT_OFFSET_RED,   _red);
+        set8BitToUL(lSettings, P143_ADAFRUIT_OFFSET_GREEN, _green);
+        set8BitToUL(lSettings, P143_ADAFRUIT_OFFSET_BLUE,  _blue);
+        P143_ADAFRUIT_COLOR_AND_BRIGHTNESS = lSettings;
+      }
+
+      switch (_device) {
+        case P143_DeviceType_e::AdafruitEncoder:
+        {
+          if (led1) {
+            Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
+            Adafruit_Spixel->show();
+            success = true;
+          }
+          break;
+        }
+        # if P143_FEATURE_INCLUDE_M5STACK
+        case P143_DeviceType_e::M5StackEncoder:
+        {
+          if (!led1) {
+            lSettings = P143_M5STACK_COLOR_AND_SELECTION;
+            set8BitToUL(lSettings, P143_M5STACK2_OFFSET_RED,   event->Par2 & 0xFF);
+            set8BitToUL(lSettings, P143_M5STACK2_OFFSET_GREEN, event->Par3 & 0xFF);
+            set8BitToUL(lSettings, P143_M5STACK2_OFFSET_BLUE,  event->Par4 & 0xFF);
+            P143_M5STACK_COLOR_AND_SELECTION = lSettings;
+          }
+          m5stack_setPixelColor(led1 ? 1 : 2, event->Par2, event->Par3, event->Par4);
+          success = true;
+          break;
+        }
+        # endif // if P143_FEATURE_INCLUDE_M5STACK
+        # if P143_FEATURE_INCLUDE_DFROBOT
+        case P143_DeviceType_e::DFRobotEncoder:
+          break;
+        # endif // if P143_FEATURE_INCLUDE_DFROBOT
+      }
+    } else
+    if (sub.equals(F("bright")) // bright,<b> (range 1..255, Adafruit and M5Stack only)
+        && (event->Par2 >= 1) && (event->Par2 <= 255)
+        # if P143_FEATURE_INCLUDE_DFROBOT
+        && _device != P143_DeviceType_e::DFRobotEncoder
+        # endif // if P143_FEATURE_INCLUDE_DFROBOT
+        ) {
+      _brightness = event->Par2;
+      uint32_t lSettings = P143_ADAFRUIT_COLOR_AND_BRIGHTNESS;
+      set8BitToUL(lSettings, P143_ADAFRUIT_OFFSET_BRIGHTNESS, _brightness);
+      P143_ADAFRUIT_COLOR_AND_BRIGHTNESS = lSettings;
+
+      switch (_device) {
+        case P143_DeviceType_e::AdafruitEncoder:
+        {
+          Adafruit_Spixel->setBrightness(_brightness);
+
+          // Update with new brightness
+          Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
+          Adafruit_Spixel->show();
+          success = true;
+          break;
+        }
+        # if P143_FEATURE_INCLUDE_M5STACK
+        case P143_DeviceType_e::M5StackEncoder:
+        {
+          // Update with new brightness
+          m5stack_setPixelColor(1, _red,                    _green,                    _blue);
+          m5stack_setPixelColor(2, P143_M5STACK2_COLOR_RED, P143_M5STACK2_COLOR_GREEN, P143_M5STACK2_COLOR_BLUE);
+          success = true;
+          break;
+        }
+        # endif // if P143_FEATURE_INCLUDE_M5STACK
+        # if P143_FEATURE_INCLUDE_DFROBOT
+        case P143_DeviceType_e::DFRobotEncoder:
+          break;
+        # endif // if P143_FEATURE_INCLUDE_DFROBOT
+      }
+    # if P143_FEATURE_INCLUDE_DFROBOT
+    } else
+    if (sub.equals(F("gain")) // gain,<gain> (Range 1..51, DFRobot only)
+        && (event->Par2 >= P143_DFROBOT_MIN_GAIN) && (event->Par2 <= P143_DFROBOT_MAX_GAIN)
+        && (_device == P143_DeviceType_e::DFRobotEncoder)
+        ) {
+      P143_DFROBOT_LED_GAIN = event->Par2;
+      success               = true;
+    # endif // if P143_FEATURE_INCLUDE_DFROBOT
+    }
+  }
+
+  return success;
 }
 
 /*****************************************************
@@ -575,12 +680,7 @@ void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
         _red   = iRed;
         _green = iGreen;
         _blue  = iBlue;
-        uint8_t data[4];
-        data[0] = static_cast<uint8_t>(P143_M5STACK_SELECTION);
-        data[1] = applyBrightness(_red);
-        data[2] = applyBrightness(_green);
-        data[3] = applyBrightness(_blue);
-        I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+        m5stack_setPixelColor(static_cast<uint8_t>(P143_M5STACK_SELECTION), _red, _green, _blue);
         break;
       }
       #  endif // if P143_FEATURE_INCLUDE_M5STACK
@@ -590,17 +690,6 @@ void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
       #  endif // if P143_FEATURE_INCLUDE_DFROBOT
     }
   }
-}
-
-/*****************************************************
- * applyBrightness, calculate new color based on brightness, based on NeoPixel library setBrightness()
- ****************************************************/
-uint8_t P143_data_struct::applyBrightness(uint8_t color) {
-  if (_brightness) {
-    color = (color * _brightness) >> 8;
-  }
-
-  return color;
 }
 
 /*****************************************************
@@ -749,5 +838,36 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   }
   return false;
 }
+
+# if P143_FEATURE_INCLUDE_M5STACK
+
+/*****************************************************
+ * applyBrightness, calculate new color based on brightness, based on NeoPixel library setBrightness()
+ ****************************************************/
+uint8_t P143_data_struct::applyBrightness(uint8_t color) {
+  if (_brightness) {
+    color = (color * _brightness) >> 8;
+  }
+
+  return color;
+}
+
+/*****************************************************
+ * m5stack_setPixelColor
+ ****************************************************/
+void P143_data_struct::m5stack_setPixelColor(uint8_t pixel,
+                                             uint8_t red,
+                                             uint8_t green,
+                                             uint8_t blue) {
+  uint8_t data[4];
+
+  data[0] = pixel;
+  data[1] = applyBrightness(red);
+  data[2] = applyBrightness(green);
+  data[3] = applyBrightness(blue);
+  I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
+}
+
+# endif // if P143_FEATURE_INCLUDE_M5STACK
 
 #endif // ifdef USES_P143

@@ -173,6 +173,8 @@ public:
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
   bool plugin_read(struct EventStruct *event);
+  bool plugin_write(struct EventStruct *event,
+                    String            & string);
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_fifty_per_second(struct EventStruct *event);
 
@@ -190,7 +192,14 @@ private:
                      int32_t min,
                      int32_t max);
   void    counterToColorMapping(struct EventStruct *event);
+
+  # if P143_FEATURE_INCLUDE_M5STACK
   uint8_t applyBrightness(uint8_t color);
+  void    m5stack_setPixelColor(uint8_t pixel,
+                                uint8_t red,
+                                uint8_t green,
+                                uint8_t blue);
+  # endif // if P143_FEATURE_INCLUDE_M5STACK
 
   bool _initialized = false;
 

@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-11-21 tonhuisman: Add command support (plugin_write) see below for supported commands, some refactoring
  * 2022-11-20 tonhuisman: Add support for button longpress, generates state 10/11 instead of 0/1 after a longpress (Pushbutton only)
  *                        NOT supported on DFRobot encoder, as the button only signals button pressed state once, and no release signal
  * 2022-11-18 tonhuisman: Implement DFRobot I2C Encoder support, no direct led control, emulated negative count, with pushbutton
@@ -17,6 +18,13 @@
  * 2022-11-10 tonhuisman: Implement Adafruit I2C Encoder support, with NeoPixel and pushbutton
  * 2022-11-04 tonhuisman: Initial plugin creation
  *
+ */
+
+/** Commands:
+ * i2cencoder,bright,<b>        : Set brightness, range 1..255, Adafruit and M5Stack only
+ * i2cencoder,led1,<r>,<g>,<b>  : Set Led1 color, R/G/B, range 0..255, Adafruit and M5Stack only
+ * i2cencoder,led2,<r>,<g>,<b>  : Set Led2 color, R/G/B, range 0..255, M5Stack only
+ * i2cencoder,gain,<gain>       : Set led vs. rotation gain factor, range 1..51, DFRobot only
  */
 
 # define PLUGIN_143
@@ -130,6 +138,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
 
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // Count doesn't have decimals
       ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0; // State doesn't have decimals
+      P143_SET_LONGPRESS_INTERVAL                  = P143_LONGPRESS_MIN_INTERVAL;
       break;
     }
 
@@ -474,6 +483,17 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P143_data) {
         success = P143_data->plugin_read(event);
+      }
+
+      break;
+    }
+
+    case PLUGIN_WRITE:
+    {
+      P143_data_struct *P143_data = static_cast<P143_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P143_data) {
+        success = P143_data->plugin_write(event, string);
       }
 
       break;
