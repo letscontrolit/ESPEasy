@@ -20,6 +20,10 @@ bool C016_deleteOldestCacheBlock() {
   return ControllerCache.deleteOldestCacheBlock();
 }
 
+bool C016_deleteAllCacheBlocks() {
+  return ControllerCache.deleteAllCacheBlocks();
+}
+
 bool C016_getCSVline(
   unsigned long& timestamp,
   uint8_t& controller_idx,
