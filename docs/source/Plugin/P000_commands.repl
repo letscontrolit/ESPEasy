@@ -402,7 +402,10 @@
     :green:`Rules`","
     Send command to other ESP (using UDP)
 
-    ``SendTo,<unit nr>,<command>``"
+    ``SendTo,<unit nr>,<command>``
+    
+    If the ``<command>`` contains comma's or spaces, it should be quoted, like ``SendTo,<unit nr>,'<command>'``, the usual quotes can be used, double quotes, single quotes or backticks.
+    "
     "
     SendToHTTP","
     :green:`Rules`","
@@ -428,7 +431,10 @@
 
     Example:
 
-    ``sendtohttp,192.168.10.114,80,'control?cmd=event,poff'``"
+    ``sendtohttp,192.168.10.114,80,'control?cmd=event,poff'``
+    
+    On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
+    "
     "
     SendToUDP","
     :green:`Rules`","
