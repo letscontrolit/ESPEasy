@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-11-22 tonhuisman: Removed [Testing] tag from plugin name, as it is mostly feature complete for now
  * 2022-11-21 tonhuisman: Add command support (plugin_write) see below for supported commands, some refactoring
  * 2022-11-20 tonhuisman: Add support for button longpress, generates state 10/11 instead of 0/1 after a longpress (Pushbutton only)
  *                        NOT supported on DFRobot encoder, as the button only signals button pressed state once, and no release signal
@@ -29,7 +30,7 @@
 
 # define PLUGIN_143
 # define PLUGIN_ID_143         143
-# define PLUGIN_NAME_143       "Switch input - I2C Rotary encoders [TESTING]" // TODO: Remove Testing tag
+# define PLUGIN_NAME_143       "Switch input - I2C Rotary encoders"
 # define PLUGIN_VALUENAME1_143 "Counter"
 # define PLUGIN_VALUENAME2_143 "State"
 
