@@ -125,6 +125,25 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      // To select the data in the 4 fields.
+      const __FlashStringHelper * options[P102_NR_OUTPUT_OPTIONS];
+
+      for (uint8_t i = 0; i < P102_NR_OUTPUT_OPTIONS; ++i) {
+        options[i] = p102_getQueryString(i);
+      }
+
+      for (uint8_t i = 0; i < P102_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P102_QUERY1_CONFIG_POS;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P102_NR_OUTPUT_OPTIONS, options);
+      }
+
+      success = true;
+
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
       if (P102_PZEM_sensor == nullptr) { P102_PZEM_FIRST = event->TaskIndex; // To detect if first PZEM or not
       }
@@ -180,20 +199,6 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       {
         addHtml(F("<span style=\"color:blue\"> <br><B>Energy reset on current PZEM ! </B></span>"));
         P102_PZEM_ADDR_SET = 0; // Reset programming confirmation
-      }
-
-      // To select the data in the 4 fields. In a separate scope to free memory of String array as soon as possible
-
-      sensorTypeHelper_webformLoad_header();
-      const __FlashStringHelper * options[P102_NR_OUTPUT_OPTIONS];
-
-      for (uint8_t i = 0; i < P102_NR_OUTPUT_OPTIONS; ++i) {
-        options[i] = p102_getQueryString(i);
-      }
-
-      for (uint8_t i = 0; i < P102_NR_OUTPUT_VALUES; ++i) {
-        const uint8_t pconfigIndex = i + P102_QUERY1_CONFIG_POS;
-        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P102_NR_OUTPUT_OPTIONS, options);
       }
 
       success = true;
