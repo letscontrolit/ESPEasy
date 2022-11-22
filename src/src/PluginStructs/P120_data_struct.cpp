@@ -92,21 +92,6 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
     _YA[_aUsed] = _y;
     _ZA[_aUsed] = _z;
 
-# if FEATURE_PLUGIN_STATS
-
-  if (getPluginStats(0) != nullptr) {
-    getPluginStats(0)->trackPeak(_x);
-  }
-  if (getPluginStats(1) != nullptr) {
-    getPluginStats(1)->trackPeak(_y);
-  }
-  if (getPluginStats(2) != nullptr) {
-    getPluginStats(2)->trackPeak(_z);
-  }
-
-# endif // if FEATURE_PLUGIN_STATS
-
-
     _aUsed++;
 
     if ((_aMax < _aUsed) && (_aUsed < _aSize)) {
@@ -141,35 +126,85 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
 // **************************************************************************/
 // Average the measurements and return the results
 // **************************************************************************/
-bool P120_data_struct::read_data(int& X, int& Y, int& Z) const {
-  float Xf, Yf, Zf;
+bool P120_data_struct::read_data(struct EventStruct *event) const
+{
+  float pitch, roll;
 
-  if (read_data(Xf, Yf, Zf)) {
-    X = Xf;
-    Y = Yf;
-    Z = Zf;
-    return true;
+  getPitchRoll(event, pitch, roll);
+  float X, Y, Z;
+
+  if (!get_XYZ(X, Y, Z)) { return false; }
+
+  // At 2.5V the sensor has 256 LSB/g
+  // However with higher voltage the sensitivity may change
+  // Assume on average we're at 1g environment, regardless the sensor orientation.
+  // Thus we need to compute the length of the vector and use that as scale factor for 1g.
+  float scaleFactor_g = sqrtf(X*X + Y*Y + Z*Z);
+  if (last_scale_factor_g > 0.1f) {
+    // IIR filter to adapt factor slowly for variations in the supply voltage.
+    // This will also prevent "shocks" to affect the scale factor a lot.
+    scaleFactor_g += last_scale_factor_g * 15;
+    scaleFactor_g /= 16;
   }
-  X = 0;
-  Y = 0;
-  Z = 0;
-  return false;
+  last_scale_factor_g = scaleFactor_g;
+
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (i < P120_NR_OUTPUT_VALUES) {
+      const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
+      float value                = 0.0f;
+
+      switch (static_cast<valueType>(PCONFIG(pconfigIndex))) {
+        case valueType::Empty:
+          break;
+        case valueType::X_RAW:
+          value = X;
+          break;
+        case valueType::Y_RAW:
+          value = Y;
+          break;
+        case valueType::Z_RAW:
+          value = Z;
+          break;
+        case valueType::X_g:
+          value = X / scaleFactor_g;
+          break;
+        case valueType::Y_g:
+          value = Y / scaleFactor_g;
+          break;
+        case valueType::Z_g:
+          value = Z / scaleFactor_g;
+          break;
+        case valueType::Pitch:
+          value = pitch;
+          break;
+        case valueType::Roll:
+          value = roll;
+          break;
+        case valueType::NR_ValueTypes:
+          break;
+      }
+      UserVar[event->BaseVarIndex + i] = value;
+    }
+  }
+  return true;
 }
 
-bool P120_data_struct::read_data(float& X,
-                                 float& Y,
-                                 float& Z) const
+bool P120_data_struct::get_XYZ(float& X, float& Y, float& Z) const
 {
+  X = 0.0f;
+  Y = 0.0f;
+  Z = 0.0f;
   if (initialized()) {
     for (uint8_t n = 0; n <= _aMax; n++) {
       X += _XA[n];
       Y += _YA[n];
       Z += _ZA[n];
     }
-
-    X /= _aMax; // Average available measurements
-    Y /= _aMax;
-    Z /= _aMax;
+    if (_aMax > 0) {
+      X /= _aMax; // Average available measurements
+      Y /= _aMax;
+      Z /= _aMax;
+    }
 
     # if PLUGIN_120_DEBUG
 
@@ -189,9 +224,6 @@ bool P120_data_struct::read_data(float& X,
     # endif // if PLUGIN_120_DEBUG
     return true;
   }
-  X = 0.0f;
-  Y = 0.0f;
-  Z = 0.0f;
   return false;
 }
 
@@ -199,7 +231,7 @@ bool P120_data_struct::getPitchRoll(struct EventStruct *event, float& pitch, flo
 {
   float X, Y, Z;
 
-  if (read_data(X, Y, Z)) {
+  if (get_XYZ(X, Y, Z)) {
     roll  = atan2(-Y, Z);
     pitch = atan2(X, sqrt(Y * Y + Z * Z));
 
@@ -209,6 +241,8 @@ bool P120_data_struct::getPitchRoll(struct EventStruct *event, float& pitch, flo
     }
     return true;
   }
+  roll  = 0.0f;
+  pitch = 0.0f;
   return false;
 }
 
@@ -256,10 +290,11 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
       act = 1;
     }
 
-    // Axis Offsets
+    // FIXME TD-er: This offset only has 1/4th the resolution of the raw data
     adxl345->setAxisOffset(get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_X) - 0x80,
                            get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_Y) - 0x80,
                            get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_Z) - 0x80);
+    
 
     // Tap triggering
     adxl345->setTapDetectionOnXYZ(bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_TAP_X),
@@ -479,11 +514,33 @@ void P120_data_struct::send_task_event(struct EventStruct *event,
 // *******************************************************************
 // Load the configuration interface
 // *******************************************************************
-bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
-  if (!i2c_mode) {
-    addFormSubHeader(F("Device Settings"));
-  }
+bool P120_data_struct::plugin_webform_loadOutputSelector(struct EventStruct *event) {
+  {
+    const __FlashStringHelper *options[P120_NR_OUTPUT_OPTIONS];
 
+    for (uint8_t i = 0; i < P120_NR_OUTPUT_OPTIONS; ++i) {
+      options[i] = P120_data_struct::valuename(i, true);
+    }
+
+    for (uint8_t i = 0; i < P120_NR_OUTPUT_VALUES; ++i) {
+      const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
+      sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P120_NR_OUTPUT_OPTIONS, options);
+    }
+  }
+  addFormSeparator(4);
+  {
+    const __FlashStringHelper *options[] = {
+      F("Degrees"),
+      F("Radians") };
+    const int values[] = { 0,
+                           1 };
+    const int choice = bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_ANGLE_IN_RAD);
+    addFormSelector(F("Angle Units"), F("p120_angle_rad"), 2, options, values, choice);
+  }
+  return true;
+}
+
+bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
   // Range
   {
     const __FlashStringHelper *rangeOptions[] = {
@@ -517,8 +574,6 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
                     bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY) == 1);
     addFormCheckBox(F("Events with raw measurements"), F("p120_raw_measurement"),
                     bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_EVENT_RAW_VALUES) == 1);
-    addFormCheckBox(F("Angles in radians"), F("p120_angle_rad"),
-                    bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_ANGLE_IN_RAD) == 1);
   }
 
   // Tap detection
@@ -600,6 +655,13 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
 // Save the configuration interface
 // *******************************************************************
 bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
+  for (uint8_t i = 0; i < P120_NR_OUTPUT_VALUES; ++i) {
+    const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
+    const uint8_t choice       = PCONFIG(pconfigIndex);
+    sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, P120_data_struct::valuename(choice, false));
+  }
+
+
   P120_FREQUENCY = getFormItemInt(F("p120_frequency"));
   uint32_t flags = 0ul;
 
@@ -615,9 +677,9 @@ bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
   bitWrite(flags, P120_FLAGS1_SEND_ACTIVITY,    isFormItemChecked(F("p120_send_activity")));
   bitWrite(flags, P120_FLAGS1_LOG_ACTIVITY,     isFormItemChecked(F("p120_log_activity")));
   bitWrite(flags, P120_FLAGS1_EVENT_RAW_VALUES, isFormItemChecked(F("p120_raw_measurement")));
-  bitWrite(flags, P120_FLAGS1_ANGLE_IN_RAD,     isFormItemChecked(F("p120_angle_rad")));
+  bitWrite(flags, P120_FLAGS1_ANGLE_IN_RAD,     getFormItemInt(F("p120_angle_rad")));
   set8BitToUL(flags, P120_FLAGS1_ACTIVITY_TRESHOLD,   getFormItemInt(F("p120_activity_treshold")));
-  set8BitToUL(flags, P120_FLAGS1_INACTIVITY_TRESHOLD, getFormItemInt(F("p120_inactivity_treshold")));
+  set8BitToUL(flags, P120_FLAGS1_INACTIVITY_TRESHOLD, getFormItemInt(F("p120_outputunits")));
   P120_CONFIG_FLAGS1 = flags;
 
   flags = 0ul;
@@ -641,27 +703,10 @@ bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
   return true;
 }
 
-bool P120_data_struct::plugin_webform_show_values(struct EventStruct *event) const
-{
-  if (initialized()) {
-    float pitch, roll;
-
-    if (getPitchRoll(event, pitch, roll)) {
-      uint8_t varNr = 3;
-      pluginWebformShowValue(event->TaskIndex, varNr++, F("pitch"), toString(pitch, 2));
-      pluginWebformShowValue(event->TaskIndex, varNr++, F("roll"),  toString(roll, 2), true);
-      return true;
-    }
-  }
-  return false;
-}
-
 // *******************************************************************
 // Set defaults for the configuration interface
 // *******************************************************************
 bool P120_data_struct::plugin_set_defaults(struct EventStruct *event) {
-  bool success = false;
-
   uint32_t flags = 0ul;
 
   set2BitToUL(flags, P120_FLAGS1_RANGE, P120_RANGE_16G); // Default to 16g range for highest resolution
@@ -695,8 +740,13 @@ bool P120_data_struct::plugin_set_defaults(struct EventStruct *event) {
     ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
   }
 
-  success = true;
-  return success;
+  PCONFIG(P120_SENSOR_TYPE_INDEX)     = static_cast<int16_t>(Sensor_VType::SENSOR_TYPE_TRIPLE);
+  PCONFIG(P120_QUERY1_CONFIG_POS + 0) = 1; // "X RAW"
+  PCONFIG(P120_QUERY1_CONFIG_POS + 1) = 2; // "Y RAW"
+  PCONFIG(P120_QUERY1_CONFIG_POS + 2) = 3; // "Z RAW"
+  PCONFIG(P120_QUERY1_CONFIG_POS + 3) = 0; // "Empty"
+
+  return true;
 }
 
 bool P120_data_struct::plugin_get_config_value(struct EventStruct *event, String& string) const
@@ -717,6 +767,47 @@ bool P120_data_struct::plugin_get_config_value(struct EventStruct *event, String
     }
   }
   return false;
+}
+
+void P120_data_struct::plugin_get_device_value_names(struct EventStruct *event)
+{
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (i < P120_NR_OUTPUT_VALUES) {
+      const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
+      uint8_t choice             = PCONFIG(pconfigIndex);
+      safe_strncpy(
+        ExtraTaskSettings.TaskDeviceValueNames[i],
+        P120_data_struct::valuename(choice, false),
+        sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+
+      // Set decimals for RAW values to 0, Others to 2 decimals
+      ExtraTaskSettings.TaskDeviceValueDecimals[i] = (choice <= 3) ? 0 : 2;
+    } else {
+      ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+    }
+  }
+}
+
+const __FlashStringHelper * P120_data_struct::valuename(uint8_t value_nr, bool displayString) {
+  switch (static_cast<valueType>(value_nr)) {
+    case valueType::Empty:    return displayString ? F("Empty") : F("");
+    case valueType::X_RAW:    return displayString ? F("X RAW") : F("X");
+    case valueType::Y_RAW:    return displayString ? F("Y RAW") : F("Y");
+    case valueType::Z_RAW:    return displayString ? F("Z RAW") : F("Z");
+    case valueType::X_g:      return displayString ? F("X (g)") : F("X");
+    case valueType::Y_g:      return displayString ? F("Y (g)") : F("Y");
+    case valueType::Z_g:      return displayString ? F("Z (g)") : F("Z");
+    case valueType::Pitch:    return displayString ? F("Pitch Angle") : F("Pitch");
+    case valueType::Roll:     return displayString ? F("Roll Angle")  : F("Roll");
+    case valueType::NR_ValueTypes:
+      break;
+  }
+  return F("");
+}
+
+bool P120_data_struct::isXYZ(valueType vtype)
+{
+  return vtype >= valueType::X_RAW &&  vtype <= valueType::Z_g;
 }
 
 #endif // if defined(USES_P120) || defined(USES_P125)

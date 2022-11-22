@@ -165,20 +165,22 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      {
-        const __FlashStringHelper *options[P052_NR_OUTPUT_OPTIONS];
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      const __FlashStringHelper *options[P052_NR_OUTPUT_OPTIONS];
 
-        for (uint8_t i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
-          options[i] = P052_data_struct::Plugin_052_valuename(i, true);
-        }
-
-        for (uint8_t i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
-          const uint8_t pconfigIndex = i + P052_QUERY1_CONFIG_POS;
-          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
-        }
+      for (uint8_t i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
+        options[i] = P052_data_struct::Plugin_052_valuename(i, true);
       }
 
+      for (uint8_t i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
+      }
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD: {
 
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -237,7 +239,6 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
           bool has_samp_meas = errorcode == 0;
 
           if (/* has_meas_mode || */ has_period || has_samp_meas) {
-            addFormSubHeader(F("Device Settings"));
 
             // Disable selector for now, since single measurement not yet supported.
 

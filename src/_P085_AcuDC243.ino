@@ -107,6 +107,23 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      const __FlashStringHelper *options[P085_NR_OUTPUT_OPTIONS];
+
+      for (int i = 0; i < P085_NR_OUTPUT_OPTIONS; ++i) {
+        options[i] = Plugin_085_valuename(i, true);
+      }
+
+      for (uint8_t i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P085_NR_OUTPUT_OPTIONS, options);
+      }
+      success = true;
+
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -183,20 +200,6 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
         addFormNote(F("Will clear all logged values when checked and saved"));
       }
 
-      {
-        // In a separate scope to free memory of String array as soon as possible
-        sensorTypeHelper_webformLoad_header();
-        const __FlashStringHelper *options[P085_NR_OUTPUT_OPTIONS];
-
-        for (int i = 0; i < P085_NR_OUTPUT_OPTIONS; ++i) {
-          options[i] = Plugin_085_valuename(i, true);
-        }
-
-        for (uint8_t i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
-          const uint8_t pconfigIndex = i + P085_QUERY1_CONFIG_POS;
-          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P085_NR_OUTPUT_OPTIONS, options);
-        }
-      }
       success = true;
       break;
     }

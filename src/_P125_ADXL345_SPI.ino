@@ -29,9 +29,6 @@
 # define PLUGIN_125
 # define PLUGIN_ID_125          125 // plugin id
 # define PLUGIN_NAME_125        "Accelerometer - ADXL345 (SPI)"
-# define PLUGIN_VALUENAME1_125  "X"
-# define PLUGIN_VALUENAME2_125  "Y"
-# define PLUGIN_VALUENAME3_125  "Z"
 
 boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -51,6 +48,7 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
       Device[deviceCount].PluginStats    = true;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
 
       break;
     }
@@ -61,24 +59,26 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_DEVICEVALUENAMES:
-    {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_125));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_125));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_125));
+    case PLUGIN_GET_DEVICEVALUENAMES: {
+      P120_data_struct::plugin_get_device_value_names(event);
       break;
     }
 
-    case PLUGIN_WEBFORM_SHOW_VALUES:
+    case PLUGIN_GET_DEVICEVALUECOUNT:
     {
-      P120_data_struct *P120_data =
-        static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if ((nullptr != P120_data) && P120_data->plugin_webform_show_values(event)) {
-        // success = true;
-      }
+      event->Par1 = P120_NR_OUTPUT_VALUES;
+      success     = true;
       break;
     }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P120_SENSOR_TYPE_INDEX));
+      event->idx        = P120_SENSOR_TYPE_INDEX;
+      success           = true;
+      break;
+    }
+
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
@@ -106,6 +106,11 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      success = P120_data_struct::plugin_webform_loadOutputSelector(event);
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -168,12 +173,7 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P120_data) {
-        if (P120_data->read_data(
-              UserVar[event->BaseVarIndex],        // X
-              UserVar[event->BaseVarIndex + 1],    // Y
-              UserVar[event->BaseVarIndex + 2])) { // Z
-          success = true;
-        }
+        success = P120_data->read_data(event);
       }
 
       break;

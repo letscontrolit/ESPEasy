@@ -70,8 +70,31 @@
 # define P120_FLAGS4_OFFSET_Y             8
 # define P120_FLAGS4_OFFSET_Z             16
 
+# define P120_QUERY1_CONFIG_POS  4
+# define P120_SENSOR_TYPE_INDEX  0
+# define P120_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P120_SENSOR_TYPE_INDEX)))
+# define P120_NR_OUTPUT_OPTIONS  9
+
+
+
 struct P120_data_struct : public PluginTaskData_base {
 public:
+  // Do not change nrs as these are stored
+  enum class valueType {
+    Empty = 0,
+    X_RAW = 1,
+    Y_RAW = 2,
+    Z_RAW = 3,
+    X_g   = 4,
+    Y_g   = 5,
+    Z_g   = 6,
+    Pitch = 7,
+    Roll  = 8,
+
+    NR_ValueTypes // keep as last
+  };
+
+  static bool isXYZ(valueType vtype);
 
   P120_data_struct(uint8_t i2c_addr,
                    uint8_t aSize);
@@ -80,13 +103,16 @@ public:
   ~P120_data_struct();
 
   bool read_sensor(struct EventStruct *event);
-  bool read_data(int& X,
-                 int& Y,
-                 int& Z) const;
 
-  bool read_data(float& X,
-                 float& Y,
-                 float& Z) const;
+  bool read_data(struct EventStruct *event) const;
+
+private:
+  bool get_XYZ(float& X,
+               float& Y,
+               float& Z) const;
+
+
+public:
 
   bool getPitchRoll(struct EventStruct *event,
                     float             & pitch,
@@ -96,13 +122,17 @@ public:
     return adxl345 != nullptr;
   }
 
+  static bool plugin_webform_loadOutputSelector(struct EventStruct *event);
   bool plugin_webform_load(struct EventStruct *event);
   bool plugin_webform_save(struct EventStruct *event);
-  bool plugin_webform_show_values(struct EventStruct *event) const;
   bool plugin_set_defaults(struct EventStruct *event);
 
   bool plugin_get_config_value(struct EventStruct *event,
                                String            & string) const;
+
+  static void plugin_get_device_value_names(struct EventStruct *event);
+
+  static const __FlashStringHelper * valuename(uint8_t value_nr, bool displayString);
 
 private:
 
@@ -130,6 +160,7 @@ private:
   uint8_t         _aMax  = 0;
 
   int _x = 0, _y = 0, _z = 0; // Last measured values
+  mutable float last_scale_factor_g = 0.0f;
 
   bool activityTriggered   = false;
   bool inactivityTriggered = false;
