@@ -184,6 +184,21 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      const __FlashStringHelper * options[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)];
+
+      for (uint8_t i = 0; i < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
+        options[i] = Plugin_082_valuename(static_cast<P082_query>(i), true);
+      }
+
+      for (uint8_t i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, static_cast<int>(P082_query::P082_NR_OUTPUT_OPTIONS), options);
+      }
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
       /*
          P082_data_struct *P082_data =
@@ -268,21 +283,6 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
         addFormFloatNumberBox(F("Latitude"),  F("lat_ref"), P082_LAT_REF,  -90.0f, 90.0f);
         addFormFloatNumberBox(F("Longitude"), F("lng_ref"), P082_LONG_REF, -180.0f, 180.0f);
-      }
-
-      {
-        // In a separate scope to free memory of String array as soon as possible
-        sensorTypeHelper_webformLoad_header();
-        const __FlashStringHelper * options[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)];
-
-        for (uint8_t i = 0; i < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
-          options[i] = Plugin_082_valuename(static_cast<P082_query>(i), true);
-        }
-
-        for (uint8_t i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
-          const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
-          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, static_cast<int>(P082_query::P082_NR_OUTPUT_OPTIONS), options);
-        }
       }
 
       addFormNumericBox(F("Distance Update Interval"), P082_DISTANCE_LABEL, P082_DISTANCE, 0, 10000);

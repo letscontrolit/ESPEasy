@@ -586,6 +586,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_INIT:
     case PLUGIN_EXIT:
     case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
     case PLUGIN_TASKTIMER_IN:
