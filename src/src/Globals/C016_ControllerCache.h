@@ -20,6 +20,8 @@ String C016_getCacheFileName(bool& islast);
 
 bool C016_deleteOldestCacheBlock();
 
+bool C016_deleteAllCacheBlocks();
+
 bool C016_getCSVline(
   unsigned long& timestamp,
   uint8_t& controller_idx,

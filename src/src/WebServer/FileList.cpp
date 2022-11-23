@@ -157,9 +157,8 @@ void handle_filelist() {
   # ifdef USES_C016
 
   if (hasArg(F("delcache"))) {
-    while (C016_deleteOldestCacheBlock()) {
-      delay(1);
-    }
+    addLog(LOG_LEVEL_INFO, F("RTC  : delcache"));
+    C016_deleteAllCacheBlocks();
 
     while (GarbageCollection()) {
       delay(1);
@@ -299,7 +298,7 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
 
   if (cacheFilesPresent) {
     html_add_button_prefix(F("red"), true);
-    addHtml(F("filelist?delcache'>Delete Cache Files</a>"));
+    addHtml(F("filelist?delcache=1'>Delete Cache Files</a>"));
   }
   addHtml(F("<BR><BR>"));
   sendHeadandTail_stdtemplate(_TAIL);
