@@ -339,7 +339,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
       String unparsedPayload;             // To keep an unprocessed copy
 
       bool checkJson = false;
