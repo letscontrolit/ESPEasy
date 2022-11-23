@@ -24,6 +24,8 @@
 #endif // if FEATURE_SD
 
 
+#define FILES_PER_PAGE   50
+
 #ifdef WEBSERVER_NEW_UI
 
 // ********************************************************************************
@@ -50,7 +52,6 @@ void handle_filelist_json() {
     # endif // if defined(ESP8266)
   }
 
-  const int pageSize = 25;
   int startIdx       = 0;
 
   String fstart = webArg(F("start"));
@@ -59,7 +60,7 @@ void handle_filelist_json() {
   {
     validIntFromString(fstart, startIdx);
   }
-  int endIdx = startIdx + pageSize - 1;
+  int endIdx = startIdx + FILES_PER_PAGE - 1;
 
   addHtml('[', '{');
   bool firstentry = true;
@@ -165,7 +166,6 @@ void handle_filelist() {
     }
   }
   # endif // ifdef USES_C016
-  const int pageSize = 25;
   int startIdx       = 0;
   String fstart      = webArg(F("start"));
 
@@ -173,7 +173,7 @@ void handle_filelist() {
   {
     validIntFromString(fstart, startIdx);
   }
-  int endIdx = startIdx + pageSize - 1;
+  int endIdx = startIdx + FILES_PER_PAGE - 1;
   html_table_class_multirow();
   html_table_header(F(""),        50);
   html_table_header(F("Filename"));
@@ -236,7 +236,7 @@ void handle_filelist() {
 
   if (startIdx > 0)
   {
-    start_prev = startIdx < pageSize ? 0 : startIdx - pageSize;
+    start_prev = startIdx < FILES_PER_PAGE ? 0 : startIdx - FILES_PER_PAGE;
   }
   int start_next = -1;
 
