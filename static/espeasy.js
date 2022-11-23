@@ -87,7 +87,9 @@ var commonPlugins = [
   //P129
   "ShiftIn", "ShiftIn,PinEvent", "ShiftIn,ChipEvent", "ShiftIn,SetChipCount", "ShiftIn,SampleFrequency", "ShiftIn,EventPerPin",
   //P127
-  "cdmrst"
+  "cdmrst",
+  //P143
+  "I2CEncoder", "I2CEncoder,bright", "I2CEncoder,led1", "I2CEncoder,led2", "I2CEncoder,gain"
 ];
 var pluginDispKind = [
   //P095

@@ -9,4 +9,17 @@
 .. |P141_shortinfo| replace:: `Nokia 5110 monochrome LCD`
 .. |P141_maintainer| replace:: `tonhuisman`
 .. |P141_compileinfo| replace:: `.`
-.. |P141_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_NeoMatrix`
+.. |P141_usedlibraries| replace:: `https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library`
+
+.. |P143_name| replace:: :cyan:`I2C Rotary encoders`
+.. |P143_type| replace:: :cyan:`Switch input`
+.. |P143_typename| replace:: :cyan:`Switch input - I2C Rotary encoders`
+.. |P143_porttype| replace:: `.`
+.. |P143_status| replace:: :yellow:`COLLECTION A` :yellow:`DISPLAY`
+.. |P143_github| replace:: P143_I2C_Rotary.ino
+.. _P143_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P143_I2C_Rotary.ino
+.. |P143_usedby| replace:: `.`
+.. |P143_shortinfo| replace:: `I2C Rotary encoders`
+.. |P143_maintainer| replace:: `tonhuisman`
+.. |P143_compileinfo| replace:: `.`
+.. |P143_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_Seesaw`
