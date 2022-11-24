@@ -203,7 +203,6 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {

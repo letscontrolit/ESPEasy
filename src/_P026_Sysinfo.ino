@@ -115,7 +115,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     {
       const __FlashStringHelper * options[P026_NR_OUTPUT_OPTIONS];
       int indices[P026_NR_OUTPUT_OPTIONS];
@@ -137,6 +137,11 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
         sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options, indices);
       }
       success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD:
+    {
       break;
     }
 

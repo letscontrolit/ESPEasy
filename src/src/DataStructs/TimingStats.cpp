@@ -239,6 +239,7 @@ const __FlashStringHelper* getMiscStatsName_F(int stat) {
     case WIFI_SCAN_ASYNC:            return F("WiFi Scan Async");
     case WIFI_SCAN_SYNC:             return F("WiFi Scan Sync (blocking)");
     case NTP_SUCCESS:                return F("NTP Success");
+    case NTP_FAIL:                   return F("NTP Fail");
     case SYSTIME_UPDATED:            return F("Systime Set");
     case C018_AIR_TIME:              return F("C018 LoRa TTN - Air Time");
   }

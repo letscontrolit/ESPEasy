@@ -30,7 +30,7 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t 
   valueCount(value_count)
 {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (i < value_count) {
+    if (i < value_count && validTaskIndex(event->TaskIndex)) {
       values[i] = UserVar[event->BaseVarIndex + i];
     } else {
       values[i] = 0.0f;

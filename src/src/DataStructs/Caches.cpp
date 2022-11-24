@@ -139,6 +139,80 @@ String Caches::getTaskDeviceFormula(taskIndex_t TaskIndex, uint8_t rel_index)
   return EMPTY_STRING;
 }
 
+long Caches::getTaskDevicePluginConfigLong(taskIndex_t TaskIndex, uint8_t rel_index)
+{
+  if (validTaskIndex(TaskIndex) && (rel_index < PLUGIN_EXTRACONFIGVAR_MAX)) {
+    #ifdef ESP8266
+    LoadTaskSettings(TaskIndex);
+    return ExtraTaskSettings.TaskDevicePluginConfigLong[rel_index];
+    #endif // ifdef ESP8266
+    #ifdef ESP32
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      if (bitRead(it->second.TaskDevicePluginConfigLong_index_used, rel_index) == 0)
+      {
+        return 0;
+      }
+      auto it_long = it->second.long_values.find(ExtraTaskSettings_cache_t::make_Long_ValuesIndex(rel_index));
+
+      if (it_long != it->second.long_values.end()) {
+        return it_long->second;
+      }
+
+      // Should not get here, since the long_values map should be in sync with the index_used bitmap.
+    }
+    #endif // ifdef ESP32
+  }
+
+  return 0;
+}
+
+int16_t Caches::getTaskDevicePluginConfig(taskIndex_t TaskIndex, uint8_t rel_index)
+{
+  if (validTaskIndex(TaskIndex) && (rel_index < PLUGIN_EXTRACONFIGVAR_MAX)) {
+    #ifdef ESP8266
+    LoadTaskSettings(TaskIndex);
+    return ExtraTaskSettings.TaskDevicePluginConfig[rel_index];
+    #endif // ifdef ESP8266
+    #ifdef ESP32
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      if (bitRead(it->second.TaskDevicePluginConfig_index_used, rel_index) == 0)
+      {
+        return 0;
+      }
+      auto it_long = it->second.long_values.find(ExtraTaskSettings_cache_t::make_Uint16_ValuesIndex(rel_index));
+
+      if (it_long != it->second.long_values.end()) {
+        return it_long->second;
+      }
+
+      // Should not get here, since the long_values map should be in sync with the index_used bitmap.
+    }
+    #endif // ifdef ESP32
+  }
+
+  return 0;
+}
+
+#if FEATURE_PLUGIN_STATS
+bool Caches::enabledPluginStats(taskIndex_t TaskIndex, uint8_t rel_index)
+{
+  if (validTaskIndex(TaskIndex) && (rel_index < VARS_PER_TASK)) {
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return bitRead(it->second.enabledPluginStats, rel_index);
+    }
+  }
+  return false;
+}
+
+#endif // if FEATURE_PLUGIN_STATS
+
+
 void Caches::updateExtraTaskSettingsCache()
 {
   const taskIndex_t TaskIndex = ExtraTaskSettings.TaskIndex;
@@ -155,6 +229,10 @@ void Caches::updateExtraTaskSettingsCache()
     tmp.TaskDeviceName = ExtraTaskSettings.TaskDeviceName;
       #endif // ifdef ESP32
 
+    #if FEATURE_PLUGIN_STATS
+    tmp.enabledPluginStats = 0;
+    #endif // if FEATURE_PLUGIN_STATS
+
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
         #ifdef ESP32
       tmp.TaskDeviceValueNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
@@ -164,7 +242,30 @@ void Caches::updateExtraTaskSettingsCache()
         tmp.hasFormula = true;
       }
       tmp.decimals[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
+      #if FEATURE_PLUGIN_STATS
+
+      if (ExtraTaskSettings.enabledPluginStats(i)) {
+        bitSet(tmp.enabledPluginStats, i);
+      }
+      #endif // if FEATURE_PLUGIN_STATS
     }
+    #ifdef ESP32
+    tmp.TaskDevicePluginConfigLong_index_used = 0;
+    tmp.TaskDevicePluginConfig_index_used     = 0;
+    tmp.long_values.clear();
+
+    for (size_t i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
+      if (ExtraTaskSettings.TaskDevicePluginConfigLong[i] != 0) {
+        bitSet(tmp.TaskDevicePluginConfigLong_index_used, i);
+        tmp.long_values[ExtraTaskSettings_cache_t::make_Long_ValuesIndex(i)] = ExtraTaskSettings.TaskDevicePluginConfigLong[i];
+      }
+
+      if (ExtraTaskSettings.TaskDevicePluginConfig[i] != 0) {
+        bitSet(tmp.TaskDevicePluginConfig_index_used, i);
+        tmp.long_values[ExtraTaskSettings_cache_t::make_Uint16_ValuesIndex(i)] = ExtraTaskSettings.TaskDevicePluginConfig[i];
+      }
+    }
+    #endif // ifdef ESP32
 
     extraTaskSettings_cache[TaskIndex] = tmp;
   }

@@ -196,7 +196,6 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
                 if (validDeviceIndex(DeviceIndex)) {
-                  LoadTaskSettings(event->TaskIndex);
                   String newEvent = getTaskDeviceName(event->TaskIndex);
                   newEvent += '#';
                   newEvent += F("AlertTriggered");
