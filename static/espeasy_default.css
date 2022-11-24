@@ -124,21 +124,12 @@ h6 {
 	font-size: 10pt
 }
 
-code,
-kbd,
-pre,
-samp,
-tt,
-xmp {
-	font: 1em monospace, monospace
-}
-
 .button {
 	border: 0;
 	border-radius: 5px;
 	color: var(--c6);
-	margin: 4px;
-	padding: 4px 16px
+	margin: 5px;
+	padding: 5px 15px
 }
 
 input,
@@ -151,16 +142,17 @@ select,
 .checkmark,
 input,
 select,
-textarea {
-	border-color: gray;
-	border-style: solid;
-	border-width: 1px
+hr,
+textarea,
+#toastmessage,
+.dotmark,
+.logviewer {
+	border: .1px solid gray;
 }
 
 .button.link.wide {
 	display: inline-block;
 	text-align: center;
-	width: 100%
 }
 
 .button.link.red {
@@ -193,12 +185,13 @@ textarea {
 
 .wide {
 	margin-bottom: 5px;
-	max-width: 350px;
+	max-width: 300px;
+	min-width: 85px;
 	width: 95%
 }
 
 .xwide {
-	width: 350px
+	width: 300px
 }
 
 .widenumber {
@@ -246,18 +239,6 @@ textarea {
 
 #toastmessage {
 	background-color: var(--bg3)
-}
-
-#toastmessage,
-.dotmark,
-.logviewer {
-	border-color: gray;
-	border-style: solid
-}
-
-#toastmessage,
-.dotmark {
-	border-width: 1px
 }
 
 .container2 {
@@ -397,9 +378,6 @@ tbody {
 .multirow,
 .normal {
 	border-spacing: 0;
-	border-style: none;
-	min-width: 420px;
-	padding-bottom: 5px;
 	width: 100%
 }
 
