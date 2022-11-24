@@ -924,8 +924,6 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         }
         devicePage_show_I2C_config(taskIndex);
 
-        // FIXME TD-er: Why do we need this only for I2C devices?
-        addFormSubHeader(F("Device settings"));
         break;
       }
 
@@ -936,8 +934,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       devicePage_show_pin_config(taskIndex, DeviceIndex);
     }
 
-    devicePage_show_output_data_type(taskIndex, DeviceIndex);
-
+    addFormSubHeader(F("Device Settings"));
 
     // add plugins content
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors
@@ -971,6 +968,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
       #endif
     }
+
+    devicePage_show_output_data_type(taskIndex, DeviceIndex);
 
     #if FEATURE_PLUGIN_STATS
     // Task statistics and historic data in a chart
@@ -1184,7 +1183,6 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   struct EventStruct TempEvent(taskIndex);
-
   int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
 
   switch (Device[DeviceIndex].OutputDataType) {
@@ -1353,7 +1351,6 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
-    LoadTaskSettings(taskIndex);
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
     {
@@ -1362,14 +1359,14 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_TD();
       {
         const String id = getPluginCustomArgName(F("TDVN"), varNr); // ="taskdevicevaluename"
-        addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], NAME_FORMULA_LENGTH_MAX);
+        addTextBox(id, Cache.getTaskDeviceValueName(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
       }
 
       if (Device[DeviceIndex].FormulaOption)
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDF"), varNr); // ="taskdeviceformula"
-        addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
+        addTextBox(id, Cache.getTaskDeviceFormula(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
       }
 
 #if FEATURE_PLUGIN_STATS
@@ -1377,7 +1374,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDS"), varNr); // ="taskdevicestats"
-        addCheckBox(id, ExtraTaskSettings.enabledPluginStats(varNr));
+        addCheckBox(id, Cache.enabledPluginStats(taskIndex, varNr));
       }
 #endif
 
@@ -1385,7 +1382,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDVD"), varNr); // ="taskdevicevaluedecimals"
-        addNumericBox(id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
+        addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, 6);
       }
     }
     addFormSeparator(colCount);

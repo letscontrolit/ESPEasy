@@ -17,8 +17,6 @@ const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType);
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pconfigIndex);
 
-void sensorTypeHelper_webformLoad_header();
-
 void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, uint8_t pconfigIndex);
 
 void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigIndex, int optionCount, const uint8_t options[]);
