@@ -121,6 +121,7 @@ void sendData_checkDuplicates(struct EventStruct *event, const String& compare_k
 }
 
 bool validUserVar(struct EventStruct *event) {
+  if (!validTaskIndex(event->TaskIndex)) return false;
   const Sensor_VType vtype = event->getSensorType();
   if (vtype == Sensor_VType::SENSOR_TYPE_LONG || 
       vtype == Sensor_VType::SENSOR_TYPE_STRING  // FIXME TD-er: Must look at length of event->String2 ?

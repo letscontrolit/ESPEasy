@@ -315,6 +315,10 @@ void ESPEasy_Scheduler::handle_schedule() {
 * These timers set a new scheduled timer, based on the old value.
 * This will make their interval as constant as possible.
 \*********************************************************************************************/
+
+// Interval where it is more important to actually run the scheduled job, instead of keeping the time drift to a minimum.
+// For example running the PLUGIN_FIFTY_PER_SECOND calls probably need to run as fast as possible as they need to fetch data before a buffer overflow happens.
+// For those it is more important to actually run it than keeping pace.
 void ESPEasy_Scheduler::setNextTimeInterval(unsigned long& timer, const unsigned long step) {
   timer += step;
   const long passed = timePassedSince(timer);
@@ -332,6 +336,22 @@ void ESPEasy_Scheduler::setNextTimeInterval(unsigned long& timer, const unsigned
 
   // Try to get in sync again.
   timer = millis() + (step - passed);
+}
+
+// More strict interval where no time drift is more important than missing a scheduled interval.
+// For example timing for repeating longPulse where 2 scheduled intervals need to be at constant 'distance' from each other.
+void ESPEasy_Scheduler::setNextStrictTimeInterval(unsigned long     & timer,
+                                                  const unsigned long step) {
+  timer += step;
+  const long passed = timePassedSince(timer);
+
+  if (passed <= 0) {
+    // Event has not yet happened, which is fine.
+    return;
+  }
+  // Try to get in sync again.
+  const unsigned long stepsMissed = static_cast<unsigned long>(passed) / step;
+  timer += (stepsMissed + 1) * step;
 }
 
 void ESPEasy_Scheduler::setIntervalTimer(IntervalTimer_e id) {
@@ -617,12 +637,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_
 
   systemTimerStruct timer_data;
 
-  timer_data.TaskIndex       = taskIndex;
-  timer_data.Par1            = Par1;
-  timer_data.Par2            = Par2;
-  timer_data.Par3            = Par3;
-  timer_data.Par4            = Par4;
-  timer_data.Par5            = Par5;
+  timer_data.fromEvent(taskIndex, Par1, Par2, Par3, Par4, Par5);
   systemTimers[mixedTimerId] = timer_data;
   setNewTimerAt(mixedTimerId, millis() + msecFromNow);
 }
@@ -637,13 +652,7 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
 
   if (it == systemTimers.end()) { return; }
 
-  struct EventStruct TempEvent(it->second.TaskIndex);
-
-  TempEvent.Par1 = it->second.Par1;
-  TempEvent.Par2 = it->second.Par2;
-  TempEvent.Par3 = it->second.Par3;
-  TempEvent.Par4 = it->second.Par4;
-  TempEvent.Par5 = it->second.Par5;
+  struct EventStruct TempEvent(it->second.toEvent());
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
@@ -816,11 +825,7 @@ void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t plu
   systemTimerStruct   timer_data;
 
   // PLUGIN_DEVICETIMER_IN does not address a task, so don't set TaskIndex
-  timer_data.Par1            = Par1;
-  timer_data.Par2            = Par2;
-  timer_data.Par3            = Par3;
-  timer_data.Par4            = Par4;
-  timer_data.Par5            = Par5;
+  timer_data.fromEvent(INVALID_TASK_INDEX, Par1, Par2, Par3, Par4, Par5);
   systemTimers[mixedTimerId] = timer_data;
   setNewTimerAt(mixedTimerId, millis() + msecFromNow);
 }
@@ -836,18 +841,12 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 
   if (it == systemTimers.end()) { return; }
 
-  struct EventStruct TempEvent;
+  struct EventStruct TempEvent(it->second.toEvent());
 
   // PLUGIN_DEVICETIMER_IN does not address a task, so don't set TaskIndex
 
   // extract deviceID from timer id:
   const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
-
-  TempEvent.Par1 = it->second.Par1;
-  TempEvent.Par2 = it->second.Par2;
-  TempEvent.Par3 = it->second.Par3;
-  TempEvent.Par4 = it->second.Par4;
-  TempEvent.Par5 = it->second.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
@@ -891,7 +890,8 @@ void ESPEasy_Scheduler::setGPIOTimer(
   int        pinnr,
   int        state,
   int        repeatInterval,
-  int        recurringCount)
+  int        recurringCount,
+  int        alternateInterval)
 {
   uint8_t GPIOType = GPIO_TYPE_INVALID;
 
@@ -916,7 +916,8 @@ void ESPEasy_Scheduler::setGPIOTimer(
     const systemTimerStruct timer_data(
       recurringCount, 
       repeatInterval, 
-      state);
+      state,
+      alternateInterval);
     systemTimers[mixedTimerId] = timer_data;
     setNewTimerAt(mixedTimerId, millis() + msecFromNow);
   }
@@ -965,15 +966,19 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id, unsigned long lastt
   // Reschedule before sending the event, as it may get rescheduled in handling the timer event.
   if (it->second.isRecurring()) {
     // Recurring timer
+    it->second.markNextRecurring();
+    
     unsigned long newTimer = lasttimer;
     setNextTimeInterval(newTimer, it->second.getInterval());
     setNewTimerAt(mixedTimerId, newTimer);
-    it->second.markNextRecurring();
   }
 
   uint8_t GPIOType      = static_cast<uint8_t>((id) & 0xFF);
   uint8_t pinNumber     = static_cast<uint8_t>((id >> 8) & 0xFF);
   uint8_t pinStateValue = static_cast<uint8_t>((id >> 16) & 0xFF);
+  if (it->second.isAlternateState()) {
+    pinStateValue = (pinStateValue > 0) ? 0 : 1;
+  }
 
   uint8_t pluginID = PLUGIN_GPIO;
 
@@ -1233,7 +1238,11 @@ void ESPEasy_Scheduler::process_system_event_queue() {
     case PluginPtrType::TaskPlugin:
 
       if (validDeviceIndex(Index)) {
-        if (Function != PLUGIN_READ || Device[Index].ErrorStateValues) {
+        if ((Function != PLUGIN_READ && 
+             Function != PLUGIN_MQTT_CONNECTION_STATE && 
+             Function != PLUGIN_MQTT_IMPORT)
+           || Device[Index].ErrorStateValues) {
+          // FIXME TD-er: LoadTaskSettings should only be called when needed, not pre-emptive.
           LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
         }
         Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
