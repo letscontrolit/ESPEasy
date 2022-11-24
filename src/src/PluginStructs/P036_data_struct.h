@@ -83,7 +83,7 @@
 # define P036_FLAG_SCROLL_WITHOUTWIFI  24 // Bit 24 ScrollWithoutWifi
 # define P036_FLAG_HIDE_HEADER         25 // Bit 25 Hide header
 # define P036_FLAG_INPUT_PULLUP        26 // Bit 26 Input PullUp
-//# define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 not longer used
+// # define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 not longer used
 # define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
 # define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
 # define P036_FLAG_HIDE_FOOTER         30 // Bit 30 Hide footer
@@ -124,8 +124,8 @@ enum class ePageScrollSpeed {
 };
 
 enum class eP036pinmode {
-  ePPM_Input         = 0,
-  ePPM_InputPullUp   = 1
+  ePPM_Input       = 0,
+  ePPM_InputPullUp = 1
 };
 
 typedef struct {
@@ -276,7 +276,7 @@ public:
 };
 
 struct P036_data_struct : public PluginTaskData_base {
-  P036_data_struct();
+  P036_data_struct() = default;
 
   virtual ~P036_data_struct();
 
@@ -326,29 +326,29 @@ struct P036_data_struct : public PluginTaskData_base {
                                ePageScrollSpeed lscrollspeed  = ePageScrollSpeed::ePSS_Instant);
 
   // Draw scrolling line (1pix/s)
-  void          display_scrolling_lines();
+  void                       display_scrolling_lines();
 
   // Draw Signal Strength Bars, return true when there was an update.
-  bool          display_wifibars();
+  bool                       display_wifibars();
 
   // Perform the actual write to the display.
-  void          update_display();
+  void                       update_display();
 
   // get pixel positions
-  int16_t       GetHeaderHeight();
-  int16_t       GetIndicatorTop();
-  tFontSettings CalculateFontSettings(uint8_t _defaultLines);
+  int16_t                    GetHeaderHeight();
+  int16_t                    GetIndicatorTop();
+  tFontSettings              CalculateFontSettings(uint8_t _defaultLines);
 
-  void          P036_JumpToPage(struct EventStruct *event,
-                                uint8_t             nextFrame);
+  void                       P036_JumpToPage(struct EventStruct *event,
+                                             uint8_t             nextFrame);
 
-  void          P036_JumpToPageOfLine(struct EventStruct *event,
-                                      uint8_t             LineNo);
-  void          P036_DisplayPage(struct EventStruct *event);
+  void                       P036_JumpToPageOfLine(struct EventStruct *event,
+                                                   uint8_t             LineNo);
+  void                       P036_DisplayPage(struct EventStruct *event);
 
   // Perform some specific changes for OLED display
-  String        P36_parseTemplate(String& tmpString,
-                                  uint8_t lineIdx);
+  String                     P36_parseTemplate(String& tmpString,
+                                               uint8_t lineIdx);
 
   void                       registerButtonState(uint8_t newButtonState,
                                                  bool    bPin3Invers);
@@ -379,11 +379,11 @@ struct P036_data_struct : public PluginTaskData_base {
   bool            bLineScrollEnabled = false;
 
   // Display button
-  bool    ButtonState     = false; // button not touched
-  uint8_t ButtonLastState = 0;     // Last state checked (debouncing in progress)
-  uint8_t DebounceCounter = 0;     // debounce counter
-  uint8_t RepeatCounter   = 0;     // Repeat delay counter when holding button pressed
-  uint16_t displayTimer   = 0;     // counter for display OFF
+  bool     ButtonState     = false; // button not touched
+  uint8_t  ButtonLastState = 0;     // Last state checked (debouncing in progress)
+  uint8_t  DebounceCounter = 0;     // debounce counter
+  uint8_t  RepeatCounter   = 0;     // Repeat delay counter when holding button pressed
+  uint16_t displayTimer    = 0;     // counter for display OFF
   // frame header
   uint16_t       HeaderCount              = 0;
   eHeaderContent HeaderContent            = eHeaderContent::eSSID;

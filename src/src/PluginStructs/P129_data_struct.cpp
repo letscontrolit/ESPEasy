@@ -12,10 +12,6 @@ P129_data_struct::P129_data_struct(int8_t  dataPin,
                                    uint8_t chipCount)
   : _dataPin(dataPin), _clockPin(clockPin), _enablePin(enablePin), _loadPin(loadPin), _chipCount(chipCount) {}
 
-// **************************************************************************/
-// Destructor
-// **************************************************************************/
-P129_data_struct::~P129_data_struct() {}
 
 bool P129_data_struct::plugin_init(struct EventStruct *event) {
   if (isInitialized()) {

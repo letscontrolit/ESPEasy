@@ -5,37 +5,33 @@
 
 
 WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq)
-  : _address(address)
+  : _address(address), _freq(freq), _use_STBY_IO(false)
 {
-  _use_STBY_IO = false;
-
   if (motor == P079_MOTOR_A) {
     _motor = P079_MOTOR_A;
   }
   else {
     _motor = P079_MOTOR_B;
   }
-
-  setfreq(freq);
 }
 
 WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq, uint8_t STBY_IO)
-  : _address(address)
+  : _address(address), _freq(freq), _use_STBY_IO(true), _STBY_IO(STBY_IO)
 {
-  _use_STBY_IO = true;
-  _STBY_IO     = STBY_IO;
-
   if (motor == P079_MOTOR_A) {
     _motor = P079_MOTOR_A;
   }
   else {
     _motor = P079_MOTOR_B;
   }
+}
 
-  setfreq(freq);
-
-  pinMode(_STBY_IO, OUTPUT);
-  digitalWrite(_STBY_IO, LOW);
+void WemosMotor::init() {
+  setfreq(_freq);
+  if (_use_STBY_IO) {
+    pinMode(_STBY_IO, OUTPUT);
+    digitalWrite(_STBY_IO, LOW);
+  }
 }
 
 /* setfreq() -- set PWM's frequency

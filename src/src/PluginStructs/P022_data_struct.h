@@ -23,6 +23,9 @@
 // Administration per address is no longer needed as it may be behind a multiplexer,
 // so multiple instances using the same address is now allowed.
 struct P022_data_struct : public PluginTaskData_base {
+  P022_data_struct() = default;
+  virtual ~P022_data_struct() = default;
+
   bool p022_is_init(uint8_t address);
 
   bool p022_set_init(uint8_t address);

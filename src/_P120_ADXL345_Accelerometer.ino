@@ -104,9 +104,10 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       P120_I2C_ADDR       = 0x53; // Default I2C Address
       P120_AVERAGE_BUFFER = 10;   // Average averaging ;-)
 
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setI2Caddress(static_cast<uint8_t>(P120_I2C_ADDR));
         success = P120_data->plugin_set_defaults(event); // This shouldn't fail
         delete P120_data;
       }
@@ -127,9 +128,10 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setI2Caddress(static_cast<uint8_t>(P120_I2C_ADDR));
         success = P120_data->plugin_webform_load(event); // This shouldn't fail
         delete P120_data;
       }
@@ -141,9 +143,10 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       P120_I2C_ADDR       = getFormItemInt(F("i2c_addr"));
       P120_AVERAGE_BUFFER = getFormItemInt(F("p120_average_buf"));
 
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setI2Caddress(static_cast<uint8_t>(P120_I2C_ADDR));
         success = P120_data->plugin_webform_save(event); // This shouldn't fail
         delete P120_data;
       }
@@ -152,10 +155,13 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER));
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = nullptr != P120_data;
+      if (nullptr != P120_data) {
+        P120_data->setI2Caddress(static_cast<uint8_t>(P120_I2C_ADDR));
+        success = true;
+      }
 
       break;
     }

@@ -329,7 +329,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P053_data) {
-        success = P053_data->initialized();
+        success = P053_data->init();
       }
 
       break;

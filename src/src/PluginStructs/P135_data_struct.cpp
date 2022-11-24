@@ -13,7 +13,10 @@ P135_data_struct::P135_data_struct(taskIndex_t taskIndex,
                                    bool        lowPowerMeasurement,
                                    bool        useSingleShot)
   : _sensorType(sensorType), _altitude(altitude), _tempOffset(tempOffset), _autoCalibrate(autoCalibrate),
-  _lowPowerMeasurement(lowPowerMeasurement), _useSingleShot(useSingleShot), initialized(false) {
+  _lowPowerMeasurement(lowPowerMeasurement), _useSingleShot(useSingleShot), initialized(false) 
+  {}
+
+bool P135_data_struct::init() {
   scd4x = new (std::nothrow) SCD4x(static_cast<scd4x_sensor_type_e>(_sensorType)); // Don't start measurement, we want to set arguments
 
   if (scd4x != nullptr) {
@@ -57,6 +60,7 @@ P135_data_struct::P135_data_struct(taskIndex_t taskIndex,
       addLog(LOG_LEVEL_ERROR, F("SDC4x: Sensor not detected."));
     }
   }
+  return isInitialized();
 }
 
 /*****************************************************

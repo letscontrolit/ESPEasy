@@ -191,6 +191,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P045_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P045_data) {
+        P045_data->init();
         success = true;
       }
 

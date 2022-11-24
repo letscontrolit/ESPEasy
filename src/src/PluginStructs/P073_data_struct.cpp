@@ -2,26 +2,34 @@
 
 #ifdef USES_P073
 
-P073_data_struct::P073_data_struct()
-  : dotpos(-1), pin1(-1), pin2(-1), pin3(-1), displayModel(0), output(0),
-  brightness(0), timesep(false), shift(false), periods(false), hideDegree(false),
-  rightAlignTempMAX7219(false), fontset(0)
-  # ifdef P073_7DBIN_COMMAND
-  , binaryData(false)
-  # endif // P073_7DBIN_COMMAND
-  # ifdef P073_SCROLL_TEXT
-  , txtScrolling(false), scrollCount(0), scrollPos(0), scrollFull(false)
-  , _scrollSpeed(0)
-  # endif // P073_SCROLL_TEXT
+void P073_data_struct::init(struct EventStruct *event)
 {
   ClearBuffer();
+  pin1         = CONFIG_PIN1;
+  pin2         = CONFIG_PIN2;
+  pin3         = CONFIG_PIN3;
+  displayModel = PCONFIG(0);
+  output       = PCONFIG(1);
+  brightness   = PCONFIG(2);
+  periods      = bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD);
+  hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
+  # ifdef P073_SCROLL_TEXT
+  txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
+  scrollFull   = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL);
+  setScrollSpeed(PCONFIG(3));
+  # endif // P073_SCROLL_TEXT
+  rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
+  timesep               = true;
+  # ifdef P073_EXTRA_FONTS
+  fontset = PCONFIG(4);
+  # endif // P073_EXTRA_FONTS
 }
 
-void P073_data_struct::FillBufferWithTime(boolean sevendgt_now,
+void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
                                           uint8_t sevendgt_hours,
                                           uint8_t sevendgt_minutes,
                                           uint8_t sevendgt_seconds,
-                                          boolean flag12h) {
+                                          bool    flag12h) {
   ClearBuffer();
 
   if (sevendgt_now) {
@@ -45,7 +53,7 @@ void P073_data_struct::FillBufferWithTime(boolean sevendgt_now,
   showbuffer[5] = sevendgt_seconds % 10;
 }
 
-void P073_data_struct::FillBufferWithDate(boolean sevendgt_now,
+void P073_data_struct::FillBufferWithDate(bool    sevendgt_now,
                                           uint8_t sevendgt_day,
                                           uint8_t sevendgt_month,
                                           int     sevendgt_year) {

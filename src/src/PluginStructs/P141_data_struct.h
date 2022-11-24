@@ -88,7 +88,8 @@ public:
                    uint16_t            bgcolor         = ADAGFX_BLACK,
                    bool                textBackFill    = true,
                    bool                displayInverted = false);
-  ~P141_data_struct();
+  P141_data_struct() = delete;
+  virtual ~P141_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);

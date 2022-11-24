@@ -368,6 +368,12 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_EXIT: {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (nullptr != P082_data) {
+        P082_data->powerDown();
+      }
+
       const int16_t pps_pin = CONFIG_PIN3;
 
       if (validGpio(pps_pin)) {
