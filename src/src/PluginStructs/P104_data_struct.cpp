@@ -1771,8 +1771,6 @@ bool P104_data_struct::saveSettings() {
 * webform_load
 **************************************************************/
 bool P104_data_struct::webform_load(struct EventStruct *event) {
-  addFormSubHeader(F("Device settings"));
-
   {                                       // Hardware types
     # define P104_hardwareTypeCount 8
     const __FlashStringHelper *hardwareTypes[P104_hardwareTypeCount] = {

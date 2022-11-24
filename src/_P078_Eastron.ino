@@ -172,26 +172,25 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      const __FlashStringHelper * options[P078_NR_OUTPUT_OPTIONS];
+      for (int i = 0; i < P078_NR_OUTPUT_OPTIONS; ++i) {
+        options[i] = p078_getQueryString(i);
+      }
+      for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P078_NR_OUTPUT_OPTIONS, options);
+      }
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         {
           const __FlashStringHelper * options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
           addFormSelector(F("Model Type"), P078_MODEL_LABEL, 4, options_model, nullptr, P078_MODEL );
         }
-
-        {
-          // In a separate scope to free memory of String array as soon as possible
-          sensorTypeHelper_webformLoad_header();
-          const __FlashStringHelper * options[P078_NR_OUTPUT_OPTIONS];
-          for (int i = 0; i < P078_NR_OUTPUT_OPTIONS; ++i) {
-            options[i] = p078_getQueryString(i);
-          }
-          for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-            const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-            sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P078_NR_OUTPUT_OPTIONS, options);
-          }
-        }
-
 
         success = true;
         break;

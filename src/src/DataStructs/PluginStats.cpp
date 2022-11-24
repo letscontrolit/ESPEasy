@@ -333,12 +333,14 @@ uint8_t PluginStats_array::nrSamplesPresent() const
 
 void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
 {
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) {
-      _plugin_stats[i]->push(UserVar[event->BaseVarIndex + i]);
+  if (validTaskIndex(event->TaskIndex)) {
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      if (_plugin_stats[i] != nullptr) {
+        _plugin_stats[i]->push(UserVar[event->BaseVarIndex + i]);
 
-      if (trackPeaks) {
-        _plugin_stats[i]->trackPeak(UserVar[event->BaseVarIndex + i]);
+        if (trackPeaks) {
+          _plugin_stats[i]->trackPeak(UserVar[event->BaseVarIndex + i]);
+        }
       }
     }
   }
