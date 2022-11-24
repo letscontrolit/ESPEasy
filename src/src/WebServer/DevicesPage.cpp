@@ -1351,7 +1351,6 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
-    LoadTaskSettings(taskIndex);
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
     {
@@ -1360,14 +1359,14 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_TD();
       {
         const String id = getPluginCustomArgName(F("TDVN"), varNr); // ="taskdevicevaluename"
-        addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], NAME_FORMULA_LENGTH_MAX);
+        addTextBox(id, Cache.getTaskDeviceValueName(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
       }
 
       if (Device[DeviceIndex].FormulaOption)
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDF"), varNr); // ="taskdeviceformula"
-        addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
+        addTextBox(id, Cache.getTaskDeviceFormula(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
       }
 
 #if FEATURE_PLUGIN_STATS
@@ -1375,7 +1374,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDS"), varNr); // ="taskdevicestats"
-        addCheckBox(id, ExtraTaskSettings.enabledPluginStats(varNr));
+        addCheckBox(id, Cache.enabledPluginStats(taskIndex, varNr));
       }
 #endif
 
@@ -1383,7 +1382,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDVD"), varNr); // ="taskdevicevaluedecimals"
-        addNumericBox(id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
+        addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, 6);
       }
     }
     addFormSeparator(colCount);

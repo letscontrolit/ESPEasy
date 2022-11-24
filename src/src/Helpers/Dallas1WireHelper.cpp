@@ -256,11 +256,8 @@ void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
     return;
   }
 
-  // Load ROM address from tasksettings
-  LoadTaskSettings(TaskIndex);
-
   for (uint8_t x = 0; x < 8; x++) {
-    uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
+    uint32_t value = (uint32_t)Cache.getTaskDevicePluginConfigLong(TaskIndex, x);
     addr[x] = static_cast<uint8_t>((value >> (var_index * 8)) & 0xFF);
   }
 }
@@ -279,6 +276,7 @@ void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
     value                                          += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
     ExtraTaskSettings.TaskDevicePluginConfigLong[x] = (long)value;
   }
+  Cache.updateExtraTaskSettingsCache();
 }
 
 /*********************************************************************************************\
