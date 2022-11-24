@@ -181,7 +181,6 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -239,7 +238,6 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
           bool has_samp_meas = errorcode == 0;
 
           if (/* has_meas_mode || */ has_period || has_samp_meas) {
-
             // Disable selector for now, since single measurement not yet supported.
 
             /*

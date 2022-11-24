@@ -48,7 +48,7 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
       Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
 
       break;
     }
