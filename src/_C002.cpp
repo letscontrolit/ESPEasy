@@ -183,7 +183,6 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               }
             }
           }
-          LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
         }
       }
       break;
