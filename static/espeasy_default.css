@@ -584,9 +584,4 @@ canvas {
 		position: absolute;
 		z-index: 1
 	}
-
-	.container {
-		display: inline;
-		user-select: none
-	}
 }
