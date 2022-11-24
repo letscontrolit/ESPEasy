@@ -73,11 +73,11 @@ void DLBus::attachDLBusInterrupt(void)
 
 void DLBus::StartReceiving(void)
 {
-  noInterrupts(); // make sure we don't get interrupted before we are ready
+  ISR_noInterrupts(); // make sure we don't get interrupted before we are ready
   ISR_PulseCount      = 0;
   ISR_Receiving       = (ISR_PtrChangeBitStream != nullptr);
   ISR_AllBitsReceived = false;
-  interrupts(); // interrupts allowed now, next instruction WILL be executed
+  ISR_interrupts(); // interrupts allowed now, next instruction WILL be executed
 }
 
 void IRAM_ATTR DLBus::ISR(void)

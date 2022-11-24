@@ -590,6 +590,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_INIT:
     case PLUGIN_EXIT:
     case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
     case PLUGIN_TASKTIMER_IN:
@@ -781,6 +782,16 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         START_TIMER;
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
+
+        // Calls may have updated ExtraTaskSettings, so validate them.
+        ExtraTaskSettings.validate();
+
+        if (Function == PLUGIN_GET_DEVICEVALUENAMES ||
+            Function == PLUGIN_WEBFORM_SAVE ||
+            Function == PLUGIN_SET_DEFAULTS ||
+            Function == PLUGIN_INIT_VALUE_RANGES) {
+          Cache.updateExtraTaskSettingsCache();
+        }
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();
         }
@@ -805,9 +816,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           }
         }
-
-        // Calls may have updated ExtraTaskSettings, so validate them.
-        ExtraTaskSettings.validate();
         
         STOP_TIMER_TASK(DeviceIndex, Function);
         delay(0); // SMY: call delay(0) unconditionally

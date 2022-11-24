@@ -211,7 +211,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   #endif // if FEATURE_ETHERNET
 
 #ifdef ESP32
-  if (UsePSRAM()) {
+  if (FoundPSRAM()) {
     // PSRAM can use GPIO 16 and 17
     switch (gpio) {
       case 16:

@@ -17,6 +17,7 @@
 
 #include "../DataStructs/RTCStruct.h"
 
+#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 
@@ -33,6 +34,7 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
@@ -288,9 +290,11 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    #if FEATURE_EXT_RTC
     if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
       addRowLabelValue(LabelType::EXT_RTC_UTC_TIME);
     }
+    #endif
     addRowLabelValue(LabelType::TIME_SOURCE);
     addRowLabelValue(LabelType::TIME_WANDER);
     addUnit(F("ppm"));

@@ -1749,6 +1749,7 @@ There are two flavors:
 
 SendTo:  SendTo <unit>,<command>
 
+(Command must be quoted if it contains commas or spaces.)
 
 Imagine you have two ESP Easy modules, ESP#1 and ESP#2
 In the Rules section of ESP#1 you have this:
@@ -1756,8 +1757,10 @@ In the Rules section of ESP#1 you have this:
 .. code-block:: none
 
  on demoEvent do
-   sendTo,2,event,startwatering //(to use the previous example.)
+   sendTo,2,'event,startwatering' //(to use the previous example.)
  endon
+
+(Command must be quoted because it contains commas or spaces.)
 
 And ESP#2 has the rules according to the previous example (givemesomewater)
 
@@ -1774,8 +1777,10 @@ It is also possible to directly order GPIO changes, like:
 .. code-block:: none
 
  on demoEvent do
-   sendTo,2,GPIO,2,1
+   sendTo,2,'GPIO,2,1'
  endon
+
+(Command must be quoted because it contains commas or spaces.)
 
 
 Publish
@@ -1849,7 +1854,7 @@ There is the following workaround:
 Added: 2022/07/23
 
 * ``SendToHTTP`` can now also be called with a full URL starting with ``http://``, so no longer the host, port and uri have to be separated. (it is still possible of course)
-* HTTP return value will be made available as event to be evaluated in the rules. Example event: ``http#hostname=404``
+* HTTP return value will be made available as **event** to be evaluated in the rules. Example event: ``http#hostname=404``
 * Calls made to a HTTP server can now also follow redirects. (GET and HEAD calls only) This has to be enabled in Tools->Advanced page.
 * Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
 * HTTP user credentials now can handle Basic Auth and Digest Auth.
@@ -2102,15 +2107,22 @@ The next script should be placed at the top of ``Rules Set 1`` as they are calle
     // %eventvalue1% = key
     // %eventvalue2% = lower limit index
     // %eventvalue3% = upper limit index
-    Let,997,(%eventvalue2%+%eventvalue3%)/2 // Compute "middle" index
-    Let,998,[int#997]+1
+  
     // [int#%v997%] is the key in the middle of our search range
+    Let,997,(%eventvalue2%+%eventvalue3%)/2 // Compute "middle" index
+    Let,998,[int#997]
+    if [int#998] < %eventvalue3%
+      Let,998,[int#998]+1
+    endif
     
-    If %eventvalue1% = [int#%v997%] or %eventvalue1% = [int#%v998%] 
+    // Compute the distance between upper and lower limit
+    let,996,%eventvalue3%-%eventvalue2%
+  
+    If %eventvalue1% = [int#%v997%] or %eventvalue1% = [int#%v998%]
       // Found it
       Event,OkTag=%eventvalue1%
     Else
-      If %eventvalue2%=%eventvalue3%
+      If %eventvalue2%=%eventvalue3% or [int#996]=1
         // Upper and lower limit are the same
         // So we have not found the key
         // No need to continue searching
@@ -2118,15 +2130,23 @@ The next script should be placed at the top of ``Rules Set 1`` as they are calle
         // When refering to an index, make sure to use the [int#<n>] notation, not the floating point version.
         If %eventvalue1% > [int#%v997%]
           // Check upper half
-          Asyncevent,checkID=%eventvalue1%,[int#997],%eventvalue3%
+          if [int#998] < %eventvalue3%
+            // We already checked #998, so increase its index
+            Let,998,[int#998]+1
+          endif
+          Asyncevent,checkID=%eventvalue1%,[int#998],%eventvalue3%
         Else
           // Check lower half
+          if [int#997] > %eventvalue2%
+            // We already checked #997, so decrease its index
+            Let,997,[int#997]-1
+          endif
           Asyncevent,checkID=%eventvalue1%,%eventvalue2%,[int#997]
         Endif
       Endif
     Endif
   Endon
-
+  
   On Turnstile_out#Tag Do // Out-going reader
     If [Turnstile_out#Tag]>0
       Event,readet=[Turnstile_out#Tag]

@@ -398,7 +398,10 @@ To create/register a plugin, you have to :
       #define PLUGIN_DESCR  "Minimal 1M OTA"
     #endif
 
-    #define CONTROLLER_SET_NONE
+
+    #ifndef CONTROLLER_SET_NONE
+      #define CONTROLLER_SET_NONE
+    #endif
 
     #define BUILD_MINIMAL_OTA
     #ifndef BUILD_NO_DEBUG
@@ -417,9 +420,13 @@ To create/register a plugin, you have to :
 //    #define USES_C013   // ESPEasy P2P network
 
 //    #define NOTIFIER_SET_STABLE
-    #define NOTIFIER_SET_NONE
+    #ifndef NOTIFIER_SET_NONE
+      #define NOTIFIER_SET_NONE
+    #endif
 
-    #define PLUGIN_SET_NONE
+    #ifndef PLUGIN_SET_NONE
+      #define PLUGIN_SET_NONE
+    #endif
 
     #ifdef FEATURE_SETTINGS_ARCHIVE
         #undef FEATURE_SETTINGS_ARCHIVE
@@ -2090,6 +2097,14 @@ To create/register a plugin, you have to :
       #define NOTIFIER_SET_NONE
     #endif
 
+  #endif
+  #ifdef ESP8266_1M
+    #ifndef NOTIFIER_SET_NONE
+      #define NOTIFIER_SET_NONE
+    #endif
+    #ifndef DISABLE_SC16IS752_Serial
+      #define DISABLE_SC16IS752_Serial
+    #endif
   #endif
 #endif
 

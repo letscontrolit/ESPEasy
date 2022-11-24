@@ -101,14 +101,15 @@ Flash size | Description                 |
 
 
 *[opt-build-features]* can be any of:
-Build features  | Description                                                              |
-----------------|--------------------------------------------------------------------------|
-LittleFS        | Use LittleFS instead of SPIFFS filesystem (SPIFFS is unstable \> 2 MB)    |
-VCC             | Analog input configured to measure VCC voltage                           |
-OTA             | Arduino OTA (Over The Air) update feature enabled                        |
-Domoticz        | Only Domoticz controllers (HTTP+MQTT) and plugins included               |
-FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included |
-ETH             | Ethernet interface enabled (ESP32 only)                                  |
+Build features  | Description                                                                                                   |
+----------------|---------------------------------------------------------------------------------------------------------------|
+PSRAM           | Enable PSRAM feature (*only* differentiated for 16M8M builds, other ESP32 builds have PSRAM enabled by default) |
+LittleFS        | Use LittleFS instead of SPIFFS filesystem (SPIFFS is unstable \> 2 MB)                                        |
+VCC             | Analog input configured to measure VCC voltage (ESP8266 only)                                                 |
+OTA             | Arduino OTA (Over The Air) update feature enabled                                                             |
+Domoticz        | Only Domoticz controllers (HTTP+MQTT) and plugins included                                                    |
+FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included                                      |
+ETH             | Ethernet interface enabled (ESP32 only)                                                                       |
 
 Some example firmware names:
 Firmware name                                       | Hardware                       | Included plugins                 |
