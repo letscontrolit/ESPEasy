@@ -58,9 +58,8 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
 #if FEATURE_PLUGIN_STATS
     const uint8_t valueCount = getValueCountForTask(taskIndex);
-    LoadTaskSettings(taskIndex);
     for (size_t i = 0; i < valueCount; ++i) {
-      if (ExtraTaskSettings.enabledPluginStats(i)) {
+      if (Cache.enabledPluginStats(taskIndex, i)) {
         Plugin_task_data[taskIndex]->initPluginStats(i);
       }
     }

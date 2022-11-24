@@ -88,7 +88,6 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
       Dallas_plugin_get_addr(addr, event->TaskIndex);
       string  = Dallas_format_address(addr);

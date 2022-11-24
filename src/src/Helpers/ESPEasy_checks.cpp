@@ -115,7 +115,7 @@ void run_compiletime_checks() {
   #if FEATURE_ESPEASY_P2P
   check_size<NodeStruct,                            66u>();
   #endif
-  check_size<systemTimerStruct,                     24u>();
+  check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
