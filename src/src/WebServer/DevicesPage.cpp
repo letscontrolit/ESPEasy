@@ -1352,7 +1352,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     }
 
     //placeholder header
-     html_table_header(F(""),0);
+     html_table_header(F(""));
      ++colCount;
 
     LoadTaskSettings(taskIndex);
