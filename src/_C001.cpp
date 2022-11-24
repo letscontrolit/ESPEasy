@@ -50,7 +50,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      if (C001_DelayHandler == nullptr) {
+      if (C001_DelayHandler == nullptr || !validTaskIndex(event->TaskIndex)) {
         break;
       }
 
