@@ -12,11 +12,18 @@
 # include "../ESPEasyCore/ESPEasyRules.h"
 
 
-P037_data_struct::P037_data_struct(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
-  loadSettings();
-}
+P037_data_struct::P037_data_struct(taskIndex_t taskIndex) : _taskIndex(taskIndex) 
+{}
 
-P037_data_struct::~P037_data_struct() {}
+P037_data_struct::~P037_data_struct() {
+  # if P037_JSON_SUPPORT
+  if (nullptr != root) {
+    root->clear();
+    delete root;
+    root = nullptr;
+  }
+  #endif
+}
 
 /**
  * Load the settings from file

@@ -68,9 +68,9 @@ struct P082_data_struct : public PluginTaskData_base {
 
   P082_data_struct();
 
-  ~P082_data_struct();
+  virtual ~P082_data_struct();
 
-  void reset();
+//  void reset();
 
   bool init(ESPEasySerialPort port,
             const int16_t     serial_rx,
@@ -151,7 +151,7 @@ public:
   String _currentSentence;
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)] = { 0 };
+  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)];
 };
 
 #endif // ifdef USES_P082

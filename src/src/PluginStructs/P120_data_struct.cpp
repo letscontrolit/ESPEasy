@@ -5,34 +5,9 @@
 # define P120_RAD_TO_DEG        57.295779f // 180.0/M_PI
 
 
-// **************************************************************************/
-// Constructor I2C
-// **************************************************************************/
-P120_data_struct::P120_data_struct(
-  uint8_t i2c_addr,
-  uint8_t aSize)
-  : _i2c_addr(i2c_addr), _aSize(aSize)
+P120_data_struct::P120_data_struct(uint8_t aSize)
+  : _aSize(aSize)
 {
-  i2c_mode = true;
-  initialization();
-}
-
-// **************************************************************************/
-// Constructor SPI
-// **************************************************************************/
-P120_data_struct::P120_data_struct(
-  int     cs_pin,
-  uint8_t aSize)
-  : _cs_pin(cs_pin), _aSize(aSize)
-{
-  i2c_mode = false;
-  initialization();
-}
-
-// **************************************************************************/
-// Common initialization
-// **************************************************************************/
-void P120_data_struct::initialization() {
   if (_aSize == 0) { _aSize = 1; }
   _XA.resize(_aSize, 0);
   _YA.resize(_aSize, 0);
@@ -41,15 +16,29 @@ void P120_data_struct::initialization() {
   _aMax  = 0;
 }
 
+
 // **************************************************************************/
 // Destructor
 // **************************************************************************/
 P120_data_struct::~P120_data_struct() {
-  if (initialized()) {
+  if (adxl345 != nullptr) {
     delete adxl345;
     adxl345 = nullptr;
   }
 }
+
+void P120_data_struct::setI2Caddress(uint8_t i2c_addr)
+{
+  _i2c_addr = i2c_addr;
+  i2c_mode = true;
+}
+
+void P120_data_struct::setSPI_CSpin(int cs_pin)
+{
+  _cs_pin = cs_pin;
+  i2c_mode = false;
+}
+
 
 // **************************************************************************/
 // Initialize sensor and read data from ADXL345

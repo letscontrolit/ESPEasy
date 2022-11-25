@@ -26,7 +26,7 @@ public:
                    uint8_t  maxbright);
 
   P038_data_struct() = delete;
-  ~P038_data_struct();
+  virtual ~P038_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);

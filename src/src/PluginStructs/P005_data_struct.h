@@ -13,6 +13,9 @@
 struct P005_data_struct : public PluginTaskData_base {
   P005_data_struct(struct EventStruct *event);
 
+  P005_data_struct() = delete;
+  virtual ~P005_data_struct() = default;
+
   /*********************************************************************************************\
   * DHT sub to wait until a pin is in a certain state
   \*********************************************************************************************/

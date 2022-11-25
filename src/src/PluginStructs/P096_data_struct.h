@@ -113,7 +113,8 @@ public:
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    AdaGFXColorDepth    colorDepth   = AdaGFXColorDepth::Monochrome,
                    bool                textBackFill = true);
-  ~P096_data_struct();
+  P096_data_struct() = delete;
+  virtual ~P096_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
@@ -132,10 +133,10 @@ private:
   bool plugin_096_sequence_in_progress = false;
 
   EPD_type_e _display;
-  uint16_t   _xpix;
-  uint16_t   _ypix;
-  uint16_t   _textcols;
-  uint16_t   _textrows;
+  uint16_t   _xpix         = 0;
+  uint16_t   _ypix         = 0;
+  uint16_t   _textcols     = 0;
+  uint16_t   _textrows     = 0;
   uint8_t    _fontwidth    = 6; // Default font characteristics
   uint8_t    _fontheight   = 10;
   uint8_t    _heightOffset = 0;

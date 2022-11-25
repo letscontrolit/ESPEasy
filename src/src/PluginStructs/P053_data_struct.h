@@ -139,7 +139,9 @@ public:
 
   P053_data_struct() = delete;
 
-  ~P053_data_struct();
+  virtual ~P053_data_struct();
+
+  bool init();
 
   bool initialized() const;
 
@@ -217,6 +219,9 @@ private:
   uint8_t            _packet[PMSx003_PACKET_BUFFER_SIZE] = { 0 };
   uint8_t            _packetPos = 0;
   const taskIndex_t  _taskIndex  = INVALID_TASK_INDEX;
+  const int8_t                  _rxPin = -1;
+  const int8_t                  _txPin = -1;
+  const ESPEasySerialPort _port = ESPEasySerialPort::not_set;
   const PMSx003_type _sensortype;
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   const bool _oversample                    = false;
@@ -230,6 +235,7 @@ private:
   uint16_t       _last_checksum              = 0; // To detect duplicate messages
   const int8_t   _resetPin                   = -1;
   const int8_t   _pwrPin                     = -1;
+
   bool           _activeReadingModeEnabled   = true;
 };
 

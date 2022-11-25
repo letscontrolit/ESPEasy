@@ -23,9 +23,9 @@ struct P044_Task : public PluginTaskData_base {
     CHECKSUM
   };
 
-  P044_Task();
+  P044_Task() = default;
 
-  ~P044_Task();
+  virtual ~P044_Task();
 
   inline static bool  serverActive(WiFiServer *server);
 
