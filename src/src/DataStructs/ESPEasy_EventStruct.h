@@ -12,7 +12,6 @@
 #include "../DataStructs/DeviceStruct.h"
 
 
-
 /*********************************************************************************************\
 * EventStruct
 * This should not be copied, only moved.

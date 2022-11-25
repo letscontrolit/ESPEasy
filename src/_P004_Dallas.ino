@@ -203,7 +203,6 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
@@ -243,11 +242,12 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
       if ((addr[0] != 0) && (validGpio(Plugin_004_DallasPin_RX)) && (validGpio(Plugin_004_DallasPin_TX))) {
         const uint8_t res = P004_RESOLUTION;
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res));
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct());
         P004_data_struct *P004_data =
           static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P004_data) {
+          P004_data->init(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res);
           // Address index 0 is already set
           for (uint8_t i = 1; i < P004_NR_OUTPUT_VALUES; ++i) {
             Dallas_plugin_get_addr(addr, event->TaskIndex, i);

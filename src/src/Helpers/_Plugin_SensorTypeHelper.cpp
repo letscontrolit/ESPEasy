@@ -85,15 +85,8 @@ void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pc
   sensorTypeHelper_webformLoad(event, pconfigIndex, 11, optionValues);
 }
 
-void sensorTypeHelper_webformLoad_header()
-{
-  addFormSubHeader(F("Output Configuration"));
-}
-
 void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, uint8_t pconfigIndex)
 {
-  sensorTypeHelper_webformLoad_header();
-
   uint8_t optionValues[4];
   optionValues[0] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
   optionValues[1] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DUAL);
@@ -104,6 +97,7 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, uint8_t pcon
 
 void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigIndex, int optionCount, const uint8_t options[])
 {
+  addFormSubHeader(F("Output Configuration"));
   if (pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
     return;
   }
@@ -154,6 +148,8 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigInde
     note += F("' may affect behavior of some controllers (e.g. Domoticz)");
     addFormNote(note);
   }
+  String dummy;
+  PluginCall(PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR, event, dummy);
 }
 
 void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uint8_t valueIndex, const String& defaultValueName)

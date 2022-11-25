@@ -29,9 +29,7 @@
 # define PLUGIN_120
 # define PLUGIN_ID_120          120 // plugin id
 # define PLUGIN_NAME_120        "Accelerometer - ADXL345 (I2C)"
-# define PLUGIN_VALUENAME1_120  "X"
-# define PLUGIN_VALUENAME2_120  "Y"
-# define PLUGIN_VALUENAME3_120  "Z"
+
 
 boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -51,6 +49,7 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
       Device[deviceCount].PluginStats    = true;
+      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
 
       break;
     }
@@ -61,11 +60,28 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_DEVICEVALUENAMES:
+    case PLUGIN_GET_DEVICEVALUENAMES: {
+      P120_data_struct::plugin_get_device_value_names(event);
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_120));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_120));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_120));
+      event->Par1 = P120_NR_OUTPUT_VALUES;
+      success     = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P120_SENSOR_TYPE_INDEX));
+      event->idx        = P120_SENSOR_TYPE_INDEX;
+      success           = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEGPIONAMES: {
+      serialHelper_getGpioNames(event);
       break;
     }
 
@@ -88,9 +104,10 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       P120_I2C_ADDR       = 0x53; // Default I2C Address
       P120_AVERAGE_BUFFER = 10;   // Average averaging ;-)
 
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setI2Caddress(static_cast<uint8_t>(P120_I2C_ADDR));
         success = P120_data->plugin_set_defaults(event); // This shouldn't fail
         delete P120_data;
       }
@@ -103,12 +120,18 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      success = P120_data_struct::plugin_webform_loadOutputSelector(event);
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setI2Caddress(static_cast<uint8_t>(P120_I2C_ADDR));
         success = P120_data->plugin_webform_load(event); // This shouldn't fail
         delete P120_data;
       }
@@ -120,9 +143,10 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       P120_I2C_ADDR       = getFormItemInt(F("i2c_addr"));
       P120_AVERAGE_BUFFER = getFormItemInt(F("p120_average_buf"));
 
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setI2Caddress(static_cast<uint8_t>(P120_I2C_ADDR));
         success = P120_data->plugin_webform_save(event); // This shouldn't fail
         delete P120_data;
       }
@@ -131,10 +155,13 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER));
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = nullptr != P120_data;
+      if (nullptr != P120_data) {
+        P120_data->setI2Caddress(static_cast<uint8_t>(P120_I2C_ADDR));
+        success = true;
+      }
 
       break;
     }
@@ -150,20 +177,23 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P120_data_struct *P120_data =
+        static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P120_data) {
+        success = P120_data->plugin_get_config_value(event, string);
+      }
+      break;
+    }
+
     case PLUGIN_ONCE_A_SECOND:
     {
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P120_data) {
-        int X, Y, Z;
-
-        if (P120_data->read_data(event, X, Y, Z)) {
-          UserVar[event->BaseVarIndex]     = X;
-          UserVar[event->BaseVarIndex + 1] = Y;
-          UserVar[event->BaseVarIndex + 2] = Z;
-
-          success = true;
-        }
+        success = P120_data->read_data(event);
       }
 
       break;

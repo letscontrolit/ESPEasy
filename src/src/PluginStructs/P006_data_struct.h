@@ -8,15 +8,18 @@
 # define BMP085_ULTRAHIGHRES         3
 
 struct P006_data_struct : public PluginTaskData_base {
+  P006_data_struct() = default;
+  virtual ~P006_data_struct() = default;
+
   bool     begin();
 
-  uint16_t readRawTemperature(void);
+  uint16_t readRawTemperature();
 
-  uint32_t readRawPressure(void);
+  uint32_t readRawPressure();
 
-  int32_t  readPressure(void);
+  int32_t  readPressure();
 
-  float    readTemperature(void);
+  float    readTemperature();
 
   uint8_t  oversampling = BMP085_ULTRAHIGHRES;
   int16_t  ac1 = 0;

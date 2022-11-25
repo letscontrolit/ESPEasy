@@ -89,7 +89,8 @@ struct P098_data_struct : public PluginTaskData_base {
   };
 
   P098_data_struct(const P098_config_struct& config);
-  ~P098_data_struct();
+  P098_data_struct() = delete;
+  virtual ~P098_data_struct();
 
   bool begin(int pos,
              int limitApos,

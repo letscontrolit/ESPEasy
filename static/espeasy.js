@@ -322,8 +322,11 @@ function initCM() {
       }
 
       if (ch == "%") {
-        stream.eatWhile(/[^\s\%]/);
-        if (stream.match("%")) return 'hr';
+        if (/\d/.test(stream.next())) { return 'number'; }
+        else {
+          stream.eatWhile(/[^\s\%]/);
+          if (stream.match("%")) return 'hr';
+        }
       }
 
       if (ch == "[") {
