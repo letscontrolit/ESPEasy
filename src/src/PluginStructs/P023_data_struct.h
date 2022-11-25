@@ -28,6 +28,8 @@ struct P023_data_struct : public PluginTaskData_base {
                    Spacing _font_spacing,
                    uint8_t _displayTimer,
                    uint8_t _use_sh1106);
+  P023_data_struct() = delete;
+  virtual ~P023_data_struct() = default;
 
   void   setDisplayTimer(uint8_t _displayTimer);
   void   checkDisplayTimer();
