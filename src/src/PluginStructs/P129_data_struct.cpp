@@ -110,7 +110,7 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         # endif // ifdef P129_DEBUG_LOG
       }
     } else if (subcommand.equals(F("chipevent"))) { // ShiftIn,chipevent,<chip>,<0|1>
-      const uint8_t chip  = event->Par2 - 1;
+      const int8_t chip  = event->Par2 - 1;
       const uint8_t value = event->Par3;
 
       if ((chip >= 0) && (chip < P129_CONFIG_CHIP_COUNT) && ((value == 0) || (value == 1))) {

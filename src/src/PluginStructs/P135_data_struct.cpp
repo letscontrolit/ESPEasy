@@ -28,6 +28,7 @@ bool P135_data_struct::init() {
       }
       const float orgTempOffset = scd4x->getTemperatureOffset();
 
+      // FIXME TD-er: Is this correct? Checking _tempOffset and not checking orgTempOffset? (same for altitude)
       if (!essentiallyEqual(_tempOffset, 0.0f)) {
         scd4x->setTemperatureOffset(_tempOffset);
       }

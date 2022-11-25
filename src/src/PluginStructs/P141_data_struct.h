@@ -124,8 +124,8 @@ private:
 
   uint16_t _xpix = 84; // Fixed size
   uint16_t _ypix = 48;
-  uint16_t _textcols;
-  uint16_t _textrows;
+  uint16_t _textcols = 0;
+  uint16_t _textrows = 0;
   uint8_t  _fontwidth    = 6; // Default font characteristics
   uint8_t  _fontheight   = 10;
   uint8_t  _heightOffset = 0;

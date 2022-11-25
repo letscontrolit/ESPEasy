@@ -82,7 +82,10 @@ void P073_data_struct::FillBufferWithDate(bool    sevendgt_now,
 
 void P073_data_struct::FillBufferWithNumber(const String& number) {
   ClearBuffer();
-  uint8_t p073_index = 7;
+  if (number.length() == 0) {
+    return;
+  }
+  int8_t p073_index = 7;
 
   dotpos = -1; // -1 means no dot to display
 

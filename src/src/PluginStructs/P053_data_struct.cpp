@@ -87,6 +87,11 @@ bool P053_data_struct::init() {
   } else {
     addLog(LOG_LEVEL_INFO, F("PMSx003 : using hardware serial"));
   }
+  if (_easySerial != nullptr) {
+    delete _easySerial;
+    _easySerial = nullptr;
+  }
+    
   _easySerial = new (std::nothrow) ESPeasySerial(_port, _rxPin, _txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
 
   if (_easySerial != nullptr) {
