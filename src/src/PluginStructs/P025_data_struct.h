@@ -10,6 +10,8 @@ public:
   P025_data_struct(uint8_t i2c_addr,
                    uint8_t _pga,
                    uint8_t _mux);
+  P025_data_struct() = delete;
+  virtual ~P025_data_struct() = default;
 
   int16_t read();
 
