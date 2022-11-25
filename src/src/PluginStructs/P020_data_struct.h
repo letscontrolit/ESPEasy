@@ -15,7 +15,8 @@
 # define P020_DATAGRAM_MAX_SIZE             256
 struct P020_Task : public PluginTaskData_base {
   P020_Task(taskIndex_t taskIndex);
-  ~P020_Task();
+  P020_Task() = delete;
+  virtual ~P020_Task();
 
   inline static bool serverActive(WiFiServer *server);
 

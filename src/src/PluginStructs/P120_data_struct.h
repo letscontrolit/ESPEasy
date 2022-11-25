@@ -96,11 +96,12 @@ public:
 
   static bool isXYZ(valueType vtype);
 
-  P120_data_struct(uint8_t i2c_addr,
-                   uint8_t aSize);
-  P120_data_struct(int     cs_pin,
-                   uint8_t aSize);
-  ~P120_data_struct();
+  P120_data_struct(uint8_t aSize);
+  P120_data_struct() = delete;
+  virtual ~P120_data_struct();
+
+  void setI2Caddress(uint8_t i2c_addr);
+  void setSPI_CSpin(int     cs_pin);
 
   bool read_sensor(struct EventStruct *event);
 
@@ -136,7 +137,6 @@ public:
 
 private:
 
-  void initialization();
   bool init_sensor(struct EventStruct *event);
   void sensor_check_interrupt(struct EventStruct *event);
   void appendPayloadXYZ(struct EventStruct *event,
@@ -151,7 +151,7 @@ private:
 
   uint8_t _i2c_addr = 0;
   int     _cs_pin   = -1;
-  uint8_t _aSize;
+  uint8_t _aSize    = 0;
 
   std::vector<int>_XA;
   std::vector<int>_YA;

@@ -52,6 +52,9 @@ P053_data_struct::P053_data_struct(
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   )
   : _taskIndex(TaskIndex),
+  _rxPin(rxPin),
+  _txPin(txPin),
+  _port(port),
   _sensortype(sensortype),
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _oversample(oversample),
@@ -59,16 +62,18 @@ P053_data_struct::P053_data_struct(
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _delay_read_after_wakeup_ms(delay_read_after_wakeup_ms),
   _resetPin(resetPin), _pwrPin(pwrPin)
-{
+{}
+
+bool P053_data_struct::init() {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log.reserve(25);
     log  = F("PMSx003 : config ");
-    log += rxPin;
+    log += _rxPin;
     log += ' ';
-    log += txPin;
+    log += _txPin;
     log += ' ';
     log += _resetPin;
     log += ' ';
@@ -77,12 +82,17 @@ P053_data_struct::P053_data_struct(
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  if (port == ESPEasySerialPort::software) {
+  if (_port == ESPEasySerialPort::software) {
     addLog(LOG_LEVEL_INFO, F("PMSx003 : using software serial"));
   } else {
     addLog(LOG_LEVEL_INFO, F("PMSx003 : using hardware serial"));
   }
-  _easySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
+  if (_easySerial != nullptr) {
+    delete _easySerial;
+    _easySerial = nullptr;
+  }
+    
+  _easySerial = new (std::nothrow) ESPeasySerial(_port, _rxPin, _txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
 
   if (_easySerial != nullptr) {
     _easySerial->begin(9600);
@@ -97,6 +107,7 @@ P053_data_struct::P053_data_struct(
     setActiveReadingMode();
   }
   clearReceivedData();
+  return initialized();
 }
 
 P053_data_struct::~P053_data_struct() {

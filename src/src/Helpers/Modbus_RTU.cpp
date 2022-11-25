@@ -7,12 +7,11 @@
 #include "../Helpers/StringConverter.h"
 
 
-ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {
-  reset();
-}
-
 ModbusRTU_struct::~ModbusRTU_struct() {
-  reset();
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
 }
 
 void ModbusRTU_struct::reset() {

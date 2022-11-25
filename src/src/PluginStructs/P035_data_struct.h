@@ -29,7 +29,7 @@ public:
   P035_data_struct(int8_t gpioPin);
 
   P035_data_struct() = delete;
-  ~P035_data_struct();
+  virtual ~P035_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);

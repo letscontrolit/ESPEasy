@@ -11,10 +11,12 @@
 
 #include <vector>
 
-P087_data_struct::P087_data_struct() :  easySerial(nullptr) {}
 
 P087_data_struct::~P087_data_struct() {
-  reset();
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
 }
 
 void P087_data_struct::reset() {

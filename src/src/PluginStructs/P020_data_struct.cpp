@@ -15,12 +15,18 @@
 
 
 P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
-  clearBuffer();
+  serial_buffer.reserve(P020_DATAGRAM_MAX_SIZE);
 }
 
 P020_Task::~P020_Task() {
-  stopServer();
-  serialEnd();
+  if (ser2netServer != nullptr) {
+    delete ser2netServer;
+    ser2netServer = nullptr;
+  }
+  if (ser2netSerial != nullptr) {
+    delete ser2netSerial;
+    ser2netSerial = nullptr;
+  }
 }
 
 bool P020_Task::serverActive(WiFiServer *server) {
