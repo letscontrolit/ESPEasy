@@ -361,7 +361,6 @@ class SettingsStruct_tmpl
   int8_t        console_serial_rxpin = 3;
   int8_t        console_serial_txpin = 1;  
   int8_t        alignment_filler1 = 0; // can be reused
-  int8_t        alignment_filler2 = 0; // can be reused
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };
