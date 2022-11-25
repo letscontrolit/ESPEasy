@@ -5,11 +5,6 @@
 #define EXTRA_TASK_SETTINGS_VERSION 1
 
 ExtraTaskSettingsStruct::ExtraTaskSettingsStruct() : TaskIndex(INVALID_TASK_INDEX) {
-  clear();
-}
-
-void ExtraTaskSettingsStruct::clear() {
-  TaskIndex = INVALID_TASK_INDEX;
   ZERO_FILL(TaskDeviceName);
 
   clearUnusedValueNames(0);
@@ -18,6 +13,10 @@ void ExtraTaskSettingsStruct::clear() {
     TaskDevicePluginConfigLong[i] = 0;
     TaskDevicePluginConfig[i]     = 0;
   }
+}
+
+void ExtraTaskSettingsStruct::clear() {
+  *this = ExtraTaskSettingsStruct();
 }
 
 void ExtraTaskSettingsStruct::validate() {

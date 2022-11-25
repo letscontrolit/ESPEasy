@@ -12,6 +12,8 @@ class P068_SHT3X : public PluginTaskData_base {
 public:
 
   P068_SHT3X(uint8_t addr);
+  P068_SHT3X() = delete;
+  virtual ~P068_SHT3X() = default;
 
   void        readFromSensor(void);
   static bool CRC8(uint8_t MSB,

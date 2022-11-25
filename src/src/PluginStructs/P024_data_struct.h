@@ -9,6 +9,8 @@ struct P024_data_struct : public PluginTaskData_base {
 public:
 
   P024_data_struct(uint8_t i2c_addr);
+  P024_data_struct() = delete;
+  virtual ~P024_data_struct() = default;
 
   float readTemperature(uint8_t reg);
 

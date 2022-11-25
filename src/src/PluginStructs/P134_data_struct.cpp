@@ -32,7 +32,6 @@ P134_data_struct::P134_data_struct(uint8_t config_port,
     P134_Serial->begin(P134_SERIAL_BAUD_RATE);
     P134_Serial->flush();
     addLog(LOG_LEVEL_INFO, F("A02YYUW: Initialization OK"));
-    initialised = true;
   } else {
     addLog(LOG_LEVEL_ERROR, F("A02YYUW: Initialization FAILED"));
   }
@@ -52,7 +51,7 @@ P134_data_struct::~P134_data_struct() {
 bool P134_data_struct::plugin_read(struct EventStruct *event)           {
   bool success = false;
 
-  if (initialised) {
+  if (isInitialized()) {
     uint8_t  data[P134_DISTANCE_DATA_SIZE] = { 0 };
     int16_t  i                             = 0;
     uint16_t measuredDistance              = P134_MIN_DISTANCE;
@@ -61,11 +60,15 @@ bool P134_data_struct::plugin_read(struct EventStruct *event)           {
 
     while (!P134_Serial->available() && i < P134_SERIAL_AVAILABLE_CHECK_CYCLES) {
       i++;
+      // FIXME TD-er: Why making such a lousy check for data holding up everything running on the ESP node.
+      // Repeat after me: "Thou shall not use delay()!"
       delay(P134_SERIAL_AVAILABLE_CHECK_DELAY);
     }
     i = 0;
 
     while (P134_Serial->available() && i < P134_DISTANCE_DATA_SIZE) {
+      // FIXME TD-er: This does not have a timeout => Will crash the node when only data is received != P134_SERIAL_HEAD_DATA
+      // Reading bytes should be done from the PLUGIN_TEN_PER_SECOND or something similar.
       data[i] = P134_Serial->read();
       i++;
 

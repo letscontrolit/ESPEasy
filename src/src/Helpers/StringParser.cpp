@@ -50,7 +50,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   START_TIMER;
 
   // Keep current loaded taskSettings to restore at the end.
-  uint8_t   currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  const taskIndex_t currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
 
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
@@ -175,7 +175,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Restore previous loaded taskSettings
-  if (currentTaskIndex != 255)
+  if (validTaskIndex(currentTaskIndex))
   {
     LoadTaskSettings(currentTaskIndex);
   }

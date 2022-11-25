@@ -66,7 +66,6 @@ tCommandLinesV2::tCommandLinesV2(const tCommandLinesV1& lineV1, uint8_t i)
 
 # endif // ifdef P16_SETTINGS_V1
 
-P016_data_struct::P016_data_struct() {}
 
 void P016_data_struct::init(struct EventStruct *event, uint16_t CmdInhibitTime) {
   # if P016_FEATURE_COMMAND_HANDLING

@@ -1187,21 +1187,26 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
 
   switch (Device[DeviceIndex].OutputDataType) {
     case Output_Data_type_t::Default:
-      break;
+      return;
     case Output_Data_type_t::Simple:
 
       if (pconfigIndex >= 0) {
         sensorTypeHelper_webformLoad_simple(&TempEvent, pconfigIndex);
+        return;
       }
       break;
     case Output_Data_type_t::All:
     {
       if (pconfigIndex >= 0) {
         sensorTypeHelper_webformLoad_allTypes(&TempEvent, pconfigIndex);
+        return;
       }
       break;
     }
   }
+  addFormSubHeader(F("Output Configuration"));
+  String dummy;
+  PluginCall(PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR, &TempEvent, dummy);
 }
 
 #if FEATURE_PLUGIN_STATS
@@ -1351,12 +1356,6 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
-    LoadTaskSettings(taskIndex);
- 
-    //placeholder header
-    html_table_header(F(""));
-    ++colCount;
-
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
     {
@@ -1365,14 +1364,14 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_TD();
       {
         const String id = getPluginCustomArgName(F("TDVN"), varNr); // ="taskdevicevaluename"
-        addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], NAME_FORMULA_LENGTH_MAX);
+        addTextBox(id, Cache.getTaskDeviceValueName(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
       }
 
       if (Device[DeviceIndex].FormulaOption)
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDF"), varNr); // ="taskdeviceformula"
-        addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
+        addTextBox(id, Cache.getTaskDeviceFormula(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
       }
 
 #if FEATURE_PLUGIN_STATS
@@ -1380,7 +1379,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDS"), varNr); // ="taskdevicestats"
-        addCheckBox(id, ExtraTaskSettings.enabledPluginStats(varNr));
+        addCheckBox(id, Cache.enabledPluginStats(taskIndex, varNr));
       }
 #endif
 
@@ -1388,7 +1387,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDVD"), varNr); // ="taskdevicevaluedecimals"
-        addNumericBox(id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
+        addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, 6);
       }
     }
     addFormSeparator(colCount);
