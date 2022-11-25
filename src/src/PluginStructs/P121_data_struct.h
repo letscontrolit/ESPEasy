@@ -9,6 +9,9 @@
 
 struct P121_data_struct : public PluginTaskData_base
 {
+  P121_data_struct() = default;
+  virtual ~P121_data_struct() = default;
+  
   bool begin(int taskid);
 
   Adafruit_HMC5883_Unified mag;

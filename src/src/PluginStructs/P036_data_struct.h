@@ -83,7 +83,7 @@
 # define P036_FLAG_SCROLL_WITHOUTWIFI  24 // Bit 24 ScrollWithoutWifi
 # define P036_FLAG_HIDE_HEADER         25 // Bit 25 Hide header
 # define P036_FLAG_INPUT_PULLUP        26 // Bit 26 Input PullUp
-//# define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 not longer used
+// # define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 not longer used
 # define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
 # define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
 # define P036_FLAG_HIDE_FOOTER         30 // Bit 30 Hide footer
@@ -124,8 +124,8 @@ enum class ePageScrollSpeed {
 };
 
 enum class eP036pinmode {
-  ePPM_Input         = 0,
-  ePPM_InputPullUp   = 1
+  ePPM_Input       = 0,
+  ePPM_InputPullUp = 1
 };
 
 typedef struct {
@@ -135,7 +135,7 @@ typedef struct {
   float    fPixSum     = 0.0f; // pix sum while scrolling (100ms)
   uint16_t LastWidth   = 0;    // width of last line in pix
   uint16_t Width       = 0;    // width in pix
-  uint8_t  SLidx;              // index to DisplayLinesV1
+  uint8_t  SLidx       = 0;    // index to DisplayLinesV1
 } tScrollLine;
 
 typedef struct {
@@ -145,8 +145,8 @@ typedef struct {
 
 typedef struct {
   String                     SPLcontent; // content
-  OLEDDISPLAY_TEXT_ALIGNMENT Alignment;
-  uint8_t                    SPLidx;     // index to DisplayLinesV1
+  OLEDDISPLAY_TEXT_ALIGNMENT Alignment = TEXT_ALIGN_LEFT;
+  uint8_t                    SPLidx = 0;     // index to DisplayLinesV1
 } tScrollingPageLines;
 
 typedef struct {
@@ -228,10 +228,10 @@ typedef struct {
 } tFontSizes;
 
 typedef struct {
-  uint8_t fontIdx; // font index for this line setting
-  uint8_t Top;     // top in pix for this line setting
-  uint8_t Height;  // font height in pix
-  int8_t  Space;   // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
+  uint8_t fontIdx = 0; // font index for this line setting
+  uint8_t Top = 0;     // top in pix for this line setting
+  uint8_t Height = 0;  // font height in pix
+  int8_t  Space = 0;   // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
 # ifdef P036_FONT_CALC_LOG
   const __FlashStringHelper* FontName() const;
 # endif // ifdef P036_FONT_CALC_LOG
@@ -247,16 +247,16 @@ typedef struct {
 } tSizeSettings;
 
 typedef struct {
-  uint8_t frame;           // frame for this line
-  uint8_t DisplayedPageNo; // number of shown pages for this line, set in CalcMaxPageCount()
-  uint8_t ypos;            // ypos for this line
-  uint8_t fontIdx;         // font index for this line
-  uint8_t FontHeight;      // font height for this line
+  uint8_t frame = 0;           // frame for this line
+  uint8_t DisplayedPageNo = 0; // number of shown pages for this line, set in CalcMaxPageCount()
+  uint8_t ypos = 0;            // ypos for this line
+  uint8_t fontIdx = 0;         // font index for this line
+  uint8_t FontHeight = 0;      // font height for this line
 } tLineSettings;
 
 typedef struct {
-  uint8_t NextLineNo;            // number of next line or 0xFF if settings do not fit
-  uint8_t IdxForBiggestFontUsed; // ypos for this line
+  uint8_t NextLineNo = 0;            // number of next line or 0xFF if settings do not fit
+  uint8_t IdxForBiggestFontUsed = 0; // ypos for this line
 } tIndividualFontSettings;
 
 class P036_LineContent {
@@ -276,7 +276,7 @@ public:
 };
 
 struct P036_data_struct : public PluginTaskData_base {
-  P036_data_struct();
+  P036_data_struct() = default;
 
   virtual ~P036_data_struct();
 
@@ -326,29 +326,29 @@ struct P036_data_struct : public PluginTaskData_base {
                                ePageScrollSpeed lscrollspeed  = ePageScrollSpeed::ePSS_Instant);
 
   // Draw scrolling line (1pix/s)
-  void          display_scrolling_lines();
+  void                       display_scrolling_lines();
 
   // Draw Signal Strength Bars, return true when there was an update.
-  bool          display_wifibars();
+  bool                       display_wifibars();
 
   // Perform the actual write to the display.
-  void          update_display();
+  void                       update_display();
 
   // get pixel positions
-  int16_t       GetHeaderHeight();
-  int16_t       GetIndicatorTop();
-  tFontSettings CalculateFontSettings(uint8_t _defaultLines);
+  int16_t                    GetHeaderHeight();
+  int16_t                    GetIndicatorTop();
+  tFontSettings              CalculateFontSettings(uint8_t _defaultLines);
 
-  void          P036_JumpToPage(struct EventStruct *event,
-                                uint8_t             nextFrame);
+  void                       P036_JumpToPage(struct EventStruct *event,
+                                             uint8_t             nextFrame);
 
-  void          P036_JumpToPageOfLine(struct EventStruct *event,
-                                      uint8_t             LineNo);
-  void          P036_DisplayPage(struct EventStruct *event);
+  void                       P036_JumpToPageOfLine(struct EventStruct *event,
+                                                   uint8_t             LineNo);
+  void                       P036_DisplayPage(struct EventStruct *event);
 
   // Perform some specific changes for OLED display
-  String        P36_parseTemplate(String& tmpString,
-                                  uint8_t lineIdx);
+  String                     P36_parseTemplate(String& tmpString,
+                                               uint8_t lineIdx);
 
   void                       registerButtonState(uint8_t newButtonState,
                                                  bool    bPin3Invers);
@@ -379,11 +379,11 @@ struct P036_data_struct : public PluginTaskData_base {
   bool            bLineScrollEnabled = false;
 
   // Display button
-  bool    ButtonState     = false; // button not touched
-  uint8_t ButtonLastState = 0;     // Last state checked (debouncing in progress)
-  uint8_t DebounceCounter = 0;     // debounce counter
-  uint8_t RepeatCounter   = 0;     // Repeat delay counter when holding button pressed
-  uint16_t displayTimer   = 0;     // counter for display OFF
+  bool     ButtonState     = false; // button not touched
+  uint8_t  ButtonLastState = 0;     // Last state checked (debouncing in progress)
+  uint8_t  DebounceCounter = 0;     // debounce counter
+  uint8_t  RepeatCounter   = 0;     // Repeat delay counter when holding button pressed
+  uint16_t displayTimer    = 0;     // counter for display OFF
   // frame header
   uint16_t       HeaderCount              = 0;
   eHeaderContent HeaderContent            = eHeaderContent::eSSID;

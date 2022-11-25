@@ -100,11 +100,6 @@ P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
   _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _textBackFill(textBackFill)
 {
-  _xpix = 240;
-  _ypix = 320;
-  ILI9xxx_type_toResolution(_displayType, _xpix, _ypix);
-
-  updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
   _commandTriggerCmd += F("cmd");
@@ -118,10 +113,19 @@ P095_data_struct::~P095_data_struct() {
   delete tft;
 }
 
+void P095_data_struct::init() {
+  _xpix = 240;
+  _ypix = 320;
+  ILI9xxx_type_toResolution(_displayType, _xpix, _ypix);
+
+  updateFontMetrics();
+}
+
 /****************************************************************************
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P095_data_struct::plugin_init(struct EventStruct *event) {
+  init();
   bool success = false;
 
   if (nullptr == tft) {

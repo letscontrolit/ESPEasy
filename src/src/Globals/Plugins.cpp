@@ -320,13 +320,13 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
         if (Function == PLUGIN_INIT) {
           #if FEATURE_PLUGIN_STATS
           if (Device[DeviceIndex].PluginStats) {
-            PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+            PluginTaskData_base *taskData = getPluginTaskData(taskIndex);
             if (taskData == nullptr) {
               // Plugin apparently does not have PluginTaskData.
               // Create Plugin Task data if it has "Stats" checked.
-              LoadTaskSettings(event->TaskIndex);
+              LoadTaskSettings(taskIndex);
               if (ExtraTaskSettings.anyEnabledPluginStats()) {
-                initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
+                initPluginTaskData(taskIndex, new (std::nothrow) _StatsOnly_data_struct());
               }
             }
           }

@@ -20,7 +20,10 @@ P094_data_struct::P094_data_struct() :  easySerial(nullptr) {
 }
 
 P094_data_struct::~P094_data_struct() {
-  reset();
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
 }
 
 void P094_data_struct::reset() {

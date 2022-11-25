@@ -27,6 +27,7 @@ public:
   } status;
 
   CCS811Core(uint8_t);
+  CCS811Core() = delete;
   virtual ~CCS811Core() = default;
 
   status beginCore(void);
@@ -64,6 +65,8 @@ class CCS811 : public CCS811Core {
 public:
 
   CCS811(uint8_t);
+  CCS811() = delete;
+  virtual ~CCS811() = default;
 
   // Call to check for errors, start app, and set default mode 1
   status   begin(void);
@@ -105,6 +108,8 @@ struct P090_data_struct : public PluginTaskData_base {
 public:
 
   P090_data_struct(uint8_t i2cAddr);
+  P090_data_struct() = delete;
+  virtual ~P090_data_struct() = default;
 
   CCS811 myCCS811;
   bool   compensation_set    = false;
