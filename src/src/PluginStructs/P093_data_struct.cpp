@@ -24,7 +24,9 @@ P093_data_struct::P093_data_struct(const ESPEasySerialPort port, const int16_t s
   _tempMode(false),
   _wideVaneAdj(false),
   _valuesInitialized(false),
-  _includeStatus(includeStatus) {
+  _includeStatus(includeStatus) {}
+
+void P093_data_struct::init() {
   setState(Connecting);
 }
 

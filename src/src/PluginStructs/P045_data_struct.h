@@ -8,6 +8,10 @@ struct P045_data_struct : public PluginTaskData_base {
 public:
 
   P045_data_struct(uint8_t i2c_addr);
+  P045_data_struct() = delete;
+  virtual ~P045_data_struct() = default;
+
+  void init();
 
   void loop();
 

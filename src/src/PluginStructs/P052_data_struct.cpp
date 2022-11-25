@@ -3,7 +3,7 @@
 #ifdef USES_P052
 
 P052_data_struct::~P052_data_struct() {
-  reset();
+  modbus.reset();
 }
 
 void P052_data_struct::reset() {

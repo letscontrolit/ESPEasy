@@ -125,8 +125,8 @@ private:
 struct P092_data_struct : public PluginTaskData_base {
 public:
 
-  P092_data_struct();
-  ~P092_data_struct();
+  P092_data_struct() = default;
+  virtual ~P092_data_struct();
 
   bool init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092pinmode);
 

@@ -468,8 +468,6 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
 # define DLbus_RSM_STANDBY         0b11
 
 
-P092_data_struct::P092_data_struct() {}
-
 P092_data_struct::~P092_data_struct() {
   if (DLbus_Data != nullptr) {
     if (DLbus_Data->ISR_DLB_Pin != 0xFF) {

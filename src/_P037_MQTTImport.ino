@@ -206,7 +206,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P037_data) {
         return success;
       }
-      success = P037_data->webform_load(
+      success = P037_data->loadSettings() && P037_data->webform_load(
         # if P037_MAPPING_SUPPORT
         P037_APPLY_MAPPINGS
         # endif // if P037_MAPPING_SUPPORT
@@ -229,6 +229,13 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
+
+      if (nullptr == P037_data) {
+        return success;
+      }
+      P037_data->loadSettings();  // FIXME TD-er: Is this loadSettings still needed or even desired?
+
       # if P037_JSON_SUPPORT
       P037_PARSE_JSON = getFormItemInt(F("pjson"));
       # endif // if P037_JSON_SUPPORT
@@ -250,11 +257,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
-      P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
-
-      if (nullptr == P037_data) {
-        return success;
-      }
       success = P037_data->webform_save(
         # if P037_FILTER_SUPPORT
         P037_APPLY_FILTERS
@@ -275,12 +277,16 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
     {
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P037_data_struct(event->TaskIndex));
 
-      // When we edit the subscription data from the webserver, the plugin is called again with init.
-      // In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
-      if (MQTTclient_connected) {
-        // Subscribe to ALL the topics from ALL instance of this import module
-        MQTTSubscribe_037(event);
-        success = true;
+      P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P037_data && P037_data->loadSettings()) {
+        // When we edit the subscription data from the webserver, the plugin is called again with init.
+        // In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
+        if (MQTTclient_connected) {
+          // Subscribe to ALL the topics from ALL instance of this import module
+          MQTTSubscribe_037(event);
+          success = true;
+        }
       }
       break;
     }

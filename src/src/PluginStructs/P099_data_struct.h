@@ -26,10 +26,10 @@
 // Data structure
 struct P099_data_struct : public PluginTaskData_base
 {
-  P099_data_struct();
-  ~P099_data_struct();
+  P099_data_struct() = default;
+  virtual ~P099_data_struct();
 
-  void      reset();
+  void reset();
   bool init(taskIndex_t taskIndex,
             uint8_t     cs,
             uint8_t     rotation,

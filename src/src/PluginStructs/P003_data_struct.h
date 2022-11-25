@@ -9,8 +9,9 @@
 
 struct P003_data_struct : public PluginTaskData_base {
   P003_data_struct(const Internal_GPIO_pulseHelper::pulseCounterConfig& config);
-  ~P003_data_struct();
+  P003_data_struct() = delete;
 
+  virtual ~P003_data_struct() = default;
 
   Internal_GPIO_pulseHelper pulseHelper;
 };
