@@ -1356,6 +1356,10 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
+    //placeholder header
+    html_table_header(F(""));
+    ++colCount;
+    
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
     {
