@@ -584,7 +584,6 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX              *display,
   _useValidation(useValidation), _textBackFill(textBackFill)
 {
   addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: GFX Init."));
-  initialize();
 }
 
 # if ADAGFX_ENABLE_BMP_DISPLAY
@@ -604,11 +603,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT           *display,
   _useValidation(useValidation), _textBackFill(textBackFill)
 {
   _display = _tft;
-  String log = F("AdaGFX_helper: TFT Init. ");
-
-  log += getFeatures();
-  addLog(LOG_LEVEL_INFO, log);
-  initialize();
+  addLog(LOG_LEVEL_INFO, ("AdaGFX_helper: TFT Init."));
 }
 
 # endif // if ADAGFX_ENABLE_BMP_DISPLAY
@@ -1747,7 +1742,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
