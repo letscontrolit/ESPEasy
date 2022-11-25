@@ -35,7 +35,7 @@ public:
 
   P089_data_struct();
 
-  ~P089_data_struct();
+  virtual ~P089_data_struct();
 
   bool send_ping(struct EventStruct *event);
 

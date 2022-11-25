@@ -253,6 +253,12 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
+      P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != task) {
+        task->stopServer();
+        task->serialEnd();
+      }
       success = true;
       break;
     }

@@ -25,13 +25,16 @@ struct P004_data_struct : public PluginTaskData_base {
   * If those limitations are not desired, use multiple tasks.
   \*********************************************************************************************/
 
+  P004_data_struct() = default;
+  virtual ~P004_data_struct() = default;
+
   // @param pin  The GPIO pin used to communicate to the Dallas sensors in this task
   // @param addr Address of the (1st) Dallas sensor (index = 0) in this task
   // @param res  The resolution of the Dallas sensor(s) used in this task
-  P004_data_struct(int8_t        pin_rx,
-                   int8_t        pin_tx,
-                   const uint8_t addr[],
-                   uint8_t       res);
+  void init(int8_t        pin_rx,
+            int8_t        pin_tx,
+            const uint8_t addr[],
+            uint8_t       res);
 
   // Add extra sensor address
   // @param addr The address to add

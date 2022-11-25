@@ -3,8 +3,12 @@
 #ifdef USES_P004
 
 
-P004_data_struct::P004_data_struct(int8_t pin_rx, int8_t pin_tx, const uint8_t addr[], uint8_t res) : _gpio_rx(pin_rx), _gpio_tx(pin_tx), _res(res)
+void P004_data_struct::init(int8_t pin_rx, int8_t pin_tx, const uint8_t addr[], uint8_t res)
 {
+  _gpio_rx = pin_rx;
+  _gpio_tx = pin_tx;
+  _res = res;
+
   // Explicitly set the pinMode using the "slow" pinMode function
   // This way we know for sure the state of any pull-up or -down resistor is known.
   pinMode(_gpio_rx, INPUT);

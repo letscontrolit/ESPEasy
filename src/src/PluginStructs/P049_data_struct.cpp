@@ -50,13 +50,12 @@ const PROGMEM uint8_t mhzCmdData[][3] = {
 };
 
 
-P049_data_struct::P049_data_struct() {
-  reset();
-  sensorResets = 0;
-}
 
 P049_data_struct::~P049_data_struct() {
-  reset();
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
 }
 
 void P049_data_struct::reset() {

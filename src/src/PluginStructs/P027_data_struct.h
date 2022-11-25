@@ -10,6 +10,9 @@ public:
 
   P027_data_struct(uint8_t i2c_addr);
 
+  P027_data_struct() = delete;
+  virtual ~P027_data_struct() = default;
+
 
   // **************************************************************************/
   // Configures to INA219 to be able to measure up to 32V and 2A

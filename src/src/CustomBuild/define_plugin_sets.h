@@ -2098,6 +2098,14 @@ To create/register a plugin, you have to :
     #endif
 
   #endif
+  #ifdef ESP8266_1M
+    #ifndef NOTIFIER_SET_NONE
+      #define NOTIFIER_SET_NONE
+    #endif
+    #ifndef DISABLE_SC16IS752_Serial
+      #define DISABLE_SC16IS752_Serial
+    #endif
+  #endif
 #endif
 
 

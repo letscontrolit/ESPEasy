@@ -61,7 +61,7 @@ public:
                    uint8_t chipCount);
 
   P129_data_struct() = delete;
-  ~P129_data_struct();
+  virtual ~P129_data_struct() = default;
 
   const bool isInitialized() const { // All GPIO's defined
     return _dataPin != -1 &&
@@ -91,10 +91,10 @@ private:
                       uint8_t             state);
 
 
-  int8_t  _dataPin;
-  int8_t  _clockPin;
-  int8_t  _enablePin;
-  int8_t  _loadPin;
+  const int8_t  _dataPin;
+  const int8_t  _clockPin;
+  const int8_t  _enablePin;
+  const int8_t  _loadPin;
   uint8_t _chipCount;
 
   uint8_t readBuffer[P129_MAX_CHIP_COUNT] = { 0 };

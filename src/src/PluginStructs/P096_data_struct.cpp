@@ -87,12 +87,6 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
   _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _commandTrigger(commandTrigger),
   _fgcolor(fgcolor), _bgcolor(bgcolor), _colorDepth(colorDepth), _textBackFill(textBackFill)
 {
-  # if P096_USE_EXTENDED_SETTINGS
-
-  EPD_type_toResolution(_display, _xpix, _ypix);
-  # endif // if P096_USE_EXTENDED_SETTINGS
-
-  updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
   _commandTriggerCmd += F("cmd");
@@ -117,6 +111,13 @@ P096_data_struct::~P096_data_struct() {
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P096_data_struct::plugin_init(struct EventStruct *event) {
+  # if P096_USE_EXTENDED_SETTINGS
+
+  EPD_type_toResolution(_display, _xpix, _ypix);
+  # endif // if P096_USE_EXTENDED_SETTINGS
+
+  updateFontMetrics();
+
   bool success = false;
 
   if (nullptr == eInkScreen) {

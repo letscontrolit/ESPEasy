@@ -35,7 +35,6 @@ P141_data_struct::P141_data_struct(uint8_t             rotation,
   _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _textBackFill(textBackFill), _displayInverted(displayInverted)
 {
-  updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd = concat(_commandTrigger, F("cmd"));
 }
@@ -51,6 +50,7 @@ P141_data_struct::~P141_data_struct() {
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P141_data_struct::plugin_init(struct EventStruct *event) {
+  updateFontMetrics();
   bool success = false;
 
   ButtonState     = false; // button not touched
