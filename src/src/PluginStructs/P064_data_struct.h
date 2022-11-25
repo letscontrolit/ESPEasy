@@ -11,6 +11,7 @@ struct P064_data_struct : public PluginTaskData_base {
 public:
 
   P064_data_struct();
+  virtual ~P064_data_struct() = default;
 
   SparkFun_APDS9960 sensor;
 };

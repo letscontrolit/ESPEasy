@@ -60,7 +60,7 @@ const char flameimg[] PROGMEM = {
 
 struct P109_data_struct : public PluginTaskData_base {
   P109_data_struct();
-  ~P109_data_struct();
+  virtual ~P109_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);

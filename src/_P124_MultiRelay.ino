@@ -168,6 +168,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         P124_data_struct *P124_data = new (std::nothrow) P124_data_struct(P124_CONFIG_I2C_ADDRESS, P124_CONFIG_RELAY_COUNT, true);
 
         if (nullptr != P124_data) {
+          P124_data->init();
           P124_CONFIG_I2C_ADDRESS++; // Increment, like the Change Address argument does.
 
           if (P124_CONFIG_I2C_ADDRESS > 0x18) { P124_CONFIG_I2C_ADDRESS = 0x11; }
@@ -190,7 +191,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (P124_data->isInitialized()) {
+      if (P124_data->init()) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
           log.reserve(46);

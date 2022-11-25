@@ -8,6 +8,9 @@ struct P032_data_struct : public PluginTaskData_base {
 public:
 
   P032_data_struct(uint8_t i2c_addr);
+  P032_data_struct() = delete;
+  virtual ~P032_data_struct() = default;
+
 
 
   // **************************************************************************/

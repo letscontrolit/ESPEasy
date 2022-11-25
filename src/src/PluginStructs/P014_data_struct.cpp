@@ -539,7 +539,7 @@ bool P014_data_struct::readHumidity(uint8_t i2caddr, uint8_t resolution)
 
     // Convert raw value to Humidity percent
     // pm-cz: it is possible to enable decimal places for humidity as well by multiplying the value in formula by 100
-    uint16_t data = ((1250 * (long)raw) >> 16) - 60;
+    int data = ((1250 * (long)raw) >> 16) - 60;
 
     // Datasheet says doing this check
     if (data>1000) data = 1000;
