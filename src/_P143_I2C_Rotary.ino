@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-11-26 tonhuisman: Add 'set' subcommand to set the encoder position (count)
  * 2022-11-22 tonhuisman: Removed [Testing] tag from plugin name, as it is mostly feature complete for now
  * 2022-11-21 tonhuisman: Add command support (plugin_write) see below for supported commands, some refactoring
  * 2022-11-20 tonhuisman: Add support for button longpress, generates state 10/11 instead of 0/1 after a longpress (Pushbutton only)
@@ -26,6 +27,7 @@
  * i2cencoder,led1,<r>,<g>,<b>  : Set Led1 color, R/G/B, range 0..255, Adafruit and M5Stack only
  * i2cencoder,led2,<r>,<g>,<b>  : Set Led2 color, R/G/B, range 0..255, M5Stack only
  * i2cencoder,gain,<gain>       : Set led vs. rotation gain factor, range 1..51, DFRobot only
+ * i2cencoder,set,<pos>[,<offset>]  : Set encoder position (count) and, for DFRobot only, optionally the initial offset
  */
 
 # define PLUGIN_143
@@ -263,7 +265,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       # if P143_FEATURE_INCLUDE_DFROBOT
 
       if (device == P143_DeviceType_e::DFRobotEncoder) {
-        addFormNumericBox(F("Offset to position"), F("poffset"), P143_OFFSET_POSITION, 0, 1023);
+        addFormNumericBox(F("Offset to position"), F("poffset"), P143_OFFSET_POSITION, P143_DFROBOT_MIN_OFFSET, P143_DFROBOT_MAX_OFFSET);
         addFormNote(F("Range: 0..1023. To enable negative counter values for DFRobot encoder."));
       }
       # endif // if P143_FEATURE_INCLUDE_DFROBOT

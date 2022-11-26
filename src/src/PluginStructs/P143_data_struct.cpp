@@ -420,6 +420,41 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
       P143_DFROBOT_LED_GAIN = event->Par2;
       success               = true;
     # endif // if P143_FEATURE_INCLUDE_DFROBOT
+    } else
+    if (sub.equals(F("set"))) { // set,<position>[,<initialOffset>] (initial offset only for DFRobot)
+      _encoderPosition = event->Par2;
+
+      switch (_device) {
+        case P143_DeviceType_e::AdafruitEncoder:
+        {
+          Adafruit_Seesaw->setEncoderPosition(_encoderPosition);
+          break;
+        }
+        # if P143_FEATURE_INCLUDE_M5STACK
+        case P143_DeviceType_e::M5StackEncoder:
+        {
+          if (_useOffset) { // Adjust offset
+            int16_t encoderCount = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
+            _offsetEncoder = encoderCount - _encoderPosition;
+          } else {          // Set position using upgraded firmware
+            uint16_t encoderCount = _encoderPosition;
+            I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, encoderCount << 8 || encoderCount >> 8);
+          }
+          break;
+        }
+        # endif // if P143_FEATURE_INCLUDE_M5STACK
+        # if P143_FEATURE_INCLUDE_DFROBOT
+        case P143_DeviceType_e::DFRobotEncoder:
+        {
+          if (!parseString(string, 4).isEmpty() && (event->Par3 >= P143_DFROBOT_MIN_OFFSET) && (event->Par3 <= P143_DFROBOT_MAX_OFFSET)) {
+            _initialOffset       = event->Par3;
+            P143_OFFSET_POSITION = _initialOffset;
+          }
+          I2C_write16_reg(_i2cAddress, P143_DFROBOT_ENCODER_COUNT_MSB_REG, _initialOffset + _encoderPosition);
+          break;
+        }
+        # endif // if P143_FEATURE_INCLUDE_DFROBOT
+      }
     }
   }
 

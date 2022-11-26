@@ -89,7 +89,7 @@ var commonPlugins = [
   //P127
   "cdmrst",
   //P143
-  "I2CEncoder", "I2CEncoder,bright", "I2CEncoder,led1", "I2CEncoder,led2", "I2CEncoder,gain"
+  "I2CEncoder", "I2CEncoder,bright", "I2CEncoder,led1", "I2CEncoder,led2", "I2CEncoder,gain", "I2CEncoder,set"
 ];
 var pluginDispKind = [
   //P095

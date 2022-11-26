@@ -35,6 +35,8 @@
 # define P143_DFROBOT_ENCODER_GAIN_REG        0x0B
 # define P143_DFROBOT_MIN_GAIN                1
 # define P143_DFROBOT_MAX_GAIN                51
+# define P143_DFROBOT_MIN_OFFSET              0
+# define P143_DFROBOT_MAX_OFFSET              1023
 
 // Common
 # define P143_STRINGS                         10 // # of values
