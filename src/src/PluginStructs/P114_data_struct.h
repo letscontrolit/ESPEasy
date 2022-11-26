@@ -40,6 +40,7 @@ public:
                    bool    highDensity);
 
   P114_data_struct() = delete;
+  virtual ~P114_data_struct() = default;
 
   bool read_sensor(float& _UVA,
                    float& _UVB,
@@ -49,11 +50,11 @@ private:
 
   bool init_sensor();
 
-  uint8_t i2cAddress;
+  const uint8_t i2cAddress;
 
   // Specify VEML6075 Integration time
-  uint8_t IT;
-  bool    HD;
+  const uint8_t IT;
+  const bool    HD;
 
   uint16_t UVData[5] = { 0, 0, 0, 0, 0 }; // UVA, Dummy, UVB, UVComp1, UVComp2
   float    UVAComp = 0.0f;

@@ -11,10 +11,11 @@
 
 #include <XPT2046_Touchscreen.h>
 
-P099_data_struct::P099_data_struct() : touchscreen(nullptr) {}
-
 P099_data_struct::~P099_data_struct() {
-  reset();
+  if (touchscreen != nullptr) {
+    delete touchscreen;
+    touchscreen = nullptr;
+  }
 }
 
 /**
