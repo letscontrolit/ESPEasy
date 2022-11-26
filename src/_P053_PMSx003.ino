@@ -329,7 +329,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P053_data) {
-        success = P053_data->initialized();
+        success = P053_data->init();
       }
 
       break;
@@ -350,6 +350,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
           # endif // ifndef BUILD_NO_DEBUG
           success = P053_data->processData(event);
+          P053_data->clearPacket();
         }
       }
       break;

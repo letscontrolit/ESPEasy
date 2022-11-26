@@ -229,33 +229,34 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     #endif
 
     if (!usingWaveForm) {
-      int repeatInterval = 0;
-      int repeatCount = 0;
+      // Par1 = pinnr
+      // Par2 = pin state
+      // Par3 = timeHigh in msec
+      // Par4 = timeLow in msec
+      // Par5 = repeat count
       GPIO_Write(pluginID, event->Par1, event->Par2);
       if (event->Par4 > 0 && event->Par5 != 0) {
         // Compute repeat interval
-        repeatInterval = event->Par3 + event->Par4;
-        repeatCount    = event->Par5;
 
         // Schedule switching pin to given state for repeat
         Scheduler.setGPIOTimer(
-          repeatInterval,   // msecFromNow
+          event->Par3,   // msecFromNow
           pluginID,    
           event->Par1,   // Pin/port nr
           event->Par2,   // pin state
-          repeatInterval,
-          repeatCount);
+          event->Par3,   // repeat interval (high)
+          event->Par5,   // repeat count
+          event->Par4);  // alternate interval (low)
+      } else {
+        // Schedule switching pin back to original state
+        Scheduler.setGPIOTimer(
+          event->Par3,   // msecFromNow
+          pluginID,    
+          event->Par1,   // Pin/port nr
+          !event->Par2,  // pin state
+          0, // repeatInterva
+          0); // repeatCount
       }
-
-
-      // Schedule switching pin back to original state
-      Scheduler.setGPIOTimer(
-        event->Par3,   // msecFromNow
-        pluginID,    
-        event->Par1,   // Pin/port nr
-        !event->Par2,  // pin state
-        repeatInterval,
-        repeatCount);
     }
 
 

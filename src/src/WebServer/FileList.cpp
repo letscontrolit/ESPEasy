@@ -24,6 +24,8 @@
 #endif // if FEATURE_SD
 
 
+#define FILES_PER_PAGE   50
+
 #ifdef WEBSERVER_NEW_UI
 
 // ********************************************************************************
@@ -50,7 +52,6 @@ void handle_filelist_json() {
     # endif // if defined(ESP8266)
   }
 
-  const int pageSize = 25;
   int startIdx       = 0;
 
   String fstart = webArg(F("start"));
@@ -59,7 +60,7 @@ void handle_filelist_json() {
   {
     validIntFromString(fstart, startIdx);
   }
-  int endIdx = startIdx + pageSize - 1;
+  int endIdx = startIdx + FILES_PER_PAGE - 1;
 
   addHtml('[', '{');
   bool firstentry = true;
@@ -156,16 +157,14 @@ void handle_filelist() {
   # ifdef USES_C016
 
   if (hasArg(F("delcache"))) {
-    while (C016_deleteOldestCacheBlock()) {
-      delay(1);
-    }
+    addLog(LOG_LEVEL_INFO, F("RTC  : delcache"));
+    C016_deleteAllCacheBlocks();
 
     while (GarbageCollection()) {
       delay(1);
     }
   }
   # endif // ifdef USES_C016
-  const int pageSize = 25;
   int startIdx       = 0;
   String fstart      = webArg(F("start"));
 
@@ -173,7 +172,7 @@ void handle_filelist() {
   {
     validIntFromString(fstart, startIdx);
   }
-  int endIdx = startIdx + pageSize - 1;
+  int endIdx = startIdx + FILES_PER_PAGE - 1;
   html_table_class_multirow();
   html_table_header(F(""),        50);
   html_table_header(F("Filename"));
@@ -236,7 +235,7 @@ void handle_filelist() {
 
   if (startIdx > 0)
   {
-    start_prev = startIdx < pageSize ? 0 : startIdx - pageSize;
+    start_prev = startIdx < FILES_PER_PAGE ? 0 : startIdx - FILES_PER_PAGE;
   }
   int start_next = -1;
 
@@ -299,7 +298,7 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
 
   if (cacheFilesPresent) {
     html_add_button_prefix(F("red"), true);
-    addHtml(F("filelist?delcache'>Delete Cache Files</a>"));
+    addHtml(F("filelist?delcache=1'>Delete Cache Files</a>"));
   }
   addHtml(F("<BR><BR>"));
   sendHeadandTail_stdtemplate(_TAIL);

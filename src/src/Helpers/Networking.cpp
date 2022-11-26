@@ -7,6 +7,7 @@
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -921,6 +922,15 @@ bool hasIPaddr() {
 #endif // ifdef CORE_POST_2_5_0
 }
 
+bool useStaticIP() {
+  #if FEATURE_ETHERNET
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    return ethUseStaticIP();
+  }
+  #endif
+  return WiFiUseStaticIP();
+}
+
 // Check connection. Maximum timeout 500 msec.
 bool NetworkConnected(uint32_t timeout_ms) {
 
@@ -1344,23 +1354,24 @@ int http_authenticate(const String& logIdentifier,
 {
   if (!uri.startsWith(F("/"))) {
     return http_authenticate(
-      logIdentifier, 
-      client, 
-      http, 
-      timeout, 
-      user, 
-      pass, 
-      host, 
-      port, 
-      String(F("/")) + uri,
-      HttpMethod, 
-      header, 
+      logIdentifier,
+      client,
+      http,
+      timeout,
+      user,
+      pass,
+      host,
+      port,
+      concat(F("/"), uri),
+      HttpMethod,
+      header,
       postStr,
       must_check_reply);
   }
   int httpCode = 0;
+  const bool hasCredentials = !user.isEmpty() && !pass.isEmpty();
 
-  if (user.length() && pass.length()) {
+  if (hasCredentials) {
     must_check_reply = true;
     http.setAuthorization(user.c_str(), pass.c_str());
   } else {
@@ -1410,7 +1421,11 @@ int http_authenticate(const String& logIdentifier,
     String name, value;
 
     while (splitHeaders(headerpos, header, name, value)) {
-      http.addHeader(name, value);
+      // Work-around to not add Authorization header since the HTTPClient code
+      // only ignores this when base64Authorication is set.
+      if (!name.equalsIgnoreCase(F("Authorization"))) {
+        http.addHeader(name, value);
+      }
     }
   }
 
@@ -1422,7 +1437,7 @@ int http_authenticate(const String& logIdentifier,
   }
 
   // Check to see if we need to try digest auth
-  if (httpCode == 401 && must_check_reply) {
+  if ((httpCode == 401) && must_check_reply) {
     const String authReq = http.header(String(F("WWW-Authenticate")).c_str());
 
     if (authReq.indexOf(F("Digest")) != -1) {

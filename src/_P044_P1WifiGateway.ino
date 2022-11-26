@@ -197,10 +197,17 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_EXIT:
-    {
-      success = true;
-      break;
-    }
+      {
+        P044_Task *task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != task) {
+          task->stopServer();
+          task->serialEnd();
+        }
+
+        success = true;
+        break;
+      }
 
     case PLUGIN_ONCE_A_SECOND:
     {

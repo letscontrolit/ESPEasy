@@ -35,7 +35,7 @@ struct P044_Task : public PluginTaskData_base {
 
   P044_Task(struct EventStruct *event);
 
-  ~P044_Task();
+  virtual ~P044_Task();
 
   inline static bool  serverActive(WiFiServer *server);
 

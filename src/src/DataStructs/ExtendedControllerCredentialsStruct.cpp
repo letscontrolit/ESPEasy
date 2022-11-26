@@ -2,27 +2,69 @@
 
 #include "../Helpers/ESPEasy_Storage.h"
 
+#ifdef ESP32
+# include <MD5Builder.h>
+#endif // ifdef ESP32
+
 #define EXT_CONTR_CRED_USER_OFFSET 0
 #define EXT_CONTR_CRED_PASS_OFFSET 1
+
+
+uint8_t last_ExtendedControllerCredentialsStruct_md5[16] = { 0 };
 
 
 ExtendedControllerCredentialsStruct::ExtendedControllerCredentialsStruct() {}
 
 
+bool ExtendedControllerCredentialsStruct::computeChecksum(uint8_t checksum[16]) const
+{
+  MD5Builder md5;
+
+  md5.begin();
+
+  for (size_t i = 0; i < CONTROLLER_MAX * 2; ++i) {
+    md5.add(_strings[i].c_str());
+  }
+
+  md5.calculate();
+  uint8_t tmp_md5[16] = { 0 };
+
+  md5.getBytes(tmp_md5);
+
+  if (memcmp(tmp_md5, checksum, 16) != 0) {
+    // Data has changed, copy computed checksum
+    memcpy(checksum, tmp_md5, 16);
+    return false;
+  }
+  return true;
+}
+
 String ExtendedControllerCredentialsStruct::load()
 {
-  return LoadStringArray(SettingsType::Enum::ExtdControllerCredentials_Type,
-                           0,
-                           _strings, CONTROLLER_MAX * 2, 0);
+  const String res =
+    LoadStringArray(SettingsType::Enum::ExtdControllerCredentials_Type,
+                    0,
+                    _strings, CONTROLLER_MAX * 2, 0);
+
+  for (int i = 0; i < CONTROLLER_MAX * 2; ++i) {
+    _strings[i].trim();
+  }
+
+  // Update the checksum after loading.
+  computeChecksum(last_ExtendedControllerCredentialsStruct_md5);
+
+  return res;
 }
 
 String ExtendedControllerCredentialsStruct::save() const
 {
+  if (computeChecksum(last_ExtendedControllerCredentialsStruct_md5)) {
+    return EMPTY_STRING;
+  }
   return SaveStringArray(SettingsType::Enum::ExtdControllerCredentials_Type,
-                           0,
-                           _strings, CONTROLLER_MAX * 2, 0);
+                         0,
+                         _strings, CONTROLLER_MAX * 2, 0);
 }
-
 
 String ExtendedControllerCredentialsStruct::getControllerUser(controllerIndex_t controller_idx) const
 {

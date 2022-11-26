@@ -299,7 +299,6 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       if (validTaskIndex(event->TaskIndex) &&
           (cmd.equalsIgnoreCase(F(CMD_NAME_P101)) ||
            cmd.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)))) {
-        LoadTaskSettings(event->TaskIndex);
         taskEnable = Settings.TaskDeviceEnabled[event->TaskIndex];
 
         // Do not process WOL command if plugin disabled. This code is for errant situations which may never occur.
@@ -330,6 +329,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         }
 
         if (paramPort.isEmpty()) {
+          LoadTaskSettings(event->TaskIndex);
           int portNumber = UDP_PORT_P101; // Get default Port from user settings.
           paramPort = portNumber;
         }
