@@ -15,6 +15,8 @@ struct P050_data_struct : public PluginTaskData_base {
 public:
 
   P050_data_struct(uint16_t integrationSetting, uint16_t gainSetting);
+  P050_data_struct() = delete;
+  virtual ~P050_data_struct() = default;
 
   bool loadSettings(taskIndex_t taskIndex);
   bool saveSettings(taskIndex_t taskIndex);

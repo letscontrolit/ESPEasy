@@ -9,20 +9,19 @@
 P128_data_struct::P128_data_struct(int8_t   _gpioPin,
                                    uint16_t _pixelCount,
                                    uint8_t  _maxBright)
-  : gpioPin(_gpioPin), pixelCount(_pixelCount), maxBright(_maxBright) {
-  if (!Plugin_128_pixels) {
-    # ifdef ESP8266
-    Plugin_128_pixels = new (std::nothrow) NEOPIXEL_LIB<FEATURE, METHOD>(min(pixelCount, static_cast<uint16_t>(ARRAYSIZE)));
-    # endif // ifdef ESP8266
-    # ifdef ESP32
-    Plugin_128_pixels = new (std::nothrow) NEOPIXEL_LIB<FEATURE, METHOD>(min(pixelCount, static_cast<uint16_t>(ARRAYSIZE)),
-                                                                         _gpioPin);
-    # endif // ifdef ESP32
+    : gpioPin(_gpioPin), pixelCount(_pixelCount), maxBright(_maxBright) 
+{
+  # ifdef ESP8266
+  Plugin_128_pixels = new (std::nothrow) NEOPIXEL_LIB<FEATURE, METHOD>(min(pixelCount, static_cast<uint16_t>(ARRAYSIZE)));
+  # endif // ifdef ESP8266
+  # ifdef ESP32
+  Plugin_128_pixels = new (std::nothrow) NEOPIXEL_LIB<FEATURE, METHOD>(min(pixelCount, static_cast<uint16_t>(ARRAYSIZE)),
+                                                                        _gpioPin);
+  # endif // ifdef ESP32
 
-    if (nullptr != Plugin_128_pixels) {
-      Plugin_128_pixels->Begin(); // This initializes the NeoPixelBus library.
-      Plugin_128_pixels->SetBrightness(maxBright);
-    }
+  if (nullptr != Plugin_128_pixels) {
+    Plugin_128_pixels->Begin(); // This initializes the NeoPixelBus library.
+    Plugin_128_pixels->SetBrightness(maxBright);
   }
 }
 

@@ -127,6 +127,9 @@ public:
   void                 setNextTimeInterval(unsigned long     & timer,
                                            const unsigned long step);
 
+  void                 setNextStrictTimeInterval(unsigned long     & timer,
+                                                 const unsigned long step);
+
   void                 setIntervalTimer(IntervalTimer_e id);
   void                 setIntervalTimerAt(IntervalTimer_e id,
                                           unsigned long   newtimer);
@@ -217,7 +220,8 @@ public:
                     int           pinnr,
                     int           state = 0,
                     int           repeatInterval = 0,
-                    int           recurringCount = 0);
+                    int           recurringCount = 0,
+                    int           alternateInterval = 0);
 
   void clearGPIOTimer(pluginID_t pluginID, int pinnr);
 
