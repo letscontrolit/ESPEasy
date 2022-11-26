@@ -3,7 +3,7 @@
 #ifdef USES_P085
 
 P085_data_struct::~P085_data_struct() {
-  reset();
+  modbus.reset();
 }
 
 void P085_data_struct::reset() {

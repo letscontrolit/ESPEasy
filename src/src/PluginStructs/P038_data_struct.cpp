@@ -16,7 +16,7 @@ P038_data_struct::P038_data_struct(int8_t   gpioPin,
 // Destructor
 // **************************************************************************/
 P038_data_struct::~P038_data_struct() {
-  if (isInitialized()) {
+  if (Plugin_038_pixels != nullptr) {
     delete Plugin_038_pixels;
     Plugin_038_pixels = nullptr;
   }

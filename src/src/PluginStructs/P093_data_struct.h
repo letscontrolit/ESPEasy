@@ -36,6 +36,11 @@ struct P093_data_struct : public PluginTaskData_base {
                    const int16_t           serialTx,
                    bool                    includeStatus);
 
+  P093_data_struct() = delete;
+  virtual ~P093_data_struct() = default;
+
+  void init();
+
   bool sync();
 
   bool read(String& result) const;

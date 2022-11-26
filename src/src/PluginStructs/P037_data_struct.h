@@ -102,7 +102,8 @@
 struct P037_data_struct : public PluginTaskData_base
 {
   P037_data_struct(taskIndex_t taskIndex);
-  ~P037_data_struct();
+  P037_data_struct() = delete;
+  virtual ~P037_data_struct();
 
   bool webform_load(
     # if P037_MAPPING_SUPPORT

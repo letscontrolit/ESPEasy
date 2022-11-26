@@ -101,9 +101,6 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
   _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
   _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
 {
-  ST77xx_type_toResolution(_device, _xpix, _ypix);
-
-  updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
   _commandTriggerCmd += F("cmd");
@@ -120,6 +117,10 @@ P116_data_struct::~P116_data_struct() {
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P116_data_struct::plugin_init(struct EventStruct *event) {
+  ST77xx_type_toResolution(_device, _xpix, _ypix);
+
+  updateFontMetrics();
+
   bool success = false;
 
   ButtonState     = false; // button not touched

@@ -123,7 +123,10 @@ public:
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    bool                textBackFill = true);
-  ~P095_data_struct();
+  P095_data_struct() = delete;
+  virtual ~P095_data_struct();
+
+  void init();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
