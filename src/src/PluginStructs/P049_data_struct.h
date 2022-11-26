@@ -42,9 +42,9 @@ enum mhzCommands : uint8_t { mhzCmdReadPPM,
 
 
 struct P049_data_struct : public PluginTaskData_base {
-  P049_data_struct();
+  P049_data_struct() = default;
 
-  ~P049_data_struct();
+  virtual ~P049_data_struct();
 
   void reset();
 

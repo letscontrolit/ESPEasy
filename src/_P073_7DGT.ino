@@ -201,54 +201,34 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P073_data) {
-        return success;
-      }
+      if (nullptr != P073_data) {
+        P073_data->init(event);
 
-      // FIXME tonhuisman: Move to constructor?!
-      P073_data->pin1         = CONFIG_PIN1;
-      P073_data->pin2         = CONFIG_PIN2;
-      P073_data->pin3         = CONFIG_PIN3;
-      P073_data->displayModel = PCONFIG(0);
-      P073_data->output       = PCONFIG(1);
-      P073_data->brightness   = PCONFIG(2);
-      P073_data->periods      = bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD);
-      P073_data->hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
-      # ifdef P073_SCROLL_TEXT
-      P073_data->txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
-      P073_data->scrollFull   = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL);
-      P073_data->setScrollSpeed(PCONFIG(3));
-      # endif // P073_SCROLL_TEXT
-      P073_data->rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
-      P073_data->timesep               = true;
-      # ifdef P073_EXTRA_FONTS
-      P073_data->fontset = PCONFIG(4);
-      # endif // P073_EXTRA_FONTS
+        switch (P073_data->displayModel) {
+          case P073_TM1637_4DGTCOLON:
+          case P073_TM1637_4DGTDOTS:
+          case P073_TM1637_6DGT: {
+            tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, PCONFIG(2) / 2, true);
 
-      switch (P073_data->displayModel) {
-        case P073_TM1637_4DGTCOLON:
-        case P073_TM1637_4DGTDOTS:
-        case P073_TM1637_6DGT: {
-          tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
-          tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, PCONFIG(2) / 2, true);
-
-          if (PCONFIG(1) == P073_DISP_MANUAL) {
-            tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            if (PCONFIG(1) == P073_DISP_MANUAL) {
+              tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            }
+            break;
           }
-          break;
-        }
-        case P073_MAX7219_8DGT: {
-          max7219_InitDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
-          delay(10); // small poweroff/poweron delay
-          max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
+          case P073_MAX7219_8DGT: {
+            max7219_InitDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            delay(10); // small poweroff/poweron delay
+            max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
 
-          if (PCONFIG(1) == P073_DISP_MANUAL) {
-            max7219_ClearDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            if (PCONFIG(1) == P073_DISP_MANUAL) {
+              max7219_ClearDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            }
+            break;
           }
-          break;
         }
+        success = true;
       }
-      success = true;
       break;
     }
 

@@ -256,11 +256,8 @@ void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
     return;
   }
 
-  // Load ROM address from tasksettings
-  LoadTaskSettings(TaskIndex);
-
   for (uint8_t x = 0; x < 8; x++) {
-    uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
+    uint32_t value = (uint32_t)Cache.getTaskDevicePluginConfigLong(TaskIndex, x);
     addr[x] = static_cast<uint8_t>((value >> (var_index * 8)) & 0xFF);
   }
 }
@@ -279,6 +276,7 @@ void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
     value                                          += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
     ExtraTaskSettings.TaskDevicePluginConfigLong[x] = (long)value;
   }
+  Cache.updateExtraTaskSettingsCache();
 }
 
 /*********************************************************************************************\
@@ -633,7 +631,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   uint8_t retries = 125;
 
-  noInterrupts();
+  ISR_noInterrupts();
 
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
   // DEBUG code using logic analyzer for timings
@@ -736,7 +734,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
       delayMicroseconds(2);
     }
   }
-  interrupts();
+  ISR_interrupts();
 
   if (presence_end != 0) {
     const long presence_duration = presence_end - presence_start;
@@ -976,7 +974,7 @@ uint8_t DALLAS_IRAM_ATTR Dallas_read_bit_ISR(
   uint8_t r;
 
   {
-    noInterrupts();
+    ISR_noInterrupts();
     start = getMicros64();
     DIRECT_pinWrite(gpio_pin_tx, 0);
     if (gpio_pin_rx == gpio_pin_tx) {
@@ -999,7 +997,7 @@ uint8_t DALLAS_IRAM_ATTR Dallas_read_bit_ISR(
     }
     r = DIRECT_pinRead(gpio_pin_rx);
 
-    interrupts();
+    ISR_interrupts();
   }
   return r;
 }
@@ -1032,7 +1030,7 @@ void DALLAS_IRAM_ATTR Dallas_write_bit_ISR(uint8_t   v,
                                            long      high_time,
                                            uint64_t& start)
 {
-  noInterrupts();
+  ISR_noInterrupts();
   start     = getMicros64();
   DIRECT_pinWrite(gpio_pin_tx, 0);
 
@@ -1041,7 +1039,7 @@ void DALLAS_IRAM_ATTR Dallas_write_bit_ISR(uint8_t   v,
   }
   start = getMicros64();
   DIRECT_pinWrite(gpio_pin_tx, 1);
-  interrupts();
+  ISR_interrupts();
 }
 
 /*********************************************************************************************\

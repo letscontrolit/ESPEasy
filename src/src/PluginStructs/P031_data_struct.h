@@ -30,6 +30,8 @@ public:
   };
 
   P031_data_struct() = default;
+  virtual ~P031_data_struct() = default;
+
 
   uint8_t init(uint8_t data_pin,
                uint8_t clock_pin,

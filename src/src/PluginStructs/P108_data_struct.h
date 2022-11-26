@@ -49,7 +49,7 @@
 struct P108_data_struct : public PluginTaskData_base {
   P108_data_struct() = default;
 
-  ~P108_data_struct();
+  virtual ~P108_data_struct();
 
   void reset();
 
