@@ -11,7 +11,7 @@
 
 # define PLUGIN_100
 # define PLUGIN_ID_100         100
-# define PLUGIN_NAME_100       "Pulse Counter - DS2423 [TESTING]"
+# define PLUGIN_NAME_100       "Pulse Counter - DS2423"
 # define PLUGIN_VALUENAME1_100 "CountDelta"
 
 boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
@@ -88,7 +88,6 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
       Dallas_plugin_get_addr(addr, event->TaskIndex);
       string  = Dallas_format_address(addr);
@@ -101,6 +100,12 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
       UserVar[event->BaseVarIndex]     = 0;
       UserVar[event->BaseVarIndex + 1] = 0;
       UserVar[event->BaseVarIndex + 2] = 0;
+
+      if (validGpio(CONFIG_PIN1)) {
+        // Explicitly set the pinMode using the "slow" pinMode function
+        // This way we know for sure the state of any pull-up or -down resistor is known.
+        pinMode(CONFIG_PIN1, INPUT);
+      }
 
       success = true;
       break;

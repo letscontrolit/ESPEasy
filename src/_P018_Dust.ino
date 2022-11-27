@@ -69,7 +69,7 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         Plugin_GP2Y10_LED_Pin = CONFIG_PIN1;
-        noInterrupts();
+        ISR_noInterrupts();
         uint8_t x;
         int value;
         value = 0;
@@ -82,7 +82,7 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
           digitalWrite(Plugin_GP2Y10_LED_Pin, HIGH);
           delayMicroseconds(9680);
         }
-        interrupts();
+        ISR_interrupts();
         UserVar[event->BaseVarIndex] = value;
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("GPY  : Dust value: ");

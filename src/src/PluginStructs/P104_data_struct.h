@@ -132,9 +132,9 @@
 #  endif // ifdef P104_USE_KATAKANA_FONT
 # endif    // ifdef LIMIT_BUILD_SIZE
 
-# if defined(P104_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
+# if defined(P104_USE_TOOLTIPS) && !FEATURE_TOOLTIPS
 #  undef P104_USE_TOOLTIPS
-# endif // if defined(P104_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
+# endif // if defined(P104_USE_TOOLTIPS) && !FEATURE_TOOLTIPS
 
 
 # ifdef P104_MINIMAL_ANIMATIONS
@@ -354,7 +354,7 @@ struct P104_data_struct : public PluginTaskData_base {
                    int8_t                   _cs_pin,
                    uint8_t                  _modules,
                    uint8_t                  _zonesCount);
-  ~P104_data_struct();
+  virtual ~P104_data_struct();
 
   bool   begin();
   void   loadSettings();
@@ -405,7 +405,6 @@ private:
   void   displayOneZoneText(uint8_t                 currentZone,
                             const P104_zone_struct& idx,
                             const String          & text);
-  String enquoteString(const String& input);
 
   String error;
 

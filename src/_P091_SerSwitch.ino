@@ -418,26 +418,19 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                       }
                     }
 
-                    log = F("SerSW   : State ");
-                    if (Plugin_091_ostate[0] != Plugin_091_switchstate[0]) {
-                      UserVar[event->BaseVarIndex] = Plugin_091_switchstate[0];
-                      log += F(" r0:");
-                      log += Plugin_091_switchstate[0];
+                    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                      log = F("SerSW   : State ");
                     }
-                    if (Plugin_091_ostate[1] != Plugin_091_switchstate[1]) {
-                      UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
-                      log += F(" r1:");
-                      log += Plugin_091_switchstate[1];
-                    }
-                    if (Plugin_091_ostate[2] != Plugin_091_switchstate[2]) {
-                      UserVar[event->BaseVarIndex + 2] = Plugin_091_switchstate[2];
-                      log += F(" r2:");
-                      log += Plugin_091_switchstate[2];
-                    }
-                    if (Plugin_091_ostate[3] != Plugin_091_switchstate[3]) {
-                      UserVar[event->BaseVarIndex + 3] = Plugin_091_switchstate[3];
-                      log += F(" r3:");
-                      log += Plugin_091_switchstate[3];
+                    for (int i = 0; i < 3; ++i) {
+                      if (Plugin_091_ostate[i] != Plugin_091_switchstate[i]) {
+                        UserVar[event->BaseVarIndex + i] = Plugin_091_switchstate[i];
+                        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                          log += F(" r");
+                          log += i;
+                          log += ':';
+                          log += Plugin_091_switchstate[i];
+                        }
+                      }
                     }
                     addLogMove(LOG_LEVEL_INFO, log);
                     if ( (Plugin_091_ostate[0] != Plugin_091_switchstate[0]) || (Plugin_091_ostate[1] != Plugin_091_switchstate[1]) || (Plugin_091_ostate[2] != Plugin_091_switchstate[2]) || (Plugin_091_ostate[3] != Plugin_091_switchstate[3]) ) {
@@ -583,7 +576,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
         if (Plugin_091_init)
         {
-          if ( command == F("relay") ) // deal with relay change command
+          if ( command.equals(F("relay"))) // deal with relay change command
           {
             success = true;
 
@@ -633,7 +626,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             }
           }
 
-          if ( command == F("relaypulse") )
+          if ( command.equals(F("relaypulse")))
           {
             success = true;
 
@@ -685,7 +678,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             }
           }
 
-          if ( command == F("relaylongpulse") )
+          if ( command.equals(F("relaylongpulse")))
           {
             success = true;
 
@@ -705,7 +698,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
             sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // init state
             //Scheduler.setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
-            Scheduler.setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
+            Scheduler.setPluginTaskTimer(timer, event->TaskIndex, rnum, !rcmd);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
               if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
                 UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
@@ -737,7 +730,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               addLogMove(LOG_LEVEL_INFO, log);
             }
           }
-          if ( command == F("ydim") ) // deal with dimmer command
+          if ( command.equals(F("ydim")) ) // deal with dimmer command
           {
             if (( (Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) { // only on tuya dimmer
               success = true;
@@ -773,7 +766,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
       {
         uint8_t par3 = 0;
 

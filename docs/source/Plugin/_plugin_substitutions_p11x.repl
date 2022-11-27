@@ -2,7 +2,7 @@
 .. |P110_type| replace:: :cyan:`Distance`
 .. |P110_typename| replace:: :cyan:`Distance - VL53L0X (200cm)`
 .. |P110_porttype| replace:: `.`
-.. |P110_status| replace:: :yellow:`TESTING B`
+.. |P110_status| replace:: :yellow:`COLLECTION B`
 .. |P110_github| replace:: P110_VL53L0X.ino
 .. _P110_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P110_VL53L0X.ino
 .. |P110_usedby| replace:: `.`
@@ -15,7 +15,7 @@
 .. |P111_type| replace:: :cyan:`RFID`
 .. |P111_typename| replace:: :cyan:`RFID - MFRC522`
 .. |P111_porttype| replace:: `.`
-.. |P111_status| replace:: :yellow:`TESTING C`
+.. |P111_status| replace:: :yellow:`COLLECTION C`
 .. |P111_github| replace:: P111_RC522_RFID.ino
 .. _P111_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P111_RC522_RFID.ino
 .. |P111_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P113_type| replace:: :cyan:`Distance`
 .. |P113_typename| replace:: :cyan:`Distance - VL53L1X (400cm)`
 .. |P113_porttype| replace:: `.`
-.. |P113_status| replace:: :yellow:`TESTING B`
+.. |P113_status| replace:: :yellow:`COLLECTION B`
 .. |P113_github| replace:: P113_VL53L1X.ino
 .. _P113_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P113_VL53L1X.ino
 .. |P113_usedby| replace:: `.`
@@ -41,7 +41,7 @@
 .. |P114_type| replace:: :cyan:`UV`
 .. |P114_typename| replace:: :cyan:`UV - VEML6075`
 .. |P114_porttype| replace:: `.`
-.. |P114_status| replace:: :yellow:`TESTING D`
+.. |P114_status| replace:: :yellow:`COLLECTION D`
 .. |P114_github| replace:: P114_VEML6075.ino
 .. _P114_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P114_VEML6075.ino
 .. |P114_usedby| replace:: `.`
@@ -54,7 +54,7 @@
 .. |P115_type| replace:: :cyan:`Energy`
 .. |P115_typename| replace:: :cyan:`Energy - MAX1704x`
 .. |P115_porttype| replace:: `.`
-.. |P115_status| replace:: :yellow:`ENERGY, TESTING B`
+.. |P115_status| replace:: :yellow:`ENERGY, COLLECTION B`
 .. |P115_github| replace:: _P115_MAX1704x_v2.ino
 .. _P115_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P115_MAX1704x_v2.ino
 .. |P115_usedby| replace:: `.`
@@ -63,11 +63,24 @@
 .. |P115_compileinfo| replace:: `.`
 .. |P115_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library`
 
+.. |P116_name| replace:: :cyan:`ST77xx TFT`
+.. |P116_type| replace:: :cyan:`Display`
+.. |P116_typename| replace:: :cyan:`Display - ST77xx TFT`
+.. |P116_porttype| replace:: `.`
+.. |P116_status| replace:: :yellow:`DISPLAY`
+.. |P116_github| replace:: _P116_ST77xx.ino
+.. _P116_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P116_ST77xx.ino
+.. |P116_usedby| replace:: `.`
+.. |P116_shortinfo| replace:: `.`
+.. |P116_maintainer| replace:: `TD-er, tonhuisman, (WDS)`
+.. |P116_compileinfo| replace:: `.`
+.. |P116_usedlibraries| replace:: `Adafruit GFX, Adafruit ST77xx, prenticedavid/Adafruit_ST7796S_kbv (local copy)`
+
 .. |P117_name| replace:: :cyan:`SCD30`
 .. |P117_type| replace:: :cyan:`Gases`
 .. |P117_typename| replace:: :cyan:`Gases - SCD30 CO2, Humidity, Temperature`
 .. |P117_porttype| replace:: `.`
-.. |P117_status| replace:: :yellow:`TESTING D`
+.. |P117_status| replace:: :yellow:`COLLECTION D` :yellow:`CLIMATE`
 .. |P117_github| replace:: _P117_SCD30.ino
 .. _P117_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P117_SCD30.ino
 .. |P117_usedby| replace:: `.`
@@ -80,20 +93,20 @@
 .. |P118_type| replace:: :cyan:`Communication`
 .. |P118_typename| replace:: :cyan:`Communication - Itho`
 .. |P118_porttype| replace:: `.`
-.. |P118_status| replace:: :yellow:`TESTING D`
+.. |P118_status| replace:: :yellow:`CLIMATE`
 .. |P118_github| replace:: _P118_Itho.ino
 .. _P118_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P118_Itho.ino
 .. |P118_usedby| replace:: `.`
 .. |P118_shortinfo| replace:: `Itho RFT fan control using a CC1101 transceiver`
 .. |P118_maintainer| replace:: `svollebregt`
 .. |P118_compileinfo| replace:: `.`
-.. |P118_usedlibraries| replace:: `https://github.com/arjenhiemstra/IthoEcoFanRFT/tree/master/Master (currently using v2.0.0 due to v2.1.0 recieve issues i.c.w. plugin)`
+.. |P118_usedlibraries| replace:: `https://github.com/arjenhiemstra/IthoEcoFanRFT/tree/master/Master (currently using a local adapted version of v2.0.0, due to v2.1.0 recieve issues i.c.w. plugin)`
 
 .. |P119_name| replace:: :cyan:`ITG3205`
 .. |P119_type| replace:: :cyan:`Gyro`
 .. |P119_typename| replace:: :cyan:`Gyro - ITG3205`
 .. |P119_porttype| replace:: `.`
-.. |P119_status| replace:: :yellow:`TESTING E`
+.. |P119_status| replace:: :yellow:`COLLECTION E`
 .. |P119_github| replace:: _P119_ITG3205_Gyro.ino
 .. _P119_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P119_ITG3205_Gyro.ino
 .. |P119_usedby| replace:: `.`

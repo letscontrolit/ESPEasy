@@ -18,15 +18,16 @@ def get_max_bin_size(env_name, file_suffix):
     if "_1M_OTA" in env_name:
         # max 600 kiB - 16 bytes
         max_bin_size = 614384
-    if "4M316k" in env_name:
+    if "4M316k" in env_name or "_ESP32_4M2M" in env_name:
         # ESP32 with 1800k of sketch space.
         max_bin_size = 1900544
         if "factory" in file_suffix:
             # Factory bin files include a part which is not overwritten via OTA
             max_bin_size = max_bin_size + 65536
-    if "_ESP32_16M8M" in env_name or "_ESP32_16M2M" in env_name or "_ESP32_16M1M" in env_name:
-        # ESP32 with 4096k of sketch space.
-        max_bin_size = 4194304
+    if "_ESP32_" in env_name or "_ESP32s2_" in env_name:
+        if "_16M8M" in env_name or "_16M2M" in env_name or "_16M1M" in env_name:
+            # ESP32 with 4096k of sketch space.
+            max_bin_size = 4194304
     if "debug_" in env_name:
         # Debug env, used for analysis, not to be run on a node.
         max_bin_size = 0
@@ -70,14 +71,14 @@ def generate_webflash_json_manifest(variant, file_suffix):
     manifest_suff = ''
     add_improve = True
 
-    if "-factory.bin" in file_suffix:
+    if ".factory.bin" in file_suffix:
         if 'ESP32s2' in variant:
             chipFamily = 'ESP32-S2'
-            manifest_suff = '-factory.manifest.json'
+            manifest_suff = '.factory.manifest.json'
         else:
             if 'ESP32' in variant:
                 chipFamily = 'ESP32'
-                manifest_suff = '-factory.manifest.json'
+                manifest_suff = '.factory.manifest.json'
     else:
         if ".bin" in file_suffix and ".gz" not in file_suffix and 'ESP32' not in variant:
             chipFamily = 'ESP8266'
@@ -92,6 +93,7 @@ def generate_webflash_json_manifest(variant, file_suffix):
 
         manifest = {}
         manifest['name'] = bin_file
+        manifest['new_install_prompt_erase'] = True
         parts = dict([('path', bin_file), ('offset', 0)])
         if add_improve:
             builds = dict([('chipFamily', chipFamily), ('improv', False), ('parts', [parts])])
@@ -121,7 +123,7 @@ def bin_elf_copy(source, target, env):
         if not os.path.isdir("{}{}".format(OUTPUT_DIR, d)):
             os.mkdir("{}{}".format(OUTPUT_DIR, d))
 
-    for suff in [".elf", ".bin", ".bin.gz", "-factory.bin", ".env.txt"]:
+    for suff in [".elf", ".bin", ".bin.gz", ".factory.bin", ".env.txt"]:
         copy_to_build_output(split_path[0], variant, suff)
 
     import datetime

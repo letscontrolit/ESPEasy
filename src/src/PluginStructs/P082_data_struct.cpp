@@ -1,12 +1,13 @@
 #include "../PluginStructs/P082_data_struct.h"
 
+#ifdef USES_P082
 
-// Needed also here for PlatformIO's library finder as the .h file 
+
+// Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 
-#ifdef USES_P082
 
 const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString) {
   switch (value_nr) {
@@ -25,6 +26,16 @@ const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displ
     case P082_query::P082_NR_OUTPUT_OPTIONS: break;
   }
   return F("");
+}
+
+P082_query Plugin_082_from_valuename(const String& valuename)
+{
+  for (uint8_t query = 0; query < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++query) {
+    if (valuename.equalsIgnoreCase(Plugin_082_valuename(static_cast<P082_query>(query), false))) {
+      return static_cast<P082_query>(query);
+    }
+  }
+  return P082_query::P082_NR_OUTPUT_OPTIONS;
 }
 
 const __FlashStringHelper* toString(P082_PowerMode mode) {
@@ -52,14 +63,13 @@ const __FlashStringHelper* toString(P082_DynamicModel model) {
   return F("");
 }
 
-P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {}
-
-P082_data_struct::~P082_data_struct() {
-  powerDown();
-  reset();
+P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {
+  for (size_t i = 0; i < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
+    _cache[i] = 0.0f;
+  }
 }
 
-void P082_data_struct::reset() {
+P082_data_struct::~P082_data_struct() {
   if (gps != nullptr) {
     delete gps;
     gps = nullptr;
@@ -71,11 +81,34 @@ void P082_data_struct::reset() {
   }
 }
 
+/*
+void P082_data_struct::reset() {
+  if (gps != nullptr) {
+    delete gps;
+    gps = nullptr;
+  }
+
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
+}
+*/
+
 bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx) {
   if (serial_rx < 0) {
     return false;
   }
-  reset();
+  if (gps != nullptr) {
+    delete gps;
+    gps = nullptr;
+  }
+
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
+
   gps        = new (std::nothrow) TinyGPSPlus();
   easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
 
@@ -150,7 +183,7 @@ bool P082_data_struct::loop() {
                     done = true;
                     break;
                   default:
-                    done = true;                    
+                    done = true;
                     break;
                 }
               }
@@ -174,6 +207,22 @@ bool P082_data_struct::loop() {
           if (available == 0) {
             available = easySerial->available();
           }
+          if (c == '$') {
+            _start_prev_sentence = _start_sentence;
+            _start_sentence = millis();
+            const unsigned long baudrate = easySerial->getBaudRate();
+            if (baudrate != 0) {
+              // Subtract the time (msec) taken to send the nr of bytes present in the serial buffer
+              // Assume 10 bits per byte. (8N1)
+              _start_sentence -= (available * 10000) / baudrate;
+            }
+            const int32_t max_sentence_duration = (160 * 10000) / baudrate;
+            if (timeDiff(_start_prev_sentence, _start_sentence) > max_sentence_duration) {
+              _start_sequence = _start_sentence;
+              // Debug accuracy of computing the time stability
+//              addLog(LOG_LEVEL_INFO, concat(F("GPS  : Start Sequence: "), _start_sequence));
+            }
+          }
         }
       }
     }
@@ -194,8 +243,8 @@ bool P082_data_struct::storeCurPos(unsigned int maxAge_msec) {
   }
 
   _distance += distanceSinceLast(maxAge_msec);
-  _last_lat = gps->location.lat();
-  _last_lng = gps->location.lng();
+  _last_lat  = gps->location.lat();
+  _last_lng  = gps->location.lng();
   return true;
 }
 
@@ -215,17 +264,27 @@ double P082_data_struct::distanceSinceLast(unsigned int maxAge_msec) {
 // Return the GPS time stamp, which is in UTC.
 // @param age is the time in msec since the last update of the time +
 // additional centiseconds given by the GPS.
-bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps_sync) {
+bool P082_data_struct::getDateTime(
+  struct tm& dateTime,
+  uint32_t & age,
+  bool     & updated,
+  bool     & pps_sync) {
+  updated = false;
+
   if (!isInitialized()) {
     return false;
   }
 
-  if (_pps_time != 0) {
-    age      = timePassedSince(_pps_time);
-    _pps_time = 0;
-    pps_sync = true;
+  if (!gps->time.isUpdated() || !gps->date.isUpdated()) {
+    return false;
+  }
 
-    if ((age > 1000) || (gps->time.age() > age)) {
+  if (_pps_time != 0) {
+    age       = timePassedSince(_pps_time);
+    _pps_time = 0;
+    pps_sync  = true;
+
+    if ((age > P082_TIMESTAMP_AGE) || (gps->time.age() > age)) {
       return false;
     }
   } else {
@@ -237,11 +296,20 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
     return false;
   }
 
+  if (!gps->time.isUpdated() || !gps->date.isUpdated()) {
+    return false;
+  }
+
   if (gps->date.age() > P082_TIMESTAMP_AGE) {
     return false;
   }
 
-  if (!gps->date.isValid() || !gps->time.isValid()) {
+  if (!gps->time.isValid()) {
+    gps->time.value(); // Clear the 'updated' state
+    return false;
+  }
+  if (!gps->date.isValid()) {
+    gps->date.value(); // Clear the 'updated' state
     return false;
   }
   dateTime.tm_year = gps->date.year() - 1900;
@@ -252,10 +320,22 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
   dateTime.tm_min  = gps->time.minute();
   dateTime.tm_sec  = gps->time.second();
 
+  const uint32_t reported_time = gps->time.value();
+  const uint32_t reported_date = gps->date.value();
+  updated = reported_time != _last_time;
+
+  _last_time = reported_time;
+  _last_date = reported_date;
   // FIXME TD-er: Must the offset in centisecond be added when pps_sync active?
   if (!pps_sync) {
+    // Don't use the "commit" time when the sentence was read, but use the timestamp when the first sentence of a NMEA sequence was received.
+    const long time_since_start_seq = timePassedSince(_start_sequence);
+    if (time_since_start_seq < P082_TIMESTAMP_AGE) {
+      age = time_since_start_seq;
+    }
     age += (gps->time.centisecond() * 10);
   }
+
   return true;
 }
 
@@ -313,7 +393,7 @@ bool P082_data_struct::setDynamicModel(P082_DynamicModel model) {
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
@@ -349,12 +429,97 @@ bool P082_data_struct::writeToGPS(const uint8_t* data, size_t size) {
       if (size != easySerial->write(data, size)) {
         addLog(LOG_LEVEL_ERROR, F("GPS  : Written less bytes than expected"));
         return false;
-      } 
+      }
       return true;
     }
   }
   addLog(LOG_LEVEL_ERROR, F("GPS  : Cannot send to GPS"));
   return false;
 }
+
+# if FEATURE_PLUGIN_STATS
+bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t var_index, P082_query query_type)
+{
+  bool somethingAdded = false;
+
+  const PluginStats *stats = getPluginStats(var_index);
+
+
+  if (stats != nullptr) {
+    if (stats->webformLoad_show_avg(event)) {
+      somethingAdded = true;
+    }
+
+    bool   show_custom = false;
+    double dist_p2p    = 0.0;
+    double dist_stddev = 0.0;
+
+    if (gps != nullptr) {
+      switch (query_type) {
+        case P082_query::P082_QUERY_LAT:
+          show_custom = true;
+          // Compute distance between min and max peak
+          dist_p2p            = gps->distanceBetween(
+            stats->getPeakLow(),  _last_lng,
+            stats->getPeakHigh(), _last_lng);
+          dist_stddev         = gps->distanceBetween(
+            _last_lat,                            _last_lng,
+            _last_lat + stats->getSampleStdDev(), _last_lng);
+          break;
+        case P082_query::P082_QUERY_LONG:
+          show_custom = true;
+          // Compute distance between min and max peak
+          dist_p2p            = gps->distanceBetween(
+            _last_lat, stats->getPeakLow(),
+            _last_lat, stats->getPeakHigh());
+          // Compute distance for std.dev
+          dist_stddev         = gps->distanceBetween(
+            _last_lat, _last_lng,
+            _last_lat, _last_lng + stats->getSampleStdDev());
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Only show standard deviation in meters, which is more useful than std. dev in degrees.
+    if (somethingAdded) {
+      if (show_custom) {
+        stats->webformLoad_show_val(
+          event,
+          F(" std. dev"),
+          dist_stddev,
+          F("m"));
+      } else {
+        stats->webformLoad_show_stdev(event);
+      }
+    }
+
+    if (stats->webformLoad_show_peaks(event, !show_custom)) {
+      somethingAdded = true;
+
+      if (show_custom) {
+        stats->webformLoad_show_val(
+          event,
+          F(" Peak-to-peak coordinates"),
+          stats->getPeakHigh() - stats->getPeakLow(),
+          F("deg"));
+        stats->webformLoad_show_val(
+          event,
+          F(" Peak-to-peak distance"),
+          dist_p2p,
+          F("m"));
+      }
+    }
+
+    if (somethingAdded) {
+      addFormSeparator(4);
+    }
+  }
+  return somethingAdded;
+}
+
+# endif // if FEATURE_PLUGIN_STATS
+
 
 #endif // ifdef USES_P082

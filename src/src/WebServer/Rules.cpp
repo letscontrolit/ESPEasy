@@ -2,7 +2,9 @@
 
 #include "../WebServer/Rules.h"
 
-#include "../WebServer/WebServer.h"
+#ifdef WEBSERVER_RULES
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/LoadFromFS.h"
@@ -19,8 +21,6 @@
 #include "../Static/WebStaticData.h"
 
 #include <FS.h>
-
-#ifdef WEBSERVER_RULES
 
 // ********************************************************************************
 // Web Interface rules page
@@ -59,7 +59,7 @@ void handle_rules() {
   }
 
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
   addHtmlError(error);
 
   html_table_class_normal();
@@ -73,9 +73,9 @@ void handle_rules() {
   addHtml(F("<form id='rulesselect' name='rulesselect' method='get'>"));
   {
     // Place combo box in its own scope to release these arrays as soon as possible
-    uint8_t   choice = rulesSet;
-    String options[RULESETS_MAX];
-    int    optionValues[RULESETS_MAX];
+    uint8_t choice = rulesSet;
+    String  options[RULESETS_MAX];
+    int     optionValues[RULESETS_MAX];
 
     for (uint8_t x = 0; x < RULESETS_MAX; x++)
     {
@@ -85,13 +85,13 @@ void handle_rules() {
     }
 
     addSelector_reloadOnChange(
-      F("set"), 
-      RULESETS_MAX, 
-      options, 
-      optionValues, 
-      nullptr, 
-      choice, 
-      F("return rules_set_onchange(rulesselect)"), 
+      F("set"),
+      RULESETS_MAX,
+      options,
+      optionValues,
+      nullptr,
+      choice,
+      F("return rules_set_onchange(rulesselect)"),
       true,
       F("wide"));
     addHelpButton(F("Tutorial_Rules"));
@@ -109,9 +109,7 @@ void handle_rules() {
   addButton(fileName, F("Download to file"));
   html_end_table();
 
-  serve_JS(JSfiles_e::SaveRulesFile);
-
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 
   checkRuleSets();
@@ -172,68 +170,69 @@ void handle_rules_new() {
   // class StreamingBuffer buffer = TXBuffer;
 
   // Build table detail
-  int count = -1;
-  HandlerFileInfo renderDetail = [/*&buffer,*/ &count, endIdx](fileInfo fi)
-                                 {
+  int count                    = -1;
+  HandlerFileInfo renderDetail =
+    [/*&buffer,*/ &count, endIdx](fileInfo fi)
+    {
 #  ifdef WEBSERVER_RULES_DEBUG
-                                   Serial.print(F("Start generation of: "));
-                                   Serial.println(fi.Name);
+      Serial.print(F("Start generation of: "));
+      Serial.println(fi.Name);
 #  endif // ifdef WEBSERVER_RULES_DEBUG
 
-                                   if (fi.isDirectory)
-                                   {
-                                     html_TR_TD();
-                                   }
-                                   else
-                                   {
-                                     count++;
-                                     addHtml(F("<TR><TD style='text-align:right'>"));
-                                   }
+      if (fi.isDirectory)
+      {
+        html_TR_TD();
+      }
+      else
+      {
+        count++;
+        addHtml(F("<TR><TD style='text-align:right'>"));
+      }
 
-                                   // Event Name
-                                   addHtml(FileNameToEvent(fi.Name));
+      // Event Name
+      addHtml(FileNameToEvent(fi.Name));
 
-                                   if (fi.isDirectory)
-                                   {
-                                     addHtml(F("</TD><TD></TD><TD></TD><TD>"));
-                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name)
-                                                   , F("Backup")
-                                                   );
-                                   }
-                                   else
-                                   {
-                                     String encodedPath =  URLEncode(String(fi.Name + F(".txt")));
+      if (fi.isDirectory)
+      {
+        addHtml(F("</TD><TD></TD><TD></TD><TD>"));
+        addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name)
+                      , F("Backup")
+                      );
+      }
+      else
+      {
+        String encodedPath =  URLEncode(String(fi.Name + F(".txt")));
 
-                                     // File Name
-                                     addHtml(F("</TD><TD><a href='"));
-                                     addHtml(String(fi.Name));
-                                     addHtml(F(".txt'>"));
-                                     addHtml(String(fi.Name));
-                                     addHtml(F(".txt</a></TD>"));
+        // File Name
+        addHtml(F("</TD><TD><a href='"));
+        addHtml(String(fi.Name));
+        addHtml(F(".txt'>"));
+        addHtml(String(fi.Name));
+        addHtml(F(".txt</a></TD>"));
 
-                                     // File size
-                                     html_TD();
-                                     addHtmlInt(fi.Size);
-                                     addHtml(F("</TD>"));
+        // File size
+        html_TD();
+        addHtmlInt(fi.Size);
+        addHtml(F("</TD>"));
 
-                                     // Actions
-                                     html_TD();
-                                     addSaveButton(String(F("/rules/backup?fileName=")) + encodedPath
-                                                   , F("Backup")
-                                                   );
+        // Actions
+        html_TD();
+        addSaveButton(String(F("/rules/backup?fileName=")) + encodedPath
+                      , F("Backup")
+                      );
 
-                                     addDeleteButton(String(F("/rules/delete?fileName=")) + encodedPath
-                                                     , F("Delete")
-                                                     );
-                                   }
-                                   addHtml(F("</TD></TR>"));
+        addDeleteButton(String(F("/rules/delete?fileName=")) + encodedPath
+                        , F("Delete")
+                        );
+      }
+      addHtml(F("</TD></TR>"));
 #  ifdef WEBSERVER_RULES_DEBUG
-                                   Serial.print(F("End generation of: "));
-                                   Serial.println(fi.Name);
+      Serial.print(F("End generation of: "));
+      Serial.println(fi.Name);
 #  endif // ifdef WEBSERVER_RULES_DEBUG
 
-                                   return count < endIdx;
-                                 };
+      return count < endIdx;
+    };
 
 
   bool hasMore = EnumerateFileAndDirectory(rootPath
@@ -360,7 +359,7 @@ void handle_rules_delete() {
 
   if (removed)
   {
-    web_server.sendHeader(F("Location"), F("/rules"), true);
+    sendHeader(F("Location"), F("/rules"), true);
     web_server.send(302, F("text/plain"), EMPTY_STRING);
   }
   else
@@ -400,6 +399,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
   if (isAddNew || (originalUri.startsWith(F("/rules/"))
                    && originalUri.endsWith(F(".txt")))) {
     if (!isLoggedIn() || !Settings.UseRules) { return false; }
+
     if (Settings.OldRulesEngine())
     {
       Goto_Rules_Root();
@@ -439,7 +439,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     if (web_server.args() > 0)
     {
       const String& rules = webArg(F("rules"));
-      isNew = webArg(F("IsNew")) == F("yes");
+      isNew = webArg(F("IsNew")).equals(F("yes"));
 
       // Overwrite verification
       if (isEdit && isNew) {
@@ -449,7 +449,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         isAddNew    = true;
         isOverwrite = true;
       }
-      else if (!web_server.hasArg(F("rules")))
+      else if (!hasArg(F("rules")))
       {
         error = F("Data was not saved, rules argument missing or corrupted");
         addLog(LOG_LEVEL_ERROR, error);
@@ -476,7 +476,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         }
 
         if (isAddNew) {
-          web_server.sendHeader(F("Location"), F("/rules"), true);
+          sendHeader(F("Location"), F("/rules"), true);
           web_server.send(302, F("text/plain"), EMPTY_STRING);
           return true;
         }
@@ -552,6 +552,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
+  addHtml(F("<script>initCM();</script>"));
 
   html_TR_TD();
   {
@@ -583,10 +584,10 @@ bool Rule_Download(const String& path)
   String filename = path + String(F(".txt"));
   filename.replace(RULE_FILE_SEPARAROR, '_');
   String str = String(F("attachment; filename=")) + filename;
-  web_server.sendHeader(F("Content-Disposition"), str);
-  web_server.sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
-  web_server.sendHeader(F("Vary"),                "*");
-  web_server.sendHeader(F("ETag"),                F("\"2.0.0\""));
+  sendHeader(F("Content-Disposition"), str);
+  sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
+  sendHeader(F("Vary"),                "*");
+  sendHeader(F("ETag"),                F("\"2.0.0\""));
 
   web_server.streamFile(dataFile, F("application/octet-stream"));
   dataFile.close();
@@ -594,7 +595,7 @@ bool Rule_Download(const String& path)
 }
 
 void Goto_Rules_Root() {
-  web_server.sendHeader(F("Location"), F("/rules"), true);
+  sendHeader(F("Location"), F("/rules"), true);
   web_server.send(302, F("text/plain"), EMPTY_STRING);
 }
 

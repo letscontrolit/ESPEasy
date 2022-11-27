@@ -84,7 +84,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         C008_queue_element& element = C008_DelayHandler->sendQueue.back();
 
         // Collect the values at the same run, to make sure all are from the same sample
-        LoadTaskSettings(event->TaskIndex);
+        //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
         parseControllerVariables(pubname, event, true);
 
         for (uint8_t x = 0; x < valueCount; x++)
@@ -137,16 +137,17 @@ bool do_process_c008_delay_queue(int controller_number, const C008_queue_element
     }
   }
 
-  WiFiClient client;
-
-  if (!try_connect_host(controller_number, client, ControllerSettings)) {
-    return false;
-  }
-
-  String request =
-    create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt[element.valuesSent]);
-
-  return element.checkDone(send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply));
+  int httpCode = -1;
+  send_via_http(
+    controller_number,
+    ControllerSettings,
+    element.controller_idx,
+    element.txt[element.valuesSent],
+    F("GET"),
+    EMPTY_STRING,
+    EMPTY_STRING,
+    httpCode);
+  return element.checkDone((httpCode >= 100) && (httpCode < 300));
 }
 
 #endif // ifdef USES_C008

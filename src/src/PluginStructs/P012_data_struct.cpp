@@ -1,18 +1,20 @@
 #include "../PluginStructs/P012_data_struct.h"
 
+#ifdef USES_P012
+
 // Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
-#include <LiquidCrystal_I2C.h>
+# include <LiquidCrystal_I2C.h>
 
-#ifdef USES_P012
 
 P012_data_struct::P012_data_struct(uint8_t addr,
                                    uint8_t lcd_size,
                                    uint8_t mode,
-                                   uint8_t    timer) :
+                                   uint8_t timer) :
   lcd(addr, 20, 4),
   Plugin_012_mode(mode),
-  displayTimer(timer) {
+  displayTimer(timer)
+{
   switch (lcd_size)
   {
     case 1:
@@ -29,8 +31,9 @@ P012_data_struct::P012_data_struct(uint8_t addr,
       Plugin_012_cols = 16;
       break;
   }
+}
 
-
+void P012_data_struct::init() {
   // Setup LCD display
   lcd.init(); // initialize the lcd
   lcd.backlight();
@@ -80,7 +83,7 @@ void P012_data_struct::lcdWrite(const String& text, uint8_t col, uint8_t row) {
   else {
     // Fix Weird (native) lcd display behaviour that split long string into row 1,3,2,4, instead of 1,2,3,4
     bool stillProcessing = 1;
-    uint8_t charCount       = 1;
+    uint8_t charCount    = 1;
 
     while (stillProcessing) {
       if (++col > Plugin_012_cols) { // have we printed 20 characters yet (+1 for the logic)
@@ -227,41 +230,43 @@ String P012_data_struct::P012_parseTemplate(String& tmpString, uint8_t lineSize)
 
 void P012_data_struct::createCustomChars() {
 # ifdef USES_P012_POLISH_CHARS
-/*
-  static const char LETTER_null[8] PROGMEM = { // spacja
-    0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000
-  };
-*/
-  static const char LETTER_a[8] PROGMEM = {    // a
+
+  /*
+     static const char LETTER_null[8] PROGMEM = { // spacja
+      0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000
+     };
+   */
+  static const char LETTER_a[8] PROGMEM = { // a
     0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b01111, 0b00010
   };
-  static const char LETTER_c[8] PROGMEM = {    // c
+  static const char LETTER_c[8] PROGMEM = { // c
     0b00010, 0b00100, 0b01110, 0b10000, 0b10000, 0b10001, 0b01110, 0b00000
   };
-  static const char LETTER_e[8] PROGMEM = {    // e
+  static const char LETTER_e[8] PROGMEM = { // e
     0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b01110, 0b00010
   };
-  static const char LETTER_l[8] PROGMEM = {    // l
+  static const char LETTER_l[8] PROGMEM = { // l
     0b01100, 0b00100, 0b00101, 0b00110, 0b01100, 0b00100, 0b01110, 0b00000
   };
-  static const char LETTER_n[8] PROGMEM = {    // n
+  static const char LETTER_n[8] PROGMEM = { // n
     0b00010, 0b00100, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b00000
   };
-  static const char LETTER_o[8] PROGMEM = {    // o
+  static const char LETTER_o[8] PROGMEM = { // o
     0b00010, 0b00100, 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000
   };
-  static const char LETTER_s[8] PROGMEM = {    // s
+  static const char LETTER_s[8] PROGMEM = { // s
     0b00010, 0b00100, 0b01110, 0b10000, 0b01110, 0b00001, 0b11110, 0b00000
   };
+
   /*
-  static const char LETTER_z1[8] PROGMEM = {   // z z kreska
-    0b00010, 0b00100, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
-  };
-  */
-  static const char LETTER_z2[8] PROGMEM = {   // z z kropka
+     static const char LETTER_z1[8] PROGMEM = {   // z z kreska
+     0b00010, 0b00100, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
+     };
+   */
+  static const char LETTER_z2[8] PROGMEM = { // z z kropka
     0b00100, 0b00000, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
   };
-  lcd.createChar(0, LETTER_o);  // probably defected memory cell
+  lcd.createChar(0, LETTER_o);               // probably defected memory cell
   lcd.createChar(1, LETTER_l);
   lcd.createChar(2, LETTER_e);
   lcd.createChar(3, LETTER_c);

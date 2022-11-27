@@ -11,6 +11,8 @@
 
 #include <Arduino.h>
 
+#include <GPIO_Direct_Access.h>
+
 #define GPIO_PLUGIN_ID  1
 
 
@@ -72,14 +74,16 @@ bool Internal_GPIO_pulseHelper::init()
     pulseModeData.Step1counter   = ISRdata.pulseTotalCounter;
     pulseModeData.Step2OKcounter = ISRdata.pulseTotalCounter;
     pulseModeData.Step3OKcounter = ISRdata.pulseTotalCounter;
-    #endif
+    #endif // ifdef PULSE_STATISTIC
 
     const int intPinMode = static_cast<int>(config.interruptPinMode) & MODE_INTERRUPT_MASK;
     attachInterruptArg(
       digitalPinToInterrupt(config.gpio),
-      reinterpret_cast<void (*)(void *)>(ISR_pulseCheck),
-      this, intPinMode);
-
+      config.useEdgeMode() ?
+        reinterpret_cast<void (*)(void *)>(ISR_edgeCheck) :
+        reinterpret_cast<void (*)(void *)>(ISR_pulseCheck),
+      this,
+      intPinMode);
     return true;
   }
   return false;
@@ -156,7 +160,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       #endif // PULSE_STATISTIC
 
       //  read current state from this tasks's GPIO
-      pulseModeData.lastCheckState = digitalRead(config.gpio);
+      pulseModeData.lastCheckState = DIRECT_pinRead(config.gpio);
 
       // after debounceTime/2, do step 2
       Scheduler.setPluginTaskTimer(config.debounceTime >> 1, config.taskIndex, GPIO_PULSE_HELPER_PROCESSING_STEP_2);
@@ -176,7 +180,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       #endif // PULSE_STATISTIC
 
       //  read current state from this tasks's GPIO
-      const int pinState = digitalRead(config.gpio);
+      const int pinState = DIRECT_pinRead(config.gpio);
 
       if (pinState == pulseModeData.lastCheckState)
 
@@ -229,7 +233,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       }
 
       //  read current state from this tasks's GPIO
-      const int pinState = digitalRead(config.gpio);
+      const int pinState = DIRECT_pinRead(config.gpio);
 
       if (pinState == pulseModeData.lastCheckState)
 
@@ -261,7 +265,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
     {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log; log.reserve(48);
-        log = F("_P003:PLUGIN_TIMER_IN: Invalid processingStep: "); log += pStep;
+        log = F("_P003:PLUGIN_TASKTIMER_IN: Invalid processingStep: "); log += pStep;
         addLogMove(LOG_LEVEL_ERROR, log);
       }
       break;
@@ -335,7 +339,7 @@ void Internal_GPIO_pulseHelper::processStablePulse(int pinState, uint64_t pulseC
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log;
           log.reserve(48);
-          log  = F("_P003:PLUGIN_TIMER_IN: Invalid modeType: ");
+          log  = F("_P003:PLUGIN_TASKTIMER_IN: Invalid modeType: ");
           log += static_cast<int>(config.interruptPinMode);
           addLogMove(LOG_LEVEL_ERROR, log);
         }
@@ -361,44 +365,44 @@ void Internal_GPIO_pulseHelper::processStablePulse(int pinState, uint64_t pulseC
   ISRdata.processingFlags = false;
 }
 
+void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_edgeCheck(Internal_GPIO_pulseHelper *self)
+{
+  ISR_noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
+
+  // legacy edge Mode types
+  // KP: we use here P003_currentStableStartTime[taskID] to persist the PulseTime (pulseTimePrevious)
+  const uint64_t currentTime          = getMicros64();
+  const uint64_t timeSinceLastTrigger = currentTime -
+                                        self->ISRdata.currentStableStartTime;
+
+  if (timeSinceLastTrigger > self->config.debounceTime_micros) // check with debounce time for this task
+  {
+    self->ISRdata.pulseCounter++;
+    self->ISRdata.pulseTotalCounter++;
+    self->ISRdata.pulseTime              = timeSinceLastTrigger;
+    self->ISRdata.currentStableStartTime = currentTime; // reset when counted to determine interval between counted pulses
+  }
+  ISR_interrupts(); // enable interrupts again.
+}
+
 void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_pulseCheck(Internal_GPIO_pulseHelper *self)
 {
-  noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
-
-  if (self->config.useEdgeMode())
-  {
-    // legacy edge Mode types
-    // KP: we use here P003_currentStableStartTime[taskID] to persist the PulseTime (pulseTimePrevious)
-    const uint64_t currentTime          = getMicros64();
-    const uint64_t timeSinceLastTrigger = currentTime -
-                                          self->ISRdata.currentStableStartTime;
-
-    if (timeSinceLastTrigger > self->config.debounceTime_micros) // check with debounce time for this task
-    {
-      self->ISRdata.pulseCounter++;
-      self->ISRdata.pulseTotalCounter++;
-      self->ISRdata.pulseTime              = timeSinceLastTrigger;
-      self->ISRdata.currentStableStartTime = currentTime; // reset when counted to determine interval between counted pulses
-    }
-  }
-  else
+  ISR_noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
 
   // processing for new PULSE mode types
-  {
-    #ifdef PULSE_STATISTIC
-    self->ISRdata.Step0counter++;
-    #endif // PULSE_STATISTIC
+  #ifdef PULSE_STATISTIC
+  self->ISRdata.Step0counter++;
+  #endif // PULSE_STATISTIC
 
-    // check if processing is allowed (not blocked) for this task (taskID)
-    if (!self->ISRdata.processingFlags)
-    {
-      // initiate processing
-      self->ISRdata.processingFlags  = true; // block further initiations as long as async processing is taking place
-      self->ISRdata.initStepsFlags   = true; // PLUGIN_FIFTY_PER_SECOND is polling for this flag set
-      self->ISRdata.triggerTimestamp = getMicros64();
-    }
+  // check if processing is allowed (not blocked) for this task (taskID)
+  if (!self->ISRdata.processingFlags)
+  {
+    // initiate processing
+    self->ISRdata.processingFlags  = true; // block further initiations as long as async processing is taking place
+    self->ISRdata.initStepsFlags   = true; // PLUGIN_FIFTY_PER_SECOND is polling for this flag set
+    self->ISRdata.triggerTimestamp = getMicros64();
   }
-  interrupts(); // enable interrupts again.
+  ISR_interrupts(); // enable interrupts again.
 }
 
 #ifdef PULSE_STATISTIC
@@ -436,7 +440,8 @@ void Internal_GPIO_pulseHelper::doStatisticLogging(uint8_t logLevel)
 {
   if (loglevelActiveFor(logLevel)) {
     // Statistic to logfile. E.g: ... [123/1|111|100/5|80/3/4|40] [12243|3244]
-    String log; 
+    String log;
+
     if (log.reserve(125)) {
       log  = F("Pulse:");
       log += F("Stats (GPIO) [step0|1|2|3|tot(ok/nok/ign)] [lo|hi]= (");
@@ -464,6 +469,7 @@ void Internal_GPIO_pulseHelper::doTimingLogging(uint8_t logLevel)
   if (loglevelActiveFor(logLevel)) {
     // Timer to logfile. E.g: ... [4|12000|13444|12243|3244]
     String log;
+
     if (log.reserve(120)) {
       log  = F("Pulse:");
       log += F("OverDueStats (GPIO) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (");

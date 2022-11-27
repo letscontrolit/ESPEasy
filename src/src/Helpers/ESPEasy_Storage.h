@@ -1,14 +1,16 @@
 #ifndef HELPERS_ESPEASY_STORAGE_H
 #define HELPERS_ESPEASY_STORAGE_H
 
-#include <FS.h>
 
+#include "../../ESPEasy_common.h"
 
+#include "../Helpers/FS_Helper.h"
+
+#include "../DataStructs/ProvisioningStruct.h"
+#include "../DataTypes/ESPEasyFileType.h"
 #include "../DataTypes/SettingsType.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
-
-#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    file system error handling
@@ -27,6 +29,7 @@ String appendLineToFile(const String& fname, const String& line);
 
 String appendToFile(const String& fname, const uint8_t *data, unsigned int size);
 
+bool fileExists(const __FlashStringHelper * fname);
 bool fileExists(const String& fname);
 
 fs::File tryOpenFile(const String& fname, const String& mode);
@@ -45,10 +48,43 @@ String BuildFixes();
  \*********************************************************************************************/
 void fileSystemCheck();
 
+bool FS_format();
+
+#ifdef ESP32
+
+int  getPartionCount(uint8_t pType, uint8_t pSubType = 0xFF);
+
+#endif
+
 /********************************************************************************************\
    Garbage collection
  \*********************************************************************************************/
 bool GarbageCollection();
+
+// Compute checksum of the data.
+// Skip the part where the checksum may be located in the data
+// @param checksum The expected checksum. Will contain checksum after call finished.
+// @retval true when checksum matches
+bool computeChecksum(
+  uint8_t checksum[16], 
+  uint8_t * data, 
+  size_t struct_size, 
+  size_t len_upto_md5,
+  bool updateChecksum = true);
+
+#define COMPUTE_STRUCT_CHECKSUM_UPDATE(STRUCT,OBJECT) \
+   computeChecksum(OBJECT.md5,\
+                   reinterpret_cast<uint8_t *>(&OBJECT),\
+                   sizeof(STRUCT),\
+                   offsetof(STRUCT, md5),\
+                   true)
+
+#define COMPUTE_STRUCT_CHECKSUM(STRUCT,OBJECT) \
+   computeChecksum(OBJECT.md5,\
+                   reinterpret_cast<uint8_t *>(&OBJECT),\
+                   sizeof(STRUCT),\
+                   offsetof(STRUCT, md5),\
+                   false)
 
 /********************************************************************************************\
    Save settings to file system
@@ -68,16 +104,27 @@ String LoadSettings();
    Disable Plugin, based on bootFailedCount
  \*********************************************************************************************/
 uint8_t disablePlugin(uint8_t bootFailedCount);
+uint8_t disableAllPlugins(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Controller, based on bootFailedCount
  \*********************************************************************************************/
 uint8_t disableController(uint8_t bootFailedCount);
+uint8_t disableAllControllers(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
  \*********************************************************************************************/
+#if FEATURE_NOTIFIER
 uint8_t disableNotification(uint8_t bootFailedCount);
+uint8_t disableAllNotifications(uint8_t bootFailedCount);
+#endif
+
+/********************************************************************************************\
+   Disable Rules, based on bootFailedCount
+ \*********************************************************************************************/
+uint8_t disableRules(uint8_t bootFailedCount);
+
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size);
 
@@ -85,14 +132,14 @@ bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int
    Load array of Strings from Custom settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String LoadStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String LoadStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t offset_in_block = 0);
 
 
 /********************************************************************************************\
    Save array of Strings from Custom settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock = 0);
 
 
 /********************************************************************************************\
@@ -108,13 +155,13 @@ String LoadTaskSettings(taskIndex_t TaskIndex);
 /********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
-String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize);
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize, uint32_t posInBlock = 0);
 
 /********************************************************************************************\
    Save array of Strings to Custom Task settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock = 0);
 
 String getCustomTaskSettingsError(uint8_t varNr);
 
@@ -126,13 +173,13 @@ String ClearCustomTaskSettings(taskIndex_t TaskIndex);
 /********************************************************************************************\
    Load Custom Task settings from file system
  \*********************************************************************************************/
-String LoadCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize);
+String LoadCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize, int offset_in_block = 0);
 
 /********************************************************************************************\
    Load array of Strings from Custom Task settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t offset_in_block = 0);
 
 /********************************************************************************************\
    Save Controller settings to file system
@@ -159,6 +206,22 @@ String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, const uin
  \*********************************************************************************************/
 String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *memAddress, int datasize);
 
+
+#if FEATURE_CUSTOM_PROVISIONING
+/********************************************************************************************\
+   Save Provisioning Settings
+ \*********************************************************************************************/
+String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings);
+
+/********************************************************************************************\
+   Load Provisioning Settings
+ \*********************************************************************************************/
+String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings);
+#endif
+
+
+
+#if FEATURE_NOTIFIER
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
@@ -170,7 +233,7 @@ String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
 
-
+#endif
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/
@@ -182,7 +245,17 @@ String InitFile(SettingsType::SettingsFileEnum file_type);
 /********************************************************************************************\
    Save data into config file on file system
  \*********************************************************************************************/
+// Save to file in r+ mode
+// Open for reading and writing.  
+// The stream is positioned at the beginning of the file.
 String SaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize);
+
+// Save to file in w+ mode
+// Open for reading and writing.  
+// The file is created if it does not exist, otherwise it is truncated.
+// The stream is positioned at the beginning of the file.
+
+String SaveToFile_trunc(const char *fname, int index, const uint8_t *memAddress, int datasize);
 
 // See for mode description: https://github.com/esp8266/Arduino/blob/master/doc/filesystem.rst
 String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize, const char *mode);
@@ -205,13 +278,9 @@ String getSettingsFileIndexRangeError(bool read, SettingsType::Enum settingsType
 
 String getSettingsFileDatasizeError(bool read, SettingsType::Enum settingsType, int index, int datasize, int max_size);
 
-String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize, int offset_in_block);
+String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize, int offset_in_block = 0);
 
-String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize);
-
-String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize);
-
-String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock);
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock = 0);
 
 String ClearInFile(SettingsType::Enum settingsType, int index);
 
@@ -256,6 +325,22 @@ String getPartitionTableHeader(const String& itemSep, const String& lineEnd);
 String getPartitionTable(uint8_t pType, const String& itemSep, const String& lineEnd);
 
 #endif // ifdef ESP32
+
+
+/********************************************************************************************\
+   Download ESPEasy file types from HTTP server
+ \*********************************************************************************************/
+#if FEATURE_DOWNLOAD
+String downloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr = 0);
+
+#endif // if FEATURE_DOWNLOAD
+#if FEATURE_CUSTOM_PROVISIONING
+// Download file type based on settings stored in provisioning.dat file.
+String downloadFileType(FileType::Enum filetype, unsigned int filenr = 0);
+
+#endif
+
+
 
 
 #endif // HELPERS_ESPEASY_STORAGE_H

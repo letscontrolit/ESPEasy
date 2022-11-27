@@ -7,7 +7,6 @@
 
 # include "src/Commands/InternalCommands.h"
 # include "src/ESPEasyCore/Controller.h"
-# include "src/Globals/ExtraTaskSettings.h"
 # include "src/Globals/Settings.h"
 # include "src/Helpers/Network.h"
 # include "src/Helpers/PeriodicalActions.h"
@@ -108,16 +107,12 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      if (!NetworkConnected(10)) {
-        success = false;
-        break;
-      }
       String pubname         = CPlugin_006_pubname;
       bool   mqtt_retainFlag = CPlugin_006_mqtt_retainFlag;
 
       statusLED(true);
 
-      LoadTaskSettings(event->TaskIndex);
+      //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
       parseControllerVariables(pubname, event, false);
 
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);

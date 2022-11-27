@@ -69,6 +69,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 16, i2cAddressValues, P012_I2C_ADDR);
       } else {
@@ -81,9 +82,9 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         uint8_t   choice2 = P012_SIZE;
-        const __FlashStringHelper * options2[2];
-        options2[0] = F("2 x 16");
-        options2[1] = F("4 x 20");
+        const __FlashStringHelper *options2[2];
+        options2[0]          = F("2 x 16");
+        options2[1]          = F("4 x 20");
         int optionValues2[2] = { 1, 2 };
         addFormSelector(F("Display Size"), F("p012_size"), 2, options2, optionValues2, choice2);
       }
@@ -92,9 +93,9 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
         String strings[P12_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P12_Nlines, P12_Nchars);
 
-        for (uint8_t varNr = 0; varNr < P12_Nlines; varNr++)
+        for (int varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P12_Nchars);
+          addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P12_Nchars);
         }
       }
 
@@ -106,7 +107,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Display Timeout"), F("p012_timer"), P012_TIMER);
 
       {
-        const __FlashStringHelper * options3[3];
+        const __FlashStringHelper *options3[3];
         options3[0] = F("Continue to next line (as in v1.4)");
         options3[1] = F("Truncate exceeding message");
         options3[2] = F("Clear then truncate exceeding message");
@@ -151,14 +152,15 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       P012_data_struct *P012_data =
         static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P012_data) {
-        break;
+      if (nullptr != P012_data) {
+        P012_data->init();
+
+        if (validGpio(CONFIG_PIN3)) {
+          pinMode(CONFIG_PIN3, INPUT_PULLUP);
+        }
+        success = true;
       }
 
-      if (validGpio(CONFIG_PIN3)) {
-        pinMode(CONFIG_PIN3, INPUT_PULLUP);
-      }
-      success = true;
       break;
     }
 
@@ -254,7 +256,5 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-
 
 #endif // USES_P012

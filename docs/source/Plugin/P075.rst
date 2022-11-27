@@ -156,7 +156,7 @@ Follow these steps to configure ESPEasy's Nextion plugin.
 
 1. Use your favorite web browser and connect to your ESPEasy device.
 2. Go to the *Devices* Tab and pick an empty task.
-3. Choose the task *Add* button and select the *Display - Nextion [TESTING]* entry.
+3. Choose the task *Add* button and select the *Display - Nextion* entry.
 4. Configure the Nextion display as needed by your application.
    See the *Configuration Settings Summary* below.
 5. Click the submit button.
@@ -189,7 +189,7 @@ Select 9600 (Nextion's factory default baud rate is 9600).
 Command Statements (Optional)
 ******************************
 
-Up to ten different *Nextion Command Statements* can be created that automatically execute at each timer interval.
+Up to twenty different *Nextion Command Statements* can be created that automatically execute at each timer interval.
 This provides a convenient way to periodically populate your Nextion display with data from the ESPEasy system variables.
 System variables are discussed here: https://www.letscontrolit.com/wiki/index.php/ESPEasy_System_Variables
 
@@ -419,6 +419,10 @@ Change log
 ----------
 .. versionchanged:: mega
   ...
+
+  |improved|
+  2022/09/27
+  Changed number of available lines to 20.
 
   |improved|
   2020/09/25

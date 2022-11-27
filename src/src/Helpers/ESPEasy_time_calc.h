@@ -43,7 +43,7 @@ inline int64_t usecPassedSince(const uint64_t& timestamp) {
   return timeDiff64(timestamp, getMicros64());
 }
 
-inline int64_t usecPassedSince(uint64_t& timestamp) {
+inline int64_t usecPassedSince(uint64_t& timestamp) { //-V669
   return timeDiff64(timestamp, getMicros64());
 }
 
@@ -68,6 +68,26 @@ bool isLeapYear(int year);
 uint8_t getMonthDays(int year, uint8_t month);
 
 uint32_t makeTime(const struct tm& tm);
+
+void breakTime(unsigned long timeInput, struct tm& tm);
+
+/********************************************************************************************\
+   Unix Time formatting
+ \*********************************************************************************************/
+
+// Format given Date separated by the given delimiter
+// date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
+String formatDateString(const struct tm& ts, char delimiter);
+
+// returns the current Time separated by the given delimiter
+// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
+String formatTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds, char hour_prefix = '\0');
+
+// returns the current Date and Time separated by the given delimiter
+// if called like this: getDateTimeString('\0', '\0', '\0');
+// it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
+String formatDateTimeString(const struct tm& ts, char dateDelimiter = '-', char timeDelimiter = ':',  char dateTimeDelimiter = ' ', bool am_pm = false);
+
 
 /********************************************************************************************\
    Time computations for rules.

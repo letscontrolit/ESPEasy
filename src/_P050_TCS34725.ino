@@ -24,7 +24,7 @@
 
 #define PLUGIN_050
 #define PLUGIN_ID_050         50
-#define PLUGIN_NAME_050       "Color - TCS34725  [TESTING]"
+#define PLUGIN_NAME_050       "Color - TCS34725"
 #define PLUGIN_VALUENAME1_050 "Red"
 #define PLUGIN_VALUENAME2_050 "Green"
 #define PLUGIN_VALUENAME3_050 "Blue"
@@ -53,6 +53,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -171,6 +172,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         if (nullptr != P050_data) {
           addFormSubHeader(F("Transformation matrix"));
 
+          P050_data->resetTransformation();
           P050_data->loadSettings(event->TaskIndex);
 
           // Display current settings
@@ -215,7 +217,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
         if (nullptr != P050_data) {
-
+          P050_data->resetTransformation();
           P050_data->loadSettings(event->TaskIndex);
 
           if (resetTransformation) {
@@ -247,6 +249,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P050_data) {
+        P050_data->resetTransformation();
         success = true;
       }
       break;
@@ -254,12 +257,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P050_data) {
-        delete P050_data; // call destructor
-        success = true;
-      }
+      success = true;
       break;
     }
 
@@ -273,7 +271,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P050_data->tcs.begin()) {
+# ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
+#endif
 
         uint16_t r, g, b, c;
         float value4 = 0.0f;
@@ -431,7 +431,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
                 RuleEvent += toString(static_cast<float>(b) / t * sRGBFactor, 4);
                 break;
               default:
-                RuleEvent = EMPTY_STRING;
+                RuleEvent.clear();
                 break;
               }
               if (!RuleEvent.isEmpty()) {
@@ -468,7 +468,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
               RuleEvent += c;
               break;
             default:
-              RuleEvent = EMPTY_STRING;
+              RuleEvent.clear();
               break;
             }
             if (!RuleEvent.isEmpty()) {
@@ -479,7 +479,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
         success = true;
       } else {
+# ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("No TCS34725 found"));
+#endif
         success = false;
       }
 

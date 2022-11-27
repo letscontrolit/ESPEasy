@@ -24,6 +24,7 @@ public:
 
   AHTx_Device(uint8_t          addr,
               AHTx_device_type type);
+  AHTx_Device() = delete;
 
   const __FlashStringHelper* getDeviceName() const;
 
@@ -45,13 +46,15 @@ protected:
 
   const uint8_t i2cAddress;
   const AHTx_device_type device_type;
-  float last_hum_val;
-  float last_temp_val;
+  float last_hum_val = 0.0f;
+  float last_temp_val = 0.0f;
 };
 
 struct P105_data_struct : public PluginTaskData_base {
   P105_data_struct(uint8_t          addr,
                    AHTx_device_type dev);
+  P105_data_struct() = delete;
+  virtual ~P105_data_struct() = default;
 
   inline String getDeviceName() const {
     return device.getDeviceName();
@@ -70,7 +73,7 @@ struct P105_data_struct : public PluginTaskData_base {
   void setUninitialized();
 
   // Perform the measurements with interval
-  bool updateMeasurements(unsigned long task_index);
+  bool updateMeasurements(taskIndex_t task_index);
 
   AHTx_Device   device;
   AHTx_state    state;

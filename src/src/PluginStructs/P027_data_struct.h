@@ -4,19 +4,14 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P027
 
-// Many boards, like Adafruit INA219: https://learn.adafruit.com/adafruit-ina219-current-sensor-breakout/assembly
-// A0 and A1 are default connected to GND with 10k pull-down resistor.
-// To select another address, bridge either A0 and/or A1 to set to VS+ level.
-# define INA219_ADDRESS                         (0x40) // 1000000 (A0+A1=GND)
-# define INA219_ADDRESS2                        (0x41) // 1000001 (A0=VS+, A1=GND)
-# define INA219_ADDRESS3                        (0x44) // 1000100 (A0=GND, A1=VS+)
-# define INA219_ADDRESS4                        (0x45) // 1000101 (A0=VS+, A1=VS+)
-
 
 struct P027_data_struct : public PluginTaskData_base {
 public:
 
   P027_data_struct(uint8_t i2c_addr);
+
+  P027_data_struct() = delete;
+  virtual ~P027_data_struct() = default;
 
 
   // **************************************************************************/

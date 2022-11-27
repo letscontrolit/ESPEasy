@@ -62,8 +62,8 @@ void ESPEasy_time_zone::logTimeZoneInfo() {
 
     if (m_dstLoc != 0) {
       struct tm tmp;
-      ESPEasy_time::breakTime(m_dstLoc, tmp);
-      log += ESPEasy_time::getDateTimeString(tmp, '-', ':', ' ', false);
+      breakTime(m_dstLoc, tmp);
+      log += formatDateTimeString(tmp, '-', ':', ' ', false);
     }
     log += F(" offset: ");
     log += m_dst.offset;
@@ -75,8 +75,8 @@ void ESPEasy_time_zone::logTimeZoneInfo() {
 
   if (m_stdLoc != 0) {
     struct tm tmp;
-    ESPEasy_time::breakTime(m_stdLoc, tmp);
-    log += ESPEasy_time::getDateTimeString(tmp, '-', ':', ' ', false);
+    breakTime(m_stdLoc, tmp);
+    log += formatDateTimeString(tmp, '-', ':', ' ', false);
   }
   log += F(" offset: ");
   log += m_std.offset;
@@ -155,6 +155,26 @@ uint32_t ESPEasy_time_zone::toLocal(uint32_t utc)
     return utc + m_std.offset * SECS_PER_MIN;
   }
 }
+
+/*----------------------------------------------------------------------*
+* Convert the given local time to UTC time, standard or                 *
+* daylight time, as appropriate.                                        *
+*-----------------------------------------------------------------------*/
+uint32_t ESPEasy_time_zone::fromLocal(uint32_t local)
+{
+  // recalculate the time change points if needed
+  if (ESPEasy_time::year(local) != ESPEasy_time::year(m_dstUTC)) { calcTimeChanges(ESPEasy_time::year(local)); }
+
+  if (locIsDST(local)) {
+    return local - m_dst.offset * SECS_PER_MIN;
+  }
+  else {
+    return local - m_std.offset * SECS_PER_MIN;
+  }
+}
+
+
+
 
 /*----------------------------------------------------------------------*
 * Determine whether the given UTC uint32_t is within the DST interval    *

@@ -3,8 +3,8 @@
 
 
 # include "src/DataStructs/PinMode.h"
-# include "src/Commands/GPIO.h"
 # include "src/ESPEasyCore/ESPEasyGPIO.h"
+# include "src/Helpers/_Plugin_Helper_webform.h"
 
 // #######################################################################################################
 // #################################### Plugin 009: MCP23017 input #######################################
@@ -39,18 +39,16 @@
 # define PLUGIN_ID_009         9
 # define PLUGIN_NAME_009       "Switch input - MCP23017"
 # define PLUGIN_VALUENAME1_009 "State"
-# define PLUGIN_009_DOUBLECLICK_MIN_INTERVAL 1000
-# define PLUGIN_009_DOUBLECLICK_MAX_INTERVAL 3000
-# define PLUGIN_009_LONGPRESS_MIN_INTERVAL 1000
-# define PLUGIN_009_LONGPRESS_MAX_INTERVAL 5000
-# define PLUGIN_009_DC_DISABLED 0
-# define PLUGIN_009_DC_LOW 1
-# define PLUGIN_009_DC_HIGH 2
-# define PLUGIN_009_DC_BOTH 3
-# define PLUGIN_009_LONGPRESS_DISABLED 0
-# define PLUGIN_009_LONGPRESS_LOW 1
-# define PLUGIN_009_LONGPRESS_HIGH 2
-# define PLUGIN_009_LONGPRESS_BOTH 3
+
+
+# define P009_BOOTSTATE     PCONFIG(0)
+# define P009_DEBOUNCE      PCONFIG_FLOAT(0)
+# define P009_DOUBLECLICK   PCONFIG(4)
+# define P009_DC_MAX_INT    PCONFIG_FLOAT(1)
+# define P009_LONGPRESS     PCONFIG(5)
+# define P009_LP_MIN_INT    PCONFIG_FLOAT(2)
+# define P009_SAFE_BTN      PCONFIG_FLOAT(3)
+
 
 boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -126,59 +124,14 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         it->second.previousTask = event->TaskIndex;
       }
 
-      addFormCheckBox(F("Send Boot state"), F("p009_boot"), PCONFIG(0));
-
-      // @giig1967-20181022
-      addFormSubHeader(F("Advanced event management"));
-
-      addFormNumericBox(F("De-bounce (ms)"), F("p009_debounce"), round(PCONFIG_FLOAT(0)), 0, 250);
-
-      // set minimum value for doubleclick MIN max speed
-      if (PCONFIG_FLOAT(1) < PLUGIN_009_DOUBLECLICK_MIN_INTERVAL) {
-        PCONFIG_FLOAT(1) = PLUGIN_009_DOUBLECLICK_MIN_INTERVAL;
-      }
-
-      {
-        const __FlashStringHelper *buttonDC[4];
-        buttonDC[0] = F("Disabled");
-        buttonDC[1] = F("Active only on LOW (EVENT=3)");
-        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
-        int buttonDCValues[4] = { PLUGIN_009_DC_DISABLED, PLUGIN_009_DC_LOW, PLUGIN_009_DC_HIGH, PLUGIN_009_DC_BOTH };
-        addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, PCONFIG(4));
-      }
-
-      addFormNumericBox(F("Doubleclick max. interval (ms)"),
-                        F("p009_dcmaxinterval"),
-                        round(PCONFIG_FLOAT(1)),
-                        PLUGIN_009_DOUBLECLICK_MIN_INTERVAL,
-                        PLUGIN_009_DOUBLECLICK_MAX_INTERVAL);
-
-      // set minimum value for longpress MIN max speed
-      if (PCONFIG_FLOAT(2) < PLUGIN_009_LONGPRESS_MIN_INTERVAL) {
-        PCONFIG_FLOAT(2) = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
-      }
-
-
-      {
-        const __FlashStringHelper *buttonLP[4];
-        buttonLP[0] = F("Disabled");
-        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
-
-        int buttonLPValues[4] =
-        { PLUGIN_009_LONGPRESS_DISABLED, PLUGIN_009_LONGPRESS_LOW, PLUGIN_009_LONGPRESS_HIGH, PLUGIN_009_LONGPRESS_BOTH };
-        addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, PCONFIG(5));
-      }
-
-      addFormNumericBox(F("Longpress min. interval (ms)"),
-                        F("p009_lpmininterval"),
-                        round(PCONFIG_FLOAT(2)),
-                        PLUGIN_009_LONGPRESS_MIN_INTERVAL,
-                        PLUGIN_009_LONGPRESS_MAX_INTERVAL);
-
-      addFormCheckBox(F("Use Safe Button (slower)"), F("p009_sb"), round(PCONFIG_FLOAT(3)));
+      SwitchWebformLoad(
+        P009_BOOTSTATE,
+        P009_DEBOUNCE,
+        P009_DOUBLECLICK,
+        P009_DC_MAX_INT,
+        P009_LONGPRESS,
+        P009_LP_MIN_INT,
+        P009_SAFE_BTN);
 
       success = true;
       break;
@@ -190,27 +143,17 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       uint8_t port = getFormItemInt(F("p009_port"));
       CONFIG_PORT = (((i2c - 0x20) << 4) + port);
 
-      PCONFIG(0) = isFormItemChecked(F("p009_boot"));
+      SwitchWebformSave(
+        event->TaskIndex,
+        PLUGIN_ID_009,
+        P009_BOOTSTATE,
+        P009_DEBOUNCE,
+        P009_DOUBLECLICK,
+        P009_DC_MAX_INT,
+        P009_LONGPRESS,
+        P009_LP_MIN_INT,
+        P009_SAFE_BTN);
 
-      // @giig1967-20181022
-      PCONFIG_FLOAT(0) = getFormItemInt(F("p009_debounce"));
-
-      PCONFIG(4)       = getFormItemInt(F("p009_dc"));
-      PCONFIG_FLOAT(1) = getFormItemInt(F("p009_dcmaxinterval"));
-
-      PCONFIG(5)       = getFormItemInt(F("p009_lp"));
-      PCONFIG_FLOAT(2) = getFormItemInt(F("p009_lpmininterval"));
-
-      PCONFIG_FLOAT(3) = isFormItemChecked(F("p009_sb"));
-
-      // check if a task has been edited and remove task flag from the previous pin
-      for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
-        if ((it->second.previousTask == event->TaskIndex) && (getPluginFromKey(it->first) == PLUGIN_ID_009)) {
-          globalMapPortStatus[it->first].previousTask = -1;
-          removeTaskFromPort(it->first);
-          break;
-        }
-      }
       success = true;
       break;
     }
@@ -238,12 +181,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
           log += newStatus.state;
           addLogMove(LOG_LEVEL_INFO, log);
         }
-        newStatus.output                         = newStatus.state;
-        (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the
-                                                                                                              // device list we assume it's
-                                                                                                              // an input pin
-        newStatus.task++;                                                                                     // add this GPIO/port as a
-                                                                                                              // task
+        newStatus.output = newStatus.state;
+        newStatus.mode   = (newStatus.state == -1) ?  PIN_MODE_OFFLINE : PIN_MODE_INPUT_PULLUP;
+
+        // @giig1967g: if it is in the device list we assume it's an input pin
+        newStatus.task++; // add this GPIO/port as a task
 
         // @giig1967g-20181022: set initial UserVar of the switch
         if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
@@ -254,7 +196,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
         // if boot state must be send, inverse default state
         // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
-        if (PCONFIG(0)) {
+        if (P009_BOOTSTATE) {
           newStatus.state = !newStatus.state;
         }
 
@@ -271,13 +213,13 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         PCONFIG_LONG(2) = millis(); // longpress timer
 
         // @giig1967g-20181022: set minimum value for doubleclick MIN max speed
-        if (PCONFIG_FLOAT(1) < PLUGIN_009_DOUBLECLICK_MIN_INTERVAL) {
-          PCONFIG_FLOAT(1) = PLUGIN_009_DOUBLECLICK_MIN_INTERVAL;
+        if (P009_DC_MAX_INT < SWITCH_DOUBLECLICK_MIN_INTERVAL) {
+          P009_DC_MAX_INT = SWITCH_DOUBLECLICK_MIN_INTERVAL;
         }
 
         // @giig1967g-20181022: set minimum value for longpress MIN max speed
-        if (PCONFIG_FLOAT(2) < PLUGIN_009_LONGPRESS_MIN_INTERVAL) {
-          PCONFIG_FLOAT(2) = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
+        if (P009_LP_MIN_INT < SWITCH_LONGPRESS_MIN_INTERVAL) {
+          P009_LP_MIN_INT = SWITCH_LONGPRESS_MIN_INTERVAL;
         }
 
         // setPinState(PLUGIN_ID_009, CONFIG_PORT, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
@@ -289,8 +231,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      const int8_t state              = GPIO_MCP_Read(CONFIG_PORT);
-      const String monitorEventString = F("MCP");
+      const int8_t state                            = GPIO_MCP_Read(CONFIG_PORT);
+      const __FlashStringHelper *monitorEventString = F("MCP");
 
       /**************************************************************************\
          20181022 - @giig1967g: new doubleclick logic is:
@@ -314,9 +256,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no port defined yet)
       if ((state != -1) && (CONFIG_PORT >= 0)) {
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
-        if (round(PCONFIG_FLOAT(3)) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+        if (lround(P009_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."));
+          #endif
           PCONFIG_LONG(3) = 1;
         }
 
@@ -332,11 +276,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
           const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
 
-          if (debounceTime >= (unsigned long)lround(PCONFIG_FLOAT(0))) // de-bounce check
+          if (debounceTime >= (unsigned long)lround(P009_DEBOUNCE)) // de-bounce check
           {
             const unsigned long deltaDC = timePassedSince(PCONFIG_LONG(1));
 
-            if ((deltaDC >= (unsigned long)lround(PCONFIG_FLOAT(1))) ||
+            if ((deltaDC >= (unsigned long)lround(P009_DC_MAX_INT)) ||
                 (PCONFIG(7) == 3))
             {
               // reset timer for doubleclick
@@ -346,7 +290,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
             // just to simplify the reading of the code
 # define COUNTER PCONFIG(7)
-# define DC PCONFIG(4)
+# define DC P009_DOUBLECLICK
 
             // check settings for doubleclick according to the settings
             if ((COUNTER != 0) || ((COUNTER == 0) && ((DC == 3) || ((DC == 1) && (state == 0)) || ((DC == 2) && (state == 1))))) {
@@ -370,7 +314,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               sendState = !sendState;
             }
 
-            if ((PCONFIG(7) == 3) && (PCONFIG(4) > 0))
+            if ((PCONFIG(7) == 3) && (P009_DOUBLECLICK > 0))
             {
               output_value = 3;                 // double click
             } else {
@@ -393,7 +337,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             sendData(event);
 
             // send monitor event
-            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value); }
+            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PORT, output_value); }
 
             // Reset forceEvent
             currentStatus.forceEvent = 0;
@@ -404,7 +348,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // just to simplify the reading of the code
-# define LP PCONFIG(5)
+# define LP P009_LONGPRESS
 # define FIRED PCONFIG(6)
 
         // check if LP is enabled and if LP has not fired yet
@@ -430,7 +374,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
           const unsigned long deltaLP = timePassedSince(PCONFIG_LONG(2));
 
-          if (deltaLP >= (unsigned long)lround(PCONFIG_FLOAT(2)))
+          if (deltaLP >= (unsigned long)lround(P009_LP_MIN_INT))
           {
             uint8_t output_value;
             PCONFIG(6) = true; // fired = true
@@ -460,7 +404,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             sendData(event);
 
             // send monitor event
-            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value); }
+            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PORT, output_value); }
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -471,7 +415,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             // Create EVENT with value = 4 for SafeButton false positive detection
-            const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+            const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
             UserVar[event->BaseVarIndex] = 4;
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -481,10 +425,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               log += tempUserVar;
               addLogMove(LOG_LEVEL_INFO, log);
             }
+
             // send task event: DO NOT SEND TASK EVENT
-            //sendData(event);
+            // sendData(event);
             // send monitor event
-            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, 4); }
+            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PORT, 4); }
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = tempUserVar;
@@ -507,7 +452,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         sendData(event);
 
         // send monitor event
-        if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, -1); }
+        if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PORT, -1); }
 
         savePortStatus(key, currentStatus);
       }
@@ -564,8 +509,10 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
+    case PLUGIN_DEVICETIMER_IN:
     {
+      Scheduler.clearGPIOTimer(PLUGIN_MCP, event->Par1);
       GPIO_MCP_Write(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
@@ -575,27 +522,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
       tempStatus = globalMapPortStatus[key];
 
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
-      savePortStatus(key, tempStatus);
-      break;
-    }
-
-    case PLUGIN_ONLY_TIMER_IN:
-    {
-      GPIO_MCP_Write(event->Par1, event->Par2);
-
-      // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-      portStatusStruct tempStatus;
-
-      // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-      tempStatus = globalMapPortStatus[key];
-
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
+      tempStatus.state        = event->Par2;
+      tempStatus.mode         = PIN_MODE_OUTPUT;
+      tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command
       savePortStatus(key, tempStatus);
       break;
     }

@@ -24,7 +24,7 @@ HLW8012 *Plugin_076_hlw = nullptr;
 #define PLUGIN_076
 #define PLUGIN_ID_076 76
 #define PLUGIN_076_DEBUG true // activate extra log info in the debug
-#define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937  [TESTING]"
+#define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937"
 #define PLUGIN_VALUENAME1_076 "Voltage"
 #define PLUGIN_VALUENAME2_076 "Current"
 #define PLUGIN_VALUENAME3_076 "Power"
@@ -41,10 +41,10 @@ int StoredTaskIndex = -1;
 uint8_t p076_read_stage = 0;
 unsigned long p076_timer = 0;
 
-double p076_hcurrent = 0.0f;
-unsigned int p076_hvoltage = 0;
-unsigned int p076_hpower = 0;
-unsigned int p076_hpowfact = 0;
+float p076_hcurrent = 0.0f;
+float p076_hvoltage = 0;
+float p076_hpower = 0;
+float p076_hpowfact = 0;
 
 #define P076_Custom       0
 
@@ -125,6 +125,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     Device[deviceCount].SendDataOption = true;
     Device[deviceCount].TimerOption = true;
     Device[deviceCount].GlobalSyncOption = false;
+    Device[deviceCount].PluginStats        = true;
     break;
   }
 
@@ -433,6 +434,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
         // Library expects an interrupt on both edges
         attachInterrupt(CF1_PIN, p076_hlw8012_cf1_interrupt, cf1_trigger);
         attachInterrupt(CF_PIN, p076_hlw8012_cf_interrupt, cf_trigger);
+
         success = true;
       }
     }
@@ -448,12 +450,12 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
       }
 
       if (command.equalsIgnoreCase(F("hlwcalibrate"))) {
-        unsigned int CalibVolt = 0;
-        double CalibCurr = 0;
-        unsigned int CalibAcPwr = 0;
-        if (validUIntFromString(parseString(string, 2), CalibVolt)) {
-          if (validDoubleFromString(parseString(string, 3), CalibCurr)) {
-            validUIntFromString(parseString(string, 4), CalibAcPwr);
+        float CalibVolt = 0;
+        float CalibCurr = 0;
+        float CalibAcPwr = 0;
+        if (validFloatFromString(parseString(string, 2), CalibVolt)) {
+          if (validFloatFromString(parseString(string, 3), CalibCurr)) {
+            validFloatFromString(parseString(string, 4), CalibAcPwr);
           }
         }
 #ifndef BUILD_NO_DEBUG

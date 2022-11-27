@@ -1,0 +1,358 @@
+.. csv-table::
+    :escape: ^
+    :widths: 20, 30
+
+    "
+    Generic commands: ``<trigger>`` is the command-trigger, documented above.
+    ","
+    Generic notes:
+
+    * If a text has comma's or spaces, then it should be 'wrapped' in either double quotes ``^"``, single quotes ``^'`` or back-ticks ``^```.
+    * For ``color`` arguments, see how colors can be defined in the ``txc`` subcommand description.
+
+    * Commands and subcommands are not case-sensitive.
+    "
+    "
+    ``<trigger>,clear[,<color>]``
+    ","
+    Clear the screen using last set background color, or a specified color. Background color is either from configuration or ``txc`` subcommand.
+    "
+    "
+    ``<trigger>,rot,<rotation>``
+    ","
+    Rotate the display orientation clock-wise from the initial position, where rotation can be: (current display content will stay as-is!)
+
+    * 0 : No rotation
+    * 1 : 90 degrees
+    * 2 : 180 degrees
+    * 3 : 270 degrees
+    "
+    "
+    ``<trigger>,tpm,<TextPrintMode>``
+    ","
+    Select the Text print Mode
+
+    * 0 : Continue to next line (wrap text onto the next line)
+    * 1 : Truncate exceeding message (cut-off text that won't fit on the screen width)
+    * 2 : Clear then truncate exceeding message (Clear to width of screen, then print the message)
+    * 3 : Truncate and center message in available space, when maxTextWidthPixels is provided in ``txtfull`` subcommand. Will act like 1 : Truncate exceeding message if no width provided.
+    "
+    "
+    ``<trigger>,txt,<text>``
+    ","
+    Write simple text (entire rest of the text provided), use last position, color and size. Color is either from configuration or ``txc`` subcommand.
+    "
+    "
+    ``<trigger>,txp,<x>,<y>``
+    ","
+    Set text position (move the cursor). Depending on the setting **Text Coordinates in col/row**, these coordinates are pixels (default) or column/rows.
+    "
+    "
+    ``<trigger>,txz,<x>,<y>,<text>``
+    ","
+    Set text position (move the cursor) and print the text. Combines the ``txp`` and ``txt`` commands in 1. Depending on the setting **Text Coordinates in col/row**, these coordinates are pixels (default) or column/rows.
+    "
+    "
+    ``<trigger>,txl,[<line>],<text>[,[<line>],<text>...]``
+    ","
+    Print 1 or more texts on specified lines, starting at column 1. If a ``<line>`` is not specified (the comma must still be there!) the next display-line will be used, depending on current font-height, if the initial ``<line>`` is not specified, starts at line 1. ``<line>`` must be a positive integer value.
+
+    Always uses column/rows mode (and restores the currently active pixels or column/rows mode).
+    "
+    "
+    ``<trigger>,txc,<foreColor>[,<backgroundColor>]``
+    ","
+    Set text color (background is transparent if not provided, or the same as the foreground color).
+
+    Colors can be specified in 3 ways:
+
+    * *Color name* Some named colors are recognized:
+        * Full color display: ``White``, ``Black``, ``Red``, ``Green``, ``Blue``, ``Yellow``, ``Orange``, ``Navy``, ``Darkgreen``, ``Cyan``, ``Darkcyan``, ``Maroon``, ``Purple``, ``Olive``, ``Magenta``, ``Lightgrey``, ``Darkgrey``, ``Pink`` and ``Greenyellow``.
+        * 7-color (eInk) displays: ``White``, ``Black``, ``Red``, ``Green``, ``Blue``, ``Yellow`` and ``Orange``
+        * Monochrome (eInk, 1 add. color, and 1 or 2-tone greyscale) displays: ``White``, ``Black``, ``Inverse``, ``Red``, ``Light`` and ``Dark``
+    * *#RGB565* A ``#`` prefixed, 1 to 4 digit, hex-coded color value in RGB565 format (5 bits red, 6 bits green, 5 bits blue) giving the max. number of 65535 colors.
+    * *#RRGGBB* A ``#`` prefixed, 6 digit, hex coded RGB color value. Will be transformed to RGB565!
+    "
+    "
+    ``<trigger>,txs,<size>``
+    ","
+    Set font scaling option. Only values from 0 to 10 are accepted. 0 assumes 1 by default.
+
+    Some display types may limit or extend the maximum accepted size.
+    "
+    "
+    ``<trigger>,txtfull,<x>,<y>,<size=1>,<foreColor=current>,<backColor=foreColor>, <textPrintMode=current>,<maxTextWidthPixels=0>,<text>``
+    ","
+    Write text at position X/Y with all options. Depending on the setting **Text Coordinates in col/row**, these coordinates are pixels (default) or column/rows.
+    
+    All options that have a default specified (size, foreColor, backColor) can be left out, but text is expected. ForeColor and BackColor use the last set Foreground and Background colors (that will by default be white and transparent if not provided).
+
+    ``textPrintMode`` can be passed an invalid value (f.e. -1) to use the current setting.
+
+    ``maxTextWidthPixels`` can be used to have textPrintMode > 0 (see ``tpm`` subcommand) but clear only a limited area width instead of clearing until the right edge of the screen. 0 implies that the right edge of the screen is used.
+    "
+    "
+    ``<trigger>,asciitable[,<offset>,<fontscaling>]``
+    ","
+    Show an ascii table on the display, starting at position 0,0. Display is not cleared before drawing the table.
+    
+    ``offset`` is in steps of 32 characters (0x20), and by default starts at 0x80, showing the 'high ascii' characters for the current font. Applicable range is -4..3, allowing to view the entire supported character set. The CR (0x0D) and LF (0x0A) characters are replaced by a space to not disturb the table on screen.
+
+    ``fontscaling`` can be changed, from the default value 2, to enlarge the characters (possibly rendering less characters of the table, hence the offset can be applied). Does not change the current fontscaling setting.
+
+    This command is not available in builds that use the ``LIMIT_BUILD_SIZE`` compile-time option, as it is intended for debugging/development use.
+    "
+    "
+    ``<trigger>,font,<fontname>``
+    ","
+    Switch to font. Also applies font settings to recalculate the max. column and row settings.
+
+    Depending on compile-time settings, none or multiple fonts are available.
+    
+    * *default* The default 6 * 10 font, includes most of the special characters like degrees centigrade and a few valuta symbols.
+
+    Enabled by default, but disabled in memory-challenged builds: (most extra fonts do *not* include special symbol characters)
+
+    * *sevenseg24* A rather large 7-segment 21 * 48 font
+    * *sevenseg18* A somewhat less large 7-segment 16 * 34 font
+    * *freesans* A sans-serif 10 * 21 font
+
+    Usually disabled fonts: (can be enabled in a Custom build, default enabled in the MAX builds)
+
+    * *angelina8prop* A proportional, handwriting, 6 * 16 font
+    * *novamono8pt* A modern 9 * 16 font
+    * *unispace8pt* A modern 12 * 24 font
+    * *unispaceitalic8pt* A modern italic (slanted) 12 * 24 font
+    * *whiterabbit8pt* A modern 12 * 24 font
+    * *robotomono8pt* A modern 8 * 10 font
+    * *angelina12prop* A proportional, handwriting, 8 * 24 font
+    * *novamono12pt* A modern 13 * 34 font
+    * *repetitionscrolling12pt* A modern 13 * 24 font
+    * *unispace12pt* A modern 13 * 18 font
+    * *unispaceitalic12pt* A modern italic (slanted) 13 * 18 font
+    * *whiterabbit12pt* A modern 13 * 18 font
+    * *robotomono12pt* A modern 13 * 18 font
+    * *amerikasans16pt* A proportional 17 * 20 font
+    * *whiterabbit16pt* A modern 16 * 20 font
+    * *robotomono16pt* A modern 16 * 20 font
+    * *whiterabbit18pt* A modern 18 * 22 font
+    * *whiterabbit20pt* A modern 20 * 24 font
+
+    Standard disabled fonts (even on MAX builds), that can be enabled in a custom build:
+
+    * *roboto8pt* A modern 9 * 16 font (proportionally spaced)
+    * *roboto12pt* A modern 13 * 18 font (proportionally spaced)
+    * *roboto16pt* A modern 16 * 20 font (proportionally spaced)
+    * *robotocond8pt* A modern 9 * 16 font (Roboto Condensed, proportionally spaced)
+    * *robotocond12pt* A modern 13 * 18 font (Roboto Condensed, proportionally spaced)
+    * *robotocond16pt* A modern 16 * 20 font (Roboto Condensed, proportionally spaced)
+
+    NB: Roboto is used as the default Android font since Android 4.1, and very readable, even when using small fonts on a small display.
+    "
+    "
+    ``<trigger>,l,<x1>,<y1>,<x2>,<y2>,<color>``
+    ","
+    Draw a simple line between point x1,y1 and x2,y2, using the (required) color, 1 pixel wide.
+    "
+    "
+    ``<trigger>,lh,<y>,<width>,<color>``
+    ","
+    Draw a horizontal line (width = Line 'width' in pixels (positive = right of first point, negative = left of first point).
+    "
+    "
+    ``<trigger>,lv,<x>,<height>,<color>``
+    ","
+    Draw a vertical line (height= Line 'height' in pixels (positive = below first point, negative = above first point).
+    "
+    "
+    ``<trigger>,lm,<color>,<x1>,<y1>,<x2>,<y2>[,<colorN>][,<xN>,<yN>[,...]|c]``
+    ","
+    Draw a continuous multi-line between point x1,y1, x2,y2, x3,y3, etc. using the (required) color, 1 pixel wide. The segments of line are drawn straight.
+    
+    If the last y argument is missing, then the last x argument will be ignored.
+
+    If the argument value ``c`` is used, the multi-line is closed to the original starting coordinate, and drawing is stopped.
+
+    If ``<colorN>`` is used, then from the next segment that color will be used. Color can be changed multiple times if desired.
+    "
+    "
+    ``<trigger>,lmr,<color>,<x>,<y>,<dx1>,<dy1>[,<colorN>][,<dxN>,<dyN>[,...]|c]``
+    ","
+    Draw a continuous multi-line starting at point x,y, moving *relatively* using the delta-x (dx) and delta-y (dy) values, etc. using the (required) color, 1 pixel wide. The segments of line are drawn straight.
+    
+    If the last dy argument is missing, then the last dx argument will be ignored.
+
+    If the argument value ``c`` is used, the multi-line is closed to the original starting coordinate, and drawing is stopped.
+
+    If ``<colorN>`` is used, then from the next segment that color will be used. Color can be changed multiple times if desired.
+    "
+    "
+    ``<trigger>,r,<x>,<y>,<width>,<height>,<color>``
+    ","
+    Draw a rectangle.
+    "
+    "
+    ``<trigger>,rf,<x>,<y>,<width>,<height>,<bordercolor>,<innercolor>``
+    ","
+    Draw a filled rectangle.
+    "
+    "
+    ``<trigger>,c,<x>,<y>,<radius>,<color>``
+    ","
+    Draw a circle.
+    "
+    "
+    ``<trigger>,cf,<x>,<y>,<radius>,<bordercolor>,<innercolor>``
+    ","
+    Draw a filled circle.
+    "
+    "
+    ``<trigger>,t,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<color>``
+    ","
+    Draw a triangle.
+    "
+    "
+    ``<trigger>,tf,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<bordercolor>,<innercolor>``
+    ","
+    Draw a filled triangle.
+    "
+    "
+    ``<trigger>,rr,<x>,<y>,<width>,<height>,<corner_radius>,<color>``
+    ","
+    Draw a rounded rectangle.
+    "
+    "``<trigger>,rrf,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor>``
+    ","
+    Draw a filled rounded rectangle.
+    "
+    "
+    ``<trigger>,px,<x>,<y>,<color>``
+    ","
+    Print a single pixel.
+    "
+    "
+    ``<trigger>,pxh,<x>,<y>,<color1>[,<color2>,...]``
+    ","
+    Print a horizontal chain of colored pixels (left to right, starting at position x,y). Just supply as many colors as pixels that need to be painted.
+    "
+    "
+    ``<trigger>,pxv,<x>,<y>,<color1>[,<color2>,...]``
+    ","
+    Print a vertical chain of colored pixels (top to bottom, starting at position x,y). Just supply as many colors as pixels that need to be painted.
+    "
+    "
+    ``<trigger>,bmp,<x>,<y>,<filename.bmp>``
+    ","
+    Display a bmp file (24 bit colors) with left/top at position x,y, with the current Rotation setting accounted for.
+
+    x and/or y can be negative to apply an offset for display. Width or height can **not** be adjusted, the full width & height of the bitmap are used.
+
+    The bitmap overwrites anything that was already displayed in the now overwritten area. After a bitmap is displayed, text/graphics can be placed on top of it using the available text and drawing commands, as listed above. By using the same background color as the foreground color (transparent), the image 'behind' the added text/graphics will stay intact.
+
+    The file can be read from SD-card, when available, and the bmp file is not found on the internal file storage.
+    "
+    "
+    ``<trigger>,btn,<state>,<mode>,<x>,<y>,<w>,<h>,<id>,<type>,<ONcolor=blue>,<OFFcolor=red>, <CaptionColor=white>,<fontsize>,<ONcaption>,<OFFcaption>,<BorderColor=white>, <DisabledColor=0x9410>,<DisabledCaptionColor=0x5A69>,<TaskIndex>,<Group>, <SelectGroup>,<objectname>``
+    ","
+    As a companion to the ESPEasy_TouchHelper, the AdafruitGFX_helper takes care of drawing button objects via this subcommand.
+
+    All arguments *must* be provided, though most can be empty, but all separator-commas must still be provided.
+
+    * ``state`` : 0 = off, 1 = on, -1 = off + disabled, -2 = on + disabled.
+
+    * ``mode`` : 0 = normal, -1 = initial, -2 = clear button area.
+
+    * ``x,y,w,h`` : button left-top coordinate, width and height.
+
+    * ``id`` : object id nr.  Not used for drawing the button, but passed to be used in rules from the ESPEasy_TouchHelper.
+
+    * ``type`` : combination (addition/and operation) of ``button type`` (bits 0..3) and ``button layout`` (bits 4..7), when negative (multiplied by -1) will clear the button area.
+
+      * ``button types`` : 0 = none, 0x01 = rectangle, 0x02 = rounded rectangle, 0x03 = circle, 0x04 = left arrow, 0x05 = up arrow, 0x06 = right arrow, 0x07 = down arrow.
+
+      * ``button layouts`` : 0 = center aligned, 0x10 = left aligned, 0x20 = top aligned, 0x30 = right aligned, 0x40 = bottom aligned, 0x50 = left top aligned, 0x60 = right top aligned, 0x70 = right bottom aligned, 0x80 = left bottom aligned, 0x90 = no caption, 0xA0 = ``bitmap`` (see ``ONcaption`` / ``OFFcaption``).
+
+    * ``ONcolor`` / ``OFFcolor`` : fill color when button state is on or off and enabled.
+
+    * ``CaptionColor`` : color used for caption text.
+
+    * ``fontsize`` : size of the font for writing the caption, range 1..10.
+
+    * ``ONcaption`` / ``OFFcaption`` : The caption to show when state is on or off, when empty the objectname will be used. For ``button layout`` = ``bitmap`` a .bmp filename should be entered, that is available on the filesystem, optionally *prefixed* with an ``x`` and ``y`` offset, in pixels, to enable f.e. drawing a small bitmap centered on a button. The format with these optional arguments is: ``[<x>[,<y>],]bmpfile.bmp``
+    
+      * If a caption contains space(s), comma(s) or quote(s), it *must* be quoted with a different quote (double/single/backtick).
+      * Captions can use variables as available in rules, like plugin values via ``[taskname#valuename]``, ``%vNN%``, ``%<systemvariable>%`` and ``{<function>}`` formats.
+
+    * ``BorderColor``, ``DisabledColor``, ``DisabledCaptionColor`` : A separate border color can be specified, and a fill-color and caption color for disabled buttons.
+
+    * ``TaskIndex`` : The Task number for the display the button is to be drawn on. Not used, but passed to be used in rules from the ESPEasy_TouchHelper.
+
+    * ``Group`` : The group this button is a member of. Not used for drawing the button, but passed to be used in rules from the ESPEasy_TouchHelper.
+
+    * ``SelectGroup`` : The group that will be activated by this button. Not used for drawing the button, but passed to be used in rules from the ESPEasy_TouchHelper.
+
+    * ``objectname`` : **Required** The name of the button object, will be used as a caption if no ``ONcaption`` and/or ``OFFcaption`` are provided. *Not required* if both an ``ONcaption`` and ``OFFcaption`` are provided.
+
+    NB: This command wil only *draw* a button, it will not respond to any action. The action is usually provided by a touch screen like :ref:`P099_page` and :ref:`P123_page`.
+    "
+    "
+    ``<trigger>,defwin,<x>,<y>,<w>,<h>,<windowId>[,<rotation>]``
+
+    Example: (Display Task is named ``st7796``, using trigger ``st77xx``)
+
+    .. code:: none
+
+      on window1 do
+        if %eventvalue1|1%=1 // on = default
+          st77xx,defwin,20,50,390,219,1,1 // Window 1, using rotation 1
+          st77xx,win,1 // Select window
+          st77xx,rot,1 // Select rotation
+          st77xx,clear // Clear area
+          st77xx,r,0,0,[st7796#width],[st7796#height],white // Draw a white border
+          st77xx,win,0 // Return to Window 0
+        else
+          asyncevent,removewindow=1 // Remove Window 1
+        endif
+      endon
+      on removewindow do
+        if [st7796#iswin,%eventvalue1|-1%]=1 // Does the Window exist?
+          st77xx,win,%eventvalue1% // Select window
+          st77xx,clear // Clear area
+          st77xx,delwin,%eventvalue1% // Delete Window
+          st77xx,win,0 // Return to Window 0
+        endif
+      endon
+
+    ","
+    Define Window.
+
+    When enabled, the Window feature of the plugin can be used to define custom areas of the screen as a window. Any printing and drawing can then be limited to that area, having a coordinate system from ``0,0`` to ``<w>,<h>``.
+
+    Window 0 is the default window, having the native size of the display. The coordinates, width and height for the ``defwin`` subcommand must be specified in pixels.
+
+    * ``x,y``: The top-left coordinate of the window, according to the native resolution of the screen. This coordinate will become the ``0,0`` coordinate of the new window.
+
+    * ``w,h``: The width and height of the window.
+
+    * ``windowId``: The Id of the new window, can be any value from 1 to 255. When re-using an Id, the previous definition will be overwritten.
+
+    * ``rotation``: Optional. The rotation, identical to the ``rot`` subcommand, that the window dimensions are related to. When not specified, the current rotation setting will be used. Internally, the dimensions are transformed to the dimensions for rotation 0, and on each change of ``rot``, all windows will be re-calculated to have the dimensions corresponding with the new rotation setting.
+    "
+    "
+    ``<trigger>,delwin,<windowId>``
+    ","
+    Delete Window.
+
+    When no longer needed, a window definition can be deleted using this subcommand.
+
+    * ``windowId``: The window Id of a previously defined window.
+    "
+    "
+    ``<trigger>,win,<windowId>``
+    ","
+    Select Window.
+
+    To make a window active, is must be selected using this subcommand.
+
+    * ``windowId``: The window Id of a previously defined window.
+    "

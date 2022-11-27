@@ -14,7 +14,7 @@
 
 # define PLUGIN_078
 # define PLUGIN_ID_078         78
-# define PLUGIN_NAME_078       "Energy (AC) - Eastron SDM120/SDM120CT/220/230/630/72D/DDM18SD [TESTING]"
+# define PLUGIN_NAME_078       "Energy (AC) - Eastron SDM120/SDM120CT/220/230/630/72D/DDM18SD"
 
 # define P078_DEV_ID          PCONFIG(0)
 # define P078_DEV_ID_LABEL    PCONFIG_LABEL(0)
@@ -51,9 +51,9 @@
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
-ESPeasySerial* Plugin_078_SoftSerial = nullptr;
-SDM* Plugin_078_SDM = nullptr;
-boolean Plugin_078_init = false;
+ESPeasySerial *Plugin_078_SoftSerial = nullptr;
+SDM *Plugin_078_SDM                  = nullptr;
+boolean Plugin_078_init              = false;
 
 
 // Forward declaration helper functions
@@ -84,6 +84,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
       Device[deviceCount].ValueCount         = P078_NR_OUTPUT_VALUES;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
@@ -97,20 +98,20 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-          if ( i < P078_NR_OUTPUT_VALUES) {
-            uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
-            safe_strncpy(
-              ExtraTaskSettings.TaskDeviceValueNames[i],
-              p078_getQueryValueString(choice, P078_MODEL),
-              sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
-          } else {
-            ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
-          }
+    {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+        if (i < P078_NR_OUTPUT_VALUES) {
+          uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+          safe_strncpy(
+            ExtraTaskSettings.TaskDeviceValueNames[i],
+            p078_getQueryValueString(choice, P078_MODEL),
+            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+        } else {
+          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
         }
-        break;
       }
+      break;
+    }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
@@ -158,7 +159,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         for (int i = 0; i < 6; ++i) {
           options_baudrate[i] = String(p078_storageValueToBaudrate(i));
         }
-        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P078_BAUDRATE );
+        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P078_BAUDRATE);
         addUnit(F("baud"));
       }
 
@@ -184,6 +185,32 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      // In a separate scope to free memory of String array as soon as possible
+      int nrOptions = 0;
+
+      switch (P078_MODEL) {
+        case 0: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM220_SDM120CT_SDM120; break;
+        case 1: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM230; break;
+        case 2: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM72D; break;
+        case 3: nrOptions = P078_NR_OUTPUT_OPTIONS_DDM18SD; break;
+        case 4: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM630; break;
+      }
+      const __FlashStringHelper *options[nrOptions];
+
+      for (int i = 0; i < nrOptions; ++i) {
+        options[i] = p078_getQueryString(i, P078_MODEL);
+      }
+
+      for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, nrOptions, options);
+      }
+
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       {
@@ -192,33 +219,10 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Model Type"), P078_MODEL_LABEL, 5, options_model, nullptr, P078_MODEL);
         addFormNote(F("Submit after changing the modell to update Output Configuration."));
       }
-      {
-        // In a separate scope to free memory of String array as soon as possible
-        sensorTypeHelper_webformLoad_header();
-        int nrOptions = 0;
-
-        switch (P078_MODEL) {
-          case 0: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM220_SDM120CT_SDM120; break;
-          case 1: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM230; break;
-          case 2: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM72D; break;
-          case 3: nrOptions = P078_NR_OUTPUT_OPTIONS_DDM18SD; break;
-          case 4: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM630; break;
-        }
-        const __FlashStringHelper *options[nrOptions];
-
-        for (int i = 0; i < nrOptions; ++i) {
-          options[i] = p078_getQueryString(i, P078_MODEL);
-        }
-
-        for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-          const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, nrOptions, options);
-        }
-      }
-
       success = true;
       break;
     }
+
 
     case PLUGIN_WEBFORM_SAVE:
     {
@@ -272,7 +276,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
     {
       Plugin_078_init = false;
-      
+
       if (Plugin_078_SoftSerial != nullptr) {
         delete Plugin_078_SoftSerial;
         Plugin_078_SoftSerial = nullptr;
@@ -289,7 +293,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     {
       if (Plugin_078_init)
       {
-        int     model  = P078_MODEL;
+        int model      = P078_MODEL;
         uint8_t dev_id = P078_DEV_ID;
         UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, dev_id, model);
         UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, dev_id, model);
@@ -308,9 +312,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
   if (Plugin_078_SDM == nullptr) { return 0.0f; }
 
-  uint8_t  retry_count = 3;
-  bool  success     = false;
-  float _tempvar    = NAN;
+  uint8_t retry_count = 3;
+  bool    success     = false;
+  float   _tempvar    = NAN;
 
   while (retry_count > 0 && !success) {
     Plugin_078_SDM->clearErrCode();
@@ -670,9 +674,9 @@ const __FlashStringHelper* p078_getQueryValueString(uint8_t query, uint8_t model
       case 5:  return F("cos-phi");
       case 6:  return F("Degrees");
       case 7:  return F("Hz");
-      case 8:  
+      case 8:
       case 9:  return F("kWh/MWh");
-      case 10: 
+      case 10:
       case 11: return F("kVArh/MVArh");
       case 12: return F("kWh");
       case 13: return F("kVArh");
@@ -687,17 +691,17 @@ const __FlashStringHelper* p078_getQueryValueString(uint8_t query, uint8_t model
       case 5:  return F("cos-phi");
       case 6:  return F("Degrees");
       case 7:  return F("Hz");
-      case 8:  
+      case 8:
       case 9:  return F("kWh/MWh");
-      case 10: 
+      case 10:
       case 11: return F("kVArh/MVArh");
-      case 12: 
-      case 13: 
-      case 14: 
-      case 15: 
-      case 16: 
+      case 12:
+      case 13:
+      case 14:
+      case 15:
+      case 16:
       case 17: return F("W");
-      case 18: 
+      case 18:
       case 19: return F("A");
       case 20: return F("kWh");
       case 21: return F("kVArh");
@@ -707,13 +711,13 @@ const __FlashStringHelper* p078_getQueryValueString(uint8_t query, uint8_t model
   } else if (model == 2) { // SDM72D
     switch (query) {
       case 0: return F("W");
-      case 1: 
+      case 1:
       case 2: return F("kWh/MWh");
-      case 3: 
-      case 4: 
-      case 5: 
+      case 3:
+      case 4:
+      case 5:
       case 6: return F("kWh");
-      case 7: 
+      case 7:
       case 8: return F("W");
     }
   } else if (model == 3) { // DDM18SD
@@ -738,20 +742,20 @@ const __FlashStringHelper* p078_getQueryValueString(uint8_t query, uint8_t model
       case 6:
       case 7:
       case 8:  return F("W");
-      case 9:  
-      case 10: 
+      case 9:
+      case 10:
       case 11: return F("VA");
-      case 12: 
-      case 13: 
+      case 12:
+      case 13:
       case 14: return F("VAr");
-      case 15: 
-      case 16: 
+      case 15:
+      case 16:
       case 17: return F("cos-phi");
-      case 18: 
-      case 19: 
+      case 18:
+      case 19:
       case 20: return F("Degrees");
       case 21: return F("V");
-      case 22: 
+      case 22:
       case 23: return F("A");
       case 24: return F("W");
       case 25: return F("VA");
@@ -759,61 +763,61 @@ const __FlashStringHelper* p078_getQueryValueString(uint8_t query, uint8_t model
       case 27: return F("cos-phi");
       case 28: return F("Degrees");
       case 29: return F("Hz");
-      case 30: 
+      case 30:
       case 31: return F("kWh/MWh");
-      case 32: 
+      case 32:
       case 33: return F("kVArh/MVArh");
       case 34: return F("kVAh/MVAh");
       case 35: return F("Ah/kAh");
-      case 36: 
+      case 36:
       case 37: return F("W");
-      case 38: 
+      case 38:
       case 39: return F("VA");
-      case 40: 
+      case 40:
       case 41: return F("A");
-      case 42: 
-      case 43: 
-      case 44: 
+      case 42:
+      case 43:
+      case 44:
       case 45: return F("V");
       case 46: return F("A");
-      case 47: 
-      case 48: 
-      case 49: 
-      case 50: 
-      case 51: 
-      case 52: 
-      case 53: 
+      case 47:
+      case 48:
+      case 49:
+      case 50:
+      case 51:
+      case 52:
+      case 53:
       case 54: return F("%");
       case 55: return F("cos-phi");
-      case 56: 
-      case 57: 
-      case 58: 
-      case 59: 
-      case 60: 
+      case 56:
+      case 57:
+      case 58:
+      case 59:
+      case 60:
       case 61: return F("A");
-      case 62: 
-      case 63: 
-      case 64: 
+      case 62:
+      case 63:
+      case 64:
       case 65: return F("%");
       case 66: return F("kWh");
       case 67: return F("kVArh");
-      case 68: 
-      case 69: 
-      case 70: 
-      case 71: 
-      case 72: 
-      case 73: 
-      case 74: 
-      case 75: 
+      case 68:
+      case 69:
+      case 70:
+      case 71:
+      case 72:
+      case 73:
+      case 74:
+      case 75:
       case 76: return F("kWh");
-      case 77: 
-      case 78: 
-      case 79: 
-      case 80: 
-      case 81: 
-      case 82: 
-      case 83: 
-      case 84: 
+      case 77:
+      case 78:
+      case 79:
+      case 80:
+      case 81:
+      case 82:
+      case 83:
+      case 84:
       case 85: return F("kVArh");
     }
   }

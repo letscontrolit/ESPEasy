@@ -5,7 +5,9 @@
 #ifdef USES_P113
 
 # define P113_DEBUG       // Enable debugging output (INFO loglevel)
+# ifndef BUILD_NO_DEBUG
 # define P113_DEBUG_DEBUG // Enable extended debugging output (DEBUG loglevel)
+#endif
 
 # ifdef LIMIT_BUILD_SIZE
   #  ifdef P113_DEBUG_DEBUG
@@ -23,6 +25,7 @@ public:
                    int     timing,
                    bool    range);
   P113_data_struct() = delete;
+  virtual ~P113_data_struct() = default;
 
   bool     begin();
   bool     startRead();
@@ -35,10 +38,10 @@ private:
 
   SFEVL53L1X sensor;
 
-  uint8_t  i2cAddress;
+  const uint8_t  i2cAddress;
   bool     initState = false;
-  int      timing;
-  bool     range;
+  const int      timing;
+  const bool     range;
   bool     success    = false;
   bool     readActive = false;
   uint16_t distance = 0u;

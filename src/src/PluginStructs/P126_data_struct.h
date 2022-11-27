@@ -6,9 +6,9 @@
 
 # include <ShiftRegister74HC595_NonTemplate.h>
 
-# ifndef LIMIT_BUILD_SIZE
+# ifndef BUILD_NO_DEBUG
 #  define P126_DEBUG_LOG // Enable for some (extra) logging
-# endif // ifndef LIMIT_BUILD_SIZE
+# endif
 
 # define P126_CONFIG_CHIP_COUNT       PCONFIG(0)
 # define P126_CONFIG_SHOW_OFFSET      PCONFIG(1)
@@ -56,7 +56,7 @@ public:
                    uint8_t chipCount);
 
   P126_data_struct() = delete;
-  ~P126_data_struct();
+  virtual ~P126_data_struct();
 
   const bool isInitialized() const {
     return nullptr != shift;

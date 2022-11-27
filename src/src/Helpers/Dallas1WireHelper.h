@@ -1,7 +1,7 @@
 #ifndef HELPERS_DALLAS1WIREHELPER_H
 #define HELPERS_DALLAS1WIREHELPER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../DataTypes/TaskIndex.h"
 #include "../DataTypes/PluginID.h"
@@ -12,7 +12,10 @@
 // We use the "standard speed" timings, not the "Overdrive speed"
 
 
+
+
 struct Dallas_SensorData {
+
   bool check_sensor(int8_t gpio_rx,
                     int8_t gpio_tx,
                     int8_t res);
@@ -29,9 +32,13 @@ struct Dallas_SensorData {
 
   uint64_t addr              = 0;
   float    value             = 0.0f;
+  uint32_t start_read_failed = 0;  
+  uint32_t start_read_retry  = 0;  
   uint32_t read_success      = 0;
+  uint32_t read_retry        = 0;
   uint32_t read_failed       = 0;  
   uint8_t  actual_res        = 0;
+
   bool     measurementActive = false;
   bool     valueRead         = false;
   bool     parasitePowered   = false;
@@ -62,7 +69,7 @@ extern int64_t presence_end;   // End presence condition (minimal 60 usec, typ: 
 /*********************************************************************************************\
    Format 1-wire address
 \*********************************************************************************************/
-String Dallas_getModel(uint8_t family);
+const __FlashStringHelper * Dallas_getModel(uint8_t family);
 
 String Dallas_format_address(const uint8_t addr[]);
 
@@ -109,15 +116,19 @@ bool Dallas_readTemp(const uint8_t ROM[8],
                      int8_t        gpio_pin_rx,
                      int8_t        gpio_pin_tx);
 
+#ifdef USES_P080
 bool Dallas_readiButton(const uint8_t addr[8],
                         int8_t     gpio_pin_rx,
                         int8_t     gpio_pin_tx);
+#endif
 
+#ifdef USES_P100
 bool Dallas_readCounter(const uint8_t ROM[8],
                         float        *value,
                         int8_t        gpio_pin_rx,
                         int8_t        gpio_pin_tx,
                         uint8_t       counter);
+#endif
 
 /*********************************************************************************************\
 * Dallas Get Resolution
@@ -169,7 +180,7 @@ void    Dallas_write(uint8_t ByteToWrite,
 *  See https://github.com/espressif/arduino-esp32/issues/1335
 \*********************************************************************************************/
 uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx);
-uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start);
+uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint64_t& start);
 
 /*********************************************************************************************\
 *  Dallas Write bit

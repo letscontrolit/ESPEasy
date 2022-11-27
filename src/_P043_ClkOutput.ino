@@ -16,17 +16,6 @@
 # define P043_SENSOR_TYPE_INDEX  2
 # define P043_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P043_SENSOR_TYPE_INDEX)))
 
-String Plugin_043_valuename(byte value_nr, bool displayString) {
-  String name = F("Output");
-
-  if (value_nr != 0) {
-    name += String(value_nr + 1);
-  }
-    if (!displayString) {
-    name.toLowerCase();
-  }
-  return name;
-}
 
 boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -62,7 +51,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
         if (i < P043_NR_OUTPUT_VALUES) {
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_043_valuename(i, false),
+            Plugin_valuename(F("Output"), i, false),
             sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
           ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
         } else {
@@ -100,15 +89,21 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
         options[1] = F("Off");
         options[2] = F("On");
  
-        for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+        for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-        	addFormTextBox(String(F("Day,Time ")) + (x + 1), String(F("p043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
+        	addFormTextBox(
+            concat(F("Day,Time "), x + 1), 
+            concat(F("p043_clock"), x), 
+            timeLong2String(Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x)), 32);
           if (CONFIG_PIN1 >= 0) {
             addHtml(' ');
-            const uint8_t choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
-            addSelector(String(F("p043_state")) + (x), 3, options, nullptr, nullptr, choice);
+            const uint8_t choice = Cache.getTaskDevicePluginConfig(event->TaskIndex, x);
+            addSelector(concat(F("p043_state"), x), 3, options, nullptr, nullptr, choice);
           }
-          else addFormNumericBox(String(F("Value")) + (x + 1), String(F("p043_state")) + (x), ExtraTaskSettings.TaskDevicePluginConfig[x]);
+          else addFormNumericBox(
+            concat(F("Value"), x + 1), 
+            concat(F("p043_state"), x), 
+            Cache.getTaskDevicePluginConfig(event->TaskIndex, x));
         }
         success = true;
         break;
@@ -116,16 +111,11 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+        for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-          String argc = F("p043_clock");
-          argc += x;
-          String plugin1 = webArg(argc);
+          const String plugin1 = webArg(concat(F("p043_clock"), x));
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
-
-          argc = F("p043_state");
-          argc += x;
-          String plugin2 = webArg(argc);
+          const String plugin2 = webArg(concat(F("p043_state"), x));
           ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();
         }
         success = true;
@@ -140,15 +130,14 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_CLOCK_IN:
       {
-        LoadTaskSettings(event->TaskIndex);
         for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
           unsigned long clockEvent = (unsigned long)node_time.minute() % 10 | (unsigned long)(node_time.minute() / 10) << 4 | (unsigned long)(node_time.hour() % 10) << 8 | (unsigned long)(node_time.hour() / 10) << 12 | (unsigned long)node_time.weekday() << 16;
-          unsigned long clockSet = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
-
+          unsigned long clockSet = Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x);
+          
           if (matchClockEvent(clockEvent,clockSet))
           {
-            uint8_t state = ExtraTaskSettings.TaskDevicePluginConfig[x];
+            uint8_t state = Cache.getTaskDevicePluginConfig(event->TaskIndex, x);
             if (state != 0) 
             {
               if (CONFIG_PIN1 >= 0) { // if GPIO is specified, use the old behavior

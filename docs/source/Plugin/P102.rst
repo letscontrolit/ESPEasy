@@ -99,6 +99,12 @@ Active Energy
 * Resolution: 1Wh
 * Measurement accuracy: 0.5%
 
+Sensor
+^^^^^^
+
+See: :ref:`SerialHelper_page`
+
+
 .. Events
 .. ~~~~~~
 

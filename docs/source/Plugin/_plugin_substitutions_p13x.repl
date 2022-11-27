@@ -1,0 +1,64 @@
+.. |P131_name| replace:: :cyan:`NeoPixel Matrix`
+.. |P131_type| replace:: :cyan:`Display`
+.. |P131_typename| replace:: :cyan:`Display - NeoPixel Matrix`
+.. |P131_porttype| replace:: `.`
+.. |P131_status| replace:: :yellow:`NEOPIXEL`
+.. |P131_github| replace:: P131_NeoPixelMatrix.ino
+.. _P131_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P131_NeoPixelMatrix.ino
+.. |P131_usedby| replace:: `.`
+.. |P131_shortinfo| replace:: `NeoPixel Matrix display`
+.. |P131_maintainer| replace:: `tonhuisman`
+.. |P131_compileinfo| replace:: `.`
+.. |P131_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_NeoMatrix`
+
+.. |P132_name| replace:: :cyan:`INA3221`
+.. |P132_type| replace:: :cyan:`Energy (DC)`
+.. |P132_typename| replace:: :cyan:`Energy (DC) - INA3221`
+.. |P132_porttype| replace:: `.`
+.. |P132_status| replace:: :yellow:`ENERGY`
+.. |P132_github| replace:: P132_INA3221.ino
+.. _P132_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P132_INA3221.ino
+.. |P132_usedby| replace:: `.`
+.. |P132_shortinfo| replace:: `3-channel I2C DC Voltage/Current sensor`
+.. |P132_maintainer| replace:: `tonhuisman`
+.. |P132_compileinfo| replace:: `.`
+.. |P132_usedlibraries| replace:: `.`
+
+.. |P133_name| replace:: :cyan:`LTR390 UV`
+.. |P133_type| replace:: :cyan:`UV`
+.. |P133_typename| replace:: :cyan:`UV - LTR390`
+.. |P133_porttype| replace:: `.`
+.. |P133_status| replace:: :yellow:`COLLECTION E`
+.. |P133_github| replace:: P133_LTR390.ino
+.. _P133_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P133_LTR390.ino
+.. |P133_usedby| replace:: `.`
+.. |P133_shortinfo| replace:: `Ultra violet and Ambient sensor`
+.. |P133_maintainer| replace:: `tonhuisman`
+.. |P133_compileinfo| replace:: `.`
+.. |P133_usedlibraries| replace:: `https://github.com/RAKWireless/RAK12019_LTR390 (modified local copy)`
+
+.. |P134_name| replace:: :cyan:`A02YYUW`
+.. |P134_type| replace:: :cyan:`Distance`
+.. |P134_typename| replace:: :cyan:`Distance - A02YYUW`
+.. |P134_porttype| replace:: `.`
+.. |P134_status| replace:: :yellow:`COLLECTION A`
+.. |P134_github| replace:: P134_A02YYUW.ino
+.. _P134_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P134_A02YYUW.ino
+.. |P134_usedby| replace:: `.`
+.. |P134_shortinfo| replace:: `Ultrasonic distance sensor`
+.. |P134_maintainer| replace:: `tonhuisman`
+.. |P134_compileinfo| replace:: `.`
+.. |P134_usedlibraries| replace:: `ESPEasy Serial`
+
+.. |P135_name| replace:: :cyan:`CO2 SCD4x`
+.. |P135_type| replace:: :cyan:`Gases`
+.. |P135_typename| replace:: :cyan:`Gases - CO2 SCD4x`
+.. |P135_porttype| replace:: `.`
+.. |P135_status| replace:: :yellow:`COLLECTION E` :yellow:`CLIMATE`
+.. |P135_github| replace:: P135_SCD4x.ino
+.. _P135_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P135_SCD4x.ino
+.. |P135_usedby| replace:: `.`
+.. |P135_shortinfo| replace:: `CO2, Humidity and Temperature sensor`
+.. |P135_maintainer| replace:: `tonhuisman`
+.. |P135_compileinfo| replace:: `.`
+.. |P135_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library`

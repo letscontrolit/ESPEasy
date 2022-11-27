@@ -169,7 +169,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
 
       {
         # define P098_PWM_MODE_TYPES  static_cast<int>(P098_config_struct::PWM_mode_type::MAX_TYPE)
-        String options[P098_PWM_MODE_TYPES];
+        const __FlashStringHelper * options[P098_PWM_MODE_TYPES];
         int optionValues[P098_PWM_MODE_TYPES];
 
         for (int i = 0; i < P098_PWM_MODE_TYPES; ++i) {
@@ -388,28 +388,28 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         const String command = parseString(string, 1);
 
         if (command.startsWith(F("pwmmotor"))) {
-          if (command == F("pwmmotorhome")) {
+          if (command.equals(F("pwmmotorhome"))) {
             // Run the motor in reverse till limit A switch is reached
             P098_data->findHome();
             success = true;
-          } else if (command == F("pwmmotorend")) {
+          } else if (command.equals(F("pwmmotorend"))) {
             // Run the motor forward till limit B switch is reached
             P098_data->moveForward(-1);
             success = true;
-          } else if (command == F("pwmmotorforward")) {
+          } else if (command.equals(F("pwmmotorforward"))) {
             // Run the motor N steps forward
             // N <= 0: Move till limit B switch is reached
             P098_data->moveForward(event->Par1);
             success = true;
-          } else if (command == F("pwmmotorreverse")) {
+          } else if (command.equals(F("pwmmotorreverse"))) {
             // Run the motor N steps in reverse
             P098_data->moveReverse(event->Par1);
             success = true;
-          } else if (command == F("pwmmotorstop")) {
+          } else if (command.equals(F("pwmmotorstop"))) {
             // Run the motor N steps in reverse
             P098_data->stop();
             success = true;
-          } else if (command == F("pwmmotormovetopos")) {
+          } else if (command.equals(F("pwmmotormovetopos"))) {
             // Run the motor in the required direction to position N
             // What to do when position is unknown?
             if (!P098_data->moveToPos(event->Par1)) {

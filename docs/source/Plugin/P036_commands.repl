@@ -12,6 +12,7 @@
         * ``low`` will dim the display to low.
         * ``med`` will dim the display to medium.
         * ``high`` will set the brightness to maximum.
+        * ``user`` will set the contrast, precharge and comdetect to user defined values.
 
         ","
         OLED displays will age quite fast, so it is not adviced to run them continously at max brightness.
@@ -21,6 +22,9 @@
         
         The display controller itself does support more brightness levels, but these are chosen to give noticable change in brightness levels and also to help in choosing the best values for the 2 brightness control registers.
         As there are 2 brightness control registers, there is some overlap in their range, but some combinations may lead to issues like coil whining noise or sometimes not even working displays as not all of these displays are wired to support both controls to be used.        
+
+        For the parameter of the user setting refer to the data sheet of the display.
+        An example for very low brightness with an user setting is ``<oledframedcmd,display,user,100,0,64>``.
         "
         "
         ``oledframedcmd,<line>,<text>``
@@ -29,6 +33,7 @@
 
         The <text> parameter must be a single command parameter. 
         Meaning, it must be wrapped in quotes when using a space or comma as text.
+        A split token ``<|>`` can be used to display the line splitted, one part on the left the other one on the right side of the display.
 
         If double quote characters are needed, wrap the parameter in single quotes or back quotes.
 
@@ -49,4 +54,21 @@
         When omitting <framenr>, or providing 0, the next frame is displayed.
 
         When the display is off, because a 'Display Timeout' is set and the timer has expired or it is turned off by the off command (see above), then it is turned on, and, when set, the timer is started again.
+        "
+        "
+        ``oledframedcmd,linecount,<1..4>``
+        ","
+        This command changes the number of lines in each frame. When the next frame is to be displayed, the frames are recalculated and the sequence is restarted at the first frame.
+
+        If Generate events for 'Linecount' is selected, a ``<taskname#linecount=<lines>`` event is generated on initialization of the plugin and when changing the setting.
+        "
+        "
+        ``oledframedcmd,leftalign,<0|1>``
+        ","
+        Set the global Left-align option for content off (0) or on (1).
+        "
+        "
+        ``oledframedcmd,align,<0|1|2>``
+        ","
+        Set the global align option for content to centre (0), left (1) or right (2).
         "

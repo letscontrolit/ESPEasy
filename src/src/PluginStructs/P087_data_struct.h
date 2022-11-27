@@ -40,16 +40,17 @@ enum P087_Match_Type {
 struct P087_data_struct : public PluginTaskData_base {
 public:
 
-  P087_data_struct();
+  P087_data_struct() = default;
 
-  ~P087_data_struct();
+  virtual ~P087_data_struct();
 
   void reset();
 
   bool init(ESPEasySerialPort port, 
             const int16_t serial_rx,
             const int16_t serial_tx,
-            unsigned long baudrate);
+            unsigned long baudrate,
+            uint8_t       config);
 
   // Called after loading the config from the settings.
   // Will interpret some data and load caches.

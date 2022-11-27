@@ -1,5 +1,7 @@
 #include "../Commands/Blynk.h"
 
+#ifdef USES_C012
+
 #include "../Commands/Common.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
@@ -12,7 +14,6 @@
 
 #include "../../ESPEasy_fdwdecl.h"
 
-#ifdef USES_C012
 
 controllerIndex_t firstEnabledBlynk_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
@@ -112,7 +113,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
   bool success = !MustCheckReply;
 
   if (MustCheckReply || data) {
-    unsigned long timer = millis() + 200;
+    unsigned long timer = millis() + ClientTimeout;
 
     while (!client_available(client) && !timeOutReached(timer)) {
       delay(1);
@@ -132,7 +133,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       #endif
 
       // success ?
-      if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
+      if (line.substring(0, 15).equals(F("HTTP/1.1 200 OK"))) {
         #ifndef BUILD_NO_DEBUG
         strcpy_P(log, PSTR("HTTP : Success"));
         #endif
@@ -140,10 +141,10 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
         if (!data) { success = true; }
       }
       #ifndef BUILD_NO_DEBUG
-      else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
+      else if (line.substring(0, 24).equals(F("HTTP/1.1 400 Bad Request"))) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
-      else if (line.substring(0, 25) == F("HTTP/1.1 401 Unauthorized")) {
+      else if (line.substring(0, 25).equals(F("HTTP/1.1 401 Unauthorized"))) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
       addLog(LOG_LEVEL_DEBUG, log);
@@ -170,13 +171,15 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       delay(0);
     }
   }
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (012)"));
+  #endif
 
   client.flush();
   client.stop();
 
   // important - backgroundtasks - free mem
-  unsigned long timer = millis() + ClientTimeout;
+  unsigned long timer = millis() + 10;
 
   while (!timeOutReached(timer)) {
     backgroundtasks();

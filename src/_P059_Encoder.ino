@@ -76,9 +76,10 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
           PCONFIG_LONG(1) = 100;
 
         {
-          const __FlashStringHelper * options[3] = { F("1 pulse per cycle"), F("2 pulses per cycle"), F("4 pulses per cycle") };
+          const __FlashStringHelper * options[3] = { F("1"), F("2"), F("4") }; 
           int optionValues[3] = { 1, 2, 4 };
           addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, PCONFIG(0));
+          addUnit(F("pulses per cycle"));
         }
 
         addFormNumericBox(F("Limit min."), F("qei_limitmin"), PCONFIG_LONG(0));
@@ -183,7 +184,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
         if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
             String command = parseString(string, 1);
-            if (command == F("encwrite"))
+            if (command.equals(F("encwrite")))
             {
               if (event->Par1 >= 0)
               {

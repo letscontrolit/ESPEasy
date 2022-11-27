@@ -3,8 +3,24 @@
 #ifdef USES_P004
 
 
-P004_data_struct::P004_data_struct(int8_t pin_rx, int8_t pin_tx, const uint8_t addr[], uint8_t res) : _gpio_rx(pin_rx), _gpio_tx(pin_tx), _res(res)
+void P004_data_struct::init(int8_t pin_rx, int8_t pin_tx, const uint8_t addr[], uint8_t res)
 {
+  _gpio_rx = pin_rx;
+  _gpio_tx = pin_tx;
+  _res = res;
+
+  // Explicitly set the pinMode using the "slow" pinMode function
+  // This way we know for sure the state of any pull-up or -down resistor is known.
+  pinMode(_gpio_rx, INPUT);
+
+  // The Shelly 1 temp. addon uses separate
+  // input and output pins, and therefore
+  // doesn't switch between input and output
+  // when running.
+  if (_gpio_rx != _gpio_tx) {
+    pinMode(_gpio_tx, OUTPUT);
+  }
+
   if ((_res < 9) || (_res > 12)) { _res = 12; }
 
   add_addr(addr, 0);
@@ -43,10 +59,7 @@ bool P004_data_struct::initiate_read() {
         *   11 bits resolution -> 375 ms
         *   12 bits resolution -> 750 ms
         \*********************************************************************************************/
-        uint8_t res = _res;
-
-        if ((res < 9) || (res > 12)) { res = 12; }
-        _timer = millis() + (800 / (1 << (12 - res)));
+        _timer = millis() + (800 / (1 << (12 - _res)));
       }
       _sensors[i].measurementActive = true;
     }

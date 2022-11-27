@@ -2,20 +2,24 @@
 
 
 #include "../../ESPEasy_common.h"
+#ifndef BUILD_MINIMAL_OTA
 
 #include "../DataStructs/CRCStruct.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/ExtraTaskSettingsStruct.h"
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/LogStruct.h"
+#if FEATURE_ESPEASY_P2P
 #include "../DataStructs/NodeStruct.h"
-#include "../DataStructs/NodeStruct.h"
+#endif
 #include "../DataStructs/PortStatusStruct.h"
 #include "../DataStructs/ProtocolStruct.h"
+#if FEATURE_CUSTOM_PROVISIONING
+#include "../DataStructs/ProvisioningStruct.h"
+#endif
 #include "../DataStructs/RTCStruct.h"
 #include "../DataStructs/SecurityStruct.h"
 #include "../DataStructs/SettingsStruct.h"
@@ -37,10 +41,10 @@
 #include "../ControllerQueue/C016_queue_element.h"
 #endif
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 #include "../DataStructs/NotificationStruct.h"
 #include "../DataStructs/NotificationSettingsStruct.h"
-#endif
+#endif // if FEATURE_NOTIFIER
 
 
 // ********************************************************************************
@@ -72,17 +76,20 @@ void run_compiletime_checks() {
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   #ifdef ESP32
-  const unsigned int SettingsStructSize = (316 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (332 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  const unsigned int SettingsStructSize = (292 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (308 + 84 * TASKS_MAX);
+  #endif
+  #if FEATURE_CUSTOM_PROVISIONING
+  check_size<ProvisioningStruct,                    256u>();  
   #endif
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   check_size<NotificationSettingsStruct,            996u>();
-  #endif
-  check_size<ExtraTaskSettingsStruct,               472u>();
+  #endif // if FEATURE_NOTIFIER
+  check_size<ExtraTaskSettingsStruct,               536u>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
   check_size<EventStruct,                           116u>(); // Is not stored
@@ -102,17 +109,13 @@ void run_compiletime_checks() {
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          8u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
+  #endif // if FEATURE_NOTIFIER
+  #if FEATURE_ESPEASY_P2P
+  check_size<NodeStruct,                            66u>();
   #endif
-  #if ESP_IDF_VERSION_MAJOR > 3
-  // String class has increased with 4 bytes
-  check_size<NodeStruct,                            32u>();
-  #else
-  check_size<NodeStruct,                            28u>();
-  #endif
-
-  check_size<systemTimerStruct,                     24u>();
+  check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
@@ -126,7 +129,7 @@ void run_compiletime_checks() {
   #endif
 
 
-  #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
+  #if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif
 
@@ -249,3 +252,4 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   #endif
   return err;
 }
+#endif

@@ -114,7 +114,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                    F("TM1637 - 4 digit (dots)"),
                                                    F("TM1637 - 6 digit"),
                                                    F("MAX7219 - 8 digit") };
-        addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, nullptr, PCONFIG(0));
+        addFormSelector(F("Display Type"), F("displtype"), 4, displtype, nullptr, PCONFIG(0));
       }
       {
         const __FlashStringHelper *displout[] = { F("Manual"),
@@ -123,10 +123,10 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                   F("Clock 12h - Blink"),
                                                   F("Clock 12h - No Blink"),
                                                   F("Date") };
-        addFormSelector(F("Display Output"), F("plugin_073_displout"), 6, displout, nullptr, PCONFIG(1));
+        addFormSelector(F("Display Output"), F("displout"), 6, displout, nullptr, PCONFIG(1));
       }
 
-      addFormNumericBox(F("Brightness"), F("plugin_073_brightness"), PCONFIG(2), 0, 15);
+      addFormNumericBox(F("Brightness"), F("brightness"), PCONFIG(2), 0, 15);
       addUnit(F("0..15"));
 
       # ifdef P073_EXTRA_FONTS
@@ -135,16 +135,16 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                   F("Siekoo"),
                                                   F("Siekoo with uppercase 'CHNORUX'"),
                                                   F("dSEG7") };
-        addFormSelector(F("Font set"), F("plugin_073_fontset"), 4, fontset, nullptr, PCONFIG(4));
+        addFormSelector(F("Font set"), F("fontset"), 4, fontset, nullptr, PCONFIG(4));
         addFormNote(F("Check documentation for examples of the font sets."));
       }
       # endif // P073_EXTRA_FONTS
 
       addFormSubHeader(F("Options"));
 
-      addFormCheckBox(F("Text show periods as dot"),    F("plugin_073_periods"),     bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD));
+      addFormCheckBox(F("Text show periods as dot"),    F("periods"),     bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD));
 
-      addFormCheckBox(F("Hide &deg; for Temperatures"), F("plugin_073_hide_degree"), bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE));
+      addFormCheckBox(F("Hide &deg; for Temperatures"), F("hide_degree"), bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE));
       # ifdef P073_7DDT_COMMAND
       addFormNote(F("Commands 7dt,&lt;temp&gt; and 7ddt,&lt;temp1&gt;,&lt;temp2&gt;"));
       # else // ifdef P073_7DDT_COMMAND
@@ -152,38 +152,38 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       # endif // P073_7DDT_COMMAND
 
       # ifdef P073_SCROLL_TEXT
-      addFormCheckBox(F("Scroll text &gt; display width"), F("plugin_073_scroll_text"), bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT));
-      addFormCheckBox(F("Scroll text in from right"),      F("plugin_073_scroll_full"), bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL));
+      addFormCheckBox(F("Scroll text &gt; display width"), F("scroll_text"), bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT));
+      addFormCheckBox(F("Scroll text in from right"),      F("scroll_full"), bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL));
 
       if (PCONFIG(3) == 0) { PCONFIG(3) = 10; }
-      addFormNumericBox(F("Scroll speed (0.1 sec/step)"), F("plugin_073_scrollspeed"), PCONFIG(3), 1, 600);
+      addFormNumericBox(F("Scroll speed (0.1 sec/step)"), F("scrollspeed"), PCONFIG(3), 1, 600);
       addUnit(F("1..600 = 0.1..60 sec/step"));
       # endif // P073_SCROLL_TEXT
 
       addFormSubHeader(F("Options for MAX7219 - 8 digit"));
 
       bool bRightAlign = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
-      addFormCheckBox(F("Right-align Temperature (7dt)"), F("plugin_073_temp_rightalign"), bRightAlign);
+      addFormCheckBox(F("Right-align Temperature (7dt)"), F("temp_rightalign"), bRightAlign);
 
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      PCONFIG(0) = getFormItemInt(F("plugin_073_displtype"));
-      PCONFIG(1) = getFormItemInt(F("plugin_073_displout"));
-      PCONFIG(2) = getFormItemInt(F("plugin_073_brightness"));
+      PCONFIG(0) = getFormItemInt(F("displtype"));
+      PCONFIG(1) = getFormItemInt(F("displout"));
+      PCONFIG(2) = getFormItemInt(F("brightness"));
       uint32_t lSettings = 0;
-      bitWrite(lSettings, P073_OPTION_PERIOD,     isFormItemChecked(F("plugin_073_periods")));
-      bitWrite(lSettings, P073_OPTION_HIDEDEGREE, isFormItemChecked(F("plugin_073_hide_degree")));
-      bitWrite(lSettings, P073_OPTION_RIGHTALIGN, isFormItemChecked(F("plugin_073_temp_rightalign")));
+      bitWrite(lSettings, P073_OPTION_PERIOD,     isFormItemChecked(F("periods")));
+      bitWrite(lSettings, P073_OPTION_HIDEDEGREE, isFormItemChecked(F("hide_degree")));
+      bitWrite(lSettings, P073_OPTION_RIGHTALIGN, isFormItemChecked(F("temp_rightalign")));
       # ifdef P073_SCROLL_TEXT
-      bitWrite(lSettings, P073_OPTION_SCROLLTEXT, isFormItemChecked(F("plugin_073_scroll_text")));
-      bitWrite(lSettings, P073_OPTION_SCROLLFULL, isFormItemChecked(F("plugin_073_scroll_full")));
-      PCONFIG(3) = getFormItemInt(F("plugin_073_scrollspeed"));
+      bitWrite(lSettings, P073_OPTION_SCROLLTEXT, isFormItemChecked(F("scroll_text")));
+      bitWrite(lSettings, P073_OPTION_SCROLLFULL, isFormItemChecked(F("scroll_full")));
+      PCONFIG(3) = getFormItemInt(F("scrollspeed"));
       # endif // P073_SCROLL_TEXT
       # ifdef P073_EXTRA_FONTS
-      PCONFIG(4) = getFormItemInt(F("plugin_073_fontset"));
+      PCONFIG(4) = getFormItemInt(F("fontset"));
       # endif // P073_EXTRA_FONTS
       PCONFIG_LONG(0) = lSettings;
 
@@ -201,54 +201,34 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P073_data) {
-        return success;
-      }
+      if (nullptr != P073_data) {
+        P073_data->init(event);
 
-      // FIXME tonhuisman: Move to constructor?!
-      P073_data->pin1         = CONFIG_PIN1;
-      P073_data->pin2         = CONFIG_PIN2;
-      P073_data->pin3         = CONFIG_PIN3;
-      P073_data->displayModel = PCONFIG(0);
-      P073_data->output       = PCONFIG(1);
-      P073_data->brightness   = PCONFIG(2);
-      P073_data->periods      = bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD);
-      P073_data->hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
-      # ifdef P073_SCROLL_TEXT
-      P073_data->txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
-      P073_data->scrollFull   = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL);
-      P073_data->setScrollSpeed(PCONFIG(3));
-      # endif // P073_SCROLL_TEXT
-      P073_data->rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
-      P073_data->timesep               = true;
-      # ifdef P073_EXTRA_FONTS
-      P073_data->fontset = PCONFIG(4);
-      # endif // P073_EXTRA_FONTS
+        switch (P073_data->displayModel) {
+          case P073_TM1637_4DGTCOLON:
+          case P073_TM1637_4DGTDOTS:
+          case P073_TM1637_6DGT: {
+            tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, PCONFIG(2) / 2, true);
 
-      switch (P073_data->displayModel) {
-        case P073_TM1637_4DGTCOLON:
-        case P073_TM1637_4DGTDOTS:
-        case P073_TM1637_6DGT: {
-          tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
-          tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, PCONFIG(2) / 2, true);
-
-          if (PCONFIG(1) == P073_DISP_MANUAL) {
-            tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            if (PCONFIG(1) == P073_DISP_MANUAL) {
+              tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            }
+            break;
           }
-          break;
-        }
-        case P073_MAX7219_8DGT: {
-          max7219_InitDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
-          delay(10); // small poweroff/poweron delay
-          max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
+          case P073_MAX7219_8DGT: {
+            max7219_InitDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            delay(10); // small poweroff/poweron delay
+            max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
 
-          if (PCONFIG(1) == P073_DISP_MANUAL) {
-            max7219_ClearDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            if (PCONFIG(1) == P073_DISP_MANUAL) {
+              max7219_ClearDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            }
+            break;
           }
-          break;
         }
+        success = true;
       }
-      success = true;
       break;
     }
 
@@ -356,44 +336,46 @@ bool p073_plugin_write(struct EventStruct *event,
     return false;
   }
 
-  String cmd  = parseString(string, 1);
-  String text = parseStringToEndKeepCase(string, 2);
+  const String cmd  = parseString(string, 1);
+  if (cmd.length() < 3 || cmd[0] != '7') return false;
 
-  if (cmd.equals("7dn")) {
+  const String text = parseStringToEndKeepCase(string, 2);
+
+  if (cmd.equals(F("7dn"))) {
     return p073_plugin_write_7dn(event, text);
-  } else if (cmd.equals("7dt")) {
+  } else if (cmd.equals(F("7dt"))) {
     return p073_plugin_write_7dt(event, text);
   # ifdef P073_7DDT_COMMAND
-  } else if (cmd.equals("7ddt")) {
+  } else if (cmd.equals(F("7ddt"))) {
     return p073_plugin_write_7ddt(event, text);
   # endif // ifdef P073_7DDT_COMMAND
-  } else if (cmd.equals("7dst")) {
+  } else if (cmd.equals(F("7dst"))) {
     return p073_plugin_write_7dst(event);
-  } else if (cmd.equals("7dsd")) {
+  } else if (cmd.equals(F("7dsd"))) {
     return p073_plugin_write_7dsd(event);
-  } else if (cmd.equals("7dtext")) {
+  } else if (cmd.equals(F("7dtext"))) {
     return p073_plugin_write_7dtext(event, text);
   # ifdef P073_EXTRA_FONTS
-  } else if (cmd.equals("7dfont")) {
+  } else if (cmd.equals(F("7dfont"))) {
     return p073_plugin_write_7dfont(event, text);
   # endif // P073_EXTRA_FONTS
   # ifdef P073_7DBIN_COMMAND
-  } else if (cmd.equals("7dbin")) {
+  } else if (cmd.equals(F("7dbin"))) {
     return p073_plugin_write_7dbin(event, text);
   # endif // P073_7DBIN_COMMAND
   } else {
     bool p073_validcmd  = false;
     bool p073_displayon = false;
 
-    if (cmd.equals("7don")) {
+    if (cmd.equals(F("7don"))) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
       p073_displayon = true;
       p073_validcmd  = true;
-    } else if (cmd.equals("7doff")) {
+    } else if (cmd.equals(F("7doff"))) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
       p073_displayon = false;
       p073_validcmd  = true;
-    } else if (cmd.equals("7db")) {
+    } else if (cmd.equals(F("7db"))) {
       if ((event->Par1 >= 0) && (event->Par1 < 16)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("7DGT : Brightness=");
@@ -508,11 +490,11 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
     return false;
   }
 
-  double p073_temptemp    = 0;
+  float p073_temptemp    = 0;
   bool   p073_tempflagdot = false;
 
   if (!text.isEmpty()) {
-    validDoubleFromString(text, p073_temptemp);
+    validFloatFromString(text, p073_temptemp);
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -530,7 +512,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
         P073_data->FillBufferWithDash();
       } else {
         if ((p073_temptemp < 100) && (p073_temptemp > -10)) {
-          p073_temptemp    = round(p073_temptemp * 10.0);
+          p073_temptemp    = roundf(p073_temptemp * 10.0f);
           p073_tempflagdot = true;
         }
         P073_data->FillBufferWithTemp(p073_temptemp);
@@ -549,7 +531,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
     }
     case P073_MAX7219_8DGT:
     {
-      p073_temptemp = round(p073_temptemp * 10.);
+      p073_temptemp = roundf(p073_temptemp * 10.0f);
       P073_data->FillBufferWithTemp(p073_temptemp);
 
       # ifdef P073_DEBUG
@@ -581,15 +563,15 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
     return false;
   }
 
-  double p073_lefttemp    = 0.0;
-  double p073_righttemp   = 0.0;
+  float p073_lefttemp    = 0.0f;
+  float p073_righttemp   = 0.0f;
   bool   p073_tempflagdot = false;
 
   if (!text.isEmpty()) {
-    validDoubleFromString(parseString(text, 1), p073_lefttemp);
+    validFloatFromString(parseString(text, 1), p073_lefttemp);
 
     if (text.indexOf(',') > -1) {
-      validDoubleFromString(parseString(text, 2), p073_righttemp);
+      validFloatFromString(parseString(text, 2), p073_righttemp);
     }
   }
 
@@ -619,25 +601,25 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
     {
       uint8_t firstDot       = -1; // No decimals is no dots
       uint8_t secondDot      = -1;
-      double  hideFactor     = P073_data->hideDegree ? 10.0 : 1.0;
+      float   hideFactor     = P073_data->hideDegree ? 10.0f : 1.0f;
       bool    firstDecimals  = false;
       bool    secondDecimals = false;
 
-      if ((p073_lefttemp > 999.99 * hideFactor) || (p073_lefttemp < -99.99 * hideFactor)) {
-        p073_lefttemp = -101.0 * hideFactor; // Triggers on -100
+      if ((p073_lefttemp > 999.99f * hideFactor) || (p073_lefttemp < -99.99f * hideFactor)) {
+        p073_lefttemp = -101.0f * hideFactor; // Triggers on -100
       } else {
-        if ((p073_lefttemp < 100.0 * hideFactor) && (p073_lefttemp > -10.0 * hideFactor)) {
-          p073_lefttemp = round(p073_lefttemp * 10.0);
+        if ((p073_lefttemp < 100.0f * hideFactor) && (p073_lefttemp > -10.0f * hideFactor)) {
+          p073_lefttemp = roundf(p073_lefttemp * 10.0f);
           firstDot      = P073_data->hideDegree ? 2 : 1;
           firstDecimals = true;
         }
       }
 
-      if ((p073_righttemp > 999.99 * hideFactor) || (p073_righttemp < -99.99 * hideFactor)) {
-        p073_righttemp = -101.0 * hideFactor;
+      if ((p073_righttemp > 999.99f * hideFactor) || (p073_righttemp < -99.99f * hideFactor)) {
+        p073_righttemp = -101.0f * hideFactor;
       } else {
-        if ((p073_righttemp < 100.0 * hideFactor) && (p073_righttemp > -10.0 * hideFactor)) {
-          p073_righttemp = round(p073_righttemp * 10.0);
+        if ((p073_righttemp < 100.0f * hideFactor) && (p073_righttemp > -10.0f * hideFactor)) {
+          p073_righttemp = roundf(p073_righttemp * 10.0f);
           secondDot      = P073_data->hideDegree ? 6 : 5;
           secondDecimals = true;
         }
@@ -818,13 +800,13 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
     String fontArg = parseString(text, 1);
     int    fontNr  = -1;
 
-    if ((fontArg == F("default")) || (fontArg == F("7dgt"))) {
+    if ((fontArg.equals(F("default"))) || (fontArg.equals(F("7dgt")))) {
       fontNr = 0;
-    } else if (fontArg == F("siekoo")) {
+    } else if (fontArg.equals(F("siekoo"))) {
       fontNr = 1;
-    } else if (fontArg == F("siekoo_upper")) {
+    } else if (fontArg.equals(F("siekoo_upper"))) {
       fontNr = 2;
-    } else if (fontArg == F("dseg7")) {
+    } else if (fontArg.equals(F("dseg7"))) {
       fontNr = 3;
     } else if (!validIntFromString(text, fontNr)) {
       fontNr = -1; // reset if invalid
@@ -1341,7 +1323,7 @@ void max7219_ShowTime(struct EventStruct *event,
 
   const uint8_t idx_list[] = { 7, 6, 4, 3, 1, 0 }; // Digits in reversed order, as the loop is backward
 
-  for (uint8_t i = 5; i >= 0; i--) {
+  for (int8_t i = 5; i >= 0; i--) {
     max7219_SetDigit(event, din_pin, clk_pin, cs_pin, idx_list[i], P073_data->showbuffer[i], false);
   }
 

@@ -1,0 +1,48 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    This plugin allows dynamic configuration of the command-trigger. Available triggers are:
+
+    * ``pcd8544``
+    * ``lcd``
+
+    The default trigger is ``pcd8544``
+    ","
+    Some commands are postfixed with ``cmd``, indicating device specific commands. Not device-specific commands are genericly applicable to all *Adafruit Graphics* enabled devices, using the ESPEasy ``AdafruitGFX_helper`` module.
+
+    Commands can be sent from several sources, from the Tools page using the Submit button, from Rules, and via the webbrowser address bar or other applications that can open an url.
+
+    When using the Tools or Rules route, the commands shown here can be used as displayed, when using an url, a command should be prefixed with: ``http://<esp-ip-address>/control?cmd=``
+    "
+    "
+    | ``pcd8544cmd,off``
+    ","
+    | Switch the display off. As this hardware doesn't have the option to be turned off, the display will be cleared. If the Backlight is connected and configured, that will also be turned off.
+    "
+    "
+    | ``pcd8544cmd,on``
+    ","
+    | Switch the display on (after it was turned off). Also turns on the backlight if that is connected and configured. Any content that was displayed when the display was turned off is *not* restored.
+    "
+    "
+    | ``pcd8544cmd,clear``
+    ","
+    | Clear the display, using the default background color.
+    "
+    "
+    | ``pcd8544cmd,backlight,<percentage>``
+    ","
+    | Set the level of backlight brightness, from 0..100%. Only applicable if a backlight pin is configured.
+    "
+    "
+    | ``pcd8544cmd,contrast,<percentage>``
+    ","
+    | Set the level of display contrast, from 0..100%.
+    "
+    "
+    | ``pcd8544cmd,inv[,<0|1>]``
+    ","
+    | Set the state of Inverted display, 0 = normal, 1 = inverted. When no value is supplied, the state is inverted.
+    "

@@ -8,12 +8,12 @@
 #include <memory> // For std::shared_ptr
 #include <new> // for std::nothrow
 
+#include <IPAddress.h>
+#include <WiFiClient.h>
+#include <WiFiUdp.h>
+
 #include "../../ESPEasy_common.h"
 #include "../Globals/Plugins.h"
-
-class IPAddress;
-class WiFiClient;
-class WiFiUDP;
 
 // Minimum delay between messages for a controller to send in msec.
 #ifndef CONTROLLER_DELAY_QUEUE_DELAY_MAX
@@ -109,7 +109,9 @@ struct ControllerSettingsStruct
 
   bool      checkHostReachable(bool quick);
 
+  #if FEATURE_HTTP_CLIENT
   bool      connectToHost(WiFiClient& client);
+  #endif // FEATURE_HTTP_CLIENT
 
   bool      beginPacket(WiFiUDP& client);
 
@@ -147,7 +149,7 @@ struct ControllerSettingsStruct
   void      useLocalSystemTime(bool value);
   
 
-  boolean      UseDNS;
+  bool         UseDNS;
   uint8_t      IP[4];
   unsigned int Port;
   char         HostName[65];

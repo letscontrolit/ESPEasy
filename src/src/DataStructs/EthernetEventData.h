@@ -1,7 +1,13 @@
 #ifndef DATASTRUCTS_ETHERNETEVENTDATA_H
 #define DATASTRUCTS_ETHERNETEVENTDATA_H
 
+#include "../../ESPEasy_common.h"
+
+#if FEATURE_ETHERNET
+
 #include "../Helpers/LongTermTimer.h"
+
+
 
 
 #ifdef ESP32
@@ -32,13 +38,15 @@ struct EthernetEventData_t {
   void setEthDisconnected();
   void setEthGotIP();
   void setEthConnected();
-  void setEthServicesInitialized();
+  bool setEthServicesInitialized();
 
 
   void markGotIP();
   void markLostIP();
   void markDisconnect();
   void markConnected();
+
+  String ESPEasyEthStatusToString() const;
 
 
   // Eth related data
@@ -55,6 +63,8 @@ struct EthernetEventData_t {
   LongTermTimer           lastGetIPmoment;
   LongTermTimer::Duration lastConnectedDuration_us = 0ll;
 
+  IPAddress dns0_cache;
+  IPAddress dns1_cache;
 
   // Semaphore like bools for processing data gathered from Eth events.
   bool processedConnect          = true;
@@ -67,6 +77,13 @@ struct EthernetEventData_t {
 
   bool ethInitSuccess            = false;
   unsigned long connectionFailures = 0;
+
+#ifdef ESP32
+  WiFiEventId_t wm_event_id = 0;
+#endif // ifdef ESP32
+
 };
+
+#endif
 
 #endif   // ifndef DATASTRUCTS_ETHERNETEVENTDATA_H

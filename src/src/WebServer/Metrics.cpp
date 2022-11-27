@@ -1,5 +1,5 @@
 # include "../WebServer/Metrics.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../../ESPEasy-Globals.h"
 # include "../Commands/Diagnostic.h"
 # include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -78,9 +78,8 @@ void handle_metrics_devices(){
         const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
         const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.TaskDeviceNumber[x];
          if (pluginID_set){
-            LoadTaskSettings(x);            
             if (Settings.TaskDeviceEnabled[x]){
-                String deviceName = ExtraTaskSettings.TaskDeviceName;
+                String deviceName = getTaskDeviceName(x);
                 addHtml(F("# HELP espeasy_device_"));
                 addHtml(deviceName);
                 addHtml(F(" Values from connected device\n"));
@@ -101,7 +100,7 @@ void handle_metrics_devices(){
                                 addHtml(F("espeasy_device_"));
                                 addHtml(deviceName);
                                 addHtml(F("{valueName=\""));
-                                addHtml(ExtraTaskSettings.TaskDeviceValueNames[varNr]);
+                                addHtml(getTaskValueName(x, varNr));
                                 addHtml(F("\"} "));
                                 addHtml(formatUserVarNoCheck(x, varNr));
                                 addHtml('\n');

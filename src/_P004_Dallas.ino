@@ -28,18 +28,10 @@
 # define P004_SENSOR_TYPE_INDEX  2
 # define P004_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P004_SENSOR_TYPE_INDEX)))
 
-String Plugin_004_valuename(uint8_t value_nr, bool displayString) {
-  String name = F("Temperature");
+// Used to easily replace a sensor, without configuring.
+// Can only be used for a single instance of this plugin and a single sensor.
+# define P004_SCAN_ON_INIT       PCONFIG(3)
 
-  if (value_nr != 0) {
-    name += String(value_nr + 1);
-  }
-
-  if (!displayString) {
-    name.toLowerCase();
-  }
-  return name;
-}
 
 boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -61,6 +53,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -76,7 +69,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         if (i < P004_NR_OUTPUT_VALUES) {
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_004_valuename(i, false),
+            Plugin_valuename(F("Temperature"), i, false),
             sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
           ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
         } else {
@@ -129,6 +122,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
+        addFormCheckBox(F("Auto Select Sensor"), F("autoselect"), P004_SCAN_ON_INIT, P004_NR_OUTPUT_VALUES > 1);
+        addFormNote(F("Auto Select can only be used for 1 Dallas sensor per GPIO pin."));
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
         {
@@ -200,6 +195,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
         Dallas_setResolution(savedAddress, res, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX);
       }
+      P004_SCAN_ON_INIT       = isFormItemChecked(F("autoselect"));
       P004_ERROR_STATE_OUTPUT = getFormItemInt(F("p004_err"));
       success                 = true;
       break;
@@ -207,7 +203,6 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
@@ -226,22 +221,33 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t addr[8];
-      Dallas_plugin_get_addr(addr, event->TaskIndex);
-
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
       if(Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
+      uint8_t addr[8] = {0};
+
+      if (P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT) {
+        Dallas_reset_search();
+        if (!Dallas_search(addr, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX)) {
+          addr[0] = 0;
+        }
+      }
+
+      if (addr[0] == 0) {
+        Dallas_plugin_get_addr(addr, event->TaskIndex);
+      }
+
       if ((addr[0] != 0) && (validGpio(Plugin_004_DallasPin_RX)) && (validGpio(Plugin_004_DallasPin_TX))) {
         const uint8_t res = P004_RESOLUTION;
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res));
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct());
         P004_data_struct *P004_data =
           static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P004_data) {
+          P004_data->init(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res);
           // Address index 0 is already set
           for (uint8_t i = 1; i < P004_NR_OUTPUT_VALUES; ++i) {
             Dallas_plugin_get_addr(addr, event->TaskIndex, i);

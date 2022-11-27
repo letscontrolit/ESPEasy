@@ -1,6 +1,11 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C013
 
+#if FEATURE_ESPEASY_P2P == 0
+  #error "Controller C013 ESPEasy P2P requires the FEATURE_ESPEASY_P2P enabled"
+#endif
+
+
 # include "src/Globals/Nodes.h"
 # include "src/DataStructs/C013_p2p_dataStructs.h"
 # include "src/ESPEasyCore/ESPEasyRules.h"
@@ -37,7 +42,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesTemplate = false;
       Protocol[protocolCount].usesAccount  = false;
       Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].defaultPort  = 65501;
+      Protocol[protocolCount].defaultPort  = 8266;
       Protocol[protocolCount].usesID       = false;
       Protocol[protocolCount].Custom       = true;
       break;
@@ -106,11 +111,10 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   infoReply.sourceTaskIndex = sourceTaskIndex;
   infoReply.destTaskIndex   = destTaskIndex;
   infoReply.deviceNumber    = pluginID;
-  LoadTaskSettings(infoReply.sourceTaskIndex);
   safe_strncpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex), sizeof(infoReply.taskName));
 
   for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
-    safe_strncpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x], sizeof(infoReply.ValueNames[x]));
+    safe_strncpy(infoReply.ValueNames[x], getTaskValueName(infoReply.sourceTaskIndex, x), sizeof(infoReply.ValueNames[x]));
   }
 
   if (destUnit != 0)
@@ -119,7 +123,7 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
@@ -155,7 +159,7 @@ void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
@@ -174,42 +178,20 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
   if (!NetworkConnected(10)) {
     return;
   }
-  NodesMap::iterator it;
 
-  if (unit != 255) {
-    it = Nodes.find(unit);
-
-    if (it == Nodes.end()) {
-      return;
-    }
-
-    if (it->second.ip[0] == 0) {
-      return;
-    }
-  }
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    String log = F("C013 : Send UDP message to ");
-    log += unit;
-    addLogMove(LOG_LEVEL_DEBUG_MORE, log);
+    addLogMove(LOG_LEVEL_DEBUG_MORE, concat(F("C013 : Send UDP message to "), unit));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
   statusLED(true);
 
-  IPAddress remoteNodeIP;
-
-  if (unit == 255) {
-    remoteNodeIP = { 255, 255, 255, 255 };
-  }
-  else {
-    remoteNodeIP = it->second.ip;
-  }
-
   if (!beginWiFiUDP_randomPort(C013_portUDP)) { return; }
 
   FeedSW_watchdog();
+  const IPAddress remoteNodeIP = getIPAddressForUnit(unit);
   if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) { return; }
   C013_portUDP.write(data, size);
   C013_portUDP.endPacket();

@@ -10,7 +10,7 @@
 
 #include <FS.h>
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 #include <SD.h>
 #endif
 
@@ -37,9 +37,11 @@ const __FlashStringHelper * getLogLevelDisplayString(int logLevel) {
     case LOG_LEVEL_NONE:       return F("None");
     case LOG_LEVEL_ERROR:      return F("Error");
     case LOG_LEVEL_INFO:       return F("Info");
+# ifndef BUILD_NO_DEBUG
     case LOG_LEVEL_DEBUG:      return F("Debug");
     case LOG_LEVEL_DEBUG_MORE: return F("Debug More");
     case LOG_LEVEL_DEBUG_DEV:  return F("Debug dev");
+#endif
 
     default:
     break;
@@ -51,9 +53,11 @@ const __FlashStringHelper * getLogLevelDisplayStringFromIndex(uint8_t index, int
   switch (index) {
     case 0: logLevel = LOG_LEVEL_ERROR;      break;
     case 1: logLevel = LOG_LEVEL_INFO;       break;
+# ifndef BUILD_NO_DEBUG
     case 2: logLevel = LOG_LEVEL_DEBUG;      break;
     case 3: logLevel = LOG_LEVEL_DEBUG_MORE; break;
     case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  break;
+#endif
 
     default: logLevel = -1; return F("");
   }
@@ -100,7 +104,7 @@ void updateLogLevelCache() {
   if (Logging.logActiveRead()) {
     max_lvl = _max(max_lvl, Settings.WebLogLevel);
   }
-#ifdef FEATURE_SD
+#if FEATURE_SD
   max_lvl = _max(max_lvl, Settings.SDLogLevel);
 #endif
   highest_active_log_level = max_lvl;
@@ -148,7 +152,7 @@ bool loglevelActiveFor(uint8_t destination, uint8_t logLevel) {
       break;
     }
     case LOG_TO_SDCARD: {
-      #ifdef FEATURE_SD
+      #if FEATURE_SD
       logLevelSettings = Settings.SDLogLevel;
       #endif
       break;
@@ -263,7 +267,7 @@ void addToSysLog(uint8_t logLevel, const String& string)
 
 void addToSDLog(uint8_t logLevel, const String& string)
 {
-#ifdef FEATURE_SD
+#if FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     fs::File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile) {

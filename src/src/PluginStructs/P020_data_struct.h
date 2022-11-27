@@ -8,14 +8,15 @@
 # include <ESPeasySerial.h>
 
 # ifndef PLUGIN_020_DEBUG
-  #  define PLUGIN_020_DEBUG                 false  // extra logging in serial out
+  #  define PLUGIN_020_DEBUG                 false // extra logging in serial out
 # endif // ifndef PLUGIN_020_DEBUG
 
 # define P020_STATUS_LED                    12
 # define P020_DATAGRAM_MAX_SIZE             256
 struct P020_Task : public PluginTaskData_base {
   P020_Task(taskIndex_t taskIndex);
-  ~P020_Task();
+  P020_Task() = delete;
+  virtual ~P020_Task();
 
   inline static bool serverActive(WiFiServer *server);
 
@@ -42,7 +43,7 @@ struct P020_Task : public PluginTaskData_base {
 
   void handleSerialIn(struct EventStruct *event);
   void handleClientIn(struct EventStruct *event);
-  void rulesEngine(String message);
+  void rulesEngine(const String& message);
 
   void discardSerialIn();
 
@@ -58,8 +59,9 @@ struct P020_Task : public PluginTaskData_base {
   String         net_buffer;
   int            checkI            = 0;
   ESPeasySerial *ser2netSerial     = nullptr;
-  uint8_t           serial_processing = 0;
-  taskIndex_t    _taskIndex = INVALID_TASK_INDEX;
+  uint8_t        serial_processing = 0;
+  taskIndex_t    _taskIndex        = INVALID_TASK_INDEX;
+  bool           handleMultiLine   = false;
 };
 
 #endif // ifdef USES_P020

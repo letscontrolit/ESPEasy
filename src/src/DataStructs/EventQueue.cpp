@@ -2,38 +2,48 @@
 
 #include "../../ESPEasy_common.h"
 
-EventQueueStruct::EventQueueStruct() {}
 
-void EventQueueStruct::add(const String& event)
+void EventQueueStruct::add(const String& event, bool deduplicate)
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif
+  #endif // ifdef USE_SECOND_HEAP
 
-  _eventQueue.push_back(event);
+  if (!deduplicate || !isDuplicate(event)) {
+    _eventQueue.push_back(event);
+  }
 }
 
-void EventQueueStruct::add(const __FlashStringHelper * event)
+void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate)
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif
+  #endif // ifdef USE_SECOND_HEAP
+
   // Wrap in String() constructor to make sure it is using the 2nd heap allocator if present.
-  _eventQueue.push_back(String(event));
+  if (!deduplicate || !isDuplicate(event)) {
+    _eventQueue.push_back(String(event));
+  }
 }
 
-void EventQueueStruct::addMove(String&& event)
+void EventQueueStruct::addMove(String&& event, bool deduplicate)
 {
-  if (!event.length()) return;
+  if (!event.length()) { return; }
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
+
   if (!mmu_is_iram(&(event[0]))) {
     // Wrap in String constructor to make sure it is stored in the 2nd heap.
-    _eventQueue.push_back(String(event));
+    if (!deduplicate || !isDuplicate(event)) {
+      _eventQueue.push_back(String(event));
+    }
     return;
   }
-  #endif
-  _eventQueue.emplace_back(std::move(event));
+  #endif // ifdef USE_SECOND_HEAP
+
+  if (!deduplicate || !isDuplicate(event)) {
+    _eventQueue.emplace_back(std::move(event));
+  }
 }
 
 bool EventQueueStruct::getNext(String& event)
@@ -48,9 +58,9 @@ bool EventQueueStruct::getNext(String& event)
     HeapSelectDram ephemeral;
     event = std::move(String(_eventQueue.front()));
   }
-  #else
+  #else // ifdef USE_SECOND_HEAP
   event = std::move(_eventQueue.front());
-  #endif
+  #endif // ifdef USE_SECOND_HEAP
   _eventQueue.pop_front();
   return true;
 }
@@ -63,4 +73,8 @@ void EventQueueStruct::clear()
 bool EventQueueStruct::isEmpty() const
 {
   return _eventQueue.empty();
+}
+
+bool EventQueueStruct::isDuplicate(const String& event) {
+  return std::find(_eventQueue.begin(), _eventQueue.end(), event) != _eventQueue.end();
 }

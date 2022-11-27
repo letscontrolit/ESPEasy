@@ -50,7 +50,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      if (C001_DelayHandler == nullptr) {
+      if (C001_DelayHandler == nullptr || !validTaskIndex(event->TaskIndex)) {
         break;
       }
 
@@ -60,6 +60,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
         const Sensor_VType sensorType = event->getSensorType();
         String url;
         const size_t expectedSize = sensorType == Sensor_VType::SENSOR_TYPE_STRING ? 64 + event->String2.length() : 128;
+
         if (url.reserve(expectedSize)) {
           url = F("/json.htm?type=command&param=");
 
@@ -113,7 +114,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
           success = C001_DelayHandler->addToQueue(C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
           Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C001_DELAY_QUEUE,
-                                          C001_DelayHandler->getNextScheduleTime());
+                                           C001_DelayHandler->getNextScheduleTime());
         }
       } // if ixd !=0
       else
@@ -140,20 +141,24 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c001_delay_queue(int controller_number, const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  WiFiClient client;
+  # ifndef BUILD_NO_DEBUG
 
-  if (!try_connect_host(controller_number, client, ControllerSettings)) {
-    return false;
-  }
-
-  // This will send the request to the server
-  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt);
-
-# ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG, element.txt);
-# endif // ifndef BUILD_NO_DEBUG
-  return send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply);
+  }
+  # endif // ifndef BUILD_NO_DEBUG
+
+  int httpCode = -1;
+  send_via_http(
+    controller_number,
+    ControllerSettings,
+    element.controller_idx,
+    element.txt,
+    F("GET"),
+    EMPTY_STRING,
+    EMPTY_STRING,
+    httpCode);
+  return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C001

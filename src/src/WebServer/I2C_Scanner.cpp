@@ -1,6 +1,8 @@
 #include "../WebServer/I2C_Scanner.h"
 
-#include "../WebServer/WebServer.h"
+#ifdef WEBSERVER_I2C_SCANNER
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
@@ -10,7 +12,6 @@
 #include "../Helpers/StringConverter.h"
 
 
-#ifdef WEBSERVER_I2C_SCANNER
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -22,21 +23,21 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
         int8_t muxAddr
       , int8_t channel
       , int nDevices
-#ifdef FEATURE_I2CMULTIPLEXER
+      #if FEATURE_I2CMULTIPLEXER
       , i2c_addresses_t &excludeDevices
-#endif
+      #endif // if FEATURE_I2CMULTIPLEXER
 ) {
   uint8_t error, address;
 
   for (address = 1; address <= 127; address++)
   {
-#ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     bool skipCheck = false;
     if (channel != -1 && excludeDevices.size() > address) {
       skipCheck = excludeDevices[address];
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
-#endif
+    #endif // if FEATURE_I2CMULTIPLEXER
       Wire.beginTransmission(address);
       error = Wire.endTransmission();
       delay(1);
@@ -44,8 +45,8 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
       if ((error == 0) || (error == 4))
       {
         json_open();
-        json_prop(F("addr"), String(formatToHex(address)));
-#ifdef FEATURE_I2CMULTIPLEXER
+        json_prop(F("addr"), formatToHex(address, 2));
+        #if FEATURE_I2CMULTIPLEXER
         if (muxAddr != -1) {
           if (channel == -1){
             json_prop(F("I2Cbus"), F("Standard I2C bus"));
@@ -56,7 +57,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
             json_prop(F("I2Cbus"), i2cChannel);
           }
         }
-#endif
+        #endif // if FEATURE_I2CMULTIPLEXER
         json_number(F("status"), String(error));
 
         if (error == 4) {
@@ -93,9 +94,9 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
         json_close();
         addHtml('\n');
       }
-#ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     }
-#endif
+    #endif // if FEATURE_I2CMULTIPLEXER
   }
   return nDevices;
 }
@@ -114,18 +115,18 @@ void handle_i2cscanner_json() {
   int  nDevices = 0;
 
   I2CSelect_Max100kHz_ClockSpeed();    // Always scan in low speed to also find old/slow devices
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   i2c_addresses_t mainBusDevices;
   mainBusDevices.resize(128);
   for (int i = 0; i < 128; i++) {
     mainBusDevices[i] = false;
   }
   nDevices = scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
-#else
+  #else // if FEATURE_I2CMULTIPLEXER
   nDevices = scanI2CbusForDevices_json(-1, -1, nDevices); // Standard scan
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
 
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   if (isI2CMultiplexerEnabled()) {
     uint8_t mux_max = I2CMultiplexerMaxChannels();
     for (int8_t channel = 0; channel < mux_max; channel++) {
@@ -134,7 +135,7 @@ void handle_i2cscanner_json() {
     }
     I2CMultiplexerOff();
   }
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
   I2CSelectHighClockSpeed(); // Reset bus to standard speed
   
   json_close(true);
@@ -146,7 +147,7 @@ void handle_i2cscanner_json() {
 String getKnownI2Cdevice(uint8_t address) {
   String result;
 
-  #if USE_I2C_DEVICE_SCAN
+  #if FEATURE_I2C_DEVICE_SCAN
   for (uint8_t x = 0; x <= deviceCount; x++) {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
@@ -171,7 +172,7 @@ String getKnownI2Cdevice(uint8_t address) {
       }
     }
   }
-  #endif // if USE_I2C_DEVICE_SCAN
+  #endif // if FEATURE_I2C_DEVICE_SCAN
   #ifndef LIMIT_BUILD_SIZE
 
   switch (address)
@@ -194,19 +195,22 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x1D:
       result +=  F("ADXL345");
       break;
+    case 0x1E:
+      result +=  F("HMC5883L");
+      break;
     case 0x20:
     case 0x21:
     case 0x22:
     case 0x25:
     case 0x26:
     case 0x27:
-      result +=  F("PCF8574,MCP23017,LCD");
+      result +=  F("PCF8574,MCP23017,LCD,PCF8575");
       break;
     case 0x23:
-      result +=  F("PCF8574,MCP23017,LCD,BH1750");
+      result +=  F("PCF8574,MCP23017,LCD,BH1750,PCF8575");
       break;
     case 0x24:
-      result +=  F("PCF8574,MCP23017,LCD,PN532");
+      result +=  F("PCF8574,MCP23017,LCD,PN532,PCF8575");
       break;
     case 0x29:
       result +=  F("TSL2561,TSL2591,TCS34725,VL53L0X,VL53L1X");
@@ -218,20 +222,20 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("MAX1704x");
       break;
     case 0x38:
-      result +=  F("PCF8574A,AHT10/20/21");
+      result +=  F("LCD,PCF8574A,AHT10/20/21,VEML6070");
       break;
     case 0x3A:
     case 0x3B:
     case 0x3E:
     case 0x3F:
-      result +=  F("PCF8574A");
+      result +=  F("LCD,PCF8574A");
       break;
     case 0x39:
-      result +=  F("PCF8574A,TSL2561,APDS9960,AHT10");
+      result +=  F("LCD,PCF8574A,TSL2561,APDS9960,AHT10");
       break;
     case 0x3C:
     case 0x3D:
-      result +=  F("PCF8574A,OLED");
+      result +=  F("LCD,PCF8574A,OLED");
       break;
     case 0x40:
       result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080");
@@ -243,29 +247,29 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x44:
     case 0x45:
-      result +=  F("SHT30/31/35");
+      result +=  F("SHT30/31/35,INA219");
       break;
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result +=  F("PCF8591,ADS1115,LM75A");
+      result +=  F("PCF8591,ADS1115,LM75A,INA219");
       break;
     case 0x49:
-      result +=  F("PCF8591,ADS1115,TSL2561,LM75A");
+      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219");
       break;
     case 0x4C:
     case 0x4E:
     case 0x4F:
-      result +=  F("PCF8591,LM75A");
+      result +=  F("PCF8591,LM75A,INA219");
       break;
     case 0x4D:
-      result +=  F("PCF8591,MCP3221,LM75A");
+      result +=  F("PCF8591,MCP3221,LM75A,INA219");
       break;
     case 0x51:
       result +=  F("PCF8563");
       break;
     case 0x53:
-      result +=  F("ADXL345");
+      result +=  F("ADXL345,LTR390");
       break;
     case 0x58:
       result +=  F("SGP30");
@@ -289,7 +293,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO DO,SCD30");
       break;
     case 0x62:
-      result += F("Atlas EZO ORP");
+      result += F("Atlas EZO ORP,SCD4x");
       break;
     case 0x63:
       result += F("Atlas EZO pH");
@@ -298,7 +302,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO EC");
       break;
     case 0x68:
-      result +=  F("DS1307,DS3231,PCF8523,ITG3205,CDM7160");
+      result +=  F("MPU6050,DS1307,DS3231,PCF8523,ITG3205,CDM7160");
       break;
     case 0x69:
       result +=  F("ITG3205,CDM7160");
@@ -333,21 +337,21 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
         int8_t muxAddr
       , int8_t channel
       , int nDevices
-#ifdef FEATURE_I2CMULTIPLEXER
+      #if FEATURE_I2CMULTIPLEXER
       , i2c_addresses_t &excludeDevices
-#endif
+      #endif // if FEATURE_I2CMULTIPLEXER
 ) {
   uint8_t error, address;
 
   for (address = 1; address <= 127; address++)
   {
-#ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     bool skipCheck = false;
     if (channel != -1 && excludeDevices.size() > address) {
       skipCheck = excludeDevices[address];
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
-#endif
+    #endif // if FEATURE_I2CMULTIPLEXER
       Wire.beginTransmission(address);
       error = Wire.endTransmission();
       delay(1);
@@ -356,7 +360,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
         case 0:
       {
         html_TR_TD();
-#ifdef FEATURE_I2CMULTIPLEXER
+        #if FEATURE_I2CMULTIPLEXER
         if (muxAddr != -1) {
           if (channel == -1){
             addHtml(F("Standard I2C bus"));
@@ -367,8 +371,8 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
           }
           html_TD();
         }
-#endif
-        addHtml(formatToHex(address));
+        #endif // if FEATURE_I2CMULTIPLEXER
+        addHtml(formatToHex(address, 2));
         html_TD();
         String description = getKnownI2Cdevice(address);
 
@@ -385,22 +389,22 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       {
         html_TR_TD();
         addHtml(F("NACK on transmit data to address "));
-        addHtml(formatToHex(address));
+        addHtml(formatToHex(address, 2));
         break;
       }
       case 4:
       {
         html_TR_TD();
         addHtml(F("SDA low at address "));
-        addHtml(formatToHex(address));
+        addHtml(formatToHex(address, 2));
         I2CForceResetBus_swap_pins(address);
         addHtml(F(" Reset bus attempted"));
         break;
       }
       }
-#ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     }
-#endif
+    #endif // if FEATURE_I2CMULTIPLEXER
   }
   return nDevices;
 }
@@ -417,29 +421,29 @@ void handle_i2cscanner() {
   sendHeadandTail_stdtemplate(_HEAD);
 
   html_table_class_multirow();
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   if (isI2CMultiplexerEnabled()) {
     html_table_header(F("I2C bus"));
   }
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
   html_table_header(F("I2C Addresses in use"));
   html_table_header(F("Supported devices"));
 
   if (Settings.isI2CEnabled()) {
     int  nDevices = 0;
     I2CSelect_Max100kHz_ClockSpeed();  // Scan bus using low speed
-    #ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     i2c_addresses_t mainBusDevices;
     mainBusDevices.resize(128);
     for (int i = 0; i < 128; i++) {
       mainBusDevices[i] = false;
     }
     nDevices = scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
-    #else
+    #else // if FEATURE_I2CMULTIPLEXER
     nDevices = scanI2CbusForDevices(-1, -1, nDevices); // Standard scan
-    #endif
+    #endif // if FEATURE_I2CMULTIPLEXER
 
-    #ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     if (isI2CMultiplexerEnabled()) {
       uint8_t mux_max = I2CMultiplexerMaxChannels();
       for (int8_t channel = 0; channel < mux_max; channel++) {
@@ -448,7 +452,7 @@ void handle_i2cscanner() {
       }
       I2CMultiplexerOff();
     }
-    #endif
+    #endif // if FEATURE_I2CMULTIPLEXER
     I2CSelectHighClockSpeed();   // By default the bus is in standard speed
 
     if (nDevices == 0) {

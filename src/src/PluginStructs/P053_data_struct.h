@@ -15,9 +15,9 @@
 // Difference in build size is roughly 4k
 # define PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-# if !defined(PLUGIN_BUILD_CUSTOM) && defined(SIZE_1M) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M OTA builds
+# if !defined(PLUGIN_BUILD_CUSTOM) && defined(ESP8266_1M) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M OTA builds
 #  undef PLUGIN_053_ENABLE_EXTRA_SENSORS
-# endif // if defined(SIZE_1M) && defined(PLUGIN_BUILD_MINIMAL_OTA) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS)
+# endif // if defined(ESP8266_1M) && defined(PLUGIN_BUILD_MINIMAL_OTA) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS)
 
 
 // Do not change values, as they are being stored
@@ -87,6 +87,9 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PMS5003_ST_SIZE        40
 # define PMS2003_3003_SIZE      24
 
+// Use the largest possible packet size as buffer size
+# define PMSx003_PACKET_BUFFER_SIZE  PMS5003_ST_SIZE
+
 
 // Active mode transport protocol description
 // "factory" relates to "CF=1" in the datasheet. (CF: Calibration Factory)
@@ -111,7 +114,7 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PMS_T_Hum_pct             11
 # define PMS_Reserved              15
 # define PMS_FW_rev_error          16
-# define PMS_RECEIVE_BUFFER_SIZE   ((PMS5003_ST_SIZE / 2) - 3)
+# define PMS_RECEIVE_BUFFER_SIZE   ((PMSx003_PACKET_BUFFER_SIZE / 2) - 3)
 
 
 struct P053_data_struct : public PluginTaskData_base {
@@ -136,13 +139,15 @@ public:
 
   P053_data_struct() = delete;
 
-  ~P053_data_struct();
+  virtual ~P053_data_struct();
+
+  bool init();
 
   bool initialized() const;
 
 private:
 
-  void    SerialRead16(uint16_t& value,
+  void    PacketRead16(uint16_t& value,
                        uint16_t *checksum);
 
   void    SerialFlush();
@@ -195,6 +200,8 @@ private:
 
 public:
 
+  void clearPacket();
+
   static const __FlashStringHelper* getEventString(uint8_t index);
 
   static void                       setTaskValueNames(ExtraTaskSettingsStruct& settings,
@@ -207,8 +214,14 @@ public:
 
 private:
 
+
   ESPeasySerial     *_easySerial = nullptr;
+  uint8_t            _packet[PMSx003_PACKET_BUFFER_SIZE] = { 0 };
+  uint8_t            _packetPos = 0;
   const taskIndex_t  _taskIndex  = INVALID_TASK_INDEX;
+  const int8_t                  _rxPin = -1;
+  const int8_t                  _txPin = -1;
+  const ESPEasySerialPort _port = ESPEasySerialPort::not_set;
   const PMSx003_type _sensortype;
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   const bool _oversample                    = false;
@@ -222,6 +235,7 @@ private:
   uint16_t       _last_checksum              = 0; // To detect duplicate messages
   const int8_t   _resetPin                   = -1;
   const int8_t   _pwrPin                     = -1;
+
   bool           _activeReadingModeEnabled   = true;
 };
 

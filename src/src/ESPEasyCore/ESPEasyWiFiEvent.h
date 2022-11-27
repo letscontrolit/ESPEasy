@@ -40,7 +40,7 @@ void setUseStaticIP(bool enabled);
 // ********************************************************************************
 #ifdef ESP32
  #if ESP_IDF_VERSION_MAJOR > 3
-  void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info);
+  void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info);
  #else
   void WiFiEvent(system_event_id_t event, system_event_info_t info);
  #endif
@@ -62,7 +62,9 @@ void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
 
 void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event);
 
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
 void onWiFiScanDone(void *arg, STATUS status);
+#endif
 
 #endif
 

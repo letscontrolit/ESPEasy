@@ -11,10 +11,11 @@
 
 #include <XPT2046_Touchscreen.h>
 
-P099_data_struct::P099_data_struct() : touchscreen(nullptr) {}
-
 P099_data_struct::~P099_data_struct() {
-  reset();
+  if (touchscreen != nullptr) {
+    delete touchscreen;
+    touchscreen = nullptr;
+  }
 }
 
 /**
@@ -174,7 +175,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
   for (uint8_t objectNr = 0; objectNr < checkObjectCount; objectNr++) {
     String objectName = String(StoredSettings.TouchObjects[objectNr].objectname);
     if ( objectName.length() > 0
-      && objectName.substring(0,1 ) != F("_")         // Ignore if name starts with an underscore
+      && !objectName.substring(0,1 ).equals(F("_"))         // Ignore if name starts with an underscore
       && StoredSettings.TouchObjects[objectNr].bottom_right.x > 0
       && StoredSettings.TouchObjects[objectNr].bottom_right.y > 0) { // Not initial could be valid
 
@@ -228,7 +229,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
  * Checks if the name doesn't exceed the max. length.
  */
 bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state, uint8_t checkObjectCount) {
-  if (touchObject.isEmpty() || touchObject.substring(0, 1) == F("_")) return false;
+  if (touchObject.isEmpty() || touchObject.substring(0, 1).equals(F("_"))) return false;
   String findObject = (state ? F("_") : F("")); // When enabling, try to find a disabled object
   findObject += touchObject;
   String thisObject;
@@ -280,7 +281,7 @@ void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
         lx = StoredSettings.Calibration.bottom_right.x;
       }
       float x_fact = static_cast<float>(StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / static_cast<float>(_ts_x_res);
-      x = static_cast<uint16_t>(round(lx / x_fact));
+      x = static_cast<uint16_t>(lround(lx / x_fact));
     }
     uint16_t ly = y - StoredSettings.Calibration.top_left.y;
     if (ly <= 0) {
@@ -290,7 +291,7 @@ void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
         ly = StoredSettings.Calibration.bottom_right.y;
       }
       float y_fact = (StoredSettings.Calibration.bottom_right.y - StoredSettings.Calibration.top_left.y) / _ts_y_res;
-      y = static_cast<uint16_t>(round(ly / y_fact));
+      y = static_cast<uint16_t>(lround(ly / y_fact));
     }
   }
 }

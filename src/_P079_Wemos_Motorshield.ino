@@ -273,7 +273,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           return true;                                             // Exit now. Info Log shows Lolin Info.
         }
         else {
-          if ((paramMotor == F("0")) || (paramMotor == F("1"))) {
+          if ((paramMotor.equals(F("0"))) || (paramMotor.equals(F("1")))) {
             motor_number = paramMotor.toInt();
           }
           else {
@@ -351,6 +351,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           switch (Plugin_079_MotorShield_type) {
             case P079_BoardType::WemosMotorshield: {
               WemosMotor Wemos(I2C_ADDR_PCFG_P079, motor_number, MOTOR_FREQ_P079);
+              Wemos.init();
 
               switch (motor_dir) {
                 case MOTOR_STATES::MOTOR_FWD:

@@ -2,8 +2,9 @@
     "name": "HLW8012", 
     "license": "GPL-3.0", 
     "platforms": [
-        "atmelavr", 
-        "espressif8266"
+        "atmelavr",
+        "espressif8266",
+        "espressif32"
     ], 
     "repository": {
         "url": "https://bitbucket.org/xoseperez/hlw8012.git", 

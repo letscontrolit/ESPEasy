@@ -1,7 +1,7 @@
 #include "../Globals/Services.h"
 
-#ifdef FEATURE_ARDUINO_OTA
-  bool ArduinoOTAtriggered=false;
+#if FEATURE_ARDUINO_OTA
+  bool ArduinoOTAtriggered = false;
 #endif
 
 
@@ -13,8 +13,6 @@
 #endif
 
 #ifdef ESP32
-  #include <WiFi.h>
-  #include <WebServer.h>
   WebServer web_server(80);
   #ifndef NO_HTTP_UPDATER
   ESP32HTTPUpdateServer httpUpdater(true);
@@ -22,8 +20,7 @@
 #endif
 
 
-#ifdef FEATURE_DNS_SERVER
-  #include <DNSServer.h>
+#if FEATURE_DNS_SERVER
   DNSServer  dnsServer;
   bool dnsServerActive = false;
-#endif
+#endif // if FEATURE_DNS_SERVER

@@ -1,6 +1,8 @@
 #include "../WebServer/HardwarePage.h"
 
-#include "../WebServer/WebServer.h"
+#ifdef WEBSERVER_HARDWARE
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -16,8 +18,6 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
-
-#ifdef WEBSERVER_HARDWARE
 
 // ********************************************************************************
 // Web Interface hardware page
@@ -42,7 +42,7 @@ void handle_hardware() {
     Settings.Pin_i2c_scl              = getFormItemInt(F("pscl"));
     Settings.I2C_clockSpeed           = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
     Settings.I2C_clockSpeed_Slow      = getFormItemInt(F("pi2cspslow"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
-#ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     Settings.I2C_Multiplexer_Type     = getFormItemInt(F("pi2cmuxtype"));
     if (Settings.I2C_Multiplexer_Type != I2C_MULTIPLEXER_NONE) {
       Settings.I2C_Multiplexer_Addr   = getFormItemInt(F("pi2cmuxaddr"));
@@ -50,7 +50,7 @@ void handle_hardware() {
       Settings.I2C_Multiplexer_Addr   = -1;
     }
     Settings.I2C_Multiplexer_ResetPin = getFormItemInt(F("pi2cmuxreset"));
-#endif
+    #endif // if FEATURE_I2CMULTIPLEXER
     #ifdef ESP32
       Settings.InitSPI                = getFormItemInt(F("initspi"), static_cast<int>(SPI_Options_e::None));
       if (Settings.InitSPI == static_cast<int>(SPI_Options_e::UserDefined)) { // User-define SPI GPIO pins
@@ -65,7 +65,7 @@ void handle_hardware() {
       Settings.InitSPI                = isFormItemChecked(F("initspi")); // SPI Init
     #endif
     Settings.Pin_sd_cs                = getFormItemInt(F("sd"));
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     Settings.ETH_Phy_Addr             = getFormItemInt(F("ethphy"));
     Settings.ETH_Pin_mdc              = getFormItemInt(F("ethmdc"));
     Settings.ETH_Pin_mdio             = getFormItemInt(F("ethmdio"));
@@ -73,7 +73,7 @@ void handle_hardware() {
     Settings.ETH_Phy_Type             = static_cast<EthPhyType_t>(getFormItemInt(F("ethtype")));
     Settings.ETH_Clock_Mode           = static_cast<EthClockMode_t>(getFormItemInt(F("ethclock")));
     Settings.NetworkMedium            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
-#endif
+#endif // if FEATURE_ETHERNET
     int gpio = 0;
 
     while (gpio <= MAX_GPIO) {
@@ -81,7 +81,7 @@ void handle_hardware() {
         // do not add the pin state select for these pins.
       } else {
         if (validGpio(gpio)) {
-          String int_pinlabel = "p";
+          String int_pinlabel('p');
           int_pinlabel       += gpio;
           Settings.setPinBootState(gpio, static_cast<PinBootState>(getFormItemInt(int_pinlabel)));
         }
@@ -117,23 +117,27 @@ void handle_hardware() {
   addFormNote(F("Use 100 kHz for old I2C devices, 400 kHz is max for most."));
   addFormNumericBox(F("Slow device Clock Speed"), F("pi2cspslow"), Settings.I2C_clockSpeed_Slow, 100, 3400000);
   addUnit(F("Hz"));
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   addFormSubHeader(F("I2C Multiplexer"));
   // Select the type of multiplexer to use
   {
-    const __FlashStringHelper * i2c_muxtype_options[5];
-    int    i2c_muxtype_choices[5];
-    i2c_muxtype_options[0] = F("- None -");
-    i2c_muxtype_choices[0] = -1;
-    i2c_muxtype_options[1] = F("TCA9548a - 8 channel");
-    i2c_muxtype_choices[1] = I2C_MULTIPLEXER_TCA9548A;
-    i2c_muxtype_options[2] = F("TCA9546a - 4 channel");
-    i2c_muxtype_choices[2] = I2C_MULTIPLEXER_TCA9546A;
-    i2c_muxtype_options[3] = F("TCA9543a - 2 channel");
-    i2c_muxtype_choices[3] = I2C_MULTIPLEXER_TCA9543A;
-    i2c_muxtype_options[4] = F("PCA9540 - 2 channel (experimental)");
-    i2c_muxtype_choices[4] = I2C_MULTIPLEXER_PCA9540;
-    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), 5, i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
+    # define I2C_MULTIPLEXER_OPTIONCOUNT  5 // Nr. of supported devices + 'None'
+    const __FlashStringHelper *i2c_muxtype_options[] = {
+      F("- None -"),
+      F("TCA9548a - 8 channel"),
+      F("TCA9546a - 4 channel"),
+      F("TCA9543a - 2 channel"),
+      F("PCA9540 - 2 channel (experimental)")
+    };
+    const int i2c_muxtype_choices[] = {
+      -1,
+      I2C_MULTIPLEXER_TCA9548A,
+      I2C_MULTIPLEXER_TCA9546A,
+      I2C_MULTIPLEXER_TCA9543A,
+      I2C_MULTIPLEXER_PCA9540
+    };
+    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), I2C_MULTIPLEXER_OPTIONCOUNT,
+                    i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
   }
   // Select the I2C address for a port multiplexer
   {
@@ -158,7 +162,7 @@ void handle_hardware() {
   }
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")), F("pi2cmuxreset"), Settings.I2C_Multiplexer_ResetPin);
   addFormNote(F("Will be pulled low to force a reset. Reset is not available on PCA9540."));
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   // SPI Init
   addFormSubHeader(F("SPI Interface"));
@@ -167,7 +171,7 @@ void handle_hardware() {
     // Script to show GPIO pins for User-defined SPI GPIOs
     html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 9 ? '' : 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
                     false);
-    const String spi_options[] = {
+    const __FlashStringHelper * spi_options[] = {
       getSPI_optionToString(SPI_Options_e::None), 
       getSPI_optionToString(SPI_Options_e::Vspi), 
       getSPI_optionToString(SPI_Options_e::Hspi), 
@@ -181,7 +185,7 @@ void handle_hardware() {
     addFormSelector_script(F("Init SPI"), F("initspi"), 4, spi_options, spi_index, nullptr, Settings.InitSPI, F("spiOptionChanged(this)"));
     // User-defined pins
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("CLK")),  F("spipinsclk"), Settings.SPI_SCLK_pin);
-    addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_input(F("MISO")),  F("spipinmiso"), Settings.SPI_MISO_pin);
+    addFormPinSelect(PinSelectPurpose::SPI_MISO, formatGpioName_input(F("MISO")),  F("spipinmiso"), Settings.SPI_MISO_pin);
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("MOSI")), F("spipinmosi"), Settings.SPI_MOSI_pin);
     html_add_script(F("document.getElementById('initspi').onchange();"), false); // Initial trigger onchange script
     addFormNote(F("Changing SPI settings requires to press the hardware-reset button or power off-on!"));
@@ -192,12 +196,12 @@ void handle_hardware() {
   #endif
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
   
-#ifdef FEATURE_SD
+#if FEATURE_SD
   addFormSubHeader(F("SD Card"));
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
   
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   addFormSubHeader(F("Ethernet"));
   addRowLabel_tr_id(F("Preferred network medium"), F("ethwifi"));
   {
@@ -210,13 +214,36 @@ void handle_hardware() {
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
   addRowLabel_tr_id(F("Ethernet PHY type"), F("ethtype"));
   {
-    const __FlashStringHelper * ethPhyTypes[2] = { 
+  #if ESP_IDF_VERSION_MAJOR > 3
+    const uint32_t nrItems = 5;
+  #else
+    const uint32_t nrItems = 2;
+  #endif
+    const __FlashStringHelper * ethPhyTypes[nrItems] = { 
       toString(EthPhyType_t::LAN8710), 
-      toString(EthPhyType_t::TLK110) };
-    addSelector(F("ethtype"), 2, ethPhyTypes, nullptr, nullptr, static_cast<int>(Settings.ETH_Phy_Type), false, true);
+      toString(EthPhyType_t::TLK110)
+  #if ESP_IDF_VERSION_MAJOR > 3
+      ,
+      toString(EthPhyType_t::RTL8201),
+      toString(EthPhyType_t::DP83848),
+      toString(EthPhyType_t::DM9051) 
+  #endif
+      };
+    const int ethPhyTypes_index[] = {
+      static_cast<int>(EthPhyType_t::LAN8710),
+      static_cast<int>(EthPhyType_t::TLK110)
+  #if ESP_IDF_VERSION_MAJOR > 3
+      ,
+      static_cast<int>(EthPhyType_t::RTL8201),
+      static_cast<int>(EthPhyType_t::DP83848),
+      static_cast<int>(EthPhyType_t::DM9051)
+  #endif
+    };
+
+    addSelector(F("ethtype"), nrItems, ethPhyTypes, ethPhyTypes_index, nullptr, static_cast<int>(Settings.ETH_Phy_Type), false, true);
   }
-  addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, 0, 255);
-  addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
+  addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, -1, 127);
+  addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110, -1 autodetect)"));
   addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(F("Ethernet MDC pin")), F("ethmdc"), Settings.ETH_Pin_mdc);
   addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_input(F("Ethernet MIO pin")), F("ethmdio"), Settings.ETH_Pin_mdio);
   addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(F("Ethernet Power pin")), F("ethpower"), Settings.ETH_Pin_power);
@@ -230,7 +257,7 @@ void handle_hardware() {
       };
     addSelector(F("ethclock"), 4, ethClockOptions, nullptr, nullptr, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
   }
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));
 

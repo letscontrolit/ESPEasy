@@ -19,7 +19,11 @@ const __FlashStringHelper * toString(EthClockMode_t clockMode);
 // Is stored in settings
 enum class EthPhyType_t : uint8_t {
   LAN8710 = 0,
-  TLK110  = 1
+  TLK110  = 1,
+  RTL8201 = 2,
+  DP83848 = 3,
+  DM9051  = 4
+  //,KSZ8081 = 5
 };
 
 bool   isValid(EthPhyType_t phyType);
