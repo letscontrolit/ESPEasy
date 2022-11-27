@@ -186,16 +186,22 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       int8_t rxPin = serialHelper_getRxPin(event);
       int8_t txPin = serialHelper_getTxPin(event);
       P144_easySerial = new (std::nothrow) ESPeasySerial(serialHelper_getSerialType(event), rxPin, txPin);
+      #ifdef PLUGIN_144_DEBUG
+      String log = F("P144 : Init: ");
+       #endif
+
       if (P144_easySerial != nullptr) 
       {
         P144_easySerial->begin(9600);
         success = true;
+        #ifdef PLUGIN_144_DEBUG
+        log += F("  ESP GPIO-pin RX:");
+        log += rxPin;
+        log += F(" TX:");
+        log += txPin;
+        #endif
       }
       #ifdef PLUGIN_144_DEBUG
-      String log = F("P144 : Init OK  ESP GPIO-pin RX:");
-      log += rxPin;
-      log += F(" TX:");
-      log += txPin;
       addLogMove(LOG_LEVEL_INFO, log);
       #endif
       break;
