@@ -11,6 +11,8 @@ struct P058_data_struct : public PluginTaskData_base {
 public:
 
   P058_data_struct(uint8_t i2c_addr);
+  P058_data_struct() = delete;
+  virtual ~P058_data_struct() = default;
 
   // Read key
   // @retval True when key has changed since last check.

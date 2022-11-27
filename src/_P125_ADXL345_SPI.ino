@@ -48,7 +48,7 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
       Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
 
       break;
     }
@@ -91,9 +91,10 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       P120_CS_PIN         = -1; // Default not selected
       P120_AVERAGE_BUFFER = 10; // Average averaging ;-)
 
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<int>(P120_CS_PIN), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setSPI_CSpin(static_cast<int>(P120_CS_PIN));
         success = P120_data->plugin_set_defaults(event); // This shouldn't fail
         delete P120_data;
       }
@@ -114,9 +115,10 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<int>(P120_CS_PIN), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setSPI_CSpin(static_cast<int>(P120_CS_PIN));
         success = P120_data->plugin_webform_load(event); // This shouldn't fail
         delete P120_data;
       }
@@ -127,9 +129,10 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
     {
       P120_AVERAGE_BUFFER = getFormItemInt(F("p120_average_buf"));
 
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<int>(P120_CS_PIN), P120_AVERAGE_BUFFER);
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 
       if (nullptr != P120_data) {
+        P120_data->setSPI_CSpin(static_cast<int>(P120_CS_PIN));
         success = P120_data->plugin_webform_save(event); // This shouldn't fail
         delete P120_data;
       }
@@ -138,10 +141,13 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(static_cast<int>(P120_CS_PIN), P120_AVERAGE_BUFFER));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER));
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = nullptr != P120_data;
+      if (nullptr != P120_data) {
+        P120_data->setSPI_CSpin(static_cast<int>(P120_CS_PIN));
+        success = true;
+      }
 
       break;
     }

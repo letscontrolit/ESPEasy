@@ -10,7 +10,9 @@
 # endif // ifndef DEFAULT_VREF
 
 
-P002_data_struct::P002_data_struct(struct EventStruct *event)
+
+
+void P002_data_struct::init(struct EventStruct *event)
 {
   _sampleMode = P002_OVERSAMPLING;
 
