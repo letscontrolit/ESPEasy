@@ -135,7 +135,7 @@ For example:
 * ..._ESP8266_1M -> ESP8285 has the flash internal, which is almost always 1 MB. ESP8266 does have an external flash chip, which allows for exchanging it for a larger flash chip (recommended).
 * ..._ESP32_4M316k -> ESP32 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
 * ..._ESP32s2_4M316k -> ESP32s2 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
-* ..._ESP32_16M2M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (2MB LittleFS)
+* ..._ESP32_16M8M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (8MB LittleFS)
 * ..._ESP32_16M1M_ETH -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (1MB SPIFFS, Wired ethernet support)
 
 Make a custom build using PlatformIO
@@ -145,7 +145,7 @@ The easiest is to go for the environment "custom_ESP8266_4M1M" and unfold that o
 Then select "Build" to see if it will start building.
 
 If that's working, you can open the file "pre_custom_esp8266.py" and add or remove the plugins and controllers you need.
-That Python file is used in the "env:custom_ESP8266_4M1M" (or any "custom" build environment) to define what should be embedded and what not.
+That Python file is used in the "env:custom_ESP8266_4M1M" (or any "custom" ESP8266 build environment) to define what should be embedded and what not.
 
 For example to have only the controller "C014", you can remove "CONTROLLER_SET_ALL", and just add "USES_C014", 
 The same for the plugins you need.
@@ -192,6 +192,11 @@ The global steps described here are:
 - Write documentation on the changes you made
 - Commit your code and create a pull request on Github to publish your changes to the world
 - Regular maintenance of your fork (housekeeping)
+
+Advanced procedures:
+
+- Get a pull request by someone else on your system to create a local custom build
+- Contribute to a pull request created by someone else
 
 Let's get started!
 
@@ -305,7 +310,7 @@ Create a new branch
 
 As shown above, the git workflow starts by creating a new branch to do the development work in. This will record all changes to the sourcecode you make, and can be put in as a pull request (explained below) for ESPEasy.
 
-A new branch is created by clicking on the 'mega' branch name (lower left in the status bar of VSCode) and selecting the option 'Create new branch...' from the list presented at the mille-top of the VSCode window. Then a new braanch name should be typed. Branch naming does use some conventions. New features are often named like 'feature/purpose-of-the-feature', and bugfixes are usually named like 'bugfix/what-is-to-be-fixed'. For the addition of this documentation, I've created a branch named 'feature/how-to-guide-for-new-developers':
+A new branch is created by clicking on the 'mega' branch name (lower left in the status bar of VSCode) and selecting the option 'Create new branch...' from the list presented at the middle-top of the VSCode window. Then a new braanch name should be typed. Branch naming does use some conventions. New features are often named like 'feature/purpose-of-the-feature', and bugfixes are usually named like 'bugfix/what-is-to-be-fixed'. For the addition of this documentation, I've created a branch named 'feature/how-to-guide-for-new-developers':
 
 .. image:: VSCode_create_branch.png
     :alt: VSCode create branch
@@ -342,6 +347,8 @@ Add a plugin to ESPEasy
 Instead of just changing an existing plugin or some other feature of ESPEasy, also, new plugins can be added. Plugins can be created from scratch, starting with the template ``_Pxxx_PluginTemplate.ino`` that includes instructions what each section is supposed to do, take a proposed plugin from the ESPEasyPlayground repository at https://github.com/letscontrolit/ESPEasyPluginPlayground, or from other sources (some plugins are in personal Github repositories, but never submitted to the ESPEasyPluginPlayground).
 
 It requires sufficient testing, and analysis of the runtime behavior, of that piece of code, before it should be submitted for a pull request.
+
+When creating a new plugin, a request for an available plugin ID should be posted in this support issue: `[Plugins] List of planned new plugins (request a Plugin-ID here) <https://github.com/letscontrolit/ESPEasy/issues/3839>`_
 
 Especially for new plugins, it is highly recommended to write documentation, as explained in the next paragraph.
 
@@ -461,7 +468,7 @@ The update is 'pulled' (git terminology) by getting the latest from the ``upstre
 
 (NB: The current development branch of ESPEasy is called ``mega`` where other Github repos often use ``master``, or ``main``. ESPEasy *does* have a ``master`` branch, but it currently isn't actively maintained. The name of the 'main' branch of any repository can be chosen freely, the ``master`` or ``main`` name is just used by convention.)
 
-Depending on the time passed since the last update, some files will be updated from the git pull command.
+Depending on the time passed since the last update and the changes made, some files will be updated from the git pull command.
 
 To update your fork on Github, these changes should be 'pushed' (git terminology) to your fork by using the command:
 
@@ -473,3 +480,47 @@ If this is the first time you try to push any changes to your repository, VSCode
 
 Updating your fork this way should be done at least every time before you start new work, and can be done more often if desired. If kept up to date you will avoid starting with an out-dated state of the repository.
 
+
+Get a pull request by someone else on your system
+-------------------------------------------------
+
+For those that want to test the code from a pull request, created by someone else, these commands can be used to get that code local:
+
+1. Update your local repository to the latest git status on the server:
+
+.. code-block::
+
+    git checkout mega
+
+    git pull upstream mega
+
+2. Create a local branch to avoid cluttering your regular ``mega`` branch: (I've deliberately used plural ``pulls`` as a local folder to distinguish from the remote ``pull`` folder on Github)
+
+.. note:: 
+    For ``<prnumber>`` the pull request number (digits only, not including the # prefix!), as visible on the Github Pull requests tab of the ``letscontrolit/ESPEasy`` repository should be used.
+
+.. code-block::
+
+    git checkout -b pulls/<prnumber>
+
+3. Download (fetch) the latest code from github into your local git repository
+
+.. code-block::
+
+    git fetch upstream pull/<prnumber>/head
+
+4. Apply (pull) the latest fetched code to the current branch (``pulls/<prnumber>``)
+
+.. code-block::
+
+    git pull upstream pull/<prnumber>/head
+
+5. Build the desired PIO environment, or add the (new?) plugin to your Custom.h file to create your local Custom build. Like described above, you can also add a plugin to the ``pre_custom_esp8266.py`` or ``pre_custom_esp32.py`` Python scripts (when *not* having a Custom.h file, as that will be used for any Custom build first).
+
+.. warning:: 
+    This method does not enable or allow to contribute to that PR, that requires a different, somewhat more complicated, procedure, documented in a next paragraph.
+
+Contribute to a pull request created by someone else
+----------------------------------------------------
+
+TODO
