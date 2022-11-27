@@ -11,6 +11,7 @@
 
 struct P074_data_struct : public PluginTaskData_base {
   P074_data_struct();
+  virtual ~P074_data_struct() = default;
 
   // Changing the integration time gives you a longer time over which to sense
   // light

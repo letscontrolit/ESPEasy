@@ -36,8 +36,6 @@ P131_data_struct::P131_data_struct(uint8_t             matrixWidth,
   :  _matrixWidth(matrixWidth),  _matrixHeight(matrixHeight),  _tileWidth(tileWidth),  _tileHeight(tileHeight),
   _pin(pin),  _matrixType(matrixType),  _ledType(ledType), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode),
   _commandTrigger(commandTrigger), _brightness(brightness), _maxbright(maxbright), _fgcolor(fgcolor), _bgcolor(bgcolor) {
-  updateFontMetrics();
-
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
   _commandTriggerCmd += F("cmd");
@@ -57,6 +55,8 @@ P131_data_struct::~P131_data_struct() {
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P131_data_struct::plugin_init(struct EventStruct *event) {
+  updateFontMetrics();
+
   bool success = false;
 
   if (!isInitialized()) {

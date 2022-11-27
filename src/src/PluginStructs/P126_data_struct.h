@@ -56,7 +56,7 @@ public:
                    uint8_t chipCount);
 
   P126_data_struct() = delete;
-  ~P126_data_struct();
+  virtual ~P126_data_struct();
 
   const bool isInitialized() const {
     return nullptr != shift;

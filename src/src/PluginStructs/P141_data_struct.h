@@ -88,7 +88,8 @@ public:
                    uint16_t            bgcolor         = ADAGFX_BLACK,
                    bool                textBackFill    = true,
                    bool                displayInverted = false);
-  ~P141_data_struct();
+  P141_data_struct() = delete;
+  virtual ~P141_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
@@ -123,8 +124,8 @@ private:
 
   uint16_t _xpix = 84; // Fixed size
   uint16_t _ypix = 48;
-  uint16_t _textcols;
-  uint16_t _textrows;
+  uint16_t _textcols = 0;
+  uint16_t _textrows = 0;
   uint8_t  _fontwidth    = 6; // Default font characteristics
   uint8_t  _fontheight   = 10;
   uint8_t  _heightOffset = 0;

@@ -151,7 +151,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
       P135_data_struct *P135_data = static_cast<P135_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P135_data) {
-        success = P135_data->isInitialized();
+        success = P135_data->init();
       }
 
       break;
