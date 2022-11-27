@@ -188,7 +188,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       P144_easySerial = new (std::nothrow) ESPeasySerial(serialHelper_getSerialType(event), rxPin, txPin);
       #ifdef PLUGIN_144_DEBUG
       String log = F("P144 : Init: ");
-       #endif
+      #endif
 
       if (P144_easySerial != nullptr) 
       {
@@ -199,6 +199,12 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
         log += rxPin;
         log += F(" TX:");
         log += txPin;
+        #endif
+      }
+      else
+      {
+        #ifdef PLUGIN_144_DEBUG
+        log += F("Failed opening serial port");
         #endif
       }
       #ifdef PLUGIN_144_DEBUG
