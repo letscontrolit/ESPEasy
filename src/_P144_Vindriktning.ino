@@ -16,7 +16,6 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P144
 # include <ESPeasySerial.h>
-
 // Standard plugin defines
 #define PLUGIN_144
 #define PLUGIN_ID_144     144                   // plugin id
@@ -185,30 +184,31 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       // this case defines code to be executed when the plugin is initialised
       int8_t rxPin = serialHelper_getRxPin(event);
       int8_t txPin = serialHelper_getTxPin(event);
+      // Try to open the assocaited serial port
       P144_easySerial = new (std::nothrow) ESPeasySerial(serialHelper_getSerialType(event), rxPin, txPin);
-      #ifdef PLUGIN_144_DEBUG
-      String log = F("P144 : Init: ");
-      #endif
-
       if (P144_easySerial != nullptr) 
       {
         P144_easySerial->begin(9600);
         success = true;
-        #ifdef PLUGIN_144_DEBUG
-        log += F("  ESP GPIO-pin RX:");
-        log += rxPin;
-        log += F(" TX:");
-        log += txPin;
-        #endif
       }
-      else
-      {
-        #ifdef PLUGIN_144_DEBUG
-        log += F("Failed opening serial port");
-        #endif
-      }
+
       #ifdef PLUGIN_144_DEBUG
-      addLogMove(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO))
+      {
+        String log = F("P144 : Init: ");
+        if (success)
+        {
+          log += F("  ESP GPIO-pin RX:");
+          log += rxPin;
+          log += F(" TX:");
+          log += txPin;  
+        }
+        else
+        {
+          log += F("Failed opening serial port");
+        }
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
       #endif
       break;
     }
@@ -219,9 +219,12 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       // It is executed according to the delay configured on the device configuration page, only once
       UserVar[event->BaseVarIndex] = P144_pm25;
       #ifdef PLUGIN_144_DEBUG
-      String log = F("P144 : READ ");
-      log += P144_pm25;
-      addLogMove(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO))
+      {
+        String log = F("P144 : READ ");
+        log += P144_pm25;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
       #endif
       // after the plugin has read data successfuly, set success and break
       success = true;
@@ -263,14 +266,19 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       bool new_data = false;
       while ((P144_easySerial->available() > 0) && !new_data) 
       {
+        // Process received characters, return true when a complete message is received 
+        // Message rate on Vindriktning is a few per minute
         new_data = P144_process_rx(P144_easySerial->read());
         if (new_data) 
         {
           P144_pm25 = float((P144_serialRxBuffer[3] << 8) + P144_serialRxBuffer[4]);
           #ifdef PLUGIN_144_DEBUG
-          String log = F("P144 : Data ");
-          log += P144_pm25;
-          addLogMove(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO))
+          {
+            String log = F("P144 : New value received ");
+            log += P144_pm25;
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
           #endif
         }
       }
@@ -349,20 +357,23 @@ char * P144_to_hex(char c, char * ptr)
 // Note: Contents may be inconsistent unless alingned with the decoder
 void P144_dump()
 {
-  String log = F("P144 : Dump ");
-  char *ptr = P144_debugBuffer;
-  for (int n=0; n< P144_rxlen; n++)
+  if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    ptr = P144_to_hex(P144_serialRxBuffer[n], ptr);
-    *ptr++ = ' ';
+    String log = F("P144 : Dump message: ");
+    char *ptr = P144_debugBuffer;
+    for (int n=0; n< P144_rxlen; n++)
+    {
+      ptr = P144_to_hex(P144_serialRxBuffer[n], ptr);
+      *ptr++ = ' ';
+    }
+    *ptr++ = '\0';
+    log += P144_debugBuffer;
+    log += " size ";
+    log += P144_rxlen;
+    log += " csum ";
+    log += (P144_rxChecksum & 0xFF);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
-  *ptr++ = '\0';
-  log += P144_debugBuffer;
-  log += " size ";
-  log += P144_rxlen;
-  log += " csum ";
-  log += (P144_rxChecksum & 0xFF);
-  addLogMove(LOG_LEVEL_INFO, log);
 }
 #endif // PLUGIN_144_DEBUG
 #endif
