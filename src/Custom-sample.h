@@ -483,15 +483,6 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 
 
-// Special plugins needing IR library
-// #define USES_P016   // IR
-// #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-// #define P016_FEATURE_COMMAND_HANDLING 0 // By default set to 1 to have the command table, that can be dsabled here
-// #define USES_P035   // IRTX
-// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
-                                 //common arguments for controlling all deeply supported A/C units
-// #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-// #define USES_P088   // Heatpump IR
 // #define USES_P108   // DDS238-x ZN Modbus energy meters
 
 
