@@ -264,7 +264,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       // code to be executed 10 times per second. Tasks which require fast response can be added here
       // be careful on what is added here. Heavy processing will result in slowing the module down!
       bool new_data = false;
-      while ((P144_easySerial->available() > 0) && !new_data) 
+      for (int charAvailable = P144_easySerial->available(); ((charAvailable > 0) && !new_data); charAvailable--)
       {
         // Process received characters, return true when a complete message is received 
         // Message rate on Vindriktning is a few per minute
