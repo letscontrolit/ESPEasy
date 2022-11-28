@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -20,30 +20,29 @@ namespace ARDUINOJSON_NAMESPACE {
 template <typename TReader, typename TStringStorage>
 class JsonDeserializer {
  public:
-  JsonDeserializer(MemoryPool &pool, TReader reader,
+  JsonDeserializer(MemoryPool* pool, TReader reader,
                    TStringStorage stringStorage)
       : _stringStorage(stringStorage),
         _foundSomething(false),
         _latch(reader),
-        _pool(&pool),
-        _error(DeserializationError::Ok) {}
+        _pool(pool) {}
 
   template <typename TFilter>
-  DeserializationError parse(VariantData &variant, TFilter filter,
+  DeserializationError parse(VariantData& variant, TFilter filter,
                              NestingLimit nestingLimit) {
-    parseVariant(variant, filter, nestingLimit);
+    DeserializationError::Code err;
 
-    if (!_error && _latch.last() != 0 && !variant.isEnclosed()) {
+    err = parseVariant(variant, filter, nestingLimit);
+
+    if (!err && _latch.last() != 0 && !variant.isEnclosed()) {
       // We don't detect trailing characters earlier, so we need to check now
       return DeserializationError::InvalidInput;
     }
 
-    return _error;
+    return err;
   }
 
  private:
-  JsonDeserializer &operator=(const JsonDeserializer &);  // non-copiable
-
   char current() {
     return _latch.current();
   }
@@ -60,10 +59,13 @@ class JsonDeserializer {
   }
 
   template <typename TFilter>
-  bool parseVariant(VariantData &variant, TFilter filter,
-                    NestingLimit nestingLimit) {
-    if (!skipSpacesAndComments())
-      return false;
+  DeserializationError::Code parseVariant(VariantData& variant, TFilter filter,
+                                          NestingLimit nestingLimit) {
+    DeserializationError::Code err;
+
+    err = skipSpacesAndComments();
+    if (err)
+      return err;
 
     switch (current()) {
       case '[':
@@ -83,7 +85,22 @@ class JsonDeserializer {
         if (filter.allowValue())
           return parseStringValue(variant);
         else
-          return skipString();
+          return skipQuotedString();
+
+      case 't':
+        if (filter.allowValue())
+          variant.setBoolean(true);
+        return skipKeyword("true");
+
+      case 'f':
+        if (filter.allowValue())
+          variant.setBoolean(false);
+        return skipKeyword("false");
+
+      case 'n':
+        // the variant should already by null, except if the same object key was
+        // used twice, as in {"a":1,"a":null}
+        return skipKeyword("null");
 
       default:
         if (filter.allowValue())
@@ -93,9 +110,12 @@ class JsonDeserializer {
     }
   }
 
-  bool skipVariant(NestingLimit nestingLimit) {
-    if (!skipSpacesAndComments())
-      return false;
+  DeserializationError::Code skipVariant(NestingLimit nestingLimit) {
+    DeserializationError::Code err;
+
+    err = skipSpacesAndComments();
+    if (err)
+      return err;
 
     switch (current()) {
       case '[':
@@ -106,7 +126,16 @@ class JsonDeserializer {
 
       case '\"':
       case '\'':
-        return skipString();
+        return skipQuotedString();
+
+      case 't':
+        return skipKeyword("true");
+
+      case 'f':
+        return skipKeyword("false");
+
+      case 'n':
+        return skipKeyword("null");
 
       default:
         return skipNumericValue();
@@ -114,24 +143,25 @@ class JsonDeserializer {
   }
 
   template <typename TFilter>
-  bool parseArray(CollectionData &array, TFilter filter,
-                  NestingLimit nestingLimit) {
-    if (nestingLimit.reached()) {
-      _error = DeserializationError::TooDeep;
-      return false;
-    }
+  DeserializationError::Code parseArray(CollectionData& array, TFilter filter,
+                                        NestingLimit nestingLimit) {
+    DeserializationError::Code err;
+
+    if (nestingLimit.reached())
+      return DeserializationError::TooDeep;
 
     // Skip opening braket
     ARDUINOJSON_ASSERT(current() == '[');
     move();
 
     // Skip spaces
-    if (!skipSpacesAndComments())
-      return false;
+    err = skipSpacesAndComments();
+    if (err)
+      return err;
 
     // Empty array?
     if (eat(']'))
-      return true;
+      return DeserializationError::Ok;
 
     TFilter memberFilter = filter[0UL];
 
@@ -139,39 +169,38 @@ class JsonDeserializer {
     for (;;) {
       if (memberFilter.allow()) {
         // Allocate slot in array
-        VariantData *value = array.addElement(_pool);
-        if (!value) {
-          _error = DeserializationError::NoMemory;
-          return false;
-        }
+        VariantData* value = array.addElement(_pool);
+        if (!value)
+          return DeserializationError::NoMemory;
 
         // 1 - Parse value
-        if (!parseVariant(*value, memberFilter, nestingLimit.decrement()))
-          return false;
+        err = parseVariant(*value, memberFilter, nestingLimit.decrement());
+        if (err)
+          return err;
       } else {
-        if (!skipVariant(nestingLimit.decrement()))
-          return false;
+        err = skipVariant(nestingLimit.decrement());
+        if (err)
+          return err;
       }
 
       // 2 - Skip spaces
-      if (!skipSpacesAndComments())
-        return false;
+      err = skipSpacesAndComments();
+      if (err)
+        return err;
 
       // 3 - More values?
       if (eat(']'))
-        return true;
-      if (!eat(',')) {
-        _error = DeserializationError::InvalidInput;
-        return false;
-      }
+        return DeserializationError::Ok;
+      if (!eat(','))
+        return DeserializationError::InvalidInput;
     }
   }
 
-  bool skipArray(NestingLimit nestingLimit) {
-    if (nestingLimit.reached()) {
-      _error = DeserializationError::TooDeep;
-      return false;
-    }
+  DeserializationError::Code skipArray(NestingLimit nestingLimit) {
+    DeserializationError::Code err;
+
+    if (nestingLimit.reached())
+      return DeserializationError::TooDeep;
 
     // Skip opening braket
     ARDUINOJSON_ASSERT(current() == '[');
@@ -180,161 +209,167 @@ class JsonDeserializer {
     // Read each value
     for (;;) {
       // 1 - Skip value
-      if (!skipVariant(nestingLimit.decrement()))
-        return false;
+      err = skipVariant(nestingLimit.decrement());
+      if (err)
+        return err;
 
       // 2 - Skip spaces
-      if (!skipSpacesAndComments())
-        return false;
+      err = skipSpacesAndComments();
+      if (err)
+        return err;
 
       // 3 - More values?
       if (eat(']'))
-        return true;
-      if (!eat(',')) {
-        _error = DeserializationError::InvalidInput;
-        return false;
-      }
+        return DeserializationError::Ok;
+      if (!eat(','))
+        return DeserializationError::InvalidInput;
     }
   }
 
   template <typename TFilter>
-  bool parseObject(CollectionData &object, TFilter filter,
-                   NestingLimit nestingLimit) {
-    if (nestingLimit.reached()) {
-      _error = DeserializationError::TooDeep;
-      return false;
-    }
+  DeserializationError::Code parseObject(CollectionData& object, TFilter filter,
+                                         NestingLimit nestingLimit) {
+    DeserializationError::Code err;
+
+    if (nestingLimit.reached())
+      return DeserializationError::TooDeep;
 
     // Skip opening brace
     ARDUINOJSON_ASSERT(current() == '{');
     move();
 
     // Skip spaces
-    if (!skipSpacesAndComments())
-      return false;
+    err = skipSpacesAndComments();
+    if (err)
+      return err;
 
     // Empty object?
     if (eat('}'))
-      return true;
+      return DeserializationError::Ok;
 
     // Read each key value pair
     for (;;) {
       // Parse key
-      if (!parseKey())
-        return false;
+      err = parseKey();
+      if (err)
+        return err;
 
       // Skip spaces
-      if (!skipSpacesAndComments())
-        return false;
+      err = skipSpacesAndComments();
+      if (err)
+        return err;
 
       // Colon
-      if (!eat(':')) {
-        _error = DeserializationError::InvalidInput;
-        return false;
-      }
+      if (!eat(':'))
+        return DeserializationError::InvalidInput;
 
-      const char *key = _stringStorage.c_str();
+      String key = _stringStorage.str();
 
-      TFilter memberFilter = filter[key];
+      TFilter memberFilter = filter[key.c_str()];
 
       if (memberFilter.allow()) {
-        VariantData *variant = object.getMember(adaptString(key));
+        VariantData* variant = object.getMember(adaptString(key.c_str()));
         if (!variant) {
           // Save key in memory pool.
           // This MUST be done before adding the slot.
           key = _stringStorage.save();
 
           // Allocate slot in object
-          VariantSlot *slot = object.addSlot(_pool);
-          if (!slot) {
-            _error = DeserializationError::NoMemory;
-            return false;
-          }
+          VariantSlot* slot = object.addSlot(_pool);
+          if (!slot)
+            return DeserializationError::NoMemory;
 
-          slot->setKey(key, typename TStringStorage::storage_policy());
+          slot->setKey(key);
 
           variant = slot->data();
         }
 
         // Parse value
-        if (!parseVariant(*variant, memberFilter, nestingLimit.decrement()))
-          return false;
+        err = parseVariant(*variant, memberFilter, nestingLimit.decrement());
+        if (err)
+          return err;
       } else {
-        if (!skipVariant(nestingLimit.decrement()))
-          return false;
+        err = skipVariant(nestingLimit.decrement());
+        if (err)
+          return err;
       }
 
       // Skip spaces
-      if (!skipSpacesAndComments())
-        return false;
+      err = skipSpacesAndComments();
+      if (err)
+        return err;
 
       // More keys/values?
       if (eat('}'))
-        return true;
-      if (!eat(',')) {
-        _error = DeserializationError::InvalidInput;
-        return false;
-      }
+        return DeserializationError::Ok;
+      if (!eat(','))
+        return DeserializationError::InvalidInput;
 
       // Skip spaces
-      if (!skipSpacesAndComments())
-        return false;
+      err = skipSpacesAndComments();
+      if (err)
+        return err;
     }
   }
 
-  bool skipObject(NestingLimit nestingLimit) {
-    if (nestingLimit.reached()) {
-      _error = DeserializationError::TooDeep;
-      return false;
-    }
+  DeserializationError::Code skipObject(NestingLimit nestingLimit) {
+    DeserializationError::Code err;
+
+    if (nestingLimit.reached())
+      return DeserializationError::TooDeep;
 
     // Skip opening brace
     ARDUINOJSON_ASSERT(current() == '{');
     move();
 
     // Skip spaces
-    if (!skipSpacesAndComments())
-      return false;
+    err = skipSpacesAndComments();
+    if (err)
+      return err;
 
     // Empty object?
     if (eat('}'))
-      return true;
+      return DeserializationError::Ok;
 
     // Read each key value pair
     for (;;) {
       // Skip key
-      if (!skipVariant(nestingLimit.decrement()))
-        return false;
+      err = skipKey();
+      if (err)
+        return err;
 
       // Skip spaces
-      if (!skipSpacesAndComments())
-        return false;
+      err = skipSpacesAndComments();
+      if (err)
+        return err;
 
       // Colon
-      if (!eat(':')) {
-        _error = DeserializationError::InvalidInput;
-        return false;
-      }
+      if (!eat(':'))
+        return DeserializationError::InvalidInput;
 
       // Skip value
-      if (!skipVariant(nestingLimit.decrement()))
-        return false;
+      err = skipVariant(nestingLimit.decrement());
+      if (err)
+        return err;
 
       // Skip spaces
-      if (!skipSpacesAndComments())
-        return false;
+      err = skipSpacesAndComments();
+      if (err)
+        return err;
 
       // More keys/values?
       if (eat('}'))
-        return true;
-      if (!eat(',')) {
-        _error = DeserializationError::InvalidInput;
-        return false;
-      }
+        return DeserializationError::Ok;
+      if (!eat(','))
+        return DeserializationError::InvalidInput;
+
+      err = skipSpacesAndComments();
+      if (err)
+        return err;
     }
   }
 
-  bool parseKey() {
+  DeserializationError::Code parseKey() {
     _stringStorage.startString();
     if (isQuote(current())) {
       return parseQuotedString();
@@ -343,18 +378,24 @@ class JsonDeserializer {
     }
   }
 
-  bool parseStringValue(VariantData &variant) {
+  DeserializationError::Code parseStringValue(VariantData& variant) {
+    DeserializationError::Code err;
+
     _stringStorage.startString();
-    if (!parseQuotedString())
-      return false;
-    const char *value = _stringStorage.save();
-    variant.setStringPointer(value, typename TStringStorage::storage_policy());
-    return true;
+
+    err = parseQuotedString();
+    if (err)
+      return err;
+
+    variant.setString(_stringStorage.save());
+
+    return DeserializationError::Ok;
   }
 
-  bool parseQuotedString() {
+  DeserializationError::Code parseQuotedString() {
 #if ARDUINOJSON_DECODE_UNICODE
     Utf16::Codepoint codepoint;
+    DeserializationError::Code err;
 #endif
     const char stopChar = current();
 
@@ -365,57 +406,47 @@ class JsonDeserializer {
       if (c == stopChar)
         break;
 
-      if (c == '\0') {
-        _error = DeserializationError::IncompleteInput;
-        return false;
-      }
+      if (c == '\0')
+        return DeserializationError::IncompleteInput;
 
       if (c == '\\') {
         c = current();
 
-        if (c == '\0') {
-          _error = DeserializationError::IncompleteInput;
-          return false;
-        }
+        if (c == '\0')
+          return DeserializationError::IncompleteInput;
 
         if (c == 'u') {
 #if ARDUINOJSON_DECODE_UNICODE
           move();
           uint16_t codeunit;
-          if (!parseHex4(codeunit))
-            return false;
+          err = parseHex4(codeunit);
+          if (err)
+            return err;
           if (codepoint.append(codeunit))
             Utf8::encodeCodepoint(codepoint.value(), _stringStorage);
-          continue;
 #else
-          _error = DeserializationError::NotSupported;
-          return false;
+          _stringStorage.append('\\');
 #endif
+          continue;
         }
 
         // replace char
         c = EscapeSequence::unescapeChar(c);
-        if (c == '\0') {
-          _error = DeserializationError::InvalidInput;
-          return false;
-        }
+        if (c == '\0')
+          return DeserializationError::InvalidInput;
         move();
       }
 
       _stringStorage.append(c);
     }
 
-    _stringStorage.append('\0');
+    if (!_stringStorage.isValid())
+      return DeserializationError::NoMemory;
 
-    if (!_stringStorage.isValid()) {
-      _error = DeserializationError::NoMemory;
-      return false;
-    }
-
-    return true;
+    return DeserializationError::Ok;
   }
 
-  bool parseNonQuotedString() {
+  DeserializationError::Code parseNonQuotedString() {
     char c = current();
     ARDUINOJSON_ASSERT(c);
 
@@ -426,21 +457,24 @@ class JsonDeserializer {
         c = current();
       } while (canBeInNonQuotedString(c));
     } else {
-      _error = DeserializationError::InvalidInput;
-      return false;
+      return DeserializationError::InvalidInput;
     }
 
-    _stringStorage.append('\0');
+    if (!_stringStorage.isValid())
+      return DeserializationError::NoMemory;
 
-    if (!_stringStorage.isValid()) {
-      _error = DeserializationError::NoMemory;
-      return false;
-    }
-
-    return true;
+    return DeserializationError::Ok;
   }
 
-  bool skipString() {
+  DeserializationError::Code skipKey() {
+    if (isQuote(current())) {
+      return skipQuotedString();
+    } else {
+      return skipNonQuotedString();
+    }
+  }
+
+  DeserializationError::Code skipQuotedString() {
     const char stopChar = current();
 
     move();
@@ -449,99 +483,83 @@ class JsonDeserializer {
       move();
       if (c == stopChar)
         break;
-      if (c == '\0') {
-        _error = DeserializationError::IncompleteInput;
-        return false;
-      }
+      if (c == '\0')
+        return DeserializationError::IncompleteInput;
       if (c == '\\') {
         if (current() != '\0')
           move();
       }
     }
 
-    return true;
+    return DeserializationError::Ok;
   }
 
-  bool parseNumericValue(VariantData &result) {
+  DeserializationError::Code skipNonQuotedString() {
+    char c = current();
+    while (canBeInNonQuotedString(c)) {
+      move();
+      c = current();
+    }
+    return DeserializationError::Ok;
+  }
+
+  DeserializationError::Code parseNumericValue(VariantData& result) {
     uint8_t n = 0;
 
     char c = current();
-    while (canBeInNonQuotedString(c) && n < 63) {
+    while (canBeInNumber(c) && n < 63) {
       move();
       _buffer[n++] = c;
       c = current();
     }
     _buffer[n] = 0;
 
-    c = _buffer[0];
-    if (c == 't') {  // true
-      result.setBoolean(true);
-      if (n != 4) {
-        _error = DeserializationError::IncompleteInput;
-        return false;
-      }
-      return true;
-    }
-    if (c == 'f') {  // false
-      result.setBoolean(false);
-      if (n != 5) {
-        _error = DeserializationError::IncompleteInput;
-        return false;
-      }
-      return true;
-    }
-    if (c == 'n') {  // null
-      // the variant is already null
-      if (n != 4) {
-        _error = DeserializationError::IncompleteInput;
-        return false;
-      }
-      return true;
-    }
+    if (!parseNumber(_buffer, result))
+      return DeserializationError::InvalidInput;
 
-    if (!parseNumber(_buffer, result)) {
-      _error = DeserializationError::InvalidInput;
-      return false;
-    }
-
-    return true;
+    return DeserializationError::Ok;
   }
 
-  bool skipNumericValue() {
+  DeserializationError::Code skipNumericValue() {
     char c = current();
-    while (canBeInNonQuotedString(c)) {
+    while (canBeInNumber(c)) {
       move();
       c = current();
     }
-    return true;
+    return DeserializationError::Ok;
   }
 
-  bool parseHex4(uint16_t &result) {
+  DeserializationError::Code parseHex4(uint16_t& result) {
     result = 0;
     for (uint8_t i = 0; i < 4; ++i) {
       char digit = current();
-      if (!digit) {
-        _error = DeserializationError::IncompleteInput;
-        return false;
-      }
+      if (!digit)
+        return DeserializationError::IncompleteInput;
       uint8_t value = decodeHex(digit);
-      if (value > 0x0F) {
-        _error = DeserializationError::InvalidInput;
-        return false;
-      }
+      if (value > 0x0F)
+        return DeserializationError::InvalidInput;
       result = uint16_t((result << 4) | value);
       move();
     }
-    return true;
+    return DeserializationError::Ok;
   }
 
   static inline bool isBetween(char c, char min, char max) {
     return min <= c && c <= max;
   }
 
+  static inline bool canBeInNumber(char c) {
+    return isBetween(c, '0', '9') || c == '+' || c == '-' || c == '.' ||
+#if ARDUINOJSON_ENABLE_NAN || ARDUINOJSON_ENABLE_INFINITY
+           isBetween(c, 'A', 'Z') || isBetween(c, 'a', 'z');
+#else
+           c == 'e' || c == 'E';
+#endif
+  }
+
   static inline bool canBeInNonQuotedString(char c) {
     return isBetween(c, '0', '9') || isBetween(c, '_', 'z') ||
-           isBetween(c, 'A', 'Z') || c == '+' || c == '-' || c == '.';
+           isBetween(c, 'A', 'Z');
   }
 
   static inline bool isQuote(char c) {
@@ -555,14 +573,13 @@ class JsonDeserializer {
     return uint8_t(c - 'A' + 10);
   }
 
-  bool skipSpacesAndComments() {
+  DeserializationError::Code skipSpacesAndComments() {
     for (;;) {
       switch (current()) {
         // end of string
         case '\0':
-          _error = _foundSomething ? DeserializationError::IncompleteInput
-                                   : DeserializationError::EmptyInput;
-          return false;
+          return _foundSomething ? DeserializationError::IncompleteInput
+                                 : DeserializationError::EmptyInput;
 
         // spaces
         case ' ':
@@ -583,10 +600,8 @@ class JsonDeserializer {
               bool wasStar = false;
               for (;;) {
                 char c = current();
-                if (c == '\0') {
-                  _error = DeserializationError::IncompleteInput;
-                  return false;
-                }
+                if (c == '\0')
+                  return DeserializationError::IncompleteInput;
                 if (c == '/' && wasStar) {
                   move();
                   break;
@@ -603,10 +618,8 @@ class JsonDeserializer {
               for (;;) {
                 move();
                 char c = current();
-                if (c == '\0') {
-                  _error = DeserializationError::IncompleteInput;
-                  return false;
-                }
+                if (c == '\0')
+                  return DeserializationError::IncompleteInput;
                 if (c == '\n')
                   break;
               }
@@ -614,106 +627,137 @@ class JsonDeserializer {
 
             // not a comment, just a '/'
             default:
-              _error = DeserializationError::InvalidInput;
-              return false;
+              return DeserializationError::InvalidInput;
           }
           break;
 #endif
 
         default:
           _foundSomething = true;
-          return true;
+          return DeserializationError::Ok;
       }
     }
+  }
+
+  DeserializationError::Code skipKeyword(const char* s) {
+    while (*s) {
+      char c = current();
+      if (c == '\0')
+        return DeserializationError::IncompleteInput;
+      if (*s != c)
+        return DeserializationError::InvalidInput;
+      ++s;
+      move();
+    }
+    return DeserializationError::Ok;
   }
 
   TStringStorage _stringStorage;
   bool _foundSomething;
   Latch<TReader> _latch;
-  MemoryPool *_pool;
+  MemoryPool* _pool;
   char _buffer[64];  // using a member instead of a local variable because it
                      // ended in the recursive path after compiler inlined the
                      // code
-  DeserializationError _error;
 };
 
+//
 // deserializeJson(JsonDocument&, const std::string&, ...)
-template <typename TInput>
+//
+// ... = NestingLimit
+template <typename TString>
 DeserializationError deserializeJson(
-    JsonDocument &doc, const TInput &input,
+    JsonDocument& doc, const TString& input,
     NestingLimit nestingLimit = NestingLimit()) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit,
                                        AllowAllFilter());
 }
-template <typename TInput>
+// ... = Filter, NestingLimit
+template <typename TString>
 DeserializationError deserializeJson(
-    JsonDocument &doc, const TInput &input, Filter filter,
+    JsonDocument& doc, const TString& input, Filter filter,
     NestingLimit nestingLimit = NestingLimit()) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit, filter);
 }
-template <typename TInput>
-DeserializationError deserializeJson(JsonDocument &doc, const TInput &input,
+// ... = NestingLimit, Filter
+template <typename TString>
+DeserializationError deserializeJson(JsonDocument& doc, const TString& input,
                                      NestingLimit nestingLimit, Filter filter) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit, filter);
 }
 
-// deserializeJson(JsonDocument&, const std::istream&, ...)
-template <typename TInput>
+//
+// deserializeJson(JsonDocument&, std::istream&, ...)
+//
+// ... = NestingLimit
+template <typename TStream>
 DeserializationError deserializeJson(
-    JsonDocument &doc, TInput &input,
+    JsonDocument& doc, TStream& input,
     NestingLimit nestingLimit = NestingLimit()) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit,
                                        AllowAllFilter());
 }
-template <typename TInput>
+// ... = Filter, NestingLimit
+template <typename TStream>
 DeserializationError deserializeJson(
-    JsonDocument &doc, TInput &input, Filter filter,
+    JsonDocument& doc, TStream& input, Filter filter,
     NestingLimit nestingLimit = NestingLimit()) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit, filter);
 }
-template <typename TInput>
-DeserializationError deserializeJson(JsonDocument &doc, TInput &input,
+// ... = NestingLimit, Filter
+template <typename TStream>
+DeserializationError deserializeJson(JsonDocument& doc, TStream& input,
                                      NestingLimit nestingLimit, Filter filter) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit, filter);
 }
 
+//
 // deserializeJson(JsonDocument&, char*, ...)
+//
+// ... = NestingLimit
 template <typename TChar>
 DeserializationError deserializeJson(
-    JsonDocument &doc, TChar *input,
+    JsonDocument& doc, TChar* input,
     NestingLimit nestingLimit = NestingLimit()) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit,
                                        AllowAllFilter());
 }
+// ... = Filter, NestingLimit
 template <typename TChar>
 DeserializationError deserializeJson(
-    JsonDocument &doc, TChar *input, Filter filter,
+    JsonDocument& doc, TChar* input, Filter filter,
     NestingLimit nestingLimit = NestingLimit()) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit, filter);
 }
+// ... = NestingLimit, Filter
 template <typename TChar>
-DeserializationError deserializeJson(JsonDocument &doc, TChar *input,
+DeserializationError deserializeJson(JsonDocument& doc, TChar* input,
                                      NestingLimit nestingLimit, Filter filter) {
   return deserialize<JsonDeserializer>(doc, input, nestingLimit, filter);
 }
 
+//
 // deserializeJson(JsonDocument&, char*, size_t, ...)
+//
+// ... = NestingLimit
 template <typename TChar>
 DeserializationError deserializeJson(
-    JsonDocument &doc, TChar *input, size_t inputSize,
+    JsonDocument& doc, TChar* input, size_t inputSize,
     NestingLimit nestingLimit = NestingLimit()) {
   return deserialize<JsonDeserializer>(doc, input, inputSize, nestingLimit,
                                        AllowAllFilter());
 }
+// ... = Filter, NestingLimit
 template <typename TChar>
 DeserializationError deserializeJson(
-    JsonDocument &doc, TChar *input, size_t inputSize, Filter filter,
+    JsonDocument& doc, TChar* input, size_t inputSize, Filter filter,
     NestingLimit nestingLimit = NestingLimit()) {
   return deserialize<JsonDeserializer>(doc, input, inputSize, nestingLimit,
                                        filter);
 }
+// ... = NestingLimit, Filter
 template <typename TChar>
-DeserializationError deserializeJson(JsonDocument &doc, TChar *input,
+DeserializationError deserializeJson(JsonDocument& doc, TChar* input,
                                      size_t inputSize,
                                      NestingLimit nestingLimit, Filter filter) {
   return deserialize<JsonDeserializer>(doc, input, inputSize, nestingLimit,

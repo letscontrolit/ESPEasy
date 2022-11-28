@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -15,7 +15,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     char str[16];
 
     strcpy(str, "hello");
-    bool result = variant.set(static_cast<const char *>(str));
+    bool result = variant.set(static_cast<const char*>(str));
     strcpy(str, "world");
 
     REQUIRE(result == true);
@@ -23,7 +23,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
   }
 
   SECTION("(const char*)0") {
-    bool result = variant.set(static_cast<const char *>(0));
+    bool result = variant.set(static_cast<const char*>(0));
 
     REQUIRE(result == true);
     REQUIRE(variant.isNull());
@@ -41,7 +41,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
   }
 
   SECTION("(char*)0") {
-    bool result = variant.set(static_cast<char *>(0));
+    bool result = variant.set(static_cast<char*>(0));
 
     REQUIRE(result == true);
     REQUIRE(variant.isNull());
@@ -51,7 +51,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     char str[16];
 
     strcpy(str, "hello");
-    bool result = variant.set(reinterpret_cast<unsigned char *>(str));
+    bool result = variant.set(reinterpret_cast<unsigned char*>(str));
     strcpy(str, "world");
 
     REQUIRE(result == true);
@@ -62,7 +62,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     char str[16];
 
     strcpy(str, "hello");
-    bool result = variant.set(reinterpret_cast<signed char *>(str));
+    bool result = variant.set(reinterpret_cast<signed char*>(str));
     strcpy(str, "world");
 
     REQUIRE(result == true);
@@ -71,7 +71,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
 
 #ifdef HAS_VARIABLE_LENGTH_ARRAY
   SECTION("VLA") {
-    int n = 16;
+    size_t n = 16;
     char str[n];
 
     strcpy(str, "hello");
@@ -98,7 +98,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     char str[16];
 
     strcpy(str, "hello");
-    bool result = variant.set(JsonString(str, true));
+    bool result = variant.set(JsonString(str, JsonString::Linked));
     strcpy(str, "world");
 
     REQUIRE(result == true);
@@ -109,7 +109,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     char str[16];
 
     strcpy(str, "hello");
-    bool result = variant.set(JsonString(str, false));
+    bool result = variant.set(JsonString(str, JsonString::Copied));
     strcpy(str, "world");
 
     REQUIRE(result == true);

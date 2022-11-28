@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -12,6 +12,7 @@
 #include <ArduinoJson/Polyfills/math.hpp>
 #include <ArduinoJson/Polyfills/preprocessor.hpp>
 #include <ArduinoJson/Polyfills/static_array.hpp>
+#include <ArduinoJson/Polyfills/type_traits.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -116,6 +117,22 @@ struct FloatTraits<T, 8 /*64bits*/> {
     return forge(0x7FEFFFFF, 0xFFFFFFFF);
   }
 
+  template <typename TOut>  // int64_t
+  static T highest_for(
+      typename enable_if<is_integral<TOut>::value && is_signed<TOut>::value &&
+                             sizeof(TOut) == 8,
+                         signed>::type* = 0) {
+    return forge(0x43DFFFFF, 0xFFFFFFFF);  //  9.2233720368547748e+18
+  }
+
+  template <typename TOut>  // uint64_t
+  static T highest_for(
+      typename enable_if<is_integral<TOut>::value && is_unsigned<TOut>::value &&
+                             sizeof(TOut) == 8,
+                         unsigned>::type* = 0) {
+    return forge(0x43EFFFFF, 0xFFFFFFFF);  //  1.8446744073709549568e+19
+  }
+
   static T lowest() {
     return forge(0xFFEFFFFF, 0xFFFFFFFF);
   }
@@ -158,24 +175,42 @@ struct FloatTraits<T, 4 /*32bits*/> {
   }
 
   static T positiveBinaryPowerOfTen(int index) {
-    ARDUINOJSON_DEFINE_STATIC_ARRAY(
-        T, factors,
-        ARDUINOJSON_EXPAND6({1e1f, 1e2f, 1e4f, 1e8f, 1e16f, 1e32f}));
-    return ARDUINOJSON_READ_STATIC_ARRAY(T, factors, index);
+    ARDUINOJSON_DEFINE_STATIC_ARRAY(uint32_t, factors,
+                                    ARDUINOJSON_EXPAND6({
+                                        0x41200000,  // 1e1f
+                                        0x42c80000,  // 1e2f
+                                        0x461c4000,  // 1e4f
+                                        0x4cbebc20,  // 1e8f
+                                        0x5a0e1bca,  // 1e16f
+                                        0x749dc5ae   // 1e32f
+                                    }));
+    return forge(ARDUINOJSON_READ_STATIC_ARRAY(uint32_t, factors, index));
   }
 
   static T negativeBinaryPowerOfTen(int index) {
-    ARDUINOJSON_DEFINE_STATIC_ARRAY(
-        T, factors,
-        ARDUINOJSON_EXPAND6({1e-1f, 1e-2f, 1e-4f, 1e-8f, 1e-16f, 1e-32f}));
-    return ARDUINOJSON_READ_STATIC_ARRAY(T, factors, index);
+    ARDUINOJSON_DEFINE_STATIC_ARRAY(uint32_t, factors,
+                                    ARDUINOJSON_EXPAND6({
+                                        0x3dcccccd,  // 1e-1f
+                                        0x3c23d70a,  // 1e-2f
+                                        0x38d1b717,  // 1e-4f
+                                        0x322bcc77,  // 1e-8f
+                                        0x24e69595,  // 1e-16f
+                                        0x0a4fb11f   // 1e-32f
+                                    }));
+    return forge(ARDUINOJSON_READ_STATIC_ARRAY(uint32_t, factors, index));
   }
 
   static T negativeBinaryPowerOfTenPlusOne(int index) {
-    ARDUINOJSON_DEFINE_STATIC_ARRAY(
-        T, factors,
-        ARDUINOJSON_EXPAND6({1e0f, 1e-1f, 1e-3f, 1e-7f, 1e-15f, 1e-31f}));
-    return ARDUINOJSON_READ_STATIC_ARRAY(T, factors, index);
+    ARDUINOJSON_DEFINE_STATIC_ARRAY(uint32_t, factors,
+                                    ARDUINOJSON_EXPAND6({
+                                        0x3f800000,  // 1e0f
+                                        0x3dcccccd,  // 1e-1f
+                                        0x3a83126f,  // 1e-3f
+                                        0x33d6bf95,  // 1e-7f
+                                        0x26901d7d,  // 1e-15f
+                                        0x0c01ceb3   // 1e-31f
+                                    }));
+    return forge(ARDUINOJSON_READ_STATIC_ARRAY(uint32_t, factors, index));
   }
 
   static T forge(uint32_t bits) {
@@ -192,6 +227,38 @@ struct FloatTraits<T, 4 /*32bits*/> {
 
   static T highest() {
     return forge(0x7f7fffff);
+  }
+
+  template <typename TOut>  // int32_t
+  static T highest_for(
+      typename enable_if<is_integral<TOut>::value && is_signed<TOut>::value &&
+                             sizeof(TOut) == 4,
+                         signed>::type* = 0) {
+    return forge(0x4EFFFFFF);  // 2.14748352E9
+  }
+
+  template <typename TOut>  // uint32_t
+  static T highest_for(
+      typename enable_if<is_integral<TOut>::value && is_unsigned<TOut>::value &&
+                             sizeof(TOut) == 4,
+                         unsigned>::type* = 0) {
+    return forge(0x4F7FFFFF);  // 4.29496704E9
+  }
+
+  template <typename TOut>  // int64_t
+  static T highest_for(
+      typename enable_if<is_integral<TOut>::value && is_signed<TOut>::value &&
+                             sizeof(TOut) == 8,
+                         signed>::type* = 0) {
+    return forge(0x5EFFFFFF);  // 9.22337148709896192E18
+  }
+
+  template <typename TOut>  // uint64_t
+  static T highest_for(
+      typename enable_if<is_integral<TOut>::value && is_unsigned<TOut>::value &&
+                             sizeof(TOut) == 8,
+                         unsigned>::type* = 0) {
+    return forge(0x5F7FFFFF);  // 1.844674297419792384E19
   }
 
   static T lowest() {

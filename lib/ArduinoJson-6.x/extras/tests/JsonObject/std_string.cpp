@@ -1,12 +1,12 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-static void eraseString(std::string &str) {
-  char *p = const_cast<char *>(str.c_str());
+static void eraseString(std::string& str) {
+  char* p = const_cast<char*>(str.c_str());
   while (*p) *p++ = '*';
 }
 

@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -9,20 +9,24 @@
 
 namespace ARDUINOJSON_NAMESPACE {
 
-template <typename TArray>
-inline ArrayRef ArrayShortcuts<TArray>::createNestedArray() const {
-  return impl()->addElement().template to<ArrayRef>();
+inline ObjectRef ArrayRef::createNestedObject() const {
+  return add().to<ObjectRef>();
 }
 
-template <typename TArray>
-inline ObjectRef ArrayShortcuts<TArray>::createNestedObject() const {
-  return impl()->addElement().template to<ObjectRef>();
+template <typename TDerived>
+inline ArrayRef VariantRefBase<TDerived>::createNestedArray() const {
+  return add().template to<ArrayRef>();
 }
 
-template <typename TArray>
-inline ElementProxy<TArray> ArrayShortcuts<TArray>::operator[](
+template <typename TDerived>
+inline ObjectRef VariantRefBase<TDerived>::createNestedObject() const {
+  return add().template to<ObjectRef>();
+}
+
+template <typename TDerived>
+inline ElementProxy<TDerived> VariantRefBase<TDerived>::operator[](
     size_t index) const {
-  return ElementProxy<TArray>(*impl(), index);
+  return ElementProxy<TDerived>(derived(), index);
 }
 
 }  // namespace ARDUINOJSON_NAMESPACE

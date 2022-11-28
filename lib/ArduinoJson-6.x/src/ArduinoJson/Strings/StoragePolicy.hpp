@@ -1,15 +1,18 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
 namespace ARDUINOJSON_NAMESPACE {
 
-namespace storage_policies {
-struct store_by_address {};
-struct store_by_copy {};
-struct decide_at_runtime {};
-}  // namespace storage_policies
+namespace StringStoragePolicy {
+
+struct Link {};
+struct Copy {};
+struct LinkOrCopy {
+  bool link;
+};
+}  // namespace StringStoragePolicy
 
 }  // namespace ARDUINOJSON_NAMESPACE

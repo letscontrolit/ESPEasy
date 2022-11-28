@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -16,10 +16,10 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
   typedef JsonSerializer<TWriter> base;
 
  public:
-  PrettyJsonSerializer(TWriter &writer) : base(writer), _nesting(0) {}
+  PrettyJsonSerializer(TWriter writer) : base(writer), _nesting(0) {}
 
-  size_t visitArray(const CollectionData &array) {
-    VariantSlot *slot = array.head();
+  size_t visitArray(const CollectionData& array) {
+    const VariantSlot* slot = array.head();
     if (slot) {
       base::write("[\r\n");
       _nesting++;
@@ -39,8 +39,8 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
     return this->bytesWritten();
   }
 
-  size_t visitObject(const CollectionData &object) {
-    VariantSlot *slot = object.head();
+  size_t visitObject(const CollectionData& object) {
+    const VariantSlot* slot = object.head();
     if (slot) {
       base::write("{\r\n");
       _nesting++;
@@ -70,19 +70,17 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
   uint8_t _nesting;
 };
 
-template <typename TSource, typename TDestination>
-size_t serializeJsonPretty(const TSource &source, TDestination &destination) {
+template <typename TDestination>
+size_t serializeJsonPretty(VariantConstRef source, TDestination& destination) {
   return serialize<PrettyJsonSerializer>(source, destination);
 }
 
-template <typename TSource>
-size_t serializeJsonPretty(const TSource &source, void *buffer,
-                           size_t bufferSize) {
+inline size_t serializeJsonPretty(VariantConstRef source, void* buffer,
+                                  size_t bufferSize) {
   return serialize<PrettyJsonSerializer>(source, buffer, bufferSize);
 }
 
-template <typename TSource>
-size_t measureJsonPretty(const TSource &source) {
+inline size_t measureJsonPretty(VariantConstRef source) {
   return measure<PrettyJsonSerializer>(source);
 }
 

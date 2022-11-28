@@ -1,10 +1,11 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
 #include <ArduinoJson/Strings/String.hpp>
+#include <ArduinoJson/Variant/VariantConstRef.hpp>
 #include <ArduinoJson/Variant/VariantRef.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
@@ -13,7 +14,8 @@ class Pair {
  public:
   Pair(MemoryPool* pool, VariantSlot* slot) {
     if (slot) {
-      _key = String(slot->key(), !slot->ownsKey());
+      _key = String(slot->key(),
+                    slot->ownsKey() ? String::Copied : String::Linked);
       _value = VariantRef(pool, slot->data());
     }
   }
@@ -35,7 +37,8 @@ class PairConst {
  public:
   PairConst(const VariantSlot* slot) {
     if (slot) {
-      _key = String(slot->key(), !slot->ownsKey());
+      _key = String(slot->key(),
+                    slot->ownsKey() ? String::Copied : String::Linked);
       _value = VariantConstRef(slot->data());
     }
   }

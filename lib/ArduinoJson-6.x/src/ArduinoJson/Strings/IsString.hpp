@@ -1,18 +1,20 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
 #include <ArduinoJson/Polyfills/type_traits.hpp>
+#include <ArduinoJson/Strings/StringAdapter.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
-template <typename>
+
+template <typename T, typename Enable = void>
 struct IsString : false_type {};
 
 template <typename T>
-struct IsString<const T> : IsString<T> {};
+struct IsString<
+    T, typename make_void<typename StringAdapter<T>::AdaptedString>::type>
+    : true_type {};
 
-template <typename T>
-struct IsString<T&> : IsString<T> {};
 }  // namespace ARDUINOJSON_NAMESPACE

@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -9,61 +9,73 @@
 
 namespace ARDUINOJSON_NAMESPACE {
 
-template <typename TObject>
 template <typename TString>
-inline ArrayRef ObjectShortcuts<TObject>::createNestedArray(
-    const TString& key) const {
-  return impl()->getOrAddMember(key).template to<ArrayRef>();
+inline ArrayRef ObjectRef::createNestedArray(const TString& key) const {
+  return operator[](key).template to<ArrayRef>();
 }
 
-template <typename TObject>
 template <typename TChar>
-inline ArrayRef ObjectShortcuts<TObject>::createNestedArray(TChar* key) const {
-  return impl()->getOrAddMember(key).template to<ArrayRef>();
+inline ArrayRef ObjectRef::createNestedArray(TChar* key) const {
+  return operator[](key).template to<ArrayRef>();
 }
 
-template <typename TObject>
+template <typename TDerived>
 template <typename TString>
-inline ObjectRef ObjectShortcuts<TObject>::createNestedObject(
+inline ArrayRef VariantRefBase<TDerived>::createNestedArray(
     const TString& key) const {
-  return impl()->getOrAddMember(key).template to<ObjectRef>();
+  return operator[](key).template to<ArrayRef>();
 }
 
-template <typename TObject>
+template <typename TDerived>
 template <typename TChar>
-inline ObjectRef ObjectShortcuts<TObject>::createNestedObject(
+inline ArrayRef VariantRefBase<TDerived>::createNestedArray(TChar* key) const {
+  return operator[](key).template to<ArrayRef>();
+}
+
+template <typename TDerived>
+template <typename TString>
+inline ObjectRef VariantRefBase<TDerived>::createNestedObject(
+    const TString& key) const {
+  return operator[](key).template to<ObjectRef>();
+}
+
+template <typename TDerived>
+template <typename TChar>
+inline ObjectRef VariantRefBase<TDerived>::createNestedObject(
     TChar* key) const {
-  return impl()->getOrAddMember(key).template to<ObjectRef>();
+  return operator[](key).template to<ObjectRef>();
 }
 
-template <typename TObject>
+template <typename TDerived>
 template <typename TString>
 inline typename enable_if<IsString<TString>::value, bool>::type
-ObjectShortcuts<TObject>::containsKey(const TString& key) const {
-  return !impl()->getMember(key).isUndefined();
+VariantRefBase<TDerived>::containsKey(const TString& key) const {
+  return variantGetMember(VariantAttorney::getData(derived()),
+                          adaptString(key)) != 0;
 }
 
-template <typename TObject>
+template <typename TDerived>
 template <typename TChar>
 inline typename enable_if<IsString<TChar*>::value, bool>::type
-ObjectShortcuts<TObject>::containsKey(TChar* key) const {
-  return !impl()->getMember(key).isUndefined();
+VariantRefBase<TDerived>::containsKey(TChar* key) const {
+  return variantGetMember(VariantAttorney::getData(derived()),
+                          adaptString(key)) != 0;
 }
 
-template <typename TObject>
+template <typename TDerived>
 template <typename TString>
 inline typename enable_if<IsString<TString*>::value,
-                          MemberProxy<TObject, TString*> >::type
-    ObjectShortcuts<TObject>::operator[](TString* key) const {
-  return MemberProxy<TObject, TString*>(*impl(), key);
+                          MemberProxy<TDerived, TString*> >::type
+VariantRefBase<TDerived>::operator[](TString* key) const {
+  return MemberProxy<TDerived, TString*>(derived(), key);
 }
 
-template <typename TObject>
+template <typename TDerived>
 template <typename TString>
 inline typename enable_if<IsString<TString>::value,
-                          MemberProxy<TObject, TString> >::type
-    ObjectShortcuts<TObject>::operator[](const TString& key) const {
-  return MemberProxy<TObject, TString>(*impl(), key);
+                          MemberProxy<TDerived, TString> >::type
+VariantRefBase<TDerived>::operator[](const TString& key) const {
+  return MemberProxy<TDerived, TString>(derived(), key);
 }
 
 }  // namespace ARDUINOJSON_NAMESPACE

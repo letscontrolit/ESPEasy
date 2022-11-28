@@ -1,9 +1,10 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
+#include <ArduinoJson/Object/MemberProxy.hpp>
 #include <ArduinoJson/Object/ObjectFunctions.hpp>
 #include <ArduinoJson/Object/ObjectIterator.hpp>
 
@@ -14,17 +15,15 @@
 
 namespace ARDUINOJSON_NAMESPACE {
 
+class ArrayRef;
+
 template <typename TData>
 class ObjectRefBase {
+  friend class VariantAttorney;
+
  public:
   operator VariantConstRef() const {
-    const void* data = _data;  // prevent warning cast-align
-    return VariantConstRef(reinterpret_cast<const VariantData*>(data));
-  }
-
-  template <typename TVisitor>
-  typename TVisitor::result_type accept(TVisitor& visitor) const {
-    return objectAccept(_data, visitor);
+    return VariantConstRef(collectionToVariant(_data));
   }
 
   FORCE_INLINE bool isNull() const {
@@ -40,7 +39,7 @@ class ObjectRefBase {
   }
 
   FORCE_INLINE size_t nesting() const {
-    return _data ? _data->nesting() : 0;
+    return variantNesting(collectionToVariant(_data));
   }
 
   FORCE_INLINE size_t size() const {
@@ -48,12 +47,16 @@ class ObjectRefBase {
   }
 
  protected:
+  const VariantData* getData() const {
+    return collectionToVariant(_data);
+  }
+
   ObjectRefBase(TData* data) : _data(data) {}
   TData* _data;
 };
 
 class ObjectConstRef : public ObjectRefBase<const CollectionData>,
-                       public Visitable {
+                       public VariantOperators<ObjectConstRef> {
   friend class ObjectRef;
   typedef ObjectRefBase<const CollectionData> base_type;
 
@@ -77,7 +80,7 @@ class ObjectConstRef : public ObjectRefBase<const CollectionData>,
   // containsKey(const String&) const
   template <typename TString>
   FORCE_INLINE bool containsKey(const TString& key) const {
-    return !getMember(key).isUndefined();
+    return objectGetMember(_data, adaptString(key)) != 0;
   }
 
   // containsKey(char*) const
@@ -85,22 +88,7 @@ class ObjectConstRef : public ObjectRefBase<const CollectionData>,
   // containsKey(const __FlashStringHelper*) const
   template <typename TChar>
   FORCE_INLINE bool containsKey(TChar* key) const {
-    return !getMember(key).isUndefined();
-  }
-
-  // getMember(const std::string&) const
-  // getMember(const String&) const
-  template <typename TString>
-  FORCE_INLINE VariantConstRef getMember(const TString& key) const {
-    return get_impl(adaptString(key));
-  }
-
-  // getMember(char*) const
-  // getMember(const char*) const
-  // getMember(const __FlashStringHelper*) const
-  template <typename TChar>
-  FORCE_INLINE VariantConstRef getMember(TChar* key) const {
-    return get_impl(adaptString(key));
+    return objectGetMember(_data, adaptString(key)) != 0;
   }
 
   // operator[](const std::string&) const
@@ -109,7 +97,7 @@ class ObjectConstRef : public ObjectRefBase<const CollectionData>,
   FORCE_INLINE
       typename enable_if<IsString<TString>::value, VariantConstRef>::type
       operator[](const TString& key) const {
-    return get_impl(adaptString(key));
+    return VariantConstRef(objectGetMember(_data, adaptString(key)));
   }
 
   // operator[](char*) const
@@ -119,24 +107,31 @@ class ObjectConstRef : public ObjectRefBase<const CollectionData>,
   FORCE_INLINE
       typename enable_if<IsString<TChar*>::value, VariantConstRef>::type
       operator[](TChar* key) const {
-    return get_impl(adaptString(key));
+    return VariantConstRef(objectGetMember(_data, adaptString(key)));
   }
 
   FORCE_INLINE bool operator==(ObjectConstRef rhs) const {
-    return objectEquals(_data, rhs._data);
-  }
+    if (_data == rhs._data)
+      return true;
 
- private:
-  template <typename TAdaptedString>
-  FORCE_INLINE VariantConstRef get_impl(TAdaptedString key) const {
-    return VariantConstRef(objectGetMember(_data, key));
+    if (!_data || !rhs._data)
+      return false;
+
+    size_t count = 0;
+    for (iterator it = begin(); it != end(); ++it) {
+      if (it->value() != rhs[it->key()])
+        return false;
+      count++;
+    }
+    return count == rhs.size();
   }
 };
 
 class ObjectRef : public ObjectRefBase<CollectionData>,
-                  public ObjectShortcuts<ObjectRef>,
-                  public Visitable {
+                  public VariantOperators<ObjectRef> {
   typedef ObjectRefBase<CollectionData> base_type;
+
+  friend class VariantAttorney;
 
  public:
   typedef ObjectIterator iterator;
@@ -176,46 +171,28 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
     return _data->copyFrom(*src._data, _pool);
   }
 
-  // getMember(const std::string&) const
-  // getMember(const String&) const
-  template <typename TString>
-  FORCE_INLINE VariantRef getMember(const TString& key) const {
-    return VariantRef(_pool, objectGetMember(_data, adaptString(key)));
-  }
-
-  // getMember(char*) const
-  // getMember(const char*) const
-  // getMember(const __FlashStringHelper*) const
-  template <typename TChar>
-  FORCE_INLINE VariantRef getMember(TChar* key) const {
-    return VariantRef(_pool, objectGetMember(_data, adaptString(key)));
-  }
-
-  // getOrAddMember(const std::string&) const
-  // getOrAddMember(const String&) const
-  template <typename TString>
-  FORCE_INLINE VariantRef getOrAddMember(const TString& key) const {
-    return VariantRef(_pool,
-                      objectGetOrAddMember(_data, adaptString(key), _pool));
-  }
-
-  // getOrAddMember(char*) const
-  // getOrAddMember(const char*) const
-  // getOrAddMember(const __FlashStringHelper*) const
-  template <typename TChar>
-  FORCE_INLINE VariantRef getOrAddMember(TChar* key) const {
-    return VariantRef(_pool,
-                      objectGetOrAddMember(_data, adaptString(key), _pool));
-  }
-
   FORCE_INLINE bool operator==(ObjectRef rhs) const {
-    return objectEquals(_data, rhs._data);
+    return ObjectConstRef(_data) == ObjectConstRef(rhs._data);
+  }
+
+  template <typename TString>
+  FORCE_INLINE typename enable_if<IsString<TString>::value,
+                                  MemberProxy<ObjectRef, TString> >::type
+  operator[](const TString& key) const {
+    return MemberProxy<ObjectRef, TString>(*this, key);
+  }
+
+  template <typename TChar>
+  FORCE_INLINE typename enable_if<IsString<TChar*>::value,
+                                  MemberProxy<ObjectRef, TChar*> >::type
+  operator[](TChar* key) const {
+    return MemberProxy<ObjectRef, TChar*>(*this, key);
   }
 
   FORCE_INLINE void remove(iterator it) const {
     if (!_data)
       return;
-    _data->removeSlot(it.internal());
+    _data->removeSlot(it._slot);
   }
 
   // remove(const std::string&) const
@@ -233,7 +210,90 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
     objectRemove(_data, adaptString(key));
   }
 
+  template <typename TString>
+  FORCE_INLINE typename enable_if<IsString<TString>::value, bool>::type
+  containsKey(const TString& key) const {
+    return objectGetMember(_data, adaptString(key)) != 0;
+  }
+
+  template <typename TChar>
+  FORCE_INLINE typename enable_if<IsString<TChar*>::value, bool>::type
+  containsKey(TChar* key) const {
+    return objectGetMember(_data, adaptString(key)) != 0;
+  }
+
+  template <typename TString>
+  FORCE_INLINE ArrayRef createNestedArray(const TString& key) const;
+
+  template <typename TChar>
+  FORCE_INLINE ArrayRef createNestedArray(TChar* key) const;
+
+  template <typename TString>
+  ObjectRef createNestedObject(const TString& key) const {
+    return operator[](key).template to<ObjectRef>();
+  }
+
+  template <typename TChar>
+  ObjectRef createNestedObject(TChar* key) const {
+    return operator[](key).template to<ObjectRef>();
+  }
+
+ protected:
+  MemoryPool* getPool() const {
+    return _pool;
+  }
+
+  VariantData* getData() const {
+    return collectionToVariant(_data);
+  }
+
+  VariantData* getOrCreateData() const {
+    return collectionToVariant(_data);
+  }
+
  private:
   MemoryPool* _pool;
+};
+
+template <>
+struct Converter<ObjectConstRef> : private VariantAttorney {
+  static void toJson(VariantConstRef src, VariantRef dst) {
+    variantCopyFrom(getData(dst), getData(src), getPool(dst));
+  }
+
+  static ObjectConstRef fromJson(VariantConstRef src) {
+    const VariantData* data = getData(src);
+    return data != 0 ? data->asObject() : 0;
+  }
+
+  static bool checkJson(VariantConstRef src) {
+    const VariantData* data = getData(src);
+    return data && data->isObject();
+  }
+};
+
+template <>
+struct Converter<ObjectRef> : private VariantAttorney {
+  static void toJson(VariantConstRef src, VariantRef dst) {
+    variantCopyFrom(getData(dst), getData(src), getPool(dst));
+  }
+
+  static ObjectRef fromJson(VariantRef src) {
+    VariantData* data = getData(src);
+    MemoryPool* pool = getPool(src);
+    return ObjectRef(pool, data != 0 ? data->asObject() : 0);
+  }
+
+  static InvalidConversion<VariantConstRef, ObjectRef> fromJson(
+      VariantConstRef);
+
+  static bool checkJson(VariantConstRef) {
+    return false;
+  }
+
+  static bool checkJson(VariantRef src) {
+    VariantData* data = getData(src);
+    return data && data->isObject();
+  }
 };
 }  // namespace ARDUINOJSON_NAMESPACE

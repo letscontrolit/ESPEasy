@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -23,7 +23,7 @@ TEST_CASE("serializeJson(JsonArray)") {
   }
 
   SECTION("Null") {
-    array.add(static_cast<char *>(0));
+    array.add(static_cast<char*>(0));
 
     check(array, "[null]");
   }

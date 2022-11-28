@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -22,8 +22,9 @@ class StaticJsonDocument : public JsonDocument {
   }
 
   template <typename T>
-  StaticJsonDocument(const T& src,
-                     typename enable_if<IsVisitable<T>::value>::type* = 0)
+  StaticJsonDocument(
+      const T& src,
+      typename enable_if<is_convertible<T, VariantConstRef>::value>::type* = 0)
       : JsonDocument(_buffer, _capacity) {
     set(src);
   }
@@ -33,13 +34,13 @@ class StaticJsonDocument : public JsonDocument {
     set(src);
   }
 
-  StaticJsonDocument operator=(const StaticJsonDocument& src) {
+  StaticJsonDocument& operator=(const StaticJsonDocument& src) {
     set(src);
     return *this;
   }
 
   template <typename T>
-  StaticJsonDocument operator=(const T& src) {
+  StaticJsonDocument& operator=(const T& src) {
     set(src);
     return *this;
   }

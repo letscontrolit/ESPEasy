@@ -1,178 +1,58 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
-#include <ArduinoJson/Configuration.hpp>
-#include <ArduinoJson/Variant/VariantOperators.hpp>
-#include <ArduinoJson/Variant/VariantShortcuts.hpp>
-#include <ArduinoJson/Variant/VariantTo.hpp>
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4522)
-#endif
+#include <ArduinoJson/Variant/VariantRefBase.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
-template <typename TArray>
-class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
-                     public VariantShortcuts<ElementProxy<TArray> >,
-                     public Visitable {
-  typedef ElementProxy<TArray> this_type;
+template <typename TUpstream>
+class ElementProxy : public VariantRefBase<ElementProxy<TUpstream> >,
+                     public VariantOperators<ElementProxy<TUpstream> > {
+  friend class VariantAttorney;
 
  public:
-  FORCE_INLINE ElementProxy(TArray array, size_t index)
-      : _array(array), _index(index) {}
+  ElementProxy(TUpstream upstream, size_t index)
+      : _upstream(upstream), _index(index) {}
 
-  FORCE_INLINE ElementProxy(const ElementProxy& src)
-      : _array(src._array), _index(src._index) {}
+  ElementProxy(const ElementProxy& src)
+      : _upstream(src._upstream), _index(src._index) {}
 
-  FORCE_INLINE this_type& operator=(const this_type& src) {
-    getOrAddUpstreamElement().set(src.as<VariantConstRef>());
+  FORCE_INLINE ElementProxy& operator=(const ElementProxy& src) {
+    this->set(src);
     return *this;
   }
 
-  // Replaces the value
-  //
-  // operator=(const TValue&)
-  // TValue = bool, long, int, short, float, double, serialized, VariantRef,
-  //          std::string, String, ArrayRef, ObjectRef
   template <typename T>
-  FORCE_INLINE this_type& operator=(const T& src) {
-    getOrAddUpstreamElement().set(src);
-    return *this;
-  }
-  //
-  // operator=(TValue)
-  // TValue = char*, const char*, const __FlashStringHelper*
-  template <typename T>
-  FORCE_INLINE this_type& operator=(T* src) {
-    getOrAddUpstreamElement().set(src);
+  FORCE_INLINE ElementProxy& operator=(const T& src) {
+    this->set(src);
     return *this;
   }
 
-  FORCE_INLINE void clear() const {
-    getUpstreamElement().clear();
-  }
-
-  FORCE_INLINE bool isNull() const {
-    return getUpstreamElement().isNull();
-  }
-
   template <typename T>
-  FORCE_INLINE typename VariantAs<T>::type as() const {
-    return getUpstreamElement().template as<T>();
-  }
-
-  template <typename T>
-  FORCE_INLINE operator T() const {
-    return getUpstreamElement();
-  }
-
-  template <typename T>
-  FORCE_INLINE bool is() const {
-    return getUpstreamElement().template is<T>();
-  }
-
-  template <typename T>
-  FORCE_INLINE typename VariantTo<T>::type to() const {
-    return getOrAddUpstreamElement().template to<T>();
-  }
-
-  // Replaces the value
-  //
-  // bool set(const TValue&)
-  // TValue = bool, long, int, short, float, double, serialized, VariantRef,
-  //          std::string, String, ArrayRef, ObjectRef
-  template <typename TValue>
-  FORCE_INLINE bool set(const TValue& value) const {
-    return getOrAddUpstreamElement().set(value);
-  }
-  //
-  // bool set(TValue)
-  // TValue = char*, const char*, const __FlashStringHelper*
-  template <typename TValue>
-  FORCE_INLINE bool set(TValue* value) const {
-    return getOrAddUpstreamElement().set(value);
-  }
-
-  template <typename TVisitor>
-  typename TVisitor::result_type accept(TVisitor& visitor) const {
-    return getUpstreamElement().accept(visitor);
-  }
-
-  FORCE_INLINE size_t size() const {
-    return getUpstreamElement().size();
-  }
-
-  template <typename TNestedKey>
-  VariantRef getMember(TNestedKey* key) const {
-    return getUpstreamElement().getMember(key);
-  }
-
-  template <typename TNestedKey>
-  VariantRef getMember(const TNestedKey& key) const {
-    return getUpstreamElement().getMember(key);
-  }
-
-  template <typename TNestedKey>
-  VariantRef getOrAddMember(TNestedKey* key) const {
-    return getOrAddUpstreamElement().getOrAddMember(key);
-  }
-
-  template <typename TNestedKey>
-  VariantRef getOrAddMember(const TNestedKey& key) const {
-    return getOrAddUpstreamElement().getOrAddMember(key);
-  }
-
-  VariantRef addElement() const {
-    return getOrAddUpstreamElement().addElement();
-  }
-
-  VariantRef getElement(size_t index) const {
-    return getOrAddUpstreamElement().getElement(index);
-  }
-
-  VariantRef getOrAddElement(size_t index) const {
-    return getOrAddUpstreamElement().getOrAddElement(index);
-  }
-
-  FORCE_INLINE void remove(size_t index) const {
-    getUpstreamElement().remove(index);
-  }
-  // remove(char*) const
-  // remove(const char*) const
-  // remove(const __FlashStringHelper*) const
-  template <typename TChar>
-  FORCE_INLINE typename enable_if<IsString<TChar*>::value>::type remove(
-      TChar* key) const {
-    getUpstreamElement().remove(key);
-  }
-  // remove(const std::string&) const
-  // remove(const String&) const
-  template <typename TString>
-  FORCE_INLINE typename enable_if<IsString<TString>::value>::type remove(
-      const TString& key) const {
-    getUpstreamElement().remove(key);
+  FORCE_INLINE ElementProxy& operator=(T* src) {
+    this->set(src);
+    return *this;
   }
 
  private:
-  FORCE_INLINE VariantRef getUpstreamElement() const {
-    return _array.getElement(_index);
+  FORCE_INLINE MemoryPool* getPool() const {
+    return VariantAttorney::getPool(_upstream);
   }
 
-  FORCE_INLINE VariantRef getOrAddUpstreamElement() const {
-    return _array.getOrAddElement(_index);
+  FORCE_INLINE VariantData* getData() const {
+    return variantGetElement(VariantAttorney::getData(_upstream), _index);
   }
 
-  TArray _array;
-  const size_t _index;
+  FORCE_INLINE VariantData* getOrCreateData() const {
+    return variantGetOrAddElement(VariantAttorney::getOrCreateData(_upstream),
+                                  _index, VariantAttorney::getPool(_upstream));
+  }
+
+  TUpstream _upstream;
+  size_t _index;
 };
 
 }  // namespace ARDUINOJSON_NAMESPACE
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif

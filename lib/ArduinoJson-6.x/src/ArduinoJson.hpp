@@ -1,22 +1,29 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
 #include "ArduinoJson/Configuration.hpp"
 
-#if !ARDUINOJSON_DEBUG
-#ifdef __clang__
-#pragma clang system_header
-#elif defined __GNUC__
-#pragma GCC system_header
+// Include Arduino.h before stdlib.h to avoid conflict with atexit()
+// https://github.com/bblanchon/ArduinoJson/pull/1693#issuecomment-1001060240
+#if ARDUINOJSON_ENABLE_ARDUINO_STRING || ARDUINOJSON_ENABLE_ARDUINO_STREAM || \
+    ARDUINOJSON_ENABLE_ARDUINO_PRINT || ARDUINOJSON_ENABLE_PROGMEM
+#  include <Arduino.h>
 #endif
+
+#if !ARDUINOJSON_DEBUG
+#  ifdef __clang__
+#    pragma clang system_header
+#  elif defined __GNUC__
+#    pragma GCC system_header
+#  endif
 #endif
 
 #include "ArduinoJson/Array/ArrayRef.hpp"
 #include "ArduinoJson/Object/ObjectRef.hpp"
-#include "ArduinoJson/Variant/VariantRef.hpp"
+#include "ArduinoJson/Variant/VariantConstRef.hpp"
 
 #include "ArduinoJson/Document/DynamicJsonDocument.hpp"
 #include "ArduinoJson/Document/StaticJsonDocument.hpp"
@@ -27,7 +34,7 @@
 #include "ArduinoJson/Collection/CollectionImpl.hpp"
 #include "ArduinoJson/Object/MemberProxy.hpp"
 #include "ArduinoJson/Object/ObjectImpl.hpp"
-#include "ArduinoJson/Variant/VariantAsImpl.hpp"
+#include "ArduinoJson/Variant/ConverterImpl.hpp"
 #include "ArduinoJson/Variant/VariantCompare.hpp"
 #include "ArduinoJson/Variant/VariantImpl.hpp"
 
