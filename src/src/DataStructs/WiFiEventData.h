@@ -122,6 +122,10 @@ struct WiFiEventData_t {
 
   std::map<int, uint32_t> connectDurations;
 
+#ifdef ESP32
+  WiFiEventId_t wm_event_id = 0;
+#endif // ifdef ESP32
+
 
 };
 

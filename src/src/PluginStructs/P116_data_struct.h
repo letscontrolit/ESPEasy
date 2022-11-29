@@ -106,7 +106,8 @@ public:
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    bool                textBackFill = true);
-  ~P116_data_struct();
+  P116_data_struct() = delete;
+  virtual ~P116_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
@@ -136,10 +137,10 @@ private:
   AdafruitGFX_helper   *gfxHelper = nullptr;
   enum ST77xx_type_e    _device;
 
-  uint16_t _xpix;
-  uint16_t _ypix;
-  uint16_t _textcols;
-  uint16_t _textrows;
+  uint16_t _xpix         = 0;
+  uint16_t _ypix         = 0;
+  uint16_t _textcols     = 0;
+  uint16_t _textrows     = 0;
   uint8_t  _fontwidth    = 6; // Default font characteristics
   uint8_t  _fontheight   = 10;
   uint8_t  _heightOffset = 0;

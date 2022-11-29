@@ -52,7 +52,7 @@ String fileFromUrl(String path) {
 }
 
 bool matchFilename(const String& path, const __FlashStringHelper *fname) {
-  return path.equalsIgnoreCase(fileFromUrl(fname));
+  return fileFromUrl(path).equalsIgnoreCase(fileFromUrl(fname));
 }
 
 // ********************************************************************************
@@ -74,13 +74,13 @@ bool fileIsEmbedded(const String& path) {
   return false;
 }
 
-void do_serveEmbedded(const __FlashStringHelper* contentType, PGM_P content, bool serve_inline) {
+void do_serveEmbedded(const __FlashStringHelper* contentType, PGM_P content, int length, bool serve_inline) {
   // Serve using our own Web_StreamingBuffer
   // Serving via web_server.send_P may cause memory allocation issues when sending large flash strings.
   if (!serve_inline) {
     TXBuffer.startStream(contentType, F("*"), 200);
   }
-  TXBuffer.addFlashString(content);
+  TXBuffer.addFlashString(content, length);
   if (!serve_inline) {
     TXBuffer.endStream();
   }
@@ -90,17 +90,18 @@ void serveEmbedded(const String& path, const __FlashStringHelper* contentType, b
 #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
 
   if (matchFilename(path, F("esp.css"))) {
-    do_serveEmbedded(contentType, (PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS), serve_inline);
+    do_serveEmbedded(contentType, (PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS), -1, serve_inline);
     return;
   }
 #endif // if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
 #ifdef WEBSERVER_FAVICON
 
   if (matchFilename(path, F("favicon.ico"))) {
-    do_serveEmbedded(contentType, (PGM_P)FPSTR(favicon_8b_ico), false);
+    do_serveEmbedded(contentType, (PGM_P)FPSTR(favicon_8b_ico), favicon_8b_ico_len, false);
     return;
   }
 #endif // ifdef WEBSERVER_FAVICON
+  addLog(LOG_LEVEL_ERROR, concat(F("serveEmbedded failed: "), path));
 }
 
 
@@ -143,6 +144,10 @@ bool isStaticFile_StripPrefix(String& path) {
 // and therefore should be read from browser cache
 // ********************************************************************************
 bool reply_304_not_modified(const String& path) {
+  if (path.endsWith(F("favicon.ico"))) {
+    // No need in serving 304 for the favicon
+    return false;
+  }
   const String ifNoneMatch = stripQuotes(web_server.header(F("If-None-Match")));
   unsigned int etag_num    = 0;
   bool res                 = false;
@@ -240,7 +245,8 @@ bool loadFromFS(String path) {
   bool mustCheckCredentials = false;
   const __FlashStringHelper* contentType  = get_ContentType(path, mustCheckCredentials);
 
-  const bool serve_304 = static_file && reply_304_not_modified(path); // Reply with a 304 Not Modified
+  const bool serve_304 = static_file && 
+                         reply_304_not_modified(path); // Reply with a 304 Not Modified
 
 #ifndef BUILD_NO_DEBUG
 

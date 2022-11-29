@@ -38,7 +38,7 @@ struct EthernetEventData_t {
   void setEthDisconnected();
   void setEthGotIP();
   void setEthConnected();
-  void setEthServicesInitialized();
+  bool setEthServicesInitialized();
 
 
   void markGotIP();
@@ -77,6 +77,11 @@ struct EthernetEventData_t {
 
   bool ethInitSuccess            = false;
   unsigned long connectionFailures = 0;
+
+#ifdef ESP32
+  WiFiEventId_t wm_event_id = 0;
+#endif // ifdef ESP32
+
 };
 
 #endif

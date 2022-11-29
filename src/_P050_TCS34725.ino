@@ -172,6 +172,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         if (nullptr != P050_data) {
           addFormSubHeader(F("Transformation matrix"));
 
+          P050_data->resetTransformation();
           P050_data->loadSettings(event->TaskIndex);
 
           // Display current settings
@@ -216,7 +217,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
         if (nullptr != P050_data) {
-
+          P050_data->resetTransformation();
           P050_data->loadSettings(event->TaskIndex);
 
           if (resetTransformation) {
@@ -248,6 +249,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P050_data) {
+        P050_data->resetTransformation();
         success = true;
       }
       break;

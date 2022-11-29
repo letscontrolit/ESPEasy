@@ -21,8 +21,14 @@ P020_Task::P020_Task(struct EventStruct *event) : _taskIndex(event->TaskIndex) {
 }
 
 P020_Task::~P020_Task() {
-  stopServer();
-  serialEnd();
+  if (ser2netServer != nullptr) {
+    delete ser2netServer;
+    ser2netServer = nullptr;
+  }
+  if (ser2netSerial != nullptr) {
+    delete ser2netSerial;
+    ser2netSerial = nullptr;
+  }
 }
 
 bool P020_Task::serverActive(WiFiServer *server) {

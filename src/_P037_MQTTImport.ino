@@ -11,6 +11,9 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2022-11-14, tonhuisman: Add support for selecting JSON sub-attributes, using the . notation, like main.sub (1 level only)
+ * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
+ *                         features were added
  * 2022-08-12, tonhuisman: Introduce plugin-specific P037_LIMIT_BUILD_SIZE feature-flag
  * 2022-04-09, tonhuisman: Add features Deduplicate Events, and Max event-queue size
  * 2022-04-09, tonhuisman: Bugfix sending (extra) events only when enabled
@@ -47,8 +50,8 @@
 # define P037_MAX_QUEUEDEPTH      150
 
 
-bool MQTT_unsubscribe_037(struct EventStruct *event);
-bool MQTTSubscribe_037(struct EventStruct *event);
+bool   MQTT_unsubscribe_037(struct EventStruct *event);
+bool   MQTTSubscribe_037(struct EventStruct *event);
 
 # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
 String P037_getMQTTLastTopicPart(const String& topic) {
@@ -82,7 +85,8 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
   } else {
     result = false;
   }
-# ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("MQTT: Event added: ");
 
@@ -93,7 +97,7 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
     }
     addLog(LOG_LEVEL_DEBUG, log);
   }
-#endif
+  # endif // ifndef BUILD_NO_DEBUG
   return result;
 }
 
@@ -133,18 +137,24 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P037_SEND_EVENTS = 1; // Enable events by default, as the original plugin did...
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Options"));
 
       # if P037_JSON_SUPPORT
-      addFormSelector_YesNo(F("Parse JSON messages"), F("p037_parse_json"), P037_PARSE_JSON,     true);
+      addFormSelector_YesNo(F("Parse JSON messages"), F("pjson"),     P037_PARSE_JSON,     true);
       # endif // if P037_JSON_SUPPORT
       # if P037_FILTER_SUPPORT
-      addFormSelector_YesNo(F("Apply filters"),       F("p037_apply_filters"), P037_APPLY_FILTERS,  true);
+      addFormSelector_YesNo(F("Apply filters"),       F("pfilters"),  P037_APPLY_FILTERS,  true);
       # endif // if P037_FILTER_SUPPORT
       # if P037_MAPPING_SUPPORT
-      addFormSelector_YesNo(F("Apply mappings"),      F("p037_apply_mappings"), P037_APPLY_MAPPINGS, true);
+      addFormSelector_YesNo(F("Apply mappings"),      F("pmappings"), P037_APPLY_MAPPINGS, true);
       # endif // if P037_MAPPING_SUPPORT
       # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
       #  if !defined(P037_LIMIT_BUILD_SIZE)
@@ -161,7 +171,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # endif  // if !defined(P037_LIMIT_BUILD_SIZE)
 
       {
-        addFormCheckBox(F("Deduplicate events"), F("p037_deduplicate"), P037_DEDUPLICATE_EVENTS == 1);
+        addFormCheckBox(F("Deduplicate events"), F("pdedupe"), P037_DEDUPLICATE_EVENTS == 1);
         # if !defined(P037_LIMIT_BUILD_SIZE)
         addFormNote(F("When enabled will not (re-)generate events that are already in the queue."));
         # endif  // if !defined(P037_LIMIT_BUILD_SIZE)
@@ -172,9 +182,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         String toolTip = F("0..");
         toolTip += P037_MAX_QUEUEDEPTH;
         toolTip += F(" entries");
-        addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
+        addFormNumericBox(F("Max. # entries in event queue"), F("pquedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
         # else // if !defined(P037_LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
-        addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
+        addFormNumericBox(F("Max. # entries in event queue"), F("pquedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
         # endif // if !defined(P037_LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
         addUnit(F("0 = no check"));
         # if !defined(P037_LIMIT_BUILD_SIZE)
@@ -186,7 +196,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         String character = F(" ");
         character[0] = (P037_REPLACE_BY_COMMA == 0 ? 0x20 : static_cast<uint8_t>(P037_REPLACE_BY_COMMA));
         addRowLabel(F("To replace by comma in event"));
-        addTextBox(F("p037_replace_char"), character, 1, false, false, F("[!@$%^ &*;:.|/\\]"), F("widenumber"));
+        addTextBox(F("preplch"), character, 1, false, false, F("[!@$%^ &*;:.|/\\]"), F("widenumber"));
         addUnit(F("Single character only, limited to: <b>! @ $ % ^ & * ; : . | / \\</b> is replaced by: <b>,</b> "));
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
@@ -196,7 +206,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P037_data) {
         return success;
       }
-      success = P037_data->webform_load(
+      success = P037_data->loadSettings() && P037_data->webform_load(
         # if P037_MAPPING_SUPPORT
         P037_APPLY_MAPPINGS
         # endif // if P037_MAPPING_SUPPORT
@@ -219,20 +229,27 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
+
+      if (nullptr == P037_data) {
+        return success;
+      }
+      P037_data->loadSettings();  // FIXME TD-er: Is this loadSettings still needed or even desired?
+
       # if P037_JSON_SUPPORT
-      P037_PARSE_JSON = getFormItemInt(F("p037_parse_json"));
+      P037_PARSE_JSON = getFormItemInt(F("pjson"));
       # endif // if P037_JSON_SUPPORT
       # if P037_MAPPING_SUPPORT
-      P037_APPLY_MAPPINGS = getFormItemInt(F("p037_apply_mappings"));
+      P037_APPLY_MAPPINGS = getFormItemInt(F("pmappings"));
       # endif // if P037_MAPPING_SUPPORT
       # if P037_FILTER_SUPPORT
-      P037_APPLY_FILTERS = getFormItemInt(F("p037_apply_filters"));
+      P037_APPLY_FILTERS = getFormItemInt(F("pfilters"));
       # endif // if P037_FILTER_SUPPORT
       P037_SEND_EVENTS        = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
-      P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("p037_deduplicate")) ? 1 : 0;
-      P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("p037_queuedepth"));
+      P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("pdedupe")) ? 1 : 0;
+      P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("pquedepth"));
       # if P037_REPLACE_BY_COMMA_SUPPORT
-      String character = webArg(F("p037_replace_char"));
+      String character = webArg(F("preplch"));
       P037_REPLACE_BY_COMMA = character[0];
 
       if (P037_REPLACE_BY_COMMA == 0x20) { // Space -> 0
@@ -240,11 +257,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
-      P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
-
-      if (nullptr == P037_data) {
-        return success;
-      }
       success = P037_data->webform_save(
         # if P037_FILTER_SUPPORT
         P037_APPLY_FILTERS
@@ -265,12 +277,16 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
     {
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P037_data_struct(event->TaskIndex));
 
-      // When we edit the subscription data from the webserver, the plugin is called again with init.
-      // In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
-      if (MQTTclient_connected) {
-        // Subscribe to ALL the topics from ALL instance of this import module
-        MQTTSubscribe_037(event);
-        success = true;
+      P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P037_data && P037_data->loadSettings()) {
+        // When we edit the subscription data from the webserver, the plugin is called again with init.
+        // In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
+        if (MQTTclient_connected) {
+          // Subscribe to ALL the topics from ALL instance of this import module
+          MQTTSubscribe_037(event);
+          success = true;
+        }
       }
       break;
     }
@@ -330,8 +346,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
-      String unparsedPayload; // To keep an unprocessed copy
+      String unparsedPayload;             // To keep an unprocessed copy
 
       bool checkJson = false;
 
@@ -441,14 +456,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         #   endif // P037_FILTER_PER_TOPIC
         #  endif  // if P037_JSON_SUPPORT
       }
-# ifndef BUILD_NO_DEBUG
+      #  ifndef BUILD_NO_DEBUG
+
       if (matchedTopic && P037_data->hasFilters() && // Single log statement
           loglevelActiveFor(LOG_LEVEL_DEBUG)) {      // Reduce standard logging
         String log = F("IMPT : MQTT filter result: ");
         log += processData ? F("true") : F("false");
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
-#endif
+      #  endif // ifndef BUILD_NO_DEBUG
       # endif // if P037_FILTER_SUPPORT
 
       if (!processData) { // Nothing to do? then clean up
@@ -506,8 +522,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 jsonAttribute.trim();
 
                 if (!jsonAttribute.isEmpty()) {
-                  key             = jsonAttribute;
-                  Payload         = P037_data->doc[key].as<String>();
+                  key = jsonAttribute;
+
+                  if (key.indexOf('.') > -1) {
+                    String part1 = parseStringKeepCase(key, 1, '.');
+                    String part2 = parseStringKeepCase(key, 2, '.');
+                    Payload = P037_data->doc[part1][part2].as<String>();
+                  } else {
+                    Payload = P037_data->doc[key].as<String>();
+                  }
                   unparsedPayload = Payload;
                   int8_t jIndex = jsonIndex.toInt();
 
@@ -691,7 +714,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-bool MQTT_unsubscribe_037(struct EventStruct *event) 
+bool MQTT_unsubscribe_037(struct EventStruct *event)
 {
   P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -701,9 +724,9 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
 
   String topic;
 
-  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
-  {
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
     String tmp = P037_data->getFullMQTTTopic(x);
+
     if (topic.equalsIgnoreCase(tmp)) {
       // Don't unsubscribe from the same topic twice
       continue;
@@ -713,15 +736,17 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
     // We must check whether other MQTT import tasks are enabled which may be subscribed to the same topic.
     // Only if we're the only one (left) being subscribed to that topic, unsubscribe
     bool canUnsubscribe = true;
+
     for (taskIndex_t task = 0; task < INVALID_TASK_INDEX && canUnsubscribe; ++task) {
       if (task != event->TaskIndex) {
-        if (Settings.TaskDeviceEnabled[task] && 
-            Settings.TaskDeviceNumber[task] == PLUGIN_ID_037) 
-        {
+        if (Settings.TaskDeviceEnabled[task] &&
+            (Settings.TaskDeviceNumber[task] == PLUGIN_ID_037)) {
           P037_data_struct *P037_data_other = static_cast<P037_data_struct *>(getPluginTaskData(task));
+
           if (nullptr != P037_data_other) {
             if (P037_data_other->shouldSubscribeToMQTTtopic(topic)) {
               canUnsubscribe = false;
+
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("IMPT : Cannot unsubscribe topic: ");
                 log += topic;
@@ -738,7 +763,8 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
         }
       }
     }
-    if (canUnsubscribe && topic.length() > 0 && MQTTclient.unsubscribe(topic.c_str())) {
+
+    if (canUnsubscribe && (topic.length() > 0) && MQTTclient.unsubscribe(topic.c_str())) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("IMPT : [");
         log += getTaskDeviceName(event->TaskIndex);
@@ -766,12 +792,10 @@ bool MQTTSubscribe_037(struct EventStruct *event)
   P037_data->loadSettings();
 
   // Now loop over all import variables and subscribe to those that are not blank
-  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
-  {
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
     String subscribeTo = P037_data->getFullMQTTTopic(x);
-    
-    if (!subscribeTo.isEmpty())
-    {
+
+    if (!subscribeTo.isEmpty()) {
       parseSystemVariables(subscribeTo, false);
 
       if (MQTTclient.subscribe(subscribeTo.c_str())) {
@@ -819,10 +843,9 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   // Test for multi-level wildcard (#) see: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718107 (for MQTT 3 and
   // MQTT 5)
 
-  if (tmpSub.equals(F("#"))) { return true; // If the subscription is for '#' then all topics are accepted
-  }
+  if (tmpSub.equals(F("#"))) { return true; } // If the subscription is for '#' then all topics are accepted
 
-  if (tmpSub.endsWith(F("/#"))) {      // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
+  if (tmpSub.endsWith(F("/#"))) {           // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
     bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));
 
     if (tmpSub.indexOf('+') == -1) {

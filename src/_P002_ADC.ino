@@ -60,9 +60,10 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         P002_data->webformLoad(event);
         success = true;
       } else {
-        P002_data = new (std::nothrow) P002_data_struct(event);
+        P002_data = new (std::nothrow) P002_data_struct();
 
         if (nullptr != P002_data) {
+          P002_data->init(event);
           P002_data->webformLoad(event);
           success = true;
           delete P002_data;
@@ -94,11 +95,14 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct(event));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct());
       P002_data_struct *P002_data =
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P002_data);
+      if (nullptr != P002_data) {
+        success = true;
+        P002_data->init(event);
+      }
       break;
     }
     case PLUGIN_TEN_PER_SECOND:

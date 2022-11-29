@@ -111,7 +111,7 @@ public:
                    uint16_t            bgcolor = ADAGFX_BLACK);
 
   P131_data_struct() = delete;
-  ~P131_data_struct();
+  virtual ~P131_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);

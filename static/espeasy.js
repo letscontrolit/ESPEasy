@@ -38,7 +38,7 @@ var commonPlugins = [
   //P036
   "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign",
   //P038
-  "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV",
+  "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV", "NeoPixelBright",
   //P048
   "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper",
   //P052
@@ -320,8 +320,11 @@ function initCM() {
       }
 
       if (ch == "%") {
-        stream.eatWhile(/[^\s\%]/);
-        if (stream.match("%")) return 'hr';
+        if (/\d/.test(stream.next())) { return 'number'; }
+        else {
+          stream.eatWhile(/[^\s\%]/);
+          if (stream.match("%")) return 'hr';
+        }
       }
 
       if (ch == "[") {

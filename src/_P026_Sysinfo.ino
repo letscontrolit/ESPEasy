@@ -1,29 +1,30 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P026
-//#######################################################################################################
-//#################################### Plugin 026: System Info ##########################################
-//#######################################################################################################
+
+// #######################################################################################################
+// #################################### Plugin 026: System Info ##########################################
+// #######################################################################################################
 
 
-#include "src/DataStructs/ESPEasy_packed_raw_data.h"
-#include "src/ESPEasyCore/ESPEasyNetwork.h"
-#include "src/Globals/ESPEasyWiFiEvent.h"
-#include "src/Helpers/Memory.h"
+# include "src/DataStructs/ESPEasy_packed_raw_data.h"
+# include "src/ESPEasyCore/ESPEasyNetwork.h"
+# include "src/Globals/ESPEasyWiFiEvent.h"
+# include "src/Helpers/Memory.h"
 
-#include "ESPEasy-Globals.h"
+# include "ESPEasy-Globals.h"
 
-#define PLUGIN_026
-#define PLUGIN_ID_026         26
-#define PLUGIN_NAME_026       "Generic - System Info"
+# define PLUGIN_026
+# define PLUGIN_ID_026         26
+# define PLUGIN_NAME_026       "Generic - System Info"
 
 // place sensor type selector right after the output value settings
-#define P026_QUERY1_CONFIG_POS  0
-#define P026_SENSOR_TYPE_INDEX  (P026_QUERY1_CONFIG_POS + VARS_PER_TASK)
-#define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX)))
+# define P026_QUERY1_CONFIG_POS  0
+# define P026_SENSOR_TYPE_INDEX  (P026_QUERY1_CONFIG_POS + VARS_PER_TASK)
+# define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX)))
 
-#define P026_NR_OUTPUT_OPTIONS  14
+# define P026_NR_OUTPUT_OPTIONS  14
 
-const __FlashStringHelper * Plugin_026_valuename(uint8_t value_nr, bool displayString) {
+const __FlashStringHelper* Plugin_026_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case 0:  return displayString ? F("Uptime") : F("uptime");
     case 1:  return displayString ? F("Free RAM") : F("freeheap");
@@ -90,15 +91,15 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
       event->Par1 = P026_NR_OUTPUT_VALUES;
-      success = true;
+      success     = true;
       break;
     }
 
     case PLUGIN_GET_DEVICEVTYPE:
     {
       event->sensorType = static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX));
-      event->idx = P026_SENSOR_TYPE_INDEX;
-      success = true;
+      event->idx        = P026_SENSOR_TYPE_INDEX;
+      success           = true;
       break;
     }
 
@@ -115,12 +116,13 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     {
-      const __FlashStringHelper * options[P026_NR_OUTPUT_OPTIONS];
+      const __FlashStringHelper *options[P026_NR_OUTPUT_OPTIONS];
       int indices[P026_NR_OUTPUT_OPTIONS];
 
       int index = 0;
+
       for (uint8_t option = 0; option < P026_NR_OUTPUT_OPTIONS; ++option) {
         if (option != 11) {
           options[index] = Plugin_026_valuename(option, true);
@@ -128,6 +130,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
           ++index;
         }
       }
+
       // Work around to get the "none" at the end.
       options[index] = Plugin_026_valuename(11, true);
       indices[index] = 11;
@@ -137,6 +140,11 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
         sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options, indices);
       }
       success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD:
+    {
       break;
     }
 
@@ -166,6 +174,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
+
         if (log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1)))
         {
           log += F("SYS  : ");
@@ -182,30 +191,30 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-#if FEATURE_PACKED_RAW_DATA
-   case PLUGIN_GET_PACKED_RAW_DATA:
+# if FEATURE_PACKED_RAW_DATA
+    case PLUGIN_GET_PACKED_RAW_DATA:
     {
       // Matching JS code:
-      // return decode(bytes, 
+      // return decode(bytes,
       //  [header, uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
       //  ['header', 'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
       int index = 0;
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // uptime
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // freeheap
-      string += LoRa_addFloat(P026_get_value(index++), PackedData_int8);  // rssi
-      string += LoRa_addFloat(P026_get_value(index++), PackedData_vcc);   // vcc
-      string += LoRa_addFloat(P026_get_value(index++), PackedData_pct_8); // load
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip1
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip2
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip3
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip4
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // web
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint16);  // freestack
-      event->Par1 = index; // valuecount
-      success = true;
+      string     += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // uptime
+      string     += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // freeheap
+      string     += LoRa_addFloat(P026_get_value(index++), PackedData_int8);  // rssi
+      string     += LoRa_addFloat(P026_get_value(index++), PackedData_vcc);   // vcc
+      string     += LoRa_addFloat(P026_get_value(index++), PackedData_pct_8); // load
+      string     += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip1
+      string     += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip2
+      string     += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip3
+      string     += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip4
+      string     += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // web
+      string     += LoRa_addInt(P026_get_value(index++), PackedData_uint16);  // freestack
+      event->Par1 = index;                                                    // valuecount
+      success     = true;
       break;
     }
-#endif // if FEATURE_PACKED_RAW_DATA
+# endif // if FEATURE_PACKED_RAW_DATA
   }
   return success;
 }
@@ -233,11 +242,11 @@ float P026_get_value(int type)
     case 10: return getCurrentFreeStack();
     case 12: return WiFiEventData.wifi_TX_pwr;
     case 13:
-      #ifdef USE_SECOND_HEAP
+      # ifdef USE_SECOND_HEAP
       return FreeMem2ndHeap();
-      #else
+      # else // ifdef USE_SECOND_HEAP
       break;
-      #endif
+      # endif // ifdef USE_SECOND_HEAP
   }
   return 0.0f;
 }

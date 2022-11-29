@@ -17,6 +17,11 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
+
+#if FEATURE_ETHERNET
+#include "../Globals/ESPEasyEthEvent.h"
+#endif
+
 #include "../Globals/NetworkState.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
@@ -26,6 +31,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
@@ -49,7 +55,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::LOCAL_TIME:             return F("Local Time");
     case LabelType::TIME_SOURCE:            return F("Time Source");
     case LabelType::TIME_WANDER:            return F("Time Wander");
-    case LabelType::EXT_RTC_UTC_TIME:       return F("UTC time stored in RTC");
+    #if FEATURE_EXT_RTC
+    case LabelType::EXT_RTC_UTC_TIME:       return F("UTC time stored in RTC chip");
+    #endif
     case LabelType::UPTIME:                 return F("Uptime");
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
@@ -258,6 +266,7 @@ String getValue(LabelType::Enum label) {
       return toString(node_time.timeSource);
     }
     case LabelType::TIME_WANDER:            return String(node_time.timeWander, 1);
+    #if FEATURE_EXT_RTC
     case LabelType::EXT_RTC_UTC_TIME:
     {
       if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
@@ -273,6 +282,7 @@ String getValue(LabelType::Enum label) {
       }
       return String('-');
     }
+    #endif
     case LabelType::UPTIME:                 return String(getUptimeMinutes());
     case LabelType::LOAD_PCT:               return toString(getCPUload(), 2);
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());

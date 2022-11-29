@@ -76,10 +76,10 @@ void run_compiletime_checks() {
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   #ifdef ESP32
-  const unsigned int SettingsStructSize = (316 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (332 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  const unsigned int SettingsStructSize = (292 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (308 + 84 * TASKS_MAX);
   #endif
   #if FEATURE_CUSTOM_PROVISIONING
   check_size<ProvisioningStruct,                    256u>();  
@@ -115,7 +115,7 @@ void run_compiletime_checks() {
   #if FEATURE_ESPEASY_P2P
   check_size<NodeStruct,                            66u>();
   #endif
-  check_size<systemTimerStruct,                     24u>();
+  check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();

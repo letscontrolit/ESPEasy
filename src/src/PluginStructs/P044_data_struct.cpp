@@ -22,8 +22,14 @@ P044_Task::P044_Task(struct EventStruct *event) {
 }
 
 P044_Task::~P044_Task() {
-  stopServer();
-  serialEnd();
+  if (P1GatewayServer != nullptr) {
+    delete P1GatewayServer;
+    P1GatewayServer = nullptr;
+  }
+  if (P1EasySerial != nullptr) {
+    delete P1EasySerial;
+    P1EasySerial = nullptr;
+  }
 }
 
 bool P044_Task::serverActive(WiFiServer *server) {

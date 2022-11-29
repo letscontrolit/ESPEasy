@@ -16,13 +16,20 @@
 # define P015_EXT_AUTO_GAIN    3
 
 struct P015_data_struct : public PluginTaskData_base {
-  P015_data_struct(uint8_t         i2caddr,
+  P015_data_struct(uint8_t      i2caddr,
                    unsigned int gain,
-                   uint8_t         integration);
+                   uint8_t      integration);
+
+  P015_data_struct() = delete;
+
+  virtual ~P015_data_struct() = default;
 
   bool begin();
 
-  bool useAutoGain() const;
+  // Called from the constructor, thus have this simple function in the header file.
+  bool useAutoGain() const {
+    return _gain == P015_AUTO_GAIN || _gain == P015_EXT_AUTO_GAIN;
+  }
 
   bool performRead(float& luxVal,
                    float& infraredVal,
@@ -125,9 +132,9 @@ struct P015_data_struct : public PluginTaskData_base {
 
 
   unsigned int _gain; // Gain setting, 0 = X1, 1 = X16, 2 = auto, 3 = extended auto;
-  uint8_t         _i2cAddr       = 0;
-  uint8_t         _integration   = 0;
-  uint8_t         _error         = 0;
+  uint8_t      _i2cAddr       = 0;
+  uint8_t      _integration   = 0;
+  uint8_t      _error         = 0;
   bool         _gain16xActive = false;
 };
 

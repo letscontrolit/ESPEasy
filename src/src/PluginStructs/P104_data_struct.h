@@ -354,7 +354,7 @@ struct P104_data_struct : public PluginTaskData_base {
                    int8_t                   _cs_pin,
                    uint8_t                  _modules,
                    uint8_t                  _zonesCount);
-  ~P104_data_struct();
+  virtual ~P104_data_struct();
 
   bool   begin();
   void   loadSettings();
