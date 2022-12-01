@@ -769,7 +769,7 @@ void addTextBox(const String  & id,
 {
   addHtml(F("<input "));
   addHtmlAttribute(F("class"),     classname);
-  addHtmlAttribute(F("type"),      F("text"));
+  addHtmlAttribute(F("type"),      F("search"));
   addHtmlAttribute(F("name"),      id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
