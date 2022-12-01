@@ -18,16 +18,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Wparentheses
 		-Wredundant-decls
 		-Wshadow
+		-Wsign-conversion
 		-Wsign-promo
 		-Wstrict-aliasing
 		-Wundef
 	)
-
-	if(NOT MINGW)
-		add_compile_options(
-			-std=c++98
-		)
-	endif()
 
 	if(${COVERAGE})
 		set(CMAKE_CXX_FLAGS "-fprofile-arcs -ftest-coverage")
@@ -36,7 +31,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL  "GNU")
-	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.8)
+	if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.8) AND (NOT ${COVERAGE}))
 		add_compile_options(-g -Og)
 	else()
 		add_compile_options(-g -O0)
@@ -70,7 +65,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.0)
+	if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.0) AND (NOT ${COVERAGE}))
 		add_compile_options(-g -Og)
 	else()
 		add_compile_options(-g -O0)
@@ -78,7 +73,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+	if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0) AND (NOT ${COVERAGE}))
 		add_compile_options(-g -Og)
 	else()
 		add_compile_options(-g -O0)
@@ -97,4 +92,10 @@ if(MSVC)
 			/Zc:__cplusplus  # Enable updated __cplusplus macro
 		)
 	endif()
+endif()
+
+if(MINGW)
+  # Static link on MinGW to avoid linking with the wrong DLLs when multiple
+	# versions are installed.
+	add_link_options(-static)
 endif()
