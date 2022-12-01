@@ -86,10 +86,18 @@ String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
   return error;
 }
 
-P036_data_struct::P036_data_struct() : display(nullptr) {}
-
 P036_data_struct::~P036_data_struct() {
-  reset();
+  if (display != nullptr) {
+    display->displayOff();
+    display->end();
+    delete display;
+    display = nullptr;
+  }
+
+  if (LineContent != nullptr) {
+    delete LineContent;
+    LineContent = nullptr;
+  }
 }
 
 void P036_data_struct::reset() {

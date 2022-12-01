@@ -19,7 +19,7 @@ public:
 
   P119_data_struct() = delete;
 
-  ~P119_data_struct();
+  virtual ~P119_data_struct();
 
   bool read_sensor();
 

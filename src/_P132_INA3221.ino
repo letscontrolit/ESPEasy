@@ -209,11 +209,11 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P132_data_struct(event));
       P132_data_struct *P132_data = static_cast<P132_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P132_data) {
-        return success;
+      if (nullptr != P132_data) {
+        P132_data->setCalibration_INA3221(event);
+        success = true;
       }
 
-      success = true;
       break;
     }
 
