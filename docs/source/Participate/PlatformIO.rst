@@ -350,7 +350,28 @@ It requires sufficient testing, and analysis of the runtime behavior, of that pi
 
 When creating a new plugin, a request for an available plugin ID should be posted in this support issue: `[Plugins] List of planned new plugins (request a Plugin-ID here) <https://github.com/letscontrolit/ESPEasy/issues/3839>`_
 
-Especially for new plugins, it is highly recommended to write documentation, as explained in the next paragraph.
+Especially for new plugins, it is highly recommended to write documentation, as explained in paragraph **Writing documentation**, below.
+
+
+Using external libraries
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note:: 
+    Since November 2022, the PlatformIO configuration for ESPEasy was changed to *require* all libraries to be locally available, to a) prevent unexpected 'surprises' when an external library is updated, and b) greatly improve build output stability and quality.
+
+While developing a plugin or some other feature, often you use an existing library to re-use that (assumably) proven and tested functionality. To include such library, there is a prerequisite, and some generic steps to take:
+
+Prerequisite:
+
+- The library should have a valid ``library.json`` or ``library.properties`` file (both is also fine).
+
+Procedure:
+
+- Create a new folder in the ``lib`` subfolder of this repository, and give that the name of the library.
+- Copy all files, preferrably excluding the ``.git`` folder that is created when cloning a git repository, into the new folder.
+- In your source, reference the library by using ``#include <main_h_file.h>``, where the ``<>`` should stay, and ``main_h_file.h`` should be replaced by the needed .h file for the library. Multiple .h files can of course be included, as needed for using the required features.
+- Include all files of the library in the (first) pull request for your changes, so the Github Actions build can also use it.
+
 
 Writing documentation
 ---------------------
@@ -494,6 +515,8 @@ For those that want to test the code from a pull request, created by someone els
 
     git pull upstream mega
 
+    git push
+
 2. Create a local branch to avoid cluttering your regular ``mega`` branch: (I've deliberately used plural ``pulls`` as a local folder to distinguish from the remote ``pull`` folder on Github)
 
 .. note:: 
@@ -503,13 +526,13 @@ For those that want to test the code from a pull request, created by someone els
 
     git checkout -b pulls/<prnumber>
 
-3. Download (fetch) the latest code from github into your local git repository
+3. Download (fetch) the latest code (head) from the pull request on github into your local git repository
 
 .. code-block::
 
     git fetch upstream pull/<prnumber>/head
 
-4. Apply (pull) the latest fetched code to the current branch (``pulls/<prnumber>``)
+4. Apply (pull) the latest fetched code (head) to the current branch (``pulls/<prnumber>``)
 
 .. code-block::
 
@@ -517,8 +540,11 @@ For those that want to test the code from a pull request, created by someone els
 
 5. Build the desired PIO environment, or add the (new?) plugin to your Custom.h file to create your local Custom build. Like described above, you can also add a plugin to the ``pre_custom_esp8266.py`` or ``pre_custom_esp32.py`` Python scripts (when *not* having a Custom.h file, as that will be used for any Custom build first).
 
+6. To update your local code after the PR has been updated on github, repeat step **3.** and **4.** within the branch created in step **2.** active (``git checkout pulls/<prnumber>``).
+
 .. warning:: 
     This method does not enable or allow to contribute to that PR, that requires a different, somewhat more complicated, procedure, documented in a next paragraph.
+
 
 Contribute to a pull request created by someone else
 ----------------------------------------------------
