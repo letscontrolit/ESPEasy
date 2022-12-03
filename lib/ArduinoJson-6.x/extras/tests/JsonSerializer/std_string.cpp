@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -44,4 +44,14 @@ TEST_CASE("serialize JsonObject to std::string") {
 
     REQUIRE("{\r\n  \"key\": \"value\"\r\n}" == json);
   }
+}
+
+TEST_CASE("serialize an std::string containing a NUL") {
+  StaticJsonDocument<256> doc;
+  doc.set(std::string("hello\0world", 11));
+  CHECK(doc.memoryUsage() == 12);
+
+  std::string json;
+  serializeJson(doc, json);
+  CHECK("\"hello\\u0000world\"" == json);
 }

@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -121,7 +121,7 @@ TEST_CASE("deserializeJson(std::istream&)") {
 
 #ifdef HAS_VARIABLE_LENGTH_ARRAY
 TEST_CASE("deserializeJson(VLA)") {
-  int i = 9;
+  size_t i = 9;
   char vla[i];
   strcpy(vla, "{\"a\":42}");
 
