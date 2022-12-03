@@ -25,9 +25,9 @@ void P099_data_struct::reset() {
     delete touchscreen;
     touchscreen = nullptr;
   }
-# ifdef PLUGIN_099_DEBUG
+  # ifdef PLUGIN_099_DEBUG
   addLog(LOG_LEVEL_INFO, F("P099 DEBUG Touchscreen reset."));
-# endif // PLUGIN_099_DEBUG
+  # endif // PLUGIN_099_DEBUG
 }
 
 /**
@@ -62,11 +62,11 @@ bool P099_data_struct::init(taskIndex_t taskIndex,
     touchscreen->setRotationFlipped(_flipped);
     touchscreen->begin();
     loadTouchObjects(taskIndex);
-# ifdef PLUGIN_099_DEBUG
+  # ifdef PLUGIN_099_DEBUG
     addLog(LOG_LEVEL_INFO, F("P099 DEBUG Plugin & touchscreen initialized."));
   } else {
     addLog(LOG_LEVEL_INFO, F("P099 DEBUG Touchscreen initialisation FAILED."));
-# endif // PLUGIN_099_DEBUG
+  # endif // PLUGIN_099_DEBUG
   }
   return isInitialized();
 }
@@ -82,14 +82,12 @@ bool P099_data_struct::isInitialized() const {
  * Load the touch objects from the settings, and initialize then properly where needed.
  */
 void P099_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
-# ifdef PLUGIN_099_DEBUG
+  # ifdef PLUGIN_099_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("P099 DEBUG loadTouchObjects size: ");
-    log += sizeof(StoredSettings);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("P099 DEBUG loadTouchObjects size: "), sizeof(StoredSettings)));
   }
-# endif // PLUGIN_099_DEBUG
+  # endif // PLUGIN_099_DEBUG
   LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
 
   for (int i = 0; i < P099_MaxObjectCount; i++) {
@@ -116,9 +114,9 @@ bool P099_data_struct::touched() {
 void P099_data_struct::readData(uint16_t *x, uint16_t *y, uint8_t *z) {
   if (isInitialized()) {
     touchscreen->readData(x, y, z);
-# ifdef PLUGIN_099_DEBUG
+    # ifdef PLUGIN_099_DEBUG
     addLog(LOG_LEVEL_INFO, F("P099 DEBUG readData"));
-# endif // PLUGIN_099_DEBUG
+    # endif // PLUGIN_099_DEBUG
   }
 }
 
@@ -128,14 +126,12 @@ void P099_data_struct::readData(uint16_t *x, uint16_t *y, uint8_t *z) {
 void P099_data_struct::setRotation(uint8_t n) {
   if (isInitialized()) {
     touchscreen->setRotation(n);
-# ifdef PLUGIN_099_DEBUG
+    # ifdef PLUGIN_099_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("P099 DEBUG Rotation set: ");
-      log += n;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("P099 DEBUG Rotation set: "), (int)n));
     }
-# endif // PLUGIN_099_DEBUG
+    # endif // PLUGIN_099_DEBUG
   }
 }
 
@@ -145,14 +141,14 @@ void P099_data_struct::setRotation(uint8_t n) {
 void P099_data_struct::setRotationFlipped(bool flipped) {
   if (isInitialized()) {
     touchscreen->setRotationFlipped(flipped);
-# ifdef PLUGIN_099_DEBUG
+    # ifdef PLUGIN_099_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("P099 DEBUG RotationFlipped set: ");
       log += flipped;
       addLogMove(LOG_LEVEL_INFO, log);
     }
-# endif // PLUGIN_099_DEBUG
+    # endif // PLUGIN_099_DEBUG
   }
 }
 
@@ -203,7 +199,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x,
         lastObjectArea      = SurfaceAreas[objectNr];
         selected            = true;
       }
-# ifdef PLUGIN_099_DEBUG
+      # ifdef PLUGIN_099_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("P099 DEBUG Touched: obj: ");
@@ -228,7 +224,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x,
         log += selectedObjectIndex;
         addLogMove(LOG_LEVEL_INFO, log);
       }
-# endif // PLUGIN_099_DEBUG
+      # endif // PLUGIN_099_DEBUG
     }
   }
   return selected;
@@ -273,7 +269,7 @@ bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state
         }
       }
       StoredSettings.TouchObjects[objectNr].objectname[P099_MaxObjectNameLength - 1] = 0; // Just to be safe
-# ifdef PLUGIN_099_DEBUG
+      # ifdef PLUGIN_099_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("P099 setTouchObjectState: obj: ");
@@ -288,7 +284,7 @@ bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state
         }
         addLogMove(LOG_LEVEL_INFO, log);
       }
-# endif // PLUGIN_099_DEBUG
+      # endif // PLUGIN_099_DEBUG
       // break; // Only first one found is processed
     }
   }

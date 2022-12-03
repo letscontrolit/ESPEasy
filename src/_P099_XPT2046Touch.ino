@@ -158,31 +158,31 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       if (width_ == 0) {
         width_ = P099_TS_X_RES; // default value
       }
-      addFormNumericBox(F("Screen Width (px) (x)"), F("p099_width"), width_, 1, 65535);
+      addFormNumericBox(F("Screen Width (px) (x)"), F("pwidth"), width_, 1, 65535);
 
       uint16_t height_ = P099_CONFIG_Y_RES;
 
       if (height_ == 0) {
         height_ = P099_TS_Y_RES; // default value
       }
-      addFormNumericBox(F("Screen Height (px) (y)"), F("p099_height"), height_, 1, 65535);
+      addFormNumericBox(F("Screen Height (px) (y)"), F("pheight"), height_, 1, 65535);
 
       {
         uint8_t choice2                        = P099_CONFIG_ROTATION;
         const __FlashStringHelper *options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") }; // Avoid unicode
         int optionValues2[4]                   = { 0, 1, 2, 3 };                                                 // Rotation similar to the
                                                                                                                  // TFT ILI9341 rotation
-        addFormSelector(F("Rotation"), F("p099_rotate"), 4, options2, optionValues2, choice2);
+        addFormSelector(F("Rotation"), F("protate"), 4, options2, optionValues2, choice2);
       }
 
       bool bRotationFlipped = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED);
-      addFormCheckBox(F("Flip rotation 180&deg;"), F("p099_rotation_flipped"), bRotationFlipped);
+      addFormCheckBox(F("Flip rotation 180&deg;"), F("protation_flipped"), bRotationFlipped);
       addFormNote(F("Some touchscreens are mounted 180&deg; rotated on the display."));
 
       addFormSubHeader(F("Touch configuration"));
 
       uint8_t treshold = P099_CONFIG_TRESHOLD;
-      addFormNumericBox(F("Touch minimum pressure"), F("p099_treshold"), treshold, 0, 255);
+      addFormNumericBox(F("Touch minimum pressure"), F("ptreshold"), treshold, 0, 255);
 
       #define P099_EVENTS_OPTIONS 6
       uint8_t choice3 = 0;
@@ -191,14 +191,14 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(choice3, P099_FLAGS_SEND_OBJECTNAME, bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_OBJECTNAME));
       {
         const __FlashStringHelper *options3[P099_EVENTS_OPTIONS] =
-        { F("None"),                 F("X and Y"),                 F("X, Y and Z"),
-          F(
-            "Objectnames only"),
-          F(
-            "Objectnames, X and Y"), F(
-            "Objectnames, X, Y and Z") };
+        { F("None"),
+          F("X and Y"),
+          F("X, Y and Z"),
+          F("Objectnames only"),
+          F("Objectnames, X and Y"),
+          F("Objectnames, X, Y and Z") };
         int optionValues3[P099_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-        addFormSelector(F("Events"), F("p099_events"), P099_EVENTS_OPTIONS, options3, optionValues3, choice3);
+        addFormSelector(F("Events"), F("pevents"), P099_EVENTS_OPTIONS, options3, optionValues3, choice3);
       }
 
       if (!Settings.UseRules) {
@@ -216,10 +216,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
         addFormSubHeader(F("Calibration"));
 
         bool tbUseCalibration = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION);
-        {
-          int choice4 = tbUseCalibration ? 1 : 0;
-          addFormSelector_YesNo(F("Calibrate to screen resolution"), F("p099_use_calibration"), choice4, true);
-        }
+        addFormSelector_YesNo(F("Calibrate to screen resolution"), F("puse_calibration"), tbUseCalibration ? 1 : 0, true);
 
         if (tbUseCalibration) {
           addRowLabel(F("Calibration"));
@@ -234,21 +231,21 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
           html_TR_TD();
           addHtml(F("Top-left"));
           html_TD();
-          addNumericBox(F("p099_cal_tl_x"), P099_data->StoredSettings.Calibration.top_left.x, 0, 65535);
+          addNumericBox(F("pcal_tl_x"), P099_data->StoredSettings.Calibration.top_left.x, 0, 65535);
           html_TD();
-          addNumericBox(F("p099_cal_tl_y"), P099_data->StoredSettings.Calibration.top_left.y, 0, 65535);
+          addNumericBox(F("pcal_tl_y"), P099_data->StoredSettings.Calibration.top_left.y, 0, 65535);
           html_TD();
           addHtml(F("Bottom-right"));
           html_TD();
-          addNumericBox(F("p099_cal_br_x"), P099_data->StoredSettings.Calibration.bottom_right.x, 0, 65535);
+          addNumericBox(F("pcal_br_x"), P099_data->StoredSettings.Calibration.bottom_right.x, 0, 65535);
           html_TD();
-          addNumericBox(F("p099_cal_br_y"), P099_data->StoredSettings.Calibration.bottom_right.y, 0, 65535);
+          addNumericBox(F("pcal_br_y"), P099_data->StoredSettings.Calibration.bottom_right.y, 0, 65535);
 
           html_end_table();
           addFormNote(F("All x/y values must be <> 0 to enable calibration."));
         }
         bool bEnableCalibrationLog = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_LOG_CALIBRATION);
-        addFormCheckBox(F("Enable logging for calibration"), F("p099_log_calibration"), bEnableCalibrationLog);
+        addFormCheckBox(F("Enable logging for calibration"), F("plog_calibration"), bEnableCalibrationLog);
 
         addFormSubHeader(F("Touch objects"));
 
@@ -263,7 +260,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
           {
             const __FlashStringHelper *options5[P099_OBJECTCOUNT_OPTIONS] = { F("None"), F("8"), F("16"), F("24"), F("32"), F("40") };
             int optionValues5[P099_OBJECTCOUNT_OPTIONS]                   = { -1, 8, 16, 24, 32, 40 };
-            addFormSelector(F("# of objects"), F("p099_objectcount"), P099_OBJECTCOUNT_OPTIONS, options5, optionValues5, choice5, true);
+            addFormSelector(F("# of objects"), F("pobjectcount"), P099_OBJECTCOUNT_OPTIONS, options5, optionValues5, choice5, true);
           }
         }
 
@@ -307,7 +304,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
           addFormNote(F("Start objectname with '_' to ignore/disable the object (temporarily)."));
 
           uint8_t debounce = P099_CONFIG_DEBOUNCE_MS;
-          addFormNumericBox(F("Debounce delay for On/Off buttons"), F("p099_debounce"), debounce, 0, 255);
+          addFormNumericBox(F("Debounce delay for On/Off buttons"), F("pdebounce"), debounce, 0, 255);
           addUnit(F("0-255 msec."));
         }
         delete P099_data;
@@ -319,21 +316,21 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P099_CONFIG_STATE       = 1; // mark config as already saved (next time, will not use default values)
-      P099_CONFIG_TRESHOLD    = getFormItemInt(F("p099_treshold"));
-      P099_CONFIG_ROTATION    = getFormItemInt(F("p099_rotate"));
-      P099_CONFIG_X_RES       = getFormItemInt(F("p099_width"));
-      P099_CONFIG_Y_RES       = getFormItemInt(F("p099_height"));
-      P099_CONFIG_OBJECTCOUNT = getFormItemInt(F("p099_objectcount"));
+      P099_CONFIG_TRESHOLD    = getFormItemInt(F("ptreshold"));
+      P099_CONFIG_ROTATION    = getFormItemInt(F("protate"));
+      P099_CONFIG_X_RES       = getFormItemInt(F("pwidth"));
+      P099_CONFIG_Y_RES       = getFormItemInt(F("pheight"));
+      P099_CONFIG_OBJECTCOUNT = getFormItemInt(F("pobjectcount"));
 
       if (P099_CONFIG_OBJECTCOUNT > P099_MaxObjectCount) { P099_CONFIG_OBJECTCOUNT = P099_MaxObjectCount; }
 
       uint32_t lSettings = 0;
-      bitWrite(lSettings, P099_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("p099_events")), P099_FLAGS_SEND_XY));
-      bitWrite(lSettings, P099_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("p099_events")), P099_FLAGS_SEND_Z));
-      bitWrite(lSettings, P099_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("p099_events")), P099_FLAGS_SEND_OBJECTNAME));
-      bitWrite(lSettings, P099_FLAGS_USE_CALIBRATION,  getFormItemInt(F("p099_use_calibration")) == 1);
-      bitWrite(lSettings, P099_FLAGS_LOG_CALIBRATION,  isFormItemChecked(F("p099_log_calibration")));
-      bitWrite(lSettings, P099_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("p099_rotation_flipped")));
+      bitWrite(lSettings, P099_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("pevents")), P099_FLAGS_SEND_XY));
+      bitWrite(lSettings, P099_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("pevents")), P099_FLAGS_SEND_Z));
+      bitWrite(lSettings, P099_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("pevents")), P099_FLAGS_SEND_OBJECTNAME));
+      bitWrite(lSettings, P099_FLAGS_USE_CALIBRATION,  getFormItemInt(F("puse_calibration")) == 1);
+      bitWrite(lSettings, P099_FLAGS_LOG_CALIBRATION,  isFormItemChecked(F("plog_calibration")));
+      bitWrite(lSettings, P099_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("protation_flipped")));
       P099_CONFIG_FLAGS = lSettings;
 
       P099_data_struct *P099_data = new (std::nothrow) P099_data_struct();
@@ -341,10 +338,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P099_data) {
         return success; // Save other settings even though this didn't initialize properly
       }
-      P099_data->StoredSettings.Calibration.top_left.x     = getFormItemInt(F("p099_cal_tl_x"));
-      P099_data->StoredSettings.Calibration.top_left.y     = getFormItemInt(F("p099_cal_tl_y"));
-      P099_data->StoredSettings.Calibration.bottom_right.x = getFormItemInt(F("p099_cal_br_x"));
-      P099_data->StoredSettings.Calibration.bottom_right.y = getFormItemInt(F("p099_cal_br_y"));
+      P099_data->StoredSettings.Calibration.top_left.x     = getFormItemInt(F("pcal_tl_x"));
+      P099_data->StoredSettings.Calibration.top_left.y     = getFormItemInt(F("pcal_tl_y"));
+      P099_data->StoredSettings.Calibration.bottom_right.x = getFormItemInt(F("pcal_br_x"));
+      P099_data->StoredSettings.Calibration.bottom_right.y = getFormItemInt(F("pcal_br_y"));
 
       String error;
 
@@ -362,12 +359,11 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                                                                                            // invalid
                                                                                                                            // characters in
                                                                                                                            // objectname
-          error += F("Invalid character in objectname #");
-          error += (objectNr + 1);
+          error += concat(F("Invalid character in objectname #"), objectNr + 1);
           error += F(". Do not use ',-+/*=^%!#[]{}()' or space.\n");
         }
-        P099_data->StoredSettings.TouchObjects[objectNr].top_left.x     =     getFormItemInt(getPluginCustomArgName(objectNr + 100));
-        P099_data->StoredSettings.TouchObjects[objectNr].top_left.y     =     getFormItemInt(getPluginCustomArgName(objectNr + 200));
+        P099_data->StoredSettings.TouchObjects[objectNr].top_left.x     = getFormItemInt(getPluginCustomArgName(objectNr + 100));
+        P099_data->StoredSettings.TouchObjects[objectNr].top_left.y     = getFormItemInt(getPluginCustomArgName(objectNr + 200));
         P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.x = getFormItemInt(getPluginCustomArgName(objectNr + 300));
         P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.y = getFormItemInt(getPluginCustomArgName(objectNr + 400));
 
@@ -378,22 +374,20 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P099_CONFIG_OBJECTCOUNT > 0) {
-        P099_CONFIG_DEBOUNCE_MS = getFormItemInt(F("p099_debounce"));
+        P099_CONFIG_DEBOUNCE_MS = getFormItemInt(F("pdebounce"));
       }
 
       if (error.length() > 0) {
         addHtmlError(error);
       }
-#ifdef PLUGIN_099_DEBUG
+      #ifdef PLUGIN_099_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("p099_data save size: ");
-        log += sizeof(P099_data->StoredSettings);
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("P099 data save size: "), sizeof(P099_data->StoredSettings)));
       }
-#endif // PLUGIN_099_DEBUG
+      #endif // PLUGIN_099_DEBUG
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P099_data->StoredSettings)),
-                             sizeof(P099_data->StoredSettings) /*+ sizeof(P099_data->TouchObjects)*/);
+                             sizeof(P099_data->StoredSettings));
       delete P099_data;
 
       success = true;
@@ -414,16 +408,16 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       bool useCalibration   = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION);
       bool bRotationFlipped = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED);
 
-      if (!(P099_data->init(event->TaskIndex,
-                            P099_CONFIG_CS_PIN,
-                            P099_CONFIG_ROTATION,
-                            bRotationFlipped,
-                            P099_CONFIG_TRESHOLD,
-                            send_xy,
-                            send_z,
-                            useCalibration,
-                            P099_CONFIG_X_RES,
-                            P099_CONFIG_Y_RES))) {
+      if (!P099_data->init(event->TaskIndex,
+                           P099_CONFIG_CS_PIN,
+                           P099_CONFIG_ROTATION,
+                           bRotationFlipped,
+                           P099_CONFIG_TRESHOLD,
+                           send_xy,
+                           send_z,
+                           useCalibration,
+                           P099_CONFIG_X_RES,
+                           P099_CONFIG_Y_RES)) {
         clearPluginTaskData(event->TaskIndex);
         P099_data = nullptr;
         success   = true;
@@ -450,13 +444,13 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
         command    = parseString(string, 1);
         subcommand = parseString(string, 2);
 
-        P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr == P099_data) {
-          return success;
-        }
-
         if (command.equals(F("touch"))) {
+          P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if (nullptr == P099_data) {
+            return success;
+          }
+
           if (subcommand.equals(F("rot"))) { // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
             uint8_t rot_ = static_cast<uint8_t>(parseString(string, 3).toInt() % 4);
 
