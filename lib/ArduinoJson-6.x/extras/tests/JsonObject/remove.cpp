@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -60,7 +60,7 @@ TEST_CASE("JsonObject::remove()") {
 
 #ifdef HAS_VARIABLE_LENGTH_ARRAY
   SECTION("key is a vla") {
-    int i = 16;
+    size_t i = 16;
     char vla[i];
     strcpy(vla, "b");
     obj.remove(vla);
@@ -70,8 +70,13 @@ TEST_CASE("JsonObject::remove()") {
   }
 #endif
 
-  SECTION("should work on null object") {
-    JsonObject null;
-    null.remove("key");
+  SECTION("remove by key on unbound reference") {
+    JsonObject unboundObject;
+    unboundObject.remove("key");
+  }
+
+  SECTION("remove by iterator on unbound reference") {
+    JsonObject unboundObject;
+    unboundObject.remove(unboundObject.begin());
   }
 }

@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -9,30 +9,30 @@ TEST_CASE("JsonVariant::operator|()") {
   DynamicJsonDocument doc(4096);
   JsonVariant variant = doc["value"].to<JsonVariant>();
 
-  SECTION("undefined") {
-    SECTION("undefined | const char*") {
+  SECTION("null") {
+    SECTION("null | const char*") {
       std::string result = variant | "default";
       REQUIRE(result == "default");
     }
 
-    SECTION("undefined | int") {
+    SECTION("null | int") {
       int result = variant | 42;
       REQUIRE(result == 42);
     }
 
-    SECTION("undefined | bool") {
+    SECTION("null | bool") {
       bool result = variant | true;
       REQUIRE(result == true);
     }
 
-    SECTION("undefined | ElementProxy") {
+    SECTION("null | ElementProxy") {
       doc["array"][0] = 42;
 
       JsonVariantConst result = variant | doc["array"][0];
       REQUIRE(result == 42);
     }
 
-    SECTION("undefined | MemberProxy") {
+    SECTION("null | MemberProxy") {
       doc["other"] = 42;
 
       JsonVariantConst result = variant | doc["other"];
@@ -135,6 +135,20 @@ TEST_CASE("JsonVariant::operator|()") {
     variant.set("not default");
     std::string result = variant | "default";
     REQUIRE(result == "not default");
+  }
+
+  SECTION("const char* | char*") {
+    char dflt[] = "default";
+    variant.set("not default");
+    std::string result = variant | dflt;
+    REQUIRE(result == "not default");
+  }
+
+  SECTION("int | char*") {
+    char dflt[] = "default";
+    variant.set(42);
+    std::string result = variant | dflt;
+    REQUIRE(result == "default");
   }
 
   SECTION("const char* | int") {
