@@ -61,6 +61,11 @@ Supported hardware
 
 .. .. include:: P008_events.repl
 
+Get Config values
+~~~~~~~~~~~~~~~~~
+
+.. include:: P008_config_values.repl
+
 Change log
 ----------
 

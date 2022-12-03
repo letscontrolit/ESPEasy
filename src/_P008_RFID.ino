@@ -115,6 +115,17 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P008_data) {
+        success = P008_data->plugin_get_config(event, string);
+      }
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Enable backward compatibility mode"), F("compatible"), P008_COMPATIBILITY == 0);
@@ -127,7 +138,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Present hex as decimal value"), F("hexdec"), P008_HEX_AS_DEC == 1);
       addFormNote(F("Useful only for numeric keypad input!"));
 
-      addFormCheckBox(F("Automatic Tag removal"), F("autoremove"), P008_AUTO_REMOVE == 0);                   // Inverted state!
+      addFormCheckBox(F("Automatic Tag removal"), F("autoremove"), P008_AUTO_REMOVE == 0);                      // Inverted state!
 
       if (P008_REMOVE_TIMEOUT == 0) { P008_REMOVE_TIMEOUT = 500; } // Defaulty 500 mSec (was hardcoded value)
       addFormNumericBox(F("Automatic Tag removal after"), F("removetimeout"), P008_REMOVE_TIMEOUT, 250, 60000); // 0.25 to 60 seconds
@@ -148,7 +159,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       P008_HEX_AS_DEC     = isFormItemChecked(F("hexdec")) ? 1 : 0;
       P008_AUTO_REMOVE    = isFormItemChecked(F("autoremove")) ? 0 : 1; // Inverted logic!
       P008_REMOVE_EVENT   = isFormItemChecked(F("resetevent")) ? 1 : 0;
-      P008_COMPATIBILITY  = isFormItemChecked(F("compatible")) ? 0 : 1;     // Inverted logic!
+      P008_COMPATIBILITY  = isFormItemChecked(F("compatible")) ? 0 : 1; // Inverted logic!
       P008_REMOVE_VALUE   = getFormItemInt(F("removevalue"));
       P008_REMOVE_TIMEOUT = getFormItemInt(F("removetimeout"));
 

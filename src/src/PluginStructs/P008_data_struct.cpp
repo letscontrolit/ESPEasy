@@ -17,7 +17,7 @@ uint64_t P008_data_struct::castHexAsDec(uint64_t hexValue) {
     digit = (hexValue & 0x0000000F);
 
     if (digit > 10) {
-      digit = 0;     // Cast by dropping any non-decimal input
+      digit = 0; // Cast by dropping any non-decimal input
     }
 
     if (digit > 0) {
@@ -92,23 +92,27 @@ bool P008_data_struct::plugin_once_a_second(struct EventStruct *event) {
 
       if ((bitCount % 4 == 0) && ((keyBuffer & 0xF) == 11)) {
         // a number of keys were pressed and finished by #
-        keyBuffer = keyBuffer >> 4;                 // Strip #
+        keyBuffer   = keyBuffer >> 4; // Strip #
+        bufferValid = true;
+        bufferBits  = bitCount;
       } else if (bitCount == P008_DATA_BITS) {
         // read a tag
         keyBuffer = keyBuffer >> 1;                 // Strip leading and trailing parity bits from the keyBuffer
 
         keyMask = (0x1ull << (P008_DATA_BITS - 2)); // Shift in 1 just past the number of remaining bits
         keyMask--;                                  // Decrement by 1 to get 0xFFFFFFFFFFFF...
-        keyBuffer &= keyMask;
+        keyBuffer  &= keyMask;
+        bufferValid = true;
+        bufferBits  = bitCount;
       } else {
         // not enough bits, maybe next time
         timeoutCount++;
+        bufferValid = false;
+        bufferBits  = 0u;
 
         if (timeoutCount > P008_TIMEOUT_LIMIT) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("RFID : reset bits: ");
-            log += bitCount;
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, concat(F("RFID : reset bits: "), (int)bitCount));
           }
 
           // reset after ~5 sec
@@ -185,6 +189,8 @@ bool P008_data_struct::plugin_timer_in(struct EventStruct *event) {
   if (initialised && (P008_AUTO_REMOVE == 0)) { // P008_AUTO_REMOVE check uses inversed logic!
     // Reset card id on timeout
     UserVar.setSensorTypeLong(event->TaskIndex, P008_REMOVE_VALUE);
+    bufferValid = true;
+    bufferBits  = P008_DATA_BITS;
     addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
 
     if (P008_REMOVE_EVENT == 1) {
@@ -220,6 +226,36 @@ void IRAM_ATTR P008_data_struct::Plugin_008_interrupt1(P008_data_struct *self) {
 void IRAM_ATTR P008_data_struct::Plugin_008_interrupt2(P008_data_struct *self) {
   // We've received a 0 bit. (bit 0 = low, bit 1 = high)
   Plugin_008_shift_bit_in_buffer(self, 0); // Shift in a 0
+}
+
+/********************************************************************
+* plugin_get_config
+********************************************************************/
+bool P008_data_struct::plugin_get_config(struct EventStruct *event,
+                                         String            & string) {
+  bool   success = false;
+  String sub     = parseString(string, 1);
+
+  if (sub.equals(F("tagstr"))) { // Format tag as hex/dec
+    uint64_t tag  = UserVar.getSensorTypeLong(event->TaskIndex);
+    uint8_t  bits = bufferBits == 0 ? (P008_DATA_BITS - (P008_DATA_BITS % 4)) / 4 : bufferBits;
+    string  = formatToHex_no_prefix(tag, bits);
+    success = true;
+  } else
+  if (sub.equals(F("tagsize")) && bufferValid) { // Last tagsize in characters
+    string  = (bufferBits - (bufferBits % 4)) / 4;
+    success = true;
+  } else
+  if (sub.equals(F("tagbits")) && bufferValid) { // Last tagsize in bits
+    string  = bufferBits;
+    success = true;
+  } else
+  if (sub.equals(F("tagvalid"))) { // Buffer valid
+    string  = bufferValid;
+    success = true;
+  }
+
+  return success;
 }
 
 #endif // ifdef USES_P008

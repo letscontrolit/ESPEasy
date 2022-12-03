@@ -25,6 +25,8 @@ public:
   bool plugin_init(struct EventStruct *event);
   bool plugin_once_a_second(struct EventStruct *event);
   bool plugin_timer_in(struct EventStruct *event);
+  bool plugin_get_config(struct EventStruct *event,
+                         String            & string);
 
   volatile uint8_t  bitCount  = 0u;   // Count the number of bits received.
   volatile uint64_t keyBuffer = 0ull; // A 64-bit-long keyBuffer into which the number is stored.
@@ -40,6 +42,8 @@ private:
 
   uint8_t timeoutCount = 0u;
   bool    initialised  = false;
+  bool    bufferValid  = false;
+  uint8_t bufferBits   = 0u;
 
   int8_t _pin1 = -1;
   int8_t _pin2 = -1;

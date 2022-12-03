@@ -1,0 +1,24 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#TagStr]``
+    ","
+    | Returns the current Tag as a string, with zeroes prefixed, if there is a valid tag in the buffer.
+    "
+    "
+    | ``[<taskname>#TagSize]``
+    ","
+    | Returns the current tagsize in characters, if there is a valid tag in the buffer.
+    "
+    "
+    | ``[<taskname>#TagBits]``
+    ","
+    | Returns the current tagsize in bits, if there is a valid tag in the buffer.
+    "
+    "
+    | ``[<taskname>#TagValid]``
+    ","
+    | State showing if there is a valid tag in the buffer (0/1).
+    "
