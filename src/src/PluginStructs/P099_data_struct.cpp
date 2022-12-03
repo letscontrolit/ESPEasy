@@ -1,15 +1,14 @@
 #include "../PluginStructs/P099_data_struct.h"
 
 #ifdef USES_P099
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Scheduler.h"
-#include "../Helpers/StringConverter.h"
-#include "../Helpers/SystemVariables.h"
+# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Scheduler.h"
+# include "../Helpers/StringConverter.h"
+# include "../Helpers/SystemVariables.h"
 
 
-
-#include <XPT2046_Touchscreen.h>
+# include <XPT2046_Touchscreen.h>
 
 P099_data_struct::~P099_data_struct() {
   if (touchscreen != nullptr) {
@@ -26,9 +25,9 @@ void P099_data_struct::reset() {
     delete touchscreen;
     touchscreen = nullptr;
   }
-#ifdef PLUGIN_099_DEBUG
+# ifdef PLUGIN_099_DEBUG
   addLog(LOG_LEVEL_INFO, F("P099 DEBUG Touchscreen reset."));
-#endif // PLUGIN_099_DEBUG
+# endif // PLUGIN_099_DEBUG
 }
 
 /**
@@ -57,16 +56,17 @@ bool P099_data_struct::init(taskIndex_t taskIndex,
   _ts_y_res       = ts_y_res;
 
   touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs);
+
   if (touchscreen != nullptr) {
     touchscreen->setRotation(_rotation);
     touchscreen->setRotationFlipped(_flipped);
     touchscreen->begin();
     loadTouchObjects(taskIndex);
-#ifdef PLUGIN_099_DEBUG
+# ifdef PLUGIN_099_DEBUG
     addLog(LOG_LEVEL_INFO, F("P099 DEBUG Plugin & touchscreen initialized."));
-   } else {
+  } else {
     addLog(LOG_LEVEL_INFO, F("P099 DEBUG Touchscreen initialisation FAILED."));
-#endif // PLUGIN_099_DEBUG
+# endif // PLUGIN_099_DEBUG
   }
   return isInitialized();
 }
@@ -82,20 +82,21 @@ bool P099_data_struct::isInitialized() const {
  * Load the touch objects from the settings, and initialize then properly where needed.
  */
 void P099_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
-#ifdef PLUGIN_099_DEBUG
+# ifdef PLUGIN_099_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("P099 DEBUG loadTouchObjects size: ");
     log += sizeof(StoredSettings);
     addLogMove(LOG_LEVEL_INFO, log);
   }
-#endif // PLUGIN_099_DEBUG
+# endif // PLUGIN_099_DEBUG
   LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
 
   for (int i = 0; i < P099_MaxObjectCount; i++) {
     StoredSettings.TouchObjects[i].objectname[P099_MaxObjectNameLength - 1] = 0; // Terminate strings in case of uninitialized data
-    SurfaceAreas[i] = 0; // Reset
-    TouchTimers[i]  = 0;
-    TouchStates[i]  = false;
+    SurfaceAreas[i]                                                         = 0; // Reset
+    TouchTimers[i]                                                          = 0;
+    TouchStates[i]                                                          = false;
   }
 }
 
@@ -105,7 +106,7 @@ void P099_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
 bool P099_data_struct::touched() {
   if (isInitialized()) {
     return touchscreen->touched();
-  } 
+  }
   return false;
 }
 
@@ -115,9 +116,9 @@ bool P099_data_struct::touched() {
 void P099_data_struct::readData(uint16_t *x, uint16_t *y, uint8_t *z) {
   if (isInitialized()) {
     touchscreen->readData(x, y, z);
-#ifdef PLUGIN_099_DEBUG
+# ifdef PLUGIN_099_DEBUG
     addLog(LOG_LEVEL_INFO, F("P099 DEBUG readData"));
-#endif // PLUGIN_099_DEBUG
+# endif // PLUGIN_099_DEBUG
   }
 }
 
@@ -127,13 +128,14 @@ void P099_data_struct::readData(uint16_t *x, uint16_t *y, uint8_t *z) {
 void P099_data_struct::setRotation(uint8_t n) {
   if (isInitialized()) {
     touchscreen->setRotation(n);
-#ifdef PLUGIN_099_DEBUG
+# ifdef PLUGIN_099_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("P099 DEBUG Rotation set: ");
       log += n;
       addLogMove(LOG_LEVEL_INFO, log);
     }
-#endif // PLUGIN_099_DEBUG
+# endif // PLUGIN_099_DEBUG
   }
 }
 
@@ -143,13 +145,14 @@ void P099_data_struct::setRotation(uint8_t n) {
 void P099_data_struct::setRotationFlipped(bool flipped) {
   if (isInitialized()) {
     touchscreen->setRotationFlipped(flipped);
-#ifdef PLUGIN_099_DEBUG
+# ifdef PLUGIN_099_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("P099 DEBUG RotationFlipped set: ");
       log += flipped;
       addLogMove(LOG_LEVEL_INFO, log);
     }
-#endif // PLUGIN_099_DEBUG
+# endif // PLUGIN_099_DEBUG
   }
 }
 
@@ -157,7 +160,7 @@ void P099_data_struct::setRotationFlipped(bool flipped) {
  * Determine if calibration is enabled and usable.
  */
 bool P099_data_struct::isCalibrationActive() {
-  return    _useCalibration
+  return _useCalibration
          && StoredSettings.Calibration.top_left.x > 0
          && StoredSettings.Calibration.top_left.y > 0
          && StoredSettings.Calibration.bottom_right.x > 0
@@ -169,32 +172,39 @@ bool P099_data_struct::isCalibrationActive() {
  * The smallest matching surface is selected if multiple objects overlap.
  * Returns state, and sets selectedObjectName to the best matching object
  */
-bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, String &selectedObjectName, int &selectedObjectIndex, uint8_t checkObjectCount) {
+bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x,
+                                                    uint16_t y,
+                                                    String & selectedObjectName,
+                                                    int    & selectedObjectIndex,
+                                                    uint8_t  checkObjectCount) {
   uint32_t lastObjectArea = 0;
-  bool     selected = false;
+  bool     selected       = false;
+
   for (uint8_t objectNr = 0; objectNr < checkObjectCount; objectNr++) {
     String objectName = String(StoredSettings.TouchObjects[objectNr].objectname);
-    if ( objectName.length() > 0
-      && !objectName.substring(0,1 ).equals(F("_"))         // Ignore if name starts with an underscore
-      && StoredSettings.TouchObjects[objectNr].bottom_right.x > 0
-      && StoredSettings.TouchObjects[objectNr].bottom_right.y > 0) { // Not initial could be valid
 
-      if (SurfaceAreas[objectNr] == 0) { // Need to calculate the surface area
-        SurfaceAreas[objectNr] = (StoredSettings.TouchObjects[objectNr].bottom_right.x - StoredSettings.TouchObjects[objectNr].top_left.x) * (StoredSettings.TouchObjects[objectNr].bottom_right.y - StoredSettings.TouchObjects[objectNr].top_left.y);
+    if ((objectName.length() > 0)
+        && !objectName.substring(0, 1).equals(F("_"))                    // Ignore if name starts with an underscore
+        && (StoredSettings.TouchObjects[objectNr].bottom_right.x > 0)
+        && (StoredSettings.TouchObjects[objectNr].bottom_right.y > 0)) { // Not initial could be valid
+      if (SurfaceAreas[objectNr] == 0) {                                 // Need to calculate the surface area
+        SurfaceAreas[objectNr] = (StoredSettings.TouchObjects[objectNr].bottom_right.x - StoredSettings.TouchObjects[objectNr].top_left.x) *
+                                 (StoredSettings.TouchObjects[objectNr].bottom_right.y - StoredSettings.TouchObjects[objectNr].top_left.y);
       }
 
-      if ( StoredSettings.TouchObjects[objectNr].top_left.x <= x
-        && StoredSettings.TouchObjects[objectNr].top_left.y <= y
-        && StoredSettings.TouchObjects[objectNr].bottom_right.x >= x
-        && StoredSettings.TouchObjects[objectNr].bottom_right.y >= y
-        && (lastObjectArea == 0 
-          || SurfaceAreas[objectNr] < lastObjectArea)) { // Select smallest area that fits the coordinates
+      if ((StoredSettings.TouchObjects[objectNr].top_left.x <= x)
+          && (StoredSettings.TouchObjects[objectNr].top_left.y <= y)
+          && (StoredSettings.TouchObjects[objectNr].bottom_right.x >= x)
+          && (StoredSettings.TouchObjects[objectNr].bottom_right.y >= y)
+          && ((lastObjectArea == 0)
+              || (SurfaceAreas[objectNr] < lastObjectArea))) { // Select smallest area that fits the coordinates
         selectedObjectName  = objectName;
         selectedObjectIndex = objectNr;
         lastObjectArea      = SurfaceAreas[objectNr];
         selected            = true;
       }
-#ifdef PLUGIN_099_DEBUG
+# ifdef PLUGIN_099_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("P099 DEBUG Touched: obj: ");
         log += objectName;
@@ -218,7 +228,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
         log += selectedObjectIndex;
         addLogMove(LOG_LEVEL_INFO, log);
       }
-#endif // PLUGIN_099_DEBUG
+# endif // PLUGIN_099_DEBUG
     }
   }
   return selected;
@@ -229,29 +239,46 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
  * Checks if the name doesn't exceed the max. length.
  */
 bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state, uint8_t checkObjectCount) {
-  if (touchObject.isEmpty() || touchObject.substring(0, 1).equals(F("_"))) return false;
+  if (touchObject.isEmpty() || touchObject.substring(0, 1).equals(F("_"))) { return false; }
   String findObject = (state ? F("_") : F("")); // When enabling, try to find a disabled object
+
   findObject += touchObject;
   String thisObject;
   bool   success = false;
+
   thisObject.reserve(P099_MaxObjectNameLength);
+
   for (uint8_t objectNr = 0; objectNr < checkObjectCount; objectNr++) {
     thisObject = String(StoredSettings.TouchObjects[objectNr].objectname);
-    if (thisObject.length() > 0 && findObject.equalsIgnoreCase(thisObject)) {
+
+    if ((thisObject.length() > 0) && findObject.equalsIgnoreCase(thisObject)) {
       if (state) {
-        success = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, thisObject.substring(1), P099_MaxObjectNameLength); // Keep original character casing
+        success = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, thisObject.substring(1), P099_MaxObjectNameLength); // Keep
+                                                                                                                                     // original
+                                                                                                                                     // character
+                                                                                                                                     // casing
       } else {
-        if (thisObject.length() < P099_MaxObjectNameLength - 2) { // Leave room for the underscore and the terminating 0.
+        if (thisObject.length() < P099_MaxObjectNameLength - 2) {                                                                    // Leave
+                                                                                                                                     // room
+                                                                                                                                     // for
+                                                                                                                                     // the
+                                                                                                                                     // underscore
+                                                                                                                                     // and
+                                                                                                                                     // the
+                                                                                                                                     // terminating
+                                                                                                                                     // 0.
           String disabledObject = F("_");
           disabledObject += thisObject;
-          success = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, disabledObject, P099_MaxObjectNameLength);
+          success         = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, disabledObject, P099_MaxObjectNameLength);
         }
       }
       StoredSettings.TouchObjects[objectNr].objectname[P099_MaxObjectNameLength - 1] = 0; // Just to be safe
-#ifdef PLUGIN_099_DEBUG
+# ifdef PLUGIN_099_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("P099 setTouchObjectState: obj: ");
         log += thisObject;
+
         if (success) {
           log += F(", new state: ");
           log += (state ? F("en") : F("dis"));
@@ -261,7 +288,7 @@ bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state
         }
         addLogMove(LOG_LEVEL_INFO, log);
       }
-#endif // PLUGIN_099_DEBUG
+# endif // PLUGIN_099_DEBUG
       // break; // Only first one found is processed
     }
   }
@@ -271,19 +298,22 @@ bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state
 /**
  * Scale the provided raw coordinates to screen-resolution coordinates if calibration is enabled/configured
  */
-void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
+void P099_data_struct::scaleRawToCalibrated(uint16_t& x, uint16_t& y) {
   if (isCalibrationActive()) {
     uint16_t lx = x - StoredSettings.Calibration.top_left.x;
+
     if (lx <= 0) {
       x = 0;
     } else {
       if (lx > StoredSettings.Calibration.bottom_right.x) {
         lx = StoredSettings.Calibration.bottom_right.x;
       }
-      float x_fact = static_cast<float>(StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / static_cast<float>(_ts_x_res);
+      float x_fact = static_cast<float>(StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) /
+                     static_cast<float>(_ts_x_res);
       x = static_cast<uint16_t>(lround(lx / x_fact));
     }
     uint16_t ly = y - StoredSettings.Calibration.top_left.y;
+
     if (ly <= 0) {
       y = 0;
     } else {
