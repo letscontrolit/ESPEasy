@@ -1328,6 +1328,7 @@ Basic Math Functions
 * ``sqrt(x)`` Square root of x. (x^0.5)
 * ``sq(x)`` Square of x, x^2.
 * ``round(x)`` Rounds to the nearest integer, but rounds halfway cases away from zero (instead of to the nearest even integer). 
+* ``^`` The caret is used as the exponentiation operator for calculating the value of x to the power of y (x\ :sup:`y`). 
 
 Rules example:
 
@@ -1338,9 +1339,11 @@ Rules example:
    let,2,sqrt([var#1])
    let,3,=log(%eventvalue2%)
    let,4,ln(%eventvalue2%)
+   let,5,%eventvalue1%^%eventvalue2%
    LogEntry,'sqrt of [var#1] = [var#2]'
    LogEntry,'log of %eventvalue2% = [var#3]'
    LogEntry,'ln of %eventvalue2% = [var#4]'   
+   LogEntry,'pow of %eventvalue1%^%eventvalue2% = [var#5]' 
  endon
 
 Called with event ``eventname2=1.234,100``
@@ -1358,6 +1361,8 @@ Called with event ``eventname2=1.234,100``
  213361 : Info   : log of 100 = 2
  213369 : Info   : ACT  : LogEntry,'ln of 100 = 4.60517018598809'
  213374 : Info   : ln of 100 = 4.60517018598809
+ 213379 : Info   : ACT : LogEntry,'pow of 1.234^100 = 1353679866.79107'
+ 213382 : Info   : pow of 1.234^100 = 1353679866.79107
 
 
 
