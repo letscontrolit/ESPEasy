@@ -211,12 +211,12 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
           addRowLabel(F("Calibration"));
           html_table(EMPTY_STRING, false);  // Sub-table
-          html_table_header(F(""));
-          html_table_header(F("x"));
-          html_table_header(F("y"));
-          html_table_header(F(""));
-          html_table_header(F("x"));
-          html_table_header(F("y"));
+          html_table_header(F(""),  100);
+          html_table_header(F("x"), 70);
+          html_table_header(F("y"), 70);
+          html_table_header(F(""),  100);
+          html_table_header(F("x"), 70);
+          html_table_header(F("y"), 70);
 
           html_TR_TD();
           addHtml(F("Top-left"));
@@ -256,14 +256,14 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
           addRowLabel(F("Object"));
           html_table(EMPTY_STRING, false);  // Sub-table
-          html_table_header(F("&nbsp;#&nbsp;"));
-          html_table_header(F("Objectname"));
-          html_table_header(F("Top-left x"));
-          html_table_header(F("Top-left y"));
-          html_table_header(F("Bottom-right x"));
-          html_table_header(F("Bottom-right y"));
-          html_table_header(F("On/Off button"));
-          html_table_header(F("Inverted"));
+          html_table_header(F("&nbsp;#&nbsp;"),  30);
+          html_table_header(F("Objectname"),     200);
+          html_table_header(F("Top-left x"),     120);
+          html_table_header(F("Top-left y"),     120);
+          html_table_header(F("Bottom-right x"), 150);
+          html_table_header(F("Bottom-right y"), 150);
+          html_table_header(F("On/Off button"),  150);
+          html_table_header(F("Inverted"),       120);
 
           for (int objectNr = 0; objectNr < P099_CONFIG_OBJECTCOUNT; objectNr++) {
             html_TR_TD();
