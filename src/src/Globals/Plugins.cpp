@@ -99,6 +99,20 @@ pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
   return INVALID_PLUGIN_ID;
 }
 
+#if FEATURE_PLUGIN_PRIORITY
+bool isPluginI2CPowerManager_from_TaskIndex(taskIndex_t taskIndex) {
+  if (validTaskIndex(taskIndex)) {
+    deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+    if (validDeviceIndex(deviceIndex)) {
+      return (Device[deviceIndex].Type == DEVICE_TYPE_I2C) && 
+             Device[deviceIndex].PowerManager && 
+             Settings.isPowerManagerTask(taskIndex);
+    }
+  }
+  return false;
+}
+#endif // if FEATURE_PLUGIN_PRIORITY
+
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 {
   if (pluginID != INVALID_PLUGIN_ID) {

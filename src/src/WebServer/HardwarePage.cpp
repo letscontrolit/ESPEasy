@@ -32,14 +32,18 @@ void handle_hardware() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  if (isFormItem(F("psda")))
-  {
+  if (isFormItem(F("pled"))) {
     String error;
     Settings.Pin_status_led           = getFormItemInt(F("pled"));
     Settings.Pin_status_led_Inversed  = isFormItemChecked(F("pledi"));
     Settings.Pin_Reset                = getFormItemInt(F("pres"));
-    Settings.Pin_i2c_sda              = getFormItemInt(F("psda"));
-    Settings.Pin_i2c_scl              = getFormItemInt(F("pscl"));
+    #if FEATURE_PLUGIN_PRIORITY
+    if (!isI2CPriorityTaskActive())
+    #endif //if FEATURE_PLUGIN_PRIORITY
+    {
+      Settings.Pin_i2c_sda            = getFormItemInt(F("psda"));
+      Settings.Pin_i2c_scl            = getFormItemInt(F("pscl"));
+    }
     Settings.I2C_clockSpeed           = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
     Settings.I2C_clockSpeed_Slow      = getFormItemInt(F("pi2cspslow"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
     #if FEATURE_I2CMULTIPLEXER
@@ -65,7 +69,7 @@ void handle_hardware() {
       Settings.InitSPI                = isFormItemChecked(F("initspi")); // SPI Init
     #endif
     Settings.Pin_sd_cs                = getFormItemInt(F("sd"));
-#if FEATURE_ETHERNET
+    #if FEATURE_ETHERNET
     Settings.ETH_Phy_Addr             = getFormItemInt(F("ethphy"));
     Settings.ETH_Pin_mdc              = getFormItemInt(F("ethmdc"));
     Settings.ETH_Pin_mdio             = getFormItemInt(F("ethmdio"));
@@ -73,7 +77,7 @@ void handle_hardware() {
     Settings.ETH_Phy_Type             = static_cast<EthPhyType_t>(getFormItemInt(F("ethtype")));
     Settings.ETH_Clock_Mode           = static_cast<EthClockMode_t>(getFormItemInt(F("ethclock")));
     Settings.NetworkMedium            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
-#endif // if FEATURE_ETHERNET
+    #endif // if FEATURE_ETHERNET
     int gpio = 0;
 
     while (gpio <= MAX_GPIO) {
@@ -110,8 +114,23 @@ void handle_hardware() {
   addFormNote(F("Press about 10s for factory reset"));
 
   addFormSubHeader(F("I2C Interface"));
-  addFormPinSelectI2C(formatGpioName_bidirectional(F("SDA")), F("psda"), Settings.Pin_i2c_sda);
-  addFormPinSelectI2C(formatGpioName_output(F("SCL")),        F("pscl"), Settings.Pin_i2c_scl);
+  #if FEATURE_PLUGIN_PRIORITY
+  if (isI2CPriorityTaskActive()) {
+    int  pinnr = -1;
+    bool input, output, warning = false;
+    addFormNote(F("I2C GPIO pins can't be changed when an I2C Priority task is configured."));
+    addRowLabel(formatGpioName_bidirectional(F("SDA")));
+    getGpioInfo(Settings.Pin_i2c_sda, pinnr, input, output, warning);
+    addHtml(createGPIO_label(Settings.Pin_i2c_sda, pinnr, true, true, false));
+    addRowLabel(formatGpioName_output(F("SCL")));
+    getGpioInfo(Settings.Pin_i2c_scl, pinnr, input, output, warning);
+    addHtml(createGPIO_label(Settings.Pin_i2c_scl, pinnr, true, true, false));
+  } else
+  #endif // if FEATURE_PLUGIN_PRIORITY
+  {
+    addFormPinSelectI2C(formatGpioName_bidirectional(F("SDA")), F("psda"), Settings.Pin_i2c_sda);
+    addFormPinSelectI2C(formatGpioName_output(F("SCL")),        F("pscl"), Settings.Pin_i2c_scl);
+  }
   addFormNumericBox(F("Clock Speed"), F("pi2csp"), Settings.I2C_clockSpeed, 100, 3400000);
   addUnit(F("Hz"));
   addFormNote(F("Use 100 kHz for old I2C devices, 400 kHz is max for most."));
@@ -276,5 +295,15 @@ void handle_hardware() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
+
+#if FEATURE_PLUGIN_PRIORITY
+bool isI2CPriorityTaskActive() {
+  bool hasI2CPriorityTask = false;
+  for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX && !hasI2CPriorityTask; taskIndex++) {
+    hasI2CPriorityTask |= isPluginI2CPowerManager_from_TaskIndex(taskIndex);
+  }
+  return hasI2CPriorityTask;
+}
+#endif // if FEATURE_PLUGIN_PRIORITY
 
 #endif // ifdef WEBSERVER_HARDWARE
