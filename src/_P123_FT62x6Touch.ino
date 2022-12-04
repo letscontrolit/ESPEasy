@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-12-04 tonhuisman: Remove [Testing] tag from plugin name
  * 2022-09-26 tonhuisman: Add nullptr checks, improved log/string handling
  * 2022-08-15 tonhuisman: Add Swipe and Slider support (to TouchHandler)
  * 2022-08-15 tonhuisman: UI improvement, settings table uses alternate color per 2 rows, code improvements
@@ -39,7 +40,7 @@
 
 #define PLUGIN_123
 #define PLUGIN_ID_123         123
-#define PLUGIN_NAME_123       "Touch - FT62x6 touchscreen [TESTING]"
+#define PLUGIN_NAME_123       "Touch - FT62x6 touchscreen"
 #define PLUGIN_VALUENAME1_123 "X"
 #define PLUGIN_VALUENAME2_123 "Y"
 #define PLUGIN_VALUENAME3_123 "Z"
@@ -219,7 +220,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       success = true;
 
       if (!P123_data->init(event)) {
-        delete P123_data;
+        clearPluginTaskData(event->TaskIndex);
         success = false;
       }
       break;
