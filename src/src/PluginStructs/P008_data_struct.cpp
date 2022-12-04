@@ -45,37 +45,41 @@ P008_data_struct::P008_data_struct(struct EventStruct *event) {
 * Destructor
 *****************************************************/
 P008_data_struct::~P008_data_struct() {
-  detachInterrupt(digitalPinToInterrupt(_pin1));
-  detachInterrupt(digitalPinToInterrupt(_pin2));
+  if (initialised) {
+    detachInterrupt(digitalPinToInterrupt(_pin1));
+    detachInterrupt(digitalPinToInterrupt(_pin2));
+  }
 }
 
 /**************************************************************************
 * plugin_init Initialize interrupt handling
 **************************************************************************/
 bool P008_data_struct::plugin_init(struct EventStruct *event) {
-  pinMode(_pin1, INPUT_PULLUP);
-  pinMode(_pin2, INPUT_PULLUP);
+  if (validGpio(_pin1) && validGpio(_pin2)) {
+    pinMode(_pin1, INPUT_PULLUP);
+    pinMode(_pin2, INPUT_PULLUP);
 
-  if (P008_COMPATIBILITY == 0) { // Keep 'old' setting for backward compatibility
-    attachInterruptArg(digitalPinToInterrupt(_pin1),
-                       reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt1),
-                       this,
-                       FALLING);
-    attachInterruptArg(digitalPinToInterrupt(_pin2),
-                       reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt2),
-                       this,
-                       FALLING);
-  } else {
-    attachInterruptArg(digitalPinToInterrupt(_pin1),
-                       reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt2),
-                       this,
-                       FALLING);
-    attachInterruptArg(digitalPinToInterrupt(_pin2),
-                       reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt1),
-                       this,
-                       FALLING);
+    if (P008_COMPATIBILITY == 0) { // Keep 'old' setting for backward compatibility
+      attachInterruptArg(digitalPinToInterrupt(_pin1),
+                         reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt1),
+                         this,
+                         FALLING);
+      attachInterruptArg(digitalPinToInterrupt(_pin2),
+                         reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt2),
+                         this,
+                         FALLING);
+    } else {
+      attachInterruptArg(digitalPinToInterrupt(_pin1),
+                         reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt2),
+                         this,
+                         FALLING);
+      attachInterruptArg(digitalPinToInterrupt(_pin2),
+                         reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt1),
+                         this,
+                         FALLING);
+    }
+    initialised = true;
   }
-  initialised = true;
   return initialised;
 }
 
@@ -233,26 +237,29 @@ void IRAM_ATTR P008_data_struct::Plugin_008_interrupt2(P008_data_struct *self) {
 ********************************************************************/
 bool P008_data_struct::plugin_get_config(struct EventStruct *event,
                                          String            & string) {
-  bool   success = false;
-  String sub     = parseString(string, 1);
+  bool success = false;
 
-  if (sub.equals(F("tagstr"))) { // Format tag as hex/dec
-    uint64_t tag  = UserVar.getSensorTypeLong(event->TaskIndex);
-    uint8_t  bits = bufferBits == 0 ? (P008_DATA_BITS - (P008_DATA_BITS % 4)) / 4 : bufferBits;
-    string  = formatToHex_no_prefix(tag, bits);
-    success = true;
-  } else
-  if (sub.equals(F("tagsize")) && bufferValid) { // Last tagsize in characters
-    string  = (bufferBits - (bufferBits % 4)) / 4;
-    success = true;
-  } else
-  if (sub.equals(F("tagbits")) && bufferValid) { // Last tagsize in bits
-    string  = bufferBits;
-    success = true;
-  } else
-  if (sub.equals(F("tagvalid"))) { // Buffer valid
-    string  = bufferValid;
-    success = true;
+  if (initialised) {
+    String sub = parseString(string, 1);
+
+    if (sub.equals(F("tagstr"))) { // Format tag as hex/dec
+      uint64_t tag  = UserVar.getSensorTypeLong(event->TaskIndex);
+      uint8_t  bits = bufferBits == 0 ? (P008_DATA_BITS - (P008_DATA_BITS % 4)) / 4 : bufferBits;
+      string  = formatToHex_no_prefix(tag, bits);
+      success = true;
+    } else
+    if (sub.equals(F("tagsize")) && bufferValid) { // Last tagsize in characters
+      string  = (bufferBits - (bufferBits % 4)) / 4;
+      success = true;
+    } else
+    if (sub.equals(F("tagbits")) && bufferValid) { // Last tagsize in bits
+      string  = bufferBits;
+      success = true;
+    } else
+    if (sub.equals(F("tagvalid"))) { // Buffer valid
+      string  = bufferValid;
+      success = true;
+    }
   }
 
   return success;

@@ -7,6 +7,8 @@
 
 /*
    History:
+   2022-12-04 tonhuisman: Fix initialization issue (hanginging ESP...) when GPIO pins are not configured correctly
+   2022-12-03 tonhuisman: Add Get Config values for tag value and bits received
    2022-08-02 tonhuisman: Enable multi-instance use, handle interrupts multi-instance compatible
                           use named defines for settings, rename variables where possible, clean up sources
    2022-08-02 tonhuisman: Reduce usage of iRam by optimizing the ISR
