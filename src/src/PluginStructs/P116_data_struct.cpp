@@ -228,30 +228,33 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
                                                       true,
                                                       _textBackFill);
 
-    displayOnOff(true);
+    if (nullptr != gfxHelper) {
+      displayOnOff(true);
 
-    gfxHelper->setRotation(_rotation);
-    st77xx->fillScreen(_bgcolor);             // fill screen with black color
-    st77xx->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+      gfxHelper->initialize();
+      gfxHelper->setRotation(_rotation);
+      st77xx->fillScreen(_bgcolor);             // fill screen with black color
+      st77xx->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
 
     # ifdef P116_SHOW_SPLASH
-    uint16_t yPos = 0;
-    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
-    yPos += (3 * _fontheight);
-    gfxHelper->printText(String(F("ST77xx")).c_str(),  0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
-    delay(100); // Splash
+      uint16_t yPos = 0;
+      gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
+      yPos += (3 * _fontheight);
+      gfxHelper->printText(String(F("ST77xx")).c_str(),  0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
+      delay(100); // Splash
     # endif // ifdef P116_SHOW_SPLASH
 
-    gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
-    st77xx->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
-    st77xx->setCursor(0, 0);           // move cursor to position (0, 0) pixel
-    updateFontMetrics();
+      gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
+      st77xx->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
+      st77xx->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+      updateFontMetrics();
 
 
-    if (P116_CONFIG_BUTTON_PIN != -1) {
-      pinMode(P116_CONFIG_BUTTON_PIN, INPUT_PULLUP);
+      if (P116_CONFIG_BUTTON_PIN != -1) {
+        pinMode(P116_CONFIG_BUTTON_PIN, INPUT_PULLUP);
+      }
+      success = true;
     }
-    success = true;
   }
   return success;
 }

@@ -100,6 +100,7 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
     displayOnOff(true);
 
     if (nullptr != gfxHelper) {
+      gfxHelper->initialize();
       pcd8544->setContrast(_contrast);
       gfxHelper->invertDisplay(_displayInverted);
       gfxHelper->setRotation(_rotation);
