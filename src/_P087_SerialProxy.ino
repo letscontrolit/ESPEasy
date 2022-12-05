@@ -113,6 +113,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
         uint32_t success, error, length_last;
         P087_data->getSentencesReceived(success, error, length_last);
         uint8_t varNr = VARS_PER_TASK;
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("TX GPIO"),    String(P087_data->getTXGpioSerial()));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
@@ -147,7 +148,8 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      addFormSubHeader(F("Filtering"));
+
+      addFormSubHeader(F("Read HEX"));
       P087_html_show_matchForms(event);
 
       addFormSubHeader(F("Statistics"));
@@ -236,7 +238,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       String cmd = parseString(string, 1);
 
 
-      if (cmd.equalsIgnoreCase(F("serialproxy_write"))) {
+      if (cmd.equalsIgnoreCase(F("serialproxy_write")) || cmd.equalsIgnoreCase(F("sp_w"))) {
         P087_data_struct *P087_data =
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -246,6 +248,49 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
           P087_data->sendString(param1);
           addLogMove(LOG_LEVEL_INFO, param1);
           success = true;
+        }
+      }
+
+      if (cmd.equalsIgnoreCase(F("serialproxy_write_tr")) || cmd.equalsIgnoreCase(F("sp_w_tr"))) {
+        P087_data_struct *P087_data =
+          static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if ((nullptr != P087_data)) {
+          if (P087_data->getTXGpioSerial() == parseStringKeepCase(string, 2).toInt()) {
+            String param1 = parseStringKeepCase(string, 3, ',', false); // Don't trim off white-space
+            parseSystemVariables(param1, false);
+            P087_data->sendString(param1);
+            addLogMove(LOG_LEVEL_INFO, param1);
+            success = true;
+          }
+        }
+      }
+
+      if (cmd.equalsIgnoreCase(F("serialproxy_writehex")) || cmd.equalsIgnoreCase(F("sp_whex"))) {
+        P087_data_struct *P087_data =
+          static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if ((nullptr != P087_data)) {
+          String param1 = parseStringKeepCase(string, 2);
+          parseSystemVariables(param1, false);
+          P087_data->sendStringhex(param1);
+          addLogMove(LOG_LEVEL_INFO, param1);
+          success = true;
+        }
+      }
+
+      if (cmd.equalsIgnoreCase(F("serialproxy_writehex_tr")) || cmd.equalsIgnoreCase(F("sp_whex_tr"))) {
+        P087_data_struct *P087_data =
+          static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if ((nullptr != P087_data)) {
+          if (P087_data->getTXGpioSerial() == parseStringKeepCase(string, 2).toInt()) {
+            String param1 = parseStringKeepCase(string, 3);
+            parseSystemVariables(param1, false);
+            P087_data->sendStringhex(param1);
+            addLogMove(LOG_LEVEL_INFO, param1);
+            success = true;
+          }
         }
       }
 
@@ -291,6 +336,20 @@ void P087_html_show_matchForms(struct EventStruct *event) {
     static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
   if ((nullptr != P087_data)) {
+
+    addFormNumericBox(F("Read HEX Data Length"), getPluginCustomArgName(P087_HEX_DATA_LEN_POS), P087_data->getHEXDataLength(), -1024, 1024);
+    addFormNote(F("Length = 0 Read ASCII 32 - 217 and end read on [Enter]; Length > 0 Read N Length; Length < 0 ,Read header next N data get Length."));
+    addFormNote(F(" e.g: set -2 , Read header next 2 data, [F11FE22EB66BA88A][00][08] , -1 = [00],-2 = [08], Set Length 8"));
+
+    addFormNumericBox(F("HEX Data Adding Length"), getPluginCustomArgName(P087_HEX_DATA_LEN_ADD_POS), P087_data->getHEXDataAddLength(), 0, 1024);
+    addFormNote(F("Length > 0 ,Read data and added N Length. e.g: set 3 , Set Length 8 + 3 = 11"));
+
+    addFormTextBox(F("HEX Header"), getPluginCustomArgName(P087_HEX_HEADER_POS), P087_data->getHEXHeader(), 32);
+    addFormNote(F("HEX start header = F11FE22EB66BA88A , Max length[16]"));
+    addFormNote(String(F("CMD [ASCII 32 - 217]: serialproxy_write,reboot ; serialproxy_write_tr,")) + String(P087_data->getTXGpioSerial()) + String(F(",reboot ; sp_w,reboot ; sp_w_tr,")) + String(P087_data->getTXGpioSerial()) + String(F(",reboot ; ")));
+    addFormNote(String(F("CMD [hex]: serialproxy_writehex,10a0 ; serialproxy_writehex_tr,")) + String(P087_data->getTXGpioSerial()) + String(F(",10a0")) + String(F(" ; sp_whex,10a0 ; sp_whex_tr,")) + String(P087_data->getTXGpioSerial()) + String(F(",10a0")));
+
+    addFormSubHeader(F("Filtering"));
     addFormTextBox(F("RegEx"), getPluginCustomArgName(P087_REGEX_POS), P087_data->getRegEx(), P87_Nchars);
     addFormNote(F("Captures are specified using round brackets."));
 
@@ -325,7 +384,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
     P087_Filter_Comp comparator = P087_Filter_Comp::Equal;
     String filter;
 
-    for (uint8_t varNr = P087_FIRST_FILTER_POS; varNr < P87_Nlines; ++varNr)
+    for (uint8_t varNr = P087_FIRST_FILTER_POS; varNr < P087_NR_FILTERS_N; ++varNr)
     {
       String id = getPluginCustomArgName(varNr);
 
@@ -374,7 +433,7 @@ void P087_html_show_stats(struct EventStruct *event) {
   {
     addRowLabel(F("Current Sentence"));
     String sentencePart;
-    P087_data->getSentence(sentencePart);
+    P087_data->getSentencePart(sentencePart);
     addHtml(sentencePart);
   }
 
