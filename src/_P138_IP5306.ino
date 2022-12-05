@@ -7,6 +7,7 @@
 
 /**
  * Changelog:
+ * 2022-12-05 tonhuisman: Remove [Testing] tag
  * 2022-11-08 tonhuisman: Fix a few typos, cleanup some comments
  * 2022-08-26 tonhuisman: Initial plugin development, using codewitch-honey-crisis/htcw_ip5306 library
  **/
@@ -33,7 +34,7 @@
 
 # define PLUGIN_138
 # define PLUGIN_ID_138         138
-# define PLUGIN_NAME_138       "Power mgt - IP5306 Power management [TESTING]"
+# define PLUGIN_NAME_138       "Power mgt - IP5306 Power management"
 
 # include "./src/PluginStructs/P138_data_struct.h"
 
