@@ -7,6 +7,8 @@
 
 /**
  * Changelog:
+ * 2022-12-06 tonhuisman: Reorder Device configuration because of added PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR state
+ *                        Enable PluginStats option
  * 2022-12-05 tonhuisman: Remove [Testing] tag
  * 2022-11-08 tonhuisman: Fix a few typos, cleanup some comments
  * 2022-08-26 tonhuisman: Initial plugin development, using codewitch-honey-crisis/htcw_ip5306 library
@@ -55,6 +57,7 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].PluginStats    = true;
       break;
     }
 
@@ -113,7 +116,7 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     {
       {
         const __FlashStringHelper *valOptions[] = {
@@ -144,7 +147,13 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
                                               valValues);
         }
       }
+      success = true;
 
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD:
+    {
       addFormNumericBox(F("Decimals for config values"), F("decimals"), P138_CONFIG_DECIMALS, 0, 4);
 
       addFormCheckBox(F("Event on PowerSource change"), F("eventpwrchg"), bitRead(P138_CONFIG_FLAGS, P138_FLAG_POWERCHANGE));
