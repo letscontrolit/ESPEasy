@@ -451,10 +451,13 @@ void handle_json()
         for(int i = 0; i < 3; i++)
         {
           if (Settings.TaskDevicePin[i][TaskIndex] != -1) {
-    	      stream_next_json_object_value(F("TaskDeviceGPIO") , Settings.TaskDevicePin[i][TaskIndex]);
+             int gpioNr = Settings.TaskDevicePin[i][TaskIndex];
+              if (i==0) {stream_next_json_object_value(F("TaskDeviceGPIO1"), gpioNr);}
+              if (i==1) {stream_next_json_object_value(F("TaskDeviceGPIO2"), gpioNr);} 
+              if (i==2) {stream_next_json_object_value(F("TaskDeviceGPIO3"), gpioNr);} 
+            }
           }
-        }
-
+        
         #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
