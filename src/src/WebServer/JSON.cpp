@@ -448,8 +448,11 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
-        if (Settings.TaskDeviceNumber[TaskIndex] == 1) {
-          stream_next_json_object_value(F("TaskDeviceGPIO"), Settings.TaskDevicePin1[TaskIndex]);
+        for(int i = 0; i < 3; i++)
+        {
+          if (Settings.TaskDevicePin[i][TaskIndex] != -1) {
+    	      stream_next_json_object_value(F("TaskDeviceGPIO") , Settings.TaskDevicePin[i][TaskIndex]);
+          }
         }
 
         #if FEATURE_I2CMULTIPLEXER
