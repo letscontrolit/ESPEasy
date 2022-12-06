@@ -448,6 +448,10 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
+        if (getPluginNameFromDeviceIndex(DeviceIndex) == "Switch input - Switch") {
+          stream_next_json_object_value(F("TaskDeviceGPIO"), Settings.TaskDevicePin1[TaskIndex]);
+        }
+        
         #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
