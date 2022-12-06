@@ -448,15 +448,11 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
-        for(int i = 0; i < 3; i++)
-        {
+        for(int i = 0; i < 3; i++) {
           if (Settings.TaskDevicePin[i][TaskIndex] != -1) {
-             int gpioNr = Settings.TaskDevicePin[i][TaskIndex];
-              if (i==0) {stream_next_json_object_value(F("TaskDeviceGPIO1"), gpioNr);}
-              if (i==1) {stream_next_json_object_value(F("TaskDeviceGPIO2"), gpioNr);} 
-              if (i==2) {stream_next_json_object_value(F("TaskDeviceGPIO3"), gpioNr);} 
-            }
+            stream_next_json_object_value(concat(F("TaskDeviceGPIO"), i + 1) , String(Settings.TaskDevicePin[i][TaskIndex]));
           }
+        }
         
         #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
