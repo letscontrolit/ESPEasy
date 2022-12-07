@@ -409,9 +409,9 @@ static unsigned int find_next(uint8_t* bits, unsigned int max, unsigned int valu
         next_value = next_set_bit(bits, max, 0, &notfound);
     }
     if (notfound || next_value != value) {
-        err = set_field(calendar, field, next_value);
-        if (err) goto return_error;
         err = reset_all_min(calendar, lower_orders);
+        if (err) goto return_error;
+        err = set_field(calendar, field, next_value);
         if (err) goto return_error;
     }
     return next_value;
