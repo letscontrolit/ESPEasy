@@ -36,6 +36,8 @@ extern "C" {
 
 #include <stdint.h> /*added for use if uint*_t data types*/
 
+#define CRON_INVALID_INSTANT ((time_t) -1)
+
 /**
  * Parsed cron expression
  */

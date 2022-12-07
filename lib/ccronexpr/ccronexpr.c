@@ -49,7 +49,6 @@
 
 #define CRON_CF_ARR_LEN 7
 
-#define CRON_INVALID_INSTANT ((time_t) -1)
 
 static const char* const DAYS_ARR[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 #define CRON_DAYS_ARR_LEN 7
