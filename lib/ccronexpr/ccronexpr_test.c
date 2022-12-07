@@ -225,7 +225,9 @@ void check_same(const char* expr1, const char* expr2) {
     cron_parse_expr(expr1, &parsed1, NULL);
     cron_expr parsed2;
     cron_parse_expr(expr2, &parsed2, NULL);
-    assert(crons_equal(&parsed1, &parsed2));
+    const int res = crons_equal(&parsed1, &parsed2);
+    (void)res; // prevent warnings
+    assert(res);
 }
 
 void check_calc_invalid() {
@@ -235,6 +237,7 @@ void check_calc_invalid() {
     time_t dateinit = timegm(calinit);
     time_t res = cron_next(&parsed, dateinit);
     assert(INVALID_INSTANT == res);
+    (void)res; // suppress warning
     free(calinit);
 }
 
@@ -363,6 +366,7 @@ void test_bits() {
             err = 1;
         }
         assert(!err);
+        (void)err;  // suppress "not used" warning
     }
 
     for (i = 0; i < 12; i++) {
