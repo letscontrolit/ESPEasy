@@ -9,6 +9,8 @@
 
 /**
  * Changelog:
+ * 2022-12-07 tonhuisman: Re-order device configuration to use PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR
+ *                        Enable PluginStats feature
  * 2022-10-30 tonhuisman: Add support for 'missing' AXP192 pins, not used in M5Stack StickC but used in Core/Core2
  *                        Add support for Pre-intialize of plugins, so plugins can be initialized before SPI is enabled.
  * 2022-08-24 tonhuisman: Remove [TESTING] tag, move include for _Plugin_helper.h to correct line
@@ -88,6 +90,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].PluginStats    = true;
       break;
     }
 
@@ -159,54 +162,6 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      {
-        const __FlashStringHelper *valOptions[] = {
-          toString(P137_valueOptions_e::None),
-          toString(P137_valueOptions_e::BatteryVoltage),
-          toString(P137_valueOptions_e::BatteryDischargeCurrent),
-          toString(P137_valueOptions_e::BatteryChargeCurrent),
-          toString(P137_valueOptions_e::BatteryPower),
-          toString(P137_valueOptions_e::AcinVoltage),
-          toString(P137_valueOptions_e::AcinCurrent),
-          toString(P137_valueOptions_e::VbusVoltage),
-          toString(P137_valueOptions_e::VbusCurrent),
-          toString(P137_valueOptions_e::InternalTemperature),
-          toString(P137_valueOptions_e::ApsVoltage),
-          toString(P137_valueOptions_e::LDO2),
-          toString(P137_valueOptions_e::LDO3),
-          toString(P137_valueOptions_e::LDOIO),
-          toString(P137_valueOptions_e::DCDC2),
-          toString(P137_valueOptions_e::DCDC3),
-        };
-        const int valValues[] = {
-          static_cast<int>(P137_valueOptions_e::None),
-          static_cast<int>(P137_valueOptions_e::BatteryVoltage),
-          static_cast<int>(P137_valueOptions_e::BatteryDischargeCurrent),
-          static_cast<int>(P137_valueOptions_e::BatteryChargeCurrent),
-          static_cast<int>(P137_valueOptions_e::BatteryPower),
-          static_cast<int>(P137_valueOptions_e::AcinVoltage),
-          static_cast<int>(P137_valueOptions_e::AcinCurrent),
-          static_cast<int>(P137_valueOptions_e::VbusVoltage),
-          static_cast<int>(P137_valueOptions_e::VbusCurrent),
-          static_cast<int>(P137_valueOptions_e::InternalTemperature),
-          static_cast<int>(P137_valueOptions_e::ApsVoltage),
-          static_cast<int>(P137_valueOptions_e::LDO2),
-          static_cast<int>(P137_valueOptions_e::LDO3),
-          static_cast<int>(P137_valueOptions_e::LDOIO),
-          static_cast<int>(P137_valueOptions_e::DCDC2),
-          static_cast<int>(P137_valueOptions_e::DCDC3),
-        };
-
-        for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; i++) {
-          sensorTypeHelper_loadOutputSelector(event,
-                                              P137_CONFIG_BASE + i,
-                                              i,
-                                              sizeof(valValues) / sizeof(int),
-                                              valOptions,
-                                              valValues);
-        }
-      }
-
       addFormNumericBox(F("Decimals for config values"), F("decimals"), P137_CONFIG_DECIMALS, 0, 4);
 
       addFormSubHeader(F("Hardware outputs AXP192"));
@@ -327,6 +282,58 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
         addHtml(F("<div hidden>"));
         addNumericBox(F("pbits"), P137_CONFIG_DISABLEBITS, 0, 0xFFFF);
         addHtml(F("</div>"));
+      }
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      const __FlashStringHelper *valOptions[] = {
+        toString(P137_valueOptions_e::None),
+        toString(P137_valueOptions_e::BatteryVoltage),
+        toString(P137_valueOptions_e::BatteryDischargeCurrent),
+        toString(P137_valueOptions_e::BatteryChargeCurrent),
+        toString(P137_valueOptions_e::BatteryPower),
+        toString(P137_valueOptions_e::AcinVoltage),
+        toString(P137_valueOptions_e::AcinCurrent),
+        toString(P137_valueOptions_e::VbusVoltage),
+        toString(P137_valueOptions_e::VbusCurrent),
+        toString(P137_valueOptions_e::InternalTemperature),
+        toString(P137_valueOptions_e::ApsVoltage),
+        toString(P137_valueOptions_e::LDO2),
+        toString(P137_valueOptions_e::LDO3),
+        toString(P137_valueOptions_e::LDOIO),
+        toString(P137_valueOptions_e::DCDC2),
+        toString(P137_valueOptions_e::DCDC3),
+      };
+      const int valValues[] = {
+        static_cast<int>(P137_valueOptions_e::None),
+        static_cast<int>(P137_valueOptions_e::BatteryVoltage),
+        static_cast<int>(P137_valueOptions_e::BatteryDischargeCurrent),
+        static_cast<int>(P137_valueOptions_e::BatteryChargeCurrent),
+        static_cast<int>(P137_valueOptions_e::BatteryPower),
+        static_cast<int>(P137_valueOptions_e::AcinVoltage),
+        static_cast<int>(P137_valueOptions_e::AcinCurrent),
+        static_cast<int>(P137_valueOptions_e::VbusVoltage),
+        static_cast<int>(P137_valueOptions_e::VbusCurrent),
+        static_cast<int>(P137_valueOptions_e::InternalTemperature),
+        static_cast<int>(P137_valueOptions_e::ApsVoltage),
+        static_cast<int>(P137_valueOptions_e::LDO2),
+        static_cast<int>(P137_valueOptions_e::LDO3),
+        static_cast<int>(P137_valueOptions_e::LDOIO),
+        static_cast<int>(P137_valueOptions_e::DCDC2),
+        static_cast<int>(P137_valueOptions_e::DCDC3),
+      };
+
+      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; i++) {
+        sensorTypeHelper_loadOutputSelector(event,
+                                            P137_CONFIG_BASE + i,
+                                            i,
+                                            sizeof(valValues) / sizeof(int),
+                                            valOptions,
+                                            valValues);
       }
 
       success = true;

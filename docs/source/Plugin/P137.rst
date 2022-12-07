@@ -48,6 +48,43 @@ The available settings here depend on the build used. At least the **Force Slow 
 Device Settings
 ^^^^^^^^^^^^^^^^
 
+* **Decimals for config values**: The number of decimals to use for presenting the Config values (see below for a list of available values).
+
+Hardware outputs AXP192
+^^^^^^^^^^^^^^^^^^^^^^^
+
+* **Predefined device configuration** The plugin provides presets for some specific devices:
+
+.. image:: P137_PredefinedDeviceOptions.png
+
+* *Select an option to set default values* This option will always be selected when opening the page.
+
+* *M5Stack StickC* Settings for the M5Stack StickC hardware.
+
+* *M5Stack Core2 (Default)* Settings for the M5Stack Core and Core2, and derived special models, hardware. This is the default predefined configuration.
+
+* *User defined* To be able to configure are available output pins the User defined option is available, f.e. when using a custom designed, or not yet supported, hardware setup.
+
+When available, new predefined devices will be added. The User defined option will stay the last option.
+
+The **LDO2**, **LDO3**, **LDOIO**, **DCDC2** and **DCDC3** outputs of the AXP192 can be set at a predefined value. When setting a value below 1800 mV, or 700 mV for the DCDC pins, the output will be turned off. Above 3300 mV is not supported/allowed, except for the DCDC3 pin that allows up to 3500 mV. Stepsize/resolution is ca. 100 mV.
+
+.. warning:: Check board documentation for what each output is actually connected to, and the allowed voltage range for that output.
+
+For the available GPIO pins (on AXP192, *not* ESP!), the initial state can be selected. The available options are:
+
+.. image:: P137_InitialStateOptions.png
+
+* *Default* Doesn't set the state of the GPIO pin.
+
+* *Output, low* Sets the state to low level (0 V).
+
+* *Output, high* Sets the state to high level.
+
+* *Input* Not supported yet.
+
+* *PWM* Not supported yet.
+
 Output Configuration
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -95,43 +132,6 @@ Available options:
 
 .. note:: Not all options hold usable values for all boards, some may even be not connected. Check the board documentation for available values.
 
-* **Decimals for config values**: The number of decimals to use for presenting the Config values (see below for a list of available values).
-
-Hardware outputs AXP192
-^^^^^^^^^^^^^^^^^^^^^^^
-
-* **Predefined device configuration** The plugin provides presets for some specific devices:
-
-.. image:: P137_PredefinedDeviceOptions.png
-
-* *Select an option to set default values* This option will always be selected when opening the page.
-
-* *M5Stack StickC* Settings for the M5Stack StickC hardware.
-
-* *M5Stack Core2 (Default)* Settings for the M5Stack Core and Core2, and derived special models, hardware. This is the default predefined configuration.
-
-* *User defined* To be able to configure are available output pins the User defined option is available, f.e. when using a custom designed, or not yet supported, hardware setup.
-
-When available, new predefined devices will be added. The User defined option will stay the last option.
-
-The **LDO2**, **LDO3**, **LDOIO**, **DCDC2** and **DCDC3** outputs of the AXP192 can be set at a predefined value. When setting a value below 1800 mV, or 700 mV for the DCDC pins, the output will be turned off. Above 3300 mV is not supported/allowed, except for the DCDC3 pin that allows up to 3500 mV. Stepsize/resolution is ca. 100 mV.
-
-.. warning:: Check board documentation for what each output is actually connected to, and the allowed voltage range for that output.
-
-For the available GPIO pins (on AXP192, *not* ESP!), the initial state can be selected. The available options are:
-
-.. image:: P137_InitialStateOptions.png
-
-* *Default* Doesn't set the state of the GPIO pin.
-
-* *Output, low* Sets the state to low level (0 V).
-
-* *Output, high* Sets the state to high level.
-
-* *Input* Not supported yet.
-
-* *PWM* Not supported yet.
-
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 
@@ -143,6 +143,8 @@ Values
 ^^^^^^
 
 The measured values are available in variables, where the names are determined by the selected **Value 1..4** settings. A formula can be set to recalculate. The number of decimals can be set as desired, and defaults to 2.
+
+By enabling the **Stats** checkbox per Values entry, you enable the gathering of statistics, that can produce a nice graph of the collected values.
 
 Commands
 ~~~~~~~~
