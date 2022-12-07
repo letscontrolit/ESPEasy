@@ -513,7 +513,7 @@ Hardware: |P013_usedby|, |P082_usedby|
 Power management
 ----------------
 
-Plugins: |Plugin_Powermanagement|
+Plugins: |Plugin_PowerMgt|
 
 Regulator
 ---------
