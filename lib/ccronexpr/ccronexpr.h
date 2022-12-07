@@ -24,8 +24,6 @@
 #ifndef CCRONEXPR_H
 #define CCRONEXPR_H
 
-//-V::795
-
 #if defined(__cplusplus) && !defined(CRON_COMPILE_AS_CXX)
 extern "C" {
 #endif
@@ -37,12 +35,6 @@ extern "C" {
 #endif /* ANDROID */
 
 #include <stdint.h> /*added for use if uint*_t data types*/
-
-
-#define CRON_INVALID_INSTANT ((time_t) -1)
-
-// Define to use local time
-#define CRON_USE_LOCAL_TIME
 
 /**
  * Parsed cron expression
