@@ -603,7 +603,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT           *display,
   _useValidation(useValidation), _textBackFill(textBackFill)
 {
   _display = _tft;
-  addLog(LOG_LEVEL_INFO, ("AdaGFX_helper: TFT Init."));
+  addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: TFT Init."));
 }
 
 # endif // if ADAGFX_ENABLE_BMP_DISPLAY
