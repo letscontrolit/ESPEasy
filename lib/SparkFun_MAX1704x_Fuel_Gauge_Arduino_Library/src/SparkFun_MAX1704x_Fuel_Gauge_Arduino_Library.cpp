@@ -23,7 +23,12 @@ Distributed as-is; no warranty is given.
 SFE_MAX1704X::SFE_MAX1704X(sfe_max1704x_devices_e device)
 {
   // Constructor
+  setDevice(device);
+}
 
+// Change the device type if required. Do this after instantiation but before .begin
+void SFE_MAX1704X::setDevice(sfe_max1704x_devices_e device)
+{
   // Record the device type
   _device = device;
 
@@ -45,47 +50,104 @@ SFE_MAX1704X::SFE_MAX1704X(sfe_max1704x_devices_e device)
   }
 }
 
-boolean SFE_MAX1704X::begin(TwoWire &wirePort)
+bool SFE_MAX1704X::begin(TwoWire &wirePort)
 {
-  _i2cPort = &wirePort; //Grab which port the user wants us to use
+  setWirePort(wirePort); //Grab which port the user wants us to use
 
   if (isConnected() == false)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("begin: isConnected returned false"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (false);
   }
 
   return (true);
 }
 
-//Returns true if device answers on _deviceAddress
-boolean SFE_MAX1704X::isConnected(void)
+// Allow _i2CPort to be set manually, so that isConnected can be called before .begin if required
+void SFE_MAX1704X::setWirePort(TwoWire &wirePort)
 {
-  _i2cPort->beginTransmission((uint8_t)MAX1704x_ADDRESS);
-  if (_i2cPort->endTransmission() == 0)
+  _i2cPort = &wirePort; //Grab which port the user wants us to use
+}
+
+//Returns true if device is present
+bool SFE_MAX1704X::isConnected(void)
+{
+  //Updated to resolve issue #4 Dec 27th 2021
+  //Also avoid using the standard "if device answers on _deviceAddress" test
+  //(https://github.com/sparkfun/Arduino_Apollo3/issues/400#issuecomment-992631994)
+  bool success = false;
+  uint8_t retries = 3;
+  uint16_t version = 0;
+
+  while ((success == false) && (retries > 0))
+  {
+    _i2cPort->beginTransmission(MAX1704x_ADDRESS);
+    _i2cPort->write(MAX17043_VERSION); // Attempt to read the version register
+    _i2cPort->endTransmission(false); // Don't release the bus
+
+    if (_i2cPort->requestFrom(MAX1704x_ADDRESS, 2) == 2) // Attempt to read the version (2 bytes)
+    {
+      uint8_t msb = _i2cPort->read();
+      uint8_t lsb = _i2cPort->read();
+      version = ((uint16_t)msb << 8) | lsb;
+      success = true;
+    }
+    else
+    {
+      retries--;
+      #if MAX1704X_ENABLE_DEBUGLOG
+      if (_printDebug == true)
+      {
+        _debugPort->println(F("SFE_MAX1704X::isConnected: retrying..."));
+      }
+      #endif // if MAX1704X_ENABLE_DEBUGLOG
+      delay(50);
+    }
+  }
+
+  if (!success) // Return now if the version could not be read
+  {
+    #if MAX1704X_ENABLE_DEBUGLOG
+    if (_printDebug == true)
+    {
+        _debugPort->println(F("SFE_MAX1704X::isConnected: failed to detect IC!"));
+    }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
+    return (success);
+  }
+
+  //Extra test - but only for MAX17048/9 - see issue #4
+  if (_device >= MAX1704X_MAX17048)
   {
     //Get version should return 0x001_
     //Not a great test but something
-    //Supported on 43/44/48/49
-    if (getVersion() & (1 << 4))
-      return true;
+    //Supported on 48/49
+    if ((version & (1 << 4)) == 0)
+      success = false;
   }
-  return false;
+
+  return (success);
 }
 
 //Enable or disable the printing of debug messages
 void SFE_MAX1704X::enableDebugging(Stream &debugPort)
 {
+  #if MAX1704X_ENABLE_DEBUGLOG
   _debugPort = &debugPort; //Grab which port the user wants us to use for debugging
   _printDebug = true;      //Should we print the commands we send? Good for debugging
+  #endif // if MAX1704X_ENABLE_DEBUGLOG
 }
 
 void SFE_MAX1704X::disableDebugging(void)
 {
+  #if MAX1704X_ENABLE_DEBUGLOG
   _printDebug = false; //Turn off extra print statements
+  #endif // if MAX1704X_ENABLE_DEBUGLOG
 }
 
 uint8_t SFE_MAX1704X::quickStart()
@@ -114,7 +176,7 @@ float SFE_MAX1704X::getVoltage()
     // 2.5mV on the MAX17044
     vCell = (vCell) >> 4; // Align the 12 bits
 
-    float divider = 4096.0f / _full_scale;
+    float divider = 4096.0 / _full_scale;
 
     return (((float)vCell) / divider);
   }
@@ -124,7 +186,7 @@ float SFE_MAX1704X::getVoltage()
     // i.e. 78.125uV per LSB on the MAX17048
     // i.e. 156.25uV per LSB on the MAX17049
 
-    float divider = 65536.0f / _full_scale;
+    float divider = 65536.0 / _full_scale;
 
     return (((float)vCell) / divider);
   }
@@ -136,7 +198,7 @@ float SFE_MAX1704X::getSOC()
   float percent;
   soc = read16(MAX17043_SOC);
   percent = (float)((soc & 0xFF00) >> 8);
-  percent += ((float)(soc & 0x00FF)) / 256.0f;
+  percent += ((float)(soc & 0x00FF)) / 256.0;
 
   return percent;
 }
@@ -151,10 +213,12 @@ uint8_t SFE_MAX1704X::getID()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("getID: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (0);
   }
 
@@ -168,10 +232,12 @@ uint8_t SFE_MAX1704X::setResetVoltage(uint8_t threshold)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("setResetVoltage: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -184,7 +250,7 @@ uint8_t SFE_MAX1704X::setResetVoltage(uint8_t threshold)
 uint8_t SFE_MAX1704X::setResetVoltage(float threshold)
 {
   // 7 bits. LSb = 40mV
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 5.08f) / 0.04f);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 5.08) / 0.04);
   return setResetVoltage(thresh);
 }
 
@@ -192,10 +258,12 @@ uint8_t SFE_MAX1704X::getResetVoltage(void)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("getResetVoltage: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (0);
   }
 
@@ -207,10 +275,12 @@ uint8_t SFE_MAX1704X::enableComparator(void)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("enableComparator: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -223,10 +293,12 @@ uint8_t SFE_MAX1704X::disableComparator(void)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("disableComparator: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -239,15 +311,17 @@ float SFE_MAX1704X::getChangeRate(void)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("getChangeRate: not supported on this device"));
     }
-    return (0.0f);
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
+    return (0.0);
   }
 
   int16_t changeRate = read16(MAX17048_CRATE);
-  float changerate_f = changeRate * 0.208f;
+  float changerate_f = changeRate * 0.208;
   return (changerate_f);
 }
 
@@ -255,10 +329,12 @@ uint8_t SFE_MAX1704X::getStatus(void)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("getStatus: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (0);
   }
 
@@ -380,10 +456,12 @@ bool SFE_MAX1704X::enableSOCAlert()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("enableSOCAlert: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (false);
   }
 
@@ -405,10 +483,12 @@ bool SFE_MAX1704X::disableSOCAlert()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("disableSOCAlert: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (false);
   }
 
@@ -432,10 +512,12 @@ uint8_t SFE_MAX1704X::enableAlert(void)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("enableAlert: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -448,10 +530,12 @@ uint8_t SFE_MAX1704X::disableAlert(void)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("disableAlert: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -480,7 +564,7 @@ uint8_t SFE_MAX1704X::setThreshold(uint8_t percent)
   // It has an LSb weight of 1%, and can be programmed from 1% to 32%.
   // The value is (32 - ATHD)%, e.g.: 00000=32%, 00001=31%, 11111=1%.
   // Let's convert our percent to that first:
-  percent = constrain(percent, 0, 32);
+  percent = (uint8_t)constrain((float)percent, 0.0, 32.0);
   percent = 32 - percent;
 
   // Read config reg, so we don't modify any other values:
@@ -511,10 +595,12 @@ uint8_t SFE_MAX1704X::sleep()
   uint16_t configReg = read16(MAX17043_CONFIG);
   if (configReg & MAX17043_CONFIG_SLEEP)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("sleep: MAX17043 is already sleeping!"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return MAX17043_GENERIC_ERROR; // Already sleeping, do nothing but return an error
   }
 
@@ -529,10 +615,12 @@ uint8_t SFE_MAX1704X::wake()
   uint16_t configReg = read16(MAX17043_CONFIG);
   if (!(configReg & MAX17043_CONFIG_SLEEP))
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("wake: MAX17043 is already awake!"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return MAX17043_GENERIC_ERROR; // Already sleeping, do nothing but return an error
   }
   configReg &= ~MAX17043_CONFIG_SLEEP; // Clear sleep bit
@@ -599,10 +687,12 @@ uint8_t SFE_MAX1704X::setVALRTMax(uint8_t threshold)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("setVALRTMax: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -613,7 +703,7 @@ uint8_t SFE_MAX1704X::setVALRTMax(uint8_t threshold)
 }
 uint8_t SFE_MAX1704X::setVALRTMax(float threshold)
 {
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 5.1f) / 0.02f);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 5.1) / 0.02);
   return setVALRTMax(thresh);
 }
 
@@ -621,10 +711,12 @@ uint8_t SFE_MAX1704X::getVALRTMax()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("getVALRTMax: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (0);
   }
 
@@ -637,10 +729,12 @@ uint8_t SFE_MAX1704X::setVALRTMin(uint8_t threshold)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("setVALRTMin: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -651,7 +745,7 @@ uint8_t SFE_MAX1704X::setVALRTMin(uint8_t threshold)
 }
 uint8_t SFE_MAX1704X::setVALRTMin(float threshold)
 {
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 5.1f) / 0.02f);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 5.1) / 0.02);
   return setVALRTMin(thresh);
 }
 
@@ -659,10 +753,12 @@ uint8_t SFE_MAX1704X::getVALRTMin()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("getVALRTMin: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (0);
   }
 
@@ -675,10 +771,12 @@ bool SFE_MAX1704X::isHibernating()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("isHibernating: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (false);
   }
 
@@ -690,10 +788,12 @@ uint8_t SFE_MAX1704X::getHIBRTActThr()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("getHIBRTActThr: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (0);
   }
 
@@ -706,10 +806,12 @@ uint8_t SFE_MAX1704X::setHIBRTActThr(uint8_t threshold)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("setHIBRTActThr: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -721,7 +823,7 @@ uint8_t SFE_MAX1704X::setHIBRTActThr(uint8_t threshold)
 uint8_t SFE_MAX1704X::setHIBRTActThr(float threshold)
 {
   // LSb = 1.25mV
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 0.31875f) / 0.00125f);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 0.31875) / 0.00125);
   return setHIBRTActThr(thresh);
 }
 
@@ -729,10 +831,12 @@ uint8_t SFE_MAX1704X::getHIBRTHibThr()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("getHIBRTHibThr: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (0);
   }
 
@@ -745,10 +849,12 @@ uint8_t SFE_MAX1704X::setHIBRTHibThr(uint8_t threshold)
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("setHIBRTHibThr: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -760,7 +866,7 @@ uint8_t SFE_MAX1704X::setHIBRTHibThr(uint8_t threshold)
 uint8_t SFE_MAX1704X::setHIBRTHibThr(float threshold)
 {
   // LSb = 0.208%/hr
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 53.04f) / 0.208f);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 53.04) / 0.208);
   return setHIBRTHibThr(thresh);
 }
 
@@ -768,10 +874,12 @@ uint8_t SFE_MAX1704X::enableHibernate()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("enableHibernate: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -782,10 +890,12 @@ uint8_t SFE_MAX1704X::disableHibernate()
 {
   if (_device <= MAX1704X_MAX17044)
   {
+    #if MAX1704X_ENABLE_DEBUGLOG
     if (_printDebug == true)
     {
       _debugPort->println(F("disableHibernate: not supported on this device"));
     }
+    #endif // if MAX1704X_ENABLE_DEBUGLOG
     return (MAX17043_GENERIC_ERROR);
   }
 
@@ -806,18 +916,43 @@ uint8_t SFE_MAX1704X::write16(uint16_t data, uint8_t address)
 
 uint16_t SFE_MAX1704X::read16(uint8_t address)
 {
-  uint8_t msb, lsb;
-  int16_t timeout = 1000;
+  bool success = false;
+  uint8_t retries = 3;
+  uint16_t result = 0;
 
-  _i2cPort->beginTransmission(MAX1704x_ADDRESS);
-  _i2cPort->write(address);
-  _i2cPort->endTransmission(false);
+  while ((success == false) && (retries > 0))
+  {
+    _i2cPort->beginTransmission(MAX1704x_ADDRESS);
+    _i2cPort->write(address);
+    _i2cPort->endTransmission(false); // Don't release the bus
 
-  _i2cPort->requestFrom(MAX1704x_ADDRESS, 2);
-  while ((_i2cPort->available() < 2) && (timeout-- > 0))
-    delay(1);
-  msb = _i2cPort->read();
-  lsb = _i2cPort->read();
+    if (_i2cPort->requestFrom(MAX1704x_ADDRESS, 2) == 2)
+    {
+      uint8_t msb = _i2cPort->read();
+      uint8_t lsb = _i2cPort->read();
+      result = ((uint16_t)msb << 8) | lsb;
+      success = true;
+    }
+    else
+    {
+      retries--;
+      #if MAX1704X_ENABLE_DEBUGLOG
+      if (_printDebug == true)
+      {
+        _debugPort->println(F("SFE_MAX1704X::read16: retrying..."));
+      }
+      #endif // if MAX1704X_ENABLE_DEBUGLOG
+      delay(50);
+    }
+  }
 
-  return ((uint16_t)msb << 8) | lsb;
+  #if MAX1704X_ENABLE_DEBUGLOG
+  if (_printDebug == true)
+  {
+    if (!success)
+      _debugPort->println(F("SFE_MAX1704X::read16: failed to read data!"));
+  }
+  #endif // if MAX1704X_ENABLE_DEBUGLOG
+
+  return (result);
 }
