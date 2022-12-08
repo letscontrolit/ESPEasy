@@ -121,7 +121,8 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     {
       // FIXME TD-er: Split functionality of this plugin into 2 new ones:
       // - switch/dimmer input
-      // - switch output (relays)
+      // - switch output (relays) and pwm output (led) - show the duty cycle as a value
+      // [ https://github.com/letscontrolit/ESPEasy/issues/4400 ]
       event->String1 = formatGpioName_bidirectional(F(""));
       break;
     }

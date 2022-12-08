@@ -274,9 +274,7 @@ void addSysVar_html(const String& input) {
   html_TR_TD();
   {
     addHtml(F("<pre>")); // Make monospaced (<tt> tag?)
-    addHtml(F("<xmp>")); // Make sure HTML code is escaped. Tag depricated??
     addHtml(input);
-    addHtml(F("</xmp>"));
     addHtml(F("</pre>"));
   }
   html_TD();

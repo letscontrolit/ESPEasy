@@ -1336,11 +1336,11 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
     // table header
     addHtml(F("<TR><TH style='width:30px;' align='center'>#"));
-    html_table_header(F("Name"));
+    html_table_header(F("Name"),500);
 
     if (Device[DeviceIndex].FormulaOption)
     {
-      html_table_header(F("Formula"), F("EasyFormula"), 0);
+      html_table_header(F("Formula"), F("EasyFormula"), 500);
       ++colCount;
     }
 
@@ -1358,6 +1358,10 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
+    //placeholder header
+    html_table_header(F(""));
+    ++colCount;
+    
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
     {

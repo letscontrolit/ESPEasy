@@ -1,8 +1,10 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
+
+#include <Arduino.h>
 
 #include <ArduinoJson/Configuration.hpp>
 #include <ArduinoJson/Namespace.hpp>
@@ -12,7 +14,7 @@ namespace ARDUINOJSON_NAMESPACE {
 // Wraps a const char* so that the our functions are picked only if the
 // originals are missing
 struct pgm_p {
-  pgm_p(const char* p) : address(p) {}
+  pgm_p(const void* p) : address(reinterpret_cast<const char*>(p)) {}
   const char* address;
 };
 }  // namespace ARDUINOJSON_NAMESPACE
@@ -65,6 +67,22 @@ inline int strcmp_P(const char* a, ARDUINOJSON_NAMESPACE::pgm_p b) {
 }
 #endif
 
+#ifndef memcmp_P
+inline int memcmp_P(const void* a, ARDUINOJSON_NAMESPACE::pgm_p b, size_t n) {
+  const uint8_t* p1 = reinterpret_cast<const uint8_t*>(a);
+  const char* p2 = b.address;
+  ARDUINOJSON_ASSERT(p1 != NULL);
+  ARDUINOJSON_ASSERT(p2 != NULL);
+  while (n-- > 0) {
+    uint8_t v1 = *p1++;
+    uint8_t v2 = pgm_read_byte(p2++);
+    if (v1 != v2)
+      return v1 - v2;
+  }
+  return 0;
+}
+#endif
+
 #ifndef memcpy_P
 inline void* memcpy_P(void* dst, ARDUINOJSON_NAMESPACE::pgm_p src, size_t n) {
   uint8_t* d = reinterpret_cast<uint8_t*>(dst);
@@ -75,5 +93,21 @@ inline void* memcpy_P(void* dst, ARDUINOJSON_NAMESPACE::pgm_p src, size_t n) {
     *d++ = pgm_read_byte(s++);
   }
   return dst;
+}
+#endif
+
+#ifndef pgm_read_dword
+inline uint32_t pgm_read_dword(ARDUINOJSON_NAMESPACE::pgm_p p) {
+  uint32_t result;
+  memcpy_P(&result, p.address, 4);
+  return result;
+}
+#endif
+
+#ifndef pgm_read_ptr
+inline void* pgm_read_ptr(ARDUINOJSON_NAMESPACE::pgm_p p) {
+  void* result;
+  memcpy_P(&result, p.address, sizeof(result));
+  return result;
 }
 #endif

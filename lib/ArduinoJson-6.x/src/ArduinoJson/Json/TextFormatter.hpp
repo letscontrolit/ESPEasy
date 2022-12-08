@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -12,6 +12,7 @@
 #include <ArduinoJson/Numbers/Integer.hpp>
 #include <ArduinoJson/Polyfills/assert.hpp>
 #include <ArduinoJson/Polyfills/attributes.hpp>
+#include <ArduinoJson/Polyfills/type_traits.hpp>
 #include <ArduinoJson/Serialization/CountingDecorator.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
@@ -40,13 +41,22 @@ class TextFormatter {
     writeRaw('\"');
   }
 
+  void writeString(const char *value, size_t n) {
+    ARDUINOJSON_ASSERT(value != NULL);
+    writeRaw('\"');
+    while (n--) writeChar(*value++);
+    writeRaw('\"');
+  }
+
   void writeChar(char c) {
     char specialChar = EscapeSequence::escapeChar(c);
     if (specialChar) {
       writeRaw('\\');
       writeRaw(specialChar);
-    } else {
+    } else if (c) {
       writeRaw(c);
+    } else {
+      writeRaw("\\u0000");
     }
   }
 
@@ -75,28 +85,31 @@ class TextFormatter {
 
     FloatParts<T> parts(value);
 
-    writePositiveInteger(parts.integral);
+    writeInteger(parts.integral);
     if (parts.decimalPlaces)
       writeDecimals(parts.decimal, parts.decimalPlaces);
 
-    if (parts.exponent < 0) {
-      writeRaw("e-");
-      writePositiveInteger(-parts.exponent);
-    }
-
-    if (parts.exponent > 0) {
+    if (parts.exponent) {
       writeRaw('e');
-      writePositiveInteger(parts.exponent);
+      writeInteger(parts.exponent);
     }
-  }
-
-  void writeNegativeInteger(UInt value) {
-    writeRaw('-');
-    writePositiveInteger(value);
   }
 
   template <typename T>
-  void writePositiveInteger(T value) {
+  typename enable_if<is_signed<T>::value>::type writeInteger(T value) {
+    typedef typename make_unsigned<T>::type unsigned_type;
+    unsigned_type unsigned_value;
+    if (value < 0) {
+      writeRaw('-');
+      unsigned_value = unsigned_type(unsigned_type(~value) + 1);
+    } else {
+      unsigned_value = unsigned_type(value);
+    }
+    writeInteger(unsigned_value);
+  }
+
+  template <typename T>
+  typename enable_if<is_unsigned<T>::value>::type writeInteger(T value) {
     char buffer[22];
     char *end = buffer + sizeof(buffer);
     char *begin = end;
@@ -151,7 +164,6 @@ class TextFormatter {
 
  protected:
   CountingDecorator<TWriter> _writer;
-  size_t _length;
 
  private:
   TextFormatter &operator=(const TextFormatter &);  // cannot be assigned
