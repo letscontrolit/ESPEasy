@@ -623,6 +623,8 @@ void processScanDone() {
       temp_disable_EspEasy_now_timer = millis() + 20000;
 #endif
     }
+  } else if (!NetworkConnected()) {
+    WiFiEventData.timerAPstart.setNow();
   }
   
   #ifdef USES_ESPEASY_NOW
@@ -654,10 +656,6 @@ void processScanDone() {
     }
   }
   #endif
-
-  if (!NetworkConnected()) {
-    WiFiEventData.timerAPstart.setNow();
-  }
 
 }
 

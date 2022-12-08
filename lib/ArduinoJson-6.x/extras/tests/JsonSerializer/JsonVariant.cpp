@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -62,6 +62,10 @@ TEST_CASE("serializeJson(JsonVariant)") {
 
     SECTION("Escape tab") {
       check(std::string("hello\tworld"), "\"hello\\tworld\"");
+    }
+
+    SECTION("NUL char") {
+      check(std::string("hello\0world", 11), "\"hello\\u0000world\"");
     }
   }
 
