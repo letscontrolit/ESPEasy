@@ -496,7 +496,7 @@ bool prepareWiFi() {
     // No need to wait longer to start AP mode.
     if (!Settings.DoNotStartAP()) {
       WifiScan(false);
-      setAP(true);
+//      setAP(true);
     }
     return false;
   }
