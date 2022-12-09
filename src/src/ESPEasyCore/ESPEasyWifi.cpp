@@ -664,17 +664,20 @@ void initWiFi()
 #endif
 #ifdef ESP8266
   // WiFi event handlers
-  stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
-	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
-	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
-  stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
-  stationModeAuthModeChangeHandler = WiFi.onStationModeAuthModeChanged(onStationModeAuthModeChanged);
-  APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
-  APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
-#ifdef USES_ESPEASY_NOW
-  APModeProbeRequestReceivedHandler = WiFi.onSoftAPModeProbeRequestReceived(onProbeRequestAPmode);
-#endif
-
+  static bool handlers_initialized = false;
+  if (!handlers_initialized) {
+    stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
+    stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
+    stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
+    stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
+    stationModeAuthModeChangeHandler = WiFi.onStationModeAuthModeChanged(onStationModeAuthModeChanged);
+    APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
+    APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
+  #ifdef USES_ESPEASY_NOW
+    APModeProbeRequestReceivedHandler = WiFi.onSoftAPModeProbeRequestReceived(onProbeRequestAPmode);
+  #endif
+    handlers_initialized = true;
+  }
 #endif
   delay(100);
 }
@@ -915,9 +918,9 @@ void WifiDisconnect()
   ETS_UART_INTR_DISABLE();
   wifi_station_set_config_current(&conf);
   ETS_UART_INTR_ENABLE();
-  #endif // if defined(ESP32)
+  #endif
   WiFiEventData.setWiFiDisconnected();
-  WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
+  WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_UNSPECIFIED);
   if (!Settings.UseLastWiFiFromRTC()) {
     RTC.clearLastWiFi();
   }
@@ -943,6 +946,10 @@ bool WiFiScanAllowed() {
   }
 
   if (WiFiEventData.wifiConnectInProgress) {
+    return false;
+  }
+
+  if (WiFiEventData.intent_to_reboot) {
     return false;
   }
 

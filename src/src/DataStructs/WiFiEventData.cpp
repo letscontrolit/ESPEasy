@@ -28,6 +28,7 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
     }
   }
   if (!wifiConnectAttemptNeeded) return false;
+  if (intent_to_reboot) return false;
   if (wifiSetupConnect) return true;
   if (wifiConnectInProgress) {
     if (last_wifi_connect_attempt_moment.isSet() && 
@@ -143,6 +144,8 @@ bool WiFiEventData_t::WiFiServicesInitialized() const {
 void WiFiEventData_t::setWiFiDisconnected() {
   wifiConnectInProgress = false;
   wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
+  last_wifi_connect_attempt_moment.clear();
+  wifiConnectInProgress = false;
 }
 
 void WiFiEventData_t::setWiFiGotIP() {
@@ -200,7 +203,10 @@ void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
     // There was an unsuccessful connection attempt
     lastConnectedDuration_us = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
   } else {
-    lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
+    if (last_wifi_connect_attempt_moment.isSet())
+      lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
+    else 
+      lastConnectedDuration_us = 0;
   }
   lastDisconnectReason = reason;
   processedDisconnect  = false;
