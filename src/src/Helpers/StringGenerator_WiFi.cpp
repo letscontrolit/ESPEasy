@@ -105,7 +105,7 @@ const __FlashStringHelper * getLastDisconnectReason(WiFiDisconnectReason reason)
     case WIFI_DISCONNECT_REASON_NO_AP_FOUND:                return F("No AP found");              
     case WIFI_DISCONNECT_REASON_AUTH_FAIL:                  return F("Auth fail");                
     case WIFI_DISCONNECT_REASON_ASSOC_FAIL:                 return F("Assoc fail");               
-    case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          return F("Handshake timeout");        
+    case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          return F("Handshake timeout");
     default:  return F("Unknown");
   }
 }
