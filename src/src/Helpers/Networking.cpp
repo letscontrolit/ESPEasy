@@ -1422,11 +1422,17 @@ int http_authenticate(const String& logIdentifier,
     String name, value;
 
     while (splitHeaders(headerpos, header, name, value)) {
+      // Disabled the check to exclude "Authorization", due to: 
+      //   https://github.com/letscontrolit/ESPEasy/issues/4364
+      // Check was added for: https://github.com/letscontrolit/ESPEasy/issues/4355
+      // However, I doubt this was the actual bug. More likely the supplied credential strings were not entirely empty for whatever reason.
+      //
       // Work-around to not add Authorization header since the HTTPClient code
       // only ignores this when base64Authorication is set.
-      if (!name.equalsIgnoreCase(F("Authorization"))) {
+      
+//      if (!name.equalsIgnoreCase(F("Authorization"))) {
         http.addHeader(name, value);
-      }
+//      }
     }
   }
 

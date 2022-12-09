@@ -1,14 +1,14 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
 #include <stdlib.h>  // malloc, free
 #include <catch.hpp>
 #include <sstream>
+#include <utility>
 
 using ARDUINOJSON_NAMESPACE::addPadding;
-using ARDUINOJSON_NAMESPACE::move;
 
 class SpyingAllocator {
  public:
@@ -78,7 +78,7 @@ TEST_CASE("BasicJsonDocument") {
       BasicJsonDocument<SpyingAllocator> doc1(4096, log);
       doc1.set(std::string("The size of this string is 32!!"));
 
-      BasicJsonDocument<SpyingAllocator> doc2(move(doc1));
+      BasicJsonDocument<SpyingAllocator> doc2(std::move(doc1));
 
       REQUIRE(doc2.as<std::string>() == "The size of this string is 32!!");
       REQUIRE(doc1.as<std::string>() == "null");
@@ -89,7 +89,7 @@ TEST_CASE("BasicJsonDocument") {
   }
 #endif
 
-  SECTION("Copy assign") {
+  SECTION("Copy assign larger") {
     {
       BasicJsonDocument<SpyingAllocator> doc1(4096, log);
       doc1.set(std::string("The size of this string is 32!!"));
@@ -104,6 +104,36 @@ TEST_CASE("BasicJsonDocument") {
     REQUIRE(log.str() == "A4096A8FA4096FF");
   }
 
+  SECTION("Copy assign smaller") {
+    {
+      BasicJsonDocument<SpyingAllocator> doc1(1024, log);
+      doc1.set(std::string("The size of this string is 32!!"));
+      BasicJsonDocument<SpyingAllocator> doc2(4096, log);
+
+      doc2 = doc1;
+
+      REQUIRE(doc1.as<std::string>() == "The size of this string is 32!!");
+      REQUIRE(doc2.as<std::string>() == "The size of this string is 32!!");
+      REQUIRE(doc2.capacity() == 1024);
+    }
+    REQUIRE(log.str() == "A1024A4096FA1024FF");
+  }
+
+  SECTION("Copy assign same size") {
+    {
+      BasicJsonDocument<SpyingAllocator> doc1(1024, log);
+      doc1.set(std::string("The size of this string is 32!!"));
+      BasicJsonDocument<SpyingAllocator> doc2(1024, log);
+
+      doc2 = doc1;
+
+      REQUIRE(doc1.as<std::string>() == "The size of this string is 32!!");
+      REQUIRE(doc2.as<std::string>() == "The size of this string is 32!!");
+      REQUIRE(doc2.capacity() == 1024);
+    }
+    REQUIRE(log.str() == "A1024A1024FF");
+  }
+
 #if ARDUINOJSON_HAS_RVALUE_REFERENCES
   SECTION("Move assign") {
     {
@@ -111,7 +141,7 @@ TEST_CASE("BasicJsonDocument") {
       doc1.set(std::string("The size of this string is 32!!"));
       BasicJsonDocument<SpyingAllocator> doc2(8, log);
 
-      doc2 = move(doc1);
+      doc2 = std::move(doc1);
 
       REQUIRE(doc2.as<std::string>() == "The size of this string is 32!!");
       REQUIRE(doc1.as<std::string>() == "null");
