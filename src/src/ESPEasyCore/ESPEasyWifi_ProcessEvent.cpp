@@ -210,6 +210,8 @@ void handle_unprocessedNetworkEvents()
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void processDisconnect() {
+  if (WiFiEventData.processedDisconnect) { return; }
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Disconnected! Reason: '");
     log += getLastDisconnectReason();
@@ -218,8 +220,6 @@ void processDisconnect() {
     if (WiFiEventData.lastConnectedDuration_us > 0) {
       log += F(" Connected for ");
       log += format_msec_duration(WiFiEventData.lastConnectedDuration_us / 1000ll);
-    } else {
-      log += F(" Connected for a long time...");
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }
@@ -249,10 +249,13 @@ void processDisconnect() {
   bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     if (!WiFi_AP_Candidates.getBestCandidate().usable())
+//      addLog(LOG_LEVEL_INFO, F("WIFI : !getBestCandidate().usable()  => mustRestartWiFi = true"));
+
       mustRestartWiFi = true;
   }
   
   if (WiFi.status() == WL_IDLE_STATUS) {
+//    addLog(LOG_LEVEL_INFO, F("WIFI : WiFi.status() == WL_IDLE_STATUS  => mustRestartWiFi = true"));
     mustRestartWiFi = true;
   }
 
@@ -493,11 +496,12 @@ void processConnectAPmode() {
 void processDisableAPmode() {
   if (!WiFiEventData.timerAPoff.isSet()) { return; }
 
-  if (WifiIsAP(WiFi.getMode())) {
-    // disable AP after timeout and no clients connected.
-    if (WiFiEventData.timerAPoff.timeReached() && (WiFi.softAPgetStationNum() == 0)) {
-      setAP(false);
-    }
+  if (!WifiIsAP(WiFi.getMode())) {
+    return;
+  }
+  // disable AP after timeout and no clients connected.
+  if (WiFiEventData.timerAPoff.timeReached() && (WiFi.softAPgetStationNum() == 0)) {
+    setAP(false);
   }
 
   if (!WifiIsAP(WiFi.getMode())) {
@@ -563,13 +567,12 @@ void processScanDone() {
       #endif
 
 //      setSTA(false);
-      NetworkConnectRelaxed();
+//      NetworkConnectRelaxed();
 #ifdef USES_ESPEASY_NOW
       temp_disable_EspEasy_now_timer = millis() + 20000;
 #endif
     }
-  }
-  if (!NetworkConnected()) {
+  } else if (!NetworkConnected()) {
     WiFiEventData.timerAPstart.setNow();
   }
 
