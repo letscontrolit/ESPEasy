@@ -278,6 +278,20 @@ However, they also cannot be used when *RMII PHY* is used.
 
 .. include:: ../Reference/Ethernet_PHY_ESP32.rst
 
+Ethernet with PoE
+^^^^^^^^^^^^^^^^^
+
+Some ethernet boards support Power over Ethernet (PoE), so only a single (ethernet) cable to the ESP is needed, and the ESP (and any sensors) will be powered via an onboard converter.
+
+For Olimex boards in the ESP32-POE range, the supplier has documented this warning:
+
+.. warning:: 
+    **Important notice**: Olimex ESP32-PoE has **no galvano isolation** from Ethernet's power supply, when you program the board via the micro USB connector the Ethernet cable should be disconnected (if you have power over the Ethernet cable)!
+    
+    Consider using Olimex USB-ISO to protect your computer and board from accidental short circuit. Also consider instead using Olimex ESP32-PoE-ISO board, which *is* insulated.
+
+Most likely, this warning is applicable to other brands as well.
+
 
 -------------------
 GPIO boot states
