@@ -116,6 +116,7 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
     success = (nullptr != gfxHelper);
 
     if (success) {
+      gfxHelper->initialize();
       gfxHelper->setRotation(_rotation);
       matrix->setBrightness(std::min(_maxbright, _brightness)); // Set brightness, so we don't get blinded by the light
       matrix->fillScreen(_bgcolor);                             // fill screen with black color
