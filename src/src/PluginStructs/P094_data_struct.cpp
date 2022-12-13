@@ -8,6 +8,8 @@
 
 #include <Regexp.h>
 
+#include "../DataStructs/mBusPacket.h"
+
 #include "../Globals/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"
 
@@ -276,36 +278,30 @@ bool P094_data_struct::parsePacket(const String& received) const {
 
     // Decoded packet
 
-    unsigned long packet_header[P094_FILTER_VALUE_Type_NR_ELEMENTS];
-    packet_header[P094_packet_length] = hexToUL(received, 1, 2);
-    packet_header[P094_unknown1]      = hexToUL(received, 3, 2);
-    packet_header[P094_manufacturer]  = hexToUL(received, 5, 4);
-    packet_header[P094_serial_number] = hexToUL(received, 9, 8);
-    packet_header[P094_unknown2]      = hexToUL(received, 17, 2);
-    packet_header[P094_meter_type]    = hexToUL(received, 19, 2);
-
-    // FIXME TD-er: Is this also correct?
-    packet_header[P094_rssi] = hexToUL(received, strlength - 4, 4);
-
-    // FIXME TD-er: Is this correct?
-    // match_result = packet_length == (strlength - 21) / 2;
+    mBusPacket_t packet;
+    if (!packet.parse(received)) return false;
+    const uint32_t rssi = hexToUL(received, strlength - 4, 4);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       if (log.reserve(128)) {
         log  = F("CUL Reader: ");
-        log += F(" length: ");
-        log += packet_header[P094_packet_length];
-        log += F(" (header: ");
-        log += strlength - (packet_header[P094_packet_length] * 2);
-        log += F(") manu: ");
-        log += formatToHex_decimal(packet_header[P094_manufacturer]);
-        log += F(" serial: ");
-        log += formatToHex_decimal(packet_header[P094_serial_number]);
-        log += F(" mType: ");
-        log += formatToHex_decimal(packet_header[P094_meter_type]);
+        if (packet._deviceId1.isValid()) {
+          log += F(" deviceId1: ");
+          log += packet._deviceId1.toString();
+          log += '(';
+          log += packet._deviceId1._length;
+          log += ')';
+        }
+        if (packet._deviceId2.isValid()) {
+          log += F(" deviceId2: ");
+          log += packet._deviceId2.toString();
+          log += '(';
+          log += packet._deviceId2._length;
+          log += ')';
+        }
         log += F(" RSSI: ");
-        log += formatToHex_decimal(packet_header[P094_rssi]);
+        log += formatToHex_decimal(rssi);
         addLogMove(LOG_LEVEL_INFO, log);
       }
     }
@@ -339,9 +335,34 @@ bool P094_data_struct::parsePacket(const String& received) const {
                 match = inputString.equalsIgnoreCase(valueString);
               }
             } else {
-              unsigned long value = hexToUL(getFilter(f, filterValueType, optional, comparator));
-              match       = (value == packet_header[i]);
-              inputString = formatToHex_decimal(packet_header[i]);
+              const unsigned long value = hexToUL(getFilter(f, filterValueType, optional, comparator));
+              uint32_t receivedValue = 0;
+              switch (static_cast<P094_Filter_Value_Type>(i)) {
+                case P094_packet_length:
+                  receivedValue = packet._deviceId1._length;
+                  match = value == receivedValue;
+                  break;
+                case P094_manufacturer:
+                  receivedValue = packet._deviceId1._manufacturer;
+                  match = value == receivedValue;
+                  break;
+                case P094_meter_type:
+                  receivedValue = packet._deviceId1._meterType;
+                  match = value == receivedValue;
+                  break;
+                case P094_serial_number:
+                  receivedValue = packet._deviceId1._serialNr;
+                  match = value == receivedValue;
+                  break;
+                case P094_rssi:
+                  receivedValue = rssi;
+                  match = value < rssi;
+                  break;
+                default:
+                  match = false;
+                  break;
+              }
+              inputString = formatToHex_decimal(receivedValue);
               valueString = formatToHex_decimal(value);
             }
 
