@@ -22,6 +22,7 @@
 // --- Feature Flagging ---------------------------------------------------------
 // Can be set to 1 to enable, 0 to disable, or not set to use the default (usually via define_plugin_sets.h)
 
+#define FEATURE_RULES_EASY_COLOR_CODE    1   // Use code highlighting, autocompleting and command suggestions and in Rules
 #define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
 #define FEATURE_ARDUINO_OTA       1     //enables the Arduino OTA capabilities
 // #define FEATURE_SD                1     // Enable SD card support
