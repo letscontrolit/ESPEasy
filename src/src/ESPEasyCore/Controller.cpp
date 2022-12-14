@@ -250,7 +250,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     }
     case TLS_types::TLS_PSK:
     {
-      //mqtt_tls->setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
+      //if (mqtt_tls != nullptr)
+      //  mqtt_tls->setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
       break;
     }
     case TLS_types::TLS_CA_CERT:
@@ -296,7 +297,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     /*
     case TLS_types::TLS_CA_CLI_CERT:
     {
-      //mqtt_tls->setCertificate(const char *client_ca);
+      //if (mqtt_tls != nullptr)
+      //  mqtt_tls->setCertificate(const char *client_ca);
       break;
     }
     */
@@ -467,13 +469,15 @@ bool MQTTConnect(controllerIndex_t controller_idx)
         dn.trim();
 
       }
-      if (!mqtt_tls->verify(
-        fp.c_str(), 
-        dn.isEmpty() ? nullptr : dn.c_str())) 
-      {
-        mqtt_tls_last_errorstr += F("TLS Fingerprint does not match");
-        addLog(LOG_LEVEL_INFO, mqtt_fingerprint);
-        MQTTresult = false;
+      if (mqtt_tls != nullptr) {
+        if (!mqtt_tls->verify(
+          fp.c_str(), 
+          dn.isEmpty() ? nullptr : dn.c_str())) 
+        {
+          mqtt_tls_last_errorstr += F("TLS Fingerprint does not match");
+          addLog(LOG_LEVEL_INFO, mqtt_fingerprint);
+          MQTTresult = false;
+        }
       }
     }
   }
@@ -494,7 +498,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
     MQTTclient.disconnect();
     #if FEATURE_MQTT_TLS
-    mqtt_tls->stop();
+    if (mqtt_tls != nullptr) {
+      mqtt_tls->stop();
+    }
     #endif
 
     updateMQTTclient_connected();
