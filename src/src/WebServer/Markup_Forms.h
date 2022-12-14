@@ -244,7 +244,7 @@ void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
                                const __FlashStringHelper *id,
                                int                        value,
                                const String             & charset,
-                               const __FlashStringHelper *additionalText = F(""));
+                               const __FlashStringHelper *additionalText);
 
 // ********************************************************************************
 // Add a selector form

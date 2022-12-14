@@ -404,7 +404,7 @@ void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
   charList[0] = F("None");
   charOpts[0] = 0;
 
-  for (int i = 0; i < charset.length(); i++) {
+  for (uint16_t i = 0; i < charset.length(); i++) {
     charList[i + 1] = charset[i];
     charOpts[i + 1] = static_cast<int>(charset[i]);
   }

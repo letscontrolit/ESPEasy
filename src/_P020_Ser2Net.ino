@@ -199,10 +199,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         # endif // ifndef LIMIT_BUILD_SIZE
 
         addFormSeparatorCharInput(F("Replace spaces in event by"),   F("replspace"),
-                                  P020_REPLACE_SPACE, F(P020_REPLACE_CHAR_SET));
+                                  P020_REPLACE_SPACE, F(P020_REPLACE_CHAR_SET), F(""));
 
         addFormSeparatorCharInput(F("Replace newlines in event by"), F("replcrlf"),
-                                  P020_REPLACE_NEWLINE, F(P020_REPLACE_CHAR_SET));
+                                  P020_REPLACE_NEWLINE, F(P020_REPLACE_CHAR_SET), F(""));
 
         addFormCheckBox(F("Process events without client"), F("pignoreclient"), P020_IGNORE_CLIENT_CONNECTED);
         # ifndef LIMIT_BUILD_SIZE

@@ -195,7 +195,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # if P037_REPLACE_BY_COMMA_SUPPORT
       {
         addFormSeparatorCharInput(F("To replace by comma in event"), F("preplch"),
-                                  P037_REPLACE_BY_COMMA, F(P037_REPLACE_CHAR_SET));
+                                  P037_REPLACE_BY_COMMA, F(P037_REPLACE_CHAR_SET), F(""));
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
