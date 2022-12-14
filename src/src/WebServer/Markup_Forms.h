@@ -238,6 +238,15 @@ void addFormIPaccessControlSelect(const __FlashStringHelper * label,
                                   int           choice);
 
 // ********************************************************************************
+// a Separator character selector
+// ********************************************************************************
+void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
+                               const __FlashStringHelper *id,
+                               int                        value,
+                               const String             & charset,
+                               const __FlashStringHelper *additionalText = F(""));
+
+// ********************************************************************************
 // Add a selector form
 // ********************************************************************************
 

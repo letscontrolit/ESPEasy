@@ -390,6 +390,32 @@ void addFormIPaccessControlSelect(const __FlashStringHelper * label, const __Fla
 }
 
 // ********************************************************************************
+// a Separator character selector
+// ********************************************************************************
+void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
+                               const __FlashStringHelper *id,
+                               int                        value,
+                               const String             & charset,
+                               const __FlashStringHelper *additionalText) {
+  const int len = charset.length() + 1;
+  String    charList[len];
+  int charOpts[len];
+
+  charList[0] = F("None");
+  charOpts[0] = 0;
+
+  for (int i = 0; i < charset.length(); i++) {
+    charList[i + 1] = charset[i];
+    charOpts[i + 1] = static_cast<int>(charset[i]);
+  }
+  addFormSelector(rowLabel, id, len, charList, charOpts, value);
+
+  if (!String(additionalText).isEmpty()) {
+    addUnit(additionalText);
+  }
+}
+
+// ********************************************************************************
 // Add a selector form
 // ********************************************************************************
 void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice)
