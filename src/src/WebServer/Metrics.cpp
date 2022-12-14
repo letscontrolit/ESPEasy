@@ -16,52 +16,68 @@
 
 void handle_metrics() {
     TXBuffer.startStream(F("text/plain"), F("*"));
+    const __FlashStringHelper *prefixHELP = F("# HELP espeasy_");
+    const __FlashStringHelper *prefixTYPE = F("# TYPE espeasy_");
 
     //uptime
-    addHtml(F("# HELP espeasy_uptime current device uptime in minutes\n"));
-    addHtml(F("# TYPE espeasy_uptime counter\n"));
+    addHtml(prefixHELP);
+    addHtml(F("uptime current device uptime in minutes\n"));
+    addHtml(prefixTYPE);
+    addHtml(F("uptime counter\n"));
     addHtml(F("espeasy_uptime "));
     addHtml(getValue(LabelType::UPTIME));       
     addHtml('\n');    
 
     //load
-    addHtml(F("# HELP espeasy_load device percentage load\n"));
-    addHtml(F("# TYPE espeasy_load gauge\n"));
+    addHtml(prefixHELP);
+    addHtml(F("load device percentage load\n"));
+    addHtml(prefixTYPE);
+    addHtml(F("load gauge\n"));
     addHtml(F("espeasy_load "));
     addHtml(getValue(LabelType::LOAD_PCT));
     addHtml('\n');
 
     //Free RAM
-    addHtml(F("# HELP espeasy_free_ram device amount of RAM free in Bytes\n"));
-    addHtml(F("# TYPE espeasy_free_ram gauge\n"));
+    addHtml(prefixHELP);
+    addHtml(F("free_ram device amount of RAM free in Bytes\n"));
+    addHtml(prefixTYPE);
+    addHtml(F("free_ram gauge\n"));
     addHtml(F("espeasy_free_ram "));
     addHtml(getValue(LabelType::FREE_MEM));
     addHtml('\n');
 
     //Free RAM
-    addHtml(F("# HELP espeasy_free_stack device amount of Stack free in Bytes\n"));
-    addHtml(F("# TYPE espeasy_free_stack gauge\n"));
+    addHtml(prefixHELP);
+    addHtml(F("free_stack device amount of Stack free in Bytes\n"));
+    addHtml(prefixTYPE);
+    addHtml(F("free_stack gauge\n"));
     addHtml(F("espeasy_free_stack "));
     addHtml(getValue(LabelType::FREE_STACK));
     addHtml('\n');
 
     //Wifi strength
-    addHtml(F("# HELP espeasy_wifi_rssi Wifi connection Strength\n"));
-    addHtml(F("# TYPE espeasy_wifi_rssi gauge\n"));
+    addHtml(prefixHELP);
+    addHtml(F("wifi_rssi Wifi connection Strength\n"));
+    addHtml(prefixTYPE);
+    addHtml(F("wifi_rssi gauge\n"));
     addHtml(F("espeasy_wifi_rssi "));
     addHtml(getValue(LabelType::WIFI_RSSI));
     addHtml('\n');
 
     //Wifi uptime
-    addHtml(F("# HELP espeasy_wifi_connected Time wifi has been connected in milliseconds\n"));
-    addHtml(F("# TYPE espeasy_wifi_connected counter\n"));
+    addHtml(prefixHELP);
+    addHtml(F("wifi_connected Time wifi has been connected in milliseconds\n"));
+    addHtml(prefixTYPE);
+    addHtml(F("wifi_connected counter\n"));
     addHtml(F("espeasy_wifi_connected "));
     addHtml(getValue(LabelType::CONNECTED_MSEC));
     addHtml('\n');
 
     //Wifi reconnects
-    addHtml(F("# HELP espeasy_wifi_reconnects Number of times Wifi has reconnected since boot\n"));
-    addHtml(F("# TYPE espeasy_wifi_reconnects counter\n"));
+    addHtml(prefixHELP);
+    addHtml(F("wifi_reconnects Number of times Wifi has reconnected since boot\n"));
+    addHtml(prefixTYPE);
+    addHtml(F("wifi_reconnects counter\n"));
     addHtml(F("espeasy_wifi_reconnects "));
     addHtml(getValue(LabelType::NUMBER_RECONNECTS));
     addHtml('\n');
@@ -69,7 +85,7 @@ void handle_metrics() {
     //devices
     handle_metrics_devices();
 
-      TXBuffer.endStream();
+    TXBuffer.endStream();
 }
 
 void handle_metrics_devices(){
@@ -80,6 +96,10 @@ void handle_metrics_devices(){
          if (pluginID_set){
             if (Settings.TaskDeviceEnabled[x]){
                 String deviceName = getTaskDeviceName(x);
+                if (deviceName.isEmpty()) { // Empty name, then use taskN
+                    deviceName = F("task");
+                    deviceName += x;
+                }
                 addHtml(F("# HELP espeasy_device_"));
                 addHtml(deviceName);
                 addHtml(F(" Values from connected device\n"));
