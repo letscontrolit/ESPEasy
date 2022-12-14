@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2022-12-12 tonhuisman: Add character conversion for the received serial data, act on Space and/or Newline
  * 2022-10-11 tonhuisman: Add option for including the message in P1 #data event
  * 2022-10-09 tonhuisman: Check P044 migration on PLUGIN_INIT too, still needs a manual save (from UI or by save command)
  * 2022-10-08 tonhuisman: Merged code from P044 into this plugin, and use a global flag to emulate P044 with P020
@@ -197,6 +198,12 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("When enabled, passes the entire message in the event. <B>Warning:</B> can cause memory overflow issues!"));
         # endif // ifndef LIMIT_BUILD_SIZE
 
+        addFormSeparatorCharInput(F("Replace spaces in event by"),   F("replspace"),
+                                  P020_REPLACE_SPACE, F(P020_REPLACE_CHAR_SET));
+
+        addFormSeparatorCharInput(F("Replace newlines in event by"), F("replcrlf"),
+                                  P020_REPLACE_NEWLINE, F(P020_REPLACE_CHAR_SET));
+
         addFormCheckBox(F("Process events without client"), F("pignoreclient"), P020_IGNORE_CLIENT_CONNECTED);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("When enabled, will process serial data without a network client connected."));
@@ -244,6 +251,9 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         P020_RX_BUFFER         = getFormItemInt(F("prx_buffer"));
       }
       P020_LED_PIN = getFormItemInt(F("pledpin"));
+
+      P020_REPLACE_SPACE   = getFormItemInt(F("replspace"));
+      P020_REPLACE_NEWLINE = getFormItemInt(F("replcrlf"));
 
       uint32_t lSettings = 0u;
       bitWrite(lSettings, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("pignoreclient")));

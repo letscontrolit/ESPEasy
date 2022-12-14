@@ -14,8 +14,12 @@
 # define P020_SERVER_PORT               ExtraTaskSettings.TaskDevicePluginConfigLong[0]
 # define P020_BAUDRATE                  ExtraTaskSettings.TaskDevicePluginConfigLong[1]
 
+# define P020_REPLACE_CHAR_SET          ",;:.!^|/\\"
+
 # define P020_LED_PIN                   PCONFIG(0)
 # define P020_SERIAL_CONFIG             PCONFIG(1)
+# define P020_REPLACE_SPACE             PCONFIG(2)
+# define P020_REPLACE_NEWLINE           PCONFIG(3)
 # define P020_RX_WAIT                   PCONFIG(4)
 # define P020_SERIAL_PROCESSING         PCONFIG(5)
 # define P020_RESET_TARGET_PIN          PCONFIG(6)
@@ -142,6 +146,8 @@ struct P020_Task : public PluginTaskData_base {
   bool          _P1EventData       = false;
   size_t        _maxDataGramSize   = P020_DATAGRAM_MAX_SIZE;
   ParserState   state              = ParserState::WAITING;
+  char          _space             = 0;
+  char          _newline           = 0;
 };
 
 #endif // ifdef USES_P020

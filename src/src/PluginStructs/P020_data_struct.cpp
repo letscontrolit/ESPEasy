@@ -18,6 +18,8 @@ P020_Task::P020_Task(struct EventStruct *event) : _taskIndex(event->TaskIndex) {
   }
   _ledEnabled  = P020_GET_LED_ENABLED == 1;
   _ledInverted = P020_GET_LED_INVERTED == 1;
+  _space       = static_cast<char>(P020_REPLACE_SPACE);
+  _newline     = static_cast<char>(P020_REPLACE_NEWLINE);
 }
 
 P020_Task::~P020_Task() {
@@ -25,6 +27,7 @@ P020_Task::~P020_Task() {
     delete ser2netServer;
     ser2netServer = nullptr;
   }
+
   if (ser2netSerial != nullptr) {
     delete ser2netSerial;
     ser2netSerial = nullptr;
@@ -357,6 +360,14 @@ void P020_Task::checkBlinkLED() {
 }
 
 void P020_Task::addChar(char ch) {
+  if ((ch == 0x20) && (_space > 0)) { ch = _space; }
+
+  if (_newline > 0) {
+    if (ch == '\n') { ch = _newline; }
+
+    if (ch == '\r') { return; } // Ignore CR if LF is replaced
+  }
+
   serial_buffer += ch;
 }
 
