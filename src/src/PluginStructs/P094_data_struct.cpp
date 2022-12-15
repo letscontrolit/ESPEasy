@@ -324,18 +324,26 @@ bool P094_data_struct::parsePacket(const String& received) const {
             P094_Filter_Comp comparator;
             bool   match = false;
             String inputString;
-            String valueString;
+            String valueString = getFilter(f, filterValueType, optional, comparator);
 
             if (i == P094_Filter_Value_Type::P094_position) {
-              valueString = getFilter(f, filterValueType, optional, comparator);
-
               if (received.length() >= (optional + valueString.length())) {
                 // received string is long enough to fit the expression.
                 inputString = received.substring(optional, optional + valueString.length());
                 match = inputString.equalsIgnoreCase(valueString);
               }
+            } else if (i == P094_Filter_Value_Type::P094_manufacturer) {
+              // Get vendor code
+              const unsigned long value = mBusPacket_header_t::encodeManufacturerID(valueString);
+              if (value == packet._deviceId1._manufacturer) {
+                match = true;
+              } else if (hexToUL(valueString) == packet._deviceId1._manufacturer) {
+                // Old 'compatible' mode, where the HEX notation was used instead of the manufacturer ID
+                match = true;
+              }
+              inputString = mBusPacket_header_t::decodeManufacturerID(packet._deviceId1._manufacturer);
             } else {
-              const unsigned long value = hexToUL(getFilter(f, filterValueType, optional, comparator));
+              const unsigned long value = hexToUL(valueString);
               uint32_t receivedValue = 0;
               switch (static_cast<P094_Filter_Value_Type>(i)) {
                 case P094_packet_length:
@@ -343,8 +351,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
                   match = value == receivedValue;
                   break;
                 case P094_manufacturer:
-                  receivedValue = packet._deviceId1._manufacturer;
-                  match = value == receivedValue;
+                  // Already handled
                   break;
                 case P094_meter_type:
                   receivedValue = packet._deviceId1._meterType;

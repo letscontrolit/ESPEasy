@@ -8,7 +8,7 @@
 typedef std::vector<uint8_t> mBusPacket_data;
 
 struct mBusPacket_header_t {
-  static String decodeManufacturerId(int id);
+  static String decodeManufacturerID(int id);
   static int    encodeManufacturerID(const String& id_str);
 
   String        getManufacturerId() const;

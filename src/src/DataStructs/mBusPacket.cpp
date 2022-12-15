@@ -6,7 +6,7 @@
 #define FRAME_FORMAT_A_FIRST_BLOCK_LENGTH 10
 #define FRAME_FORMAT_A_OTHER_BLOCK_LENGTH 16
 
-String mBusPacket_header_t::decodeManufacturerId(int id)
+String mBusPacket_header_t::decodeManufacturerID(int id)
 {
   String res;
   int    shift = 15;
@@ -38,12 +38,12 @@ int mBusPacket_header_t::encodeManufacturerID(const String& id_str)
 
 String mBusPacket_header_t::getManufacturerId() const
 {
-  return decodeManufacturerId(_manufacturer);
+  return decodeManufacturerID(_manufacturer);
 }
 
 String mBusPacket_header_t::toString() const
 {
-  String res = decodeManufacturerId(_manufacturer);
+  String res = decodeManufacturerID(_manufacturer);
 
   res += '.';
   res += formatToHex_no_prefix(_meterType, 2);
