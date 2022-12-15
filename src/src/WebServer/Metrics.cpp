@@ -98,7 +98,7 @@ void handle_metrics_devices(){
                 String deviceName = getTaskDeviceName(x);
                 if (deviceName.isEmpty()) { // Empty name, then use taskN
                     deviceName = F("task");
-                    deviceName += x;
+                    deviceName += x + 1;
                 }
                 addHtml(F("# HELP espeasy_device_"));
                 addHtml(deviceName);
