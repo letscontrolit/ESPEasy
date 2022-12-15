@@ -279,16 +279,20 @@ void ESPEasy_setup()
     // automatic light sleep is enabled if tickless idle support is enabled.
 #if CONFIG_IDF_TARGET_ESP32
     esp_pm_config_esp32_t pm_config = {
+            .max_freq_mhz = 240,
 #elif CONFIG_IDF_TARGET_ESP32S2
     esp_pm_config_esp32s2_t pm_config = {
+            .max_freq_mhz = 240,
 #elif CONFIG_IDF_TARGET_ESP32C3
     esp_pm_config_esp32c3_t pm_config = {
+            .max_freq_mhz = 160,
 #elif CONFIG_IDF_TARGET_ESP32S3
     esp_pm_config_esp32s3_t pm_config = {
+            .max_freq_mhz = 240,
 #elif CONFIG_IDF_TARGET_ESP32C2
     esp_pm_config_esp32c2_t pm_config = {
+            .max_freq_mhz = 120,
 #endif
-            .max_freq_mhz = 240,
             .min_freq_mhz = 80,
 #if CONFIG_FREERTOS_USE_TICKLESS_IDLE
             .light_sleep_enable = true
