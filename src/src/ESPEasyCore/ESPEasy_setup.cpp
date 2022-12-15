@@ -44,6 +44,9 @@
 #include <soc/boot_mode.h>
 #include <soc/gpio_reg.h>
 #include <soc/efuse_reg.h>
+
+#include <esp_pm.h>
+
 #endif
 
 
@@ -268,6 +271,33 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif
+
+#ifdef ESP32
+  if (Settings.EcoPowerMode()) {
+    // Configure dynamic frequency scaling:
+    // maximum and minimum frequencies are set in sdkconfig,
+    // automatic light sleep is enabled if tickless idle support is enabled.
+#if CONFIG_IDF_TARGET_ESP32
+    esp_pm_config_esp32_t pm_config = {
+#elif CONFIG_IDF_TARGET_ESP32S2
+    esp_pm_config_esp32s2_t pm_config = {
+#elif CONFIG_IDF_TARGET_ESP32C3
+    esp_pm_config_esp32c3_t pm_config = {
+#elif CONFIG_IDF_TARGET_ESP32S3
+    esp_pm_config_esp32s3_t pm_config = {
+#elif CONFIG_IDF_TARGET_ESP32C2
+    esp_pm_config_esp32c2_t pm_config = {
+#endif
+            .max_freq_mhz = 240,
+            .min_freq_mhz = 80,
+#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
+            .light_sleep_enable = true
+#endif
+    };
+    esp_pm_configure(&pm_config);
+  }
+#endif
+
 
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
