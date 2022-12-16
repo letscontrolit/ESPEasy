@@ -112,6 +112,9 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         P020_RESET_TARGET_PIN  = P020_DEFAULT_RESET_TARGET_PIN;
         P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing (only)
         P020_LED_PIN           = P020_STATUS_LED;
+        P020_RX_WAIT           = 0;
+        P020_REPLACE_SPACE     = 0;                                            // Force empty
+        P020_REPLACE_NEWLINE   = 0;
         bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);
         bitSet(P020_FLAGS, P020_FLAG_P044_MODE_SAVED);                         // Inital config, no conversion needed
       } else {
@@ -198,11 +201,13 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("When enabled, passes the entire message in the event. <B>Warning:</B> can cause memory overflow issues!"));
         # endif // ifndef LIMIT_BUILD_SIZE
 
-        addFormSeparatorCharInput(F("Replace spaces in event by"),   F("replspace"),
-                                  P020_REPLACE_SPACE, F(P020_REPLACE_CHAR_SET), F(""));
+        if (!P020_Emulate_P044) { // Not appropriate for P1 WiFi Gateway
+          addFormSeparatorCharInput(F("Replace spaces in event by"),   F("replspace"),
+                                    P020_REPLACE_SPACE, F(P020_REPLACE_CHAR_SET), F(""));
 
-        addFormSeparatorCharInput(F("Replace newlines in event by"), F("replcrlf"),
-                                  P020_REPLACE_NEWLINE, F(P020_REPLACE_CHAR_SET), F(""));
+          addFormSeparatorCharInput(F("Replace newlines in event by"), F("replcrlf"),
+                                    P020_REPLACE_NEWLINE, F(P020_REPLACE_CHAR_SET), F(""));
+        }
 
         addFormCheckBox(F("Process events without client"), F("pignoreclient"), P020_IGNORE_CLIENT_CONNECTED);
         # ifndef LIMIT_BUILD_SIZE
@@ -252,8 +257,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
       P020_LED_PIN = getFormItemInt(F("pledpin"));
 
-      P020_REPLACE_SPACE   = getFormItemInt(F("replspace"));
-      P020_REPLACE_NEWLINE = getFormItemInt(F("replcrlf"));
+      if (!P020_Emulate_P044) {
+        P020_REPLACE_SPACE   = getFormItemInt(F("replspace"));
+        P020_REPLACE_NEWLINE = getFormItemInt(F("replcrlf"));
+      }
 
       uint32_t lSettings = 0u;
       bitWrite(lSettings, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("pignoreclient")));
