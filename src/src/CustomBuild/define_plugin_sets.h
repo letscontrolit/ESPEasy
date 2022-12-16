@@ -2212,6 +2212,9 @@ To create/register a plugin, you have to :
     #ifdef USES_P100 // Pulse Counter - DS2423
       #undef USES_P100
     #endif
+    #ifdef USES_C017 // Zabbix
+      #undef USES_C017
+    #endif
   #endif
   #ifdef USES_C012
     #undef USES_C012 // Blynk
@@ -2221,9 +2224,6 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_C016
     #undef USES_C016 // Cache controller
-  #endif
-  #ifdef USES_C017 // Zabbix
-    #undef USES_C017
   #endif
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
