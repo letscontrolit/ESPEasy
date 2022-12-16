@@ -27,7 +27,11 @@
 #define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
 #define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
 
-#define P094_APPEND_RECEIVE_SYSTIME PCONFIG(0)
+#define P094_GET_APPEND_RECEIVE_SYSTIME    bitRead(PCONFIG(0),0)
+#define P094_SET_APPEND_RECEIVE_SYSTIME(X) bitWrite(PCONFIG(0),0,X)
+
+#define P094_GET_GENERATE_DEBUG_CUL_DATA    bitRead(PCONFIG(0),1)
+#define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0),1,X)
 
 #define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P094_NR_OUTPUT_OPTIONS  1
@@ -155,7 +159,8 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
       addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
 
-      addFormCheckBox(F("Append system time"), F("systime"), P094_APPEND_RECEIVE_SYSTIME);
+      addFormCheckBox(F("Append system time"), F("systime"), P094_GET_APPEND_RECEIVE_SYSTIME);
+      addFormCheckBox(F("(debug) Generate CUL data"), F("debug_data"), P094_GET_GENERATE_DEBUG_CUL_DATA);
 
       success = true;
       break;
@@ -178,7 +183,8 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         success = true;
       }
 
-      P094_APPEND_RECEIVE_SYSTIME = isFormItemChecked(F("systime"));
+      P094_SET_APPEND_RECEIVE_SYSTIME(isFormItemChecked(F("systime")));
+      P094_SET_GENERATE_DEBUG_CUL_DATA(isFormItemChecked(F("debug_data")));
 
       break;
     }
@@ -198,6 +204,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE)) {
         LoadCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0);
         P094_data->post_init();
+        P094_data->setGenerate_DebugCulData(P094_GET_GENERATE_DEBUG_CUL_DATA);
         success = true;
 
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
@@ -216,7 +223,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           // Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
-          P094_data->getSentence(event->String2, P094_APPEND_RECEIVE_SYSTIME);
+          P094_data->getSentence(event->String2, P094_GET_APPEND_RECEIVE_SYSTIME);
 
           if (event->String2.length() > 0) {
             if (Plugin_094_match_all(event->TaskIndex, event->String2)) {

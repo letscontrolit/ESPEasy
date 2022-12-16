@@ -91,7 +91,7 @@ bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
     _deviceId1._serialNr = 0;
 
     for (int i = 0; i < 4; ++i) {
-      const uint32_t val = payloadWithoutChecksums[offset + 7 - i];
+      const uint32_t val = payloadWithoutChecksums[offset + 4 + i];
       _deviceId1._serialNr += val << (i * 8);
     }
     offset += 10;
@@ -103,11 +103,13 @@ bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
     switch (payloadWithoutChecksums[offset]) {
       case 0x8C:                                            // ELL short
         offset += 3;                                        // fixed length
+        _deviceId1._length = payloadSize - offset;
         break;
       case 0x90:                                            // AFL
         offset++;
         offset += (payloadWithoutChecksums[offset] & 0xff); // dynamic length with length in 1st byte
         offset++;                                           // length byte
+        _deviceId1._length = payloadSize - offset;
         break;
       case 0x72:                                            // TPL_RESPONSE_MBUS_LONG_HEADER
         _deviceId2 = _deviceId1;
@@ -122,10 +124,10 @@ bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
         // Serial (offset + 4; 4 Bytes; least significant first; converted to hex)
         _deviceId1._serialNr = 0;
 
-        _deviceId1._length = payloadSize - _deviceId2._length;
+        _deviceId1._length = payloadSize - offset;
 
         for (int i = 0; i < 4; ++i) {
-          const uint32_t val = payloadWithoutChecksums[offset + 4 - i];
+          const uint32_t val = payloadWithoutChecksums[offset + 1 + i];
           _deviceId1._serialNr += val << (i * 8);
         }
 
