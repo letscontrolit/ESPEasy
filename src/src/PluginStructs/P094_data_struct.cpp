@@ -16,8 +16,8 @@
 
 P094_data_struct::P094_data_struct() :  easySerial(nullptr) {
   for (int i = 0; i < P094_NR_FILTERS; ++i) {
-    valueType_index[i] = P094_Filter_Value_Type::P094_not_used;
-    filter_comp[i] = P094_Filter_Comp::P094_Equal_OR;
+    filterLine_valueType[i] = P094_Filter_Value_Type::P094_not_used;
+    filterLine_compare[i] = P094_Filter_Comp::P094_Equal_OR;
   }
 }
 
@@ -53,24 +53,24 @@ bool P094_data_struct::init(ESPEasySerialPort port,
 }
 
 void P094_data_struct::post_init() {
-  for (uint8_t i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
-    valueType_used[i] = false;
+  for (uint8_t f = 0; f < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++f) {
+    filterValueType_used[f] = false;
   }
 
-  for (uint8_t i = 0; i < P094_NR_FILTERS; ++i) {
-    size_t lines_baseindex            = P094_Get_filter_base_index(i);
-    int    index                      = _lines[lines_baseindex].toInt();
-    int    tmp_filter_comp            = _lines[lines_baseindex + 2].toInt();
+  for (uint8_t filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine) {
+    const size_t lines_baseindex      = P094_Get_filter_base_index(filterLine);
+    const int    index                = _lines[lines_baseindex].toInt();
+    const int    tmp_filter_comp      = _lines[lines_baseindex + 2].toInt();
     const bool filter_string_notempty = _lines[lines_baseindex + 3].length() > 0;
-    const bool valid_index            = index >= 0 && index < P094_FILTER_VALUE_Type_NR_ELEMENTS;
+    const bool valid_index            = index > 0 && index < P094_FILTER_VALUE_Type_NR_ELEMENTS;
     const bool valid_filter_comp      = tmp_filter_comp >= 0 && tmp_filter_comp < P094_FILTER_COMP_NR_ELEMENTS;
 
-    valueType_index[i] = P094_not_used;
+    filterLine_valueType[filterLine] = P094_not_used;
 
     if (valid_index && valid_filter_comp && filter_string_notempty) {
-      valueType_used[index] = true;
-      valueType_index[i]    = static_cast<P094_Filter_Value_Type>(index);
-      filter_comp[i]        = static_cast<P094_Filter_Comp>(tmp_filter_comp);
+      filterValueType_used[index]      = true;
+      filterLine_valueType[filterLine] = static_cast<P094_Filter_Value_Type>(index);
+      filterLine_compare[filterLine]   = static_cast<P094_Filter_Comp>(tmp_filter_comp);
     }
   }
 }
@@ -510,7 +510,7 @@ bool P094_data_struct::invertMatch() const {
 
 bool P094_data_struct::filterUsed(uint8_t lineNr) const
 {
-  if (valueType_index[lineNr] == P094_Filter_Value_Type::P094_not_used) { return false; }
+  if (filterLine_valueType[lineNr] == P094_Filter_Value_Type::P094_not_used) { return false; }
   uint8_t varNr = P094_Get_filter_base_index(lineNr);
   return _lines[varNr + 3].length() > 0;
 }
@@ -524,8 +524,8 @@ String P094_data_struct::getFilter(uint8_t lineNr, P094_Filter_Value_Type& filte
 
   if ((varNr + 3) >= P94_Nlines) { return ""; }
   optional        = _lines[varNr + 1].toInt();
-  filterValueType = valueType_index[lineNr];
-  comparator      = filter_comp[lineNr];
+  filterValueType = filterLine_valueType[lineNr];
+  comparator      = filterLine_compare[lineNr];
 
   //  filterValueType = static_cast<P094_Filter_Value_Type>(_lines[varNr].toInt());
   //  comparator      = static_cast<P094_Filter_Comp>(_lines[varNr + 2].toInt());
@@ -610,9 +610,9 @@ bool P094_data_struct::parsePacket(const String& received) const {
 
     // Do not check for "not used" (0)
     for (unsigned int i = 1; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
-      if (valueType_used[i]) {
-        for (unsigned int f = 0; f < P094_NR_FILTERS; ++f) {
-          if (valueType_index[f] == i) {
+      if (filterValueType_used[i]) {
+        for (unsigned int filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine) {
+          if (filterLine_valueType[filterLine] == i) {
             // Have a matching filter
 
             uint32_t optional;
@@ -620,7 +620,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
             P094_Filter_Comp comparator;
             bool   match = false;
             String inputString;
-            String valueString = getFilter(f, filterValueType, optional, comparator);
+            String valueString = getFilter(filterLine, filterValueType, optional, comparator);
 
             if (i == P094_Filter_Value_Type::P094_position) {
               if (received.length() >= (optional + valueString.length())) {
@@ -630,14 +630,19 @@ bool P094_data_struct::parsePacket(const String& received) const {
               }
             } else if (i == P094_Filter_Value_Type::P094_manufacturer) {
               // Get vendor code
-              const unsigned long value = mBusPacket_header_t::encodeManufacturerID(valueString);
-              if (value == packet._deviceId1._manufacturer) {
+              const int value = mBusPacket_header_t::encodeManufacturerID(valueString);
+              inputString = mBusPacket_header_t::decodeManufacturerID(packet._deviceId1._manufacturer);
+
+              addLog(LOG_LEVEL_INFO, concat(F("Manufacturer ID filter: "), 
+                     mBusPacket_header_t::decodeManufacturerID(value)) + concat(F(" input: "), inputString));
+
+              if (value == packet._deviceId1._manufacturer
+                  /*inputString.equalsIgnoreCase(valueString)*/) {
                 match = true;
               } else if (hexToUL(valueString) == packet._deviceId1._manufacturer) {
                 // Old 'compatible' mode, where the HEX notation was used instead of the manufacturer ID
                 match = true;
               }
-              inputString = mBusPacket_header_t::decodeManufacturerID(packet._deviceId1._manufacturer);
             } else {
               const unsigned long value = hexToUL(valueString);
               uint32_t receivedValue = 0;
@@ -674,7 +679,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
               String log;
               if (log.reserve(64)) {
                 log += F("CUL Reader: ");
-                log += P094_FilterValueType_toString(valueType_index[f]);
+                log += P094_FilterValueType_toString(filterLine_valueType[filterLine]);
                 log += F(":  in:");
                 log += inputString;
                 log += ' ';
@@ -701,11 +706,11 @@ bool P094_data_struct::parsePacket(const String& received) const {
             switch (comparator) {
               case P094_Filter_Comp::P094_Equal_OR:
 
-                if (match) { filter_matches[f] = true; }
+                if (match) { filter_matches[filterLine] = true; }
                 break;
               case P094_Filter_Comp::P094_NotEqual_OR:
 
-                if (!match) { filter_matches[f] = true; }
+                if (!match) { filter_matches[filterLine] = true; }
                 break;
 
               case P094_Filter_Comp::P094_Equal_MUST:
@@ -727,8 +732,8 @@ bool P094_data_struct::parsePacket(const String& received) const {
     int nrMatches = 0;
     int nrNotUsed = 0;
 
-    for (unsigned int f = 0; !match_result && f < P094_NR_FILTERS; ++f) {
-      if (f % P094_AND_FILTER_BLOCK == 0) {
+    for (unsigned int filterLine = 0; !match_result && filterLine < P094_NR_FILTERS; ++filterLine) {
+      if (filterLine % P094_AND_FILTER_BLOCK == 0) {
         if ((nrMatches > 0) && ((nrMatches + nrNotUsed) == P094_AND_FILTER_BLOCK)) {
           match_result = true;
         }
@@ -736,10 +741,10 @@ bool P094_data_struct::parsePacket(const String& received) const {
         nrNotUsed = 0;
       }
 
-      if (filter_matches[f]) {
+      if (filter_matches[filterLine]) {
         ++nrMatches;
       } else {
-        if (!filterUsed(f)) {
+        if (!filterUsed(filterLine)) {
           ++nrNotUsed;
         }
       }

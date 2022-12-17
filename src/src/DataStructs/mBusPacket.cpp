@@ -25,13 +25,15 @@ int mBusPacket_header_t::encodeManufacturerID(const String& id_str)
 
   if (nrChars > 3) { nrChars = 3; }
 
-  for (int i = 0; i < nrChars; ++i) {
-    const char c = id_str[i];
-
-    if ((c >= 64) && (c < 96)) {
-      res += static_cast<int>(c) - 64;
-    }
+  int i = 0;
+  while (i < nrChars) {
     res <<= 5;
+    const int c = static_cast<int>(toUpperCase(id_str[i])) - 64;
+
+    if (c >= 0) {
+      res += c & 0x1f;
+    }
+    ++i;
   }
   return res;
 }
