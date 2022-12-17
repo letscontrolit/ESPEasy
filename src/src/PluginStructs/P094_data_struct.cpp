@@ -2,22 +2,22 @@
 
 #ifdef USES_P094
 
-// Needed also here for PlatformIO's library finder as the .h file 
+// Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
-#include <ESPeasySerial.h>
+# include <ESPeasySerial.h>
 
-#include <Regexp.h>
+# include <Regexp.h>
 
-#include "../DataStructs/mBusPacket.h"
+# include "../DataStructs/mBusPacket.h"
 
-#include "../Globals/ESPEasy_time.h"
-#include "../Helpers/StringConverter.h"
+# include "../Globals/ESPEasy_time.h"
+# include "../Helpers/StringConverter.h"
 
 
 P094_data_struct::P094_data_struct() :  easySerial(nullptr) {
   for (int i = 0; i < P094_NR_FILTERS; ++i) {
     filterLine_valueType[i] = P094_Filter_Value_Type::P094_not_used;
-    filterLine_compare[i] = P094_Filter_Comp::P094_Equal_OR;
+    filterLine_compare[i]   = P094_Filter_Comp::P094_Equal_OR;
   }
 }
 
@@ -35,10 +35,10 @@ void P094_data_struct::reset() {
   }
 }
 
-bool P094_data_struct::init(ESPEasySerialPort port, 
-                            const int16_t serial_rx, 
-                            const int16_t serial_tx, 
-                            unsigned long baudrate) {
+bool P094_data_struct::init(ESPEasySerialPort port,
+                            const int16_t     serial_rx,
+                            const int16_t     serial_tx,
+                            unsigned long     baudrate) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
@@ -58,12 +58,12 @@ void P094_data_struct::post_init() {
   }
 
   for (uint8_t filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine) {
-    const size_t lines_baseindex      = P094_Get_filter_base_index(filterLine);
-    const int    index                = _lines[lines_baseindex].toInt();
-    const int    tmp_filter_comp      = _lines[lines_baseindex + 2].toInt();
-    const bool filter_string_notempty = _lines[lines_baseindex + 3].length() > 0;
-    const bool valid_index            = index > 0 && index < P094_FILTER_VALUE_Type_NR_ELEMENTS;
-    const bool valid_filter_comp      = tmp_filter_comp >= 0 && tmp_filter_comp < P094_FILTER_COMP_NR_ELEMENTS;
+    const size_t lines_baseindex        = P094_Get_filter_base_index(filterLine);
+    const int    index                  = _lines[lines_baseindex].toInt();
+    const int    tmp_filter_comp        = _lines[lines_baseindex + 2].toInt();
+    const bool   filter_string_notempty = _lines[lines_baseindex + 3].length() > 0;
+    const bool   valid_index            = index > 0 && index < P094_FILTER_VALUE_Type_NR_ELEMENTS;
+    const bool   valid_filter_comp      = tmp_filter_comp >= 0 && tmp_filter_comp < P094_FILTER_COMP_NR_ELEMENTS;
 
     filterLine_valueType[filterLine] = P094_not_used;
 
@@ -414,6 +414,7 @@ bool P094_data_struct::loop() {
               valid = false;
             }
           }
+
           if (valid) {
             fullSentenceReceived = true;
           }
@@ -424,7 +425,8 @@ bool P094_data_struct::loop() {
           // Ignore LF
           break;
         default:
-          if (c >= 32 && c < 127) {
+
+          if ((c >= 32) && (c < 127)) {
             sentence_part += c;
           } else {
             current_sentence_errored = true;
@@ -440,28 +442,29 @@ bool P094_data_struct::loop() {
     ++sentences_received;
     length_last_received = sentence_part.length();
   } else {
-    if (debug_generate_CUL_data && sentence_part.length() == 0) {
+    if (debug_generate_CUL_data && (sentence_part.length() == 0)) {
       static uint32_t last_test_sentence = 0;
-      static int count = 0;
+      static int count                   = 0;
+
       if (timePassedSince(last_test_sentence) > 1000) {
         count++;
-        sentence_part = getDebugSentences(count);
+        sentence_part        = getDebugSentences(count);
         fullSentenceReceived = true;
-        last_test_sentence = millis();
+        last_test_sentence   = millis();
       }
     }
   }
   return fullSentenceReceived;
 }
 
-
 const String& P094_data_struct::peekSentence() const {
   return sentence_part;
 }
 
 void P094_data_struct::getSentence(String& string, bool appendSysTime) {
-  string = std::move(sentence_part);
+  string        = std::move(sentence_part);
   sentence_part = String(); // FIXME TD-er: Should not be needed as move already cleared it.
+
   if (appendSysTime) {
     // Unix timestamp = 10 decimals + separator
     if (string.reserve(sentence_part.length() + 11)) {
@@ -512,6 +515,7 @@ bool P094_data_struct::filterUsed(uint8_t lineNr) const
 {
   if (filterLine_valueType[lineNr] == P094_Filter_Value_Type::P094_not_used) { return false; }
   uint8_t varNr = P094_Get_filter_base_index(lineNr);
+
   return _lines[varNr + 3].length() > 0;
 }
 
@@ -575,13 +579,16 @@ bool P094_data_struct::parsePacket(const String& received) const {
     // Decoded packet
 
     mBusPacket_t packet;
-    if (!packet.parse(received)) return false;
+
+    if (!packet.parse(received)) { return false; }
     const uint32_t rssi = hexToUL(received, strlength - 4, 4);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
+
       if (log.reserve(128)) {
-        log  = F("CUL Reader: ");
+        log = F("CUL Reader: ");
+
         if (packet._deviceId1.isValid()) {
           log += F(" deviceId1: ");
           log += packet._deviceId1.toString();
@@ -589,6 +596,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
           log += packet._deviceId1._length;
           log += ')';
         }
+
         if (packet._deviceId2.isValid()) {
           log += F(" deviceId2: ");
           log += packet._deviceId2.toString();
@@ -626,17 +634,18 @@ bool P094_data_struct::parsePacket(const String& received) const {
               if (received.length() >= (optional + valueString.length())) {
                 // received string is long enough to fit the expression.
                 inputString = received.substring(optional, optional + valueString.length());
-                match = inputString.equalsIgnoreCase(valueString);
+                match       = inputString.equalsIgnoreCase(valueString);
               }
             } else if (i == P094_Filter_Value_Type::P094_manufacturer) {
               // Get vendor code
               const int value = mBusPacket_header_t::encodeManufacturerID(valueString);
               inputString = mBusPacket_header_t::decodeManufacturerID(packet._deviceId1._manufacturer);
 
-              addLog(LOG_LEVEL_INFO, concat(F("Manufacturer ID filter: "), 
-                     mBusPacket_header_t::decodeManufacturerID(value)) + concat(F(" input: "), inputString));
+              addLog(LOG_LEVEL_INFO, concat(F("Manufacturer ID filter: "),
+                                            mBusPacket_header_t::decodeManufacturerID(value)) + concat(F(" input: "), inputString));
 
               if (value == packet._deviceId1._manufacturer
+
                   /*inputString.equalsIgnoreCase(valueString)*/) {
                 match = true;
               } else if (hexToUL(valueString) == packet._deviceId1._manufacturer) {
@@ -645,26 +654,27 @@ bool P094_data_struct::parsePacket(const String& received) const {
               }
             } else {
               const unsigned long value = hexToUL(valueString);
-              uint32_t receivedValue = 0;
+              uint32_t receivedValue    = 0;
+
               switch (static_cast<P094_Filter_Value_Type>(i)) {
                 case P094_packet_length:
                   receivedValue = packet._deviceId1._length;
-                  match = value == receivedValue;
+                  match         = value == receivedValue;
                   break;
                 case P094_manufacturer:
                   // Already handled
                   break;
                 case P094_meter_type:
                   receivedValue = packet._deviceId1._meterType;
-                  match = value == receivedValue;
+                  match         = value == receivedValue;
                   break;
                 case P094_serial_number:
                   receivedValue = packet._deviceId1._serialNr;
-                  match = value == receivedValue;
+                  match         = value == receivedValue;
                   break;
                 case P094_rssi:
                   receivedValue = rssi;
-                  match = value < rssi;
+                  match         = value < rssi;
                   break;
                 default:
                   match = false;
@@ -677,6 +687,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
+
               if (log.reserve(64)) {
                 log += F("CUL Reader: ");
                 log += P094_FilterValueType_toString(filterLine_valueType[filterLine]);
@@ -691,7 +702,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
                   case P094_Filter_Comp::P094_Equal_OR:
                   case P094_Filter_Comp::P094_Equal_MUST:
 
-                    if (match) { log += F(" expected MATCH"); } 
+                    if (match) { log += F(" expected MATCH"); }
                     break;
                   case P094_Filter_Comp::P094_NotEqual_OR:
                   case P094_Filter_Comp::P094_NotEqual_MUST:

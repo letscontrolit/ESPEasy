@@ -4,8 +4,8 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P094
 
-#include <ESPeasySerial.h>
-#include <Regexp.h>
+# include <ESPeasySerial.h>
+# include <Regexp.h>
 
 
 # define P094_REGEX_POS             0
@@ -62,30 +62,31 @@ public:
 
   void reset();
 
-  bool init(ESPEasySerialPort port, 
-            const int16_t serial_rx,
-            const int16_t serial_tx,
-            unsigned long baudrate);
+  bool init(ESPEasySerialPort port,
+            const int16_t     serial_rx,
+            const int16_t     serial_tx,
+            unsigned long     baudrate);
 
-  void post_init();
+  void          post_init();
 
-  bool isInitialized() const;
+  bool          isInitialized() const;
 
-  void sendString(const String& data);
+  void          sendString(const String& data);
 
-  bool loop();
+  bool          loop();
 
   const String& peekSentence() const;
 
-  void getSentence(String& string, bool appendSysTime);
+  void          getSentence(String& string,
+                            bool    appendSysTime);
 
-  void getSentencesReceived(uint32_t& succes,
-                            uint32_t& error,
-                            uint32_t& length_last) const;
+  void          getSentencesReceived(uint32_t& succes,
+                                     uint32_t& error,
+                                     uint32_t& length_last) const;
 
   void setMaxLength(uint16_t maxlenght);
 
-  void setLine(uint8_t          varNr,
+  void setLine(uint8_t       varNr,
                const String& line);
 
 
@@ -102,15 +103,15 @@ public:
                             uint32_t              & optional,
                             P094_Filter_Comp      & comparator) const;
 
-  void          setDisableFilterWindowTimer();
+  void                              setDisableFilterWindowTimer();
 
-  bool          disableFilterWindowActive() const;
+  bool                              disableFilterWindowActive() const;
 
-  bool          parsePacket(const String& received) const;
+  bool                              parsePacket(const String& received) const;
 
-  static const __FlashStringHelper * MatchType_toString(P094_Match_Type matchType);
-  static const __FlashStringHelper * P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
-  static const __FlashStringHelper * P094_FilterComp_toString(P094_Filter_Comp comparator);
+  static const __FlashStringHelper* MatchType_toString(P094_Match_Type matchType);
+  static const __FlashStringHelper* P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
+  static const __FlashStringHelper* P094_FilterComp_toString(P094_Filter_Comp comparator);
 
 
   // Made public so we don't have to copy the values when loading/saving.
@@ -119,9 +120,11 @@ public:
   static size_t P094_Get_filter_base_index(size_t filterLine);
 
   // Get (and increment) debug counter
-  uint32_t getDebugCounter();
+  uint32_t      getDebugCounter();
 
-  void setGenerate_DebugCulData(bool value) { debug_generate_CUL_data = value; }
+  void          setGenerate_DebugCulData(bool value) {
+    debug_generate_CUL_data = value;
+  }
 
 private:
 
@@ -138,7 +141,7 @@ private:
   uint32_t       debug_counter            = 0;
   bool           debug_generate_CUL_data  = false;
 
-  bool                   filterValueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = {0};
+  bool                   filterValueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = { 0 };
   P094_Filter_Value_Type filterLine_valueType[P094_NR_FILTERS];
   P094_Filter_Comp       filterLine_compare[P094_NR_FILTERS];
 };

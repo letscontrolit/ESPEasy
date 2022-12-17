@@ -10,36 +10,36 @@
 //
 
 
-#include "src/Helpers/ESPEasy_Storage.h"
-#include "src/Helpers/StringConverter.h"
-#include "src/PluginStructs/P094_data_struct.h"
+# include "src/Helpers/ESPEasy_Storage.h"
+# include "src/Helpers/StringConverter.h"
+# include "src/PluginStructs/P094_data_struct.h"
 
-#include <Regexp.h>
+# include <Regexp.h>
 
-#define PLUGIN_094
-#define PLUGIN_ID_094           94
-#define PLUGIN_NAME_094         "Communication - CUL Reader"
+# define PLUGIN_094
+# define PLUGIN_ID_094           94
+# define PLUGIN_NAME_094         "Communication - CUL Reader"
 
 
-#define P094_BAUDRATE           PCONFIG_LONG(0)
-#define P094_BAUDRATE_LABEL     PCONFIG_LABEL(0)
+# define P094_BAUDRATE           PCONFIG_LONG(0)
+# define P094_BAUDRATE_LABEL     PCONFIG_LABEL(0)
 
-#define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
-#define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
+# define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
+# define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
 
-#define P094_GET_APPEND_RECEIVE_SYSTIME    bitRead(PCONFIG(0),0)
-#define P094_SET_APPEND_RECEIVE_SYSTIME(X) bitWrite(PCONFIG(0),0,X)
+# define P094_GET_APPEND_RECEIVE_SYSTIME    bitRead(PCONFIG(0), 0)
+# define P094_SET_APPEND_RECEIVE_SYSTIME(X) bitWrite(PCONFIG(0), 0, X)
 
-#define P094_GET_GENERATE_DEBUG_CUL_DATA    bitRead(PCONFIG(0),1)
-#define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0),1,X)
+# define P094_GET_GENERATE_DEBUG_CUL_DATA    bitRead(PCONFIG(0), 1)
+# define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0), 1, X)
 
-#define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
-#define P094_NR_OUTPUT_OPTIONS  1
+# define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
+# define P094_NR_OUTPUT_OPTIONS  1
 
-#define P094_NR_OUTPUT_VALUES   1
-#define P094_QUERY1_CONFIG_POS  3
+# define P094_NR_OUTPUT_VALUES   1
+# define P094_QUERY1_CONFIG_POS  3
 
-#define P094_DEFAULT_BAUDRATE   38400
+# define P094_DEFAULT_BAUDRATE   38400
 
 
 // Plugin settings:
@@ -77,6 +77,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
       Device[deviceCount].DuplicateDetection = true;
+
       // FIXME TD-er: Not sure if access to any existing task data is needed when saving
       Device[deviceCount].ExitTaskBeforeSave = false;
       break;
@@ -128,7 +129,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P094_BAUDRATE = P094_DEFAULT_BAUDRATE;
+      P094_BAUDRATE              = P094_DEFAULT_BAUDRATE;
       P094_DEBUG_SENTENCE_LENGTH = 0;
 
       success = true;
@@ -149,7 +150,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: 
+    case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Filtering"));
       P094_html_show_matchForms(event);
@@ -159,7 +160,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
       addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
 
-      addFormCheckBox(F("Append system time"), F("systime"), P094_GET_APPEND_RECEIVE_SYSTIME);
+      addFormCheckBox(F("Append system time"),        F("systime"),    P094_GET_APPEND_RECEIVE_SYSTIME);
       addFormCheckBox(F("(debug) Generate CUL data"), F("debug_data"), P094_GET_GENERATE_DEBUG_CUL_DATA);
 
       success = true;
@@ -167,7 +168,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      P094_BAUDRATE = getFormItemInt(P094_BAUDRATE_LABEL);
+      P094_BAUDRATE              = getFormItemInt(P094_BAUDRATE_LABEL);
       P094_DEBUG_SENTENCE_LENGTH = getFormItemInt(P094_DEBUG_SENTENCE_LABEL);
 
       P094_data_struct *P094_data =
@@ -190,8 +191,8 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_INIT: {
-      const int16_t serial_rx = CONFIG_PIN1;
-      const int16_t serial_tx = CONFIG_PIN2;
+      const int16_t serial_rx      = CONFIG_PIN1;
+      const int16_t serial_tx      = CONFIG_PIN2;
       const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P094_data_struct());
       P094_data_struct *P094_data =
@@ -229,9 +230,11 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log;
+
                 if (log.reserve(128)) {
                   log = F("CUL Reader: Sending: ");
                   const size_t messageLength = event->String2.length();
+
                   if (messageLength < 100) {
                     log += event->String2;
                   } else {
@@ -243,10 +246,12 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
                   addLogMove(LOG_LEVEL_INFO, log);
                 }
               }
+
               // Filter length options:
-              // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit sending meters, which normaly is a fault)
+              // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit
+              // sending meters, which normaly is a fault)
               // - 38 char, The exact message, because we have 2 uint8_t from the value payload
-              //sendData_checkDuplicates(event, event->String2.substring(0, 22));
+              // sendData_checkDuplicates(event, event->String2.substring(0, 22));
               sendData(event);
             }
           }
@@ -267,16 +272,19 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           event->String2 += String(debug_count);
           event->String2 += '_';
           const char c = '0' + debug_count % 10;
+
           for (long i = event->String2.length(); i < P094_DEBUG_SENTENCE_LENGTH; ++i) {
             event->String2 += c;
           }
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("CUL Reader: Sending: ");
             log += event->String2.substring(0, 20);
             log += F("...");
             addLogMove(LOG_LEVEL_INFO, log);
           }
-//          sendData_checkDuplicates(event, event->String2.substring(0, 22));
+
+          //          sendData_checkDuplicates(event, event->String2.substring(0, 22));
           sendData(event);
         }
       }
@@ -353,8 +361,8 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      const __FlashStringHelper * options[P094_Match_Type_NR_ELEMENTS];
-      int    optionValues[P094_Match_Type_NR_ELEMENTS];
+      const __FlashStringHelper *options[P094_Match_Type_NR_ELEMENTS];
+      int optionValues[P094_Match_Type_NR_ELEMENTS];
 
       for (int i = 0; i < P094_Match_Type_NR_ELEMENTS; ++i) {
         P094_Match_Type matchType = static_cast<P094_Match_Type>(i);
@@ -372,7 +380,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     }
 
 
-    uint8_t filterSet                  = 0;
+    uint8_t  filterSet             = 0;
     uint32_t optional              = 0;
     P094_Filter_Value_Type capture = P094_Filter_Value_Type::P094_packet_length;
     P094_Filter_Comp comparator    = P094_Filter_Comp::P094_Equal_OR;
@@ -403,8 +411,8 @@ void P094_html_show_matchForms(struct EventStruct *event) {
 
             // Combo box with filter types
             {
-              const __FlashStringHelper * options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
-              int    optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+              const __FlashStringHelper *options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+              int optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
 
               for (int i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
                 P094_Filter_Value_Type filterValueType = static_cast<P094_Filter_Value_Type>(i);
@@ -425,8 +433,8 @@ void P094_html_show_matchForms(struct EventStruct *event) {
           case 2:
           {
             // Comparator
-            const __FlashStringHelper * options[P094_FILTER_COMP_NR_ELEMENTS];
-            int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
+            const __FlashStringHelper *options[P094_FILTER_COMP_NR_ELEMENTS];
+            int optionValues[P094_FILTER_COMP_NR_ELEMENTS];
 
             for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {
               P094_Filter_Comp enumValue = static_cast<P094_Filter_Comp>(i);
