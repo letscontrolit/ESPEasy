@@ -7,6 +7,10 @@
 # include <ESPeasySerial.h>
 # include <Regexp.h>
 
+# ifndef P094_DEBUG_OPTIONS
+#  define P094_DEBUG_OPTIONS 0
+# endif
+
 
 # define P094_REGEX_POS             0
 # define P094_NR_CHAR_USE_POS       1
@@ -119,12 +123,14 @@ public:
 
   static size_t P094_Get_filter_base_index(size_t filterLine);
 
+#if P094_DEBUG_OPTIONS
   // Get (and increment) debug counter
   uint32_t      getDebugCounter();
 
   void          setGenerate_DebugCulData(bool value) {
     debug_generate_CUL_data = value;
   }
+#endif
 
 private:
 
@@ -138,8 +144,10 @@ private:
   bool           current_sentence_errored = false;
   uint32_t       length_last_received     = 0;
   unsigned long  disable_filter_window    = 0;
+  #if P094_DEBUG_OPTIONS
   uint32_t       debug_counter            = 0;
   bool           debug_generate_CUL_data  = false;
+  #endif
 
   bool                   filterValueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = { 0 };
   P094_Filter_Value_Type filterLine_valueType[P094_NR_FILTERS];

@@ -30,8 +30,10 @@
 # define P094_GET_APPEND_RECEIVE_SYSTIME    bitRead(PCONFIG(0), 0)
 # define P094_SET_APPEND_RECEIVE_SYSTIME(X) bitWrite(PCONFIG(0), 0, X)
 
+#if P094_DEBUG_OPTIONS
 # define P094_GET_GENERATE_DEBUG_CUL_DATA    bitRead(PCONFIG(0), 1)
 # define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0), 1, X)
+#endif
 
 # define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 # define P094_NR_OUTPUT_OPTIONS  1
@@ -161,7 +163,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
 
       addFormCheckBox(F("Append system time"),        F("systime"),    P094_GET_APPEND_RECEIVE_SYSTIME);
+#if P094_DEBUG_OPTIONS
       addFormCheckBox(F("(debug) Generate CUL data"), F("debug_data"), P094_GET_GENERATE_DEBUG_CUL_DATA);
+#endif
 
       success = true;
       break;
@@ -185,7 +189,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       }
 
       P094_SET_APPEND_RECEIVE_SYSTIME(isFormItemChecked(F("systime")));
+#if P094_DEBUG_OPTIONS
       P094_SET_GENERATE_DEBUG_CUL_DATA(isFormItemChecked(F("debug_data")));
+#endif
 
       break;
     }
@@ -205,7 +211,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE)) {
         LoadCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0);
         P094_data->post_init();
+#if P094_DEBUG_OPTIONS
         P094_data->setGenerate_DebugCulData(P094_GET_GENERATE_DEBUG_CUL_DATA);
+#endif
         success = true;
 
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
@@ -267,6 +275,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P094_data)) {
+          #if P094_DEBUG_OPTIONS
           const uint32_t debug_count = P094_data->getDebugCounter();
           event->String2.reserve(P094_DEBUG_SENTENCE_LENGTH);
           event->String2 += String(debug_count);
@@ -276,6 +285,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           for (long i = event->String2.length(); i < P094_DEBUG_SENTENCE_LENGTH; ++i) {
             event->String2 += c;
           }
+          #endif
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("CUL Reader: Sending: ");

@@ -76,7 +76,7 @@ bool mBusPacket_t::parse(const String& payload)
 
 bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
 {
-  const size_t payloadSize = payloadWithoutChecksums.size();
+  const int payloadSize = payloadWithoutChecksums.size();
 
 
   if (payloadSize < 10) { return false; }
@@ -169,7 +169,7 @@ uint8_t mBusPacket_t::hexToByte(const String& str, size_t index)
 mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
 {
   mBusPacket_data result;
-  const size_t    payloadLength = payload.length();
+  const int    payloadLength = payload.length();
 
   if (payloadLength < 4) { return result; }
 
@@ -214,7 +214,7 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
 mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload)
 {
   mBusPacket_data result;
-  const size_t    payloadLength = payload.length();
+  const int    payloadLength = payload.length();
 
   if (payloadLength < 4) { return result; }
 

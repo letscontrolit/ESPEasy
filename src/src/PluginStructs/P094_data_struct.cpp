@@ -94,6 +94,7 @@ void P094_data_struct::sendString(const String& data) {
   }
 }
 
+#if P094_DEBUG_OPTIONS
 const __FlashStringHelper * getDebugSentences(int& count) {
   switch (count) {
     case 1: return F("b3C449344369291352337D55472593107009344230A920000200C0538ECE32625004C0527262500426CBF2CCC0805BDF032262500C2086CDF21326CFFFF046D26BB1103DA22B4E093E2"); break; //QDS.0A.00073159"); break; //QDS.37.35919236
@@ -376,7 +377,7 @@ const __FlashStringHelper * getDebugSentences(int& count) {
   count = 0;
   return F("");
 }
-
+#endif
 
 bool P094_data_struct::loop() {
   if (!isInitialized()) {
@@ -441,7 +442,9 @@ bool P094_data_struct::loop() {
   if (fullSentenceReceived) {
     ++sentences_received;
     length_last_received = sentence_part.length();
-  } else {
+  } 
+#if P094_DEBUG_OPTIONS
+  else {
     if (debug_generate_CUL_data && (sentence_part.length() == 0)) {
       static uint32_t last_test_sentence = 0;
       static int count                   = 0;
@@ -454,6 +457,7 @@ bool P094_data_struct::loop() {
       }
     }
   }
+#endif
   return fullSentenceReceived;
 }
 
@@ -825,8 +829,10 @@ size_t P094_data_struct::P094_Get_filter_base_index(size_t filterLine) {
   return filterLine * P094_ITEMS_PER_FILTER + P094_FIRST_FILTER_POS;
 }
 
+#if P094_DEBUG_OPTIONS
 uint32_t P094_data_struct::getDebugCounter() {
   return debug_counter++;
 }
+#endif
 
 #endif // USES_P094
