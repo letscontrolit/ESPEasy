@@ -171,7 +171,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               String ctrl = valueName.substring(19, 20);
               int ctrlNr = 0;
               if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX)) {
-                value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex];
+                value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex] && Settings.ControllerEnabled[ctrlNr];
               }
             }
             if (!value.isEmpty()) {
