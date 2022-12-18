@@ -724,7 +724,9 @@ For retrieving some generic task-specific settings, below variables have been ad
 
 ``[<TaskName>#settings.valuecount]`` to get the number of values, available in the named task. Range: 0..4. For tasks with a configurable number of values, like the SysInfo plugin, it will return the *currently* set number of values.
 
-``[<TaskName>#settings.controllerN]`` to get the enabled/disabled state (1/0) for controller N (1..3) of the named task. The controller has to be enabled too, to return an enabled state!
+``[<TaskName>#settings.controllerN.enabled]`` to get the enabled/disabled state (1/0) for controller N (1..3) of the named task. The controller has to be enabled too, to return an enabled state!
+
+``[<TaskName>#settings.controllerN.idx]`` to get the Idx value for controller N (1..3) of the named task, when supported by that Controller. The controller has to be enabled too, to return an idx!
 
 These settings will be returned independent of the task being enabled or disabled, as that state can be retrieved separately.
 

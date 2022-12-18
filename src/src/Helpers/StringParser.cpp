@@ -12,6 +12,7 @@
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
+#include "../Globals/Protocol.h"
 #include "../Globals/RuntimeData.h"
 
 #include "../Helpers/ESPEasy_math.h"
@@ -159,7 +160,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               }
             }
           }
-          if (!isHandled && valueName.startsWith(F("settings."))) {  // Special settings values
+          if (!isHandled && valueName.startsWith(F("settings."))) {  // Task settings values
             String value;
             if (valueName.endsWith(F(".enabled"))) {           // Task state
               value = Settings.TaskDeviceEnabled[taskIndex];
@@ -167,11 +168,21 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               value = Settings.TaskDeviceTimer[taskIndex];
             } else if (valueName.endsWith(F(".valuecount"))) { // Task value count
               value = getValueCountForTask(taskIndex);
-            } else if ((valueName.indexOf(F(".controller")) > -1) && valueName.length() == 20) { // Task controller state
+            } else if ((valueName.indexOf(F(".controller")) == 8) && valueName.length() >= 20) { // Task controller values
               String ctrl = valueName.substring(19, 20);
               int ctrlNr = 0;
-              if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX)) {
-                value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex] && Settings.ControllerEnabled[ctrlNr];
+              if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
+                  Settings.ControllerEnabled[ctrlNr - 1]) { // Controller nr. valid and enabled
+                if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
+                  value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex];
+                } else if (valueName.endsWith(F(".idx"))) { // Task-controller idx value
+                  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
+
+                  if (validProtocolIndex(ProtocolIndex) && 
+                      Protocol[ProtocolIndex].usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
+                    value = Settings.TaskDeviceID[ctrlNr - 1][taskIndex];
+                  }
+                }
               }
             }
             if (!value.isEmpty()) {
