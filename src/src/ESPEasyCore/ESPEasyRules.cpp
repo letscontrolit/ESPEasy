@@ -463,6 +463,38 @@ void parse_string_commands(String& line) {
             && arg2valid) {
           replacement = arg3.substring(startpos, endpos);
         }
+      } else if (cmd_s_lower.equals(F("indexof"))) {
+        // indexOf arduino style (0-based position of first char returned, -1 if not found, case sensitive), optional 3rd argument 1: case-insensitive
+        // Syntax like {indexof:HELLO:"ANOTHER HELLO WORLD"} => 8, {indexof:hello:"ANOTHER HELLO WORLD"} => -1, {indexof:Hello:"ANOTHER HELLO WORLD":1} => 8
+
+        if (!arg1.isEmpty()
+            && !arg2.isEmpty()) {
+          int caseInsensitive = -1;
+          validIntFromString(arg3, caseInsensitive);
+          if (caseInsensitive == 1) {
+            String arg1copy(arg1);
+            String arg2copy(arg2);
+            arg1copy.toLowerCase();
+            arg2copy.toLowerCase();
+            replacement = arg2copy.indexOf(arg1copy);
+          } else {
+            replacement = arg2.indexOf(arg1);
+          }
+        }
+      } else if (cmd_s_lower.equals(F("equals"))) {
+        // equals compare strings 1 = equal, 0 = unequal (case sensitive), optional 3rd argument 1: case-insensitive compare
+        // Syntax like {equals:HELLO:HELLO} => 1, {equals:hello:HELLO} => 0, {equals:hello:HELLO:1} => 1, {equals:hello:BLA:1} => 0
+
+        if (!arg1.isEmpty()
+            && !arg2.isEmpty()) {
+          int caseInsensitive = -1;
+          validIntFromString(arg3, caseInsensitive);
+          if (caseInsensitive == 1) {
+            replacement = arg2.equalsIgnoreCase(arg1);
+          } else {
+            replacement = arg2.equals(arg1);
+          }
+        }
       // #ifndef LIMIT_BUILD_SIZE
       } else if (cmd_s_lower.equals(F("timetomin")) || cmd_s_lower.equals(F("timetosec"))) {
         // time to minutes, transform a substring hh:mm to minutes

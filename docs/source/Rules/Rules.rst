@@ -923,6 +923,51 @@ For example (bit useless example, just for illustrative purposes):
  221351 : Info  : Command: logentry
  221353 : Info  : 87
 
+IndexOf
+^^^^^^^
+
+Determining the position of a substring in a string, using the Arduino ``indexOf()`` function.
+
+Usage:
+
+* ``{indexof:<substring>:<string_to_search_in>[:<caseInsensitive>]}``  Determine the position of ``substring`` within ``string_to_search_in``, 0-based result, -1 if not found. Set the optional argument ``caseInsensitive`` to 1 to ignore character case.
+
+String values containing spaces or commas have to be wrapped in quotes.
+
+Example:
+
+.. code-block:: none
+
+  on HandleCommands#* do // syntax: event,handleCommands#run=parameters
+    if {indexof:run:%eventpar%:1}=0 // command starts with 'run'
+      LogEntry,'Running command: %eventpar% with arguments: %eventvalue0%'
+    endif
+  endon
+
+Equals
+^^^^^^
+
+Compare 2 string values to determine equality, optionally case-insensitive.
+
+Usage:
+
+* ``{equals:<string1>:<string2>[:<caseInsensitive>]``  Compare ``string1`` and ``string2`` for equality, returns 1 for equal and 0 for inequal. Set the optional argument ``caseInsensitive`` to 1 to ignore character case.
+
+String values containing spaces or commas have to be wrapped in quotes.
+
+Example:
+
+.. code-block:: none
+
+  on HandleCommands#* do // syntax: event,handleCommands#start=parameters or event,handleCommands#stop=parameters
+    if {equals:start:%eventpar%:1}=1 and {equals:GO:"%eventvalue1%"} // command is 'start,GO' (eventvalue1 can contain spaces or commas, so quoted)
+      LogEntry,'Starting with arguments: %eventvalue0%'
+    elseif {equals:stop:%eventpar%:1}=1 // command is 'stop'
+      LogEntry,'Stopping with arguments: %eventvalue0%'
+    endif
+  endon
+
+
 strtol
 ^^^^^^
 
