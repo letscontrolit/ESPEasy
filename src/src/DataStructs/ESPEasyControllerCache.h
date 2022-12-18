@@ -41,9 +41,6 @@ struct ControllerCache_struct {
 
   String getPeekCacheFileName(bool& islast) const;
 
-  int readFileNr = 0;
-  int readPos    = 0;
-
 private:
 
   RTC_cache_handler_struct *_RTC_cache_handler = nullptr;

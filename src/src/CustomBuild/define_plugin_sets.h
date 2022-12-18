@@ -1963,6 +1963,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
+  #ifndef USES_P146
+    #define USES_P146   // Cache Controller Reader
+  #endif
 
   // Controllers
   #ifndef USES_C015
@@ -2325,6 +2328,12 @@ To create/register a plugin, you have to :
     #define FEATURE_NOTIFIER  1
   #endif
 #endif
+
+// Cache Controller Reader plugin needs Cache Controller
+#if defined(USES_P146) && !defined(USES_C016)
+  #define USES_C016
+#endif
+
 
 
 // P098 PWM motor needs P003 pulse

@@ -3,11 +3,12 @@
 #ifdef USES_C016
 
 
-#include "../ControllerQueue/C016_queue_element.h"
+# include "../ControllerQueue/C016_queue_element.h"
 
 ControllerCache_struct ControllerCache;
 
 bool C016_startCSVdump() {
+  ControllerCache.flush();
   ControllerCache.resetpeek();
   return ControllerCache.isInitialized();
 }
@@ -26,27 +27,58 @@ bool C016_deleteAllCacheBlocks() {
 
 bool C016_getCSVline(
   unsigned long& timestamp,
-  uint8_t& controller_idx,
-  uint8_t& TaskIndex,
-  Sensor_VType& sensorType,
-  uint8_t& valueCount,
-  float& val1,
-  float& val2,
-  float& val3,
-  float& val4)
+  uint8_t      & controller_idx,
+  uint8_t      & TaskIndex,
+  Sensor_VType & sensorType,
+  uint8_t      & valueCount,
+  float        & val1,
+  float        & val2,
+  float        & val3,
+  float        & val4)
 {
   C016_queue_element element;
-  bool result = ControllerCache.peek((uint8_t*)&element, sizeof(element));
-  timestamp = element._timestamp;
+  bool result = ControllerCache.peek((uint8_t *)&element, sizeof(element));
+
+  timestamp      = element._timestamp;
   controller_idx = element.controller_idx;
-  TaskIndex = element.TaskIndex;
-  sensorType = element.sensorType;
-  valueCount = element.valueCount;
-  val1 = element.values[0];
-  val2 = element.values[1];
-  val3 = element.values[2];
-  val4 = element.values[3];
+  TaskIndex      = element.TaskIndex;
+  sensorType     = element.sensorType;
+  valueCount     = element.valueCount;
+  val1           = element.values[0];
+  val2           = element.values[1];
+  val3           = element.values[2];
+  val4           = element.values[3];
   return result;
 }
 
-#endif
+struct EventStruct C016_getTaskSample(
+  unsigned long& timestamp,
+  uint8_t      & valueCount,
+  float        & val1,
+  float        & val2,
+  float        & val3,
+  float        & val4)
+{
+  C016_queue_element element;
+
+  if (!ControllerCache.peek((uint8_t *)&element, sizeof(element))) {
+    return EventStruct();
+  }
+
+  timestamp  = element._timestamp;
+  valueCount = element.valueCount;
+  val1       = element.values[0];
+  val2       = element.values[1];
+  val3       = element.values[2];
+  val4       = element.values[3];
+
+  EventStruct event(element.TaskIndex);
+
+  // FIXME TD-er: Is this needed?
+  //  event.ControllerIndex = element.controller_idx;
+  event.sensorType = element.sensorType;
+
+  return event;
+}
+
+#endif // ifdef USES_C016

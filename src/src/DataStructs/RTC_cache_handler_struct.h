@@ -88,9 +88,9 @@ private:
   RTC_cache_struct    RTC_cache;
   std::vector<uint8_t>RTC_cache_data;
 #endif // ifdef ESP8266
-  fs::File fw;
-  fs::File fr;
-  fs::File fp;
+  fs::File fw;  // File handler Write
+  fs::File fr;  // File handler Read
+  fs::File fp;  // File handler Peek
   size_t   peekfilenr  = 0;
   size_t   peekreadpos = 0;
 

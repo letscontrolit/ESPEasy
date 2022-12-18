@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include "../DataStructs/ESPEasyControllerCache.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/DeviceStruct.h"
 
 extern ControllerCache_struct ControllerCache;
@@ -27,6 +28,14 @@ bool C016_getCSVline(
   uint8_t& controller_idx,
   uint8_t& TaskIndex,
   Sensor_VType& sensorType,
+  uint8_t& valueCount,
+  float& val1,
+  float& val2,
+  float& val3,
+  float& val4);
+
+struct EventStruct C016_getTaskSample(
+  unsigned long& timestamp,
   uint8_t& valueCount,
   float& val1,
   float& val2,
