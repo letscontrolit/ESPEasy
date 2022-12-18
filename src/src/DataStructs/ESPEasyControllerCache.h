@@ -35,6 +35,10 @@ struct ControllerCache_struct {
 
   void   resetpeek();
 
+  int    getPeekFilePos(int& peekFileNr) const;
+
+  void   setPeekFilePos(int peekFileNr, int peekReadPos);
+
   // Read data without marking it as being read.
   bool   peek(uint8_t     *data,
               unsigned int size) const;

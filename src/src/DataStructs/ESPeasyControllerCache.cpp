@@ -63,6 +63,19 @@ void ControllerCache_struct::resetpeek() {
   }
 }
 
+int  ControllerCache_struct::getPeekFilePos(int& peekFileNr) const {
+  if (_RTC_cache_handler != nullptr) {
+    return _RTC_cache_handler->getPeekFilePos(peekFileNr);
+  }
+  return -1;
+}
+
+void ControllerCache_struct::setPeekFilePos(int peekFileNr, int peekReadPos) {
+  if (_RTC_cache_handler != nullptr) {
+    _RTC_cache_handler->setPeekFilePos(peekFileNr, peekReadPos);
+  }
+}
+
 // Read data without marking it as being read.
 bool ControllerCache_struct::peek(uint8_t *data, unsigned int size) const {
   if (_RTC_cache_handler == nullptr) {

@@ -59,6 +59,53 @@ void RTC_cache_handler_struct::resetpeek() {
   peekreadpos = 0;
 }
 
+int RTC_cache_handler_struct::getPeekFilePos(int& peekFileNr) const {
+  peekFileNr = peekfilenr;
+  return peekreadpos;
+}
+
+void RTC_cache_handler_struct::setPeekFilePos(int peekFileNr, int peekReadPos) {
+  String fname = createCacheFilename(peekFileNr);
+
+  if (fname.isEmpty()) { return; }
+
+  if (fp) {
+    if (peekfilenr != peekFileNr) {
+      // Not the same file
+      fp.close();
+      peekfilenr = 0;
+    }
+  }
+
+  if (!fp) {
+    fp = tryOpenFile(fname, "r");
+  }
+
+  if (fp) {
+    peekfilenr = peekFileNr;
+
+    if (peekReadPos > 0) {
+      if (fp.seek(peekReadPos)) {
+        peekreadpos = peekReadPos;
+        return;
+      }
+      const int fileSize = fp.size();
+
+      if (fileSize <= peekReadPos) {
+        peekReadPos = fileSize;
+        return;
+      }
+    } else {
+      peekreadpos = 0;
+      return;
+    }
+  }
+
+  if (fp) { fp.close(); }
+  peekreadpos = 0;
+  peekfilenr  = 0;
+}
+
 bool RTC_cache_handler_struct::peek(uint8_t *data, unsigned int size) {
   int retries = 2;
 
@@ -83,10 +130,16 @@ bool RTC_cache_handler_struct::peek(uint8_t *data, unsigned int size) {
 
     if (!fp) { return false; }
 
-    if (fp.read(data, size)) {
+    const size_t bytesRead = fp.read(data, size);
+    peekreadpos += bytesRead;
+
+    if (bytesRead > 0) {
       return true;
     }
+
+    // FIXME TD-er: What to do when we just finished reading the last file?
     fp.close();
+    peekreadpos = 0;
   }
   return true;
 }

@@ -28,6 +28,9 @@
 # define PLUGIN_VALUENAME1_146 "FileNr"
 # define PLUGIN_VALUENAME2_146 "FilePos"
 
+# define P146_TASKVALUE_FILENR  UserVar[event->BaseVarIndex + 0]
+# define P146_TASKVALUE_FILEPOS UserVar[event->BaseVarIndex + 1]
+
 # define P146_GET_SEND_BINARY    bitRead(PCONFIG(0), 0)
 # define P146_SET_SEND_BINARY(X) bitWrite(PCONFIG(0), 0, X)
 
@@ -103,6 +106,10 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      // Restore the last position from RTC when rebooting.
+      ControllerCache.setPeekFilePos(
+        P146_TASKVALUE_FILENR,
+        P146_TASKVALUE_FILEPOS);
       success = true;
       break;
     }
@@ -113,55 +120,20 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
         // FIXME TD-er: Implement flushing binary format to MQTT controller
         // Find
       } else {
-        unsigned long timestamp;
-        uint8_t valueCount;
-        float   taskValues[VARS_PER_TASK] = {};
-        EventStruct tmpEvent(C016_getTaskSample(
-                               timestamp, valueCount,
-                               taskValues[0], taskValues[1], taskValues[2], taskValues[3]));
+        // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
+        // FIXME TD-er: Maybe decimate this, so the broker does have an idea of where we are?
 
-        if (validTaskIndex(tmpEvent.TaskIndex)) {
-          // FIXME TD-er: Not sure yet how to send the task values to a controller as we can't send it from a task itself.
-          // But this may also copy it to the Cache Controller again.
-
-          // Steps to take to flush it via the original tasks:
-          // - Temporary copy the existing task values
-          // - Copy values from the cache bin files to the task it had
-          // - Call CPLUGIN_PROTOCOL_SEND
-          // - Restore the values
-          for (int valIndex = 0; valIndex < VARS_PER_TASK; ++valIndex) {
-            std::swap(taskValues[valIndex], UserVar[tmpEvent.BaseVarIndex + valIndex]);
-          }
-
-          for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
-          {
-            if (Settings.Protocol[x] != 16) {
-              tmpEvent.ControllerIndex = x;
-              tmpEvent.idx             = Settings.TaskDeviceID[x][event->TaskIndex];
-
-              if (Settings.TaskDeviceSendData[x][event->TaskIndex] &&
-                  Settings.ControllerEnabled[x] &&
-                  Settings.Protocol[x])
-              {
-                protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
-
-                if (validUserVar(&tmpEvent)) {
-                  String dummy;
-
-                  if (CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_SEND, &tmpEvent, dummy)) {
-                    success = true;
-                  }
-                }
-              }
-            }
-          }
-
-          for (int valIndex = 0; valIndex < VARS_PER_TASK; ++valIndex) {
-            std::swap(taskValues[valIndex], UserVar[tmpEvent.BaseVarIndex + valIndex]);
-          }
-        }
+        /*success =*/ P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP);
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P146_MINIMAL_SEND_INTERVAL);
       }
 
+      //      if (success) {
+      int readFileNr    = 0;
+      const int readPos = ControllerCache.getPeekFilePos(readFileNr);
+      P146_TASKVALUE_FILENR  = readFileNr;
+      P146_TASKVALUE_FILEPOS = readPos;
+
+      //      }
 
       break;
     }
@@ -193,6 +165,20 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       P146_MQTT_MESSAGE_LENGTH   = getFormItemInt(F("maxmsgsize"));
 
       success = true;
+      break;
+    }
+
+    case PLUGIN_WRITE:
+    {
+      const String command    = parseString(string, 1);
+      const String subcommand = parseString(string, 2);
+
+      if (command.equals(F("cachereader"))) {
+        if (subcommand.equals(F("setreadpos"))) {
+          P146_data_struct::setPeekFilePos(event->Par2, event->Par3);
+          success = true;
+        }
+      }
       break;
     }
   }

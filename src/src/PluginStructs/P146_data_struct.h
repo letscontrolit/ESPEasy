@@ -12,7 +12,9 @@ public:
   virtual ~P146_data_struct();
 
 
+static bool sendViaOriginalTask(taskIndex_t P146_TaskIndex, bool sendTimestamp);
 
+static bool setPeekFilePos(int peekFileNr, int peekReadPos);
 
 private:
 

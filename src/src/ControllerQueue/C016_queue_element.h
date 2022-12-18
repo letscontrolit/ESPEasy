@@ -24,10 +24,12 @@ public:
 
   C016_queue_element();
 
+  C016_queue_element(const C016_queue_element& other) = delete;
+
   C016_queue_element(C016_queue_element&& other);
 
   C016_queue_element(const struct EventStruct *event,
-                     uint8_t                      value_count,
+                     uint8_t                   value_count,
                      unsigned long             unixTime);
 
   C016_queue_element& operator=(C016_queue_element&& other);

@@ -124,10 +124,12 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
 
         // Small optimization so we don't try to copy potentially large strings
         if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
-          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
+          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag))
+            success = true;
         } else {
           String value = formatUserVarNoCheck(event, x);
-          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
+          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag))
+            success = true;
         }
       }
       break;
