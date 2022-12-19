@@ -5,7 +5,7 @@
 var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
-  "ControllerEnable", "DateTime", "Debug", "DeepSleep", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner",
+  "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
   "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
   "Reboot", "Reset", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
