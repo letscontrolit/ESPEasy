@@ -97,7 +97,9 @@ var pluginDispKind = [
   //P116
   /*"tft",*/ "st77xx", "st7735", "st7789", "st7796",
   //P131
-  "neomatrix", "neo"
+  "neomatrix", "neo",
+  //P141
+  /*"lcd",*/ "pcd8544",
 ];
 var pluginDispCmd = [
   "cmd,on", "cmd,off", "cmd,clear", "cmd,backlight", "cmd,bright", "cmd,deepsleep", "cmd,seq_start", "cmd,seq_end", "cmd,inv", "cmd,rot",
