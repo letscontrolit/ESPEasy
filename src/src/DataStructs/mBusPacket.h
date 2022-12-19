@@ -13,9 +13,11 @@ struct mBusPacket_header_t {
 
   String        getManufacturerId() const;
 
-  String toString() const;
+  String        toString() const;
 
-  bool isValid() const;
+  bool          isValid() const;
+
+  void          clear();
 
   int      _manufacturer = 0;
   int      _meterType    = 0;
@@ -42,6 +44,8 @@ public:
 
   mBusPacket_header_t _deviceId1;
   mBusPacket_header_t _deviceId2;
+  int                 _LQI  = 0;
+  int                 _rssi = 0;
 };
 
 #endif // ifndef DATASTRUCTS_MBUSPACKET_H

@@ -26,6 +26,7 @@ int mBusPacket_header_t::encodeManufacturerID(const String& id_str)
   if (nrChars > 3) { nrChars = 3; }
 
   int i = 0;
+
   while (i < nrChars) {
     res <<= 5;
     const int c = static_cast<int>(toUpperCase(id_str[i])) - 64;
@@ -62,8 +63,28 @@ bool mBusPacket_header_t::isValid() const
          _length > 0;
 }
 
+void mBusPacket_header_t::clear()
+{
+  _manufacturer = 0;
+  _meterType    = 0;
+  _serialNr     = 0;
+  _length       = 0;
+}
+
 bool mBusPacket_t::parse(const String& payload)
 {
+  if (payload.length() < 10) { return false; }
+  const uint16_t lqi_rssi = hexToUL(payload, payload.length() - 4, 4);
+
+  _LQI  = (lqi_rssi >> 8) & 0x7f; // Bit 7 = CRC OK Bit
+  _rssi = lqi_rssi & 0xFF;
+
+  if (_rssi >= 128) {
+    _rssi -= 256; // 2-complement
+  }
+  _rssi = (_rssi / 2) - 74;
+
+
   if (payload.startsWith(F("bY"))) {
     return parseHeaders(removeChecksumsFrameB(payload));
   }
@@ -77,7 +98,8 @@ bool mBusPacket_t::parse(const String& payload)
 bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
 {
   const int payloadSize = payloadWithoutChecksums.size();
-
+  _deviceId1.clear();
+  _deviceId2.clear();
 
   if (payloadSize < 10) { return false; }
   int offset = 0;
@@ -96,15 +118,15 @@ bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
       const uint32_t val = payloadWithoutChecksums[offset + 4 + i];
       _deviceId1._serialNr += val << (i * 8);
     }
-    offset += 10;
-    _deviceId1._length = offset;
+    offset            += 10;
+    _deviceId1._length = payloadWithoutChecksums[0];
   }
 
   // next blocks can be anything. we skip known blocks of no interest, parse known blocks if interest and stop on onknown blocks
   while (offset < payloadSize) {
-    switch (payloadWithoutChecksums[offset]) {
+    switch (static_cast<int>(payloadWithoutChecksums[offset])) {
       case 0x8C:                                            // ELL short
-        offset += 3;                                        // fixed length
+        offset            += 3;                             // fixed length
         _deviceId1._length = payloadSize - offset;
         break;
       case 0x90:                                            // AFL
@@ -126,7 +148,6 @@ bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
         // Serial (offset + 4; 4 Bytes; least significant first; converted to hex)
         _deviceId1._serialNr = 0;
 
-        _deviceId1._length = payloadSize - offset;
 
         for (int i = 0; i < 4; ++i) {
           const uint32_t val = payloadWithoutChecksums[offset + 1 + i];
@@ -138,6 +159,7 @@ bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
         break;
       default:
         // We're done
+        addLog(LOG_LEVEL_ERROR, concat(F("CUL : offset "), offset) + F(" Data: ") + formatToHex(payloadWithoutChecksums[offset]));
         offset = payloadSize;
         break;
     }
@@ -169,7 +191,7 @@ uint8_t mBusPacket_t::hexToByte(const String& str, size_t index)
 mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
 {
   mBusPacket_data result;
-  const int    payloadLength = payload.length();
+  const int payloadLength = payload.length();
 
   if (payloadLength < 4) { return result; }
 
@@ -178,7 +200,8 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
 
   // 1st byte contains length of data (excuding 1st byte and excluding CRC)
   const int expectedMessageSize = hexToByte(payload, sourceIndex) + 1;
-  if (payloadLength < (2* expectedMessageSize)) {
+
+  if (payloadLength < (2 * expectedMessageSize)) {
     // Not an exact check, but close enough to fail early on packets which are seriously too short.
     return result;
   }
@@ -187,7 +210,7 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
 
   while (targetIndex < expectedMessageSize) {
     // end index is start index + block size + 2 byte checksums
-    int blockSize = (sourceIndex == 0) ? FRAME_FORMAT_A_FIRST_BLOCK_LENGTH : FRAME_FORMAT_A_OTHER_BLOCK_LENGTH;
+    int blockSize = (sourceIndex == 1) ? FRAME_FORMAT_A_FIRST_BLOCK_LENGTH : FRAME_FORMAT_A_OTHER_BLOCK_LENGTH;
 
     if ((targetIndex + blockSize) > expectedMessageSize) { // last block
       blockSize = expectedMessageSize - targetIndex;
@@ -214,7 +237,7 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
 mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload)
 {
   mBusPacket_data result;
-  const int    payloadLength = payload.length();
+  const int payloadLength = payload.length();
 
   if (payloadLength < 4) { return result; }
 
@@ -222,7 +245,8 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload)
 
   // 1st byte contains length of data (excuding 1st byte BUT INCLUDING CRC)
   int expectedMessageSize = hexToByte(payload, sourceIndex) + 1;
-  if (payloadLength < (2* expectedMessageSize)) {
+
+  if (payloadLength < (2 * expectedMessageSize)) {
     return result;
   }
 

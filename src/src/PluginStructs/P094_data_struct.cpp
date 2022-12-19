@@ -442,8 +442,8 @@ bool P094_data_struct::loop() {
   if (fullSentenceReceived) {
     ++sentences_received;
     length_last_received = sentence_part.length();
-  } 
-#if P094_DEBUG_OPTIONS
+  }
+# if P094_DEBUG_OPTIONS
   else {
     if (debug_generate_CUL_data && (sentence_part.length() == 0)) {
       static uint32_t last_test_sentence = 0;
@@ -451,13 +451,15 @@ bool P094_data_struct::loop() {
 
       if (timePassedSince(last_test_sentence) > 1000) {
         count++;
-        sentence_part        = getDebugSentences(count);
+
+//        sentence_part = F("b2644AC48585300005037FAB97201585300AC485003150000202F2F0C0AF314213993002F2F2F2F2F2F2F2FAFCA8046");
+        sentence_part = getDebugSentences(count);
         fullSentenceReceived = true;
         last_test_sentence   = millis();
       }
     }
   }
-#endif
+# endif // if P094_DEBUG_OPTIONS
   return fullSentenceReceived;
 }
 
@@ -585,7 +587,6 @@ bool P094_data_struct::parsePacket(const String& received) const {
     mBusPacket_t packet;
 
     if (!packet.parse(received)) { return false; }
-    const uint32_t rssi = hexToUL(received, strlength - 4, 4);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
@@ -608,8 +609,10 @@ bool P094_data_struct::parsePacket(const String& received) const {
           log += packet._deviceId2._length;
           log += ')';
         }
+        log += F(" LQI: ");
+        log += packet._LQI;
         log += F(" RSSI: ");
-        log += formatToHex_decimal(rssi);
+        log += packet._rssi;
         addLogMove(LOG_LEVEL_INFO, log);
       }
     }
@@ -677,8 +680,8 @@ bool P094_data_struct::parsePacket(const String& received) const {
                   match         = value == receivedValue;
                   break;
                 case P094_rssi:
-                  receivedValue = rssi;
-                  match         = value < rssi;
+                  receivedValue = packet._rssi;
+                  match         = value > packet._rssi;
                   break;
                 default:
                   match = false;
@@ -829,10 +832,11 @@ size_t P094_data_struct::P094_Get_filter_base_index(size_t filterLine) {
   return filterLine * P094_ITEMS_PER_FILTER + P094_FIRST_FILTER_POS;
 }
 
-#if P094_DEBUG_OPTIONS
+# if P094_DEBUG_OPTIONS
 uint32_t P094_data_struct::getDebugCounter() {
   return debug_counter++;
 }
-#endif
+
+# endif // if P094_DEBUG_OPTIONS
 
 #endif // USES_P094
