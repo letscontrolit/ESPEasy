@@ -35,8 +35,8 @@ private:
   static uint8_t         hexToByte(const String& str,
                                    size_t        index);
 
-  static mBusPacket_data removeChecksumsFrameA(const String& payload);
-  static mBusPacket_data removeChecksumsFrameB(const String& payload);
+  static mBusPacket_data removeChecksumsFrameA(const String& payload, uint16_t& checksum);
+  static mBusPacket_data removeChecksumsFrameB(const String& payload, uint16_t& checksum);
 
   bool                   parseHeaders(const mBusPacket_data& payloadWithoutChecksums);
 
@@ -46,6 +46,9 @@ public:
   mBusPacket_header_t _deviceId2;
   int                 _LQI  = 0;
   int                 _rssi = 0;
+
+  // Checksum based on the XOR of all removed checksums from the message
+  uint16_t            _checksum = 0;
 };
 
 #endif // ifndef DATASTRUCTS_MBUSPACKET_H

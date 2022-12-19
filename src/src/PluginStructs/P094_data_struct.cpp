@@ -609,6 +609,8 @@ bool P094_data_struct::parsePacket(const String& received) const {
           log += packet._deviceId2._length;
           log += ')';
         }
+        log += F(" chksum: ");
+        log += formatToHex(packet._checksum, 4);
         log += F(" LQI: ");
         log += packet._LQI;
         log += F(" RSSI: ");

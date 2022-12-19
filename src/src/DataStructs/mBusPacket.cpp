@@ -73,8 +73,21 @@ void mBusPacket_header_t::clear()
 
 bool mBusPacket_t::parse(const String& payload)
 {
-  if (payload.length() < 10) { return false; }
-  const uint16_t lqi_rssi = hexToUL(payload, payload.length() - 4, 4);
+  mBusPacket_data payloadWithoutChecksums;
+
+  if (payload.startsWith(F("bY"))) {
+    payloadWithoutChecksums = removeChecksumsFrameB(payload, _checksum);
+  } else if (payload.startsWith(F("b"))) {
+    payloadWithoutChecksums = removeChecksumsFrameA(payload, _checksum);
+  } else { return false; }
+
+  if (payloadWithoutChecksums.size() < 10) { return false; }
+
+  int pos_semicolon = payload.indexOf(';');
+
+  if (pos_semicolon == -1) { pos_semicolon = payload.length(); }
+
+  const uint16_t lqi_rssi = hexToUL(payload, pos_semicolon - 4, 4);
 
   _LQI  = (lqi_rssi >> 8) & 0x7f; // Bit 7 = CRC OK Bit
   _rssi = lqi_rssi & 0xFF;
@@ -83,21 +96,13 @@ bool mBusPacket_t::parse(const String& payload)
     _rssi -= 256; // 2-complement
   }
   _rssi = (_rssi / 2) - 74;
-
-
-  if (payload.startsWith(F("bY"))) {
-    return parseHeaders(removeChecksumsFrameB(payload));
-  }
-
-  if (payload.startsWith(F("b"))) {
-    return parseHeaders(removeChecksumsFrameA(payload));
-  }
-  return false;
+  return parseHeaders(payloadWithoutChecksums);
 }
 
 bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
 {
   const int payloadSize = payloadWithoutChecksums.size();
+
   _deviceId1.clear();
   _deviceId2.clear();
 
@@ -188,7 +193,7 @@ uint8_t mBusPacket_t::hexToByte(const String& str, size_t index)
  * ...
  * (last block can be < 16 bytes)
  */
-mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
+mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload, uint16_t& checksum)
 {
   mBusPacket_data result;
   const int payloadLength = payload.length();
@@ -221,6 +226,8 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
       result.push_back(hexToByte(payload, sourceIndex));
       sourceIndex += 2; // 2 hex chars
     }
+    // [2 bytes CRC]
+    checksum ^= hexToUL(payload, sourceIndex, 4);
     sourceIndex += 4;   // Skip 2 bytes CRC => 4 hex chars
     targetIndex += blockSize;
   }
@@ -234,7 +241,7 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload)
  * (if message length <=126 bytes, only the 1st block exists)
  * (last block can be < 125 bytes)
  */
-mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload)
+mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload, uint16_t& checksum)
 {
   mBusPacket_data result;
   const int payloadLength = payload.length();
@@ -266,9 +273,11 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload)
     result.push_back(hexToByte(payload, sourceIndex));
     sourceIndex += 2; // 2 hex chars
   }
+  // [2 bytes CRC]
+  checksum ^= hexToUL(payload, sourceIndex, 4);
+  sourceIndex += 4; // Skip 2 bytes CRC => 4 hex chars
 
   if (expectedMessageSize > 126) {
-    sourceIndex += 4; // Skip 2 bytes CRC => 4 hex chars
     int block2Size = expectedMessageSize - 127;
 
     if (block2Size > 124) { block2Size = 124; }
@@ -277,6 +286,8 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload)
       result.push_back(hexToByte(payload, sourceIndex));
       sourceIndex += 2; // 2 hex chars
     }
+    // [2 bytes CRC]
+    checksum ^= hexToUL(payload, sourceIndex, 4);
   }
 
   // remove the checksums and the 1st byte from the actual message length, so that the meaning of this byte is the same as in Frame A
