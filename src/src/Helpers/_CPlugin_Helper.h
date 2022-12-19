@@ -65,7 +65,7 @@ String send_via_http(int                             controller_number,
 #endif // FEATURE_HTTP_CLIENT
                      
 
-String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
+String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, bool parseTemplate = true);
 String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
 void setControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value);
 void setControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value);
