@@ -207,16 +207,16 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       {
         addRowLabel(F("Enable change-event for"));
         html_table(EMPTY_STRING); // Sub-table
-        html_table_header(F("Chip #&nbsp;"));
-        html_table_header(F("Port:"));
-        html_table_header(F("D7"));
-        html_table_header(F("D6"));
-        html_table_header(F("D5"));
-        html_table_header(F("D4"));
-        html_table_header(F("D3"));
-        html_table_header(F("D2"));
-        html_table_header(F("D1"));
-        html_table_header(F("D0"));
+        html_table_header(F("Chip #&nbsp;"), 70);
+        html_table_header(F("Port:"),        70);
+        html_table_header(F("D7"),           30);
+        html_table_header(F("D6"),           30);
+        html_table_header(F("D5"),           30);
+        html_table_header(F("D4"),           30);
+        html_table_header(F("D3"),           30);
+        html_table_header(F("D2"),           30);
+        html_table_header(F("D1"),           30);
+        html_table_header(F("D0"),           30);
 
         uint64_t bits = 0;
         uint8_t  off  = 0;
