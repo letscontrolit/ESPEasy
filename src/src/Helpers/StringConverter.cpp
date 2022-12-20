@@ -177,7 +177,7 @@ void appendHexChar(uint8_t data, String& string)
 String formatToHex_array(const uint8_t* data, size_t size)
 {
   String res;
-  res.reserve(2*size);
+  res.reserve(2 * size);
   for (int i = 0; i < size; ++i) {
     appendHexChar(data[i], res);
   }

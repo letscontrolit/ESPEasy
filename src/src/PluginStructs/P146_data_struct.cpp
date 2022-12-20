@@ -38,8 +38,8 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   size_t messageLength = message.length();
 
   const size_t chunkSize           = sizeof(C016_queue_element);
-  const size_t nrChunks            = (maxMessageSize - messageLength) / (chunkSize + 1);
-  const size_t expectedMessageSize = messageLength + (nrChunks * (chunkSize + 1));
+  const size_t nrChunks            = (maxMessageSize - messageLength) / ((2 * chunkSize) + 1);
+  const size_t expectedMessageSize = messageLength + (nrChunks * ((2* chunkSize) + 1));
 
   if (0 == message.reserve(expectedMessageSize)) { return 0; }
 
