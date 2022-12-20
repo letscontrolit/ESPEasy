@@ -23,7 +23,13 @@
 
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
-#define MQTT_MAX_PACKET_SIZE 1024 // need to fix this here, because this define cannot be overruled within the Arduino sketch...
+  // need to fix this here, because this define cannot be overruled within the Arduino sketch...
+  #ifdef ESP8266
+    #define MQTT_MAX_PACKET_SIZE 1024
+  #endif
+  #ifdef ESP32
+    #define MQTT_MAX_PACKET_SIZE 2048
+  #endif
 #endif
 
 // MQTT_KEEPALIVE : keepAlive interval in Seconds

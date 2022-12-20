@@ -183,7 +183,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       uint8_t state            = switchstate[event->TaskIndex];
 
       // compare with threshold value
-      bool  isZero             = essentiallyEqual(P021_TRIGGER_HYSTERESIS, 0.0f);
+      bool  isZero             = essentiallyZero(P021_TRIGGER_HYSTERESIS);
       float valueLowThreshold  = P021_TRIGGER_LEVEL - (isZero ? 0.0f : (P021_TRIGGER_HYSTERESIS / 2.0f));
       float valueHighThreshold = P021_TRIGGER_LEVEL + (isZero ? 1.0f : (P021_TRIGGER_HYSTERESIS / 2.0f)); // Include setvalue on
                                                                                                           // 0-hysteresis

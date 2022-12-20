@@ -75,16 +75,12 @@ void handle_dumpcache() {
     csv_values[valindex++] = val4;
 
     for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-      String html;
-      html.reserve(12);
-      html += ';';
-
-      if (essentiallyEqual(csv_values[i], 0.0f)) {
-        html += '0';
+      if (essentiallyZero(csv_values[i])) {
+        addHtml(';', '0');
       } else {
-        html += String(csv_values[i], 6);
+        addHtml(';');
+        addHtmlFloat(csv_values[i], 6);
       }
-      addHtml(html);
     }
     html_BR();
     delay(0);

@@ -267,7 +267,7 @@ String serializeDomoticzJson(struct EventStruct *event)
         json += ',';
         json += to_json_object_value(F("command"), F("switchlight"));
 
-        if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
+        if (essentiallyZero(UserVar[event->BaseVarIndex])) {
           json += ',';
           json += to_json_object_value(F("switchcmd"), F("Off"));
         }
@@ -280,7 +280,7 @@ String serializeDomoticzJson(struct EventStruct *event)
         json += ',';
         json += to_json_object_value(F("command"), F("switchlight"));
 
-        if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
+        if (essentiallyZero(UserVar[event->BaseVarIndex])) {
           json += ',';
           json += to_json_object_value(F("switchcmd"), F("Off"));
         }

@@ -371,19 +371,6 @@ void runPeriodicalMQTT() {
   }
 }
 
-// FIXME TD-er: Must move to a more logical part of the code
-controllerIndex_t firstEnabledMQTT_ControllerIndex() {
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
-    if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
-        return i;
-      }
-    }
-  }
-  return INVALID_CONTROLLER_INDEX;
-}
-
 
 #endif //if FEATURE_MQTT
 

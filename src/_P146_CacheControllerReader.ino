@@ -24,7 +24,7 @@
 
 # define PLUGIN_146
 # define PLUGIN_ID_146          146
-# define PLUGIN_NAME_146       "Generic - Cache Controller Reader"
+# define PLUGIN_NAME_146       "Generic - Cache Reader"
 # define PLUGIN_VALUENAME1_146 "FileNr"
 # define PLUGIN_VALUENAME2_146 "FilePos"
 
