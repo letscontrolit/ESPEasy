@@ -120,7 +120,11 @@ bool RTC_cache_handler_struct::peek(uint8_t *data, unsigned int size) {
         fname      = getReadCacheFileName(tmppos);
         peekfilenr = getCacheFileCountFromFilename(fname);
       } else {
+        if (peekfilenr >= RTC_cache.writeFileNr) {
+          return false;
+        }
         ++peekfilenr;
+        peekreadpos = 0;
         fname = createCacheFilename(peekfilenr);
       }
 

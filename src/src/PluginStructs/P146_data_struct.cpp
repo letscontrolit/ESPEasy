@@ -39,7 +39,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
 
   const size_t chunkSize           = sizeof(C016_queue_element);
   const size_t nrChunks            = (maxMessageSize - messageLength) / ((2 * chunkSize) + 1);
-  const size_t expectedMessageSize = messageLength + (nrChunks * ((2* chunkSize) + 1));
+  const size_t expectedMessageSize = messageLength + (nrChunks * ((2 * chunkSize) + 1));
 
   if (0 == message.reserve(expectedMessageSize)) { return 0; }
 
@@ -55,6 +55,11 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
     } else {
       done = true;
     }
+  }
+
+  if (message.length() == messageLength) {
+    // Nothing added, don't bother sending the peek pos
+    return 0;
   }
   messageLength = message.length();
   String topic = F("CULreader/upload");
