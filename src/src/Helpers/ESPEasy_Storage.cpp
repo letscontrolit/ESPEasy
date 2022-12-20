@@ -149,7 +149,10 @@ bool fileExists(const String& fname) {
     res = SD.exists(patched_fname);
   }
   #endif
-  Cache.fileExistsMap[patched_fname] = res;
+  // Only keep track of existing files. Not the non-existing files from the cache controller
+  if (res || patched_fname.indexOf(F("cache_")) == -1) {
+    Cache.fileExistsMap[patched_fname] = res;
+  }
   if (Cache.fileCacheClearMoment == 0) {
     if (node_time.timeSource == timeSource_t::No_time_source) {
       // use some random value as we don't have a time yet
