@@ -90,12 +90,13 @@ bool mBusPacket_t::parse(const String& payload)
   const uint16_t lqi_rssi = hexToUL(payload, pos_semicolon - 4, 4);
 
   _LQI  = (lqi_rssi >> 8) & 0x7f; // Bit 7 = CRC OK Bit
-  _rssi = lqi_rssi & 0xFF;
 
-  if (_rssi >= 128) {
-    _rssi -= 256; // 2-complement
+  int rssi = lqi_rssi & 0xFF;
+
+  if (rssi >= 128) {
+    rssi -= 256; // 2-complement
   }
-  _rssi = (_rssi / 2) - 74;
+  _rssi = (rssi / 2) - 74;
   return parseHeaders(payloadWithoutChecksums);
 }
 
@@ -193,7 +194,7 @@ uint8_t mBusPacket_t::hexToByte(const String& str, size_t index)
  * ...
  * (last block can be < 16 bytes)
  */
-mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload, uint16_t& checksum)
+mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload, uint32_t& checksum)
 {
   mBusPacket_data result;
   const int payloadLength = payload.length();
@@ -227,6 +228,7 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload, uint1
       sourceIndex += 2; // 2 hex chars
     }
     // [2 bytes CRC]
+    checksum <<= 8;
     checksum ^= hexToUL(payload, sourceIndex, 4);
     sourceIndex += 4;   // Skip 2 bytes CRC => 4 hex chars
     targetIndex += blockSize;
@@ -241,7 +243,7 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload, uint1
  * (if message length <=126 bytes, only the 1st block exists)
  * (last block can be < 125 bytes)
  */
-mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload, uint16_t& checksum)
+mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload, uint32_t& checksum)
 {
   mBusPacket_data result;
   const int payloadLength = payload.length();
@@ -274,6 +276,7 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload, uint1
     sourceIndex += 2; // 2 hex chars
   }
   // [2 bytes CRC]
+  checksum <<= 8;
   checksum ^= hexToUL(payload, sourceIndex, 4);
   sourceIndex += 4; // Skip 2 bytes CRC => 4 hex chars
 
@@ -287,6 +290,7 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload, uint1
       sourceIndex += 2; // 2 hex chars
     }
     // [2 bytes CRC]
+    checksum <<= 8;
     checksum ^= hexToUL(payload, sourceIndex, 4);
   }
 

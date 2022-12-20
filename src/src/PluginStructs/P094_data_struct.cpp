@@ -452,8 +452,8 @@ bool P094_data_struct::loop() {
       if (timePassedSince(last_test_sentence) > 1000) {
         count++;
 
-//        sentence_part = F("b2644AC48585300005037FAB97201585300AC485003150000202F2F0C0AF314213993002F2F2F2F2F2F2F2FAFCA8046");
-        sentence_part = getDebugSentences(count);
+        //        sentence_part = F("b2644AC48585300005037FAB97201585300AC485003150000202F2F0C0AF314213993002F2F2F2F2F2F2F2FAFCA8046");
+        sentence_part        = getDebugSentences(count);
         fullSentenceReceived = true;
         last_test_sentence   = millis();
       }
@@ -610,7 +610,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
           log += ')';
         }
         log += F(" chksum: ");
-        log += formatToHex(packet._checksum, 4);
+        log += formatToHex(packet._checksum, 8);
         log += F(" LQI: ");
         log += packet._LQI;
         log += F(" RSSI: ");
@@ -682,9 +682,15 @@ bool P094_data_struct::parsePacket(const String& received) const {
                   match         = value == receivedValue;
                   break;
                 case P094_rssi:
+                {
                   receivedValue = packet._rssi;
-                  match         = value > packet._rssi;
+                  int int_value = 0;
+
+                  if (validIntFromString(valueString, int_value)) {
+                    match = int_value > packet._rssi;
+                  }
                   break;
+                }
                 default:
                   match = false;
                   break;
@@ -841,4 +847,4 @@ uint32_t P094_data_struct::getDebugCounter() {
 
 # endif // if P094_DEBUG_OPTIONS
 
-#endif // USES_P094
+#endif  // USES_P094

@@ -19,10 +19,13 @@ struct mBusPacket_header_t {
 
   void          clear();
 
-  int      _manufacturer = 0;
-  int      _meterType    = 0;
+  // Use for stats as key:
   uint32_t _serialNr     = 0;
-  int      _length       = 0;
+  uint16_t _manufacturer = 0;
+  uint8_t  _meterType    = 0;
+
+  // Use for filtering
+  uint8_t  _length       = 0;
 };
 
 struct mBusPacket_t {
@@ -35,8 +38,8 @@ private:
   static uint8_t         hexToByte(const String& str,
                                    size_t        index);
 
-  static mBusPacket_data removeChecksumsFrameA(const String& payload, uint16_t& checksum);
-  static mBusPacket_data removeChecksumsFrameB(const String& payload, uint16_t& checksum);
+  static mBusPacket_data removeChecksumsFrameA(const String& payload, uint32_t& checksum);
+  static mBusPacket_data removeChecksumsFrameB(const String& payload, uint32_t& checksum);
 
   bool                   parseHeaders(const mBusPacket_data& payloadWithoutChecksums);
 
@@ -44,11 +47,27 @@ public:
 
   mBusPacket_header_t _deviceId1;
   mBusPacket_header_t _deviceId2;
-  int                 _LQI  = 0;
-  int                 _rssi = 0;
+  int16_t             _rssi = 0;
+  uint8_t             _LQI  = 0;
+
+
+/*
+  // Statistics:
+  // Key:
+  deviceID1:
+  - manufacturer
+  - metertype   
+  - serialnr
+
+  // Value:
+  - message count
+  - rssi
+  - lqi???
+*/
+
 
   // Checksum based on the XOR of all removed checksums from the message
-  uint16_t            _checksum = 0;
+  uint32_t            _checksum = 0;
 };
 
 #endif // ifndef DATASTRUCTS_MBUSPACKET_H
