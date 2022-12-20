@@ -205,7 +205,7 @@ Decimals
 The number of decimals set here will be used throughout ESPEasy whenever a task value has to be formatted.
 For example, when referring to a task value on a display via ``[bme#temperature]``, the value formatting will include the set number of decimals.
 
-See :ref:`Rules: Formatting refered values <Formatting values>` on how this can be customized.
+See :ref:`Rules: Formatting referred values <Formatting values>` on how this can be customized.
 Just remember such formatting cannot "make up" more decimals than what was set here in the task setup.
 
 
