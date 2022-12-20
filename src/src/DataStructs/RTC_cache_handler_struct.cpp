@@ -191,6 +191,14 @@ bool RTC_cache_handler_struct::flush() {
       #ifdef RTC_STRUCT_DEBUG
       size_t filesize = fw.size();
       #endif // ifdef RTC_STRUCT_DEBUG
+      // Make sure the read and peek file handles cannot be used on possibly deleted files.
+      if (fr) {
+        fr.close();
+      }
+      if (fp) {
+        fp.close();
+      }
+
       int bytesWritten = fw.write(&RTC_cache_data[0], RTC_cache.writePos);
 
       delay(0);
@@ -286,6 +294,14 @@ bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
       String fname = createCacheFilename(RTC_cache.readFileNr);
 
       writeError = false;
+
+      // Make sure the read and peek file handles cannot be used on possibly deleted files.
+      if (fr) {
+        fr.close();
+      }
+      if (fp) {
+        fp.close();
+      }
 
       if (tryDeleteFile(fname)) {
           #ifdef RTC_STRUCT_DEBUG
@@ -486,6 +502,15 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
       #endif // ifdef RTC_STRUCT_DEBUG
     return false;
   }
+
+  // Make sure the read and peek file handles cannot be used on possibly deleted files.
+  if (fr) {
+    fr.close();
+  }
+  if (fp) {
+    fp.close();
+  }
+
   unsigned int retries = 3;
 
   while (retries > 0) {

@@ -4,7 +4,7 @@
 
 # include "../Globals/C016_ControllerCache.h"
 
-#include "../ControllerQueue/C016_queue_element.h"
+# include "../ControllerQueue/C016_queue_element.h"
 
 
 P146_data_struct::P146_data_struct()
@@ -14,12 +14,12 @@ P146_data_struct::~P146_data_struct()
 {}
 
 
-bool P146_data_struct::sendBinaryInBulk(uint32_t& messageSize)
+uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
 {
-
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+
   if (!validControllerIndex(enabledMqttController)) {
-    return false;
+    return 0;
   }
 
 
@@ -27,36 +27,46 @@ bool P146_data_struct::sendBinaryInBulk(uint32_t& messageSize)
   int peekFileNr        = 0;
   const int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
 
+
   String message;
-  message.reserve(messageSize);
 
   message += peekFileNr;
   message += ';';
   message += peekReadPos;
   message += ';';
 
+  size_t messageLength = message.length();
 
-  const size_t nrChunks = (messageSize - message.length()) / (sizeof(C016_queue_element) + 1);
+  const size_t chunkSize           = sizeof(C016_queue_element);
+  const size_t nrChunks            = (maxMessageSize - messageLength) / (chunkSize + 1);
+  const size_t expectedMessageSize = messageLength + (nrChunks * (chunkSize + 1));
 
-  for (int chunk = 0; chunk < nrChunks; ++chunk) {
-    uint8_t chunkdata[sizeof(C016_queue_element)] = {0};
-    if (ControllerCache.peek(chunkdata, sizeof(C016_queue_element)))
+  if (0 == message.reserve(expectedMessageSize)) { return 0; }
+
+  bool done = false;
+
+  for (int chunk = 0; chunk < nrChunks && !done; ++chunk) {
+    uint8_t chunkdata[chunkSize] = { 0 };
+
+    if (ControllerCache.peek(chunkdata, chunkSize))
     {
-      for (int i = 0; i < sizeof(C016_queue_element); ++i)
-      {
-        message += formatToHex_no_prefix(chunkdata[i], 2);
-      }
+      message += formatToHex_array(chunkdata, chunkSize);
       message += ';';
+    } else {
+      done = true;
     }
+  }
+  messageLength = message.length();
+  String topic = F("CULreader/upload");
 
+  if (MQTTpublish(enabledMqttController, P146_TaskIndex, std::move(topic), std::move(message), false)) {
+    return messageLength;
   }
 
-  
-
-
-  return true;
+  // Restore peek position
+  ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+  return 0;
 }
-
 
 bool P146_data_struct::sendViaOriginalTask(
   taskIndex_t P146_TaskIndex, bool sendTimestamp)
