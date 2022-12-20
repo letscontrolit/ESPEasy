@@ -14,6 +14,50 @@ P146_data_struct::~P146_data_struct()
 {}
 
 
+bool P146_data_struct::sendBinaryInBulk(uint32_t& messageSize)
+{
+
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  if (!validControllerIndex(enabledMqttController)) {
+    return false;
+  }
+
+
+  // Keep the current peek position, so we can reset it when we fail to deliver the data to the controller.
+  int peekFileNr        = 0;
+  const int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+
+  String message;
+  message.reserve(messageSize);
+
+  message += peekFileNr;
+  message += ';';
+  message += peekReadPos;
+  message += ';';
+
+
+  const size_t nrChunks = (messageSize - message.length()) / (sizeof(C016_queue_element) + 1);
+
+  for (int chunk = 0; chunk < nrChunks; ++chunk) {
+    uint8_t chunkdata[sizeof(C016_queue_element)] = {0};
+    if (ControllerCache.peek(chunkdata, sizeof(C016_queue_element)))
+    {
+      for (int i = 0; i < sizeof(C016_queue_element); ++i)
+      {
+        message += formatToHex_no_prefix(chunkdata[i], 2);
+      }
+      message += ';';
+    }
+
+  }
+
+  
+
+
+  return true;
+}
+
+
 bool P146_data_struct::sendViaOriginalTask(
   taskIndex_t P146_TaskIndex, bool sendTimestamp)
 {

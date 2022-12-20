@@ -11,19 +11,18 @@ public:
 
   virtual ~P146_data_struct();
 
+  static bool sendBinaryInBulk(uint32_t& messageSize);
 
-static bool sendViaOriginalTask(taskIndex_t P146_TaskIndex, bool sendTimestamp);
+  static bool sendViaOriginalTask(taskIndex_t P146_TaskIndex,
+                                  bool        sendTimestamp);
 
-static bool setPeekFilePos(int peekFileNr, int peekReadPos);
+  static bool setPeekFilePos(int peekFileNr,
+                             int peekReadPos);
 
 private:
 
-  
   int readFileNr = 0;
   int readPos    = 0;
-
-
-
 };
 
 
