@@ -1317,6 +1317,7 @@ To create/register a plugin, you have to :
       #define WEBSERVER_USE_CDN_JS_CSS
     #endif
   #endif
+  #define KEEP_I2C_MULTIPLEXER
 #endif
 
 // COLLECTIONS #####################################
@@ -1484,6 +1485,7 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #ifndef PLUGIN_BUILD_MAX_ESP32
        #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+       #define KEEP_I2C_MULTIPLEXER
      #endif
    #endif
    #if !defined(FEATURE_SD) && !defined(ESP8266)
@@ -2177,10 +2179,12 @@ To create/register a plugin, you have to :
   #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
     #define BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   #endif
-  #ifdef FEATURE_I2CMULTIPLEXER
-    #undef FEATURE_I2CMULTIPLEXER
+  #ifndef KEEP_I2C_MULTIPLEXER
+    #ifdef FEATURE_I2CMULTIPLEXER
+      #undef FEATURE_I2CMULTIPLEXER
+    #endif
+    #define FEATURE_I2CMULTIPLEXER  0
   #endif
-  #define FEATURE_I2CMULTIPLEXER  0
   #ifdef FEATURE_SETTINGS_ARCHIVE
     #undef FEATURE_SETTINGS_ARCHIVE
   #endif
