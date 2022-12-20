@@ -9,20 +9,20 @@
   The original Ikea processor is controlling the PM1006 sensor, the plugin is eavesdropping the responses
   DevicePin1 - RX on ESP, TX on PM1006
   DevicePin2 - TX on ESP, RX on PM1006 (optional, currently not accessed by the plugin)
+  This plugin is intended to be extended with stand alone support for the PM1006 and PM1006K sensors
+  The stand alone support is not implemented yet
 */
-
 
 // #include section
 #include "_Plugin_Helper.h"
 #ifdef USES_P144
-# include <ESPeasySerial.h>
+#include "src/PluginStructs/P144_data_struct.h"  // Sensor abstraction for P144
+
 // Standard plugin defines
 #define PLUGIN_144
-#define PLUGIN_ID_144     144                   // plugin id
+#define PLUGIN_ID_144     144                               // plugin id
 #define PLUGIN_NAME_144   "Dust - PM1006(K) (Vindriktning)" // "Plugin Name" is what will be dislpayed in the selection list
-#define PLUGIN_VALUENAME1_144 "PM2.5"           // variable output of the plugin. The label is in quotation marks
-#define PLUGIN_144_DEBUG  true                  // set to true for extra log info
-
+#define PLUGIN_VALUENAME1_144 "PM2.5"                       // variable output of the plugin. The label is in quotation marks
 
 //   PIN/port configuration is stored in the following:
 //   CONFIG_PIN1 - Used by plugin_Helper_serial (RX pin) 
@@ -40,35 +40,8 @@
 //   PCONFIG_LABEL(x) is a function to generate a unique label used as HTML id to be able to match 
 //                    returned values when saving a configuration.
 
-// Make accessing specific parameters more readable in the code
-// #define P144_BAUDRATE           PCONFIG_LONG(0)
-// #define P144_BAUDRATE_LABEL     PCONFIG_LABEL(0)
-
-// States for statemachine used to decode received message
-typedef enum {
-    PM1006_HEADER,
-    PM1006_LENGTH,
-    PM1006_DATA,
-    PM1006_CHECK
-} pm1006_state_t;
-
-// Global variables TODO: attach them to the task to allow multiple instances
-  ESPeasySerial *P144_easySerial = nullptr;
-  const int P144_bufferSize = 20;
-  char P144_serialRxBuffer[P144_bufferSize];
-  #ifdef PLUGIN_144_DEBUG
-  char P144_debugBuffer[3*P144_bufferSize];
-  #endif
-  //int P144_rxBufferPtr = 0;
-  int P144_rxChecksum = 0;
-  int P144_index = 0;
-  int P144_rxlen = 0;
-  int P144_pm25 = 0;
-  pm1006_state_t P144_rxState = PM1006_HEADER;
-
 
 // A plugin has to implement the following function
-
 boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
 {
   // function: reason the plugin was called
@@ -95,9 +68,9 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].Custom             = false;
       Device[deviceCount].SendDataOption     = true;                             // Allow to send data to a controller.
       Device[deviceCount].GlobalSyncOption   = true;                             // No longer used. Was used for ESPeasy values sync between nodes
-      Device[deviceCount].TimerOption        = true;                            // Allow to set the "Interval" timer for the plugin.
+      Device[deviceCount].TimerOption        = true;                             // Allow to set the "Interval" timer for the plugin.
       Device[deviceCount].TimerOptional      = false;                            // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
-      Device[deviceCount].DecimalsOnly       = false;                             // Allow to set the number of decimals (otherwise treated a 0 decimals)
+      Device[deviceCount].DecimalsOnly       = false;                            // Allow to set the number of decimals (otherwise treated a 0 decimals)
       break;
     }
 
@@ -117,7 +90,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-       case PLUGIN_GET_DEVICEGPIONAMES:
+    case PLUGIN_GET_DEVICEGPIONAMES:
     {
       serialHelper_getGpioNames(event, false, true); // TX optional
       break;
@@ -184,32 +157,17 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       // this case defines code to be executed when the plugin is initialised
       int8_t rxPin = serialHelper_getRxPin(event);
       int8_t txPin = serialHelper_getTxPin(event);
-      // Try to open the assocaited serial port
-      P144_easySerial = new (std::nothrow) ESPeasySerial(serialHelper_getSerialType(event), rxPin, txPin);
-      if (P144_easySerial != nullptr) 
-      {
-        P144_easySerial->begin(9600);
-        success = true;
-      }
+      ESPEasySerialPort portType = serialHelper_getSerialType(event); 
 
-      #ifdef PLUGIN_144_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_INFO))
+      // Create the P144_data_struct object that will do all the sensor interaction
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P144_data_struct());
+      P144_data_struct *P144_data =
+        static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (P144_data != nullptr) 
       {
-        String log = F("P144 : Init: ");
-        if (success)
-        {
-          log += F("  ESP GPIO-pin RX:");
-          log += rxPin;
-          log += F(" TX:");
-          log += txPin;  
-        }
-        else
-        {
-          log += F("Failed opening serial port");
-        }
-        addLogMove(LOG_LEVEL_INFO, log);
+        success = P144_data->setSerial(portType, rxPin, txPin);    // Initialize with existing task data
       }
-      #endif
       break;
     }
 
@@ -217,16 +175,20 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
     {
       // code to be executed to read data
       // It is executed according to the delay configured on the device configuration page, only once
-      UserVar[event->BaseVarIndex] = P144_pm25;
-      #ifdef PLUGIN_144_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_INFO))
-      {
-        String log = F("P144 : READ ");
-        log += P144_pm25;
-        addLogMove(LOG_LEVEL_INFO, log);
+      P144_data_struct *P144_data =
+        static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (P144_data != nullptr) {
+        UserVar[event->BaseVarIndex]  = P144_data->getValue(); 
+        #ifdef PLUGIN_144_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_INFO))
+        {
+          String log = F("P144 : READ ");
+          log += UserVar[event->BaseVarIndex];
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+        #endif
       }
-      #endif
-      // after the plugin has read data successfuly, set success and break
       success = true;
       break;
     }
@@ -244,9 +206,11 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
     {
       // perform cleanup tasks here. For example, free memory
-      if (P144_easySerial != nullptr) {
-        delete(P144_easySerial);
-        P144_easySerial = nullptr;
+      
+      P144_data_struct *P144_data =
+        static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (P144_data != nullptr) {
+        P144_data->disconnectSerial();
       }
       success = true;
       break;
@@ -263,26 +227,9 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
     {
       // code to be executed 10 times per second. Tasks which require fast response can be added here
       // be careful on what is added here. Heavy processing will result in slowing the module down!
-      bool new_data = false;
-      for (int charAvailable = P144_easySerial->available(); ((charAvailable > 0) && !new_data); charAvailable--)
-      {
-        // Process received characters, return true when a complete message is received 
-        // Message rate on Vindriktning is a few per minute
-        new_data = P144_process_rx(P144_easySerial->read());
-        if (new_data) 
-        {
-          P144_pm25 = float((P144_serialRxBuffer[3] << 8) + P144_serialRxBuffer[4]);
-          #ifdef PLUGIN_144_DEBUG
-          if (loglevelActiveFor(LOG_LEVEL_INFO))
-          {
-            String log = F("P144 : New value received ");
-            log += P144_pm25;
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
-          #endif
-        }
-      }
-      success = true;
+      P144_data_struct *P144_data =
+        static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
+      success = P144_data->processSensor();
       break;
     }
 
@@ -290,90 +237,4 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }   // function
 
-// Function P144_process_rx
-// Handles a single character received from the PM1006 in the Vindrikning
-// It expects a response to the poll message sent by the Vindriknings own CPU
-// 0x16 <len> <data> <chksum>
-// <len>  = size of <data> in char [1 char]
-// <data> = message payload, array of <len> chars
-// <csum> = checksum, 256-(sum of all received characters) [1 char]
-bool P144_process_rx(char c)
-{
-    switch (P144_rxState) {
-    case PM1006_HEADER:
-        P144_rxChecksum = c;
-        if (c == 0x16) {
-            P144_rxState = PM1006_LENGTH;
-        }
-        break;
-
-    case PM1006_LENGTH:
-        P144_rxChecksum += c;
-        if (c <= P144_bufferSize) {
-            P144_rxlen = c;
-            P144_index = 0;
-            P144_rxState = (P144_rxlen > 0) ? PM1006_DATA : PM1006_CHECK;
-        } else {
-            P144_rxState = PM1006_HEADER;
-        }
-        break;
-
-    case PM1006_DATA:
-        P144_rxChecksum += c;
-        P144_serialRxBuffer[P144_index++] = c;
-        if (P144_index == P144_rxlen) {
-            P144_rxState = PM1006_CHECK;
-        }
-        break;
-
-    case PM1006_CHECK:
-        P144_rxChecksum += c;
-        P144_rxState = PM1006_HEADER;
-#ifdef PLUGIN_144_DEBUG
-        P144_dump();
-#endif
-        return ((P144_rxChecksum&0xFF) == 0);
-
-    default:
-        P144_rxState = PM1006_HEADER;
-        break;
-    }
-    return false;
-}
-
-#ifdef PLUGIN_144_DEBUG
-// Function P144_to_hex
-// Helper to convert uint8/char to HEX representation
-char * P144_to_hex(char c, char * ptr)
-{
-  static const char hex[] = "0123456789ABCDEF";
-  *ptr++ = hex[c>>4];
-  *ptr++ = hex[c&0x7];
-  return ptr;
-}
-
-// Function P144_dump
-// Dump the received buffer
-// Note: Contents may be inconsistent unless alingned with the decoder
-void P144_dump()
-{
-  if (loglevelActiveFor(LOG_LEVEL_INFO))
-  {
-    String log = F("P144 : Dump message: ");
-    char *ptr = P144_debugBuffer;
-    for (int n=0; n< P144_rxlen; n++)
-    {
-      ptr = P144_to_hex(P144_serialRxBuffer[n], ptr);
-      *ptr++ = ' ';
-    }
-    *ptr++ = '\0';
-    log += P144_debugBuffer;
-    log += " size ";
-    log += P144_rxlen;
-    log += " csum ";
-    log += (P144_rxChecksum & 0xFF);
-    addLogMove(LOG_LEVEL_INFO, log);
-  }
-}
-#endif // PLUGIN_144_DEBUG
 #endif
