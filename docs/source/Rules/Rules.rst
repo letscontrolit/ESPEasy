@@ -708,8 +708,27 @@ If none is set, "No variables set" will be shown.
 
 If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
 
-.. note: Interval variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without loosing power), please use a dummy task for this.
+.. note:: Internal variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without losing power), please use a dummy task for this.
 
+
+Task-specific settings
+----------------------
+
+(Added 2022-12-17)
+
+For retrieving some generic task-specific settings, below variables have been added. They can be formatted using the :ref:`Formatting referred values <Formatting values>` options.
+
+``[<TaskName>#settings.enabled]`` to get the enabled/disabled state (1/0) for a specific task (by name only)
+
+``[<TaskName>#settings.interval]`` to get the Interval setting for the named task. Possible range = 0..65535.
+
+``[<TaskName>#settings.valuecount]`` to get the number of values, available in the named task. Range: 0..4. For tasks with a configurable number of values, like the SysInfo plugin, it will return the *currently* set number of values.
+
+``[<TaskName>#settings.controllerN.enabled]`` to get the enabled/disabled state (1/0) for controller N (1..3) of the named task. The controller has to be enabled too, to return an enabled state!
+
+``[<TaskName>#settings.controllerN.idx]`` to get the Idx value for controller N (1..3) of the named task, when supported by that Controller. The controller has to be enabled too, to return an idx!
+
+These settings will be returned independent of the task being enabled or disabled, as that state can be retrieved separately.
 
 
 Special task names
@@ -788,10 +807,10 @@ N.B. these extra quotes are removed from the parameter when used, as well as tra
 The reason this behavior was changed from before 2019/11 was that the old implementation could lead to unpredictable results.
 
 
-Formatting refered values
--------------------------
-
 .. _Formatting values:
+
+Formatting referred values
+--------------------------
 
 When referring another value, some basic formatting can be used.
 
