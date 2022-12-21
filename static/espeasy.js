@@ -143,30 +143,15 @@ var EXTRAWORDS = commonAtoms.concat(commonPlugins, commonKeywords, commonCommand
 
 var rEdit;
 function initCM() {
-  //this is causing issues
-  /*var onlongtouch;
-  var timer;
-  var touchduration = 800; 
-
-  function touchstart(e) {
-    if (!timer) {
-      timer = setTimeout(onlongtouch, touchduration);
-    }
+  //inital autocorrection
+  for (const element of EXTRAWORDS) {
+    let textR = document.getElementById("rules").innerHTML;
+    if (element === "Do")
+    {regExpReplace = new RegExp("(\\s+)(\\b"+element+"\\b)$"); }
+    else {regExpReplace = new RegExp("^(\\s*)(\\b"+element+"\\b)");}
+    document.getElementById("rules").innerHTML = textR.replaceAll(new RegExp(regExpReplace, "gmi"), "$1" + element);
   }
-  function touchend() {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
-  }
-  onlongtouch = function () {
-    timer = null;
-    rEdit.execCommand('replace');
-  };
-  document.addEventListener("DOMContentLoaded", function (event) {
-    window.addEventListener("touchstart", touchstart, false);
-    window.addEventListener("touchend", touchend, false);
-  });*/
+  
   CodeMirror.commands.autocomplete = function (cm) { cm.showHint({ hint: CodeMirror.hint.anyword }); }
   rEdit = CodeMirror.fromTextArea(document.getElementById('rules'), {
     tabSize: 2, indentWithTabs: false, lineNumbers: true, autoCloseBrackets: true,
