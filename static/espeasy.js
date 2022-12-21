@@ -146,12 +146,16 @@ function initCM() {
   //inital autocorrection
   for (const element of EXTRAWORDS) {
     let textR = document.getElementById("rules").innerHTML;
-    if (element === "Do")
-    {regExpReplace = new RegExp("(\\s+)(\\b"+element+"\\b)$"); }
-    else {regExpReplace = new RegExp("^(\\s*)(\\b"+element+"\\b)");}
-    document.getElementById("rules").innerHTML = textR.replaceAll(new RegExp(regExpReplace, "gmi"), "$1" + element);
+    if (element === "Do") {
+      regExpReplace = new RegExp("(\\s*)(\\b" + element + "\\b)$|(\\s+)(\\bdo\\b)(?:(\\s*)(\\/{2}.*))$");
+      document.getElementById("rules").innerHTML = textR.replaceAll(new RegExp(regExpReplace, "gmi"), "$1$3" + element + "$5$6");
+    }
+    else {
+      regExpReplace = new RegExp("^(\\s*)(\\b" + element + "\\b)");
+      document.getElementById("rules").innerHTML = textR.replaceAll(new RegExp(regExpReplace, "gmi"), "$1" + element);
+    }
   }
-  
+
   CodeMirror.commands.autocomplete = function (cm) { cm.showHint({ hint: CodeMirror.hint.anyword }); }
   rEdit = CodeMirror.fromTextArea(document.getElementById('rules'), {
     tabSize: 2, indentWithTabs: false, lineNumbers: true, autoCloseBrackets: true,
