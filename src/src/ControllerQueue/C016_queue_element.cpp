@@ -70,4 +70,8 @@ bool C016_queue_element::isDuplicate(const C016_queue_element& other) const {
   return true;
 }
 
+void C016_queue_element::setPluginID_insteadOf_controller_idx() {
+  controller_idx = getPluginID_from_TaskIndex(TaskIndex);
+}
+
 #endif // ifdef USES_C016

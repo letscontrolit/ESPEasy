@@ -46,11 +46,13 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   bool done = false;
 
   for (int chunk = 0; chunk < nrChunks && !done; ++chunk) {
-    uint8_t chunkdata[chunkSize] = { 0 };
+    C016_queue_element element;
 
-    if (ControllerCache.peek(chunkdata, chunkSize))
+    if (ControllerCache.peek(reinterpret_cast<uint8_t *>(&element), chunkSize))
     {
-      message += formatToHex_array(chunkdata, chunkSize);
+      // It makes no sense to keep the controller index when storing it.
+      element.setPluginID_insteadOf_controller_idx();
+      message += formatToHex_array(reinterpret_cast<const uint8_t *>(&element), chunkSize);
       message += ';';
     } else {
       done = true;
@@ -62,7 +64,8 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
     return 0;
   }
   messageLength = message.length();
-  String topic = F("CULreader/upload");
+  String topic = concat(F("tracker_v2/%sysname%_%unit%/") , getTaskDeviceName(P146_TaskIndex)) + F("/upload");
+  topic = parseTemplate(topic);
 
   if (MQTTpublish(enabledMqttController, P146_TaskIndex, std::move(topic), std::move(message), false)) {
     return messageLength;

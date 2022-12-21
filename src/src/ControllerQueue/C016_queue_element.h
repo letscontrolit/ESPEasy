@@ -41,6 +41,10 @@ public:
 
   const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
+  // It makes no sense to keep the controller index when storing it.
+  // re-purpose it to store the pluginID      
+  void setPluginID_insteadOf_controller_idx();
+
   float values[VARS_PER_TASK] = { 0 };
   unsigned long _timestamp    = 0; // Unix timestamp
   taskIndex_t TaskIndex       = INVALID_TASK_INDEX;

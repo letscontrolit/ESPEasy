@@ -100,6 +100,10 @@ void handle_cache_json() {
   addHtml(to_json_value(F("UTC timestamp")));
   addHtml(',');
   addHtml(to_json_value(F("task index")));
+  if (hasArg(F("pluginID"))) {
+    addHtml(',');
+    addHtml(to_json_value(F("plugin ID")));
+  }
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     for (int j = 0; j < VARS_PER_TASK; ++j) {
@@ -128,6 +132,15 @@ void handle_cache_json() {
     }
   }
   addHtml(F("],\n"));
+  addHtml(F("\"pluginID\": ["));
+  for (taskIndex_t taskIndex = 0; validTaskIndex(taskIndex); ++taskIndex) {
+    if (taskIndex != 0) {
+      addHtml(',');
+    }
+    addHtmlInt(getPluginID_from_TaskIndex(taskIndex));
+  }
+  addHtml(F("],\n"));
+  stream_next_json_object_value(F("separator"), F(";"));
   stream_last_json_object_value(F("nrfiles"), filenr);
   addHtml('\n');
   TXBuffer.endStream();

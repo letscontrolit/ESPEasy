@@ -117,6 +117,10 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
         event, 
         valueCount, 
         C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime());
+
+      // It makes no sense to keep the controller index when storing it.
+      // re-purpose it to store the pluginID
+      element.setPluginID_insteadOf_controller_idx();
       success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&element), sizeof(element));
 
       /*

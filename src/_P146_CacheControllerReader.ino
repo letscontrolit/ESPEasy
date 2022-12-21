@@ -146,7 +146,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Append 'bin' to topic"), F("appendbintopic"), P146_GET_APPEND_BINARY_TOPIC);
       addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
       addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
-      addFormNumericBox(F("Max Message Size"),      F("maxmsgsize"),      P146_MQTT_MESSAGE_LENGTH,   0, MQTT_MAX_PACKET_SIZE - 200);
+      addFormNumericBox(F("Max Message Size"),      F("maxmsgsize"),      P146_MQTT_MESSAGE_LENGTH,   sizeof(C016_queue_element) + 16, MQTT_MAX_PACKET_SIZE - 200);
 
       addFormSubHeader(F("Non MQTT Output Options"));
       addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);
