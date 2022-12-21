@@ -1375,7 +1375,6 @@ To create/register a plugin, you have to :
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P105   // AHT10/20/21
     #define USES_P134   // A02YYUW
-    #define USES_P143   // I2C Rotary encoders
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_B
@@ -1401,6 +1400,7 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
 
     #define USES_P111   // RC522 RFID reader
+    #define USES_P143   // I2C Rotary encoders
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_D
