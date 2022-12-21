@@ -15,7 +15,7 @@
 .. |P143_type| replace:: :cyan:`Switch input`
 .. |P143_typename| replace:: :cyan:`Switch input - I2C Rotary encoders`
 .. |P143_porttype| replace:: `.`
-.. |P143_status| replace:: :yellow:`COLLECTION A` :yellow:`DISPLAY`
+.. |P143_status| replace:: :yellow:`COLLECTION C` :yellow:`DISPLAY`
 .. |P143_github| replace:: P143_I2C_Rotary.ino
 .. _P143_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P143_I2C_Rotary.ino
 .. |P143_usedby| replace:: `.`
