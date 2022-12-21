@@ -147,8 +147,8 @@ function initCM() {
   for (const element of EXTRAWORDS) {
     let textR = document.getElementById("rules").innerHTML;
     if (element === "Do") {
-      regExpReplace = new RegExp("(\\s*)(\\b" + element + "\\b)$|(\\s+)(\\bdo\\b)(?:(\\s*)(\\/{2}.*))$");
-      document.getElementById("rules").innerHTML = textR.replaceAll(new RegExp(regExpReplace, "gmi"), "$1$3" + element + "$5$6");
+      regExpReplace = new RegExp("(\\s+)(\\b" + element + "\\b)(\\s*)$|(\\s+)(\\bdo\\b)(\\s*)(\\/{2}.*)");
+      document.getElementById("rules").innerHTML = textR.replaceAll(new RegExp(regExpReplace, "gmi"), "$1$4" + element + "$6$7");
     }
     else {
       regExpReplace = new RegExp("^(\\s*)(\\b" + element + "\\b)");
