@@ -229,7 +229,10 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       // be careful on what is added here. Heavy processing will result in slowing the module down!
       P144_data_struct *P144_data =
         static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
-      success = P144_data->processSensor();
+      if (P144_data != nullptr)
+      {
+        success = P144_data->processSensor();
+      }
       break;
     }
 

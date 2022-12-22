@@ -12,10 +12,10 @@
 
 // States for statemachine used to decode received message
 typedef enum {
-    PM1006_HEADER,
-    PM1006_LENGTH,
-    PM1006_DATA,
-    PM1006_CHECK
+    PM1006_HEADER,    // Waiting for the message header character
+    PM1006_LENGTH,    // Waiting for the message length
+    PM1006_DATA,      // waiting for/receiving data
+    PM1006_CHECK      // waiting for the checksum
 } pm1006_state_t;
 
 const int P144_bufferSize = 20;
@@ -30,12 +30,12 @@ struct P144_data_struct : public PluginTaskData_base {
   private:
   bool     processRx(char c);   // Handle one received character according to protocol
   void     dump();              // Diagnostics, dump the serialRxBuffer
-  char*    toHex(char c, char * ptr);    // Print a int in hexadecimal
+  char*    toHex(char c, char * ptr);           // Print an int in hexadecimal
 
-  ESPeasySerial *easySerial = nullptr;    // Setial port object
-  char serialRxBuffer[P144_bufferSize];   // Receive buffer for serial RX characters
+  ESPeasySerial *easySerial = nullptr;          // Setial port object
+  char serialRxBuffer[P144_bufferSize] = {0};   // Receive buffer for serial RX characters
   #ifdef PLUGIN_144_DEBUG
-  char debugBuffer[3*P144_bufferSize];    // Buffer to build debugging string during reception
+  char debugBuffer[3*P144_bufferSize] = {0};    // Buffer to build debugging string during reception
   #endif
   int rxChecksum = 0;     // Build checksum value during message processing
   int rxIndex = 0;        // Index in serialRxBuffer during message processing

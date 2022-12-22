@@ -114,46 +114,53 @@ int P144_data_struct::getValue()
 // ----------------------------------------------------------------------------
 bool P144_data_struct::processRx(char c)
 {
-    switch (rxState) {
-    case PM1006_HEADER:
-        rxChecksum = c;
-        if (c == 0x16) {
-            rxState = PM1006_LENGTH;
-        }
-        break;
-
-    case PM1006_LENGTH:
-        rxChecksum += c;
-        if (c <= P144_bufferSize) {
-            rxlen = c;
-            rxIndex = 0;
-            rxState = (rxlen > 0) ? PM1006_DATA : PM1006_CHECK;
-        } else {
-            rxState = PM1006_HEADER;
-        }
-        break;
-
-    case PM1006_DATA:
-        rxChecksum += c;
-        serialRxBuffer[rxIndex++] = c;
-        if (rxIndex == rxlen) {
-            rxState = PM1006_CHECK;
-        }
-        break;
-
-    case PM1006_CHECK:
-        rxChecksum += c;
-        rxState = PM1006_HEADER;
-#ifdef PLUGIN_144_DEBUG
-        dump();
-#endif
-        return ((rxChecksum & 0xFF) == 0);
-
-    default:
-        rxState = PM1006_HEADER;
-        break;
+  switch (rxState) {
+  case PM1006_HEADER:
+    // Waiting for the expected message header (0x16)
+    rxChecksum = c;
+    if (c == 0x16) {
+      rxState = PM1006_LENGTH;
     }
-    return false;
+    break;
+
+  case PM1006_LENGTH:
+    // Waiting for the message length
+    rxChecksum += c;
+    if (c <= P144_bufferSize) {
+      rxlen = c;
+      rxIndex = 0;
+      rxState = (rxlen > 0) ? PM1006_DATA : PM1006_CHECK;
+    } 
+    else 
+    {
+      rxState = PM1006_HEADER;
+    }
+    break;
+
+  case PM1006_DATA:
+    // Receiving the data part of the message
+    rxChecksum += c;
+    serialRxBuffer[rxIndex++] = c;
+    if (rxIndex == rxlen) {
+      rxState = PM1006_CHECK;
+    }
+    break;
+
+  case PM1006_CHECK:
+    // Waiting for the checksum of the message
+    rxChecksum += c;
+    rxState = PM1006_HEADER;
+#ifdef PLUGIN_144_DEBUG
+    dump();
+#endif
+    return ((rxChecksum & 0xFF) == 0);
+
+  default:
+    // Unexpected state, reset statemachine trashing pending data
+    rxState = PM1006_HEADER;
+    break;
+  }
+  return false;
 }
 
 #ifdef PLUGIN_144_DEBUG
