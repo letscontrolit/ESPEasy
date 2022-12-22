@@ -64,7 +64,9 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
     return 0;
   }
   messageLength = message.length();
-  String topic = concat(F("tracker_v2/%sysname%_%unit%/") , getTaskDeviceName(P146_TaskIndex)) + F("/upload");
+
+  String topic = F("tracker_v2/%sysname%_%unit%/%tskname%/upload");
+  topic.replace(F("%tskname%"), getTaskDeviceName(P146_TaskIndex));
   topic = parseTemplate(topic);
 
   if (MQTTpublish(enabledMqttController, P146_TaskIndex, std::move(topic), std::move(message), false)) {

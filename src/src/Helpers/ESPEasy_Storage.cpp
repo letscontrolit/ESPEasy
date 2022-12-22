@@ -1681,6 +1681,7 @@ String createCacheFilename(unsigned int count) {
 
 // Match string with an integer between '_' and ".bin"
 int getCacheFileCountFromFilename(const String& fname) {
+  if (fname.indexOf(F("cache_")) == -1) return -1;
   int startpos = fname.indexOf('_');
 
   if (startpos < 0) { return -1; }

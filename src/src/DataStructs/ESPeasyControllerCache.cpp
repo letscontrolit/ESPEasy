@@ -33,6 +33,9 @@ bool ControllerCache_struct::flush() {
 void ControllerCache_struct::init() {
   if (_RTC_cache_handler == nullptr) {
     _RTC_cache_handler = new (std::nothrow) RTC_cache_handler_struct;
+    if (_RTC_cache_handler != nullptr) {
+      _RTC_cache_handler->init();
+    }
   }
 }
 
@@ -63,6 +66,13 @@ void ControllerCache_struct::resetpeek() {
   }
 }
 
+bool ControllerCache_struct::peekDataAvailable() const {
+  if (_RTC_cache_handler == nullptr) {
+    return false;
+  }
+  return _RTC_cache_handler->peekDataAvailable();
+}
+
 int  ControllerCache_struct::getPeekFilePos(int& peekFileNr) const {
   if (_RTC_cache_handler != nullptr) {
     return _RTC_cache_handler->getPeekFilePos(peekFileNr);
@@ -84,9 +94,11 @@ bool ControllerCache_struct::peek(uint8_t *data, unsigned int size) const {
   return _RTC_cache_handler->peek(data, size);
 }
 
-String ControllerCache_struct::getPeekCacheFileName(bool& islast) const {
+String ControllerCache_struct::getNextCacheFileName(int& fileNr, bool& islast) {
   if (_RTC_cache_handler == nullptr) {
-    return "";
+    fileNr = -1;
+    islast = true;
+    return EMPTY_STRING;
   }
-  return _RTC_cache_handler->getPeekCacheFileName(islast);
+  return _RTC_cache_handler->getNextCacheFileName(fileNr, islast);
 }

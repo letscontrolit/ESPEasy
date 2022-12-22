@@ -91,6 +91,9 @@ void handle_dumpcache() {
 void handle_cache_json() {
   if (!isLoggedIn()) { return; }
 
+  // Flush any data still in RTC memory to the cache files.
+  C016_startCSVdump();
+
   TXBuffer.startJsonStream();
   addHtml(F("{\"columns\": ["));
 
@@ -115,20 +118,21 @@ void handle_cache_json() {
     }
   }
   addHtml(F("],\n"));
-  C016_startCSVdump();
   addHtml(F("\"files\": ["));
   bool islast = false;
   int  filenr = 0;
+  int fileCount = 0;
 
   while (!islast) {
-    String currentFile = C016_getCacheFileName(islast);
+    const String currentFile = C016_getCacheFileName(filenr, islast);
+    ++filenr;
 
     if (currentFile.length() > 0) {
-      if (filenr != 0) {
+      if (fileCount != 0) {
         addHtml(',');
       }
       addHtml(to_json_value(currentFile));
-      ++filenr;
+      ++fileCount;
     }
   }
   addHtml(F("],\n"));
@@ -141,7 +145,7 @@ void handle_cache_json() {
   }
   addHtml(F("],\n"));
   stream_next_json_object_value(F("separator"), F(";"));
-  stream_last_json_object_value(F("nrfiles"), filenr);
+  stream_last_json_object_value(F("nrfiles"), fileCount);
   addHtml('\n');
   TXBuffer.endStream();
 }

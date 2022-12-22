@@ -9,12 +9,11 @@ ControllerCache_struct ControllerCache;
 
 bool C016_startCSVdump() {
   ControllerCache.flush();
-  ControllerCache.resetpeek();
   return ControllerCache.isInitialized();
 }
 
-String C016_getCacheFileName(bool& islast) {
-  return ControllerCache.getPeekCacheFileName(islast);
+String C016_getCacheFileName(int& fileNr, bool& islast) {
+  return ControllerCache.getNextCacheFileName(fileNr, islast);
 }
 
 bool C016_deleteOldestCacheBlock() {

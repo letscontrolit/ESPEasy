@@ -28,7 +28,9 @@ RTC_NOINIT_ATTR uint8_t RTC_cache_data[RTC_CACHE_DATA_SIZE];
 /********************************************************************************************\
    RTC located cache
  \*********************************************************************************************/
-RTC_cache_handler_struct::RTC_cache_handler_struct() {
+RTC_cache_handler_struct::RTC_cache_handler_struct() {}
+
+bool RTC_cache_handler_struct::init() {
   bool success = loadMetaData() && loadData();
 
   if (!success) {
@@ -42,6 +44,8 @@ RTC_cache_handler_struct::RTC_cache_handler_struct() {
     rtc_debug_log(F("Read from RTC cache"), RTC_cache.writePos);
       #endif // ifdef RTC_STRUCT_DEBUG
   }
+  updateRTC_filenameCounters();
+  return success;
 }
 
 unsigned int RTC_cache_handler_struct::getFreeSpace() {
@@ -59,40 +63,58 @@ void RTC_cache_handler_struct::resetpeek() {
   peekreadpos = 0;
 }
 
+bool RTC_cache_handler_struct::peekDataAvailable() const {
+  if (peekfilenr < RTC_cache.writeFileNr) {
+    return true;
+  }
+
+  if (peekfilenr == RTC_cache.writeFileNr) {
+    if (fw) {
+      if (peekreadpos < fw.position()) { return true; }
+    }
+  }
+  return false;
+}
+
 int RTC_cache_handler_struct::getPeekFilePos(int& peekFileNr) const {
   peekFileNr = peekfilenr;
   return peekreadpos;
 }
 
-void RTC_cache_handler_struct::setPeekFilePos(int peekFileNr, int peekReadPos) {
-  String fname = createCacheFilename(peekFileNr);
 
-  if (fname.isEmpty()) { return; }
+
+void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekReadPos) {
+  validateFilePos(newPeekFileNr, newPeekReadPos);
 
   if (fp) {
-    if (peekfilenr != peekFileNr) {
+    if (getCacheFileCountFromFilename(fp.name()) != newPeekFileNr) {
       // Not the same file
       fp.close();
       peekfilenr = 0;
     }
   }
 
+
   if (!fp) {
+    String fname = createCacheFilename(newPeekFileNr);
+
+    if (fname.isEmpty()) { return; }
+
     fp = tryOpenFile(fname, "r");
   }
 
   if (fp) {
-    peekfilenr = peekFileNr;
+    peekfilenr = newPeekFileNr;
 
-    if (peekReadPos > 0) {
-      if (fp.seek(peekReadPos)) {
-        peekreadpos = peekReadPos;
-        return;
-      }
+    if (newPeekReadPos > 0) {
       const int fileSize = fp.size();
 
-      if (fileSize <= peekReadPos) {
-        peekReadPos = fileSize;
+      if (fileSize <= newPeekReadPos) {
+        newPeekReadPos = fileSize;
+      }
+
+      if (fp.seek(newPeekReadPos)) {
+        peekreadpos = newPeekReadPos;
         return;
       }
     } else {
@@ -101,51 +123,48 @@ void RTC_cache_handler_struct::setPeekFilePos(int peekFileNr, int peekReadPos) {
     }
   }
 
+
   if (fp) { fp.close(); }
   peekreadpos = 0;
   peekfilenr  = 0;
 }
 
 bool RTC_cache_handler_struct::peek(uint8_t *data, unsigned int size) {
-  int retries = 2;
-
-  while (retries > 0) {
-    --retries;
-
-    if (!fp) {
-      int tmppos;
-      String fname;
-
-      if (peekfilenr == 0) {
-        fname      = getReadCacheFileName(tmppos);
-        peekfilenr = getCacheFileCountFromFilename(fname);
-      } else {
-        if (peekfilenr >= RTC_cache.writeFileNr) {
-          return false;
-        }
-        ++peekfilenr;
-        peekreadpos = 0;
-        fname = createCacheFilename(peekfilenr);
+  if (!fp) {
+    if (peekfilenr == 0) {
+      setPeekFilePos(0, 0);
+    } else {
+      if (!peekDataAvailable()) {
+        return false;
       }
+      String fname = createCacheFilename(peekfilenr);
 
       if (fname.isEmpty()) { return false; }
       fp = tryOpenFile(fname, "r");
     }
-
-    if (!fp) { return false; }
-
-    const size_t bytesRead = fp.read(data, size);
-    peekreadpos += bytesRead;
-
-    if (bytesRead > 0) {
-      return true;
-    }
-
-    // FIXME TD-er: What to do when we just finished reading the last file?
-    fp.close();
-    peekreadpos = 0;
   }
-  return true;
+
+  if (!peekDataAvailable()) { return false; }
+
+  if (!fp) { return false; }
+
+  const size_t bytesRead = fp.read(data, size);
+
+  peekreadpos += bytesRead;
+
+  if (bytesRead > 0) {
+    return true;
+  }
+
+  if (peekreadpos >= fp.size()) {
+    if (peekfilenr < RTC_cache.writeFileNr) {
+      fp.close();
+      peekreadpos = 0;
+      ++peekfilenr;
+    }
+  }
+
+  return false;
 }
 
 // Write a single sample set to the buffer
@@ -195,10 +214,12 @@ bool RTC_cache_handler_struct::flush() {
       #ifdef RTC_STRUCT_DEBUG
       size_t filesize = fw.size();
       #endif // ifdef RTC_STRUCT_DEBUG
+
       // Make sure the read and peek file handles cannot be used on possibly deleted files.
       if (fr) {
         fr.close();
       }
+
       if (fp) {
         fp.close();
       }
@@ -270,22 +291,16 @@ String RTC_cache_handler_struct::getReadCacheFileName(int& readPos) {
   return EMPTY_STRING;
 }
 
-String RTC_cache_handler_struct::getPeekCacheFileName(bool& islast) {
-  int tmppos;
-  String fname;
-
-  if (peekfilenr == 0) {
-    fname      = getReadCacheFileName(tmppos);
-    peekfilenr = getCacheFileCountFromFilename(fname);
-  } else {
-    ++peekfilenr;
-    fname = createCacheFilename(peekfilenr);
-  }
-  islast = peekfilenr > RTC_cache.writeFileNr;
+String RTC_cache_handler_struct::getNextCacheFileName(int& fileNr, bool& islast)  {
+  int filepos = 0;
+  validateFilePos(fileNr, filepos);
+  islast = fileNr >= RTC_cache.writeFileNr;
+  const String fname = createCacheFilename(fileNr);
 
   if (fileExists(fname)) {
     return fname;
   }
+  islast = true;
   return EMPTY_STRING;
 }
 
@@ -303,6 +318,7 @@ bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
       if (fr) {
         fr.close();
       }
+
       if (fp) {
         fp.close();
       }
@@ -511,6 +527,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
   if (fr) {
     fr.close();
   }
+
   if (fp) {
     fp.close();
   }
@@ -565,6 +582,24 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
   addLog(LOG_LEVEL_ERROR, F("RTC  : prepareFileForWrite failed"));
     #endif // ifdef RTC_STRUCT_DEBUG
   return false;
+}
+
+void RTC_cache_handler_struct::validateFilePos(int& fileNr, int& readPos) {
+  {
+    // Check to see if we try to set it to a no longer existing file
+    int tmppos;
+    const int curReadFileNr = getCacheFileCountFromFilename(getReadCacheFileName(tmppos));
+
+    if (fileNr < curReadFileNr) {
+      fileNr  = curReadFileNr;
+      readPos = 0;
+    }
+  }
+
+  if (fileNr > RTC_cache.writeFileNr) {
+    // We're trying to set it to a not yet existing file
+    fileNr = RTC_cache.writeFileNr;
+  }
 }
 
 #ifdef RTC_STRUCT_DEBUG

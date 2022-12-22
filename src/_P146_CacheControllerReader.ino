@@ -48,7 +48,7 @@
 # define P146_MQTT_MESSAGE_LENGTH               PCONFIG_LONG(1)
 # define P146_MQTT_SEND_TASKVALUENAMES_INTERVAL PCONFIG_LONG(2)
 
-
+# include "src/ControllerQueue/C016_queue_element.h"
 # include "src/Globals/C016_ControllerCache.h"
 # include "src/Globals/CPlugins.h"
 
@@ -67,10 +67,10 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = true;
+      Device[deviceCount].DecimalsOnly       = false;
       Device[deviceCount].ValueCount         = 2;
       Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOption        = false;
       Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::Default;
@@ -116,25 +116,27 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      if (P146_GET_SEND_BINARY) {
-        // FIXME TD-er: Implement flushing binary format to MQTT controller
-        P146_data_struct::sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH);
-      } else {
-        // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
-        // FIXME TD-er: Maybe decimate this, so the broker does have an idea of where we are?
+      if (ControllerCache.peekDataAvailable()) {
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P146_MINIMAL_SEND_INTERVAL);
 
-        /*success =*/ P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP);
+        if (P146_GET_SEND_BINARY) {
+          // FIXME TD-er: Implement flushing binary format to MQTT controller
+          P146_data_struct::sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH);
+        } else {
+          // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
+          // FIXME TD-er: Maybe decimate this, so the broker does have an idea of where we are?
+
+          /*success =*/ P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP);
+        }
+      } else {
+        // Default to 1 sec
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 1000);
       }
 
-      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P146_MINIMAL_SEND_INTERVAL);
-
-      //      if (success) {
       int readFileNr    = 0;
       const int readPos = ControllerCache.getPeekFilePos(readFileNr);
       P146_TASKVALUE_FILENR  = readFileNr;
       P146_TASKVALUE_FILEPOS = readPos;
-
-      //      }
 
       break;
     }
@@ -146,7 +148,11 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Append 'bin' to topic"), F("appendbintopic"), P146_GET_APPEND_BINARY_TOPIC);
       addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
       addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
-      addFormNumericBox(F("Max Message Size"),      F("maxmsgsize"),      P146_MQTT_MESSAGE_LENGTH,   sizeof(C016_queue_element) + 16, MQTT_MAX_PACKET_SIZE - 200);
+      addFormNumericBox(F("Max Message Size"),
+                        F("maxmsgsize"),
+                        P146_MQTT_MESSAGE_LENGTH,
+                        sizeof(C016_queue_element) + 16,
+                        MQTT_MAX_PACKET_SIZE - 200);
 
       addFormSubHeader(F("Non MQTT Output Options"));
       addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);

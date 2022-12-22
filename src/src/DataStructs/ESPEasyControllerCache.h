@@ -35,6 +35,8 @@ struct ControllerCache_struct {
 
   void   resetpeek();
 
+  bool   peekDataAvailable() const;
+
   int    getPeekFilePos(int& peekFileNr) const;
 
   void   setPeekFilePos(int peekFileNr, int peekReadPos);
@@ -43,7 +45,7 @@ struct ControllerCache_struct {
   bool   peek(uint8_t     *data,
               unsigned int size) const;
 
-  String getPeekCacheFileName(bool& islast) const;
+  String getNextCacheFileName(int& fileNr, bool& islast);
 
 private:
 

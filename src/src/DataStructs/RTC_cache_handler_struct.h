@@ -33,9 +33,13 @@ struct RTC_cache_handler_struct
 {
   RTC_cache_handler_struct();
 
+  bool         init();
+
   unsigned int getFreeSpace();
 
   void         resetpeek();
+
+  bool         peekDataAvailable() const;
 
   int          getPeekFilePos(int& peekFileNr) const;
 
@@ -55,7 +59,7 @@ struct RTC_cache_handler_struct
   // Will be empty if there is no file to process.
   String getReadCacheFileName(int& readPos);
 
-  String getPeekCacheFileName(bool& islast);
+  String getNextCacheFileName(int& fileNr, bool& islast);
 
   bool   deleteOldestCacheBlock();
 
@@ -80,6 +84,8 @@ private:
 
   // Return true if any cache file found
   bool     updateRTC_filenameCounters();
+
+  void     validateFilePos(int& fileNr, int& readPos);
 
   bool     prepareFileForWrite();
 

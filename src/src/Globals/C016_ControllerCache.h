@@ -17,7 +17,7 @@ extern ControllerCache_struct ControllerCache;
 //********************************************************************************
 bool C016_startCSVdump();
 
-String C016_getCacheFileName(bool& islast);
+String C016_getCacheFileName(int& fileNr, bool& islast);
 
 bool C016_deleteOldestCacheBlock();
 
