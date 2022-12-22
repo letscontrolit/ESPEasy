@@ -58,6 +58,10 @@ IthoCC1101::IthoCC1101(int8_t CSpin, int8_t MISOpin, uint8_t counter, uint8_t se
 IthoCC1101::~IthoCC1101()
 {} // ~IthoCC1101
 
+void IthoCC1101::enableOrcon(bool state) {
+  _enableOrcon = state;
+}
+
 void IthoCC1101::initSendMessage(uint8_t len)
 {
   // finishTransfer();
