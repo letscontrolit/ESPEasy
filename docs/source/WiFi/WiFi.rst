@@ -99,6 +99,8 @@ A typical beacon interval is ~100 msec (102.4 msec).
 When you try to send data to a connected WiFi station, your access point first tries to send directly to the node and if it doesn't immediately reply, the access point includes a notification for this node in such a beacon package.
 Meaning, if you send a ping (or just any package) to a WiFi connected node, the first reply typically takes half this interval. (later ping replies may receive a response more quickly as the radio may be on continuously)
 
+.. note:: On ESP32, setting the ECO mode will also reduce the CPU clock to 80 MHz. (added: 2022/12/15)
+
 If the ESP (or any other WiFi device in "power save mode") is not listening to each beacon interval, it may take longer to reach the node.
 Such a "listen interval" is called a DTIM interval and is often set between 1 and 3 for almost all WiFi devices.
 I'm not entirely sure what the ESP uses when consuming ~80 mA, but I think it has the radio on all the time, effectively receiving packets before the next beacon interval.
