@@ -1,4 +1,10 @@
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
+// MIT License
+
 #include <ArduinoJson/Namespace.hpp>
+
+#include <string.h>  // strcmp, strncmp
 
 // Issue #1198: strcmp() implementation that returns a value larger than 8-bit
 

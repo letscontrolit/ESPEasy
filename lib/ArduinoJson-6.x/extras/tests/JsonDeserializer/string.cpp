@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #define ARDUINOJSON_DECODE_UNICODE 1
@@ -46,6 +46,24 @@ TEST_CASE("Valid JSON strings value") {
   }
 }
 
+TEST_CASE("\\u0000") {
+  StaticJsonDocument<200> doc;
+
+  DeserializationError err = deserializeJson(doc, "\"wx\\u0000yz\"");
+  REQUIRE(err == DeserializationError::Ok);
+
+  const char* result = doc.as<const char*>();
+  CHECK(result[0] == 'w');
+  CHECK(result[1] == 'x');
+  CHECK(result[2] == 0);
+  CHECK(result[3] == 'y');
+  CHECK(result[4] == 'z');
+  CHECK(result[5] == 0);
+
+  CHECK(doc.as<JsonString>().size() == 5);
+  CHECK(doc.as<std::string>().size() == 5);
+}
+
 TEST_CASE("Truncated JSON string") {
   const char* testCases[] = {"\"hello", "\'hello", "'\\u", "'\\u00", "'\\u000"};
   const size_t testCount = sizeof(testCases) / sizeof(testCases[0]);
@@ -78,12 +96,37 @@ TEST_CASE("Not enough room to save the key") {
   DynamicJsonDocument doc(JSON_OBJECT_SIZE(1) + 8);
 
   SECTION("Quoted string") {
+    REQUIRE(deserializeJson(doc, "{\"example\":1}") ==
+            DeserializationError::Ok);
     REQUIRE(deserializeJson(doc, "{\"accuracy\":1}") ==
             DeserializationError::NoMemory);
+    REQUIRE(deserializeJson(doc, "{\"hello\":1,\"world\"}") ==
+            DeserializationError::NoMemory);  // fails in the second string
   }
 
   SECTION("Non-quoted string") {
+    REQUIRE(deserializeJson(doc, "{example:1}") == DeserializationError::Ok);
     REQUIRE(deserializeJson(doc, "{accuracy:1}") ==
             DeserializationError::NoMemory);
+    REQUIRE(deserializeJson(doc, "{hello:1,world}") ==
+            DeserializationError::NoMemory);  // fails in the second string
+  }
+}
+
+TEST_CASE("Empty memory pool") {
+  // NOLINTNEXTLINE(clang-analyzer-optin.portability.UnixAPI)
+  DynamicJsonDocument doc(0);
+
+  SECTION("Input is const char*") {
+    REQUIRE(deserializeJson(doc, "\"hello\"") ==
+            DeserializationError::NoMemory);
+    REQUIRE(deserializeJson(doc, "\"\"") == DeserializationError::NoMemory);
+  }
+
+  SECTION("Input is const char*") {
+    char hello[] = "\"hello\"";
+    REQUIRE(deserializeJson(doc, hello) == DeserializationError::Ok);
+    char empty[] = "\"hello\"";
+    REQUIRE(deserializeJson(doc, empty) == DeserializationError::Ok);
   }
 }

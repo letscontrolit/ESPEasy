@@ -5,7 +5,7 @@
 var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
-  "ControllerEnable", "DateTime", "Debug", "DeepSleep", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner",
+  "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
   "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
   "Reboot", "Reset", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
@@ -97,7 +97,9 @@ var pluginDispKind = [
   //P116
   /*"tft",*/ "st77xx", "st7735", "st7789", "st7796",
   //P131
-  "neomatrix", "neo"
+  "neomatrix", "neo",
+  //P141
+  /*"lcd",*/ "pcd8544",
 ];
 var pluginDispCmd = [
   "cmd,on", "cmd,off", "cmd,clear", "cmd,backlight", "cmd,bright", "cmd,deepsleep", "cmd,seq_start", "cmd,seq_end", "cmd,inv", "cmd,rot",
@@ -119,6 +121,10 @@ var AnythingElse = [
   "%rssi%", "%ip%", "%unit%", "%ssid%", "%bssid%", "%wi_ch%", "%iswifi%", "%vcc%", "%mac%", "%mac_int%", "%isntp%", "%ismqtt%",
   "%dns%", "%dns1%", "%dns2%", "%flash_freq%", "%flash_size%", "%flash_chip_vendor%", "%flash_chip_model%", "%fs_free%", "%fs_size%",
   "%cpu_id%", "%cpu_freq%", "%cpu_model%", "%cpu_rev%", "%cpu_cores%", "%board_name%",
+  //Task settings
+  "settings.Enabled", "settings.Interval", "settings.ValueCount",
+  "settings.Controller1.Enabled", "settings.Controller2.Enabled", "settings.Controller3.Enabled",
+  "settings.Controller1.Idx", "settings.Controller2.Idx", "settings.Controller3.Idx",
   //Standard Conversions
   "%c_w_dir%", "%c_c2f%", "%c_ms2Bft%", "%c_dew_th%", "%c_alt_pres_sea%", "%c_sea_pres_alt%", "%c_cm2imp%", "%c_mm2imp%",
   "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_2hex%", "%c_u2ip%"
