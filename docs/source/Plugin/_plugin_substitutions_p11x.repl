@@ -93,7 +93,7 @@
 .. |P118_type| replace:: :cyan:`Communication`
 .. |P118_typename| replace:: :cyan:`Communication - Itho`
 .. |P118_porttype| replace:: `.`
-.. |P118_status| replace:: :yellow:`CLIMATE`
+.. |P118_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
 .. |P118_github| replace:: _P118_Itho.ino
 .. _P118_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P118_Itho.ino
 .. |P118_usedby| replace:: `.`
