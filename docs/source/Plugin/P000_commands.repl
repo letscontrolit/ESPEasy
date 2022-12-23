@@ -138,6 +138,14 @@
 
     ``Debug,<1-4>``"
     "
+    Dec","
+    :red:`Internal`","
+    Decrement the value of variable n (1..INT_MAX) by 1 or an optional value.
+
+    ``Dec,<n>[,<value>]`` (``value`` = 1 by default)
+    
+    See also ``Let`` and ``Inc``."
+    "
     DeepSleep","
     :red:`Internal`","
     Switch the node to deep sleep.
@@ -217,6 +225,14 @@
 
     "
     "
+    Inc","
+    :red:`Internal`","
+    Increment the value of variable n (1..INT_MAX) by 1 or an optional value.
+
+    ``Inc,<n>[,<value>]`` (``value`` = 1 by default)
+    
+    See also ``Let`` and ``Dec``."
+    "
     IP","
     :red:`Internal`","
     Get or set IP address
@@ -229,9 +245,11 @@
     "
     Let","
     :red:`Internal`","
-    Set the value of n (1..16).
+    Set the value of variable n (1..INT_MAX).
 
-    ``Let,<n>,<value>``"
+    ``Let,<n>,<value>``
+    
+    See also ``Inc`` and ``Dec``."
     "
     Load","
     :red:`Internal`","

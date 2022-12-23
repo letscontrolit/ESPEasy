@@ -94,11 +94,7 @@ void SettingsStruct_tmpl<N_TASKS>::EcoPowerMode(bool value) {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep() const {
-  #ifdef ESP32
-  return true;
-  #else
   return bitRead(VariousBits1, 7);
-  #endif
 }
 
 template<unsigned int N_TASKS>

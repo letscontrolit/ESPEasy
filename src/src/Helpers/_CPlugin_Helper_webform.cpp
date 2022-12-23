@@ -160,7 +160,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
         ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.ControllerUser[0]) - 1;
       addFormTextBox(displayName,
                      internalName,
-                     getControllerUser(controllerindex, ControllerSettings),
+                     getControllerUser(controllerindex, ControllerSettings, false),
                      fieldMaxLength);
       break;
     }

@@ -642,6 +642,9 @@ void afterloadSettings() {
     ResetFactoryDefaultPreference = pref_temp;
   }
   Scheduler.setEcoMode(Settings.EcoPowerMode());
+  #ifdef ESP32
+  setCpuFrequencyMhz(Settings.EcoPowerMode() ? 80 : 240);
+  #endif
 
   if (!Settings.UseRules) {
     eventQueue.clear();
