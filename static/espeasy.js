@@ -5,7 +5,7 @@
 var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
-  "ControllerEnable", "DateTime", "Debug", "DeepSleep", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner",
+  "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
   "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
   "Reboot", "Reset", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
@@ -99,7 +99,9 @@ var pluginDispKind = [
   //P116
   /*"tft",*/ "st77xx", "st7735", "st7789", "st7796",
   //P131
-  "neomatrix", "neo"
+  "neomatrix", "neo",
+  //P141
+  /*"lcd",*/ "pcd8544",
 ];
 var pluginDispCmd = [
   "cmd,on", "cmd,off", "cmd,clear", "cmd,backlight", "cmd,bright", "cmd,deepsleep", "cmd,seq_start", "cmd,seq_end", "cmd,inv", "cmd,rot",
