@@ -244,6 +244,8 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "Collection_D, IR with AC"
   #elif defined(PLUGIN_SET_COLLECTION_E_ESP32)
     #define PLUGIN_DESCR  "Collection_E, IR with AC"
+  #elif defined(PLUGIN_SET_COLLECTION_F_ESP32)
+    #define PLUGIN_DESCR  "Collection_F, IR with AC"
   #else
     #define PLUGIN_DESCR  "Normal, IR with AC"
   #endif
@@ -258,7 +260,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_COLLECTION
-  #if !defined(PLUGIN_BUILD_COLLECTION_B) && !defined(PLUGIN_BUILD_COLLECTION_C) && !defined(PLUGIN_BUILD_COLLECTION_D) && !defined(PLUGIN_BUILD_COLLECTION_E)
+  #if !defined(PLUGIN_BUILD_COLLECTION_B) && !defined(PLUGIN_BUILD_COLLECTION_C) && !defined(PLUGIN_BUILD_COLLECTION_D) && !defined(PLUGIN_BUILD_COLLECTION_E) && !defined(PLUGIN_BUILD_COLLECTION_F)
     #define PLUGIN_DESCR  "Collection_A"
     #define PLUGIN_SET_COLLECTION_A
   #endif
@@ -299,6 +301,15 @@ To create/register a plugin, you have to :
   #define PLUGIN_DESCR  "Collection_E"
   #define PLUGIN_SET_COLLECTION
   #define PLUGIN_SET_COLLECTION_E
+  #define CONTROLLER_SET_COLLECTION
+  #define NOTIFIER_SET_COLLECTION
+  #define PLUGIN_BUILD_NORMAL     // add stable
+#endif
+
+#ifdef PLUGIN_BUILD_COLLECTION_F
+  #define PLUGIN_DESCR  "Collection_F"
+  #define PLUGIN_SET_COLLECTION
+  #define PLUGIN_SET_COLLECTION_F
   #define CONTROLLER_SET_COLLECTION
   #define NOTIFIER_SET_COLLECTION
   #define PLUGIN_BUILD_NORMAL     // add stable
@@ -793,7 +804,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_ESP32
-  #if !defined(PLUGIN_SET_COLLECTION_B_ESP32) && !defined(PLUGIN_SET_COLLECTION_C_ESP32) && !defined(PLUGIN_SET_COLLECTION_D_ESP32) && !defined(PLUGIN_SET_COLLECTION_E_ESP32)
+  #if !defined(PLUGIN_SET_COLLECTION_B_ESP32) && !defined(PLUGIN_SET_COLLECTION_C_ESP32) && !defined(PLUGIN_SET_COLLECTION_D_ESP32) && !defined(PLUGIN_SET_COLLECTION_E_ESP32) && !defined(PLUGIN_SET_COLLECTION_F_ESP32)
     #ifndef PLUGIN_DESCR // COLLECTION_A_ESP32_IRExt also passes here
       #define PLUGIN_DESCR  "Collection_A ESP32"
     #endif
@@ -940,6 +951,37 @@ To create/register a plugin, you have to :
   #endif
   #define  PLUGIN_SET_COLLECTION
   #define  PLUGIN_SET_COLLECTION_E
+  #define  CONTROLLER_SET_STABLE
+  #define  CONTROLLER_SET_COLLECTION
+  #define  NOTIFIER_SET_STABLE
+  #define  PLUGIN_SET_STABLE     // add stable
+  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
+  // where incompatible plugins will be disabled.
+  // TODO : Check compatibility of plugins for ESP32 board.
+#endif
+
+#ifdef PLUGIN_SET_COLLECTION_F_ESP32
+  #ifndef PLUGIN_DESCR // COLLECTION_F_ESP32_IRExt also passes here
+    #define PLUGIN_DESCR  "Collection_F ESP32"
+  #endif
+  #ifndef ESP32
+    #define ESP32
+  #endif
+  #ifdef ESP8266
+    #undef ESP8266
+  #endif
+  // Undefine contradictionary defines
+  #ifdef PLUGIN_SET_NONE
+    #undef PLUGIN_SET_NONE
+  #endif
+  #ifdef PLUGIN_SET_ONLY_SWITCH
+    #undef PLUGIN_SET_ONLY_SWITCH
+  #endif
+  #ifdef PLUGIN_SET_ONLY_TEMP_HUM
+    #undef PLUGIN_SET_ONLY_TEMP_HUM
+  #endif
+  #define  PLUGIN_SET_COLLECTION
+  #define  PLUGIN_SET_COLLECTION_F
   #define  CONTROLLER_SET_STABLE
   #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
@@ -1107,6 +1149,9 @@ To create/register a plugin, you have to :
   #ifdef PLUGIN_SET_COLLECTION_E
     #undef PLUGIN_SET_COLLECTION_E
   #endif
+  #ifdef PLUGIN_SET_COLLECTION_F
+    #undef PLUGIN_SET_COLLECTION_F
+  #endif
   #ifdef PLUGIN_SET_EXPERIMENTAL
     #undef PLUGIN_SET_EXPERIMENTAL
   #endif
@@ -1199,6 +1244,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef PLUGIN_SET_COLLECTION_E
     #define PLUGIN_SET_COLLECTION_E
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION_F
+    #define PLUGIN_SET_COLLECTION_F
   #endif
 #endif
 
@@ -1304,7 +1352,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#if defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E)
+#if defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E) || defined(PLUGIN_SET_COLLECTION_F)
   #if !defined(PLUGIN_SET_MAX) && !defined(ESP32)
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
@@ -1318,6 +1366,7 @@ To create/register a plugin, you have to :
       #define WEBSERVER_USE_CDN_JS_CSS
     #endif
   #endif
+  #define KEEP_I2C_MULTIPLEXER
 #endif
 
 // COLLECTIONS #####################################
@@ -1426,6 +1475,12 @@ To create/register a plugin, you have to :
     #define USES_P135   // SCD4x
 #endif
 
+#ifdef PLUGIN_SET_COLLECTION_F
+  // Disable Itho when using second heap as it no longer fits.
+  #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
+    #define USES_P118 // Itho ventilation control
+  #endif
+#endif
 
 // Collection of all energy related plugins.
 #ifdef PLUGIN_ENERGY_COLLECTION
@@ -1485,6 +1540,7 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #ifndef PLUGIN_BUILD_MAX_ESP32
        #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+       #define KEEP_I2C_MULTIPLEXER
      #endif
    #endif
    #if !defined(FEATURE_SD) && !defined(ESP8266)
@@ -2181,10 +2237,12 @@ To create/register a plugin, you have to :
   #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
     #define BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   #endif
-  #ifdef FEATURE_I2CMULTIPLEXER
-    #undef FEATURE_I2CMULTIPLEXER
+  #ifndef KEEP_I2C_MULTIPLEXER
+    #ifdef FEATURE_I2CMULTIPLEXER
+      #undef FEATURE_I2CMULTIPLEXER
+    #endif
+    #define FEATURE_I2CMULTIPLEXER  0
   #endif
-  #define FEATURE_I2CMULTIPLEXER  0
   #ifdef FEATURE_SETTINGS_ARCHIVE
     #undef FEATURE_SETTINGS_ARCHIVE
   #endif
@@ -2216,6 +2274,9 @@ To create/register a plugin, you have to :
     #ifdef USES_P100 // Pulse Counter - DS2423
       #undef USES_P100
     #endif
+    #ifdef USES_C017 // Zabbix
+      #undef USES_C017
+    #endif
   #endif
   #ifdef USES_C012
     #undef USES_C012 // Blynk
@@ -2225,9 +2286,6 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_C016
     #undef USES_C016 // Cache controller
-  #endif
-  #ifdef USES_C017 // Zabbix
-    #undef USES_C017
   #endif
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
@@ -2385,7 +2443,7 @@ To create/register a plugin, you have to :
 #endif
 
 // Here we can re-enable specific features in the COLLECTION sets as we have created some space there by splitting them up
-#if defined(COLLECTION_FEATURE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E))
+#if defined(COLLECTION_FEATURE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E) || defined(PLUGIN_SET_COLLECTION_F))
   #ifndef FEATURE_RTTTL
     #define FEATURE_RTTTL 1
   #endif

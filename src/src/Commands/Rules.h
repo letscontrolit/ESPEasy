@@ -8,5 +8,7 @@ String Command_Rules_UseRules(struct EventStruct *event, const char *Line);
 const __FlashStringHelper * Command_Rules_Async_Events(struct EventStruct *event, const char *Line);
 const __FlashStringHelper * Command_Rules_Events(struct EventStruct *event, const char *Line);
 const __FlashStringHelper * Command_Rules_Let(struct EventStruct *event, const char *Line);
+const __FlashStringHelper * Command_Rules_Inc(struct EventStruct *event, const char *Line);
+const __FlashStringHelper * Command_Rules_Dec(struct EventStruct *event, const char *Line);
 
 #endif // COMMAND_RULES_H
