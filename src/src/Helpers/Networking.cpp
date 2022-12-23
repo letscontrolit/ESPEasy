@@ -402,25 +402,21 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
    Get IP address for unit
 \*********************************************************************************************/
 IPAddress getIPAddressForUnit(uint8_t unit) {
-  IPAddress remoteNodeIP;
-
   if (unit == 255) {
-    remoteNodeIP = { 255, 255, 255, 255 };
+    return { 255, 255, 255, 255 };
   }
-  else {
-    auto it = Nodes.find(unit);
+  auto it = Nodes.find(unit);
 
-    if (it == Nodes.end()) {
-      return remoteNodeIP;
-    }
-
-    if (it->second.ip[0] == 0) {
-      return remoteNodeIP;
-    }
-    return it->second.IP();
+  if (it == Nodes.end()) {
+    return {};
   }
-  return remoteNodeIP;
+
+  if (it->second.ip[0] == 0) {
+    return {};
+  }
+  return it->second.IP();
 }
+
 
 /*********************************************************************************************\
    Refresh aging for remote units, drop if too old...
