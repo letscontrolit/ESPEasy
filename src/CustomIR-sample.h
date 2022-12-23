@@ -8,6 +8,17 @@
  * - Change the supported list of IR devices by commenting/uncommenting options that DISABLE a device when UNcommented
  */
 
+
+// Special plugins needing IR library
+// #define USES_P016   // IR
+// #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
+// #define P016_FEATURE_COMMAND_HANDLING 0 // By default set to 1 to have the command table, that can be dsabled here
+// #define USES_P035   // IRTX
+// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
+                                 //common arguments for controlling all deeply supported A/C units
+// #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
+// #define USES_P088   // Heatpump IR
+
 // *** This file must be updated adding new supported devices when updating IRreceive8266 library ***
 
 // Set flags to enable (1) or disable (0) the DECODE_ and/or SEND_ feature for a specific IR device

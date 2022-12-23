@@ -159,6 +159,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       #  if P096_USE_EXTENDED_SETTINGS
 
       if (nullptr != gfxHelper) {
+        gfxHelper->initialize();
         gfxHelper->setRotation(_rotation);
         gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
         gfxHelper->setTxtfullCompensation(!bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096) ? 0 : 1); // Inverted

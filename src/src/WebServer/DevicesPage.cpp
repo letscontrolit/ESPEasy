@@ -1140,10 +1140,10 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
     if (multipleMuxPorts) {
       addRowLabel(F("Select connections"), EMPTY_STRING);
       html_table(EMPTY_STRING, false); // Sub-table
-      html_table_header(F("Channel"));
-      html_table_header(F("Enable"));
-      html_table_header(F("Channel"));
-      html_table_header(F("Enable"));
+      html_table_header(F("Channel"), 100);
+      html_table_header(F("Enable"),  80);
+      html_table_header(F("Channel"), 100);
+      html_table_header(F("Enable"),  80);
 
       for (int x = 0; x < I2CMultiplexerMaxChannels(); x++) {
         if (x % 2 == 0) { html_TR(); } // Start a new row for every 2 channels
@@ -1334,11 +1334,11 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
     // table header
     addHtml(F("<TR><TH style='width:30px;' align='center'>#"));
-    html_table_header(F("Name"));
+    html_table_header(F("Name"),500);
 
     if (Device[DeviceIndex].FormulaOption)
     {
-      html_table_header(F("Formula"), F("EasyFormula"), 0);
+      html_table_header(F("Formula"), F("EasyFormula"), 500);
       ++colCount;
     }
 
@@ -1356,6 +1356,10 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
+    //placeholder header
+    html_table_header(F(""));
+    ++colCount;
+    
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
     {
