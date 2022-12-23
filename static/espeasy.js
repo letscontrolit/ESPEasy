@@ -5,7 +5,7 @@
 var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
-  "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
+  "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DisablePriorityTask", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
   "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
   "Reboot", "Reset", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
@@ -87,7 +87,11 @@ var commonPlugins = [
   //P129
   "ShiftIn", "ShiftIn,PinEvent", "ShiftIn,ChipEvent", "ShiftIn,SetChipCount", "ShiftIn,SampleFrequency", "ShiftIn,EventPerPin",
   //P127
-  "cdmrst"
+  "cdmrst",
+  //P137
+  "axp,ldo2", "axp,ldo3", "axp,ldoio", "axp,gpio0", "axp,gpio1", "axp,gpio2", "axp,gpio3", "axp,gpio4", "axp,dcdc2", "axp,dcdc3", "axp,ldo2map", "axp,ldo3map", "axp,ldoiomap", "axp,dcdc2map", "axp,dcdc3map", "axp,ldo2perc", "axp,ldo3perc", "axp,ldoioperc", "axp,dcdc2perc", "axp,dcdc3perc",
+  //P143
+  "I2CEncoder", "I2CEncoder,bright", "I2CEncoder,led1", "I2CEncoder,led2", "I2CEncoder,gain", "I2CEncoder,set"
 ];
 var pluginDispKind = [
   //P095
@@ -108,7 +112,7 @@ var pluginDispCmd = [
 ];
 var commonTag = ["On", "Do", "Endon"];
 var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
-var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d"];
+var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sin_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "aTan_d"];
 var commonWarning = ["delay", "Delay", "ResetFlashWriteCounter"];
 var taskSpecifics = [
   //Task settings
