@@ -146,8 +146,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSubHeader(F("Options"));
-
       # if P037_JSON_SUPPORT
       addFormSelector_YesNo(F("Parse JSON messages"), F("pjson"),     P037_PARSE_JSON,     true);
       # endif // if P037_JSON_SUPPORT
@@ -162,6 +160,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Changing a Yes/No option will reload the page. Changing to No will clear corresponding settings!"));
       #  endif // if !defined(P037_LIMIT_BUILD_SIZE)
       # endif  // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
+
+      addFormSubHeader(F("Options"));
+
       addFormCheckBox(F("Generate events for accepted topics"),
                       F("p037_send_events"), P037_SEND_EVENTS);
       # if !defined(P037_LIMIT_BUILD_SIZE)
