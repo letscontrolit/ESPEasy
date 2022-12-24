@@ -172,10 +172,12 @@ class SettingsStruct_tmpl
   bool isTaskEnableReadonly(taskIndex_t taskIndex) const;
   void setTaskEnableReadonly(taskIndex_t taskIndex, bool value);
 
+  #if FEATURE_PLUGIN_PRIORITY
   bool isPowerManagerTask(taskIndex_t taskIndex) const;
   void setPowerManagerTask(taskIndex_t taskIndex, bool value);
 
   bool isPriorityTask(taskIndex_t taskIndex) const;
+  #endif // if FEATURE_PLUGIN_PRIORITY
 
   void validate();
 

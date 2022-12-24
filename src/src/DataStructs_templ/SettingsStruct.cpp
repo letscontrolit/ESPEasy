@@ -341,6 +341,7 @@ void SettingsStruct_tmpl<N_TASKS>::setTaskEnableReadonly(taskIndex_t taskIndex, 
   }
 }
 
+#if FEATURE_PLUGIN_PRIORITY
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isPowerManagerTask(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex)) {
@@ -363,6 +364,7 @@ bool SettingsStruct_tmpl<N_TASKS>::isPriorityTask(taskIndex_t taskIndex) const {
   }
   return false;
 }
+#endif // if FEATURE_PLUGIN_PRIORITY
 
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {

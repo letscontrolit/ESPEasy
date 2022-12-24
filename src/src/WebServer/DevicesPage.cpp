@@ -1030,21 +1030,30 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
   addHtml(F("devices?setpage="));
   addHtmlInt(page);
   addHtml(F("'>Close</a>"));
-  if (!Settings.isPriorityTask(taskIndex)) {
+  #if FEATURE_PLUGIN_PRIORITY
+  if (!Settings.isPriorityTask(taskIndex))
+  #endif // if FEATURE_PLUGIN_PRIORITY
+  {
     addSubmitButton();
   }
   addHtml(F("<input type='hidden' name='edit' value='1'>"));
   addHtml(F("<input type='hidden' name='page' value='1'>"));
 
   // if user selected a device, add the delete button, except for Priority tasks
-  if (validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]) && !Settings.isPriorityTask(taskIndex)) {
+  if (validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex])
+      #if FEATURE_PLUGIN_PRIORITY
+      && !Settings.isPriorityTask(taskIndex)
+      #endif // if FEATURE_PLUGIN_PRIORITY
+     ) {
     addSubmitButton(F("Delete"), F("del"));
   }
 
   html_end_table();
+  #if FEATURE_PLUGIN_PRIORITY
   if (Settings.isPriorityTask(taskIndex)) {
     addFormNote(F("A Priority task can't be updated or deleted. See documentation."));
   }
+  #endif // if FEATURE_PLUGIN_PRIORITY
   html_end_form();
   serve_JS(JSfiles_e::SplitPasteInput);
 }

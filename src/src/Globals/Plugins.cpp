@@ -689,7 +689,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str); // Initialize value range(s)
         }
 
-        if ((Function == PLUGIN_INIT) && !Settings.isPriorityTask(event->TaskIndex)) {
+        if ((Function == PLUGIN_INIT)
+            #if FEATURE_PLUGIN_PRIORITY
+            && !Settings.isPriorityTask(event->TaskIndex)
+            #endif // if FEATURE_PLUGIN_PRIORITY
+           ) {
           // Make sure any task data is actually cleared.
           clearPluginTaskData(event->TaskIndex);
         }
