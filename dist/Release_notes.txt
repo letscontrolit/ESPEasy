@@ -1,4 +1,139 @@
 -------------------------------------------------
+Changes in release mega-20221224 (since mega-20221105)
+-------------------------------------------------
+
+Release date: za 24 dec 2022 21:35:00 CET
+
+C.Lee Taylor (1):
+      Add comment to P001 for split up
+
+TD-er (39):
+      [PIO Build] Remove concat work-around for ESP32 builds
+      [PIO] Add all used libraries in lib folder
+      [PSRAM] Do not check UsePSRAM but FoundPSRAM
+      [Docs] Fix "Validate a RFID tag" example
+      [P002] Fix using nr. decimals in calibration
+      [Favicon] Fix serving favicon.ico
+      [Build] Exclude all ext. RTC code when not enabled in build
+      [WiFi] Switch default and alt.WiFi builds for ESP8266
+      [LCtech switch] Fix longpulse (#3385)
+      [NTP] Fix calling NTP when current time source is ext. RTC
+      [Build] Include the 'boards' folder in the source ZIP file (#4274)
+      [SendToHTTP] Only include "Authorization" header  when credentials set
+      [ESP32 2.0.5.x] Fix crashes calling noInterrupt() in ISR callback
+      [Adafruit NeoPixel] Update lib to fix noInterrupts
+      [Quad Enc] Fix ESP32 noInterrupts()
+      [Docs] Update rules docs not using %eventvalue1%
+      [HTTP] Restore Authorization headers used in C011 (#4364)
+      [HTTP] Remove check for "Authorization" header
+      [ADXL345] Add pitch and roll as derived task values
+      [ADXL345] Update min/max values per raw sample reading.
+      [Cache Controller] Speedup ESP32 + LittleFS use.
+      [Cache Controller] Allow for larger files on large ESP8266 FileSystems
+      [Build] Make normal_ESP8266_1M fit max. size again
+      [ADXL345] Add output of values in g with self calibration
+      [ADXL345] Document new features of plugin
+      [LongPulse] Fix recurring longPulse
+      [Speedup] Make less calls to LoadTaskSettings as it is slow on ESP32
+      [Cache] Fix updating ExtraTaskSettings Cache after it has been modified.
+      [Cleanup] Do not call own class functions from constructor/destructor
+      [Build] Fix missing #ifdef check.
+      [Taskvalue Select] Fix showing taskvalue config for some plugins
+      [Taskvalue Select] Fix showing taskvalue config for some plugins
+      [PVS Studio] Fix issues reported by PVS Studio
+      [Lib] Update to ArduinoJson 6.19.4
+      [WiFi] Fix WiFi (re)connect not starting AP immediately
+      [WiFi] Fix loop WIFI_STA and WIFI_OFF preventing boot/wificonnect
+      [Controller] Allow system variables in controller username
+      [ESP32] Fix ECO mode on ESP32
+      Fix max. frequencies for various ESP32 SoC's
+
+Ton Huisman (47):
+      [Build] Revert Espressif32 framework to 2.0.4.1 to fix NeoPixel/RMT related issues
+      [P121] Bugfix for unconnected sensor, correct name-typo, code cleanup
+      [P121] Remove obsolete Arduino 1.0 check, use `f` suffix for float values
+      [P038] Add initial and max brightness settings and command, update docs, optimizations
+      [P121] Add HMC5883L to I2C scanner
+      [Build] Update platform to 2.0.5.2, enable PSRAM for 16M8M envs, prepare PSRAM fix config
+      [CodeMirror] Add NeoPixelBright command
+      [P037] Add JSON sub-attribute support
+      [P037] String and memory optimizations
+      [P037] Small source cleanup
+      [Docs] Add quotes in rules examples for SendTo and SendToHTTP
+      Revert "[Docs] Add quotes in rules examples for SendTo and SendToHTTP"
+      [Docs] Add quotes in rules examples for SendTo and SendToHTTP
+      [P037] Small source improvement
+      [P037] Remove unneeded LoadTaskSettings call
+      [AdafruitGFX] Fix potential initialization issues
+      [Libs] Fix initialization issues
+      [PVS] Code improvements and corrections
+      [P037] Correct table layout on Configuration page
+      [P129] Correct table layout on Configuration page
+      [P099] Correct table layout on Configuration page
+      [P099] Format sources using Uncrustify
+      [P099] Code improvements, small string reductions
+      [Command parsing] Non-numeric arguments could return uninitialized data
+      [AdaGFX] Fix typo in constructor
+      [Build] Deduplicate libs and un-space lib foldernames
+      [Build] Add readme.md to lib folder
+      [P037] Move device configuration subheader, small uncrustify changes
+      [P109] Add Inverted relay-state and Setpoint-delay settings
+      [Build] Enable I2C Multiplexer in most ESP8266 4M builds
+      [I2CMux] Fix Multiple Channels I2C Multiplexer selection table column widths
+      [Metrics] Use default devicename `taskN` when Name is empty
+      [Metrics] Show default task number as displayed in the device overview
+      [Metrics] Format source using Uncrustify
+      [Build] Enable Zabbix controller for Collection builds
+      [Rules] Get task settings for use in rules
+      [Rules] `settings.controllerN` also check Controller enabled/disabled
+      [Rules] Update documentation for task settings variables, fix a few typos
+      [Rules] Update ESPEasy ColorCode configuration
+      [Rules] Adjust fetching task-controller settings, update documentation
+      [Rules] Add String functions `indexOf` and `equals`, with documentation
+      [Rules] Improved `indexOf(_ci)` and `equals(_ci)` string function handling, update documentation
+      [Rules] Introduce commands `Inc` and `Dec`, update documentation
+      [Rules] Update ESPEasy ColorCode config for `dec` and `inc` commands
+      [ColorCode] Add missing command for P141
+      [Build] Add `COLLECTION F` builds
+      [P118] Bugfix for crash during startup
+
+Zafrir Ron (5):
+      LCD Rules example
+      spelling correction
+      Impoved version
+      Fix set speed comment
+      Fix to asyncevent & speed comment
+
+chromoxdor (23):
+      modulo+number is now categorized as number
+      [style][layout] css optimizations, values table improvement
+      the zero is not necessary i guess
+      turns out there is more to remove in the css...
+      forgot to minify and embed the css
+      removed one sys var wrap and re added  pre tag
+      and i forgot to change p021....
+      and xmp is out
+      Update DevicesPage.cpp
+      made the number inputfield better fit (except firefox)
+      forgot to change width to max-width
+      back to input type=search
+      Update Rules.rst
+      Update JSON.cpp
+      Update JSON.cpp
+      Update JSON.cpp
+      Update JSON.cpp
+      Update JSON.cpp
+      Update JSON.cpp
+      Update Custom-sample.h
+      corrected typo
+      update for #4421
+      update
+
+jimmys01 (1):
+      Move Custom IR related defines in the appropriate file
+
+
+-------------------------------------------------
 Changes in release mega-20221105 (since mega-20220809)
 -------------------------------------------------
 
