@@ -285,6 +285,7 @@ bool executeInternalCommand(command_case_data & data)
     case 'd': {
       COMMAND_CASE_R( "datetime", Command_DateTime,         2); // Time.h
       COMMAND_CASE_R(    "debug", Command_Debug,            1); // Diagnostic.h
+      COMMAND_CASE_A(      "dec", Command_Rules_Dec,       -1); // Rules.h
       COMMAND_CASE_R("deepsleep", Command_System_deepSleep, 1); // System.h
       COMMAND_CASE_R(    "delay", Command_Delay,            1); // Timers.h
       COMMAND_CASE_R(      "dns", Command_DNS,              1); // Network Command
@@ -323,6 +324,7 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 'i': {
       COMMAND_CASE_R("i2cscanner", Command_i2c_Scanner, -1); // i2c.h
+      COMMAND_CASE_A(       "inc", Command_Rules_Inc,   -1); // Rules.h
       COMMAND_CASE_R(        "ip", Command_IP,           1); // Network Command
       break;
     }

@@ -145,8 +145,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSubHeader(F("Options"));
-
       # if P037_JSON_SUPPORT
       addFormSelector_YesNo(F("Parse JSON messages"), F("pjson"),     P037_PARSE_JSON,     true);
       # endif // if P037_JSON_SUPPORT
@@ -161,6 +159,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Changing a Yes/No option will reload the page. Changing to No will clear corresponding settings!"));
       #  endif // if !defined(P037_LIMIT_BUILD_SIZE)
       # endif  // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
+
+      addFormSubHeader(F("Options"));
+
       addFormCheckBox(F("Generate events for accepted topics"),
                       F("p037_send_events"), P037_SEND_EVENTS);
       # if !defined(P037_LIMIT_BUILD_SIZE)
@@ -234,7 +235,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P037_data) {
         return success;
       }
-      P037_data->loadSettings();  // FIXME TD-er: Is this loadSettings still needed or even desired?
+      P037_data->loadSettings(); // FIXME TD-er: Is this loadSettings still needed or even desired?
 
       # if P037_JSON_SUPPORT
       P037_PARSE_JSON = getFormItemInt(F("pjson"));
@@ -279,7 +280,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P037_data && P037_data->loadSettings()) {
+      if ((nullptr != P037_data) && P037_data->loadSettings()) {
         // When we edit the subscription data from the webserver, the plugin is called again with init.
         // In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
         if (MQTTclient_connected) {
@@ -346,7 +347,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      String unparsedPayload;             // To keep an unprocessed copy
+      String unparsedPayload; // To keep an unprocessed copy
 
       bool checkJson = false;
 

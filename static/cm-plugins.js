@@ -13,7 +13,7 @@ var isSame;
     anyword(CodeMirror);
 })(function (CodeMirror) {
   "use strict";
-  var WORD = /[\w?#.,%]+/, RANGE = 500;
+  var WORD = /[\w?.,%]+/, RANGE = 500;
   CodeMirror.registerHelper("hint", "anyword", function (editor, options) {
     var word = options && options.word || WORD;
     var range = options && options.range || RANGE;
@@ -29,7 +29,7 @@ var isSame;
       return element.toLowerCase() === curWord;
     });
     var list = options && options.list || [], seen = {};
-    var re = new RegExp(word.source, "g");
+    var re = new RegExp(word.source, "gi");
     for (var dir = -1; dir <= 1; dir += 2) {
       var line = cur.line, endLine = Math.min(Math.max(line + dir * range, editor.firstLine()), editor.lastLine()) + dir;
       for (; line != endLine; line += dir) {
@@ -39,6 +39,7 @@ var isSame;
         var replaceK = text.match(/\w+(?:,(\S+)){2}/);
         if (replaceK) {text = text.replace(replaceK[1], ' ' + replaceK[1]);} //filter out everything after second comma
         //and put a space between CXD
+        if (text.includes("#")){re = new RegExp(/[\w?#.,%]+/, "gi");} //regain old bahaviour of "word1#word2" suggestions
         while (m = re.exec(text)) {
           if (line == cur.line && m[0].toLowerCase() === curWord) continue;
           if ((!curWord || m[0].toLowerCase().lastIndexOf(curWord, 0) == 0) && !Object.prototype.hasOwnProperty.call(seen, m[0])) {
