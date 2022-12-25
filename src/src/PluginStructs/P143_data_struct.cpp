@@ -95,23 +95,12 @@ P143_data_struct::P143_data_struct(struct EventStruct *event) {
  * Destructor
  ****************************************************/
 P143_data_struct::~P143_data_struct() {
-  switch (_device)
-  {
-    case P143_DeviceType_e::AdafruitEncoder:
-
-      delete Adafruit_Seesaw;
-      delete Adafruit_Spixel;
-      break;
-    # if P143_FEATURE_INCLUDE_M5STACK
-    case P143_DeviceType_e::M5StackEncoder:
-      break;
-    # endif // if P143_FEATURE_INCLUDE_M5STACK
-    # if P143_FEATURE_INCLUDE_DFROBOT
-    case P143_DeviceType_e::DFRobotEncoder:
-      break;
-    # endif // if P143_FEATURE_INCLUDE_DFROBOT
-  }
+  delete Adafruit_Seesaw;
+  delete Adafruit_Spixel;
 }
+
+// Macro to swap the upper and lower byte of an uint16_t, has #undef at the end of this source
+# define BYTESWAP16(z) (((z & 0xFF) << 8) | ((z >> 8) & 0xFF))
 
 /**************************************************************************
  * plugin_init Initialize sensor and prepare for reading
@@ -166,7 +155,7 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
         // - re-read and if not changed we use an offset to handle passing the set limits
         int16_t encoderCount = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
         encoderCount++;
-        I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, encoderCount << 8 || encoderCount >> 8);
+        I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, BYTESWAP16(encoderCount));
 
         if (encoderCount != I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER)) {
           _useOffset       = true;
@@ -175,7 +164,7 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
         } else {
           // Don't need to use offset, set configured initial value
           encoderCount = _encoderPosition;
-          I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, encoderCount << 8 || encoderCount >> 8);
+          I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, BYTESWAP16(encoderCount));
         }
 
         _red   = P143_ADAFRUIT_COLOR_RED; // Also used for M5Stack Led 1
@@ -264,9 +253,11 @@ bool P143_data_struct::plugin_exit(struct EventStruct *event) {
       case P143_DeviceType_e::AdafruitEncoder:
       {
         // Stop interrupthandler
-        Adafruit_Seesaw->disableEncoderInterrupt();
+        if (nullptr != Adafruit_Seesaw) {
+          Adafruit_Seesaw->disableEncoderInterrupt();
+        }
 
-        if (P143_PLUGIN_EXIT_LED_OFF) {
+        if ((nullptr != Adafruit_Spixel) && P143_PLUGIN_EXIT_LED_OFF) {
           // Turn off Neopixel 0 by setting the R/G/B color to black
           Adafruit_Spixel->setPixelColor(0, 0, 0, 0);
           Adafruit_Spixel->show();
@@ -346,7 +337,7 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
       switch (_device) {
         case P143_DeviceType_e::AdafruitEncoder:
         {
-          if (led1) {
+          if (led1 && (nullptr != Adafruit_Spixel)) {
             Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
             Adafruit_Spixel->show();
             success = true;
@@ -363,7 +354,7 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
             set8BitToUL(lSettings, P143_M5STACK2_OFFSET_BLUE,  event->Par4 & 0xFF);
             P143_M5STACK_COLOR_AND_SELECTION = lSettings;
           }
-          m5stack_setPixelColor(led1 ? 1 : 2, event->Par2, event->Par3, event->Par4);
+          m5stack_setPixelColor(led1 ? 1 : 2, event->Par2 & 0xFF, event->Par3 & 0xFF, event->Par4 & 0xFF);
           success = true;
           break;
         }
@@ -388,11 +379,13 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
       switch (_device) {
         case P143_DeviceType_e::AdafruitEncoder:
         {
-          Adafruit_Spixel->setBrightness(_brightness);
+          if (nullptr != Adafruit_Spixel) {
+            Adafruit_Spixel->setBrightness(_brightness);
 
-          // Update with new brightness
-          Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
-          Adafruit_Spixel->show();
+            // Update with new brightness
+            Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
+            Adafruit_Spixel->show();
+          }
           success = true;
           break;
         }
@@ -427,7 +420,9 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
       switch (_device) {
         case P143_DeviceType_e::AdafruitEncoder:
         {
-          Adafruit_Seesaw->setEncoderPosition(_encoderPosition);
+          if (nullptr != Adafruit_Seesaw) {
+            Adafruit_Seesaw->setEncoderPosition(_encoderPosition);
+          }
           break;
         }
         # if P143_FEATURE_INCLUDE_M5STACK
@@ -437,8 +432,8 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
             int16_t encoderCount = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
             _offsetEncoder = encoderCount - _encoderPosition;
           } else {          // Set position using upgraded firmware
-            uint16_t encoderCount = _encoderPosition;
-            I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, encoderCount << 8 || encoderCount >> 8);
+            int16_t encoderCount = _encoderPosition;
+            I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, BYTESWAP16(encoderCount));
           }
           break;
         }
@@ -476,7 +471,10 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     // Read encoder
     switch (_device) {
       case P143_DeviceType_e::AdafruitEncoder:
-        current = Adafruit_Seesaw->getEncoderPosition();
+
+        if (nullptr != Adafruit_Seesaw) {
+          current = Adafruit_Seesaw->getEncoderPosition();
+        }
         break;
       # if P143_FEATURE_INCLUDE_M5STACK
       case P143_DeviceType_e::M5StackEncoder:
@@ -526,7 +524,10 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         if (current != orgCurrent) {
           switch (_device) {
             case P143_DeviceType_e::AdafruitEncoder:
-              Adafruit_Seesaw->setEncoderPosition(current);
+
+              if (nullptr != Adafruit_Seesaw) {
+                Adafruit_Seesaw->setEncoderPosition(current);
+              }
               break;
             # if P143_FEATURE_INCLUDE_M5STACK
             case P143_DeviceType_e::M5StackEncoder:
@@ -534,7 +535,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
               // Set encoder position. NB: will only work if the encoder firmware is updated to v1.1
               if (!_useOffset) {
                 int16_t down = current;
-                I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, down << 8 || down >> 8);
+                I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, BYTESWAP16(down));
               }
               break;
             # endif // if P143_FEATURE_INCLUDE_M5STACK
@@ -705,8 +706,11 @@ void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
         _red   = iRed;
         _green = iGreen;
         _blue  = iBlue;
-        Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
-        Adafruit_Spixel->show();
+
+        if (nullptr != Adafruit_Spixel) {
+          Adafruit_Spixel->setPixelColor(0, _red, _green, _blue);
+          Adafruit_Spixel->show();
+        }
         break;
       }
       #  if P143_FEATURE_INCLUDE_M5STACK
@@ -794,7 +798,10 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
     // Read button
     switch (_device) {
       case P143_DeviceType_e::AdafruitEncoder:
-        button = Adafruit_Seesaw->digitalRead(P143_SEESAW_SWITCH);
+
+        if (nullptr != Adafruit_Seesaw) {
+          button = Adafruit_Seesaw->digitalRead(P143_SEESAW_SWITCH);
+        }
         break;
       # if P143_FEATURE_INCLUDE_M5STACK
       case P143_DeviceType_e::M5StackEncoder:
@@ -904,5 +911,7 @@ void P143_data_struct::m5stack_setPixelColor(uint8_t pixel,
 }
 
 # endif // if P143_FEATURE_INCLUDE_M5STACK
+
+# undef BYTESWAP16
 
 #endif // ifdef USES_P143
