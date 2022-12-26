@@ -522,13 +522,3 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
 }
 
 #endif // ifndef BUILD_NO_RAM_TRACKER
-
-/*********************************************
-* Swap bytes in an uint16_t
-*********************************************/
-uint16_t byteSwap16(uint16_t byteSwap) {
-  uint16_t result = (byteSwap & 0xFF) << 8;
-
-  result |= (byteSwap >> 8) & 0xFF;
-  return result;
-}

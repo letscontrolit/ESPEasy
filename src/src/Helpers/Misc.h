@@ -194,9 +194,5 @@ bool intArrayContains(const int arraySize, const uint8_t array[], const uint8_t&
 void logMemUsageAfter(const __FlashStringHelper * function, int value = -1);
 #endif
 
-/*********************************************
-* Swap bytes in an uint16_t
-*********************************************/
-uint16_t byteSwap16(uint16_t byteSwap);
 
 #endif // ifndef HELPERS_MISC_H
