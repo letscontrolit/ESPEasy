@@ -99,9 +99,6 @@ P143_data_struct::~P143_data_struct() {
   delete Adafruit_Spixel;
 }
 
-// Macro to swap the upper and lower byte of an uint16_t, has #undef at the end of this source
-# define BYTESWAP16(z) (((z & 0xFF) << 8) | ((z >> 8) & 0xFF))
-
 /**************************************************************************
  * plugin_init Initialize sensor and prepare for reading
  *************************************************************************/
@@ -154,8 +151,8 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
         // - Write incremented value, only works with upgraded firmware
         // - re-read and if not changed we use an offset to handle passing the set limits
         int16_t encoderCount = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
-        encoderCount++;
-        I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, BYTESWAP16(encoderCount));
+        encoderCount++; // Forced int16_t to uint16_t conversion is intentional
+        I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, byteSwap16(encoderCount));
 
         if (encoderCount != I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER)) {
           _useOffset       = true;
@@ -163,8 +160,8 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
           _offsetEncoder   = _previousEncoder - _encoderPosition;
         } else {
           // Don't need to use offset, set configured initial value
-          encoderCount = _encoderPosition;
-          I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, BYTESWAP16(encoderCount));
+          encoderCount = _encoderPosition; // Forced int16_t to uint16_t conversion is intentional
+          I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, byteSwap16(encoderCount));
         }
 
         _red   = P143_ADAFRUIT_COLOR_RED; // Also used for M5Stack Led 1
@@ -428,12 +425,12 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
         # if P143_FEATURE_INCLUDE_M5STACK
         case P143_DeviceType_e::M5StackEncoder:
         {
-          if (_useOffset) { // Adjust offset
+          if (_useOffset) {                          // Adjust offset
             int16_t encoderCount = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
             _offsetEncoder = encoderCount - _encoderPosition;
-          } else {          // Set position using upgraded firmware
-            int16_t encoderCount = _encoderPosition;
-            I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, BYTESWAP16(encoderCount));
+          } else {                                   // Set position using upgraded firmware
+            int16_t encoderCount = _encoderPosition; // Forced int16_t to uint16_t conversion is intentional
+            I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, byteSwap16(encoderCount));
           }
           break;
         }
@@ -534,8 +531,8 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 
               // Set encoder position. NB: will only work if the encoder firmware is updated to v1.1
               if (!_useOffset) {
-                int16_t down = current;
-                I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, BYTESWAP16(down));
+                int16_t down = current; // Forced int16_t to uint16_t conversion is intentional
+                I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, byteSwap16(down));
               }
               break;
             # endif // if P143_FEATURE_INCLUDE_M5STACK
@@ -911,7 +908,5 @@ void P143_data_struct::m5stack_setPixelColor(uint8_t pixel,
 }
 
 # endif // if P143_FEATURE_INCLUDE_M5STACK
-
-# undef BYTESWAP16
 
 #endif // ifdef USES_P143
