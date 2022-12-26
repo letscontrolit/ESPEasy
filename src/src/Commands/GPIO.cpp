@@ -1194,11 +1194,21 @@ bool getGPIOPinStateValues(String& str) {
     if (validArgument) {
       switch (device[0]) {
         case 'g':
+        {
+          const uint32_t key = createKey(PLUGIN_GPIO, par1);
+          const auto it = globalMapPortStatus.find(key);
 
-          str       = digitalRead(par1);
+          if (it != globalMapPortStatus.end() && ((it->second.mode == PIN_MODE_PWM) || (it->second.mode == PIN_MODE_SERVO))) {
+            // For PWM or SERVO mode get the last set duty cycle
+            str = it->second.getValue();
+          } else {
+            // Just read the current pinstate
+            str = digitalRead(par1);
+          }
           logPrefix = F("GPIO");
           success   = true;
           break;
+        }
 
 #ifdef USES_P009
         case 'm':
