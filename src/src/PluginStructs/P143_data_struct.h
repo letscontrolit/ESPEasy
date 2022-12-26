@@ -98,6 +98,9 @@
 # ifndef P143_FEATURE_INCLUDE_M5STACK
 #  define P143_FEATURE_INCLUDE_M5STACK        1
 # endif // ifndef P143_FEATURE_INCLUDE_M5STACK
+# ifndef P143_FEATURE_M5STACK_V1_1
+#  define P143_FEATURE_M5STACK_V1_1           0 // Untested so unsupported for now
+# endif // ifndef P143_FEATURE_M5STACK_V1_1
 # ifndef P143_FEATURE_INCLUDE_DFROBOT
 #  define P143_FEATURE_INCLUDE_DFROBOT        1
 # endif // ifndef P143_FEATURE_INCLUDE_DFROBOT

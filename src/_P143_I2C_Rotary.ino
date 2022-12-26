@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-12-26 tonhuisman: Disable all code related to M5Stack encoder firmware v1.1, as we don't have a device available for testing
  * 2022-12-24 tonhuisman: Add null-checks before using an instantiated object, fix byte-swap for M5Stack encoder with 1.1 firmware
  * 2022-11-26 tonhuisman: Add 'set' subcommand to set the encoder position (count)
  * 2022-11-22 tonhuisman: Removed [Testing] tag from plugin name, as it is mostly feature complete for now

@@ -146,13 +146,15 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
         // Reset, only actually supported with upgraded firmware
         I2C_write8_reg(_i2cAddress, P143_M5STACK_REG_MODE, 0x00);
 
+        #  if P143_FEATURE_M5STACK_V1_1
+
         // Check if we need to use the offset method
         // - Read current counter
         // - Write incremented value, only works with upgraded firmware
         // - re-read and if not changed we use an offset to handle passing the set limits
         int16_t encoderCount = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
-        encoderCount++; // Forced int16_t to uint16_t conversion is intentional
-        I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, byteSwap16(encoderCount));
+        encoderCount++;
+        I2C_write16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, encoderCount);
 
         if (encoderCount != I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER)) {
           _useOffset       = true;
@@ -160,9 +162,12 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
           _offsetEncoder   = _previousEncoder - _encoderPosition;
         } else {
           // Don't need to use offset, set configured initial value
-          encoderCount = _encoderPosition; // Forced int16_t to uint16_t conversion is intentional
-          I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, byteSwap16(encoderCount));
+          encoderCount = _encoderPosition;
+          I2C_write16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, encoderCount);
         }
+        #  else // if P143_FEATURE_M5STACK_V1_1
+        _useOffset = true;                // No check needed, we need to use the offset method
+        #  endif // if P143_FEATURE_M5STACK_V1_1
 
         _red   = P143_ADAFRUIT_COLOR_RED; // Also used for M5Stack Led 1
         _green = P143_ADAFRUIT_COLOR_GREEN;
@@ -425,12 +430,13 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
         # if P143_FEATURE_INCLUDE_M5STACK
         case P143_DeviceType_e::M5StackEncoder:
         {
-          if (_useOffset) {                          // Adjust offset
+          if (_useOffset) { // Adjust offset
             int16_t encoderCount = I2C_readS16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER);
             _offsetEncoder = encoderCount - _encoderPosition;
-          } else {                                   // Set position using upgraded firmware
-            int16_t encoderCount = _encoderPosition; // Forced int16_t to uint16_t conversion is intentional
-            I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, byteSwap16(encoderCount));
+          #  if P143_FEATURE_M5STACK_V1_1
+          } else { // Set position using upgraded firmware
+            I2C_write16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, _encoderPosition);
+          #  endif // if P143_FEATURE_M5STACK_V1_1
           }
           break;
         }
@@ -529,11 +535,13 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
             # if P143_FEATURE_INCLUDE_M5STACK
             case P143_DeviceType_e::M5StackEncoder:
 
+              #  if P143_FEATURE_M5STACK_V1_1
+
               // Set encoder position. NB: will only work if the encoder firmware is updated to v1.1
               if (!_useOffset) {
-                int16_t down = current; // Forced int16_t to uint16_t conversion is intentional
-                I2C_write16_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, byteSwap16(down));
+                I2C_write16_LE_reg(_i2cAddress, P143_M5STACK_REG_ENCODER, current);
               }
+              #  endif // if P143_FEATURE_M5STACK_V1_1
               break;
             # endif // if P143_FEATURE_INCLUDE_M5STACK
             # if P143_FEATURE_INCLUDE_DFROBOT
