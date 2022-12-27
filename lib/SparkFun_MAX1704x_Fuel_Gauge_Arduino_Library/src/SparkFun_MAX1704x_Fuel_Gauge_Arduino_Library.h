@@ -21,6 +21,10 @@ Distributed as-is; no warranty is given.
 #ifndef MAX1704X_ARDUINO_LIBRARY_H
 #define MAX1704X_ARDUINO_LIBRARY_H
 
+// Uncomment the next #define to EXclude any debug logging from the code, by default debug logging code will be included
+
+// #define MAX1704X_ENABLE_DEBUGLOG 0 // OFF/disabled/excluded on demand
+
 #if (ARDUINO >= 100)
 #include "Arduino.h"
 #else
@@ -28,6 +32,15 @@ Distributed as-is; no warranty is given.
 #endif
 
 #include <Wire.h>
+
+//Enable/disable including debug log (to allow saving some space)
+#ifndef MAX1704X_ENABLE_DEBUGLOG
+  #if defined(LIBRARIES_NO_LOG) && LIBRARIES_NO_LOG
+    #define MAX1704X_ENABLE_DEBUGLOG 0 // OFF/disabled/excluded on demand
+  #else
+    #define MAX1704X_ENABLE_DEBUGLOG 1 // ON/enabled/included by default
+  #endif
+#endif
 
 //#include "application.h"
 
@@ -120,11 +133,17 @@ class SFE_MAX1704X
 public:
   SFE_MAX1704X(sfe_max1704x_devices_e device = MAX1704X_MAX17043); // Default to the 5V MAX17043
 
-  // begin() - Initializes the MAX17043.
-  boolean begin(TwoWire &wirePort = Wire); //Returns true if module is detected
+  // Change the device type if required. Do this after instantiation but before .begin
+  void setDevice(sfe_max1704x_devices_e device);
 
-  //Returns true if device answers on MAX1704x_ADDRESS
-  boolean isConnected(void);
+  // Allow _i2CPort to be set manually, so that isConnected can be called before .begin if required
+  void setWirePort(TwoWire &wirePort);
+
+  // begin() - Initializes the MAX17043.
+  bool begin(TwoWire &wirePort = Wire); //Returns true if module is detected
+
+  //Returns true if device is present
+  bool isConnected(void);
 
   // Debug
   void enableDebugging(Stream &debugPort = Serial); // enable debug messages
@@ -366,8 +385,10 @@ private:
   //Variables
   TwoWire *_i2cPort; //The generic connection to user's chosen I2C hardware
 
+  #if MAX1704X_ENABLE_DEBUGLOG
   Stream *_debugPort;          //The stream to send debug messages to if enabled. Usually Serial.
-  boolean _printDebug = false; //Flag to print debugging variables
+  bool _printDebug = false; //Flag to print debugging variables
+  #endif // if MAX1704X_ENABLE_DEBUGLOG
 
   // Clear the specified bit(s) in the MAX17048/49 status register
   // This requires the bits in mask to be correctly aligned.

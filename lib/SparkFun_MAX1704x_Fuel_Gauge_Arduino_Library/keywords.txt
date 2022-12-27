@@ -12,6 +12,8 @@ SFE_MAX17043	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
+setDevice	KEYWORD2
+setWirePort	KEYWORD2
 begin	KEYWORD2
 isConnected	KEYWORD2
 enableDebugging	KEYWORD2
