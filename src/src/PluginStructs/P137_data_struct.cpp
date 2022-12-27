@@ -65,6 +65,14 @@ void P137_CheckPredefinedParameters(struct EventStruct *event) {
         P137_SET_GPIO_FLAGS(4, static_cast<uint8_t>(P137_GPIOBootState_e::Output_high));
         break;
       }
+      case P137_PredefinedDevices_e::LilyGO_TBeam: // LilyGO T-Beam
+      {
+        P137_REG_DCDC2_LDO2     = (P137_valueToSetting(-1, P137_CONST_MAX_DCDC2) << 16) | P137_valueToSetting(3300, P137_CONST_MAX_LDO);
+        P137_REG_DCDC3_LDO3     = (P137_valueToSetting(3300, P137_CONST_MAX_DCDC) << 16) | P137_valueToSetting(3300, P137_CONST_MAX_LDO);
+        P137_REG_LDOIO          =  P137_valueToSetting(3300, P137_CONST_MAX_LDOIO);
+        P137_CONFIG_DISABLEBITS = 0b1111111000; // NC pins disabled
+        break;
+      }
       case P137_PredefinedDevices_e::UserDefined: // User defined
       {
         P137_REG_DCDC2_LDO2     = (P137_valueToSetting(-1, P137_CONST_MAX_DCDC2) << 16) | P137_valueToSetting(3300, P137_CONST_MAX_LDO);
@@ -128,6 +136,7 @@ const __FlashStringHelper* toString(const P137_PredefinedDevices_e device) {
     case P137_PredefinedDevices_e::Unselected: return F("Select an option to set default values");
     case P137_PredefinedDevices_e::M5Stack_StickC: return F("M5Stack StickC");
     case P137_PredefinedDevices_e::M5Stack_Core2: return F("M5Stack Core2 (Default)");
+    case P137_PredefinedDevices_e::LilyGO_TBeam: return F("LilyGO T-Beam");
     case P137_PredefinedDevices_e::UserDefined: return F("User defined");
   }
   return F("*Undefined*");
@@ -140,20 +149,20 @@ P137_data_struct::P137_data_struct(struct EventStruct *event) {
   axp192 = new (std::nothrow) I2C_AXP192();                // Default address and I2C Wire object
 
   if (isInitialized()) {                                   // Functions based on:
-    I2C_AXP192_InitDef initDef = {                         // M5Stack StickC / M5Stack Core2
+    I2C_AXP192_InitDef initDef = {                         // M5Stack StickC / M5Stack Core2 / LilyGO T-Beam
       .EXTEN  = true,                                      // Enable ESP Power
       .BACKUP = true,                                      // Enable RTC power
-      .DCDC1  = 3300,                                      // ESP Power      / ESP Power (Fixed)
-      .DCDC2  = P137_GET_CONFIG_DCDC2,                     // Unused         / Unused
-      .DCDC3  = P137_GET_CONFIG_DCDC3,                     // Unused         / LCD Backlight
-      .LDO2   = P137_GET_CONFIG_LDO2,                      // Backlight power (3000 mV) / Periferal VDD
-      .LDO3   = P137_GET_CONFIG_LDO3,                      // TFT Power (3000 mV)       / Vibration motor
+      .DCDC1  = 3300,                                      // ESP Power      / ESP Power (Fixed)  / OLed
+      .DCDC2  = P137_GET_CONFIG_DCDC2,                     // Unused         / Unused             / Unused
+      .DCDC3  = P137_GET_CONFIG_DCDC3,                     // Unused         / LCD Backlight      / ESP Power
+      .LDO2   = P137_GET_CONFIG_LDO2,                      // Backlight power (3000 mV) / Periferal VDD   / LoRa
+      .LDO3   = P137_GET_CONFIG_LDO3,                      // TFT Power (3000 mV)       / Vibration motor / GPS
       .LDOIO  = P137_GET_CONFIG_LDOIO,                     // LDOIO voltage (2800 mV)
-      .GPIO0  = static_cast<int>(P137_GET_FLAG_GPIO0 - 1), // Microphone power / Bus pwr enable
-      .GPIO1  = static_cast<int>(P137_GET_FLAG_GPIO1 - 1), // Unused / Sys Led (green)
-      .GPIO2  = static_cast<int>(P137_GET_FLAG_GPIO2 - 1), // Unused / Speaker enable
-      .GPIO3  = static_cast<int>(P137_GET_FLAG_GPIO3 - 1), // Unused / Unused
-      .GPIO4  = static_cast<int>(P137_GET_FLAG_GPIO4 - 1), // Unused / TFT Reset
+      .GPIO0  = static_cast<int>(P137_GET_FLAG_GPIO0 - 1), // Microphone power / Bus pwr enable / Unused
+      .GPIO1  = static_cast<int>(P137_GET_FLAG_GPIO1 - 1), // Unused / Sys Led (green)          / Unused
+      .GPIO2  = static_cast<int>(P137_GET_FLAG_GPIO2 - 1), // Unused / Speaker enable           / Unused
+      .GPIO3  = static_cast<int>(P137_GET_FLAG_GPIO3 - 1), // Unused / Unused                   / Unused
+      .GPIO4  = static_cast<int>(P137_GET_FLAG_GPIO4 - 1), // Unused / TFT Reset                / Unused
     };
     ldo2_value  = P137_GET_CONFIG_LDO2;
     ldo3_value  = P137_GET_CONFIG_LDO3;

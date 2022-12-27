@@ -9,6 +9,7 @@
 
 /**
  * Changelog:
+ * 2022-12-27 tonhuisman: Add predefined config settings for LilyGO T-Beam LoRa units
  * 2022-12-07 tonhuisman: Re-order device configuration to use PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR
  *                        Enable PluginStats feature
  * 2022-10-30 tonhuisman: Add support for 'missing' AXP192 pins, not used in M5Stack StickC but used in Core/Core2
@@ -172,12 +173,14 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           toString(P137_PredefinedDevices_e::Unselected),
           toString(P137_PredefinedDevices_e::M5Stack_StickC),
           toString(P137_PredefinedDevices_e::M5Stack_Core2),
+          toString(P137_PredefinedDevices_e::LilyGO_TBeam),
           toString(P137_PredefinedDevices_e::UserDefined) // keep last and at 99 !!
         };
         const int predefinedValues[] = {
           static_cast<int>(P137_PredefinedDevices_e::Unselected),
           static_cast<int>(P137_PredefinedDevices_e::M5Stack_StickC),
           static_cast<int>(P137_PredefinedDevices_e::M5Stack_Core2),
+          static_cast<int>(P137_PredefinedDevices_e::LilyGO_TBeam),
           static_cast<int>(P137_PredefinedDevices_e::UserDefined) }; // keep last and at 99 !!
         addFormSelector(F("Predefined device configuration"), F("predef"),
                         sizeof(predefinedValues) / sizeof(int),
@@ -204,32 +207,32 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
                           EMPTY_STRING,
                           #  endif // if FEATURE_TOOLTIPS
                           bitRead(P137_CONFIG_DISABLEBITS, 0));
-        addUnit(!bitRead(P137_CONFIG_DISABLEBITS, 0) ? ldoioRangeUnit : notConnected);
+        addUnit(bitRead(P137_CONFIG_DISABLEBITS, 0) && (P137_GET_CONFIG_LDO2 == -1) ? notConnected : ldoioRangeUnit);
         addFormNumericBox(F("LDO3"), F("pldo3"), P137_GET_CONFIG_LDO3, -1, P137_CONST_MAX_LDO,
                           #  if FEATURE_TOOLTIPS
                           EMPTY_STRING,
                           #  endif // if FEATURE_TOOLTIPS
                           bitRead(P137_CONFIG_DISABLEBITS, 1));
-        addUnit(!bitRead(P137_CONFIG_DISABLEBITS, 1) ? ldoioRangeUnit : notConnected);
+        addUnit(bitRead(P137_CONFIG_DISABLEBITS, 1) && (P137_GET_CONFIG_LDO3 == -1) ? notConnected : ldoioRangeUnit);
         addFormNumericBox(F("GPIO LDO (LDOIO)"), F("ldoiovolt"), P137_GET_CONFIG_LDOIO, -1, P137_CONST_MAX_LDOIO,
                           #  if FEATURE_TOOLTIPS
                           EMPTY_STRING,
                           #  endif // if FEATURE_TOOLTIPS
                           bitRead(P137_CONFIG_DISABLEBITS, 2));
-        addUnit(!bitRead(P137_CONFIG_DISABLEBITS, 2) ? ldoioRangeUnit : notConnected);
+        addUnit(bitRead(P137_CONFIG_DISABLEBITS, 2) && (P137_GET_CONFIG_LDOIO == -1) ? notConnected : ldoioRangeUnit);
 
         addFormNumericBox(F("DCDC2"), F("pdcdc2"), P137_GET_CONFIG_DCDC2, -1, P137_CONST_MAX_DCDC2,
                           #  if FEATURE_TOOLTIPS
                           EMPTY_STRING,
                           #  endif // if FEATURE_TOOLTIPS
                           bitRead(P137_CONFIG_DISABLEBITS, 8));
-        addUnit(!bitRead(P137_CONFIG_DISABLEBITS, 8) ? F("range 700 - 2750mV") : notConnected);
+        addUnit(bitRead(P137_CONFIG_DISABLEBITS, 8) && (P137_GET_CONFIG_DCDC2 == -1) ? notConnected : F("range 700 - 2750mV"));
         addFormNumericBox(F("DCDC3"), F("pdcdc3"), P137_GET_CONFIG_DCDC3, -1, P137_CONST_MAX_DCDC,
                           #  if FEATURE_TOOLTIPS
                           EMPTY_STRING,
                           #  endif // if FEATURE_TOOLTIPS
                           bitRead(P137_CONFIG_DISABLEBITS, 9));
-        addUnit(!bitRead(P137_CONFIG_DISABLEBITS, 9) ? F("range 700 - 3500mV") : notConnected);
+        addUnit(bitRead(P137_CONFIG_DISABLEBITS, 9) && (P137_GET_CONFIG_DCDC3 == -1) ? notConnected : F("range 700 - 3500mV"));
 
         addFormNote(F("Values &lt; min. range will switch off the output. Set to -1 to not initialize/unused."));
         addFormNote(F("Check your device documentation for what is connected to each output."));

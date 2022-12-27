@@ -81,6 +81,7 @@ enum class P137_PredefinedDevices_e : uint8_t {
   Unselected     = 0u,
   M5Stack_StickC = 1u,
   M5Stack_Core2  = 2u,
+  LilyGO_TBeam   = 3u,
   UserDefined    = 99u // Keep as last
 };
 

@@ -63,6 +63,8 @@ Hardware outputs AXP192
 
 * *M5Stack Core2 (Default)* Settings for the M5Stack Core and Core2, and derived special models, hardware. This is the default predefined configuration.
 
+* *LilyGO T-Beam* Settings for the LilyGO T-Beam series of GPS/LoRa devices with optional OLed display.
+
 * *User defined* To be able to configure are available output pins the User defined option is available, f.e. when using a custom designed, or not yet supported, hardware setup.
 
 When available, new predefined devices will be added. The User defined option will stay the last option.
