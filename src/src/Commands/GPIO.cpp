@@ -1181,7 +1181,7 @@ bool getGPIOPinStateValues(String& str) {
   // parseString(string, 2) = command (pinstate,pinrange)
   // parseString(string, 3) = gpio 1st number or a range separated by '-'
   bool   success = false;
-  const __FlashStringHelper * logPrefix = F("");
+  String logPrefix = F("");
   const String device     = parseString(str, 1);
   const String command    = parseString(str, 2);
   const String gpio_descr = parseString(str, 3);
@@ -1190,21 +1190,18 @@ bool getGPIOPinStateValues(String& str) {
     // returns pin value using syntax: [plugin#xxxxxxx#pinstate#x]
     int par1;
     const bool validArgument = validIntFromString(gpio_descr, par1);
+    #if FEATURE_PINSTATE_EXTENDED
+    pluginID_t pluginID = INVALID_PLUGIN_ID;
+    #endif // if FEATURE_PINSTATE_EXTENDED
 
     if (validArgument) {
       switch (device[0]) {
         case 'g':
         {
-          const uint32_t key = createKey(PLUGIN_GPIO, par1);
-          const auto it = globalMapPortStatus.find(key);
-
-          if (it != globalMapPortStatus.end() && ((it->second.mode == PIN_MODE_PWM) || (it->second.mode == PIN_MODE_SERVO))) {
-            // For PWM or SERVO mode get the last set duty cycle
-            str = it->second.getValue();
-          } else {
-            // Just read the current pinstate
-            str = digitalRead(par1);
-          }
+          #if FEATURE_PINSTATE_EXTENDED
+          pluginID  = PLUGIN_GPIO;
+          #endif // if FEATURE_PINSTATE_EXTENDED
+          str       = digitalRead(par1);
           logPrefix = F("GPIO");
           success   = true;
           break;
@@ -1212,6 +1209,9 @@ bool getGPIOPinStateValues(String& str) {
 
 #ifdef USES_P009
         case 'm':
+          #if FEATURE_PINSTATE_EXTENDED
+          pluginID  = PLUGIN_MCP;
+          #endif // if FEATURE_PINSTATE_EXTENDED
           str       = GPIO_MCP_Read(par1);
           logPrefix = F("MCP");
           success   = true;
@@ -1220,20 +1220,50 @@ bool getGPIOPinStateValues(String& str) {
 
 #ifdef USES_P019
         case 'p':
+          #if FEATURE_PINSTATE_EXTENDED
+          pluginID  = PLUGIN_PCF;
+          #endif // if FEATURE_PINSTATE_EXTENDED
           str       = GPIO_PCF_Read(par1);
           logPrefix = F("PCF");
           success   = true;
           break;
 #endif
         default:
-          addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
-          return false;
+        {
+          #if FEATURE_PINSTATE_EXTENDED
+          unsigned int plugin = INVALID_PLUGIN_ID;
+          if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID)) { // Valid plugin ID?
+            pluginID  = plugin;
+            logPrefix = F("P");
+            if (pluginID < 100) { logPrefix += '0'; }
+            if (pluginID < 10)  { logPrefix += '0'; }
+            logPrefix += pluginID;
+          } else 
+          #endif // if FEATURE_PINSTATE_EXTENDED
+          {
+            addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+            return false;
+          }
+        }
       }
+      #if FEATURE_PINSTATE_EXTENDED
+      if (pluginID != INVALID_PLUGIN_ID) {
+        const uint32_t key       = createKey(pluginID, par1);
+        const auto it            = globalMapPortStatus.find(key);
+        const bool notGpioMcpPcf = ((pluginID != PLUGIN_GPIO) && (pluginID != PLUGIN_MCP) && (pluginID != PLUGIN_PCF));
+
+        if (it != globalMapPortStatus.end() && ((it->second.mode == PIN_MODE_PWM) || (it->second.mode == PIN_MODE_SERVO) || notGpioMcpPcf)) {
+          // For GPIO/MCP/PCF PWM or SERVO mode get the last set duty cycle or for other plugins get the PWM/SERVO or pinstate
+          str     = it->second.getValue();
+          success = true;
+        }
+      }
+      #endif // if FEATURE_PINSTATE_EXTENDED
     }
 
     if (success) {
       #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, String(logPrefix) + F(" PLUGIN PINSTATE pin =") + String(par1) + F("; value=") + str);
+      addLog(LOG_LEVEL_DEBUG, logPrefix + F(" PLUGIN PINSTATE pin =") + String(par1) + F("; value=") + str);
       #endif // ifndef BUILD_NO_DEBUG
     } else {
       addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric"));
