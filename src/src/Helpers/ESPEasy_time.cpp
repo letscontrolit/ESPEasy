@@ -613,6 +613,18 @@ String ESPEasy_time::weekday_str() const
   return weekday_str(weekday() - 1);
 }
 
+String ESPEasy_time::month_str(int month)
+{
+  const String months = F("JanFebMarAprMayJunJulAugSepOctNovDec");
+
+  return months.substring(month * 3, month * 3 + 3);
+}
+
+String ESPEasy_time::month_str() const
+{
+  return month_str(month() - 1);
+}
+
 /********************************************************************************************\
    Sunrise/Sunset calculations
  \*********************************************************************************************/

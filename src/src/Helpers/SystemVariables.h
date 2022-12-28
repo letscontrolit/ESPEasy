@@ -62,6 +62,7 @@ public:
     SYSMIN,
     SYSMIN_0,
     SYSMONTH,
+    SYSMONTH_S,
     SYSNAME,
     SYSSEC,
     SYSSEC_0,

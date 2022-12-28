@@ -178,6 +178,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSMIN:            return String(node_time.minute());
     case SYSMIN_0:          return timeReplacement_leadZero(node_time.minute());
     case SYSMONTH:          return String(node_time.month());
+    case SYSMONTH_S:        return String(node_time.month_str());
     case SYSNAME:           return Settings.getHostname();
     case SYSSEC:            return String(node_time.second());
     case SYSSEC_0:          return timeReplacement_leadZero(node_time.second());
@@ -387,6 +388,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSMIN:             return F("sysmin");
     case Enum::SYSMIN_0:           return F("sysmin_0");
     case Enum::SYSMONTH:           return F("sysmonth");
+    case Enum::SYSMONTH_S:         return F("sysmonth_s");
     case Enum::SYSNAME:            return F("sysname");
     case Enum::SYSSEC:             return F("syssec");
     case Enum::SYSSEC_0:           return F("syssec_0");

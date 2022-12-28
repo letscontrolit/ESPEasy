@@ -100,6 +100,9 @@ public:
   // Convert a weekday number (Sun = 1 ... Sat = 7) to a 3 letter string
   static String weekday_str(int wday);
 
+  // Convert a month number (Jan = 1 ... Dec = 12) to a 3 letter string
+  static String month_str(int month);
+
 
   // Get current year.
   int year() const
@@ -144,6 +147,8 @@ public:
   }
 
   String weekday_str() const;
+
+  String month_str() const;
 
 
   /********************************************************************************************\
