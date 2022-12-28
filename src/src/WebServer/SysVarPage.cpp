@@ -126,6 +126,7 @@ void handle_sysvars() {
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
   addSysVar_html(F("%sysmonth% // %sysmonth_0%"));
+  addSysVar_enum_html(SystemVariables::SYSMONTH_S);
   addSysVar_html(F("%sysday%   // %sysday_0%"));
   addSysVar_html(F("%syshour%  // %syshour_0%"));
   addSysVar_html(F("%sysmin%   // %sysmin_0%"));
