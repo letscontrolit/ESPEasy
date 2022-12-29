@@ -564,6 +564,7 @@ String ESPEasy_time::getTimeZoneOffsetString() {
   char valueString[6] = { 0 };
   String tzoffset;
 
+  // Formatting the timezone-offset string as [+|-]HHMM
   if (dif < 0) {
     tzoffset += '-';
   } else {

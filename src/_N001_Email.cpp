@@ -6,6 +6,11 @@
 // ########################### Notification Plugin 001: Email ############################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2022-12-29 tonhuisman: Add Date: field to email header to reduce spam score, see https://github.com/letscontrolit/ESPEasy/issues/3865
+ * 2022-12-29 tonhuisman: Start changelog
+*/
+
 # define NPLUGIN_001
 # define NPLUGIN_ID_001         1
 # define NPLUGIN_NAME_001       "Email (SMTP)"
