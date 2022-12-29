@@ -6,6 +6,10 @@
 // ############################### Plugin 013: HC-SR04, RCW-0001, etc. ###################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2022-12-29 tonhuisman: Add start-trigger setting, range 10-30 usec. See https://github.com/letscontrolit/ESPEasy/issues/3857
+ * 2022-12-29 tonhuisman: Add changelog
+ */
 
 # define PLUGIN_013
 # define PLUGIN_ID_013        13
@@ -79,6 +83,14 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(5) = 5;
+      PCONFIG(6) = 10;
+
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       int16_t operatingMode = PCONFIG(0);
@@ -87,6 +99,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       int16_t measuringUnit = PCONFIG(3);
       int16_t filterType    = PCONFIG(4);
       int16_t filterSize    = PCONFIG(5);
+      int16_t triggerWidth  = PCONFIG(6);
 
       // default filtersize = 5
       if (filterSize == 0) {
@@ -94,8 +107,13 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         PCONFIG(5) = filterSize;
       }
 
+      if (triggerWidth == 0) {
+        triggerWidth = 10;
+        PCONFIG(6)   = triggerWidth;
+      }
 
-      const __FlashStringHelper * strUnit = (measuringUnit == UNIT_CM) ? F("cm") : F("inch");
+
+      const __FlashStringHelper *strUnit = (measuringUnit == UNIT_CM) ? F("cm") : F("inch");
 
       {
         const __FlashStringHelper *optionsOpMode[2];
@@ -134,6 +152,9 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         addFormNumericBox(F("Number of Pings"), F("p013_FilterSize"), filterSize, 2, 20);
       }
 
+      addFormNumericBox(F("Trigger width"), F("trigWidth"), triggerWidth, 10, 30);
+      addUnit(F("10..30 &micro;sec"));
+
       success = true;
       break;
     }
@@ -156,6 +177,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       if (filterType != FILTER_NONE) {
         PCONFIG(5) = getFormItemInt(F("p013_FilterSize"));
       }
+      PCONFIG(6) = getFormItemInt(F("trigWidth"));
 
       success = true;
       break;
@@ -167,6 +189,9 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       int16_t measuringUnit = PCONFIG(3);
       int16_t filterType    = PCONFIG(4);
       int16_t filterSize    = PCONFIG(5);
+      int16_t triggerWidth  = PCONFIG(6);
+
+      if (triggerWidth == 0) { triggerWidth = 10; }
 
       int8_t  Plugin_013_TRIG_Pin = CONFIG_PIN1;
       int8_t  Plugin_013_IRQ_Pin  = CONFIG_PIN2;
@@ -175,14 +200,16 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       // create sensor instance and add to std::map
       P_013_sensordefs.erase(event->TaskIndex);
       P_013_sensordefs[event->TaskIndex] =
-        std::shared_ptr<NewPing>(new NewPing(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance_cm));
+        std::shared_ptr<NewPing>(new NewPing(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance_cm, triggerWidth));
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("ULTRASONIC : TaskNr: ");
         log += event->TaskIndex + 1;
         log += F(" TrigPin: ");
         log += Plugin_013_TRIG_Pin;
-        log += F(" IRQ_Pin: ");
+        log += F(" TrigWidth: ");
+        log += triggerWidth;
+        log += F(" usec IRQ_Pin: ");
         log += Plugin_013_IRQ_Pin;
         log += F(" max dist ");
         log += (measuringUnit == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");

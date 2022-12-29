@@ -41,10 +41,11 @@
 // * Actively developed with features being added and bugs/issues addressed.
 //
 // CONSTRUCTOR:
-//   NewPing sonar(trigger_pin, echo_pin [, max_cm_distance])
+//   NewPing sonar(trigger_pin, echo_pin [, max_cm_distance] [,trigger_width])
 //     trigger_pin & echo_pin - Arduino pins connected to sensor trigger and echo.
 //       NOTE: To use the same Arduino pin for trigger and echo, specify the same pin for both values.
 //     max_cm_distance - [Optional] Maximum distance you wish to sense. Default=500cm.
+//		 trigger_width - [Optional] Width of the trigger-pulse to start the measurement. Default=10usec.
 //
 // METHODS:
 //   sonar.ping([max_cm_distance]) - Send a ping and get the echo time (in microseconds) as a result. [max_cm_distance] allows you to optionally set a new max distance. 
@@ -60,6 +61,7 @@
 //   NewPing::timer_stop() - Stop the timer.
 //
 // HISTORY:
+// 29/12/2022 tonhuisman: Add triggerWidth option, defaults to 10
 // 01/26/2022 v1.9.4 - Added esp32 to the compatible architectures (note:
 //   non-timer methods only)
 // 01/20/2022 v1.9.3 - Default to disable timer methods for non-AVR
@@ -171,6 +173,7 @@
 	#define ONE_PIN_ENABLED true    // Set to "false" to disable one pin mode which saves around 14-26 bytes of binary size. Default=true
 	#define ROUNDING_ENABLED false  // Set to "true" to enable distance rounding which also adds 64 bytes to binary size. Default=false
 	#define URM37_ENABLED false     // Set to "true" to enable support for the URM37 sensor in PWM mode. Default=false
+	#define DEFAULT_TRIGGER_WIDTH 10 // Length of the pulse	that starts the measurement. Default=10usec.
 
 	// Probably shouldn't change these values unless you really know what you're doing.
 	#define NO_ECHO 0               // Value returned if there's no ping echo within the specified MAX_SENSOR_DISTANCE or max_cm_distance. Default=0
@@ -230,7 +233,7 @@
 				STATUS_ECHO_STATE_ERROR 				// echopin level not low after triggered
 			};
 
-			NewPing(uint8_t trigger_pin, uint8_t echo_pin, unsigned int max_cm_distance = MAX_SENSOR_DISTANCE);
+			NewPing(uint8_t trigger_pin, uint8_t echo_pin, unsigned int max_cm_distance = MAX_SENSOR_DISTANCE, uint8_t trigger_width = DEFAULT_TRIGGER_WIDTH);
 			unsigned int ping(unsigned int max_cm_distance = 0);
 			unsigned long ping_cm(unsigned int max_cm_distance = 0);
 			unsigned long ping_in(unsigned int max_cm_distance = 0);
@@ -281,6 +284,7 @@
 	#else
 			uint8_t _triggerPin;
 			uint8_t _echoPin;
+			uint8_t _triggerWidth;
 	#endif
 			unsigned int _maxEchoTime;
 			unsigned long _max_time;
