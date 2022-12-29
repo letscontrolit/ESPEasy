@@ -91,8 +91,8 @@ void ESPEasy_time::restoreFromRTC()
 }
 
 void ESPEasy_time::setExternalTimeSource(double time, timeSource_t new_timeSource, uint8_t unitnr) {
-  if (new_timeSource == timeSource) {
-    // Update from the same type of time source
+  if ((new_timeSource == timeSource) && (new_timeSource != timeSource_t::Manual_set)) {
+    // Update from the same type of time source, except when manually adjusting the time
     if (timePassedSince(lastSyncTime_ms) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) {
       return;
     }
