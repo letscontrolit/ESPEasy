@@ -173,7 +173,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     mailheader.replace(F("$emailfrom"),      notificationsettings.Sender);
     mailheader.replace(F("$ato"),            notificationsettings.Receiver);
     mailheader.replace(F("$subject"),        aSub);
-    String dateFmtHdr = F("%sysweekday_s%, %sysday_0% %sysmonth_s% %sysyear% %systime%"); // TODO Add timezone offset +0000
+    String dateFmtHdr = F("%sysweekday_s%, %sysday_0% %sysmonth_s% %sysyear% %systime% %systzoffset%");
     String date       = parseTemplate(dateFmtHdr);
     mailheader.replace(F("$date"),           date);
     mailheader.replace(F("$espeasyversion"), getSystemBuildString());
