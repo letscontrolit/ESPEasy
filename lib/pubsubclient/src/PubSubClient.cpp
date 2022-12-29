@@ -559,6 +559,11 @@ size_t PubSubClient::write(const uint8_t *buffer, size_t size) {
     return rc;
 }
 
+size_t PubSubClient::write(const String& message) {
+    return write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
+}
+
+
 size_t PubSubClient::buildHeader(uint8_t header, uint8_t* buf, uint16_t length) {
     uint8_t lenBuf[4];
     uint8_t llen = 0;

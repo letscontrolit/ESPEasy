@@ -180,6 +180,10 @@ public:
    // Write size bytes from buffer into the payload (only to be used with beginPublish/endPublish)
    // Returns the number of bytes written
    virtual size_t write(const uint8_t *buffer, size_t size);
+   // Write string into the payload (only to be used with beginPublish/endPublish)
+   size_t write(const String& message);
+
+
    boolean subscribe(const char* topic);
    boolean subscribe(const char* topic, uint8_t qos);
    boolean unsubscribe(const char* topic);

@@ -41,7 +41,7 @@ struct RTC_cache_handler_struct
 
   bool         peekDataAvailable() const;
 
-  int          getPeekFilePos(int& peekFileNr) const;
+  int          getPeekFilePos(int& peekFileNr);
 
   void         setPeekFilePos(int peekFileNr, int peekReadPos);
 
@@ -101,8 +101,8 @@ private:
   fs::File fw;  // File handler Write
   fs::File fr;  // File handler Read
   fs::File fp;  // File handler Peek
-  size_t   peekfilenr  = 0;
-  size_t   peekreadpos = 0;
+  size_t   _peekfilenr  = 0;
+  size_t   _peekreadpos = 0;
 
   uint8_t storageLocation = CACHE_STORAGE_SPIFFS;
   bool    writeError      = false;

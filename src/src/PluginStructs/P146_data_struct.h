@@ -11,6 +11,8 @@ public:
 
   virtual ~P146_data_struct();
 
+  static uint32_t sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize);
+
   static uint32_t sendBinaryInBulk(taskIndex_t P146_TaskIndex,
                                    uint32_t    messageSize);
 

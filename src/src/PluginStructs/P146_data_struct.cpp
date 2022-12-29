@@ -2,9 +2,9 @@
 
 #ifdef USES_P146
 
-# include "../Globals/C016_ControllerCache.h"
-
 # include "../ControllerQueue/C016_queue_element.h"
+# include "../Globals/C016_ControllerCache.h"
+# include "../Globals/MQTT.h"
 
 
 P146_data_struct::P146_data_struct()
@@ -13,6 +13,67 @@ P146_data_struct::P146_data_struct()
 P146_data_struct::~P146_data_struct()
 {}
 
+
+uint32_t writeToMqtt(const String& str, bool send) {
+  if (send) {
+    MQTTclient.write(str);
+  }
+  return str.length();
+}
+
+uint32_t writeToMqtt(const char& c, bool send) {
+  if (send) 
+    MQTTclient.write(String(c));
+  return 1;
+}
+
+uint32_t createTaskInfoJson(bool send) {
+  size_t expected_size = 0;
+  expected_size += writeToMqtt('[', send);
+
+  for (taskIndex_t task = 0; validTaskIndex(task); ++task) {
+    {
+      String taskName;
+      if (task != 0) {
+        taskName = ',';
+      }
+      taskName += concat(F("{\"taskName\":\""), getTaskDeviceName(task));
+      taskName += concat(F("\",\"taskIndex\":"), task);
+      taskName += F(",\"taskValues\":[");
+      expected_size += writeToMqtt(taskName, send);
+    }
+    for (taskVarIndex_t rel_index = 0; rel_index < INVALID_TASKVAR_INDEX; ++rel_index) {
+      String taskVarName;
+      if (rel_index != 0) { 
+        taskVarName = ',';
+      }
+      // FIXME TD-er: getTaskValueName returns empty string when task is not enabled, therefore use cache.
+      //              Should getTaskValueName return empty string when task is disabled?
+      taskVarName += wrap_String(Cache.getTaskDeviceValueName(task, rel_index), '"');
+      expected_size += writeToMqtt(taskVarName, send);
+    }
+    {
+      const String tail = F("]}");
+      expected_size += writeToMqtt(tail, send);
+    }
+  }
+  expected_size += writeToMqtt(']', send);
+  return expected_size;
+}
+
+uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
+{
+  String topic = F("tracker_v2/%sysname%_%unit%/%tskname%/upload_meta");
+  topic.replace(F("%tskname%"), getTaskDeviceName(P146_TaskIndex));
+  topic = parseTemplate(topic);
+
+
+  const size_t expected_size = createTaskInfoJson(false);
+  MQTTclient.beginPublish(topic.c_str(), expected_size, false);
+  createTaskInfoJson(true);
+  MQTTclient.endPublish();
+  return 0;
+}
 
 uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
 {

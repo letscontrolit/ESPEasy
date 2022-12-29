@@ -184,6 +184,9 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
         if (subcommand.equals(F("setreadpos"))) {
           P146_data_struct::setPeekFilePos(event->Par2, event->Par3);
           success = true;
+        } else if (subcommand.equals(F("sendtaskinfo"))) {
+          P146_data_struct::sendTaskInfoInBulk(event->TaskIndex, 0);
+          success = true;
         }
       }
       break;
