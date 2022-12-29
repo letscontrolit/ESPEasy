@@ -556,6 +556,25 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   return false;
 }
 
+/**************************************************
+* get the timezone-offset string in +/-0000 format
+**************************************************/
+String ESPEasy_time::getTimeZoneOffsetString() {
+  int dif = static_cast<int>((static_cast<int64_t>(now()) - static_cast<int64_t>(getUnixTime())) / 60); // Minutes
+  char valueString[6] = { 0 };
+  String tzoffset;
+
+  if (dif < 0) {
+    tzoffset += '-';
+  } else {
+    tzoffset += '+';
+  }
+
+  dif = abs(dif);
+  sprintf_P(valueString, PSTR("%02d%02d"), dif / 60, dif % 60);
+  tzoffset += String(valueString);
+  return tzoffset;
+}
 /********************************************************************************************\
    Date/Time string formatters
  \*********************************************************************************************/

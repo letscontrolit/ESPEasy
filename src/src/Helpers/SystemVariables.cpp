@@ -193,6 +193,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSTM_HM_AM:       return node_time.getTimeString_ampm(':', false);
     case SYSTM_HM_AM_0:     return node_time.getTimeString_ampm(':', false, '0');
     case SYSTM_HM_AM_SP:    return node_time.getTimeString_ampm(':', false, ' ');
+    case SYSTZOFFSET:       return node_time.getTimeZoneOffsetString();
     case SYSWEEKDAY:        return String(node_time.weekday());
     case SYSWEEKDAY_S:      return node_time.weekday_str();
     case SYSYEAR_0:
@@ -404,6 +405,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSTM_HM_AM:        return F("systm_hm_am");
     case Enum::SYSTM_HM_AM_0:      return F("systm_hm_am_0");
     case Enum::SYSTM_HM_AM_SP:     return F("systm_hm_am_sp");
+    case Enum::SYSTZOFFSET:        return F("systzoffset");
     case Enum::SYSWEEKDAY:         return F("sysweekday");
     case Enum::SYSWEEKDAY_S:       return F("sysweekday_s");
     case Enum::SYSYEAR:            return F("sysyear");

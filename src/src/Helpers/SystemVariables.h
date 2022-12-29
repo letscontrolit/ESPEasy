@@ -78,6 +78,7 @@ public:
     SYSTM_HM_AM,
     SYSTM_HM_AM_0,
     SYSTM_HM_AM_SP,
+    SYSTZOFFSET,
     SYSWEEKDAY,
     SYSWEEKDAY_S,
     SYSYEAR,
