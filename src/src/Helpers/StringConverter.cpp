@@ -535,16 +535,41 @@ String to_json_value(const String& value, bool wrapInQuotes) {
   }
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
-    if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
-      // Must replace characters, so make a deepcopy
-      String tmpValue(value);
-      tmpValue.replace('\n', '^');
-      tmpValue.replace('\r', '^');
-      tmpValue.replace('"',  '\'');
-      return wrap_String(tmpValue, '"');
-    } else {
-      return wrap_String(value, '"');
+
+    // First we check for not allowed special characters.
+    const size_t val_length = value.length();
+    for (size_t i = 0; i < val_length; ++i) {
+      switch (value[i]) {
+        case '\n':
+        case '\r':
+        case '\t':
+        case '\\':
+        case '\b':
+        case '\f':
+        case '"':
+        {
+          // Special characters not allowed in JSON:
+          //  \b  Backspace (ascii code 08)
+          //  \f  Form feed (ascii code 0C)
+          //  \n  New line
+          //  \r  Carriage return
+          //  \t  Tab
+          //  \"  Double quote
+          //  \\  Backslash character
+          // Must replace characters, so make a deepcopy
+          String tmpValue(value);
+          tmpValue.replace('\n', '^');
+          tmpValue.replace('\r', '^');
+          tmpValue.replace('\t', ' ');
+          tmpValue.replace('\\', '^');
+          tmpValue.replace('\b', '^');
+          tmpValue.replace('\f', '^');
+          tmpValue.replace('"',  '\'');
+          return wrap_String(tmpValue, '"');
+        }
+      }
     }
+    return wrap_String(value, '"');
   } 
   // It is a numerical
   return value;
