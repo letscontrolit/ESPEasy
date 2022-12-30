@@ -73,7 +73,7 @@ public:
   P067_data_struct() = delete;
   virtual ~P067_data_struct();
 
-  bool init();
+  bool init(struct EventStruct *event);
 
   bool plugin_read(struct EventStruct *event);
   bool plugin_fifty_per_second(struct EventStruct *event);

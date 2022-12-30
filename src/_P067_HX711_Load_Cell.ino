@@ -17,6 +17,8 @@
 // Datasheet: https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 
 /** Changelog:
+ * 2022-12-30 tonhuisman: Fix no longer generating events, use DIRECT_pinRead() and DIRECT_pinWrite() to ensure proper working on ESP32,
+ *                        include Task number when logging values, reset any previous values on init, change Pin names to match board text
  * 2022-12-28 tonhuisman: Refactor using PluginTaskData struct to eliminate the use of static and global variables
  * 2022-12-28 tonhuisman: Add changelog, older log not registered
  */
@@ -69,8 +71,8 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      event->String1 = formatGpioName_output(F("SCL"));
-      event->String2 = formatGpioName_input(F("DOUT"));
+      event->String1 = formatGpioName_output(F("SCK"));
+      event->String2 = formatGpioName_input(F("DT"));
       break;
     }
 
@@ -193,7 +195,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
       P067_data_struct *P067_data = static_cast<P067_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P067_data) {
-        success = P067_data->init();
+        success = P067_data->init(event);
       }
 
       break;

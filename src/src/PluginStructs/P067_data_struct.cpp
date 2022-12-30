@@ -1,6 +1,7 @@
 #include "../PluginStructs/P067_data_struct.h"
 
 #ifdef USES_P067
+# include <GPIO_Direct_Access.h>
 
 /****************************************************
 * Convert a float to 2 ints
@@ -48,19 +49,21 @@ P067_data_struct::~P067_data_struct() {}
 /****************************************************
 * Initialization
 ****************************************************/
-bool P067_data_struct::init() {
+bool P067_data_struct::init(struct EventStruct *event) {
   // Log anyway
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = concat(F("HX711: GPIO: SCL="), static_cast<int>(_pinSCL));
     log += concat(F(" DOUT="), static_cast<int>(_pinDOUT));
     addLogMove(LOG_LEVEL_INFO, log);
   }
+  UserVar[event->BaseVarIndex]     = 0.0f; // Reset output
+  UserVar[event->BaseVarIndex + 1] = 0.0f;
 
   if (isInitialized()) {
-    pinMode(_pinSCL, OUTPUT);
+    pinMode(_pinSCL, OUTPUT); // Keep regular pinMode functions for initialization
     digitalWrite(_pinSCL, LOW);
 
-    pinMode(_pinDOUT, INPUT_PULLUP); // TODO tonhuisman: Check if applicable: https://github.com/bogde/HX711/issues/222
+    pinMode(_pinDOUT, INPUT); // Checked, doesn't seem applicable: https://github.com/bogde/HX711/issues/222
 
     return true;
   }
@@ -74,15 +77,14 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
   bool success = false;
 
   if (isInitialized()) {
-    float valFloat;
-
     if ((_modeChanA == P067_ChannelA_State_e::modeAoff) && (_modeChanB == P067_ChannelB_State_e::modeBoff)) {
       addLog(LOG_LEVEL_INFO, F("HX711: No channel selected"));
     }
 
     // Channel A activated?
     if (_modeChanA != P067_ChannelA_State_e::modeAoff) {
-      String log = F("HX711: ChanA: ");
+      String log = concat(F("HX711: ("), (int)event->TaskIndex + 1);
+      log += F(") ChanA: ");
 
       if (OversamplingCountChanA > 0) {
         UserVar[event->BaseVarIndex + 2] = static_cast<float>(OversamplingValueChanA) /
@@ -113,11 +115,13 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
         log += F("NO NEW VALUE");
       }
       addLogMove(LOG_LEVEL_INFO, log);
+      success = true;
     }
 
     // Channel B activated?
     if (_modeChanB != P067_ChannelB_State_e::modeBoff) {
-      String log = F("HX711: ChanB: ");
+      String log = concat(F("HX711: ("), (int)event->TaskIndex + 1);
+      log += F(") ChanB: ");
 
       if (OversamplingCountChanB > 0) {
         UserVar[event->BaseVarIndex + 3] = static_cast<float>(OversamplingValueChanB) /
@@ -148,6 +152,7 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
         log += F("NO NEW VALUE");
       }
       addLogMove(LOG_LEVEL_INFO, log);
+      success = true;
     }
   }
   return success;
@@ -242,7 +247,7 @@ bool P067_data_struct::isInitialized() {
 ****************************************************/
 bool P067_data_struct::isDataReady() {
   if (isInitialized()) {
-    return !digitalRead(_pinDOUT);
+    return !DIRECT_pinRead(_pinDOUT);
   }
   return false;
 }
@@ -251,14 +256,14 @@ bool P067_data_struct::isDataReady() {
 * Read data from the load sensor
 ****************************************************/
 int32_t P067_data_struct::readHX711() {
-  int32_t value = 0;
-  int32_t mask  = 0x00800000;
+  int32_t  value = 0;
+  uint32_t mask  = 0x00800000;
 
   _channelRead = _nextChannel;
 
   // Both channels off
   if ((_modeChanA == P067_ChannelA_State_e::modeAoff) && (_modeChanB == P067_ChannelB_State_e::modeBoff)) {
-    digitalWrite(_pinSCL, HIGH);
+    DIRECT_pinWrite(_pinSCL, HIGH);
     return 0;
   }
 
@@ -291,11 +296,11 @@ int32_t P067_data_struct::readHX711() {
   }
 
   for (uint8_t i = 0; i < 24; i++) {
-    digitalWrite(_pinSCL, HIGH);
+    DIRECT_pinWrite(_pinSCL, HIGH);
     delayMicroseconds(1);
-    digitalWrite(_pinSCL, LOW);
+    DIRECT_pinWrite(_pinSCL, LOW);
 
-    if (digitalRead(_pinDOUT)) {
+    if (DIRECT_pinRead(_pinDOUT)) {
       value |= mask;
     }
     delayMicroseconds(1);
@@ -303,9 +308,9 @@ int32_t P067_data_struct::readHX711() {
   }
 
   for (uint8_t i = 0; i < (static_cast < uint8_t > (_nextChannel) + 1); i++) {
-    digitalWrite(_pinSCL, HIGH);
+    DIRECT_pinWrite(_pinSCL, HIGH);
     delayMicroseconds(1);
-    digitalWrite(_pinSCL, LOW);
+    DIRECT_pinWrite(_pinSCL, LOW);
     delayMicroseconds(1);
   }
 
