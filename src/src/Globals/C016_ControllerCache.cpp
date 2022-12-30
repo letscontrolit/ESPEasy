@@ -35,7 +35,7 @@ bool C016_getCSVline(
   float        & val3,
   float        & val4)
 {
-  C016_queue_element element;
+  C016_binary_element element;
   bool result = ControllerCache.peek((uint8_t *)&element, sizeof(element));
 
   timestamp      = element._timestamp;
@@ -58,7 +58,7 @@ struct EventStruct C016_getTaskSample(
   float        & val3,
   float        & val4)
 {
-  C016_queue_element element;
+  C016_binary_element element;
 
   if (!ControllerCache.peek((uint8_t *)&element, sizeof(element))) {
     return EventStruct();

@@ -63,7 +63,10 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
         addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));
         break;
       }
-      success = C007_DelayHandler->addToQueue(C007_queue_element(event));
+
+      std::unique_ptr<C007_queue_element> element(new C007_queue_element(event));
+      success = C007_DelayHandler->addToQueue(std::move(element));
+
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler->getNextScheduleTime());
       break;
     }

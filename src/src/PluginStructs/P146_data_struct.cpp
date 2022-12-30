@@ -98,7 +98,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
 
   size_t messageLength = message.length();
 
-  const size_t chunkSize           = sizeof(C016_queue_element);
+  const size_t chunkSize           = sizeof(C016_binary_element);
   const size_t nrChunks            = (maxMessageSize - messageLength) / ((2 * chunkSize) + 1);
   const size_t expectedMessageSize = messageLength + (nrChunks * ((2 * chunkSize) + 1));
 
@@ -107,7 +107,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   bool done = false;
 
   for (int chunk = 0; chunk < nrChunks && !done; ++chunk) {
-    C016_queue_element element;
+    C016_binary_element element;
 
     if (ControllerCache.peek(reinterpret_cast<uint8_t *>(&element), chunkSize))
     {
@@ -218,7 +218,7 @@ bool P146_data_struct::sendViaOriginalTask(
 bool P146_data_struct::setPeekFilePos(int peekFileNr, int peekReadPos)
 {
   {
-    const int modulo_24 = peekReadPos % sizeof(C016_queue_element);
+    const int modulo_24 = peekReadPos % sizeof(C016_binary_element);
 
     if (modulo_24 != 0) { peekReadPos -= modulo_24; }
   }

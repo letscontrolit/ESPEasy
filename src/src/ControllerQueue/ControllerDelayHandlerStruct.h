@@ -134,10 +134,10 @@ struct ControllerDelayHandlerStruct {
       // Use reverse iterator here, as it is more likely a duplicate is added shortly after another.
       auto it = sendQueue.rbegin(); // Same as back()
       for (; it != sendQueue.rend(); ++it) {
-        if (element.isDuplicate(*it)) {
+        if (element.isDuplicate(*(it->get()))) {
 #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->controller_idx);
+            const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->get()->controller_idx);
             String log = get_formatted_Controller_number(cpluginID);
             log += F(" : Remove duplicate");
             addLogMove(LOG_LEVEL_DEBUG, log);
@@ -152,34 +152,29 @@ struct ControllerDelayHandlerStruct {
 
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return true when item was added, or skipped as it was considered a duplicate
-  bool addToQueue(T&& element) {
-    if (isDuplicate(element)) {
+  bool addToQueue(std::unique_ptr<T> element) {
+    if (isDuplicate(*element)) {
       return true;
     }
 
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
-      while (queueFull(element)) {
+      while (queueFull(*element)) {
         sendQueue.pop_front();
         attempt = 0;
       }
     }
 
-    if (!queueFull(element)) {
-      #ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      sendQueue.push_back(element);
-      #else
+    if (!queueFull(*element)) {
       sendQueue.push_back(std::move(element));
-      #endif
 
       return true;
     }
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(element.controller_idx);
+      const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex((*element).controller_idx);
       String log = get_formatted_Controller_number(cpluginID);
       log += F(" : queue full");
       addLogMove(LOG_LEVEL_DEBUG, log);
@@ -201,7 +196,7 @@ struct ControllerDelayHandlerStruct {
     if (expire_timeout != 0) {
       bool done = false;
       while (!done && !sendQueue.empty()) {
-        if (timePassedSince(sendQueue.front()._timestamp) < static_cast<long>(expire_timeout)) {
+        if (sendQueue.front().get() != nullptr && timePassedSince(sendQueue.front()->_timestamp) < static_cast<long>(expire_timeout)) {
           done = true;
         } else {
           sendQueue.pop_front();
@@ -211,7 +206,7 @@ struct ControllerDelayHandlerStruct {
     }
 
     if (sendQueue.empty()) { return nullptr; }
-    return &sendQueue.front();
+    return sendQueue.front().get();
   }
 
   // Mark as processed and return time to schedule for next process.
@@ -254,19 +249,20 @@ struct ControllerDelayHandlerStruct {
     size_t totalSize = 0;
 
     for (auto it = sendQueue.begin(); it != sendQueue.end(); ++it) {
-      totalSize += it->getSize();
+      if (it->get() != nullptr)
+      totalSize += it->get()->getSize();
     }
     return totalSize;
   }
 
-  std::list<T>  sendQueue;
+  std::list<std::unique_ptr<T>>  sendQueue;
   mutable UnitLastMessageCount_map unitLastMessageCount;
   unsigned long lastSend;
   unsigned int  minTimeBetweenMessages;
   unsigned long expire_timeout = 0;
-  uint8_t          max_queue_depth;
-  uint8_t          attempt;
-  uint8_t          max_retries;
+  uint8_t       max_queue_depth;
+  uint8_t       attempt;
+  uint8_t       max_retries;
   bool          delete_oldest;
   bool          must_check_reply;
   bool          deduplicate;
@@ -301,7 +297,7 @@ struct ControllerDelayHandlerStruct {
   bool do_process_c##NNN####M##_delay_queue(int controller_number,                                                     \
                                            const C##NNN####M##_queue_element & element,                                \
                                            ControllerSettingsStruct & ControllerSettings);                             \
-  typedef ControllerDelayHandlerStruct<C##NNN####M##_queue_element> C##NNN####M##_DelayHandler_t;                      \
+  typedef ControllerDelayHandlerStruct<Queue_element_base> C##NNN####M##_DelayHandler_t;                      \
   extern C##NNN####M##_DelayHandler_t *C##NNN####M##_DelayHandler;                                                     \
   void process_c##NNN####M##_delay_queue();                                                                            \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex);                                              \
@@ -311,7 +307,7 @@ struct ControllerDelayHandlerStruct {
   C##NNN####M##_DelayHandler_t *C##NNN####M##_DelayHandler = nullptr;                                                  \
   void process_c##NNN####M##_delay_queue() {                                                                           \
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                                 \
-    C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler->getNext());                                       \
+    C##NNN####M##_queue_element *element(static_cast<C##NNN####M##_queue_element *>(C##NNN####M##_DelayHandler->getNext()));                                       \
     if (element == nullptr) return;                                                                                    \
     if (C##NNN####M##_DelayHandler->readyToProcess(*element)) {                                                        \
       MakeControllerSettings(ControllerSettings);                                                                      \

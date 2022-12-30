@@ -180,14 +180,14 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      
-      success = C015_DelayHandler->addToQueue(C015_queue_element(event, valueCount));
+      std::unique_ptr<C015_queue_element> element(new C015_queue_element(event, valueCount));
+      success = C015_DelayHandler->addToQueue(std::move(element));
 
       if (success) {
         // Element was added.
         // Now we try to append to the existing element
         // and thus preventing the need to create a long string only to copy it to a queue element.
-        C015_queue_element& element = C015_DelayHandler->sendQueue.back();
+        C015_queue_element& element = static_cast<C015_queue_element&>(*(C015_DelayHandler->sendQueue.back()));
 
         for (uint8_t x = 0; x < valueCount; x++)
         {

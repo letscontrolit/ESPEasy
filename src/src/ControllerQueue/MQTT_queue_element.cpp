@@ -5,8 +5,9 @@
 MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
                                        taskIndex_t TaskIndex,
                                        const String& topic, const String& payload, bool retained) :
-  TaskIndex(TaskIndex), controller_idx(ctrl_idx), _retained(retained)
+  TaskIndex(TaskIndex), _retained(retained)
 {
+  controller_idx = ctrl_idx;
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   #endif
@@ -22,8 +23,9 @@ MQTT_queue_element::MQTT_queue_element(int         ctrl_idx,
                                        String   && topic,
                                        String   && payload,
                                        bool        retained)
-  : TaskIndex(TaskIndex), controller_idx(ctrl_idx), _retained(retained)
+  : TaskIndex(TaskIndex),  _retained(retained)
 {
+  controller_idx = ctrl_idx;
   // Copy in the scope of the constructor, so we might store it in the 2nd heap
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
@@ -49,11 +51,12 @@ size_t MQTT_queue_element::getSize() const {
   return sizeof(*this) + _topic.length() + _payload.length();
 }
 
-bool MQTT_queue_element::isDuplicate(const MQTT_queue_element& other) const {
-  if ((other.controller_idx != controller_idx) ||
-      (other._retained != _retained) ||
-      other._topic != _topic ||
-      other._payload != _payload) {
+bool MQTT_queue_element::isDuplicate(const Queue_element_base& other) const {
+  const MQTT_queue_element& oth = static_cast<const MQTT_queue_element&>(other);
+  if ((oth.controller_idx != controller_idx) ||
+      (oth._retained != _retained) ||
+      oth._topic != _topic ||
+      oth._payload != _payload) {
     return false;
   }
   return true;

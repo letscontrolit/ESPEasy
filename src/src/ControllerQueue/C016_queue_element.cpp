@@ -7,30 +7,35 @@
 
 #ifdef USES_C016
 
-C016_queue_element::C016_queue_element() : _timestamp(0), TaskIndex(INVALID_TASK_INDEX), controller_idx(0), sensorType(
-    Sensor_VType::SENSOR_TYPE_NONE) {}
+C016_queue_element::C016_queue_element() : TaskIndex(INVALID_TASK_INDEX), sensorType(
+    Sensor_VType::SENSOR_TYPE_NONE) {
+  _timestamp     = 0;
+  controller_idx = 0;
+}
 
 C016_queue_element::C016_queue_element(C016_queue_element&& other)
-  : _timestamp(other._timestamp)
-  , TaskIndex(other.TaskIndex)
-  , controller_idx(other.controller_idx)
+  : TaskIndex(other.TaskIndex)
   , sensorType(other.sensorType)
   , valueCount(other.valueCount)
 {
+  _timestamp     = other._timestamp;
+  controller_idx = other.controller_idx;
+
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     values[i] = other.values[i];
   }
 }
 
 C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count, unsigned long unixTime) :
-  _timestamp(unixTime),
   TaskIndex(event->TaskIndex),
-  controller_idx(event->ControllerIndex),
   sensorType(event->sensorType),
   valueCount(value_count)
 {
+  _timestamp     = unixTime;
+  controller_idx = event->ControllerIndex;
+
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (i < value_count && validTaskIndex(event->TaskIndex)) {
+    if ((i < value_count) && validTaskIndex(event->TaskIndex)) {
       values[i] = UserVar[event->BaseVarIndex + i];
     } else {
       values[i] = 0.0f;
@@ -39,11 +44,12 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t 
 }
 
 C016_queue_element& C016_queue_element::operator=(C016_queue_element&& other) {
-  _timestamp = other._timestamp;
-  TaskIndex = other.TaskIndex;
+  _timestamp     = other._timestamp;
+  TaskIndex      = other.TaskIndex;
   controller_idx = other.controller_idx;
-  sensorType = other.sensorType;
-  valueCount = other.valueCount;
+  sensorType     = other.sensorType;
+  valueCount     = other.valueCount;
+
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     values[i] = other.values[i];
   }
@@ -54,23 +60,40 @@ size_t C016_queue_element::getSize() const {
   return sizeof(*this);
 }
 
-bool C016_queue_element::isDuplicate(const C016_queue_element& other) const {
-  if ((other.controller_idx != controller_idx) ||
-      (other.TaskIndex != TaskIndex) ||
-      (other.sensorType != sensorType) ||
-      (other.valueCount != valueCount)) {
+bool C016_queue_element::isDuplicate(const Queue_element_base& other) const {
+  const C016_queue_element& oth = static_cast<const C016_queue_element&>(other);
+
+  if ((oth.controller_idx != controller_idx) ||
+      (oth.TaskIndex != TaskIndex) ||
+      (oth.sensorType != sensorType) ||
+      (oth.valueCount != valueCount)) {
     return false;
   }
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (!essentiallyEqual(other.values[i] , values[i])) {
+    if (!essentiallyEqual(oth.values[i], values[i])) {
       return false;
     }
   }
   return true;
 }
 
-void C016_queue_element::setPluginID_insteadOf_controller_idx() {
+C016_binary_element C016_queue_element::getBinary() const {
+  C016_binary_element element;
+
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    element.values[i] = values[i];
+  }
+  element._timestamp     = _timestamp;
+  element.TaskIndex      = TaskIndex;
+  element.controller_idx = controller_idx;
+  element.sensorType     = sensorType;
+  element.valueCount     = valueCount;
+
+  return element;
+}
+
+void C016_binary_element::setPluginID_insteadOf_controller_idx() {
   controller_idx = getPluginID_from_TaskIndex(TaskIndex);
 }
 

@@ -8,8 +8,10 @@
 C011_queue_element::C011_queue_element(const struct EventStruct *event) :
   idx(event->idx),
   TaskIndex(event->TaskIndex),
-  controller_idx(event->ControllerIndex),
-  sensorType(event->sensorType) {}
+  sensorType(event->sensorType)
+{
+  controller_idx = event->ControllerIndex;
+}
 
 size_t C011_queue_element::getSize() const {
   size_t total = sizeof(*this);
@@ -21,17 +23,19 @@ size_t C011_queue_element::getSize() const {
   return total;
 }
 
-bool C011_queue_element::isDuplicate(const C011_queue_element& other) const {
-  if ((other.controller_idx != controller_idx) ||
-      (other.TaskIndex != TaskIndex) ||
-      (other.sensorType != sensorType) ||
-      (other.idx != idx)) {
+bool C011_queue_element::isDuplicate(const Queue_element_base& other) const {
+  const C011_queue_element& oth = static_cast<const C011_queue_element&>(other);
+
+  if ((oth.controller_idx != controller_idx) ||
+      (oth.TaskIndex != TaskIndex) ||
+      (oth.sensorType != sensorType) ||
+      (oth.idx != idx)) {
     return false;
   }
-  return other.uri.equals(uri) &&
-         other.HttpMethod.equals(HttpMethod) &&
-         other.header.equals(header) &&
-         other.postStr.equals(postStr);
+  return oth.uri.equals(uri) &&
+         oth.HttpMethod.equals(HttpMethod) &&
+         oth.header.equals(header) &&
+         oth.postStr.equals(postStr);
 }
 
 #endif // ifdef USES_C011

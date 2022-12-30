@@ -6,7 +6,7 @@
 #include "../Helpers/PeriodicalActions.h"
 
 #if FEATURE_MQTT
-ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler = nullptr;
+ControllerDelayHandlerStruct<Queue_element_base> *MQTTDelayHandler = nullptr;
 
 bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag) {
   MakeControllerSettings(ControllerSettings); //-V522
@@ -19,7 +19,7 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
     HeapSelectIram ephemeral;
     #endif
 
-    MQTTDelayHandler = new (std::nothrow) ControllerDelayHandlerStruct<MQTT_queue_element>;
+    MQTTDelayHandler = new (std::nothrow) ControllerDelayHandlerStruct<Queue_element_base>;
   }
   if (MQTTDelayHandler == nullptr) {
     return false;

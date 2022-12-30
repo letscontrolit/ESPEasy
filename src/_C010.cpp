@@ -64,7 +64,9 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
-      C010_queue_element element(event, valueCount);
+
+      std::unique_ptr<C010_queue_element> element(new C010_queue_element(event, valueCount));
+
 
       {
         String pubname;
@@ -86,12 +88,12 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           const String formattedValue = formatUserVar(event, x, isvalid);
 
           if (isvalid) {
-            element.txt[x] = pubname;
-            parseSingleControllerVariable(element.txt[x], event, x, false);
-            element.txt[x].replace(F("%value%"), formattedValue);
+            element->txt[x] = pubname;
+            parseSingleControllerVariable(element->txt[x], event, x, false);
+            element->txt[x].replace(F("%value%"), formattedValue);
 #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
-              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+              addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
 #endif
           }
         }

@@ -258,13 +258,15 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
   // Add a new element to the queue with the minimal payload
-  bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));
+  std::unique_ptr<C011_queue_element> element(new C011_queue_element(event));
+  bool success = C011_DelayHandler->addToQueue(std::move(element));
 
   if (success) {
     // Element was added.
     // Now we try to append to the existing element
     // and thus preventing the need to create a long string only to copy it to a queue element.
-    C011_queue_element& element = C011_DelayHandler->sendQueue.back();
+    C011_queue_element& element = static_cast<C011_queue_element&>(*(C011_DelayHandler->sendQueue.back()));
+
 
     if (!load_C011_ConfigStruct(event->ControllerIndex, element.HttpMethod, element.uri, element.header, element.postStr))
     {

@@ -5,9 +5,10 @@
 
 #ifdef USES_C018
 
-#include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataStructs/UnitMessageCount.h"
-#include "../Globals/CPlugins.h"
+# include "../ControllerQueue/Queue_element_base.h"
+# include "../CustomBuild/ESPEasyLimits.h"
+# include "../DataStructs/UnitMessageCount.h"
+# include "../Globals/CPlugins.h"
 
 
 struct EventStruct;
@@ -17,35 +18,39 @@ struct EventStruct;
 \*********************************************************************************************/
 
 
-class C018_queue_element {
+class C018_queue_element : public Queue_element_base {
 public:
 
   C018_queue_element() = default;
 
-#ifdef USE_SECOND_HEAP
+# ifdef USE_SECOND_HEAP
   C018_queue_element(const C018_queue_element& other) = default;
-#else
+# else // ifdef USE_SECOND_HEAP
   C018_queue_element(const C018_queue_element& other) = delete;
-#endif
+# endif // ifdef USE_SECOND_HEAP
 
   C018_queue_element(C018_queue_element&& other) = default;
 
   C018_queue_element(struct EventStruct *event,
                      uint8_t             sampleSetCount);
 
-  size_t getSize() const;
+  size_t                    getSize() const;
 
-  bool isDuplicate(const C018_queue_element& other) const;
+  bool                      isDuplicate(const Queue_element_base& other) const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+  const UnitMessageCount_t* getUnitMessageCount() const {
+    return nullptr;
+  }
+
+  UnitMessageCount_t* getUnitMessageCount() {
+    return nullptr;
+  }
 
   String packed;
-  unsigned long _timestamp         = millis();
-  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
-  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
+  taskIndex_t TaskIndex = INVALID_TASK_INDEX;
 };
 
-#endif //USES_C018
+#endif // USES_C018
 
 
 #endif // CONTROLLERQUEUE_C018_QUEUE_ELEMENT_H

@@ -75,13 +75,17 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
       
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      success = C008_DelayHandler->addToQueue(C008_queue_element(event, valueCount));
+
+
+
+      std::unique_ptr<C008_queue_element> element(new C008_queue_element(event, valueCount));
+      success = C008_DelayHandler->addToQueue(std::move(element));
 
       if (success) {
         // Element was added.
         // Now we try to append to the existing element
         // and thus preventing the need to create a long string only to copy it to a queue element.
-        C008_queue_element& element = C008_DelayHandler->sendQueue.back();
+        C008_queue_element& element = static_cast<C008_queue_element&>(*(C008_DelayHandler->sendQueue.back()));
 
         // Collect the values at the same run, to make sure all are from the same sample
         //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed

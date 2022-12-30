@@ -6,6 +6,8 @@
 
 
 #include "../ControllerQueue/ControllerDelayHandlerStruct.h"
+#include "../ControllerQueue/Queue_element_base.h"
+
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 
@@ -28,7 +30,7 @@
 
 #if FEATURE_MQTT
 # include "../ControllerQueue/MQTT_queue_element.h"
-extern ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler;
+extern ControllerDelayHandlerStruct<Queue_element_base> *MQTTDelayHandler;
 
 bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag);
 void exit_mqtt_delay_queue();

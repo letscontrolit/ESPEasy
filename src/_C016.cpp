@@ -113,15 +113,18 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     {
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      C016_queue_element element(
+      const C016_queue_element element(
         event, 
         valueCount, 
         C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime());
 
+
+      C016_binary_element binary_element = element.getBinary();
       // It makes no sense to keep the controller index when storing it.
       // re-purpose it to store the pluginID
-      element.setPluginID_insteadOf_controller_idx();
-      success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&element), sizeof(element));
+      binary_element.setPluginID_insteadOf_controller_idx();
+
+      success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&binary_element), sizeof(C016_binary_element));
 
       /*
               if (C016_DelayHandler == nullptr) {

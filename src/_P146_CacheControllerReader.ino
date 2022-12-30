@@ -151,7 +151,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Max Message Size"),
                         F("maxmsgsize"),
                         P146_MQTT_MESSAGE_LENGTH,
-                        sizeof(C016_queue_element) + 16,
+                        sizeof(C016_binary_element) + 16,
                         MQTT_MAX_PACKET_SIZE - 200);
 
       addFormSubHeader(F("Non MQTT Output Options"));

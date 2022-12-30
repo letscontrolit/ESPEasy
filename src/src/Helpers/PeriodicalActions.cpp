@@ -288,7 +288,7 @@ void processMQTTdelayQueue() {
   }
 
   START_TIMER;
-  MQTT_queue_element *element(MQTTDelayHandler->getNext());
+  MQTT_queue_element *element(static_cast<MQTT_queue_element *>(MQTTDelayHandler->getNext()));
 
   if (element == nullptr) { return; }
 

@@ -5,13 +5,14 @@
 
 #if FEATURE_MQTT
 
+#include "../ControllerQueue/Queue_element_base.h"
 #include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 
 /*********************************************************************************************\
 * MQTT_queue_element for all MQTT base controllers
 \*********************************************************************************************/
-class MQTT_queue_element {
+class MQTT_queue_element: public Queue_element_base {
 public:
 
   MQTT_queue_element() = default;
@@ -38,7 +39,7 @@ public:
 
   size_t getSize() const;
 
-  bool isDuplicate(const MQTT_queue_element& other) const;
+  bool isDuplicate(const Queue_element_base& other) const;
 
   const UnitMessageCount_t* getUnitMessageCount() const { return &UnitMessageCount; }
   UnitMessageCount_t* getUnitMessageCount() { return &UnitMessageCount; }
@@ -47,9 +48,7 @@ public:
 
   String _topic;
   String _payload;
-  unsigned long _timestamp         = millis();
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
-  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   bool _retained                   = false;
   UnitMessageCount_t UnitMessageCount;
 };

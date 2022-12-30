@@ -56,7 +56,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      C012_queue_element element(event, valueCount);
+      std::unique_ptr<C012_queue_element> element(new C012_queue_element(event, valueCount));
 
       for (uint8_t x = 0; x < valueCount; x++)
       {
@@ -64,13 +64,13 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         const String formattedValue = formatUserVar(event, x, isvalid);
 
         if (isvalid) {
-          element.txt[x]  = F("update/V");
-          element.txt[x] += event->idx + x;
-          element.txt[x] += F("?value=");
-          element.txt[x] += formattedValue;
+          element->txt[x]  = F("update/V");
+          element->txt[x] += event->idx + x;
+          element->txt[x] += F("?value=");
+          element->txt[x] += formattedValue;
           #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+            addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
           }
           #endif
         }
