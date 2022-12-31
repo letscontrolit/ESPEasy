@@ -10,11 +10,12 @@
 // This table is stored in PROGMEM to save space in RAM
 // The data for the selected sensor type is copied to RAM, see P145_data_struct
 /******************************************************************************/
-const struct SENSORDEF sensorData[] PROGMEM =
+const struct P145_SENSORDEF sensorData[] PROGMEM =
 {
-  // User defined
+  // User defined, open for experiments/ own snsor definition
   {     
       "USER",       // Name
+      "unknown",    // gas
       p145AlgNone,  // preferred/tuned algorithm
       0.0,          // cleanRatio
       0.0,          // PARA scaling factor value
@@ -30,6 +31,7 @@ const struct SENSORDEF sensorData[] PROGMEM =
   // MQ-135
   {
       "MQ-135",     // Name
+      "CO2",        // gas
       p145AlgA,     // preferred/tuned algorithm
       0.0,          // cleanRatio
       116.6020682,  // PARA scaling factor value
@@ -42,13 +44,14 @@ const struct SENSORDEF sensorData[] PROGMEM =
       -0.001923077, // CORF
       1.130128205,  // CORG
   },
-  // MQ-3
+    // MQ-2
   {
-      "MQ-3",       // Name
+      "MQ-2",       // Name
+      "H2",         // gas
       p145AlgB,     // preferred/tuned algorithm
-      60.0,         // cleanRatio
-      0.3934,       // PARA scaling factor value 3.71
-      -1.504,       // PARB exponent value 1.431
+      9.83,         // cleanRatio
+      987.99,       // PARA scaling factor
+      -2.162,       // PARB exponent value
       0.0,          // CORA
       0.0,          // CORB
       0.0,          // CORC
@@ -56,8 +59,57 @@ const struct SENSORDEF sensorData[] PROGMEM =
       0.0,          // CORE
       0.0,          // CORF
       0.0,          // CORG
+  },
+  // MQ-3
+  {
+      "MQ-3",       // Name
+      "alcohol",    // gas
+      p145AlgB,     // preferred/tuned algorithm
+      60.0,         // cleanRatio
+      0.3934,       // PARA scaling factor
+      -1.504,       // PARB exponent value
+      0.0,          // CORA
+      0.0,          // CORB
+      0.0,          // CORC
+      0.0,          // CORD
+      0.0,          // CORE
+      0.0,          // CORF
+      0.0,          // CORG
+  },
+  // MQ-4
+  {
+      "MQ-4",       // Name
+      "CH4",        // gas
+      p145AlgB,     // preferred/tuned algorithm
+      4.4,          // cleanRatio
+      1012.7,       // PARA scaling
+      -2.786,       // PARB exponent
+      0.0,          // CORA
+      0.0,          // CORB
+      0.0,          // CORC
+      0.0,          // CORD
+      0.0,          // CORE
+      0.0,          // CORF
+      0.0,          // CORG
+  },
+  // MQ-7
+  {
+      "MQ-7",       // Name
+      "CO",         // gas
+      p145AlgB,     // preferred/tuned algorithm
+      27.5,         // cleanRatio
+      491204,       // PARA scaling
+      -5.826,       // PARB exponent
+      0.0,          // CORA
+      0.0,          // CORB
+      0.0,          // CORC
+      0.0,          // CORD
+      0.0,          // CORE
+      0.0,          // CORF
+      0.0,          // CORG   
   }
 };
+const int nbrOfTypes = (int)(sizeof(sensorData) / sizeof(struct P145_SENSORDEF));
 
 /*****************************************************************************/
 /*!
@@ -117,7 +169,7 @@ void P145_data_struct::calibrate (float currentRcal)
 /*****************************************************************************/
 float P145_data_struct::getResistance(float val)
 {
-  return ((MAXSCALE * VCC) / (VMAX * val) - 1.0) * rload;
+  return ((P145_MAXSCALE * P145_VCC) / (P145_VMAX * val) - 1.0) * rload;
 }
 
 /*****************************************************************************/
@@ -302,9 +354,9 @@ void P145_data_struct::setSensorData(int stype, bool comp, bool cal, float load,
 {
   /* Each MQ-xxx sensor comes with its own set cof constants */
   /* Copy the correct set from program meory space           */
-  if ((stype != sensorType) && (stype < SENSOR_MAX) && (stype >= 0))
+  if ((stype != sensorType) && (stype < nbrOfTypes) && (stype >= 0))
   {
-    memcpy_P(&sensordef, &sensorData[stype], sizeof(struct SENSORDEF));
+    memcpy_P(&sensordef, &sensorData[stype], sizeof(struct P145_SENSORDEF));
     algorithm = sensordef.alg;
     sensorType = stype;   // Selected sensor type, index in sensor data table
   }
@@ -517,24 +569,42 @@ void P145_data_struct::dump()
 }
 
 /**************************************************************************/
+/* @brief Provide the sensor name associated with a sensor type
+   @param[in] stype Sensor type (index in sensor table)
+   @return Pointer to sensor name as stored in flash memory
+   @note Returns "invalid" for invalid sensor types
+*/
 /**************************************************************************/
-const __FlashStringHelper * P145_data_struct::getTypeName( int stype)
+const __FlashStringHelper * P145_data_struct::getTypeName(int stype)
 {
-  //static char retval[8];
-  //if ((stype < SENSOR_MAX) && (stype >= 0))
-  //{
-  //  memcpy_P(&retval, &sensorData[stype].name, sizeof(retval));
-  //}
-  //else
-  //{
-  //  memcpy_P(&retval, F("invalid"), sizeof(retval));
-  //}
-  //return(retval);
-
-  if ((stype < SENSOR_MAX) && (stype >= 0))
+  if ((stype < nbrOfTypes) && (stype >= 0))
     return (const __FlashStringHelper *)&sensorData[stype].name;
   else
     return F("invalid");
 }
 
+/**************************************************************************/
+/* @brief Provide the name of the gas measured by a sensor type
+   @param[in] stype Sensor type (index in sensor table)
+   @return Pointer to gas name as stored in flash memory
+   @note Returns "invalid" for invalid sensor types
+*/
+/**************************************************************************/
+const __FlashStringHelper * P145_data_struct::getGasName(int stype)
+{
+  if ((stype < nbrOfTypes) && (stype >= 0))
+    return (const __FlashStringHelper *)&sensorData[stype].gas;
+  else
+    return F("invalid");
+}
+
+/**************************************************************************/
+/* @brief Returns the number of predefined sensor/gas entries in the table
+   @return Number of predefined entries
+*/
+/**************************************************************************/
+int   P145_data_struct::getNbrOfTypes()
+{
+  return nbrOfTypes;
+}
 #endif // USES_P145

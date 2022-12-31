@@ -1,4 +1,3 @@
-
 //#######################################################################################################
 //#################################### Plugin 145: MQ-xx ################################################
 //#################################### by flashmark      ################################################
@@ -36,14 +35,14 @@
 // Reference:Reference value expected when calibrating Rzero (configuration PCONFIG_FLOAT_REF)
 // Rcal:     Computed Rzero as if the current measurement value is at Reference level
 //
-// Temperature/humidity  compensation is supported for some sensors. In these cases the value will be
-// read from another task.
+// Temperature/humidity  compensation is supported for some sensors. 
+// In these cases the value will be read from another task.
 // temperature: Read from task/value configured in PCONFIG_TEMP_TASK/PCONFIG_TEMP_VAL
 // humidity:    Read from task/value configured in PCONFIG_HUM_TASK/PCONFIG_HUM_VAL
 //
 // Analog input is sampled 10/second and averaged with the same oversampling algoritm of P002_ADC
-// Note only ESP8266 is supported with hard coded A0 as analog input.
-// TODO: Support for analog input on other hardware
+// Note: ESP8266 uses hard coded A0 as analog input.
+//       ESP32 provides the standard ESPeasy serial configuration
 //
 // Conversion algorithm:
 // Sensor resistance is logaritmic to the concentration of a gas. Sensors are not specific to a single
@@ -136,10 +135,26 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormSeparator(2);
-        String options[3] = { F("USER"), F("MQ-135"), F("MQ-3") };
-        int optionValues[3] = { SENSOR_USER, SENSOR_MQ135, SENSOR_MQ3};
-        addFormSelector(F("Sensor type"), F("plugin_145_sensor"), 3, options, optionValues, PCONFIG_SENSORT);
+        P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
+        // addFormSeparator(2);
+        // FormSelector with all predefined "Sensor - Gas" options
+        String options[P145_MAXTYPES] = {};
+        int optionValues[P145_MAXTYPES] = {};
+        int x = 0;
+        if(P145_data != nullptr)
+        {
+          x = P145_data->getNbrOfTypes();
+          if (x > P145_MAXTYPES) 
+          {
+            x = P145_MAXTYPES;
+          }
+          for (int i=0; i<x; i++)
+          {
+            options[i] = (String)P145_data->getTypeName(i) + (String)(F(" - ")) + (String)P145_data->getGasName(i);
+            optionValues[i] = i; 
+          }
+        }
+        addFormSelector(F("Sensor type"), F("plugin_145_sensor"), x, options, optionValues, PCONFIG_SENSORT);
 
 # ifdef ESP32
         addRowLabel(F("Analog Pin"));
