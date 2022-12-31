@@ -32,8 +32,10 @@ NewPing::NewPing(uint8_t trigger_pin, uint8_t echo_pin, unsigned int max_cm_dist
 #else
 	_triggerPin = trigger_pin;
 	_echoPin = echo_pin;
-	_triggerWidth = trigger_width;
 #endif
+	if ((trigger_width >= DEFAULT_TRIGGER_WIDTH) && (trigger_width <= MAX_TRIGGER_WIDTH)) {
+		_triggerWidth = trigger_width;
+	}
 
 	set_max_distance(max_cm_distance); // Call function to set the max sensor distance.
 
