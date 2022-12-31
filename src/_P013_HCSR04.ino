@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-12-31 tonhuisman: Code improvements, change start-trigger range to 10-50 usec.
+ *                        Optionally not send regular Interval events when using State mode
  * 2022-12-29 tonhuisman: Add start-trigger setting, range 10-30 usec. See https://github.com/letscontrolit/ESPEasy/issues/3857
  * 2022-12-29 tonhuisman: Add changelog
  */
@@ -16,7 +18,6 @@
 # define PLUGIN_NAME_013       "Position - HC-SR04, RCW-0001, etc."
 # define PLUGIN_VALUENAME1_013 "Distance"
 
-# include <Arduino.h>
 # include <map>
 # include <NewPing.h>
 
@@ -33,11 +34,27 @@
 # define FILTER_NONE         (0)
 # define FILTER_MEDIAN       (1)
 
-// map of sensors
-std::map<unsigned int, std::shared_ptr<NewPing> > P_013_sensordefs;
+# define P013_TRIGGER_PIN       CONFIG_PIN1
+# define P013_ECHO_PIN          CONFIG_PIN2
 
-// Forward declaration
-const __FlashStringHelper* Plugin_013_getErrorStatusString(taskIndex_t taskIndex);
+# define P013_OPERATINGMODE     PCONFIG(0)
+# define P013_THRESHOLD         PCONFIG(1)
+# define P013_MAX_DISTANCE      PCONFIG(2)
+# define P013_MEASURINGUNIT     PCONFIG(3)
+# define P013_FILTERTYPE        PCONFIG(4)
+# define P013_FILTER_SIZE       PCONFIG(5)
+# define P013_TRIGGER_WIDTH     PCONFIG(6)
+# define P013_SEND_STATE_VALUE  PCONFIG(7)
+
+# define P013_DEFAULT_FILTER_SIZE     (5)
+# define P013_DEFAULT_TRIGGER_WIDTH   (10)
+
+// map of sensors
+std::map<unsigned int, std::shared_ptr<NewPing> >P_013_sensordefs;
+
+// Forward declarations
+float                      Plugin_013_read(struct EventStruct *event);
+const __FlashStringHelper* Plugin_013_getErrorStatusString(struct EventStruct *event);
 
 boolean                    Plugin_013(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -48,18 +65,16 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_013;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      Device[++deviceCount].Number         = PLUGIN_ID_013;
+      Device[deviceCount].Type             = DEVICE_TYPE_DUAL;
+      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_SINGLE;
+      Device[deviceCount].Ports            = 0;
+      Device[deviceCount].FormulaOption    = true;
+      Device[deviceCount].ValueCount       = 1;
+      Device[deviceCount].SendDataOption   = true;
+      Device[deviceCount].TimerOption      = true;
+      Device[deviceCount].GlobalSyncOption = true;
+      Device[deviceCount].PluginStats      = true;
 
       break;
     }
@@ -85,75 +100,65 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
     case PLUGIN_SET_DEFAULTS:
     {
-      PCONFIG(5) = 5;
-      PCONFIG(6) = 10;
+      P013_FILTER_SIZE   = P013_DEFAULT_FILTER_SIZE;
+      P013_TRIGGER_WIDTH = P013_DEFAULT_TRIGGER_WIDTH;
 
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      int16_t operatingMode = PCONFIG(0);
-      int16_t threshold     = PCONFIG(1);
-      int16_t max_distance  = PCONFIG(2);
-      int16_t measuringUnit = PCONFIG(3);
-      int16_t filterType    = PCONFIG(4);
-      int16_t filterSize    = PCONFIG(5);
-      int16_t triggerWidth  = PCONFIG(6);
+      // default filtersize
+      if (P013_FILTER_SIZE == 0) { P013_FILTER_SIZE = P013_DEFAULT_FILTER_SIZE; }
 
-      // default filtersize = 5
-      if (filterSize == 0) {
-        filterSize = 5;
-        PCONFIG(5) = filterSize;
-      }
+      // default trigger width
+      if (P013_TRIGGER_WIDTH == 0) { P013_TRIGGER_WIDTH = P013_DEFAULT_TRIGGER_WIDTH; }
 
-      if (triggerWidth == 0) {
-        triggerWidth = 10;
-        PCONFIG(6)   = triggerWidth;
-      }
-
-
-      const __FlashStringHelper *strUnit = (measuringUnit == UNIT_CM) ? F("cm") : F("inch");
+      const __FlashStringHelper *strUnit = (P013_MEASURINGUNIT == UNIT_CM) ? F("cm") : F("inch");
 
       {
-        const __FlashStringHelper *optionsOpMode[2];
-        int optionValuesOpMode[2] = { 0, 1 };
-        optionsOpMode[0] = F("Value");
-        optionsOpMode[1] = F("State");
-        addFormSelector(F("Mode"), F("p013_mode"), 2, optionsOpMode, optionValuesOpMode, operatingMode);
+        const int optionValuesOpMode[] = { OPMODE_VALUE, OPMODE_STATE };
+        const __FlashStringHelper *optionsOpMode[] {
+          F("Value"),
+          F("State"),
+        };
+        addFormSelector(F("Mode"), F("pmode"), 2, optionsOpMode, optionValuesOpMode, P013_OPERATINGMODE);
       }
 
-      if (operatingMode == OPMODE_STATE)
-      {
-        addFormNumericBox(F("Threshold"), F("p013_threshold"), threshold);
+      if (P013_OPERATINGMODE == OPMODE_STATE) {
+        addFormCheckBox(F("State event (also) on Interval"), F("pevent"), P013_SEND_STATE_VALUE == 0);
+        addFormNumericBox(F("Threshold"), F("pthreshold"), P013_THRESHOLD);
         addUnit(strUnit);
       }
-      addFormNumericBox(F("Max Distance"), F("p013_max_distance"), max_distance, 0, 500);
+      addFormNumericBox(F("Max Distance"), F("pmax_distance"), P013_MAX_DISTANCE, 0, 500);
       addUnit(strUnit);
 
       {
-        const __FlashStringHelper *optionsUnit[2];
-        int optionValuesUnit[2] = { 0, 1 };
-        optionsUnit[0] = F("Metric");
-        optionsUnit[1] = F("Imperial");
-        addFormSelector(F("Unit"), F("p013_Unit"), 2, optionsUnit, optionValuesUnit, measuringUnit);
+        const int optionValuesUnit[2] = { UNIT_CM, UNIT_INCH };
+        const __FlashStringHelper *optionsUnit[] {
+          F("Metric"),
+          F("Imperial"),
+        };
+        addFormSelector(F("Unit"), F("pUnit"), 2, optionsUnit, optionValuesUnit, P013_MEASURINGUNIT);
       }
 
       {
-        const __FlashStringHelper *optionsFilter[2];
-        int optionValuesFilter[2] = { 0, 1 };
-        optionsFilter[0] = F("None");
-        optionsFilter[1] = F("Median");
-        addFormSelector(F("Filter"), F("p013_FilterType"), 2, optionsFilter, optionValuesFilter, filterType);
+        const int optionValuesFilter[2] = { FILTER_NONE, FILTER_MEDIAN };
+        const __FlashStringHelper *optionsFilter[] {
+          F("None"),
+          F("Median"),
+        };
+        addFormSelector(F("Filter"), F("fltrType"), 2, optionsFilter, optionValuesFilter, P013_FILTERTYPE);
       }
 
       // enable filtersize option if filter is used,
-      if (filterType != FILTER_NONE) {
-        addFormNumericBox(F("Number of Pings"), F("p013_FilterSize"), filterSize, 2, 20);
+      if (P013_FILTERTYPE != FILTER_NONE) {
+        addFormNumericBox(F("Number of Pings"), F("fltrSize"), P013_FILTER_SIZE, 2, 20);
+        addUnit(F("2..20"));
       }
 
-      addFormNumericBox(F("Trigger width"), F("trigWidth"), triggerWidth, 10, 30);
-      addUnit(F("10..30 &micro;sec"));
+      addFormNumericBox(F("Trigger width"), F("trigWidth"), P013_TRIGGER_WIDTH, 10, 50);
+      addUnit(F("10..50 &micro;sec"));
 
       success = true;
       break;
@@ -161,23 +166,24 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      int16_t operatingMode = PCONFIG(0);
-      int16_t filterType    = PCONFIG(4);
+      int16_t prevOperatingMode = P013_OPERATINGMODE;
+      int16_t prevFilterType    = P013_FILTERTYPE;
 
-      PCONFIG(0) = getFormItemInt(F("p013_mode"));
+      P013_OPERATINGMODE = getFormItemInt(F("pmode"));
 
-      if (operatingMode == OPMODE_STATE) {
-        PCONFIG(1) = getFormItemInt(F("p013_threshold"));
+      if (prevOperatingMode == OPMODE_STATE) {
+        P013_SEND_STATE_VALUE = isFormItemChecked(F("pevent")) ? 0 : 1; // Inverted state
+        P013_THRESHOLD        = getFormItemInt(F("pthreshold"));
       }
-      PCONFIG(2) = getFormItemInt(F("p013_max_distance"));
+      P013_MAX_DISTANCE = getFormItemInt(F("pmax_distance"));
 
-      PCONFIG(3) = getFormItemInt(F("p013_Unit"));
-      PCONFIG(4) = getFormItemInt(F("p013_FilterType"));
+      P013_MEASURINGUNIT = getFormItemInt(F("pUnit"));
+      P013_FILTERTYPE    = getFormItemInt(F("fltrType"));
 
-      if (filterType != FILTER_NONE) {
-        PCONFIG(5) = getFormItemInt(F("p013_FilterSize"));
+      if (prevFilterType != FILTER_NONE) {
+        P013_FILTER_SIZE = getFormItemInt(F("fltrSize"));
       }
-      PCONFIG(6) = getFormItemInt(F("trigWidth"));
+      P013_TRIGGER_WIDTH = getFormItemInt(F("trigWidth"));
 
       success = true;
       break;
@@ -185,56 +191,58 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
     case PLUGIN_INIT:
     {
-      int16_t max_distance  = PCONFIG(2);
-      int16_t measuringUnit = PCONFIG(3);
-      int16_t filterType    = PCONFIG(4);
-      int16_t filterSize    = PCONFIG(5);
-      int16_t triggerWidth  = PCONFIG(6);
+      if (P013_FILTER_SIZE == 0) { P013_FILTER_SIZE = P013_DEFAULT_FILTER_SIZE; }
 
-      if (triggerWidth == 0) { triggerWidth = 10; }
+      if (P013_TRIGGER_WIDTH == 0) { P013_TRIGGER_WIDTH = P013_DEFAULT_TRIGGER_WIDTH; }
 
-      int8_t  Plugin_013_TRIG_Pin = CONFIG_PIN1;
-      int8_t  Plugin_013_IRQ_Pin  = CONFIG_PIN2;
-      int16_t max_distance_cm     = (measuringUnit == UNIT_CM) ? max_distance : static_cast<float>(max_distance) * 2.54f;
+      int16_t max_distance_cm = (P013_MEASURINGUNIT == UNIT_CM) ? P013_MAX_DISTANCE : static_cast<float>(P013_MAX_DISTANCE) * 2.54f;
 
       // create sensor instance and add to std::map
       P_013_sensordefs.erase(event->TaskIndex);
-      P_013_sensordefs[event->TaskIndex] =
-        std::shared_ptr<NewPing>(new NewPing(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance_cm, triggerWidth));
+      P_013_sensordefs[event->TaskIndex] = std::shared_ptr<NewPing>(new NewPing(P013_TRIGGER_PIN,
+                                                                                P013_ECHO_PIN,
+                                                                                max_distance_cm,
+                                                                                P013_TRIGGER_WIDTH));
+      success = true;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("ULTRASONIC : TaskNr: ");
         log += event->TaskIndex + 1;
         log += F(" TrigPin: ");
-        log += Plugin_013_TRIG_Pin;
-        log += F(" TrigWidth: ");
-        log += triggerWidth;
-        log += F(" usec IRQ_Pin: ");
-        log += Plugin_013_IRQ_Pin;
-        log += F(" max dist ");
-        log += (measuringUnit == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");
-        log += max_distance;
-        log += F(" max echo: ");
-        log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
-        log += F(" Filter: ");
+        log += P013_TRIGGER_PIN;
+        log += F(" IRQ_Pin: ");
+        log += P013_ECHO_PIN;
 
-        if (filterType == FILTER_NONE) {
-          log += F("none");
+        if (nullptr != P_013_sensordefs[event->TaskIndex]) { // Initialization successful
+          log += F(" TrigWidth [usec]: ");
+          log += P013_TRIGGER_WIDTH;
+          log += F(" max dist ");
+          log += (P013_MEASURINGUNIT == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");
+          log += P013_MAX_DISTANCE;
+
+          log += F(" max echo: ");
+          log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
+          log += F(" Filter: ");
+
+          if (P013_FILTERTYPE == FILTER_NONE) {
+            log += F("none");
+          }
+          else if (P013_FILTERTYPE == FILTER_MEDIAN) {
+            log += F("Median size: ");
+            log += P013_FILTER_SIZE;
+          } else {
+            log += F("invalid!");
+          }
+
+          log += F(" nr_tasks: ");
+          log += P_013_sensordefs.size();
+        } else {
+          log    += F(" CONSTRUCTOR FAILED!");
+          success = false; // Initialization failed
         }
-        else
-        if (filterType == FILTER_MEDIAN) {
-          log += F("Median size: ");
-          log += filterSize;
-        }
-        else {
-          log += F("invalid!");
-        }
-        log += F(" nr_tasks: ");
-        log += P_013_sensordefs.size();
         addLogMove(LOG_LEVEL_INFO, log);
       }
 
-      success = true;
       break;
     }
 
@@ -246,12 +254,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
     case PLUGIN_READ: // If we select value mode, read and send the value based on global timer
     {
-      int16_t operatingMode = PCONFIG(0);
-      int16_t measuringUnit = PCONFIG(3);
-
-      if (operatingMode == OPMODE_VALUE)
-      {
-        const float value = Plugin_013_read(event->TaskIndex);
+      if (P013_OPERATINGMODE == OPMODE_VALUE) {
+        const float value = Plugin_013_read(event);
         UserVar[event->BaseVarIndex] = value;
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -259,31 +263,31 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           log += event->TaskIndex + 1;
           log += F(" Distance: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          log += (measuringUnit == UNIT_CM) ? F(" cm ") : F(" inch ");
+          log += (P013_MEASURINGUNIT == UNIT_CM) ? F(" cm ") : F(" inch ");
 
-          if (essentiallyEqual(value, NO_ECHO))
-          {
+          if (essentiallyEqual(value, NO_ECHO)) {
             log += F(" Error: ");
-            log += Plugin_013_getErrorStatusString(event->TaskIndex);
+            log += Plugin_013_getErrorStatusString(event);
           }
 
           addLogMove(LOG_LEVEL_INFO, log);
         }
+        success = true;                 // Only send out when actually using Value mode
       }
-      success = true;
+
+      if (P013_SEND_STATE_VALUE == 0) { // Also send on Interval when using State mode
+        success = true;
+      }
       break;
     }
 
     case PLUGIN_TEN_PER_SECOND: // If we select state mode, do more frequent checks and send only state changes
     {
-      int16_t operatingMode = PCONFIG(0);
-      int16_t threshold     = PCONFIG(1);
-
-      if (operatingMode == OPMODE_STATE) {
+      if (P013_OPERATINGMODE == OPMODE_STATE) {
         uint8_t state = 0;
-        float   value = Plugin_013_read(event->TaskIndex);
+        float   value = Plugin_013_read(event);
 
-        if (!essentiallyEqual(value, NO_ECHO) && definitelyLessThan(value, threshold)) {
+        if (!essentiallyEqual(value, NO_ECHO) && definitelyLessThan(value, P013_THRESHOLD)) {
           state = 1;
         }
 
@@ -297,7 +301,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
               log += state;
             } else {
               log += F(" Error: ");
-              log += Plugin_013_getErrorStatusString(event->TaskIndex);
+              log += Plugin_013_getErrorStatusString(event);
             }
             addLogMove(LOG_LEVEL_INFO, log);
           }
@@ -308,6 +312,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         }
       }
       success = true;
+
       break;
     }
   }
@@ -315,34 +320,30 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 }
 
 /*********************************************************************/
-float Plugin_013_read(taskIndex_t taskIndex)
+float Plugin_013_read(struct EventStruct *event)
 
 /*********************************************************************/
 {
-  if (P_013_sensordefs.count(taskIndex) == 0) {
+  if (P_013_sensordefs.count(event->TaskIndex) == 0) {
     return 0;
   }
 
-  int16_t max_distance    = Settings.TaskDevicePluginConfig[taskIndex][2];
-  int16_t measuringUnit   = Settings.TaskDevicePluginConfig[taskIndex][3];
-  int16_t filterType      = Settings.TaskDevicePluginConfig[taskIndex][4];
-  int16_t filterSize      = Settings.TaskDevicePluginConfig[taskIndex][5];
-  int16_t max_distance_cm = (measuringUnit == UNIT_CM) ? max_distance : static_cast<float>(max_distance) * 2.54f;
+  int16_t max_distance_cm = (P013_MEASURINGUNIT == UNIT_CM) ? P013_MAX_DISTANCE : static_cast<float>(P013_MAX_DISTANCE) * 2.54f;
 
   unsigned int echoTime = 0;
 
-  switch  (filterType) {
+  switch  (P013_FILTERTYPE) {
     case FILTER_NONE:
-      echoTime = (P_013_sensordefs[taskIndex])->ping();
+      echoTime = (P_013_sensordefs[event->TaskIndex])->ping();
       break;
     case FILTER_MEDIAN:
-      echoTime = (P_013_sensordefs[taskIndex])->ping_median(filterSize, max_distance_cm);
+      echoTime = (P_013_sensordefs[event->TaskIndex])->ping_median(P013_FILTER_SIZE, max_distance_cm);
       break;
     default:
       addLog(LOG_LEVEL_ERROR, F("invalid Filter Type setting!"));
   }
 
-  if (measuringUnit == UNIT_CM) {
+  if (P013_MEASURINGUNIT == UNIT_CM) {
     return NewPing::convert_cm_F(echoTime);
   }
   else {
@@ -351,15 +352,15 @@ float Plugin_013_read(taskIndex_t taskIndex)
 }
 
 /*********************************************************************/
-const __FlashStringHelper* Plugin_013_getErrorStatusString(taskIndex_t taskIndex)
+const __FlashStringHelper* Plugin_013_getErrorStatusString(struct EventStruct *event)
 
 /*********************************************************************/
 {
-  if (P_013_sensordefs.count(taskIndex) == 0) {
+  if (P_013_sensordefs.count(event->TaskIndex) == 0) {
     return F("invalid taskindex");
   }
 
-  switch ((P_013_sensordefs[taskIndex])->getErrorState()) {
+  switch ((P_013_sensordefs[event->TaskIndex])->getErrorState()) {
     case NewPing::STATUS_SENSOR_READY: {
       return F("Sensor ready");
     }
