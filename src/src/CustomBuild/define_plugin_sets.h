@@ -1448,6 +1448,7 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
 
     #define USES_P111   // RC522 RFID reader
+    #define USES_P143   // I2C Rotary encoders
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_D
@@ -1592,6 +1593,9 @@ To create/register a plugin, you have to :
    #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
+  #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
   #endif
 #endif
 
@@ -2019,9 +2023,17 @@ To create/register a plugin, you have to :
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
+  #ifndef USES_P142
+//    #define USES_P142   //
+  #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
+  #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
+
+
 
   // Controllers
   #ifndef USES_C015
