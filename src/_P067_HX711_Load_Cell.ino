@@ -17,6 +17,7 @@
 // Datasheet: https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 
 /** Changelog:
+ * 2023-01-01 tonhuisman: Minor string reductions
  * 2022-12-30 tonhuisman: Fix no longer generating events, use DIRECT_pinRead() and DIRECT_pinWrite() to ensure proper working on ESP32,
  *                        include Task number when logging values, reset any previous values on init, change Pin names to match board text
  * 2022-12-28 tonhuisman: Refactor using PluginTaskData struct to eliminate the use of static and global variables
@@ -83,57 +84,57 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
       // A ------------
       addFormSubHeader(F("Measurement Channel A"));
 
-      addFormCheckBox(F("Oversampling"), F("osChanA"), P067_GET_CHANNEL_A_OS);
+      addFormCheckBox(F("Oversampling"), F("osChA"), P067_GET_CHANNEL_A_OS);
 
       {
         const __FlashStringHelper *optionsModeChanA[] = { F("Off"), F("Gain 64"), F("Gain 128") };
-        addFormSelector(F("Mode"), F("modeChanA"), 3, optionsModeChanA, nullptr, P067_GET_CHANNEL_A_MODE);
+        addFormSelector(F("Mode"), F("modeChA"), 3, optionsModeChanA, nullptr, P067_GET_CHANNEL_A_MODE);
       }
 
       P067_int2float(P067_OFFSET_CHANNEL_A_1, P067_OFFSET_CHANNEL_A_2, &valFloat);
-      addFormTextBox(F("Offset"), F("offs_chanA"), toString(valFloat, 3), 25);
-      addHtml(F(" &nbsp; &nbsp; &#8617; Tare: "));
-      addCheckBox(F("tareChanA"), 0); // always off
+      addFormTextBox(F("Offset"), F("offsChA"), toString(valFloat, 3), 25);
+      addHtml(F("&nbsp; &nbsp;&#8617; Tare: "));
+      addCheckBox(F("tareChA"), 0); // always off
 
       // B ------------
       addFormSubHeader(F("Measurement Channel B"));
 
-      addFormCheckBox(F("Oversampling"), F("osChanB"), P067_GET_CHANNEL_B_OS);
+      addFormCheckBox(F("Oversampling"), F("osChB"), P067_GET_CHANNEL_B_OS);
 
       {
         const __FlashStringHelper *optionsModeChanB[] = { F("Off"), F("Gain 32") };
-        addFormSelector(F("Mode"), F("modeChanB"), 2, optionsModeChanB, nullptr, P067_GET_CHANNEL_B_MODE);
+        addFormSelector(F("Mode"), F("modeChB"), 2, optionsModeChanB, nullptr, P067_GET_CHANNEL_B_MODE);
       }
 
       P067_int2float(P067_OFFSET_CHANNEL_B_1, P067_OFFSET_CHANNEL_B_2, &valFloat);
-      addFormTextBox(F("Offset"), F("offs_chanB"), toString(valFloat, 3), 25);
-      addHtml(F(" &nbsp; &nbsp; &#8617; Tare: "));
-      addCheckBox(F("tareChanB"), 0); // always off
+      addFormTextBox(F("Offset"), F("offsChB"), toString(valFloat, 3), 25);
+      addHtml(F("&nbsp; &nbsp;&#8617; Tare: "));
+      addCheckBox(F("tareChB"), 0); // always off
 
       // A ------------
       addFormSubHeader(F("Two Point Calibration Channel A"));
-      addFormCheckBox(F("Calibration Enabled"), F("cal_chanA"), P067_GET_CHANNEL_A_CALIB);
+      addFormCheckBox(F("Calibration Enabled"), F("calChA"), P067_GET_CHANNEL_A_CALIB);
 
-      addFormNumericBox(F("Point 1"), F("adc1_chanA"), P067_CONFIG_CHANNEL_A_ADC1);
+      addFormNumericBox(F("Point 1"), F("adc1ChA"), P067_CONFIG_CHANNEL_A_ADC1);
       html_add_estimate_symbol();
-      addTextBox(F("out1_chanA"), toString(P067_CONFIG_CHANNEL_A_OUT1, 3), 10);
+      addTextBox(F("out1ChA"), toString(P067_CONFIG_CHANNEL_A_OUT1, 3), 10);
 
-      addFormNumericBox(F("Point 2"), F("adc2_chanA"), P067_CONFIG_CHANNEL_A_ADC2);
+      addFormNumericBox(F("Point 2"), F("adc2ChA"), P067_CONFIG_CHANNEL_A_ADC2);
       html_add_estimate_symbol();
-      addTextBox(F("out2_chanA"), toString(P067_CONFIG_CHANNEL_A_OUT2, 3), 10);
+      addTextBox(F("out2ChA"), toString(P067_CONFIG_CHANNEL_A_OUT2, 3), 10);
 
       // B ------------
       addFormSubHeader(F("Two Point Calibration Channel B"));
 
-      addFormCheckBox(F("Calibration Enabled"), F("cal_chanB"), P067_GET_CHANNEL_B_CALIB);
+      addFormCheckBox(F("Calibration Enabled"), F("calChB"), P067_GET_CHANNEL_B_CALIB);
 
-      addFormNumericBox(F("Point 1"), F("adc1_chanB"), P067_CONFIG_CHANNEL_B_ADC1);
+      addFormNumericBox(F("Point 1"), F("adc1ChB"), P067_CONFIG_CHANNEL_B_ADC1);
       html_add_estimate_symbol();
-      addTextBox(F("out1_chanB"), toString(P067_CONFIG_CHANNEL_B_OUT1, 3), 10);
+      addTextBox(F("out1ChB"), toString(P067_CONFIG_CHANNEL_B_OUT1, 3), 10);
 
-      addFormNumericBox(F("Point 2"), F("adc2_chanB"), P067_CONFIG_CHANNEL_B_ADC2);
+      addFormNumericBox(F("Point 2"), F("adc2ChB"), P067_CONFIG_CHANNEL_B_ADC2);
       html_add_estimate_symbol();
-      addTextBox(F("out2_chanB"), toString(P067_CONFIG_CHANNEL_B_OUT2, 3), 10);
+      addTextBox(F("out2ChB"), toString(P067_CONFIG_CHANNEL_B_OUT2, 3), 10);
 
       success = true;
       break;
@@ -145,43 +146,43 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
       P067_CONFIG_FLAGS = 0;
 
-      P067_SET_CHANNEL_A_OS(isFormItemChecked(F("osChanA")));
-      P067_SET_CHANNEL_B_OS(isFormItemChecked(F("osChanB")));
+      P067_SET_CHANNEL_A_OS(isFormItemChecked(F("osChA")));
+      P067_SET_CHANNEL_B_OS(isFormItemChecked(F("osChB")));
 
       uint32_t tmp = P067_CONFIG_FLAGS;
-      set2BitToUL(tmp, P067_CONFIG_CHANNEL_A_MODE, getFormItemInt(F("modeChanA")));
+      set2BitToUL(tmp, P067_CONFIG_CHANNEL_A_MODE, getFormItemInt(F("modeChA")));
       P067_CONFIG_FLAGS = tmp;
 
-      P067_SET_CHANNEL_B_MODE(getFormItemInt(F("modeChanB")));
+      P067_SET_CHANNEL_B_MODE(getFormItemInt(F("modeChB")));
 
-      P067_SET_CHANNEL_A_CALIB(isFormItemChecked(F("cal_chanA")));
-      P067_SET_CHANNEL_B_CALIB(isFormItemChecked(F("cal_chanB")));
+      P067_SET_CHANNEL_A_CALIB(isFormItemChecked(F("calChA")));
+      P067_SET_CHANNEL_B_CALIB(isFormItemChecked(F("calChB")));
 
-      if (isFormItemChecked(F("tareChanA"))) {
+      if (isFormItemChecked(F("tareChA"))) {
         valFloat = -UserVar[event->BaseVarIndex + 2];
       } else {
-        valFloat = getFormItemFloat(F("offs_chanA"));
+        valFloat = getFormItemFloat(F("offsChA"));
       }
       P067_float2int(valFloat, &P067_OFFSET_CHANNEL_A_1, &P067_OFFSET_CHANNEL_A_2);
 
-      if (isFormItemChecked(F("tareChanB"))) {
+      if (isFormItemChecked(F("tareChB"))) {
         valFloat = -UserVar[event->BaseVarIndex + 3];
       } else {
-        valFloat = getFormItemFloat(F("offs_chanB"));
+        valFloat = getFormItemFloat(F("offsChB"));
       }
       P067_float2int(valFloat, &P067_OFFSET_CHANNEL_B_1, &P067_OFFSET_CHANNEL_B_2);
 
-      P067_CONFIG_CHANNEL_A_ADC1 = getFormItemInt(F("adc1_chanA"));
-      P067_CONFIG_CHANNEL_A_OUT1 = getFormItemFloat(F("out1_chanA"));
+      P067_CONFIG_CHANNEL_A_ADC1 = getFormItemInt(F("adc1ChA"));
+      P067_CONFIG_CHANNEL_A_OUT1 = getFormItemFloat(F("out1ChA"));
 
-      P067_CONFIG_CHANNEL_A_ADC2 = getFormItemInt(F("adc2_chanA"));
-      P067_CONFIG_CHANNEL_A_OUT2 = getFormItemFloat(F("out2_chanA"));
+      P067_CONFIG_CHANNEL_A_ADC2 = getFormItemInt(F("adc2ChA"));
+      P067_CONFIG_CHANNEL_A_OUT2 = getFormItemFloat(F("out2ChA"));
 
-      P067_CONFIG_CHANNEL_B_ADC1 = getFormItemInt(F("adc1_chanB"));
-      P067_CONFIG_CHANNEL_B_OUT1 = getFormItemFloat(F("out1_chanB"));
+      P067_CONFIG_CHANNEL_B_ADC1 = getFormItemInt(F("adc1ChB"));
+      P067_CONFIG_CHANNEL_B_OUT1 = getFormItemFloat(F("out1ChB"));
 
-      P067_CONFIG_CHANNEL_B_ADC2 = getFormItemInt(F("adc2_chanB"));
-      P067_CONFIG_CHANNEL_B_OUT2 = getFormItemFloat(F("out2_chanB"));
+      P067_CONFIG_CHANNEL_B_ADC2 = getFormItemInt(F("adc2ChB"));
+      P067_CONFIG_CHANNEL_B_OUT2 = getFormItemFloat(F("out2ChB"));
 
       success = true;
       break;
