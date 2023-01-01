@@ -37,7 +37,7 @@ P067_data_struct::P067_data_struct(struct EventStruct *event,
 {
   _modeChanA = P067_GET_CHANNEL_A_MODE_e;
   _modeChanB = P067_GET_CHANNEL_B_MODE_e;
-  P067_int2float(P067_OFFSET_CHANNEL_A_1, P067_OFFSET_CHANNEL_B_2, &_offsetChanA);
+  P067_int2float(P067_OFFSET_CHANNEL_A_1, P067_OFFSET_CHANNEL_A_2, &_offsetChanA);
   P067_int2float(P067_OFFSET_CHANNEL_B_1, P067_OFFSET_CHANNEL_B_2, &_offsetChanB);
 }
 
