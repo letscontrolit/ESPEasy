@@ -101,7 +101,8 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c009_delay_queue(int controller_number, const C009_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c009_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C009_queue_element& element = static_cast<const C009_queue_element&>(element_base);
 // *INDENT-ON*
   String jsonString;
   // Make an educated guess on the actual length, based on earlier requests.

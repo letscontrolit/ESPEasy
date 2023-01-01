@@ -11,13 +11,16 @@
 
 # include <Arduino.h>
 # include <map>
+#endif
+
 
 
 /*********************************************************************************************\
 * TimingStats
 \*********************************************************************************************/
 
-
+// These defines must not be excluded when FEATURE_TIMING_STATS is not defined.
+// The Cxxx_DELAY_QUEUE defines are used in the macros to process the controller queues.
 # define LOADFILE_STATS                 0
 # define SAVEFILE_STATS                 1
 # define LOOP_STATS                     2
@@ -91,6 +94,7 @@
 # define NTP_FAIL                       70
 # define SYSTIME_UPDATED                71
 
+#if FEATURE_TIMING_STATS
 
 class TimingStats {
 public:

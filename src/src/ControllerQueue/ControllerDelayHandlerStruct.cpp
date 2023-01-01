@@ -13,6 +13,17 @@
     deduplicate(false),
     useLocalSystemTime(false) {}
 
+  bool ControllerDelayHandlerStruct::configureControllerSettings(controllerIndex_t ControllerIndex)
+  {
+    MakeControllerSettings(ControllerSettings);
+    if (!AllocatedControllerSettings()) {
+      return false;
+    }
+    LoadControllerSettings(ControllerIndex, ControllerSettings);
+    configureControllerSettings(ControllerSettings);
+    return true;
+  }
+
   void ControllerDelayHandlerStruct::configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
     max_queue_depth        = settings.MaxQueueDepth;
@@ -20,7 +31,7 @@
     delete_oldest          = settings.DeleteOldest;
     must_check_reply       = settings.MustCheckReply;
     deduplicate            = settings.deduplicate();
-    useLocalSystemTime          = settings.useLocalSystemTime();
+    useLocalSystemTime     = settings.useLocalSystemTime();
     if (settings.allowExpire()) {
       expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
       if (expire_timeout < CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME) {
@@ -222,4 +233,27 @@
       totalSize += it->get()->getSize();
     }
     return totalSize;
+  }
+
+
+  void ControllerDelayHandlerStruct::process(
+    int controller_number,
+    do_process_function func,
+    int timerstats_id,
+    ESPEasy_Scheduler::IntervalTimer_e timerID
+  ) {
+    Queue_element_base *element(static_cast<Queue_element_base *>(getNext()));                                     
+    if (element == nullptr) return;                                                                                
+    if (readyToProcess(*element)) {                                                                                
+      MakeControllerSettings(ControllerSettings);                                                                  
+      if (AllocatedControllerSettings()) {                                                                         
+        LoadControllerSettings(element->controller_idx, ControllerSettings);                                       
+        configureControllerSettings(ControllerSettings);                                                           
+        START_TIMER;                                                                                               
+        markProcessed(func(controller_number, *element, ControllerSettings));                      
+        STOP_TIMER(timerstats_id);                                                                     
+      }                                                                                                            
+    }                                                                                                              
+    Scheduler.scheduleNextDelayQueue(timerID, getNextScheduleTime());         
+
   }

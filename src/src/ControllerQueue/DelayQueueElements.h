@@ -7,8 +7,6 @@
 
 #include "../ControllerQueue/ControllerDelayHandlerStruct.h"
 #include "../ControllerQueue/Queue_element_base.h"
-
-
 #include "../DataStructs/ControllerSettingsStruct.h"
 
 
@@ -26,7 +24,69 @@
 //
 // N.B. These queue element classes should be defined as class (not a struct), to be used as template.
 //
-struct ControllerDelayHandlerStruct;
+
+
+
+
+// Uncrustify must not be used on macros, so turn it off.
+// Also make sure to wrap the forward declaration of this function in the same wrappers 
+// as it may not split the forward declaration into multiple lines.
+//
+// *INDENT-OFF*
+
+
+
+// Define the function wrappers to handle the calling to Cxxx_DelayHandler etc.
+// If someone knows how to add leading zeros in macros, please be my guest :)
+
+
+// This macro defines the code needed to create the 'process_c##NNN####M##_delay_queue()'
+// function and all needed objects and forward declarations.
+// It is a macro to prevent common typo errors.
+// This function will perform the (re)scheduling and mark if it is processed (and can be removed)
+// The controller itself must implement the 'do_process_c004_delay_queue' function to actually
+// send the data.
+// Its return value must state whether it can be marked 'Processed'.
+// N.B. some controllers only can send one value per iteration, so a returned "false" can mean it
+//      was still successful. The controller should keep track of the last value sent
+//      in the element stored in the queue.
+#define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN, M)                                                                          \
+  extern struct ControllerDelayHandlerStruct *C##NNN####M##_DelayHandler;                                              \
+  bool do_process_c##NNN####M##_delay_queue(int controller_number, const Queue_element_base & element, ControllerSettingsStruct & ControllerSettings); \
+  void process_c##NNN####M##_delay_queue();                                                                            \
+  bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex);                                              \
+  void exit_c##NNN####M##_delay_queue();                                                                               \
+
+#define DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(NNN, M)                                                                    \
+  ControllerDelayHandlerStruct *C##NNN####M##_DelayHandler = nullptr;                                                \
+  void process_c##NNN####M##_delay_queue() {                                                                         \
+    if (C##NNN####M##_DelayHandler == nullptr) return;                                                               \
+    C##NNN####M##_DelayHandler->process(                                                                             \
+      M, do_process_c##NNN####M##_delay_queue, C##NNN####M##_DELAY_QUEUE,                                            \
+      ESPEasy_Scheduler::IntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE);                                          \
+  }                                                                                                                  \
+  bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                           \
+    if (C##NNN####M##_DelayHandler == nullptr) {                                                                     \
+      C##NNN####M##_DelayHandler = new (std::nothrow) (ControllerDelayHandlerStruct);                                \
+    }                                                                                                                \
+    if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                     \
+    return C##NNN####M##_DelayHandler->configureControllerSettings(ControllerIndex);                                 \
+  }                                                                                                                  \
+  void exit_c##NNN####M##_delay_queue() {                                                                            \
+    if (C##NNN####M##_DelayHandler != nullptr) {                                                                     \
+      delete C##NNN####M##_DelayHandler;                                                                             \
+      C##NNN####M##_DelayHandler = nullptr;                                                                          \
+    }                                                                                                                \
+  }                                                                                                                  \
+
+
+
+
+// Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
+// *INDENT-ON*
+
+
+
 
 #if FEATURE_MQTT
 # include "../ControllerQueue/MQTT_queue_element.h"
@@ -45,16 +105,7 @@ void exit_mqtt_delay_queue();
 #ifdef USES_C001
 # include "../ControllerQueue/SimpleQueueElement_string_only.h"
 typedef simple_queue_element_string_only C001_queue_element;
-
-// DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  1)
-extern struct ControllerDelayHandlerStruct *C001_DelayHandler;
-bool do_process_c001_delay_queue(int                       controller_number,
-                                 const C001_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c001_delay_queue();
-bool init_c001_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c001_delay_queue();
-
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  1)
 #endif // ifdef USES_C001
 
 /*********************************************************************************************\
@@ -63,43 +114,19 @@ void exit_c001_delay_queue();
 #ifdef USES_C003
 # include "../ControllerQueue/SimpleQueueElement_string_only.h"
 typedef simple_queue_element_string_only C003_queue_element; 
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 3)
-extern struct ControllerDelayHandlerStruct *C003_DelayHandler;
-bool do_process_c003_delay_queue(int                       controller_number,
-                                 const C003_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c003_delay_queue();
-bool init_c003_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c003_delay_queue();
-
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 3)
 #endif // ifdef USES_C003
 
 #ifdef USES_C004
 # include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
-# define C004_queue_element SimpleQueueElement_formatted_Strings
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 4)
-extern struct ControllerDelayHandlerStruct *C004_DelayHandler;
-bool do_process_c004_delay_queue(int                       controller_number,
-                                 const C004_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c004_delay_queue();
-bool init_c004_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c004_delay_queue();
-
+typedef SimpleQueueElement_formatted_Strings C004_queue_element;
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 4)
 #endif // ifdef USES_C004
 
 #ifdef USES_C007
 # include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
-# define C007_queue_element SimpleQueueElement_formatted_Strings
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 7)
-extern struct ControllerDelayHandlerStruct *C007_DelayHandler;
-bool do_process_c007_delay_queue(int                       controller_number,
-                                 const C007_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c007_delay_queue();
-bool init_c007_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c007_delay_queue();
-
+typedef SimpleQueueElement_formatted_Strings C007_queue_element;
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 7)
 #endif // ifdef USES_C007
 
 
@@ -109,30 +136,14 @@ void exit_c007_delay_queue();
 \*********************************************************************************************/
 #ifdef USES_C008
 # include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
-# define C008_queue_element SimpleQueueElement_formatted_Strings
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 8)
-extern struct ControllerDelayHandlerStruct *C008_DelayHandler;
-bool do_process_c008_delay_queue(int                       controller_number,
-                                 const C008_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c008_delay_queue();
-bool init_c008_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c008_delay_queue();
-
+typedef SimpleQueueElement_formatted_Strings C008_queue_element;
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 8)
 #endif // ifdef USES_C008
 
 #ifdef USES_C009
 # include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
-# define C009_queue_element SimpleQueueElement_formatted_Strings
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 9)
-extern struct ControllerDelayHandlerStruct *C009_DelayHandler;
-bool do_process_c009_delay_queue(int                       controller_number,
-                                 const C009_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c009_delay_queue();
-bool init_c009_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c009_delay_queue();
-
+typedef SimpleQueueElement_formatted_Strings C009_queue_element;
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 9)
 #endif // ifdef USES_C009
 
 
@@ -142,16 +153,8 @@ void exit_c009_delay_queue();
 \*********************************************************************************************/
 #ifdef USES_C010
 # include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
-# define C010_queue_element SimpleQueueElement_formatted_Strings
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 10)
-extern struct ControllerDelayHandlerStruct *C010_DelayHandler;
-bool do_process_c010_delay_queue(int                       controller_number,
-                                 const C010_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c010_delay_queue();
-bool init_c010_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c010_delay_queue();
-
+typedef SimpleQueueElement_formatted_Strings C010_queue_element;
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 10)
 #endif // ifdef USES_C010
 
 
@@ -160,15 +163,7 @@ void exit_c010_delay_queue();
 \*********************************************************************************************/
 #ifdef USES_C011
 # include "../ControllerQueue/C011_queue_element.h"
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 11)
-extern struct ControllerDelayHandlerStruct *C011_DelayHandler;
-bool do_process_c011_delay_queue(int                       controller_number,
-                                 const C011_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c011_delay_queue();
-bool init_c011_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c011_delay_queue();
-
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 11)
 #endif // ifdef USES_C011
 
 
@@ -178,16 +173,8 @@ void exit_c011_delay_queue();
 \*********************************************************************************************/
 #ifdef USES_C012
 # include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
-# define C012_queue_element SimpleQueueElement_formatted_Strings
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 12)
-extern struct ControllerDelayHandlerStruct *C012_DelayHandler;
-bool do_process_c012_delay_queue(int                       controller_number,
-                                 const C012_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c012_delay_queue();
-bool init_c012_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c012_delay_queue();
-
+typedef SimpleQueueElement_formatted_Strings C012_queue_element;
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 12)
 #endif // ifdef USES_C012
 
 /*
@@ -205,57 +192,25 @@ void exit_c012_delay_queue();
 
 #ifdef USES_C015
 # include "../ControllerQueue/C015_queue_element.h"
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 15)
-extern struct ControllerDelayHandlerStruct *C015_DelayHandler;
-bool do_process_c015_delay_queue(int                       controller_number,
-                                 const C015_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c015_delay_queue();
-bool init_c015_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c015_delay_queue();
-
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 15)
 #endif // ifdef USES_C015
 
 
 #ifdef USES_C016
 # include "../ControllerQueue/C016_queue_element.h"
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 16)
-extern struct ControllerDelayHandlerStruct *C016_DelayHandler;
-bool do_process_c016_delay_queue(int                       controller_number,
-                                 const C016_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c016_delay_queue();
-bool init_c016_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c016_delay_queue();
-
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 16)
 #endif // ifdef USES_C016
 
 
 #ifdef USES_C017
 # include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
-# define C017_queue_element SimpleQueueElement_formatted_Strings
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 17)
-extern struct ControllerDelayHandlerStruct *C017_DelayHandler;
-bool do_process_c017_delay_queue(int                       controller_number,
-                                 const C017_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c017_delay_queue();
-bool init_c017_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c017_delay_queue();
-
+typedef SimpleQueueElement_formatted_Strings C017_queue_element;
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 17)
 #endif // ifdef USES_C017
 
 #ifdef USES_C018
 # include "../ControllerQueue/C018_queue_element.h"
-//DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 18)
-extern struct ControllerDelayHandlerStruct *C018_DelayHandler;
-bool do_process_c018_delay_queue(int                       controller_number,
-                                 const C018_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
-void process_c018_delay_queue();
-bool init_c018_delay_queue(controllerIndex_t ControllerIndex);
-void exit_c018_delay_queue();
-
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 18)
 #endif // ifdef USES_C018
 
 

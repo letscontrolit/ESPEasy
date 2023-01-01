@@ -199,7 +199,8 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c011_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C011_queue_element& element = static_cast<const C011_queue_element&>(element_base);
 // *INDENT-ON*
 
   if (!NetworkConnected()) { return false; }

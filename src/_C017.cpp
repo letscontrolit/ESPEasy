@@ -85,9 +85,9 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c017_delay_queue(int controller_number, const C017_queue_element& element, ControllerSettingsStruct& ControllerSettings)
+bool do_process_c017_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C017_queue_element& element = static_cast<const C017_queue_element&>(element_base);
 // *INDENT-ON*
-{
   if (element.valueCount == 0) {
     return true; // exit if we don't have anything to send.
   }

@@ -1013,7 +1013,8 @@ bool C018_init(struct EventStruct *event) {
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c018_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C018_queue_element& element = static_cast<const C018_queue_element&>(element_base);
 // *INDENT-ON*
   uint8_t pl           = (element.packed.length() / 2);
   float   airtime_ms   = C018_data->getLoRaAirTime(pl);
