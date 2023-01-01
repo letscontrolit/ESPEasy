@@ -103,8 +103,8 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
           portNames[x]  = 'P';
           portNames[x] += x;
         }
-        addFormSelectorI2C(F("plugin_019_i2c"), 16, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("plugin_019_port"), 8, portNames, portValues, port);
+        addFormSelectorI2C(F("pi2c"), 16, i2cAddressValues, address);
+        addFormSelector(F("Port"), F("pport"), 8, portNames, portValues, port);
         addFormNote(F("PCF8574 uses addresses 0x20..0x27, PCF8574<b>A</b> uses addresses 0x38..0x3F."));
       } else {
         success = intArrayContains(16, i2cAddressValues, event->Par1);
@@ -137,11 +137,11 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      uint8_t i2c = getFormItemInt(F("plugin_019_i2c"));
+      uint8_t i2c = getFormItemInt(F("pi2c"));
 
       if (i2c > 0x27) { i2c -= 0x10; }
 
-      uint8_t port = getFormItemInt(F("plugin_019_port"));
+      uint8_t port = getFormItemInt(F("pport"));
       CONFIG_PORT = (((i2c - 0x20) << 3) + port);
 
       SwitchWebformSave(

@@ -70,7 +70,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         (0x07),
         (0x06)
       };
-      addFormSelector(F("Option"), F("p024_option"), MLX90614_OPTION, options, optionValues, choice);
+      addFormSelector(F("Option"), F("option"), MLX90614_OPTION, options, optionValues, choice);
 
       success = true;
       break;
@@ -78,7 +78,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0)      = getFormItemInt(F("p024_option"));
+      PCONFIG(0)      = getFormItemInt(F("option"));
       success         = true;
       break;
     }

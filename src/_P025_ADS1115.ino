@@ -6,12 +6,12 @@
 // #######################################################################################################
 
 
-#include "src/PluginStructs/P025_data_struct.h"
+# include "src/PluginStructs/P025_data_struct.h"
 
-#define PLUGIN_025
-#define PLUGIN_ID_025 25
-#define PLUGIN_NAME_025 "Analog input - ADS1115"
-#define PLUGIN_VALUENAME1_025 "Analog"
+# define PLUGIN_025
+# define PLUGIN_ID_025 25
+# define PLUGIN_NAME_025 "Analog input - ADS1115"
+# define PLUGIN_VALUENAME1_025 "Analog"
 
 
 boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
@@ -53,8 +53,9 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      #define ADS1115_I2C_OPTION 4
+      # define ADS1115_I2C_OPTION 4
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), ADS1115_I2C_OPTION, i2cAddressValues, PCONFIG(0));
       } else {
@@ -78,9 +79,8 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Input"));
 
       {
-          #define ADS1115_PGA_OPTION 6
-        uint8_t pga                              = PCONFIG(1);
-        const __FlashStringHelper * pgaOptions[ADS1115_PGA_OPTION] = {
+        # define ADS1115_PGA_OPTION 6
+        const __FlashStringHelper *pgaOptions[ADS1115_PGA_OPTION] = {
           F("2/3x gain (FS=6.144V)"),
           F("1x gain (FS=4.096V)"),
           F("2x gain (FS=2.048V)"),
@@ -88,13 +88,12 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           F("8x gain (FS=0.512V)"),
           F("16x gain (FS=0.256V)")
         };
-        addFormSelector(F("Gain"), F("p025_gain"), ADS1115_PGA_OPTION, pgaOptions, nullptr, pga);
+        addFormSelector(F("Gain"), F("gain"), ADS1115_PGA_OPTION, pgaOptions, nullptr, PCONFIG(1));
       }
 
       {
-          #define ADS1115_MUX_OPTION 8
-        uint8_t mux                              = PCONFIG(2);
-        const __FlashStringHelper * muxOptions[ADS1115_MUX_OPTION] = {
+        # define ADS1115_MUX_OPTION 8
+        const __FlashStringHelper *muxOptions[ADS1115_MUX_OPTION] = {
           F("AIN0 - AIN1 (Differential)"),
           F("AIN0 - AIN3 (Differential)"),
           F("AIN1 - AIN3 (Differential)"),
@@ -104,20 +103,20 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           F("AIN2 - GND (Single-Ended)"),
           F("AIN3 - GND (Single-Ended)"),
         };
-        addFormSelector(F("Input Multiplexer"), F("p025_mode"), ADS1115_MUX_OPTION, muxOptions, nullptr, mux);
+        addFormSelector(F("Input Multiplexer"), F("mode"), ADS1115_MUX_OPTION, muxOptions, nullptr, PCONFIG(2));
       }
 
       addFormSubHeader(F("Two Point Calibration"));
 
-      addFormCheckBox(F("Calibration Enabled"), F("p025_cal"), PCONFIG(3));
+      addFormCheckBox(F("Calibration Enabled"), F("cal"), PCONFIG(3));
 
-      addFormNumericBox(F("Point 1"), F("p025_adc1"), PCONFIG_LONG(0), -32768, 32767);
+      addFormNumericBox(F("Point 1"), F("adc1"), PCONFIG_LONG(0), -32768, 32767);
       html_add_estimate_symbol();
-      addTextBox(F("p025_out1"), toString(PCONFIG_FLOAT(0), 3), 10);
+      addTextBox(F("out1"), toString(PCONFIG_FLOAT(0), 3), 10);
 
-      addFormNumericBox(F("Point 2"), F("p025_adc2"), PCONFIG_LONG(1), -32768, 32767);
+      addFormNumericBox(F("Point 2"), F("adc2"), PCONFIG_LONG(1), -32768, 32767);
       html_add_estimate_symbol();
-      addTextBox(F("p025_out2"), toString(PCONFIG_FLOAT(1), 3), 10);
+      addTextBox(F("out2"), toString(PCONFIG_FLOAT(1), 3), 10);
 
       success = true;
       break;
@@ -127,17 +126,17 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
     {
       PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
-      PCONFIG(1) = getFormItemInt(F("p025_gain"));
+      PCONFIG(1) = getFormItemInt(F("gain"));
 
-      PCONFIG(2) = getFormItemInt(F("p025_mode"));
+      PCONFIG(2) = getFormItemInt(F("mode"));
 
-      PCONFIG(3) = isFormItemChecked(F("p025_cal"));
+      PCONFIG(3) = isFormItemChecked(F("cal"));
 
-      PCONFIG_LONG(0)  = getFormItemInt(F("p025_adc1"));
-      PCONFIG_FLOAT(0) = getFormItemFloat(F("p025_out1"));
+      PCONFIG_LONG(0)  = getFormItemInt(F("adc1"));
+      PCONFIG_FLOAT(0) = getFormItemFloat(F("out1"));
 
-      PCONFIG_LONG(1)  = getFormItemInt(F("p025_adc2"));
-      PCONFIG_FLOAT(1) = getFormItemFloat(F("p025_out2"));
+      PCONFIG_LONG(1)  = getFormItemInt(F("adc2"));
+      PCONFIG_FLOAT(1) = getFormItemFloat(F("out2"));
 
       success = true;
       break;
@@ -149,13 +148,9 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       // uint8_t unit = (CONFIG_PORT - 1) / 4;
       // uint8_t port = CONFIG_PORT - (unit * 4);
       // uint8_t address = 0x48 + unit;
-      const uint8_t address = PCONFIG(0);
-      const uint8_t pga     = PCONFIG(1);
-      const uint8_t mux     = PCONFIG(2);
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(address, pga, mux));
-      P025_data_struct *P025_data =
-        static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2)));
+      P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P025_data) {
         success = true;
@@ -165,20 +160,20 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      P025_data_struct *P025_data =
-        static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P025_data) {
         const int16_t value = P025_data->read();
         UserVar[event->BaseVarIndex] = value;
 
-        #ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
         String log;
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           log  = F("ADS1115 : Analog value: ");
           log += value;
         }
-        #endif
+        # endif // ifndef BUILD_NO_DEBUG
 
         if (PCONFIG(3)) // Calibration?
         {
@@ -191,22 +186,24 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           {
             const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
-            #ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
+
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
               log += ' ';
               log += formatUserVarNoCheck(event->TaskIndex, 0);
             }
-            #endif
+            # endif // ifndef BUILD_NO_DEBUG
           }
         }
 
         // TEST log += F(" @0x");
         // TEST log += String(config, 16);
-        #ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           addLogMove(LOG_LEVEL_DEBUG, log);
         }
-        #endif
+        # endif // ifndef BUILD_NO_DEBUG
         success = true;
       }
       break;

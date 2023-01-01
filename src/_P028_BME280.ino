@@ -137,10 +137,10 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      addFormNumericBox(F("Altitude"), F("p028_elev"), P028_ALTITUDE);
+      addFormNumericBox(F("Altitude"), F("elev"), P028_ALTITUDE);
       addUnit('m');
 
-      addFormNumericBox(F("Temperature offset"), F("p028_tempoffset"), P028_TEMPERATURE_OFFSET);
+      addFormNumericBox(F("Temperature offset"), F("tempoffset"), P028_TEMPERATURE_OFFSET);
       addUnit(F("x 0.1C"));
       String offsetNote = F("Offset in units of 0.1 degree Celsius");
 
@@ -184,7 +184,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         # endif // ifndef LIMIT_BUILD_SIZE
       };
       addFormSelector(F("Temperature Error Value"),
-                      F("p028_err"),
+                      F("err"),
                       P028_ERROR_STATE_COUNT,
                       resultsOptions,
                       resultsOptionValues,
@@ -203,7 +203,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P028_data) {
         if (P028_data->lastMeasurementError) {
           success = true; // "success" may be a confusing name here
-          string = F("Sensor Not Found");
+          string  = F("Sensor Not Found");
         }
       }
       break;
@@ -212,9 +212,9 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P028_I2C_ADDRESS        = getFormItemInt(F("i2c_addr"));
-      P028_ALTITUDE           = getFormItemInt(F("p028_elev"));
-      P028_TEMPERATURE_OFFSET = getFormItemInt(F("p028_tempoffset"));
-      P028_ERROR_STATE_OUTPUT = getFormItemInt(F("p028_err"));
+      P028_ALTITUDE           = getFormItemInt(F("elev"));
+      P028_TEMPERATURE_OFFSET = getFormItemInt(F("tempoffset"));
+      P028_ERROR_STATE_OUTPUT = getFormItemInt(F("err"));
       success                 = true;
       break;
     }
