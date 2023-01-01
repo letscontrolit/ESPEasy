@@ -743,7 +743,7 @@ You must not use the task names ``Plugin``, ``var`` ``int`` as these have specia
 
 ``[Plugin#PCF#Pinstate#N]`` to get the pin state of a PCF pin.
 
-Since 2022-12-27:
+Since 2022-12-27: (Enabled for all builds with flash size > 1MB)
 
 - For GPIO, MCP or PCF pins set to PWM or SERVO output, the last set duty-cycle is returned instead of the current pin state (that was of no use).
 
