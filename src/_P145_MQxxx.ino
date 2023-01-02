@@ -73,7 +73,7 @@
 
 #define PLUGIN_145
 #define PLUGIN_ID_145     145           // plugin id
-#define PLUGIN_NAME_145   "Gases - MQxxx (MQ135 CO2, MQ3 Alcohol)" // "Plugin Name" is what will be dislpayed in the selection list
+#define PLUGIN_NAME_145   "Gases - MQxxx (MQ135 CO2, MQ3 Alcohol) [TESTING]" // "Plugin Name" is what will be dislpayed in the selection list
 #define PLUGIN_VALUENAME1_145 "level"   // variable output of the plugin. The label is in quotation marks
 #define PLUGIN_145_DEBUG  false         // set to true for extra log info in the debug
 
@@ -124,7 +124,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       string = F(PLUGIN_NAME_145);
       break;
     }
-    
+
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_145));
