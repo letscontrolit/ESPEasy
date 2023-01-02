@@ -6,6 +6,11 @@
 // ########################### Notification Plugin 001: Email ############################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2022-12-29 tonhuisman: Add Date: field to email header to reduce spam score, see https://github.com/letscontrolit/ESPEasy/issues/3865
+ * 2022-12-29 tonhuisman: Start changelog
+*/
+
 # define NPLUGIN_001
 # define NPLUGIN_ID_001         1
 # define NPLUGIN_NAME_001       "Email (SMTP)"
@@ -144,6 +149,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       "To: $ato\r\n"
       "Subject: $subject\r\n"
       "Reply-To: $nodename <$emailfrom>\r\n"
+      "Date: $date\r\n"
       "MIME-VERSION: 1.0\r\n"
       "Content-type: text/html; charset=UTF-8\r\n"
       "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
@@ -172,6 +178,9 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     mailheader.replace(F("$emailfrom"),      notificationsettings.Sender);
     mailheader.replace(F("$ato"),            notificationsettings.Receiver);
     mailheader.replace(F("$subject"),        aSub);
+    String dateFmtHdr = F("%sysweekday_s%, %sysday_0% %sysmonth_s% %sysyear% %systime% %systzoffset%");
+    String date       = parseTemplate(dateFmtHdr);
+    mailheader.replace(F("$date"),           date);
     mailheader.replace(F("$espeasyversion"), getSystemBuildString());
     aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
 
