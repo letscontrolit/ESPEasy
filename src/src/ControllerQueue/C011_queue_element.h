@@ -49,7 +49,6 @@ public:
   String header;
   String postStr;
   int idx                 = 0;
-  taskIndex_t TaskIndex   = INVALID_TASK_INDEX;
   Sensor_VType sensorType = Sensor_VType::SENSOR_TYPE_NONE;
 };
 

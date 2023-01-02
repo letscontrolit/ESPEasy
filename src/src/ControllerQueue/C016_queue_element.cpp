@@ -7,19 +7,20 @@
 
 #ifdef USES_C016
 
-C016_queue_element::C016_queue_element() : TaskIndex(INVALID_TASK_INDEX), sensorType(
+C016_queue_element::C016_queue_element() :  sensorType(
     Sensor_VType::SENSOR_TYPE_NONE) {
   _timestamp     = 0;
   controller_idx = 0;
+  TaskIndex      = INVALID_TASK_INDEX;
 }
 
 C016_queue_element::C016_queue_element(C016_queue_element&& other)
-  : TaskIndex(other.TaskIndex)
-  , sensorType(other.sensorType)
+  : sensorType(other.sensorType)
   , valueCount(other.valueCount)
 {
   _timestamp     = other._timestamp;
   controller_idx = other.controller_idx;
+  TaskIndex      = other.TaskIndex;
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     values[i] = other.values[i];
@@ -27,12 +28,12 @@ C016_queue_element::C016_queue_element(C016_queue_element&& other)
 }
 
 C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count, unsigned long unixTime) :
-  TaskIndex(event->TaskIndex),
   sensorType(event->sensorType),
   valueCount(value_count)
 {
   _timestamp     = unixTime;
   controller_idx = event->ControllerIndex;
+  TaskIndex      = event->TaskIndex;
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if ((i < value_count) && validTaskIndex(event->TaskIndex)) {

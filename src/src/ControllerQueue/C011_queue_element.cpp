@@ -7,10 +7,10 @@
 
 C011_queue_element::C011_queue_element(const struct EventStruct *event) :
   idx(event->idx),
-  TaskIndex(event->TaskIndex),
   sensorType(event->sensorType)
 {
   controller_idx = event->ControllerIndex;
+  TaskIndex = event->TaskIndex;
 }
 
 size_t C011_queue_element::getSize() const {

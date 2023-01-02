@@ -8,10 +8,10 @@
 
 # include "../Helpers/_CPlugin_LoRa_TTN_helper.h"
 
-C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount) :
-  TaskIndex(event->TaskIndex)
+C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount)
 {
   controller_idx = event->ControllerIndex;
+  TaskIndex      = event->TaskIndex;
   # if FEATURE_PACKED_RAW_DATA
     #  ifdef USE_SECOND_HEAP
 

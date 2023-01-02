@@ -5,12 +5,13 @@
 #ifdef USES_C015
 
 C015_queue_element::C015_queue_element(C015_queue_element&& other)
-  : idx(other.idx), TaskIndex(other.TaskIndex)
+  : idx(other.idx)
   , valuesSent(other.valuesSent)
   , valueCount(other.valueCount)
 {
   _timestamp     = other._timestamp;
   controller_idx = other.controller_idx;
+  TaskIndex      = other.TaskIndex;
   # ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   # endif // ifdef USE_SECOND_HEAP
@@ -23,10 +24,10 @@ C015_queue_element::C015_queue_element(C015_queue_element&& other)
 
 C015_queue_element::C015_queue_element(const struct EventStruct *event, uint8_t value_count) :
   idx(event->idx),
-  TaskIndex(event->TaskIndex),
   valuesSent(0),
   valueCount(value_count) {
   controller_idx = event->ControllerIndex;
+  TaskIndex      = event->TaskIndex;
 }
 
 C015_queue_element& C015_queue_element::operator=(C015_queue_element&& other) {

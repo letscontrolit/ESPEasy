@@ -8,14 +8,14 @@
 
 SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(struct EventStruct *event) :
   idx(event->idx),
-  TaskIndex(event->TaskIndex),
   sensorType(event->sensorType),
-  valuesSent(0) 
+  valuesSent(0)
 {
-controller_idx = event->ControllerIndex;
+  controller_idx = event->ControllerIndex;
+  TaskIndex = event->TaskIndex;
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif
+  #endif // ifdef USE_SECOND_HEAP
 
   valueCount = getValueCountForTask(TaskIndex);
 
@@ -26,23 +26,24 @@ controller_idx = event->ControllerIndex;
 
 SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(const struct EventStruct *event, uint8_t value_count) :
   idx(event->idx),
-  TaskIndex(event->TaskIndex),
   sensorType(event->sensorType),
   valuesSent(0),
   valueCount(value_count) {
-controller_idx = event->ControllerIndex;
-  }
+  controller_idx = event->ControllerIndex;
+  TaskIndex      = event->TaskIndex;
+}
 
 SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(SimpleQueueElement_formatted_Strings&& rval)
-  : idx(rval.idx), TaskIndex(rval.TaskIndex),
+  : idx(rval.idx),
   sensorType(rval.sensorType),
   valuesSent(rval.valuesSent), valueCount(rval.valueCount)
 {
-  _timestamp = rval._timestamp;
+  _timestamp     = rval._timestamp;
   controller_idx = rval.controller_idx;
+  TaskIndex      = rval.TaskIndex;
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif
+  #endif // ifdef USE_SECOND_HEAP
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     txt[i] = std::move(rval.txt[i]);
@@ -61,12 +62,13 @@ SimpleQueueElement_formatted_Strings& SimpleQueueElement_formatted_Strings::oper
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     #ifdef USE_SECOND_HEAP
     HeapSelectIram ephemeral;
+
     if (rval.txt[i].length() && !mmu_is_iram(&(rval.txt[i][0]))) {
       txt[i] = rval.txt[i];
     } else {
       txt[i] = std::move(rval.txt[i]);
     }
-    #else
+    #else // ifdef USE_SECOND_HEAP
     txt[i] = std::move(rval.txt[i]);
     #endif // ifdef USE_SECOND_HEAP
   }

@@ -52,7 +52,6 @@ public:
   String txt[VARS_PER_TASK];
   int vPin[VARS_PER_TASK]    = { 0 };
   int idx                    = 0;
-  taskIndex_t TaskIndex      = INVALID_TASK_INDEX;
   mutable uint8_t valuesSent = 0; // Value must be set by const function checkDone()
   uint8_t valueCount         = 0;
 };

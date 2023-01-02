@@ -68,7 +68,6 @@ public:
   C016_binary_element getBinary() const;
 
   float values[VARS_PER_TASK] = { 0 };
-  taskIndex_t TaskIndex       = INVALID_TASK_INDEX;
   Sensor_VType sensorType     = Sensor_VType::SENSOR_TYPE_NONE;
   uint8_t valueCount          = 0;
 };

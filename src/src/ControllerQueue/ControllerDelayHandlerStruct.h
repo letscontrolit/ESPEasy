@@ -26,10 +26,12 @@
 #include <new>    // std::nothrow
 
 #ifndef CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME
-  #define CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME 10000
-#endif
+  # define CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME 10000
+#endif // ifndef CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME
 
-typedef bool (*do_process_function)(int, const Queue_element_base& , ControllerSettingsStruct&);
+typedef bool (*do_process_function)(int,
+                                    const Queue_element_base&,
+                                    ControllerSettingsStruct&);
 
 /*********************************************************************************************\
 * ControllerDelayHandlerStruct
@@ -49,7 +51,7 @@ struct ControllerDelayHandlerStruct {
 
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return true when item was added, or skipped as it was considered a duplicate
-  bool addToQueue(std::unique_ptr<Queue_element_base> element);
+  bool addToQueue(std::unique_ptr<Queue_element_base>element);
 
   // Get the next element.
   // Remove front element when max_retries is reached.
@@ -63,33 +65,31 @@ struct ControllerDelayHandlerStruct {
   unsigned long getNextScheduleTime() const;
 
   // Set the "lastSend" to "now" + some additional delay.
-  // This will cause the next schedule time to be delayed to 
+  // This will cause the next schedule time to be delayed to
   // msecFromNow + minTimeBetweenMessages
-  void setAdditionalDelay(unsigned long msecFromNow);
+  void   setAdditionalDelay(unsigned long msecFromNow);
 
   size_t getQueueMemorySize() const;
 
-  void process(    
-    int controller_number,
-    do_process_function func,
-    int timerstats_id,
+  void   process(
+    int                                controller_number,
+    do_process_function                func,
+    int                                timerstats_id,
     ESPEasy_Scheduler::IntervalTimer_e timerID);
 
-  std::list<std::unique_ptr<Queue_element_base>>  sendQueue;
-  mutable UnitLastMessageCount_map unitLastMessageCount;
-  unsigned long lastSend = 0;
-  unsigned int  minTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
-  unsigned long expire_timeout = 0;
-  uint8_t       max_queue_depth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
-  uint8_t       attempt = 0;
-  uint8_t       max_retries = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
-  bool          delete_oldest = false;
-  bool          must_check_reply = false;
-  bool          deduplicate = false;
-  bool          useLocalSystemTime = false;
+  std::list<std::unique_ptr<Queue_element_base> >sendQueue;
+  mutable UnitLastMessageCount_map               unitLastMessageCount;
+  unsigned long                                  lastSend               = 0;
+  unsigned int                                   minTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+  unsigned long                                  expire_timeout         = 0;
+  uint8_t                                        max_queue_depth        = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+  uint8_t                                        attempt                = 0;
+  uint8_t                                        max_retries            = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
+  bool                                           delete_oldest          = false;
+  bool                                           must_check_reply       = false;
+  bool                                           deduplicate            = false;
+  bool                                           useLocalSystemTime     = false;
 };
-
-
 
 
 #endif // CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H

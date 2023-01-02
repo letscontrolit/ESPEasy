@@ -5,14 +5,16 @@
 MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
                                        taskIndex_t TaskIndex,
                                        const String& topic, const String& payload, bool retained) :
-  TaskIndex(TaskIndex), _retained(retained)
+  _retained(retained)
 {
   controller_idx = ctrl_idx;
-  #ifdef USE_SECOND_HEAP
+  TaskIndex      = TaskIndex;
+  # ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif
+  # endif // ifdef USE_SECOND_HEAP
+
   // Copy in the scope of the constructor, so we might store it in the 2nd heap
-  _topic = topic;
+  _topic   = topic;
   _payload = payload;
 
   removeEmptyTopics();
@@ -23,26 +25,30 @@ MQTT_queue_element::MQTT_queue_element(int         ctrl_idx,
                                        String   && topic,
                                        String   && payload,
                                        bool        retained)
-  : TaskIndex(TaskIndex),  _retained(retained)
+  : _retained(retained)
 {
   controller_idx = ctrl_idx;
+  TaskIndex      = TaskIndex;
+
   // Copy in the scope of the constructor, so we might store it in the 2nd heap
-  #ifdef USE_SECOND_HEAP
+  # ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
+
   if (topic.length() && !mmu_is_iram(&(topic[0]))) {
     _topic = topic;
   } else {
-    _topic = std::move(topic);  
+    _topic = std::move(topic);
   }
+
   if (payload.length() && !mmu_is_iram(&(payload[0]))) {
     _payload = payload;
   } else {
     _payload = std::move(payload);
   }
-  #else
-  _topic = std::move(topic);
+  # else // ifdef USE_SECOND_HEAP
+  _topic   = std::move(topic);
   _payload = std::move(payload);
-  #endif
+  # endif // ifdef USE_SECOND_HEAP
 
   removeEmptyTopics();
 }
@@ -53,10 +59,11 @@ size_t MQTT_queue_element::getSize() const {
 
 bool MQTT_queue_element::isDuplicate(const Queue_element_base& other) const {
   const MQTT_queue_element& oth = static_cast<const MQTT_queue_element&>(other);
+
   if ((oth.controller_idx != controller_idx) ||
       (oth._retained != _retained) ||
-      oth._topic != _topic ||
-      oth._payload != _payload) {
+      (oth._topic != _topic) ||
+      (oth._payload != _payload)) {
     return false;
   }
   return true;
@@ -70,4 +77,5 @@ void MQTT_queue_element::removeEmptyTopics() {
     _topic.replace(F("//"), F("/"));
   }
 }
+
 #endif // if FEATURE_MQTT

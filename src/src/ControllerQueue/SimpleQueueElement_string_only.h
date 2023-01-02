@@ -10,32 +10,36 @@
 /*********************************************************************************************\
 * Simple queue element, only storing controller index and some String
 \*********************************************************************************************/
-class simple_queue_element_string_only: public Queue_element_base {
+class simple_queue_element_string_only : public Queue_element_base {
 public:
 
   simple_queue_element_string_only() = default;
 
   #ifdef USE_SECOND_HEAP
   simple_queue_element_string_only(const simple_queue_element_string_only& other) = default;
-  #else
+  #else // ifdef USE_SECOND_HEAP
   simple_queue_element_string_only(const simple_queue_element_string_only& other) = delete;
-  #endif
-  
+  #endif // ifdef USE_SECOND_HEAP
+
   simple_queue_element_string_only(simple_queue_element_string_only&& other) = default;
 
-  explicit simple_queue_element_string_only(int           ctrl_idx,
-                                            taskIndex_t   TaskIndex,
-                                            String&&      req);
-  
-  size_t getSize() const;
+  explicit simple_queue_element_string_only(int         ctrl_idx,
+                                            taskIndex_t TaskIndex,
+                                            String   && req);
 
-  bool isDuplicate(const Queue_element_base& other) const;
+  size_t                    getSize() const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
-  UnitMessageCount_t* getUnitMessageCount() { return nullptr; }
+  bool                      isDuplicate(const Queue_element_base& other) const;
+
+  const UnitMessageCount_t* getUnitMessageCount() const {
+    return nullptr;
+  }
+
+  UnitMessageCount_t* getUnitMessageCount() {
+    return nullptr;
+  }
 
   String txt;
-  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
 };
 
 

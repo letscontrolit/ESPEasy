@@ -47,7 +47,6 @@ public:
   }
 
   String packed;
-  taskIndex_t TaskIndex = INVALID_TASK_INDEX;
 };
 
 #endif // USES_C018
