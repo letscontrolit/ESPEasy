@@ -1969,10 +1969,15 @@ To create/register a plugin, you have to :
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
+  #ifndef USES_P142
+//    #define USES_P142   //
+  #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
+  #endif
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
   #endif
-
 
   // Controllers
   #ifndef USES_C015
