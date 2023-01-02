@@ -47,6 +47,14 @@ bool I2C_write16_LE_reg(uint8_t  i2caddr,
                         uint16_t value);
 
 // **************************************************************************/
+// Writes length bytes over I2C to a register
+// **************************************************************************/
+bool I2C_writeBytes_reg(uint8_t i2caddr,
+                        uint8_t reg,
+                        uint8_t *buffer,
+                        uint8_t length);
+
+// **************************************************************************/
 // Reads an 8 bit value over I2C
 // **************************************************************************/
 uint8_t I2C_read8(uint8_t i2caddr,
