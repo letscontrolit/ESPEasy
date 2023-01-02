@@ -1,3 +1,9 @@
+// ----------------------------------------------------------------------------
+// P145 "Gases - MQxxx (MQ135 CO2, MQ3 Alcohol)"
+// Implementation of sensor abstraction
+// See _P145_MQxxx.ino
+// 2023 By flashmark
+// ----------------------------------------------------------------------------
 #include "../PluginStructs/P145_data_struct.h"
 
 #ifdef USES_P145
@@ -12,7 +18,7 @@
 /******************************************************************************/
 const struct P145_SENSORDEF sensorData[] PROGMEM =
 {
-  // User defined, open for experiments/ own snsor definition
+  // User defined, open for experiments/own sensor definition
   {     
       "USER",       // Name
       "unknown",    // gas
@@ -127,11 +133,11 @@ void P145_data_struct::calibrate (float currentRcal)
   float lastRcal = rcal;  // Last calculated Rcal this calibration sequence
   bool doit = false;
   
-  if ((currentRcal > rcal) || (rcal <= 0.0))
+  if (currentRcal > rcal)
   {
     rcal = currentRcal;
   }
-  doit = (time > P145_CALIBRATION_INTERVAL) && (lastRcal > 0.0);
+  doit = (time > P145_CALIBRATION_INTERVAL) && (rcal > 0.0);
   if (doit)
   {
     rzero = rcal;     // Update Rzero as determined by calibration
@@ -142,11 +148,13 @@ void P145_data_struct::calibrate (float currentRcal)
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log;
+#ifdef P145_DEBUG
     log = F("MQ-xx: Calibration with Rcal =  ");
-    log += currentRcal;      // Calculated Rzero if calibration concentration is applied
+    log += currentRcal; // Calculated Rzero if calibration concentration is applied
     log += F(" Rlast = ");
-    log += lastRcal;  // Rcal as calculated previous sample
+    log += lastRcal;    // Rcal as calculated previous sample
     addLog(LOG_LEVEL_INFO, log);
+#endif
     if (doit)
     {
       log = F("MQ-xx: ***Calibrating*** Rzero =  ");
@@ -162,14 +170,14 @@ void P145_data_struct::calibrate (float currentRcal)
 @param[in] val     Analog input value read from ADC [counts]
 @return The sensor resistance in Ohm
 @note   Uses hard coded constants:
-        MAXSCALE   Max range for ADC
-        VMAX       Analog  input voltage corresponding to MAXSCALE
-        VCC        Voltage applied to the sensor-Rload combination
+        MAX_ADC_VALUE Max range for ADC
+        VMAX          Analog  input voltage corresponding to MAX_ADC_VALUE
+        VCC           Voltage applied to the sensor-Rload combination
 */
 /*****************************************************************************/
 float P145_data_struct::getResistance(float val)
 {
-  return ((P145_MAXSCALE * P145_VCC) / (P145_VMAX * val) - 1.0) * rload;
+  return ((MAX_ADC_VALUE * P145_VCC) / (P145_VMAX * val) - 1.0) * rload;
 }
 
 /*****************************************************************************/
@@ -411,6 +419,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
       log = F("MQ-xx: level= ");
       log += value;                     // Calculated sensor value
       addLog(LOG_LEVEL_INFO, log);
+#ifdef P145_DEBUG
       log = F("MQ-xx: Sensor type= ");
       log += sensorType;                // Selected sensor type
       log += F(": ");
@@ -418,16 +427,18 @@ float P145_data_struct::readValue(float temperature, float humidity)
       addLog(LOG_LEVEL_INFO, log);              
       log = F("MQ-xx: Rload= ");
       log += rload;                     // Rload
-      addLog(LOG_LEVEL_INFO, log);              
+      addLog(LOG_LEVEL_INFO, log); 
       log = F("MQ-xx: Rzero= ");
       log += rzero;                     // R0
       addLog(LOG_LEVEL_INFO, log);              
+#endif 
       log = F("MQ-xx: Rcal= ");
       log += rCal;                      // R0 when calibrating
       addLog(LOG_LEVEL_INFO, log);
       log = F("MQ-xx: RS= ");
       log += rSensor;                   // Calculated sensor resistance
       addLog(LOG_LEVEL_INFO, log);
+#ifdef P145_DEBUG
       log = F("MQ-xx: Ref= ");
       log += refLevel;                  // Reference level for calibration
       addLog(LOG_LEVEL_INFO, log);
@@ -442,9 +453,10 @@ float P145_data_struct::readValue(float temperature, float humidity)
       addLog(LOG_LEVEL_INFO, log);
       if (calibration)
       {
-        log += F("MQ-xx: Calibration enabled");
+        log = F("MQ-xx: Calibration enabled");
         addLog(LOG_LEVEL_INFO, log);
       }
+#endif
     }
 
     // Now reset the oversampling variables.
@@ -517,6 +529,31 @@ bool P145_data_struct::plugin_ten_per_second()
 
 /**************************************************************************/
 /*!
+@brief  Return the actual Calibration value. 
+@return Rzero associated with the current measurement
+@note   The value depends on the conversion algorithm associated with the 
+        sensor type.
+*/
+/**************************************************************************/
+float P145_data_struct::getCalibrationValue()
+{
+  return (rcal);
+}
+
+/**************************************************************************/
+/*!
+@brief  Return the Rzero value determined by autocalibration. 
+@return Rzero as calculated by the autocalibration algorithm
+@note   This is the internally corrected Rzero and will be unaltered when
+        Autocalibration is switched off.
+*/
+float P145_data_struct::getAutoCalibrationValue()
+{
+  return rzero;
+}
+
+/**************************************************************************/
+/*!
 @brief  Dump data from the internal plugin struct/class structure to the log
 @note   This function is only used for debugging
 */
@@ -525,6 +562,7 @@ void P145_data_struct::dump()
 {
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
+#ifdef P145_DEBUG
     String log;                       // Helper string to build log text
     log = F("MQ-xx: NAME ");
     log += sensordef.name;
@@ -565,6 +603,10 @@ void P145_data_struct::dump()
     log = F("MQ-xx: rzero ");
     log += rzero;
     addLog(LOG_LEVEL_INFO, log);
+    log = F("MQ-xx: PIN: ");
+    log += analogPin;
+    addLog(LOG_LEVEL_INFO, log);
+#endif
   }
 }
 
@@ -573,6 +615,7 @@ void P145_data_struct::dump()
    @param[in] stype Sensor type (index in sensor table)
    @return Pointer to sensor name as stored in flash memory
    @note Returns "invalid" for invalid sensor types
+         This is a static member function
 */
 /**************************************************************************/
 const __FlashStringHelper * P145_data_struct::getTypeName(int stype)
@@ -588,6 +631,7 @@ const __FlashStringHelper * P145_data_struct::getTypeName(int stype)
    @param[in] stype Sensor type (index in sensor table)
    @return Pointer to gas name as stored in flash memory
    @note Returns "invalid" for invalid sensor types
+         This is a static member function
 */
 /**************************************************************************/
 const __FlashStringHelper * P145_data_struct::getGasName(int stype)
@@ -601,6 +645,7 @@ const __FlashStringHelper * P145_data_struct::getGasName(int stype)
 /**************************************************************************/
 /* @brief Returns the number of predefined sensor/gas entries in the table
    @return Number of predefined entries
+   @note This is a static member function
 */
 /**************************************************************************/
 int   P145_data_struct::getNbrOfTypes()

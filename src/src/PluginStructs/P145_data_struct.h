@@ -1,3 +1,9 @@
+// ----------------------------------------------------------------------------
+// P145 "Gases - MQxxx (MQ135 CO2, MQ3 Alcohol)"
+// Definition of sensor abstraction
+// See _P145_MQxxx.ino
+// 2023 By flashmark
+// ----------------------------------------------------------------------------
 #ifndef PLUGINSTRUCTS_P145_DATA_STRUCT_H
 #define PLUGINSTRUCTS_P145_DATA_STRUCT_H
 
@@ -15,14 +21,6 @@
 #define P145_VCC        (5.0)
 // Max input scale voltage of the ADC
 #define P145_VMAX       (3.3)
-// Max scale value of the ADC [MAXSCALE=>VMAX]
-# ifdef ESP32
-// ESP32 has a 12-bit ADC
-#define P145_MAXSCALE   (4095)
-#else
-// ESP8266 has a 10-bit ADC
-#define P145_MAXSCALE   (1023)
-#endif
 
 // Calibration interval in milli seconds (once per day)
 #define P145_CALIBRATION_INTERVAL (24*60*60*1000)
@@ -64,13 +62,13 @@ struct P145_data_struct : public PluginTaskData_base
     uint   ovs_min = 0;     // Oversampling algorithm minimum value
     uint   ovs_max = 0;     // Oversampling algorithm maximum value
     uint   ovs_cnt = 0;     // Oversampling algorithm sample counter
-    /* Calibration static data */
     float  last_ain = 0.0;  // Oversampling algorithm last measured analog input value
+    /* Calibration static data */
     ulong  last_cal = 0;    // Last calibration timestamp
+    float  rcal = 0.0;      // Rcal, calibration resistance [Ohm]
     /* Sensor value conversion parameters */
     float rload = 0.0;      // Rload, load resistor [Ohm]
     float rzero = 0.0;      // R0, reference resistance [Ohm]
-    float rcal = 0.0;       // Rcal, calibration resistance [Ohm]
     float refLevel = 0.0;   // Reference level for calibration [ppm]
     /* Sensor type & user options */
     bool compensation = false;            // Use temperature compensation
@@ -84,9 +82,11 @@ struct P145_data_struct : public PluginTaskData_base
     bool plugin_init();
     bool plugin_ten_per_second();
     void setSensorData(int stype, bool comp, bool cal, float load, float zero, float ref);
-    const __FlashStringHelper * getTypeName( int stype);
-    const __FlashStringHelper * getGasName( int stype);
-    int   getNbrOfTypes();
+    float getCalibrationValue();
+    float getAutoCalibrationValue();
+    static const __FlashStringHelper * getTypeName( int stype);
+    static const __FlashStringHelper * getGasName( int stype);
+    static int getNbrOfTypes();
     void dump();
     
     private:
