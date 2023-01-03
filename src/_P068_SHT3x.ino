@@ -84,7 +84,7 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Temperature offset"), F("p068_tempoffset"), PCONFIG(1));
+      addFormNumericBox(F("Temperature offset"), F("tempoffset"), PCONFIG(1));
       addUnit(F("x 0.1C"));
       addFormNote(F("Offset in units of 0.1 degree Celsius"));
       success = true;
@@ -94,7 +94,7 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-      PCONFIG(1) = getFormItemInt(F("p068_tempoffset"));
+      PCONFIG(1) = getFormItemInt(F("tempoffset"));
 
       success = true;
       break;

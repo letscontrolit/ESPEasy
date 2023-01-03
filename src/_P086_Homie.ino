@@ -101,25 +101,25 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
           choice = PCONFIG(i);
           if (i==0) addFormNote(F("Triggers an event when a ../%event%/set topic arrives"));
           labelText = F("Event Name");
-          keyName = F("p086_functionName");
+          keyName = F("functionName");
           keyName += i;
           addFormTextBox(labelText, keyName, ExtraTaskSettings.TaskDeviceValueNames[i], NAME_FORMULA_LENGTH_MAX);
           labelText = F("Parameter Type");
-          keyName = F("p086_valueType");
+          keyName = F("valueType");
           keyName += i;
           addFormSelector(labelText, keyName, PLUGIN_086_VALUE_TYPES, options, optionValues, choice );
           keyName += F("_min");
           addFormNumericBox(F("Min"),keyName,ExtraTaskSettings.TaskDevicePluginConfig[i]);
-          keyName = F("p086_valueType");
+          keyName = F("valueType");
           keyName += i;
           keyName += F("_max");
           addFormNumericBox(F("Max"),keyName,ExtraTaskSettings.TaskDevicePluginConfig[i+PLUGIN_086_VALUE_MAX]);
           if (i==0) addFormNote(F("min max values only valid for numeric parameter"));
-          keyName = F("p086_decimals");
+          keyName = F("decimals");
           keyName += i;
           addFormNumericBox(F("Decimals"),keyName,ExtraTaskSettings.TaskDeviceValueDecimals[i],0,8);
           if (i==0) addFormNote(F("Decimal counts for float parameter"));
-          keyName = F("p086_string");
+          keyName = F("string");
           keyName += i;
           addFormTextBox(F("String or enum"), keyName, ExtraTaskSettings.TaskDeviceFormula[i], NAME_FORMULA_LENGTH_MAX);
           if (i==0) addFormNote(F("Default string or enumumeration list (comma seperated)."));
@@ -132,24 +132,24 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
       {
         String keyName;
         for (int i=0;i<PLUGIN_086_VALUE_MAX;i++) {
-          keyName = F("p086_valueType");
+          keyName = F("valueType");
           keyName += i;
           PCONFIG(i) = getFormItemInt(keyName);
-          keyName = F("p086_functionName");
+          keyName = F("functionName");
           keyName += i;
           strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[i], keyName);
-          keyName = F("p086_valueType");
+          keyName = F("valueType");
           keyName += i;
           keyName += F("_min");
           ExtraTaskSettings.TaskDevicePluginConfig[i]=getFormItemInt(keyName);
-          keyName = F("p086_valueType");
+          keyName = F("valueType");
           keyName += i;
           keyName += F("_max");
           ExtraTaskSettings.TaskDevicePluginConfig[i+PLUGIN_086_VALUE_MAX]=getFormItemInt(keyName);
-          keyName = F("p086_decimals");
+          keyName = F("decimals");
           keyName += i;
           ExtraTaskSettings.TaskDeviceValueDecimals[i]=getFormItemInt(keyName);
-          keyName = F("p086_string");
+          keyName = F("string");
           keyName += i;
           strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[i], keyName);
         }
@@ -226,7 +226,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               log += event->Par5;
               addLog(LOG_LEVEL_DEBUG, log);
             } */
-            float floatValue = 0;
+            float floatValue = 0.0f;
             String enumList;
             int i = 0;
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -268,9 +268,9 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
               case PLUGIN_086_VALUE_BOOLEAN:
                 if (parameter=="false") {
-                  floatValue = 0;
+                  floatValue = 0.0f;
                 } else {
-                  floatValue = 1;
+                  floatValue = 1.0f;
                 }
                 UserVar[userVarIndex]=floatValue;
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
