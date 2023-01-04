@@ -22,35 +22,36 @@ uint32_t writeToMqtt(const String& str, bool send) {
 }
 
 uint32_t writeToMqtt(const char& c, bool send) {
-  if (send) 
-    MQTTclient.write(String(c));
+  if (send) {
+    MQTTclient.write(static_cast<uint8_t>(c));
+  }
   return 1;
 }
 
 uint32_t createTaskInfoJson(bool send) {
   size_t expected_size = 0;
+
   expected_size += writeToMqtt('[', send);
 
   for (taskIndex_t task = 0; validTaskIndex(task); ++task) {
     {
-      String taskName;
       if (task != 0) {
-        taskName = ',';
+        expected_size += writeToMqtt(',', send);
       }
-      taskName += concat(F("{\"taskName\":\""), getTaskDeviceName(task));
-      taskName += concat(F("\",\"taskIndex\":"), task);
-      taskName += F(",\"taskValues\":[");
-      expected_size += writeToMqtt(taskName, send);
+      expected_size += writeToMqtt(concat(F("{\"taskName\":\""), getTaskDeviceName(task)), send);
+      expected_size += writeToMqtt(concat(F("\",\"taskIndex\":"), task), send);
+      expected_size += writeToMqtt(concat(F(",\"pluginId\":"), getPluginID_from_TaskIndex(task)), send);
+      expected_size += writeToMqtt(F(",\"taskValues\":["), send);
     }
+
     for (taskVarIndex_t rel_index = 0; rel_index < INVALID_TASKVAR_INDEX; ++rel_index) {
-      String taskVarName;
-      if (rel_index != 0) { 
-        taskVarName = ',';
+      if (rel_index != 0) {
+        expected_size += writeToMqtt(',', send);
       }
+
       // FIXME TD-er: getTaskValueName returns empty string when task is not enabled, therefore use cache.
       //              Should getTaskValueName return empty string when task is disabled?
-      taskVarName += wrap_String(Cache.getTaskDeviceValueName(task, rel_index), '"');
-      expected_size += writeToMqtt(taskVarName, send);
+      expected_size += writeToMqtt(wrap_String(Cache.getTaskDeviceValueName(task, rel_index), '"'), send);
     }
     {
       const String tail = F("]}");
@@ -64,11 +65,13 @@ uint32_t createTaskInfoJson(bool send) {
 uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
 {
   String topic = F("tracker_v2/%sysname%_%unit%/%tskname%/upload_meta");
+
   topic.replace(F("%tskname%"), getTaskDeviceName(P146_TaskIndex));
   topic = parseTemplate(topic);
 
 
   const size_t expected_size = createTaskInfoJson(false);
+
   if (MQTTclient.beginPublish(topic.c_str(), expected_size, false)) {
     createTaskInfoJson(true);
     MQTTclient.endPublish();
@@ -86,25 +89,29 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
 
 
   // Keep the current peek position, so we can reset it when we fail to deliver the data to the controller.
-  int peekFileNr        = 0;
+  int peekFileNr  = 0;
   int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+
   if (peekFileNr <= 0) {
     return 0;
   }
 
   int peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+
   if (peekFileSize < 0) {
     // Peek file is not opened. Setting peek file pos will try to open it.
     ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
     peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
     peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
   }
+
   // FIXME TD-er: This is messy, but needed to increment peek file nr.
   if (peekReadPos >= peekFileSize) {
     ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
     peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
     peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
   }
+
   if (peekFileSize < 0) {
     // peek file still not open.
     return 0;
@@ -121,6 +128,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   const size_t data_left     = (maxMessageSize - messageLength);
   const size_t chunkSize     = sizeof(C016_binary_element);
   size_t nrChunks            = data_left / ((2 * chunkSize) + 1);
+
   if (peekReadPos < peekFileSize) {
     // Try to serve the rest of the file in 1 go.
     const size_t chunksLeftInFile = (peekFileSize - peekReadPos) / chunkSize;
@@ -139,6 +147,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
 
 
   String topic = F("tracker_v2/%sysname%_%unit%/%tskname%/upload");
+
   topic.replace(F("%tskname%"), getTaskDeviceName(P146_TaskIndex));
   topic = parseTemplate(topic);
 
@@ -147,23 +156,25 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
     return 0;
   }
   writeToMqtt(message, true);
+
   for (int chunk = 0; chunk < nrChunks; ++chunk) {
     C016_binary_element element;
 
     if (ControllerCache.peek(reinterpret_cast<uint8_t *>(&element), chunkSize))
     {
       // Test data to show layout of binary content:
-/*
-      element._timestamp = 0x11223344;
-      element.TaskIndex = 0x55;
-      element.controller_idx = 0x66;
-      element.sensorType = Sensor_VType::SENSOR_TYPE_NONE; // 0x00
-      element.valueCount = 0x88;
-      element.values[0] = 0x99;
-      element.values[1] = 0xAA;
-      element.values[2] = 0xBB;
-      element.values[3] = 0xCC;
-*/
+
+      /*
+            element._timestamp = 0x11223344;
+            element.TaskIndex = 0x55;
+            element.controller_idx = 0x66;
+            element.sensorType = Sensor_VType::SENSOR_TYPE_NONE; // 0x00
+            element.valueCount = 0x88;
+            element.values[0] = 0x99;
+            element.values[1] = 0xAA;
+            element.values[2] = 0xBB;
+            element.values[3] = 0xCC;
+       */
 
       // Example of MQTT message containing a single CacheController sample:
       // Filenr;Filepos;Sample (24 bytes -> 48 HEX digits);
@@ -173,11 +184,12 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
       // 00001943 00002a43 00003b43 00004c43 44332211 55      66       00         88
     }
     writeToMqtt(formatToHex_array(reinterpret_cast<const uint8_t *>(&element), chunkSize), true);
-    writeToMqtt(';', true);
+    writeToMqtt(';',                                                                       true);
   }
   MQTTclient.endPublish();
+
   // Restore peek position
-//  ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+  //  ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
   return expectedMessageSize;
 }
 
