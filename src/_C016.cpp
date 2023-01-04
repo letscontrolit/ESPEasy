@@ -118,25 +118,8 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
         valueCount, 
         C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime());
 
-
-      C016_binary_element binary_element = element.getBinary();
-      // It makes no sense to keep the controller index when storing it.
-      // re-purpose it to store the pluginID
-      binary_element.setPluginID_insteadOf_controller_idx();
-
+      const C016_binary_element binary_element = element.getBinary();
       success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&binary_element), sizeof(C016_binary_element));
-
-      /*
-              if (C016_DelayHandler == nullptr) {
-                break;
-              }
-
-              MakeControllerSettings(ControllerSettings); //-V522
-              LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-              success = C016_DelayHandler->addToQueue(std::move(element));
-              Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C016_DELAY_QUEUE,
-                 C016_DelayHandler->getNextScheduleTime());
-       */
       break;
     }
 

@@ -18,14 +18,10 @@ struct EventStruct;
 // The binary format to store the samples using the Cache Controller
 // Do NOT change order of members!
 struct C016_binary_element {
-  // It makes no sense to keep the controller index when storing it.
-  // re-purpose it to store the pluginID
-  void setPluginID_insteadOf_controller_idx();
-
   float             values[VARS_PER_TASK] = { 0 };
   unsigned long     _timestamp            = 0; // Unix timestamp
   taskIndex_t       TaskIndex             = INVALID_TASK_INDEX;
-  controllerIndex_t controller_idx        = INVALID_CONTROLLER_INDEX;
+  pluginID_t        pluginID              = INVALID_PLUGIN_ID;
   Sensor_VType      sensorType            = Sensor_VType::SENSOR_TYPE_NONE;
   uint8_t           valueCount            = 0;
 };

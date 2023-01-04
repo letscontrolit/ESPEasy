@@ -151,8 +151,25 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
 
     if (ControllerCache.peek(reinterpret_cast<uint8_t *>(&element), chunkSize))
     {
-      // Plugin ID is way more interesting than the controller index.
-      element.setPluginID_insteadOf_controller_idx();
+      // Test data to show layout of binary content:
+/*
+      element._timestamp = 0x11223344;
+      element.TaskIndex = 0x55;
+      element.controller_idx = 0x66;
+      element.sensorType = Sensor_VType::SENSOR_TYPE_NONE; // 0x00
+      element.valueCount = 0x88;
+      element.values[0] = 0x99;
+      element.values[1] = 0xAA;
+      element.values[2] = 0xBB;
+      element.values[3] = 0xCC;
+*/
+
+      // Example of MQTT message containing a single CacheController sample:
+      // Filenr;Filepos;Sample (24 bytes -> 48 HEX digits);
+      // 17;14616;0000194300002a4300003b4300004c434433221155660088;
+
+      // val[0]   val[1]   val[2]   val[3]   timestmp taskidx PluginID SensorType ValueCount
+      // 00001943 00002a43 00003b43 00004c43 44332211 55      66       00         88
     }
     writeToMqtt(formatToHex_array(reinterpret_cast<const uint8_t *>(&element), chunkSize), true);
     writeToMqtt(';', true);

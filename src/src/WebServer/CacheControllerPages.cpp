@@ -25,7 +25,7 @@ void handle_dumpcache() {
 
   C016_startCSVdump();
   unsigned long timestamp;
-  uint8_t  controller_idx;
+  uint8_t  pluginID;
   uint8_t  TaskIndex;
   Sensor_VType  sensorType;
   uint8_t  valueCount;
@@ -52,14 +52,14 @@ void handle_dumpcache() {
     csv_values[i] = 0.0f;
   }
 
-  while (C016_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
+  while (C016_getCSVline(timestamp, pluginID, TaskIndex, sensorType,
                          valueCount, val1, val2, val3, val4)) {
     {
       String html;
       html.reserve(64);
       html += timestamp;
       html += ';';
-      html += controller_idx;
+      html += pluginID;
       html += ';';
       html += static_cast<uint8_t>(sensorType);
       html += ';';
