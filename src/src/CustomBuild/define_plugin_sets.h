@@ -2416,12 +2416,7 @@ To create/register a plugin, you have to :
 #if FEATURE_MQTT
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
-  #ifdef ESP8266
   #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
-  #endif
-  #ifdef ESP32
-  #define MQTT_MAX_PACKET_SIZE 2048 // Is also used in PubSubClient
-  #endif
 #endif
 #endif //if FEATURE_MQTT
 

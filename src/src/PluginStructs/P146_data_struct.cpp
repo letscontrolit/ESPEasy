@@ -69,9 +69,10 @@ uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32
 
 
   const size_t expected_size = createTaskInfoJson(false);
-  MQTTclient.beginPublish(topic.c_str(), expected_size, false);
-  createTaskInfoJson(true);
-  MQTTclient.endPublish();
+  if (MQTTclient.beginPublish(topic.c_str(), expected_size, false)) {
+    createTaskInfoJson(true);
+    MQTTclient.endPublish();
+  }
   return 0;
 }
 
