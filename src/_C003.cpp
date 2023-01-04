@@ -123,7 +123,7 @@ bool do_process_c003_delay_queue(int controller_number, const Queue_element_base
   #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("TELNT: Sending pw"));
   #endif
-  client.println(getControllerPass(element.controller_idx, ControllerSettings));
+  client.println(getControllerPass(element._controller_idx, ControllerSettings));
   delay(100);
 
   while (client_available(client)) {

@@ -4,11 +4,13 @@
 
 MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
                                        taskIndex_t TaskIndex,
-                                       const String& topic, const String& payload, bool retained) :
+                                       const String& topic, const String& payload,
+                                       bool retained, bool callbackTask) :
   _retained(retained)
 {
-  controller_idx = ctrl_idx;
-  TaskIndex      = TaskIndex;
+  _controller_idx                      = ctrl_idx;
+  _taskIndex                           = TaskIndex;
+  _call_PLUGIN_PROCESS_CONTROLLER_DATA = callbackTask;
   # ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   # endif // ifdef USE_SECOND_HEAP
@@ -24,11 +26,13 @@ MQTT_queue_element::MQTT_queue_element(int         ctrl_idx,
                                        taskIndex_t TaskIndex,
                                        String   && topic,
                                        String   && payload,
-                                       bool        retained)
+                                       bool        retained,
+                                       bool        callbackTask)
   : _retained(retained)
 {
-  controller_idx = ctrl_idx;
-  TaskIndex      = TaskIndex;
+  _controller_idx                      = ctrl_idx;
+  _taskIndex                           = TaskIndex;
+  _call_PLUGIN_PROCESS_CONTROLLER_DATA = callbackTask;
 
   // Copy in the scope of the constructor, so we might store it in the 2nd heap
   # ifdef USE_SECOND_HEAP
@@ -58,9 +62,14 @@ size_t MQTT_queue_element::getSize() const {
 }
 
 bool MQTT_queue_element::isDuplicate(const Queue_element_base& other) const {
+  if (_call_PLUGIN_PROCESS_CONTROLLER_DATA || other._call_PLUGIN_PROCESS_CONTROLLER_DATA) {
+    return false;
+  }
   const MQTT_queue_element& oth = static_cast<const MQTT_queue_element&>(other);
 
-  if ((oth.controller_idx != controller_idx) ||
+  // TD-er: We do not compare the taskindex.
+  // If it were to make a difference, the topic would be different.
+  if ((oth._controller_idx != _controller_idx) ||
       (oth._retained != _retained) ||
       (oth._topic != _topic) ||
       (oth._payload != _payload)) {

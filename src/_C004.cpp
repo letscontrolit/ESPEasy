@@ -95,7 +95,7 @@ bool do_process_c004_delay_queue(int controller_number, const Queue_element_base
 // *INDENT-ON*
   String postDataStr = F("api_key=");
 
-  postDataStr += getControllerPass(element.controller_idx, ControllerSettings); // used for API key
+  postDataStr += getControllerPass(element._controller_idx, ControllerSettings); // used for API key
 
   if (element.sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
     postDataStr += F("&status=");
@@ -120,7 +120,7 @@ bool do_process_c004_delay_queue(int controller_number, const Queue_element_base
   send_via_http(
     controller_number,
     ControllerSettings,
-    element.controller_idx,
+    element._controller_idx,
     F("/update"), // uri
     F("POST"),
     F("Content-Type: application/x-www-form-urlencoded\r\n"),

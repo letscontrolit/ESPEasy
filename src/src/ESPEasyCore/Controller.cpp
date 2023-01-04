@@ -523,7 +523,7 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
   }
   MQTT_queue_element dummy_element;
 
-  dummy_element.controller_idx = controller_idx;
+  dummy_element._controller_idx = controller_idx;
 
   if (MQTTDelayHandler->queueFull(dummy_element)) {
     // The queue is full, try to make some room first.
@@ -533,7 +533,7 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
   return false;
 }
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const char *topic, const char *payload, bool retained)
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const char *topic, const char *payload, bool retained, bool callbackTask)
 {
   if (MQTTDelayHandler == nullptr) {
     return false;
@@ -542,13 +542,13 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained)));
+  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;
 }
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained) {
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained, bool callbackTask) {
   if (MQTTDelayHandler == nullptr) {
     return false;
   }
@@ -556,7 +556,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained)));
+  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;

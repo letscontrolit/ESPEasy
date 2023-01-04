@@ -29,13 +29,15 @@ public:
                               taskIndex_t   TaskIndex,
                               const String& topic,
                               const String& payload,
-                              bool          retained);
+                              bool          retained,
+                              bool          callbackTask);
 
   explicit MQTT_queue_element(int         ctrl_idx,
                               taskIndex_t TaskIndex,
                               String   && topic,
                               String   && payload,
-                              bool        retained);
+                              bool        retained,
+                              bool        callbackTask);
 
   size_t                    getSize() const;
 

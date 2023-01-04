@@ -74,7 +74,7 @@ struct EventStruct C016_getTaskSample(
   EventStruct event(element.TaskIndex);
 
   // FIXME TD-er: Is this needed?
-  //  event.ControllerIndex = element.controller_idx;
+  //  event.ControllerIndex = element._controller_idx;
   event.sensorType = element.sensorType;
 
   return event;

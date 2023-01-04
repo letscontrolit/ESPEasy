@@ -23,9 +23,16 @@ public:
   virtual UnitMessageCount_t      * getUnitMessageCount()       = 0;
 
   unsigned long _timestamp         = millis();
-  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
-  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
+  controllerIndex_t _controller_idx = INVALID_CONTROLLER_INDEX;
+  taskIndex_t _taskIndex            = INVALID_TASK_INDEX;
 
+  // Call PLUGIN_PROCESS_CONTROLLER_DATA which may process the data.
+  // Typical use case is dumping large data which would otherwise take up lot of RAM.
+  bool _call_PLUGIN_PROCESS_CONTROLLER_DATA = false;
+
+  // Some formatting of values can be done when actually sending it.
+  // This may require less RAM than keeping formatted strings in memory
+  bool _processByController = false;
 };
 
 #endif // ifndef CONTROLLERQUEUE_QUEUE_ELEMENT_BASE_H

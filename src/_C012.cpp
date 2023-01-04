@@ -115,7 +115,7 @@ bool do_process_c012_delay_queue(int controller_number, const Queue_element_base
   if (!NetworkConnected()) {
     return false;
   }
-  return element.checkDone(Blynk_get(element.txt[element.valuesSent], element.controller_idx));
+  return element.checkDone(Blynk_get(element.txt[element.valuesSent], element._controller_idx));
 }
 
 #endif // ifdef USES_C012

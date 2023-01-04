@@ -120,24 +120,38 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P146_MINIMAL_SEND_INTERVAL);
 
         if (P146_GET_SEND_BINARY) {
-          // FIXME TD-er: Implement flushing binary format to MQTT controller
-          P146_data_struct::sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH);
+          P146_data_struct::prepareBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH);
         } else {
           // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
           // FIXME TD-er: Maybe decimate this, so the broker does have an idea of where we are?
 
-          /*success =*/ P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP);
+          if (P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
+            int readFileNr    = 0;
+            const int readPos = ControllerCache.getPeekFilePos(readFileNr);
+            P146_TASKVALUE_FILENR  = readFileNr;
+            P146_TASKVALUE_FILEPOS = readPos;
+          }
         }
       } else {
         // Default to 1 sec
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 1000);
       }
 
-      int readFileNr    = 0;
-      const int readPos = ControllerCache.getPeekFilePos(readFileNr);
-      P146_TASKVALUE_FILENR  = readFileNr;
-      P146_TASKVALUE_FILEPOS = readPos;
+      break;
+    }
 
+    case PLUGIN_PROCESS_CONTROLLER_DATA:
+    {
+      if (P146_GET_SEND_BINARY) {
+        if (0 != P146_data_struct::sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH)) {
+          int readFileNr    = 0;
+          const int readPos = ControllerCache.getPeekFilePos(readFileNr);
+          P146_TASKVALUE_FILENR  = readFileNr;
+          P146_TASKVALUE_FILEPOS = readPos;
+        }
+        success = true;
+      }
+    
       break;
     }
 
@@ -152,7 +166,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
                         F("maxmsgsize"),
                         P146_MQTT_MESSAGE_LENGTH,
                         sizeof(C016_binary_element) + 16,
-                        MQTT_MAX_PACKET_SIZE - 200);
+                        32768);
 
       addFormSubHeader(F("Non MQTT Output Options"));
       addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);

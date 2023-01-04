@@ -56,7 +56,7 @@ void ControllerDelayHandlerStruct::configureControllerSettings(const ControllerS
 }
 
 bool ControllerDelayHandlerStruct::readyToProcess(const Queue_element_base& element) const {
-  const protocolIndex_t protocolIndex = getProtocolIndex_from_ControllerIndex(element.controller_idx);
+  const protocolIndex_t protocolIndex = getProtocolIndex_from_ControllerIndex(element._controller_idx);
 
   if (protocolIndex == INVALID_PROTOCOL_INDEX) {
     return false;
@@ -90,7 +90,7 @@ bool ControllerDelayHandlerStruct::queueFull(const Queue_element_base& element) 
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Controller-");
-    log += element.controller_idx + 1;
+    log += element._controller_idx + 1;
     log += F(" : Memory used: ");
     log += getQueueMemorySize();
     log += F(" bytes ");
@@ -126,7 +126,7 @@ bool ControllerDelayHandlerStruct::isDuplicate(const Queue_element_base& element
 #ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->get()->controller_idx);
+          const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->get()->_controller_idx);
           String log                  = get_formatted_Controller_number(cpluginID);
           log += F(" : Remove duplicate");
           addLogMove(LOG_LEVEL_DEBUG, log);
@@ -163,7 +163,7 @@ bool ControllerDelayHandlerStruct::addToQueue(std::unique_ptr<Queue_element_base
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex((*element).controller_idx);
+    const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex((*element)._controller_idx);
     String log                  = get_formatted_Controller_number(cpluginID);
     log += F(" : queue full");
     addLogMove(LOG_LEVEL_DEBUG, log);
@@ -260,7 +260,7 @@ void ControllerDelayHandlerStruct::process(
     MakeControllerSettings(ControllerSettings);
 
     if (AllocatedControllerSettings()) {
-      LoadControllerSettings(element->controller_idx, ControllerSettings);
+      LoadControllerSettings(element->_controller_idx, ControllerSettings);
       configureControllerSettings(ControllerSettings);
       START_TIMER;
       markProcessed(func(controller_number, *element, ControllerSettings));

@@ -39,6 +39,8 @@ struct ControllerCache_struct {
 
   int    getPeekFilePos(int& peekFileNr) const;
 
+  int    getPeekFileSize(int peekFileNr) const;
+
   void   setPeekFilePos(int peekFileNr, int peekReadPos);
 
   // Read data without marking it as being read.

@@ -9,8 +9,8 @@ C011_queue_element::C011_queue_element(const struct EventStruct *event) :
   idx(event->idx),
   sensorType(event->sensorType)
 {
-  controller_idx = event->ControllerIndex;
-  TaskIndex = event->TaskIndex;
+  _controller_idx = event->ControllerIndex;
+  _taskIndex = event->TaskIndex;
 }
 
 size_t C011_queue_element::getSize() const {
@@ -26,8 +26,8 @@ size_t C011_queue_element::getSize() const {
 bool C011_queue_element::isDuplicate(const Queue_element_base& other) const {
   const C011_queue_element& oth = static_cast<const C011_queue_element&>(other);
 
-  if ((oth.controller_idx != controller_idx) ||
-      (oth.TaskIndex != TaskIndex) ||
+  if ((oth._controller_idx != _controller_idx) ||
+      (oth._taskIndex != _taskIndex) ||
       (oth.sensorType != sensorType) ||
       (oth.idx != idx)) {
     return false;

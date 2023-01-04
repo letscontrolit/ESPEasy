@@ -103,7 +103,7 @@ bool do_process_c007_delay_queue(int controller_number, const Queue_element_base
   }
   url += '}';
   url += F("&apikey=");
-  url += getControllerPass(element.controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
+  url += getControllerPass(element._controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
 
 #ifndef BUILD_NO_DEBUG
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
@@ -115,7 +115,7 @@ bool do_process_c007_delay_queue(int controller_number, const Queue_element_base
   send_via_http(
     controller_number,
     ControllerSettings,
-    element.controller_idx,
+    element._controller_idx,
     url,
     F("GET"),
     EMPTY_STRING,

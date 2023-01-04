@@ -16,6 +16,9 @@ public:
   static uint32_t sendBinaryInBulk(taskIndex_t P146_TaskIndex,
                                    uint32_t    messageSize);
 
+  static bool prepareBinaryInBulk(taskIndex_t P146_TaskIndex,
+                                  uint32_t    messageSize);
+
   static bool     sendViaOriginalTask(taskIndex_t P146_TaskIndex,
                                       bool        sendTimestamp);
 

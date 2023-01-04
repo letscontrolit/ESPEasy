@@ -62,10 +62,10 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex();
 
 bool MQTT_queueFull(controllerIndex_t controller_idx);
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained);
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained, bool callbackTask = false);
 
 // Publish using the move operator for topic and message
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained);
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained, bool callbackTask = false);
 
 
 /*********************************************************************************************\

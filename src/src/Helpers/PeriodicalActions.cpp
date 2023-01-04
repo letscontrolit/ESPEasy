@@ -292,22 +292,40 @@ void processMQTTdelayQueue() {
 
   if (element == nullptr) { return; }
 
-  if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-    if (WiFiEventData.connectionFailures > 0) {
-      --WiFiEventData.connectionFailures;
+  bool handled = false;
+
+  if (element->_call_PLUGIN_PROCESS_CONTROLLER_DATA) {
+    struct EventStruct TempEvent(element->_taskIndex);
+    String dummy;
+
+    // FIXME TD-er: Do we need anything from the element in the event?
+//    TempEvent.String1 = element->_topic;
+//    TempEvent.String2 = element->_payload;
+    if (PluginCall(PLUGIN_PROCESS_CONTROLLER_DATA, &TempEvent, dummy)) {
+      handled = true;
+      MQTTDelayHandler->markProcessed(true);
+    } else {
+      MQTTDelayHandler->markProcessed(false);
     }
-    MQTTDelayHandler->markProcessed(true);
-  } else {
-    MQTTDelayHandler->markProcessed(false);
+  } else
+  if (!handled) {
+    if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
+      if (WiFiEventData.connectionFailures > 0) {
+        --WiFiEventData.connectionFailures;
+      }
+      MQTTDelayHandler->markProcessed(true);
+    } else {
+      MQTTDelayHandler->markProcessed(false);
 #ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("MQTT : process MQTT queue not published, ");
-      log += MQTTDelayHandler->sendQueue.size();
-      log += F(" items left in queue");
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("MQTT : process MQTT queue not published, ");
+        log += MQTTDelayHandler->sendQueue.size();
+        log += F(" items left in queue");
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
 #endif // ifndef BUILD_NO_DEBUG
+    }
   }
   Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();

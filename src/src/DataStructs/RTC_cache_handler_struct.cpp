@@ -87,10 +87,22 @@ int RTC_cache_handler_struct::getPeekFilePos(int& peekFileNr) {
   return _peekreadpos;
 }
 
+int RTC_cache_handler_struct::getPeekFileSize(int peekFileNr) const {
+  if (fp) {
+    return fp.size();
+  }
+  return -1;
+}
+
 void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekReadPos) {
   validateFilePos(newPeekFileNr, newPeekReadPos);
 
   if (fp) {
+    if (newPeekReadPos >= fp.size() && _peekfilenr == newPeekFileNr) {
+      newPeekFileNr++;
+      newPeekReadPos = 0;
+      validateFilePos(newPeekFileNr, newPeekReadPos);
+    }
     if (_peekfilenr != newPeekFileNr) {
       // Not the same file
       fp.close();

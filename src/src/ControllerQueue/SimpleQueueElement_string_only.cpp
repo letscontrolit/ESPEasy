@@ -3,8 +3,8 @@
 
 simple_queue_element_string_only::simple_queue_element_string_only(int ctrl_idx, taskIndex_t TaskIndex,  String&& req)
 {
-  controller_idx = ctrl_idx;
-  TaskIndex      = TaskIndex;
+  _controller_idx = ctrl_idx;
+  _taskIndex      = TaskIndex;
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
 
@@ -26,8 +26,8 @@ size_t simple_queue_element_string_only::getSize() const {
 bool simple_queue_element_string_only::isDuplicate(const Queue_element_base& other) const {
   const simple_queue_element_string_only& oth = static_cast<const simple_queue_element_string_only&>(other);
 
-  if ((oth.controller_idx != controller_idx) ||
-      (oth.TaskIndex != TaskIndex) ||
+  if ((oth._controller_idx != _controller_idx) ||
+      (oth._taskIndex != _taskIndex) ||
       (oth.txt != txt)) {
     return false;
   }

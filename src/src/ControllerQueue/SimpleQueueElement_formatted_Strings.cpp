@@ -11,13 +11,13 @@ SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(struc
   sensorType(event->sensorType),
   valuesSent(0)
 {
-  controller_idx = event->ControllerIndex;
-  TaskIndex = event->TaskIndex;
+  _controller_idx = event->ControllerIndex;
+  _taskIndex = event->TaskIndex;
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   #endif // ifdef USE_SECOND_HEAP
 
-  valueCount = getValueCountForTask(TaskIndex);
+  valueCount = getValueCountForTask(_taskIndex);
 
   for (uint8_t i = 0; i < valueCount; ++i) {
     txt[i] = formatUserVarNoCheck(event, i);
@@ -29,8 +29,8 @@ SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(const
   sensorType(event->sensorType),
   valuesSent(0),
   valueCount(value_count) {
-  controller_idx = event->ControllerIndex;
-  TaskIndex      = event->TaskIndex;
+  _controller_idx = event->ControllerIndex;
+  _taskIndex      = event->TaskIndex;
 }
 
 SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(SimpleQueueElement_formatted_Strings&& rval)
@@ -38,9 +38,9 @@ SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(Simpl
   sensorType(rval.sensorType),
   valuesSent(rval.valuesSent), valueCount(rval.valueCount)
 {
-  _timestamp     = rval._timestamp;
-  controller_idx = rval.controller_idx;
-  TaskIndex      = rval.TaskIndex;
+  _timestamp      = rval._timestamp;
+  _controller_idx = rval._controller_idx;
+  _taskIndex      = rval._taskIndex;
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   #endif // ifdef USE_SECOND_HEAP
@@ -51,13 +51,13 @@ SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(Simpl
 }
 
 SimpleQueueElement_formatted_Strings& SimpleQueueElement_formatted_Strings::operator=(SimpleQueueElement_formatted_Strings&& rval) {
-  idx            = rval.idx;
-  _timestamp     = rval._timestamp;
-  TaskIndex      = rval.TaskIndex;
-  controller_idx = rval.controller_idx;
-  sensorType     = rval.sensorType;
-  valuesSent     = rval.valuesSent;
-  valueCount     = rval.valueCount;
+  idx             = rval.idx;
+  _timestamp      = rval._timestamp;
+  _taskIndex      = rval._taskIndex;
+  _controller_idx = rval._controller_idx;
+  sensorType      = rval.sensorType;
+  valuesSent      = rval.valuesSent;
+  valueCount      = rval.valueCount;
 
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     #ifdef USE_SECOND_HEAP
@@ -92,8 +92,8 @@ size_t SimpleQueueElement_formatted_Strings::getSize() const {
 bool SimpleQueueElement_formatted_Strings::isDuplicate(const Queue_element_base& rval) const {
   const SimpleQueueElement_formatted_Strings& oth = static_cast<const SimpleQueueElement_formatted_Strings&>(rval);
 
-  if ((oth.controller_idx != controller_idx) ||
-      (oth.TaskIndex != TaskIndex) ||
+  if ((oth._controller_idx != _controller_idx) ||
+      (oth._taskIndex != _taskIndex) ||
       (oth.sensorType != sensorType) ||
       (oth.valueCount != valueCount) ||
       (oth.idx != idx)) {

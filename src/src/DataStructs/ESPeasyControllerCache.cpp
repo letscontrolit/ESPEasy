@@ -80,6 +80,13 @@ int  ControllerCache_struct::getPeekFilePos(int& peekFileNr) const {
   return -1;
 }
 
+int  ControllerCache_struct::getPeekFileSize(int peekFileNr) const {
+  if (_RTC_cache_handler != nullptr) {
+    return _RTC_cache_handler->getPeekFileSize(peekFileNr);
+  }
+  return -1;
+}
+
 void ControllerCache_struct::setPeekFilePos(int peekFileNr, int peekReadPos) {
   if (_RTC_cache_handler != nullptr) {
     _RTC_cache_handler->setPeekFilePos(peekFileNr, peekReadPos);

@@ -43,6 +43,8 @@ struct RTC_cache_handler_struct
 
   int          getPeekFilePos(int& peekFileNr);
 
+  int          getPeekFileSize(int peekFileNr) const;
+
   void         setPeekFilePos(int peekFileNr, int peekReadPos);
 
   bool         peek(uint8_t     *data,

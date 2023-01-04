@@ -174,9 +174,9 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
             jsonString += x;
             jsonString += F("\":{");
             {
-              jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element.TaskIndex));
+              jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element._taskIndex));
               jsonString += ',';
-              jsonString += to_json_object_value(F("valueName"), getTaskValueName(element.TaskIndex, x));
+              jsonString += to_json_object_value(F("valueName"), getTaskValueName(element._taskIndex, x));
               jsonString += ',';
               jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
               jsonString += ',';
@@ -203,7 +203,7 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
   send_via_http(
     controller_number,
     ControllerSettings,
-    element.controller_idx,
+    element._controller_idx,
     F("/ESPEasy"),
     F("POST"),
     EMPTY_STRING,

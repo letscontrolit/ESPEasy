@@ -77,7 +77,7 @@ uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32
 
 uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
 {
-  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  const controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
   if (!validControllerIndex(enabledMqttController)) {
     return 0;
@@ -86,8 +86,28 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
 
   // Keep the current peek position, so we can reset it when we fail to deliver the data to the controller.
   int peekFileNr        = 0;
-  const int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+  int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+  if (peekFileNr <= 0) {
+    return 0;
+  }
 
+  int peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+  if (peekFileSize < 0) {
+    // Peek file is not opened. Setting peek file pos will try to open it.
+    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
+    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+  }
+  // FIXME TD-er: This is messy, but needed to increment peek file nr.
+  if (peekReadPos >= peekFileSize) {
+    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
+    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+  }
+  if (peekFileSize < 0) {
+    // peek file still not open.
+    return 0;
+  }
 
   String message;
 
@@ -96,47 +116,67 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   message += peekReadPos;
   message += ';';
 
-  size_t messageLength = message.length();
+  const size_t messageLength = message.length();
+  const size_t data_left     = (maxMessageSize - messageLength);
+  const size_t chunkSize     = sizeof(C016_binary_element);
+  size_t nrChunks            = data_left / ((2 * chunkSize) + 1);
+  if (peekReadPos < peekFileSize) {
+    // Try to serve the rest of the file in 1 go.
+    const size_t chunksLeftInFile = (peekFileSize - peekReadPos) / chunkSize;
 
-  const size_t chunkSize           = sizeof(C016_binary_element);
-  const size_t nrChunks            = (maxMessageSize - messageLength) / ((2 * chunkSize) + 1);
-  const size_t expectedMessageSize = messageLength + (nrChunks * ((2 * chunkSize) + 1));
-
-  if (0 == message.reserve(expectedMessageSize)) { return 0; }
-
-  bool done = false;
-
-  for (int chunk = 0; chunk < nrChunks && !done; ++chunk) {
-    C016_binary_element element;
-
-    if (ControllerCache.peek(reinterpret_cast<uint8_t *>(&element), chunkSize))
-    {
-      // It makes no sense to keep the controller index when storing it.
-      element.setPluginID_insteadOf_controller_idx();
-      message += formatToHex_array(reinterpret_cast<const uint8_t *>(&element), chunkSize);
-      message += ';';
-    } else {
-      done = true;
+    if (chunksLeftInFile < nrChunks) {
+      nrChunks = chunksLeftInFile;
     }
   }
 
-  if (message.length() == messageLength) {
-    // Nothing added, don't bother sending the peek pos
+  const size_t expectedMessageSize = messageLength + (nrChunks * ((2 * chunkSize) + 1));
+
+  if (nrChunks == 0) {
+    // Nothing to be sent
     return 0;
   }
-  messageLength = message.length();
+
 
   String topic = F("tracker_v2/%sysname%_%unit%/%tskname%/upload");
   topic.replace(F("%tskname%"), getTaskDeviceName(P146_TaskIndex));
   topic = parseTemplate(topic);
 
-  if (MQTTpublish(enabledMqttController, P146_TaskIndex, std::move(topic), std::move(message), false)) {
-    return messageLength;
+  if (!MQTTclient.beginPublish(topic.c_str(), expectedMessageSize, false)) {
+    // Can't start a message
+    return 0;
+  }
+  writeToMqtt(message, true);
+  for (int chunk = 0; chunk < nrChunks; ++chunk) {
+    C016_binary_element element;
+
+    if (ControllerCache.peek(reinterpret_cast<uint8_t *>(&element), chunkSize))
+    {
+      // Plugin ID is way more interesting than the controller index.
+      element.setPluginID_insteadOf_controller_idx();
+    }
+    writeToMqtt(formatToHex_array(reinterpret_cast<const uint8_t *>(&element), chunkSize), true);
+    writeToMqtt(';', true);
+  }
+  MQTTclient.endPublish();
+  // Restore peek position
+//  ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+  return expectedMessageSize;
+}
+
+bool P146_data_struct::prepareBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t messageSize)
+{
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+
+  if (!validControllerIndex(enabledMqttController)) {
+    return 0;
   }
 
-  // Restore peek position
-  ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
-  return 0;
+  // Just create an 'empty' controller queue message so we will use the controller's mechanism to limit the sending rate.
+  String topic;
+  String message;
+  const bool callbackTask = true;
+
+  return MQTTpublish(enabledMqttController, P146_TaskIndex, std::move(topic), std::move(message), false, callbackTask);
 }
 
 bool P146_data_struct::sendViaOriginalTask(

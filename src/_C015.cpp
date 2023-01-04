@@ -252,7 +252,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 bool do_process_c015_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C015_queue_element& element = static_cast<const C015_queue_element&>(element_base);
 // *INDENT-ON*
-  if (!Settings.ControllerEnabled[element.controller_idx]) {
+  if (!Settings.ControllerEnabled[element._controller_idx]) {
     // controller has been disabled. Answer true to flush queue.
     return true;
   }
@@ -261,7 +261,7 @@ bool do_process_c015_delay_queue(int controller_number, const Queue_element_base
     return false;
   }
 
-  if (!Blynk_keep_connection_c015(element.controller_idx, ControllerSettings)) {
+  if (!Blynk_keep_connection_c015(element._controller_idx, ControllerSettings)) {
     return false;
   }
 

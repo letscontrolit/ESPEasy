@@ -10,8 +10,8 @@
 
 C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount)
 {
-  controller_idx = event->ControllerIndex;
-  TaskIndex      = event->TaskIndex;
+  _controller_idx = event->ControllerIndex;
+  _taskIndex      = event->TaskIndex;
   # if FEATURE_PACKED_RAW_DATA
     #  ifdef USE_SECOND_HEAP
 
@@ -35,8 +35,8 @@ size_t C018_queue_element::getSize() const {
 bool C018_queue_element::isDuplicate(const Queue_element_base& other) const {
   const C018_queue_element& oth = static_cast<const C018_queue_element&>(other);
 
-  if ((oth.controller_idx != controller_idx) ||
-      (oth.TaskIndex != TaskIndex) ||
+  if ((oth._controller_idx != _controller_idx) ||
+      (oth._taskIndex != _taskIndex) ||
       (oth.packed != packed)) {
     return false;
   }
