@@ -155,7 +155,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
                        formatGpioName_output(F("Motor Fwd")), 
                        F("taskdevicepin1"),
                        Settings.TaskDevicePin1[event->TaskIndex]);
-      addFormCheckBox(F("Motor Fwd Inverted"), F("mot_fwd_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_FWD_INVERTED));
+      addFormCheckBox(F("Motor Fwd Inverted"), F("fwd_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_FWD_INVERTED));
 
       addFormSeparator(2);
 
@@ -163,7 +163,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
                        formatGpioName_output(F("Motor Rev")), 
                        F("taskdevicepin2"),
                        Settings.TaskDevicePin2[event->TaskIndex]);
-      addFormCheckBox(F("Motor Rev Inverted"), F("mot_rev_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED));
+      addFormCheckBox(F("Motor Rev Inverted"), F("rev_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED));
 
       addFormSeparator(2);
 
@@ -176,11 +176,11 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
           options[i]      = P098_config_struct::toString(static_cast<P098_config_struct::PWM_mode_type>(i));
           optionValues[i] = i;
         }
-        addFormSelector(F("Motor Control"), F("p098_motor_contr"), P098_PWM_MODE_TYPES, options, optionValues, P098_MOTOR_CONTROL);
+        addFormSelector(F("Motor Control"), F("motor_contr"), P098_PWM_MODE_TYPES, options, optionValues, P098_MOTOR_CONTROL);
       }
-      addFormNumericBox(F("PWM Frequency"), F("p098_pwm_freq"), P098_PWM_FREQ, 50, 100000);
+      addFormNumericBox(F("PWM Frequency"), F("pwm_freq"), P098_PWM_FREQ, 50, 100000);
       addUnit(F("Hz"));
-      addFormNumericBox(F("PWM Duty Cycle"), F("p098_pwm_duty"), P098_PWM_DUTY, 0, 1023);
+      addFormNumericBox(F("PWM Duty Cycle"), F("pwm_duty"), P098_PWM_DUTY, 0, 1023);
       addFormCheckBox(F("PWM Soft Start/Stop"), F("pwm_soft_st"), bitRead(P098_FLAGS, P098_FLAGBIT_PWM_SOFT_STARTSTOP));
 
 
@@ -243,18 +243,18 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       P098_LIMIT_SWA_DEBOUNCE = getFormItemInt(F("limit_a_debounce"));
       P098_LIMIT_SWB_DEBOUNCE = getFormItemInt(F("limit_b_debounce"));
 
-      P098_MOTOR_CONTROL = getFormItemInt(F("p098_motor_contr"));
-      P098_PWM_FREQ      = getFormItemInt(F("p098_pwm_freq"));
-      P098_PWM_DUTY      = getFormItemInt(F("p098_pwm_duty"));
+      P098_MOTOR_CONTROL = getFormItemInt(F("motor_contr"));
+      P098_PWM_FREQ      = getFormItemInt(F("pwm_freq"));
+      P098_PWM_DUTY      = getFormItemInt(F("pwm_duty"));
       # ifdef ESP32
       P098_ANALOG_GPIO = getFormItemInt(F("analogpin"));
       # endif // ifdef ESP32
 
       P098_FLAGS = 0;
 
-      if (isFormItemChecked(F("mot_fwd_inv"))) { bitSet(P098_FLAGS, P098_FLAGBIT_MOTOR_FWD_INVERTED); }
+      if (isFormItemChecked(F("fwd_inv"))) { bitSet(P098_FLAGS, P098_FLAGBIT_MOTOR_FWD_INVERTED); }
 
-      if (isFormItemChecked(F("mot_rev_inv"))) { bitSet(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED); }
+      if (isFormItemChecked(F("rev_inv"))) { bitSet(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED); }
 
       if (isFormItemChecked(F("pwm_soft_st"))) { bitSet(P098_FLAGS, P098_FLAGBIT_PWM_SOFT_STARTSTOP); }
 
