@@ -35,11 +35,9 @@ enum P145_algorithm
 };
 
 // Structure with sensor specific conversion data
+// Members are preferrably sorted by memory alignment
 struct P145_SENSORDEF
 {
-  char name[8];       // Sensor type name
-  char gas[8];        // Measured gas concentration
-  P145_algorithm alg; // Preferred/tuned algorithm
   float cleanRatio;   // Rs/R0 ratio in clean air
   float para;         // PARA scaling factor value
   float parb;         // PARB exponent value
@@ -50,6 +48,10 @@ struct P145_SENSORDEF
   float core;         // CORE
   float corf;         // CORF
   float corg;         // CORG
+  P145_algorithm alg; // Preferred/tuned algorithm
+  char name[8];       // Sensor type name
+  char gas[8];        // Measured gas concentration
+
 };
 
 struct P145_data_struct : public PluginTaskData_base 
@@ -82,17 +84,17 @@ struct P145_data_struct : public PluginTaskData_base
     bool plugin_init();
     bool plugin_ten_per_second();
     void setSensorData(int stype, bool comp, bool cal, float load, float zero, float ref);
-    float getCalibrationValue();
-    float getAutoCalibrationValue();
+    float getCalibrationValue() const;
+    float getAutoCalibrationValue() const;
     static const __FlashStringHelper * getTypeName( int stype);
     static const __FlashStringHelper * getGasName( int stype);
     static int getNbrOfTypes();
-    void dump();
+    void dump() const;
     
     private:
     void  calibrate (float Rcal);
     float getAnalogValue();
-    float getResistance(float val);
+    float getResistance(float val) const;
     float getRZero(float rSensor);
     float getCorrectedRZero(float rSensor, float temperature, float humidity);
     float getPPM(float rSensor);

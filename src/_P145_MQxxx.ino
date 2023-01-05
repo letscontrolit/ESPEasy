@@ -27,16 +27,16 @@
 // VCC:      Supply voltage on the sensor. (#define VCC)
 // GND:      Reference voltage, ground
 // Rsensor:  Sensor resistor value
-// Rload:    Load resistor (configuration PCONFIG_FLOAT_RLOAD)
+// Rload:    Load resistor (configuration P145_PCONFIG_RLOAD)
 // Rzero:    Calibrated reference resistance used as input for Rsensor to concentration value conversion
-//           (configuration PCONFIG_FLOAT_RZERO)
-// Reference:Reference value expected when calibrating Rzero (configuration PCONFIG_FLOAT_REF)
+//           (configuration P145_PCONFIG_RZERO)
+// Reference:Reference value expected when calibrating Rzero (configuration P145_PCONFIG_REF)
 // Rcal:     Computed Rzero as if the current measurement value is at Reference level
 //
 // Temperature/humidity  compensation is supported for some sensors. 
 // In these cases the value will be read from another task.
-// temperature: Read from task/value configured in PCONFIG_TEMP_TASK/PCONFIG_TEMP_VAL
-// humidity:    Read from task/value configured in PCONFIG_HUM_TASK/PCONFIG_HUM_VAL
+// temperature: Read from task/value configured in P145_PCONFIG_TEMP_TASK/P145_PCONFIG_TEMP_VAL
+// humidity:    Read from task/value configured in P145_PCONFIG_HUM_TASK/P145_PCONFIG_HUM_VAL
 //
 // Analog input is sampled 10/second and averaged with the same oversampling algoritm of P002_ADC
 // Note: ESP8266 uses hard coded A0 as analog input.
@@ -56,15 +56,15 @@
 ///################################### Configuration data ###############################################
 // This plugin uses the following predefined static data storage 
 // analog input reading which is now always A0.
-// PCONFIG_FLOAT_RLOAD  PCONFIG_FLOAT(0)  RLOAD   [Ohm] 
-// PCONFIG_FLOAT_RZERO  PCONFIG_FLOAT(1)  RZERO   [Ohm]
-// PCONFIG_FLOAT_REF    PCONFIG_FLOAT(2)  REF. level [ppm]
-// PCONFIG_FLAGS        PCONFIG(0)        Enable compensation & Enable Calibration
-// PCONFIG_TEMP_TASK    PCONFIG(1)        Temperature compensation task
-// PCONFIG_TEMP_VAL     PCONFIG(2)        Temperature compensation value
-// PCONFIG_HUM_TASK     PCONFIG(3)        Humidity compensation task
-// PCONFIG_HUM_VAL      PCONFIG(4)        Humidity compensation value
-// PCONFIG_SENSORT      PCONFIG(5)        Sensor type
+// P145_PCONFIG_RLOAD  PCONFIG_FLOAT(0)  RLOAD   [Ohm] 
+// P145_PCONFIG_RZERO  PCONFIG_FLOAT(1)  RZERO   [Ohm]
+// P145_PCONFIG_REF    PCONFIG_FLOAT(2)  REF. level [ppm]
+// P145_PCONFIG_FLAGS        PCONFIG(0)        Enable compensation & Enable Calibration
+// P145_PCONFIG_TEMP_TASK    PCONFIG(1)        Temperature compensation task
+// P145_PCONFIG_TEMP_VAL     PCONFIG(2)        Temperature compensation value
+// P145_PCONFIG_HUM_TASK     PCONFIG(3)        Humidity compensation task
+// P145_PCONFIG_HUM_VAL      PCONFIG(4)        Humidity compensation value
+// P145_PCONFIG_SENSORT      PCONFIG(5)        Sensor type
 //#######################################################################################################
 
 #include "_Plugin_Helper.h"
@@ -82,15 +82,15 @@
 // PCONFIG_FLOAT : stors a float (4)
 // PCONFIG_LONG  : stores a long (4, shared with PCONFIG_ULONG)
 // PCONFIG_ULONG : stores an unsigned long (4, shared with PCONFIG_LONG)
-#define PCONFIG_FLOAT_RLOAD PCONFIG_FLOAT(0)
-#define PCONFIG_FLOAT_RZERO PCONFIG_FLOAT(1)
-#define PCONFIG_FLOAT_REF   PCONFIG_FLOAT(2)
-#define PCONFIG_FLAGS       PCONFIG(0)
-#define PCONFIG_TEMP_TASK   PCONFIG(1)
-#define PCONFIG_TEMP_VAL    PCONFIG(2)
-#define PCONFIG_HUM_TASK    PCONFIG(3)
-#define PCONFIG_HUM_VAL     PCONFIG(4)
-#define PCONFIG_SENSORT     PCONFIG(5)
+#define P145_PCONFIG_RLOAD       PCONFIG_FLOAT(0)
+#define P145_PCONFIG_RZERO       PCONFIG_FLOAT(1)
+#define P145_PCONFIG_REF         PCONFIG_FLOAT(2)
+#define P145_PCONFIG_FLAGS       PCONFIG(0)
+#define P145_PCONFIG_TEMP_TASK   PCONFIG(1)
+#define P145_PCONFIG_TEMP_VAL    PCONFIG(2)
+#define P145_PCONFIG_HUM_TASK    PCONFIG(3)
+#define P145_PCONFIG_HUM_VAL     PCONFIG(4)
+#define P145_PCONFIG_SENSORT     PCONFIG(5)
 
 // PIN/port configuration is stored in the following:
 #define CONFIG_PIN_AIN      CONFIG_PIN1
@@ -143,10 +143,10 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       }
       for (int i=0; i<x; i++)
       {
-        options[i] = (String)P145_data_struct::getTypeName(i) + (String)(F(" - ")) + (String)P145_data_struct::getGasName(i);
+        options[i] = concat(P145_data_struct::getTypeName(i), F(" - ")) + (String)P145_data_struct::getGasName(i);
         optionValues[i] = i; 
       }
-      addFormSelector(F("Sensor type"), F("plugin_145_sensor"), x, options, optionValues, PCONFIG_SENSORT);
+      addFormSelector(F("Sensor type"), F("plugin_145_sensor"), x, options, optionValues, P145_PCONFIG_SENSORT);
 
 # ifdef ESP32
       // Analog input selection
@@ -154,11 +154,11 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 # endif // ifdef ESP32
 
-      addFormTextBox(F("Load Resistance"), F("plugin_145_RLOAD"), String(PCONFIG_FLOAT_RLOAD), 33);
+      addFormFloatNumberBox(F("Load Resistance"), F("plugin_145_RLOAD"), P145_PCONFIG_RLOAD, 0.0, 10e6, 2U);
       addUnit(F("Ohm"));
-      addFormTextBox(F("R Zero"), F("plugin_145_RZERO"), String(PCONFIG_FLOAT_RZERO), 33);
+      addFormFloatNumberBox(F("R Zero"), F("plugin_145_RZERO"), P145_PCONFIG_RZERO, 0.0, 10e6, 2U);
       addUnit(F("Ohm"));
-      addFormTextBox(F("Reference Level"), F("plugin_145_REFLEVEL"), String(PCONFIG_FLOAT_REF), 33);
+       addFormFloatNumberBox(F("Reference Level"), F("plugin_145_REFLEVEL"), P145_PCONFIG_REF, 0.0, 10e6, 2U);
       addUnit(F("ppm"));
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P145_data != nullptr)
@@ -171,24 +171,24 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       }
 
       addFormSeparator(2);
-      // Auto calibration and Temp/hum compensation flags are bitfields in PCONFIG_FLAGS
-      bool compensate = PCONFIG_FLAGS & 0x0001;
-      bool calibrate = (PCONFIG_FLAGS >> 1) & 0x0001;
+      // Auto calibration and Temp/hum compensation flags are bitfields in P145_PCONFIG_FLAGS
+      bool compensate = P145_PCONFIG_FLAGS & 0x0001;
+      bool calibrate = (P145_PCONFIG_FLAGS >> 1) & 0x0001;
       addFormCheckBox(F("Enable automatic calibration"), F("plugin_145_enable_calibrarion"), calibrate);
       addFormCheckBox(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate);
       addFormNote(F("If this is enabled, the Temperature and Humidity values below need to be configured."));
       // temperature
       addHtml(F("<TR><TD>Temperature:<TD>"));
-      addTaskSelect(F("plugin_145_temperature_task"), PCONFIG_TEMP_TASK);
-      LoadTaskSettings(PCONFIG_TEMP_TASK); // we need to load the values from another task for selection!
+      addTaskSelect(F("plugin_145_temperature_task"), P145_PCONFIG_TEMP_TASK);
+      LoadTaskSettings(P145_PCONFIG_TEMP_TASK); // we need to load the values from another task for selection!
       addHtml(F("<TR><TD>Temperature Value:<TD>"));
-      addTaskValueSelect(F("plugin_145_temperature_value"), PCONFIG_TEMP_VAL, PCONFIG_TEMP_TASK);
+      addTaskValueSelect(F("plugin_145_temperature_value"), P145_PCONFIG_TEMP_VAL, P145_PCONFIG_TEMP_TASK);
       // humidity
       addHtml(F("<TR><TD>Humidity:<TD>"));
-      addTaskSelect(F("plugin_145_humidity_task"), PCONFIG_HUM_TASK);
-      LoadTaskSettings(PCONFIG_HUM_TASK); // we need to load the values from another task for selection!
+      addTaskSelect(F("plugin_145_humidity_task"), P145_PCONFIG_HUM_TASK);
+      LoadTaskSettings(P145_PCONFIG_HUM_TASK); // we need to load the values from another task for selection!
       addHtml(F("<TR><TD>Humidity Value:<TD>"));
-      addTaskValueSelect(F("plugin_145_humidity_value"), PCONFIG_HUM_VAL, PCONFIG_HUM_TASK);
+      addTaskValueSelect(F("plugin_145_humidity_value"), P145_PCONFIG_HUM_VAL, P145_PCONFIG_HUM_TASK);
       LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
 
       success = true;
@@ -197,23 +197,22 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG_SENSORT   = getFormItemInt(F("plugin_145_sensor"));
-      PCONFIG_FLOAT_RLOAD = getFormItemFloat(F("plugin_145_RLOAD"));
-      PCONFIG_FLOAT_RZERO = getFormItemFloat(F("plugin_145_RZERO"));
-      PCONFIG_FLOAT_REF   = getFormItemFloat(F("plugin_145_REFLEVEL"));
-      bool compensate = isFormItemChecked(F("plugin_145_enable_compensation") );
-      bool calibrate  = isFormItemChecked(F("plugin_145_enable_calibrarion") );
-      PCONFIG_FLAGS = compensate + (calibrate << 1);
-      PCONFIG_TEMP_TASK = getFormItemInt(F("plugin_145_temperature_task"));
-      PCONFIG_TEMP_VAL  = getFormItemInt(F("plugin_145_temperature_value"));
-      PCONFIG_HUM_TASK  = getFormItemInt(F("plugin_145_humidity_task"));
-      PCONFIG_HUM_VAL   = getFormItemInt(F("plugin_145_humidity_value"));
+      P145_PCONFIG_SENSORT   = getFormItemInt(F("plugin_145_sensor"));
+      P145_PCONFIG_RLOAD     = getFormItemFloat(F("plugin_145_RLOAD"));
+      P145_PCONFIG_RZERO     = getFormItemFloat(F("plugin_145_RZERO"));
+      P145_PCONFIG_REF       = getFormItemFloat(F("plugin_145_REFLEVEL"));
+      bool compensate        = isFormItemChecked(F("plugin_145_enable_compensation") );
+      bool calibrate         = isFormItemChecked(F("plugin_145_enable_calibrarion") );
+      P145_PCONFIG_FLAGS     = compensate + (calibrate << 1);
+      P145_PCONFIG_TEMP_TASK = getFormItemInt(F("plugin_145_temperature_task"));
+      P145_PCONFIG_TEMP_VAL  = getFormItemInt(F("plugin_145_temperature_value"));
+      P145_PCONFIG_HUM_TASK  = getFormItemInt(F("plugin_145_humidity_task"));
+      P145_PCONFIG_HUM_VAL   = getFormItemInt(F("plugin_145_humidity_value"));
 
-      P145_data_struct *P145_data = new (std::nothrow) P145_data_struct();
-      initPluginTaskData(event->TaskIndex, P145_data);
+      P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P145_data != nullptr)
       {
-        P145_data->setSensorData(PCONFIG_SENSORT, PCONFIG_FLAGS & 0x0001, (PCONFIG_FLAGS >> 1) & 0x0001, PCONFIG_FLOAT_RLOAD, PCONFIG_FLOAT_RZERO, PCONFIG_FLOAT_REF);
+        P145_data->setSensorData(P145_PCONFIG_SENSORT, P145_PCONFIG_FLAGS & 0x0001, (P145_PCONFIG_FLAGS >> 1) & 0x0001, P145_PCONFIG_RLOAD, P145_PCONFIG_RZERO, P145_PCONFIG_REF);
         P145_data->dump();
       }
       success = true;
@@ -230,7 +229,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
         if (P145_data != nullptr)
         {
           P145_data->plugin_init();
-          P145_data->setSensorData(PCONFIG_SENSORT, PCONFIG_FLAGS & 0x0001, (PCONFIG_FLAGS >> 1) & 0x0001, PCONFIG_FLOAT_RLOAD, PCONFIG_FLOAT_RZERO, PCONFIG_FLOAT_REF);
+          P145_data->setSensorData(P145_PCONFIG_SENSORT, P145_PCONFIG_FLAGS & 0x0001, (P145_PCONFIG_FLAGS >> 1) & 0x0001, P145_PCONFIG_RLOAD, P145_PCONFIG_RZERO, P145_PCONFIG_REF);
           P145_data->dump();
         }
       }
@@ -254,8 +253,8 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       if (P145_data != nullptr)
       {
         // we're checking a var from another task, so calculate that basevar
-        float temperature = UserVar[PCONFIG_TEMP_TASK * VARS_PER_TASK + PCONFIG_TEMP_VAL]; // in degrees C
-        float humidity = UserVar[PCONFIG_HUM_TASK * VARS_PER_TASK + PCONFIG_HUM_VAL];    // in % relative
+        float temperature = UserVar[P145_PCONFIG_TEMP_TASK * VARS_PER_TASK + P145_PCONFIG_TEMP_VAL]; // in degrees C
+        float humidity = UserVar[P145_PCONFIG_HUM_TASK * VARS_PER_TASK + P145_PCONFIG_HUM_VAL];    // in % relative
         UserVar[event->BaseVarIndex] = P145_data->readValue(temperature, humidity);
         success = true;
       }
@@ -266,12 +265,12 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
     {
       // Update Rzero in case of autocalibration
       // TODO is there an event to signal the plugin code that the value has been updated to prevent polling?
-      if ((PCONFIG_FLAGS >> 1) & 0x0001)
+      if ((P145_PCONFIG_FLAGS >> 1) & 0x0001)
       {
         P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
         if (P145_data != nullptr)
         {
-          PCONFIG_FLOAT_RZERO = P145_data->getAutoCalibrationValue();
+          P145_PCONFIG_RZERO = P145_data->getAutoCalibrationValue();
         }
       }
       break;
