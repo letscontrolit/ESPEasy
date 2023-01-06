@@ -1058,6 +1058,16 @@ void scrubDNS() {
 
 bool setDNS(int index, const IPAddress& dns) {
   if (index >= 2) return false;
+  #ifdef ESP8266
+  if(dns.isSet() && dns != WiFi.dnsIP(index)) {
+    dns_setserver(index, dns);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
+    }
+    return true;
+  }
+  #endif
+  #ifdef ESP32
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
@@ -1075,6 +1085,7 @@ bool setDNS(int index, const IPAddress& dns) {
     }
     return true;
   }
+  #endif
   return false;
 }
 
