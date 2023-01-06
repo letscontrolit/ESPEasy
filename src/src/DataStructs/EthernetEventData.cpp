@@ -43,8 +43,8 @@ void EthernetEventData_t::clearAll() {
   processedGotIP            = true;
   processedDHCPTimeout      = true;
   ethConnectAttemptNeeded  = true;
-  dns0_cache.clear();
-  dns1_cache.clear();
+  dns0_cache = IPAddress();
+  dns1_cache = IPAddress();
 }
 
 void EthernetEventData_t::markEthBegin() {

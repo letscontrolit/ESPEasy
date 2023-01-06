@@ -104,8 +104,8 @@ void WiFiEventData_t::clear_processed_flags() {
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
   processingDisconnect.clear();
-  dns0_cache.clear();
-  dns1_cache.clear();
+  dns0_cache = IPAddress();
+  dns1_cache = IPAddress();
 }
 
 void WiFiEventData_t::markWiFiBegin() {
