@@ -9,11 +9,12 @@
 //   https://github.com/miguel5612/MQSensorsLib (I borrowed code from here)
 //   https://jayconsystems.com/blog/understanding-a-gas-sensor
 //   http://davidegironi.blogspot.com/2014/01/cheap-co2-meter-using-mq135-sensor-with.html
-//   ttps://hackaday.io/project/3475-sniffing-trinket/log/12363-mq135-arduino-library
+//   https://hackaday.io/project/3475-sniffing-trinket/log/12363-mq135-arduino-library
 //
 //#################################### Change log        ###############################################
 // 2020-05-21 Refactored and extended by flashmark
 // 2022-07-11 Refactored, first attempt for calibration
+// 2023-01-06 Reworked after review
 //#################################### Description       ################################################
 // This plugin supports some gas sensors for which the resistance depends on a gas concentration (MQ-xxx)
 // Conversion depends on the sensor type. Main property is the logarithmic Rsensor/Rzero curve
@@ -55,7 +56,6 @@
 // Remember the lowest value of Rcal assuming it belongs to measuring the lowest concentration 
 ///################################### Configuration data ###############################################
 // This plugin uses the following predefined static data storage 
-// analog input reading which is now always A0.
 // P145_PCONFIG_RLOAD  PCONFIG_FLOAT(0)  RLOAD   [Ohm] 
 // P145_PCONFIG_RZERO  PCONFIG_FLOAT(1)  RZERO   [Ohm]
 // P145_PCONFIG_REF    PCONFIG_FLOAT(2)  REF. level [ppm]
@@ -139,7 +139,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       int x = P145_data_struct::getNbrOfTypes();
       if (x > P145_MAXTYPES) 
       {
-        x = P145_MAXTYPES;
+        x = P145_MAXTYPES;    // Clip to prevent array boundary out of range access
       }
       for (int i=0; i<x; i++)
       {
