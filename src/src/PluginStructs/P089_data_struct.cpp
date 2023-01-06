@@ -51,7 +51,7 @@ bool P089_data_struct::send_ping(struct EventStruct *event) {
   LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
 
   /* This one lost as well, DNS dead? */
-  if (WiFi.hostByName(hostname, ip) == false) {
+  if (!resolveHostByName(hostname, ip)) {
     return true;
   }
   destIPAddress.addr = ip;
