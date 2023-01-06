@@ -29,7 +29,7 @@ struct ExtendedControllerCredentialsStruct
 
 private:
 
-  String _strings[CONTROLLER_MAX * 2];
+  String _strings[CONTROLLER_MAX * 2]{};
 
   // TODO TD-er: Add extra WiFi credentials
 };

@@ -4,10 +4,24 @@
 
 #define EXTRA_TASK_SETTINGS_VERSION 1
 
-ExtraTaskSettingsStruct::ExtraTaskSettingsStruct() : TaskIndex(INVALID_TASK_INDEX) {
+ExtraTaskSettingsStruct::ExtraTaskSettingsStruct() : 
+  TaskIndex(INVALID_TASK_INDEX),
+  dummy1(0), version(1)
+{
   ZERO_FILL(TaskDeviceName);
 
-  clearUnusedValueNames(0);
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    ZERO_FILL(TaskDeviceFormula[i]);
+    ZERO_FILL(TaskDeviceValueNames[i]);
+    TaskDeviceValueDecimals[i] = 2;
+    
+    // Clear range to indicate no range check should be done.
+    TaskDeviceMinValue[i] = 0.0f;
+    TaskDeviceMaxValue[i] = 0.0f;
+
+    TaskDeviceErrorValue[i] = 0.0f;
+    VariousBits[i] = 0;
+  }
 
   for (uint8_t i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
     TaskDevicePluginConfigLong[i] = 0;
