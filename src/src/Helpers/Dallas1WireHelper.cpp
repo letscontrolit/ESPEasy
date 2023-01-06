@@ -32,14 +32,14 @@
 
 #include <vector>
 
-unsigned char ROM_NO[8] = { 0 };
-uint8_t LastDiscrepancy = 0;
-uint8_t LastFamilyDiscrepancy = 0;
-uint8_t LastDeviceFlag = 0;  
+unsigned char ROM_NO[8]{ 0 };
+uint8_t LastDiscrepancy{};
+uint8_t LastFamilyDiscrepancy{};
+uint8_t LastDeviceFlag{};
 
-int64_t usec_release   = 0;
-int64_t presence_start = 0;
-int64_t presence_end   = 0;
+int64_t usec_release{};
+int64_t presence_start{};
+int64_t presence_end{};
 
 
 // References to 1-wire family codes:

@@ -32,14 +32,14 @@ struct Dallas_SensorData {
 
   String get_formatted_address() const;
 
-  uint64_t addr              = 0;
-  float    value             = 0.0f;
-  uint32_t start_read_failed = 0;
-  uint32_t start_read_retry  = 0;
-  uint32_t read_success      = 0;
-  uint32_t read_retry        = 0;
-  uint32_t read_failed       = 0;
-  uint8_t  actual_res        = 0;
+  uint64_t addr{};
+  float    value{};
+  uint32_t start_read_failed{};
+  uint32_t start_read_retry{};
+  uint32_t read_success{};
+  uint32_t read_retry{};
+  uint32_t read_failed{};
+  uint8_t  actual_res{};
 
   bool measurementActive = false;
   bool valueRead         = false;

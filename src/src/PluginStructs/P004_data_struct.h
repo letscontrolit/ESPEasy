@@ -85,10 +85,10 @@ private:
   // while the node is up some time between 24.9 and 49.7 days.
   unsigned long     _timer            = millis();
   unsigned long     _measurementStart = millis();
-  Dallas_SensorData _sensors[VARS_PER_TASK] = {};
-  int8_t            _gpio_rx = -1;
-  int8_t            _gpio_tx = -1;
-  uint8_t           _res  = 0;
+  Dallas_SensorData _sensors[VARS_PER_TASK]{};
+  int8_t            _gpio_rx{-1};
+  int8_t            _gpio_tx{-1};
+  uint8_t           _res{};
 };
 
 #endif // ifdef USES_P004
