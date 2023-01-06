@@ -55,7 +55,7 @@ public:
     return nullptr;
   }
 
-  String txt[VARS_PER_TASK];
+  String txt[VARS_PER_TASK]  = {};
   int idx                    = 0;
   Sensor_VType sensorType    = Sensor_VType::SENSOR_TYPE_NONE;
   mutable uint8_t valuesSent = 0; // Value must be set by const function checkDone()

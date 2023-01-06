@@ -18,12 +18,12 @@ struct EventStruct;
 // The binary format to store the samples using the Cache Controller
 // Do NOT change order of members!
 struct C016_binary_element {
-  float             values[VARS_PER_TASK] = { 0 };
-  unsigned long     _timestamp            = 0; // Unix timestamp
-  taskIndex_t       TaskIndex             = INVALID_TASK_INDEX;
-  pluginID_t        pluginID              = INVALID_PLUGIN_ID;
-  Sensor_VType      sensorType            = Sensor_VType::SENSOR_TYPE_NONE;
-  uint8_t           valueCount            = 0;
+  float             values[VARS_PER_TASK]{};
+  unsigned long     _timestamp{}; // Unix timestamp
+  taskIndex_t       TaskIndex{INVALID_TASK_INDEX};
+  pluginID_t        pluginID{INVALID_PLUGIN_ID};
+  Sensor_VType      sensorType{Sensor_VType::SENSOR_TYPE_NONE};
+  uint8_t           valueCount{};
 };
 
 
@@ -63,9 +63,9 @@ public:
 
   C016_binary_element getBinary() const;
 
-  float values[VARS_PER_TASK] = { 0 };
-  Sensor_VType sensorType     = Sensor_VType::SENSOR_TYPE_NONE;
-  uint8_t valueCount          = 0;
+  float values[VARS_PER_TASK]{};
+  Sensor_VType sensorType{Sensor_VType::SENSOR_TYPE_NONE};
+  uint8_t valueCount{};
 };
 
 #endif // USES_C016

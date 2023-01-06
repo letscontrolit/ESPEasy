@@ -49,7 +49,7 @@ public:
     return nullptr;
   }
 
-  String txt[VARS_PER_TASK];
+  String txt[VARS_PER_TASK]  = {};
   int vPin[VARS_PER_TASK]    = { 0 };
   int idx                    = 0;
   mutable uint8_t valuesSent = 0; // Value must be set by const function checkDone()

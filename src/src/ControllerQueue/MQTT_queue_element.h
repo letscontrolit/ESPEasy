@@ -53,10 +53,10 @@ public:
 
   void removeEmptyTopics();
 
-  String _topic;
-  String _payload;
-  bool _retained = false;
-  UnitMessageCount_t UnitMessageCount;
+  String _topic{};
+  String _payload{};
+  UnitMessageCount_t UnitMessageCount{};
+  bool _retained = false; 
 };
 
 #endif // if FEATURE_MQTT
