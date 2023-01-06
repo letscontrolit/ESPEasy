@@ -32,7 +32,7 @@
 
 #include <vector>
 
-unsigned char ROM_NO[8];
+unsigned char ROM_NO[8] = { 0 };
 uint8_t LastDiscrepancy = 0;
 uint8_t LastFamilyDiscrepancy = 0;
 uint8_t LastDeviceFlag = 0;  
@@ -65,11 +65,7 @@ String Dallas_format_address(const uint8_t addr[]) {
 
   for (uint8_t j = 0; j < 8; j++)
   {
-    if (addr[j] < 0x10) {
-      result += '0';
-    }
-    result += String(addr[j], HEX);
-
+    appendHexChar(addr[j], result);
     if (j < 7) { result += '-'; }
   }
   result += F(" [");
