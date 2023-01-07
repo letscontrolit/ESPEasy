@@ -167,6 +167,23 @@ unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHex
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
+void appendHexChar(uint8_t data, String& string)
+{
+  const char *hex_chars = "0123456789abcdef";
+  string += hex_chars[(data >> 4) & 0xF];
+  string += hex_chars[(data) & 0xF];
+}
+
+String formatToHex_array(const uint8_t* data, size_t size)
+{
+  String res;
+  res.reserve(2 * size);
+  for (int i = 0; i < size; ++i) {
+    appendHexChar(data[i], res);
+  }
+  return res;
+}
+
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
@@ -831,7 +848,6 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 String URLEncode(const String& msg)
 {
-  const char *hex = "0123456789abcdef";
   String encodedMsg;
 
   const size_t msg_length = msg.length();
@@ -846,8 +862,7 @@ String URLEncode(const String& msg)
       encodedMsg += ch;
     } else {
       encodedMsg += '%';
-      encodedMsg += hex[ch >> 4];
-      encodedMsg += hex[ch & 15];
+      appendHexChar(ch, encodedMsg);
     }
   }
   return encodedMsg;

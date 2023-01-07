@@ -2,12 +2,11 @@
 
 #ifdef USES_P004
 
-
 void P004_data_struct::init(int8_t pin_rx, int8_t pin_tx, const uint8_t addr[], uint8_t res)
 {
   _gpio_rx = pin_rx;
   _gpio_tx = pin_tx;
-  _res = res;
+  _res     = res;
 
   // Explicitly set the pinMode using the "slow" pinMode function
   // This way we know for sure the state of any pull-up or -down resistor is known.
@@ -28,11 +27,11 @@ void P004_data_struct::init(int8_t pin_rx, int8_t pin_tx, const uint8_t addr[], 
 }
 
 void P004_data_struct::add_addr(const uint8_t addr[], uint8_t index) {
-  if (index < 4) {
+  if (index < VARS_PER_TASK) {
     _sensors[index].addr = Dallas_addr_to_uint64(addr);
 
     // If the address already exists, set it to 0 to avoid duplicates
-    for (uint8_t i = 0; i < 4; ++i) {
+    for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
       if (index != i) {
         if (_sensors[index].addr == _sensors[i].addr) {
           _sensors[index].addr = 0;
@@ -46,7 +45,7 @@ void P004_data_struct::add_addr(const uint8_t addr[], uint8_t index) {
 bool P004_data_struct::initiate_read() {
   _measurementStart = millis();
 
-  for (uint8_t i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_sensors[i].initiate_read(_gpio_rx, _gpio_tx, _res)) {
       if (!measurement_active()) {
         // Set the timer right after initiating the first sensor
@@ -71,7 +70,7 @@ bool P004_data_struct::initiate_read() {
 bool P004_data_struct::collect_values() {
   bool success = false;
 
-  for (uint8_t i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_sensors[i].collect_value(_gpio_rx, _gpio_tx)) {
       success = true;
     }
@@ -80,7 +79,8 @@ bool P004_data_struct::collect_values() {
 }
 
 bool P004_data_struct::read_temp(float& value, uint8_t index) const {
-    if (index >= 4) return false;
+  if (index >= VARS_PER_TASK) { return false; }
+
   if ((_sensors[index].addr == 0) || !_sensors[index].valueRead) { return false; }
 
   value = _sensors[index].value;
@@ -88,12 +88,14 @@ bool P004_data_struct::read_temp(float& value, uint8_t index) const {
 }
 
 String P004_data_struct::get_formatted_address(uint8_t index) const {
-    if (index < 4) return _sensors[index].get_formatted_address();
-    return "";
+  if (index < VARS_PER_TASK) { 
+    return _sensors[index].get_formatted_address(); 
+  }
+  return EMPTY_STRING;
 }
 
 bool P004_data_struct::measurement_active() const {
-  for (uint8_t i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_sensors[i].measurementActive) { return true; }
   }
 
@@ -101,22 +103,22 @@ bool P004_data_struct::measurement_active() const {
 }
 
 bool P004_data_struct::measurement_active(uint8_t index) const {
-  if (index < 4) {
+  if (index < VARS_PER_TASK) {
     return _sensors[index].measurementActive;
   }
   return false;
 }
 
 void P004_data_struct::set_measurement_inactive() {
-  for (uint8_t i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     _sensors[i].set_measurement_inactive();
   }
 }
 
 Dallas_SensorData P004_data_struct::get_sensor_data(uint8_t index) const {
-    if (index < 4) return _sensors[index];
-    return Dallas_SensorData();
+  if (index < VARS_PER_TASK) { return _sensors[index]; }
+  Dallas_SensorData res;
+  return res;
 }
-
 
 #endif // ifdef USES_P004

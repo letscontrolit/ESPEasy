@@ -53,7 +53,7 @@ struct P004_data_struct : public PluginTaskData_base {
   bool          read_temp(float & value,
                           uint8_t index = 0) const;
 
-  String        get_formatted_address(uint8_t index = 0) const;
+  String        get_formatted_address(uint8_t index) const;
 
   unsigned long get_timer() const {
     return _timer;
@@ -83,12 +83,12 @@ private:
   // Do not set the _timer to 0, since it may cause issues
   // if this object is created (settings edited or task enabled)
   // while the node is up some time between 24.9 and 49.7 days.
-  unsigned long   _timer            = millis();
-  unsigned long   _measurementStart = millis();
-  Dallas_SensorData _sensors[4];
-  int8_t          _gpio_rx = -1;
-  int8_t          _gpio_tx = -1;
-  uint8_t         _res  = 0;
+  unsigned long     _timer            = millis();
+  unsigned long     _measurementStart = millis();
+  Dallas_SensorData _sensors[VARS_PER_TASK]{};
+  int8_t            _gpio_rx{-1};
+  int8_t            _gpio_tx{-1};
+  uint8_t           _res{};
 };
 
 #endif // ifdef USES_P004
