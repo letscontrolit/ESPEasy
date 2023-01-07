@@ -10,6 +10,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 
@@ -36,6 +37,7 @@
 #include <base64.h>
 #include <MD5Builder.h>
 
+#include <lwip/dns.h>
 
 // Generic Networking routines
 
@@ -1034,6 +1036,55 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 }
 #endif // FEATURE_HTTP_CLIENT
 
+void scrubDNS() {
+  #if FEATURE_ETHERNET
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    if (EthEventData.EthServicesInitialized()) {
+      setDNS(0, EthEventData.dns0_cache);
+      setDNS(1, EthEventData.dns1_cache);
+    }
+    return;
+  }
+  #endif
+  if (WiFiEventData.WiFiServicesInitialized()) {
+    setDNS(0, WiFiEventData.dns0_cache);
+    setDNS(1, WiFiEventData.dns1_cache);
+  }
+}
+
+bool setDNS(int index, const IPAddress& dns) {
+  if (index >= 2) return false;
+  #ifdef ESP8266
+  if(dns.isSet() && dns != WiFi.dnsIP(index)) {
+    dns_setserver(index, dns);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
+    }
+    return true;
+  }
+  #endif
+  #ifdef ESP32
+  ip_addr_t d;
+  d.type = IPADDR_TYPE_V4;
+
+  if (dns != (uint32_t)0x00000000 && dns  != INADDR_NONE) {
+    // Set DNS0-Server
+    d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
+    const ip_addr_t* cur_dns = dns_getserver(index);
+    if (cur_dns != nullptr && cur_dns->u_addr.ip4.addr == d.u_addr.ip4.addr) {
+      // Still the same as before
+      return false;
+    }
+    dns_setserver(index, &d);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
+    }
+    return true;
+  }
+  #endif
+  return false;
+}
+
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms) {
   START_TIMER;
 
@@ -1042,6 +1093,9 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeo
   }
 
   FeedSW_watchdog();
+
+  // FIXME TD-er: Must try to restore DNS server entries.
+  scrubDNS();
 
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
@@ -1403,6 +1457,7 @@ int http_authenticate(const String& logIdentifier,
   http.addHeader(F("X-Forwarded-For"), NetworkLocalIP().toString());
 
   delay(0);
+  scrubDNS();
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
 #else // if defined(CORE_POST_2_6_0) || defined(ESP32)

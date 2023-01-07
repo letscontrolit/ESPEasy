@@ -1,0 +1,55 @@
+name: Arduino Library CI
+
+on: [pull_request, push, repository_dispatch]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        arduino-platform: ["uno", "leonardo", "mega2560", "zero", "esp8266", "esp32", "metro_m4", "nrf52840"]
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+         repository: adafruit/ci-arduino
+         path: ci
+
+    - name: pre-install
+      run: bash ci/actions_install.sh
+
+    - name: test platforms
+      run: python3 ci/build_platform.py ${{ matrix.arduino-platform }}
+
+  clang_and_doxy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v2
+
+    - uses: actions/checkout@v2
+      with:
+         repository: adafruit/ci-arduino
+         path: ci
+
+    - name: pre-install
+      run: bash ci/actions_install.sh
+
+    - name: clang
+      run: python3 ci/run-clang-format.py -e "ci/*" -e "bin/*" -r . 
+
+    - name: doxygen
+      env:
+        GH_REPO_TOKEN: ${{ secrets.GH_REPO_TOKEN }}
+        PRETTYNAME : "Adafruit seesaw Library"
+      run: bash ci/doxy_gen_and_deploy.sh
+

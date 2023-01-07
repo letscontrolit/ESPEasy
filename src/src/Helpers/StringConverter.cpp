@@ -167,6 +167,23 @@ unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHex
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
+void appendHexChar(uint8_t data, String& string)
+{
+  const char *hex_chars = "0123456789abcdef";
+  string += hex_chars[(data >> 4) & 0xF];
+  string += hex_chars[(data) & 0xF];
+}
+
+String formatToHex_array(const uint8_t* data, size_t size)
+{
+  String res;
+  res.reserve(2 * size);
+  for (int i = 0; i < size; ++i) {
+    appendHexChar(data[i], res);
+  }
+  return res;
+}
+
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
@@ -535,16 +552,41 @@ String to_json_value(const String& value, bool wrapInQuotes) {
   }
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
-    if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
-      // Must replace characters, so make a deepcopy
-      String tmpValue(value);
-      tmpValue.replace('\n', '^');
-      tmpValue.replace('\r', '^');
-      tmpValue.replace('"',  '\'');
-      return wrap_String(tmpValue, '"');
-    } else {
-      return wrap_String(value, '"');
+
+    // First we check for not allowed special characters.
+    const size_t val_length = value.length();
+    for (size_t i = 0; i < val_length; ++i) {
+      switch (value[i]) {
+        case '\n':
+        case '\r':
+        case '\t':
+        case '\\':
+        case '\b':
+        case '\f':
+        case '"':
+        {
+          // Special characters not allowed in JSON:
+          //  \b  Backspace (ascii code 08)
+          //  \f  Form feed (ascii code 0C)
+          //  \n  New line
+          //  \r  Carriage return
+          //  \t  Tab
+          //  \"  Double quote
+          //  \\  Backslash character
+          // Must replace characters, so make a deepcopy
+          String tmpValue(value);
+          tmpValue.replace('\n', '^');
+          tmpValue.replace('\r', '^');
+          tmpValue.replace('\t', ' ');
+          tmpValue.replace('\\', '^');
+          tmpValue.replace('\b', '^');
+          tmpValue.replace('\f', '^');
+          tmpValue.replace('"',  '\'');
+          return wrap_String(tmpValue, '"');
+        }
+      }
     }
+    return wrap_String(value, '"');
   } 
   // It is a numerical
   return value;
@@ -806,7 +848,6 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 String URLEncode(const String& msg)
 {
-  const char *hex = "0123456789abcdef";
   String encodedMsg;
 
   const size_t msg_length = msg.length();
@@ -821,8 +862,7 @@ String URLEncode(const String& msg)
       encodedMsg += ch;
     } else {
       encodedMsg += '%';
-      encodedMsg += hex[ch >> 4];
-      encodedMsg += hex[ch & 15];
+      appendHexChar(ch, encodedMsg);
     }
   }
   return encodedMsg;
