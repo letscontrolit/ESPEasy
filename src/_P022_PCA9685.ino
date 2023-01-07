@@ -200,8 +200,8 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       {
         LoadTaskSettings(event->TaskIndex);
         String name = command.substring(0, dotPos);
-        name.replace(F("["), EMPTY_STRING);
-        name.replace(F("]"), EMPTY_STRING);
+        removeChar(name, '[');
+        removeChar(name, ']');
 
         if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
           command         = command.substring(dotPos + 1);

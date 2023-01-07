@@ -216,7 +216,9 @@ bool deserializeDomoticzJson(const String& json,
   if (root.isNull()) {
     return false;
   }
-  idx       = root[F("idx")];
+  // Use long here as intermediate object type to prevent ArduinoJSON from adding a new template variant to the code.
+  const long idx_long = root[F("idx")];
+  idx       = idx_long;
   nvalue    = root[F("nvalue")];
   nvaluealt = root[F("nvalue")];
 

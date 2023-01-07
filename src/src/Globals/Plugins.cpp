@@ -432,8 +432,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = parseString(arg0, 1, '.');    // Extract taskname prefix
-          thisTaskName.replace(F("["), EMPTY_STRING);         // Remove the optional square brackets
-          thisTaskName.replace(F("]"), EMPTY_STRING);
+          removeChar(thisTaskName, '[');                      // Remove the optional square brackets
+          removeChar(thisTaskName, ']');
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
             if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?
