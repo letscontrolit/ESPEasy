@@ -3,6 +3,8 @@
 #if defined(USES_P089) && defined(ESP8266)
 
 
+#include "../Helpers/Networking.h"
+
 P089_data_struct::P089_data_struct() {
   destIPAddress.addr = 0;
   idseq              = 0;
