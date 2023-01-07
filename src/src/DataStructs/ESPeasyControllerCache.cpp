@@ -1,5 +1,6 @@
 #include "../DataStructs/ESPEasyControllerCache.h"
 
+#if FEATURE_RTC_CACHE_STORAGE
 
 ControllerCache_struct::~ControllerCache_struct() {
   if (_RTC_cache_handler != nullptr) {
@@ -109,3 +110,5 @@ String ControllerCache_struct::getNextCacheFileName(int& fileNr, bool& islast) {
   }
   return _RTC_cache_handler->getNextCacheFileName(fileNr, islast);
 }
+
+#endif

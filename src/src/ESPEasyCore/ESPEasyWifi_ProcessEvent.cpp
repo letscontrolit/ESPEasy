@@ -458,6 +458,7 @@ void processDisconnectAPmode() {
   if (WiFiEventData.processedDisconnectAPmode) { return; }
   WiFiEventData.processedDisconnectAPmode = true;
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");
@@ -466,6 +467,7 @@ void processDisconnectAPmode() {
     log += nrStationsConnected;
     addLogMove(LOG_LEVEL_INFO, log);
   }
+#endif  
 }
 
 // Client connects to AP on this node
@@ -474,7 +476,7 @@ void processConnectAPmode() {
   WiFiEventData.processedConnectAPmode = true;
   // Extend timer to switch off AP.
   WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
     log += WiFiEventData.lastMacConnectedAPmode.toString();
@@ -482,6 +484,7 @@ void processConnectAPmode() {
     log += WiFi.softAPgetStationNum();
     addLogMove(LOG_LEVEL_INFO, log);
   }
+#endif
 
   #if FEATURE_DNS_SERVER
   // Start DNS, only used if the ESP has no valid WiFi config

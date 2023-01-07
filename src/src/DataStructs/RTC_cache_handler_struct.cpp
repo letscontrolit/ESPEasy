@@ -1,5 +1,7 @@
 #include "../DataStructs/RTC_cache_handler_struct.h"
 
+#if FEATURE_RTC_CACHE_STORAGE
+
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/RTCStruct.h"
 #include "../Helpers/CRC_functions.h"
@@ -98,7 +100,7 @@ void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekRead
   validateFilePos(newPeekFileNr, newPeekReadPos);
 
   if (fp) {
-    if (newPeekReadPos >= fp.size() && _peekfilenr == newPeekFileNr) {
+    if (newPeekReadPos >= static_cast<int>(fp.size()) && static_cast<int>(_peekfilenr) == newPeekFileNr) {
       newPeekFileNr++;
       newPeekReadPos = 0;
       validateFilePos(newPeekFileNr, newPeekReadPos);
@@ -624,3 +626,6 @@ void RTC_cache_handler_struct::rtc_debug_log(const String& description, size_t n
 }
 
 #endif // ifdef RTC_STRUCT_DEBUG
+
+
+#endif

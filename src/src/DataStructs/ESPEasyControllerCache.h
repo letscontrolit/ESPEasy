@@ -1,6 +1,10 @@
 #ifndef DATASTRUCTS_ESPEASYCONTROLLERCACHE_H
 #define DATASTRUCTS_ESPEASYCONTROLLERCACHE_H
 
+#include "../../ESPEasy_common.h"
+
+#if FEATURE_RTC_CACHE_STORAGE
+
 #include <Arduino.h>
 
 #include "../DataStructs/RTC_cache_handler_struct.h"
@@ -54,5 +58,6 @@ private:
   RTC_cache_handler_struct *_RTC_cache_handler = nullptr;
 };
 
+#endif
 
 #endif // ifndef DATASTRUCTS_ESPEASYCONTROLLERCACHE_H

@@ -1057,9 +1057,11 @@ bool setDNS(int index, const IPAddress& dns) {
   #ifdef ESP8266
   if(dns.isSet() && dns != WiFi.dnsIP(index)) {
     dns_setserver(index, dns);
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
     }
+    #endif
     return true;
   }
   #endif

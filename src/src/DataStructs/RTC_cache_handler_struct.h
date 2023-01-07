@@ -2,9 +2,12 @@
 #define DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H
 
 
-#include "../DataStructs/RTCCacheStruct.h"
 
 #include "../../ESPEasy_common.h"
+
+#if FEATURE_RTC_CACHE_STORAGE
+
+#include "../DataStructs/RTCCacheStruct.h"
 
 #include <FS.h>
 #include <vector>
@@ -110,4 +113,5 @@ private:
   bool    writeError      = false;
 };
 
+#endif
 #endif // ifndef DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H
