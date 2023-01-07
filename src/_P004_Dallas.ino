@@ -200,16 +200,26 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      uint8_t addr[8];
 
+      P004_data_struct *P004_data =
+        static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
+ 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P004_NR_OUTPUT_VALUES) {
-          Dallas_plugin_get_addr(addr, event->TaskIndex, i);
-
           if (i != 0) {
             string += F("<br>");
           }
-          string += Dallas_format_address(addr);
+          if (nullptr != P004_data) {
+            // Show the actively used IDs
+            // For "Auto Select Sensor" no value is stored
+            string += P004_data->get_formatted_address(i);
+          } else {
+            // Read the data from the settings.
+            uint8_t addr[8]{};
+            Dallas_plugin_get_addr(addr, event->TaskIndex, i);
+
+            string += Dallas_format_address(addr);
+          }
         }
       }
       success = true;
