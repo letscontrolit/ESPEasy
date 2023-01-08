@@ -40,7 +40,7 @@ P148_data_struct::P148_data_struct(const Tm1621_t& config) : Tm1621(config) {
 }
 
 bool P148_data_struct::init() {
-  if (!Tm1621.isValid()) { 
+  if (!Tm1621.isValid()) {
     return false;
   }
   TM1621Init();
@@ -62,15 +62,10 @@ void P148_data_struct::TM1621SendCmnd(uint16_t command) {
   delayMicroseconds(TM1621_PULSE_WIDTH / 2);
 
   for (uint32_t i = 0; i < 12; i++) {
-    digitalWrite(Tm1621.pin_wr, 0);   // Start write sequence
-
-    if (full_command & 0x8000) {
-      digitalWrite(Tm1621.pin_da, 1); // Set data
-    } else {
-      digitalWrite(Tm1621.pin_da, 0); // Set data
-    }
+    digitalWrite(Tm1621.pin_wr, 0);                               // Start write sequence
+    digitalWrite(Tm1621.pin_da, (full_command & 0x8000) ? 1 : 0); // Set data
     delayMicroseconds(TM1621_PULSE_WIDTH);
-    digitalWrite(Tm1621.pin_wr, 1);   // Read data
+    digitalWrite(Tm1621.pin_wr, 1);                               // Read data
     delayMicroseconds(TM1621_PULSE_WIDTH);
     full_command <<= 1;
   }
@@ -84,15 +79,10 @@ void P148_data_struct::TM1621SendAddress(uint16_t address) {
   delayMicroseconds(TM1621_PULSE_WIDTH / 2);
 
   for (uint32_t i = 0; i < 9; i++) {
-    digitalWrite(Tm1621.pin_wr, 0);   // Start write sequence
-
-    if (full_address & 0x8000) {
-      digitalWrite(Tm1621.pin_da, 1); // Set data
-    } else {
-      digitalWrite(Tm1621.pin_da, 0); // Set data
-    }
+    digitalWrite(Tm1621.pin_wr, 0);                               // Start write sequence
+    digitalWrite(Tm1621.pin_da, (full_address & 0x8000) ? 1 : 0); // Set data
     delayMicroseconds(TM1621_PULSE_WIDTH);
-    digitalWrite(Tm1621.pin_wr, 1);   // Read data
+    digitalWrite(Tm1621.pin_wr, 1);                               // Read data
     delayMicroseconds(TM1621_PULSE_WIDTH);
     full_address <<= 1;
   }
@@ -100,15 +90,10 @@ void P148_data_struct::TM1621SendAddress(uint16_t address) {
 
 void P148_data_struct::TM1621SendCommon(uint8_t common) {
   for (uint32_t i = 0; i < 8; i++) {
-    digitalWrite(Tm1621.pin_wr, 0);   // Start write sequence
-
-    if (common & 1) {
-      digitalWrite(Tm1621.pin_da, 1); // Set data
-    } else {
-      digitalWrite(Tm1621.pin_da, 0); // Set data
-    }
+    digitalWrite(Tm1621.pin_wr, 0);          // Start write sequence
+    digitalWrite(Tm1621.pin_da, common & 1); // Set data
     delayMicroseconds(TM1621_PULSE_WIDTH);
-    digitalWrite(Tm1621.pin_wr, 1);   // Read data
+    digitalWrite(Tm1621.pin_wr, 1);          // Read data
     delayMicroseconds(TM1621_PULSE_WIDTH);
     common >>= 1;
   }
@@ -135,12 +120,15 @@ void P148_data_struct::TM1621SendRows() {
       snprintf_P(Tm1621.row[j], sizeof(Tm1621.row[j]), PSTR("9999"));
       row_idx = 3;
     }
-    row[3] = (row_idx >= 0) ? Tm1621.row[j][row_idx--] : ' ';
 
-    if ((row_idx >= 0) && dp) { row_idx--; }
-    row[2] = (row_idx >= 0) ? Tm1621.row[j][row_idx--] : ' ';
-    row[1] = (row_idx >= 0) ? Tm1621.row[j][row_idx--] : ' ';
-    row[0] = (row_idx >= 0) ? Tm1621.row[j][row_idx--] : ' ';
+    for (int i = 3; i >= 0; --i) {
+      row[i] = (row_idx >= 0) ? Tm1621.row[j][row_idx--] : ' ';
+
+      if ((i == 3) && (row_idx >= 0) && dp) {
+        // Skip the '.'
+        row_idx--;
+      }
+    }
 
     //    AddLog(LOG_LEVEL_DEBUG, PSTR("TM1: Dump%d %4_H"), j +1, row);
 
