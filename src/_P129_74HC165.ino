@@ -294,7 +294,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         }
 
         for (uint8_t j = 0; j < 8; j++) {
-          bitWrite(bits, static_cast<uint64_t>(off * 8 + (7 - j)), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1))); // -V784
+          bitWrite(bits, static_cast<uint64_t>(off * 8 + (7 - j)), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1))); // -V629
         }
         PCONFIG_ULONG(i / 4) = bits;
 
