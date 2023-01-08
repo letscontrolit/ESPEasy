@@ -1622,6 +1622,7 @@ To create/register a plugin, you have to :
   #define USES_P012   // LCD
   #define USES_P014   // SI7021
   #define USES_P018   // Dust
+  #define USES_P019   // PCF8574
 
   #define USES_P021   // Level
   #define USES_P023   // OLED
