@@ -19,6 +19,7 @@
 // Have fun ... Dominik
 
 /** Changelog:
+ * 2023-01-08 tonhuisman: Add Low temperature threshold setting (default 0 K/-273.15 C) to ignore temperatures below that value
  * 2023-01-02 tonhuisman: Cleanup and uncrustify source
  * 2022-10-22 tonhuisman: Correct CS pin check to allow GPIO0
  * 2022-10: Older changelog not recorded
@@ -98,8 +99,14 @@
 # define P039_RTD_LM_TYPE            PCONFIG(6)
 # define P039_RTD_LM_SHTDWN          PCONFIG(7)
 # define P039_RTD_RES                PCONFIG_LONG(0)
+# define P039_FLAGS                  PCONFIG_ULONG(3)
+# define P039_TEMP_THRESHOLD_FLAG    0
 # define P039_RTD_OFFSET             PCONFIG_FLOAT(0)
+# define P039_TEMP_THRESHOLD         PCONFIG_FLOAT(1)
 
+# define P039_TEMP_THRESHOLD_DEFAULT (-273.15f) // Default and minimum value
+# define P039_TEMP_THRESHOLD_MIN     P039_TEMP_THRESHOLD_DEFAULT
+# define P039_TEMP_THRESHOLD_MAX     (1000.0f)  // Max value
 # define P039_TC                     0u
 # define P039_RTD                    1u
 
@@ -281,8 +288,18 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P039_TEMP_THRESHOLD = P039_TEMP_THRESHOLD_DEFAULT; // 0 K
+      bitSet(P039_FLAGS, P039_TEMP_THRESHOLD_FLAG);
+      break;
+    }
+
     case PLUGIN_INIT:
     {
+      if (!bitRead(P039_FLAGS, P039_TEMP_THRESHOLD_FLAG)) {
+        P039_TEMP_THRESHOLD = P039_TEMP_THRESHOLD_DEFAULT; // 0 K
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P039_data_struct());
       P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -556,22 +573,37 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
+      addFormSubHeader(F("Value validation"));
+
+      if (!bitRead(P039_FLAGS, P039_TEMP_THRESHOLD_FLAG)) {
+        P039_TEMP_THRESHOLD = P039_TEMP_THRESHOLD_DEFAULT; // 0 K
+      }
+      addFormFloatNumberBox(F("Low temperature threshold"),
+                            F("temp_thres"),
+                            P039_TEMP_THRESHOLD,
+                            P039_TEMP_THRESHOLD_MIN,
+                            P039_TEMP_THRESHOLD_MAX,
+                            2u);
+      addUnit(F("&deg;C"));
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P039_FAM_TYPE      = getFormItemInt(F("famtype"));
-      P039_MAX_TYPE      = getFormItemInt(F("maxtype"));
-      P039_TC_TYPE       = getFormItemInt(F("tctype"));
-      P039_RTD_TYPE      = getFormItemInt(F("rtdtype"));
-      P039_CONFIG_4      = getFormItemInt(F("contype"));
-      P039_RTD_FILT_TYPE = getFormItemInt(F("filttype"));
-      P039_RTD_RES       = getFormItemInt(F("res"));
-      P039_RTD_OFFSET    = getFormItemFloat(F("offset"));
-      P039_RTD_LM_TYPE   = getFormItemInt(F("rtd_lm_type"));
-      P039_RTD_LM_SHTDWN = isFormItemChecked(F("rtd_lm_shtdwn"));
+      P039_FAM_TYPE       = getFormItemInt(F("famtype"));
+      P039_MAX_TYPE       = getFormItemInt(F("maxtype"));
+      P039_TC_TYPE        = getFormItemInt(F("tctype"));
+      P039_RTD_TYPE       = getFormItemInt(F("rtdtype"));
+      P039_CONFIG_4       = getFormItemInt(F("contype"));
+      P039_RTD_FILT_TYPE  = getFormItemInt(F("filttype"));
+      P039_RTD_RES        = getFormItemInt(F("res"));
+      P039_RTD_OFFSET     = getFormItemFloat(F("offset"));
+      P039_RTD_LM_TYPE    = getFormItemInt(F("rtd_lm_type"));
+      P039_RTD_LM_SHTDWN  = isFormItemChecked(F("rtd_lm_shtdwn"));
+      P039_TEMP_THRESHOLD = getFormItemFloat(F("temp_thres"));
+      bitSet(P039_FLAGS, P039_TEMP_THRESHOLD_FLAG); // We've set a value, don't replace by default
 
       success = true;
       break;
@@ -624,7 +656,10 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             addLogMove(LOG_LEVEL_INFO, log);
           }
         }
-        success = true;
+
+        if (definitelyGreaterThan(Plugin_039_Celsius, P039_TEMP_THRESHOLD)) {
+          success = true;
+        }
       }
       else
       {
@@ -666,7 +701,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             {
               case MAX31865_BIAS_ON_STATE:
               {
-                  # ifndef BUILD_NO_DEBUG
+                # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   // calc delta since last call
@@ -689,7 +724,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                     addLogMove(LOG_LEVEL_DEBUG, log);
                   }
                 }
-                  # endif // ifndef BUILD_NO_DEBUG
+                # endif // ifndef BUILD_NO_DEBUG
 
                 // activate one shot conversion
                 change8BitRegister(CS_pin_no,
@@ -703,7 +738,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 P039_data->convReady = false;
                 Scheduler.setPluginTaskTimer(MAX31865_CONVERSION_TIME, event->TaskIndex, MAX31865_RD_STATE);
 
-                  # ifndef BUILD_NO_DEBUG
+                # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log;
@@ -717,13 +752,13 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                     addLogMove(LOG_LEVEL_DEBUG, log);
                   }
                 }
-                  # endif // ifndef BUILD_NO_DEBUG
+                # endif // ifndef BUILD_NO_DEBUG
 
                 break;
               }
               case MAX31865_RD_STATE:
               {
-                  # ifndef BUILD_NO_DEBUG
+                # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   // calc delta since last call
@@ -745,7 +780,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                     addLogMove(LOG_LEVEL_DEBUG, log);
                   }
                 }
-                  # endif // ifndef BUILD_NO_DEBUG
+                # endif // ifndef BUILD_NO_DEBUG
 
                 // read conversion result
                 P039_data->conversionResult = read16BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_RTD_MSB));
@@ -763,7 +798,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 // mark conversion as ready
                 P039_data->convReady = true;
 
-                  # ifndef BUILD_NO_DEBUG
+                # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log;
@@ -780,7 +815,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                     addLogMove(LOG_LEVEL_DEBUG, log);
                   }
                 }
-                  # endif // ifndef BUILD_NO_DEBUG
+                # endif // ifndef BUILD_NO_DEBUG
 
 
                 break;
@@ -955,7 +990,7 @@ float readMax31855(struct EventStruct *event)
       // Fault code changed, log them
       P039_data->sensorFault = ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0);
 
-# ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
       {
@@ -984,10 +1019,10 @@ float readMax31855(struct EventStruct *event)
           addLogMove(LOG_LEVEL_DEBUG_MORE, log);
         }
       }
-# endif // ifndef BUILD_NO_DEBUG
+      # endif // ifndef BUILD_NO_DEBUG
     }
 
-      # ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
@@ -1003,7 +1038,7 @@ float readMax31855(struct EventStruct *event)
       }
     }
 
-      # endif // ifndef BUILD_NO_DEBUG
+    # endif // ifndef BUILD_NO_DEBUG
   }
 
   // D16 - This bit reads at 1 when any of the SCV, SCG, or OC faults are active. Default value is 0.
@@ -1122,7 +1157,7 @@ float readMax31856(struct EventStruct *event)
 
     P039_data->sensorFault = (sr != 0); // Set new state
 
-# ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
@@ -1175,7 +1210,7 @@ float readMax31856(struct EventStruct *event)
         }
       }
     }
-# endif // ifndef BUILD_NO_DEBUG
+    # endif // ifndef BUILD_NO_DEBUG
   }
 
 
@@ -1317,7 +1352,7 @@ float readMax31865(struct EventStruct *event)
 
   Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
 
- # ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
   {
@@ -1365,7 +1400,7 @@ float readMax31865(struct EventStruct *event)
       }
     }
   }
-    # endif // ifndef BUILD_NO_DEBUG
+  # endif // ifndef BUILD_NO_DEBUG
 
 
   bool ValueValid = false;
@@ -1897,7 +1932,7 @@ void write8BitRegister(int8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
 
   transfer_n_ByteSPI(l_CS_pin_no, 2, l_messageBuffer);
 
-   # ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
   {
