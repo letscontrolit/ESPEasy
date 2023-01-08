@@ -10,16 +10,15 @@
 // datasheet at https://atlas-scientific.com/files/ORP_EZO_Datasheet.pdf
 // datasheet at https://atlas-scientific.com/files/EC_EZO_Datasheet.pdf
 // datasheet at https://atlas-scientific.com/files/DO_EZO_Datasheet.pdf
-// works only in i2c mode
+// only i2c mode is supported
 
 /** Changelog:
+ * 2023-01-08 tonhuisman: Replace ambiguous #define UNKNOWN, move support functions to plugin_struct source
  * 2023-01-07 tonhuisman: Refactored strings (a.o. shorter names for WEBFORM_LOAD and WEBFORM_SAVE events), separate javascript function
  *                        instead of repeated code, extract red/orange/green messages into functions
  *                        Uncrustify source and more optimizations
  *                        Reuse char arrays instead of instantiating a new one
  */
-
-# include "src/Helpers/Rules_calculate.h"
 
 # define PLUGIN_103
 # define PLUGIN_ID_103          103
@@ -27,42 +26,13 @@
 # define PLUGIN_VALUENAME1_103  "SensorData"
 # define PLUGIN_VALUENAME2_103  "Voltage"
 
-# define UNKNOWN  0 // FIXME Rename to avoid possible confusion
-# define PH       1
-# define ORP      2
-# define EC       3
-# define DO       4
-
-# define P103_BOARD_TYPE                PCONFIG(0)
-# define P103_I2C_ADDRESS               PCONFIG(1)
-# define P103_STATUS_LED                PCONFIG(2)
-# define P103_SENSOR_VERSION            PCONFIG_FLOAT(0)
-# define P103_CALIBRATION_SINGLE        PCONFIG_FLOAT(1)
-# define P103_CALIBRATION_LOW           PCONFIG_FLOAT(2)
-# define P103_CALIBRATION_HIGH          PCONFIG_FLOAT(3)
-
-# define ATLAS_EZO_RETURN_ARRAY_SIZE    33 // Max expected result 32 bytes + \0
-
-# define P103_ATLASEZO_I2C_NB_OPTIONS   4  // was: 6 see comment below at 'const int i2cAddressValues'
-
-# define FIXED_TEMP_VALUE               20 // Temperature correction for pH and EC sensor if no temperature is given from calculation
-
-bool P103_send_I2C_command(uint8_t       I2Caddress,
-                           const String& cmd,
-                           char         *sensordata); // Forward declarations
-
-void    P103_addDisabler();
-void    P103_html_color_message(const __FlashStringHelper *color,
-                                const String             & message);
-void    P103_html_red(const String& message);
-void    P103_html_orange(const String& message);
-void    P103_html_green(const String& message);
+# include "src/PluginStructs/P103_data_struct.h"
 
 boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  uint8_t board_type = UNKNOWN;
+  AtlasEZO_Sensors_e board_type = AtlasEZO_Sensors_e::UNKNOWN;
 
   switch (function)
   {
@@ -128,17 +98,22 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         String version = boardInfo.substring(boardInfo.lastIndexOf(',') + 1);
         addHtml(board);
 
-        String  boardTypes = F("pH  ORP EC  D.O.");
-        uint8_t boardIDs[] = { PH, ORP, EC, DO };
-        int     bType      = boardTypes.indexOf(board);
+        String boardTypes             = F("pH  ORP EC  D.O.");
+        AtlasEZO_Sensors_e boardIDs[] = {
+          AtlasEZO_Sensors_e::PH,
+          AtlasEZO_Sensors_e::ORP,
+          AtlasEZO_Sensors_e::EC,
+          AtlasEZO_Sensors_e::DO,
+        };
+        int bType = boardTypes.indexOf(board);
 
         if (bType > -1) {
           board_type = boardIDs[bType / 4];
         }
 
-        P103_BOARD_TYPE = board_type;
+        P103_BOARD_TYPE = static_cast<uint8_t>(board_type);
 
-        if (board_type == UNKNOWN)
+        if (board_type == AtlasEZO_Sensors_e::UNKNOWN)
         {
           P103_html_red(F("  WARNING : Board type should be 'pH', 'ORP', 'EC' or 'DO', check your i2c address? "));
         }
@@ -153,7 +128,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       {
         P103_html_red(F("Unable to send command to device"));
 
-        if (board_type == UNKNOWN)
+        if (board_type == AtlasEZO_Sensors_e::UNKNOWN)
         {
           P103_html_red(F("  WARNING : Board type should be 'pH', 'ORP', 'EC' or 'DO', check your i2c address? "));
         }
@@ -217,26 +192,28 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
         switch (board_type)
         {
-          case PH:
+          case AtlasEZO_Sensors_e::PH:
           {
             addUnit(F("pH"));
             break;
           }
-          case ORP:
+          case AtlasEZO_Sensors_e::ORP:
           {
             addUnit(F("mV"));
             break;
           }
-          case EC:
+          case AtlasEZO_Sensors_e::EC:
           {
             addUnit(F("&micro;S"));
             break;
           }
-          case DO:
+          case AtlasEZO_Sensors_e::DO:
           {
             addUnit(F("mg/L"));
             break;
           }
+          case AtlasEZO_Sensors_e::UNKNOWN:
+            break;
         }
       }
       else
@@ -250,7 +227,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Status LED"), F("status_led"), P103_STATUS_LED);
 
       // Ability to see and change EC Probe Type (e.g., 0.1, 1.0, 10)
-      if (board_type == EC)
+      if (board_type == AtlasEZO_Sensors_e::EC)
       {
         memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
 
@@ -266,12 +243,12 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       // calibrate
       switch (board_type)
       {
-        case PH:
+        case AtlasEZO_Sensors_e::PH:
         {
           addFormSubHeader(F("pH Calibration"));
           addFormNote(F(
                         "Calibration for pH-Probe could be 1 (single), 2 (single, low) or 3 point (single, low, high). The sequence is important."));
-          const int nb_calibration_points = addCreate3PointCalibration(board_type, event, P103_I2C_ADDRESS, F("pH"), 0.0, 14.0, 2, 0.01);
+          const int nb_calibration_points = P103_addCreate3PointCalibration(board_type, event, P103_I2C_ADDRESS, F("pH"), 0.0, 14.0, 2, 0.01);
 
           if (nb_calibration_points > 1)
           {
@@ -285,34 +262,38 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
           break;
         }
 
-        case ORP:
+        case AtlasEZO_Sensors_e::ORP:
         {
           addFormSubHeader(F("ORP Calibration"));
-          addCreateSinglePointCalibration(board_type, event, P103_I2C_ADDRESS, F("mV"), 0.0, 1500.0, 0, 1.0);
+          P103_addCreateSinglePointCalibration(board_type, event, P103_I2C_ADDRESS, F("mV"), 0.0, 1500.0, 0, 1.0);
           break;
         }
 
-        case EC:
+        case AtlasEZO_Sensors_e::EC:
         {
           addFormSubHeader(F("EC Calibration"));
-          addCreateDryCalibration();
-          addCreate3PointCalibration(board_type, event, P103_I2C_ADDRESS, F("&micro;S"), 0.0, 500000.0, 0, 1.0);
+          P103_addCreateDryCalibration();
+          P103_addCreate3PointCalibration(board_type, event, P103_I2C_ADDRESS, F("&micro;S"), 0.0, 500000.0, 0, 1.0);
           break;
         }
 
-        case DO:
+        case AtlasEZO_Sensors_e::DO:
         {
           addFormSubHeader(F("DO Calibration"));
-          addDOCalibration(P103_I2C_ADDRESS);
+          P103_addDOCalibration(P103_I2C_ADDRESS);
           break;
         }
+        case AtlasEZO_Sensors_e::UNKNOWN:
+          break;
       }
 
       // Clear calibration
-      addClearCalibration();
+      P103_addClearCalibration();
 
       // Temperature compensation
-      if ((board_type == PH) || (board_type == EC) || (board_type == DO))
+      if ((board_type == AtlasEZO_Sensors_e::PH) ||
+          (board_type == AtlasEZO_Sensors_e::EC) ||
+          (board_type == AtlasEZO_Sensors_e::DO))
       {
         double value;
         char   strValue[6] = { 0 };
@@ -323,7 +304,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         ZERO_TERMINATE(deviceTemperatureTemplate);
         addFormTextBox(F("Temperature "), F("_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
         addFormNote(F("You can use a formula and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import),"
-                      " e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for '25.5'."));
+                      " e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' or '25.5'."));
 
         String deviceTemperatureTemplateString(deviceTemperatureTemplate);
         String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
@@ -331,7 +312,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         if (Calculate(pooltempString, value) != CalculateReturnCode::OK)
         {
           addFormNote(F("It seems I can't parse your formula. Fixed value will be used!"));
-          value = FIXED_TEMP_VALUE;
+          value = P103_FIXED_TEMP_VALUE;
         }
 
         dtostrf(value, 5, 2, strValue);
@@ -345,7 +326,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      board_type = P103_BOARD_TYPE;
+      board_type = static_cast<AtlasEZO_Sensors_e>(P103_BOARD_TYPE);
 
       P103_I2C_ADDRESS = getFormItemInt(F("i2c"));
 
@@ -363,11 +344,11 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       }
       P103_STATUS_LED = isFormItemChecked(F("status_led"));
 
-      if ((board_type == EC) && isFormItemChecked(F("en_set_probe_type")))
+      if ((board_type == AtlasEZO_Sensors_e::EC) && isFormItemChecked(F("en_set_probe_type")))
       {
-      # ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("isFormItemChecked"));
-      # endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef BUILD_NO_DEBUG
         String probeType(F("K,"));
         probeType += webArg(F("ec_probe_type"));
         memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
@@ -393,7 +374,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       }
       else if (isFormItemChecked(F("en_cal_single")))
       {
-        if (board_type == PH)
+        if (board_type == AtlasEZO_Sensors_e::PH)
         {
           cmd += F("mid,");
         }
@@ -429,7 +410,9 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         P103_send_I2C_command(P103_I2C_ADDRESS, cmd, boarddata);
       }
 
-      if ((board_type == PH) || (board_type == EC) || (board_type == DO))
+      if ((board_type == AtlasEZO_Sensors_e::PH) ||
+          (board_type == AtlasEZO_Sensors_e::EC) ||
+          (board_type == AtlasEZO_Sensors_e::DO))
       {
         char   deviceTemperatureTemplate[40] = { 0 };
         String tmpString                     = webArg(F("_template"));
@@ -452,11 +435,13 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      board_type = P103_BOARD_TYPE;
+      board_type = static_cast<AtlasEZO_Sensors_e>(P103_BOARD_TYPE);
 
       String readCommand;
 
-      if ((board_type == PH) || (board_type == EC) || (board_type == DO))
+      if ((board_type == AtlasEZO_Sensors_e::PH) ||
+          (board_type == AtlasEZO_Sensors_e::EC) ||
+          (board_type == AtlasEZO_Sensors_e::DO))
       {
         // first set the temperature of reading
         char deviceTemperatureTemplate[40] = { 0 };
@@ -464,19 +449,19 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         ZERO_TERMINATE(deviceTemperatureTemplate);
 
         String deviceTemperatureTemplateString(deviceTemperatureTemplate);
-        String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
+        String temperatureString(parseTemplate(deviceTemperatureTemplateString, 40));
 
         readCommand = F("RT,");
         double temperatureReading;
 
-        if (Calculate(pooltempString, temperatureReading) != CalculateReturnCode::OK)
+        if (Calculate(temperatureString, temperatureReading) != CalculateReturnCode::OK)
         {
-          temperatureReading = FIXED_TEMP_VALUE;
+          temperatureReading = P103_FIXED_TEMP_VALUE;
         }
 
         readCommand += temperatureReading;
       }
-      else if (board_type == ORP)
+      else if (board_type == AtlasEZO_Sensors_e::ORP)
       {
         readCommand = F("R,");
       }
@@ -506,310 +491,6 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
-}
-
-// Call this function with two char arrays, one containing the command
-// The other containing an allocatted char array for answer
-// Returns true on success, false otherwise
-
-bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensordata)
-{
-  sensordata[0] = '\0';
-
-  uint16_t sensor_bytes_received = 0;
-
-  uint8_t error;
-  uint8_t i2c_response_code = 0;
-  uint8_t in_char           = 0;
-
-  # ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG, concat(F("> cmd = "), cmd));
-  }
-  # endif // ifndef BUILD_NO_DEBUG
-  Wire.beginTransmission(I2Caddress);
-  Wire.write(cmd.c_str());
-  error = Wire.endTransmission();
-
-  if (error != 0)
-  {
-    addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check Atlas shield, pH, ORP, EC and DO are supported."));
-    return false;
-  }
-
-  // don't read answer if we want to go to sleep
-  if (cmd.substring(0, 5).equalsIgnoreCase(F("Sleep")))
-  {
-    return true;
-  }
-
-  i2c_response_code = 254;
-
-  while (i2c_response_code == 254)
-  {
-    Wire.requestFrom(I2Caddress, (uint8_t)(ATLAS_EZO_RETURN_ARRAY_SIZE - 1)); // call the circuit and request ATLAS_EZO_RETURN_ARRAY_SIZE -
-                                                                              // 1 = 32 bytes (this is more then we need).
-    i2c_response_code = Wire.read();                                          // read response code
-
-    while (Wire.available())
-    {                                                                         // read response
-      in_char = Wire.read();
-
-      if (in_char == 0)
-      {   // if we receive a null caracter, we're done
-        while (Wire.available())
-        { // purge the data line if needed
-          Wire.read();
-        }
-
-        break; // exit the while loop.
-      }
-      else
-      {
-        if (sensor_bytes_received > ATLAS_EZO_RETURN_ARRAY_SIZE)
-        {
-          addLog(LOG_LEVEL_ERROR, F("< result array to short!"));
-          return false;
-        }
-        sensordata[sensor_bytes_received] = in_char; // load this uint8_t into our array.
-        sensor_bytes_received++;
-      }
-    }
-    sensordata[sensor_bytes_received] = '\0';
-
-    switch (i2c_response_code)
-    {
-      case 1:
-      {
-        # ifndef BUILD_NO_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          addLogMove(LOG_LEVEL_DEBUG, concat(F("< success, answer = "), String(sensordata)));
-        }
-        # endif // ifndef BUILD_NO_DEBUG
-        break;
-      }
-
-      case 2:
-        # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("< command failed"));
-        # endif // ifndef BUILD_NO_DEBUG
-        return false;
-
-      case 254:
-        # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG_MORE, F("< command pending"));
-        # endif // ifndef BUILD_NO_DEBUG
-        break;
-
-      case 255:
-        # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("< no data"));
-        # endif // ifndef BUILD_NO_DEBUG
-        return false;
-    }
-  }
-
-  return true;
-}
-
-int getCalibrationPoints(uint8_t i2cAddress)
-{
-  int  nb_calibration_points                   = -1;
-  char sensordata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
-
-  if (P103_send_I2C_command(i2cAddress, F("Cal,?"), sensordata))
-  {
-    if (strncmp(sensordata, "?Cal,", 5))
-    {
-      char tmp[2];
-      tmp[0]                = sensordata[5];
-      tmp[1]                = '\0',
-      nb_calibration_points = str2int(tmp);
-    }
-  }
-
-  return nb_calibration_points;
-}
-
-void P103_html_color_message(const __FlashStringHelper *color, const String& message) {
-  addHtml(F("&nbsp;<span style='color:"));
-  addHtml(color);
-  addHtml(F(";'>"));
-  addHtml(message);
-  addHtml(F("</span>"));
-}
-
-void P103_html_red(const String& message) {
-  P103_html_color_message(F("red"), message);
-}
-
-void P103_html_orange(const String& message) {
-  P103_html_color_message(F("orange"), message);
-}
-
-void P103_html_green(const String& message) {
-  P103_html_color_message(F("green"), message);
-}
-
-void P103_addDisabler() {
-  // disabler(): argument(s) on 'true' will set that checkbox to false! non-boolean ignores argument
-  // addHtml(F("\n<script type='text/javascript'>function disabler(clear,single,l,h,dry,nul,atm)"
-  //           "{if (clear===true){document.getElementById('en_cal_clear').checked=false;}"
-  //           "if (single===true){document.getElementById('en_cal_single').checked=false;}"
-  //           "if(l===true){document.getElementById('en_cal_L').checked=false;}"
-  //           "if(h===true){document.getElementById('en_cal_H').checked=false;}"
-  //           "if(dry===true){document.getElementById('en_cal_dry').checked=false;}"
-  //           "if(nul===true){document.getElementById('en_cal_0').checked=false;}"
-  //           "if(atm===true){document.getElementById('en_cal_atm').checked=false;}};</script>"));
-  // Minified:
-  addHtml(F("\n<script type='text/javascript'>function disabler(e,l,c,a,n,d,t){!0===e&&(document.getElementById('en_cal_clear').checked=!1)"
-            ",!0===l&&(document.getElementById('en_cal_single').checked=!1)"
-            ",!0===c&&(document.getElementById('en_cal_L').checked=!1)"
-            ",!0===a&&(document.getElementById('en_cal_H').checked=!1)"
-            ",!0===n&&(document.getElementById('en_cal_dry').checked=!1)"
-            ",!0===d&&(document.getElementById('en_cal_0').checked=!1)"
-            ",!0===t&&(document.getElementById('en_cal_atm').checked=!1)};</script>"));
-}
-
-void addClearCalibration()
-{
-  addRowLabel(F("<strong>Clear calibration</strong>"));
-  addFormCheckBox(F("Clear"), F("en_cal_clear"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_clear').onclick=disabler(0,true,true,true,true,0,0);</script>"));
-  addFormNote(F("Attention! This will reset all calibrated data. New calibration will be needed!!!"));
-}
-
-int addDOCalibration(uint8_t I2Cchoice)
-{
-  int nb_calibration_points = getCalibrationPoints(I2Cchoice);
-
-  addRowLabel("Calibrated Points");
-  addHtmlInt(nb_calibration_points);
-
-  if (nb_calibration_points < 1)
-  {
-    P103_html_red(F("   Calibration needed"));
-  }
-
-  addRowLabel(F("<strong>Calibrate to atmospheric oxygen levels</strong>"));
-  addFormCheckBox(F("Enable"), F("en_cal_atm"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_atm').onclick=disabler(true,0,0,0,0,true,true);</script>"));
-
-  addRowLabel(F("<strong>Calibrate device to 0 dissolved oxygen</strong>"));
-  addFormCheckBox(F("Enable"), F("en_cal_0"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_0').onclick=disabler(true,0,0,0,0,true,true);</script>"));
-
-  if (nb_calibration_points > 0)
-  {
-    P103_html_green(F("OK"));
-  }
-  else
-  {
-    P103_html_red(F("Not yet calibrated"));
-  }
-
-  return nb_calibration_points;
-}
-
-void addCreateDryCalibration()
-{
-  addRowLabel(F("<strong>Dry calibration</strong>"));
-  addFormCheckBox(F("Enable"), F("en_cal_dry"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_dry').onclick=disabler(true,true,true,true,0,0,0);</script>"));
-  addFormNote(F("Dry calibration must always be done first!"));
-  addFormNote(F("Calibration for pH-Probe could be 1 (single) or 2 point (low, high)."));
-}
-
-int addCreateSinglePointCalibration(uint8_t             board_type,
-                                    struct EventStruct *event,
-                                    uint8_t             I2Cchoice,
-                                    String              unit,
-                                    float               min,
-                                    float               max,
-                                    uint8_t             nrDecimals,
-                                    float               stepsize)
-{
-  int nb_calibration_points = getCalibrationPoints(I2Cchoice);
-
-  addRowLabel("Calibrated Points");
-  addHtmlInt(nb_calibration_points);
-
-  if (nb_calibration_points < 1)
-  {
-    P103_html_red(F("   Calibration needed"));
-  }
-
-  addRowLabel(F("<strong>Single point calibration</strong>"));
-  addFormFloatNumberBox(F("Ref single point"), F("ref_cal_single'"), P103_CALIBRATION_SINGLE, min, max, nrDecimals, stepsize);
-  addUnit(unit);
-
-  if (((board_type != EC) && (nb_calibration_points > 0)) || ((board_type == EC) && (nb_calibration_points == 1)))
-  {
-    P103_html_green(F("OK"));
-  }
-  else
-  {
-    if ((board_type == EC) && (nb_calibration_points > 1))
-    {
-      P103_html_green(F("Not calibrated, because two point calibration is active."));
-    }
-    else
-    {
-      P103_html_red(F("Not yet calibrated"));
-    }
-  }
-  addFormCheckBox(F("Enable"), F("en_cal_single"), false);
-  addHtml(F(
-            "\n<script type='text/javascript'>document.getElementById('en_cal_single').onclick=disabler(true,0,true,true,true,0,0);</script>"));
-
-  return nb_calibration_points;
-}
-
-int addCreate3PointCalibration(uint8_t             board_type,
-                               struct EventStruct *event,
-                               uint8_t             I2Cchoice,
-                               String              unit,
-                               float               min,
-                               float               max,
-                               uint8_t             nrDecimals,
-                               float               stepsize)
-{
-  int nb_calibration_points = addCreateSinglePointCalibration(board_type, event, I2Cchoice, unit, min, max, nrDecimals, stepsize);
-
-  addRowLabel(F("<strong>Low calibration</strong>"));
-  addFormFloatNumberBox(F("Ref low point"), F("ref_cal_L"), P103_CALIBRATION_LOW, min, max, nrDecimals, stepsize);
-  addUnit(unit);
-
-  if (nb_calibration_points > 1)
-  {
-    P103_html_green(F("OK"));
-  }
-  else
-  {
-    P103_html_orange(F("Not yet calibrated"));
-  }
-  addFormCheckBox(F("Enable"), F("en_cal_L"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_L').onclick=disabler(true,true,0,true,true,0,0);</script>"));
-
-  addHtml(F("<TR><TD><strong>High calibration</strong></TD>"));
-  addFormFloatNumberBox(F("Ref high point"), F("ref_cal_H"), P103_CALIBRATION_HIGH, min, max, nrDecimals, stepsize);
-  addUnit(unit);
-
-  // pH: low, high OK with 3 calibration points (single is the first one); EC: low high OK with 2 calibration points
-  if ((nb_calibration_points > 2) || ((board_type == EC) && (nb_calibration_points > 1)))
-  {
-    P103_html_green(F("OK"));
-  }
-  else
-  {
-    P103_html_orange(F("Not yet calibrated"));
-  }
-  addFormCheckBox(F("Enable"), F("en_cal_H"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_H').onclick=disabler(true,true,true,0,true,0,0);</script>"));
-
-  return nb_calibration_points;
 }
 
 #endif // ifdef USES_P103
