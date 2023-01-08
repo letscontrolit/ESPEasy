@@ -80,31 +80,34 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      addHtml(F("M Fwd:"));
-      addHtml(F("&nbsp;"));
-      addHtml(formatGpioLabel(Settings.TaskDevicePin1[event->TaskIndex], true));
-      addHtml(event->String1);
-      addHtml(F("M Rev:"));
-      addHtml(F("&nbsp;"));
-      addHtml(formatGpioLabel(Settings.TaskDevicePin2[event->TaskIndex], true));
-      addHtml(event->String1);
-      addHtml(F("Enc:"));
-      addHtml(F("&nbsp;"));
-      addHtml(formatGpioLabel(Settings.TaskDevicePin3[event->TaskIndex], true));
-      addHtml(event->String1);
-      # ifdef ESP32
-      addHtml(F("Analog:"));
-      addHtml(F("&nbsp;"));
-      addHtml(formatGpioLabel(P098_ANALOG_GPIO, true));
-      addHtml(event->String1);
-      # endif // ifdef ESP32
-      addHtml(F("Lim A:"));
-      addHtml(F("&nbsp;"));
-      addHtml(formatGpioLabel(P098_LIMIT_SWA_GPIO, true));
-      addHtml(event->String1);
-      addHtml(F("Lim B:"));
-      addHtml(F("&nbsp;"));
-      addHtml(formatGpioLabel(P098_LIMIT_SWB_GPIO, true));
+      const __FlashStringHelper *labels[] = {
+        F("M Fwd"), 
+        F("M Rev"), 
+        F("Enc"), 
+        #ifdef ESP32
+        F("Analog"),
+        #endif
+        F("Lim A"),
+        F("Lim B")
+      };
+      int values[] = {
+        CONFIG_PIN1,
+        CONFIG_PIN2,
+        CONFIG_PIN3,
+        #ifdef ESP32
+        P098_ANALOG_GPIO,
+        #endif
+        P098_LIMIT_SWA_GPIO,
+        P098_LIMIT_SWB_GPIO
+      };
+      constexpr size_t nrElements = sizeof(values) / sizeof(values[0]);
+      for (int i = 0; i < nrElements; ++i) {
+        if (i != 0) { addHtml(event->String1); }
+        addHtml(labels[i]);
+        addHtml(F(":&nbsp;"));
+        addHtml(formatGpioLabel(values[i], true));
+      }
+
       success = true;
       break;
     }
@@ -154,7 +157,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       addFormPinSelect(PinSelectPurpose::Generic_output, 
                        formatGpioName_output(F("Motor Fwd")), 
                        F("taskdevicepin1"),
-                       Settings.TaskDevicePin1[event->TaskIndex]);
+                       CONFIG_PIN1);
       addFormCheckBox(F("Motor Fwd Inverted"), F("mot_fwd_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_FWD_INVERTED));
 
       addFormSeparator(2);
@@ -162,7 +165,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       addFormPinSelect(PinSelectPurpose::Generic_output, 
                        formatGpioName_output(F("Motor Rev")), 
                        F("taskdevicepin2"),
-                       Settings.TaskDevicePin2[event->TaskIndex]);
+                       CONFIG_PIN2);
       addFormCheckBox(F("Motor Rev Inverted"), F("mot_rev_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED));
 
       addFormSeparator(2);
@@ -189,7 +192,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       addFormPinSelect(PinSelectPurpose::Generic_input,
                        formatGpioName_input_optional(F("Encoder")),
                        F("taskdevicepin3"),
-                       Settings.TaskDevicePin3[event->TaskIndex]);
+                       CONFIG_PIN3);
       addFormCheckBox(F("Encoder Pull-Up"), F("enc_pu"), bitRead(P098_FLAGS, P098_FLAGBIT_ENC_IN_PULLUP));
       addFormNumericBox(F("Encoder Timeout"), F("enc_timeout"), P098_ENC_TIMEOUT, 0, 1000);
       addUnit(F("ms"));
@@ -232,9 +235,9 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       // We load/save the TaskDevicePin ourselves to allow to combine the pin specific configuration be shown along with the pin selection.
-      Settings.TaskDevicePin1[event->TaskIndex] = getFormItemInt(F("taskdevicepin1"));
-      Settings.TaskDevicePin2[event->TaskIndex] = getFormItemInt(F("taskdevicepin2"));
-      Settings.TaskDevicePin3[event->TaskIndex] = getFormItemInt(F("taskdevicepin3"));
+      CONFIG_PIN1 = getFormItemInt(F("taskdevicepin1"));
+      CONFIG_PIN2 = getFormItemInt(F("taskdevicepin2"));
+      CONFIG_PIN3 = getFormItemInt(F("taskdevicepin3"));
 
       P098_ENC_TIMEOUT        = getFormItemInt(F("enc_timeout"));
 
