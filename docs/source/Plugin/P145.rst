@@ -1,0 +1,177 @@
+.. include:: ../Plugin/_plugin_substitutions_p14x.repl
+.. _P145_page:
+
+|P145_typename|
+==================================================
+
+|P145_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P145_type|
+
+Name: |P145_name|
+
+Status: |P145_status|
+
+GitHub: |P145_github|_
+
+Maintainer: |P145_maintainer|
+
+Used libraries: |P145_usedlibraries|
+
+Description
+-----------
+
+This plugin supports some gas sensors for which the resistance depends on a gas concentration. These cheap sensors are tuned for specific gasses although they always respond to multiple gasses. The sensors are sold as MQ-xxx (MQ-3, MQ-135, etc).
+
+The analog value of the sensors is determined by a resistance (Rsensor). The sensor is typically used in series with a load resistor (Rload). 
+The voltage is over Rload is connected to the analog input of the ESP. A sensor and gas specific conversion formula is used to convert the measured voltage to a gas concentration.
+
+The plugin can be configured to select one of the predefined sensor types and tune some of the conversion parameters.
+
+Basic algorithm
+^^^^^^^^^^^^^^^
+
+The MQ-xxx series of sensors contain a resistor that depends on the concentration of certain gases in the environment. This relation is typically provided in the datasheets as a curve on a logarithmic plot. Figure below shows this relation for the MQ-3 sensor. In the indicated range the plot is close to linear. 
+The plugin uses a conversion algoritm based upon a linear relation in the log-log plot. This results in two parameters parA and parB that determine this linear relation.
+
+.. image:: P145_SensorPlot.jpg
+   :alt: Relation between gas level and sensor resistance (Rsensor/Rzero)
+
+All plots use a normalized sensor resistance ratio (Rsensor/Rzero) as input. The ratio Rsensor/Rzero is the measured sensor resistance divided by a reference resistance value Rzero. 
+The value of Rzero is the value the sensor has when a reference gas concentration is measured. As the plot is logaritmic changing Rzero equals shifting the curve up or down. This means Rzero can be used to calibrate the sensor.
+
+The measurement algoritm is done in two steps: 1) Convert the measured voltage in the resistance value of Rsensor. 2) Apply the approximated curve for the given sensor type and gas type.
+
+* The current plugin algorithm assumes the sensor is connected to a supply voltage of 5 Volt and an ESP analog input range of 3.3 Volt. In case your circuit uses a different configuration you need to build the plugin with different values. 
+  The load resistance is a device setting. Ohms law is used to determine the sensor's resistance Rsensor.
+
+* Several examples were found in literature to apply the linear log-log relation to convert the measured Rsensor value into a gas concentation level. The plugin uses a table with sensor specific data. Per sensor the algorithma and associated parameters are provided.
+  Other sensors can be added, given the correct data can be produced.
+
+Temperature and humidity compensation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The MQ-xxx series of sensors is depending on the environment temperature and humidity. The datasheets often provide a graph that shows the relation between the Rsensor/Rzero ratio and environment temperature for various relative humidity levels. Figure below shows this relation for the MQ-3 sensor.
+From the plot it is clear that this relation is not linear.
+
+.. image:: P145_TemHumDependency.jpg
+   :alt: Relation between temperature & humidity versus sensor resistance (Rsensor/Rzero)
+
+The plugin uses a calibration algorithm for the MQ-135 as found on the internet. Other sensors are waiting for proper measurement data and assocaited algorithms.
+
+Calibration can be enabled for all sensors. Temperature and Humidity must be provided by external sensors. If enabled the plugin tasks and values for both temperature and Humidity must be configured. 
+In case a sensor type does not support compensation the output level will be the same as for compensation turned off.
+
+Calibration
+^^^^^^^^^^^
+
+The plugin uses a ration (Rsensor/Rzero) as input to determine the gas level. By changing the value of Rzero the resulting sensor value can be tuned. 
+With every measurement the plugin calculates what Rzero should be if the current concentration level equals the reference level. This is the reverse formula for the relation between level and (Rsensor/Rzero) ration.
+The plugin will log this value as Rcal. This can be seen on the log output page or on the serial terminal. If a save value can be calculated this will also be shown as a suggestion on device settings page.
+
+The user shall take care that the sensor is well heated and in a clean air (reference for most sensors) for some time. If the Rcal value is stable it can be copied to the Rzero setting on the settings page.
+
+Autocalibration
+^^^^^^^^^^^^^^^
+
+The user can switch on autocalibration for the plugin. If autocalibration is switched on the plugin measures the calibration value Rcal over a full day. Once a day it uses the lowest value of the day as new value for Rzero. 
+Note that this asumes that at least once a day the reference level is reached. Don't use autocalibration if levels can be high for a day or longer! Autocalibration will cause a jump in the value once a day when Rzero is updated.
+
+Final thoughts about the sensors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The MQ-xxx sensors are cheap sensors for various types of gas. They are primary used to warn for high levels of gas and not for accurate level reporting. For reportinmg these sensors have several drawbacks:
+
+* They respond to multiple gasses. Although each sensor type is tuned to one or a few gasses also other gasses will influence the readings.
+
+* They depend on the temperature and humidity. Compensation is partly possible, but requires non-linear formulas. 
+
+* The Rsensor/Rzero relation is not completely linear of the logarithmic scales. This reduces the accuracy of the measurements.
+
+* The sensors are known to drift over time. For good results they shall be calibrated regularly.
+
+Although the serious issues with this kind of sensors they provide a cheap way to do some trend analysis on your environment. They can be used to control ventilation or provide warnings about air quality. 
+As long as values are not taken absolute it is fun to play with them. I use a MQ-135 as CO2 sensor next to a ndir MHZ-19 sensor. They both increase the reading strongly when working in a closed room. 
+However the MQ-135 keeps the values high much longer that the MHZ-19. Sometimes the MQ-135 detects "gasses" while the MHZ-19 is quiet. 
+It was fun to learn how to build a ESPeasy plugin and I will play with these sensors. But I won't use them for accurate logging of a specific gas.
+
+Hardware
+---------
+
+Sensors can be bought as a component. The internet is full of development boards that contain the sensor with load resistor connected. These boards also provide a comparator that compares the output value with a preset value for a simple digital output.
+
+.. image:: P145_MQ_hardware.jpeg
+   :alt: MQ-7 development board
+
+Development board with MQ-7 CO sensor
+   
+Connections
+^^^^^^^^^^^^
+
+The sensor analog output is connected to an analog input. The digital output often provided on development boards is not used by the plugin. You can use the digital input plugin instead (P001).
+
+Load resistor remarks
+^^^^^^^^^^^^^^^^^^^^^
+
+The manufactors of the MQ-xxx sensors provide the conversion plots given a set of environment conditions. This includes the supply voltage and a prescribed range for the load resistor  Rload. 
+Unfortunately most of the cheap development boards put a standard 1kOhm resistor on the board. For most sensors this value is far too low. The plugin can handle such values. 
+However such a low value for the load resistor decreases the range of the output signal and thus the accuracy of the measurent. It also uses the sensor in a range that is not supported by the manufator.
+It is advised to replace this sensor by a value fitting the range advised by the manufactor. You can find these in the datasheets.
+
+Many ESP8266 boards use resistors to divide the analog input value so map the 1 Volt input range of the ESP to the 3.3 Volt supply range. These resistors are in parallel with the Rload on the sensor board. 
+This shall be taken into account when determining the Rload value for the plugin.
+
+The plugin assumes a supply voltage of 5 Volt for the sensor and an input range of 3.3 Volt for the Analog input. This implies that the input may get out of range for very high gas levels. 
+Please check the expected range for the given sensor and Rload combination. If clipping is expected Rload might be decreased. Other options are to use/change the input divider resistors or apply a 3.3 volt power to the sensor. 
+Note that such configurations are not yet supported by the plugin. You have to change some settings in the code and build the plugin yourself.
+
+Device
+------
+
+.. image:: P145_DeviceConfiguration.jpg
+   :alt: Device configuration
+
+* **Name** A unique name should be entered here.
+
+* **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
+
+* **Sensor type** Dropdown box to select one of the predefined sensors. Used to determine the correct conversion algorithm.
+
+* **Load Resistance** Value of the connected load resistor (Rload)
+
+* **R Zero** Reference resistance value for teh sensor. This is the main calibration value, see sensor description.
+
+* **Reference Level** Reference gas concentration level for calibration of Rzero
+
+* **Enable automatic calibration** Checkbox to enable automatic calibration. 
+
+* **Enable temp/hmid compensation** Checkbox to enable temperature and humidity compensation. This requires an external temperature and humidity sensor that deliver the actual data.
+
+* **Temperature Task** Dropdown box to select the task for the compensation temperature.
+
+* **Temperature Value** Dropdown box to select the value for the compensation temperature.
+
+* **Humidity Task** Dropdown box to select the task for the compensation humidity.
+
+* **Humidity Value** Dropdown box to select the value for the compensation humidity.
+
+Commands
+----------
+
+This plugin does not support additinal commands.
+
+Values
+------
+
+This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+
+Change log
+----------
+
+.. versionadded:: 2.0
+  ...
+
+  |added| 2023-01-08 Created.
