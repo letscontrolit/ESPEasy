@@ -101,7 +101,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         P098_LIMIT_SWB_GPIO
       };
       constexpr size_t nrElements = sizeof(values) / sizeof(values[0]);
-      for (int i = 0; i < nrElements; ++i) {
+      for (size_t i = 0; i < nrElements; ++i) {
         if (i != 0) { addHtml(event->String1); }
         addHtml(labels[i]);
         addHtml(F(":&nbsp;"));
