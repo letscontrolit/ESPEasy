@@ -194,7 +194,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      // Plugin_090_WAKE_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+      // Plugin_090_WAKE_Pin = CONFIG_PIN1;
       CCS811Core::status returnCode;
       returnCode = P090_data->myCCS811.begin();
 
