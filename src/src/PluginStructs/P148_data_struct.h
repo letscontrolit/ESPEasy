@@ -48,6 +48,15 @@ public:
     THR3xxD  = 2  // Sonoff THR316D / THR320D
   };
 
+  enum class Tm1621UnitOfMeasure {
+    None,
+    Celsius,
+    Fahrenheit,
+    kWh_Watt,
+    Humidity,
+    Volt_Amp
+  };
+
   struct Tm1621_t {
     bool isValid() const;
 
@@ -89,26 +98,48 @@ public:
 
 private:
 
-  void TM1621WriteBit(bool value) const;
-  void TM1621StartSequence() const;
-  void TM1621StopSequence() const;
-  void TM1621SendCmnd(uint16_t command) const;
-  void TM1621SendAddress(uint16_t address) const;
-  void TM1621SendCommon(uint8_t common) const;
-  void TM1621WritePixelBuffer(const uint8_t *buf,
-                              size_t         size,
-                              uint16_t       address) const;
-  void TM1621SendRows() const;
+  void            TM1621Init();
+  void            TM1621WriteBit(bool value) const;
+  void            TM1621StartSequence() const;
+  void            TM1621StopSequence() const;
+  void            TM1621SendCmnd(uint16_t command) const;
+  void            TM1621SendAddress(uint16_t address) const;
+  void            TM1621SendCommon(uint8_t common) const;
+  void            TM1621WritePixelBuffer(const uint8_t *buf,
+                                         size_t         size,
+                                         uint16_t       address) const;
+  void            TM1621SendRows() const;
+
+  static uint32_t bufferIndex(bool firstrow, uint32_t col) {
+    return firstrow ? col : 7 - col;
+  }
 
 public:
 
   void writeString(bool          firstrow,
                    const String& str);
+  void writeStrings(const String& str1,
+                    const String& str2);
+
+  void writeFloats(float value1,
+                   float value2);
+
+  void writeFloat(bool  firstrow,
+                  float value);
+
   void writeRawData(uint64_t rawdata) const;
 
-private:
+  void setUnit(Tm1621UnitOfMeasure unit);
 
-  void TM1621Init();
+  void writeVoltAmp(float volt,
+                    float amp);
+  void writeEnergy(float kWh,
+                   float watt);
+  void writeTemp(float temp,
+                 bool  Celsius = true);
+  void writeHumidity(float humidity);
+
+private:
 
   Tm1621_t Tm1621;
 };

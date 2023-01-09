@@ -137,6 +137,36 @@ bool P148_data_struct::init() {
 
 /*********************************************************************************************/
 
+void P148_data_struct::TM1621Init() {
+  digitalWrite(Tm1621.pin_cs, 0);
+  delayMicroseconds(80);
+  digitalWrite(Tm1621.pin_rd, 0);
+  delayMicroseconds(15);
+  digitalWrite(Tm1621.pin_wr, 0);
+  delayMicroseconds(25);
+  digitalWrite(Tm1621.pin_da, 0);
+  delayMicroseconds(TM1621_PULSE_WIDTH);
+  digitalWrite(Tm1621.pin_da, 1);
+
+  constexpr uint32_t nr_commands = sizeof(tm1621_commands) / sizeof(tm1621_commands[0]);
+
+  for (uint32_t command = 0; command < nr_commands; command++) {
+    TM1621SendCmnd(tm1621_commands[command]);
+  }
+
+  // Clear entire display buffer
+  TM1621SendAddress(0x00);
+
+  for (uint32_t segment = 0; segment < 16; segment++) {
+    TM1621SendCommon(0);
+  }
+  TM1621StopSequence();
+
+  snprintf_P(Tm1621.row[0], sizeof(Tm1621.row[0]), PSTR("----"));
+  snprintf_P(Tm1621.row[1], sizeof(Tm1621.row[1]), PSTR("----"));
+  TM1621SendRows();
+}
+
 void P148_data_struct::TM1621WriteBit(bool value) const {
   digitalWrite(Tm1621.pin_wr, 0);             // Start write sequence
   digitalWrite(Tm1621.pin_da, value ? 1 : 0); // Set data
@@ -201,12 +231,13 @@ void P148_data_struct::TM1621SendRows() const {
   // "123456.7" will be shown as "9999" being a four digit overflow
 
   uint8_t buffer[8] = { 0 }; // TM1621 16-segment 4-bit common buffer
-  char    row[4]{ '-', '-', '-', '-' };
 
   for (uint32_t j = 0; j < 2; j++) {
     const bool firstrow = 0 == j;
 
     if (Tm1621.isNumerical(firstrow)) {
+      char row[4]{};
+
       // 0.4V => "  04", 0.0A => "  ", 1234.5V => "1234"
       uint32_t len  = strlen(Tm1621.row[j]);
       char    *dp   = nullptr; // Expect number larger than "123"
@@ -234,8 +265,7 @@ void P148_data_struct::TM1621SendRows() const {
       }
 
       for (uint32_t i = 0; i < 4; i++) {
-        const uint32_t bidx = (firstrow) ? i : 7 - i;
-        buffer[bidx] = TM1621GetFontCharacter(row[i], firstrow);
+        buffer[bufferIndex(firstrow, i)] = TM1621GetFontCharacter(row[i], firstrow);
       }
 
       if (dp) {
@@ -247,8 +277,7 @@ void P148_data_struct::TM1621SendRows() const {
       }
     } else {
       for (uint32_t i = 0; i < 4; i++) {
-        const uint32_t bidx = (firstrow) ? i : 7 - i;
-        buffer[bidx] = TM1621GetFontCharacter(Tm1621.row[j][i], firstrow);
+        buffer[bufferIndex(firstrow, i)] = TM1621GetFontCharacter(Tm1621.row[j][i], firstrow);
       }
     }
   }
@@ -272,48 +301,94 @@ void P148_data_struct::writeString(bool firstrow, const String& str) {
   TM1621SendRows();
 }
 
+void P148_data_struct::writeStrings(const String& str1, const String& str2) {
+  safe_strncpy(Tm1621.row[0], str1, sizeof(Tm1621.row[0]));
+  safe_strncpy(Tm1621.row[1], str2, sizeof(Tm1621.row[0]));
+  TM1621SendRows();
+}
+
+void P148_data_struct::writeFloats(float value1, float value2) {
+  writeStrings(String(value1, 1), String(value2, 1));
+}
+
+void P148_data_struct::writeFloat(bool firstrow, float value) {
+  writeString(firstrow, String(value, 1));
+}
+
 void P148_data_struct::writeRawData(uint64_t rawdata) const {
   uint8_t buffer[8] = { 0 }; // TM1621 16-segment 4-bit common buffer
 
   for (uint32_t j = 0; j < 2; j++) {
     for (uint32_t i = 0; i < 4; i++) {
-      uint32_t bidx = (0 == j) ? i : 7 - i;
-      buffer[bidx] = ((rawdata >> 56) & 0xFF);
-      rawdata    <<= 8;
+      buffer[bufferIndex((0 == j), i)] = ((rawdata >> 56) & 0xFF);
+      rawdata                        <<= 8;
     }
   }
 
   TM1621WritePixelBuffer(buffer, 8, 0x10); // Sonoff only uses the upper 16 Segments
 }
 
-void P148_data_struct::TM1621Init() {
-  digitalWrite(Tm1621.pin_cs, 0);
-  delayMicroseconds(80);
-  digitalWrite(Tm1621.pin_rd, 0);
-  delayMicroseconds(15);
-  digitalWrite(Tm1621.pin_wr, 0);
-  delayMicroseconds(25);
-  digitalWrite(Tm1621.pin_da, 0);
-  delayMicroseconds(TM1621_PULSE_WIDTH);
-  digitalWrite(Tm1621.pin_da, 1);
-
-  constexpr uint32_t nr_commands = sizeof(tm1621_commands) / sizeof(tm1621_commands[0]);
-
-  for (uint32_t command = 0; command < nr_commands; command++) {
-    TM1621SendCmnd(tm1621_commands[command]);
+void P148_data_struct::setUnit(P148_data_struct::Tm1621UnitOfMeasure unit) {
+  switch (unit) {
+    case P148_data_struct::Tm1621UnitOfMeasure::None:
+      Tm1621.celsius    = false;
+      Tm1621.fahrenheit = false;
+      Tm1621.humidity   = false;
+      Tm1621.voltage    = false;
+      Tm1621.kwh        = false;
+      break;
+    case P148_data_struct::Tm1621UnitOfMeasure::Celsius:
+      Tm1621.celsius    = true;
+      Tm1621.fahrenheit = false;
+      Tm1621.voltage    = false;
+      Tm1621.kwh        = false;
+      break;
+    case P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit:
+      Tm1621.fahrenheit = true;
+      Tm1621.celsius    = false;
+      Tm1621.voltage    = false;
+      Tm1621.kwh        = false;
+      break;
+    case P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt:
+      Tm1621.kwh        = true;
+      Tm1621.celsius    = false;
+      Tm1621.fahrenheit = false;
+      Tm1621.humidity   = false;
+      Tm1621.voltage    = false;
+      break;
+    case P148_data_struct::Tm1621UnitOfMeasure::Humidity:
+      Tm1621.humidity = true;
+      Tm1621.voltage  = false;
+      Tm1621.kwh      = false;
+      break;
+    case P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp:
+      Tm1621.voltage    = true;
+      Tm1621.celsius    = false;
+      Tm1621.fahrenheit = false;
+      Tm1621.humidity   = false;
+      Tm1621.kwh        = false;
+      break;
   }
+}
 
-  // Clear entire display buffer
-  TM1621SendAddress(0x00);
+void P148_data_struct::writeVoltAmp(float volt, float amp) {
+  setUnit(P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp);
+  writeFloats(volt, amp);
+}
 
-  for (uint32_t segment = 0; segment < 16; segment++) {
-    TM1621SendCommon(0);
-  }
-  TM1621StopSequence();
+void P148_data_struct::writeEnergy(float kWh, float watt) {
+  setUnit(P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt);
+  writeFloats(kWh, watt);
+}
 
-  snprintf_P(Tm1621.row[0], sizeof(Tm1621.row[0]), PSTR("----"));
-  snprintf_P(Tm1621.row[1], sizeof(Tm1621.row[1]), PSTR("----"));
-  TM1621SendRows();
+void P148_data_struct::writeTemp(float temp, bool Celsius) {
+  setUnit(Celsius ? P148_data_struct::Tm1621UnitOfMeasure::Celsius : P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit);
+  writeFloat(true, temp);
+}
+
+void P148_data_struct::writeHumidity(float humidity) {
+  setUnit(P148_data_struct::Tm1621UnitOfMeasure::Humidity);
+  writeFloat(false, humidity);
 }
 
 #endif // ifdef USES_P148
