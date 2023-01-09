@@ -1,0 +1,76 @@
+.. include:: ../Plugin/_plugin_substitutions_p14x.repl
+.. _P148_page:
+
+|P148_typename|
+==================================================
+
+|P148_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P148_type|
+
+Name: |P148_name|
+
+Status: |P148_status|
+
+GitHub: |P148_github|_
+
+Maintainer: |P148_maintainer|
+
+Used libraries: |P148_usedlibraries|
+
+Description
+-----------
+
+
+Hardware
+--------
+
+
+
+Configuration
+-------------
+
+.. image:: P148_DeviceConfiguration.png
+  :alt: Device configuration
+
+
+* **Name**: Required by ESPEasy, must be unique among the list of available devices/tasks.
+
+* **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
+
+
+Device Settings
+^^^^^^^^^^^^^^^
+
+
+Generic settings
+^^^^^^^^^^^^^^^^
+
+
+Display Values
+^^^^^^^^^^^^^^
+
+
+
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P148_commands.repl
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  2023-01-10 Initial release version.
+
+
+
+
+
