@@ -21,8 +21,8 @@
     "
     | ``tm1621,writerow,<rownr>,<str>``
 
-    | ``<rownr>``: ``<= 1`` for first row, otherwise second row.
-    | ``<str>``: Upto 4 characters
+    | ``<rownr>``: Use <= 1 for first row, otherwise second row.
+    | ``<str>``: Upto 4 characters.
     ","
     | Writes ``str1`` value on the given row. Any symbol on the right will be cleared.
 
@@ -75,4 +75,5 @@
     | Writes HEX values directly to the frame buffer of the display.
 
     | For example: ``tm1621,raw,0x2f6b3700f2e7d357`` will create the characters showing ``ESP`` on the first row and ``EASY`` on the second row.
+    | ``tm1621,raw,0xffffffffffffffff`` will turn all 'pixels' on the LCD on.
     "
