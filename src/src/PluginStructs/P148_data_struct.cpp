@@ -34,46 +34,82 @@
 const uint8_t tm1621_commands[] =
 { TM1621_SYS_EN, TM1621_LCD_ON, TM1621_BIAS, TM1621_TIMER_DIS, TM1621_WDT_DIS, TM1621_TONE_OFF, TM1621_IRQ_DIS };
 
-// Uncrustify may mangle the readability of the fonts
-//
-// *INDENT-OFF*
 
-// TM1621 Font
-//                                          0     1     2     3     4     5     6     7     8     9     -     off
-const uint8_t tm1621_digit_row[2][12] = { { 0x5F, 0x50, 0x3D, 0x79, 0x72, 0x6B, 0x6F, 0x51, 0x7F, 0x7B, 0x20, 0x00 },
-                                          { 0xF5, 0x05, 0xB6, 0x97, 0x47, 0xD3, 0xF3, 0x85, 0xF7, 0xD7, 0x02, 0x00 } };
-//                                          'A'   'b'   'C'   'b'   'E'   'F'   'G'   'H'   'i'   'J'   'K'   'L'   'M'   'n'   'o'   'P'   'q'   'r'   'S'   't'   'U'   'v'   'W'   'X'   'Y'   'Z'   '?'   ' '
-const uint8_t tm1621_char_row[2][28] = { { 0x77, 0x6E, 0x0F, 0x7C, 0x2F, 0x27, 0x4f, 0x76, 0x40, 0x5C, 0x00, 0x0E, 0x00, 0x64, 0x6C, 0x37, 0x73, 0x24, 0x6B, 0x2E, 0x5E, 0x4C, 0x00, 0x00, 0x7A, 0x00, 0x35, 0x00 },
-                                         { 0xE7, 0x73, 0xF0, 0x37, 0xF2, 0xE2, 0xF1, 0x67, 0x01, 0x35, 0x00, 0x70, 0x00, 0x23, 0x33, 0xE6, 0xC7, 0x22, 0xD3, 0x72, 0x75, 0x31, 0x00, 0x00, 0x57, 0x00, 0xA6, 0x00 } };
+uint8_t P148_data_struct::TM1621GetFontCharacter(char character, bool firstrow) {
+  // Uncrustify may mangle the readability of the fonts
+  //
+  // *INDENT-OFF*
 
-// HEX bit values per segment
-// Row 1
-//        1
-//      -----
-//     |     |
-//    2|     |10
-//     |     |
-//      --20-
-//     |     |
-//    4|     |40
-//     |     |
-//      -----
-//        8
-//   
-// Row 2
-//        80
-//      -----
-//     |     |
-//   40|     |4
-//     |     |
-//      --2--
-//     |     |
-//   20|     |1
-//     |     |
-//      -----
-//        10
+  // HEX bit values per segment
+  // Row 1              Row 2
+  //        1                  80
+  //      -----              -----
+  //     |     |            |     |
+  //    2|     |10        40|     |4
+  //     |     |            |     |
+  //      --20-              --2--
+  //     |     |            |     |
+  //    4|     |40        20|     |1
+  //     |     |            |     |
+  //      -----              -----
+  //        8                  10
 
-// *INDENT-ON*
+  // TM1621 Font
+  //                                                  0     1     2     3     4     5     6     7     8     9     -  
+  static const uint8_t tm1621_digit_row[2][11] = { { 0x5F, 0x50, 0x3D, 0x79, 0x72, 0x6B, 0x6F, 0x51, 0x7F, 0x7B, 0x20 },
+                                                   { 0xF5, 0x05, 0xB6, 0x97, 0x47, 0xD3, 0xF3, 0x85, 0xF7, 0xD7, 0x02 } };
+  //                                                 'A'   'b'   'C'   'b'   'E'   'F'   'G'   'H'   'i'   'J'   'K'   'L'   'M'   'n'   'o'   'P'   'q'   'r'   'S'   't'   'U'   'v'   'W'   'X'   'Y'   'Z'   '?'
+  static const uint8_t tm1621_char_row[2][27] = { { 0x77, 0x6E, 0x0F, 0x7C, 0x2F, 0x27, 0x4f, 0x76, 0x40, 0x5C, 0x00, 0x0E, 0x00, 0x64, 0x6C, 0x37, 0x73, 0x24, 0x6B, 0x2E, 0x5E, 0x4C, 0x00, 0x00, 0x7A, 0x00, 0x35 },
+                                                  { 0xE7, 0x73, 0xF0, 0x37, 0xF2, 0xE2, 0xF1, 0x67, 0x01, 0x35, 0x00, 0x70, 0x00, 0x23, 0x33, 0xE6, 0xC7, 0x22, 0xD3, 0x72, 0x75, 0x31, 0x00, 0x00, 0x57, 0x00, 0xA6 } };
+ // *INDENT-ON*
+
+  const char c       = toLowerCase(character);
+  const uint32_t row = firstrow ? 0 : 1;
+
+  if (isdigit(c) || (c == '-')) {
+    // Part of a number
+    if (c == '-') {
+      return tm1621_digit_row[row][10];
+    } else {
+      return tm1621_digit_row[row][c - '0'];
+    }
+  }
+
+  // String
+  if (c == '?') { return tm1621_char_row[row][26]; }
+
+  if (('a' <= c) && (c <= 'z')) {
+    return tm1621_char_row[row][c - 'a'];
+  }
+
+  // Return a 'space'
+  return 0u;
+}
+
+bool P148_data_struct::Tm1621_t::isValid() const {
+  // FIXME TD-er: Must check if the selected pins also are usable
+  return pin_da != -1 &&
+         pin_wr != -1 &&
+         pin_rd != -1 &&
+         pin_cs != -1;
+}
+
+bool P148_data_struct::Tm1621_t::isNumerical(bool firstrow) const {
+  bool done = false;
+
+  // Only need to check upto the first 6 characters
+  for (size_t i = 0; i < 6 && !done; ++i) {
+    const char c = row[firstrow ? 0 : 1][i];
+
+    if (c == '\0') { done = true; }
+    else {
+      if (!(isdigit(c) || (c == '-') || (c == '.'))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 P148_data_struct::P148_data_struct(const Tm1621_t& config) : Tm1621(config) {
   if (Tm1621.isValid()) {
@@ -110,6 +146,11 @@ void P148_data_struct::TM1621WriteBit(bool value) const {
   delayMicroseconds(TM1621_PULSE_WIDTH);
 }
 
+void P148_data_struct::TM1621StartSequence() const {
+  digitalWrite(Tm1621.pin_cs, 0); // Start command sequence
+  delayMicroseconds(TM1621_PULSE_WIDTH / 2);
+}
+
 void P148_data_struct::TM1621StopSequence() const {
   digitalWrite(Tm1621.pin_cs, 1); // Stop command sequence
   delayMicroseconds(TM1621_PULSE_WIDTH / 2);
@@ -119,8 +160,7 @@ void P148_data_struct::TM1621StopSequence() const {
 void P148_data_struct::TM1621SendCmnd(uint16_t command) const {
   uint16_t full_command = (0x0400 | command) << 5; // 0b100cccccccc00000
 
-  digitalWrite(Tm1621.pin_cs, 0);                  // Start command sequence
-  delayMicroseconds(TM1621_PULSE_WIDTH / 2);
+  TM1621StartSequence();
 
   for (uint32_t i = 0; i < 12; i++) {
     TM1621WriteBit(full_command & 0x8000);
@@ -132,8 +172,7 @@ void P148_data_struct::TM1621SendCmnd(uint16_t command) const {
 void P148_data_struct::TM1621SendAddress(uint16_t address) const {
   uint16_t full_address = (address | 0x0140) << 7; // 0b101aaaaaa0000000
 
-  digitalWrite(Tm1621.pin_cs, 0);                  // Start command sequence
-  delayMicroseconds(TM1621_PULSE_WIDTH / 2);
+  TM1621StartSequence();
 
   for (uint32_t i = 0; i < 9; i++) {
     TM1621WriteBit(full_address & 0x8000);
@@ -148,6 +187,15 @@ void P148_data_struct::TM1621SendCommon(uint8_t common) const {
   }
 }
 
+void P148_data_struct::TM1621WritePixelBuffer(const uint8_t *buf, size_t size, uint16_t address) const {
+  TM1621SendAddress(address);
+
+  for (uint32_t i = 0; i < size; i++) {
+    TM1621SendCommon(buf[i]);
+  }
+  TM1621StopSequence();
+}
+
 void P148_data_struct::TM1621SendRows() const {
   // Tm1621.row[x] = "text", "----", "    " or a number with one decimal like "0.4", "237.5", "123456.7"
   // "123456.7" will be shown as "9999" being a four digit overflow
@@ -156,55 +204,51 @@ void P148_data_struct::TM1621SendRows() const {
   char    row[4]{ '-', '-', '-', '-' };
 
   for (uint32_t j = 0; j < 2; j++) {
-    // 0.4V => "  04", 0.0A => "  ", 1234.5V => "1234"
-    uint32_t len  = strlen(Tm1621.row[j]);
-    char    *dp   = nullptr; // Expect number larger than "123"
-    int  row_idx  = len - 3; // "1234.5"
-    bool overflow = false;
+    const bool firstrow = 0 == j;
 
-    if (len <= 5) {          // "----", "    ", "0.4", "237.5"
-      dp      = strchr(Tm1621.row[j], '.');
-      row_idx = len - 1;
-    }
-    else if (len > 6) { // "12345.6"
-      overflow = true;
-      row_idx  = 3;
-    }
+    if (Tm1621.isNumerical(firstrow)) {
+      // 0.4V => "  04", 0.0A => "  ", 1234.5V => "1234"
+      uint32_t len  = strlen(Tm1621.row[j]);
+      char    *dp   = nullptr; // Expect number larger than "123"
+      int  row_idx  = len - 3; // "1234.5"
+      bool overflow = false;
 
-    for (int i = 3; i >= 0; --i) {
-      if (row_idx >= 0) {
-        row[i] = (overflow) ? '9' : Tm1621.row[j][row_idx--];
+      if (len <= 5) {          // "----", "    ", "0.4", "237.5"
+        dp      = strchr(Tm1621.row[j], '.');
+        row_idx = len - 1;
+      }
+      else if (len > 6) { // "12345.6"
+        overflow = true;
+        row_idx  = 3;
       }
 
-      if ((i == 3) && (row_idx >= 0) && dp) {
-        // Skip the '.'
-        row_idx--;
-      }
-    }
+      for (int i = 3; i >= 0; --i) {
+        if (row_idx >= 0) {
+          row[i] = (overflow) ? '9' : Tm1621.row[j][row_idx--];
+        }
 
-    //    AddLog(LOG_LEVEL_DEBUG, PSTR("TM1: Dump%d %4_H"), j +1, row);
-
-    char command[10];
-
-    for (uint32_t i = 0; i < 4; i++) {
-      int index = 11; // Empty
-
-      if (row[i] == '-') {
-        index = 10;
-      } else if (isDigit(row[i])) {
-        index = row[i] - '0';
+        if ((i == 3) && (row_idx >= 0) && dp) {
+          // Skip the '.'
+          row_idx--;
+        }
       }
 
-      if (-1 == index) { index = 11; }
-      uint32_t bidx = (0 == j) ? i : 7 - i;
-      buffer[bidx] = tm1621_digit_row[j][index];
-    }
+      for (uint32_t i = 0; i < 4; i++) {
+        const uint32_t bidx = (firstrow) ? i : 7 - i;
+        buffer[bidx] = TM1621GetFontCharacter(row[i], firstrow);
+      }
 
-    if (dp) {
-      if (0 == j) {
-        buffer[2] |= 0x80; // Row 1 decimal point
-      } else {
-        buffer[5] |= 0x08; // Row 2 decimal point
+      if (dp) {
+        if (firstrow) {
+          buffer[2] |= 0x80; // Row 1 decimal point
+        } else {
+          buffer[5] |= 0x08; // Row 2 decimal point
+        }
+      }
+    } else {
+      for (uint32_t i = 0; i < 4; i++) {
+        const uint32_t bidx = (firstrow) ? i : 7 - i;
+        buffer[bidx] = TM1621GetFontCharacter(Tm1621.row[j][i], firstrow);
       }
     }
   }
@@ -220,55 +264,15 @@ void P148_data_struct::TM1621SendRows() const {
   if (Tm1621.voltage) { buffer[7] |= 0x08; }
 
   //  AddLog(LOG_LEVEL_DEBUG, PSTR("TM1: Dump3 %8_H"), buffer);
-  TM1621SendAddress(0x10); // Sonoff only uses the upper 16 Segments
-
-  for (uint32_t i = 0; i < 8; i++) {
-    TM1621SendCommon(buffer[i]);
-  }
-  TM1621StopSequence();
+  TM1621WritePixelBuffer(buffer, 8, 0x10); // Sonoff only uses the upper 16 Segments
 }
 
-void P148_data_struct::TM1621WriteString(bool firstrow, const String& str) {
-  const uint32_t row = firstrow ? 0 : 1;
-  uint8_t  buffer[4] = { 0 }; // 1 row of TM1621 8-segment 4-bit common buffer
-  uint32_t nrChar    = str.length();
-
-  if (nrChar > 4) { nrChar = 4; }
-
-  for (uint32_t i = 0; i < nrChar; i++) {
-    const uint32_t bidx = (firstrow) ? i : 3 - i;
-    const char     c    = toLowerCase(str[i]);
-
-    if (isdigit(c) || (c == '-')) {
-      int index = 11; // Empty
-
-      if (c == '-') {
-        index = 10;
-      } else {
-        index = c - '0';
-      }
-
-      if (-1 == index) { index = 11; }
-      buffer[bidx] = tm1621_digit_row[row][index];
-    } else {
-      uint32_t index = (c == '?') ? 26 : 27;
-
-      if (('a' <= c) && (c <= 'z')) {
-        index = c - 'a';
-      }
-      buffer[bidx] = tm1621_char_row[row][index];
-    }
-  }
-
-  TM1621SendAddress(firstrow ? 0x10 : 0x18); // Sonoff only uses the upper 16 Segments
-
-  for (uint32_t i = 0; i < 4; i++) {
-    TM1621SendCommon(buffer[i]);
-  }
-  TM1621StopSequence();
+void P148_data_struct::writeString(bool firstrow, const String& str) {
+  safe_strncpy(Tm1621.row[firstrow ? 0 : 1], str, sizeof(Tm1621.row[0]));
+  TM1621SendRows();
 }
 
-void P148_data_struct::TM1621WritePixelBuffer(uint64_t rawdata) const {
+void P148_data_struct::writeRawData(uint64_t rawdata) const {
   uint8_t buffer[8] = { 0 }; // TM1621 16-segment 4-bit common buffer
 
   for (uint32_t j = 0; j < 2; j++) {
@@ -279,12 +283,7 @@ void P148_data_struct::TM1621WritePixelBuffer(uint64_t rawdata) const {
     }
   }
 
-  TM1621SendAddress(0x10); // Sonoff only uses the upper 16 Segments
-
-  for (uint32_t i = 0; i < 8; i++) {
-    TM1621SendCommon(buffer[i]);
-  }
-  TM1621StopSequence();
+  TM1621WritePixelBuffer(buffer, 8, 0x10); // Sonoff only uses the upper 16 Segments
 }
 
 void P148_data_struct::TM1621Init() {

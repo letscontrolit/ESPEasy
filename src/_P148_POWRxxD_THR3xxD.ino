@@ -187,12 +187,12 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
 
             if (validUInt64FromString(rawdata_str, rawdata)) {
               success = true;
-              P148_data->TM1621WritePixelBuffer(rawdata);
+              P148_data->writeRawData(rawdata);
             }
           } else if (command.equals(F("tm1621write"))) {
             // tm1621write,<rownr>,<string>
             const String str = parseString(string, 3);
-            P148_data->TM1621WriteString(event->Par1 <= 1, str);
+            P148_data->writeString(event->Par1 <= 1, str);
             success = true;
           }
         }

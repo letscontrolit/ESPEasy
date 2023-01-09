@@ -49,16 +49,9 @@ public:
   };
 
   struct Tm1621_t {
-    bool isValid() const {
-      // FIXME TD-er: Must check if the selected pins also are usable
-      return pin_da != -1 &&
-             pin_wr != -1 &&
-             pin_rd != -1 &&
-             pin_cs != -1;
-    }
+    bool isValid() const;
 
-    // Buffer to send to the TM1621 RAM
-    uint8_t buffer[8] = {};
+    bool isNumerical(bool firstrow) const;
 
     // "Text" to write to the display
     char         row[2][12]          = { {}, {} };
@@ -81,6 +74,13 @@ public:
     bool present    = false;
   };
 
+private:
+
+  static uint8_t TM1621GetFontCharacter(char character,
+                                        bool firstrow);
+
+public:
+
   P148_data_struct(const Tm1621_t& config);
   P148_data_struct()          = delete;
   virtual ~P148_data_struct() = default;
@@ -90,17 +90,21 @@ public:
 private:
 
   void TM1621WriteBit(bool value) const;
+  void TM1621StartSequence() const;
   void TM1621StopSequence() const;
   void TM1621SendCmnd(uint16_t command) const;
   void TM1621SendAddress(uint16_t address) const;
   void TM1621SendCommon(uint8_t common) const;
+  void TM1621WritePixelBuffer(const uint8_t *buf,
+                              size_t         size,
+                              uint16_t       address) const;
   void TM1621SendRows() const;
 
 public:
 
-  void TM1621WriteString(bool          firstrow,
-                         const String& str);
-  void TM1621WritePixelBuffer(uint64_t rawdata) const;
+  void writeString(bool          firstrow,
+                   const String& str);
+  void writeRawData(uint64_t rawdata) const;
 
 private:
 
