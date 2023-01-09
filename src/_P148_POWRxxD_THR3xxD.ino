@@ -193,11 +193,12 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
             }
           } else if (subcommand.equals(F("writerow"))) {
             // tm1621write,<rownr>,<string>
-            const String str = parseString(string, 4);
-            P148_data->writeString(event->Par2 <= 1, str);
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None);
+            P148_data->writeString(event->Par2 <= 1, parseString(string, 4));
             success = true;
           } else if (subcommand.equals(F("write"))) {
             // tm1621write,<string1>,<string2>
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None);
             const String str1 = parseString(string, 3);
             const String str2 = parseString(string, 4);
 

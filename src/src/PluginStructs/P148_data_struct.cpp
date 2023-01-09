@@ -235,40 +235,44 @@ void P148_data_struct::TM1621SendRows() const {
   for (uint32_t j = 0; j < 2; j++) {
     const bool firstrow = 0 == j;
 
-    if (Tm1621.isNumerical(firstrow)) {
+    float value = 0.0;
+
+    if (validFloatFromString(Tm1621.row[j], value)) {
+      // 0.4V => "  04", 0.0A => "  ", 1234.5V => "1234"
+
+      // Check to see if the original string had a dot.
+      bool hadDot = false;
+
+      for (size_t i = 0; i < 4 && !hadDot; ++i) {
+        if (Tm1621.row[j][i] == '.') { hadDot = true; }
+      }
+
       char row[4]{};
 
-      // 0.4V => "  04", 0.0A => "  ", 1234.5V => "1234"
-      uint32_t len  = strlen(Tm1621.row[j]);
-      char    *dp   = nullptr; // Expect number larger than "123"
-      int  row_idx  = len - 3; // "1234.5"
-      bool overflow = false;
+      if (value > 9999.0f) { value = 9999.0f; }
 
-      if (len <= 5) {          // "----", "    ", "0.4", "237.5"
-        dp      = strchr(Tm1621.row[j], '.');
-        row_idx = len - 1;
-      }
-      else if (len > 6) { // "12345.6"
-        overflow = true;
-        row_idx  = 3;
-      }
+      if (value < -999.0f) { value = -999.0f; }
+      bool dot = false;
 
-      for (int i = 3; i >= 0; --i) {
-        if (row_idx >= 0) {
-          row[i] = (overflow) ? '9' : Tm1621.row[j][row_idx--];
+      if ((-99.9f < value) && (value < 999.9f)) {
+        if (hadDot) {
+          dot    = true;
+          value *= 10.0f;
         }
+      }
+      const String value_str(static_cast<int>(value));
+      const size_t strlen = value_str.length();
+      size_t pos          = 0;
 
-        if ((i == 3) && (row_idx >= 0) && dp) {
-          // Skip the '.'
-          row_idx--;
-        }
+      for (size_t i = 4 - strlen; i < 4 && pos < strlen; ++i, ++pos) {
+        row[i] = value_str[pos];
       }
 
       for (uint32_t i = 0; i < 4; i++) {
         buffer[bufferIndex(firstrow, i)] = TM1621GetFontCharacter(row[i], firstrow);
       }
 
-      if (dp) {
+      if (dot) {
         if (firstrow) {
           buffer[2] |= 0x80; // Row 1 decimal point
         } else {
