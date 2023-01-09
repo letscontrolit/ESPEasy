@@ -53,9 +53,9 @@ public:
     None       = 0,
     Celsius    = 1,
     Fahrenheit = 2,
-    kWh_Watt   = 3,
-    Humidity   = 4,
-    Volt_Amp   = 5
+    Humidity   = 3,
+    Volt_Amp   = 4,
+    kWh_Watt   = 5
   };
 
   struct MonitorTaskValue_t {
@@ -88,11 +88,7 @@ public:
     int8_t       pin_cs              = -1;
     int8_t       pin_rd              = -1;
     int8_t       pin_wr              = -1;
-    uint8_t      state               = {}; // FIXME TD-er: Still needed?
     Tm1621Device device              = Tm1621Device::USER;
-    uint8_t      display_rotate      = {};
-    uint8_t      temp_sensors        = {};
-    uint8_t      temp_sensors_rotate = {};
 
     // Symbols
     bool celsius    = false;
@@ -152,6 +148,7 @@ public:
   void writeRawData(uint64_t rawdata) const;
 
   void setUnit(Tm1621UnitOfMeasure unit);
+  void setUnit(Tm1621UnitOfMeasure unit, bool firstrow);
 
   MonitorTaskValue_t MonitorTaskValues[6] = {};
 

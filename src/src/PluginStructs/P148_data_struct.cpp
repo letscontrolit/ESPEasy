@@ -88,24 +88,23 @@ uint8_t P148_data_struct::TM1621GetFontCharacter(char character, bool firstrow) 
   return 0u;
 }
 
+// Do not change the order of these as it is stored.
 union MonitorTaskValue_conversion {
   struct {
-    int16_t TaskIndex : 9;
-    int16_t taskVar   : 3;
-    int16_t unit      : 3;
-    int16_t showname  : 1;
+    uint16_t TaskIndex : 9;
+    uint16_t unit      : 3;
+    uint16_t taskVar   : 3;
+    uint16_t showname  : 1;
   };
   int16_t pconfigval;
 };
 
-P148_data_struct::MonitorTaskValue_t::MonitorTaskValue_t(int16_t pconfigvalue)
-{
+P148_data_struct::MonitorTaskValue_t::MonitorTaskValue_t(int16_t pconfigvalue) {
   MonitorTaskValue_conversion conv;
 
   conv.pconfigval = pconfigvalue;
   TaskIndex       = conv.TaskIndex;
   taskVar         = conv.taskVar;
-  showname        = conv.showname;
   unit            = static_cast<Tm1621UnitOfMeasure>(conv.unit);
   showname        = conv.showname;
 }
@@ -124,7 +123,7 @@ void P148_data_struct::MonitorTaskValue_t::webformLoad(int index) const {
   const bool firstrow = (index % 2) == 0;
 
   {
-    String label = concat(F(" Page "), index / 2);
+    String label = concat(F("Page "), index / 2);
     label += firstrow ? F(" Top Row") : F(" Bottom Row");
     addTableSeparator(label, 2, 2);
   }
@@ -139,24 +138,59 @@ void P148_data_struct::MonitorTaskValue_t::webformLoad(int index) const {
 
     addFormCheckBox(F("Show Var Name"), concat(F("pshowname"), index), showname);
 
-    // FIXME TD-er: Add unit selector
+    if (firstrow)
+    {
+      const __FlashStringHelper *options[] = {
+        F("None"),
+        F("Celsius"),
+        F("Fahrenheit"),
+        F("V & A"),
+        F("kWh & W")
+      };
+      int optionValues[] {
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::None),
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::Celsius),
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit),
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp),
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt)
+      };
+      constexpr size_t nrElements = sizeof(optionValues) / sizeof(optionValues[0]);
+
+      addFormSelector(
+        F("Unit Symbols"), concat(F("punit"), index),
+        nrElements, options, optionValues, static_cast<int>(unit));
+    } else {
+      const __FlashStringHelper *options[] = {
+        F("None"),
+        F("%RH (humidity)"),
+        F("V & A"),
+        F("kWh & W")
+      };
+      int optionValues[] {
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::None),
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::Humidity),
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp),
+        static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt)
+      };
+      constexpr size_t nrElements = sizeof(optionValues) / sizeof(optionValues[0]);
+
+      addFormSelector(
+        F("Unit Symbols"), concat(F("punit"), index),
+        nrElements, options, optionValues, static_cast<int>(unit));
+    }
   } else {
     addFormCheckBox(F("Clear Line"), concat(F("pshowname"), index), showname);
   }
-
-  /*
-     if (!firstrow) {
-      addFormSeparator(2);
-     }
-   */
 }
 
 int16_t P148_data_struct::MonitorTaskValue_t::webformSave(int index) {
   TaskIndex = getFormItemInt(concat(F("ptask"), index), INVALID_TASK_INDEX);
   taskVar   = getFormItemInt(concat(F("pvalue"), index), INVALID_TASKVAR_INDEX);
-  showname  = isFormItemChecked(concat(F("pshowname"), index));
-
-  // FIXME TD-er: Add unit selector
+  unit      =
+    static_cast<P148_data_struct::Tm1621UnitOfMeasure>(
+      getFormItemInt(concat(F("punit"), index), static_cast<int>(P148_data_struct::Tm1621UnitOfMeasure::None))
+      );
+  showname = isFormItemChecked(concat(F("pshowname"), index));
 
   return getPconfigValue();
 }
@@ -197,9 +231,6 @@ P148_data_struct::P148_data_struct(const Tm1621_t& config) : Tm1621(config) {
     pinMode(Tm1621.pin_wr, OUTPUT);
     digitalWrite(Tm1621.pin_wr, 1);
   }
-
-  // FIXME TD-er: Still needed?
-  Tm1621.state = 200;
 }
 
 bool P148_data_struct::init() {
@@ -371,7 +402,6 @@ void P148_data_struct::TM1621SendRows() const {
 
   if (Tm1621.voltage) { buffer[7] |= 0x08; }
 
-  //  AddLog(LOG_LEVEL_DEBUG, PSTR("TM1: Dump3 %8_H"), buffer);
   TM1621WritePixelBuffer(buffer, 8, 0x10); // Sonoff only uses the upper 16 Segments
 }
 
@@ -380,17 +410,23 @@ void P148_data_struct::showPage() {
     pagenr = 0;
   }
 
-  for (int row = 2 * pagenr; row <= (2 * pagenr + 1); ++row) {
-    const bool firstrow   = (row % 2) == 0;
-    bool   writeToDisplay = true;
-    String value          = MonitorTaskValues[row].formatTaskValue(writeToDisplay);
+  // Skip pages which do not change the display.
+  bool somethingWritten = false;
 
-    if (writeToDisplay) {
-      setUnit(MonitorTaskValues[row].unit);
-      writeString(firstrow, value);
+  while (!somethingWritten && pagenr < 3) {
+    for (int row = 2 * pagenr; row <= (2 * pagenr + 1); ++row) {
+      const bool firstrow   = (row % 2) == 0;
+      bool   writeToDisplay = true;
+      String value          = MonitorTaskValues[row].formatTaskValue(writeToDisplay);
+
+      if (writeToDisplay) {
+        somethingWritten = true;
+        setUnit(MonitorTaskValues[row].unit, firstrow);
+        writeString(firstrow, value);
+      }
     }
+    ++pagenr;
   }
-  ++pagenr;
 }
 
 void P148_data_struct::writeString(bool firstrow, const String& str) {
@@ -425,45 +461,72 @@ void P148_data_struct::writeRawData(uint64_t rawdata) const {
   TM1621WritePixelBuffer(buffer, 8, 0x10); // Sonoff only uses the upper 16 Segments
 }
 
-void P148_data_struct::setUnit(P148_data_struct::Tm1621UnitOfMeasure unit) {
+void P148_data_struct::setUnit(Tm1621UnitOfMeasure unit) {
+  setUnit(unit, true);
+  setUnit(unit, false);
+}
+
+void P148_data_struct::setUnit(P148_data_struct::Tm1621UnitOfMeasure unit, bool firstrow) {
   switch (unit) {
     case P148_data_struct::Tm1621UnitOfMeasure::None:
-      Tm1621.celsius    = false;
-      Tm1621.fahrenheit = false;
-      Tm1621.humidity   = false;
-      Tm1621.voltage    = false;
-      Tm1621.kwh        = false;
+
+      if (firstrow) {
+        Tm1621.celsius    = false;
+        Tm1621.fahrenheit = false;
+        Tm1621.voltage    = false;
+        Tm1621.kwh        = false;
+      } else {
+        Tm1621.humidity = false;
+      }
       break;
     case P148_data_struct::Tm1621UnitOfMeasure::Celsius:
-      Tm1621.celsius    = true;
-      Tm1621.fahrenheit = false;
-      Tm1621.voltage    = false;
-      Tm1621.kwh        = false;
+
+      if (firstrow) {
+        Tm1621.celsius    = true;
+        Tm1621.fahrenheit = false;
+        Tm1621.voltage    = false;
+        Tm1621.kwh        = false;
+      }
       break;
     case P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit:
-      Tm1621.fahrenheit = true;
-      Tm1621.celsius    = false;
-      Tm1621.voltage    = false;
-      Tm1621.kwh        = false;
+
+      if (firstrow) {
+        Tm1621.fahrenheit = true;
+        Tm1621.celsius    = false;
+        Tm1621.voltage    = false;
+        Tm1621.kwh        = false;
+      }
       break;
     case P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt:
-      Tm1621.kwh        = true;
-      Tm1621.celsius    = false;
-      Tm1621.fahrenheit = false;
-      Tm1621.humidity   = false;
-      Tm1621.voltage    = false;
+      Tm1621.kwh = true;
+
+      if (firstrow) {
+        Tm1621.celsius    = false;
+        Tm1621.fahrenheit = false;
+        Tm1621.voltage    = false;
+      } else {
+        Tm1621.humidity = false;
+      }
+
       break;
     case P148_data_struct::Tm1621UnitOfMeasure::Humidity:
-      Tm1621.humidity = true;
-      Tm1621.voltage  = false;
-      Tm1621.kwh      = false;
+
+      if (!firstrow) {
+        Tm1621.humidity = true;
+        Tm1621.voltage  = false;
+        Tm1621.kwh      = false;
+      }
       break;
     case P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp:
-      Tm1621.voltage    = true;
-      Tm1621.celsius    = false;
-      Tm1621.fahrenheit = false;
-      Tm1621.humidity   = false;
-      Tm1621.kwh        = false;
+      Tm1621.voltage = true;
+      Tm1621.kwh     = false;
+
+      if (firstrow) {
+        Tm1621.celsius    = false;
+        Tm1621.fahrenheit = false;
+      } else {
+        Tm1621.humidity = false;
+      }
       break;
   }
 }

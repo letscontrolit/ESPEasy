@@ -135,6 +135,10 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Display Values"));
 
       for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+        if ((i % 2 == 0) && (i != P148_FIRST_PAGE_ROW_INDEX)) {
+          addFormSeparator(2);
+        }
+
         P148_data_struct::MonitorTaskValue_t MonitorTaskValue(PCONFIG(i));
         MonitorTaskValue.webformLoad(i);
       }
@@ -239,8 +243,9 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
             }
           } else if (subcommand.equals(F("writerow"))) {
             // tm1621write,<rownr>,<string>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None);
-            P148_data->writeString(event->Par2 <= 1, parseString(string, 4));
+            const bool firstrow = event->Par2 <= 1;
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None, firstrow);
+            P148_data->writeString(firstrow, parseString(string, 4));
             success = true;
           } else if (subcommand.equals(F("write"))) {
             // tm1621write,<string1>,<string2>
@@ -266,17 +271,17 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
             success = true;
           } else if (subcommand.equals(F("celcius"))) {
             // tm1621celcius,<temperture>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Celsius);
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Celsius, true);
             P148_data->writeString(true, parseString(string, 3));
             success = true;
           } else if (subcommand.equals(F("fahrenheit"))) {
             // tm1621fahrenheit,<temperture>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit);
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit, true);
             P148_data->writeString(true, parseString(string, 3));
             success = true;
           } else if (subcommand.equals(F("humidity"))) {
             // tm1621humidity,<%humidity>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Humidity);
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Humidity, false);
             P148_data->writeString(false, parseString(string, 3));
             success = true;
           }
