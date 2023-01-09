@@ -48,13 +48,35 @@ public:
     THR3xxD  = 2  // Sonoff THR316D / THR320D
   };
 
+  // Value is being stored, so do not change values.
   enum class Tm1621UnitOfMeasure {
-    None,
-    Celsius,
-    Fahrenheit,
-    kWh_Watt,
-    Humidity,
-    Volt_Amp
+    None       = 0,
+    Celsius    = 1,
+    Fahrenheit = 2,
+    kWh_Watt   = 3,
+    Humidity   = 4,
+    Volt_Amp   = 5
+  };
+
+  struct MonitorTaskValue_t {
+    MonitorTaskValue_t(int16_t pconfigvalue);
+
+    MonitorTaskValue_t() = default;
+
+    int16_t getPconfigValue() const;
+
+    void    webformLoad(int index) const;
+
+    int16_t webformSave(int index);
+
+    bool    isValid() const;
+
+    String  formatTaskValue(bool& writeToDisplay) const;
+
+    taskIndex_t         TaskIndex = INVALID_TASK_INDEX;
+    taskVarIndex_t      taskVar   = INVALID_TASKVAR_INDEX;
+    Tm1621UnitOfMeasure unit      = Tm1621UnitOfMeasure::None;
+    bool                showname  = false;
   };
 
   struct Tm1621_t {
@@ -114,6 +136,8 @@ private:
 
 public:
 
+  void showPage();
+
   void writeString(bool          firstrow,
                    const String& str);
   void writeStrings(const String& str1,
@@ -129,17 +153,13 @@ public:
 
   void setUnit(Tm1621UnitOfMeasure unit);
 
-  void writeVoltAmp(float volt,
-                    float amp);
-  void writeEnergy(float kWh,
-                   float watt);
-  void writeTemp(float temp,
-                 bool  Celsius = true);
-  void writeHumidity(float humidity);
+  MonitorTaskValue_t MonitorTaskValues[6] = {};
 
 private:
 
   Tm1621_t Tm1621;
+
+  uint8_t pagenr = 0;
 };
 
 #endif // ifdef USES_P148

@@ -3,6 +3,8 @@
 #ifdef USES_P148
 
 
+# include "../Helpers/StringConverter.h"
+
 # define TM1621_PULSE_WIDTH   10   // microseconds (Sonoff = 100)
 
 // Commands
@@ -84,6 +86,96 @@ uint8_t P148_data_struct::TM1621GetFontCharacter(char character, bool firstrow) 
 
   // Return a 'space'
   return 0u;
+}
+
+union MonitorTaskValue_conversion {
+  struct {
+    int16_t TaskIndex : 9;
+    int16_t taskVar   : 3;
+    int16_t unit      : 3;
+    int16_t showname  : 1;
+  };
+  int16_t pconfigval;
+};
+
+P148_data_struct::MonitorTaskValue_t::MonitorTaskValue_t(int16_t pconfigvalue)
+{
+  MonitorTaskValue_conversion conv;
+
+  conv.pconfigval = pconfigvalue;
+  TaskIndex       = conv.TaskIndex;
+  taskVar         = conv.taskVar;
+  showname        = conv.showname;
+  unit            = static_cast<Tm1621UnitOfMeasure>(conv.unit);
+  showname        = conv.showname;
+}
+
+int16_t P148_data_struct::MonitorTaskValue_t::getPconfigValue() const {
+  MonitorTaskValue_conversion conv;
+
+  conv.TaskIndex = TaskIndex;
+  conv.taskVar   = taskVar;
+  conv.unit      = static_cast<int>(unit);
+  conv.showname  = showname;
+  return conv.pconfigval;
+}
+
+void P148_data_struct::MonitorTaskValue_t::webformLoad(int index) const {
+  const bool firstrow = (index % 2) == 0;
+
+  {
+    String label = concat(F(" Page "), index / 2);
+    label += firstrow ? F(" Top Row") : F(" Bottom Row");
+    addTableSeparator(label, 2, 2);
+  }
+
+  addRowLabel(F("Task"));
+  addTaskSelect(concat(F("ptask"), index), TaskIndex);
+
+  if (validTaskIndex(TaskIndex)) {
+    LoadTaskSettings(TaskIndex);
+    addRowLabel(F("Value"));
+    addTaskValueSelect(concat(F("pvalue"), index), taskVar, TaskIndex);
+
+    addFormCheckBox(F("Show Var Name"), concat(F("pshowname"), index), showname);
+
+    // FIXME TD-er: Add unit selector
+  } else {
+    addFormCheckBox(F("Clear Line"), concat(F("pshowname"), index), showname);
+  }
+
+  /*
+     if (!firstrow) {
+      addFormSeparator(2);
+     }
+   */
+}
+
+int16_t P148_data_struct::MonitorTaskValue_t::webformSave(int index) {
+  TaskIndex = getFormItemInt(concat(F("ptask"), index), INVALID_TASK_INDEX);
+  taskVar   = getFormItemInt(concat(F("pvalue"), index), INVALID_TASKVAR_INDEX);
+  showname  = isFormItemChecked(concat(F("pshowname"), index));
+
+  // FIXME TD-er: Add unit selector
+
+  return getPconfigValue();
+}
+
+bool P148_data_struct::MonitorTaskValue_t::isValid() const {
+  return validTaskIndex(TaskIndex) && validTaskVarIndex(taskVar);
+}
+
+String P148_data_struct::MonitorTaskValue_t::formatTaskValue(bool& writeToDisplay) const {
+  if (!isValid()) {
+    writeToDisplay = showname;
+    return EMPTY_STRING;
+  }
+  writeToDisplay = true;
+
+  if (showname) {
+    return getTaskValueName(TaskIndex, taskVar);
+  }
+  return formatUserVarNoCheck(TaskIndex, taskVar);
 }
 
 bool P148_data_struct::Tm1621_t::isValid() const {
@@ -283,6 +375,24 @@ void P148_data_struct::TM1621SendRows() const {
   TM1621WritePixelBuffer(buffer, 8, 0x10); // Sonoff only uses the upper 16 Segments
 }
 
+void P148_data_struct::showPage() {
+  if (pagenr >= 3) {
+    pagenr = 0;
+  }
+
+  for (int row = 2 * pagenr; row <= (2 * pagenr + 1); ++row) {
+    const bool firstrow   = (row % 2) == 0;
+    bool   writeToDisplay = true;
+    String value          = MonitorTaskValues[row].formatTaskValue(writeToDisplay);
+
+    if (writeToDisplay) {
+      setUnit(MonitorTaskValues[row].unit);
+      writeString(firstrow, value);
+    }
+  }
+  ++pagenr;
+}
+
 void P148_data_struct::writeString(bool firstrow, const String& str) {
   safe_strncpy(Tm1621.row[firstrow ? 0 : 1], str, sizeof(Tm1621.row[0]));
   TM1621SendRows();
@@ -356,26 +466,6 @@ void P148_data_struct::setUnit(P148_data_struct::Tm1621UnitOfMeasure unit) {
       Tm1621.kwh        = false;
       break;
   }
-}
-
-void P148_data_struct::writeVoltAmp(float volt, float amp) {
-  setUnit(P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp);
-  writeFloats(volt, amp);
-}
-
-void P148_data_struct::writeEnergy(float kWh, float watt) {
-  setUnit(P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt);
-  writeFloats(kWh, watt);
-}
-
-void P148_data_struct::writeTemp(float temp, bool Celsius) {
-  setUnit(Celsius ? P148_data_struct::Tm1621UnitOfMeasure::Celsius : P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit);
-  writeFloat(true, temp);
-}
-
-void P148_data_struct::writeHumidity(float humidity) {
-  setUnit(P148_data_struct::Tm1621UnitOfMeasure::Humidity);
-  writeFloat(false, humidity);
 }
 
 #endif // ifdef USES_P148

@@ -18,6 +18,17 @@
 # define P148_GPIO_TM1621_RD   CONFIG_PIN3
 # define P148_GPIO_TM1621_CS   CONFIG_PORT
 
+# define P148_FIRST_PAGE_ROW_INDEX 2
+# define P148_NR_PAGE_ROW_INDICES 6
+# define P148_MAX_PAGE_ROW_INDEX (P148_FIRST_PAGE_ROW_INDEX + P148_NR_PAGE_ROW_INDICES)
+# define P148_PAGE1_ROW1_TASK  PCONFIG(P148_FIRST_PAGE_ROW_INDEX)
+# define P148_PAGE1_ROW2_TASK  PCONFIG(3)
+# define P148_PAGE2_ROW1_TASK  PCONFIG(4)
+# define P148_PAGE2_ROW2_TASK  PCONFIG(5)
+# define P148_PAGE3_ROW1_TASK  PCONFIG(6)
+# define P148_PAGE3_ROW2_TASK  PCONFIG(7)
+
+
 # include "src/PluginStructs/P148_data_struct.h"
 
 boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
@@ -37,8 +48,8 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].FormulaOption      = false;
       Device[deviceCount].ValueCount         = 0;
       Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = false;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
@@ -79,14 +90,17 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       P148_GPIO_TM1621_CS  = -1;
       P148_GPIO_TM1621_WR  = -1;
       P148_GPIO_TM1621_RD  = -1;
+      P148_data_struct::MonitorTaskValue_t MonitorTaskValue;
+
+      for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+        PCONFIG(i) = MonitorTaskValue.getPconfigValue();
+      }
 
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSubHeader(F("Display"));
-
       // We load/save the TaskDevicePin ourselves to allow to combine the pin specific configuration be shown along with the pin selection.
       addFormPinSelect(PinSelectPurpose::Generic_output,
                        formatGpioName_output(F("TM1621 DAT")),
@@ -118,6 +132,14 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("GPIO settings will be ignored when selecting other than 'Custom'"));
       }
 
+      addFormSubHeader(F("Display Values"));
+
+      for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+        P148_data_struct::MonitorTaskValue_t MonitorTaskValue(PCONFIG(i));
+        MonitorTaskValue.webformLoad(i);
+      }
+      LoadTaskSettings(event->TaskIndex);
+
       success = true;
       break;
     }
@@ -148,6 +170,12 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
           P148_GPIO_TM1621_CS  = 17;
           break;
       }
+
+      for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+        P148_data_struct::MonitorTaskValue_t MonitorTaskValue(PCONFIG(i));
+        PCONFIG(i) = MonitorTaskValue.webformSave(i);
+      }
+
       success = true;
       break;
     }
@@ -165,7 +193,25 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P148_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P148_data) {
-        success = P148_data->init();
+        if (P148_data->init()) {
+          for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+            P148_data->MonitorTaskValues[i - P148_FIRST_PAGE_ROW_INDEX] = P148_data_struct::MonitorTaskValue_t(PCONFIG(i));
+          }
+
+          P148_data->writeStrings(F("ESP"), F("Easy"));
+          success = true;
+        }
+      }
+      break;
+    }
+
+    case PLUGIN_READ:
+    {
+      P148_data_struct *P148_data =
+        static_cast<P148_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P148_data) {
+        P148_data->showPage();
       }
       break;
     }
