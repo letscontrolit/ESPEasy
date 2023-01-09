@@ -58,7 +58,7 @@ uint8_t P148_data_struct::TM1621GetFontCharacter(char character, bool firstrow) 
   //                                                  0     1     2     3     4     5     6     7     8     9     -  
   static const uint8_t tm1621_digit_row[2][11] = { { 0x5F, 0x50, 0x3D, 0x79, 0x72, 0x6B, 0x6F, 0x51, 0x7F, 0x7B, 0x20 },
                                                    { 0xF5, 0x05, 0xB6, 0x97, 0x47, 0xD3, 0xF3, 0x85, 0xF7, 0xD7, 0x02 } };
-  //                                                 'A'   'b'   'C'   'b'   'E'   'F'   'G'   'H'   'i'   'J'   'K'   'L'   'M'   'n'   'o'   'P'   'q'   'r'   'S'   't'   'U'   'v'   'W'   'X'   'Y'   'Z'   '?'
+  //                                                 'A'   'b'   'C'   'd'   'E'   'F'   'G'   'H'   'i'   'J'   'K'   'L'   'M'   'n'   'o'   'P'   'q'   'r'   'S'   't'   'U'   'v'   'W'   'X'   'Y'   'Z'   '?'
   static const uint8_t tm1621_char_row[2][27] = { { 0x77, 0x6E, 0x0F, 0x7C, 0x2F, 0x27, 0x4f, 0x76, 0x40, 0x5C, 0x00, 0x0E, 0x00, 0x64, 0x6C, 0x37, 0x73, 0x24, 0x6B, 0x2E, 0x5E, 0x4C, 0x00, 0x00, 0x7A, 0x00, 0x35 },
                                                   { 0xE7, 0x73, 0xF0, 0x37, 0xF2, 0xE2, 0xF1, 0x67, 0x01, 0x35, 0x00, 0x70, 0x00, 0x23, 0x33, 0xE6, 0xC7, 0x22, 0xD3, 0x72, 0x75, 0x31, 0x00, 0x00, 0x57, 0x00, 0xA6 } };
  // *INDENT-ON*
@@ -92,23 +92,6 @@ bool P148_data_struct::Tm1621_t::isValid() const {
          pin_wr != -1 &&
          pin_rd != -1 &&
          pin_cs != -1;
-}
-
-bool P148_data_struct::Tm1621_t::isNumerical(bool firstrow) const {
-  bool done = false;
-
-  // Only need to check upto the first 6 characters
-  for (size_t i = 0; i < 6 && !done; ++i) {
-    const char c = row[firstrow ? 0 : 1][i];
-
-    if (c == '\0') { done = true; }
-    else {
-      if (!(isdigit(c) || (c == '-') || (c == '.'))) {
-        return false;
-      }
-    }
-  }
-  return true;
 }
 
 P148_data_struct::P148_data_struct(const Tm1621_t& config) : Tm1621(config) {

@@ -60,8 +60,6 @@ public:
   struct Tm1621_t {
     bool isValid() const;
 
-    bool isNumerical(bool firstrow) const;
-
     // "Text" to write to the display
     char         row[2][12]          = { {}, {} };
     int8_t       pin_da              = -1;
