@@ -49,7 +49,6 @@ public:
   };
 
   struct Tm1621_t {
-
     bool isValid() const {
       // FIXME TD-er: Must check if the selected pins also are usable
       return pin_da != -1 &&
@@ -90,11 +89,21 @@ public:
 
 private:
 
-  void TM1621StopSequence();
-  void TM1621SendCmnd(uint16_t command);
-  void TM1621SendAddress(uint16_t address);
-  void TM1621SendCommon(uint8_t common);
-  void TM1621SendRows();
+  void TM1621WriteBit(bool value) const;
+  void TM1621StopSequence() const;
+  void TM1621SendCmnd(uint16_t command) const;
+  void TM1621SendAddress(uint16_t address) const;
+  void TM1621SendCommon(uint8_t common) const;
+  void TM1621SendRows() const;
+
+public:
+
+  void TM1621WriteString(bool          firstrow,
+                         const String& str);
+  void TM1621WritePixelBuffer(uint64_t rawdata) const;
+
+private:
+
   void TM1621Init();
 
   Tm1621_t Tm1621;

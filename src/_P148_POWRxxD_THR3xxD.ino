@@ -169,6 +169,37 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    case PLUGIN_WRITE:
+    {
+      P148_data_struct *P148_data =
+        static_cast<P148_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P148_data) {
+        const String command = parseString(string, 1);
+
+        if (command.startsWith(F("tm1621"))) {
+          if (command.equals(F("tm1621raw"))) {
+            // Write raw data to the display
+            // Typical use case: testing fonts
+            const String rawdata_str = parseString(string, 2);
+            uint64_t     rawdata;
+
+            if (validUInt64FromString(rawdata_str, rawdata)) {
+              success = true;
+              P148_data->TM1621WritePixelBuffer(rawdata);
+            }
+          } else if (command.equals(F("tm1621write"))) {
+            // tm1621write,<rownr>,<string>
+            const String str = parseString(string, 3);
+            P148_data->TM1621WriteString(event->Par1 <= 1, str);
+            success = true;
+          }
+        }
+      }
+
+      break;
+    }
   }
   return success;
 }
