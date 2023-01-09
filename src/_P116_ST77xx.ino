@@ -130,12 +130,12 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      AdaGFXFormBacklight(F("p116_backlight"), P116_CONFIG_BACKLIGHT_PIN,
-                          F("p116_backpercentage"), P116_CONFIG_BACKLIGHT_PERCENT);
+      AdaGFXFormBacklight(F("backlight"), P116_CONFIG_BACKLIGHT_PIN,
+                          F("backpercentage"), P116_CONFIG_BACKLIGHT_PERCENT);
 
-      AdaGFXFormDisplayButton(F("p116_button"), P116_CONFIG_BUTTON_PIN,
-                              F("p116_buttonInverse"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON),
-                              F("p116_timer"), P116_CONFIG_DISPLAY_TIMEOUT);
+      AdaGFXFormDisplayButton(F("button"), P116_CONFIG_BUTTON_PIN,
+                              F("buttonInverse"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON),
+                              F("timer"), P116_CONFIG_DISPLAY_TIMEOUT);
 
       {
         const __FlashStringHelper *options4[] = {
@@ -160,9 +160,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw_135x240),
           static_cast<int>(ST77xx_type_e::ST7796s_320x480)
         };
+        constexpr int optCount4 = sizeof(optionValues4) / sizeof(optionValues4[0]);
         addFormSelector(F("TFT display model"),
-                        F("p116_type"),
-                        static_cast<int>(ST77xx_type_e::ST77xx_MAX),
+                        F("type"),
+                        optCount4,
                         options4,
                         optionValues4,
                         P116_CONFIG_FLAG_GET_TYPE);
@@ -170,13 +171,13 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Layout"));
 
-      AdaGFXFormRotation(F("p116_rotate"), P116_CONFIG_FLAG_GET_ROTATION);
+      AdaGFXFormRotation(F("rotate"), P116_CONFIG_FLAG_GET_ROTATION);
 
-      AdaGFXFormTextPrintMode(F("p116_mode"), P116_CONFIG_FLAG_GET_MODE);
+      AdaGFXFormTextPrintMode(F("mode"), P116_CONFIG_FLAG_GET_MODE);
 
-      AdaGFXFormFontScaling(F("p116_fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE);
+      AdaGFXFormFontScaling(F("fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE);
 
-      addFormCheckBox(F("Clear display on exit"), F("p116_clearOnExit"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT));
+      addFormCheckBox(F("Clear display on exit"), F("clearOnExit"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT));
 
       {
         const __FlashStringHelper *commandTriggers[] = { // Be sure to use all options available in the enum (except MAX)!
@@ -193,47 +194,45 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P116_CommandTrigger::st7789),
           static_cast<int>(P116_CommandTrigger::st7796)
         };
+        constexpr int cmdCount = sizeof(commandTriggerOptions) / sizeof(commandTriggerOptions[0]);
         addFormSelector(F("Write Command trigger"),
-                        F("p116_commandtrigger"),
-                        static_cast<int>(P116_CommandTrigger::MAX),
+                        F("commandtrigger"),
+                        cmdCount,
                         commandTriggers,
                         commandTriggerOptions,
                         P116_CONFIG_FLAG_GET_CMD_TRIGGER);
+        # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
+        # endif // ifndef LIMIT_BUILD_SIZE
       }
 
       // Inverted state!
-      addFormCheckBox(F("Wake display on receiving text"), F("p116_NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
+      addFormCheckBox(F("Wake display on receiving text"), F("NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
+      # ifndef LIMIT_BUILD_SIZE
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
+      # endif // ifndef LIMIT_BUILD_SIZE
 
-      AdaGFXFormTextColRowMode(F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW) == 1);
+      AdaGFXFormTextColRowMode(F("colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW) == 1);
 
-      AdaGFXFormTextBackgroundFill(F("p116_backfill"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0); // Inverse
+      AdaGFXFormTextBackgroundFill(F("backfill"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0); // Inverse
 
       addFormSubHeader(F("Content"));
 
-      AdaGFXFormForeAndBackColors(F("p116_foregroundcolor"),
+      AdaGFXFormForeAndBackColors(F("foregroundcolor"),
                                   P116_CONFIG_GET_COLOR_FOREGROUND,
-                                  F("p116_backgroundcolor"),
+                                  F("backgroundcolor"),
                                   P116_CONFIG_GET_COLOR_BACKGROUND);
 
       String strings[P116_Nlines];
       LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      String   line; // Default reserved length is plenty
       uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
 
       for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
-        line  = F("Line ");
-        line += (varNr + 1);
-        addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
+        addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
         remain -= (strings[varNr].length() + 1);
       }
-      String remainStr;
-      remainStr.reserve(15);
-      remainStr  = F("Remaining: ");
-      remainStr += remain;
-      addUnit(remainStr);
+      addUnit(concat(F("Remaining: "), remain));
 
       success = true;
       break;
@@ -241,34 +240,34 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P116_CONFIG_BUTTON_PIN        = getFormItemInt(F("p116_button"));
-      P116_CONFIG_DISPLAY_TIMEOUT   = getFormItemInt(F("p116_timer"));
-      P116_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("p116_backlight"));
-      P116_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("p116_backpercentage"));
+      P116_CONFIG_BUTTON_PIN        = getFormItemInt(F("button"));
+      P116_CONFIG_DISPLAY_TIMEOUT   = getFormItemInt(F("timer"));
+      P116_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("backlight"));
+      P116_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("backpercentage"));
 
       uint32_t lSettings = 0;
-      bitWrite(lSettings, P116_CONFIG_FLAG_NO_WAKE,       !isFormItemChecked(F("p116_NoDisplay")));    // Bit 0 NoDisplayOnReceivingText,
-                                                                                                       // reverse logic, default=checked!
-      bitWrite(lSettings, P116_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("p116_buttonInverse"))); // Bit 1 buttonInverse
-      bitWrite(lSettings, P116_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("p116_clearOnExit")));   // Bit 2 ClearOnExit
-      bitWrite(lSettings, P116_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("p116_colrow")));        // Bit 3 Col/Row addressing
+      bitWrite(lSettings, P116_CONFIG_FLAG_NO_WAKE,       !isFormItemChecked(F("NoDisplay")));    // Bit 0 NoDisplayOnReceivingText,
+      // reverse logic, default=checked!
+      bitWrite(lSettings, P116_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("buttonInverse"))); // Bit 1 buttonInverse
+      bitWrite(lSettings, P116_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("clearOnExit")));   // Bit 2 ClearOnExit
+      bitWrite(lSettings, P116_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("colrow")));        // Bit 3 Col/Row addressing
 
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,        getFormItemInt(F("p116_mode")));            // Bit 4..7 Text print mode
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_ROTATION,    getFormItemInt(F("p116_rotate")));          // Bit 8..11 Rotation
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("p116_fontscale")));       // Bit 12..15 Font scale
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_TYPE,        getFormItemInt(F("p116_type")));            // Bit 16..19 Hardwaretype
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p116_commandtrigger")));  // Bit 20..23 Command trigger
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,        getFormItemInt(F("mode")));            // Bit 4..7 Text print mode
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_ROTATION,    getFormItemInt(F("rotate")));          // Bit 8..11 Rotation
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("fontscale")));       // Bit 12..15 Font scale
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_TYPE,        getFormItemInt(F("type")));            // Bit 16..19 Hardwaretype
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("commandtrigger")));  // Bit 20..23 Command trigger
 
-      bitWrite(lSettings, P116_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("p116_backfill")));         // Bit 28 Back fill text (inv)
+      bitWrite(lSettings, P116_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("backfill")));         // Bit 28 Back fill text (inv)
       P116_CONFIG_FLAGS = lSettings;
 
-      String   color   = webArg(F("p116_foregroundcolor"));
+      String   color   = webArg(F("foregroundcolor"));
       uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
       }
-      color = webArg(F("p116_backgroundcolor"));
+      color = webArg(F("backgroundcolor"));
       uint16_t bgcolor = AdaGFXparseColor(color);
 
       P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
@@ -282,7 +281,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      if (error.length() > 0) {
+      if (!error.isEmpty()) {
         addHtmlError(error);
       }
 
@@ -347,12 +346,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       if (P116_CONFIG_BUTTON_PIN != -1) {
         P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr == P116_data) {
-          return success;
+        if (nullptr != P116_data) {
+          P116_data->registerButtonState(digitalRead(P116_CONFIG_BUTTON_PIN), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON));
+          success = true;
         }
-
-        P116_data->registerButtonState(digitalRead(P116_CONFIG_BUTTON_PIN), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON));
-        success = true;
       }
       break;
     }

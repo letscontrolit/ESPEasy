@@ -173,9 +173,10 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P131_CommandTrigger::neomatrix),
           static_cast<int>(P131_CommandTrigger::neo)
         };
+        constexpr int cmdCount = sizeof(commandTriggerOptions) / sizeof(commandTriggerOptions[0]);
         addFormSelector(F("Write Command trigger"),
                         F("cmdtrigger"),
-                        static_cast<int>(P131_CommandTrigger::MAX),
+                        cmdCount,
                         commandTriggers,
                         commandTriggerOptions,
                         P131_CONFIG_FLAG_GET_CMD_TRIGGER);

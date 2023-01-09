@@ -60,8 +60,9 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x29, 0x30 };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("plugin_113_vl53l1x_i2c"), 2, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("i2c"), 2, i2cAddressValues, PCONFIG(0));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -70,31 +71,31 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      unsigned int choiceMode2 = PCONFIG(1);
       {
-        const __FlashStringHelper * optionsMode2[6];
-        optionsMode2[0] = F("100ms (Normal)");
-        optionsMode2[1] = F("20ms (Fastest)");
-        optionsMode2[2] = F("33ms (Fast)");
-        optionsMode2[3] = F("50ms");
-        optionsMode2[4] = F("200ms (Accurate)");
-        optionsMode2[5] = F("500ms");
-        int optionValuesMode2[6] = { 100, 20, 33, 50, 200, 500 };
-        addFormSelector(F("Timing"), F("plugin_113_vl53l1x_timing"), 6, optionsMode2, optionValuesMode2, choiceMode2);
+        const __FlashStringHelper *optionsMode2[] = {
+          F("100ms (Normal)"),
+          F("20ms (Fastest)"),
+          F("33ms (Fast)"),
+          F("50ms"),
+          F("200ms (Accurate)"),
+          F("500ms"),
+        };
+        const int optionValuesMode2[] = { 100, 20, 33, 50, 200, 500 };
+        addFormSelector(F("Timing"), F("timing"), 6, optionsMode2, optionValuesMode2, PCONFIG(1));
       }
 
-      int choiceMode3 = PCONFIG(2);
       {
-        const __FlashStringHelper * optionsMode3[2];
-        optionsMode3[0] = F("Normal (~130cm)");
-        optionsMode3[1] = F("Long (~400cm)");
-        int optionValuesMode3[2] = { 0, 1 };
-        addFormSelector(F("Range"), F("plugin_113_vl53l1x_range"), 2, optionsMode3, optionValuesMode3, choiceMode3);
+        const __FlashStringHelper *optionsMode3[] = {
+          F("Normal (~130cm)"),
+          F("Long (~400cm)"),
+        };
+        const int optionValuesMode3[2] = { 0, 1 };
+        addFormSelector(F("Range"), F("range"), 2, optionsMode3, optionValuesMode3, PCONFIG(2));
       }
-      addFormCheckBox(F("Send event when value unchanged"), F("plugin_113_vl53l1x_notchanged"), PCONFIG(3) == 1);
+      addFormCheckBox(F("Send event when value unchanged"), F("notchanged"), PCONFIG(3) == 1);
       addFormNote(F("When checked, 'Trigger delta' setting is ignored!"));
 
-      addFormNumericBox(F("Trigger delta"), F("plugin_113_trigger_delta"), PCONFIG(4), 0, 100);
+      addFormNumericBox(F("Trigger delta"), F("delta"), PCONFIG(4), 0, 100);
       addUnit(F("0-100mm"));
       addFormNote(F("Minimal change in Distance to trigger an event."));
 
@@ -104,11 +105,11 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("plugin_113_vl53l1x_i2c"));
-      PCONFIG(1) = getFormItemInt(F("plugin_113_vl53l1x_timing"));
-      PCONFIG(2) = getFormItemInt(F("plugin_113_vl53l1x_range"));
-      PCONFIG(3) = isFormItemChecked(F("plugin_113_vl53l1x_notchanged")) ? 1 : 0;
-      PCONFIG(4) = getFormItemInt(F("plugin_113_trigger_delta"));
+      PCONFIG(0) = getFormItemInt(F("i2c"));
+      PCONFIG(1) = getFormItemInt(F("timing"));
+      PCONFIG(2) = getFormItemInt(F("range"));
+      PCONFIG(3) = isFormItemChecked(F("notchanged")) ? 1 : 0;
+      PCONFIG(4) = getFormItemInt(F("delta"));
 
       success = true;
       break;

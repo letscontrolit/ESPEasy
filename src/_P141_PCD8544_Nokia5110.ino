@@ -287,7 +287,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
     // Check more often for debouncing the button, when enabled
     case PLUGIN_FIFTY_PER_SECOND:
     {
-      if (P141_CONFIG_BUTTON_PIN != -1) {
+      if (validGpio(P141_CONFIG_BUTTON_PIN)) {
         P141_data_struct *P141_data = static_cast<P141_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P141_data) {
