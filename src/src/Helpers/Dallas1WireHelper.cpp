@@ -1120,7 +1120,7 @@ uint16_t Dallas_crc16(const uint8_t *input, uint16_t len, uint16_t crc)
 Dallas_SensorData::Dallas_SensorData() :
   addr(0), value(0.0f), 
   start_read_failed(0), start_read_retry(0), read_success(0),
-  read_retry(0), read_failed(0), actual_res(0),
+  read_retry(0), read_failed(0), reinit_count(0), actual_res(0),
   measurementActive(false), valueRead(false), 
   parasitePowered(false), lastReadError(false)
 {}

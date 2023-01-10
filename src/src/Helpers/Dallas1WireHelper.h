@@ -41,6 +41,7 @@ struct Dallas_SensorData {
   uint32_t read_success;
   uint32_t read_retry;
   uint32_t read_failed;
+  uint32_t reinit_count;
   uint8_t  actual_res;
 
   bool measurementActive = false;

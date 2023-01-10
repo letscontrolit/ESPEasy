@@ -25,16 +25,18 @@ struct P004_data_struct : public PluginTaskData_base {
   * If those limitations are not desired, use multiple tasks.
   \*********************************************************************************************/
 
-  P004_data_struct();
+  // @param pin  The GPIO pin used to communicate to the Dallas sensors in this task
+  // @param res  The resolution of the Dallas sensor(s) used in this task
+  P004_data_struct(taskIndex_t taskIndex,
+                   int8_t      pin_rx,
+                   int8_t      pin_tx,
+                   uint8_t     res,
+                   bool        scanOnInit);
   virtual ~P004_data_struct() = default;
 
-  // @param pin  The GPIO pin used to communicate to the Dallas sensors in this task
-  // @param addr Address of the (1st) Dallas sensor (index = 0) in this task
-  // @param res  The resolution of the Dallas sensor(s) used in this task
-  void init(int8_t        pin_rx,
-            int8_t        pin_tx,
-            const uint8_t addr[],
-            uint8_t       res);
+  void init();
+
+  bool sensorAddressSet() const;
 
   // Add extra sensor address
   // @param addr The address to add
@@ -64,19 +66,18 @@ struct P004_data_struct : public PluginTaskData_base {
   }
 
   int8_t get_gpio_rx() const {
-      return _gpio_rx;
+    return _gpio_rx;
   }
 
   int8_t get_gpio_tx() const {
-      return _gpio_tx;
+    return _gpio_tx;
   }
 
-  bool measurement_active() const;
-  bool measurement_active(uint8_t index) const;
-  void set_measurement_inactive();
+  bool              measurement_active() const;
+  bool              measurement_active(uint8_t index) const;
+  void              set_measurement_inactive();
 
   Dallas_SensorData get_sensor_data(uint8_t index) const;
-
 
 private:
 
@@ -86,9 +87,11 @@ private:
   unsigned long     _timer;
   unsigned long     _measurementStart;
   Dallas_SensorData _sensors[VARS_PER_TASK];
+  taskIndex_t       _taskIndex;
   int8_t            _gpio_rx;
   int8_t            _gpio_tx;
   uint8_t           _res;
+  bool              _scanOnInit;
 };
 
 #endif // ifdef USES_P004
