@@ -170,7 +170,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      pinMode(CONFIG_PIN1, OUTPUT);
+      if (validGpio(CONFIG_PIN1)) {
+        pinMode(CONFIG_PIN1, OUTPUT);
+      }
       success = true;
       break;
     }

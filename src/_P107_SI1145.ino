@@ -63,9 +63,7 @@ boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
       P107_data_struct *P107_data =
         static_cast<P107_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P107_data && P107_data->begin()) {
-        success = true;
-      }
+      success = (nullptr != P107_data && P107_data->begin());
       break;
     }
 

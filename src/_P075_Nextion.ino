@@ -101,7 +101,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         F("115200")
       };
 
-      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
+      addFormSelector(F("Baud Rate"), F("baud"), 4, options, nullptr, P075_BaudRate);
       addUnit(F("baud"));
       break;
     }
@@ -167,7 +167,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       }
 
       //        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
-      P075_BaudRate      = getFormItemInt(F("p075_baud"));
+      P075_BaudRate      = getFormItemInt(F("baud"));
       P075_IncludeValues = isFormItemChecked(F("IncludeValues"));
 
       /* Task will be stopped and restarted, so no reason to reload the display here

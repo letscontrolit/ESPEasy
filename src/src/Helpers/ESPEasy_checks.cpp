@@ -215,7 +215,7 @@ bool SettingsCheck(String& error) {
 
 String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
-  #ifndef LIMIT_BUILD_SIZE
+  #ifndef PLUGIN_BUILD_MINIMAL_OTA
   if (err.length() > 0) return err;
   if (!ExtraTaskSettings.checkUniqueValueNames()) {
     return F("Use unique value names");
@@ -249,7 +249,7 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   }
 
   err += LoadTaskSettings(taskIndex);
-  #endif
+  #endif // ifndef PLUGIN_BUILD_MINIMAL_OTA
   return err;
 }
 #endif
