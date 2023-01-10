@@ -109,6 +109,8 @@ void WiFiEventData_t::clear_processed_flags() {
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
   processingDisconnect.clear();
+  dns0_cache = IPAddress();
+  dns1_cache = IPAddress();
 }
 
 void WiFiEventData_t::markWiFiBegin() {
@@ -151,6 +153,8 @@ void WiFiEventData_t::setWiFiDisconnected() {
 void WiFiEventData_t::setWiFiGotIP() {
   bitSet(wifiStatus, ESPEASY_WIFI_GOT_IP);
   processedGotIP = true;
+  dns0_cache = WiFi.dnsIP(0);
+  dns1_cache = WiFi.dnsIP(1);
 }
 
 void WiFiEventData_t::setWiFiConnected() {
@@ -170,6 +174,8 @@ void WiFiEventData_t::setWiFiServicesInitialized() {
     #ifdef USES_ESPEASY_NOW
     temp_disable_EspEasy_now_timer = millis() + WIFI_RECONNECT_WAIT;
     #endif
+    dns0_cache = WiFi.dnsIP(0);
+    dns1_cache = WiFi.dnsIP(1);
   }
 }
 

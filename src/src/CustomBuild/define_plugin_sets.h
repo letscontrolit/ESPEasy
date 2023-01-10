@@ -1448,6 +1448,7 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
 
     #define USES_P111   // RC522 RFID reader
+    #define USES_P143   // I2C Rotary encoders
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_D
@@ -1529,6 +1530,10 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+   #ifndef USES_P148
+     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+   #endif
+
 #endif
 
 // Collection of all display plugins. (also NeoPixel)
@@ -1592,6 +1597,12 @@ To create/register a plugin, you have to :
    #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
+  #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
+  #endif
+  #ifndef USES_P148
+    #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
 #endif
 
@@ -1696,6 +1707,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
+  #ifndef USES_P148
+    #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+
 #endif
 
 // Collection of all NeoPixel plugins
@@ -2018,6 +2033,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
+  #endif
+  #ifndef USES_P142
+//    #define USES_P142   //
+  #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
   #endif
 
   // Controllers
@@ -2476,7 +2497,10 @@ To create/register a plugin, you have to :
   #define FEATURE_ESPEASY_P2P 1
 #endif
 
-
+#if !defined(ESP32) && defined(USES_P148)
+  // This chip/display is only used on ESP32 devices made by Sonoff
+  #undef USES_P148   // Sonoff POWR3xxD and THR3xxD display
+#endif
 
 
 

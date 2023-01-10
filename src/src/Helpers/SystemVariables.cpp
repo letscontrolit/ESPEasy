@@ -186,6 +186,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSMIN:            return String(node_time.minute());
     case SYSMIN_0:          return timeReplacement_leadZero(node_time.minute());
     case SYSMONTH:          return String(node_time.month());
+    case SYSMONTH_S:        return String(node_time.month_str());
     case SYSNAME:           return Settings.getHostname();
     case SYSSEC:            return String(node_time.second());
     case SYSSEC_0:          return timeReplacement_leadZero(node_time.second());
@@ -200,6 +201,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSTM_HM_AM:       return node_time.getTimeString_ampm(':', false);
     case SYSTM_HM_AM_0:     return node_time.getTimeString_ampm(':', false, '0');
     case SYSTM_HM_AM_SP:    return node_time.getTimeString_ampm(':', false, ' ');
+    case SYSTZOFFSET:       return node_time.getTimeZoneOffsetString();
     case SYSWEEKDAY:        return String(node_time.weekday());
     case SYSWEEKDAY_S:      return node_time.weekday_str();
     case SYSYEAR_0:
@@ -404,6 +406,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSMIN:             return F("sysmin");
     case Enum::SYSMIN_0:           return F("sysmin_0");
     case Enum::SYSMONTH:           return F("sysmonth");
+    case Enum::SYSMONTH_S:         return F("sysmonth_s");
     case Enum::SYSNAME:            return F("sysname");
     case Enum::SYSSEC:             return F("syssec");
     case Enum::SYSSEC_0:           return F("syssec_0");
@@ -419,6 +422,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSTM_HM_AM:        return F("systm_hm_am");
     case Enum::SYSTM_HM_AM_0:      return F("systm_hm_am_0");
     case Enum::SYSTM_HM_AM_SP:     return F("systm_hm_am_sp");
+    case Enum::SYSTZOFFSET:        return F("systzoffset");
     case Enum::SYSWEEKDAY:         return F("sysweekday");
     case Enum::SYSWEEKDAY_S:       return F("sysweekday_s");
     case Enum::SYSYEAR:            return F("sysyear");

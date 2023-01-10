@@ -21,6 +21,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
+#include "../Helpers/StringProvider.h"
 
 #ifdef USES_ESPEASY_NOW
 # include "../Globals/ESPEasy_now_handler.h"
@@ -1543,18 +1544,17 @@ void setupStaticIPconfig() {
   const IPAddress subnet = Settings.Subnet;
   const IPAddress dns    = Settings.DNS;
 
+  WiFiEventData.dns0_cache = Settings.DNS;
+
+  WiFi.config(ip, gw, subnet, dns);
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
+    log += concat(F(" GW: "), formatIP(gw));
+    log += concat(F(" SN: "), formatIP(subnet));
+    log += concat(F(" DNS: "), getValue(LabelType::DNS));
     addLogMove(LOG_LEVEL_INFO, log);
   }
-  WiFi.config(ip, gw, subnet, dns);
 }
 
 // ********************************************************************************

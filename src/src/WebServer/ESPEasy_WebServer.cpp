@@ -660,10 +660,14 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
   addHtmlAttribute(F("onchange"), F("return dept_onchange(frmselect)"));
   addHtml('>');
 
-  for (taskIndex_t x = 0; x < TASKS_MAX; x++)
+  for (taskIndex_t x = 0; x <= TASKS_MAX; x++)
   {
-    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
-    deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
+    if (validTaskIndex(x)) {
+      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+      deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
+    } else {
+      deviceName = F("Not Set");
+    }
     {
       addHtml(F("<option value='"));
       addHtmlInt(x);
@@ -674,12 +678,14 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
       }
     }
 
-    if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
+    if (validTaskIndex(x) && !validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
       addDisabled();
     }
     {
       addHtml('>');
-      addHtmlInt(x + 1);
+      if (validTaskIndex(x)) {
+        addHtmlInt(x + 1);
+      }
       addHtml(F(" - "));
       addHtml(deviceName);
       addHtml(F(" - "));

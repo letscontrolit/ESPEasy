@@ -15,6 +15,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Network.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/MDNS_Helper.h"
 
@@ -171,7 +172,8 @@ IPAddress NetworkGatewayIP() {
   return WiFi.gatewayIP();
 }
 
-IPAddress NetworkDnsIP (uint8_t dns_no) {
+IPAddress NetworkDnsIP(uint8_t dns_no) {
+  scrubDNS();
   #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(EthEventData.ethInitSuccess) {

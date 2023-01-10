@@ -154,6 +154,10 @@ bool connectClient(WiFiClient& client, const char *hostname, uint16_t port, uint
 bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t timeout_ms = 100);
 #endif // FEATURE_HTTP_CLIENT
 
+void scrubDNS();
+
+bool setDNS(int index, const IPAddress& dns);
+
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms = 1000);
 
 bool hostReachable(const String& hostname);
