@@ -2,11 +2,25 @@
 
 #ifdef USES_P004
 
+P004_data_struct::P004_data_struct() :
+  _gpio_rx(-1), _gpio_tx(-1), _res(0)
+{
+  _timer = millis();
+  _measurementStart = _timer;
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    _sensors[i].clear();
+  }
+}
+
 void P004_data_struct::init(int8_t pin_rx, int8_t pin_tx, const uint8_t addr[], uint8_t res)
 {
   _gpio_rx = pin_rx;
   _gpio_tx = pin_tx;
   _res     = res;
+
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    _sensors[i].clear();
+  }
 
   // Explicitly set the pinMode using the "slow" pinMode function
   // This way we know for sure the state of any pull-up or -down resistor is known.

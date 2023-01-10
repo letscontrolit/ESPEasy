@@ -15,7 +15,9 @@
 
 
 struct Dallas_SensorData {
-  Dallas_SensorData() = default;
+  Dallas_SensorData();
+
+  void clear();
 
   bool check_sensor(int8_t gpio_rx,
                     int8_t gpio_tx,
@@ -32,14 +34,14 @@ struct Dallas_SensorData {
 
   String get_formatted_address() const;
 
-  uint64_t addr{};
-  float    value{};
-  uint32_t start_read_failed{};
-  uint32_t start_read_retry{};
-  uint32_t read_success{};
-  uint32_t read_retry{};
-  uint32_t read_failed{};
-  uint8_t  actual_res{};
+  uint64_t addr;
+  float    value;
+  uint32_t start_read_failed;
+  uint32_t start_read_retry;
+  uint32_t read_success;
+  uint32_t read_retry;
+  uint32_t read_failed;
+  uint8_t  actual_res;
 
   bool measurementActive = false;
   bool valueRead         = false;
