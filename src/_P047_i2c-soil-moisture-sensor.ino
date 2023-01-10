@@ -11,34 +11,34 @@
 // this code is based on version 1.1.2 of the above library
 //
 
-#define PLUGIN_047
-#define PLUGIN_ID_047        47
-#define PLUGIN_NAME_047       "Environment - Soil moisture sensor"
-#define PLUGIN_VALUENAME1_047 "Temperature"
-#define PLUGIN_VALUENAME2_047 "Moisture"
-#define PLUGIN_VALUENAME3_047 "Light"
+# define PLUGIN_047
+# define PLUGIN_ID_047        47
+# define PLUGIN_NAME_047       "Environment - Soil moisture sensor"
+# define PLUGIN_VALUENAME1_047 "Temperature"
+# define PLUGIN_VALUENAME2_047 "Moisture"
+# define PLUGIN_VALUENAME3_047 "Light"
 
 
 // Default I2C Address of the sensor
-#define SOILMOISTURESENSOR_DEFAULT_ADDR 0x20
+# define SOILMOISTURESENSOR_DEFAULT_ADDR 0x20
 
 // Soil Moisture Sensor Register Addresses
-#define SOILMOISTURESENSOR_GET_CAPACITANCE      0x00 // (r)     2 bytes
-#define SOILMOISTURESENSOR_SET_ADDRESS          0x01 //	(w)     1 uint8_t
-#define SOILMOISTURESENSOR_GET_ADDRESS          0x02 // (r)     1 uint8_t
-#define SOILMOISTURESENSOR_MEASURE_LIGHT        0x03 //	(w)     n/a
-#define SOILMOISTURESENSOR_GET_LIGHT            0x04 //	(r)     2 bytes
-#define SOILMOISTURESENSOR_GET_TEMPERATURE      0x05 //	(r)     2 bytes
-#define SOILMOISTURESENSOR_RESET                0x06 //	(w)     n/a
-#define SOILMOISTURESENSOR_GET_VERSION          0x07 //	(r)     1 bytes
-#define SOILMOISTURESENSOR_SLEEP                0x08 // (w)     n/a
-#define SOILMOISTURESENSOR_GET_BUSY             0x09 // (r)	    1 bytes
+# define SOILMOISTURESENSOR_GET_CAPACITANCE      0x00 // (r)     2 bytes
+# define SOILMOISTURESENSOR_SET_ADDRESS          0x01 //	(w)     1 uint8_t
+# define SOILMOISTURESENSOR_GET_ADDRESS          0x02 // (r)     1 uint8_t
+# define SOILMOISTURESENSOR_MEASURE_LIGHT        0x03 //	(w)     n/a
+# define SOILMOISTURESENSOR_GET_LIGHT            0x04 //	(r)     2 bytes
+# define SOILMOISTURESENSOR_GET_TEMPERATURE      0x05 //	(r)     2 bytes
+# define SOILMOISTURESENSOR_RESET                0x06 //	(w)     n/a
+# define SOILMOISTURESENSOR_GET_VERSION          0x07 //	(r)     1 bytes
+# define SOILMOISTURESENSOR_SLEEP                0x08 // (w)     n/a
+# define SOILMOISTURESENSOR_GET_BUSY             0x09 // (r)	    1 bytes
 
-#define P047_I2C_ADDR       PCONFIG(0)
-#define P047_SENSOR_SLEEP   PCONFIG(1)
-#define P047_CHECK_VERSION  PCONFIG(2)
-#define P047_NEW_ADDR       PCONFIG(3)
-#define P047_CHANGE_ADDR    PCONFIG(4)
+# define P047_I2C_ADDR       PCONFIG(0)
+# define P047_SENSOR_SLEEP   PCONFIG(1)
+# define P047_CHECK_VERSION  PCONFIG(2)
+# define P047_NEW_ADDR       PCONFIG(3)
+# define P047_CHANGE_ADDR    PCONFIG(4)
 
 
 boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
@@ -89,14 +89,14 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormCheckBox(F("Send sensor to sleep"), F("p047_sleep"),   P047_SENSOR_SLEEP);
+      addFormCheckBox(F("Send sensor to sleep"), F("sleep"),   P047_SENSOR_SLEEP);
 
-      addFormCheckBox(F("Check sensor version"), F("p047_version"), P047_CHECK_VERSION);
+      addFormCheckBox(F("Check sensor version"), F("version"), P047_CHECK_VERSION);
 
       addFormSeparator(2);
 
-      addFormCheckBox(F("Change Sensor address"), F("p047_changeAddr"), false);
-      addFormTextBox(F("Change I2C Addr. to (Hex)"), F("p047_i2cSoilMoisture_changeAddr"),
+      addFormCheckBox(F("Change Sensor address"), F("changeAddr"), false);
+      addFormTextBox(F("Change I2C Addr. to (Hex)"), F("i2cSoilMoisture_changeAddr"),
                      formatToHex_decimal(P047_I2C_ADDR), 4);
 
       addFormSeparator(2);
@@ -110,14 +110,14 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       String plugin1 = webArg(F("i2c_addr"));
       P047_I2C_ADDR = (int)strtol(plugin1.c_str(), 0, 16);
 
-      P047_SENSOR_SLEEP = isFormItemChecked(F("p047_sleep"));
+      P047_SENSOR_SLEEP = isFormItemChecked(F("sleep"));
 
-      P047_CHECK_VERSION = isFormItemChecked(F("p047_version"));
+      P047_CHECK_VERSION = isFormItemChecked(F("version"));
 
-      String plugin4 = webArg(F("p047_i2cSoilMoisture_changeAddr"));
+      String plugin4 = webArg(F("i2cSoilMoisture_changeAddr"));
       P047_NEW_ADDR = (int)strtol(plugin4.c_str(), 0, 16);
 
-      P047_CHANGE_ADDR = isFormItemChecked(F("p047_changeAddr"));
+      P047_CHANGE_ADDR = isFormItemChecked(F("changeAddr"));
       success          = true;
       break;
     }
@@ -134,9 +134,9 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
         // wake sensor
         Plugin_047_getVersion(P047_I2C_ADDR);
         delayBackground(20);
-        #ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->wake"));
-        #endif
+        # endif // ifndef BUILD_NO_DEBUG
       }
 
       uint8_t sensorVersion = 0;
@@ -160,7 +160,7 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       if (P047_CHANGE_ADDR) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Change Address: 0x")) + String(P047_I2C_ADDR, HEX) + String(F("->0x")) +
-               String(P047_NEW_ADDR, HEX));
+                 String(P047_NEW_ADDR, HEX));
         }
 
         if (Plugin_047_setAddress(P047_I2C_ADDR, P047_NEW_ADDR)) {
@@ -213,9 +213,9 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
         if (P047_SENSOR_SLEEP) {
           // send sensor to sleep
           I2C_write8(P047_I2C_ADDR, SOILMOISTURESENSOR_SLEEP);
-          #ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->sleep"));
-          #endif
+          # endif // ifndef BUILD_NO_DEBUG
         }
         success = true;
         break;

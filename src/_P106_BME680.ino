@@ -80,7 +80,7 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Altitude"), F("plugin_106_BME680_elev"), PCONFIG(1));
+      addFormNumericBox(F("Altitude"), F("elev"), PCONFIG(1));
       addUnit('m');
 
       success = true;
@@ -90,7 +90,7 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-      PCONFIG(1) = getFormItemInt(F("plugin_106_BME680_elev"));
+      PCONFIG(1) = getFormItemInt(F("elev"));
       success    = true;
       break;
     }
@@ -103,8 +103,7 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P106_data) {
         P106_data->initialized = false; // Force re-init just in case the address changed.
-        P106_data->begin(PCONFIG(0));
-        success = P106_data->initialized;
+        success = P106_data->begin(PCONFIG(0));
       }
       break;
     }
@@ -125,7 +124,6 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
         if (!P106_data->bme.performReading()) {
           P106_data->initialized = false;
           addLog(LOG_LEVEL_ERROR, F("BME680 : Failed to perform reading!"));
-          success = false;
           break;
         }
 

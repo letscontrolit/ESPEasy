@@ -60,8 +60,9 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[2] = { 0x10, 0x11 };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("plugin_114_veml6075_i2c"), 2, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("i2c"), 2, i2cAddressValues, PCONFIG(0));
         addFormNote(F("SDO Low=0x10, High=0x11"));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
@@ -72,29 +73,31 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper * optionsMode2[5];
-        optionsMode2[0] = F("50 ms");
-        optionsMode2[1] = F("100 ms");
-        optionsMode2[2] = F("200 ms");
-        optionsMode2[3] = F("400 ms");
-        optionsMode2[4] = F("800 ms");
-        int optionValuesMode2[5];
-        optionValuesMode2[0] = IT_50;
-        optionValuesMode2[1] = IT_100;
-        optionValuesMode2[2] = IT_200;
-        optionValuesMode2[3] = IT_400;
-        optionValuesMode2[4] = IT_800;
-        addFormSelector(F("Integration Time"), F("plugin_114_veml6075_it"), 5, optionsMode2, optionValuesMode2, PCONFIG(1));
+        const __FlashStringHelper *optionsMode2[] = {
+          F("50 ms"),
+          F("100 ms"),
+          F("200 ms"),
+          F("400 ms"),
+          F("800 ms"),
+        };
+        const int optionValuesMode2[] = {
+          P114_IT_50,
+          P114_IT_100,
+          P114_IT_200,
+          P114_IT_400,
+          P114_IT_800,
+        };
+        addFormSelector(F("Integration Time"), F("it"), 5, optionsMode2, optionValuesMode2, PCONFIG(1));
       }
 
       {
-        const __FlashStringHelper * optionsMode3[2];
+        const __FlashStringHelper *optionsMode3[2];
         optionsMode3[0] = F("Normal Dynamic");
         optionsMode3[1] = F("High Dynamic");
         int optionValuesMode3[2];
         optionValuesMode3[0] = 0;
         optionValuesMode3[1] = 1;
-        addFormSelector(F("Dynamic Setting"), F("plugin_114_veml6075_hd"), 2, optionsMode3, optionValuesMode3, PCONFIG(2));
+        addFormSelector(F("Dynamic Setting"), F("hd"), 2, optionsMode3, optionValuesMode3, PCONFIG(2));
       }
 
       success = true;
@@ -103,9 +106,9 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("plugin_114_veml6075_i2c"));
-      PCONFIG(1) = getFormItemInt(F("plugin_114_veml6075_it"));
-      PCONFIG(2) = getFormItemInt(F("plugin_114_veml6075_hd"));
+      PCONFIG(0) = getFormItemInt(F("i2c"));
+      PCONFIG(1) = getFormItemInt(F("it"));
+      PCONFIG(2) = getFormItemInt(F("hd"));
 
       success = true;
       break;
@@ -117,11 +120,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       P114_data_struct *P114_data =
         static_cast<P114_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P114_data) {
-        return success;
-      }
-
-      success = true;
+      success = (nullptr != P114_data);
 
       break;
     }
@@ -146,8 +145,9 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
+
           if (log.reserve(130)) {
-            String log  = F("VEML6075: Address: 0x");
+            String log = F("VEML6075: Address: 0x");
             log += String(PCONFIG(0), HEX);
             log += F(" / Integration Time: ");
             log += PCONFIG(1);
