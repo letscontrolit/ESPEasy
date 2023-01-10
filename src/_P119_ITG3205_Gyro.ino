@@ -105,16 +105,16 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormCheckBox(F("Read 'raw' values from Gyro"), F("p119_rawData"), P119_RAW_DATA == 1);
+      addFormCheckBox(F("Read 'raw' values from Gyro"), F("rawData"), P119_RAW_DATA == 1);
 
-      addFormNumericBox(F("Averaging buffer size"), F("p119_average_buf"), P119_AVERAGE_BUFFER, 1, 100);
+      addFormNumericBox(F("Averaging buffer size"), F("average_buf"), P119_AVERAGE_BUFFER, 1, 100);
       addUnit(F("1..100"));
 
       const __FlashStringHelper *frequencyOptions[] = {
         F("10"),
         F("50") };
-      int frequencyValues[] = { P119_FREQUENCY_10, P119_FREQUENCY_50 };
-      addFormSelector(F("Measuring frequency"), F("p119_frequency"), 2, frequencyOptions, frequencyValues, P119_FREQUENCY);
+      const int frequencyValues[] = { P119_FREQUENCY_10, P119_FREQUENCY_50 };
+      addFormSelector(F("Measuring frequency"), F("frequency"), 2, frequencyOptions, frequencyValues, P119_FREQUENCY);
       addUnit(F("Hz"));
 
       success = true;
@@ -124,9 +124,9 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P119_I2C_ADDR       = getFormItemInt(F("i2c_addr"));
-      P119_RAW_DATA       = isFormItemChecked(F("p119_rawData")) ? 1 : 0;
-      P119_AVERAGE_BUFFER = getFormItemInt(F("p119_average_buf"));
-      P119_FREQUENCY      = getFormItemInt(F("p119_frequency"));
+      P119_RAW_DATA       = isFormItemChecked(F("rawData")) ? 1 : 0;
+      P119_AVERAGE_BUFFER = getFormItemInt(F("average_buf"));
+      P119_FREQUENCY      = getFormItemInt(F("frequency"));
 
       success = true;
       break;
@@ -137,9 +137,7 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P119_data_struct(P119_I2C_ADDR, P119_RAW_DATA, P119_AVERAGE_BUFFER));
       P119_data_struct *P119_data = static_cast<P119_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P119_data) {
-        success = true;
-      }
+      success = (nullptr != P119_data);
 
       break;
     }

@@ -18,18 +18,18 @@ bool P114_data_struct::read_sensor(float& _UVA, float& _UVB, float& _UVIndex) {
   }
 
 
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
-    log.reserve(40);
+    log.reserve(48);
     log  = F("VEML6075: i2caddress: 0x");
     log += String(i2cAddress, HEX);
-    addLogMove(LOG_LEVEL_DEBUG, log);
-    log  = F("VEML6075: initialized: ");
+    log += F(", initialized: ");
     log += String(initialised ? F("true") : F("false"));
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
 
   if (initialised) {
     for (int j = 0; j < 5; j++) {
@@ -41,18 +41,21 @@ bool P114_data_struct::read_sensor(float& _UVA, float& _UVB, float& _UVIndex) {
     UVBComp  = (UVData[2] - UVData[1]) - CCoef * (UVData[3] - UVData[1]) - DCoef * (UVData[4] - UVData[1]);
     _UVIndex = ((UVBComp * UVBresponsivity) +  (UVAComp * UVAresponsivity)) / 2.0f;
 
-    _UVA = static_cast<float>(UVData[0]) / static_cast<float>(1 << (IT - 1)); // UVA light sensitivity increases linear with integration time
-    _UVB = static_cast<float>(UVData[2]) / static_cast<float>(1 << (IT - 1)); // UVB light sensitivity increases linear with integration time
+    _UVA = static_cast<float>(UVData[0]) / static_cast<float>(1 << (IT - 1)); // UVA light sensitivity increases linear with integration
+                                                                              // time
+    _UVB = static_cast<float>(UVData[2]) / static_cast<float>(1 << (IT - 1)); // UVB light sensitivity increases linear with integration
+                                                                              // time
 
     // float UVASensitivity = 0.93/(static_cast<float>(IT + 1)); // UVA light sensitivity increases with integration time
     // float UVBSensitivity = 2.10/(static_cast<float>(IT + 1)); // UVB light sensitivity increases with integration time
-    #ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log  = F("VEML6075: IT raw: 0x");
+      String log = F("VEML6075: IT raw: 0x");
       log += String(IT + 1, HEX);
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
-    #endif
+    # endif // ifndef BUILD_NO_DEBUG
     return true;
   }
   return false;
@@ -64,7 +67,8 @@ bool P114_data_struct::read_sensor(float& _UVA, float& _UVB, float& _UVIndex) {
 bool P114_data_struct::init_sensor() {
   uint16_t deviceID = I2C_readS16_LE_reg(i2cAddress, VEML6075_UV_ID);
 
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log.reserve(60);
@@ -76,7 +80,7 @@ bool P114_data_struct::init_sensor() {
     log += String(VEML6075_UV_ID, HEX);
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
 
   if (deviceID != 0x26) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -88,7 +92,6 @@ bool P114_data_struct::init_sensor() {
     }
     return false;
   } else {
-
     // log  = F("VEML6075: found deviceID: 0x");
     // log += String(deviceID, HEX);
 
