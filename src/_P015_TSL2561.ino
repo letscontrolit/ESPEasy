@@ -11,21 +11,21 @@
 // written based on version 1.1.0 from https://github.com/sparkfun/SparkFun_TSL2561_Arduino_Library
 
 
-#include "src/PluginStructs/P015_data_struct.h"
+# include "src/PluginStructs/P015_data_struct.h"
 
-#define PLUGIN_015
-#define PLUGIN_ID_015        15
-#define PLUGIN_NAME_015       "Light/Lux - TSL2561"
-#define PLUGIN_VALUENAME1_015 "Lux"
-#define PLUGIN_VALUENAME2_015 "Infrared"
-#define PLUGIN_VALUENAME3_015 "Broadband"
-#define PLUGIN_VALUENAME4_015 "Ratio"
+# define PLUGIN_015
+# define PLUGIN_ID_015        15
+# define PLUGIN_NAME_015       "Light/Lux - TSL2561"
+# define PLUGIN_VALUENAME1_015 "Lux"
+# define PLUGIN_VALUENAME2_015 "Infrared"
+# define PLUGIN_VALUENAME3_015 "Broadband"
+# define PLUGIN_VALUENAME4_015 "Ratio"
 
 
-#define P015_I2C_ADDR    PCONFIG(0)
-#define P015_INTEGRATION PCONFIG(1)
-#define P015_SLEEP       PCONFIG(2)
-#define P015_GAIN        PCONFIG(3)
+# define P015_I2C_ADDR    PCONFIG(0)
+# define P015_INTEGRATION PCONFIG(1)
+# define P015_SLEEP       PCONFIG(2)
+# define P015_GAIN        PCONFIG(3)
 
 
 boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
@@ -70,6 +70,7 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { TSL2561_ADDR, TSL2561_ADDR_1, TSL2561_ADDR_0 };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 3, i2cAddressValues, P015_I2C_ADDR);
       } else {
@@ -81,34 +82,38 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        #define TSL2561_INTEGRATION_OPTION 3
-        const __FlashStringHelper * options[TSL2561_INTEGRATION_OPTION];
-        int    optionValues[TSL2561_INTEGRATION_OPTION];
-        optionValues[0] = 0x00;
-        options[0]      = F("13.7 ms");
-        optionValues[1] = 0x01;
-        options[1]      = F("101 ms");
-        optionValues[2] = 0x02;
-        options[2]      = F("402 ms");
-        addFormSelector(F("Integration time"), F("p015_integration"), TSL2561_INTEGRATION_OPTION, options, optionValues, P015_INTEGRATION);
+        # define TSL2561_INTEGRATION_OPTION 3
+        const __FlashStringHelper * options[TSL2561_INTEGRATION_OPTION] = {
+          F("13.7 ms"),
+          F("101 ms"),
+          F("402 ms"),
+        };
+        const int optionValues[TSL2561_INTEGRATION_OPTION] = {
+          0x00,
+          0x01,
+          0x02,
+        };
+        addFormSelector(F("Integration time"), F("pintegration"), TSL2561_INTEGRATION_OPTION, options, optionValues, P015_INTEGRATION);
       }
 
-      addFormCheckBox(F("Send sensor to sleep:"), F("p015_sleep"),
+      addFormCheckBox(F("Send sensor to sleep:"), F("psleep"),
                       P015_SLEEP);
 
       {
-        #define TSL2561_GAIN_OPTION 4
-        const __FlashStringHelper * options[TSL2561_GAIN_OPTION];
-        int    optionValues[TSL2561_GAIN_OPTION];
-        optionValues[0] = P015_NO_GAIN;
-        options[0]      = F("No Gain");
-        optionValues[1] = P015_16X_GAIN;
-        options[1]      = F("16x Gain");
-        optionValues[2] = P015_AUTO_GAIN;
-        options[2]      = F("Auto Gain");
-        optionValues[3] = P015_EXT_AUTO_GAIN;
-        options[3]      = F("Extended Auto Gain");
-        addFormSelector(F("Gain"), F("p015_gain"), TSL2561_GAIN_OPTION, options, optionValues, P015_GAIN);
+        # define TSL2561_GAIN_OPTION 4
+        const __FlashStringHelper *options[TSL2561_GAIN_OPTION] = {
+          F("No Gain"),
+          F("16x Gain"),
+          F("Auto Gain"),
+          F("Extended Auto Gain"),
+        };
+        const int optionValues[TSL2561_GAIN_OPTION] = {
+          P015_NO_GAIN,
+          P015_16X_GAIN,
+          P015_AUTO_GAIN,
+          P015_EXT_AUTO_GAIN,
+        };
+        addFormSelector(F("Gain"), F("pgain"), TSL2561_GAIN_OPTION, options, optionValues, P015_GAIN);
       }
 
       success = true;
@@ -118,9 +123,9 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P015_I2C_ADDR    = getFormItemInt(F("i2c_addr"));
-      P015_INTEGRATION = getFormItemInt(F("p015_integration"));
-      P015_SLEEP       = isFormItemChecked(F("p015_sleep"));
-      P015_GAIN        = getFormItemInt(F("p015_gain"));
+      P015_INTEGRATION = getFormItemInt(F("pintegration"));
+      P015_SLEEP       = isFormItemChecked(F("psleep"));
+      P015_GAIN        = getFormItemInt(F("pgain"));
 
       success = true;
       break;
@@ -132,9 +137,7 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
       P015_data_struct *P015_data =
         static_cast<P015_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P015_data) {
-        success = true;
-      }
+      success = (nullptr != P015_data);
       break;
     }
 
@@ -153,9 +156,9 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 3]); // ir_broadband_ratio
 
         if (P015_SLEEP) {
-#ifndef BUILD_NO_DEBUG
-          addLog(LOG_LEVEL_DEBUG_MORE, F("TSL2561: sleeping..."));
-#endif
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("TSL2561: sleeping..."));
+          # endif // ifndef BUILD_NO_DEBUG
           P015_data->setPowerDown();
         }
       }

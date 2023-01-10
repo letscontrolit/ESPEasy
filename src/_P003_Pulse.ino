@@ -53,9 +53,6 @@
 # define P003_CT_INDEX_TOTAL                2
 # define P003_CT_INDEX_COUNTER_TOTAL        3
 
-bool validIntFromString(const String& tBuf,
-                        int         & result);
-
 
 boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -103,13 +100,13 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Debounce Time (mSec)"), F("p003_debounce")
+      addFormNumericBox(F("Debounce Time (mSec)"), F("debounce")
                         , PCONFIG(P003_IDX_DEBOUNCETIME));
 
       {
         uint8_t choice  = PCONFIG(P003_IDX_COUNTERTYPE);
         const __FlashStringHelper *options[P003_NR_COUNTERTYPES] = P003_COUNTERTYPE_LIST;
-        addFormSelector(F("Counter Type"), F("p003_countertype"), P003_NR_COUNTERTYPES, options, nullptr, choice);
+        addFormSelector(F("Counter Type"), F("countertype"), P003_NR_COUNTERTYPES, options, nullptr, choice);
         if (choice != 0) {
           addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));
         }
@@ -117,7 +114,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
       Internal_GPIO_pulseHelper::addGPIOtriggerMode(
         F("Mode Type"), 
-        F("p003_raisetype"), 
+        F("raisetype"), 
         static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE)));
 
       success = true;
@@ -126,9 +123,9 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(P003_IDX_DEBOUNCETIME) = getFormItemInt(F("p003_debounce"));
-      PCONFIG(P003_IDX_COUNTERTYPE)  = getFormItemInt(F("p003_countertype"));
-      PCONFIG(P003_IDX_MODETYPE)     = getFormItemInt(F("p003_raisetype"));
+      PCONFIG(P003_IDX_DEBOUNCETIME) = getFormItemInt(F("debounce"));
+      PCONFIG(P003_IDX_COUNTERTYPE)  = getFormItemInt(F("countertype"));
+      PCONFIG(P003_IDX_MODETYPE)     = getFormItemInt(F("raisetype"));
       success                        = true;
       break;
     }
@@ -192,7 +189,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // set up device pin and estabish interupt handlers
-        P003_data->pulseHelper.init();
+        success = P003_data->pulseHelper.init();
       }
       break;
     }

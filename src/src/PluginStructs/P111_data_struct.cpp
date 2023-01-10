@@ -238,12 +238,12 @@ bool P111_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       const uint32_t old_key = UserVar.getSensorTypeLong(event->TaskIndex);
       bool new_key           = false;
 
-          # ifdef P111_USE_REMOVAL
+      # ifdef P111_USE_REMOVAL
 
       if (removedTag && (P111_TAG_AUTOREMOVAL == 2)) { // removal detected and enabled
         key = P111_REMOVALVALUE;
       }
-          # endif // P111_USE_REMOVAL
+      # endif // P111_USE_REMOVAL
 
       if ((old_key != key) && (key != P111_NO_KEY)) {
         UserVar.setSensorTypeLong(event->TaskIndex, key);

@@ -150,19 +150,19 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
           int     value     = P085_data->modbus.readHoldingRegister(0x107, errorcode);
 
           if (errorcode == 0) {
-            addFormNumericBox(F("Full Range Voltage Value"), F("p085_fr_volt"), value, 5, 9999);
+            addFormNumericBox(F("Full Range Voltage Value"), F("fr_volt"), value, 5, 9999);
             addUnit('V');
           }
           value = P085_data->modbus.readHoldingRegister(0x104, errorcode);
 
           if (errorcode == 0) {
-            addFormNumericBox(F("Full Range Current Value"), F("p085_fr_curr"), value, 20, 50000);
+            addFormNumericBox(F("Full Range Current Value"), F("fr_curr"), value, 20, 50000);
             addUnit('A');
           }
           value = P085_data->modbus.readHoldingRegister(0x105, errorcode);
 
           if (errorcode == 0) {
-            addFormNumericBox(F("Full Range Shunt Value"), F("p085_fr_shunt"), value, 50, 100);
+            addFormNumericBox(F("Full Range Shunt Value"), F("fr_shunt"), value, 50, 100);
             addUnit(F("mV"));
           }
 
@@ -171,7 +171,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
           value = P085_data->modbus.readHoldingRegister(0x500, errorcode);
 
           if (errorcode == 0) {
-            addFormCheckBox(F("Enable data logging"), F("p085_en_log"), value);
+            addFormCheckBox(F("Enable data logging"), F("en_log"), value);
           }
           value = P085_data->modbus.readHoldingRegister(0x501, errorcode);
 
@@ -182,7 +182,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
           value = P085_data->modbus.readHoldingRegister(0x502, errorcode);
 
           if (errorcode == 0) {
-            addFormNumericBox(F("Log Interval"), F("p085_log_int"), value, 1, 1440);
+            addFormNumericBox(F("Log Interval"), F("log_int"), value, 1, 1440);
             addUnit(F("minutes"));
           }
         }
@@ -197,7 +197,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
 
         // Checkbox is always presented unchecked.
         // Must check and save to clear the stored accumulated values in the sensor.
-        addFormCheckBox(F("Clear logged values"), F("p085_clear_log"), false);
+        addFormCheckBox(F("Clear logged values"), F("clear_log"), false);
         addFormNote(F("Will clear all logged values when checked and saved"));
       }
 
@@ -221,26 +221,26 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P085_data) && P085_data->isInitialized()) {
-        uint16_t log_enabled = isFormItemChecked(F("p085_en_log")) ? 1 : 0;
+        uint16_t log_enabled = isFormItemChecked(F("en_log")) ? 1 : 0;
         P085_data->modbus.writeMultipleRegisters(0x500, log_enabled);
         delay(1);
 
-        uint16_t log_int = getFormItemInt(F("p085_log_int"));
+        uint16_t log_int = getFormItemInt(F("log_int"));
         P085_data->modbus.writeMultipleRegisters(0x502, log_int);
         delay(1);
 
-        uint16_t current = getFormItemInt(F("p085_fr_curr"));
+        uint16_t current = getFormItemInt(F("fr_curr"));
         P085_data->modbus.writeMultipleRegisters(0x104, current);
         delay(1);
 
-        uint16_t shunt = getFormItemInt(F("p085_fr_shunt"));
+        uint16_t shunt = getFormItemInt(F("fr_shunt"));
         P085_data->modbus.writeMultipleRegisters(0x105, shunt);
         delay(1);
 
-        uint16_t voltage = getFormItemInt(F("p085_fr_volt"));
+        uint16_t voltage = getFormItemInt(F("fr_volt"));
         P085_data->modbus.writeMultipleRegisters(0x107, voltage);
 
-        if (isFormItemChecked(F("p085_clear_log")))
+        if (isFormItemChecked(F("clear_log")))
         {
           // Clear all logged values in the meter.
           P085_data->modbus.writeMultipleRegisters(0x122, 0x0A); // Clear Energy
