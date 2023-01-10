@@ -18,6 +18,17 @@
 # define P148_GPIO_TM1621_RD   CONFIG_PIN3
 # define P148_GPIO_TM1621_CS   CONFIG_PORT
 
+# define P148_FIRST_PAGE_ROW_INDEX 2
+# define P148_NR_PAGE_ROW_INDICES 6
+# define P148_MAX_PAGE_ROW_INDEX (P148_FIRST_PAGE_ROW_INDEX + P148_NR_PAGE_ROW_INDICES)
+# define P148_PAGE1_ROW1_TASK  PCONFIG(P148_FIRST_PAGE_ROW_INDEX)
+# define P148_PAGE1_ROW2_TASK  PCONFIG(3)
+# define P148_PAGE2_ROW1_TASK  PCONFIG(4)
+# define P148_PAGE2_ROW2_TASK  PCONFIG(5)
+# define P148_PAGE3_ROW1_TASK  PCONFIG(6)
+# define P148_PAGE3_ROW2_TASK  PCONFIG(7)
+
+
 # include "src/PluginStructs/P148_data_struct.h"
 
 boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
@@ -37,8 +48,8 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].FormulaOption      = false;
       Device[deviceCount].ValueCount         = 0;
       Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = false;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
@@ -62,7 +73,7 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       };
       constexpr size_t nrElements = sizeof(values) / sizeof(values[0]);
 
-      for (int i = 0; i < nrElements; ++i) {
+      for (size_t i = 0; i < nrElements; ++i) {
         if (i != 0) { addHtml(event->String1); }
         addHtml(labels[i]);
         addHtml(F(":&nbsp;"));
@@ -79,14 +90,17 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       P148_GPIO_TM1621_CS  = -1;
       P148_GPIO_TM1621_WR  = -1;
       P148_GPIO_TM1621_RD  = -1;
+      P148_data_struct::MonitorTaskValue_t MonitorTaskValue;
+
+      for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+        PCONFIG(i) = MonitorTaskValue.getPconfigValue();
+      }
 
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSubHeader(F("Display"));
-
       // We load/save the TaskDevicePin ourselves to allow to combine the pin specific configuration be shown along with the pin selection.
       addFormPinSelect(PinSelectPurpose::Generic_output,
                        formatGpioName_output(F("TM1621 DAT")),
@@ -118,6 +132,18 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("GPIO settings will be ignored when selecting other than 'Custom'"));
       }
 
+      addFormSubHeader(F("Display Values"));
+
+      for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+        if ((i % 2 == 0) && (i != P148_FIRST_PAGE_ROW_INDEX)) {
+          addFormSeparator(2);
+        }
+
+        P148_data_struct::MonitorTaskValue_t MonitorTaskValue(PCONFIG(i));
+        MonitorTaskValue.webformLoad(i);
+      }
+      LoadTaskSettings(event->TaskIndex);
+
       success = true;
       break;
     }
@@ -148,6 +174,12 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
           P148_GPIO_TM1621_CS  = 17;
           break;
       }
+
+      for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+        P148_data_struct::MonitorTaskValue_t MonitorTaskValue(PCONFIG(i));
+        PCONFIG(i) = MonitorTaskValue.webformSave(i);
+      }
+
       success = true;
       break;
     }
@@ -165,8 +197,97 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P148_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P148_data) {
-        success = P148_data->init();
+        if (P148_data->init()) {
+          for (int i = P148_FIRST_PAGE_ROW_INDEX; i < P148_MAX_PAGE_ROW_INDEX; ++i) {
+            P148_data->MonitorTaskValues[i - P148_FIRST_PAGE_ROW_INDEX] = P148_data_struct::MonitorTaskValue_t(PCONFIG(i));
+          }
+
+          P148_data->writeStrings(F("ESP"), F("Easy"));
+          success = true;
+        }
       }
+      break;
+    }
+
+    case PLUGIN_READ:
+    {
+      P148_data_struct *P148_data =
+        static_cast<P148_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P148_data) {
+        P148_data->showPage();
+      }
+      break;
+    }
+
+    case PLUGIN_WRITE:
+    {
+      P148_data_struct *P148_data =
+        static_cast<P148_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P148_data) {
+        const String command = parseString(string, 1);
+
+        if (command.equals(F("tm1621"))) {
+          const String subcommand = parseString(string, 2);
+
+          if (subcommand.equals(F("raw"))) {
+            // Write raw data to the display
+            // Typical use case: testing fonts
+            const String rawdata_str = parseString(string, 3);
+            uint64_t     rawdata;
+
+            if (validUInt64FromString(rawdata_str, rawdata)) {
+              success = true;
+              P148_data->writeRawData(rawdata);
+            }
+          } else if (subcommand.equals(F("writerow"))) {
+            // tm1621write,<rownr>,<string>
+            const bool firstrow = event->Par2 <= 1;
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None, firstrow);
+            P148_data->writeString(firstrow, parseString(string, 4));
+            success = true;
+          } else if (subcommand.equals(F("write"))) {
+            // tm1621write,<string1>,<string2>
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None);
+            const String str1 = parseString(string, 3);
+            const String str2 = parseString(string, 4);
+
+            if (str2.isEmpty()) {
+              P148_data->writeString(true, str1);
+            } else {
+              P148_data->writeStrings(str1, str2);
+            }
+            success = true;
+          } else if (subcommand.equals(F("voltamp"))) {
+            // tm1621voltamp,<volt>,<amp>
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp);
+            P148_data->writeStrings(parseString(string, 3), parseString(string, 4));
+            success = true;
+          } else if (subcommand.equals(F("energy"))) {
+            // tm1621energy,<kWh>,<Watt>
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt);
+            P148_data->writeStrings(parseString(string, 3), parseString(string, 4));
+            success = true;
+          } else if (subcommand.equals(F("celcius"))) {
+            // tm1621celcius,<temperture>
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Celsius, true);
+            P148_data->writeString(true, parseString(string, 3));
+            success = true;
+          } else if (subcommand.equals(F("fahrenheit"))) {
+            // tm1621fahrenheit,<temperture>
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit, true);
+            P148_data->writeString(true, parseString(string, 3));
+            success = true;
+          } else if (subcommand.equals(F("humidity"))) {
+            // tm1621humidity,<%humidity>
+            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Humidity, false);
+            P148_data->writeString(false, parseString(string, 3));
+            success = true;
+          }
+        }
+      }
+
       break;
     }
   }
