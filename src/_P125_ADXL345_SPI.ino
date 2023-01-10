@@ -127,7 +127,7 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P120_AVERAGE_BUFFER = getFormItemInt(F("p120_average_buf"));
+      P120_AVERAGE_BUFFER = getFormItemInt(F("average_buf"));
 
       P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 

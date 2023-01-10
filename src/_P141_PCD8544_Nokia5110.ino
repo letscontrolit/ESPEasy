@@ -263,9 +263,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
                                                                bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1));
         P141_data_struct *P141_data = static_cast<P141_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr != P141_data) {
-          success = P141_data->plugin_init(event); // Start the display
-        }
+        success = (nullptr != P141_data) && P141_data->plugin_init(event); // Start the display
       # ifndef LIMIT_BUILD_SIZE
       } else {
         addLog(LOG_LEVEL_ERROR, F("PCD8544: SPI not enabled."));
@@ -287,7 +285,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
     // Check more often for debouncing the button, when enabled
     case PLUGIN_FIFTY_PER_SECOND:
     {
-      if (P141_CONFIG_BUTTON_PIN != -1) {
+      if (validGpio(P141_CONFIG_BUTTON_PIN)) {
         P141_data_struct *P141_data = static_cast<P141_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P141_data) {

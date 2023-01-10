@@ -620,17 +620,14 @@ void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
     case P143_CounterMapping_e::ColorMapping:
     {
       for (int i = 0; i <= _colorMaps; i++) {
-        if (!_colorMapping[i].isEmpty()) {
-          if (iCount == INT32_MIN) {
-            if (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) {
-              if (iCount < _encoderPosition) { // Reset, out of range
-                iRed   = -1;
-                iGreen = -1;
-                iBlue  = -1;
-                iCount = INT32_MIN;
-              }
-            }
-          }
+        if ((!_colorMapping[i].isEmpty()) &&
+            (iCount == INT32_MIN) &&
+            (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) &&
+            (iCount < _encoderPosition)) { // Reset, out of range
+          iRed   = -1;
+          iGreen = -1;
+          iBlue  = -1;
+          iCount = INT32_MIN;
         }
       }
       break;
@@ -640,26 +637,22 @@ void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
     {
       for (int i = 0; i <= _colorMaps; i++) {
         if (!_colorMapping[i].isEmpty()) {
-          if (iCount == INT32_MIN) {
-            if (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) {
-              if ((iCount > _encoderPosition) || !rangeCheck(iCount, _encoderMin, _encoderMax)) {
-                iRed   = -1;
-                iGreen = -1;
-                iBlue  = -1;
-                iCount = INT32_MIN;
-              }
-            }
+          if ((iCount == INT32_MIN) &&
+              (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) &&
+              ((iCount > _encoderPosition) || !rangeCheck(iCount, _encoderMin, _encoderMax))) {
+            iRed   = -1;
+            iGreen = -1;
+            iBlue  = -1;
+            iCount = INT32_MIN;
           }
 
-          if (pCount == INT32_MIN) {
-            if (parseColorMapLine(_colorMapping[i], pCount, pRed, pGreen, pBlue)) {
-              if ((pCount < _encoderPosition) || !rangeCheck(pCount, _encoderMin, _encoderMax)) {
-                pRed   = -1;
-                pGreen = -1;
-                pBlue  = -1;
-                pCount = INT32_MIN;
-              }
-            }
+          if ((pCount == INT32_MIN) &&
+              (parseColorMapLine(_colorMapping[i], pCount, pRed, pGreen, pBlue)) &&
+              ((pCount < _encoderPosition) || !rangeCheck(pCount, _encoderMin, _encoderMax))) {
+            pRed   = -1;
+            pGreen = -1;
+            pBlue  = -1;
+            pCount = INT32_MIN;
           }
         }
       }
@@ -779,14 +772,8 @@ bool P143_data_struct::parseColorMapLine(const String& line,
 bool P143_data_struct::rangeCheck(int32_t count,
                                   int32_t min,
                                   int32_t max) {
-  bool result = true;
-
-  if (min != max) {
-    if ((count < min) || (count > max)) {
-      result = false;
-    }
-  }
-  return result;
+  return !((min != max) &&
+           ((count < min) || (count > max)));
 }
 
 # endif // if P143_FEATURE_COUNTER_COLORMAPPING

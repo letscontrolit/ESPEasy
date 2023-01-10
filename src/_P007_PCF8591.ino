@@ -94,10 +94,6 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
     {
       PCONFIG(P007_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
 
-      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
-      }
-
       success = true;
       break;
     }
@@ -119,8 +115,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
           portNames[x]  = 'A';
           portNames[x] += x;
         }
-        addFormSelectorI2C(F("plugin_007_i2c"), 8, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("plugin_007_port"), 4, portNames, portValues, port);
+        addFormSelectorI2C(F("pi2c"), 8, i2cAddressValues, address);
+        addFormSelector(F("Port"), F("pport"), 4, portNames, portValues, port);
         addFormNote(F("Selected Port value will be stored in first 'Values' field and consecutively for 'Number Output Values' &gt; Single."));
       } else {
         success = intArrayContains(8, i2cAddressValues, event->Par1);
@@ -145,9 +141,9 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
         0b00100000,
         0b00110000,
       };
-      addFormSelector(F("Input mode"), F("plugin_007_input_mode"), 4, inputModeOptions, inputModeValues, P007_INPUT_MODE);
+      addFormSelector(F("Input mode"), F("input_mode"), 4, inputModeOptions, inputModeValues, P007_INPUT_MODE);
 
-      addFormCheckBox(F("Enable Analog output (AOUT)"), F("plugin_007_output_mode"), P007_OUTPUT_MODE == P007_OUTPUT_ENABLED);
+      addFormCheckBox(F("Enable Analog output (AOUT)"), F("output_mode"), P007_OUTPUT_MODE == P007_OUTPUT_ENABLED);
 
       success = true;
       break;
@@ -158,12 +154,12 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       if (PCONFIG(P007_SENSOR_TYPE_INDEX) == 0) {
         PCONFIG(P007_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
       }
-      uint8_t i2c  = getFormItemInt(F("plugin_007_i2c"));
-      uint8_t port = getFormItemInt(F("plugin_007_port"));
+      uint8_t i2c  = getFormItemInt(F("pi2c"));
+      uint8_t port = getFormItemInt(F("pport"));
       CONFIG_PORT = (((i2c - 0x48) << 2) + port);
 
-      P007_INPUT_MODE  = getFormItemInt(F("plugin_007_input_mode"));
-      P007_OUTPUT_MODE = isFormItemChecked(F("plugin_007_output_mode")) ? P007_OUTPUT_ENABLED : 0;
+      P007_INPUT_MODE  = getFormItemInt(F("input_mode"));
+      P007_OUTPUT_MODE = isFormItemChecked(F("output_mode")) ? P007_OUTPUT_ENABLED : 0;
 
       success = true;
       break;
