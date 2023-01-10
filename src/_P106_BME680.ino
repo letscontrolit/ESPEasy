@@ -103,8 +103,7 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P106_data) {
         P106_data->initialized = false; // Force re-init just in case the address changed.
-        P106_data->begin(PCONFIG(0));
-        success = P106_data->initialized;
+        success = P106_data->begin(PCONFIG(0));
       }
       break;
     }

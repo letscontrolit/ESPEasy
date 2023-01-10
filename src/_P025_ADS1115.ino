@@ -152,9 +152,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2)));
       P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P025_data) {
-        success = true;
-      }
+      success = (nullptr != P025_data);
       break;
     }
 

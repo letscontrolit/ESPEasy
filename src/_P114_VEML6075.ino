@@ -120,9 +120,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       P114_data_struct *P114_data =
         static_cast<P114_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P114_data) {
-        success = true;
-      }
+      success = (nullptr != P114_data);
 
       break;
     }

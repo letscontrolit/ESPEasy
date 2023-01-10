@@ -77,9 +77,7 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
       P006_data_struct *P006_data =
         static_cast<P006_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P006_data) {
-        success = true;
-      }
+      success = (nullptr != P006_data);
       break;
     }
 

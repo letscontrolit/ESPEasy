@@ -153,10 +153,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
       P105_data_struct *P105_data =
         static_cast<P105_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P105_data) {
-        return success;
-      }
-      success = true;
+      success = (nullptr != P105_data);
 
       break;
     }

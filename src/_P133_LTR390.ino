@@ -164,9 +164,7 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
                                                                                P133_INITRESET == 1));
       P133_data_struct *P133_data = static_cast<P133_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P133_data) {
-        success = P133_data->plugin_init(event);
-      }
+      success = (nullptr != P133_data) && P133_data->plugin_init(event);
       break;
     }
 

@@ -429,7 +429,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      success = true; // PLUGIN_INIT *must* return true on successful initialization, even if nothing is happening here
+      success = true;
       break;
     }
 

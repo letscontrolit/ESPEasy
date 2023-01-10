@@ -85,21 +85,21 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t unit       = CONFIG_PORT;
+      uint8_t unit    = CONFIG_PORT;
       uint8_t address = 0x5A + unit;
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P024_data_struct(address));
       P024_data_struct *P024_data =
         static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P024_data) {
-        //        if (!msgTemp024) // Mysensors
-        //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
-        //        present(event->BaseVarIndex, S_TEMP); //Mysensors
-        //        serialPrint("Present MLX90614: "); //Mysensors
-        //        serialPrintln(event->BaseVarIndex); //Mysensors
-        success = true;
-      }
+      success = (nullptr != P024_data);
+      //        if (!msgTemp024) // Mysensors
+      //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
+      //        present(event->BaseVarIndex, S_TEMP); //Mysensors
+      //        serialPrint("Present MLX90614: "); //Mysensors
+      //        serialPrintln(event->BaseVarIndex); //Mysensors
+      //   success = true;
+      // }
       break;
     }
 

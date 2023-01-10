@@ -466,9 +466,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P143_data_struct(event));
       P143_data_struct *P143_data = static_cast<P143_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P143_data) {
-        success = P143_data->plugin_init(event);
-      }
+      success = (nullptr != P143_data) && P143_data->plugin_init(event);
       break;
     }
 

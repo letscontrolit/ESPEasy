@@ -189,7 +189,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // set up device pin and estabish interupt handlers
-        P003_data->pulseHelper.init();
+        success = P003_data->pulseHelper.init();
       }
       break;
     }

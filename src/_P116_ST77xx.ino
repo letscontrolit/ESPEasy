@@ -321,9 +321,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0));
         P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr != P116_data) {
-          success = P116_data->plugin_init(event); // Start the display
-        }
+        success = (nullptr != P116_data) && P116_data->plugin_init(event); // Start the display
       } else {
         addLog(LOG_LEVEL_ERROR, F("ST77xx: SPI not enabled, init cancelled."));
       }

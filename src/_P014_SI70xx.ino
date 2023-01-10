@@ -154,9 +154,7 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P014_data_struct());
       P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P014_data) {
-        success = true; // Init should return true when successful
-      }
+      success = (nullptr != P014_data); // Init should return true when successful
 
       // if (P014_data->init(P014_I2C_ADDRESS, P014_RESOLUTION)) {
       //  success = true;

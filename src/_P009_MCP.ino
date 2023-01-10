@@ -224,8 +224,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
         // setPinState(PLUGIN_ID_009, CONFIG_PORT, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
         savePortStatus(key, newStatus);
+        success = true;
       }
-      success = true;
       break;
     }
 

@@ -120,9 +120,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P113_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2) == 1));
       P113_data_struct *P113_data = static_cast<P113_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P113_data) {
-        success = P113_data->begin(); // Start the sensor
-      }
+      success = (nullptr != P113_data) && P113_data->begin(); // Start the sensor
       break;
     }
 

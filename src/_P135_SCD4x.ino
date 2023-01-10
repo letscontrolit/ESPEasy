@@ -150,9 +150,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
                                                                                 static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD41))));
       P135_data_struct *P135_data = static_cast<P135_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P135_data) {
-        success = P135_data->init();
-      }
+      success = (nullptr != P135_data) && P135_data->init();
 
       break;
     }

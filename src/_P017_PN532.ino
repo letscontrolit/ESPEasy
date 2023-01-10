@@ -185,6 +185,7 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t x = 0; x < 3; x++)
       {
         if (Plugin_017_Init(CONFIG_PIN3)) {
+          success = true;
           break;
         }
         delay(100);

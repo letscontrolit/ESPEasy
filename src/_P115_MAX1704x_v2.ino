@@ -81,9 +81,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P115_data_struct(device, threshold));
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P115_data) {
-        success = P115_data->begin(); // Start the sensor
-      }
+      success = (nullptr != P115_data) && P115_data->begin(); // Start the sensor
       break;
     }
 
