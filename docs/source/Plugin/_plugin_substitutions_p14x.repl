@@ -36,3 +36,16 @@
 .. |P145_maintainer| replace:: `flashmark`
 .. |P145_compileinfo| replace:: `.`
 .. |P145_usedlibraries| replace:: `ESPEasy Serial`
+
+.. |P148_name| replace:: :cyan:`POWR3xxD/THR3xxD`
+.. |P148_type| replace:: :cyan:`Display`
+.. |P148_typename| replace:: :cyan:`Display - POWR3xxD/THR3xxD`
+.. |P148_porttype| replace:: `.`
+.. |P148_status| replace:: :yellow:`ENERGY` :yellow:`DISPLAY`
+.. |P148_github| replace:: P148_POWRxxD_THR3xxD.ino
+.. _P148_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P148_POWRxxD_THR3xxD.ino
+.. |P148_usedby| replace:: `.`
+.. |P148_shortinfo| replace:: `Display for Sonoff Elite POWR3xxD/THR3xxD`
+.. |P148_maintainer| replace:: `TD-er`
+.. |P148_compileinfo| replace:: `.`
+.. |P148_usedlibraries| replace:: `.`

@@ -139,26 +139,30 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         // temperature
         addRowLabel(F("Temperature"));
         addTaskSelect(F("p090_temperature_task"), P090_TEMPERATURE_TASK_INDEX);
-        LoadTaskSettings(P090_TEMPERATURE_TASK_INDEX); // we need to load the values from another task for selection!
-        addRowLabel(F("Temperature Value:"));
-        addTaskValueSelect(F("p090_temperature_value"), P090_TEMPERATURE_TASK_VALUE, P090_TEMPERATURE_TASK_INDEX);
+        if (validTaskIndex(P090_TEMPERATURE_TASK_INDEX)) {
+          LoadTaskSettings(P090_TEMPERATURE_TASK_INDEX); // we need to load the values from another task for selection!
+          addRowLabel(F("Temperature Value:"));
+          addTaskValueSelect(F("p090_temperature_value"), P090_TEMPERATURE_TASK_VALUE, P090_TEMPERATURE_TASK_INDEX);
 
-        // temperature scale
-        int temperatureScale = P090_TEMPERATURE_SCALE;
-        addRowLabel(F("Temperature Scale")); // checked
-        addHtml(F("<input type='radio' id='p090_temperature_c' name='p090_temperature_scale' value='0'"));
-        addHtml((temperatureScale == 0) ? F(" checked>") : F(">"));
-        addHtml(F("<label for='p090_temperature_c'> &deg;C</label> &nbsp; "));
-        addHtml(F("<input type='radio' id='p090_temperature_f' name='p090_temperature_scale' value='1'"));
-        addHtml((temperatureScale == 1) ? F(" checked>") : F(">"));
-        addHtml(F("<label for='p090_temperature_f'> &deg;F</label><br>"));
+          // temperature scale
+          int temperatureScale = P090_TEMPERATURE_SCALE;
+          addRowLabel(F("Temperature Scale")); // checked
+          addHtml(F("<input type='radio' id='p090_temperature_c' name='p090_temperature_scale' value='0'"));
+          addHtml((temperatureScale == 0) ? F(" checked>") : F(">"));
+          addHtml(F("<label for='p090_temperature_c'> &deg;C</label> &nbsp; "));
+          addHtml(F("<input type='radio' id='p090_temperature_f' name='p090_temperature_scale' value='1'"));
+          addHtml((temperatureScale == 1) ? F(" checked>") : F(">"));
+          addHtml(F("<label for='p090_temperature_f'> &deg;F</label><br>"));
 
-        // humidity
-        addRowLabel(F("Humidity"));
-        addTaskSelect(F("p090_humidity_task"), P090_HUMIDITY_TASK_INDEX);
-        LoadTaskSettings(P090_HUMIDITY_TASK_INDEX); // we need to load the values from another task for selection!
-        addRowLabel(F("Humidity Value"));
-        addTaskValueSelect(F("p090_humidity_value"), P090_HUMIDITY_TASK_VALUE, P090_HUMIDITY_TASK_INDEX);
+          // humidity
+          addRowLabel(F("Humidity"));
+          addTaskSelect(F("p090_humidity_task"), P090_HUMIDITY_TASK_INDEX);
+          if (validTaskIndex(P090_HUMIDITY_TASK_INDEX)) {
+            LoadTaskSettings(P090_HUMIDITY_TASK_INDEX); // we need to load the values from another task for selection!
+            addRowLabel(F("Humidity Value"));
+            addTaskValueSelect(F("p090_humidity_value"), P090_HUMIDITY_TASK_VALUE, P090_HUMIDITY_TASK_INDEX);
+          }
+        }
       }
 
       LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
@@ -194,7 +198,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      // Plugin_090_WAKE_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+      // Plugin_090_WAKE_Pin = CONFIG_PIN1;
       CCS811Core::status returnCode;
       returnCode = P090_data->myCCS811.begin();
 
@@ -286,34 +290,37 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
       {
         // we're checking a var from another task, so calculate that basevar
         uint8_t  TaskIndex    = P090_TEMPERATURE_TASK_INDEX;
-        uint8_t  BaseVarIndex = TaskIndex * VARS_PER_TASK + P090_TEMPERATURE_TASK_VALUE;
-        float temperature  = UserVar[BaseVarIndex]; // in degrees C
-        // convert to celsius if required
-        int temperature_in_fahrenheit = P090_TEMPERATURE_SCALE;
-        String temp;
-        temp += 'C';
+        if (validTaskIndex(TaskIndex)) {
+          uint8_t  BaseVarIndex = TaskIndex * VARS_PER_TASK + P090_TEMPERATURE_TASK_VALUE;
+          float temperature  = UserVar[BaseVarIndex]; // in degrees C
+          // convert to celsius if required
+          int temperature_in_fahrenheit = P090_TEMPERATURE_SCALE;
+          String temp;
+          temp += 'C';
 
-        if (temperature_in_fahrenheit)
-        {
-          temperature = ((temperature - 32) * 5.0f) / 9.0f;
-          temp        =  F("F");
+          if (temperature_in_fahrenheit)
+          {
+            temperature = ((temperature - 32) * 5.0f) / 9.0f;
+            temp        =  F("F");
+          }
+
+          uint8_t  TaskIndex2    = P090_HUMIDITY_TASK_INDEX;
+          if (validTaskIndex(TaskIndex2)) {
+            uint8_t  BaseVarIndex2 = TaskIndex2 * VARS_PER_TASK + P090_HUMIDITY_TASK_VALUE;
+            float humidity      = UserVar[BaseVarIndex2]; // in % relative
+
+          #ifndef BUILD_NO_DEBUG
+
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              String log = F("CCS811 : Compensating for Temperature: ");
+              log += toString(temperature) + temp + F(" & Humidity: ") + toString(humidity) + F("%");
+              addLogMove(LOG_LEVEL_DEBUG, log);
+            }
+          #endif // ifndef BUILD_NO_DEBUG
+
+            P090_data->myCCS811.setEnvironmentalData(humidity, temperature);
+          }
         }
-
-        uint8_t  TaskIndex2    = P090_HUMIDITY_TASK_INDEX;
-        uint8_t  BaseVarIndex2 = TaskIndex2 * VARS_PER_TASK + P090_HUMIDITY_TASK_VALUE;
-        float humidity      = UserVar[BaseVarIndex2]; // in % relative
-
-      #ifndef BUILD_NO_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("CCS811 : Compensating for Temperature: ");
-          log += toString(temperature) + temp + F(" & Humidity: ") + toString(humidity) + F("%");
-          addLogMove(LOG_LEVEL_DEBUG, log);
-        }
-      #endif // ifndef BUILD_NO_DEBUG
-
-        P090_data->myCCS811.setEnvironmentalData(humidity, temperature);
-
         P090_data->compensation_set = true;
       }
 
