@@ -134,7 +134,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
     {
       Internal_GPIO_pulseHelper::pulseCounterConfig config;
       config.setDebounceTime(PCONFIG(P003_IDX_DEBOUNCETIME));
-      config.gpio             = Settings.TaskDevicePin1[event->TaskIndex];
+      config.gpio             = CONFIG_PIN1;
       config.taskIndex        = event->TaskIndex;
       config.interruptPinMode = static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE));
       config.pullupPinMode    = Settings.TaskDevicePin1PullUp[event->TaskIndex] ? INPUT_PULLUP : INPUT;
@@ -183,7 +183,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           String log; 
           if (log.reserve(20)) {
             log += F("INIT : PulsePin: "); 
-            log += Settings.TaskDevicePin1[event->TaskIndex];
+            log += CONFIG_PIN1;
             addLogMove(LOG_LEVEL_INFO, log);
           }
         }

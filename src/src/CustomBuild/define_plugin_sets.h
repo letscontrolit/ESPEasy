@@ -1530,6 +1530,10 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+   #ifndef USES_P148
+     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+   #endif
+
 #endif
 
 // Collection of all display plugins. (also NeoPixel)
@@ -1596,6 +1600,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
+  #endif
+  #ifndef USES_P148
+    #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
 #endif
 
@@ -1701,6 +1708,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
+  #ifndef USES_P148
+    #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+
 #endif
 
 // Collection of all NeoPixel plugins
@@ -2487,7 +2498,10 @@ To create/register a plugin, you have to :
   #define FEATURE_ESPEASY_P2P 1
 #endif
 
-
+#if !defined(ESP32) && defined(USES_P148)
+  // This chip/display is only used on ESP32 devices made by Sonoff
+  #undef USES_P148   // Sonoff POWR3xxD and THR3xxD display
+#endif
 
 
 
