@@ -81,12 +81,12 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        uint8_t   choice2 = P012_SIZE;
-        const __FlashStringHelper *options2[2];
-        options2[0]          = F("2 x 16");
-        options2[1]          = F("4 x 20");
-        int optionValues2[2] = { 1, 2 };
-        addFormSelector(F("Display Size"), F("p012_size"), 2, options2, optionValues2, choice2);
+        const __FlashStringHelper *options2[] = {
+          F("2 x 16"),
+          F("4 x 20"),
+        };
+        const int optionValues2[2] = { 1, 2 };
+        addFormSelector(F("Display Size"), F("psize"), 2, options2, optionValues2, P012_SIZE);
       }
 
       {
@@ -102,17 +102,18 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       addRowLabel(F("Display button"));
       addPinSelect(PinSelectPurpose::Generic_input, F("taskdevicepin3"), CONFIG_PIN3);
 
-      addFormCheckBox(F("Inversed logic"), F("p012_inversed_btn"), P012_INVERSE_BTN == 1, false);
+      addFormCheckBox(F("Inversed logic"), F("pinv_btn"), P012_INVERSE_BTN == 1, false);
 
-      addFormNumericBox(F("Display Timeout"), F("p012_timer"), P012_TIMER);
+      addFormNumericBox(F("Display Timeout"), F("ptimer"), P012_TIMER);
 
       {
-        const __FlashStringHelper *options3[3];
-        options3[0] = F("Continue to next line (as in v1.4)");
-        options3[1] = F("Truncate exceeding message");
-        options3[2] = F("Clear then truncate exceeding message");
-        int optionValues3[3] = { 0, 1, 2 };
-        addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, P012_MODE);
+        const __FlashStringHelper *options3[] {
+          F("Continue to next line (as in v1.4)"),
+          F("Truncate exceeding message"),
+          F("Clear then truncate exceeding message"),
+        };
+        const int optionValues3[] = { 0, 1, 2 };
+        addFormSelector(F("LCD command Mode"), F("pmode"), 3, options3, optionValues3, P012_MODE);
       }
 
       success = true;
@@ -122,10 +123,10 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P012_I2C_ADDR    = getFormItemInt(F("i2c_addr"));
-      P012_SIZE        = getFormItemInt(F("p012_size"));
-      P012_TIMER       = getFormItemInt(F("p012_timer"));
-      P012_MODE        = getFormItemInt(F("p012_mode"));
-      P012_INVERSE_BTN = isFormItemChecked(F("p012_inversed_btn")) ? 1 : 0;
+      P012_SIZE        = getFormItemInt(F("psize"));
+      P012_TIMER       = getFormItemInt(F("ptimer"));
+      P012_MODE        = getFormItemInt(F("pmode"));
+      P012_INVERSE_BTN = isFormItemChecked(F("pinv_btn")) ? 1 : 0;
 
       // FIXME TD-er: This is a huge stack allocated object.
       char   deviceTemplate[P12_Nlines][P12_Nchars];

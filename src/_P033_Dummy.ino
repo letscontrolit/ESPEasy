@@ -94,9 +94,12 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
 
       if (command.equals(F("dummyvalueset")))
       {
+        // TODO tonhuisman: Remove this command, as TaskValueSet is more versatile
+        addLog(LOG_LEVEL_INFO, F("dummyvalueset: Command deprecated, use TaskValueSet instead!"));
+
         if (event->Par1 == event->TaskIndex + 1) // make sure that this instance is the target
         {
-          float floatValue = 0;
+          float floatValue = 0.0f;
 
           if (string2float(parseString(string, 4), floatValue))
           {

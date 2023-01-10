@@ -108,9 +108,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P121_data_struct());
       P121_data_struct *P121_data = static_cast<P121_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P121_data) {
-        success = P121_data->begin(event->TaskIndex);
-      }
+      success = (nullptr != P121_data) && P121_data->begin(event->TaskIndex);
       break;
     }
 

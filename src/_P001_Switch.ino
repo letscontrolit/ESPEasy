@@ -263,8 +263,8 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         if (P001_LP_MIN_INT < SWITCH_LONGPRESS_MIN_INTERVAL) {
           P001_LP_MIN_INT = SWITCH_LONGPRESS_MIN_INTERVAL;
         }
+        success = true;
       }
-      success = true;
       break;
     }
 
