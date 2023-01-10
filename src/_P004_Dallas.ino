@@ -97,9 +97,6 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(P004_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
-      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
-      }
 
       success                         = true;
       break;
@@ -142,7 +139,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
           if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
           const __FlashStringHelper * resultsOptions[4]      = { F("9"), F("10"), F("11"), F("12") };
           int    resultsOptionValues[4] = { 9, 10, 11, 12 };
-          addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
+          addFormSelector(F("Device Resolution"), F("res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
           addHtml(F(" Bit"));
         }
 
@@ -150,7 +147,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
           // Value in case of Error
           const __FlashStringHelper * resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
           int    resultsOptionValues[5] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
-          addFormSelector(F("Error State Value"), F("p004_err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
+          addFormSelector(F("Error State Value"), F("err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
         }
         addFormNote(F("External pull up resistor is needed, see docs!"));
 
@@ -186,7 +183,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         // save the address for selected device and store into extra tasksettings
         Dallas_addr_selector_webform_save(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
-        uint8_t res = getFormItemInt(F("p004_res"));
+        uint8_t res = getFormItemInt(F("res"));
 
         if ((res < 9) || (res > 12)) { res = 12; }
         P004_RESOLUTION = res;
@@ -196,7 +193,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Dallas_setResolution(savedAddress, res, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX);
       }
       P004_SCAN_ON_INIT       = isFormItemChecked(F("autoselect"));
-      P004_ERROR_STATE_OUTPUT = getFormItemInt(F("p004_err"));
+      P004_ERROR_STATE_OUTPUT = getFormItemInt(F("err"));
       success                 = true;
       break;
     }

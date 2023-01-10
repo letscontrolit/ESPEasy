@@ -59,7 +59,7 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Clock Delay"), F("p031_delay"), PCONFIG(0), 0, P031_MAX_CLOCK_DELAY);
+      addFormNumericBox(F("Clock Delay"), F("delay"), PCONFIG(0), 0, P031_MAX_CLOCK_DELAY);
       addUnit(F("usec"));
       addFormNote(F("Reduce clock/data frequency to allow for longer cables"));
       success = true;
@@ -67,7 +67,7 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p031_delay"));
+      PCONFIG(0) = getFormItemInt(F("delay"));
       success    = true;
       break;
     }

@@ -179,8 +179,8 @@
 # define P104_CONFIG_ZONE_COUNT   PCONFIG(0)
 # define P104_CONFIG_TOTAL_UNITS  PCONFIG(1)
 # define P104_CONFIG_HARDWARETYPE PCONFIG(2)
-# define P104_CONFIG_FLAGS        PCONFIG_LONG(0)
-# define P104_CONFIG_DATETIME     PCONFIG_LONG(1)
+# define P104_CONFIG_FLAGS        PCONFIG_ULONG(0)
+# define P104_CONFIG_DATETIME     PCONFIG_ULONG(1)
 
 # define P104_CONFIG_FLAG_CLEAR_DISABLE 0
 # define P104_CONFIG_FLAG_LOG_ALL_TEXT  1
@@ -402,9 +402,9 @@ private:
                        uint8_t  row);
   # endif // ifdef P104_USE_BAR_GRAPH
 
-  void   displayOneZoneText(uint8_t                 currentZone,
-                            const P104_zone_struct& idx,
-                            const String          & text);
+  void displayOneZoneText(uint8_t                 currentZone,
+                          const P104_zone_struct& idx,
+                          const String          & text);
 
   String error;
 
@@ -427,6 +427,38 @@ private:
   // time/date stuff
   char szTimeL[P104_MAX_MESG] = { 0 }; // dd-mm-yyyy hh:mm:ss\0
   char szTimeH[P104_MAX_MESG] = { 0 };
+
+  int8_t getTime(char *psz,
+                 bool  seconds  = false,
+                 bool  colon    = true,
+                 bool  time12h  = false,
+                 bool  timeAmpm = false);
+  void getDate(char         *psz,
+               bool          showYear = true,
+               bool          fourDgt  = false
+               # ifdef       P104_USE_DATETIME_OPTIONS
+               ,
+               const uint8_t dateFmt = 0
+               ,
+               const uint8_t dateSep = 0
+               # endif // ifdef P104_USE_DATETIME_OPTIONS
+               );
+  uint8_t getDateTime(char         *psz,
+                      bool          colon    = true,
+                      bool          time12h  = false,
+                      bool          timeAmpm = false,
+                      bool          fourDgt  = false
+                      # ifdef       P104_USE_DATETIME_OPTIONS
+                      ,
+                      const uint8_t dateFmt = 0
+                      ,
+                      const uint8_t dateSep = 0
+                      # endif // ifdef P104_USE_DATETIME_OPTIONS
+                      );
+  # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+  void createHString(String& string);
+  # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+  void reverseStr(String& str);
 };
 
 #endif // ifdef USES_P104
