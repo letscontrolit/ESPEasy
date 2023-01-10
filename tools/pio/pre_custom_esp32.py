@@ -42,10 +42,10 @@ else:
     "-DUSES_P080",  # Dallas iButton
     "-DUSES_P081",  # Cron
     "-DUSES_P082",  # GPS
-    "-DUSES_P085",  # AcuDC24x
+#   "-DUSES_P085",  # AcuDC24x
     "-DUSES_P098",  # PWM motor
 
-    "-DUSES_P100",  # Pulse Counter - DS2423
+#   "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
 #   "-DUSES_P094",  # CUL Reader
 #   "-DUSES_P095",  # TFT ILI9341

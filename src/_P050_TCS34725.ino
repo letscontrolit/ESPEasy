@@ -19,19 +19,20 @@
 // 2021-01-03 tonhuisman: Merged most of the changes in the library, for adding the getRGB() and calculateColorTemperature_dn40(0 functions)
 //
 
-#include "src/PluginStructs/P050_data_struct.h"
+# include "src/PluginStructs/P050_data_struct.h"
 
 
-#define PLUGIN_050
-#define PLUGIN_ID_050         50
-#define PLUGIN_NAME_050       "Color - TCS34725"
-#define PLUGIN_VALUENAME1_050 "Red"
-#define PLUGIN_VALUENAME2_050 "Green"
-#define PLUGIN_VALUENAME3_050 "Blue"
-#define PLUGIN_VALUENAME4_050 "ColorTemperature"
+# define PLUGIN_050
+# define PLUGIN_ID_050         50
+# define PLUGIN_NAME_050       "Color - TCS34725"
+# define PLUGIN_VALUENAME1_050 "Red"
+# define PLUGIN_VALUENAME2_050 "Green"
+# define PLUGIN_VALUENAME3_050 "Blue"
+# define PLUGIN_VALUENAME4_050 "ColorTemperature"
 
 // #ifndef LIMIT_BUILD_SIZE
-#define P050_OPTION_RGB_EVENTS
+# define P050_OPTION_RGB_EVENTS
+
 // #endif
 
 boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
@@ -95,9 +96,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      uint8_t   choiceMode = PCONFIG(0);
+      uint8_t choiceMode = PCONFIG(0);
       {
-        const __FlashStringHelper * optionsMode[6];
+        const __FlashStringHelper *optionsMode[6];
         optionsMode[0] = F("2.4 ms");
         optionsMode[1] = F("24 ms");
         optionsMode[2] = F("50 ms");
@@ -111,12 +112,12 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         optionValuesMode[3] = TCS34725_INTEGRATIONTIME_101MS;
         optionValuesMode[4] = TCS34725_INTEGRATIONTIME_154MS;
         optionValuesMode[5] = TCS34725_INTEGRATIONTIME_700MS;
-        addFormSelector(F("Integration Time"), F("p050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(F("Integration Time"), F("inttime"), 6, optionsMode, optionValuesMode, choiceMode);
       }
 
-      uint8_t   choiceMode2 = PCONFIG(1);
+      uint8_t choiceMode2 = PCONFIG(1);
       {
-        const __FlashStringHelper * optionsMode2[4];
+        const __FlashStringHelper *optionsMode2[4];
         optionsMode2[0] = F("1x");
         optionsMode2[1] = F("4x");
         optionsMode2[2] = F("16x");
@@ -126,43 +127,45 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         optionValuesMode2[1] = TCS34725_GAIN_4X;
         optionValuesMode2[2] = TCS34725_GAIN_16X;
         optionValuesMode2[3] = TCS34725_GAIN_60X;
-        addFormSelector(F("Gain"), F("p050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
+        addFormSelector(F("Gain"), F("gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
       }
 
       addFormSubHeader(F("Output settings"));
 
       {
-        #define P050_RGB_OPTIONS 6
-        const __FlashStringHelper * optionsRGB[P050_RGB_OPTIONS];
-        optionsRGB[0] = F("Raw RGB");
-        optionsRGB[1] = F("Raw RGB transformed (3x3 matrix, below)");
-        optionsRGB[2] = F("Normalized RGB (0..255)");
-        optionsRGB[3] = F("Normalized RGB transformed (3x3 matrix, below)");
-        optionsRGB[4] = F("Normalized RGB (0.0000..1.0000)");
-        optionsRGB[5] = F("Normalized RGB (0.0000..1.0000) transformed (3x3 matrix, below)");
-        int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1, 2, 3, 4, 5};
-        addFormSelector(F("Output RGB Values"), F("p050_outputrgb"), P050_RGB_OPTIONS, optionsRGB, optionValuesRGB, PCONFIG(2));
+        # define P050_RGB_OPTIONS 6
+        const __FlashStringHelper *optionsRGB[P050_RGB_OPTIONS] = {
+          F("Raw RGB"),
+          F("Raw RGB transformed (3x3 matrix, below)"),
+          F("Normalized RGB (0..255)"),
+          F("Normalized RGB transformed (3x3 matrix, below)"),
+          F("Normalized RGB (0.0000..1.0000)"),
+          F("Normalized RGB (0.0000..1.0000) transformed (3x3 matrix, below)"),
+        };
+        const int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1, 2, 3, 4, 5 };
+        addFormSelector(F("Output RGB Values"), F("outputrgb"), P050_RGB_OPTIONS, optionsRGB, optionValuesRGB, PCONFIG(2));
         addFormNote(F("For 'normalized' or 'transformed' options, the Red/Green/Blue Decimals should best be increased."));
 
-#ifdef P050_OPTION_RGB_EVENTS
-        addFormCheckBox(F("Generate RGB events"), F("p050_generate_rgb_events"), PCONFIG(5) == 1);
+# ifdef P050_OPTION_RGB_EVENTS
+        addFormCheckBox(F("Generate RGB events"), F("rgbevents"), PCONFIG(5) == 1);
         addFormNote(F("Eventnames: taskname + #RawRGB, #RawRGBtransformed, #NormRGB, #NormRGBtransformed, #NormSRGB, #NormSRGBtransformed"));
         addFormNote(F("Only generated for not selected outputs, 3 values per event, =&lt;r&gt;,&lt;g&gt;,&lt;b&gt;"));
-#endif
+# endif // ifdef P050_OPTION_RGB_EVENTS
       }
 
       {
-        #define P050_VALUE4_OPTIONS 4
-        const __FlashStringHelper * optionsOutput[P050_VALUE4_OPTIONS];
-        optionsOutput[0] = F("Color Temperature (deprecated) [K]");
-        optionsOutput[1] = F("Color Temperature (DN40) [K]");
-        optionsOutput[2] = F("Ambient Light [Lux]");
-        optionsOutput[3] = F("Clear Channel");
-        int optionValuesOutput[P050_VALUE4_OPTIONS] = { 0, 1, 2, 3};
-        addFormSelector(F("Output at Values #4"), F("p050_output4"), P050_VALUE4_OPTIONS, optionsOutput, optionValuesOutput, PCONFIG(3));
+        # define P050_VALUE4_OPTIONS 4
+        const __FlashStringHelper *optionsOutput[P050_VALUE4_OPTIONS] = {
+          F("Color Temperature (deprecated) [K]"),
+          F("Color Temperature (DN40) [K]"),
+          F("Ambient Light [Lux]"),
+          F("Clear Channel"),
+        };
+        const int optionValuesOutput[P050_VALUE4_OPTIONS] = { 0, 1, 2, 3 };
+        addFormSelector(F("Output at Values #4"), F("output4"), P050_VALUE4_OPTIONS, optionsOutput, optionValuesOutput, PCONFIG(3));
         addFormNote(F("Optionally adjust Values #4 name accordingly."));
 
-        addFormCheckBox(F("Generate all as events"), F("p050_generate_all_events"), PCONFIG(4) == 1);
+        addFormCheckBox(F("Generate all as events"), F("allevents"), PCONFIG(4) == 1);
         addFormNote(F("Eventnames: taskname + #CCT, #CCT_DN40, #Lux, #Clear"));
       }
 
@@ -177,21 +180,26 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
           // Display current settings
           const String RGB = F("RGB");
+
           for (int i = 0; i < 3; i++) {
             addRowLabel(RGB.substring(i, i + 1));
-            String id = F("p050_cal_");
+            String id = F("cal_");
+
             for (int j = 0; j < 3; j++) {
               addHtml(static_cast<char>('a' + i));
               addHtml(F("<sub>"));
               addHtmlInt(j + 1);
               addHtml(F("</sub>"));
               addHtml(':');
-              addFloatNumberBox(id + static_cast<char>('a' + i) + '_' + String(j), P050_data->TransformationSettings.matrix[i][j], -255.999f, 255.999f);
+              addFloatNumberBox(id + static_cast<char>('a' + i) + '_' + String(j),
+                                P050_data->TransformationSettings.matrix[i][j],
+                                -255.999f,
+                                255.999f);
             }
           }
           addFormNote(F("Check plugin documentation (i) on how to calibrate and how to calculate transformation matrix."));
 
-          addFormCheckBox(F("Reset transformation matrix"), F("p050_reset_transformation"), false);
+          addFormCheckBox(F("Reset transformation matrix"), F("resettrans"), false);
           addFormNote(F("Select then Submit to confirm. Reset transformation matrix can't be un-done!"));
 
           // Need to delete the allocated object here
@@ -204,15 +212,15 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p050_integrationTime"));
-      PCONFIG(1) = getFormItemInt(F("p050_gain"));
-      PCONFIG(2) = getFormItemInt(F("p050_outputrgb"));
-      PCONFIG(3) = getFormItemInt(F("p050_output4"));
-      PCONFIG(4) = isFormItemChecked(F("p050_generate_all_events")) ? 1 : 0;
-#ifdef P050_OPTION_RGB_EVENTS
-      PCONFIG(5) = isFormItemChecked(F("p050_generate_rgb_events")) ? 1 : 0;
-#endif
-      bool resetTransformation = isFormItemChecked(F("p050_reset_transformation"));
+      PCONFIG(0) = getFormItemInt(F("inttime"));
+      PCONFIG(1) = getFormItemInt(F("gain"));
+      PCONFIG(2) = getFormItemInt(F("outputrgb"));
+      PCONFIG(3) = getFormItemInt(F("output4"));
+      PCONFIG(4) = isFormItemChecked(F("allevents")) ? 1 : 0;
+# ifdef P050_OPTION_RGB_EVENTS
+      PCONFIG(5) = isFormItemChecked(F("rgbevents")) ? 1 : 0;
+# endif // ifdef P050_OPTION_RGB_EVENTS
+      bool resetTransformation = isFormItemChecked(F("resettrans"));
       {
         P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
@@ -226,7 +234,8 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           } else {
             // Save new settings
             for (int i = 0; i < 3; i++) {
-              String id = F("p050_cal_");
+              String id = F("cal_");
+
               for (int j = 0; j < 3; j++) {
                 P050_data->TransformationSettings.matrix[i][j] = getFormItemFloat(id + static_cast<char>('a' + i) + '_' + String(j));
               }
@@ -263,7 +272,6 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-
       P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P050_data) {
@@ -273,7 +281,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       if (P050_data->tcs.begin()) {
 # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
-#endif
+# endif // ifndef BUILD_NO_DEBUG
 
         uint16_t r, g, b, c;
         float value4 = 0.0f;
@@ -281,9 +289,11 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         P050_data->loadSettings(event->TaskIndex);
 
         P050_data->tcs.getRawData(&r, &g, &b, &c, true);
+
         switch (PCONFIG(3)) {
           case 0:
-            value4 = P050_data->tcs.calculateColorTemperature(r, g, b); // Deprecated because of deemed inaccurate calculation, kept for backward compatibility
+            value4 = P050_data->tcs.calculateColorTemperature(r, g, b); // Deprecated because of deemed inaccurate calculation, kept for
+                                                                        // backward compatibility
             break;
           case 1:
             value4 = P050_data->tcs.calculateColorTemperature_dn40(r, g, b, c);
@@ -296,8 +306,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
             break;
         }
 
-        float sRGBFactor = 1.0f; // (s)RGB factor 1.0 or 255.0
-        uint32_t t = r + g + b;  // Normalization factor
+        float sRGBFactor = 1.0f;      // (s)RGB factor 1.0 or 255.0
+        uint32_t t       = r + g + b; // Normalization factor
+
         if (t == 0) {
           UserVar[event->BaseVarIndex + 0] = 0.0f;
           UserVar[event->BaseVarIndex + 1] = 0.0f;
@@ -311,6 +322,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + 2] = b;
             break;
           case 1:
+
             if (t != 0) { // R/G/B transformed
               P050_data->applyTransformation(r, g, b,
                                              &UserVar[event->BaseVarIndex + 0],
@@ -320,8 +332,10 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
             break;
           case 2:
             sRGBFactor = 255.0f;
-            // Fall through
+
+          // Fall through
           case 4:
+
             if (t != 0) { // r/g/b (normalized to 0.00..255.00 (but avoid divide by 0)
               UserVar[event->BaseVarIndex + 0] = static_cast<float>(r) / t * sRGBFactor;
               UserVar[event->BaseVarIndex + 1] = static_cast<float>(g) / t * sRGBFactor;
@@ -330,8 +344,10 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
             break;
           case 3:
             sRGBFactor = 255.0f;
-            // Fall through
+
+          // Fall through
           case 5:
+
             if (t != 0) { // R/G/B normalized & transformed
               const float nr = static_cast<float>(r) / t * sRGBFactor;
               const float ng = static_cast<float>(g) / t * sRGBFactor;
@@ -347,6 +363,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("TCS34725: ");
+
           switch (PCONFIG(3)) {
             case 0:
             case 1:
@@ -369,108 +386,119 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO, log);
         }
 
-#ifdef P050_OPTION_RGB_EVENTS
+# ifdef P050_OPTION_RGB_EVENTS
+
         // First RGB events
-        if (PCONFIG(5) == 1 && t != 0) { // Not if invalid read/data
+        if ((PCONFIG(5) == 1) && (t != 0)) { // Not if invalid read/data
           String RuleEvent;
           float tr, tg, tb, nr, ng, nb;
           RuleEvent.reserve(48);
+
           for (int i = 0; i < 6; i++) {
             if (i != PCONFIG(2)) { // Skip currently selected RGB output to keep nr. of events a bit limited
               sRGBFactor = 1.0f;
               RuleEvent.clear();
               RuleEvent += getTaskDeviceName(event->TaskIndex);
               RuleEvent += '#';
+
               switch (i) {
-              case 0:
-                RuleEvent += F("RawRGB=");
-                RuleEvent += r;
-                RuleEvent += ',';
-                RuleEvent += g;
-                RuleEvent += ',';
-                RuleEvent += b;
-                break;
-              case 3:
-                sRGBFactor = 255.0f;
+                case 0:
+                  RuleEvent += F("RawRGB=");
+                  RuleEvent += r;
+                  RuleEvent += ',';
+                  RuleEvent += g;
+                  RuleEvent += ',';
+                  RuleEvent += b;
+                  break;
+                case 3:
+                  sRGBFactor = 255.0f;
+
                 // Fall through
-              case 1:
-              case 5:
-                if (i == 1) {
-                  RuleEvent += F("RawRGBtransformed=");
-                  P050_data->applyTransformation(r, g, b, &tr, &tg, &tb);
-                } else {
-                  if (i == 3) {
-                    RuleEvent += F("NormRGBtransformed=");
+                case 1:
+                case 5:
+
+                  if (i == 1) {
+                    RuleEvent += F("RawRGBtransformed=");
+                    P050_data->applyTransformation(r, g, b, &tr, &tg, &tb);
                   } else {
-                    RuleEvent += F("NormSRGBtransformed=");
+                    if (i == 3) {
+                      RuleEvent += F("NormRGBtransformed=");
+                    } else {
+                      RuleEvent += F("NormSRGBtransformed=");
+                    }
+                    nr = static_cast<float>(r) / t * sRGBFactor;
+                    ng = static_cast<float>(g) / t * sRGBFactor;
+                    nb = static_cast<float>(b) / t * sRGBFactor;
+                    P050_data->applyTransformation(nr, ng, nb, &tr, &tg, &tb);
                   }
-                  nr = static_cast<float>(r) / t * sRGBFactor;
-                  ng = static_cast<float>(g) / t * sRGBFactor;
-                  nb = static_cast<float>(b) / t * sRGBFactor;
-                  P050_data->applyTransformation(nr, ng, nb, &tr, &tg, &tb);
-                }
-                RuleEvent += toString(tr, 4);
-                RuleEvent += ',';
-                RuleEvent += toString(tg, 4);
-                RuleEvent += ',';
-                RuleEvent += toString(tb, 4);
-                break;
-              case 2:
-                sRGBFactor = 255.0f;
+                  RuleEvent += toString(tr, 4);
+                  RuleEvent += ',';
+                  RuleEvent += toString(tg, 4);
+                  RuleEvent += ',';
+                  RuleEvent += toString(tb, 4);
+                  break;
+                case 2:
+                  sRGBFactor = 255.0f;
+
                 // Fall through
-              case 4:
-                if (i == 2) {
-                  RuleEvent += F("NormRGB=");
-                } else {
-                  RuleEvent += F("NormSRGB=");
-                }
-                RuleEvent += toString(static_cast<float>(r) / t * sRGBFactor, 4);
-                RuleEvent += ',';
-                RuleEvent += toString(static_cast<float>(g) / t * sRGBFactor, 4);
-                RuleEvent += ',';
-                RuleEvent += toString(static_cast<float>(b) / t * sRGBFactor, 4);
-                break;
-              default:
-                RuleEvent.clear();
-                break;
+                case 4:
+
+                  if (i == 2) {
+                    RuleEvent += F("NormRGB=");
+                  } else {
+                    RuleEvent += F("NormSRGB=");
+                  }
+                  RuleEvent += toString(static_cast<float>(r) / t * sRGBFactor, 4);
+                  RuleEvent += ',';
+                  RuleEvent += toString(static_cast<float>(g) / t * sRGBFactor, 4);
+                  RuleEvent += ',';
+                  RuleEvent += toString(static_cast<float>(b) / t * sRGBFactor, 4);
+                  break;
+                default:
+                  RuleEvent.clear();
+                  break;
               }
+
               if (!RuleEvent.isEmpty()) {
                 eventQueue.addMove(std::move(RuleEvent));
               }
             }
           }
         }
-#endif
+# endif // ifdef P050_OPTION_RGB_EVENTS
 
         // Then Values #4 events
         if (PCONFIG(4) == 1) {
           String RuleEvent;
           RuleEvent.reserve(48);
+
           for (int i = 0; i < 4; i++) {
             RuleEvent.clear();
             RuleEvent += getTaskDeviceName(event->TaskIndex);
             RuleEvent += '#';
+
             switch (i) {
-            case 0:
-              RuleEvent += F("CCT=");
-              RuleEvent += P050_data->tcs.calculateColorTemperature(r, g, b);
-              break;
-            case 1:
-              RuleEvent += F("CCT_DN40=");
-              RuleEvent += P050_data->tcs.calculateColorTemperature_dn40(r, g, b, c);
-              break;
-            case 2:
-              RuleEvent += F("Lux=");
-              RuleEvent += P050_data->tcs.calculateLux(r, g, b);
-              break;
-            case 3:
-              RuleEvent += F("Clear=");
-              RuleEvent += c;
-              break;
-            default:
-              RuleEvent.clear();
-              break;
+              case 0:
+                RuleEvent += F("CCT=");
+                RuleEvent += P050_data->tcs.calculateColorTemperature(r, g, b);
+                break;
+              case 1:
+                RuleEvent += F("CCT_DN40=");
+                RuleEvent += P050_data->tcs.calculateColorTemperature_dn40(r, g, b, c);
+                break;
+              case 2:
+                RuleEvent += F("Lux=");
+                RuleEvent += P050_data->tcs.calculateLux(r, g, b);
+                break;
+              case 3:
+                RuleEvent += F("Clear=");
+                RuleEvent += c;
+                break;
+              default:
+                RuleEvent.clear();
+                break;
             }
+
             if (!RuleEvent.isEmpty()) {
               eventQueue.addMove(std::move(RuleEvent));
             }
@@ -481,7 +509,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       } else {
 # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("No TCS34725 found"));
-#endif
+# endif // ifndef BUILD_NO_DEBUG
         success = false;
       }
 

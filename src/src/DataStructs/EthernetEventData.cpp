@@ -43,6 +43,8 @@ void EthernetEventData_t::clearAll() {
   processedGotIP            = true;
   processedDHCPTimeout      = true;
   ethConnectAttemptNeeded  = true;
+  dns0_cache = IPAddress();
+  dns1_cache = IPAddress();
 }
 
 void EthernetEventData_t::markEthBegin() {
@@ -94,6 +96,9 @@ void EthernetEventData_t::setEthConnected() {
 bool EthernetEventData_t::setEthServicesInitialized() {
   if (!unprocessedEthEvents() && !EthServicesInitialized()) {
     if (EthGotIP() && EthConnected()) {
+      dns0_cache = WiFi.dnsIP(0);
+      dns1_cache = WiFi.dnsIP(1);
+
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("Eth : Eth services initialized"));
       #endif
@@ -156,7 +161,6 @@ String EthernetEventData_t::ESPEasyEthStatusToString() const {
     }
   }
   return log;
-
 }
 
 #endif

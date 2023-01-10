@@ -61,7 +61,7 @@
 #define CUSTOMTASK_STR_SIZE_P101 20
 #define DEF_TASK_NAME_P101 "WAKE_ON_LAN"
 #define UDP_PORT_P101      ExtraTaskSettings.TaskDevicePluginConfigLong[1]
-#define FORM_PORT_P101     "P101_port"
+#define FORM_PORT_P101     "pport"
 
 // Command keyword defines
 #define CMD_NAME_P101      "WAKEONLAN"
@@ -283,7 +283,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       char   ipString[IP_BUFF_SIZE_P101]   = {0};
       char   macString[MAC_BUFF_SIZE_P101] = {0};
       bool   taskEnable                    = false;
-      uint8_t   parse_error                   = false;
+      uint8_t parse_error                  = false;
       String msgStr;
       String strings[2];
       String tmpString    = string;

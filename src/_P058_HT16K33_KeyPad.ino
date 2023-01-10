@@ -107,9 +107,7 @@ boolean Plugin_058(uint8_t function, struct EventStruct *event, String& string)
       P058_data_struct *P058_data =
         static_cast<P058_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P058_data) {
-        success = true;
-      }
+      success = (nullptr != P058_data);
       break;
     }
 

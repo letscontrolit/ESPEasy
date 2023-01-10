@@ -70,7 +70,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         (0x07),
         (0x06)
       };
-      addFormSelector(F("Option"), F("p024_option"), MLX90614_OPTION, options, optionValues, choice);
+      addFormSelector(F("Option"), F("option"), MLX90614_OPTION, options, optionValues, choice);
 
       success = true;
       break;
@@ -78,28 +78,28 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0)      = getFormItemInt(F("p024_option"));
+      PCONFIG(0)      = getFormItemInt(F("option"));
       success         = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      uint8_t unit       = CONFIG_PORT;
+      uint8_t unit    = CONFIG_PORT;
       uint8_t address = 0x5A + unit;
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P024_data_struct(address));
       P024_data_struct *P024_data =
         static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P024_data) {
-        //        if (!msgTemp024) // Mysensors
-        //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
-        //        present(event->BaseVarIndex, S_TEMP); //Mysensors
-        //        serialPrint("Present MLX90614: "); //Mysensors
-        //        serialPrintln(event->BaseVarIndex); //Mysensors
-        success = true;
-      }
+      success = (nullptr != P024_data);
+      //        if (!msgTemp024) // Mysensors
+      //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
+      //        present(event->BaseVarIndex, S_TEMP); //Mysensors
+      //        serialPrint("Present MLX90614: "); //Mysensors
+      //        serialPrintln(event->BaseVarIndex); //Mysensors
+      //   success = true;
+      // }
       break;
     }
 
