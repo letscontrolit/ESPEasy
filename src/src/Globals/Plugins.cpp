@@ -689,7 +689,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           clearPluginTaskData(event->TaskIndex);
           initSerial();
           queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
-          clearTaskCaches(); // FIXME: To improve: Only remove current TaskIndex from cache
+          clearTaskCache(event->TaskIndex);
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
         post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);

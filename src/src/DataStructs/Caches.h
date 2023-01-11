@@ -47,8 +47,10 @@ typedef std::map<taskIndex_t, ExtraTaskSettings_cache_t> ExtraTaskSettingsMap;
 
 struct Caches {
   void    clearAllCaches();
+  void    clearAllButTaskCaches();
 
-  void    clearTaskCaches();
+  void    clearAllTaskCaches();
+  void    clearTaskCache(taskIndex_t TaskIndex);
 
   void    clearFileCaches();
 
@@ -88,6 +90,8 @@ struct Caches {
 private:
 
   ExtraTaskSettingsMap::const_iterator getExtraTaskSettings(taskIndex_t TaskIndex);
+
+  void clearTaskIndexFromMaps(taskIndex_t TaskIndex);
 
 public:
 

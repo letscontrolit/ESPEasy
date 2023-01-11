@@ -128,8 +128,8 @@ void taskClear(taskIndex_t taskIndex, bool save)
   checkRAM(F("taskClear"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
   Settings.clearTask(taskIndex);
-  Cache.clearTaskCaches();
-  ExtraTaskSettings.clear(); // Invalidate any cached values.
+  clearTaskCache(taskIndex); // Invalidate any cached values.
+  ExtraTaskSettings.clear(); 
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {

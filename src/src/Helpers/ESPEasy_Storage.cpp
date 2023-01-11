@@ -190,7 +190,7 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
 bool tryRenameFile(const String& fname_old, const String& fname_new) {
   clearFileCaches();
   if (fileExists(fname_old) && !fileExists(fname_new)) {
-    clearAllCaches();
+    clearAllCaches(); // FIXME TD-er: Must this also clear task caches?
     return ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
   }
   return false;
@@ -199,7 +199,7 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
 bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
-    clearAllCaches();
+    clearAllCaches();  // FIXME TD-er: Must this also clear task caches?
     bool res = ESPEASY_FS.remove(patch_fname(fname));
     #if FEATURE_SD
     if (!res) {
@@ -981,18 +981,20 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
   computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
   if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, checksum)) {
+    clearTaskCache(TaskIndex);
     err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
                             TaskIndex,
                             reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                             structSize);
+#ifndef BUILD_MINIMAL_OTA
+    if (err.isEmpty()) {
+      err = checkTaskSettings(TaskIndex);
+    }
+#endif
+
   } else {
     addLog(LOG_LEVEL_INFO, F("Skip saving task settings, not changed"));
   }
-#ifndef BUILD_MINIMAL_OTA
-  if (err.isEmpty()) {
-    err = checkTaskSettings(TaskIndex);
-  }
-#endif
   return err;
 }
 
@@ -1013,7 +1015,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   #endif
 
   START_TIMER
-  const size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
+  constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
   const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
 
   // Need to compute checksum as how it is stored on the file system, 
@@ -1057,6 +1059,7 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, 
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomTaskSettings"));
   #endif
+  clearTaskCache(TaskIndex);
   return SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, TaskIndex, memAddress, datasize, posInBlock);
 }
 
@@ -1346,7 +1349,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   fs::File f          = tryOpenFile(fname, mode);
 
   if (f) {
-    clearAllCaches();
+    clearAllButTaskCaches();
     SPIFFS_CHECK(f,                          fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
     const uint8_t *pointerToByteToSave = memAddress;

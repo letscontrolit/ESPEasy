@@ -13,17 +13,31 @@
 
 void Caches::clearAllCaches()
 {
+  clearAllButTaskCaches();
+  clearAllTaskCaches();
+}
+
+void Caches::clearAllButTaskCaches() {
   clearFileCaches();
-  clearTaskCaches();
   WiFi_AP_Candidates.clearCache();
   rulesHelper.closeAllFiles();
 }
 
-void Caches::clearTaskCaches() {
+void Caches::clearAllTaskCaches() {
   taskIndexName.clear();
   taskIndexValueName.clear();
   extraTaskSettings_cache.clear();
   updateActiveTaskUseSerial0();
+}
+
+void Caches::clearTaskCache(taskIndex_t TaskIndex) {
+  clearTaskIndexFromMaps(TaskIndex);
+
+  auto it = extraTaskSettings_cache.find(TaskIndex);
+
+  if (it != extraTaskSettings_cache.end()) {
+    extraTaskSettings_cache.erase(it);
+  }
 }
 
 void Caches::clearFileCaches()
@@ -237,6 +251,7 @@ void Caches::updateExtraTaskSettingsCache()
 
       // Now clear it so we can create a fresh copy.
       extraTaskSettings_cache.erase(it);
+      clearTaskIndexFromMaps(TaskIndex);
     }
 
       #ifdef ESP32
@@ -323,4 +338,30 @@ ExtraTaskSettingsMap::const_iterator Caches::getExtraTaskSettings(taskIndex_t Ta
     return it;
   }
   return extraTaskSettings_cache.end();
+}
+
+
+void Caches::clearTaskIndexFromMaps(taskIndex_t TaskIndex)
+{ 
+  {
+    auto it = taskIndexName.begin();
+    for (; it != taskIndexName.end(); ) {
+      if (it->second == TaskIndex) {
+        it = taskIndexName.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+  {
+    const String searchstr = String('#') + TaskIndex;
+    auto it = taskIndexValueName.begin();
+    for (; it != taskIndexValueName.end(); ) {
+      if (it->first.endsWith(searchstr)) {
+        it = taskIndexValueName.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
 }

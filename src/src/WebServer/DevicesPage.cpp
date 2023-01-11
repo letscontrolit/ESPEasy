@@ -155,8 +155,8 @@ void handle_devices() {
     if (taskdevicenumber != 0) {
       // Task index has a task device number, so it makes sense to save.
       // N.B. When calling delete, the settings were already saved.
+      addHtmlError(SaveTaskSettings(taskIndex));
       if (!nosave) {
-        addHtmlError(SaveTaskSettings(taskIndex));
         addHtmlError(SaveSettings());
       }
 
@@ -287,7 +287,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   struct EventStruct TempEvent(taskIndex);
 
   ExtraTaskSettings.clear();
-  Cache.clearTaskCaches();
+  clearTaskCache(taskIndex);
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   // Save selected output type.
