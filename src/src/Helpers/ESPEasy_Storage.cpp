@@ -187,10 +187,19 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
   return f;
 }
 
+bool fileMatchesTaskSettingsType(const String& fname) {
+  const String config_dat_file = patch_fname(getFileName(FileType::CONFIG_DAT));
+  return config_dat_file.equalsIgnoreCase(patch_fname(fname));
+}
+
 bool tryRenameFile(const String& fname_old, const String& fname_new) {
   clearFileCaches();
   if (fileExists(fname_old) && !fileExists(fname_new)) {
-    clearAllCaches(); // FIXME TD-er: Must this also clear task caches?
+    if (fileMatchesTaskSettingsType(fname_old)) {
+      clearAllCaches();
+    } else {
+      clearAllButTaskCaches();
+    }
     return ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
   }
   return false;
@@ -199,7 +208,11 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
 bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
-    clearAllCaches();  // FIXME TD-er: Must this also clear task caches?
+    if (fileMatchesTaskSettingsType(fname)) {
+      clearAllCaches();
+    } else {
+      clearAllButTaskCaches();
+    }
     bool res = ESPEASY_FS.remove(patch_fname(fname));
     #if FEATURE_SD
     if (!res) {
@@ -290,12 +303,15 @@ String BuildFixes()
     Settings.WebserverPort = 80;
   }
   if (Settings.Build < 20108) {
+#ifdef ESP32
+  // Ethernet related settings are never used on ESP8266
     Settings.ETH_Phy_Addr   = DEFAULT_ETH_PHY_ADDR;
     Settings.ETH_Pin_mdc    = DEFAULT_ETH_PIN_MDC;
     Settings.ETH_Pin_mdio   = DEFAULT_ETH_PIN_MDIO;
     Settings.ETH_Pin_power  = DEFAULT_ETH_PIN_POWER;
     Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
     Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
+#endif
     Settings.NetworkMedium  = DEFAULT_NETWORK_MEDIUM;
   }
   if (Settings.Build < 20109) {
@@ -625,12 +641,23 @@ void afterloadSettings() {
  \*********************************************************************************************/
 String LoadSettings()
 {
+  clearAllButTaskCaches();
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadSettings"));
   #endif
+
+  uint8_t oldSettingsChecksum[16] = { 0 };
+  memcpy(oldSettingsChecksum, Settings.md5, 16);
+
+
   String  err;
 
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&Settings), sizeof(SettingsStruct));
+
+  if (memcmp(oldSettingsChecksum, Settings.md5, 16) != 0) {
+    // File has changed, so need to flush all task caches.
+    Cache.clearAllTaskCaches();
+  }
 
   if (err.length()) {
     return err;

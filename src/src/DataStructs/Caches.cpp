@@ -38,6 +38,7 @@ void Caches::clearTaskCache(taskIndex_t TaskIndex) {
   if (it != extraTaskSettings_cache.end()) {
     extraTaskSettings_cache.erase(it);
   }
+  updateActiveTaskUseSerial0();
 }
 
 void Caches::clearFileCaches()
