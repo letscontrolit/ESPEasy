@@ -105,8 +105,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
           portNames[x] += (x < 8 ? 'A' : 'B');
           portNames[x] += (x < 8 ? x : x - 8);
         }
-        addFormSelectorI2C(F("p009_i2c"), 8, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("p009_port"), 16, portNames, portValues, port);
+        addFormSelectorI2C(F("pi2c"), 8, i2cAddressValues, address);
+        addFormSelector(F("Port"), F("pport"), 16, portNames, portValues, port);
       } else {
         success = intArrayContains(8, i2cAddressValues, event->Par1);
       }
@@ -139,8 +139,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      uint8_t i2c  = getFormItemInt(F("p009_i2c"));
-      uint8_t port = getFormItemInt(F("p009_port"));
+      uint8_t i2c  = getFormItemInt(F("pi2c"));
+      uint8_t port = getFormItemInt(F("pport"));
       CONFIG_PORT = (((i2c - 0x20) << 4) + port);
 
       SwitchWebformSave(
@@ -224,8 +224,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
         // setPinState(PLUGIN_ID_009, CONFIG_PORT, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
         savePortStatus(key, newStatus);
+        success = true;
       }
-      success = true;
       break;
     }
 

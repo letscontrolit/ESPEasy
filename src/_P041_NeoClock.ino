@@ -59,18 +59,18 @@ boolean Plugin_041(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(F("Red"), F("p041_red"), PCONFIG(0), 0, 255);
-      	addFormNumericBox(F("Green"), F("p041_green"), PCONFIG(1), 0, 255);
-      	addFormNumericBox(F("Blue"), F("p041_blue"), PCONFIG(2), 0, 255);
+      	addFormNumericBox(F("Red"), F("red"), PCONFIG(0), 0, 255);
+      	addFormNumericBox(F("Green"), F("green"), PCONFIG(1), 0, 255);
+      	addFormNumericBox(F("Blue"), F("blue"), PCONFIG(2), 0, 255);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("p041_red"));
-        PCONFIG(1) = getFormItemInt(F("p041_green"));
-        PCONFIG(2) = getFormItemInt(F("p041_blue"));
+        PCONFIG(0) = getFormItemInt(F("red"));
+        PCONFIG(1) = getFormItemInt(F("green"));
+        PCONFIG(2) = getFormItemInt(F("blue"));
         Plugin_041_red = PCONFIG(0);
         Plugin_041_green = PCONFIG(1);
         Plugin_041_blue = PCONFIG(2);
