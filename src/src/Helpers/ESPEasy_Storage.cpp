@@ -75,7 +75,7 @@ String FileError(int line, const char *fname)
   err += fname;
   err += F(" in ");
   err += line;
-  addLogMove(LOG_LEVEL_ERROR, err);
+  addLog(LOG_LEVEL_ERROR, err);
   return err;
 }
 
@@ -424,7 +424,7 @@ void fileSystemCheck()
   {
     const __FlashStringHelper * log = F("FS   : Mount failed");
     serialPrintln(log);
-    addLogMove(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, log);
     ResetFactory();
   }
 }
@@ -475,7 +475,9 @@ bool GarbageCollection() {
   START_TIMER;
 
   if (ESPEASY_FS.gc()) {
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("FS   : Success garbage collection"));
+#endif
     STOP_TIMER(FS_GC_SUCCESS);
     return true;
   }
@@ -548,9 +550,12 @@ String SaveSettings()
     */
         ) {
       err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings));
-    } else {
+    } 
+#ifndef BUILD_NO_DEBUG    
+    else {
       addLog(LOG_LEVEL_INFO, F("Skip saving settings, not changed"));
     }
+#endif
   }
 
   if (err.length()) {
@@ -589,12 +594,13 @@ String SaveSecuritySettings() {
         AttemptWiFiConnect();
       }
     }
-  } else {
+  } 
+#ifndef BUILD_NO_DEBUG
+  else {
     addLog(LOG_LEVEL_INFO, F("Skip saving SecuritySettings, not changed"));
-
   }
+#endif
 
-  // FIXME TD-er: How to check if these have changed?
   ExtendedControllerCredentials.save();
   afterloadSettings();
   return err;
@@ -663,15 +669,17 @@ String LoadSettings()
     return err;
   }
   Settings.validate();
-
+#ifndef BUILD_NO_DEBUG
   if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
     addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
   } else{
     addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
   }
+#endif
 
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
 
+#ifndef BUILD_NO_DEBUG
   if (COMPUTE_STRUCT_CHECKSUM(SecurityStruct, SecuritySettings)) {
     addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
 
@@ -682,6 +690,7 @@ String LoadSettings()
   else {
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
+#endif
 
   ExtendedControllerCredentials.load();
 
@@ -1013,15 +1022,18 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                             TaskIndex,
                             reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                             structSize);
-#ifndef BUILD_MINIMAL_OTA
+#if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
     if (err.isEmpty()) {
       err = checkTaskSettings(TaskIndex);
     }
 #endif
-
-  } else {
+  } 
+#ifndef LIMIT_BUILD_SIZE
+  else {
     addLog(LOG_LEVEL_INFO, F("Skip saving task settings, not changed"));
+
   }
+#endif
   return err;
 }
 
@@ -1239,7 +1251,7 @@ String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 {
   String err = LoadFromFile(getFileName(FileType::PROVISIONING_DAT, 0).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
-
+#ifndef BUILD_NO_DEBUG
   if (COMPUTE_STRUCT_CHECKSUM(ProvisioningStruct, ProvisioningSettings))
   {
     addLog(LOG_LEVEL_INFO, F("CRC  : ProvisioningSettings CRC   ...OK "));
@@ -1251,6 +1263,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
   else {
     addLog(LOG_LEVEL_ERROR, F("CRC  : ProvisioningSettings CRC   ...FAIL"));
   }
+#endif
   ProvisioningSettings.validate();
   return err;
 }
