@@ -2,6 +2,9 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_Plugin.h"
+
 #define EXTRA_TASK_SETTINGS_VERSION 1
 
 uint8_t last_ExtraTaskSettingsStruct_md5[16] = { 0 };
