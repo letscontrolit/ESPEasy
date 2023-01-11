@@ -1048,13 +1048,23 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (!validTaskIndex(TaskIndex)) {
     return EMPTY_STRING; // Un-initialized task index.
   }
+  constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
+
   ExtraTaskSettings.clear();
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+  if (!validDeviceIndex(DeviceIndex)) {
+    // No need to load from storage, as there is no plugin assigned to this task.
+    ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
+    uint8_t checksum[16] = {0};
+    computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
+    Cache.updateExtraTaskSettingsCache(checksum);
+    return EMPTY_STRING;
+  }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadTaskSettings"));
   #endif
 
   START_TIMER
-  constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
   const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
 
   // Need to compute checksum as how it is stored on the file system, 
@@ -1065,14 +1075,11 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
 
-  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
-  if (validDeviceIndex(DeviceIndex)) {
-    if (!Device[DeviceIndex].configurableDecimals()) {
-      // Nr of decimals cannot be configured, so set them to 0 just to be sure.
-      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
-      }      
-    }
+  if (!Device[DeviceIndex].configurableDecimals()) {
+    // Nr of decimals cannot be configured, so set them to 0 just to be sure.
+    for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+      ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
+    }      
   }
 
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) {
