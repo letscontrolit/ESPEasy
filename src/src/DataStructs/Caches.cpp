@@ -32,6 +32,18 @@ void Caches::clearFileCaches()
   fileCacheClearMoment = 0;
 }
 
+bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, uint8_t checksum[16]) const
+{
+  if (validTaskIndex(TaskIndex)) {
+    auto it = extraTaskSettings_cache.find(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return memcmp(checksum, it->second.md5checksum, 16);
+    }
+  }
+  return false;
+}
+
 void Caches::updateActiveTaskUseSerial0() {
   activeTaskUseSerial0 = false;
 
@@ -215,13 +227,18 @@ void Caches::updateExtraTaskSettingsCache()
   const taskIndex_t TaskIndex = ExtraTaskSettings.TaskIndex;
 
   if (validTaskIndex(TaskIndex)) {
+    ExtraTaskSettings_cache_t tmp;
+
     auto it = extraTaskSettings_cache.find(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
+      // We need to keep the original checksum, from when loaded from storage
+      memcpy(tmp.md5checksum, it->second.md5checksum, 16);
+
+      // Now clear it so we can create a fresh copy.
       extraTaskSettings_cache.erase(it);
     }
 
-    ExtraTaskSettings_cache_t tmp;
       #ifdef ESP32
     tmp.TaskDeviceName = ExtraTaskSettings.TaskDeviceName;
       #endif // ifdef ESP32
@@ -265,6 +282,31 @@ void Caches::updateExtraTaskSettingsCache()
     #endif // ifdef ESP32
 
     extraTaskSettings_cache[TaskIndex] = tmp;
+  }
+}
+
+void Caches::updateExtraTaskSettingsCache(uint8_t checksum[16]) 
+{
+  if (!validTaskIndex(ExtraTaskSettings.TaskIndex)) {
+    return;
+  }
+
+  // Check if we need to update the cache
+  auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+  if (it != extraTaskSettings_cache.end()) {
+    if (memcmp(it->second.md5checksum, checksum, 16) == 0) {
+      return;
+    }
+  }
+
+  // First update all other values
+  updateExtraTaskSettingsCache();
+
+  // Iterator has changed
+  it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+
+  if (it != extraTaskSettings_cache.end()) {
+    memcpy(it->second.md5checksum, checksum, 16);
   }
 }
 

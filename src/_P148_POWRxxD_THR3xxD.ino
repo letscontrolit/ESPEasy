@@ -144,6 +144,16 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       }
       LoadTaskSettings(event->TaskIndex);
 
+      // Add hidden checkbox which will only be checked when a select dropdown list is changed and settings should not be saved.
+      html_TR_TD();
+
+      addHtml(F("<label class='nosave'>&nbsp;<input "));
+      addHtmlAttribute(F("type"), F("checkbox"));
+      addHtmlAttribute(F("id"),   F("nosave"));
+      addHtmlAttribute(F("name"), F("nosave"));
+      addHtmlAttribute(F("style"), F("display:none"));
+      addHtml(F("><span class='checkmark'></span></label>"));
+
       success = true;
       break;
     }

@@ -974,10 +974,20 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
     return F("Save error");
     #endif
   }
-  String err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
-                          TaskIndex,
-                          reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
-                          sizeof(struct ExtraTaskSettingsStruct));
+
+  String err;
+
+  uint8_t checksum[16] = {0};
+  constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
+  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
+  if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, checksum)) {
+    err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
+                            TaskIndex,
+                            reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
+                            structSize);
+  } else {
+    addLog(LOG_LEVEL_INFO, F("Skip saving task settings, not changed"));
+  }
 #ifndef BUILD_MINIMAL_OTA
   if (err.isEmpty()) {
     err = checkTaskSettings(TaskIndex);
@@ -1003,7 +1013,13 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   #endif
 
   START_TIMER
-  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), sizeof(struct ExtraTaskSettingsStruct));
+  const size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
+  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
+
+  // Need to compute checksum as how it is stored on the file system, 
+  // not including any patches made below
+  uint8_t checksum[16] = {0};
+  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -1027,7 +1043,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
-  Cache.updateExtraTaskSettingsCache();
+  Cache.updateExtraTaskSettingsCache(checksum);
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;

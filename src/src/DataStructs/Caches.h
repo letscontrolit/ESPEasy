@@ -32,6 +32,7 @@ struct ExtraTaskSettings_cache_t {
   String TaskDeviceValueNames[VARS_PER_TASK];
   String TaskDeviceName;
   #endif // ifdef ESP32
+  uint8_t md5checksum[16] = { 0 };
   uint8_t decimals[VARS_PER_TASK] = { 0 };
   #if FEATURE_PLUGIN_STATS
   uint8_t enabledPluginStats = 0;
@@ -50,6 +51,8 @@ struct Caches {
   void    clearTaskCaches();
 
   void    clearFileCaches();
+
+  bool    matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, uint8_t checksum[16]) const;
 
   void    updateActiveTaskUseSerial0();
 
@@ -76,8 +79,11 @@ struct Caches {
   #endif // if FEATURE_PLUGIN_STATS
 
 
-  // Update the cached value, called after LoadTaskSettings()
+  // Update all cached values, except the checksum.
   void updateExtraTaskSettingsCache();
+
+  // Update the cached value, only to be called from LoadTaskSettings()
+  void updateExtraTaskSettingsCache(uint8_t checksum[16]);
 
 private:
 

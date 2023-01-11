@@ -4,6 +4,8 @@
 
 #define EXTRA_TASK_SETTINGS_VERSION 1
 
+uint8_t last_ExtraTaskSettingsStruct_md5[16] = { 0 };
+
 ExtraTaskSettingsStruct::ExtraTaskSettingsStruct() : TaskIndex(INVALID_TASK_INDEX) {
   ZERO_FILL(TaskDeviceName);
 

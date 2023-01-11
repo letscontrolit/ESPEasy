@@ -132,6 +132,8 @@ void handle_devices() {
   taskIndex_t taskIndex       = getFormItemInt(F("index"), 0);
   boolean     taskIndexNotSet = taskIndex == 0;
 
+  const bool nosave = isFormItemChecked(F("nosave"));
+
   if (!taskIndexNotSet) {
     --taskIndex;
 //    LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
@@ -153,8 +155,10 @@ void handle_devices() {
     if (taskdevicenumber != 0) {
       // Task index has a task device number, so it makes sense to save.
       // N.B. When calling delete, the settings were already saved.
-      addHtmlError(SaveTaskSettings(taskIndex));
-      addHtmlError(SaveSettings());
+      if (!nosave) {
+        addHtmlError(SaveTaskSettings(taskIndex));
+        addHtmlError(SaveSettings());
+      }
 
       struct EventStruct TempEvent(taskIndex);
       String dummy;
@@ -384,8 +388,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   // allow the plugin to save plugin-specific form settings.
   {
     String dummy;
-
-    SaveTaskSettings(taskIndex);
+    const bool nosave = isFormItemChecked(F("nosave"));
+    if (nosave) {
+      SaveTaskSettings(taskIndex);
+    }
     if (Device[DeviceIndex].ExitTaskBeforeSave) {
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
     }
