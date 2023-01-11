@@ -16,36 +16,36 @@
 // This table is stored in PROGMEM to save space in RAM
 // The data for the selected sensor type is copied to RAM, see P145_data_struct
 /******************************************************************************/
-const struct P145_SENSORDEF sensorData[] PROGMEM =
+const struct P145_SENSORDEF sensorDefs[] PROGMEM =
 {
   // User defined, open for experiments/own sensor definition
   {     
-      0.0,          // cleanRatio
-      0.0,          // PARA scaling factor value
-      0.0,          // PARB exponent value
-      0.0,          // CORA
-      0.0,          // CORB
-      0.0,          // CORC
-      0.0,          // CORD
-      0.0,          // CORE
-      0.0,          // CORF
-      0.0,          // CORG
+      0.0f,         // cleanRatio
+      0.0f,         // PARA scaling factor value
+      0.0f,         // PARB exponent value
+      0.0f,         // CORA
+      0.0f,         // CORB
+      0.0f,         // CORC
+      0.0f,         // CORD
+      0.0f,         // CORE
+      0.0f,         // CORF
+      0.0f,         // CORG
       p145AlgNone,  // preferred/tuned algorithm
       "USER",       // Name
       "unknown",    // gas
   },
   // MQ-135
   {
-      0.0,          // cleanRatio
-      116.6020682,  // PARA scaling factor value
-      2.769034857,  // PARB exponent value
-      0.00035,      // CORA
-      0.02718,      // CORB
-      1.39538,      // CORC
-      0.0018,       // CORD
-      -0.003333333, // CORE
-      -0.001923077, // CORF
-      1.130128205,  // CORG
+      0.0f,         // cleanRatio
+      116.6020682f, // PARA scaling factor value
+      2.769034857f, // PARB exponent value
+      0.00035f,     // CORA
+      0.02718f,     // CORB
+      1.39538f,     // CORC
+      0.0018f,      // CORD
+      -0.003333333f,// CORE
+      -0.001923077f,// CORF
+      1.130128205f, // CORG
       p145AlgA,     // preferred/tuned algorithm
       "MQ-135",     // Name
       "CO2",        // gas
@@ -53,32 +53,32 @@ const struct P145_SENSORDEF sensorData[] PROGMEM =
   },
     // MQ-2
   {
-      9.83,         // cleanRatio
-      987.99,       // PARA scaling factor
-      -2.162,       // PARB exponent value
-      0.0,          // CORA
-      0.0,          // CORB
-      0.0,          // CORC
-      0.0,          // CORD
-      0.0,          // CORE
-      0.0,          // CORF
-      0.0,          // CORG
+      9.83f,        // cleanRatio
+      987.99f,      // PARA scaling factor
+      -2.162f,      // PARB exponent value
+      0.0f,         // CORA
+      0.0f,         // CORB
+      0.0f,         // CORC
+      0.0f,         // CORD
+      0.0f,         // CORE
+      0.0f,         // CORF
+      0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
       "MQ-2",       // Name
       "H2",         // gas
   },
   // MQ-3
   {
-      60.0,         // cleanRatio
-      0.3934,       // PARA scaling factor
-      -1.504,       // PARB exponent value
-      0.0,          // CORA
-      0.0,          // CORB
-      0.0,          // CORC
-      0.0,          // CORD
-      0.0,          // CORE
-      0.0,          // CORF
-      0.0,          // CORG
+      60.0f,        // cleanRatio
+      0.3934f,      // PARA scaling factor
+      -1.504f,      // PARB exponent value
+      0.0f,         // CORA
+      0.0f,         // CORB
+      0.0f,         // CORC
+      0.0f,         // CORD
+      0.0f,         // CORE
+      0.0f,         // CORF
+      0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
       "MQ-3",       // Name
       "alcohol",    // gas
@@ -86,39 +86,39 @@ const struct P145_SENSORDEF sensorData[] PROGMEM =
   },
   // MQ-4
   {
-      4.4,          // cleanRatio
-      1012.7,       // PARA scaling
-      -2.786,       // PARB exponent
-      0.0,          // CORA
-      0.0,          // CORB
-      0.0,          // CORC
-      0.0,          // CORD
-      0.0,          // CORE
-      0.0,          // CORF
-      0.0,          // CORG
+      4.4f,         // cleanRatio
+      1012.7f,      // PARA scaling
+      -2.786f,      // PARB exponent
+      0.0f,         // CORA
+      0.0f,         // CORB
+      0.0f,         // CORC
+      0.0f,         // CORD
+      0.0f,         // CORE
+      0.0f,         // CORF
+      0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
       "MQ-4",       // Name
       "CH4",        // gas
   },
   // MQ-7
   {
-      27.5,         // cleanRatio
-      491204,       // PARA scaling
-      -5.826,       // PARB exponent
-      0.0,          // CORA
-      0.0,          // CORB
-      0.0,          // CORC
-      0.0,          // CORD
-      0.0,          // CORE
-      0.0,          // CORF
-      0.0,          // CORG   
+      27.5f,        // cleanRatio
+      491204.0f,    // PARA scaling
+      -5.826f,      // PARB exponent
+      0.0f,         // CORA
+      0.0f,         // CORB
+      0.0f,         // CORC
+      0.0f,         // CORD
+      0.0f,         // CORE
+      0.0f,         // CORF
+      0.0f,         // CORG   
       p145AlgB,     // preferred/tuned algorithm
       "MQ-7",       // Name
       "CO",         // gas
   }
 };
-/// @brief The number of types stored in the sensorData[] table
-constexpr const int nbrOfTypes = (int)(sizeof(sensorData) / sizeof(struct P145_SENSORDEF));
+/// @brief The number of types stored in the sensorDefs[] table
+constexpr const int nbrOfTypes = (int)(sizeof(sensorDefs) / sizeof(struct P145_SENSORDEF));
 
 /*****************************************************************************/
 /*!
@@ -143,7 +143,7 @@ void P145_data_struct::calibrate (float currentRcal)
   if (doit)
   {
     rzero = rcal;     // Update Rzero as determined by calibration
-    rcal = 0.0;       // Restart calibration cycle with no value
+    rcal = 0.0f;      // Restart calibration cycle with no value
     last_cal = now;   // Remember calibration moment
   }
 
@@ -168,13 +168,20 @@ void P145_data_struct::calibrate (float currentRcal)
 @return The sensor resistance in Ohm
 @note   Uses hard coded constants:
         MAX_ADC_VALUE Max range for ADC
-        VMAX          Analog  input voltage corresponding to MAX_ADC_VALUE
-        VCC           Voltage applied to the sensor-Rload combination
+        P145_VMAX     Analog  input voltage corresponding to MAX_ADC_VALUE
+        P145_VCC      Voltage applied to the sensor-Rload combination
 */
 /*****************************************************************************/
 float P145_data_struct::getResistance(float val) const
 {
-  return ((MAX_ADC_VALUE * P145_VCC) / (P145_VMAX * val) - 1.0f) * rload;
+  if (val > 0.0f)
+  {
+    return ((MAX_ADC_VALUE * P145_VCC) / (P145_VMAX * val) - 1.0f) * rload;
+  }
+  else
+  {
+    return (1e9f); // Very high resistance value of 1G Ohm
+  }
 }
 
 /*****************************************************************************/
@@ -184,7 +191,7 @@ float P145_data_struct::getResistance(float val) const
 @return The sensor resistance RZero in kOhm
 */
 /*****************************************************************************/
-float P145_data_struct::getRZero(float rSensor)
+float P145_data_struct::getRZero(float rSensor) const
 {
   float newValue = rSensor;  // Default to current measured Rsensor
   
@@ -195,7 +202,7 @@ float P145_data_struct::getRZero(float rSensor)
       newValue = (rSensor * powf((refLevel / sensordef.para), (1.0f / sensordef.parb)));
       break;
     case p145AlgB:  // Miquel5612 Exponential
-      if (sensordef.cleanRatio > 0.0)
+      if (sensordef.cleanRatio > 0.0f)
       {
         newValue = (rSensor / sensordef.cleanRatio);
       }
@@ -227,7 +234,7 @@ float P145_data_struct::getRZero(float rSensor)
 @return The corrected sensor resistance RZero in kOhm
 */
 /*****************************************************************************/
-float P145_data_struct::getCorrectedRZero(float rSensor, float temperature, float humidity)
+float P145_data_struct::getCorrectedRZero(float rSensor, float temperature, float humidity) const
 {
   float c;    // Correction factor
 
@@ -243,7 +250,7 @@ float P145_data_struct::getCorrectedRZero(float rSensor, float temperature, floa
   {
     c = sensordef.core * temperature + sensordef.corf * humidity + sensordef.corg;
   }
-  return (rSensor / c) * pow((refLevel / sensordef.para), (1.0f / sensordef.parb));
+  return (rSensor / c) * powf((refLevel / sensordef.para), (1.0f / sensordef.parb));
 }
 
 /*****************************************************************************/
@@ -260,13 +267,13 @@ float P145_data_struct::getPPM(float rSensor)
   switch (algorithm)
   {
     case p145AlgA:  // MQ-135
-      return (sensordef.para * pow((rSensor/rzero), -sensordef.parb));
+      return (sensordef.para * powf((rSensor/rzero), -sensordef.parb));
       break;
     case p145AlgB:  // Miquel5612 Exponential
-      return (sensordef.para *pow((rSensor/rzero), sensordef.parb));
+      return (sensordef.para *powf((rSensor/rzero), sensordef.parb));
       break;
     case p145AlgC:  // Miquel5612 Linear
-      return (pow(10.0f, (log10(rSensor/rzero)-sensordef.parb)/sensordef.para));
+      return (powf(10.0f, (log10f(rSensor/rzero)-sensordef.parb)/sensordef.para));
       break;
     default:
       return (0.0f);
@@ -291,9 +298,9 @@ float P145_data_struct::getCorrectedPPM(float rSensor, float temperature, float 
   {
     case p145AlgA:
       float c;                      // Temperature & humidity correction factor
-      if (temperature < 20)
+      if (temperature < 20.0f)
       {
-        c = sensordef.cora * temperature * temperature - sensordef.corb * temperature + sensordef.corc - (humidity - 33.) * sensordef.cord;
+        c = sensordef.cora * temperature * temperature - sensordef.corb * temperature + sensordef.corc - (humidity - 33.0f) * sensordef.cord;
       }
       else
       {
@@ -361,7 +368,7 @@ void P145_data_struct::setSensorData(int stype, bool comp, bool cal, float load,
   /* Copy the correct set from program meory space           */
   if ((stype != sensorType) && (stype < nbrOfTypes) && (stype >= 0))
   {
-    memcpy_P(&sensordef, &sensorData[stype], sizeof(struct P145_SENSORDEF));
+    memcpy_P(&sensordef, &sensorDefs[stype], sizeof(struct P145_SENSORDEF));
     algorithm = sensordef.alg;
     sensorType = stype;   // Selected sensor type, index in sensor data table
   }
@@ -389,8 +396,8 @@ float P145_data_struct::readValue(float temperature, float humidity)
 {
     float ain = getAnalogValue();           // Analog measured and filtered data 
     float rSensor = getResistance(ain);     // Convert to sensor resistance Rs
-    float rCal    = 0.0;                    // Potential Rzero for calibration
-    float value = 0.0;                      // Return value
+    float rCal    = 0.0f;                   // Potential Rzero for calibration
+    float value = 0.0f;                     // Return value
 
     // Check if temperature/Humidity compensation is selected
     if (compensation)
@@ -405,7 +412,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
     }
 
     // Perform calibration if functionality is enabled
-    if (calibration && (rCal < 1.0e6)) 
+    if (calibration && (rCal < 1.0e6f)) 
     { 
         calibrate(rCal);
     }
@@ -414,7 +421,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
     {
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: level= "), value));         // Calculated sensor value
 #ifdef P145_DEBUG
-      addLog(LOG_LEVEL_INFO, concat(concat(F("MQ-xx: Sensor type= "), sensorType), concat(F(": "), sensordef.name))); 
+      addLog(LOG_LEVEL_INFO, concat(concat(F("MQ-xx: Sensor type= "), sensorType), concat(F(": "), String(sensordef.name)))); 
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rload= "), rload));         // Load resistor Rload
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rzero= "), rzero));         // Rerefernce resistance Rzero
 #endif 
@@ -467,7 +474,7 @@ bool P145_data_struct::plugin_init()
 
 /*****************************************************************************/
 /*!
-@brief  Handle the 10Hz processing for the plugin strct/class 
+@brief  Handle the 10Hz processing for the plugin struct/class 
 @return Always true
 @note   This function is expected to be called as part of the plugin 
         PLUGIN_TEN_PER_SECOND functionality
@@ -535,7 +542,7 @@ void P145_data_struct::dump() const
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
 #ifdef P145_DEBUG
-    addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: NAME "), sensordef.name));
+    addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: NAME "), String(sensordef.name)));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: CleanRatio "), sensordef.cleanRatio));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Algorithm "), sensordef.alg));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: PARA "), sensordef.para));
@@ -561,10 +568,10 @@ void P145_data_struct::dump() const
          This is a static member function
 */
 /**************************************************************************/
-const __FlashStringHelper * P145_data_struct::getTypeName(int stype)
+const String P145_data_struct::getTypeName(int stype)
 {
   if ((stype < nbrOfTypes) && (stype >= 0))
-    return (const __FlashStringHelper *)&sensorData[stype].name;
+    return String(sensorDefs[stype].name);
   else
     return F("invalid");
 }
@@ -577,10 +584,10 @@ const __FlashStringHelper * P145_data_struct::getTypeName(int stype)
          This is a static member function
 */
 /**************************************************************************/
-const __FlashStringHelper * P145_data_struct::getGasName(int stype)
+const String P145_data_struct::getGasName(int stype)
 {
   if ((stype < nbrOfTypes) && (stype >= 0))
-    return (const __FlashStringHelper *)&sensorData[stype].gas;
+    return String(sensorDefs[stype].gas);
   else
     return F("invalid");
 }

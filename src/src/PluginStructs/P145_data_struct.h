@@ -48,10 +48,9 @@ struct P145_SENSORDEF
   float core;         // CORE
   float corf;         // CORF
   float corg;         // CORG
-  P145_algorithm alg; // Preferred/tuned algorithm
-  char name[8];       // Sensor type name
-  char gas[8];        // Measured gas concentration
-
+  P145_algorithm alg;  // Preferred/tuned algorithm
+  char name[8];         // Sensor type name
+  char gas[8];          // Measured gas concentration
 };
 
 struct P145_data_struct : public PluginTaskData_base 
@@ -75,8 +74,8 @@ struct P145_data_struct : public PluginTaskData_base
     /* Sensor type & user options */
     bool compensation = false;            // Use temperature compensation
     bool calibration = false;             // Perform auto calibration
-    int  sensorType = 0;                  // Selected sensor type
-    P145_algorithm algorithm = p145AlgA;  // conversion algorithm
+    int  sensorType = -1;                 // Selected sensor type
+    P145_algorithm algorithm = p145AlgNone; // conversion algorithm
     int  analogPin = P145_SENSOR_PIN;     // Analog input pin connected to the sensor
 
     public:
@@ -86,8 +85,8 @@ struct P145_data_struct : public PluginTaskData_base
     void setSensorData(int stype, bool comp, bool cal, float load, float zero, float ref);
     float getCalibrationValue() const;
     float getAutoCalibrationValue() const;
-    static const __FlashStringHelper * getTypeName( int stype);
-    static const __FlashStringHelper * getGasName( int stype);
+    static const String getTypeName( int stype);
+    static const String getGasName( int stype);
     static int getNbrOfTypes();
     void dump() const;
     
@@ -95,8 +94,8 @@ struct P145_data_struct : public PluginTaskData_base
     void  calibrate (float Rcal);
     float getAnalogValue();
     float getResistance(float val) const;
-    float getRZero(float rSensor);
-    float getCorrectedRZero(float rSensor, float temperature, float humidity);
+    float getRZero(float rSensor) const;
+    float getCorrectedRZero(float rSensor, float temperature, float humidity) const;
     float getPPM(float rSensor);
     float getCorrectedPPM(float rSensor, float temperature, float humidity);
     void  resetOversampling();

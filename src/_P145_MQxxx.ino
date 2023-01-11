@@ -143,7 +143,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       }
       for (int i=0; i<x; i++)
       {
-        options[i] = concat(P145_data_struct::getTypeName(i), F(" - ")) + (String)P145_data_struct::getGasName(i);
+        options[i] = concat(P145_data_struct::getTypeName(i), F(" - ")) + P145_data_struct::getGasName(i);
         optionValues[i] = i; 
       }
       addFormSelector(F("Sensor type"), F("plugin_145_sensor"), x, options, optionValues, P145_PCONFIG_SENSORT);
@@ -154,11 +154,11 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 # endif // ifdef ESP32
 
-      addFormFloatNumberBox(F("Load Resistance"), F("plugin_145_RLOAD"), P145_PCONFIG_RLOAD, 0.0, 10e6, 2U);
+      addFormFloatNumberBox(F("Load Resistance"), F("plugin_145_RLOAD"), P145_PCONFIG_RLOAD, 0.0f, 10e6f, 2U);
       addUnit(F("Ohm"));
-      addFormFloatNumberBox(F("R Zero"), F("plugin_145_RZERO"), P145_PCONFIG_RZERO, 0.0, 10e6, 2U);
+      addFormFloatNumberBox(F("R Zero"), F("plugin_145_RZERO"), P145_PCONFIG_RZERO, 0.0f, 10e6f, 2U);
       addUnit(F("Ohm"));
-       addFormFloatNumberBox(F("Reference Level"), F("plugin_145_REFLEVEL"), P145_PCONFIG_REF, 0.0, 10e6, 2U);
+      addFormFloatNumberBox(F("Reference Level"), F("plugin_145_REFLEVEL"), P145_PCONFIG_REF, 0.0f, 10e6f, 2U);
       addUnit(F("ppm"));
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P145_data != nullptr)
@@ -166,7 +166,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
         float calVal = P145_data->getCalibrationValue();
         if (calVal > 0.0) 
         {
-          addFormNote((String)F("Current measurement suggests Rzero= ") + (String)calVal);
+          addFormNote(String(F("Current measurement suggests Rzero= ")) + String(calVal));
         }
       }
 
@@ -177,19 +177,28 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Enable automatic calibration"), F("plugin_145_enable_calibrarion"), calibrate);
       addFormCheckBox(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate);
       addFormNote(F("If this is enabled, the Temperature and Humidity values below need to be configured."));
-      // temperature
-      addHtml(F("<TR><TD>Temperature:<TD>"));
-      addTaskSelect(F("plugin_145_temperature_task"), P145_PCONFIG_TEMP_TASK);
-      LoadTaskSettings(P145_PCONFIG_TEMP_TASK); // we need to load the values from another task for selection!
-      addHtml(F("<TR><TD>Temperature Value:<TD>"));
-      addTaskValueSelect(F("plugin_145_temperature_value"), P145_PCONFIG_TEMP_VAL, P145_PCONFIG_TEMP_TASK);
-      // humidity
-      addHtml(F("<TR><TD>Humidity:<TD>"));
-      addTaskSelect(F("plugin_145_humidity_task"), P145_PCONFIG_HUM_TASK);
-      LoadTaskSettings(P145_PCONFIG_HUM_TASK); // we need to load the values from another task for selection!
-      addHtml(F("<TR><TD>Humidity Value:<TD>"));
-      addTaskValueSelect(F("plugin_145_humidity_value"), P145_PCONFIG_HUM_VAL, P145_PCONFIG_HUM_TASK);
-      LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
+      if (compensate)
+      {
+        // temperature
+        addRowLabel(F("Temperature"));
+        addTaskSelect(F("plugin_145_temperature_task"), P145_PCONFIG_TEMP_TASK);
+        if (validTaskIndex(P145_PCONFIG_TEMP_TASK))
+        {
+          LoadTaskSettings(P145_PCONFIG_TEMP_TASK); // we need to load the values from another task for selection!
+          addRowLabel(F("Temperature Value"));
+          addTaskValueSelect(F("plugin_145_temperature_value"), P145_PCONFIG_TEMP_VAL, P145_PCONFIG_TEMP_TASK);
+        }
+        // humidity
+        addRowLabel(F("Humidity"));
+        addTaskSelect(F("plugin_145_humidity_task"), P145_PCONFIG_HUM_TASK);
+        if (validTaskIndex(P145_PCONFIG_HUM_TASK))
+        {
+          LoadTaskSettings(P145_PCONFIG_HUM_TASK); // we need to load the values from another task for selection!
+          addRowLabel(F("Humidity Value"));
+          addTaskValueSelect(F("plugin_145_humidity_value"), P145_PCONFIG_HUM_VAL, P145_PCONFIG_HUM_TASK);
+        }
+        LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
+      }
 
       success = true;
       break;
