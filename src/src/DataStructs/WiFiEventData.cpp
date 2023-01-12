@@ -28,6 +28,7 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
     }
   }
   if (!wifiConnectAttemptNeeded) return false;
+  if (intent_to_reboot) return false;
   if (wifiSetupConnect) return true;
   if (wifiConnectInProgress) {
     if (last_wifi_connect_attempt_moment.isSet() && 
@@ -103,6 +104,8 @@ void WiFiEventData_t::clear_processed_flags() {
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
   processingDisconnect.clear();
+  dns0_cache = IPAddress();
+  dns1_cache = IPAddress();
 }
 
 void WiFiEventData_t::markWiFiBegin() {
@@ -135,11 +138,15 @@ bool WiFiEventData_t::WiFiServicesInitialized() const {
 void WiFiEventData_t::setWiFiDisconnected() {
   wifiConnectInProgress = false;
   wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
+  last_wifi_connect_attempt_moment.clear();
+  wifiConnectInProgress = false;
 }
 
 void WiFiEventData_t::setWiFiGotIP() {
   bitSet(wifiStatus, ESPEASY_WIFI_GOT_IP);
   processedGotIP = true;
+  dns0_cache = WiFi.dnsIP(0);
+  dns1_cache = WiFi.dnsIP(1);
 }
 
 void WiFiEventData_t::setWiFiConnected() {
@@ -155,6 +162,8 @@ void WiFiEventData_t::setWiFiServicesInitialized() {
     bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
     wifiConnectInProgress = false;
     wifiConnectAttemptNeeded = false;
+    dns0_cache = WiFi.dnsIP(0);
+    dns1_cache = WiFi.dnsIP(1);
   }
 }
 
@@ -188,7 +197,10 @@ void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
     // There was an unsuccessful connection attempt
     lastConnectedDuration_us = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
   } else {
-    lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
+    if (last_wifi_connect_attempt_moment.isSet())
+      lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
+    else 
+      lastConnectedDuration_us = 0;
   }
   lastDisconnectReason = reason;
   processedDisconnect  = false;

@@ -129,9 +129,7 @@ public:
                       uint8_t     srcId[3]  = 0,
                       uint8_t     destId[3] = 0);
 
-  void enableOrcon(bool state) {
-    _enableOrcon = state;
-  }
+  void enableOrcon(bool state);
 
 protected:
 

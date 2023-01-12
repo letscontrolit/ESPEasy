@@ -91,7 +91,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       {
         const __FlashStringHelper *optionsMode[6] = { F("100"), F("200"), F("300"),
                                                       F("400"), F("500"), F("600") };
-        addFormSelector(F("Integration Time"), F("p074_itime"), 6, optionsMode,
+        addFormSelector(F("Integration Time"), F("itime"), 6, optionsMode,
                         nullptr, PCONFIG(1));
         addUnit(F("ms"));
       }
@@ -103,7 +103,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       {
         const __FlashStringHelper *optionsGain[4] = { F("low gain (1x)"),      F("medium gain (25x)"),
                                                       F("medium gain (428x)"), F("max gain (9876x)") };
-        addFormSelector(F("Value Mapping"), F("p074_gain"), 4, optionsGain, nullptr,
+        addFormSelector(F("Value Mapping"), F("gain"), 4, optionsGain, nullptr,
                         PCONFIG(2));
       }
 
@@ -113,8 +113,8 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_WEBFORM_SAVE: {
       // PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-      PCONFIG(1) = getFormItemInt(F("p074_itime"));
-      PCONFIG(2) = getFormItemInt(F("p074_gain"));
+      PCONFIG(1) = getFormItemInt(F("itime"));
+      PCONFIG(2) = getFormItemInt(F("gain"));
 
       success = true;
       break;

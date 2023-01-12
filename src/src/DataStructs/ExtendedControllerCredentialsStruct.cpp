@@ -71,7 +71,7 @@ String ExtendedControllerCredentialsStruct::getControllerUser(controllerIndex_t 
   if (validControllerIndex(controller_idx)) {
     return _strings[controller_idx * 2 + EXT_CONTR_CRED_USER_OFFSET];
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 String ExtendedControllerCredentialsStruct::getControllerPass(controllerIndex_t controller_idx) const
@@ -79,7 +79,7 @@ String ExtendedControllerCredentialsStruct::getControllerPass(controllerIndex_t 
   if (validControllerIndex(controller_idx)) {
     return _strings[controller_idx * 2 + EXT_CONTR_CRED_PASS_OFFSET];
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 void ExtendedControllerCredentialsStruct::setControllerUser(controllerIndex_t controller_idx, const String& user)

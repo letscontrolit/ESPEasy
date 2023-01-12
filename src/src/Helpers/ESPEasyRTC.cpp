@@ -106,14 +106,13 @@ RTC_NOINIT_ATTR uint32_t UserVar_checksum;
  \*********************************************************************************************/
 bool saveToRTC()
 {
+  START_TIMER
   // ESP8266 has the RTC struct stored in memory which we must actively fetch
   // ESP32 can use a compiler flag to mark a struct to be located in RTC_SLOW memory
   #if defined(ESP32)
   RTC_tmp = RTC;
-  return true;
   #else // if defined(ESP32)
 
-  START_TIMER
   if (!system_rtc_mem_write(RTC_BASE_STRUCT, reinterpret_cast<const uint8_t *>(&RTC), sizeof(RTC)) || !readFromRTC())
   {
       # ifdef RTC_STRUCT_DEBUG
@@ -121,12 +120,9 @@ bool saveToRTC()
       # endif // ifdef RTC_STRUCT_DEBUG
     return false;
   }
-  else
-  {
-    STOP_TIMER(SAVE_TO_RTC);
-    return true;
-  }
   #endif // if defined(ESP32)
+  STOP_TIMER(SAVE_TO_RTC);
+  return true;
 }
 
 /********************************************************************************************\

@@ -21,6 +21,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
+#include "../Helpers/StringProvider.h"
 
 #ifdef ESP32
 #include <WiFiGeneric.h>
@@ -496,7 +497,7 @@ bool prepareWiFi() {
     // No need to wait longer to start AP mode.
     if (!Settings.DoNotStartAP()) {
       WifiScan(false);
-      setAP(true);
+//      setAP(true);
     }
     return false;
   }
@@ -632,13 +633,17 @@ void initWiFi()
 #endif
 #ifdef ESP8266
   // WiFi event handlers
-  stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
-	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
-	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
-  stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
-  stationModeAuthModeChangeHandler = WiFi.onStationModeAuthModeChanged(onStationModeAuthModeChanged);
-  APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
-  APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
+  static bool handlers_initialized = false;
+  if (!handlers_initialized) {
+    stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
+    stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
+    stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
+    stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
+    stationModeAuthModeChangeHandler = WiFi.onStationModeAuthModeChanged(onStationModeAuthModeChanged);
+    APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
+    APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
+    handlers_initialized = true;
+  }
 #endif
   delay(100);
 }
@@ -862,9 +867,9 @@ void WifiDisconnect()
   ETS_UART_INTR_DISABLE();
   wifi_station_set_config_current(&conf);
   ETS_UART_INTR_ENABLE();
-  #endif // if defined(ESP32)
+  #endif
   WiFiEventData.setWiFiDisconnected();
-  WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
+  WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_UNSPECIFIED);
   if (!Settings.UseLastWiFiFromRTC()) {
     RTC.clearLastWiFi();
   }
@@ -890,6 +895,10 @@ bool WiFiScanAllowed() {
   }
 
   if (WiFiEventData.wifiConnectInProgress) {
+    return false;
+  }
+
+  if (WiFiEventData.intent_to_reboot) {
     return false;
   }
 
@@ -1439,18 +1448,17 @@ void setupStaticIPconfig() {
   const IPAddress subnet = Settings.Subnet;
   const IPAddress dns    = Settings.DNS;
 
+  WiFiEventData.dns0_cache = Settings.DNS;
+
+  WiFi.config(ip, gw, subnet, dns);
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
+    log += concat(F(" GW: "), formatIP(gw));
+    log += concat(F(" SN: "), formatIP(subnet));
+    log += concat(F(" DNS: "), getValue(LabelType::DNS));
     addLogMove(LOG_LEVEL_INFO, log);
   }
-  WiFi.config(ip, gw, subnet, dns);
 }
 
 // ********************************************************************************
