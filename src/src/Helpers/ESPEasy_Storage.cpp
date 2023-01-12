@@ -1011,17 +1011,27 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
     #endif
   }
 
+  START_TIMER
   String err;
 
   uint8_t checksum[16] = {0};
   constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
   computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
   if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, checksum)) {
-    clearTaskCache(TaskIndex);
+    ExtraTaskSettings.validate(); // Validate before saving will reduce nr of saves as it is more likely to not have changed the next time it will be saved.
+
+    // Call to validate() may have changed the content, so re-compute the checksum.
+    computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
+
+    // This is how it is now stored, so we can now also update the 
+    // ExtraTaskSettings cache. This may prevent a reload.
+    Cache.updateExtraTaskSettingsCache(checksum);
+
     err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
                             TaskIndex,
                             reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                             structSize);
+
 #if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
     if (err.isEmpty()) {
       err = checkTaskSettings(TaskIndex);
@@ -1034,6 +1044,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
 
   }
 #endif
+  STOP_TIMER(SAVE_TASK_SETTINGS);
   return err;
 }
 
@@ -1048,6 +1059,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (!validTaskIndex(TaskIndex)) {
     return EMPTY_STRING; // Un-initialized task index.
   }
+  START_TIMER
   constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
 
   ExtraTaskSettings.clear();
@@ -1058,19 +1070,19 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     uint8_t checksum[16] = {0};
     computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
     Cache.updateExtraTaskSettingsCache(checksum);
+    STOP_TIMER(LOAD_TASK_SETTINGS_CACHED);
     return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadTaskSettings"));
   #endif
 
-  START_TIMER
   const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
 
   // Need to compute checksum as how it is stored on the file system, 
   // not including any patches made below
-  uint8_t checksum[16] = {0};
-  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
+//  uint8_t checksum[16] = {0};
+//  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -1091,6 +1103,8 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
+  uint8_t checksum[16] = {0};
+  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
   Cache.updateExtraTaskSettingsCache(checksum);
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
@@ -1105,7 +1119,6 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, 
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomTaskSettings"));
   #endif
-  clearTaskCache(TaskIndex);
   return SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, TaskIndex, memAddress, datasize, posInBlock);
 }
 

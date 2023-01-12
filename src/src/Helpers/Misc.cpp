@@ -133,6 +133,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
+    addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
     SaveTaskSettings(taskIndex);
     SaveSettings();
   }

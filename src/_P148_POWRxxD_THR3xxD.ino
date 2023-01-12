@@ -142,7 +142,6 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
         P148_data_struct::MonitorTaskValue_t MonitorTaskValue(PCONFIG(i));
         MonitorTaskValue.webformLoad(i);
       }
-      LoadTaskSettings(event->TaskIndex);
 
       // Add hidden checkbox which will only be checked when a select dropdown list is changed and settings should not be saved.
       html_TR_TD();

@@ -65,7 +65,7 @@ struct ExtraTaskSettingsStruct
   uint8_t     dummy1                                                           = 0;
   uint8_t     version                                                          = 1;
   long        TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX]            = {};
-  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK]                           = {};
+  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK]                           = {2,2,2,2};
   int16_t     TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX]                = {};
   float       TaskDeviceMinValue[VARS_PER_TASK]                                = {};
   float       TaskDeviceMaxValue[VARS_PER_TASK]                                = {};

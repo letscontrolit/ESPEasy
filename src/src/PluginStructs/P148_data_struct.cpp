@@ -132,7 +132,6 @@ void P148_data_struct::MonitorTaskValue_t::webformLoad(int index) const {
   addTaskSelect(concat(F("ptask"), index), TaskIndex);
 
   if (validTaskIndex(TaskIndex)) {
-    LoadTaskSettings(TaskIndex);
     addRowLabel(F("Value"));
     addTaskValueSelect(concat(F("pvalue"), index), taskVar, TaskIndex);
 

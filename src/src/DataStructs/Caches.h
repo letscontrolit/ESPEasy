@@ -84,7 +84,9 @@ struct Caches {
   // Update all cached values, except the checksum.
   void updateExtraTaskSettingsCache();
 
-  // Update the cached value, only to be called from LoadTaskSettings()
+  // Update the cached value.
+  // Only to be called from LoadTaskSettings() or SaveTaskSettings()
+  // since only those functions know the checksum of what has been stored.
   void updateExtraTaskSettingsCache(uint8_t checksum[16]);
 
 private:

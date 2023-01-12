@@ -220,7 +220,6 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         String log;
-        LoadTaskSettings(event->TaskIndex);
         Plugin_091_ownindex = event->TaskIndex;
         Settings.UseSerial = true;         // make sure that serial enabled
         Settings.SerialLogLevel = 0;       // and logging disabled
@@ -586,7 +585,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               rcmd = event->Par2;
             }
 
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if (event->Par2 == 2) { // toggle
@@ -635,7 +634,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             if ((event->Par2 == 0) || (event->Par2 == 1)) {
               rcmd = event->Par2;
             }
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -687,7 +686,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             if ((event->Par2 == 0) || (event->Par2 == 1)) {
               rcmd = event->Par2;
             }
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -734,7 +733,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             if (( (Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) { // only on tuya dimmer
               success = true;
 
-              LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+              // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
               event->setTaskIndex(Plugin_091_ownindex);
 
               sendmcudim(event->Par1, Plugin_091_globalpar0);
@@ -769,7 +768,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t par3 = 0;
 
-        LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+        // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
         event->setTaskIndex(Plugin_091_ownindex);
 
         if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
