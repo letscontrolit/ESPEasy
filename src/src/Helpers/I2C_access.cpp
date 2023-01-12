@@ -24,14 +24,14 @@ I2C_bus_state I2C_check_bus(int8_t scl, int8_t sda) {
     case I2C_clear_bus_state::Start:
     {
       // FIXME TD-er: Check for proper I2C pins
-      if ((sda < 0) || (scl < 0)) { 
+      if ((sda < 0) || (scl < 0)) {
         last_state_change = 0;
-        return I2C_bus_state::NotConfigured; 
+        return I2C_bus_state::NotConfigured;
       }
 
-      if ((digitalRead(scl) == HIGH) && (digitalRead(sda) == HIGH)) { 
+      if ((digitalRead(scl) == HIGH) && (digitalRead(sda) == HIGH)) {
         last_state_change = 0;
-        return I2C_bus_state::OK; 
+        return I2C_bus_state::OK;
       }
 
       pinMode(sda, INPUT_PULLUP); // Make SDA (data) and SCL (clock) pins Inputs with pullup.
@@ -202,6 +202,19 @@ bool I2C_write16_reg(uint8_t i2caddr, uint8_t reg, uint16_t value) {
 // **************************************************************************/
 bool I2C_write16_LE_reg(uint8_t i2caddr, uint8_t reg, uint16_t value) {
   return I2C_write16_reg(i2caddr, reg, (value << 8) | (value >> 8));
+}
+
+// **************************************************************************/
+// Writes length bytes over I2C to a register
+// **************************************************************************/
+bool I2C_writeBytes_reg(uint8_t i2caddr, uint8_t reg, uint8_t *buffer, uint8_t length) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write(reg);
+
+  for (int i = 0; i < length; i++) {
+    Wire.write(*(buffer + i));
+  }
+  return Wire.endTransmission() == 0;
 }
 
 // **************************************************************************/

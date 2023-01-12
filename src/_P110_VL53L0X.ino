@@ -116,9 +116,7 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P110_data_struct(P110_I2C_ADDRESS, P110_TIMING, P110_RANGE == 1));
       P110_data_struct *P110_data = static_cast<P110_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P110_data) {
-        success = P110_data->begin(); // Start the sensor
-      }
+      success = (nullptr != P110_data) && P110_data->begin(); // Start the sensor
       break;
     }
     case PLUGIN_READ:
