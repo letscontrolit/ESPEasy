@@ -155,7 +155,7 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         addFormSubHeader(F("PZEM actions"));
         {
           const __FlashStringHelper *options_model[3] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
-          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 3, options_model, nullptr, P102_PZEM_mode);
+          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), 3, options_model, nullptr, P102_PZEM_mode);
         }
 
         if (P102_PZEM_mode == 2)
@@ -164,14 +164,14 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
                     "<span style=\"color:red\"> <br>When programming an address, only one PZEMv30 must be connected. Otherwise, all connected PZEMv30s will get the same address, which would cause a conflict during reading.</span>"));
           {
             const __FlashStringHelper *options_confirm[2] = { F("NO"), F("YES") };
-            addFormSelector(F("Confirm address programming ?"), F("P102_PZEM_addr_set"), 2, options_confirm, nullptr, P102_PZEM_ADDR_SET);
+            addFormSelector(F("Confirm address programming ?"), F("PZEM_addr_set"), 2, options_confirm, nullptr, P102_PZEM_ADDR_SET);
           }
-          addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
+          addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
           addHtml(F("Select the address to set PZEM. Programming address 0 is forbidden."));
         }
         else
         {
-          addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), P102_PZEM_ADDR, 0, 247);
+          addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), P102_PZEM_ADDR, 0, 247);
           addHtml(F("  Address 0 allows to communicate with any <B>single</B> PZEMv30 whatever its address"));
         }
 
@@ -186,10 +186,10 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         addFormSubHeader(F("PZEM actions"));
         {
           const __FlashStringHelper *options_model[2] = { F("Read_value"), F("Reset_Energy") };
-          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 2, options_model, nullptr, P102_PZEM_mode);
+          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), 2, options_model, nullptr, P102_PZEM_mode);
         }
         addHtml(F(" Tx/Rx Pins config disabled: Configuration is available in the first PZEM plugin.<br>"));
-        addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), P102_PZEM_ADDR, 1, 247);
+        addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), P102_PZEM_ADDR, 1, 247);
       }
 
       addHtml(F("<br><br> Reset energy can be done also by: http://*espeasyip*/control?cmd=resetenergy,*PZEM address*"));
@@ -213,9 +213,9 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, p102_getQueryString(choice));
       }
-      P102_PZEM_mode     = getFormItemInt(F("P102_PZEM_mode"));
-      P102_PZEM_ADDR     = getFormItemInt(F("P102_PZEM_addr"));
-      P102_PZEM_ADDR_SET = getFormItemInt(F("P102_PZEM_addr_set"));
+      P102_PZEM_mode     = getFormItemInt(F("PZEM_mode"));
+      P102_PZEM_ADDR     = getFormItemInt(F("PZEM_addr"));
+      P102_PZEM_ADDR_SET = getFormItemInt(F("PZEM_addr_set"));
       Plugin_102_init    = false; // Force device setup next time
       success            = true;
       break;

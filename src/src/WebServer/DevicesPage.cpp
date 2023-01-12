@@ -1214,7 +1214,7 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
 {
   if (Device[DeviceIndex].PluginStats)
   {
-    PluginTaskData_base *taskData = getPluginTaskData(taskIndex);
+    PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(taskIndex);
 
     if (taskData != nullptr) {
       if (taskData->hasPluginStats()) {

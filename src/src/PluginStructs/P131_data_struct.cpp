@@ -10,7 +10,6 @@ const __FlashStringHelper* P131_CommandTrigger_toString(P131_CommandTrigger cmd)
   switch (cmd) {
     case P131_CommandTrigger::neomatrix: return F("neomatrix");
     case P131_CommandTrigger::neo: return F("neo");
-    case P131_CommandTrigger::MAX: break;
   }
   return F("None");
 }

@@ -399,29 +399,17 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P099_data_struct());
       P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P099_data) {
-        return success;
-      }
+      success = (nullptr != P099_data) && P099_data->init(event->TaskIndex,
+                                                          P099_CONFIG_CS_PIN,
+                                                          P099_CONFIG_ROTATION,
+                                                          bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED),
+                                                          P099_CONFIG_TRESHOLD,
+                                                          bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY),
+                                                          bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z),
+                                                          bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION),
+                                                          P099_CONFIG_X_RES,
+                                                          P099_CONFIG_Y_RES);
 
-      bool send_xy          = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY);
-      bool send_z           = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z);
-      bool useCalibration   = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION);
-      bool bRotationFlipped = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED);
-
-      if (!P099_data->init(event->TaskIndex,
-                           P099_CONFIG_CS_PIN,
-                           P099_CONFIG_ROTATION,
-                           bRotationFlipped,
-                           P099_CONFIG_TRESHOLD,
-                           send_xy,
-                           send_z,
-                           useCalibration,
-                           P099_CONFIG_X_RES,
-                           P099_CONFIG_Y_RES)) {
-        clearPluginTaskData(event->TaskIndex);
-        P099_data = nullptr;
-        success   = true;
-      }
       break;
     }
 
