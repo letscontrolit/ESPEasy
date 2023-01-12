@@ -100,6 +100,11 @@ void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekRead
   validateFilePos(newPeekFileNr, newPeekReadPos);
 
   if (fp) {
+    if (newPeekReadPos < fp.position()) {
+      _peekfilenr = newPeekFileNr;
+      _peekreadpos = newPeekReadPos;
+      fp.close();
+    } else
     if (newPeekReadPos >= static_cast<int>(fp.size()) && static_cast<int>(_peekfilenr) == newPeekFileNr) {
       newPeekFileNr++;
       newPeekReadPos = 0;
