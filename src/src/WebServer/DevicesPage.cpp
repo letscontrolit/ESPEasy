@@ -389,7 +389,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   {
     String dummy;
     const bool nosave = isFormItemChecked(F("nosave"));
-    if (nosave) {
+    if (!nosave) {
       SaveTaskSettings(taskIndex);
     }
     if (Device[DeviceIndex].ExitTaskBeforeSave) {

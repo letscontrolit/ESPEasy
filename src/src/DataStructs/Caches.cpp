@@ -53,7 +53,7 @@ bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, uint8_t check
     auto it = extraTaskSettings_cache.find(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
-      return memcmp(checksum, it->second.md5checksum, 16);
+      return memcmp(checksum, it->second.md5checksum, 16) == 0;
     }
   }
   return false;
