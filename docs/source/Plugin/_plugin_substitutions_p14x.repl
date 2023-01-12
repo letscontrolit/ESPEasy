@@ -28,7 +28,7 @@
 .. |P145_type| replace:: :cyan:`Gases`
 .. |P145_typename| replace:: :cyan:`Gases - MQxxx (MQ135 CO2, MQ3 Alcohol)`
 .. |P145_porttype| replace:: `.`
-.. |P145_status| replace:: :yellow:`t.b.d.`
+.. |P145_status| replace:: :yellow:`COLLECTION F`
 .. |P145_github| replace:: P145_MQxxx.ino
 .. _P145_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P145_MQxxx.ino
 .. |P145_usedby| replace:: `.`

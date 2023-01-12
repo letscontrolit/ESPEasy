@@ -24,12 +24,15 @@ Used libraries: |P145_usedlibraries|
 Description
 -----------
 
-This plugin supports some gas sensors for which the resistance depends on a gas concentration. These cheap sensors are tuned for specific gasses although they always respond to multiple gasses. The sensors are sold as MQ-xxx (MQ-3, MQ-135, etc).
+This plugin supports gas sensors for which the resistance depends on a gas concentration. These cheap sensors are tuned for specific gasses although they always respond to multiple gasses. The sensors are sold as MQ-xxx (MQ-3, MQ-135, etc).
 
 The analog value of the sensors is determined by a resistance (Rsensor). The sensor is typically used in series with a load resistor (Rload). 
 The voltage is over Rload is connected to the analog input of the ESP. A sensor and gas specific conversion formula is used to convert the measured voltage to a gas concentration.
 
-The plugin can be configured to select one of the predefined sensor types and tune some of the conversion parameters.
+.. image:: P145_MQ-xxx-Diagram.jpg
+   :alt: Basic circuit to connect MQ-xxx sensors
+
+The plugin can be configured to select one of the predefined sensor types and tune the conversion parameters.
 
 Basic algorithm
 ^^^^^^^^^^^^^^^
@@ -62,17 +65,18 @@ From the plot it is clear that this relation is not linear.
 
 The plugin uses a calibration algorithm for the MQ-135 as found on the internet. Other sensors are waiting for proper measurement data and assocaited algorithms.
 
-Calibration can be enabled for all sensors. Temperature and Humidity must be provided by external sensors. If enabled the plugin tasks and values for both temperature and Humidity must be configured. 
+Compensation can be enabled for all sensors. The temperature and humidity values must be provided by external sensors. If enabled the plugin tasks and values for both temperature and Humidity must be configured. 
 In case a sensor type does not support compensation the output level will be the same as for compensation turned off.
 
 Calibration
 ^^^^^^^^^^^
 
-The plugin uses a ration (Rsensor/Rzero) as input to determine the gas level. By changing the value of Rzero the resulting sensor value can be tuned. 
-With every measurement the plugin calculates what Rzero should be if the current concentration level equals the reference level. This is the reverse formula for the relation between level and (Rsensor/Rzero) ration.
-The plugin will log this value as Rcal. This can be seen on the log output page or on the serial terminal. If a save value can be calculated this will also be shown as a suggestion on device settings page.
+The plugin uses a ratio (Rsensor/Rzero) as input to determine the gas level. By changing the value of Rzero the resulting sensor value can be tuned. 
+With every measurement the plugin calculates what Rzero should be if the current concentration level equals the reference level. This is the reverse formula for the relation between level and (Rsensor/Rzero) ratio.
+The plugin will log this value as Rcal. The value is shown in the logging (log output page or on the serial terminal). If a safe value can be calculated the value will also be shown as a suggestion on device settings page.
 
-The user shall take care that the sensor is well heated and in a clean air (reference for most sensors) for some time. If the Rcal value is stable it can be copied to the Rzero setting on the settings page.
+The user shall take care the sensor is well heated and in a clean air environment (reference for most sensors) for some time. If the Rcal value is stable it can be copied to the Rzero setting on the settings page. 
+For the MQ-135 the reference level for CO2 can be configured on the device page. Typically the level is around 400ppm in fresh air, but local conditions may differ. Most other sensors use a predefined value for the clean air level.
 
 Autocalibration
 ^^^^^^^^^^^^^^^
@@ -83,7 +87,7 @@ Note that this asumes that at least once a day the reference level is reached. D
 Final thoughts about the sensors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The MQ-xxx sensors are cheap sensors for various types of gas. They are primary used to warn for high levels of gas and not for accurate level reporting. For reportinmg these sensors have several drawbacks:
+The MQ-xxx sensors are cheap sensors for various types of gas. They are primary used to warn for high levels of gas and not for accurate level reporting. For reporting these sensors have several drawbacks:
 
 * They respond to multiple gasses. Although each sensor type is tuned to one or a few gasses also other gasses will influence the readings.
 
@@ -93,7 +97,7 @@ The MQ-xxx sensors are cheap sensors for various types of gas. They are primary 
 
 * The sensors are known to drift over time. For good results they shall be calibrated regularly.
 
-Although the serious issues with this kind of sensors they provide a cheap way to do some trend analysis on your environment. They can be used to control ventilation or provide warnings about air quality. 
+Although the serious issues with this kind of sensors they provide a cheap way to do some trend analysis of your environment. They can be used to control ventilation or provide warnings about air quality. 
 As long as values are not taken absolute it is fun to play with them. I use a MQ-135 as CO2 sensor next to a ndir MHZ-19 sensor. They both increase the reading strongly when working in a closed room. 
 However the MQ-135 keeps the values high much longer that the MHZ-19. Sometimes the MQ-135 detects "gasses" while the MHZ-19 is quiet. 
 It was fun to learn how to build a ESPeasy plugin and I will play with these sensors. But I won't use them for accurate logging of a specific gas.
@@ -108,10 +112,16 @@ Sensors can be bought as a component. The internet is full of development boards
 
 Development board with MQ-7 CO sensor
    
+.. image:: P145_MQxxx-sensor-board.jpg
+   :alt: Development board schematics 
+
+Schematics for development board
+
 Connections
 ^^^^^^^^^^^^
 
-The sensor analog output is connected to an analog input. The digital output often provided on development boards is not used by the plugin. You can use the digital input plugin instead (P001).
+The sensor analog output is connected to an analog input on the ESP. The digital output provided on development boards is not used by the plugin. You can use the digital input plugin instead (P001).
+See analog input plugin for more information about the available analog inputs for each ESP version.
 
 Load resistor remarks
 ^^^^^^^^^^^^^^^^^^^^^

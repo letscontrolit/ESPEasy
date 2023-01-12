@@ -1480,6 +1480,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
     #define USES_P118 // Itho ventilation control
   #endif
+  #ifndef USES_P145
+    #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
+  #endif
 #endif
 
 // Collection of all energy related plugins.

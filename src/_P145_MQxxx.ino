@@ -177,7 +177,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Enable automatic calibration"), F("plugin_145_enable_calibrarion"), calibrate);
       addFormCheckBox(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate);
       addFormNote(F("If this is enabled, the Temperature and Humidity values below need to be configured."));
-      if (compensate)
+      //if (compensate)
       {
         // temperature
         addRowLabel(F("Temperature"));
@@ -261,9 +261,14 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P145_data != nullptr)
       {
-        // we're checking a var from another task, so calculate that basevar
-        float temperature = UserVar[P145_PCONFIG_TEMP_TASK * VARS_PER_TASK + P145_PCONFIG_TEMP_VAL]; // in degrees C
-        float humidity = UserVar[P145_PCONFIG_HUM_TASK * VARS_PER_TASK + P145_PCONFIG_HUM_VAL];    // in % relative
+        float temperature = 20.0f;  // A reasonable value in case temperature source task is invalid
+        float humidity = 60.0f;     // A reasonable value in case tumidity source task is invalid
+        if (validTaskIndex(P145_PCONFIG_TEMP_TASK) && validTaskIndex(P145_PCONFIG_HUM_TASK))
+        {
+          // we're checking a var from another task, so calculate that basevar
+          temperature = UserVar[P145_PCONFIG_TEMP_TASK * VARS_PER_TASK + P145_PCONFIG_TEMP_VAL]; // in degrees C
+          humidity = UserVar[P145_PCONFIG_HUM_TASK * VARS_PER_TASK + P145_PCONFIG_HUM_VAL];    // in % relative
+        }
         UserVar[event->BaseVarIndex] = P145_data->readValue(temperature, humidity);
         success = true;
       }
