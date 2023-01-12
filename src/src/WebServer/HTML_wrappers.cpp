@@ -281,7 +281,10 @@ void html_add_form() {
 }
 
 void html_add_JQuery_script() {
-  addHtml(F("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js\"></script>"));
+  #ifndef CDN_URL_JQUERY
+    #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+  #endif // ifndef CDN_URL_JQUERY
+  addHtml(F("<script src=\"" CDN_URL_JQUERY "\"></script>"));
 }
 
 #if FEATURE_CHART_JS
@@ -290,7 +293,10 @@ void html_add_ChartJS_script() {
   // - Select a CDN (jsdelivr is fine)
   // - Select the chart.js file (may be called chart.umd.min.js) and copy the url
   // - Replace the url in below script src element, keeping the quotes
-  addHtml(F("<script src=\"https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js\"></script>"));
+  #ifndef CDN_URL_CHART_JS
+    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+  #endif // ifndef CDN_URL_CHART_JS
+  addHtml(F("<script src=\"" CDN_URL_CHART_JS "\"></script>"));
 }
 #endif // if FEATURE_CHART_JS
 
