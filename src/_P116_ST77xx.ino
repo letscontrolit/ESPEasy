@@ -161,9 +161,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw_135x240),
           static_cast<int>(ST77xx_type_e::ST7796s_320x480)
         };
+        constexpr int optCount4 = sizeof(optionValues4) / sizeof(optionValues4[0]);
         addFormSelector(F("TFT display model"),
                         F("type"),
-                        static_cast<int>(ST77xx_type_e::ST77xx_MAX),
+                        optCount4,
                         options4,
                         optionValues4,
                         P116_CONFIG_FLAG_GET_TYPE);
@@ -194,18 +195,23 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P116_CommandTrigger::st7789),
           static_cast<int>(P116_CommandTrigger::st7796)
         };
+        constexpr int cmdCount = sizeof(commandTriggerOptions) / sizeof(commandTriggerOptions[0]);
         addFormSelector(F("Write Command trigger"),
                         F("commandtrigger"),
-                        static_cast<int>(P116_CommandTrigger::MAX),
+                        cmdCount,
                         commandTriggers,
                         commandTriggerOptions,
                         P116_CONFIG_FLAG_GET_CMD_TRIGGER);
+        # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
+        # endif // ifndef LIMIT_BUILD_SIZE
       }
 
       // Inverted state!
       addFormCheckBox(F("Wake display on receiving text"), F("NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
+      # ifndef LIMIT_BUILD_SIZE
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
+      # endif // ifndef LIMIT_BUILD_SIZE
 
       AdaGFXFormTextColRowMode(F("colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW) == 1);
 
@@ -221,20 +227,13 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       String strings[P116_Nlines];
       LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      String   line; // Default reserved length is plenty
       uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
 
       for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
-        line  = F("Line ");
-        line += (varNr + 1);
-        addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
+        addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
         remain -= (strings[varNr].length() + 1);
       }
-      String remainStr;
-      remainStr.reserve(15);
-      remainStr  = F("Remaining: ");
-      remainStr += remain;
-      addUnit(remainStr);
+      addUnit(concat(F("Remaining: "), remain));
 
       success = true;
       break;
@@ -282,7 +281,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      if (error.length() > 0) {
+      if (!error.isEmpty()) {
         addHtmlError(error);
       }
 
@@ -322,9 +321,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0));
         P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr != P116_data) {
-          success = P116_data->plugin_init(event); // Start the display
-        }
+        success = (nullptr != P116_data) && P116_data->plugin_init(event); // Start the display
       } else {
         addLog(LOG_LEVEL_ERROR, F("ST77xx: SPI not enabled, init cancelled."));
       }
@@ -347,12 +344,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       if (P116_CONFIG_BUTTON_PIN != -1) {
         P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr == P116_data) {
-          return success;
+        if (nullptr != P116_data) {
+          P116_data->registerButtonState(digitalRead(P116_CONFIG_BUTTON_PIN), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON));
+          success = true;
         }
-
-        P116_data->registerButtonState(digitalRead(P116_CONFIG_BUTTON_PIN), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON));
-        success = true;
       }
       break;
     }

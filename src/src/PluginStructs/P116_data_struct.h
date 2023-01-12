@@ -24,9 +24,9 @@
 # define P116_CONFIG_TYPE               PCONFIG(2)      // Type of device
 # define P116_CONFIG_BACKLIGHT_PIN      PCONFIG(3)      // Backlight pin
 # define P116_CONFIG_BACKLIGHT_PERCENT  PCONFIG(4)      // Backlight percentage
-# define P116_CONFIG_COLORS             PCONFIG_LONG(3) // 2 Colors fit in 1 long
+# define P116_CONFIG_COLORS            PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
-# define P116_CONFIG_FLAGS              PCONFIG_LONG(0) // All flags
+# define P116_CONFIG_FLAGS             PCONFIG_ULONG(0) // All flags
 # define P116_CONFIG_FLAG_NO_WAKE       0               // Flag: Don't wake display
 # define P116_CONFIG_FLAG_INVERT_BUTTON 1               // Flag: Inverted button state
 # define P116_CONFIG_FLAG_CLEAR_ON_EXIT 2               // Flag: Clear display on exit
@@ -68,13 +68,12 @@ enum class ST77xx_type_e : uint8_t {
   ST7735s_128x128   = 0,
   ST7735s_128x160   = 1u,
   ST7735s_80x160    = 2u,
-  ST7735s_80x160_M5 = 8u,
   ST7789vw_240x320  = 3u,
   ST7789vw_240x240  = 4u,
   ST7789vw_240x280  = 5u,
   ST7789vw_135x240  = 6u,
   ST7796s_320x480   = 7u,
-  ST77xx_MAX        = 9u // must be last value in enum
+  ST7735s_80x160_M5 = 8u,
 };
 
 enum class P116_CommandTrigger : uint8_t {
@@ -83,7 +82,6 @@ enum class P116_CommandTrigger : uint8_t {
   st7735 = 2u,
   st7789 = 3u,
   st7796 = 4u,
-  MAX // Keep as last item!
 };
 
 const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device);
@@ -106,7 +104,7 @@ public:
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    bool                textBackFill = true);
-  P116_data_struct() = delete;
+  P116_data_struct()                                = delete;
   virtual ~P116_data_struct();
 
   bool plugin_init(struct EventStruct *event);

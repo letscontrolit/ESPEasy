@@ -15,7 +15,7 @@
 # define P126_CONFIG_DATA_PIN         PIN(0)
 # define P126_CONFIG_CLOCK_PIN        PIN(1)
 # define P126_CONFIG_LATCH_PIN        PIN(2)
-# define P126_CONFIG_FLAGS            PCONFIG_LONG(0)
+# define P126_CONFIG_FLAGS            PCONFIG_ULONG(0)
 
 # define P126_FLAGS_VALUES_DISPLAY    0 // 0/off = HEX, 1/on = BIN
 // Restore values from RTC after warm boot (default enabled, inverted logic)

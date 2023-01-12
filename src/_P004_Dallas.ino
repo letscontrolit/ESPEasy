@@ -97,11 +97,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(P004_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
-      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
-      }
 
-      success                         = true;
+      success = true;
       break;
     }
 
@@ -117,7 +114,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
-      if(Plugin_004_DallasPin_TX == -1) {
+
+      if (Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
@@ -140,9 +138,9 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
           int resolutionChoice = P004_RESOLUTION;
 
           if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
-          const __FlashStringHelper * resultsOptions[4]      = { F("9"), F("10"), F("11"), F("12") };
-          int    resultsOptionValues[4] = { 9, 10, 11, 12 };
-          addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
+          const __FlashStringHelper *resultsOptions[4] = { F("9"), F("10"), F("11"), F("12") };
+          int resultsOptionValues[4]                   = { 9, 10, 11, 12 };
+          addFormSelector(F("Device Resolution"), F("res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
           addHtml(F(" Bit"));
         }
 
@@ -150,7 +148,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
           // Value in case of Error
           const __FlashStringHelper * resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
           int    resultsOptionValues[5] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
-          addFormSelector(F("Error State Value"), F("p004_err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
+          addFormSelector(F("Error State Value"), F("err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
         }
         addFormNote(F("External pull up resistor is needed, see docs!"));
 
@@ -178,7 +176,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
     {
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
-      if(Plugin_004_DallasPin_TX == -1) {
+
+      if (Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
@@ -186,7 +185,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         // save the address for selected device and store into extra tasksettings
         Dallas_addr_selector_webform_save(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
-        uint8_t res = getFormItemInt(F("p004_res"));
+        uint8_t res = getFormItemInt(F("res"));
 
         if ((res < 9) || (res > 12)) { res = 12; }
         P004_RESOLUTION = res;
@@ -196,23 +195,33 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Dallas_setResolution(savedAddress, res, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX);
       }
       P004_SCAN_ON_INIT       = isFormItemChecked(F("autoselect"));
-      P004_ERROR_STATE_OUTPUT = getFormItemInt(F("p004_err"));
+      P004_ERROR_STATE_OUTPUT = getFormItemInt(F("err"));
       success                 = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      uint8_t addr[8];
+      P004_data_struct *P004_data =
+        static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P004_NR_OUTPUT_VALUES) {
-          Dallas_plugin_get_addr(addr, event->TaskIndex, i);
-
           if (i != 0) {
             string += F("<br>");
           }
-          string += Dallas_format_address(addr);
+
+          if (nullptr != P004_data) {
+            // Show the actively used IDs
+            // For "Auto Select Sensor" no value is stored
+            string += P004_data->get_formatted_address(i);
+          } else {
+            // Read the data from the settings.
+            uint8_t addr[8]{};
+            Dallas_plugin_get_addr(addr, event->TaskIndex, i);
+
+            string += Dallas_format_address(addr);
+          }
         }
       }
       success = true;
@@ -223,38 +232,29 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
     {
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
-      if(Plugin_004_DallasPin_TX == -1) {
+      const uint8_t res              = P004_RESOLUTION;
+
+      if (Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
-      uint8_t addr[8] = {0};
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(
+        event->TaskIndex,
+        Plugin_004_DallasPin_RX, 
+        Plugin_004_DallasPin_TX, 
+        res, 
+        P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT));
+      P004_data_struct *P004_data =
+        static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT) {
-        Dallas_reset_search();
-        if (!Dallas_search(addr, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX)) {
-          addr[0] = 0;
+      if (nullptr != P004_data) {
+        for (uint8_t i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
+          uint8_t addr[8] = { 0 };
+          Dallas_plugin_get_addr(addr, event->TaskIndex, i);
+          P004_data->add_addr(addr, i);
         }
-      }
-
-      if (addr[0] == 0) {
-        Dallas_plugin_get_addr(addr, event->TaskIndex);
-      }
-
-      if ((addr[0] != 0) && (validGpio(Plugin_004_DallasPin_RX)) && (validGpio(Plugin_004_DallasPin_TX))) {
-        const uint8_t res = P004_RESOLUTION;
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct());
-        P004_data_struct *P004_data =
-          static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr != P004_data) {
-          P004_data->init(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res);
-          // Address index 0 is already set
-          for (uint8_t i = 1; i < P004_NR_OUTPUT_VALUES; ++i) {
-            Dallas_plugin_get_addr(addr, event->TaskIndex, i);
-            P004_data->add_addr(addr, i);
-          }
-          success = true;
-        }
+        P004_data->init();
+        success = true;
       }
 
       break;
@@ -266,6 +266,11 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P004_data) {
+        if (P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT) {
+          if (!P004_data->sensorAddressSet()) {
+            P004_data->init();
+          }
+        }
         if (!timeOutReached(P004_data->get_timer())) {
           Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->get_timer());
         } else {

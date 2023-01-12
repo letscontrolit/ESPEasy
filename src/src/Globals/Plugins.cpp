@@ -502,7 +502,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           if (1 == (lastTask - firstTask)) {
             // These plugin task data commands are generic, so only apply them on a specific task.
             // Don't try to match them on the first task that may have such data.
-            PluginTaskData_base *taskData = getPluginTaskData(task);
+            PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(task);
             if (nullptr != taskData) {
               if (taskData->plugin_write_base(event, command)) {
                 retval = true;
@@ -681,7 +681,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           } else {
             #if FEATURE_PLUGIN_STATS
-            PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+            PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
             if (taskData != nullptr) {
               taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
             }
@@ -805,7 +805,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_CONFIG_VALUE && !retval) {
           // Try to match a statistical property of a task value.
           // e.g.: [taskname#valuename.avg]
-          PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+          PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
           if (nullptr != taskData) {
             if (taskData->plugin_get_config_value_base(event, str)) {
               retval = true;
