@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-12-26, tonhuisman:  Set initial brightness with default value 255, and allow 'only' values 1..255
 // 2022-11-06, tonhuisman:  Add Initial and Max brightness settings, and NeoPixelBright[,0..255] command, 0 = initial
 //                          Code optimizations
 // 2022-01-29, tonhuisman:  Resolve FIXME for GPIO selection, update comments
@@ -76,6 +77,12 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P038_CONFIG_BRIGHTNESS = 255;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormNumericBox(F("Led Count"), F("pleds"), P038_CONFIG_LEDCOUNT, 1, 999);
@@ -86,8 +93,9 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Strip Type"), F("pstrip"), 2, options, indices, P038_CONFIG_STRIPTYPE);
       }
 
-      addFormNumericBox(F("Initial brightness"), F("ibright"), P038_CONFIG_BRIGHTNESS, 0, 255);
-      addUnit(F("0..255"));
+      if (P038_CONFIG_BRIGHTNESS == 0) { P038_CONFIG_BRIGHTNESS = 255; }
+      addFormNumericBox(F("Initial brightness"), F("ibright"), P038_CONFIG_BRIGHTNESS, 1, 255);
+      addUnit(F("1..255"));
 
       if (P038_CONFIG_MAXBRIGHT == 0) { P038_CONFIG_MAXBRIGHT = 255; }
       addFormNumericBox(F("Maximum allowed brightness"), F("maxbright"), P038_CONFIG_MAXBRIGHT, 1, 255);
@@ -110,6 +118,8 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (P038_CONFIG_BRIGHTNESS == 0) { P038_CONFIG_BRIGHTNESS = 255; }
+
       if (P038_CONFIG_MAXBRIGHT == 0) { P038_CONFIG_MAXBRIGHT = 255; }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P038_data_struct(CONFIG_PIN1,
                                                                                P038_CONFIG_LEDCOUNT,
@@ -118,9 +128,7 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
                                                                                P038_CONFIG_MAXBRIGHT));
       P038_data_struct *P038_data = static_cast<P038_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P038_data) {
-        success = P038_data->plugin_init(event);
-      }
+      success = (nullptr != P038_data) && P038_data->plugin_init(event);
 
       break;
     }

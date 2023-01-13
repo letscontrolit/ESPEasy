@@ -59,14 +59,14 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Altitude [m]"), F("_p006_bmp085_elev"), PCONFIG(1));
+      addFormNumericBox(F("Altitude [m]"), F("elev"), PCONFIG(1));
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(1) = getFormItemInt(F("_p006_bmp085_elev"));
+      PCONFIG(1) = getFormItemInt(F("elev"));
       success    = true;
       break;
     }
@@ -77,9 +77,7 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
       P006_data_struct *P006_data =
         static_cast<P006_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P006_data) {
-        success = true;
-      }
+      success = (nullptr != P006_data);
       break;
     }
 

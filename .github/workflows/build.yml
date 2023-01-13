@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   documentation:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -39,7 +39,7 @@ jobs:
           name: Documentation
           path: ESPEasy_docs.zip
   generate-matrix:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -54,7 +54,7 @@ jobs:
 
   build:
     needs: generate-matrix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -79,7 +79,7 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt install binutils build-essential libffi-dev python-dev libgit2-dev
+          sudo apt install binutils build-essential libffi-dev libgit2-dev
           pip3 install --upgrade pip
           pip install -r requirements.txt
           platformio update
