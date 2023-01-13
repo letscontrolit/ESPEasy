@@ -221,6 +221,8 @@ const __FlashStringHelper* getMiscStatsName_F(int stat) {
     case WIFI_ISCONNECTED_STATS:     return F("WiFi.isConnected()");
     case WIFI_NOTCONNECTED_STATS:    return F("WiFi.isConnected() (fail)");
     case LOAD_TASK_SETTINGS:         return F("LoadTaskSettings()");
+    case LOAD_TASK_SETTINGS_CACHED:  return F("LoadTaskSettings() (cached)");
+    case SAVE_TASK_SETTINGS:         return F("SaveTaskSettings()");
     case TRY_OPEN_FILE:              return F("TryOpenFile()");
     case FS_GC_SUCCESS:              return F("ESPEASY_FS GC success");
     case FS_GC_FAIL:                 return F("ESPEASY_FS GC fail");

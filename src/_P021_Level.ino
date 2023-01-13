@@ -81,7 +81,6 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       addRowLabel(F("Check Task"));
       addTaskSelect(F("ptask"), P021_CHECK_TASK);
       if (validTaskIndex(P021_CHECK_TASK)) {
-        LoadTaskSettings(P021_CHECK_TASK); // we need to load the values from another task for selection!
         addRowLabel(F("Check Value"));
         addTaskValueSelect(F("pvalue"), P021_CHECK_VALUE, P021_CHECK_TASK);
       }
@@ -102,8 +101,6 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Interval to check if 'Set Level' is changed via <pre>config</pre> command and saves it. Max. 24h, 0 = Off"));
       # endif // ifndef BUILD_NO_DEBUG
 
-      // we need to restore our original taskvalues!
-      LoadTaskSettings(event->TaskIndex);
       success = true;
       break;
     }

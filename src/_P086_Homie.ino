@@ -103,25 +103,25 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
           labelText = F("Event Name");
           keyName = F("functionName");
           keyName += i;
-          addFormTextBox(labelText, keyName, ExtraTaskSettings.TaskDeviceValueNames[i], NAME_FORMULA_LENGTH_MAX);
+          addFormTextBox(labelText, keyName, Cache.getTaskDeviceValueName(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
           labelText = F("Parameter Type");
           keyName = F("valueType");
           keyName += i;
           addFormSelector(labelText, keyName, PLUGIN_086_VALUE_TYPES, options, optionValues, choice );
           keyName += F("_min");
-          addFormNumericBox(F("Min"),keyName,ExtraTaskSettings.TaskDevicePluginConfig[i]);
+          addFormNumericBox(F("Min"),keyName,Cache.getTaskDevicePluginConfig(event->TaskIndex, i));
           keyName = F("valueType");
           keyName += i;
           keyName += F("_max");
-          addFormNumericBox(F("Max"),keyName,ExtraTaskSettings.TaskDevicePluginConfig[i+PLUGIN_086_VALUE_MAX]);
+          addFormNumericBox(F("Max"),keyName,Cache.getTaskDevicePluginConfig(event->TaskIndex, i+PLUGIN_086_VALUE_MAX));
           if (i==0) addFormNote(F("min max values only valid for numeric parameter"));
           keyName = F("decimals");
           keyName += i;
-          addFormNumericBox(F("Decimals"),keyName,ExtraTaskSettings.TaskDeviceValueDecimals[i],0,8);
+          addFormNumericBox(F("Decimals"),keyName,Cache.getTaskDeviceValueDecimals(event->TaskIndex, i) ,0,8);
           if (i==0) addFormNote(F("Decimal counts for float parameter"));
           keyName = F("string");
           keyName += i;
-          addFormTextBox(F("String or enum"), keyName, ExtraTaskSettings.TaskDeviceFormula[i], NAME_FORMULA_LENGTH_MAX);
+          addFormTextBox(F("String or enum"), keyName, Cache.getTaskDeviceFormula(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
           if (i==0) addFormNote(F("Default string or enumumeration list (comma seperated)."));
         }
         success = true;
@@ -188,7 +188,6 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               validTaskVarIndex(taskVarIndex) && 
               validUserVarIndex(userVarIndex) &&  
               (event->Par1 == (event->TaskIndex + 1))) {// make sure that this instance is the target
-            LoadTaskSettings(event->TaskIndex);
             String parameter = parseStringToEndKeepCase(string,4);
             String log;
 /*            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -291,7 +290,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 break;
 
               case PLUGIN_086_VALUE_ENUM:
-                enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
+                enumList = Cache.getTaskDeviceFormula(event->TaskIndex, taskVarIndex);
                 i = 1;
                 while (!parseString(enumList,i).isEmpty()) { // lookup result in enum List
                   if (parseString(enumList,i)==parameter) {

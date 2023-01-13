@@ -196,7 +196,6 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
       if (dotPos > -1)
       {
-        LoadTaskSettings(event->TaskIndex);
         String name = command.substring(0, dotPos);
         removeChar(name, '[');
         removeChar(name, ']');
