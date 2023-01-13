@@ -178,7 +178,7 @@ void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
     log += F("PortStatus detail: Port=");
     log += getPortFromKey(it->first);
     log += F(" State=");
-    log += it->second.state;
+    log += it->second.getValue();
     log += F(" Output=");
     log += it->second.output;
     log += F(" Mode=");
