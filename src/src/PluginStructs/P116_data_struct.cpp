@@ -245,6 +245,15 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       if (P116_CONFIG_BUTTON_PIN != -1) {
         pinMode(P116_CONFIG_BUTTON_PIN, INPUT_PULLUP);
       }
+
+      if (!stringsLoaded) {
+        LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
+        stringsLoaded = true;
+
+        for (uint8_t x = 0; x < P116_Nlines && !stringsHasContent; x++) {
+          stringsHasContent = !strings[x].isEmpty();
+        }
+      }
       success = true;
     }
   }
@@ -300,16 +309,7 @@ void P116_data_struct::cleanup() {
  ***************************************************************************/
 bool P116_data_struct::plugin_read(struct EventStruct *event) {
   if (nullptr != st77xx) {
-    String strings[P116_Nlines];
-    LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
-
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P116_Nlines && !hasContent; x++) {
-      hasContent = !strings[x].isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
 
       int yPos = 0;

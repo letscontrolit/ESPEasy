@@ -164,6 +164,10 @@ private:
 
   int8_t _leftMarginCompensation = 0; // Not settable yet
   int8_t _topMarginCompensation  = 0;
+
+  String strings[P116_Nlines];
+  bool   stringsLoaded     = false;
+  bool   stringsHasContent = false;
 };
 
 
