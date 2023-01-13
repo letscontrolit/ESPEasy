@@ -6,6 +6,7 @@
 # These are the same environment names as with tools/build_ESPeasy.sh (i.e. all of them)
 
 import json
+import os
 from platformio.project.config import ProjectConfig
 
 
@@ -40,4 +41,5 @@ if __name__ == "__main__":
         sort.sort(key=str.casefold)
 
     serialized = json.dumps({"include": jobs})
-    print("::set-output name=matrix::{}".format(serialized))
+    with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+        print("matrix={}".format(serialized), file=fh)

@@ -209,6 +209,11 @@
 #endif // ifdef ESP32
 #define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
+// Optional alternative CDN links:
+// Chart.js: (only used when FEATURE_CHART_JS is enabled)
+// #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+// JQuery:
+// #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
 
 
 // #define FEATURE_SETTINGS_ARCHIVE 1
