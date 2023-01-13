@@ -397,7 +397,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             LoadTaskSettings(x);
             deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
 
-            deviceName = ExtraTaskSettings.TaskDeviceName;
+            deviceName = getTaskDeviceName(x);
 
             if (validDeviceIndex(DeviceIndex) && Settings.TaskDeviceEnabled[x]) // Device is enabled so send information
             {                                                                   // device enabled
@@ -577,7 +577,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                          deviceName,
                                          F("$name"),
                                          F(""),
-                                         ExtraTaskSettings.TaskDeviceName,
+                                         getTaskDeviceName(x),
                                          errorCounter);
 
                 // $type	Device → Controller	Type of the node	Yes	Yes
@@ -925,13 +925,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
     {
-      LoadTaskSettings(event->Par1 - 1);
+      
 
       /*        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                 String log = F("CPLUGIN_ACKNOWLEDGE: ");
                 log += string;
                 log += F(" / ");
-                log += ExtraTaskSettings.TaskDeviceName;
+                log += getTaskDeviceName(event->TaskIndex);
                 log += F(" / ");
                 log += ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1];
                 log += F(" sensorType:");
@@ -1015,7 +1015,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             topic.replace(F("%sysname%"), Settings.Name);
             int deviceIndex = event->Par1; // parseString(string, 2).toInt();
             LoadTaskSettings(deviceIndex - 1);
-            String deviceName = ExtraTaskSettings.TaskDeviceName;
+            const String deviceName = getTaskDeviceName(event->TaskIndex);
             topic.replace(F("%tskname%"), deviceName);
             String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2 - 1]; // parseString(string, 3).toInt()-1];
             topic.replace(F("%valname%"), valueName);
