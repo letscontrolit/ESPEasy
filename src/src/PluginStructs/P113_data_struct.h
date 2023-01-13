@@ -4,10 +4,10 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P113
 
-# define P113_DEBUG       // Enable debugging output (INFO loglevel)
+# define P113_DEBUG        // Enable debugging output (INFO loglevel)
 # ifndef BUILD_NO_DEBUG
-# define P113_DEBUG_DEBUG // Enable extended debugging output (DEBUG loglevel)
-#endif
+#  define P113_DEBUG_DEBUG // Enable extended debugging output (DEBUG loglevel)
+# endif // ifndef BUILD_NO_DEBUG
 
 # ifdef LIMIT_BUILD_SIZE
   #  ifdef P113_DEBUG_DEBUG
@@ -24,7 +24,7 @@ public:
   P113_data_struct(uint8_t i2c_addr,
                    int     timing,
                    bool    range);
-  P113_data_struct() = delete;
+  P113_data_struct()          = delete;
   virtual ~P113_data_struct() = default;
 
   bool     begin();
@@ -38,13 +38,13 @@ private:
 
   SFEVL53L1X sensor;
 
-  const uint8_t  i2cAddress;
-  bool     initState = false;
-  const int      timing;
-  const bool     range;
-  bool     success    = false;
-  bool     readActive = false;
-  uint16_t distance = 0u;
+  const uint8_t i2cAddress;
+  bool          initState = false;
+  const int     timing;
+  const bool    range;
+  bool          success    = false;
+  bool          readActive = false;
+  uint16_t      distance   = 0u;
 };
 #endif // ifdef USES_P113
 #endif // ifndef PLUGINSTRUCTS_P113_DATA_STRUCT_H

@@ -2,18 +2,12 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_Plugin.h"
+
 #define EXTRA_TASK_SETTINGS_VERSION 1
 
-ExtraTaskSettingsStruct::ExtraTaskSettingsStruct() : TaskIndex(INVALID_TASK_INDEX) {
-  ZERO_FILL(TaskDeviceName);
-
-  clearUnusedValueNames(0);
-
-  for (uint8_t i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
-    TaskDevicePluginConfigLong[i] = 0;
-    TaskDevicePluginConfig[i]     = 0;
-  }
-}
+uint8_t last_ExtraTaskSettingsStruct_md5[16] = { 0 };
 
 void ExtraTaskSettingsStruct::clear() {
   *this = ExtraTaskSettingsStruct();
@@ -67,7 +61,7 @@ void ExtraTaskSettingsStruct::clearUnusedValueNames(uint8_t usedVars) {
     TaskDeviceValueDecimals[i] = 2;
     setIgnoreRangeCheck(i);
     TaskDeviceErrorValue[i] = 0.0f;
-    VariousBits[i] = 0;
+    VariousBits[i]          = 0;
   }
 }
 
@@ -90,35 +84,12 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames() const {
   return true;
 }
 
+String ExtraTaskSettingsStruct::getInvalidCharsForNames() {
+  return F(",-+/*=^%!#[]{}()");
+}
+
 bool ExtraTaskSettingsStruct::validCharForNames(char c) {
-  // Smal optimization to check these chars as they are in sequence in the ASCII table
-
-  /*
-     case '(': // 40
-     case ')': // 41
-     case '*': // 42
-     case '+': // 43
-     case ',': // 44
-     case '-': // 45
-   */
-
-  if ((c >= '(') && (c <= '-')) { return false; }
-
-  if (
-    (c == ' ') ||
-    (c == '!') ||
-    (c == '#') ||
-    (c == '%') ||
-    (c == '/') ||
-    (c == '=') ||
-    (c == '[') ||
-    (c == ']') ||
-    (c == '^') ||
-    (c == '{') ||
-    (c == '}')) {
-    return false;
-  }
-  return true;
+  return c != ' ' && getInvalidCharsForNames().indexOf(c) == -1;
 }
 
 void ExtraTaskSettingsStruct::setAllowedRange(taskVarIndex_t taskVarIndex, const float& minValue, const float& maxValue)
@@ -176,6 +147,7 @@ float ExtraTaskSettingsStruct::checkAllowedRange(taskVarIndex_t taskVarIndex, co
 }
 
 #if FEATURE_PLUGIN_STATS
+
 // Plugin Stats is now only a single bit, but this may later changed into a combobox with some options.
 // Thus leave 8 bits for the plugin stats options.
 
@@ -195,8 +167,28 @@ void ExtraTaskSettingsStruct::enablePluginStats(taskVarIndex_t taskVarIndex, boo
 bool ExtraTaskSettingsStruct::anyEnabledPluginStats() const
 {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (enabledPluginStats(i)) return true;
+    if (enabledPluginStats(i)) { return true; }
   }
   return false;
 }
-#endif
+
+#endif // if FEATURE_PLUGIN_STATS
+
+void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
+  const __FlashStringHelper *valuename,
+  size_t                     nrValues,
+  uint8_t                    defaultDecimals,
+  bool                       displayString)
+{
+  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+    if (i < nrValues) {
+      safe_strncpy(
+        TaskDeviceValueNames[i],
+        Plugin_valuename(valuename, i, displayString),
+        sizeof(TaskDeviceValueNames[i]));
+      TaskDeviceValueDecimals[i] = defaultDecimals;
+    } else {
+      ZERO_FILL(TaskDeviceValueNames[i]);
+    }
+  }
+}

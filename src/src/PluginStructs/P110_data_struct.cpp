@@ -94,15 +94,18 @@ long P110_data_struct::readDistance() {
     }
 
     # ifdef P110_INFO_LOG
-    log  = F("VL53L0X: Address: 0x");
-    log += String(i2cAddress, HEX);
-    log += F(" / Timing: ");
-    log += String(timing, DEC);
-    log += F(" / Long Range: ");
-    log += String(range, BIN);
-    log += F(" / Distance: ");
-    log += dist;
-    addLogMove(LOG_LEVEL_INFO, log);
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log  = F("VL53L0X: Address: 0x");
+      log += String(i2cAddress, HEX);
+      log += F(" / Timing: ");
+      log += timing;
+      log += F(" / Long Range: ");
+      log += String(range, BIN);
+      log += F(" / Distance: ");
+      log += dist;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
     # endif // P110_INFO_LOG
   }
   return dist;
