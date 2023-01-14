@@ -47,13 +47,13 @@ void Caches::clearFileCaches()
   fileCacheClearMoment = 0;
 }
 
-bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, uint8_t checksum[16]) const
+bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const ChecksumType& checksum) const
 {
   if (validTaskIndex(TaskIndex)) {
     auto it = extraTaskSettings_cache.find(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
-      return memcmp(checksum, it->second.md5checksum, 16) == 0;
+      return checksum.matchChecksum(it->second.md5checksum);
     }
   }
   return false;
@@ -301,7 +301,7 @@ void Caches::updateExtraTaskSettingsCache()
   }
 }
 
-void Caches::updateExtraTaskSettingsCache(uint8_t checksum[16]) 
+void Caches::updateExtraTaskSettingsCache(const ChecksumType& checksum) 
 {
   if (!validTaskIndex(ExtraTaskSettings.TaskIndex)) {
     return;
@@ -310,7 +310,7 @@ void Caches::updateExtraTaskSettingsCache(uint8_t checksum[16])
   // Check if we need to update the cache
   auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
   if (it != extraTaskSettings_cache.end()) {
-    if (memcmp(it->second.md5checksum, checksum, 16) == 0) {
+    if (checksum.matchChecksum(it->second.md5checksum)) {
       return;
     }
   }
@@ -322,7 +322,7 @@ void Caches::updateExtraTaskSettingsCache(uint8_t checksum[16])
   it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
 
   if (it != extraTaskSettings_cache.end()) {
-    memcpy(it->second.md5checksum, checksum, 16);
+    checksum.getChecksum(it->second.md5checksum);
   }
 }
 

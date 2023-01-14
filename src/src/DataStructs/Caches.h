@@ -4,6 +4,7 @@
 #include <map>
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/ChecksumType.h"
 #include "../Globals/Plugins.h"
 
 #include "../Helpers/RulesHelper.h"
@@ -54,7 +55,7 @@ struct Caches {
 
   void    clearFileCaches();
 
-  bool    matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, uint8_t checksum[16]) const;
+  bool    matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const ChecksumType& checksum) const;
 
   void    updateActiveTaskUseSerial0();
 
@@ -87,7 +88,7 @@ struct Caches {
   // Update the cached value.
   // Only to be called from LoadTaskSettings() or SaveTaskSettings()
   // since only those functions know the checksum of what has been stored.
-  void updateExtraTaskSettingsCache(uint8_t checksum[16]);
+  void updateExtraTaskSettingsCache(const ChecksumType& checksum);
 
 private:
 
@@ -108,7 +109,9 @@ private:
 
 public:
 
-  uint32_t fileCacheClearMoment = 0;
+  ChecksumType controllerSettings_checksums[CONTROLLER_MAX] = {};
+  uint32_t     fileCacheClearMoment = 0;
+
 
   bool activeTaskUseSerial0 = false;
 };
