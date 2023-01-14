@@ -252,10 +252,7 @@ void handle_config() {
   int dsmax = getDeepSleepMax();
   addFormNumericBox(F("Sleep time"), F("delay"), Settings.Delay, 0, dsmax); // limited by hardware
   {
-    String maxSleeptimeUnit = F("sec (max: ");
-    maxSleeptimeUnit += String(dsmax);
-    maxSleeptimeUnit += ')';
-    addUnit(maxSleeptimeUnit);
+    addUnit(concat(F("sec (max: "), dsmax) + ')');
   }
 
   addFormCheckBox(F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
