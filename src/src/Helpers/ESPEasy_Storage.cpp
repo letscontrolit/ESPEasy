@@ -553,7 +553,7 @@ String SaveSecuritySettings() {
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
 
-  if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SecurityStruct, SecuritySettings)) {
+  if (SecuritySettings.updateChecksum()) {
     // Settings have changed, save to file.
     err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
@@ -652,7 +652,7 @@ String LoadSettings()
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
 
 #ifndef BUILD_NO_DEBUG
-  if (COMPUTE_STRUCT_CHECKSUM(SecurityStruct, SecuritySettings)) {
+  if (SecuritySettings.checksumMatch()) {
     addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
 
     if (memcmp(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16) != 0) {
@@ -992,11 +992,9 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
     ExtraTaskSettings.validate(); // Validate before saving will reduce nr of saves as it is more likely to not have changed the next time it will be saved.
 
     // Call to validate() may have changed the content, so re-compute the checksum.
-    computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
-
     // This is how it is now stored, so we can now also update the 
     // ExtraTaskSettings cache. This may prevent a reload.
-    Cache.updateExtraTaskSettingsCache(checksum);
+    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
 
     err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
                             TaskIndex,
@@ -1038,9 +1036,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (!validDeviceIndex(DeviceIndex)) {
     // No need to load from storage, as there is no plugin assigned to this task.
     ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
-    uint8_t checksum[16] = {0};
-    computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
-    Cache.updateExtraTaskSettingsCache(checksum);
+    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
     STOP_TIMER(LOAD_TASK_SETTINGS_CACHED);
     return EMPTY_STRING;
   }
@@ -1074,9 +1070,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
-  uint8_t checksum[16] = {0};
-  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
-  Cache.updateExtraTaskSettingsCache(checksum);
+  Cache.updateExtraTaskSettingsCache_afterLoad_Save();
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
@@ -1163,9 +1157,14 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveControllerSettings"));
   #endif
+  if (controller_settings.computeChecksum() == (Cache.controllerSettings_checksums[ControllerIndex])) {
+    return EMPTY_STRING;
+  }
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
-  return SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
+  const String res = SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                     reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(controller_settings));
+  Cache.controllerSettings_checksums[ControllerIndex] = controller_settings.computeChecksum();
+  return res;
 }
 
 /********************************************************************************************\
@@ -1179,6 +1178,7 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
     LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                  reinterpret_cast<uint8_t *>(&controller_settings), sizeof(controller_settings));
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
+  Cache.controllerSettings_checksums[ControllerIndex] = controller_settings.computeChecksum();
   return result;
 }
 

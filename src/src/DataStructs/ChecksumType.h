@@ -10,10 +10,10 @@ struct ChecksumType {
   ChecksumType(uint8_t checksum[16]);
 
   // Construct with checksum over entire range of given data
-  ChecksumType(uint8_t *data,
+  ChecksumType(const uint8_t *data,
                size_t   data_length);
 
-  ChecksumType(uint8_t *data,
+  ChecksumType(const uint8_t *data,
                size_t   data_length,
                size_t   len_upto_md5);
 
@@ -23,7 +23,7 @@ struct ChecksumType {
   // @retval true when checksum matches
   static bool computeChecksum(
     uint8_t  checksum[16],
-    uint8_t *data,
+    const uint8_t *data,
     size_t   data_length,
     size_t   len_upto_md5,
     bool     updateChecksum = true);
@@ -31,6 +31,8 @@ struct ChecksumType {
   void getChecksum(uint8_t checksum[16]) const;
   void setChecksum(const uint8_t checksum[16]);
   bool matchChecksum(const uint8_t checksum[16]) const;
+  bool operator==(const ChecksumType& rhs) const;
+  ChecksumType& operator=(const ChecksumType& rhs);
 
 private:
 

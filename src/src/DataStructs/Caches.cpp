@@ -301,7 +301,7 @@ void Caches::updateExtraTaskSettingsCache()
   }
 }
 
-void Caches::updateExtraTaskSettingsCache(const ChecksumType& checksum) 
+void Caches::updateExtraTaskSettingsCache_afterLoad_Save() 
 {
   if (!validTaskIndex(ExtraTaskSettings.TaskIndex)) {
     return;
@@ -310,7 +310,7 @@ void Caches::updateExtraTaskSettingsCache(const ChecksumType& checksum)
   // Check if we need to update the cache
   auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
   if (it != extraTaskSettings_cache.end()) {
-    if (checksum.matchChecksum(it->second.md5checksum)) {
+    if (ExtraTaskSettings.computeChecksum() == it->second.md5checksum) {
       return;
     }
   }
@@ -322,7 +322,7 @@ void Caches::updateExtraTaskSettingsCache(const ChecksumType& checksum)
   it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
 
   if (it != extraTaskSettings_cache.end()) {
-    checksum.getChecksum(it->second.md5checksum);
+    ExtraTaskSettings.computeChecksum().getChecksum(it->second.md5checksum);
   }
 }
 

@@ -41,6 +41,10 @@ void ExtraTaskSettingsStruct::validate() {
   }
 }
 
+ChecksumType ExtraTaskSettingsStruct::computeChecksum() const {
+  return ChecksumType(reinterpret_cast<const uint8_t *>(this), sizeof(ExtraTaskSettingsStruct));
+}
+
 bool ExtraTaskSettingsStruct::checkUniqueValueNames() const {
   for (int i = 0; i < (VARS_PER_TASK - 1); ++i) {
     for (int j = i; j < VARS_PER_TASK; ++j) {

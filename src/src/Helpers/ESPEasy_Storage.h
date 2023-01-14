@@ -64,6 +64,7 @@ int  getPartionCount(uint8_t pType, uint8_t pSubType = 0xFF);
 bool GarbageCollection();
 
 
+// Macros needed for template class types, like SettingsStruct
 #define COMPUTE_STRUCT_CHECKSUM_UPDATE(STRUCT,OBJECT) \
    ChecksumType::computeChecksum(OBJECT.md5,\
                    reinterpret_cast<uint8_t *>(&OBJECT),\

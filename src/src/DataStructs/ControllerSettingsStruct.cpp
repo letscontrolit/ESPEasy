@@ -77,6 +77,10 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(LWTMessageDisconnect);
 }
 
+ChecksumType ControllerSettingsStruct::computeChecksum() const {
+  return ChecksumType(reinterpret_cast<const uint8_t *>(this), sizeof(ControllerSettingsStruct));
+}
+
 IPAddress ControllerSettingsStruct::getIP() const {
   IPAddress host(IP[0], IP[1], IP[2], IP[3]);
 
