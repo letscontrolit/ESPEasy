@@ -490,40 +490,6 @@ bool GarbageCollection() {
   #endif // ifdef CORE_POST_2_6_0
 }
 
-bool computeChecksum(
-  uint8_t checksum[16], 
-  uint8_t * data, 
-  size_t struct_size, 
-  size_t len_upto_md5,
-  bool updateChecksum)
-{
-  if (len_upto_md5 > struct_size) len_upto_md5 = struct_size;
-  MD5Builder md5;
-  md5.begin();
-
-  if (len_upto_md5 > 0) {
-    md5.add(data, len_upto_md5);
-  }
-  if ((len_upto_md5 + 16) < struct_size) {
-    data += len_upto_md5 + 16;
-    const int len_after_md5 = struct_size - 16 - len_upto_md5;
-    if (len_after_md5 > 0) {
-      md5.add(data, len_after_md5);
-    }
-  }
-  md5.calculate();
-  uint8_t    tmp_md5[16] = { 0 };
-  md5.getBytes(tmp_md5);
-  if (memcmp(tmp_md5, checksum, 16) != 0) {
-    // Data has changed, copy computed checksum
-    if (updateChecksum) {
-      memcpy(checksum, tmp_md5, 16);
-    }
-    return false;
-  }
-  return true;
-}
-
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
@@ -1014,9 +980,8 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   START_TIMER
   String err;
 
-  uint8_t checksum[16] = {0};
   constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
-  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
+  ChecksumType checksum(reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
   if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, checksum)) {
     ExtraTaskSettings.validate(); // Validate before saving will reduce nr of saves as it is more likely to not have changed the next time it will be saved.
 

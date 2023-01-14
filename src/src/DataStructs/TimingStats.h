@@ -87,11 +87,12 @@
 # define HANDLE_SCHEDULER_IDLE          66
 # define HANDLE_SCHEDULER_TASK          67
 # define HANDLE_SERVING_WEBPAGE         68
-# define WIFI_SCAN_ASYNC                69
-# define WIFI_SCAN_SYNC                 70
-# define NTP_SUCCESS                    71
-# define NTP_FAIL                       72
-# define SYSTIME_UPDATED                73
+# define HANDLE_SERVING_WEBPAGE_JSON    69
+# define WIFI_SCAN_ASYNC                70
+# define WIFI_SCAN_SYNC                 71
+# define NTP_SUCCESS                    72
+# define NTP_FAIL                       73
+# define SYSTIME_UPDATED                74
 
 
 class TimingStats {

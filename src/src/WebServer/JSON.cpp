@@ -105,6 +105,7 @@ void handle_csvval()
 // ********************************************************************************
 void handle_json()
 {
+  START_TIMER
   const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
   const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
@@ -496,6 +497,7 @@ void handle_json()
   }
 
   TXBuffer.endStream();
+  STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
 }
 
 // ********************************************************************************

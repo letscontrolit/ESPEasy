@@ -238,6 +238,7 @@ const __FlashStringHelper* getMiscStatsName_F(int stat) {
     case PARSE_SYSVAR:               return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:      return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:     return F("handle webpage");
+    case HANDLE_SERVING_WEBPAGE_JSON: return F("handle webpage JSON");
     case WIFI_SCAN_ASYNC:            return F("WiFi Scan Async");
     case WIFI_SCAN_SYNC:             return F("WiFi Scan Sync (blocking)");
     case NTP_SUCCESS:                return F("NTP Success");
