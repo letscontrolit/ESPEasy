@@ -151,7 +151,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 # ifdef ESP32
       // Analog input selection
       addRowLabel(F("Analog Pin"));
-      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
+      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN_AIN);
 # endif // ifdef ESP32
 
       addFormFloatNumberBox(F("Load Resistance"), F("plugin_145_RLOAD"), P145_PCONFIG_RLOAD, 0.0f, 10e6f, 2U);
@@ -175,10 +175,13 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       bool compensate = P145_PCONFIG_FLAGS & 0x0001;
       bool calibrate = (P145_PCONFIG_FLAGS >> 1) & 0x0001;
       addFormCheckBox(F("Enable automatic calibration"), F("plugin_145_enable_calibrarion"), calibrate);
-      addFormCheckBox(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate);
-      addFormNote(F("If this is enabled, the Temperature and Humidity values below need to be configured."));
-      //if (compensate)
+      //addFormCheckBox(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate);
+      addFormSelector_YesNo(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate, true);
+      // Above selector will fore reloading the page and thus updating the compensate flag
+      // Show the compensation details only when compensation is enabled
+      if (compensate)
       {
+        addFormNote(F("If compensation is enabled, the Temperature and Humidity values below need to be configured."));
         // temperature
         addRowLabel(F("Temperature"));
         addTaskSelect(F("plugin_145_temperature_task"), P145_PCONFIG_TEMP_TASK);
@@ -210,7 +213,8 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       P145_PCONFIG_RLOAD     = getFormItemFloat(F("plugin_145_RLOAD"));
       P145_PCONFIG_RZERO     = getFormItemFloat(F("plugin_145_RZERO"));
       P145_PCONFIG_REF       = getFormItemFloat(F("plugin_145_REFLEVEL"));
-      bool compensate        = isFormItemChecked(F("plugin_145_enable_compensation") );
+      //bool compensate        = isFormItemChecked(F("plugin_145_enable_compensation") );
+      bool compensate = (getFormItemInt(F("plugin_145_enable_compensation")) == 1);
       bool calibrate         = isFormItemChecked(F("plugin_145_enable_calibrarion") );
       P145_PCONFIG_FLAGS     = compensate + (calibrate << 1);
       P145_PCONFIG_TEMP_TASK = getFormItemInt(F("plugin_145_temperature_task"));
@@ -263,7 +267,8 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       {
         float temperature = 20.0f;  // A reasonable value in case temperature source task is invalid
         float humidity = 60.0f;     // A reasonable value in case tumidity source task is invalid
-        if (validTaskIndex(P145_PCONFIG_TEMP_TASK) && validTaskIndex(P145_PCONFIG_HUM_TASK))
+        bool compensate = P145_PCONFIG_FLAGS & 0x0001;
+        if (compensate && validTaskIndex(P145_PCONFIG_TEMP_TASK) && validTaskIndex(P145_PCONFIG_HUM_TASK))
         {
           // we're checking a var from another task, so calculate that basevar
           temperature = UserVar[P145_PCONFIG_TEMP_TASK * VARS_PER_TASK + P145_PCONFIG_TEMP_VAL]; // in degrees C

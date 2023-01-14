@@ -38,19 +38,19 @@ enum P145_algorithm
 // Members are preferrably sorted by memory alignment
 struct P145_SENSORDEF
 {
-  float cleanRatio;   // Rs/R0 ratio in clean air
-  float para;         // PARA scaling factor value
-  float parb;         // PARB exponent value
-  float cora;         // CORA
-  float corb;         // CORB
-  float corc;         // CORC
-  float cord;         // CORD
-  float core;         // CORE
-  float corf;         // CORF
-  float corg;         // CORG
+  float cleanRatio;    // Rs/R0 ratio in clean air
+  float para;          // PARA scaling factor value
+  float parb;          // PARB exponent value
+  float cora;          // CORA
+  float corb;          // CORB
+  float corc;          // CORC
+  float cord;          // CORD
+  float core;          // CORE
+  float corf;          // CORF
+  float corg;          // CORG
   P145_algorithm alg;  // Preferred/tuned algorithm
-  char name[8];         // Sensor type name
-  char gas[8];          // Measured gas concentration
+  char name[8];        // Sensor type name
+  char gas[8];         // Measured gas concentration
 };
 
 struct P145_data_struct : public PluginTaskData_base 
@@ -65,12 +65,12 @@ struct P145_data_struct : public PluginTaskData_base
     uint   ovs_cnt = 0;     // Oversampling algorithm sample counter
     float  last_ain = 0.0;  // Oversampling algorithm last measured analog input value
     /* Calibration static data */
-    ulong  last_cal = 0;    // Last calibration timestamp
-    float  rcal = 0.0;      // Rcal, calibration resistance [Ohm]
+    ulong  last_cal = 0U;   // Last calibration timestamp
+    float  rcal = 0.0f;     // Rcal, calibration resistance [Ohm]
     /* Sensor value conversion parameters */
-    float rload = 0.0;      // Rload, load resistor [Ohm]
-    float rzero = 0.0;      // R0, reference resistance [Ohm]
-    float refLevel = 0.0;   // Reference level for calibration [ppm]
+    float rload = 0.0f;     // Rload, load resistor [Ohm]
+    float rzero = 0.0f;     // R0, reference resistance [Ohm]
+    float refLevel = 0.0f;  // Reference level for calibration [ppm]
     /* Sensor type & user options */
     bool compensation = false;            // Use temperature compensation
     bool calibration = false;             // Perform auto calibration

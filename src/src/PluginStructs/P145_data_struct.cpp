@@ -270,7 +270,7 @@ float P145_data_struct::getPPM(float rSensor)
       return (sensordef.para * powf((rSensor/rzero), -sensordef.parb));
       break;
     case p145AlgB:  // Miquel5612 Exponential
-      return (sensordef.para *powf((rSensor/rzero), sensordef.parb));
+      return (sensordef.para * powf((rSensor/rzero), sensordef.parb));
       break;
     case p145AlgC:  // Miquel5612 Linear
       return (powf(10.0f, (log10f(rSensor/rzero)-sensordef.parb)/sensordef.para));
@@ -294,10 +294,10 @@ float P145_data_struct::getPPM(float rSensor)
 /*****************************************************************************/
 float P145_data_struct::getCorrectedPPM(float rSensor, float temperature, float humidity)
 {
+  float c = 1.0f;   // Correction factor
   switch (algorithm)
   {
     case p145AlgA:
-      float c;                      // Temperature & humidity correction factor
       if (temperature < 20.0f)
       {
         c = sensordef.cora * temperature * temperature - sensordef.corb * temperature + sensordef.corc - (humidity - 33.0f) * sensordef.cord;
@@ -306,7 +306,6 @@ float P145_data_struct::getCorrectedPPM(float rSensor, float temperature, float 
       {
         c = sensordef.core * temperature + sensordef.corf * humidity + sensordef.corg;
       }
-      return (sensordef.para * pow(((rSensor / c) / rzero), -sensordef.parb));
     case p145AlgB:
       // TODO Still missing a formula to correct for temp/hum when applying this algorithm
       break;
@@ -317,7 +316,7 @@ float P145_data_struct::getCorrectedPPM(float rSensor, float temperature, float 
       // Do nothing, return a default value at the end
       break;
   }
-  return 0.0f;  // Default value should never be returned
+  return getPPM(rSensor/c);  // Default value should never be returned
 }
 
 /*****************************************************************************/
@@ -429,6 +428,8 @@ float P145_data_struct::readValue(float temperature, float humidity)
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: RS= "), rSensor));          // Calculated sensor resistance Rsensor
 #ifdef P145_DEBUG
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Ref= "), refLevel));        // Reference level for calibration
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Temp= "), temperature));    // Temperature for compensation algorithm
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Hum= "), humidity));        // Humidity for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ain= "), ain));             // Measured analog input value
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ovs= "), ovs_cnt));         // Oversampling count
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: algorithm= "), algorithm)); // Conversion algorithm

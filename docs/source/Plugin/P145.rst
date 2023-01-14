@@ -29,16 +29,20 @@ This plugin supports gas sensors for which the resistance depends on a gas conce
 The analog value of the sensors is determined by a resistance (Rsensor). The sensor is typically used in series with a load resistor (Rload). 
 The voltage is over Rload is connected to the analog input of the ESP. A sensor and gas specific conversion formula is used to convert the measured voltage to a gas concentration.
 
+Typical MQ-xxx sensor connection:
+
 .. image:: P145_MQ-xxx-Diagram.jpg
    :alt: Basic circuit to connect MQ-xxx sensors
 
-The plugin can be configured to select one of the predefined sensor types and tune the conversion parameters.
+The plugin can be configured to select one of the predefined sensor types. Various parameters can be tuned to adapt the conversion.
 
 Basic algorithm
 ^^^^^^^^^^^^^^^
 
 The MQ-xxx series of sensors contain a resistor that depends on the concentration of certain gases in the environment. This relation is typically provided in the datasheets as a curve on a logarithmic plot. Figure below shows this relation for the MQ-3 sensor. In the indicated range the plot is close to linear. 
 The plugin uses a conversion algoritm based upon a linear relation in the log-log plot. This results in two parameters parA and parB that determine this linear relation.
+
+Example MQ-xxx sensor gas level to resistance graph:
 
 .. image:: P145_SensorPlot.jpg
    :alt: Relation between gas level and sensor resistance (Rsensor/Rzero)
@@ -59,6 +63,8 @@ Temperature and humidity compensation
 
 The MQ-xxx series of sensors is depending on the environment temperature and humidity. The datasheets often provide a graph that shows the relation between the Rsensor/Rzero ratio and environment temperature for various relative humidity levels. Figure below shows this relation for the MQ-3 sensor.
 From the plot it is clear that this relation is not linear.
+
+Example MQ-xxx temperature and humidity influence on sensor resistance
 
 .. image:: P145_TemHumDependency.jpg
    :alt: Relation between temperature & humidity versus sensor resistance (Rsensor/Rzero)
@@ -107,29 +113,35 @@ Hardware
 
 Sensors can be bought as a component. The internet is full of development boards that contain the sensor with load resistor connected. These boards also provide a comparator that compares the output value with a preset value for a simple digital output.
 
+Development board with MQ-7 CO sensor:
+
 .. image:: P145_MQ_hardware.jpeg
    :alt: MQ-7 development board
-
-Development board with MQ-7 CO sensor
    
+Schematics for development board:
+
 .. image:: P145_MQxxx-sensor-board.jpg
    :alt: Development board schematics 
-
-Schematics for development board
 
 Connections
 ^^^^^^^^^^^^
 
 The sensor analog output is connected to an analog input on the ESP. The digital output provided on development boards is not used by the plugin. You can use the digital input plugin instead (P001).
-See analog input plugin for more information about the available analog inputs for each ESP version.
+The plugin uses the standard ESPeasy mechanism to select an analog input pin. Selection options depend on the type of ESP used.
+See analog input plugin for more information about the available analog inputs for each of the supported ESP versions.
 
 Load resistor remarks
 ^^^^^^^^^^^^^^^^^^^^^
 
 The manufactors of the MQ-xxx sensors provide the conversion plots given a set of environment conditions. This includes the supply voltage and a prescribed range for the load resistor  Rload. 
 Unfortunately most of the cheap development boards put a standard 1kOhm resistor on the board. For most sensors this value is far too low. The plugin can handle such values. 
-However such a low value for the load resistor decreases the range of the output signal and thus the accuracy of the measurent. It also uses the sensor in a range that is not supported by the manufator.
-It is advised to replace this sensor by a value fitting the range advised by the manufactor. You can find these in the datasheets.
+However, a too low value for the load resistor decreases the range of the output voltage signal and thus the accuracy of the measurent. It also uses the sensor in a range that is not supported by the manufator.
+It is advised to replace this resistor by a value fitting the range advised by the manufactor. You can find the correct range in the datasheet for the sensor. 
+
+Location of Rload on many of the cheap development boards:
+
+.. image:: P145_loadResistor.png
+   :alt: Load register location on sensor development boards
 
 Many ESP8266 boards use resistors to divide the analog input value so map the 1 Volt input range of the ESP to the 3.3 Volt supply range. These resistors are in parallel with the Rload on the sensor board. 
 This shall be taken into account when determining the Rload value for the plugin.
