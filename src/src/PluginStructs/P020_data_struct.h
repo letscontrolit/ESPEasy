@@ -11,8 +11,11 @@
   #  define PLUGIN_020_DEBUG            false // when true: extra logging in serial out !?!?!
 # endif // ifndef PLUGIN_020_DEBUG
 
-# define P020_SERVER_PORT               ExtraTaskSettings.TaskDevicePluginConfigLong[0]
-# define P020_BAUDRATE                  ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+# define P020_SET_SERVER_PORT           ExtraTaskSettings.TaskDevicePluginConfigLong[0]
+# define P020_SET_BAUDRATE              ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+
+# define P020_GET_SERVER_PORT           Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 0)
+# define P020_GET_BAUDRATE              Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 1)
 
 # define P020_REPLACE_CHAR_SET          ",;:.!^|/\\"
 

@@ -9,8 +9,10 @@
 
 // #define PLUGIN_044_DEBUG  // extra logging in serial out
 
-# define P044_WIFI_SERVER_PORT      ExtraTaskSettings.TaskDevicePluginConfigLong[0]
-# define P044_BAUDRATE              ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+# define P044_SET_WIFI_SERVER_PORT  ExtraTaskSettings.TaskDevicePluginConfigLong[0]
+# define P044_SET_BAUDRATE          ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+# define P044_GET_WIFI_SERVER_PORT  Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 0)
+# define P044_GET_BAUDRATE          Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 1)
 # define P044_RX_WAIT               PCONFIG(0)
 # define P044_SERIAL_CONFIG         PCONFIG(1)
 # define P044_RESET_TARGET_PIN      CONFIG_PIN1
@@ -112,5 +114,5 @@ struct P044_Task : public PluginTaskData_base {
   bool   _ledInverted = false;
 };
 
-#endif // ifdef USES_P044
+#endif // ifdef USES_P044_ORG
 #endif // ifndef PLUGINSTRUCTS_P044_DATA_STRUCT_H
