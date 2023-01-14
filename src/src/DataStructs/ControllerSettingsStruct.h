@@ -13,6 +13,7 @@
 #include <WiFiUdp.h>
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/ChecksumType.h"
 #include "../Globals/Plugins.h"
 
 // Minimum delay between messages for a controller to send in msec.
@@ -100,6 +101,8 @@ struct ControllerSettingsStruct
   bool      isSet() const;
 
   void      validate();
+
+  ChecksumType computeChecksum() const;
 
   IPAddress getIP() const;
 

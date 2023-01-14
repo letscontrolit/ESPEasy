@@ -8,6 +8,7 @@
 #include <Arduino.h>
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/ChecksumType.h"
 #include "../Globals/Plugins.h"
 
 // This is only used by some plugins to store extra settings like formula descriptions.
@@ -21,6 +22,8 @@ struct ExtraTaskSettingsStruct
   void          clear();
 
   void          validate();
+ 
+  ChecksumType  computeChecksum() const;
 
   bool          checkUniqueValueNames() const;
 

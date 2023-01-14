@@ -23,6 +23,7 @@ SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPrefere
   clearNetworkSettings();
 }
 
+
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname()  const {

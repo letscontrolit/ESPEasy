@@ -7,13 +7,13 @@ ChecksumType::ChecksumType(uint8_t checksum[16])
   memcpy(_checksum, checksum, 16);
 }
 
-ChecksumType::ChecksumType(uint8_t *data,
+ChecksumType::ChecksumType(const uint8_t *data,
                            size_t   data_length)
 {
   computeChecksum(_checksum, data, data_length, data_length, true);
 }
 
-ChecksumType::ChecksumType(uint8_t *data,
+ChecksumType::ChecksumType(const uint8_t *data,
                            size_t   data_length,
                            size_t   len_upto_md5)
 {
@@ -22,7 +22,7 @@ ChecksumType::ChecksumType(uint8_t *data,
 
 bool ChecksumType::computeChecksum(
   uint8_t  checksum[16],
-  uint8_t *data,
+  const uint8_t *data,
   size_t   data_length,
   size_t   len_upto_md5,
   bool     updateChecksum)
@@ -33,7 +33,8 @@ bool ChecksumType::computeChecksum(
   md5.begin();
 
   if (len_upto_md5 > 0) {
-    md5.add(data, len_upto_md5);
+    // MD5Builder::add has non-const argument
+    md5.add(const_cast<uint8_t *>(data), len_upto_md5);
   }
 
   if ((len_upto_md5 + 16) < data_length) {
@@ -41,7 +42,8 @@ bool ChecksumType::computeChecksum(
     const int len_after_md5 = data_length - 16 - len_upto_md5;
 
     if (len_after_md5 > 0) {
-      md5.add(data, len_after_md5);
+      // MD5Builder::add has non-const argument
+      md5.add(const_cast<uint8_t *>(data), len_after_md5);
     }
   }
   md5.calculate();
@@ -69,4 +71,13 @@ void ChecksumType::setChecksum(const uint8_t checksum[16]) {
 
 bool ChecksumType::matchChecksum(const uint8_t checksum[16]) const {
   return memcmp(_checksum, checksum, 16) == 0;
+}
+
+bool ChecksumType::operator==(const ChecksumType& rhs) const {
+  return memcmp(_checksum, rhs._checksum, 16) == 0;
+}
+
+ChecksumType& ChecksumType::operator=(const ChecksumType& rhs) {
+  memcpy(_checksum, rhs._checksum, 16);
+  return *this;
 }
