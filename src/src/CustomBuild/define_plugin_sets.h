@@ -1530,6 +1530,10 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+   #ifndef USES_P148
+     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+   #endif
+
 #endif
 
 // Collection of all display plugins. (also NeoPixel)
@@ -1597,6 +1601,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
   #endif
+  #ifndef USES_P148
+    #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
 #endif
 
 // Collection of all climate plugins.
@@ -1622,6 +1629,7 @@ To create/register a plugin, you have to :
   #define USES_P012   // LCD
   #define USES_P014   // SI7021
   #define USES_P018   // Dust
+  #define USES_P019   // PCF8574
 
   #define USES_P021   // Level
   #define USES_P023   // OLED
@@ -1700,6 +1708,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
+  #ifndef USES_P148
+    #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+
 #endif
 
 // Collection of all NeoPixel plugins
@@ -2489,7 +2501,10 @@ To create/register a plugin, you have to :
   #define FEATURE_ESPEASY_P2P 1
 #endif
 
-
+#if !defined(ESP32) && defined(USES_P148)
+  // This chip/display is only used on ESP32 devices made by Sonoff
+  #undef USES_P148   // Sonoff POWR3xxD and THR3xxD display
+#endif
 
 
 
@@ -2667,5 +2682,12 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_PINSTATE_EXTENDED
+  #ifdef ESP8266_1M
+    #define FEATURE_PINSTATE_EXTENDED           0 // Don't use extended pinstate feature on 1M builds
+  #else
+    #define FEATURE_PINSTATE_EXTENDED           1 // Enable by default for all other builds
+  #endif
+#endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

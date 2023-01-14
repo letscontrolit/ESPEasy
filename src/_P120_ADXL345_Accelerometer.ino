@@ -11,6 +11,7 @@
  */
 
 /** Changelog:
+ * 2023-01-09, tonhuisman: Fixed a bug that the Inactivity threshold wasn't saved, and thus not applied
  * 2021-12-10, tonhuisman: Split functional parts into P120_data_struc to re-use for P125 ADXL345 SPI plugin
  * 2021-11-22, tonhuisman: Move from DEVELOPMENT to TESTING
  * 2021-11-02, tonhuisman: Add Axis offsets for calibration
@@ -141,7 +142,7 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P120_I2C_ADDR       = getFormItemInt(F("i2c_addr"));
-      P120_AVERAGE_BUFFER = getFormItemInt(F("p120_average_buf"));
+      P120_AVERAGE_BUFFER = getFormItemInt(F("average_buf"));
 
       P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
 

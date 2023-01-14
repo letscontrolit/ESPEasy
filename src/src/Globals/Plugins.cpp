@@ -287,6 +287,9 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
     {
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
       if (validDeviceIndex(DeviceIndex)) {
+        if (Function == PLUGIN_INIT) {
+          LoadTaskSettings(taskIndex);
+        }
         TempEvent->setTaskIndex(taskIndex);
         TempEvent->sensorType   = Device[DeviceIndex].VType;
         if (event != nullptr) {
@@ -480,7 +483,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           if (1 == (lastTask - firstTask)) {
             // These plugin task data commands are generic, so only apply them on a specific task.
             // Don't try to match them on the first task that may have such data.
-            PluginTaskData_base *taskData = getPluginTaskData(task);
+            PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(task);
             if (nullptr != taskData) {
               if (taskData->plugin_write_base(event, command)) {
                 retval = true;
@@ -490,7 +493,10 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
 
         if (retval) {
-          CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, command);
+          EventStruct CPlugin_ack_event;
+          CPlugin_ack_event.deep_copy(TempEvent);
+          CPlugin_ack_event.setTaskIndex(task);
+          CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &CPlugin_ack_event, command);
           return true;
         }
       }
@@ -604,11 +610,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
       if (validDeviceIndex(DeviceIndex)) {
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          if (Function == PLUGIN_READ && !Device[DeviceIndex].ErrorStateValues) {
+          if (Function == PLUGIN_READ && Device[DeviceIndex].ErrorStateValues) {
             // PLUGIN_READ should not need to access ExtraTaskSettings except for what's already being cached.
             // Only exception is when ErrorStateValues is needed.
-            // Therefore no need to call LoadTaskSettings
-          } else {
+            // Therefore only need to call LoadTaskSettings for those tasks with ErrorStateValues
+            LoadTaskSettings(event->TaskIndex);
+          } else if (Function == PLUGIN_INIT || Function == PLUGIN_WEBFORM_LOAD) {
             // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
             LoadTaskSettings(event->TaskIndex);
           }
@@ -659,7 +666,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           } else {
             #if FEATURE_PLUGIN_STATS
-            PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+            PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
             if (taskData != nullptr) {
               taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
             }
@@ -689,7 +696,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           clearPluginTaskData(event->TaskIndex);
           initSerial();
           queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
-          clearTaskCaches(); // FIXME: To improve: Only remove current TaskIndex from cache
+          updateActiveTaskUseSerial0();
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
         post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
@@ -777,6 +784,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             Function == PLUGIN_WEBFORM_SAVE ||
             Function == PLUGIN_SET_DEFAULTS ||
             Function == PLUGIN_INIT_VALUE_RANGES) {
+          // Each of these may update ExtraTaskSettings, but it may not have been saved yet.
+          // Thus update the cache just in case something from it is requested from the cache.
           Cache.updateExtraTaskSettingsCache();
         }
         if (Function == PLUGIN_SET_DEFAULTS) {
@@ -785,7 +794,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_CONFIG_VALUE && !retval) {
           // Try to match a statistical property of a task value.
           // e.g.: [taskname#valuename.avg]
-          PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+          PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
           if (nullptr != taskData) {
             if (taskData->plugin_get_config_value_base(event, str)) {
               retval = true;

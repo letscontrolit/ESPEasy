@@ -125,7 +125,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         const int indices[]                  = { static_cast<int>(AHTx_device_type::AHT10_DEVICE),
                                                  static_cast<int>(AHTx_device_type::AHT20_DEVICE),
                                                  static_cast<int>(AHTx_device_type::AHT21_DEVICE) };
-        addFormSelector(F("Sensor model"), F("p105_ahttype"), 3, options, indices, PCONFIG(1), true);
+        addFormSelector(F("Sensor model"), F("ahttype"), 3, options, indices, PCONFIG(1), true);
         addFormNote(F("Changing Sensor model will reload the page."));
       }
 
@@ -135,7 +135,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(1) = getFormItemInt(F("p105_ahttype"));
+      PCONFIG(1) = getFormItemInt(F("ahttype"));
 
       if (static_cast<AHTx_device_type>(PCONFIG(1)) != AHTx_device_type::AHT10_DEVICE) {
         PCONFIG(0) = 0x38; // AHT20/AHT21 only support a single I2C address.
@@ -153,10 +153,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
       P105_data_struct *P105_data =
         static_cast<P105_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P105_data) {
-        return success;
-      }
-      success = true;
+      success = (nullptr != P105_data);
 
       break;
     }
@@ -182,7 +179,6 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P105_data) {
         if (P105_data->state != AHTx_state::AHTx_New_values) {
-          success = false;
           break;
         }
         P105_data->state = AHTx_state::AHTx_Values_read;

@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-01-04 tonhuisman: Use DIRECT_pin GPIO functions for faster GPIO handling (mostly on ESP32), string optimization
  * 2022-08-05 tonhuisman: Fix issue with reading 8th bit of each byte (found during HW testing)
  *                        Reduce number of Values to match the selected number of chips/4. Small UI improvements.
  *                        Enable pin is no longer required, as it is not available or required on some boards.
@@ -172,10 +173,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
                         chipOption,
                         P129_CONFIG_CHIP_COUNT,
                         true);
-
-        String unit = F("Daisychained 1..");
-        unit += P129_MAX_CHIP_COUNT;
-        addUnit(unit);
+        addUnit(concat(F("Daisychained 1.."), P129_MAX_CHIP_COUNT));
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
         # endif // ifndef LIMIT_BUILD_SIZE
@@ -296,7 +294,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         }
 
         for (uint8_t j = 0; j < 8; j++) {
-          bitWrite(bits, static_cast<uint64_t>(off * 8 + (7 - j)), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1))); // -V784
+          bitWrite(bits, static_cast<uint64_t>(off * 8 + (7 - j)), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1))); // -V629
         }
         PCONFIG_ULONG(i / 4) = bits;
 

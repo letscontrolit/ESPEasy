@@ -84,13 +84,13 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
         uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
         serialHelper_serialconfig_webformLoad(event, serialConfChoice);
 
-        addFormNumericBox(F("Baud Rate"), F("pbaud"), P044_BAUDRATE, 0, 115200);
+        addFormNumericBox(F("Baud Rate"), F("pbaud"), P044_GET_BAUDRATE, 0, 115200);
       }
 
       { // Device settings
         addFormSubHeader(F("Device"));
 
-        addFormNumericBox(F("TCP Port"), F("pport"), P044_WIFI_SERVER_PORT, 0, 65535);
+        addFormNumericBox(F("TCP Port"), F("pport"), P044_GET_WIFI_SERVER_PORT, 0, 65535);
         # ifndef LIMIT_BUILD_SIZE
         addUnit(F("0..65535"));
         # endif // ifndef LIMIT_BUILD_SIZE
@@ -115,13 +115,13 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      LoadTaskSettings(event->TaskIndex);
-      P044_WIFI_SERVER_PORT = getFormItemInt(F("pport"));
-      P044_BAUDRATE         = getFormItemInt(F("pbaud"));
-      P044_RX_WAIT          = getFormItemInt(F("prxwait"));
-      P044_LED_ENABLED      = 0x80 + (isFormItemChecked(F("pled")) ? 0 : 1); // Invert + set 8th bit to confirm new settings have been saved
-      P044_LED_INVERTED     = isFormItemChecked(F("pledinv")) ? 1 : 0;
-      P044_SERIAL_CONFIG    = serialHelper_serialconfig_webformSave();
+      P044_SET_WIFI_SERVER_PORT = getFormItemInt(F("pport"));
+      P044_SET_BAUDRATE         = getFormItemInt(F("pbaud"));
+      P044_RX_WAIT              = getFormItemInt(F("prxwait"));
+      P044_LED_ENABLED          = 0x80 + (isFormItemChecked(F("pled")) ? 0 : 1); // Invert + set 8th bit to confirm new settings have been
+                                                                                 // saved
+      P044_LED_INVERTED  = isFormItemChecked(F("pledinv")) ? 1 : 0;
+      P044_SERIAL_CONFIG = serialHelper_serialconfig_webformSave();
 
       success = true;
       break;
@@ -136,7 +136,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
       LoadTaskSettings(event->TaskIndex);
 
-      if ((P044_WIFI_SERVER_PORT == 0) || (P044_BAUDRATE == 0)) {
+      if ((P044_GET_WIFI_SERVER_PORT == 0) || (P044_GET_BAUDRATE == 0)) {
         clearPluginTaskData(event->TaskIndex);
         break;
       }
@@ -162,8 +162,8 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
       // FIXME TD-er: Must use proper pin settings and standard ESPEasySerial wrapper
       ESPeasySerialType::getSerialTypePins(ESPEasySerialPort::serial0, rxPin, txPin);
       uint8_t serialconfig = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
-      task->serialBegin(ESPEasySerialPort::not_set, rxPin, txPin, P044_BAUDRATE, serialconfig);
-      task->startServer(P044_WIFI_SERVER_PORT);
+      task->serialBegin(ESPEasySerialPort::not_set, rxPin, txPin, P044_GET_BAUDRATE, serialconfig);
+      task->startServer(P044_GET_WIFI_SERVER_PORT);
 
       if (!task->isInit()) {
         clearPluginTaskData(event->TaskIndex);
@@ -180,7 +180,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
       task->blinkLED();
 
-      if (P044_BAUDRATE == 115200) {
+      if (P044_GET_BAUDRATE == 115200) {
         # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 5 meter, CRC on"));
         # endif // ifndef BUILD_NO_DEBUG
@@ -197,17 +197,17 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_EXIT:
-      {
-        P044_Task *task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
+    {
+      P044_Task *task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr != task) {
-          task->stopServer();
-          task->serialEnd();
-        }
-
-        success = true;
-        break;
+      if (nullptr != task) {
+        task->stopServer();
+        task->serialEnd();
       }
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_ONCE_A_SECOND:
     {
@@ -252,4 +252,4 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif // USES_P044
+#endif // USES_P044_ORG
