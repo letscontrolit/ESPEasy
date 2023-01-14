@@ -141,6 +141,11 @@ class SettingsStruct_tmpl
   bool SendToHTTP_follow_redirects() const;
   void SendToHTTP_follow_redirects(bool value);
 
+  #if FEATURE_ZEROFILL_APPEND_UNITNUMBER
+  // Fill out the Unit number with zeros when appended to hostname
+  bool zerofillUnitNumber() const;
+  void zerofillUnitNumber(bool value);
+  #endif // FEATURE_ZEROFILL_APPEND_UNITNUMBER
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;

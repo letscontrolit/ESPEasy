@@ -419,6 +419,17 @@ When using Dark-mode as an Operating System or Web-browser setting, the ESPEasy 
 
 NB: If this option is not available, the regular non-dark mode will be used.
 
+Zerofill Unitnr appended to hostname
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-01-14
+
+When the unit number is appended to the hostname, the unit number can be pre-fixed with zeroes to ease the (external) sorting by hostname. Using 3 digits, as the max. usable unit nr is 254.
+
+When enabled, a preview is shown (after submitting the page), independent of the ``Append Unit Number to hostname`` state.
+
+NB: Not available in Minimal builds.
+
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
 

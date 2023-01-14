@@ -68,6 +68,9 @@ struct LabelType {
 #if FEATURE_AUTO_DARK_MODE
     ENABLE_AUTO_DARK_MODE,
 #endif
+#if FEATURE_ZEROFILL_APPEND_UNITNUMBER
+    ZEROFILL_APPEND_UNITNUMBER,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0

@@ -449,6 +449,11 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_TIMING_STATS  0
 
+    #ifdef FEATURE_ZEROFILL_APPEND_UNITNUMBER
+        #undef FEATURE_ZEROFILL_APPEND_UNITNUMBER
+    #endif
+    #define FEATURE_ZEROFILL_APPEND_UNITNUMBER  0
+
     #ifndef USES_P001
         #define USES_P001   // switch
     #endif
@@ -2503,6 +2508,9 @@ To create/register a plugin, you have to :
   #undef USES_P148   // Sonoff POWR3xxD and THR3xxD display
 #endif
 
+#ifndef FEATURE_ZEROFILL_APPEND_UNITNUMBER 
+  #define FEATURE_ZEROFILL_APPEND_UNITNUMBER    1
+#endif
 
 
 

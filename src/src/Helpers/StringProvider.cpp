@@ -112,6 +112,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #if FEATURE_AUTO_DARK_MODE
     case LabelType::ENABLE_AUTO_DARK_MODE:  return F("Web light/dark mode");
 #endif // FEATURE_AUTO_DARK_MODE
+#if FEATURE_ZEROFILL_APPEND_UNITNUMBER
+    case LabelType::ZEROFILL_APPEND_UNITNUMBER: return F("Zerofill Unitnr appended to hostname");
+#endif // FEATURE_ZEROFILL_APPEND_UNITNUMBER
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -343,6 +346,9 @@ String getValue(LabelType::Enum label) {
 #if FEATURE_AUTO_DARK_MODE
     case LabelType::ENABLE_AUTO_DARK_MODE:      return toString(Settings.getCssMode());
 #endif // FEATURE_AUTO_DARK_MODE
+#if FEATURE_ZEROFILL_APPEND_UNITNUMBER
+    case LabelType::ZEROFILL_APPEND_UNITNUMBER: return jsonBool(Settings.zerofillUnitNumber());
+#endif
 
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
