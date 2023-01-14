@@ -2682,5 +2682,12 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_PINSTATE_EXTENDED
+  #ifdef ESP8266_1M
+    #define FEATURE_PINSTATE_EXTENDED           0 // Don't use extended pinstate feature on 1M builds
+  #else
+    #define FEATURE_PINSTATE_EXTENDED           1 // Enable by default for all other builds
+  #endif
+#endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

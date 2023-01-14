@@ -65,17 +65,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        if (i < P004_NR_OUTPUT_VALUES) {
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_valuename(F("Temperature"), i, false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
-          ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
-        } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
-        }
-      }
+      ExtraTaskSettings.populateDeviceValueNamesSeq(F("Temperature"), P004_NR_OUTPUT_VALUES, 2, false);
       break;
     }
 
