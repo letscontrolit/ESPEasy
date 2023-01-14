@@ -140,7 +140,6 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         addRowLabel(F("Temperature"));
         addTaskSelect(F("temperature_task"), P090_TEMPERATURE_TASK_INDEX);
         if (validTaskIndex(P090_TEMPERATURE_TASK_INDEX)) {
-          LoadTaskSettings(P090_TEMPERATURE_TASK_INDEX); // we need to load the values from another task for selection!
           addRowLabel(F("Temperature Value:"));
           addTaskValueSelect(F("temperature_value"), P090_TEMPERATURE_TASK_VALUE, P090_TEMPERATURE_TASK_INDEX);
 
@@ -158,14 +157,12 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
           addRowLabel(F("Humidity"));
           addTaskSelect(F("humidity_task"), P090_HUMIDITY_TASK_INDEX);
           if (validTaskIndex(P090_HUMIDITY_TASK_INDEX)) {
-            LoadTaskSettings(P090_HUMIDITY_TASK_INDEX); // we need to load the values from another task for selection!
             addRowLabel(F("Humidity Value"));
             addTaskValueSelect(F("humidity_value"), P090_HUMIDITY_TASK_VALUE, P090_HUMIDITY_TASK_INDEX);
           }
         }
       }
 
-      LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
       //            addFormSeparator(string);
       addFormSeparator(2);
 

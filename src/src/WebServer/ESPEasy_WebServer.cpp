@@ -657,7 +657,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice, const String& csscla
   if (!cssclass.isEmpty()) {
     addHtmlAttribute(F("class"),  cssclass);
   }
-  addHtmlAttribute(F("onchange"), F("return dept_onchange(frmselect)"));
+  addHtmlAttribute(F("onchange"), F("return task_select_onchange(frmselect)"));
   addHtml('>');
 
   for (taskIndex_t x = 0; x <= TASKS_MAX; x++)

@@ -1136,10 +1136,10 @@ void Dallas_SensorData::clear() {
   actual_res        = 0u;
 
 
-  bool measurementActive = false;
-  bool valueRead         = false;
-  bool parasitePowered   = false;
-  bool lastReadError     = false;
+  measurementActive = false;
+  valueRead         = false;
+  parasitePowered   = false;
+  lastReadError     = false;
 }
 
 void Dallas_SensorData::set_measurement_inactive() {
