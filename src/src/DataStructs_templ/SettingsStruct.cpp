@@ -326,6 +326,7 @@ void SettingsStruct_tmpl<N_TASKS>::setCssMode(uint8_t value) {
 }
 #endif // FEATURE_AUTO_DARK_MODE
 
+#if FEATURE_ZEROFILL_APPEND_UNITNUMBER
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::zerofillUnitNumber() const {
   return bitRead(VariousBits1, 30);
@@ -335,6 +336,7 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::zerofillUnitNumber(bool value) {
   bitWrite(VariousBits1, 30, value);
 }
+#endif // if FEATURE_ZEROFILL_APPEND_UNITNUMBER
 
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
@@ -586,7 +588,7 @@ String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
   if ((this->Unit != 0) && appendUnit) { // only append non-zero unit number
     hostname += '_';
     #if FEATURE_ZEROFILL_APPEND_UNITNUMBER
-    if (zerofillUnitNumber()) {
+    if (this->zerofillUnitNumber()) {
       if (this->Unit < 10) { hostname += '0'; }
       if (this->Unit < 100) { hostname += '0'; }
     }
