@@ -6,6 +6,8 @@
 
 #include "../CustomBuild/CompiletimeDefines.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
