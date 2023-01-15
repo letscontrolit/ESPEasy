@@ -1040,11 +1040,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
 
-  // Need to compute checksum as how it is stored on the file system, 
-  // not including any patches made below
-//  uint8_t checksum[16] = {0};
-//  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
-
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
 
@@ -1151,13 +1146,20 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveControllerSettings"));
   #endif
-  if (controller_settings.computeChecksum() == (Cache.controllerSettings_checksums[ControllerIndex])) {
+
+  controller_settings.validate(); // Make sure the saved controller settings have proper values.
+
+  const ChecksumType checksum(reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(ControllerSettingsStruct));
+
+  if (checksum == (Cache.controllerSettings_checksums[ControllerIndex])) {
+    addLog(LOG_LEVEL_INFO, concat(F("Skip saving ControllerSettings: "), checksum.toString()));
     return EMPTY_STRING;
   }
-  controller_settings.validate(); // Make sure the saved controller settings have proper values.
   const String res = SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                     reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(controller_settings));
-  Cache.controllerSettings_checksums[ControllerIndex] = controller_settings.computeChecksum();
+
+  Cache.controllerSettings_checksums[ControllerIndex] = checksum;
+
   return res;
 }
 
@@ -1171,7 +1173,9 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   String result =
     LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                  reinterpret_cast<uint8_t *>(&controller_settings), sizeof(controller_settings));
+
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
+
   Cache.controllerSettings_checksums[ControllerIndex] = controller_settings.computeChecksum();
   return result;
 }
@@ -1588,6 +1592,7 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if (!fileExists(fname)) {
     InitFile(settingsType);
   }
+  addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) + concat(F(" index: "), index));
   return SaveToFile(fname.c_str(), offset + posInBlock, memAddress, datasize);
 }
 

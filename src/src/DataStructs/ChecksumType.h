@@ -34,6 +34,8 @@ struct ChecksumType {
   bool operator==(const ChecksumType& rhs) const;
   ChecksumType& operator=(const ChecksumType& rhs);
 
+  String toString() const;
+
 private:
 
   uint8_t _checksum[16] = { 0 };

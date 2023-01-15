@@ -70,7 +70,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      char hostname[PLUGIN_089_HOSTNAME_SIZE];
+      char hostname[PLUGIN_089_HOSTNAME_SIZE] = {};
 
       // Reset "Fails" if settings updated
       UserVar[event->BaseVarIndex] = 0;
