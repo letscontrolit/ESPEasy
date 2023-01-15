@@ -1033,7 +1033,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     // No need to load from storage, as there is no plugin assigned to this task.
     ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
     Cache.updateExtraTaskSettingsCache_afterLoad_Save();
-    STOP_TIMER(LOAD_TASK_SETTINGS_CACHED);
     return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
@@ -1178,6 +1177,7 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadControllerSettings"));
   #endif
+  START_TIMER
   String result =
     LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                  reinterpret_cast<uint8_t *>(&controller_settings), sizeof(controller_settings));
@@ -1185,6 +1185,7 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
 
   Cache.controllerSettings_checksums[ControllerIndex] = controller_settings.computeChecksum();
+  STOP_TIMER(LOAD_CONTROLLER_SETTINGS);
   return result;
 }
 

@@ -62,7 +62,7 @@
   void process_c##NNN####M##_delay_queue() {                                                                         \
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                               \
     C##NNN####M##_DelayHandler->process(                                                                             \
-      M, do_process_c##NNN####M##_delay_queue, C##NNN####M##_DELAY_QUEUE,                                            \
+      M, do_process_c##NNN####M##_delay_queue, TimingStatsElements::C##NNN####M##_DELAY_QUEUE,                                            \
       ESPEasy_Scheduler::IntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE);                                          \
   }                                                                                                                  \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                           \

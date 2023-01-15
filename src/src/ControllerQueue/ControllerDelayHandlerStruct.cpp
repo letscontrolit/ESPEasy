@@ -249,7 +249,7 @@ size_t ControllerDelayHandlerStruct::getQueueMemorySize() const {
 void ControllerDelayHandlerStruct::process(
   int                                controller_number,
   do_process_function                func,
-  int                                timerstats_id,
+  TimingStatsElements                timerstats_id,
   ESPEasy_Scheduler::IntervalTimer_e timerID) 
 {
   Queue_element_base *element(static_cast<Queue_element_base *>(getNext()));
@@ -264,7 +264,9 @@ void ControllerDelayHandlerStruct::process(
       configureControllerSettings(ControllerSettings);
       START_TIMER;
       markProcessed(func(controller_number, *element, ControllerSettings));
-      STOP_TIMER(timerstats_id);
+      #if FEATURE_TIMING_STATS
+      STOP_TIMER_VAR(timerstats_id);
+      #endif
     }
   }
   Scheduler.scheduleNextDelayQueue(timerID, getNextScheduleTime());
