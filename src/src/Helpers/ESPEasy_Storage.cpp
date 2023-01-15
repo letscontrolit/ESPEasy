@@ -48,7 +48,6 @@
 
 
 #ifdef ESP32
-#include <MD5Builder.h>
 #include <esp_partition.h>
 #endif
 
@@ -980,9 +979,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   START_TIMER
   String err;
 
-  constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
-  ChecksumType checksum(reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
-  if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, checksum)) {
+  if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, ExtraTaskSettings.computeChecksum())) {
     ExtraTaskSettings.validate(); // Validate before saving will reduce nr of saves as it is more likely to not have changed the next time it will be saved.
 
     // Call to validate() may have changed the content, so re-compute the checksum.
@@ -993,7 +990,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
     err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
                             TaskIndex,
                             reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
-                            structSize);
+                            sizeof(struct ExtraTaskSettingsStruct));
 
 #if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
     if (err.isEmpty()) {
@@ -1023,7 +1020,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     return EMPTY_STRING; // Un-initialized task index.
   }
   START_TIMER
-  constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
 
   ExtraTaskSettings.clear();
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
@@ -1038,7 +1034,11 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   checkRAM(F("LoadTaskSettings"));
   #endif
 
-  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
+  const String result = LoadFromFile(
+    SettingsType::Enum::TaskSettings_Type, 
+    TaskIndex, 
+    reinterpret_cast<uint8_t *>(&ExtraTaskSettings), 
+    sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -1152,7 +1152,9 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   const ChecksumType checksum(reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(ControllerSettingsStruct));
 
   if (checksum == (Cache.controllerSettings_checksums[ControllerIndex])) {
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, concat(F("Skip saving ControllerSettings: "), checksum.toString()));
+#endif
     return EMPTY_STRING;
   }
   const String res = SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
@@ -1592,7 +1594,9 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if (!fileExists(fname)) {
     InitFile(settingsType);
   }
+#ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) + concat(F(" index: "), index));
+#endif
   return SaveToFile(fname.c_str(), offset + posInBlock, memAddress, datasize);
 }
 
@@ -1706,6 +1710,7 @@ bool SpiffsFull() {
   return SpiffsFreeSpace() == 0;
 }
 
+#if FEATURE_RTC_CACHE_STORAGE
 /********************************************************************************************\
    Handling cached data
  \*********************************************************************************************/
@@ -1785,8 +1790,10 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
             highest         = count;
             filesizeHighest = file.size();
           }
+#ifndef BUILD_NO_DEBUG
         } else {
           addLog(LOG_LEVEL_INFO, String(F("RTC  : Cannot get count from: ")) + fname);
+#endif
         }
       }
     }
@@ -1801,6 +1808,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   highest = 0;
   return false;
 }
+#endif
 
 /********************************************************************************************\
    Get partition table information

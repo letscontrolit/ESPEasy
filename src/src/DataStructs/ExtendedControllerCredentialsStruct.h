@@ -14,9 +14,8 @@ struct ExtendedControllerCredentialsStruct
   ExtendedControllerCredentialsStruct();
 
   // Compute checksum of the data.
-  // @param checksum The expected checksum. Will contain checksum after call finished.
   // @retval true when checksum matches
-  bool computeChecksum(uint8_t checksum[16]) const;
+  bool validateChecksum() const;
 
   String load();
   String save() const;

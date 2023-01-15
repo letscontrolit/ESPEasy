@@ -60,20 +60,19 @@ struct ExtraTaskSettingsStruct
                                             uint8_t                    defaultDecimals,
                                             bool                       displayString);
 
-  taskIndex_t TaskIndex                                                        = INVALID_TASK_INDEX; // Always < TASKS_MAX or
-                                                                                                     // INVALID_TASK_INDEX
-  char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1]                      = {};
-  char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1]    = {};
-  char        TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1] = {};
+  taskIndex_t TaskIndex = INVALID_TASK_INDEX; // Always < TASKS_MAX or INVALID_TASK_INDEX
+  char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
+  char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
+  char        TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
   uint8_t     dummy1                                                           = 0;
   uint8_t     version                                                          = 1;
-  long        TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX]            = {};
-  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK]                           = {2,2,2,2};
-  int16_t     TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX]                = {};
-  float       TaskDeviceMinValue[VARS_PER_TASK]                                = {};
-  float       TaskDeviceMaxValue[VARS_PER_TASK]                                = {};
-  float       TaskDeviceErrorValue[VARS_PER_TASK]                              = {};
-  uint32_t    VariousBits[VARS_PER_TASK]                                       = {};
+  long        TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
+  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK];
+  int16_t     TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
+  float       TaskDeviceMinValue[VARS_PER_TASK];
+  float       TaskDeviceMaxValue[VARS_PER_TASK];
+  float       TaskDeviceErrorValue[VARS_PER_TASK];
+  uint32_t    VariousBits[VARS_PER_TASK];
 };
 
 
