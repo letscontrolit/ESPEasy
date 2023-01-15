@@ -48,6 +48,7 @@
 # define P146_MQTT_MESSAGE_LENGTH               PCONFIG_LONG(1)
 # define P146_MQTT_SEND_TASKVALUENAMES_INTERVAL PCONFIG_LONG(2)
 
+
 # include "src/ControllerQueue/C016_queue_element.h"
 # include "src/Globals/C016_ControllerCache.h"
 # include "src/Globals/CPlugins.h"
@@ -100,6 +101,13 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       P146_MINIMAL_SEND_INTERVAL = 100;
       P146_MQTT_MESSAGE_LENGTH   = 800;
 
+      String strings[P146_Nlines];
+      strings[P146_TaskInfoTopicIndex] = F("tracker_v2/%sysname%_%unit%/%tskname%/upload_meta");
+      strings[P146_PublishTopicIndex]  = F("tracker_v2/%sysname%_%unit%/%tskname%/upload");
+
+      SaveCustomTaskSettings(event->TaskIndex, strings, P146_Nlines, 0);
+
+
       success = true;
       break;
     }
@@ -110,7 +118,13 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       ControllerCache.setPeekFilePos(
         P146_TASKVALUE_FILENR,
         P146_TASKVALUE_FILEPOS);
-      success = true;
+      initPluginTaskData(event->TaskIndex,
+                         new (std::nothrow) P146_data_struct(event->TaskIndex));
+      P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P146_data) {
+        success = true;
+      }
       break;
     }
 
@@ -143,15 +157,19 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_PROCESS_CONTROLLER_DATA:
     {
       if (P146_GET_SEND_BINARY) {
-        if (0 != P146_data_struct::sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH)) {
-          int readFileNr    = 0;
-          const int readPos = ControllerCache.getPeekFilePos(readFileNr);
-          P146_TASKVALUE_FILENR  = readFileNr;
-          P146_TASKVALUE_FILEPOS = readPos;
+        P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != P146_data) {
+          if (0 != P146_data->sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH)) {
+            int readFileNr    = 0;
+            const int readPos = ControllerCache.getPeekFilePos(readFileNr);
+            P146_TASKVALUE_FILENR  = readFileNr;
+            P146_TASKVALUE_FILEPOS = readPos;
+          }
+          success = true;
         }
-        success = true;
       }
-    
+
       break;
     }
 
@@ -159,8 +177,8 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormSubHeader(F("MQTT Output Options"));
       addFormCheckBox(F("HEX encoded Binary"),    F("binary"),         P146_GET_SEND_BINARY);
-      addFormCheckBox(F("Append 'bin' to topic"), F("appendbintopic"), P146_GET_APPEND_BINARY_TOPIC);
-      addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
+//      addFormCheckBox(F("Append 'bin' to topic"), F("appendbintopic"), P146_GET_APPEND_BINARY_TOPIC);
+//      addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
       addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
       addFormNumericBox(F("Max Message Size"),
                         F("maxmsgsize"),
@@ -168,8 +186,14 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
                         sizeof(C016_binary_element) + 16,
                         32768);
 
-      addFormSubHeader(F("Non MQTT Output Options"));
-      addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);
+      String strings[P146_Nlines];
+      LoadCustomTaskSettings(event->TaskIndex, strings, P146_Nlines, 0);
+      addFormTextBox(F("TaskInfo Topic"), getPluginCustomArgName(P146_TaskInfoTopicIndex), strings[P146_TaskInfoTopicIndex], P146_Nchars);
+      addFormTextBox(F("Publish Topic"),  getPluginCustomArgName(P146_PublishTopicIndex),  strings[P146_PublishTopicIndex],  P146_Nchars);
+
+
+//      addFormSubHeader(F("Non MQTT Output Options"));
+//      addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);
 
       success = true;
       break;
@@ -178,12 +202,26 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P146_SET_SEND_BINARY(isFormItemChecked(F("binary")));
-      P146_SET_APPEND_BINARY_TOPIC(isFormItemChecked(F("appendbintopic")));
-      P146_SET_SEND_TIMESTAMP(isFormItemChecked(F("sendtimestamp")));
-      P146_SET_SEND_READ_POS(isFormItemChecked(F("sendreadpos")));
+//      P146_SET_APPEND_BINARY_TOPIC(isFormItemChecked(F("appendbintopic")));
+//      P146_SET_SEND_READ_POS(isFormItemChecked(F("sendreadpos")));
+//      P146_SET_SEND_TIMESTAMP(isFormItemChecked(F("sendtimestamp")));
 
       P146_MINIMAL_SEND_INTERVAL = getFormItemInt(F("minsendinterval"));
       P146_MQTT_MESSAGE_LENGTH   = getFormItemInt(F("maxmsgsize"));
+
+      String strings[P146_Nlines];
+      String error;
+
+      for (uint8_t varNr = 0; varNr < P146_Nlines; varNr++) {
+        strings[varNr] = webArg(getPluginCustomArgName(varNr));
+      }
+
+      error = SaveCustomTaskSettings(event->TaskIndex, strings, P146_Nlines, 0);
+
+      if (!error.isEmpty()) {
+        addHtmlError(error);
+      }
+
 
       success = true;
       break;
@@ -199,8 +237,12 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
           P146_data_struct::setPeekFilePos(event->Par2, event->Par3);
           success = true;
         } else if (subcommand.equals(F("sendtaskinfo"))) {
-          P146_data_struct::sendTaskInfoInBulk(event->TaskIndex, 0);
-          success = true;
+          P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if (nullptr != P146_data) {
+            P146_data->sendTaskInfoInBulk(event->TaskIndex, 0);
+            success = true;
+          }
         }
       }
       break;

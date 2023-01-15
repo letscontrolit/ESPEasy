@@ -7,8 +7,10 @@
 # include "../Globals/MQTT.h"
 
 
-P146_data_struct::P146_data_struct()
-{}
+P146_data_struct::P146_data_struct(taskIndex_t P146_TaskIndex)
+{
+  LoadCustomTaskSettings(P146_TaskIndex, _topics, P146_Nlines, 0);
+}
 
 P146_data_struct::~P146_data_struct()
 {}
@@ -62,14 +64,9 @@ uint32_t createTaskInfoJson(bool send) {
   return expected_size;
 }
 
-uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
+uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize) const
 {
-  String topic = F("tracker_v2/%sysname%_%unit%/%tskname%/upload_meta");
-
-  topic.replace(F("%tskname%"), getTaskDeviceName(P146_TaskIndex));
-  topic = parseTemplate(topic);
-
-
+  const String topic         = getTopic(P146_TaskInfoTopicIndex, P146_TaskIndex);
   const size_t expected_size = createTaskInfoJson(false);
 
   if (MQTTclient.beginPublish(topic.c_str(), expected_size, false)) {
@@ -79,7 +76,7 @@ uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32
   return 0;
 }
 
-uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
+uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize) const
 {
   const controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -146,10 +143,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   }
 
 
-  String topic = F("tracker_v2/%sysname%_%unit%/%tskname%/upload");
-
-  topic.replace(F("%tskname%"), getTaskDeviceName(P146_TaskIndex));
-  topic = parseTemplate(topic);
+  const String topic = getTopic(P146_PublishTopicIndex, P146_TaskIndex);
 
   if (!MQTTclient.beginPublish(topic.c_str(), expectedMessageSize, false)) {
     // Can't start a message
@@ -300,6 +294,17 @@ bool P146_data_struct::setPeekFilePos(int peekFileNr, int peekReadPos)
   }
 
   return true;
+}
+
+String P146_data_struct::getTopic(int index, taskIndex_t P146_TaskIndex) const {
+  if ((index != P146_TaskInfoTopicIndex) && (index != P146_PublishTopicIndex)) {
+    return EMPTY_STRING;
+  }
+  String topic = _topics[index];
+
+  topic.replace(F("%tskname%"), getTaskDeviceName(P146_TaskIndex));
+  topic = parseTemplate(topic);
+  return topic;
 }
 
 #endif // ifdef USES_P146
