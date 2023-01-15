@@ -215,13 +215,13 @@ bool SettingsCheck(String& error) {
 
 String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
-  #ifndef PLUGIN_BUILD_MINIMAL_OTA
+  #if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
   if (err.length() > 0) return err;
   if (!ExtraTaskSettings.checkUniqueValueNames()) {
     return F("Use unique value names");
   }
   if (!ExtraTaskSettings.checkInvalidCharInNames()) {
-    return F("Invalid character in name. Do not use ',-+/*=^%!#[]{}()' or space.");
+    return concat(F("Invalid character in name. Do not use space or '"), ExtraTaskSettingsStruct::getInvalidCharsForNames()) + '\'';
   }
   String deviceName = ExtraTaskSettings.TaskDeviceName;
   NumericalType detectedType;
@@ -249,7 +249,7 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   }
 
   err += LoadTaskSettings(taskIndex);
-  #endif // ifndef PLUGIN_BUILD_MINIMAL_OTA
+  #endif 
   return err;
 }
 #endif
