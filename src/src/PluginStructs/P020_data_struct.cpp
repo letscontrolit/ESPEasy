@@ -205,11 +205,10 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
         }
 
         if (serial_processing == P020_Events::P1WiFiGateway) {
-          done = handleP1Char(ser2netSerial->read());
+          done = handleP1Char(static_cast<char>(ser2netSerial->read()));
         } else {
-          addChar((char)ser2netSerial->read());
+          addChar(static_cast<char>(ser2netSerial->read()));
         }
-
 
         if (_ledEnabled) {
           digitalWrite(_ledPin, _ledInverted ? 1 : 0);
@@ -227,6 +226,9 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
   if (serial_buffer.length() > 0) {
     if (ser2netClient.connected()) { // Only send out if a client is connected
+      if ((serial_processing == P020_Events::P1WiFiGateway) && !serial_buffer.endsWith(F("\r\n"))) {
+        serial_buffer += F("\r\n");
+      }
       ser2netClient.print(serial_buffer);
     }
 
