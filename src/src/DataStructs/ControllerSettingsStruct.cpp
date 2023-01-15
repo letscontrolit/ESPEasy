@@ -16,7 +16,7 @@
 
 ControllerSettingsStruct::ControllerSettingsStruct()
 {
-  reset();
+  safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 
 void ControllerSettingsStruct::reset() {

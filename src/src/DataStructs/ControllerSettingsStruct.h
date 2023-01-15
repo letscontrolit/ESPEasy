@@ -151,25 +151,24 @@ struct ControllerSettingsStruct
   bool      useLocalSystemTime() const;
   void      useLocalSystemTime(bool value);
   
-
-  bool         UseDNS;
-  uint8_t      IP[4];
-  unsigned int Port;
-  char         HostName[65];
-  char         Publish[129];
-  char         Subscribe[129];
-  char         MQTTLwtTopic[129];
-  char         LWTMessageConnect[129];
-  char         LWTMessageDisconnect[129];
-  unsigned int MinimalTimeBetweenMessages;
-  unsigned int MaxQueueDepth;
-  unsigned int MaxRetry;
-  bool         DeleteOldest;       // Action to perform when buffer full, delete oldest, or ignore newest.
-  unsigned int ClientTimeout;
-  bool         MustCheckReply;     // When set to false, a sent message is considered always successful.
-  taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
-  uint32_t     VariousFlags;       // Various flags
-  char         ClientID[65];       // Used to define the Client ID used by the controller
+  bool         UseDNS = DEFAULT_SERVER_USEDNS;
+  uint8_t      IP[4] = {};
+  unsigned int Port = DEFAULT_PORT;
+  char         HostName[65] = {};
+  char         Publish[129] = {};
+  char         Subscribe[129] = {};
+  char         MQTTLwtTopic[129] = {};
+  char         LWTMessageConnect[129] = {};
+  char         LWTMessageDisconnect[129] = {};
+  unsigned int MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+  unsigned int MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+  unsigned int MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
+  bool         DeleteOldest = DEFAULT_CONTROLLER_DELETE_OLDEST;       // Action to perform when buffer full, delete oldest, or ignore newest.
+  unsigned int ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
+  bool         MustCheckReply = DEFAULT_CONTROLLER_MUST_CHECK_REPLY;     // When set to false, a sent message is considered always successful.
+  taskIndex_t  SampleSetInitiator = INVALID_TASK_INDEX; // The first task to start a sample set.
+  uint32_t     VariousFlags = 0;       // Various flags
+  char         ClientID[65] = {};       // Used to define the Client ID used by the controller
 
 private:
 

@@ -684,6 +684,9 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
     result     = false;
   }
   strncpy_P(dest, source, str_length);
+  for (size_t i = str_length; i < max_size; ++i) {
+    dest[i] = 0;
+  }
   dest[max_size - 1] = 0;
   return result;
 }

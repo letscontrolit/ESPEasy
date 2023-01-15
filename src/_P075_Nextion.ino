@@ -146,7 +146,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE: {
       {
         // FIXME TD-er: This is a huge object allocated on the Stack.
-        char deviceTemplate[P75_Nlines][P75_Nchars];
+        char deviceTemplate[P75_Nlines][P75_Nchars] = {};
         String error;
 
         for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++)

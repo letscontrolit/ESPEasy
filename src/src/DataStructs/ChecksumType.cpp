@@ -1,5 +1,7 @@
 #include "../DataStructs/ChecksumType.h"
 
+#include "../Helpers/StringConverter.h"
+
 #include <MD5Builder.h>
 
 ChecksumType::ChecksumType(uint8_t checksum[16])
@@ -80,4 +82,8 @@ bool ChecksumType::operator==(const ChecksumType& rhs) const {
 ChecksumType& ChecksumType::operator=(const ChecksumType& rhs) {
   memcpy(_checksum, rhs._checksum, 16);
   return *this;
+}
+
+String ChecksumType::toString() const {
+  return formatToHex_array(_checksum, 16);
 }
