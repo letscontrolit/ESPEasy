@@ -180,9 +180,7 @@ void handle_filelist() {
   int count = -1;
 
   bool moreFilesPresent  = false;
-#if FEATURE_RTC_CACHE_STORAGE
   bool cacheFilesPresent = false;
-#endif
 
 # if defined(ESP8266)
 
@@ -200,12 +198,10 @@ void handle_filelist() {
       if (f) {
         filesize = f.size();
       }
-#if FEATURE_RTC_CACHE_STORAGE
       if (!cacheFilesPresent && (getCacheFileCountFromFilename(dir.fileName()) != -1))
       {
         cacheFilesPresent = true;
       }
-#endif
       handle_filelist_add_file(dir.fileName(), filesize, startIdx);
     }
   }
@@ -222,12 +218,10 @@ void handle_filelist() {
 
       if (count >= startIdx)
       {
-#if FEATURE_RTC_CACHE_STORAGE
         if (!cacheFilesPresent && (getCacheFileCountFromFilename(file.name()) != -1))
         {
           cacheFilesPresent = true;
         }
-#endif
         handle_filelist_add_file(file.name(), file.size(), startIdx);
       }
     }
@@ -247,11 +241,7 @@ void handle_filelist() {
   if ((count >= endIdx) && moreFilesPresent) {
     start_next = endIdx + 1;
   }
-#if FEATURE_RTC_CACHE_STORAGE
   handle_filelist_buttons(start_prev, start_next, cacheFilesPresent);
-#else
-  handle_filelist_buttons(start_prev, start_next, false);
-#endif
 }
 
 void handle_filelist_add_file(const String& filename, int filesize, int startIdx) {
@@ -304,12 +294,10 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
     addHtmlInt(start_next);
     addHtml(F("'>Next</a>"));
   }
-#if FEATURE_RTC_CACHE_STORAGE
   if (cacheFilesPresent) {
     html_add_button_prefix(F("red"), true);
     addHtml(F("filelist?delcache=1'>Delete Cache Files</a>"));
   }
-#endif
   addHtml(F("<BR><BR>"));
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();

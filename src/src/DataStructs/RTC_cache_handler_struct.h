@@ -1,10 +1,10 @@
 #ifndef DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H
 #define DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H
 
+#include "../../ESPEasy_common.h"
+
 
 #include "../DataStructs/RTCCacheStruct.h"
-
-#include "../../ESPEasy_common.h"
 
 #include <FS.h>
 #include <vector>
@@ -97,5 +97,6 @@ private:
   uint8_t storageLocation = CACHE_STORAGE_SPIFFS;
   bool    writeError      = false;
 };
+
 
 #endif // ifndef DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H

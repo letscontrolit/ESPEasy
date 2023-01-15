@@ -158,7 +158,7 @@ void jsonStatistics(bool clearStats) {
     if (!x.second.isEmpty()) {
       json_open(); // open new misc item
       json_prop(F("name"), getMiscStatsName(x.first));
-      json_prop(F("id"),   String(x.first));
+      json_prop(F("id"),   String(static_cast<int>(x.first)));
       json_open(true, F("function")); // open function
       json_open(); // open first function element
       // Stream function timing stats

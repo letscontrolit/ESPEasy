@@ -5,96 +5,102 @@
 
 #if FEATURE_TIMING_STATS
 
+# include "../DataTypes/DeviceIndex.h"
 # include "../DataTypes/ESPEasy_plugin_functions.h"
+# include "../DataTypes/ProtocolIndex.h"
 # include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_time_calc.h"
 
 # include <Arduino.h>
 # include <map>
+#endif // if FEATURE_TIMING_STATS
 
 
 /*********************************************************************************************\
 * TimingStats
 \*********************************************************************************************/
 
+// These TimingStatsElements must not be excluded when FEATURE_TIMING_STATS is not defined.
+// The Cxxx_DELAY_QUEUE defines are used in the macros to process the controller queues.
+enum class TimingStatsElements {
+  LOADFILE_STATS,
+  SAVEFILE_STATS,
+  LOOP_STATS,
+  PLUGIN_CALL_50PS,
+  PLUGIN_CALL_10PS,
+  PLUGIN_CALL_10PSU,
+  PLUGIN_CALL_1PS,
+  SENSOR_SEND_TASK,
+  CPLUGIN_CALL_10PS,
+  CPLUGIN_CALL_50PS,
+  SEND_DATA_STATS,
+  COMPUTE_FORMULA_STATS,
+  PLUGIN_CALL_DEVICETIMER_IN,
+  SET_NEW_TIMER,
+  TIME_DIFF_COMPUTE,
+  MQTT_DELAY_QUEUE,
+  C001_DELAY_QUEUE,
+  C002_DELAY_QUEUE,
+  C003_DELAY_QUEUE,
+  C004_DELAY_QUEUE,
+  C005_DELAY_QUEUE,
+  C006_DELAY_QUEUE,
+  C007_DELAY_QUEUE,
+  C008_DELAY_QUEUE,
+  C009_DELAY_QUEUE,
+  C010_DELAY_QUEUE,
+  C011_DELAY_QUEUE,
+  C012_DELAY_QUEUE,
+  C013_DELAY_QUEUE,
+  C014_DELAY_QUEUE,
+  C015_DELAY_QUEUE,
+  C016_DELAY_QUEUE,
+  C017_DELAY_QUEUE,
+  C018_DELAY_QUEUE,
+  C019_DELAY_QUEUE,
+  C020_DELAY_QUEUE,
+  C021_DELAY_QUEUE,
+  C022_DELAY_QUEUE,
+  C023_DELAY_QUEUE,
+  C024_DELAY_QUEUE,
+  C025_DELAY_QUEUE,
+  C018_AIR_TIME,
+  LOAD_TASK_SETTINGS,
+  SAVE_TASK_SETTINGS,
+  LOAD_CUSTOM_TASK_STATS,
+  LOAD_CONTROLLER_SETTINGS,
+  TRY_OPEN_FILE,
+  FS_GC_SUCCESS,
+  FS_GC_FAIL,
+  PARSE_SYSVAR,
+  PARSE_SYSVAR_NOCHANGE,
+  PARSE_TEMPLATE_PADDED,
+  RULES_PROCESSING,
+  RULES_PARSE_LINE,
+  RULES_PROCESS_MATCHED,
+  RULES_MATCH,
+  GRAT_ARP_STATS,
+  SAVE_TO_RTC,
+  BACKGROUND_TASKS,
+  PROCESS_SYSTEM_EVENT_QUEUE,
+  HANDLE_SCHEDULER_IDLE,
+  HANDLE_SCHEDULER_TASK,
+  HANDLE_SERVING_WEBPAGE,
+  HANDLE_SERVING_WEBPAGE_JSON,
+  TRY_CONNECT_HOST_TCP,
+  TRY_CONNECT_HOST_UDP,
+  HOST_BY_NAME_STATS,
+  WIFI_ISCONNECTED_STATS,
+  WIFI_NOTCONNECTED_STATS,
+  CONNECT_CLIENT_STATS,
+  WIFI_SCAN_ASYNC,
+  WIFI_SCAN_SYNC,
+  NTP_SUCCESS,
+  NTP_FAIL,
+  SYSTIME_UPDATED
+};
 
-# define LOADFILE_STATS                 0
-# define SAVEFILE_STATS                 1
-# define LOOP_STATS                     2
-# define PLUGIN_CALL_50PS               3
-# define PLUGIN_CALL_10PS               4
-# define PLUGIN_CALL_10PSU              5
-# define PLUGIN_CALL_1PS                6
-# define SENSOR_SEND_TASK               7
-# define CPLUGIN_CALL_10PS              8
-# define CPLUGIN_CALL_50PS              9
-# define SEND_DATA_STATS                10
-# define COMPUTE_FORMULA_STATS          11
-# define PLUGIN_CALL_DEVICETIMER_IN     12
-# define SET_NEW_TIMER                  13
-# define TIME_DIFF_COMPUTE              14
-# define MQTT_DELAY_QUEUE               15
-# define C001_DELAY_QUEUE               16
-# define C002_DELAY_QUEUE               17
-# define C003_DELAY_QUEUE               18
-# define C004_DELAY_QUEUE               19
-# define C005_DELAY_QUEUE               20
-# define C006_DELAY_QUEUE               21
-# define C007_DELAY_QUEUE               22
-# define C008_DELAY_QUEUE               23
-# define C009_DELAY_QUEUE               24
-# define C010_DELAY_QUEUE               25
-# define C011_DELAY_QUEUE               26
-# define C012_DELAY_QUEUE               27
-# define C013_DELAY_QUEUE               28
-# define C014_DELAY_QUEUE               29
-# define C015_DELAY_QUEUE               30
-# define C016_DELAY_QUEUE               31
-# define C017_DELAY_QUEUE               32
-# define C018_DELAY_QUEUE               33
-# define C019_DELAY_QUEUE               34
-# define C020_DELAY_QUEUE               35
-# define C021_DELAY_QUEUE               36
-# define C022_DELAY_QUEUE               37
-# define C023_DELAY_QUEUE               38
-# define C024_DELAY_QUEUE               39
-# define C025_DELAY_QUEUE               40
-# define C018_AIR_TIME                  41
-# define TRY_CONNECT_HOST_TCP           42
-# define TRY_CONNECT_HOST_UDP           43
-# define HOST_BY_NAME_STATS             44
-# define CONNECT_CLIENT_STATS           45
-# define LOAD_CUSTOM_TASK_STATS         46
-# define WIFI_ISCONNECTED_STATS         47
-# define WIFI_NOTCONNECTED_STATS        48
-# define LOAD_TASK_SETTINGS             49
-# define LOAD_TASK_SETTINGS_CACHED      50
-# define SAVE_TASK_SETTINGS             51
-# define TRY_OPEN_FILE                  52
-# define FS_GC_SUCCESS                  53
-# define FS_GC_FAIL                     54
-# define PARSE_SYSVAR                   55
-# define PARSE_SYSVAR_NOCHANGE          56
-# define PARSE_TEMPLATE_PADDED          57
-# define RULES_PROCESSING               58
-# define RULES_PARSE_LINE               59
-# define RULES_PROCESS_MATCHED          60
-# define RULES_MATCH                    61
-# define GRAT_ARP_STATS                 62
-# define SAVE_TO_RTC                    63
-# define BACKGROUND_TASKS               64
-# define PROCESS_SYSTEM_EVENT_QUEUE     65
-# define HANDLE_SCHEDULER_IDLE          66
-# define HANDLE_SCHEDULER_TASK          67
-# define HANDLE_SERVING_WEBPAGE         68
-# define HANDLE_SERVING_WEBPAGE_JSON    69
-# define WIFI_SCAN_ASYNC                70
-# define WIFI_SCAN_SYNC                 71
-# define NTP_SUCCESS                    72
-# define NTP_FAIL                       73
-# define SYSTIME_UPDATED                74
-
-
+#if FEATURE_TIMING_STATS
 class TimingStats {
 public:
 
@@ -121,22 +127,22 @@ const __FlashStringHelper* getPluginFunctionName(int function);
 bool                       mustLogFunction(int function);
 const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function);
 bool                       mustLogCFunction(CPlugin::Function function);
-String                     getMiscStatsName(int stat);
+String                     getMiscStatsName(TimingStatsElements stat);
 
-void                       stopTimerTask(int      T,
-                                         int      F,
-                                         uint64_t statisticsTimerStart);
-void                       stopTimerController(int               T,
+void                       stopTimerTask(deviceIndex_t T,
+                                         int           F,
+                                         uint64_t      statisticsTimerStart);
+void                       stopTimerController(protocolIndex_t   T,
                                                CPlugin::Function F,
                                                uint64_t          statisticsTimerStart);
-void                       stopTimer(int      L,
-                                     uint64_t statisticsTimerStart);
-void                       addMiscTimerStat(int     L,
-                                            int64_t T);
+void                       stopTimer(TimingStatsElements L,
+                                     uint64_t            statisticsTimerStart);
+void                       addMiscTimerStat(TimingStatsElements L,
+                                            int64_t             T);
 
 extern std::map<int, TimingStats> pluginStats;
 extern std::map<int, TimingStats> controllerStats;
-extern std::map<int, TimingStats> miscStats;
+extern std::map<TimingStatsElements, TimingStats> miscStats;
 extern unsigned long timingstats_last_reset;
 
 # define START_TIMER const uint64_t statisticsTimerStart(getMicros64());
@@ -144,10 +150,11 @@ extern unsigned long timingstats_last_reset;
 # define STOP_TIMER_CONTROLLER(T, F) stopTimerController(T, F, statisticsTimerStart);
 
 // #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
-# define STOP_TIMER(L) stopTimer(L, statisticsTimerStart);
+# define STOP_TIMER(L) stopTimer(TimingStatsElements::L, statisticsTimerStart);
+# define STOP_TIMER_VAR(L) stopTimer(L, statisticsTimerStart);
 
 // Add a timer statistic value in usec.
-# define ADD_TIMER_STAT(L, T) addMiscTimerStat(L, T);
+# define ADD_TIMER_STAT(L, T) addMiscTimerStat(TimingStatsElements::L, T);
 
 #else // if FEATURE_TIMING_STATS
 
