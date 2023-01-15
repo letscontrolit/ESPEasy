@@ -332,9 +332,12 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
  * updateValues: put x and y coordinates in Values 0 and 1
  ***************************************************************************/
 void P141_data_struct::updateValues(struct EventStruct *event) {
-  int16_t curX, curY;
+  int16_t curX = 0;
+  int16_t curY = 0;
 
-  gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
+  if (nullptr != gfxHelper) {
+    gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
+  }
   UserVar[event->BaseVarIndex]     = curX;
   UserVar[event->BaseVarIndex + 1] = curY;
 }
@@ -362,7 +365,7 @@ bool P141_data_struct::plugin_get_config_value(struct EventStruct *event,
  * displayOnOff: Turn display on or off
  ***************************************************************************/
 void P141_data_struct::displayOnOff(bool state) {
-  if (_backlightPin != -1) {
+  if (validGpio(_backlightPin)) {
     # if defined(ESP8266)
     analogWrite(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0);
     # endif // if defined(ESP8266)

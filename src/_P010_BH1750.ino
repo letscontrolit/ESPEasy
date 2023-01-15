@@ -54,6 +54,7 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { BH1750_DEFAULT_I2CADDR, BH1750_SECOND_I2CADDR };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
         addFormNote(F("ADDR Low=0x23, High=0x5c"));
@@ -65,20 +66,21 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      uint8_t   choiceMode = PCONFIG(1);
-      const __FlashStringHelper * optionsMode[4];
-      optionsMode[0] = F("RESOLUTION_LOW");
-      optionsMode[1] = F("RESOLUTION_NORMAL");
-      optionsMode[2] = F("RESOLUTION_HIGH");
-      optionsMode[3] = F("RESOLUTION_AUTO_HIGH");
-      int optionValuesMode[4];
-      optionValuesMode[0] = RESOLUTION_LOW;
-      optionValuesMode[1] = RESOLUTION_NORMAL;
-      optionValuesMode[2] = RESOLUTION_HIGH;
-      optionValuesMode[3] = RESOLUTION_AUTO_HIGH;
-      addFormSelector(F("Measurement mode"), F("p010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
+      const __FlashStringHelper *optionsMode[] = {
+        F("RESOLUTION_LOW"),
+        F("RESOLUTION_NORMAL"),
+        F("RESOLUTION_HIGH"),
+        F("RESOLUTION_AUTO_HIGH"),
+      };
+      const int optionValuesMode[] = {
+        RESOLUTION_LOW,
+        RESOLUTION_NORMAL,
+        RESOLUTION_HIGH,
+        RESOLUTION_AUTO_HIGH,
+      };
+      addFormSelector(F("Measurement mode"), F("pmode"), 4, optionsMode, optionValuesMode, PCONFIG(1));
 
-      addFormCheckBox(F("Send sensor to sleep"), F("p010_sleep"), PCONFIG(2));
+      addFormCheckBox(F("Send sensor to sleep"), F("psleep"), PCONFIG(2));
 
       success = true;
       break;
@@ -87,8 +89,8 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-      PCONFIG(1) = getFormItemInt(F("p010_mode"));
-      PCONFIG(2) = isFormItemChecked(F("p010_sleep"));
+      PCONFIG(1) = getFormItemInt(F("pmode"));
+      PCONFIG(2) = isFormItemChecked(F("psleep"));
       success    = true;
       break;
     }
@@ -101,10 +103,7 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      uint8_t address = PCONFIG(0);
-
-
-      AS_BH1750 sensor = AS_BH1750(address);
+      AS_BH1750 sensor = AS_BH1750(PCONFIG(0));
 
       // replaced the 8 lines below to optimize code
       sensors_resolution_t mode = static_cast<sensors_resolution_t>(PCONFIG(1));
@@ -118,18 +117,18 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
       // if (PCONFIG(1)==RESOLUTION_AUTO_HIGH)
       //        mode = RESOLUTION_AUTO_HIGH;
 
-      bool autoPowerDown = PCONFIG(2);
-      sensor.begin(mode, autoPowerDown);
+      sensor.begin(mode, PCONFIG(2) == 1);
 
       float lux = sensor.readLightLevel();
 
       if (lux != -1) {
         UserVar[event->BaseVarIndex] = lux;
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("BH1750 Address: ");
-          log += formatToHex(address, 2);
+          log += formatToHex(PCONFIG(0), 2);
           log += F(" Mode: ");
-          log += formatToHex(mode, 2);
+          log += formatToHex(PCONFIG(1), 2);
           log += F(" : Light intensity: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
           addLogMove(LOG_LEVEL_INFO, log);

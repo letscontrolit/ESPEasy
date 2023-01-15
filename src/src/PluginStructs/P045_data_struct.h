@@ -50,7 +50,7 @@ private:
 
 public:
 
-  int16_t _axis[3][5]; // [xyz], [min/max/range,a,g]
+  int16_t _axis[3][5]{}; // [xyz], [min/max/range,a,g]
 
 private:
 

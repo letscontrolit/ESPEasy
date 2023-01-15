@@ -13,16 +13,31 @@
 
 void Caches::clearAllCaches()
 {
+  clearAllButTaskCaches();
+  clearAllTaskCaches();
+}
+
+void Caches::clearAllButTaskCaches() {
   clearFileCaches();
-  clearTaskCaches();
   WiFi_AP_Candidates.clearCache();
   rulesHelper.closeAllFiles();
 }
 
-void Caches::clearTaskCaches() {
+void Caches::clearAllTaskCaches() {
   taskIndexName.clear();
   taskIndexValueName.clear();
   extraTaskSettings_cache.clear();
+  updateActiveTaskUseSerial0();
+}
+
+void Caches::clearTaskCache(taskIndex_t TaskIndex) {
+  clearTaskIndexFromMaps(TaskIndex);
+
+  auto it = extraTaskSettings_cache.find(TaskIndex);
+
+  if (it != extraTaskSettings_cache.end()) {
+    extraTaskSettings_cache.erase(it);
+  }
   updateActiveTaskUseSerial0();
 }
 
@@ -30,6 +45,18 @@ void Caches::clearFileCaches()
 {
   fileExistsMap.clear();
   fileCacheClearMoment = 0;
+}
+
+bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, uint8_t checksum[16]) const
+{
+  if (validTaskIndex(TaskIndex)) {
+    auto it = extraTaskSettings_cache.find(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return memcmp(checksum, it->second.md5checksum, 16) == 0;
+    }
+  }
+  return false;
 }
 
 void Caches::updateActiveTaskUseSerial0() {
@@ -215,13 +242,19 @@ void Caches::updateExtraTaskSettingsCache()
   const taskIndex_t TaskIndex = ExtraTaskSettings.TaskIndex;
 
   if (validTaskIndex(TaskIndex)) {
+    ExtraTaskSettings_cache_t tmp;
+
     auto it = extraTaskSettings_cache.find(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
+      // We need to keep the original checksum, from when loaded from storage
+      memcpy(tmp.md5checksum, it->second.md5checksum, 16);
+
+      // Now clear it so we can create a fresh copy.
       extraTaskSettings_cache.erase(it);
+      clearTaskIndexFromMaps(TaskIndex);
     }
 
-    ExtraTaskSettings_cache_t tmp;
       #ifdef ESP32
     tmp.TaskDeviceName = ExtraTaskSettings.TaskDeviceName;
       #endif // ifdef ESP32
@@ -268,6 +301,31 @@ void Caches::updateExtraTaskSettingsCache()
   }
 }
 
+void Caches::updateExtraTaskSettingsCache(uint8_t checksum[16]) 
+{
+  if (!validTaskIndex(ExtraTaskSettings.TaskIndex)) {
+    return;
+  }
+
+  // Check if we need to update the cache
+  auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+  if (it != extraTaskSettings_cache.end()) {
+    if (memcmp(it->second.md5checksum, checksum, 16) == 0) {
+      return;
+    }
+  }
+
+  // First update all other values
+  updateExtraTaskSettingsCache();
+
+  // Iterator has changed
+  it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+
+  if (it != extraTaskSettings_cache.end()) {
+    memcpy(it->second.md5checksum, checksum, 16);
+  }
+}
+
 ExtraTaskSettingsMap::const_iterator Caches::getExtraTaskSettings(taskIndex_t TaskIndex)
 {
   if (validTaskIndex(TaskIndex)) {
@@ -281,4 +339,30 @@ ExtraTaskSettingsMap::const_iterator Caches::getExtraTaskSettings(taskIndex_t Ta
     return it;
   }
   return extraTaskSettings_cache.end();
+}
+
+
+void Caches::clearTaskIndexFromMaps(taskIndex_t TaskIndex)
+{ 
+  {
+    auto it = taskIndexName.begin();
+    for (; it != taskIndexName.end(); ) {
+      if (it->second == TaskIndex) {
+        it = taskIndexName.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+  {
+    const String searchstr = String('#') + TaskIndex;
+    auto it = taskIndexValueName.begin();
+    for (; it != taskIndexValueName.end(); ) {
+      if (it->first.endsWith(searchstr)) {
+        it = taskIndexValueName.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
 }

@@ -16,53 +16,61 @@
 // FIXME @TD-er: Should think of another mechanism to make this more efficient.
 struct ExtraTaskSettingsStruct
 {
-  ExtraTaskSettingsStruct();
+  ExtraTaskSettingsStruct() = default;
 
-  void        clear();
+  void          clear();
 
-  void        validate();
+  void          validate();
 
-  bool        checkUniqueValueNames() const;
+  bool          checkUniqueValueNames() const;
 
-  void        clearUnusedValueNames(uint8_t usedVars);
+  void          clearUnusedValueNames(uint8_t usedVars);
 
-  bool        checkInvalidCharInNames(const char *name) const;
+  bool          checkInvalidCharInNames(const char *name) const;
 
-  bool        checkInvalidCharInNames() const;
+  bool          checkInvalidCharInNames() const;
 
-  static bool validCharForNames(char character);
+  static bool   validCharForNames(char character);
+  static String getInvalidCharsForNames();
 
-  void        setAllowedRange(taskVarIndex_t taskVarIndex,
-                              const float  & minValue,
-                              const float  & maxValue);
-  void        setIgnoreRangeCheck(taskVarIndex_t taskVarIndex);
+  void          setAllowedRange(taskVarIndex_t taskVarIndex,
+                                const float  & minValue,
+                                const float  & maxValue);
+  void          setIgnoreRangeCheck(taskVarIndex_t taskVarIndex);
 
-  bool        ignoreRangeCheck(taskVarIndex_t taskVarIndex) const;
+  bool          ignoreRangeCheck(taskVarIndex_t taskVarIndex) const;
 
-  float       checkAllowedRange(taskVarIndex_t taskVarIndex,
-                                const float  & value) const;
-
-  bool        valueInAllowedRange(taskVarIndex_t taskVarIndex,
+  float         checkAllowedRange(taskVarIndex_t taskVarIndex,
                                   const float  & value) const;
-#if FEATURE_PLUGIN_STATS
-  bool        enabledPluginStats(taskVarIndex_t taskVarIndex) const;  
-  void        enablePluginStats(taskVarIndex_t taskVarIndex, bool enabled);
-  bool        anyEnabledPluginStats() const;
-#endif
 
-  taskIndex_t TaskIndex; // Always < TASKS_MAX or INVALID_TASK_INDEX
-  char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
-  char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
-  char        TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
-  uint8_t     dummy1 = 0;
-  uint8_t     version = 1;
-  long        TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX] = {0};
-  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK] = {0};
-  int16_t     TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX] = {0};
-  float       TaskDeviceMinValue[VARS_PER_TASK];
-  float       TaskDeviceMaxValue[VARS_PER_TASK];
-  float       TaskDeviceErrorValue[VARS_PER_TASK];
-  uint32_t    VariousBits[VARS_PER_TASK] = {0};
+  bool          valueInAllowedRange(taskVarIndex_t taskVarIndex,
+                                    const float  & value) const;
+#if FEATURE_PLUGIN_STATS
+  bool          enabledPluginStats(taskVarIndex_t taskVarIndex) const;
+  void          enablePluginStats(taskVarIndex_t taskVarIndex,
+                                  bool           enabled);
+  bool          anyEnabledPluginStats() const;
+#endif // if FEATURE_PLUGIN_STATS
+
+  void          populateDeviceValueNamesSeq(const __FlashStringHelper *valuename,
+                                            size_t                     nrValues,
+                                            uint8_t                    defaultDecimals,
+                                            bool                       displayString);
+
+  taskIndex_t TaskIndex                                                        = INVALID_TASK_INDEX; // Always < TASKS_MAX or
+                                                                                                     // INVALID_TASK_INDEX
+  char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1]                      = {};
+  char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1]    = {};
+  char        TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1] = {};
+  uint8_t     dummy1                                                           = 0;
+  uint8_t     version                                                          = 1;
+  long        TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX]            = {};
+  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK]                           = {2,2,2,2};
+  int16_t     TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX]                = {};
+  float       TaskDeviceMinValue[VARS_PER_TASK]                                = {};
+  float       TaskDeviceMaxValue[VARS_PER_TASK]                                = {};
+  float       TaskDeviceErrorValue[VARS_PER_TASK]                              = {};
+  uint32_t    VariousBits[VARS_PER_TASK]                                       = {};
 };
 
 

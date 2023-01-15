@@ -1,6 +1,7 @@
 #include "../PluginStructs/P129_data_struct.h"
 
 #ifdef USES_P129
+#include <GPIO_Direct_Access.h>
 
 // **************************************************************************/
 // Constructor
@@ -24,9 +25,9 @@ bool P129_data_struct::plugin_init(struct EventStruct *event) {
     pinMode(_loadPin,  OUTPUT);
     pinMode(_clockPin, OUTPUT);
     pinMode(_dataPin,  INPUT);
-    digitalWrite(_loadPin, HIGH);
+    DIRECT_pinWrite(_loadPin, HIGH);
 
-    if (validGpio(_enablePin)) { digitalWrite(_enablePin, HIGH); }
+    if (validGpio(_enablePin)) { DIRECT_pinWrite(_enablePin, HIGH); }
 
     return true;
   }
@@ -170,19 +171,19 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
 
 bool P129_data_struct::plugin_readData(struct EventStruct *event) {
   if (isInitialized()) {
-    digitalWrite(_loadPin, LOW);
+    DIRECT_pinWrite(_loadPin, LOW);
     delayMicroseconds(5);
-    digitalWrite(_loadPin, HIGH);
+    DIRECT_pinWrite(_loadPin, HIGH);
     delayMicroseconds(5);
 
-    if (validGpio(_enablePin)) { digitalWrite(_enablePin, LOW); }
+    if (validGpio(_enablePin)) { DIRECT_pinWrite(_enablePin, LOW); }
 
     for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i++) {
       prevBuffer[i] = readBuffer[i];
       readBuffer[i] = shiftIn(static_cast<uint8_t>(_dataPin), static_cast<uint8_t>(_clockPin), MSBFIRST);
     }
 
-    if (validGpio(_enablePin)) { digitalWrite(_enablePin, HIGH); }
+    if (validGpio(_enablePin)) { DIRECT_pinWrite(_enablePin, HIGH); }
     delay(0);
 
     checkDiff(event);

@@ -60,8 +60,9 @@
 // Config Setting defines
 #define CUSTOMTASK_STR_SIZE_P101 20
 #define DEF_TASK_NAME_P101 "WAKE_ON_LAN"
-#define UDP_PORT_P101      ExtraTaskSettings.TaskDevicePluginConfigLong[1]
-#define FORM_PORT_P101     "P101_port"
+#define SET_UDP_PORT_P101  ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+#define GET_UDP_PORT_P101  Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 1)
+#define FORM_PORT_P101     "pport"
 
 // Command keyword defines
 #define CMD_NAME_P101      "WAKEONLAN"
@@ -136,7 +137,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      UDP_PORT_P101 = PORT_DEF_P101;
+      SET_UDP_PORT_P101 = PORT_DEF_P101;
       break;
     }
 
@@ -160,7 +161,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 
       safe_strncpy(ipString, strings[0], IP_BUFF_SIZE_P101);
       addFormTextBox(F("IPv4 Address"), getPluginCustomArgName(0), ipString, IP_ADDR_SIZE_P101);
-      addFormNumericBox(F("UDP Port"), F(FORM_PORT_P101), UDP_PORT_P101, 0, PORT_MAX_P101);
+      addFormNumericBox(F("UDP Port"), F(FORM_PORT_P101), GET_UDP_PORT_P101, 0, PORT_MAX_P101);
       msgStr  = F("Typical Installations use IP Address ");
       msgStr += F(IP_STR_DEF_P101);
       msgStr += F(", Port ");
@@ -178,8 +179,6 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       String errorStr;
       String msgStr;
       const String wolStr = F(LOG_NAME_P101);
-
-      LoadTaskSettings(event->TaskIndex);
 
       // Check Task Name.
       uint8_t nameCode = safeName(event->TaskIndex);
@@ -264,7 +263,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 
       // Save all the Task parameters.
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
-      UDP_PORT_P101 = getFormItemInt(F(FORM_PORT_P101));
+      SET_UDP_PORT_P101 = getFormItemInt(F(FORM_PORT_P101));
       success       = true;
       break;
     }
@@ -283,7 +282,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       char   ipString[IP_BUFF_SIZE_P101]   = {0};
       char   macString[MAC_BUFF_SIZE_P101] = {0};
       bool   taskEnable                    = false;
-      uint8_t   parse_error                   = false;
+      uint8_t parse_error                  = false;
       String msgStr;
       String strings[2];
       String tmpString    = string;
@@ -330,7 +329,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 
         if (paramPort.isEmpty()) {
           LoadTaskSettings(event->TaskIndex);
-          int portNumber = UDP_PORT_P101; // Get default Port from user settings.
+          int portNumber = GET_UDP_PORT_P101; // Get default Port from user settings.
           paramPort = portNumber;
         }
 
