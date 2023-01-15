@@ -33,7 +33,7 @@ struct ExtraTaskSettings_cache_t {
   String TaskDeviceValueNames[VARS_PER_TASK];
   String TaskDeviceName;
   #endif // ifdef ESP32
-  uint8_t md5checksum[16] = { 0 };
+  ChecksumType md5checksum;
   uint8_t decimals[VARS_PER_TASK] = { 0 };
   #if FEATURE_PLUGIN_STATS
   uint8_t enabledPluginStats = 0;
