@@ -53,7 +53,7 @@ bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const Checksu
     auto it = extraTaskSettings_cache.find(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
-      return checksum.matchChecksum(it->second.md5checksum);
+      return checksum == it->second.md5checksum;
     }
   }
   return false;
@@ -248,7 +248,7 @@ void Caches::updateExtraTaskSettingsCache()
 
     if (it != extraTaskSettings_cache.end()) {
       // We need to keep the original checksum, from when loaded from storage
-      memcpy(tmp.md5checksum, it->second.md5checksum, 16);
+      tmp.md5checksum = it->second.md5checksum;
 
       // Now clear it so we can create a fresh copy.
       extraTaskSettings_cache.erase(it);
@@ -322,7 +322,7 @@ void Caches::updateExtraTaskSettingsCache_afterLoad_Save()
   it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
 
   if (it != extraTaskSettings_cache.end()) {
-    ExtraTaskSettings.computeChecksum().getChecksum(it->second.md5checksum);
+    it->second.md5checksum = ExtraTaskSettings.computeChecksum();
   }
 }
 
