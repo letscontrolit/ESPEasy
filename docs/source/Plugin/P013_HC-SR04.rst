@@ -62,6 +62,11 @@ Sensor
   set to ``1``, if the detected value is above the given threshold the task will
   be ``0``. You should set the interval to zero in the case of using the state
   setting, just to make sure the action is triggered as soon as possible.
+
+.. image:: P013_StateEvent.png
+
+* **State event (also) on Interval**: Only available when **Mode** is set to ``State``. When enabled will repeat the last State on every Interval, when disabled will only send an event if the state actually changed.
+
 * **Max distance**: Set the max value the task will show. If the actual value is above the
   max distance the max distance will be displayed. Set to ``0`` will disable the max
   distance setting. Max according to the specifications is ``300`` cm.
