@@ -68,11 +68,13 @@ Sensor
 * **Unit**: You can show the output value as imperial without the need to do it using the formula function.
 * **Filter**: The signal might be a bit shaky for some applications, try to use the ``Median`` filtering
   setting in that case.
+* **Trigger width**: For hardware that doesn't exactly follow the timing guidelines, it may be needed to extend the pulse delay somewhat to receive a usable echo. The default is 10 microsoconds, and can be increased in small steps to max. 50 microseconds.
 
 
 Data acquisition
 ^^^^^^^^^^^^^^^^
 
+* **Single event with all values**: This setting combines all values for the plugin in a single ``<taskname>#All,<value>`` event, but as this plugin has only 1 value, this doesn't make much sense.
 * **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
 * **Interval**: How often should the task publish its value (1..5 seconds is normal for the ``value`` setting, 0 for the ``state`` setting).
 
@@ -92,7 +94,7 @@ Rules examples
 .. code-block::
 
    on RCW0001#distance do
-    if [RCW0001#distance]<50 and [RCW0001#distance]>45
+    if %eventvalue1%<50 and %eventvalue1%>45
       GPIO,14,1 //light up LED to show that you're at the correct position
     else
       GPIO,14,0
