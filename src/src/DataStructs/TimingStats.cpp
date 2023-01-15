@@ -7,8 +7,8 @@
 # include "../Helpers/_CPlugin_Helper.h"
 # include "../Helpers/StringConverter.h"
 
-std::map<deviceIndex_t, TimingStats> pluginStats;
-std::map<protocolIndex_t, TimingStats> controllerStats;
+std::map<int, TimingStats> pluginStats;
+std::map<int, TimingStats> controllerStats;
 std::map<TimingStatsElements, TimingStats> miscStats;
 unsigned long timingstats_last_reset(0);
 
@@ -294,12 +294,12 @@ String getMiscStatsName(TimingStatsElements stat) {
 
 void stopTimerTask(deviceIndex_t T, int F, uint64_t statisticsTimerStart)
 {
-  if (mustLogFunction(F)) { pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
+  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
 }
 
 void stopTimerController(protocolIndex_t T, CPlugin::Function F, uint64_t statisticsTimerStart)
 {
-  if (mustLogCFunction(F)) { controllerStats[(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart)); }
+  if (mustLogCFunction(F)) { controllerStats[static_cast<int>(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart)); }
 }
 
 void stopTimer(TimingStatsElements L, uint64_t statisticsTimerStart)

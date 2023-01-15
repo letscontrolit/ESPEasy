@@ -141,8 +141,8 @@ void                       stopTimer(TimingStatsElements L,
 void                       addMiscTimerStat(TimingStatsElements L,
                                             int64_t             T);
 
-extern std::map<deviceIndex_t, TimingStats> pluginStats;
-extern std::map<protocolIndex_t, TimingStats> controllerStats;
+extern std::map<int, TimingStats> pluginStats;
+extern std::map<int, TimingStats> controllerStats;
 extern std::map<TimingStatsElements, TimingStats> miscStats;
 extern unsigned long timingstats_last_reset;
 
