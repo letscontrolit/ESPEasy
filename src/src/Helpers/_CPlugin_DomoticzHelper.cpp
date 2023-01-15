@@ -209,7 +209,9 @@ String formatDomoticzSensorType(struct EventStruct *event) {
 bool deserializeDomoticzJson(const String& json,
                              unsigned int& idx, float& nvalue, long& nvaluealt,
                              String& svalue1, String& switchtype) {
-  DynamicJsonDocument root(512);
+  uint16_t jsonlength = 512;
+
+  DynamicJsonDocument root(jsonlength);
 
   deserializeJson(root, json);
 

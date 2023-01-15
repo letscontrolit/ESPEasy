@@ -12,17 +12,17 @@
 // Currently DC Motors and Steppers are implemented, Servos are in default firmware!!!
 
 
-#include <Adafruit_MotorShield.h>
+# include <Adafruit_MotorShield.h>
 
 
-#define PLUGIN_048
-#define PLUGIN_ID_048         48
-#define PLUGIN_NAME_048       "Motor - Adafruit Motorshield v2"
-#define PLUGIN_VALUENAME1_048 "MotorShield v2"
+# define PLUGIN_048
+# define PLUGIN_ID_048         48
+# define PLUGIN_NAME_048       "Motor - Adafruit Motorshield v2"
+# define PLUGIN_VALUENAME1_048 "MotorShield v2"
 
-#define Plugin_048_MotorShield_address     PCONFIG(0)
-#define Plugin_048_MotorStepsPerRevolution PCONFIG(1)
-#define Plugin_048_StepperSpeed            PCONFIG(2)
+# define Plugin_048_MotorShield_address     PCONFIG(0)
+# define Plugin_048_MotorStepsPerRevolution PCONFIG(1)
+# define Plugin_048_StepperSpeed            PCONFIG(2)
 
 boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
@@ -76,10 +76,10 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
 
 
     case PLUGIN_WEBFORM_LOAD: {
-      addFormNumericBox(F("Stepper: steps per revolution"), F("p048_MotorStepsPerRevolution")
+      addFormNumericBox(F("Stepper: steps per revolution"), F("steps")
                         , Plugin_048_MotorStepsPerRevolution);
 
-      addFormNumericBox(F("Stepper speed (rpm)"),           F("p048_StepperSpeed")
+      addFormNumericBox(F("Stepper speed (rpm)"),           F("speed")
                         , Plugin_048_StepperSpeed);
 
       success = true;
@@ -90,9 +90,9 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
       String plugin1 = webArg(F("i2c_addr"));
       Plugin_048_MotorShield_address = (int)strtol(plugin1.c_str(), 0, 16);
 
-      Plugin_048_MotorStepsPerRevolution = getFormItemInt(F("p048_MotorStepsPerRevolution"));
+      Plugin_048_MotorStepsPerRevolution = getFormItemInt(F("steps"));
 
-      Plugin_048_StepperSpeed = getFormItemInt(F("p048_StepperSpeed"));
+      Plugin_048_StepperSpeed = getFormItemInt(F("speed"));
       success                 = true;
       break;
     }
@@ -128,13 +128,14 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
 
         // Create the motor shield object with the default I2C address
         AFMS = Adafruit_MotorShield(Plugin_048_MotorShield_address);
-        #ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("MotorShield: Address: 0x");
           log += String(Plugin_048_MotorShield_address, HEX);
           addLogMove(LOG_LEVEL_DEBUG, log);
         }
-        #endif
+        # endif // ifndef BUILD_NO_DEBUG
 
         if (param1.equalsIgnoreCase(F("DCMotor"))) {
           if (param2_is_int && (p2_int > 0) && (p2_int < 5))
@@ -150,6 +151,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                 speed = p4_int;
               }
               AFMS.begin();
+
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("DCMotor");
                 log += param2;
@@ -170,6 +172,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                 speed = p4_int;
               }
               AFMS.begin();
+
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("DCMotor");
                 log += param2;
@@ -210,7 +213,8 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
             myStepper = AFMS.getStepper(Plugin_048_MotorStepsPerRevolution, p2_int);
             myStepper->setSpeed(Plugin_048_StepperSpeed);
 
-            #ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
+
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
               String log = F("MotorShield: StepsPerRevolution: ");
               log += String(Plugin_048_MotorStepsPerRevolution);
@@ -218,7 +222,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
               log += String(Plugin_048_StepperSpeed);
               addLogMove(LOG_LEVEL_DEBUG_MORE, log);
             }
-            #endif
+            # endif // ifndef BUILD_NO_DEBUG
 
             if (param3.equalsIgnoreCase(F("Forward")))
             {
@@ -253,6 +257,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                   myStepper->step(steps, FORWARD, MICROSTEP);
                   success = true;
                 }
+
                 if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("Stepper");
                   log += param2;
@@ -314,6 +319,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
             if (param3.equalsIgnoreCase(F("Release")))
             {
               AFMS.begin();
+
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("Stepper");
                 log += param2;

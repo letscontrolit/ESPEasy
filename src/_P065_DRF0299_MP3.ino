@@ -99,16 +99,9 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # pragma GCC diagnostic push
-
-      // note: we cant fix this, its a upstream bug.
-      # pragma GCC diagnostic warning "-Wdelete-non-virtual-dtor"
-
       if (P065_easySerial) {
         delete P065_easySerial;
       }
-      # pragma GCC diagnostic pop
-
 
       P065_easySerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), -1, CONFIG_PIN1); // no RX, only TX
 
@@ -141,7 +134,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
       int    value;
       bool   valueValid = validIntFromString(param, value);
 
-      if (valueValid && (command.equals(F("play"))))
+      if (valueValid && command.equals(F("play")))
       {
         Plugin_065_Play(value);
         success = true;
@@ -153,7 +146,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         success = true;
       }
 
-      if (valueValid && (command.equals(F("vol"))))
+      if (valueValid && command.equals(F("vol")))
       {
         if (value == 0) { value = 30; }
         PCONFIG(0) = value;
@@ -161,19 +154,19 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         success = true;
       }
 
-      if (valueValid && (command.equals(F("eq"))))
+      if (valueValid && command.equals(F("eq")))
       {
         Plugin_065_SetEQ(value);
         success = true;
       }
 
-      if (valueValid && (command.equals(F("mode"))))
+      if (valueValid && command.equals(F("mode")))
       {
         Plugin_065_SetMode(value);
         success = true;
       }
 
-      if (valueValid && (command.equals(F("repeat"))))
+      if (valueValid && command.equals(F("repeat")))
       {
         Plugin_065_SetRepeat(value);
         success = true;
@@ -257,7 +250,8 @@ void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
 
   P065_easySerial->write(buffer, 10); // Send the byte array
 
-#ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("MP3  : Send Cmd ");
 
@@ -267,7 +261,7 @@ void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
     }
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
-#endif
+  # endif // ifndef BUILD_NO_DEBUG
 }
 
 #endif // USES_P065

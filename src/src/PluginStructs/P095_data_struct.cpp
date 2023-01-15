@@ -22,7 +22,6 @@ const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device) {
     case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
     case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
     # endif // ifdef P095_ENABLE_ILI948X
-    case ILI9xxx_type_e::ILI9xxx_MAX: break;
   }
   # ifndef BUILD_NO_DEBUG
   return F("Unsupported type!");
@@ -58,8 +57,6 @@ void ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
       x = 320;
       y = 480;
       break;
-    case ILI9xxx_type_e::ILI9xxx_MAX:
-      break;
   }
 }
 
@@ -69,14 +66,13 @@ void ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
 const __FlashStringHelper* P095_CommandTrigger_toString(const P095_CommandTrigger& cmd) {
   switch (cmd) {
     case P095_CommandTrigger::tft: return F("tft");
-    case P095_CommandTrigger::ili9341: return F("ili9341");
+    case P095_CommandTrigger::ili9341: break;
     case P095_CommandTrigger::ili9342: return F("ili9342");
     case P095_CommandTrigger::ili9481: return F("ili9481");
     # ifdef P095_ENABLE_ILI948X
     case P095_CommandTrigger::ili9486: return F("ili9486");
     case P095_CommandTrigger::ili9488: return F("ili9488");
     # endif // ifdef P095_ENABLE_ILI948X
-    case P095_CommandTrigger::MAX: return F("None");
   }
   return F("ili9341"); // Default command trigger
 }

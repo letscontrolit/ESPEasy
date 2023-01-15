@@ -80,10 +80,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       addRowLabel(F("Check Task"));
       addTaskSelect(F("ptask"), P021_CHECK_TASK);
-
-      LoadTaskSettings(P021_CHECK_TASK); // we need to load the values from another task for selection!
-      addRowLabel(F("Check Value"));
-      addTaskValueSelect(F("pvalue"), P021_CHECK_VALUE, P021_CHECK_TASK);
+      if (validTaskIndex(P021_CHECK_TASK)) {
+        addRowLabel(F("Check Value"));
+        addTaskValueSelect(F("pvalue"), P021_CHECK_VALUE, P021_CHECK_TASK);
+      }
 
       addFormTextBox(F("Set Level"),  F("psetvalue"), toString(P021_TRIGGER_LEVEL),      8);
 
@@ -101,8 +101,6 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Interval to check if 'Set Level' is changed via <pre>config</pre> command and saves it. Max. 24h, 0 = Off"));
       # endif // ifndef BUILD_NO_DEBUG
 
-      // we need to restore our original taskvalues!
-      LoadTaskSettings(event->TaskIndex);
       success = true;
       break;
     }
@@ -169,7 +167,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      pinMode(CONFIG_PIN1, OUTPUT);
+      if (validGpio(CONFIG_PIN1)) {
+        pinMode(CONFIG_PIN1, OUTPUT);
+      }
       success = true;
       break;
     }
@@ -178,6 +178,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       // we're checking a var from another task, so calculate that basevar
       taskIndex_t TaskIndex    = P021_CHECK_TASK;
+      if (!validTaskIndex(TaskIndex)) {
+        break;
+      }
       uint8_t     BaseVarIndex = TaskIndex * VARS_PER_TASK + P021_CHECK_VALUE;
       float   value            = UserVar[BaseVarIndex];
       uint8_t state            = switchstate[event->TaskIndex];
