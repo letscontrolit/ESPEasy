@@ -317,6 +317,14 @@
 
     ``Name,<new name>``"
     "
+    NTPHost[,<host-name_or_ip>]","
+    :red:`Internal`","
+    Set the name of the NTP-host
+
+    ``NTPHost,192.168.1.1`` -> Set an IP for the NTP host (local NTP server)
+    
+    ``NTPHost,""`` or ``NTPHost,`` -> Clear the NTP host so a default host from pool.ntp.org will be used. (As second argument *is* provided but empty.)"
+    "
     Password","
     :red:`Internal`","
     Set the password of the unit.
