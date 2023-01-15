@@ -17,6 +17,8 @@ struct ChecksumType {
                size_t   data_length,
                size_t   len_upto_md5);
 
+  ChecksumType(const String strings[], size_t nrStrings);
+
   // Compute checksum of the data.
   // Skip the part where the checksum may be located in the data
   // @param checksum The expected checksum. Will contain checksum after call finished.

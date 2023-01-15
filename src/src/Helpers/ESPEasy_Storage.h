@@ -294,6 +294,7 @@ size_t SpiffsFreeSpace();
 
 bool SpiffsFull();
 
+#if FEATURE_RTC_CACHE_STORAGE
 /********************************************************************************************\
    Handling cached data
  \*********************************************************************************************/
@@ -305,6 +306,7 @@ int getCacheFileCountFromFilename(const String& fname);
 // Look into the filesystem to see if there are any cache files present on the filesystem
 // Return true if any found.
 bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeHighest);
+#endif
 
 /********************************************************************************************\
    Get partition table information

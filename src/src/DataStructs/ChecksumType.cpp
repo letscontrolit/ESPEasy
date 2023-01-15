@@ -22,6 +22,19 @@ ChecksumType::ChecksumType(const uint8_t *data,
   computeChecksum(_checksum, data, data_length, len_upto_md5, true);
 }
 
+ChecksumType::ChecksumType(const String strings[], size_t nrStrings)
+{
+  MD5Builder md5;
+
+  md5.begin();
+
+  for (size_t i = 0; i < nrStrings; ++i) {
+    md5.add(strings[i].c_str());
+  }
+  md5.calculate();
+  md5.getBytes(_checksum);
+}
+
 bool ChecksumType::computeChecksum(
   uint8_t  checksum[16],
   const uint8_t *data,
