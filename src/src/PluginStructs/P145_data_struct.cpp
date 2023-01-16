@@ -169,14 +169,20 @@ void P145_data_struct::calibrate (float currentRcal)
 @note   Uses hard coded constants:
         MAX_ADC_VALUE Max range for ADC
         P145_VMAX     Analog  input voltage corresponding to MAX_ADC_VALUE
-        P145_VCC      Voltage applied to the sensor-Rload combination
+        P145_VCC      Standard voltage applied to the sensor-Rload combination
+        P145_VCCLOW   Low voltage used to align with ESP input range
 */
 /*****************************************************************************/
 float P145_data_struct::getResistance(float val) const
 {
   if (val > 0.0f)
   {
-    return ((MAX_ADC_VALUE * P145_VCC) / (P145_VMAX * val) - 1.0f) * rload;
+    float vcc = P145_VCC;   // Voltage applied to the sensor
+    if (lowvcc)
+    {
+      vcc = P145_VCCLOW;
+    }
+    return ((MAX_ADC_VALUE * vcc) / (P145_VMAX * val) - 1.0f) * rload;
   }
   else
   {
@@ -361,7 +367,7 @@ float P145_data_struct::getAnalogValue()
 @note   These parameters must be set before the plugin can calculate the level
         They are determined by the plugin configuration
 /*****************************************************************************/
-void P145_data_struct::setSensorData(int stype, bool comp, bool cal, float load, float zero, float ref)
+void P145_data_struct::setSensorData(int stype, bool comp, bool cal, bool vcclow, float load, float zero, float ref)
 {
   /* Each MQ-xxx sensor comes with its own set cof constants */
   /* Copy the correct set from program meory space           */
@@ -371,6 +377,7 @@ void P145_data_struct::setSensorData(int stype, bool comp, bool cal, float load,
     algorithm = sensordef.alg;
     sensorType = stype;   // Selected sensor type, index in sensor data table
   }
+  lowvcc = vcclow;        // Low power supply value
   compensation = comp;    // Compensation selection flag
   calibration = cal;      // Calibration selection flag
   rload = load;           // Rload, load resistor [Ohm]
@@ -504,7 +511,7 @@ bool P145_data_struct::plugin_ten_per_second()
         ovs_min = currentValue;
       }
     }
-    return(true);
+    return true;
 }
 
 /**************************************************************************/
@@ -517,7 +524,7 @@ bool P145_data_struct::plugin_ten_per_second()
 /**************************************************************************/
 float P145_data_struct::getCalibrationValue() const
 {
-  return (rcal);
+  return rcal;
 }
 
 /**************************************************************************/
@@ -540,9 +547,9 @@ float P145_data_struct::getAutoCalibrationValue() const
 /**************************************************************************/
 void P145_data_struct::dump() const
 {
+#ifdef P145_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-#ifdef P145_DEBUG
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: NAME "), String(sensordef.name)));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: CleanRatio "), sensordef.cleanRatio));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Algorithm "), sensordef.alg));
@@ -557,8 +564,8 @@ void P145_data_struct::dump() const
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: CORG "), sensordef.corg));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: rzero "), rzero));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: PIN: "), analogPin));
-#endif
   }
+#endif
 }
 
 /**************************************************************************/

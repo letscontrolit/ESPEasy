@@ -95,6 +95,19 @@
 // PIN/port configuration is stored in the following:
 #define CONFIG_PIN_AIN      CONFIG_PIN1
 
+// Form IDs used on the device setup page
+#define P145_GUID_TYPE       (F("f01"))
+#define P145_GUID_RLOAD      (F("f02"))
+#define P145_GUID_RZERO      (F("f03"))
+#define P145_GUID_RREFLEVEL  (F("f04"))
+#define P145_GUID_CAL        (F("f05"))
+#define P145_GUID_COMP       (F("f06"))
+#define P145_GUID_LOWVCC     (F("f07"))
+#define P145_GUID_TEMP_T     (F("f08"))
+#define P145_GUID_TEMP_V     (F("f09"))
+#define P145_GUID_HUM_T      (F("f10"))
+#define P145_GUID_HUM_V      (F("f11"))
+
 // A plugin has to implement the following function
 // ------------------------------------------------
 boolean Plugin_145(byte function, struct EventStruct *event, String& string)
@@ -146,7 +159,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
         options[i] = concat(P145_data_struct::getTypeName(i), F(" - ")) + P145_data_struct::getGasName(i);
         optionValues[i] = i; 
       }
-      addFormSelector(F("Sensor type"), F("plugin_145_sensor"), x, options, optionValues, P145_PCONFIG_SENSORT);
+      addFormSelector(F("Sensor type"), P145_GUID_TYPE, x, options, optionValues, P145_PCONFIG_SENSORT);
 
 # ifdef ESP32
       // Analog input selection
@@ -154,11 +167,11 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN_AIN);
 # endif // ifdef ESP32
 
-      addFormFloatNumberBox(F("Load Resistance"), F("plugin_145_RLOAD"), P145_PCONFIG_RLOAD, 0.0f, 10e6f, 2U);
+      addFormFloatNumberBox(F("Load Resistance"), P145_GUID_RLOAD, P145_PCONFIG_RLOAD, 0.0f, 10e6f, 2U);
       addUnit(F("Ohm"));
-      addFormFloatNumberBox(F("R Zero"), F("plugin_145_RZERO"), P145_PCONFIG_RZERO, 0.0f, 10e6f, 2U);
+      addFormFloatNumberBox(F("R Zero"), P145_GUID_RZERO, P145_PCONFIG_RZERO, 0.0f, 10e6f, 2U);
       addUnit(F("Ohm"));
-      addFormFloatNumberBox(F("Reference Level"), F("plugin_145_REFLEVEL"), P145_PCONFIG_REF, 0.0f, 10e6f, 2U);
+      addFormFloatNumberBox(F("Reference Level"), P145_GUID_RREFLEVEL, P145_PCONFIG_REF, 0.0f, 10e6f, 2U);
       addUnit(F("ppm"));
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P145_data != nullptr)
@@ -169,14 +182,16 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
           addFormNote(String(F("Current measurement suggests Rzero= ")) + String(calVal));
         }
       }
+      bool lowvcc = (P145_PCONFIG_FLAGS >> 2) & 0x0001;
+      addFormCheckBox(F("Low sensor supply voltage"), P145_GUID_LOWVCC, lowvcc);
 
       addFormSeparator(2);
       // Auto calibration and Temp/hum compensation flags are bitfields in P145_PCONFIG_FLAGS
       bool compensate = P145_PCONFIG_FLAGS & 0x0001;
       bool calibrate = (P145_PCONFIG_FLAGS >> 1) & 0x0001;
-      addFormCheckBox(F("Enable automatic calibration"), F("plugin_145_enable_calibrarion"), calibrate);
+      addFormCheckBox(F("Enable automatic calibration"), P145_GUID_CAL, calibrate);
       //addFormCheckBox(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate);
-      addFormSelector_YesNo(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate, true);
+      addFormSelector_YesNo(F("Enable temp/humid compensation"), P145_GUID_COMP, compensate, true);
       // Above selector will fore reloading the page and thus updating the compensate flag
       // Show the compensation details only when compensation is enabled
       if (compensate)
@@ -184,21 +199,21 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
         addFormNote(F("If compensation is enabled, the Temperature and Humidity values below need to be configured."));
         // temperature
         addRowLabel(F("Temperature"));
-        addTaskSelect(F("plugin_145_temperature_task"), P145_PCONFIG_TEMP_TASK);
+        addTaskSelect(P145_GUID_TEMP_T, P145_PCONFIG_TEMP_TASK);
         if (validTaskIndex(P145_PCONFIG_TEMP_TASK))
         {
           LoadTaskSettings(P145_PCONFIG_TEMP_TASK); // we need to load the values from another task for selection!
           addRowLabel(F("Temperature Value"));
-          addTaskValueSelect(F("plugin_145_temperature_value"), P145_PCONFIG_TEMP_VAL, P145_PCONFIG_TEMP_TASK);
+          addTaskValueSelect(P145_GUID_TEMP_V, P145_PCONFIG_TEMP_VAL, P145_PCONFIG_TEMP_TASK);
         }
         // humidity
         addRowLabel(F("Humidity"));
-        addTaskSelect(F("plugin_145_humidity_task"), P145_PCONFIG_HUM_TASK);
+        addTaskSelect(P145_GUID_HUM_T, P145_PCONFIG_HUM_TASK);
         if (validTaskIndex(P145_PCONFIG_HUM_TASK))
         {
           LoadTaskSettings(P145_PCONFIG_HUM_TASK); // we need to load the values from another task for selection!
           addRowLabel(F("Humidity Value"));
-          addTaskValueSelect(F("plugin_145_humidity_value"), P145_PCONFIG_HUM_VAL, P145_PCONFIG_HUM_TASK);
+          addTaskValueSelect(P145_GUID_HUM_V, P145_PCONFIG_HUM_VAL, P145_PCONFIG_HUM_TASK);
         }
         LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
       }
@@ -209,23 +224,24 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P145_PCONFIG_SENSORT   = getFormItemInt(F("plugin_145_sensor"));
-      P145_PCONFIG_RLOAD     = getFormItemFloat(F("plugin_145_RLOAD"));
-      P145_PCONFIG_RZERO     = getFormItemFloat(F("plugin_145_RZERO"));
-      P145_PCONFIG_REF       = getFormItemFloat(F("plugin_145_REFLEVEL"));
+      P145_PCONFIG_SENSORT   = getFormItemInt(P145_GUID_TYPE);
+      P145_PCONFIG_RLOAD     = getFormItemFloat(P145_GUID_RLOAD);
+      P145_PCONFIG_RZERO     = getFormItemFloat(P145_GUID_RZERO);
+      P145_PCONFIG_REF       = getFormItemFloat(P145_GUID_RREFLEVEL);
       //bool compensate        = isFormItemChecked(F("plugin_145_enable_compensation") );
-      bool compensate = (getFormItemInt(F("plugin_145_enable_compensation")) == 1);
-      bool calibrate         = isFormItemChecked(F("plugin_145_enable_calibrarion") );
-      P145_PCONFIG_FLAGS     = compensate + (calibrate << 1);
-      P145_PCONFIG_TEMP_TASK = getFormItemInt(F("plugin_145_temperature_task"));
-      P145_PCONFIG_TEMP_VAL  = getFormItemInt(F("plugin_145_temperature_value"));
-      P145_PCONFIG_HUM_TASK  = getFormItemInt(F("plugin_145_humidity_task"));
-      P145_PCONFIG_HUM_VAL   = getFormItemInt(F("plugin_145_humidity_value"));
+      bool compensate = (getFormItemInt(P145_GUID_COMP) == 1);
+      bool calibrate         = isFormItemChecked(P145_GUID_CAL);
+      bool lowvcc            = isFormItemChecked(P145_GUID_LOWVCC);
+      P145_PCONFIG_FLAGS     = compensate + (calibrate << 1) + (lowvcc << 2);
+      P145_PCONFIG_TEMP_TASK = getFormItemInt(P145_GUID_TEMP_T);
+      P145_PCONFIG_TEMP_VAL  = getFormItemInt(P145_GUID_TEMP_V);
+      P145_PCONFIG_HUM_TASK  = getFormItemInt(P145_GUID_HUM_T);
+      P145_PCONFIG_HUM_VAL   = getFormItemInt(P145_GUID_HUM_V);
 
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P145_data != nullptr)
       {
-        P145_data->setSensorData(P145_PCONFIG_SENSORT, P145_PCONFIG_FLAGS & 0x0001, (P145_PCONFIG_FLAGS >> 1) & 0x0001, P145_PCONFIG_RLOAD, P145_PCONFIG_RZERO, P145_PCONFIG_REF);
+        P145_data->setSensorData(P145_PCONFIG_SENSORT, compensate, calibrate, lowvcc, P145_PCONFIG_RLOAD, P145_PCONFIG_RZERO, P145_PCONFIG_REF);
         P145_data->dump();
       }
       success = true;
@@ -242,7 +258,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
         if (P145_data != nullptr)
         {
           P145_data->plugin_init();
-          P145_data->setSensorData(P145_PCONFIG_SENSORT, P145_PCONFIG_FLAGS & 0x0001, (P145_PCONFIG_FLAGS >> 1) & 0x0001, P145_PCONFIG_RLOAD, P145_PCONFIG_RZERO, P145_PCONFIG_REF);
+          P145_data->setSensorData(P145_PCONFIG_SENSORT, P145_PCONFIG_FLAGS & 0x0001, (P145_PCONFIG_FLAGS >> 1) & 0x0001, (P145_PCONFIG_FLAGS >> 2) & 0x0001, P145_PCONFIG_RLOAD, P145_PCONFIG_RZERO, P145_PCONFIG_REF);
           P145_data->dump();
         }
       }
@@ -266,7 +282,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       if (P145_data != nullptr)
       {
         float temperature = 20.0f;  // A reasonable value in case temperature source task is invalid
-        float humidity = 60.0f;     // A reasonable value in case tumidity source task is invalid
+        float humidity = 60.0f;     // A reasonable value in case humidity source task is invalid
         bool compensate = P145_PCONFIG_FLAGS & 0x0001;
         if (compensate && validTaskIndex(P145_PCONFIG_TEMP_TASK) && validTaskIndex(P145_PCONFIG_HUM_TASK))
         {

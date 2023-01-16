@@ -19,6 +19,7 @@
 
 // Supply voltage applied to the sensor
 #define P145_VCC        (5.0)
+#define P145_VCCLOW     (3.3)
 // Max input scale voltage of the ADC
 #define P145_VMAX       (3.3)
 
@@ -35,6 +36,7 @@ enum P145_algorithm
 };
 
 // Structure with sensor specific conversion data
+// A table of sensors is stored in PROGMEM, see P145_data_struct.cpp
 // Members are preferrably sorted by memory alignment
 struct P145_SENSORDEF
 {
@@ -74,6 +76,7 @@ struct P145_data_struct : public PluginTaskData_base
     /* Sensor type & user options */
     bool compensation = false;            // Use temperature compensation
     bool calibration = false;             // Perform auto calibration
+    bool lowvcc = false;                  // Sensor power is low voltage 3v3
     int  sensorType = -1;                 // Selected sensor type
     P145_algorithm algorithm = p145AlgNone; // conversion algorithm
     int  analogPin = P145_SENSOR_PIN;     // Analog input pin connected to the sensor
@@ -82,7 +85,7 @@ struct P145_data_struct : public PluginTaskData_base
     float readValue(float temperature, float humidity);
     bool plugin_init();
     bool plugin_ten_per_second();
-    void setSensorData(int stype, bool comp, bool cal, float load, float zero, float ref);
+    void setSensorData(int stype, bool comp, bool cal, bool vcclow, float load, float zero, float ref);
     float getCalibrationValue() const;
     float getAutoCalibrationValue() const;
     static const String getTypeName( int stype);
