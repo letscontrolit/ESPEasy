@@ -96,15 +96,13 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        uint8_t choiceMode                       = PCONFIG(0);
         const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A") };
-        int optionValuesMode[]                   = { 0, 1, 2 };
-        addFormSelector(F("Measure range"), F("p027_range"), 3, optionsMode, optionValuesMode, choiceMode);
+        const int optionValuesMode[]             = { 0, 1, 2 };
+        addFormSelector(F("Measure range"), F("range"), 3, optionsMode, optionValuesMode, PCONFIG(0));
       }
       {
-        uint8_t choiceMeasureType             = PCONFIG(2);
-        const __FlashStringHelper *options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
-        addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, nullptr, choiceMeasureType);
+        const __FlashStringHelper *options[] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
+        addFormSelector(F("Measurement Type"), F("measuretype"), 4, options, nullptr, PCONFIG(2));
       }
 
       success = true;
@@ -113,9 +111,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p027_range"));
+      PCONFIG(0) = getFormItemInt(F("range"));
       PCONFIG(1) = getFormItemInt(F("i2c_addr"));
-      PCONFIG(2) = getFormItemInt(F("p027_measuretype"));
+      PCONFIG(2) = getFormItemInt(F("measuretype"));
       success    = true;
       break;
     }
@@ -194,7 +192,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         String     log;
 
         if (mustLog) {
-          log  = formatToHex(P027_I2C_ADDR, F("INA219 0x"), 2);
+          log = formatToHex(P027_I2C_ADDR, F("INA219 0x"), 2);
         }
 
         // for backward compability we allow the user to select if only one measurement should be returned

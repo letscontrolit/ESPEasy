@@ -88,10 +88,10 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Touch Settings"));
 
-      addFormCheckBox(F("Send Touch Event"),    F("p097_sendtouch"),    P097_SEND_TOUCH_EVENT);
-      addFormCheckBox(F("Send Release Event"),  F("p097_sendrelease"),  P097_SEND_RELEASE_EVENT);
-      addFormCheckBox(F("Send Duration Event"), F("p097_sendduration"), P097_SEND_DURATION_EVENT);
-      addFormNumericBox(F("Touch Threshold"), F("p097_threshold"), P097_TOUCH_THRESHOLD, 0, P097_MAX_ADC_VALUE);
+      addFormCheckBox(F("Send Touch Event"),    F("sendtouch"),    P097_SEND_TOUCH_EVENT);
+      addFormCheckBox(F("Send Release Event"),  F("sendrelease"),  P097_SEND_RELEASE_EVENT);
+      addFormCheckBox(F("Send Duration Event"), F("sendduration"), P097_SEND_DURATION_EVENT);
+      addFormNumericBox(F("Touch Threshold"), F("threshold"), P097_TOUCH_THRESHOLD, 0, P097_MAX_ADC_VALUE);
 
       // Show current value
       addRowLabel(F("Current Pressure"));
@@ -103,10 +103,10 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P097_SEND_TOUCH_EVENT    = isFormItemChecked(F("p097_sendtouch"));
-      P097_SEND_RELEASE_EVENT  = isFormItemChecked(F("p097_sendrelease"));
-      P097_SEND_DURATION_EVENT = isFormItemChecked(F("p097_sendduration"));
-      P097_TOUCH_THRESHOLD     = getFormItemInt(F("p097_threshold"));
+      P097_SEND_TOUCH_EVENT    = isFormItemChecked(F("sendtouch"));
+      P097_SEND_RELEASE_EVENT  = isFormItemChecked(F("sendrelease"));
+      P097_SEND_DURATION_EVENT = isFormItemChecked(F("sendduration"));
+      P097_TOUCH_THRESHOLD     = getFormItemInt(F("threshold"));
 
       success = true;
       break;

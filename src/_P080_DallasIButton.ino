@@ -102,8 +102,8 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
         Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
         delay(800); // give it time to do intial conversion
+        success = true;
       }
-      success = true;
       break;
     }
 

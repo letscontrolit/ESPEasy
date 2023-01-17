@@ -336,8 +336,9 @@ bool p073_plugin_write(struct EventStruct *event,
     return false;
   }
 
-  const String cmd  = parseString(string, 1);
-  if (cmd.length() < 3 || cmd[0] != '7') return false;
+  const String cmd = parseString(string, 1);
+
+  if ((cmd.length() < 3) || (cmd[0] != '7')) { return false; }
 
   const String text = parseStringToEndKeepCase(string, 2);
 
@@ -491,7 +492,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
   }
 
   float p073_temptemp    = 0;
-  bool   p073_tempflagdot = false;
+  bool  p073_tempflagdot = false;
 
   if (!text.isEmpty()) {
     validFloatFromString(text, p073_temptemp);
@@ -508,10 +509,10 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
     case P073_TM1637_4DGTDOTS:
     case P073_TM1637_6DGT:
     {
-      if ((p073_temptemp > 999) || (p073_temptemp < -99.9)) {
+      if ((p073_temptemp > 999.0f) || (p073_temptemp < -99.9f)) {
         P073_data->FillBufferWithDash();
       } else {
-        if ((p073_temptemp < 100) && (p073_temptemp > -10)) {
+        if ((p073_temptemp < 100.0f) && (p073_temptemp > -10.0f)) {
           p073_temptemp    = roundf(p073_temptemp * 10.0f);
           p073_tempflagdot = true;
         }
@@ -565,7 +566,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
 
   float p073_lefttemp    = 0.0f;
   float p073_righttemp   = 0.0f;
-  bool   p073_tempflagdot = false;
+  bool  p073_tempflagdot = false;
 
   if (!text.isEmpty()) {
     validFloatFromString(parseString(text, 1), p073_lefttemp);

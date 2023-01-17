@@ -5,6 +5,7 @@
 
 _StatsOnly_data_struct::_StatsOnly_data_struct()
 {
+    _baseClassOnly = true;
 
 }
 
