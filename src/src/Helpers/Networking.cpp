@@ -405,16 +405,14 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
 \*********************************************************************************************/
 IPAddress getIPAddressForUnit(uint8_t unit) {
   if (unit == 255) {
-    return { 255, 255, 255, 255 };
+    const IPAddress ip(255, 255, 255, 255);
+    return ip;
   }
   auto it = Nodes.find(unit);
 
-  if (it == Nodes.end()) {
-    return {};
-  }
-
-  if (it->second.ip[0] == 0) {
-    return {};
+  if (it == Nodes.end() || it->second.ip[0] == 0) {
+    IPAddress ip;
+    return ip;
   }
   return it->second.IP();
 }
