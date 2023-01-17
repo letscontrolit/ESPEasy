@@ -14,10 +14,12 @@ public:
   virtual ~P025_data_struct() = default;
 
   int16_t read();
+  uint8_t getMux();
 
 private:
 
-  uint16_t readRegister025(uint8_t reg);
+  uint16_t readConversionRegister025(void);
+  bool isReady025(void);
 
   uint8_t pga; // Gain
   uint8_t mux; // Input multiplexer
