@@ -170,6 +170,8 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           log  = F("ADS1115 : Analog value: ");
           log += value;
+          log += F(" / Channel: ");
+          log += P025_data->getMux();
         }
         # endif // ifndef BUILD_NO_DEBUG
 
