@@ -102,21 +102,11 @@ uint8_t Caches::getTaskDeviceValueDecimals(taskIndex_t TaskIndex, uint8_t rel_in
 String Caches::getTaskDeviceName(taskIndex_t TaskIndex)
 {
   if (validTaskIndex(TaskIndex)) {
-  #ifdef ESP8266
-
-    // ESP8266 uses SPIFFS, which is fast enough to read the task settings
-    // Also RAM is limited, so don't waste it on caching where it is not needed.
-    LoadTaskSettings(TaskIndex);
-    return ExtraTaskSettings.TaskDeviceName;
-  #endif // ifdef ESP8266
-  #ifdef ESP32
-
     auto it = getExtraTaskSettings(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
       return it->second.TaskDeviceName;
     }
-  #endif // ifdef ESP32
   }
   return EMPTY_STRING;
 }
@@ -259,9 +249,7 @@ void Caches::updateExtraTaskSettingsCache()
       clearTaskIndexFromMaps(TaskIndex);
     }
 
-      #ifdef ESP32
     tmp.TaskDeviceName = ExtraTaskSettings.TaskDeviceName;
-      #endif // ifdef ESP32
 
     #if FEATURE_PLUGIN_STATS
     tmp.enabledPluginStats = 0;

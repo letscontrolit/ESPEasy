@@ -1009,6 +1009,9 @@ void parseSystemVariables(String& s, bool useURLencode)
 
 void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)
 {
+  if (s.indexOf('%') == -1) {
+    return;
+  }
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
   if (validTaskIndex(event->TaskIndex)) {
@@ -1026,10 +1029,12 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
     }
   }
 
-  if (validTaskIndex(event->TaskIndex)) {
-    repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
-  } else {
-    repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
+  if (s.indexOf(F("%tskname%")) != -1) {
+    if (validTaskIndex(event->TaskIndex)) {
+      repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
+    } else {
+      repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
+    }
   }
 
   const bool vname_found = s.indexOf(F("%vname")) != -1;
