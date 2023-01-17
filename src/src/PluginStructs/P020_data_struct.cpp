@@ -226,9 +226,10 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
   if (serial_buffer.length() > 0) {
     if (ser2netClient.connected()) { // Only send out if a client is connected
-      if ((serial_processing == P020_Events::P1WiFiGateway) && !serial_buffer.endsWith(F("\r\n"))) {
-        serial_buffer += F("\r\n");
-      }
+      // FIXME tonhuisman: Disable extra check for now as it reportedly doesn't work as intended
+      // if ((serial_processing == P020_Events::P1WiFiGateway) && !serial_buffer.endsWith(F("\r\n"))) {
+      //   serial_buffer += F("\r\n");
+      // }
       ser2netClient.print(serial_buffer);
     }
 

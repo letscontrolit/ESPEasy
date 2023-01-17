@@ -58,6 +58,7 @@ bool P020_ConvertP044Settings(struct EventStruct *event) {
     CONFIG_PIN2 = 1;                                                       // P044 TX pin
 
     // Former P044 defaults
+    P020_FLAGS = 0u;                                                       // Reset
     bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);                             // Led enabled...
     P020_LED_PIN           = P020_STATUS_LED;                              // ...and connected to GPIO-12
     P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing
@@ -115,6 +116,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         P020_RX_WAIT           = 0;
         P020_REPLACE_SPACE     = 0;                                            // Force empty
         P020_REPLACE_NEWLINE   = 0;
+        P020_FLAGS             = 0u;                                           // Reset
         bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);
         bitSet(P020_FLAGS, P020_FLAG_P044_MODE_SAVED);                         // Inital config, no conversion needed
       } else {
@@ -254,13 +256,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       } else {
         P020_SERIAL_PROCESSING = getFormItemInt(F("pevents"));
         P020_RX_BUFFER         = getFormItemInt(F("prx_buffer"));
+        P020_REPLACE_SPACE     = getFormItemInt(F("replspace"));
+        P020_REPLACE_NEWLINE   = getFormItemInt(F("replcrlf"));
       }
       P020_LED_PIN = getFormItemInt(F("pledpin"));
-
-      if (!P020_Emulate_P044) {
-        P020_REPLACE_SPACE   = getFormItemInt(F("replspace"));
-        P020_REPLACE_NEWLINE = getFormItemInt(F("replcrlf"));
-      }
 
       uint32_t lSettings = 0u;
       bitWrite(lSettings, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("pignoreclient")));
@@ -290,8 +289,6 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         bitSet(P020_FLAGS, P020_FLAG_P044_MODE_SAVED); // Set to P044 configuration done on next save
       }
       # endif // ifdef USES_P044
-
-      LoadTaskSettings(event->TaskIndex);
 
       if (P020_GET_LED_ENABLED && validGpio(P020_LED_PIN)) {
         pinMode(P020_LED_PIN, OUTPUT);
