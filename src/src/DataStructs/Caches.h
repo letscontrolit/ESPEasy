@@ -67,6 +67,10 @@ struct Caches {
   String  getTaskDeviceValueName(taskIndex_t TaskIndex,
                                  uint8_t     rel_index);
 
+  // Check to see if at least one of the taskvalues has a non-empty formula field.
+  bool    hasFormula(taskIndex_t TaskIndex);
+                                   
+
   String  getTaskDeviceFormula(taskIndex_t TaskIndex,
                                uint8_t     rel_index);
 

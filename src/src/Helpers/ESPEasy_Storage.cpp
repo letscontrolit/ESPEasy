@@ -49,6 +49,9 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#if FEATURE_RTC_CACHE_STORAGE
+# include "../Globals/C016_ControllerCache.h"
+#endif
 
 #ifdef ESP32
 #include <esp_partition.h>
@@ -124,7 +127,7 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
   SPIFFS_CHECK(f,                   fname.c_str());
   SPIFFS_CHECK(f.write(data, size), fname.c_str());
   f.close();
-  return "";
+  return EMPTY_STRING;
 }
 
 bool fileExists(const __FlashStringHelper * fname)
@@ -148,8 +151,12 @@ bool fileExists(const String& fname) {
     res = SD.exists(patched_fname);
   }
   #endif
-  // Only keep track of existing files. Not the non-existing files from the cache controller
-  if (res || patched_fname.indexOf(F("cache_")) == -1) {
+  // Only keep track of existing files or non-existing filenames that may be requested several times.
+  // Not the non-existing files from the cache controller
+  #if FEATURE_RTC_CACHE_STORAGE
+  if (res || !isCacheFile(patched_fname)) 
+  #endif
+  {
     Cache.fileExistsMap[patched_fname] = res;
   }
   if (Cache.fileCacheClearMoment == 0) {
@@ -213,6 +220,11 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
 bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
+    #if FEATURE_RTC_CACHE_STORAGE
+    if (isCacheFile(fname)) {
+      ControllerCache.closeOpenFiles();
+    }
+    #endif
     if (fileMatchesTaskSettingsType(fname)) {
       clearAllCaches();
     } else {
@@ -1736,7 +1748,7 @@ String createCacheFilename(unsigned int count) {
 
 // Match string with an integer between '_' and ".bin"
 int getCacheFileCountFromFilename(const String& fname) {
-  if (fname.indexOf(F("cache_")) == -1) return -1;
+  if (!isCacheFile(fname)) return -1;
   int startpos = fname.indexOf('_');
 
   if (startpos < 0) { return -1; }
@@ -1751,6 +1763,10 @@ int getCacheFileCountFromFilename(const String& fname) {
     return result;
   }
   return -1;
+}
+
+bool isCacheFile(const String& fname) {
+  return fname.indexOf(F("cache_")) != -1;
 }
 
 // Look into the filesystem to see if there are any cache files present on the filesystem

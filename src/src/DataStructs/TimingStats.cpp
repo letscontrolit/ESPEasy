@@ -208,9 +208,9 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::SENSOR_SEND_TASK:           return F("SensorSendTask()");
     case TimingStatsElements::SEND_DATA_STATS:            return F("sendData()");
     case TimingStatsElements::COMPUTE_FORMULA_STATS:      return F("Compute formula");
+    case TimingStatsElements::COMPUTE_STATS:              return F("Compute()");
     case TimingStatsElements::PLUGIN_CALL_DEVICETIMER_IN: return F("PLUGIN_DEVICETIMER_IN");
     case TimingStatsElements::SET_NEW_TIMER:              return F("setNewTimerAt()");
-    case TimingStatsElements::TIME_DIFF_COMPUTE:          return F("timeDiff()");
     case TimingStatsElements::MQTT_DELAY_QUEUE:           return F("Delay queue MQTT");
     case TimingStatsElements::TRY_CONNECT_HOST_TCP:       return F("try_connect_host() (TCP)");
     case TimingStatsElements::TRY_CONNECT_HOST_UDP:       return F("try_connect_host() (UDP)");

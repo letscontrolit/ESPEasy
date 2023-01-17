@@ -8,49 +8,6 @@
 #include "../Globals/Protocol.h"
 #include "../Helpers/Convert.h"
 
-/*
-   void logStatistics(uint8_t loglevel, bool clearStats) {
-   if (loglevelActiveFor(loglevel)) {
-    String log;
-    log.reserve(80);
-    for (auto& x: pluginStats) {
-        if (!x.second.isEmpty()) {
-            const int deviceIndex = x.first/256;
-            log = F("PluginStats P_");
-            log += deviceIndex + 1;
-            log += '_';
-            log += getPluginNameFromDeviceIndex(deviceIndex);
-            log += ' ';
-            log += getPluginFunctionName(x.first%256);
-            log += ' ';
-            log += getLogLine(x.second);
-            addLog(loglevel, log);
-            if (clearStats) x.second.reset();
-        }
-    }
-    for (auto& x: miscStats) {
-        if (!x.second.isEmpty()) {
-            log = getMiscStatsName(x.first);
-            log += F(" stats: ");
-            log += getLogLine(x.second);
-            addLog(loglevel, log);
-            if (clearStats) x.second.reset();
-        }
-    }
-    log = getMiscStatsName(TIME_DIFF_COMPUTE);
-    log += F(" stats: Count: ");
-    log += timediff_calls;
-    log += F(" - CPU cycles per call: ");
-    log += static_cast<float>(timediff_cpu_cycles_total) / static_cast<float>(timediff_calls);
-    addLog(loglevel, log);
-    if (clearStats) {
-      timediff_calls = 0;
-      timediff_cpu_cycles_total = 0;
-    }
-   }
-   }
- */
-
 void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
   uint64_t minVal, maxVal;
   uint64_t  count = stats.getMinMax(minVal, maxVal);

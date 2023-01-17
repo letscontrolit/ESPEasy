@@ -75,8 +75,9 @@ bool RTC_cache_handler_struct::peekDataAvailable() const {
 
   if (_peekfilenr == RTC_cache.writeFileNr) {
     if (fw) {
-      if ((_peekreadpos + 1) < fw.position()) { return true; }
+      return ((_peekreadpos + 1) < fw.position());
     }
+    return true;
   }
   return false;
 }
@@ -359,6 +360,17 @@ bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
   }
 #endif // ifdef RTC_STRUCT_DEBUG
   return false;
+}
+
+void RTC_cache_handler_struct::closeOpenFiles()
+{
+  if (fr) {
+    fr.close();
+  }
+
+  if (fp) {
+    fp.close();
+  }
 }
 
 bool RTC_cache_handler_struct::deleteAllCacheBlocks()

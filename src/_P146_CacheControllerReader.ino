@@ -102,8 +102,8 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       P146_MQTT_MESSAGE_LENGTH   = 800;
 
       String strings[P146_Nlines];
-      strings[P146_TaskInfoTopicIndex] = F("tracker_v2/%sysname%_%unit%/%tskname%/upload_meta");
-      strings[P146_PublishTopicIndex]  = F("tracker_v2/%sysname%_%unit%/%tskname%/upload");
+      strings[P146_TaskInfoTopicIndex] = F("%sysname%_%unit%/%tskname%/upload_meta");
+      strings[P146_PublishTopicIndex]  = F("%sysname%_%unit%/%tskname%/upload");
 
       SaveCustomTaskSettings(event->TaskIndex, strings, P146_Nlines, 0);
 
@@ -114,6 +114,9 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      // Init the controller cache handler, just in case the cache controller may not be enabled
+      ControllerCache.init();
+
       // Restore the last position from RTC when rebooting.
       ControllerCache.setPeekFilePos(
         P146_TASKVALUE_FILENR,

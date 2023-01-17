@@ -648,7 +648,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
     const uint8_t valueCount = getValueCountForTask(TaskIndex);
     // Store the previous value, in case %pvalue% is used in the formula
     String preValue[VARS_PER_TASK];
-    if (Device[DeviceIndex].FormulaOption) {
+    if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(TaskIndex)) {
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         const String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
@@ -672,14 +672,14 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
     if (success)
     {
-      if (Device[DeviceIndex].FormulaOption) {
-        START_TIMER;
-
+      if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(TaskIndex)) {
         for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
           String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
           if (!formula.isEmpty())
           {
+            START_TIMER;
+
             // TD-er: Should we use the set nr of decimals here, or not round at all?
             // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
             formula.replace(F("%pvalue%"), preValue[varNr]);
@@ -689,9 +689,10 @@ void SensorSendTask(taskIndex_t TaskIndex)
             if (!isError(Calculate(parseTemplate(formula), result))) {
               UserVar[TempEvent.BaseVarIndex + varNr] = result;
             }
+
+            STOP_TIMER(COMPUTE_FORMULA_STATS);
           }
         }
-        STOP_TIMER(COMPUTE_FORMULA_STATS);
       }
       sendData(&TempEvent);
     }

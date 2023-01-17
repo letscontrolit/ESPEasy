@@ -144,19 +144,23 @@ String Caches::getTaskDeviceValueName(taskIndex_t TaskIndex, uint8_t rel_index)
   return EMPTY_STRING;
 }
 
+bool Caches::hasFormula(taskIndex_t TaskIndex)
+{
+  if (validTaskIndex(TaskIndex)) {
+    // Just a quick test to see if we do have a formula present.
+    // Task Formula are not used very often, so we will probably almost always have to return an empty string.
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return it->second.hasFormula;
+    }
+  }
+  return false;
+}
+
 String Caches::getTaskDeviceFormula(taskIndex_t TaskIndex, uint8_t rel_index)
 {
-  if (validTaskIndex(TaskIndex) && (rel_index < VARS_PER_TASK)) {
-    {
-      // Just a quick test to see if we do have a formula present.
-      // Task Formula are not used very often, so we will probably almost always have to return an empty string.
-      auto it = getExtraTaskSettings(TaskIndex);
-
-      if (it != extraTaskSettings_cache.end()) {
-        if (!it->second.hasFormula) { return EMPTY_STRING; }
-      }
-    }
-
+  if (rel_index < VARS_PER_TASK && hasFormula(TaskIndex)) {
     LoadTaskSettings(TaskIndex);
     return ExtraTaskSettings.TaskDeviceFormula[rel_index];
   }

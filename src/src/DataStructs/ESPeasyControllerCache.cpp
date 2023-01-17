@@ -54,6 +54,12 @@ bool ControllerCache_struct::deleteOldestCacheBlock() {
   return false;
 }
 
+void ControllerCache_struct::closeOpenFiles() {
+  if (_RTC_cache_handler != nullptr) {
+    _RTC_cache_handler->closeOpenFiles();
+  }
+}
+
 bool ControllerCache_struct::deleteAllCacheBlocks() {
   if (_RTC_cache_handler != nullptr) {
     return _RTC_cache_handler->deleteAllCacheBlocks();

@@ -70,6 +70,9 @@ struct RTC_cache_handler_struct
 
   bool   deleteAllCacheBlocks();
 
+  // When trying to access cache files, like deleting them, these files must be closed first.
+  void   closeOpenFiles();
+
 private:
 
   bool     loadMetaData();

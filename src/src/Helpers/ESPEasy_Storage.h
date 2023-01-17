@@ -300,6 +300,8 @@ bool SpiffsFull();
  \*********************************************************************************************/
 String createCacheFilename(unsigned int count);
 
+bool isCacheFile(const String& fname);
+
 // Match string with an integer between '_' and ".bin"
 int getCacheFileCountFromFilename(const String& fname);
 
