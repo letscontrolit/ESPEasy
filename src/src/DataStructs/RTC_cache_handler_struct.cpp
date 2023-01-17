@@ -77,7 +77,7 @@ bool RTC_cache_handler_struct::peekDataAvailable() const {
     if (fw) {
       return ((_peekreadpos + 1) < fw.position());
     }
-    return true;
+//    return true;
   }
   return false;
 }
