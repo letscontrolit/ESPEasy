@@ -534,37 +534,44 @@ void SendStatus(struct EventStruct *event, const String& status)
 }
 
 #if FEATURE_MQTT
+controllerIndex_t firstEnabledMQTT_ControllerIndex() {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+    if (validProtocolIndex(ProtocolIndex)) {
+      if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+        return i;
+      }
+    }
+  }
+  return INVALID_CONTROLLER_INDEX;
+}
+
 bool MQTT_queueFull(controllerIndex_t controller_idx) {
   if (MQTTDelayHandler == nullptr) {
     return true;
   }
-  MQTT_queue_element dummy_element;
 
-  dummy_element.controller_idx = controller_idx;
-
-  if (MQTTDelayHandler->queueFull(dummy_element)) {
+  if (MQTTDelayHandler->queueFull(controller_idx)) {
     // The queue is full, try to make some room first.
     processMQTTdelayQueue();
-    return MQTTDelayHandler->queueFull(dummy_element);
+    return MQTTDelayHandler->queueFull(controller_idx);
   }
   return false;
 }
 
 #ifdef USES_ESPEASY_NOW
 
-bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const MessageRouteInfo_t& messageRouteInfo, bool retained)
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const MessageRouteInfo_t& messageRouteInfo, bool retained, bool callbackTask)
 {
   bool success = false;
   if (!MQTT_queueFull(controller_idx))
   {
     {
-      MQTT_queue_element element;
       size_t pos = 0;
-      element.controller_idx = controller_idx;
-      element._retained = retained;
-      element.MessageRouteInfo = messageRouteInfo;
       const size_t payloadSize = message.getPayloadSize();
-      if (message.getString(element._topic,   pos) && message.getString(element._payload, pos)) {
+      MessageRouteInfo_t routeinfo = messageRouteInfo;
+      String topic, payload;
+      if (message.getString(topic, pos) && message.getString(payload, pos)) {
         success = true;
         const size_t bytesLeft = payloadSize - pos;
         if (bytesLeft >= 4) {
@@ -575,14 +582,14 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
           // Use temp position as we don't yet know the true size of the message route info
           size_t tmp_pos = pos;
           if (message.getBinaryData(&routeInfoData[0], bytesLeft, tmp_pos) == bytesLeft) {
-            validMessageRouteInfo = element.MessageRouteInfo.deserialize(routeInfoData);
+            validMessageRouteInfo = routeinfo.deserialize(routeInfoData);
             if (validMessageRouteInfo) {
               // Move pos for the actual number of bytes we read.
-              pos += element.MessageRouteInfo.getSerializedSize();
+              pos += routeinfo.getSerializedSize();
             }
             {
               String log = F("MQTT  : MQTTpublish MessageRouteInfo: ");
-              log += element.MessageRouteInfo.toString();
+              log += routeinfo.toString();
               log += F(" bytesLeft: ");
               log += bytesLeft;
               addLog(LOG_LEVEL_INFO, log);
@@ -590,14 +597,25 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
           }
           if (!validMessageRouteInfo) {
             // Whatever may have been present, it could not be loaded, so clear just to be sure.
-            element.MessageRouteInfo = messageRouteInfo;
+            routeinfo = messageRouteInfo;
           }
           // Append our own unit number
-          element.MessageRouteInfo.appendUnit(Settings.Unit);
+          routeinfo.appendUnit(Settings.Unit);
         }
       }
       if (success) {
-        success = MQTTDelayHandler->addToQueue(std::move(element));
+       std::unique_ptr<MQTT_queue_element> element = std::unique_ptr<MQTT_queue_element>(
+        new MQTT_queue_element(
+          controller_idx,
+          INVALID_TASK_INDEX,
+          std::move(topic),
+          std::move(payload),
+          retained,
+          callbackTask));
+        if (element) {
+          element->MessageRouteInfo = routeinfo;
+          success = MQTTDelayHandler->addToQueue(std::move(element));
+        }
       }
     }
   }
@@ -607,7 +625,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
 
 #endif
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const char *topic, const char *payload, bool retained)
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const char *topic, const char *payload, bool retained, bool callbackTask)
 {
   if (MQTTDelayHandler == nullptr) {
     return false;
@@ -616,13 +634,13 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained));
+  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;
 }
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained) {
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained, bool callbackTask) {
   if (MQTTDelayHandler == nullptr) {
     return false;
   }
@@ -630,7 +648,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained));
+  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -722,7 +740,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
     const uint8_t valueCount = getValueCountForTask(TaskIndex);
     // Store the previous value, in case %pvalue% is used in the formula
     String preValue[VARS_PER_TASK];
-    if (Device[DeviceIndex].FormulaOption) {
+    if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(TaskIndex)) {
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         const String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
@@ -746,14 +764,14 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
     if (success)
     {
-      if (Device[DeviceIndex].FormulaOption) {
-        START_TIMER;
-
+      if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(TaskIndex)) {
         for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
           String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
           if (!formula.isEmpty())
           {
+            START_TIMER;
+
             // TD-er: Should we use the set nr of decimals here, or not round at all?
             // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
             formula.replace(F("%pvalue%"), preValue[varNr]);
@@ -763,9 +781,10 @@ void SensorSendTask(taskIndex_t TaskIndex)
             if (!isError(Calculate(parseTemplate(formula), result))) {
               UserVar[TempEvent.BaseVarIndex + varNr] = result;
             }
+
+            STOP_TIMER(COMPUTE_FORMULA_STATS);
           }
         }
-        STOP_TIMER(COMPUTE_FORMULA_STATS);
       }
       sendData(&TempEvent);
     }

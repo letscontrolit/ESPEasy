@@ -1092,7 +1092,13 @@ void WifiScan(bool async, uint8_t channel) {
       processScanDone();
     }
   }
-  STOP_TIMER(async ? WIFI_SCAN_ASYNC : WIFI_SCAN_SYNC);
+#if FEATURE_TIMING_STATS
+  if (async) {
+    STOP_TIMER(WIFI_SCAN_ASYNC);
+  } else {
+    STOP_TIMER(WIFI_SCAN_SYNC);
+  }
+#endif
 
 #ifdef ESP32
   RTC.clearLastWiFi();

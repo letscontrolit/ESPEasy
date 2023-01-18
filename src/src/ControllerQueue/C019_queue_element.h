@@ -35,9 +35,11 @@ public:
 
   bool isDuplicate(const C019_queue_element& other) const;
 
-#ifdef USES_ESPEASY_NOW
+
   const MessageRouteInfo_t* getMessageRouteInfo() const { return nullptr; }
-#endif
+
+  MessageRouteInfo_t* getMessageRouteInfo() { return nullptr; }
+
 
   String packed;
   unsigned long _timestamp         = millis();
@@ -45,9 +47,6 @@ public:
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   pluginID_t plugin_id = INVALID_PLUGIN_ID;
   EventStruct event;
-#ifdef USES_ESPEASY_NOW
-  MessageRouteInfo_t MessageRouteInfo; 
-#endif
 };
 
 #endif //USES_C019

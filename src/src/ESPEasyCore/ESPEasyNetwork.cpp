@@ -219,52 +219,48 @@ String NetworkGetHostNameFromSettings(bool force_add_unitnr)
 }
 
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr) {
-  return createRFCCompliantHostname(NetworkGetHostNameFromSettings(force_add_unitnr));
-}
-
-// Create hostname with - instead of spaces
-String createRFCCompliantHostname(const String& oldString) {
-  String result(oldString);
+  String hostname(NetworkGetHostNameFromSettings(force_add_unitnr));
+  // Create hostname with - instead of spaces
 
   // See RFC952.
   // Allowed chars:
   // * letters (a-z, A-Z)
   // * numerals (0-9)
   // * Hyphen (-)
-  replaceUnicodeByChar(result, '-');
-  for (size_t i = 0; i < result.length(); ++i) {
-    const char c = result[i];
+  replaceUnicodeByChar(hostname, '-');
+  for (size_t i = 0; i < hostname.length(); ++i) {
+    const char c = hostname[i];
     if (!isAlphaNumeric(c)) {
-      result[i] = '-';
+      hostname[i] = '-';
     }
   }
 
-
   // May not start or end with a hyphen
-  while (result.startsWith(String('-'))) {
-    result = result.substring(1);
+  const String dash('-');
+  while (hostname.startsWith(dash)) {
+    hostname = hostname.substring(1);
   }
-  while (result.endsWith(String('-'))) {
-    result = result.substring(0, result.length() - 1);
+  while (hostname.endsWith(dash)) {
+    hostname = hostname.substring(0, hostname.length() - 1);
   }
 
   // May not contain only numerals
   bool onlyNumerals = true;
-  for (size_t i = 0; onlyNumerals && i < result.length(); ++i) {
-    const char c = result[i];
+  for (size_t i = 0; onlyNumerals && i < hostname.length(); ++i) {
+    const char c = hostname[i];
     if (!isdigit(c)) {
       onlyNumerals = false;
     }
   }
   if (onlyNumerals) {
-    result = String(F("ESPEasy-")) + result;
+    hostname = concat(F("ESPEasy-"), hostname);
   }
 
-  if (result.length() > 24) {
-    result = result.substring(0, 24);
+  if (hostname.length() > 24) {
+    hostname = hostname.substring(0, 24);
   }
 
-  return result;
+  return hostname;
 }
 
 MAC_address WifiSoftAPmacAddress() {

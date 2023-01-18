@@ -886,6 +886,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
+      if (MQTT_queueFull(event->ControllerIndex)) {
+        break;
+      }
+
       String pubname         = CPlugin_014_pubname;
       bool   mqtt_retainFlag = CPlugin_014_mqtt_retainFlag;
 
@@ -904,11 +908,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
         // Small optimization so we don't try to copy potentially large strings
         if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
-          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
+          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag))
+            success = true;
           value = event->String2.substring(0, 20); // For the log
         } else {
           value = formatUserVarNoCheck(event, x);
-          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
+          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag))
+            success = true;
         }
 
 #ifndef BUILD_NO_DEBUG

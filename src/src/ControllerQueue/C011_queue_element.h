@@ -5,6 +5,7 @@
 
 #ifdef USES_C011
 
+#include "../ControllerQueue/Queue_element_base.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataStructs/MessageRouteInfo.h"
@@ -17,26 +18,31 @@ struct EventStruct;
 /*********************************************************************************************\
 * C011_queue_element for queueing requests for C011: Generic HTTP Advanced.
 \*********************************************************************************************/
-class C011_queue_element {
+class C011_queue_element : public Queue_element_base {
 public:
 
   C011_queue_element() = default;
 
   C011_queue_element(C011_queue_element&& other) = default;
 
-#ifdef USE_SECOND_HEAP
+# ifdef USE_SECOND_HEAP
   C011_queue_element(const C011_queue_element& other) = default;
-#else
+# else // ifdef USE_SECOND_HEAP
   C011_queue_element(const C011_queue_element& other) = delete;
-#endif
+# endif // ifdef USE_SECOND_HEAP
 
   C011_queue_element(const struct EventStruct *event);
 
-  bool isDuplicate(const C011_queue_element& other) const;
+  bool                      isDuplicate(const Queue_element_base& other) const;
 
-#ifdef USES_ESPEASY_NOW
-  const MessageRouteInfo_t* getMessageRouteInfo() const { return nullptr; }
-#endif
+
+  const MessageRouteInfo_t* getMessageRouteInfo() const {
+    return nullptr;
+  }
+
+  MessageRouteInfo_t* getMessageRouteInfo() {
+    return nullptr;
+  }
 
   size_t getSize() const;
 
@@ -44,14 +50,11 @@ public:
   String HttpMethod;
   String header;
   String postStr;
-  int idx                          = 0;
-  unsigned long _timestamp         = millis();
-  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
-  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
-  Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
+  int idx                 = 0;
+  Sensor_VType sensorType = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
-#endif //USES_C011
+#endif // USES_C011
 
 
 #endif // CONTROLLERQUEUE_C011_QUEUE_ELEMENT_H

@@ -1,6 +1,6 @@
 #include "../DataStructs/MessageRouteInfo.h"
 
-#ifdef USES_ESPEASY_NOW
+
 MessageRouteInfo_t::MessageRouteInfo_t(const uint8_t* serializedData, size_t size) {
   deserialize(serializedData, size);
 }
@@ -138,4 +138,3 @@ void UnitMessageRouteInfo_map::add(const MessageRouteInfo_t *info) {
     _map[info->unit] = *info;
   }
 }
-#endif

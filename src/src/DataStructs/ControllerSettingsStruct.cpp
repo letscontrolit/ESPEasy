@@ -16,7 +16,7 @@
 
 ControllerSettingsStruct::ControllerSettingsStruct()
 {
-  reset();
+  safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 
 void ControllerSettingsStruct::reset() {
@@ -75,6 +75,10 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(MQTTLwtTopic);
   ZERO_TERMINATE(LWTMessageConnect);
   ZERO_TERMINATE(LWTMessageDisconnect);
+}
+
+ChecksumType ControllerSettingsStruct::computeChecksum() const {
+  return ChecksumType(reinterpret_cast<const uint8_t *>(this), sizeof(ControllerSettingsStruct));
 }
 
 IPAddress ControllerSettingsStruct::getIP() const {

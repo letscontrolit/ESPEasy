@@ -49,9 +49,6 @@ void updateMQTTclient_connected();
 
 void runPeriodicalMQTT();
 
-controllerIndex_t firstEnabledMQTT_ControllerIndex();
-
-
 #endif //if FEATURE_MQTT
 
 
