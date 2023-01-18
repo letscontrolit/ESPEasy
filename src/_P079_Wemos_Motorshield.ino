@@ -118,8 +118,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
       if ((I2C_ADDR_PCFG_P079 < 0x01) || (I2C_ADDR_PCFG_P079 > 0x7f)) { // Validate I2C Addr.
         I2C_ADDR_PCFG_P079 = DEF_I2C_ADDRESS_079;
       }
-      String i2c_addres_string = formatToHex(I2C_ADDR_PCFG_P079);
-      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"), i2c_addres_string, 4);
+      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"), formatToHex(I2C_ADDR_PCFG_P079), 4);
 
       // Validate Shield Type.
       bool valid = false;
