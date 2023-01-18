@@ -105,7 +105,7 @@ private:
   String _title;
   bool   _alternateTitle = true;
 
-  char _deviceTemplate[P109_Nlines][P109_Nchars];
+  char _deviceTemplate[P109_Nlines][P109_Nchars] = {};
 
   bool _initialized  = false;
   bool _showWiFiName = true;

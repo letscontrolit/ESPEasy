@@ -779,7 +779,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
     }
 
     for (auto it = barGraphs.begin(); it != barGraphs.end(); ++it) {
-      if (essentiallyEqual(it->min, 0.0)) {
+      if (essentiallyZero(it->min)) {
         pixTop    = zstruct._lower - 1 + (((zstruct._upper + 1) - zstruct._lower) / it->max) * it->value;
         pixBottom = zstruct._lower - 1;
         zeroPoint = 0;

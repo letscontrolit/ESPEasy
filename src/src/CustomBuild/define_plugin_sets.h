@@ -2041,6 +2041,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
   #endif
+  #ifndef USES_P146
+    #define USES_P146   // Cache Controller Reader
+  #endif
+
+
 
   // Controllers
   #ifndef USES_C015
@@ -2207,6 +2212,9 @@ To create/register a plugin, you have to :
     #undef FEATURE_EXT_RTC
   #endif
   #define FEATURE_EXT_RTC 0
+  #ifndef BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
+  #endif
 #endif
 
 #if defined(PLUGIN_BUILD_MAX_ESP32) || defined(NO_LIMIT_BUILD_SIZE)
@@ -2406,6 +2414,19 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+// Cache Controller Reader plugin needs Cache Controller
+#if defined(USES_P146) && !defined(USES_C016)
+  #define USES_C016
+#endif
+
+#if defined(USES_P146) || defined(USES_C016)
+  #ifdef FEATURE_RTC_CACHE_STORAGE
+    #undef FEATURE_RTC_CACHE_STORAGE
+  #endif
+  #define FEATURE_RTC_CACHE_STORAGE 1
+#endif
+
+
 
 // P098 PWM motor needs P003 pulse
 #if defined(USES_P098)
@@ -2525,6 +2546,10 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_CUSTOM_PROVISIONING           
 #define FEATURE_CUSTOM_PROVISIONING           0
+#endif
+
+#ifndef FEATURE_RTC_CACHE_STORAGE
+#define FEATURE_RTC_CACHE_STORAGE             0
 #endif
 
 #ifndef FEATURE_DNS_SERVER                    
