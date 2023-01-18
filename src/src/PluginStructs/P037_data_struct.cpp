@@ -6,17 +6,25 @@
 # include "../Helpers/Numerical.h"
 # include "../Helpers/RulesMatcher.h"
 # include "../WebServer/Markup_Forms.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/Markup.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../ESPEasyCore/ESPEasyRules.h"
 
 
-P037_data_struct::P037_data_struct(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
-  loadSettings();
-}
+P037_data_struct::P037_data_struct(taskIndex_t taskIndex) : _taskIndex(taskIndex)
+{}
 
-P037_data_struct::~P037_data_struct() {}
+P037_data_struct::~P037_data_struct() {
+  # if P037_JSON_SUPPORT
+
+  if (nullptr != root) {
+    root->clear();
+    delete root;
+    root = nullptr;
+  }
+  # endif // if P037_JSON_SUPPORT
+}
 
 /**
  * Load the settings from file
@@ -36,9 +44,9 @@ bool P037_data_struct::loadSettings() {
       String tmp[1];
 
       LoadCustomTaskSettings(_taskIndex, tmp,
-                            1, 41, offset);
-      globalTopicPrefix  = std::move(tmp[0]);
-      offset += 41;
+                             1, 41, offset);
+      globalTopicPrefix = std::move(tmp[0]);
+      offset           += 41;
     }
 
 
@@ -51,34 +59,36 @@ bool P037_data_struct::loadSettings() {
 
 String P037_data_struct::saveSettings() {
   String res;
+
   if (_taskIndex < TASKS_MAX) {
     size_t offset = 0;
     res += SaveCustomTaskSettings(_taskIndex, mqttTopics,
-                           VARS_PER_TASK, 41, offset);
+                                  VARS_PER_TASK, 41, offset);
     offset += VARS_PER_TASK * 41;
 
     res += SaveCustomTaskSettings(_taskIndex, jsonAttributes,
-                           VARS_PER_TASK, 21, offset);
+                                  VARS_PER_TASK, 21, offset);
     offset += VARS_PER_TASK * 21;
 
     {
       String tmp[1];
       tmp[0] = globalTopicPrefix;
-      res += SaveCustomTaskSettings(_taskIndex, tmp,
-                            1, 41, offset);
+      res   += SaveCustomTaskSettings(_taskIndex, tmp,
+                                      1, 41, offset);
       offset += 41;
     }
 
 
     res += SaveCustomTaskSettings(_taskIndex, valueArray,
-                           P037_ARRAY_SIZE, 0, offset + 1);
+                                  P037_ARRAY_SIZE, 0, offset + 1);
   }
   return res;
 }
 
 String P037_data_struct::getFullMQTTTopic(uint8_t taskValueIndex) const {
   String topic;
-  if (taskValueIndex < VARS_PER_TASK && mqttTopics[taskValueIndex].length() > 0) {
+
+  if ((taskValueIndex < VARS_PER_TASK) && (mqttTopics[taskValueIndex].length() > 0)) {
     topic.reserve(globalTopicPrefix.length() + mqttTopics[taskValueIndex].length());
     topic = globalTopicPrefix;
     topic.trim();
@@ -88,11 +98,10 @@ String P037_data_struct::getFullMQTTTopic(uint8_t taskValueIndex) const {
   return topic;
 }
 
-
 bool P037_data_struct::shouldSubscribeToMQTTtopic(const String& topic) const {
-  if (topic.length() == 0) return false;
-  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
-  {
+  if (topic.length() == 0) { return false; }
+
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
     if (topic.equalsIgnoreCase(getFullMQTTTopic(x))) {
       return true;
     }
@@ -124,8 +133,11 @@ void P037_data_struct::parseMappings() {
     _maxFilter = 0; // Initialize to empty
     #  endif // if P037_FILTER_SUPPORT
 
+    #  if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
+    int8_t idx;
+    #  endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
     #  if P037_MAPPING_SUPPORT
-    int8_t idx = P037_MAX_MAPPINGS;
+    idx = P037_MAX_MAPPINGS;
 
     for (uint8_t mappingOffset = P037_END_MAPPINGS; mappingOffset >= P037_START_MAPPINGS && _maxIdx == 0; mappingOffset--) {
       if (!valueArray[mappingOffset].isEmpty()) {
@@ -178,51 +190,41 @@ bool P037_data_struct::webform_load(
   addFormSubHeader(F("Topic subscriptions"));
 
   // Global topic prefix
-  addFormTextBox(F("Prefix for all topics"), F("topicprefix"), globalTopicPrefix, 40);
+  addFormTextBox(F("Prefix for all topics"), F("pprefix"), globalTopicPrefix, 40);
 
   # ifdef P037_JSON_SUPPORT
 
   if (jsonEnabled) {
     addRowLabel(F("MQTT Topic"));
     html_table(EMPTY_STRING, false); // Sub-table
-    html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("Topic"),          500);
+    html_table_header(F("&nbsp;#&nbsp;"),  30);
+    html_table_header(F("Topic"),          350);
     html_table_header(F("JSON Attribute"), 200);
   }
   # endif // ifdef P037_JSON_SUPPORT
 
-  for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
-  {
-    String id;
+  for (int varNr = 0; varNr < VARS_PER_TASK; varNr++) {
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) { // Add a column with the json attribute to use for value
       html_TR_TD();
       addHtml(F("&nbsp;"));
       addHtmlInt(varNr + 1);
-      html_TD();
-      id  = F("template");
-      id += (varNr + 1);
-      addTextBox(id,
+      html_TD(F("padding-right: 8px"));
+      addTextBox(concat(F("template"), varNr + 1),
                  mqttTopics[varNr],
                  40,
-                 false, false, EMPTY_STRING, F("wide"));
-      html_TD();
-      id  = F("attribute");
-      id += (varNr + 1);
-      addTextBox(id,
+                 false, false, EMPTY_STRING, F("xwide"));
+      html_TD(F("padding-right: 8px"));
+      addTextBox(concat(F("attribute"), varNr + 1),
                  jsonAttributes[varNr],
                  20,
-                 false, false, EMPTY_STRING, EMPTY_STRING);
+                 false, false, EMPTY_STRING, F("xwide"));
       html_TD();
     } else
     # endif // ifdef P037_JSON_SUPPORT
     {
-      String label = F("MQTT Topic ");
-      label += (varNr + 1);
-      id     = F("template");
-      id    += (varNr + 1);
-      addFormTextBox(label, id, mqttTopics[varNr], 40);
+      addFormTextBox(concat(F("MQTT Topic "), varNr + 1), concat(F("template"), varNr + 1), mqttTopics[varNr], 40);
     }
   }
   # ifdef P037_JSON_SUPPORT
@@ -247,10 +249,10 @@ bool P037_data_struct::webform_load(
     addRowLabel(F("Filter"));
     #  endif // ifdef P037_FILTER_PER_TOPIC
     html_table(F(""), false); // Sub-table
-    html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("Name[;Index]"));
-    html_table_header(F("Operand"), 180);
-    html_table_header(F("Value"));
+    html_table_header(F("&nbsp;#&nbsp;"), 30);
+    html_table_header(F("Name[;Index]"),  350);
+    html_table_header(F("Operand"),       180);
+    html_table_header(F("Value"),         550);
 
     const __FlashStringHelper *filterOptions[] = {
       F("equals"), // map name to value
@@ -259,9 +261,9 @@ bool P037_data_struct::webform_load(
       , F("list")  // list of multiple values
       #  endif // if P037_FILTER_COUNT >= 3
     };
-    int filterIndices[] = { 0, 1
+    const int filterIndices[] = { 0, 1
       #  if P037_FILTER_COUNT >= 3
-                            , 2
+                                  , 2
       #  endif // if P037_FILTER_COUNT >= 3
     };
 
@@ -283,7 +285,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0),
                    parseStringKeepCase(valueArray[filterOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F("xwide"));
       }
       {
         html_TD();
@@ -292,7 +294,7 @@ bool P037_data_struct::webform_load(
         html_TD();
 
         addTextBox(getPluginCustomArgName(idx + 100 + 2), parseStringKeepCase(valueArray[filterOffset], 3, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
       }
@@ -305,10 +307,8 @@ bool P037_data_struct::webform_load(
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String info;
       info.reserve(25);
-      info += F("P037 maxFilter: ");
-      info += _maxFilter;
-      info += F(" idx: ");
-      info += idx;
+      info += concat(F("P037 maxFilter: "), (int)_maxFilter);
+      info += concat(F(" idx: "), (int)idx);
       addLogMove(LOG_LEVEL_INFO, info);
     }
     #  endif // ifdef PLUGIN_037_DEBUG
@@ -323,7 +323,7 @@ bool P037_data_struct::webform_load(
         addHtmlInt(filterNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F("xwide"));
       }
       {
         html_TD();
@@ -344,10 +344,8 @@ bool P037_data_struct::webform_load(
     #   ifdef PLUGIN_037_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      info  = F("P037 extraFilters: ");
-      info += extraFilters;
-      info += F(" idx: ");
-      info += idx;
+      info  = concat(F("P037 extraFilters: "), (int)extraFilters);
+      info += concat(F(" idx: "), (int)idx);
       addLogMove(LOG_LEVEL_INFO, info);
     }
     #   endif // ifdef PLUGIN_037_DEBUG
@@ -356,8 +354,8 @@ bool P037_data_struct::webform_load(
     #  ifndef P037_FILTER_PER_TOPIC
 
     if (extraFilters == P037_EXTRA_VALUES) {
-      String moreMessage = F("After filling all filters, submitting this page will make extra filters available (up to ");
-      moreMessage += P037_MAX_FILTERS;
+      String moreMessage = concat(F("After filling all filters, submitting this page will make extra filters available (up to "),
+                                  P037_MAX_FILTERS);
       moreMessage += F(").");
       addFormNote(moreMessage);
     }
@@ -373,15 +371,15 @@ bool P037_data_struct::webform_load(
 
     addRowLabel(F("Mapping"));
     html_table(F(""), false); // Sub-table
-    html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("Name"));
-    html_table_header(F("Operand"), 180);
-    html_table_header(F("Value"));
+    html_table_header(F("&nbsp;#&nbsp;"), 30);
+    html_table_header(F("Name"),          300);
+    html_table_header(F("Operand"),       180);
+    html_table_header(F("Value"),         300);
 
     const __FlashStringHelper *operandOptions[] = {
       F("map"),                          // map name to int
       F("percentage") };                 // map attribute value to percentage of provided value
-    int operandIndices[] = { 0, 1 };
+    const int operandIndices[] = { 0, 1 };
 
     String operands = P037_OPERAND_LIST; // Anticipate more operations
     int8_t operandIndex;
@@ -397,7 +395,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0),
                    parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
       }
       {
         html_TD();
@@ -406,7 +404,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2),
                    parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         html_TD();
       }
       mapNr++;
@@ -417,10 +415,8 @@ bool P037_data_struct::webform_load(
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String info;
       info.reserve(25);
-      info += F("P037 maxIdx: ");
-      info += _maxIdx;
-      info += F(" idx: ");
-      info += idx;
+      info += concat(F("P037 maxIdx: "), (int)_maxIdx);
+      info += concat(F(" idx: "), (int)idx);
       addLogMove(LOG_LEVEL_INFO, info);
     }
     #  endif // ifdef PLUGIN_037_DEBUG
@@ -434,14 +430,14 @@ bool P037_data_struct::webform_load(
         addHtmlInt(mapNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
       }
       {
         html_TD();
         addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F(""));
         html_TD();
       }
       idx += 3;
@@ -453,18 +449,17 @@ bool P037_data_struct::webform_load(
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String info;
-      info += F("P037 extraMappings: ");
-      info += extraMappings;
-      info += F(" idx: ");
-      info += idx;
+      info.reserve(35);
+      info += concat(F("P037 extraMappings: "), (int)extraMappings);
+      info += concat(F(" idx: "), (int)idx);
       addLogMove(LOG_LEVEL_INFO, info);
     }
     #  endif // ifdef PLUGIN_037_DEBUG
     addFormNote(F("Both Name and Value must be filled for a valid mapping. Mappings are case-sensitive."));
 
     if (extraMappings == P037_EXTRA_VALUES) {
-      String moreMessage = F("After filling all mappings, submitting this page will make extra mappings available (up to ");
-      moreMessage += P037_MAX_MAPPINGS;
+      String moreMessage = concat(F("After filling all mappings, submitting this page will make extra mappings available (up to "),
+                                  P037_MAX_MAPPINGS);
       moreMessage += F(").");
       addFormNote(moreMessage);
     }
@@ -474,7 +469,6 @@ bool P037_data_struct::webform_load(
   success = true;
   return success;
 } // webform_load
-
 
 bool P037_data_struct::webform_save(
   # if P037_FILTER_SUPPORT
@@ -493,28 +487,23 @@ bool P037_data_struct::webform_save(
 
   error.reserve(80); // Estimated
 
-  for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
-  {
-    String argName = F("template");
-    argName += (varNr + 1);
-
-    mqttTopics[varNr] = web_server.arg(argName);
+  for (int varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+    mqttTopics[varNr] = webArg(concat(F("template"), varNr + 1));
 
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) {
-      argName  = F("attribute");
-      argName += (varNr + 1);
-      jsonAttributes[varNr] = web_server.arg(argName);
+      jsonAttributes[varNr] = webArg(concat(F("attribute"), varNr + 1));
     }
     # endif // P037_JSON_SUPPORT
   }
 
-  globalTopicPrefix = web_server.arg(F("topicprefix"));
+  globalTopicPrefix = webArg(F("pprefix"));
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   String left, right;
   bool   firstError;
+  int8_t idx = 0;
   # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
 
   // Mappings are processed first
@@ -522,16 +511,15 @@ bool P037_data_struct::webform_save(
   firstError = true;
   String  operands = P037_OPERAND_LIST;
   uint8_t mapNr    = 1;
-  int8_t  idx      = 0;
   left.reserve(32);
   right.reserve(32);
 
   for (uint8_t mappingOffset = P037_START_MAPPINGS; mappingOffset <= P037_END_MAPPINGS; mappingOffset++) {
     left.clear();
-    left +=  web_server.arg(getPluginCustomArgName(idx + 0));
+    left +=  webArg(getPluginCustomArgName(idx + 0));
     left.trim();
     right.clear();
-    right += web_server.arg(getPluginCustomArgName(idx + 2));
+    right += webArg(getPluginCustomArgName(idx + 2));
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()) {
@@ -571,9 +559,9 @@ bool P037_data_struct::webform_save(
   idx = 0;
 
   for (uint8_t filterOffset = P037_START_FILTERS; filterOffset <= P037_END_FILTERS; filterOffset++) {
-    left =  web_server.arg(getPluginCustomArgName(idx + 100 + 0));
+    left =  webArg(getPluginCustomArgName(idx + 100 + 0));
     left.trim();
-    right = web_server.arg(getPluginCustomArgName(idx + 100 + 2));
+    right = webArg(getPluginCustomArgName(idx + 100 + 2));
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()
@@ -635,10 +623,8 @@ void P037_data_struct::logMapValue(const String& input, const String& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String info;
     info.reserve(45);
-    info += F("IMPT : MQTT mapped value '");
-    info += input;
-    info += F("' to '");
-    info += result;
+    info += concat(F("IMPT : MQTT mapped value '"), input);
+    info += concat(F("' to '"), result);
     info += '\'';
     addLogMove(LOG_LEVEL_INFO, info);
   }
@@ -722,10 +708,7 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
 bool P037_data_struct::hasFilters() {
   parseMappings(); // When not parsed yet
   #  ifdef PLUGIN_037_DEBUG
-  String log;
-  log += F("p037 hasFilter: ");
-  log += _maxFilter;
-  addLogMove(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, concat(F("p037 hasFilter: "), (int)_maxFilter));
   #  endif // ifdef PLUGIN_037_DEBUG
   return _maxFilter > 0;
 } // hasFilters
@@ -767,10 +750,8 @@ void P037_data_struct::logFilterValue(const String& text, const String& key, con
     log.reserve(text.length() + key.length() + value.length() + match.length() + 16);
     log += text;
     log += key;
-    log += F(" value: ");
-    log += value;
-    log += F(" match: ");
-    log += match;
+    log += concat(F(" value: "), value);
+    log += concat(F(" match: "), match);
     addLogMove(LOG_LEVEL_INFO, log);
   }
 } // logFilterValue
@@ -971,11 +952,7 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
     #  ifdef PLUGIN_037_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-      log.reserve(35);
-      log += F("IMPT : JSON buffer increased to ");
-      log += lastJsonMessageLength;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("IMPT : JSON buffer increased to "), (int)lastJsonMessageLength));
     }
     #  endif // ifdef PLUGIN_037_DEBUG
   }
@@ -985,7 +962,7 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
   }
 
   if (nullptr != root) {
-    deserializeJson(*root, message.c_str());
+    deserializeJson(*root, message);
 
     if (!root->isNull()) {
       result = true;

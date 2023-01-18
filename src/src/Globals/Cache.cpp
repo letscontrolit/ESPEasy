@@ -7,9 +7,19 @@ void clearAllCaches()
   Cache.clearAllCaches();
 }
 
-void clearTaskCaches()
+void clearAllButTaskCaches()
 {
-  Cache.clearTaskCaches();
+  Cache.clearAllButTaskCaches();
+}
+
+void clearTaskCache(taskIndex_t TaskIndex)
+{
+  Cache.clearTaskCache(TaskIndex);
+}
+
+void clearFileCaches()
+{
+  Cache.clearFileCaches();
 }
 
 void updateActiveTaskUseSerial0()

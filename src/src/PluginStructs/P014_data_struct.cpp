@@ -1,143 +1,270 @@
 #include "../PluginStructs/P014_data_struct.h"
 
 #ifdef USES_P014
-P014_data_struct::P014_data_struct(uint8_t resolution) : res(resolution) {
-  reset();
+
+
+P014_data_struct::P014_data_struct() {
+  state         = P014_state::Uninitialized; // Force device setup next time
+  last_measurement_time = 0;
 }
 
-void P014_data_struct::reset()
+
+bool P014_data_struct::startInit(uint8_t i2caddr)
 {
-  state         = SI7021_state::Uninitialized; // Force device setup next time
-  timeStartRead = 0;
+  state = P014_state::Uninitialized;
+
+  uint8_t ret = I2C_wakeup(i2caddr);
+  if (ret){
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)){
+      String log = F("SI70xx : Not available at address: ");
+      log += String(i2caddr, HEX);
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return false;
+  }
+
+  //reset the device
+  if (!softReset(i2caddr)){
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)){
+      String log = F("SI70xx : Not able to reset: ");
+      log += String(i2caddr, HEX);
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return false;
+  }
+
+  return true;
 }
 
-bool P014_data_struct::init()
+
+bool P014_data_struct::finalizeInit(uint8_t i2caddr, uint8_t resolution)
 {
-  state = SI7021_state::Uninitialized;
+  //read the device ID and revision
+  //SHT devices do not have this capability so we are continuing if not available 
+  int8_t ret = readSerialNumber(i2caddr); //this will also set the device ID
+  if (ret){
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)){
+          String log = F("SI70xx : Not able to read SN: addr=0x");
+          log += String(i2caddr, HEX);
+          log += F(" err=");
+          log += String(ret, DEC);
+          addLog(LOG_LEVEL_ERROR, log);
+      }
+    //return false;
+  }
+
+  //at this point we know the chip_id
+  if (loglevelActiveFor(LOG_LEVEL_INFO)){
+    String log = F("P014: chip_id=");
+    log += String(chip_id, DEC);
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  if (chip_id == CHIP_ID_SI7013){
+    if (!I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, SI7013_REG2_DEFAULT )){
+      return false;
+    }
+    if (!enablePowerForADC(i2caddr)){
+      return false;
+    }
+  }
 
   // Set the resolution we want
-  const uint8_t ret = setResolution(res);
-
-  if (ret == 0) {
-    state = SI7021_state::Initialized;
-    return true;
+  if(!setResolution(i2caddr,resolution)){
+    return false;
+  }
+  
+  //SI7013 has ADC and we need to start the first measurement
+  if (chip_id == CHIP_ID_SI7013){
+    if (!requestADC(i2caddr))
+      return false;
   }
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SI7021 : Res=0x");
-    log += String(res, HEX);
-    log += F(" => Error 0x");
-    log += String(ret, HEX);
-    addLogMove(LOG_LEVEL_INFO, log);
-  }
+  //we are now initialized
+  return true;
+}
+
+
+
+//The main state machine
+//Only perform the measurements with big interval to prevent the sensor from warming up.
+//returns true when the state changes and false otherwise
+bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filter_power) {
+
+  switch(state){
+    case P014_state::Uninitialized:
+        //make sure we do not try to initialize too often
+        //someone could enable the plugin but does not have the hardware connected
+        if (!timeOutReached(last_measurement_time + errCount*SI70xx_INIT_DELAY)) {
+          return false;
+        }
+        last_measurement_time = millis();
+        //we have to stop trying after a while
+        if (errCount>P014_MAX_RETRY){
+            state = P014_state::Error;
+            return true;
+        }
+
+        if (I2C_wakeup(i2caddr)!=0){
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)){
+            String log = F("SI70xx : Not available at address: ");
+            log += String(i2caddr, HEX);
+            addLog(LOG_LEVEL_ERROR, log);
+          }
+          errCount++;
+          return false;
+        }
+
+        if (startInit(i2caddr)){
+          state                 = P014_state::Wait_for_reset;
+          return true;
+        }
+
+        errCount++;
+        return false;
+    //break;
+
+    case P014_state::Wait_for_reset:
+      //we need to wait for the chip to reset
+      if (!timeOutReached(last_measurement_time + SI70xx_RESET_DELAY)) {
+        return false;
+      }
+
+      if (!finalizeInit(i2caddr,resolution)){
+        state = P014_state::Uninitialized;
+        errCount++;
+        return true;
+      }
+
+      errCount = 0;
+      state = P014_state::Initialized;
+      return true;
+    //break;      
+
+    case P014_state::Initialized:
+      if (chip_id == CHIP_ID_SI7013){
+        //we need to wait for the read of ADC
+        if (!timeOutReached(last_measurement_time + SI70xx_MEASUREMENT_DELAY)) {
+          return false;
+        }
+
+        if ( !readADC(i2caddr,filter_power)){
+          return false;
+        }
+        
+        adc = adc << filter_power; //this is the first measurement
+      } 
+      last_measurement_time = millis();
+      state = P014_state::Ready;
+      return true;
+    //break;
+
+    case P014_state::Ready:
+        if (!I2C_write8(i2caddr,SI70xx_CMD_MEASURE_HUM)) { //measure humidity and temperature at the same time
+          addLog(LOG_LEVEL_ERROR,F("SI70xx: startConv Failed!"));
+          return false;
+        }
+      
+        last_measurement_time = millis();
+        state = P014_state::Wait_for_humidity_samples;
+      return true;
+    //break;
+
+    case P014_state::Wait_for_humidity_samples:
+        //make sure we wait for the measurement to complete
+        if (!timeOutReached(last_measurement_time + SI70xx_MEASUREMENT_DELAY)) {
+          return false;
+        }
+
+        if (!readHumidity(i2caddr, resolution)) {
+          state = P014_state::Ready; //we go back to request the reading again
+          return true;
+        }
+        
+        last_measurement_time = millis();
+  
+        if (chip_id == CHIP_ID_HTU21D){
+          if (!I2C_write8(i2caddr,SI70xx_CMD_MEASURE_TEMP)) { //HTU21D can't read temperature from humidity measurement
+            addLog(LOG_LEVEL_ERROR,F("SI70xx: startConv Failed!"));
+            return false;
+          }
+          state = P014_state::Wait_for_temperature_samples;
+          return false;
+        }
+
+        if (!readTemperatureFromHumidity(i2caddr,resolution)){
+          state = P014_state::Ready; //we go back to request the reading again
+          return true;
+        }
+
+        if (chip_id == CHIP_ID_SI7013){
+          if(!enablePowerForADC(i2caddr)){
+            state = P014_state::Ready; //we go back to request the reading again
+            return true;
+          }
+          state = P014_state::RequestADC;
+        }else{
+          state = P014_state::New_Values_Available;
+        }
+        return true;
+    //break;
+
+    case P014_state::Wait_for_temperature_samples:
+        if (!timeOutReached(last_measurement_time + SI70xx_MEASUREMENT_DELAY)) {
+          return false;
+        }
+
+        if (!readTemperature(i2caddr,resolution)){
+          state = P014_state::Ready; //we go back to request the reading again
+          return true;
+        }
+
+        state = P014_state::New_Values_Available;
+        return true;
+
+    case P014_state::RequestADC:
+        //make sure we wait for the power to stabilize
+        if (!timeOutReached(last_measurement_time + SI70xx_MEASUREMENT_DELAY)) {
+          return false;
+        }
+
+        if (!requestADC(i2caddr)){
+          state = P014_state::Ready; //we go back to request the reading again
+          return true;
+        }
+        
+        state = P014_state::Wait_for_adc_samples;
+        return true;
+    //break;
+
+    case P014_state::Wait_for_adc_samples:
+        if (!readADC(i2caddr, filter_power)){
+          state = P014_state::RequestADC; //we go back to request the reading again
+          return false;
+        }
+        state = P014_state::New_Values_Available;
+        return true;
+    //break;
+
+    case P014_state::Error:
+    case P014_state::New_Values_Available:
+      //this state is used outside so all we need is to stay here
+      return false;
+    break;
+
+
+    default: //anything not defined above sends the device for initialization
+      state = P014_state::Uninitialized;
+      return true;
+  } 
+
   return false;
 }
 
-bool P014_data_struct::loop() {
-  switch (state)
-  {
-    case SI7021_state::Initialized:
-    {
-      // Start conversion for humidity
-      startConv(SI7021_MEASURE_HUM);
-      timeStartRead = millis();
 
-      // change state of sensor
-      state = SI7021_state::Wait_for_temperature_samples;
-      break;
-    }
+ 
 
-    case SI7021_state::Wait_for_temperature_samples:
-    {
-      // Check if conversion is finished
-      if (readValues(SI7021_MEASURE_HUM, res) == 0) {
-        // Start conversion for temperature
-        startConv(SI7021_MEASURE_TEMP);
+//--------------- Supporting Functions -------------------
 
-        // change state of sensor
-        state = SI7021_state::Wait_for_humidity_samples;
-      }
-      break;
-    }
-
-    case SI7021_state::Wait_for_humidity_samples:
-    {
-      // Check if conversion is finished
-      if (readValues(SI7021_MEASURE_TEMP, res) == 0) {
-        // change state of sensor
-        state         = SI7021_state::New_values;
-        timeStartRead = 0;
-      }
-      break;
-    }
-
-    default:
-      break;
-  }
-
-  if (timeStartRead != 0) {
-    // Apparently we're waiting for some reading.
-    if (timePassedSince(timeStartRead) > SI7021_TIMEOUT) {
-      reset();
-    }
-  }
-  return SI7021_state::New_values == state;
-}
-
-bool P014_data_struct::getReadValue(float& temperature, float& humidity) {
-  bool success = false;
-
-  switch (state) {
-    case SI7021_state::Uninitialized:
-    {
-      addLog(LOG_LEVEL_INFO, F("SI7021 : sensor not initialized !"));
-      init();
-      break;
-    }
-    case SI7021_state::Initialized:
-    {
-      // No call made to start a new reading
-      // Should be handled in the loop()
-      addLog(LOG_LEVEL_INFO, F("SI7021 : No read started !"));
-      break;
-    }
-    case SI7021_state::Wait_for_temperature_samples:
-    case SI7021_state::Wait_for_humidity_samples:
-    {
-      // Still waiting for data
-      // Should be handled in the loop()
-      addLog(LOG_LEVEL_ERROR, F("SI7021 : Read Error !"));
-      break;
-    }
-
-    case SI7021_state::New_values:
-    {
-      temperature = si7021_temperature / 100.0f;
-      humidity    = si7021_humidity / 10.0f;
-      state       = SI7021_state::Values_read;
-      success     = true;
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SI7021 : Temperature: ");
-        log += temperature;
-        addLogMove(LOG_LEVEL_INFO, log);
-        log  = F("SI7021 : Humidity: ");
-        log += humidity;
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
-      break;
-    }
-    case SI7021_state::Values_read:
-    {
-      // This must be done in a separate call to
-      // make sure we only start reading when the plugin wants us to perform a reading.
-      // Change state of sensor for non blocking reading
-      state = SI7021_state::Initialized;
-      break;
-    }
-  }
-  return success;
-}
 
 /* ======================================================================
    Function: checkCRC
@@ -175,148 +302,311 @@ uint8_t P014_data_struct::checkCRC(uint16_t data, uint8_t check)
   return (uint8_t)remainder;
 }
 
+
+
+
+
 /* ======================================================================
-   Function: si7021_readRegister
-   Purpose : read the user register from the sensor
-   Input   : user register value filled by function
-   Output  : 0 if okay
-   Comments: -
-   ====================================================================== */
-int8_t P014_data_struct::readRegister(uint8_t *value)
+Function: setResolution
+Purpose : Sets the sensor resolution to one of four levels
+Input   : see #define default is SI7013_RESOLUTION_14T_12RH
+Output  : 0 if okay
+Comments: -
+====================================================================== */
+bool P014_data_struct::setResolution(uint8_t i2caddr, uint8_t resolution)
 {
-  // Request user register
-  Wire.beginTransmission(SI7021_I2C_ADDRESS);
-  Wire.write(SI7021_READ_REG);
-  Wire.endTransmission();
-
-  // request 1 uint8_t result
-  Wire.requestFrom(SI7021_I2C_ADDRESS, 1);
-
-  if (Wire.available() >= 1) {
-    *value = Wire.read();
-    return 0;
+  bool ok;
+  uint8_t reg = I2C_read8_reg(i2caddr,SI70xx_CMD_READ_REG1,&ok);
+  if (ok) {
+    // remove resolution bits
+    reg &= SI70xx_RESOLUTION_MASK ;
+    // Write the new resolution bits but clear unused before
+    ok = I2C_write8_reg(i2caddr,SI70xx_CMD_WRITE_REG1, reg | ( resolution &= ~SI70xx_RESOLUTION_MASK) );
   }
 
-  return 1;
+  if (!ok) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)){
+        String log = F("SI70xx : Unable to set resolution: ");
+        log += String(i2caddr, HEX);
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+  }
+
+  return ok;
 }
 
-/* ======================================================================
-   Function: startConv
-   Purpose : return temperature or humidity measured
-   Input   : data type SI7021_READ_HUM or SI7021_READ_TEMP
-   Output  : 0 if okay
-   Comments: -
-   ====================================================================== */
-uint8_t P014_data_struct::startConv(uint8_t datatype)
-{
-  // Request a reading
-  Wire.beginTransmission(SI7021_I2C_ADDRESS);
-  Wire.write(datatype);
+
+inline bool P014_data_struct::softReset(uint8_t i2caddr){
+  // Prepare to write to the register value
+    bool ret = I2C_write8(i2caddr, SI70xx_CMD_SOFT_RESET);
+    return ret;
+}
+
+
+#ifndef LIMIT_BUILD_SIZE
+int8_t P014_data_struct::readRevision(uint8_t i2caddr) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(SI70xx_CMD_FIRMREV >> 8));
+  Wire.write((uint8_t)(SI70xx_CMD_FIRMREV & 0xFF));
   Wire.endTransmission();
 
-  return 0;
+  uint32_t start = millis(); // start timeout
+  
+  while (!timeOutReached(start + SI70xx_MEASUREMENT_DELAY)) {
+    if (Wire.requestFrom(i2caddr, 2u) == 2) {
+      uint8_t rev = Wire.read();
+      Wire.read(); //ignore CRC
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)){
+        String log = F("SI7013 : revision=");
+        log += String(rev,HEX);
+        addLog(LOG_LEVEL_INFO,log);
+      }
+      
+      return 0;
+    }
+    delay(2);
+  }
+  return -1; // Error timeout
 }
 
-/* ======================================================================
-   Function: readValues
-   Purpose : read temperature and humidity from SI7021 sensor
-   Input   : current config resolution
-   Output  : 0 if okay
-   Comments: -
-   ====================================================================== */
-int8_t P014_data_struct::readValues(uint8_t datatype, uint8_t resolution)
-{
-  long data;
-  uint16_t raw;
-  uint8_t  checksum;
+#endif
 
-  if (Wire.requestFrom(SI7021_I2C_ADDRESS, 3) != 3) {
-    return -1;
+/*!
+ *  @brief  Reads serial number and stores It in sernum_a and sernum_b variable
+ */
+int8_t P014_data_struct::readSerialNumber(uint8_t i2caddr) {
+  
+  bool ok = I2C_write8_reg(i2caddr,(uint8_t)(SI70xx_CMD_ID1 >> 8),(uint8_t)(SI70xx_CMD_ID1 & 0xFF));
+  if (!ok) return -1; //error on sending command 
+  
+  if (Wire.requestFrom(i2caddr, 8u) != 8u) {
+    return -2; //time out on the SNA read
+  }
+
+  uint32_t sernum_a = Wire.read(); //SNA_3
+  Wire.read(); //ignore CRC
+  sernum_a <<= 8;
+  sernum_a |= Wire.read(); //SNA_2
+  Wire.read(); //ignore CRC
+  sernum_a <<= 8;
+  sernum_a |= Wire.read(); //SNA_1
+  Wire.read(); //ignore CRC
+  sernum_a <<= 8;
+  sernum_a |= Wire.read(); //SNA_0
+  Wire.read(); //ignore CRC
+
+  ok = I2C_write8_reg(i2caddr,(uint8_t)(SI70xx_CMD_ID2 >> 8),(uint8_t)(SI70xx_CMD_ID2 & 0xFF));
+  if (!ok) return -3; //error on sending command 
+
+  if (Wire.requestFrom(i2caddr, 6u) != 6u) {
+    return -4; //time out on the SNA read
+  }
+
+  uint32_t sernum_b = Wire.read(); //SNB_3 (Device ID)
+  chip_id = sernum_b; //we save the chip identifier
+  //Wire.read(); //ignore CRC
+  sernum_b <<= 8;
+  sernum_b |= Wire.read(); //SNB_2
+  Wire.read(); //ignore CRC
+  sernum_b <<= 8;
+  sernum_b |= Wire.read(); //SNB_1
+  //Wire.read(); //ignore CRC
+  sernum_b <<= 8;
+  sernum_b |= Wire.read(); //SNB_0
+  Wire.read(); //ignore CRC
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)){
+    String log = F("SI7013 : sn=");
+    log += String(sernum_a,HEX);
+    log += F("-");
+    log += String(sernum_b,HEX);
+    addLog(LOG_LEVEL_INFO,log);
+  }
+  return 0; //ok
+}
+
+
+bool P014_data_struct::enablePowerForADC(uint8_t i2caddr){
+  //set VOUT
+  //Get the current register value
+
+  //we know the type of circuit used based on the i2c address 
+
+
+  bool ok=false;
+  uint8_t reg = I2C_read8_reg(i2caddr,SI7013_READ_REG2, &ok);
+
+  if (!ok) {
+    addLog(LOG_LEVEL_ERROR, F("SI7013: Could not read REG2!"));
+    return false;
+  }
+    
+  
+  if (i2caddr == SI7013_I2C_ADDRESS_AD0_1){
+    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & B11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
+  }else{
+    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2,reg | (1+2+4+64) );//set last three bits to 1 (VIN bufered, Vref=VDD, VOUT=VDD) and No-Hold for bit 6
+  }
+  if (!ok){
+    addLog(LOG_LEVEL_ERROR, F("SI7013: Could not write REG2!"));
+    return false;
+  }
+
+  return true;
+}
+
+bool P014_data_struct::disablePowerForADC(uint8_t i2caddr){
+  //set VOUT
+  //Get the current register value
+
+  //we know the type of circuit used based on the i2c address 
+
+
+  bool ok=false;
+  uint8_t reg = I2C_read8_reg(i2caddr,SI7013_READ_REG2, &ok);
+
+  if (!ok) {
+    addLog(LOG_LEVEL_ERROR, F("SI7013: Could not read REG2!"));
+    return false;
+  }
+    
+  
+  if (i2caddr == SI7013_I2C_ADDRESS_AD0_1){
+    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2,reg | (1+2+4+64) );//set last three bits to 1 (VIN bufered, Vref=VDD, VOUT=VDD) and No-Hold for bit 6
+  }else{
+    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & B11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
+  }
+  if (!ok){
+    addLog(LOG_LEVEL_ERROR, F("SI7013: Could not write REG2!"));
+    return false;
+  }
+
+  return true;
+}
+
+bool P014_data_struct::requestADC(uint8_t i2caddr)
+{
+    //start ADC conversion
+    if(!I2C_write8(i2caddr, SI7013_READ_ADC)){
+      addLog(LOG_LEVEL_ERROR,F("SI7013: could not start ADC conversion"));
+      return false;
+    }
+    //delay(10); //waiting for conversion to be done: in the specs is mentioned 7ms in normal mode
+  return true;
+}
+
+
+bool P014_data_struct::readADC(uint8_t i2caddr, uint8_t filter_power)
+{
+  if ( Wire.requestFrom(i2caddr, 2u) < 2 ) {
+    return false;
+  }
+
+  // Comes back in two bytes, data(MSB) / data(LSB) with no Checksum
+  uint16_t raw  = ((uint16_t) Wire.read()) << 8;
+  raw |= Wire.read();
+
+  //Calculate Moving average where 2^filter_power is the moving window of points
+  //MA*[i]= MA*[i-1] +X[i] - MA*[i-1]/N
+  adc = adc + raw - (adc>>filter_power);
+  
+  //disable power for ADC
+  return disablePowerForADC(i2caddr);
+}
+
+
+
+bool P014_data_struct::readHumidity(uint8_t i2caddr, uint8_t resolution)
+{
+    uint16_t raw;
+    uint8_t bytes = Wire.requestFrom(i2caddr, 3u); //asking to read 3 bytes  
+    if ( bytes < 3 ) {
+      return false;
+    }
+
+    // Comes back in three bytes, data(MSB) / data(LSB) / Checksum
+    raw  = ((uint16_t) Wire.read()) << 8;
+    raw |= Wire.read(); 
+    uint8_t checksum = Wire.read();
+
+
+    // Check CRC of data received
+    if(checkCRC(raw, checksum) != 0) {
+      addLog(LOG_LEVEL_ERROR,F("SI70xx : checksum error!"));
+      return false;
+    }
+
+    // Convert raw value to Humidity percent
+    // pm-cz: it is possible to enable decimal places for humidity as well by multiplying the value in formula by 100
+    int data = ((1250 * (long)raw) >> 16) - 60;
+
+    // Datasheet says doing this check
+    if (data>1000) data = 1000;
+    if (data<0)   data = 0;
+
+    //pm-cz: Let us make sure we have enough precision due to ADC bits
+    if (resolution == SI70xx_RESOLUTION_12T_08RH) {
+      data = (data + 5) / 10;
+      data *= 10;
+    }
+    // save value
+    humidity = data;
+
+  return true;
+}
+
+bool P014_data_struct::readTemperature(uint8_t i2caddr, uint8_t resolution)
+{
+  uint16_t raw;
+  uint8_t bytes = Wire.requestFrom(i2caddr, 3u); //asking to read 3 bytes  
+  if ( bytes < 3 ) {
+    return false;
   }
 
   // Comes back in three bytes, data(MSB) / data(LSB) / Checksum
-  raw      = ((uint16_t)Wire.read()) << 8;
-  raw     |= Wire.read();
-  checksum = Wire.read();
+  raw  = ((uint16_t) Wire.read()) << 8;
+  raw |= Wire.read();
+  
+  uint8_t checksum = Wire.read();
 
   // Check CRC of data received
-  if (checkCRC(raw, checksum) != 0) {
-    addLog(LOG_LEVEL_ERROR, F("SI7021 : checksum error!"));
-    return -1;
+  if(checkCRC(raw, checksum) != 0) {
+    addLog(LOG_LEVEL_ERROR,F("SI70xx : checksum error!"));
+    return false;
   }
 
-  // Humidity
-  if ((datatype == SI7021_MEASURE_HUM) || (datatype == SI7021_MEASURE_HUM_HM)) {
-    // Convert value to Himidity percent
-    // pm-cz: it is possible to enable decimal places for humidity as well by multiplying the value in formula by 100
-    data = ((1250 * (long)raw) >> 16) - 60;
-
-    // Datasheet says doing this check
-    if (data > 1000) { data = 1000; }
-
-    if (data < 0) { data = 0; }
-
-    // pm-cz: Let us make sure we have enough precision due to ADC bits
-    if (resolution == SI7021_RESOLUTION_12T_08RH) {
-      data  = (data + 5) / 10;
-      data *= 10;
-    }
-
-    // save value
-    si7021_humidity = (uint16_t)data;
-
-    // Temperature
-  } else if ((datatype == SI7021_MEASURE_TEMP) || (datatype == SI7021_MEASURE_TEMP_HM) || (datatype == SI7021_MEASURE_TEMP_HUM)) {
-    // Convert value to Temperature (*100)
-    // for 23.45C value will be 2345
-    data =  ((17572 * (long)raw) >> 16) - 4685;
-
-    /*
-       // pm-cz: We should probably check for precision here as well
-       if (resolution != SI7021_RESOLUTION_14T_12RH) {
-       if (data > 0) {
-        data = (data + 5) / 10;
-       } else {
-        data = (data - 5) / 10;
-       }
-       data *= 10;
-       }
-     */
-
-    // save value
-    si7021_temperature = (int16_t)data;
-  }
-
-  return 0;
+  temperature =  convertRawTemperature(raw & 0xFFFC,resolution);
+  return true;
 }
 
-/* ======================================================================
-   Function: setResolution
-   Purpose : Sets the sensor resolution to one of four levels
-   Input   : see #define default is SI7021_RESOLUTION_14T_12RH
-   Output  : 0 if okay
-   Comments: -
-   ====================================================================== */
-int8_t P014_data_struct::setResolution(uint8_t res)
-{
-  // Get the current register value
-  uint8_t reg   = 0;
-  uint8_t error = readRegister(&reg);
+bool P014_data_struct::readTemperatureFromHumidity(uint8_t i2caddr, uint8_t resolution){
+  // Temperature
+  //Request a reading
+  uint16_t   raw = I2C_read16_reg(i2caddr,SI70xx_CMD_READ_TEMP_FROM_HUM);
 
-  if (error == 0) {
-    // remove resolution bits
-    reg &= SI7021_RESOLUTION_MASK;
+  // save value
+  temperature =  convertRawTemperature(raw,resolution);
+  
+  return true;
+}
 
-    // Prepare to write to the register value
-    Wire.beginTransmission(SI7021_I2C_ADDRESS);
-    Wire.write(SI7021_WRITE_REG);
+int16_t P014_data_struct::convertRawTemperature(uint16_t raw, uint8_t resolution){
+  // Convert raw value to Temperature (*100)
+  // for 23.45C value will be 2345
+  int16_t data =  ((17572 * (long)raw) >> 16) - 4685;
 
-    // Write the new resolution bits but clear unused before
-    Wire.write(reg | (res &= ~SI7021_RESOLUTION_MASK));
-    return (int8_t)Wire.endTransmission();
+  // pm-cz: We should probably check for precision here as well
+  if (resolution != SI70xx_RESOLUTION_14T_12RH) {
+    if (data > 0) {
+      data = (data + 5) / 10;
+    } else {
+      data = (data - 5) / 10;
+    }
+    data *= 10;
   }
 
-  return error;
+  return data;
 }
 
 #endif // ifdef USES_P014

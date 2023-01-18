@@ -153,7 +153,13 @@ const __FlashStringHelper * Command_logentry(struct EventStruct *event, const ch
 {
   uint8_t level = LOG_LEVEL_INFO;
   // An extra optional parameter to set log level.
-  if (event->Par2 > LOG_LEVEL_NONE && event->Par2 <= LOG_LEVEL_DEBUG_MORE) { level = event->Par2; }
+  if (event->Par2 > LOG_LEVEL_NONE && event->Par2 <= 
+  # ifndef BUILD_NO_DEBUG
+    LOG_LEVEL_DEBUG_MORE
+  #else
+    LOG_LEVEL_INFO
+  #endif
+    ) { level = event->Par2; }
   addLog(level, tolerantParseStringKeepCase(Line, 2));
   return return_command_success();
 }
@@ -168,12 +174,11 @@ const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, co
 void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
 {  
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("PortStatus detail: ");
-
-    log += F("Port=");
+    String log;
+    log += F("PortStatus detail: Port=");
     log += getPortFromKey(it->first);
     log += F(" State=");
-    log += it->second.state;
+    log += it->second.getValue();
     log += F(" Output=");
     log += it->second.output;
     log += F(" Mode=");
@@ -197,25 +202,17 @@ void debugPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
   createLogPortStatus(it);
 }
 
-void logPortStatus(const String& from) {
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
 
-    log  = F("PortStatus structure: Called from=");
-    log += from;
-    log += F(" Count=");
-    log += globalMapPortStatus.size();
-    addLogMove(LOG_LEVEL_INFO, log);
+const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, const char *Line)
+{
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLogMove(LOG_LEVEL_INFO, concat(F("PortStatus structure: Called from=Rules Count="), static_cast<int>(globalMapPortStatus.size())));
   }
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
     debugPortStatus(it);
   }
-}
 
-const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, const char *Line)
-{
-  logPortStatus("Rules");
   return return_command_success();
 }
 #endif // BUILD_NO_DIAGNOSTIC_COMMANDS

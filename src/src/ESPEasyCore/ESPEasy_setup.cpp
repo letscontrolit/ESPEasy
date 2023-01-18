@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -27,7 +28,7 @@
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringGenerator_System.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 
 #ifdef USE_RTOS_MULTITASKING
@@ -43,6 +44,9 @@
 #include <soc/boot_mode.h>
 #include <soc/gpio_reg.h>
 #include <soc/efuse_reg.h>
+
+#include <esp_pm.h>
+
 #endif
 
 
@@ -116,7 +120,7 @@ void ESPEasy_setup()
   psramInit();
 #endif
 
-#ifdef CONFIG_IDF_TARGET_ESP32
+#if CONFIG_IDF_TARGET_ESP32
   // restore GPIO16/17 if no PSRAM is found
   if (!FoundPSRAM()) {
     // test if the CPU is not pico
@@ -127,7 +131,7 @@ void ESPEasy_setup()
       gpio_reset_pin(GPIO_NUM_17);
     }
   }
-#endif  // CONFIG_IDF_TARGET_ESP32
+#endif  // if CONFIG_IDF_TARGET_ESP32
   initADC();
 #endif  // ESP32
 #ifndef BUILD_NO_RAM_TRACKER
@@ -136,8 +140,11 @@ void ESPEasy_setup()
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
   initWiFi();
+  WiFiEventData.clearAll();
 
+#ifndef BUILD_MINIMAL_OTA
   run_compiletime_checks();
+#endif
 #ifdef ESP8266
 
   //  ets_isr_attach(8, sw_watchdog_callback, nullptr);  // Set a callback for feeding the watchdog.
@@ -192,6 +199,10 @@ void ESPEasy_setup()
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("\n\n\rINIT : Booting version: ");
+    log += getValue(LabelType::BINARY_FILENAME);
+    log += F(", (");
+    log += get_build_origin();
+    log += F(") ");
     log += getValue(LabelType::GIT_BUILD);
     log += F(" (");
     log += getSystemLibraryString();
@@ -261,6 +272,37 @@ void ESPEasy_setup()
   logMemUsageAfter(F("LoadSettings()"));
   #endif
 
+#ifdef ESP32
+  if (Settings.EcoPowerMode()) {
+    // Configure dynamic frequency scaling:
+    // maximum and minimum frequencies are set in sdkconfig,
+    // automatic light sleep is enabled if tickless idle support is enabled.
+#if CONFIG_IDF_TARGET_ESP32
+    esp_pm_config_esp32_t pm_config = {
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32S2
+    esp_pm_config_esp32s2_t pm_config = {
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32C3
+    esp_pm_config_esp32c3_t pm_config = {
+            .max_freq_mhz = 160,
+#elif CONFIG_IDF_TARGET_ESP32S3
+    esp_pm_config_esp32s3_t pm_config = {
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32C2
+    esp_pm_config_esp32c2_t pm_config = {
+            .max_freq_mhz = 120,
+#endif
+            .min_freq_mhz = 80,
+#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
+            .light_sleep_enable = true
+#endif
+    };
+    esp_pm_configure(&pm_config);
+  }
+#endif
+
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
@@ -280,10 +322,28 @@ void ESPEasy_setup()
     if (toDisable != 0) {
       toDisable = disableController(toDisable);
     }
-
+    #if FEATURE_NOTIFIER
     if (toDisable != 0) {
       toDisable = disableNotification(toDisable);
     }
+    #endif
+
+    if (toDisable != 0) {
+      toDisable = disableRules(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllPlugins(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllControllers(toDisable);
+    }
+#if FEATURE_NOTIFIER
+    if (toDisable != 0) {
+      toDisable = disableAllNotifications(toDisable);
+    }
+#endif
   }
   #if FEATURE_ETHERNET
 
@@ -295,6 +355,7 @@ void ESPEasy_setup()
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
     WiFi_AP_Candidates.load_knownCredentials();
+    setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
       WiFiEventData.wifiSetup = true;
       RTC.clearLastWiFi(); // Must scan all channels
@@ -307,7 +368,8 @@ void ESPEasy_setup()
     // Always perform WiFi scan
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
-    WifiScan(true);
+    WifiScan(false);
+    setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("WifiScan()"));
@@ -341,7 +403,7 @@ void ESPEasy_setup()
   #endif
 
 
-  if (Settings.Build != BUILD) {
+  if (Settings.Build != get_build_nr()) {
     BuildFixes();
   }
 
@@ -351,10 +413,11 @@ void ESPEasy_setup()
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
+# ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
   }
-
+#endif
 
   timermqtt_interval      = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
@@ -362,20 +425,21 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("CPluginInit()"));
   #endif
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   NPluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("NPluginInit()"));
   #endif
-  #endif // ifdef USES_NOTIFIER
+  #endif // if FEATURE_NOTIFIER
 
   PluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("PluginInit()"));
   #endif
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log  = F("INFO : Plugins: ");
-    log += deviceCount + 1;
+    String log;
+    log.reserve(80);
+    log += concat(F("INFO : Plugins: "), deviceCount + 1);
     log += ' ';
     log += getPluginDescriptionString();
     log += F(" (");
@@ -385,7 +449,7 @@ void ESPEasy_setup()
   }
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
-    addLog(LOG_LEVEL_ERROR, String(F("Programming error! - Increase PLUGIN_MAX (")) + deviceCount + ')');
+    addLog(LOG_LEVEL_ERROR, concat(F("Programming error! - Increase PLUGIN_MAX ("), deviceCount) + ')');
   }
 
   clearAllCaches();
@@ -435,9 +499,9 @@ void ESPEasy_setup()
   #endif
 
 
-  #ifdef FEATURE_REPORTING
+  #if FEATURE_REPORTING
   ReportStatus();
-  #endif // ifdef FEATURE_REPORTING
+  #endif // if FEATURE_REPORTING
 
   #if FEATURE_ARDUINO_OTA
   ArduinoOTAInit();

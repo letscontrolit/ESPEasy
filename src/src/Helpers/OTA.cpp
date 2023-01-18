@@ -5,6 +5,7 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
@@ -54,62 +55,64 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
  \*********************************************************************************************/
 void ArduinoOTAInit()
 {
-  # ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("ArduinoOTAInit"));
-  # endif // ifndef BUILD_NO_RAM_TRACKER
+  if (Settings.ArduinoOTAEnable) {
+    # ifndef BUILD_NO_RAM_TRACKER
+    checkRAM(F("ArduinoOTAInit"));
+    # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  ArduinoOTA.setPort(ARDUINO_OTA_PORT);
-  ArduinoOTA.setHostname(Settings.getHostname().c_str());
+    ArduinoOTA.setPort(ARDUINO_OTA_PORT);
+    ArduinoOTA.setHostname(Settings.getHostname().c_str());
 
-  if (SecuritySettings.Password[0] != 0) {
-    ArduinoOTA.setPassword(SecuritySettings.Password);
-  }
-
-  ArduinoOTA.onStart([]() {
-    serialPrintln(F("OTA  : Start upload"));
-    ArduinoOTAtriggered = true;
-    ESPEASY_FS.end(); // important, otherwise it fails
-  });
-
-  ArduinoOTA.onEnd([]() {
-    serialPrintln(F("\nOTA  : End"));
-
-    // "dangerous": if you reset during flash you have to reflash via serial
-    // so dont touch device until restart is complete
-    serialPrintln(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
-
-    // delay(100);
-    // reboot(); //Not needed, node reboots automaticall after calling onEnd and succesfully flashing
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    if (Settings.UseSerial) {
-      Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
+    if (SecuritySettings.Password[0] != 0) {
+      ArduinoOTA.setPassword(SecuritySettings.Password);
     }
-  });
 
-  ArduinoOTA.onError([](ota_error_t error) {
-    serialPrint(F("\nOTA  : Error (will reboot): "));
+    ArduinoOTA.onStart([]() {
+      serialPrintln(F("OTA  : Start upload"));
+      ArduinoOTAtriggered = true;
+      ESPEASY_FS.end(); // important, otherwise it fails
+    });
 
-    if (error == OTA_AUTH_ERROR) { serialPrintln(F("Auth Failed")); }
-    else if (error == OTA_BEGIN_ERROR) { serialPrintln(F("Begin Failed")); }
-    else if (error == OTA_CONNECT_ERROR) { serialPrintln(F("Connect Failed")); }
-    else if (error == OTA_RECEIVE_ERROR) { serialPrintln(F("Receive Failed")); }
-    else if (error == OTA_END_ERROR) { serialPrintln(F("End Failed")); }
+    ArduinoOTA.onEnd([]() {
+      serialPrintln(F("\nOTA  : End"));
 
-    delay(100);
-    reboot(ESPEasy_Scheduler::IntendedRebootReason_e::OTA_error);
-  });
+      // "dangerous": if you reset during flash you have to reflash via serial
+      // so dont touch device until restart is complete
+      serialPrintln(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
 
-  #if defined(ESP8266) && defined(FEATURE_MDNS)
-  ArduinoOTA.begin(true);
-  #else
-  ArduinoOTA.begin();
-  #endif
+      // delay(100);
+      // reboot(); //Not needed, node reboots automaticall after calling onEnd and succesfully flashing
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      if (Settings.UseSerial) {
+        Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
+      }
+    });
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("OTA  : Arduino OTA enabled on port ");
-    log += ARDUINO_OTA_PORT;
-    addLogMove(LOG_LEVEL_INFO, log);
+    ArduinoOTA.onError([](ota_error_t error) {
+      serialPrint(F("\nOTA  : Error (will reboot): "));
+
+      if (error == OTA_AUTH_ERROR) { serialPrintln(F("Auth Failed")); }
+      else if (error == OTA_BEGIN_ERROR) { serialPrintln(F("Begin Failed")); }
+      else if (error == OTA_CONNECT_ERROR) { serialPrintln(F("Connect Failed")); }
+      else if (error == OTA_RECEIVE_ERROR) { serialPrintln(F("Receive Failed")); }
+      else if (error == OTA_END_ERROR) { serialPrintln(F("End Failed")); }
+
+      delay(100);
+      reboot(ESPEasy_Scheduler::IntendedRebootReason_e::OTA_error);
+    });
+
+    #if defined(ESP8266) && FEATURE_MDNS
+    ArduinoOTA.begin(true);
+    #else
+    ArduinoOTA.begin();
+    #endif
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("OTA  : Arduino OTA enabled on port ");
+      log += ARDUINO_OTA_PORT;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
 }
 

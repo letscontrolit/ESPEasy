@@ -14,7 +14,8 @@ struct P062_data_struct : public PluginTaskData_base {
 public:
 
   P062_data_struct();
-  ~P062_data_struct();
+  virtual ~P062_data_struct();
+  
   bool init(taskIndex_t taskIndex,
             uint8_t     i2c_addr,
             bool        scancode,
@@ -43,10 +44,10 @@ public:
   };
 
   struct tP062_StoredSettings_struct {
-    tP062_Sensitivity TouchObjects[P062_MaxTouchObjects];
+    tP062_Sensitivity TouchObjects[P062_MaxTouchObjects] = {};
   };
 
-  tP062_StoredSettings_struct StoredSettings;
+  tP062_StoredSettings_struct StoredSettings{};
 
   /**
    * Structs for Calbration values
@@ -72,7 +73,7 @@ private:
   int8_t           _i2c_addr            = -1;
   bool             _use_scancode        = false;
   bool             _keepCalibrationData = false;
-  uint8_t          _sensitivity;
+  uint8_t          _sensitivity = 0;
 };
 
 #endif // ifdef USES_P062

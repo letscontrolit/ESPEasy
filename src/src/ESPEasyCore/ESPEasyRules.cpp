@@ -446,6 +446,9 @@ void parse_string_commands(String& line) {
       uint64_t iarg1, iarg2 = 0;
       double   fresult = 0.0;
       int64_t  iresult = 0;
+      int startpos, endpos = -1;
+      const bool arg1valid = validIntFromString(arg1, startpos);
+      const bool arg2valid = validIntFromString(arg2, endpos);
 
       if (parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         const bool trimTrailingZeros = true;
@@ -455,12 +458,65 @@ void parse_string_commands(String& line) {
       } else if (cmd_s_lower.equals(F("substring"))) {
         // substring arduino style (first char included, last char excluded)
         // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
-        int startpos, endpos = -1;
 
-        if (validIntFromString(arg1, startpos)
-            && validIntFromString(arg2, endpos)) {
+        if (arg1valid
+            && arg2valid) {
           replacement = arg3.substring(startpos, endpos);
         }
+      } else if (cmd_s_lower.equals(F("indexof")) || cmd_s_lower.equals(F("indexof_ci"))) {
+        // indexOf arduino style (0-based position of first char returned, -1 if not found, case sensitive), 3rd argument is search-offset
+        // indexOf_ci : case-insensitive
+        // Syntax like {indexof:HELLO:"ANOTHER HELLO WORLD"} => 8, {indexof:hello:"ANOTHER HELLO WORLD"} => -1, {indexof_ci:Hello:"ANOTHER HELLO WORLD"} => 8
+        // or like {indexof_ci:hello:"ANOTHER HELLO WORLD":10} => -1
+
+        if (!arg1.isEmpty()
+            && !arg2.isEmpty()) {
+          unsigned int offset = 0;
+          validUIntFromString(arg3, offset);
+          bool caseInsensitive = cmd_s_lower.endsWith(F("_ci"));
+          if (caseInsensitive) {
+            String arg1copy(arg1);
+            String arg2copy(arg2);
+            arg1copy.toLowerCase();
+            arg2copy.toLowerCase();
+            replacement = arg2copy.indexOf(arg1copy, offset);
+          } else {
+            replacement = arg2.indexOf(arg1, offset);
+          }
+        }
+      } else if (cmd_s_lower.equals(F("equals")) || cmd_s_lower.equals(F("equals_ci"))) {
+        // equals: compare strings 1 = equal, 0 = unequal (case sensitive)
+        // equals_ci: case-insensitive compare
+        // Syntax like {equals:HELLO:HELLO} => 1, {equals:hello:HELLO} => 0, {equals_ci:hello:HELLO} => 1, {equals_ci:hello:BLA} => 0
+
+        if (!arg1.isEmpty()
+            && !arg2.isEmpty()) {
+          bool caseInsensitive = cmd_s_lower.endsWith(F("_ci"));
+          if (caseInsensitive) {
+            replacement = arg2.equalsIgnoreCase(arg1);
+          } else {
+            replacement = arg2.equals(arg1);
+          }
+        }
+      // #ifndef LIMIT_BUILD_SIZE
+      } else if (cmd_s_lower.equals(F("timetomin")) || cmd_s_lower.equals(F("timetosec"))) {
+        // time to minutes, transform a substring hh:mm to minutes
+        // time to seconds, transform a substring hh:mm:ss to seconds
+        // syntax similar to substring
+
+        if (arg1valid
+            && arg2valid) {
+          int timeSeconds = 0;
+          String timeString;
+          if(timeStringToSeconds(arg3.substring(startpos, endpos), timeSeconds, timeString)) {
+            if (cmd_s_lower.equals(F("timetosec"))) {
+              replacement = timeSeconds;
+            } else { // timetomin
+              replacement = timeSeconds / 60;
+            }
+          }
+        }
+      // #endif // ifndef LIMIT_BUILD_SIZE
       } else if (cmd_s_lower.equals(F("strtol"))) {
         // string to long integer (from cstdlib)
         // Syntax like 1234{strtol:16:38}7890
@@ -840,7 +896,7 @@ void processMatchedRule(String& action, const String& event,
     }
   }
 
-  if ((lcAction == F("else")) && !fakeIfBlock) // in case of an "else" block of
+  if ((lcAction.equals(F("else"))) && !fakeIfBlock) // in case of an "else" block of
                                                // actions, set ifBranche to
                                                // false
   {
@@ -858,7 +914,7 @@ void processMatchedRule(String& action, const String& event,
 #endif // ifndef BUILD_NO_DEBUG
   }
 
-  if (lcAction == F("endif")) // conditional block ends here
+  if (lcAction.equals(F("endif"))) // conditional block ends here
   {
     if (fakeIfBlock) {
       fakeIfBlock--;

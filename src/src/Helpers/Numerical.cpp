@@ -183,26 +183,6 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
     ++firstDec;
   }
 
-  // Strip leading zeroes until next char is a '.' or one of the "0x" and "0b" prefixes
-  // or the zero remains as last character of the string
-  // See: https://github.com/letscontrolit/ESPEasy/issues/4134
-  bool doneStrippingZeroes = false;
-
-  while ((firstDec + 1) < bufLength && tBuf.charAt(firstDec) == '0' && !doneStrippingZeroes) {
-    const char nextChar = tBuf.charAt(firstDec + 1);
-
-    if ((nextChar != '.') && 
-        (nextChar != '+') && (nextChar != '-') && // +/-
-        (nextChar != 'x') && (nextChar != 'X') && // Matching "0x"
-        (nextChar != 'b') && (nextChar != 'B'))   // Matching "0b"
-    {
-      ++firstDec;
-    }
-    else { 
-      doneStrippingZeroes = true;
-    }
-  }
-
   if (firstDec >= bufLength) {
     detectedType = NumericalType::Not_a_number;
     return result;
@@ -224,6 +204,12 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         c = tBuf.charAt(firstDec);
       }
     }
+  }
+
+  // Strip leading zeroes
+  while (c == '0' && isdigit(tBuf.charAt(firstDec + 1))) {
+    ++firstDec;
+    c = tBuf.charAt(firstDec);
   }
 
   if (c == '0') {
@@ -256,7 +242,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
       } else {
-        if (result == F("-")) {
+        if (result.equals(F("-"))) {
           detectedType = NumericalType::Not_a_number;
           return emptyString;
         }
@@ -320,7 +306,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
     }
   }
 
-  if (result == F("-")) {
+  if (result.equals(F("-"))) {
     detectedType = NumericalType::Not_a_number;
     return emptyString;
   }

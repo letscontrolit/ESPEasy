@@ -42,7 +42,7 @@
 #define MDMCFG2 0x02 // 16bit sync word / 16bit specific
 
 // default constructor
-IthoCC1101::IthoCC1101(uint8_t counter, uint8_t sendTries) : CC1101()
+IthoCC1101::IthoCC1101(int8_t CSpin, int8_t MISOpin, uint8_t counter, uint8_t sendTries) : CC1101(CSpin, MISOpin)
 {
   this->outIthoPacket.counter = counter;
   this->sendTries             = sendTries;
@@ -57,6 +57,10 @@ IthoCC1101::IthoCC1101(uint8_t counter, uint8_t sendTries) : CC1101()
 // default destructor
 IthoCC1101::~IthoCC1101()
 {} // ~IthoCC1101
+
+void IthoCC1101::enableOrcon(bool state) {
+  _enableOrcon = state;
+}
 
 void IthoCC1101::initSendMessage(uint8_t len)
 {
@@ -188,7 +192,12 @@ void IthoCC1101::initReceive()
   writeCommand(CC1101_SCAL);
 
   // wait for calibration to finish
-  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE) { yield(); }
+  uint32_t maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
+
+  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE &&
+         millis() < maxWait) {
+    yield();
+  }
 
   writeRegister(CC1101_FSCAL2,   0x00);
   writeRegister(CC1101_MCSM0,    0x18); // no auto calibrate
@@ -233,7 +242,12 @@ void IthoCC1101::initReceive()
   writeCommand(CC1101_SCAL);
 
   // wait for calibration to finish
-  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE) { yield(); }
+  maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
+
+  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE &&
+         millis() < maxWait) {
+    yield();
+  }
 
   writeRegister(CC1101_MCSM0, 0x18); // no auto calibrate
 
@@ -246,7 +260,12 @@ void IthoCC1101::initReceive()
 
   writeCommand(CC1101_SRX);
 
-  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_RX) { yield(); }
+  maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
+
+  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_RX &&
+         millis() < maxWait) {
+    yield();
+  }
 
   initReceiveMessage();
 }
@@ -272,10 +291,14 @@ void IthoCC1101::initReceiveMessage()
   writeRegister(CC1101_MDMCFG2,  MDMCFG2);
   writeRegister(CC1101_PKTCTRL1, 0x00);
 
-  writeCommand(CC1101_SRX); // switch to RX state
+  writeCommand(CC1101_SRX);                    // switch to RX state
 
   // Check that the RX state has been entered
-  while (((marcState = readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) & CC1101_BITS_MARCSTATE) != CC1101_MARCSTATE_RX)
+  uint32_t maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
+
+  while (((marcState =
+             readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) & CC1101_BITS_MARCSTATE) != CC1101_MARCSTATE_RX &&
+         millis() < maxWait)
   {
     if (marcState == CC1101_MARCSTATE_RXFIFO_OVERFLOW) { // RX_OVERFLOW
       writeCommand(CC1101_SFRX);                         // flush RX buffer
@@ -292,6 +315,14 @@ bool IthoCC1101::checkForNewPacket() {
 }
 
 bool IthoCC1101::parseMessageCommand() {
+  // TODO nl0pvm: make this orcon proof?
+  #if defined(CRC_FILTER)
+  uint8_t mLen = 0;
+  # define SET_MLEN(n) mLen = n;
+  #else // if defined(CRC_FILTER)
+  # define SET_MLEN(n)
+  #endif // if defined(CRC_FILTER)
+
   messageDecode(&inMessage, &inIthoPacket);
 
   // deviceType of message type?
@@ -305,77 +336,82 @@ bool IthoCC1101::parseMessageCommand() {
   // counter1
   inIthoPacket.counter = inIthoPacket.dataDecoded[4];
 
-  bool isHighCommand     = checkIthoCommand(&inIthoPacket, ithoMessageHighCommandBytes);
-  bool isRVHighCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVHighCommandBytes);
-  bool isMediumCommand   = checkIthoCommand(&inIthoPacket, ithoMessageMediumCommandBytes);
-  bool isRVMediumCommand = checkIthoCommand(&inIthoPacket, ithoMessageRVMediumCommandBytes);
-  bool isLowCommand      = checkIthoCommand(&inIthoPacket, ithoMessageLowCommandBytes);
-  bool isRVLowCommand    = checkIthoCommand(&inIthoPacket, ithoMessageRVLowCommandBytes);
-  bool isRVAutoCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVAutoCommandBytes);
-  bool isStandByCommand  = checkIthoCommand(&inIthoPacket, ithoMessageStandByCommandBytes);
-  bool isTimer1Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer1CommandBytes);
-  bool isTimer2Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer2CommandBytes);
-  bool isTimer3Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer3CommandBytes);
-  bool isJoinCommand     = checkIthoCommand(&inIthoPacket, ithoMessageJoinCommandBytes);
-  bool isJoin2Command    = checkIthoCommand(&inIthoPacket, ithoMessageJoin2CommandBytes);
-  bool isRVJoinCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVJoinCommandBytes);
-  bool isLeaveCommand    = checkIthoCommand(&inIthoPacket, ithoMessageLeaveCommandBytes);
-
   // determine command
   inIthoPacket.command = IthoUnknown;
 
-  if (isHighCommand) { inIthoPacket.command = IthoHigh; }
-
-  if (isRVHighCommand) { inIthoPacket.command = IthoHigh; }
-
-  if (isMediumCommand) { inIthoPacket.command = IthoMedium; }
-
-  if (isRVMediumCommand) { inIthoPacket.command = IthoMedium; }
-
-  if (isLowCommand) { inIthoPacket.command = IthoLow; }
-
-  if (isRVLowCommand) { inIthoPacket.command = IthoLow; }
-
-  if (isRVAutoCommand) { inIthoPacket.command = IthoStandby; }
-
-  if (isStandByCommand) { inIthoPacket.command = IthoStandby; }
-
-  if (isTimer1Command) { inIthoPacket.command = IthoTimer1; }
-
-  if (isTimer2Command) { inIthoPacket.command = IthoTimer2; }
-
-  if (isTimer3Command) { inIthoPacket.command = IthoTimer3; }
-
-  if (isJoinCommand) { inIthoPacket.command = IthoJoin; }
-
-  if (isJoin2Command) { inIthoPacket.command = IthoJoin; }
-
-  if (isRVJoinCommand) { inIthoPacket.command = IthoJoin; }
-
-  if (isLeaveCommand) { inIthoPacket.command = IthoLeave; }
-
-#if defined(CRC_FILTER)
-  uint8_t mLen = 0;
-
-  if (isPowerCommand || isHighCommand || isMediumCommand || isLowCommand || isStandByCommand || isTimer1Command || isTimer2Command ||
-      isTimer3Command) {
-    mLen = 11;
+  // TODO: When enabling CRC_FILTER, most likely commands without SET_MLEN() need that check too
+  if (checkIthoCommand(&inIthoPacket, ithoMessageHighCommandBytes)) {
+    inIthoPacket.command = IthoHigh;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVHighCommandBytes)) {
+    inIthoPacket.command = IthoHigh;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageMediumCommandBytes)) {
+    inIthoPacket.command = IthoMedium;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVMediumCommandBytes)) {
+    inIthoPacket.command = IthoMedium;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageLowCommandBytes)) {
+    inIthoPacket.command = IthoLow;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVLowCommandBytes)) {
+    inIthoPacket.command = IthoLow;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVAutoCommandBytes)) {
+    inIthoPacket.command = IthoStandby;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageStandByCommandBytes)) {
+    inIthoPacket.command = IthoStandby;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageTimer1CommandBytes)) {
+    inIthoPacket.command = IthoTimer1;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageTimer2CommandBytes)) {
+    inIthoPacket.command = IthoTimer2;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageTimer3CommandBytes)) {
+    inIthoPacket.command = IthoTimer3;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageJoinCommandBytes)) {
+    inIthoPacket.command = IthoJoin;
+    SET_MLEN(20)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageJoin2CommandBytes)) {
+    inIthoPacket.command = IthoJoin;
+    SET_MLEN(20)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVJoinCommandBytes)) {
+    inIthoPacket.command = IthoJoin;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageLeaveCommandBytes)) {
+    inIthoPacket.command = IthoLeave;
+    SET_MLEN(14)
+  } else if (_enableOrcon) {
+    if (checkIthoCommand(&inIthoPacket, orconMessageStandByCommandBytes)) {
+      inIthoPacket.command = OrconStandBy;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageLowCommandBytes)) {
+      inIthoPacket.command = OrconLow;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageMediumCommandBytes)) {
+      inIthoPacket.command = OrconMedium;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageFullCommandBytes)) {
+      inIthoPacket.command = OrconHigh;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageAutoCommandBytes)) {
+      inIthoPacket.command = OrconAuto;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageTimer0CommandBytes)) {
+      inIthoPacket.command = OrconTimer0;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageTimer1CommandBytes)) {
+      inIthoPacket.command = OrconTimer1;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageTimer2CommandBytes)) {
+      inIthoPacket.command = OrconTimer2;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageTimer3CommandBytes)) {
+      inIthoPacket.command = OrconTimer3;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageAutoCO2CommandBytes)) {
+      inIthoPacket.command = OrconAutoCO2;
+    }
   }
-  else if (isJoinCommand || isJoin2Command) {
-    mLen = 20;
-  }
-  else if (isLeaveCommand) {
-    mLen = 14;
-  }
-  else {
-    return true;
-  }
+  #undef SET_MLEN
 
-  if (getCounter2(&inIthoPacket, mLen) != inIthoPacket.dataDecoded[mLen]) {
+  #if defined(CRC_FILTER)
+
+  if ((mLen != 0) && (getCounter2(&inIthoPacket, mLen) != inIthoPacket.dataDecoded[mLen])) {
     inIthoPacket.command = IthoUnknown;
     return false;
   }
-#endif // if defined(CRC_FILTER)
+  #endif // if defined(CRC_FILTER)
 
   return true;
 }
@@ -383,20 +419,39 @@ bool IthoCC1101::parseMessageCommand() {
 bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]) {
   uint8_t offset = 0;
 
-  if ((itho->deviceType == 28) || (itho->deviceType == 24)) { offset = 2; }
+  // this is quite hacky as not even the opcode is checked for itho. Because of that orcon 31E0 messages are wrongly recognised as itho
+  // standby messages.
+  // TODO nl0pvm: FIX THIS :D
 
-  for (int i = 4; i < 6; i++)
-  {
-    // if (i == 2 || i == 3) continue; //skip byte3 and byte4, rft-rv and co2-auto remote device seem to sometimes have a different number
-    // there
-    if ((itho->dataDecoded[i + 5 + offset] != commandBytes[i]) && (itho->dataDecodedChk[i + 5 + offset] != commandBytes[i])) {
+  // first byte is the header of the message, this determines the structure of the rest of the message
+  // The bits are used as follows <00TTAAPP>
+  // 00 - Unused
+  // TT - Message type
+  // AA - Present DeviceID fields
+  // PP - Present Params
+
+  if ((itho->deviceType == 28) || (itho->deviceType == 24)) {
+    offset = 2;
+  }
+
+  // for (int i = 4; i < 6; i++)
+  // for Orcon: the code above makes that only 3 bytes (byte 4, 5 and 6) are checked. That gives false positves
+  for (int i = 0; i < 6; i++) {
+    // this is required for differentiating between Orcon and Itho commands. However I don't know what the reason was to comment this out.
+    // thus this needs to be verified by Itho users
+    if ((i == 2) || (i == 3)) {
+      continue; // skip byte3 and byte4, rft-rv and co2-auto remote device seem to sometimes have a different number there
+    }
+
+    if ((itho->dataDecoded[i + 5 + offset] != pgm_read_byte(&(commandBytes[i]))) &&
+        (itho->dataDecodedChk[i + 5 + offset] != pgm_read_byte(&(commandBytes[i])))) {
       return false;
     }
   }
   return true;
 }
 
-void IthoCC1101::sendCommand(IthoCommand command)
+void IthoCC1101::sendCommand(IthoCommand command, uint8_t srcId[3], uint8_t destId[3])
 {
   CC1101Packet outMessage;
   uint8_t maxTries  = sendTries;
@@ -419,6 +474,23 @@ void IthoCC1101::sendCommand(IthoCommand command)
       // the leave command needs to be transmitted for 1 second according the manual
       maxTries  = 30;
       delaytime = 4;
+      break;
+
+    case OrconStandBy:
+    case OrconLow:
+    case OrconMedium:
+    case OrconHigh:
+    case OrconAuto:
+    case OrconTimer0:
+    case OrconTimer1:
+    case OrconTimer2:
+    case OrconTimer3:
+    case OrconAutoCO2:
+
+      if (_enableOrcon) {
+        maxTries = 1;
+        createOrconMessageCommand(&outIthoPacket, &outMessage, srcId, destId);
+      }
       break;
 
     default:
@@ -457,6 +529,66 @@ void IthoCC1101::createMessageStart(IthoPacket *itho, CC1101Packet *packet)
   // [start of command specific data]
 }
 
+void IthoCC1101::createOrconMessageCommand(IthoPacket *itho, CC1101Packet *packet, uint8_t srcId[3], uint8_t destId[3])
+{
+  // set start message structure
+  createMessageStart(itho, packet);
+
+  // first byte is the header of the message, this determines the structure of the rest of the message
+  // The bits are used as follows <00TTAAPP>
+  // 00 - Unused
+  // TT - Message type
+  // AA - Present DeviceID fields
+  // PP - Present Params
+  uint8_t header = 0b00011100;
+
+  itho->dataDecoded[0] = header; // 00TTAAPP
+  // set source deviceID
+  itho->dataDecoded[1] = srcId[0];
+  itho->dataDecoded[2] = srcId[1];
+  itho->dataDecoded[3] = srcId[2];
+
+  // set destination deviceID
+  itho->dataDecoded[4] = destId[0];
+  itho->dataDecoded[5] = destId[1];
+  itho->dataDecoded[6] = destId[2];
+
+  const uint8_t *commandBytes  = getMessageCommandBytes(itho->command);
+  const uint8_t  commandLength = getMessageCommandLength(itho->command);
+
+  for (uint8_t i = 0; i < commandLength; i++) {
+    itho->dataDecoded[i + 7] = pgm_read_byte(&(commandBytes[i]));
+  }
+
+  itho->length = 7 + 1 + commandLength;
+
+  itho->dataDecoded[itho->length - 1] = getCRC(itho, itho->length - 1);
+  itho->length                       += 1;
+
+  packet->length = messageEncode(itho, packet) - 2; // delete the last two itho bytes (0x55, 0x95) so we can reuse messageEncode() without
+                                                    // modifications
+
+  // set compex orcon specific end bytes
+  packet->data[packet->length] = 0xAC;
+  packet->length              += 1;
+  packet->data[packet->length] = 0xAA;
+  packet->length              += 1;
+  packet->data[packet->length] = 0xBF;
+  packet->length              += 1;
+  packet->data[packet->length] = 0x0E;
+  packet->length              += 1;
+}
+
+uint8_t IthoCC1101::getCRC(IthoPacket *itho, uint8_t len) {
+  uint8_t val = 0;
+
+  for (uint8_t i = 0; i < len; i++) {
+    val += itho->dataDecoded[i];
+  }
+
+  return 0x100 - (val & 0xFF);
+}
+
 void IthoCC1101::createMessageCommand(IthoPacket *itho, CC1101Packet *packet)
 {
   // set start message structure
@@ -477,7 +609,7 @@ void IthoCC1101::createMessageCommand(IthoPacket *itho, CC1101Packet *packet)
   const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
-    itho->dataDecoded[i + 5] = commandBytes[i];
+    itho->dataDecoded[i + 5] = pgm_read_byte(&(commandBytes[i]));
   }
 
   // set counter2
@@ -519,7 +651,7 @@ void IthoCC1101::createMessageJoin(IthoPacket *itho, CC1101Packet *packet)
   const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
-    itho->dataDecoded[i + 5] = commandBytes[i];
+    itho->dataDecoded[i + 5] = pgm_read_byte(&(commandBytes[i]));
   }
 
   // set deviceID
@@ -575,7 +707,7 @@ void IthoCC1101::createMessageLeave(IthoPacket *itho, CC1101Packet *packet)
   const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
-    itho->dataDecoded[i + 5] = commandBytes[i];
+    itho->dataDecoded[i + 5] = pgm_read_byte(&(commandBytes[i]));
   }
 
   // set deviceID
@@ -626,8 +758,82 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
       return &ithoMessageJoinCommandBytes[0];
     case IthoLeave:
       return &ithoMessageLeaveCommandBytes[0];
+
+    case OrconStandBy:
+      return &orconMessageStandByCommandBytes[0];
+    case OrconLow:
+      return &orconMessageLowCommandBytes[0];
+    case OrconMedium:
+      return &orconMessageMediumCommandBytes[0];
+    case OrconHigh:
+      return &orconMessageFullCommandBytes[0];
+    case OrconAuto:
+      return &orconMessageAutoCommandBytes[0];
+    case OrconTimer0:
+      return &orconMessageTimer0CommandBytes[0];
+    case OrconTimer1:
+      return &orconMessageTimer1CommandBytes[0];
+    case OrconTimer2:
+      return &orconMessageTimer2CommandBytes[0];
+    case OrconTimer3:
+      return &orconMessageTimer3CommandBytes[0];
+    case OrconAutoCO2:
+      return &orconMessageAutoCO2CommandBytes[0];
+
     default:
       return &ithoMessageLowCommandBytes[0];
+  }
+}
+
+uint8_t IthoCC1101::getMessageCommandLength(IthoCommand command)
+{
+  switch (command)
+  {
+    case IthoStandby:
+      return sizeof(ithoMessageStandByCommandBytes) / sizeof(uint8_t);
+    case IthoHigh:
+      return sizeof(ithoMessageHighCommandBytes) / sizeof(uint8_t);
+    case IthoFull:
+      return sizeof(ithoMessageFullCommandBytes) / sizeof(uint8_t);
+    case IthoMedium:
+      return sizeof(ithoMessageMediumCommandBytes) / sizeof(uint8_t);
+    case IthoLow:
+      return sizeof(ithoMessageLowCommandBytes) / sizeof(uint8_t);
+    case IthoTimer1:
+      return sizeof(ithoMessageTimer1CommandBytes) / sizeof(uint8_t);
+    case IthoTimer2:
+      return sizeof(ithoMessageTimer2CommandBytes) / sizeof(uint8_t);
+    case IthoTimer3:
+      return sizeof(ithoMessageTimer3CommandBytes) / sizeof(uint8_t);
+    case IthoJoin:
+      return sizeof(ithoMessageJoinCommandBytes) / sizeof(uint8_t);
+    case IthoLeave:
+      return sizeof(ithoMessageLeaveCommandBytes) / sizeof(uint8_t);
+
+    case OrconStandBy:
+      return sizeof(orconMessageStandByCommandBytes) / sizeof(uint8_t);
+    case OrconLow:
+      return sizeof(orconMessageLowCommandBytes) / sizeof(uint8_t);
+    case OrconMedium:
+      return sizeof(orconMessageMediumCommandBytes) / sizeof(uint8_t);
+    case OrconHigh:
+      return sizeof(orconMessageFullCommandBytes) / sizeof(uint8_t);
+    case OrconAuto:
+      return sizeof(orconMessageAutoCommandBytes) / sizeof(uint8_t);
+    case OrconTimer0:
+      return sizeof(orconMessageTimer0CommandBytes) / sizeof(uint8_t);
+    case OrconTimer1:
+      return sizeof(orconMessageTimer1CommandBytes) / sizeof(uint8_t);
+    case OrconTimer2:
+      return sizeof(orconMessageTimer2CommandBytes) / sizeof(uint8_t);
+    case OrconTimer3:
+      return sizeof(orconMessageTimer3CommandBytes) / sizeof(uint8_t);
+    case OrconAutoCO2:
+      return sizeof(orconMessageAutoCO2CommandBytes) / sizeof(uint8_t);
+
+
+    default:
+      return sizeof(ithoMessageLowCommandBytes) / sizeof(uint8_t);
   }
 }
 
@@ -648,17 +854,19 @@ uint8_t IthoCC1101::getCounter2(IthoPacket *itho, uint8_t len) {
 
 uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
   // FIXME TD-er: lenOutbuf not used????
-  /*
-  uint8_t lenOutbuf = 0;
 
-  if ((itho->length * 20) % 8 == 0) { // inData len fits niecly in out buffer length
-    lenOutbuf = itho->length * 2.5;
-  }
-  else {                              // is this an issue? inData last byte does not fill out buffer length, add 1 out byte extra, padding
+  /*
+     uint8_t lenOutbuf = 0;
+
+     if ((itho->length * 20) % 8 == 0) { // inData len fits niecly in out buffer length
+     lenOutbuf = itho->length * 2.5;
+     }
+     else {                              // is this an issue? inData last byte does not fill out buffer length, add 1 out byte extra,
+        padding
                                       // is done after encode
-    lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
-  }
-  */
+     lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
+     }
+   */
 
   uint8_t out_bytecounter    = 14; // index of Outbuf, start at offset 14, first part of the message is set manually
   uint8_t out_bitcounter     = 0;  // bit position of current outbuf byte
@@ -800,36 +1008,36 @@ void IthoCC1101::messageDecode(CC1101Packet *packet, IthoPacket *itho) {
   }
 }
 
-uint8_t IthoCC1101::ReadRSSI()
-{
-  uint8_t rssi  = 0;
-  uint8_t value = 0;
+// uint8_t IthoCC1101::ReadRSSI()
+// {
+//   uint8_t rssi  = 0;
+//   uint8_t value = 0;
 
-  rssi = (readRegister(CC1101_RSSI, CC1101_STATUS_REGISTER));
+//   rssi = (readRegister(CC1101_RSSI, CC1101_STATUS_REGISTER));
 
-  if (rssi >= 128)
-  {
-    value  = 255 - rssi;
-    value /= 2;
-    value += 74;
-  }
-  else
-  {
-    value  = rssi / 2;
-    value += 74;
-  }
-  return value;
-}
+//   if (rssi >= 128)
+//   {
+//     value  = 255 - rssi;
+//     value /= 2;
+//     value += 74;
+//   }
+//   else
+//   {
+//     value  = rssi / 2;
+//     value += 74;
+//   }
+//   return value;
+// }
 
-bool IthoCC1101::checkID(const uint8_t *id)
-{
-  for (uint8_t i = 0; i < 3; i++) {
-    if (id[i] != inIthoPacket.deviceId[i]) {
-      return false;
-    }
-  }
-  return true;
-}
+// bool IthoCC1101::checkID(const uint8_t *id) const
+// {
+//   for (uint8_t i = 0; i < 3; i++) {
+//     if (id[i] != inIthoPacket.deviceId[i]) {
+//       return false;
+//     }
+//   }
+//   return true;
+// }
 
 String IthoCC1101::getLastIDstr(bool ashex) {
   String str;
@@ -843,51 +1051,51 @@ String IthoCC1101::getLastIDstr(bool ashex) {
   return str;
 }
 
-int * IthoCC1101::getLastID() {
-  static int id[3];
+// int * IthoCC1101::getLastID() {
+//   static int id[3];
 
-  for (uint8_t i = 0; i < 3; i++) {
-    id[i] = inIthoPacket.deviceId[i];
-  }
-  return id;
-}
+//   for (uint8_t i = 0; i < 3; i++) {
+//     id[i] = inIthoPacket.deviceId[i];
+//   }
+//   return id;
+// }
 
-String IthoCC1101::getLastMessagestr(bool ashex) {
-  String str = F("Length=");
+// String IthoCC1101::getLastMessagestr(bool ashex) {
+//   String str = F("Length=");
 
-  str += inMessage.length;
-  str += '.';
+//   str += inMessage.length;
+//   str += '.';
 
-  for (uint8_t i = 0; i < inMessage.length; i++) {
-    if (ashex) { str += String(inMessage.data[i], HEX); }
-    else { str += String(inMessage.data[i]); }
+//   for (uint8_t i = 0; i < inMessage.length; i++) {
+//     if (ashex) { str += String(inMessage.data[i], HEX); }
+//     else { str += String(inMessage.data[i]); }
 
-    if (i < inMessage.length - 1) { str += ':'; }
-  }
-  return str;
-}
+//     if (i < inMessage.length - 1) { str += ':'; }
+//   }
+//   return str;
+// }
 
-String IthoCC1101::LastMessageDecoded() {
-  String str;
+// String IthoCC1101::LastMessageDecoded() const {
+//   String str;
 
-  if (inIthoPacket.length > 11) {
-    str += F("Device type?: ");
-    str += String(inIthoPacket.deviceType);
-    str += F(" - CMD: ");
+//   if (inIthoPacket.length > 11) {
+//     str += F("Device type?: ");
+//     str += String(inIthoPacket.deviceType);
+//     str += F(" - CMD: ");
 
-    for (int i = 4; i < inIthoPacket.length; i++) {
-      str += String(inIthoPacket.dataDecoded[i]);
+//     for (int i = 4; i < inIthoPacket.length; i++) {
+//       str += String(inIthoPacket.dataDecoded[i]);
 
-      if (i < inIthoPacket.length - 1) { str += ','; }
-    }
-  }
-  else {
-    for (uint8_t i = 0; i < inIthoPacket.length; i++) {
-      str += String(inIthoPacket.dataDecoded[i]);
+//       if (i < inIthoPacket.length - 1) { str += ','; }
+//     }
+//   }
+//   else {
+//     for (uint8_t i = 0; i < inIthoPacket.length; i++) {
+//       str += String(inIthoPacket.dataDecoded[i]);
 
-      if (i < inIthoPacket.length - 1) { str += ','; }
-    }
-  }
-  str += '\n';
-  return str;
-}
+//       if (i < inIthoPacket.length - 1) { str += ','; }
+//     }
+//   }
+//   str += '\n';
+//   return str;
+// }

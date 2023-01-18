@@ -29,7 +29,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   // in case of event, store to buffer and return...
   String command = parseString(webrequest, 1);
 
-  if ((command == F("event")) || (command == F("asyncevent")))
+  if ((command.equals(F("event"))) || (command.equals(F("asyncevent"))))
   {
     eventQueue.addMove(parseStringToEndKeepCase(webrequest, 2));
     handledCmd = true;
@@ -56,7 +56,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   if (handledCmd) {
     if (sendOK) {
       String reply = printWebString.isEmpty() ? F("OK") : printWebString;
-      reply.replace(F("\n"), EMPTY_STRING); // Don't use newline in JSON.
+      removeChar(reply, '\n'); // Don't use newline in JSON.
       if (printToWebJSON) {
         // Format "OK" to JSON format
         printWebString = F("{\"return\": \"");

@@ -24,12 +24,12 @@
 # define UVBresponsivity  0.00125f
 
 
-enum IT {
-  IT_50  = 0, //   50 ms
-  IT_100 = 1, //  100 ms
-  IT_200 = 2, //  200 ms
-  IT_400 = 3, //  400 ms
-  IT_800 = 4  //  800 ms
+enum P114_IT {
+  P114_IT_50  = 0, //   50 ms
+  P114_IT_100 = 1, //  100 ms
+  P114_IT_200 = 2, //  200 ms
+  P114_IT_400 = 3, //  400 ms
+  P114_IT_800 = 4  //  800 ms
 };
 
 struct P114_data_struct : public PluginTaskData_base {
@@ -40,6 +40,7 @@ public:
                    bool    highDensity);
 
   P114_data_struct() = delete;
+  virtual ~P114_data_struct() = default;
 
   bool read_sensor(float& _UVA,
                    float& _UVB,
@@ -49,11 +50,11 @@ private:
 
   bool init_sensor();
 
-  uint8_t i2cAddress;
+  const uint8_t i2cAddress;
 
   // Specify VEML6075 Integration time
-  uint8_t IT;
-  bool    HD;
+  const uint8_t IT;
+  const bool    HD;
 
   uint16_t UVData[5] = { 0, 0, 0, 0, 0 }; // UVA, Dummy, UVB, UVComp1, UVComp2
   float    UVAComp = 0.0f;

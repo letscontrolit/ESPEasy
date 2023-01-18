@@ -38,8 +38,9 @@ void log_connecting_to(const __FlashStringHelper * prefix, int controller_number
 
 void log_connecting_fail(const __FlashStringHelper * prefix, int controller_number);
 
-bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number);
+bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number, unsigned long connect_start_time);
 
+#if FEATURE_HTTP_CLIENT
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings);
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings);
@@ -56,15 +57,15 @@ bool client_available(WiFiClient& client);
 String send_via_http(int                             controller_number,
                      const ControllerSettingsStruct& ControllerSettings,
                      controllerIndex_t               controller_idx,
-                     WiFiClient                    & client,
                      const String                  & uri,
                      const String                  & HttpMethod,
                      const String                  & header,
                      const String                  & postStr,
                      int                           & httpCode);
+#endif // FEATURE_HTTP_CLIENT
                      
 
-String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
+String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, bool parseTemplate = true);
 String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
 void setControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value);
 void setControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value);

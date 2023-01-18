@@ -49,6 +49,10 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
       if (C003_DelayHandler == nullptr) {
         break;
       }
+      if (C003_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
+
 
       // We now create a URI for the request
       String url = F("variableset ");
@@ -56,7 +60,10 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
       url    += ',';
       url    += formatUserVarNoCheck(event, 0);
       url    += '\n';
-      success = C003_DelayHandler->addToQueue(C003_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
+
+      std::unique_ptr<C003_queue_element> element(new C003_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
+
+      success = C003_DelayHandler->addToQueue(std::move(element));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C003_DELAY_QUEUE, C003_DelayHandler->getNextScheduleTime());
 
       break;
@@ -77,7 +84,8 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c003_delay_queue(int controller_number, const C003_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c003_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C003_queue_element& element = static_cast<const C003_queue_element&>(element_base);
 // *INDENT-ON*
   bool success = false;
 
@@ -110,20 +118,25 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
     if (line.startsWith(F("Enter your password:")))
     {
       success = true;
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("TELNT: Password request ok"));
+      #endif
     }
     delay(1);
   }
-
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("TELNT: Sending pw"));
-  client.println(getControllerPass(element.controller_idx, ControllerSettings));
+  #endif
+  client.println(getControllerPass(element._controller_idx, ControllerSettings));
   delay(100);
 
   while (client_available(client)) {
     client.read();
   }
 
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("TELNT: Sending cmd"));
+  #endif
   client.print(element.txt);
   delay(10);
 
@@ -131,7 +144,9 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
     client.read();
   }
 
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("TELNT: closing connection"));
+  #endif
 
   client.stop();
   return success;

@@ -306,9 +306,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$fw/version"), toString(Settings.Build, 0),
                                    errorCounter);
 
+#if FEATURE_ESPEASY_P2P
         // $fw/name	Device → Controller	Name of the firmware running on the device. Allowed characters are the same as the device ID	Yes	Yes
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$fw/name"), getNodeTypeDisplayString(NODE_TYPE_ID),
                                    errorCounter);
+#endif
 
         // $stats/interval	Device → Controller	Interval in seconds at which the device refreshes its $stats/+: See next section for
         // details about statistical attributes	Yes	Yes
@@ -395,7 +397,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             LoadTaskSettings(x);
             deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
 
-            deviceName = ExtraTaskSettings.TaskDeviceName;
+            deviceName = getTaskDeviceName(x);
 
             if (validDeviceIndex(DeviceIndex) && Settings.TaskDeviceEnabled[x]) // Device is enabled so send information
             {                                                                   // device enabled
@@ -575,7 +577,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                          deviceName,
                                          F("$name"),
                                          F(""),
-                                         ExtraTaskSettings.TaskDeviceName,
+                                         getTaskDeviceName(x),
                                          errorCounter);
 
                 // $type	Device → Controller	Type of the node	Yes	Yes
@@ -705,7 +707,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         int lastindex = event->String1.lastIndexOf('/');
         errorCounter = 0;
 
-        if (event->String1.substring(lastindex + 1) == F("set"))
+        if (event->String1.substring(lastindex + 1).equals(F("set")))
         {
           pubname   = event->String1.substring(0, lastindex);
           lastindex = pubname.lastIndexOf('/');
@@ -723,7 +725,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log += valueName;
           }
 
-          if (nodeName == F(CPLUGIN_014_SYSTEM_DEVICE))                                              // msg to a system device
+          if (nodeName.equals(F(CPLUGIN_014_SYSTEM_DEVICE)))                                              // msg to a system device
           {
             if (valueName.startsWith(F(CPLUGIN_014_GPIO_VALUE))) // msg to to set gpio values
             {
@@ -732,10 +734,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               cmd  = F("GPIO,");
               cmd += valueName.substring(gpio_value_tag_length).toInt();                    // get the GPIO
 
-              if ((event->String2 == F("true")) || (event->String2 == F("1"))) { cmd += F(",1"); }
+              if ((event->String2.equals(F("true"))) || (event->String2.equals(F("1")))) { cmd += F(",1"); }
               else { cmd += F(",0"); }
               validTopic = true;
-            } else if (valueName == F(CPLUGIN_014_CMD_VALUE)) // msg to send a command
+            } else if (valueName.equals(F(CPLUGIN_014_CMD_VALUE))) // msg to send a command
             {
               cmd        = event->String2;
               validTopic = true;
@@ -825,7 +827,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           // in case of event, store to buffer and return...
           String command = parseString(cmd, 1);
 
-          if ((command == F("event")) || (command == F("asyncevent")))
+          if ((command.equals(F("event"))) || (command.equals(F("asyncevent"))))
           {
             if (Settings.UseRules) {
               String newEvent = parseStringToEnd(cmd, 2);
@@ -883,6 +885,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
+      if (MQTT_queueFull(event->ControllerIndex)) {
+        break;
+      }
+
       String pubname         = CPlugin_014_pubname;
       bool   mqtt_retainFlag = CPlugin_014_mqtt_retainFlag;
 
@@ -901,11 +907,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
         // Small optimization so we don't try to copy potentially large strings
         if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
-          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
+          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag))
+            success = true;
           value = event->String2.substring(0, 20); // For the log
         } else {
           value = formatUserVarNoCheck(event, x);
-          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
+          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag))
+            success = true;
         }
 
 #ifndef BUILD_NO_DEBUG
@@ -923,13 +931,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
     {
-      LoadTaskSettings(event->Par1 - 1);
+      
 
       /*        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                 String log = F("CPLUGIN_ACKNOWLEDGE: ");
                 log += string;
                 log += F(" / ");
-                log += ExtraTaskSettings.TaskDeviceName;
+                log += getTaskDeviceName(event->TaskIndex);
                 log += F(" / ");
                 log += ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1];
                 log += F(" sensorType:");
@@ -965,7 +973,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       if (!string.isEmpty()) {
         String commandName = parseString(string, 1); // could not find a way to get the command out of the event structure.
 
-        if (commandName == F("gpio"))                // !ToDo : As gpio is like any other plugin commands should be integrated below!
+        if (commandName.equals(F("gpio")))                // !ToDo : As gpio is like any other plugin commands should be integrated below!
         {
           int port         = event->Par1;            // parseString(string, 2).toInt();
           int valueInt     = event->Par2;            // parseString(string, 3).toInt();
@@ -1013,14 +1021,14 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             topic.replace(F("%sysname%"), Settings.Name);
             int deviceIndex = event->Par1; // parseString(string, 2).toInt();
             LoadTaskSettings(deviceIndex - 1);
-            String deviceName = ExtraTaskSettings.TaskDeviceName;
+            const String deviceName = getTaskDeviceName(event->TaskIndex);
             topic.replace(F("%tskname%"), deviceName);
             String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2 - 1]; // parseString(string, 3).toInt()-1];
             topic.replace(F("%valname%"), valueName);
             String valueStr;
             int    valueInt = 0;
 
-            if ((commandName == F("taskvalueset")) || (commandName == F("dummyvalueset"))) // should work for both
+            if ((commandName.equals(F("taskvalueset"))) || (commandName.equals(F("dummyvalueset")))) // should work for both
             {
               valueStr = formatUserVarNoCheck(event, taskVarIndex);                        // parseString(string, 4);
               success  = MQTTpublish(CPLUGIN_ID_014, INVALID_TASK_INDEX, topic.c_str(), valueStr.c_str(), false);
@@ -1050,7 +1058,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log += F(" ERROR!");
                 addLogMove(LOG_LEVEL_ERROR, log);
               }
-            } else if (parseString(commandName, 1) == F("homievalueset")) { // acknolages value form P086 Homie Receiver
+            } else if (parseString(commandName, 1).equals(F("homievalueset"))) { // acknolages value form P086 Homie Receiver
               switch (Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex]) {
                 case 0:                                                     // PLUGIN_085_VALUE_INTEGER
                   valueInt = static_cast<int>(UserVar[userVarIndex]);

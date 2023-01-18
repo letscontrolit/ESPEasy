@@ -483,10 +483,10 @@ P053 :ref:`P053_page`
 .. .. include:: ../Plugin/P058_commands.repl
 
 
-.. P059 :ref:`P059_page`
-.. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+P059 :ref:`P059_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. .. include:: ../Plugin/P059_commands.repl
+.. include:: ../Plugin/P059_commands.repl
 
 
 .. P060 :ref:`P060_page`
@@ -653,6 +653,8 @@ P095 :ref:`P095_page`
 
 .. include:: ../Plugin/P095_commands.repl
 
+See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
+
 P099 :ref:`P099_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -670,12 +672,17 @@ P104 :ref:`P104_page`
 
 .. include:: ../Plugin/P104_commands.repl
 
-
-
 P115 :ref:`P115_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: ../Plugin/P115_commands.repl
+
+P116 :ref:`P116_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P116_commands.repl
+
+See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
 
 P117 :ref:`P117_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -701,3 +708,47 @@ P127 :ref:`P127_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: ../Plugin/P127_commands.repl
+
+P129 :ref:`P129_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P129_commands.repl
+
+P131 :ref:`P131_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P131_commands.repl
+
+See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
+
+P135 :ref:`P135_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P135_commands.repl
+
+P141 :ref:`P141_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P141_commands.repl
+
+P143 :ref:`P143_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P143_commands.repl
+
+P148 :ref:`P148_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P148_commands.repl
+
+.. .. *** Insert regular plugin commands above this remark! ***
+
+.. _AdafruitGFX Helper commands:
+
+AdafruitGFX Helper commands
+---------------------------
+
+For all displays that use the AdafruitGFX Helper, these commands are available in addition to the display-specific commands:
+
+.. include:: ../Plugin/AdaGFX_commands.repl
+

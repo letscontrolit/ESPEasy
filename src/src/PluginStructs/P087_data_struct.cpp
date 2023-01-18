@@ -1,5 +1,7 @@
 #include "../PluginStructs/P087_data_struct.h"
 
+#ifdef USES_P087
+
 
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
@@ -7,14 +9,14 @@
 #include <Regexp.h>
 
 
-#ifdef USES_P087
-
 #include <vector>
 
-P087_data_struct::P087_data_struct() :  easySerial(nullptr) {}
 
 P087_data_struct::~P087_data_struct() {
-  reset();
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
 }
 
 void P087_data_struct::reset() {
@@ -47,7 +49,9 @@ void P087_data_struct::post_init() {
     capture_index_used[i] = false;
   }
   regex_empty = _lines[P087_REGEX_POS].isEmpty();
+  # ifndef BUILD_NO_DEBUG
   String log = F("P087_post_init:");
+  #endif
 
   for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
     // Create some quick lookup table to see if we have a filter for the specific index
@@ -56,15 +60,19 @@ void P087_data_struct::post_init() {
 
     // Index is negative when not used.
     if ((index >= 0) && (index < P87_MAX_CAPTURE_INDEX) && (_lines[i * 3 + P087_FIRST_FILTER_POS + 2].length() > 0)) {
+      # ifndef BUILD_NO_DEBUG
       log                      += ' ';
       log                      += String(i);
       log                      += ':';
       log                      += String(index);
+      #endif
       capture_index[i]          = index;
       capture_index_used[index] = true;
     }
   }
+  # ifndef BUILD_NO_DEBUG
   addLogMove(LOG_LEVEL_DEBUG, log);
+  #endif
 }
 
 bool P087_data_struct::isInitialized() const {

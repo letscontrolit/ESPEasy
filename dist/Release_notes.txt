@@ -1,4 +1,1034 @@
 -------------------------------------------------
+Changes in release mega-20221224 (since mega-20221105)
+-------------------------------------------------
+
+Release date: za 24 dec 2022 21:35:00 CET
+
+C.Lee Taylor (1):
+      Add comment to P001 for split up
+
+TD-er (39):
+      [PIO Build] Remove concat work-around for ESP32 builds
+      [PIO] Add all used libraries in lib folder
+      [PSRAM] Do not check UsePSRAM but FoundPSRAM
+      [Docs] Fix "Validate a RFID tag" example
+      [P002] Fix using nr. decimals in calibration
+      [Favicon] Fix serving favicon.ico
+      [Build] Exclude all ext. RTC code when not enabled in build
+      [WiFi] Switch default and alt.WiFi builds for ESP8266
+      [LCtech switch] Fix longpulse (#3385)
+      [NTP] Fix calling NTP when current time source is ext. RTC
+      [Build] Include the 'boards' folder in the source ZIP file (#4274)
+      [SendToHTTP] Only include "Authorization" header  when credentials set
+      [ESP32 2.0.5.x] Fix crashes calling noInterrupt() in ISR callback
+      [Adafruit NeoPixel] Update lib to fix noInterrupts
+      [Quad Enc] Fix ESP32 noInterrupts()
+      [Docs] Update rules docs not using %eventvalue1%
+      [HTTP] Restore Authorization headers used in C011 (#4364)
+      [HTTP] Remove check for "Authorization" header
+      [ADXL345] Add pitch and roll as derived task values
+      [ADXL345] Update min/max values per raw sample reading.
+      [Cache Controller] Speedup ESP32 + LittleFS use.
+      [Cache Controller] Allow for larger files on large ESP8266 FileSystems
+      [Build] Make normal_ESP8266_1M fit max. size again
+      [ADXL345] Add output of values in g with self calibration
+      [ADXL345] Document new features of plugin
+      [LongPulse] Fix recurring longPulse
+      [Speedup] Make less calls to LoadTaskSettings as it is slow on ESP32
+      [Cache] Fix updating ExtraTaskSettings Cache after it has been modified.
+      [Cleanup] Do not call own class functions from constructor/destructor
+      [Build] Fix missing #ifdef check.
+      [Taskvalue Select] Fix showing taskvalue config for some plugins
+      [Taskvalue Select] Fix showing taskvalue config for some plugins
+      [PVS Studio] Fix issues reported by PVS Studio
+      [Lib] Update to ArduinoJson 6.19.4
+      [WiFi] Fix WiFi (re)connect not starting AP immediately
+      [WiFi] Fix loop WIFI_STA and WIFI_OFF preventing boot/wificonnect
+      [Controller] Allow system variables in controller username
+      [ESP32] Fix ECO mode on ESP32
+      Fix max. frequencies for various ESP32 SoC's
+
+Ton Huisman (47):
+      [Build] Revert Espressif32 framework to 2.0.4.1 to fix NeoPixel/RMT related issues
+      [P121] Bugfix for unconnected sensor, correct name-typo, code cleanup
+      [P121] Remove obsolete Arduino 1.0 check, use `f` suffix for float values
+      [P038] Add initial and max brightness settings and command, update docs, optimizations
+      [P121] Add HMC5883L to I2C scanner
+      [Build] Update platform to 2.0.5.2, enable PSRAM for 16M8M envs, prepare PSRAM fix config
+      [CodeMirror] Add NeoPixelBright command
+      [P037] Add JSON sub-attribute support
+      [P037] String and memory optimizations
+      [P037] Small source cleanup
+      [Docs] Add quotes in rules examples for SendTo and SendToHTTP
+      Revert "[Docs] Add quotes in rules examples for SendTo and SendToHTTP"
+      [Docs] Add quotes in rules examples for SendTo and SendToHTTP
+      [P037] Small source improvement
+      [P037] Remove unneeded LoadTaskSettings call
+      [AdafruitGFX] Fix potential initialization issues
+      [Libs] Fix initialization issues
+      [PVS] Code improvements and corrections
+      [P037] Correct table layout on Configuration page
+      [P129] Correct table layout on Configuration page
+      [P099] Correct table layout on Configuration page
+      [P099] Format sources using Uncrustify
+      [P099] Code improvements, small string reductions
+      [Command parsing] Non-numeric arguments could return uninitialized data
+      [AdaGFX] Fix typo in constructor
+      [Build] Deduplicate libs and un-space lib foldernames
+      [Build] Add readme.md to lib folder
+      [P037] Move device configuration subheader, small uncrustify changes
+      [P109] Add Inverted relay-state and Setpoint-delay settings
+      [Build] Enable I2C Multiplexer in most ESP8266 4M builds
+      [I2CMux] Fix Multiple Channels I2C Multiplexer selection table column widths
+      [Metrics] Use default devicename `taskN` when Name is empty
+      [Metrics] Show default task number as displayed in the device overview
+      [Metrics] Format source using Uncrustify
+      [Build] Enable Zabbix controller for Collection builds
+      [Rules] Get task settings for use in rules
+      [Rules] `settings.controllerN` also check Controller enabled/disabled
+      [Rules] Update documentation for task settings variables, fix a few typos
+      [Rules] Update ESPEasy ColorCode configuration
+      [Rules] Adjust fetching task-controller settings, update documentation
+      [Rules] Add String functions `indexOf` and `equals`, with documentation
+      [Rules] Improved `indexOf(_ci)` and `equals(_ci)` string function handling, update documentation
+      [Rules] Introduce commands `Inc` and `Dec`, update documentation
+      [Rules] Update ESPEasy ColorCode config for `dec` and `inc` commands
+      [ColorCode] Add missing command for P141
+      [Build] Add `COLLECTION F` builds
+      [P118] Bugfix for crash during startup
+
+Zafrir Ron (5):
+      LCD Rules example
+      spelling correction
+      Impoved version
+      Fix set speed comment
+      Fix to asyncevent & speed comment
+
+chromoxdor (23):
+      modulo+number is now categorized as number
+      [style][layout] css optimizations, values table improvement
+      the zero is not necessary i guess
+      turns out there is more to remove in the css...
+      forgot to minify and embed the css
+      removed one sys var wrap and re added  pre tag
+      and i forgot to change p021....
+      and xmp is out
+      Update DevicesPage.cpp
+      made the number inputfield better fit (except firefox)
+      forgot to change width to max-width
+      back to input type=search
+      Update Rules.rst
+      Update JSON.cpp
+      Update JSON.cpp
+      Update JSON.cpp
+      Update JSON.cpp
+      Update JSON.cpp
+      Update JSON.cpp
+      Update Custom-sample.h
+      corrected typo
+      update for #4421
+      update
+
+jimmys01 (1):
+      Move Custom IR related defines in the appropriate file
+
+
+-------------------------------------------------
+Changes in release mega-20221105 (since mega-20220809)
+-------------------------------------------------
+
+Release date: za  5 nov 2022 16:15:44 CET
+
+Alex (1):
+      Update release.yml
+
+Jason2866 (2):
+      Fix boot flash mode
+      `opi` flash needs to be flashed in mode `dout`
+
+Max Prokhorov (1):
+      Fix github-script v5 breaking change
+
+TD-er (167):
+      [Framed OLED] Load/save settings in smaller memory chunks
+      [Framed OLED] Reduce memory usage, especially during load/save
+      [OLED Framed] Prevent copy of strings when calling some write functions
+      [PlatformIO] Do not extend multiple PIO envs
+      [PlatformIO] Change src_filter into build_src_filter for PIO 6.0.0
+      [PlatformIO] Revert to PlatformIO 5.2.5
+      [Cleanup] Reduce build size ESPEasySerial inline functions to .cpp
+      Reduce blocking delays in Blynk command
+      [Framed OLED] Simplify code to send P036 events
+      [GPS] Make a bit more clear the GPS has a fix.
+      [LoRaWAN] Reduce build size + more sensible default settings.
+      [LoRaWAN] Make RX2 frequency configurable + allow write RN2483 commands
+      [LoRaWAN] describe how to reduce nr of OTAA joins
+      [ESP32 PN532] Fix reading PN532 on ESP32
+      [PN532] Make reading tags non-blocking
+      [PN532] Disable Debug code + remove last global variable
+      [PN532] Fix switching I2C clock frequency on ESP32
+      [I2C] Fix build for ESP8266 (no Wire.end() )
+      [Cleanup] Renamed other enums related to PLUGIN_TASKTIMER_IN
+      [ESP32 flash mode] Change flash mode board defs to use QIO for ESP32
+      [Build] Fix include path + add CircularBuffer to libs folder (#4201)
+      [ESP32] Include SPI memory_type in board defs
+      [Build scripts] Only show memory_type on ESP32 builds
+      [Rules] Fix matching events with first eventvalue being zero (#4198)
+      [Rules] Simplify & fix stripping leading zeroes
+      [ESP32 flash] Move back to DOUT and DOUT_QSPI
+      [SendToHttp] Do not set HTTP authentication when no user/pass set
+      [ESP32] Use patched 2.0.4 framework-arduinoespressif32 to fix SPI modes
+      [PMSx003] Fix buffer overflow when reading sensor data
+      [Build] Include ESPEasy_config.h everywhere
+      [Build] Add missing include of Wire.h in ESPEasy_common.h
+      [Build] Fix ESPEasySerial build with DISABLE_SOFTWARE_SERIAL defined
+      [Build] Explicit ignore SD libraries on "minimal" builds
+      [Cleanup] Reduce build size for minimal builds
+      [Cleanup] Disable MCP/PCF commands when P009 and P019 not included.
+      [Cleanup] Remove MCP/PCF related code when plugins not included
+      [Build] Reduce build size reducing ArduinoJSON instances
+      [Build] Fix compile time defines strings with spaces
+      [Build Version] Generate build version based on date
+      [Build] Fix build error due to missed function renames
+      [Build] Fix warning when P009 or P019 is not included in build
+      [Custom build] Remove #include <Arduino.h> from Custom_sample.h
+      [Sysinfo] Add functions to compute runtime ABP and flash frequency
+      [Sysinfo] Code cleanup & add Xtal frequency
+      [Sysinfo] Fix some code/logic duplication
+      [Sysinfo] Fix determining flash mode on ESP32-S2
+      [Build] Move include/ESPEasy_config.h to src/include (#4216)
+      [Sysinfo] Use FSPI define addressing the SPI bus to the flash
+      [SendToHttp] Fix HTTP 401 and 404 error
+      [Network Timeout] Apply workaround to set timeout in msec on ESP32
+      [Cleanup] Uncrustify _N001_Email.cpp
+      [HTTP] Change read timeout into HTTP code 200 when "Ignore Ack" is set
+      [SendToHttp] Set timeout to 1000 msec when set to ignore ack
+      [Controller] Make timeout dynamic, depending on actual results
+      [Controller] Don't make timeout dynamic if ignore acknowledgement is set
+      [Git] Add _*Custom.h to .gitignore
+      [String] Use .equals for flash strings instead of ==
+      [Build] Set ESP8266/Arduino to use actual 'staging' code
+      [ESP8266] Change resetmethod to "nodemcu" to fix reset during flash
+      [Build] Switch ESP32 board definitions to use DIO mode
+      [RN2483] Forward declaration of  functions
+      [ESP32 MAX] Fix not defining LIMIT_BUILD_SIZE on MAX builds
+      [Build_CDN] Generate CDN prefix URL based on Git tag
+      [Build_CDN] Generate CDN prefix URL based on Git tag
+      [Build CDN] CDN URL prefix matches checkout tag or  latest tag
+      [Build CDN] Serve ESPEasy auto css by default
+      [Build] Remove all debug logs when BUILD_NO_DEBUG is set
+      [Debug Log] Fix reduces log level combo box with BUILD_NO_DEBUG set
+      [ESP ETH] Reset GPIO states before calling ETH.begin()
+      [Build] Reduce bin size & merge NodeStruct from ESPEasy-NOW PR
+      [Build] Add missing dependency check C013 needs FEATURE_ESPEASY_P2P
+      [Cleanup] Minor tweaks to include less code during compile
+      [Cleanup] Uncrustify WebServer/RootPage.cpp
+      [Cleanup] Remove code duplication + concat function to reduce bin size
+      [CSE7766] Fix wrong debug check wrapper P077 (#4248)
+      [MH-Z19] Fix executing command for MH-Z19
+      [PZEM004T] Fix nullptr dereference (#4251)
+      [Build] Reduce build size by doing less flash string conversions
+      [Build] Fix missing controllers to ESP32 "Collection" builds
+      [Build] Do not (yet)  define USES_ESPEASY_NOW for MAX builds
+      [Build] Add FEATURE_RULES_EASY_COLOR_CODE build option
+      [ESPEasy p2p] Fix crashes (#4261)
+      [GPIO] Fix bug in GPIO command parsing (#4271)
+      [Build] Reduce build size for energy and display builds CDN JS/CSS
+      [CodeMirror] Fix loading code mirror CSS from filesystem
+      [CDN] Serve static files with cache-control from file system
+      [build] Disable normal_alt_wifi_ESP8266_1M due to bin size
+      [CDN] Cleanup the CDN code
+      [CDN] Browser cache  embedded Favicon and CSS
+      [Build] Fix build on ESP32
+      [CDN] Only load codeMirror files on Rules/Custom page + add Expires
+      [CDN] Add Last-Modified header when serving built-in static files
+      [CodeMirror] Link JS in the HEAD & don't use defer on those.
+      [WiFi] Prevent setting same WiFi mode multiple times
+      [SysVars] Fix sunrise/sunset offset (%sunrise-1h%)
+      [Build] Reduce build size to make minimal OTA_FHEM_HA fit again
+      [String parse] Cleanup formatting transformation function
+      [Cleanup] Use roundf or lround where appropriate
+      [Build] Reduce build size by removing unneeded pow function calls
+      [WiFi] Change Espressif SDK to SDK221
+      [WiFi] Prevent reconnect loop
+      [WiFi] Check scan results for known candidates
+      [WiFi] Make WiFi reconnect more predictable
+      [WiFi] Fix WiFi connect timeout handling
+      [ADC] Internal ADC plugin reading Vcc on _VCC builds
+      [WiFi] Limit WiFi logs on size challenged builds
+      [Cleanup] Reduce bin size when using timing stats
+      [Commands] Fix accepting invalid commands
+      [Factory Default] Fix default settings for SSID2
+      [Factory Default] Fix default settings for SSID2
+      [WiFi] Reduce time needed to connect to WiFi
+      [WiFi Setup] Fix serving CSS on initial WiFi setup
+      [Time] Fix check whether real time is set
+      [p2p NTP] Update time via p2p node when NTP not set or unreachable
+      [p2p NTP] Fix build includes
+      [p2p NTP]  Fix applying NTP received from peers
+      [p2p NTP] Prevent receiving random data from old ESPEasy nodes
+      [p2p NTP] Fix log entry showing correct time source
+      [Webserver] Fix strange crashes when serving flash strings
+      [GPIO] Add option for longpulse repeat
+      [LongPulse] Stop scheduled pulse when setting GPIO + add waveform call
+      [Longpulse] Cleanup and document
+      [Longpulse] Fix missing includes
+      [Dallas] Add option to auto select first sensor found
+      [Dallas] Document the new Auto Select Sensor feature
+      [Build] Make ESP8266 Collection D VCC fit again
+      [Build] Make using ESP8266 Waveform a build feature
+      [Build] Disable ext. RTC on limited build size builds
+      [Build] Reduce bin size by excluding libs from 1M builds
+      [PVS Studio] Fix some uninitialized members found by PVS Studio
+      Fix build error
+      [Cleanup] Change time wander unit to ppm
+      [Dallas] Add DS28EA00 chip (#4292)
+      [WiFi] Retry to connect to WiFi when set AP is not reachable
+      [Cleanup] Reduce bin size by assigning smaller types to enums
+      [Cleanup] Reduce bin size by assigning smaller types to enums
+      [Sonoff POW] Do not use volatile ints to check for divide by zero
+      [GPS] Fix set system time via GPS
+      [GPS] Use custom GPS view of plugin stats data
+      [PMSx003] Support I2C UART bridge on ESP32
+      [Ext RTC] Fix updating ext. RTC from other sources like p2p nodes
+      [Time] Clean up code + show UTC time stored in RTC
+      [sunset/sunrise] Fix parsing multiple instances of %sunrise...%
+      [Cleanup] Uncrustify ESPEasy_time
+      [time] Limit settime update frequency from p2p nodes
+      [NTP] Fix prefer NTP over p2p time sync
+      [NTP] Make "p2p time sync" only preferred after at least 2 hours.
+      [Ext RTC] Round time set to ext. RTC to reduce error to +/- 500 msec
+      [time] Reduce time update frequency from the same time source
+      [p2p time] Show ESPEasy unit nr used as time source
+      [p2p time] Do not use own node as p2p source.
+      [Build] Update pygit2 lib to fix GitHub Actions builds
+      [Build] Fix missing include
+      [SI70xx] Set default I2C address when upgrading using old settings
+      [HLW8012] Improve stability and resolution Voltage/Current measurement
+      [HLW8012] Don't use double when float will suffice
+      [Setup] Fix CSS on setup page + WiFi/Eth event handling
+      [Settings] Reintroduce MD5 checksum to prevent saving unchanged settings
+      [PlatformIO] Add missing ESP32 ETH envs (energy/display/climate/neopixel)
+      [WiFi/Eth] Split handling of WiFi and Ethernet events
+      [Eth] Split WiFi and Eth event data + fix static Ethernet IP
+      [WiFi] Increase time between WiFi reconnects
+      [Ethernet] Restore DNS records for Eth when WiFi turned off
+      [Ethernet] Fix restore Eth DNS static IP config
+      [Ethernet] Split handling WiFi/Eth event processing
+      Reserve ESPEasy-NOW member in SettingsStruct
+      [Build] Fix missing include + some define checks
+
+Ton Huisman (332):
+      [P118] Make CS pin configurable, resolve some compiler warnings
+      [P118] Restructure using Plugin_data_struct, allow 3 simultaneous instances, code reformatted
+      [P118] Add library.properties and reference it
+      [P118] Use more descriptive names for a few variables/constants
+      [P118] Fix missing #define
+      [Build] Fix compiler warnings
+      [P118] Refactor interrupt handling
+      [P118] Attempt to avoid startup crash
+      [P118] Attempt to avoid startup crash
+      [P118] Add entry to Custom-sample.h
+      [P118] Reformat CC1101 library using Uncrustify
+      [P095] Add support for extra TFT displays (ILI934x/ILI948x)
+      [P095] Reformat sources using Uncrustify
+      [P095] String allocation improvements
+      [P118] Log optimization
+      [P095] Restore accidently lost addLogMove
+      [P095] Fix merge issue
+      [P095] Make enum values explicit
+      [P129] Add 74HC165 input shiftregisters plugin
+      [P129] Rename command to ShiftIn, and promote rest of command to second argument
+      [P129] Rename plugin, some minor corrections
+      [P129] Add documentation
+      [P129] Always show formatted output, even when plugin is not active. Rename some arguments
+      [P064] Unblock while reading gestures when object is very close
+      [P064] Format source using uncrustify
+      [P092] DL-Bus: Add support for UVR42
+      [P092] Add second digital value for UVR42
+      [P092] Add documentation for UVR42, some minor corrections
+      [P092] Documentation typo
+      [P131] Add plugin Display - NeoPixel Matrix
+      [Build] Add ESP32 4M2M NO_OTA configuration
+      [P131] Fix IR build issue, initialization of class variables
+      [P095] Rename local copy of Adafruit ILI9341 library, initializations
+      [P131] Correct invalid initialization in struct
+      [P131] Add documentation
+      [P095] Updated documentation
+      [P045] Add option for detect movement on all/any axis
+      [P045] Minor improvements
+      [P045] Add plugin documentation, remove invalid documentation file
+      [P045] Move descriptions from Device configuration to documentation
+      [AdaGFX] Add optional Roboto fonts
+      [AdaGFX] Fix typos in #ifdef
+      [AdaGFX] Small documentation updates
+      [P095] Make Splash at start configurable, docs updated
+      [P095] Fix for displaying text on previous location was not overwriting old content Add Text print mode for centered text Extend txtfull subcommand to enable centered text
+      [P095] Update documentation
+      [Build] Update custom ESP32 NO_OTA_LittleFS build configuration
+      [AdaGFX] Add support for `btn` subcommand to draw button-like objects
+      [AdaGFX] Improve btn subcommand, slim down bin size, other minor improvements
+      [AdaGFX] Add support for confined windows to print/draw in [AdaGFX] Add support for getting config values
+      [AdaGFX] Process like template for length and textheight values
+      [AdaGFX] Add/update documentation for window commands and config values
+      [AdaGFX] Code improvements, initialization, const, move window offset into printText()
+      [AdaGFX] Code improvements as suggested by feedback
+      [AdaGFX] Correct font include paths, add #ifndef filename checks to fonts
+      [AdaGFX] Regression: Background-fill for text should fill entire line height
+      [AdaGFX] Re-add some previously missed changes
+      [P131] Code optimizations, make splash configurable
+      [P095] Implement getconfig feature, code optimization, update documenation
+      [Settings] Add PCONFIG_ULONG(n), union with PCONFIG_LONG(n)
+      [P131] Fix loading content, implement PCONFIG_ULONG(n)
+      [Build] Restore TEST_E builds for ESP and ESP32s2
+      [Fix] Complete implementation for changed addFormSelector() definition
+      [P129] Optimizations and small fixes
+      [Settings] Add PCONFIG_ULONG(n), union with PCONFIG_LONG(n)
+      [P129] Implement use of PCONFIG_ULONG()
+      [Settings] Replace long by int32_t for PCONFIG_LONG(n)
+      [P129] Remove undesirable const declarations
+      [Settings] Replace long by int32_t for PCONFIG_LONG(n)
+      [P131] Corrections for nullptr, resize and 0 checks
+      [P131] Restore delete of matrix object to properly free memory
+      [P131] Implement splash without delay()
+      [P095] Implement splash without delay()
+      [P095] Implement splash without delay()
+      [P095] Use ESPEasy-specific ILI9341 extended library
+      [P118] Code optimizations
+      [P131] Add to NeoPixel builds, make it fit in ESP8266 4M NeoPixel build
+      [P064] Code optimizations, remove unused I2C Address selector, adjust documentation
+      [P109] Improve binary size and memory use
+      [P109] More optimizations, use #defines where appropriate
+      [OLedHelper] Add helper with some OLed functions
+      [P109] Make plugin multi-instance capable, implement OLed_helper functions
+      [P036] Implement OLed_helper to reduce code size
+      [P023] Implement OLed_helper to reduce code size, reformat source (Uncrustify)
+      [P023] Optimizations, source formatting (Uncrustify)
+      [P109] Move deconstruction code to class deconstructor
+      [P023] Improved comments to clarify unclear code
+      [OLedHelper] Add changeable values argument to OLedFormController function
+      [P023] Avoid awkward code construct by using changed OLedFormController
+      [P036] Apply changed OLedFormController function
+      [P109] Apply changed OLedFormController function
+      [P118] Minor code optimizations
+      [P110] Replace delay() call, format source, code improvements
+      [P110] Disable development logging
+      [P111] Format source (uncrustify)
+      [P111] Replace delay() calls, format source, code improvements
+      [P111] Move reset handling mostly away from 50/sec handler for timing reasons
+      [P127] Replace delay() calls, code improvements
+      [Build] Enable SD-card support for Display and NeoPixel sets
+      [NeoPixel] Add generic power calculation to documentation
+      [AdaGFX] Add getTextSize and get/setValidation methods
+      [P131] Add horizontal scroll feature, fix clear on exit bug
+      [P131] Code optimization
+      [P131] Scrolling fixes
+      [P131] Documentation updates
+      [ILI9341 lib] Extend supported ILI9481 sub-types (CMI7 and CMI8, borrowed from TFT_eSPI)
+      [P095] Extend supported ILI9481 display models
+      [P095] Update documentation
+      [P129] Fix build error, apply code suggestions
+      [P128] Fix compiler warning
+      [SDcard] Remove unused variable in handle_SDfilelist()
+      [P128] Fix compiler warning
+      [SDcard] Remove unused variable in handle_SDfilelist()
+      [Build] Leave SD-card support out for any NEOPIXEL ESP8266 build to make it fit again
+      [P095] Disable unavailable displays (ILI9486/ILI9488)
+      [P131] Remove plugin from DISPLAY builds, enable SD-card support for NEOPIXEL ESP32 builds
+      [P131] Enable SD-card support for NEOPIXEL ESP32s2 build
+      [P131] Add commands for scroll options, update documentation, remove Testing tag, improvements
+      [P129] Remove testing tag, update ENABLE_TOOLTIPS to FEATURE_TOOLTIPS
+      [P131] Update ENABLE_TOOLTIPS to FEATURE_TOOLTIPS
+      [P129] Update ENABLE_TOOLTIPS to FEATURE_TOOLTIPS
+      [P131] Update ENABLE_TOOLTIPS to FEATURE_TOOLTIPS
+      [P134] Add Distance - A02YYUW sensor
+      [P134] Use serialHelper functions where possible
+      [P134] Add documentation
+      [P008] Reduce iRam usage in ISR
+      [P008] Enable Multi-instance use, rename variables, use named setting defines
+      [P008] Update documentation
+      [P134] Code correction
+      [P135] Add SCD4x CO2, Humidity and Temperature sensor
+      [Build] Add flag to exclude (unused) debug logging from SparkFun SCD4x library
+      [P135] Add documentation
+      [P134] Add plugin to Custom-sample.h
+      [Docs] Move Serial Helper configuration to separate page and add links where appropriate
+      [P135] Rename feature flag, enable selftest and factoryreset for all builds
+      [P135] Minor documentation updates
+      [I2C] Set default GPIO pins for ESP32 SDA=21, SCL=22
+      [P135] Add check for too many mis-readings to stop the plugin
+      [P135] Minor documentation updates
+      [P135] Add FRC feature, get serial number, update docs, code optimization and improvements
+      [P064] Improved handling of errors, remove [TESTING] tag
+      [I2C] Set default GPIO pins for ESP32 SDA=-1 SCL=-1
+      [I2C] Set default GPIO pins for ESP32 SDA=-1 SCL=-1
+      [P129] Fix a bug, improve code and documentation
+      [P129] Fix documentation
+      [IR] [Build] Enable IR device selection
+      [LIB] IRremoteESP8266 updated to v2.8.2
+      [IR] Correct some defines for SEND-ONLY protocols
+      [Build] Fix extra_scripts environment chaining
+      [LIB] IRremoteESP8266 proposed solution for limiting combobox list
+      [P016] Limit list of supported protocols to what is actually included in build (proposal), update CustomIR-sample.h
+      [P016] Make buffersize configurable, we usually don't need max buffer size
+      [P035] Fix list of supported protocols, comment unreachable code
+      [P016] Increase default buffersize to 150 to avoid log message for nearly every received code
+      [P016] Add feature flag P016_FEATURE_COMMAND_HANDLING to optionally disable command processing
+      [SysVars] Add conversion for minutes to hh:mm notation (%c_m2hcm%)
+      [P016] Change display/entry of buffer size to bytes instead of unnamed 'units' (2 bytes)
+      [P016] Update documentation
+      [Rules] Process conversions during rules-matching
+      [SysVars] Add string functions timeToMin/timeToSec with docs
+      [SysVars] Reduce build size for LIMIT_BUILD_SIZE by disabling timeToMin/timeToSec
+      [JSON] Add variables to /json output
+      [Build] Upgrade SparkFun MAX1704x to latest
+      [P095] Optimize code and reduce string use to make build fit
+      [I2C] Improve visibility of I2C Configuration errors, few minor code enhancements
+      [I2C] invert bool argument name and value for readability
+      [P118] Itho library limit formerly endless loops to max. 3 seconds
+      [P118] Fix bugs found during testing, rename variables, clean up source
+      [P118] Update documentation
+      [P118] Fix bugs found during testing, rename variables, clean up source
+      [P118] Fix ESP32 support, shorten lib time-out, improve Devices overview display
+      [Devices] Fine-tune display of custom GPIO configuration
+      [P116] Add Devices list GPIO overview
+      [P118] [Build] Restore Itho communication in ESP32 builds
+      [Build] Remove NeoPixel plugins from DISPLAY builds
+      [Build] Remove NeoPixel plugins from DISPLAY builds
+      [Build] Update documentation
+      [Build] Explicitly remove NeoPixel plugins from DISPLAY builds (still in Normal and Collection)
+      [IRremoteESP8266] Fix a few wrong-mapped defines
+      [P037] Introduce plugin-specific P037_LIMIT_BUILD_SIZE feature flag
+      [Build] Have Energy build apply some plugin-specific size-reduction feature flags (P036, P037)
+      [Boot] Show binary filename in startup log messages
+      [Plugin] Remove obsolete [DEVELOPMENT] tags
+      [IRremoteESP8266] Add comments requested by lib maintainers
+      [P111] Fix small typo
+      [Itho Lib] Merge Orcon functions from #4099
+      [P118] Merge Orcon functions from #4099
+      [P118] Update documentation with Orcon commands
+      [P118] Move plugin to `Collection E` to make the build fit in again
+      [P059] Add documentation, migrated from the Wiki
+      [Itho Lib] Code improvements as suggested (mostly)
+      [P141] Add plugin Display - PCD8544 Nokia 5110 ('migrated' from PluginPlayground)
+      [P141] Include in Display builds, add library
+      [AdaGFX] Add `txl` subcommand to send multiple lines of text to display
+      [AdaGFX] Add documentation for `txl` subcommand
+      [P021] Add Auto-save interval option
+      [P021] Add Auto-save interval option
+      [P021] Update documentation
+      [P021] Improved checks to really avoid auto-saving if not needed
+      [P021] Fix compilation issue
+      [P021] Fix typo
+      [P021] Don't restart Auto-save timer after saving settings
+      [P021] Extra check to avoid decrementing the timer when not started
+      [AdaGFX] Some small improvements and corrections
+      [P141] Add Invert display option and matching 'inv' subcommand, several improvements and fixes
+      [JSON] Add ESP_CHIP_MODEL and REVISION (ESP32 only) to /json output
+      [P135] Remove [TESTING] tag, minor code improvements
+      [Lib] Remove unused variable from SparkFun AS7265X library (avoid compiler warning)
+      [P111] Small code improvements for size reduction
+      [P021] Fix possible issue for GetLevel config value
+      [Docs] Split long lines in AdaGFX commands documentation
+      [Docs] Update the Commands reference
+      [AdaGFX] Implement invertDisplay() used by monochrome displays
+      [P141] Improve Inverted display support, code improvements
+      [P141] Add documentation
+      [P141] Include in Custom-sample.h
+      [Hardware] Fix compiler warning about FM_UNKNOWN
+      [P135] Fix flash-string ==
+      [Bugfix] DevicesPage: ExtraTaskSettings are not always saved
+      [P135] Add missing code-comment
+      [P135] Change plugin name to include 'CO2', in line with other CO2 plugins, update and corrections for documentation
+      [SysVars] Suggested improvement and `timetosec`/`timetomin` code size reduction
+      [P109] Optimize code, some deduplication/refactoring
+      [UI] Make auto-dark mode optional
+      [UI] Make auto-dark mode optional
+      [UI] Improved code-semantics
+      [UI] Enable Web dark-mode documentation
+      [UI] Restore static attribute for css data arrays
+      [Tools] embed_files.sh: Use `static` attribute on generated char arrays, force LF line ends for script
+      [UI] Device page shows Controller names
+      [CSS] Remove no longer needed `esp_auto.css`
+      [CSS] Re-add `esp_auto[.min].css`, combining `espeasy_default.css` and `esp_auto_dark.css`
+      [UI] Restored `Send to Controller` display, with fixed number display, and Controller name included
+      [UI] Make theme selectable: Auto, Light, Dark
+      [UI] Rearrange Controller name, checkbox and optional IDX on Devices page
+      [UI] Update documentation
+      [UI] Change `multi2row` to `multirow tworow` (@chromoxdor), improved `tworow`
+      [UI] Apply classes `multirow odd` where previously only `multirow` was needed
+      [UI] Replace 'odd' by 'even' class, restoring pre-dark mode multirow style
+      [UI] /setup now uses auto-dark mode, Dashboard gets the auto/dark mode from settings
+      [UI] Improve template processing, fix partition table in dark mode
+      [UI] Fix dark mode display for Chart JS graphs
+      [P037] Enable all features for NORMAL builds not using LIMIT_BUILD_SIZE (2M/4M/16M)
+      [P037] Disable extra features for ENERGY build for size reasons
+      [P037] Update documentation, and some minor corrections
+      [Code] Apply PVS-Studio bugfixes and suggestions, 2022-09
+      [Code] Use correct Vnnn error codes
+      [UI] Correct WiFi bars color (now blue) in /setup
+      [UI] Add transparency to WiFi bars not-active color
+      [P134] Remove TESTING tag, code improvements
+      [AdaGFX] Fix printing partial characters near the right edge of the screen (no linewrap, Window 0 only)
+      [P141] Add configurable line-spacing, fix some bugs, code improvements
+      [P141] Update documentation
+      [Libs] Partially upgrade HeatpumpIR lib to fix PVS reported issue and save space
+      [Build] Allow HeatpumpIR in ESP32 Custom_IR builds
+      [P131] Fix lines display to start on next tile
+      [P141] Reduce build size
+      [Build] Minimal OTA Domoticz without HTTP (#4246)
+      [Build] Add Minimal OTA Domoticz MQTT builds to restore the HTTP features in previous environments
+      [Build] Fix typo in conditional include
+      [AdaGFX] Add line-spacing setting, default is backward compatible
+      [P141] Remove unneeded color selection options
+      [P141] Update documentation
+      [Build] Rename feature flag to disable HTTP client
+      [P109] Disable in ESP8266 build, some size optimizations
+      [P141] Disable SD card support in ESP8266 Display build for size
+      [P118] Fix LOG_LEVEL_DEBUG compilation
+      [P141] Adjust default plugin settings, update documentation
+      [AdaGFX] Fix issue with top pixel when using Col/Row mode
+      [AdaGFX] Remove unneeded logging
+      [P141] Less preprocessing of commands
+      [P045] Minor code size reduction
+      [P021] Minor code reduction
+      [P110] Rename LOG flags, fix logic for disabling debug log
+      [P118] Hide Debug log option from UI when not available, small improvements
+      [P127] Use correct build flag
+      [P141] Correct line offset, skip empty lines on taskrun
+      [P141] Documentation updates
+      [P109] Add commands for emulating left, right and mode buttons
+      [P141] Enable contrast setting from 1..100% and add 'contrast' subcommand
+      [P141] Update and extend documentation
+      [P109] Rename commands Left and Right to LeftBtn and RightBtn, some code moved
+      [Build] Add CLIMATE configuration and move P118 there with all climate sensors
+      [Docs] Update documentation for CLIMATE builds, fix some errors in documentation
+      [Build] Fix compiler warnings for signed/unsigned int compare
+      [AdaGFX] Allow backlight percentage setting from 0% (instead of 1%)
+      [P141] Allow backlight and contrast settings from 0% instead of 1%, updated documentation
+      [P141] Also store 'inv' setting when changed via command (not saved)
+      [P092] Code optimizations, reduce logging for LIMIT_BUILD_SIZE
+      [P075] Increase nr. of lines for commands to send to Nextion
+      [P109] Code improvements
+      [P109] Fix merge conflict
+      [P109] Rename button commands, add title options
+      [AdaGFX] Don't trim off spaces from command arguments
+      [AdaGFX] Small log improvement
+      [Build] Restore Notifiers and other features in normal_ESP8266_4M1M_VCC
+      [Build] Fix preprocessor issue
+      [Build] Add preprocessor flag NO_LIMIT_BUILD_SIZE
+      [P141] Add GET_CONFIG_VALUE support, update documentation
+      [OLedHelper] Add OLedI2CAddressCheck() for some de-duplication of OLed plugins
+      [P023] Implement OLedI2CAddressCheck()
+      [P036] Implement OLedI2CAddressCheck()
+      [P109] Change behavior for minimizing saving to thermo<tasknr>.dat, delay relay activation after setpoint change
+      [P109] Correct a few bugs, save pending settings, adjust timeout display
+      [P109] Correctly un-initialize relay state after enabling/switching task
+      [Bugfix] Taskenable,<taskname> wasn't working anymore
+      [P109] Add temporary heater delay timing logging
+      [Bugfix] P141 PCD8544 Library issue resolutions
+      [P109] Solve setpoint update without short interval
+      [Formatting] Formatting values doesn't work as intended
+      [Checks] Correctly check for obsolete USES_NOTIFIER define
+      [Checks] Adjusted comment
+      [MAX] Increase plugin list to 140
+      [OTA] Initialize Arduino OTA only when enabled
+      [Log] Minor logging improvements
+      [MAX] Enable I2C Device scan
+      [I2C] Some missing I2C devices added
+      [P039] Allow GPIO-0 (D3) to be used for CS (Bugfix)
+      [Boards] Set additional IDF flag for ESP32s2 (and yet unsupported ESP32c3) boards
+      [SPI] 3rd SPI GPIO pin should be output only
+      [Boards] Fix IDF version and order of ESP32/s2/c3 checks to get correct GPIO definitions
+      [Boards] Move IDF version to platform_core-defs.ini
+      [Build] Conditional compilation improvement for CONFIG_IDF_TARGET_ESP32
+      [SPI] Corrected pin selection for User-defined SPI (input/output)
+      [ESP32] Use patched 2.0.5 framework-arduinoespressif32
+      [P095] Add Invert display option for  foreground / background color swap
+      [Docs] Add rules example for a b-tree search on a list of Tags
+      [P095] Log selected display type during init
+      [Docs] Emphasize the use of `%eventvalue%` variables in event-handling rules
+      [P037] Bugfix: Enable event generation when adding task
+      [Build] Add PSRAM environments for 16M8M
+      [Build] Switch to platform-espressif32 2.0.5.2
+
+Zafrir Ron (1):
+      Fix CPLIGIN-WRITE to allow controller commands
+
+chromoxdor (56):
+      initial codemirror support
+      back to local testing
+      minor change
+      Update espeasy.js
+      added minified files
+      update
+      fixed typo & removed an unintentional easteregg
+      each plugin one line
+      Forgot to rename variable in anyword
+      typo: commonPlugins
+      added missing plugin commands + code cleanup
+      added all display specific commands
+      added , for hinting
+      removing duplicates in hints
+      nobody except me needs the log
+      bit more "root" keywords for faster typing
+      maybe better hint listing
+      Update anyword-hint.min.js
+      changes
+      sevenseg fix
+      changed css +round buttons
+      css update+ round helper buttons
+      removed unnecessary css
+      changed highlightcolor  + wider column
+      fixed to wide input fields
+      no rounded corners and green is back
+      Update Markup.cpp
+      accommodate to windows users
+      put back some stuff
+      ubbs..i edited the wrong line
+      modernized the css
+      render table-border on ios devices
+      table-border ios fix the 2nd
+      added files
+      minor changes+ adding automode css files
+      resolves minor issue in /setup
+      update CM files
+      remove unnecessary types
+      Update HTML_wrappers.cpp
+      added xwide to css, reverted p016 column change
+      Update HTML_wrappers.cpp
+      Added the tworow class to P016
+      no need for two colons
+      Add the "ESPeasy Code Editor" to the docs
+      Update _P016_IR.ino
+      update codemirror files
+      Update codemirror.min.js
+      better minification
+      Css variables update + add P023
+      firefox was left out for "normal" rules, removed unnecessary folder
+      reposition of codemirror js files + minor css additions
+      css fix for textviewer
+      it should be height not width :)
+      removing height for textarea completely
+      re adding max-height
+      [P109][Colorcode] added plugin specific commands
+
+fmuntean (9):
+      [P014] added support for SI7013 ADC
+      [P014] added Datasheet link
+      [FIX] updated based on the feedback
+      [FIX] reduced the last_measurement_time from 2 places to one; commented all the break; lines
+      [FIX] multiple fixes and updates: Init had to be split as delay is required after reset
+      [P014] Added documentation
+      [Fix] Spelling
+      [P014_SI70xx] guardrail all the logging
+      [P014] Fixing support for HTU21D with chip_id=50
+
+stefan (2):
+      [ArduinoIDE] Make it compile again
+      [ArduinoIDE] make it build agian - Fix typo
+
+uwekaditz (37):
+      [P036] improvments (line alignment separatly)
+      Changes requested by @tonhuisman
+      Uncrustify code
+      FIX: wrong alignment (only centered) for long, non-scrolling lines
+      FIX: wrong pixel calculation for alignment for non-scrolling lines on 64x48 display
+      [P036] NEW: individual font settings for each line
+      code reduced by 530 bytes to fit the build size for 'esp8266, normal_ESP8266_1M'
+      ADD: Setting and support for user defined contrast: oledframedcmd,display,user,contrast,precharge,comdetect
+      Copy&paste error
+      CHG: Setting for user defined contrast simplified
+      NEW: use the split token <|> to split lines into left and right part
+      FIX: last frame was not shown
+      [NEW] css style xwide
+      Documentation updated
+      FIX: empty page was shown if just one frame has text
+      FIX: empty page was shown if just one frame has text
+      CHG: font Dialog_plain_18 is optional (not using LIMIT_BUILD_SIZE)
+      CHG: font Dialog_plain_18 is optional (not used with LIMIT_BUILD_SIZE)
+      CHG: Logging in [P092] reduced for LIMIT_BUILD_SIZE
+      CHG: font Dialog_plain_12 is optional (not used with LIMIT_BUILD_SIZE)
+      [P037] Using xWide and html_TD(const String& style)
+      P36_MaxFontCount reduced for LIMIT_BUILD_SIZE
+      FIX: left alignment again with leading spaces
+      NEW: right alignment with trailing spaces
+      Update P036.rst
+      Update P037_data_struct.cpp
+      Reset P037_data_struct.cpp to mega
+      [P037] Using xWide and html_TD(const String& style)
+      Changes proposed and requested by tonhuisman
+      History updated
+      Added new sub-table from PR #4239
+      CHG: use P036_LIMIT_BUILD_SIZE if PLUGIN_BUILD_IR is defined
+      Obsolete code with #ifdef INPUT_PULLDOWN removed
+      BugFix for addSelector()
+      Conflict resolved
+      Conflicts resolved
+      CHG: Display timeout is now a uint16_t value (max 65535s for display off)
+
+
+-------------------------------------------------
+Changes in release mega-20220809 (since mega-20220616)
+-------------------------------------------------
+
+Release date: di  9 aug 2022  8:58:50 CEST
+
+DMoosh (1):
+      Update README.md
+
+Florin (1):
+      Notification Page to Display GPIO pins when in use.
+
+TD-er (145):
+      [ESP8285] Remove ESP8285 specific builds, detect at runtime (#3848)
+      [Provisioning] Add command to download firmware OTA
+      [Provisioning] Fix missing includes
+      [Build] Fix missing line in .ini file due to merge issues
+      [PlatformIO] Update to PIO 6.0.1
+      [PlatformIO] Clean requirements.txt files to only the essentials
+      [Provisioning] Fix missing include
+      [P002 ADC] Move PluginTaskData to separate file
+      [ADC] Add binning and multi-point processing of values
+      [ADC] Improve binning stability
+      [ADC] Speed up formula parsing
+      [ADC] Add caching for binning range
+      [ADC] Add fields to load/save multipoint values.
+      [ADC] Add option to paste many variables at once
+      [Cleanup] Small optimizations to reduce bin size
+      [Cleanup] Reduce loading controller settings when not ready to process
+      [Cleanup] Add function addFormSelector_YesNo to remove code duplication
+      [Cleanup] Reduce build size by combining controller queue types
+      [Controller Queue] Add missing includes
+      [PVS Studio] Fix some hints provided by PVS Studio
+      [P073, PVS Studio] Fix bug in font handling for Siekoo display
+      [ADC] Fix compiler warnings + remove binning for LIMIT_BUILD_SIZE builds
+      [Firmware Download] Fix downloading with no content length set
+      [Download] Fix warning signed/unsigned
+      [BME280] Allow to take samples using taskRun (#3879)
+      [BME280] Clean-up code
+      [BME280] Proper handling error states, send error event.
+      [BME280] Make TaskError event more useful by adding error string
+      [BME280] Update comment to reflect actual behaviour
+      [Cleanup] Reduce build size web form functions
+      [Cleanup] Reduce bin size deduplicate webform switch plugins (001/009/019)
+      [Cleanup] Uncrustify
+      [Cleanup] Minor optimizations to reduce build size
+      [Static Files] Fix option to local store dev page JS file (#4102)
+      [Build] Show proper ESP board name on ESP8266 sysinfo
+      [Build] Do not use commas in ESP board name
+      [PIO] Update to esp8266/Arduino @ 4.0.1
+      [Rules] Disable rules reorder optimization (#4062)
+      [MCP/PCF] Small optimization in code to set MCP/PCF pin range
+      [2nd Heap] No longer use "2nd heap" on all "beta" builds (unstable)
+      [Build] Disable ESP8266 custom beta debug build due to size
+      [Cleanup] Apply minor suggestions from PVS Studio
+      [PlatformIO] Fix upload size for 16M boards, causing bootloops
+      [ADC] Add support for ESP32 ADC factory calibration
+      [PlatformIO] Fix boot loop issues on 16M ESP32 boards
+      [ADC] Fix building on ESP32-S2
+      [Cleanup] Uncrustify Helpers/Hardware.cpp
+      [ADC] Fix build on ESP8266
+      [ADC] Fix crash when importing older ADC task settings enabling binning
+      [ADC] Add charts to show the factory calibration
+      [ADC] Hide Factory calibration data + fix build on ESP8266
+      [ADC] Add chart axis options (e.g. label)
+      [ADC] Add chart to show simulated ADC to output
+      [ADC] Add attenuation option for ESP32
+      [Cleanup] Remove some unneeded HTML code
+      [ADC] Fix building on builds with LIMIT_BUILD_SIZE
+      [ADC] Add pseudo task values via PLUGIN_GET_CONFIG
+      [ADC] Fix reading + cleanup UI
+      [ADC] Add PluginStats to keep history of values
+      [ADC] Fix build issue on LIMIT_BUILD_SIZE
+      [PluginStats] Add generic statistics for tasks
+      [Plugin Stats] Add option for average over last N samples.
+      [Plugin Stats] Use task specific error value
+      [Plugin Stats] Make Plugin Stats optional per task value
+      [Plugin Stats] Add version transitions to ExtraTaskSettings
+      [Plugin Stats] Enable Plugin Stats for all plugins with task data
+      [Plugin Stats] Show statistics + historic samples on all supported tasks
+      [Plugin Stats] Add missing plugins to use the plugin stats too
+      [PluginStats] Add build flags USES_PLUGIN_STATS and USES_CHART_JS
+      [PluginStats] Exclude PluginStats and ChartJS from NeopixelESP8266 build
+      [ADC] Change order of items shown in statistics
+      [ADC] Use set nr of decimals for stats
+      [Cleanup] Move PluginTaskData_base structs to Pxxx_data_struct.h/.cpp
+      [SVG] Revert changes to draw SVG since we're now using ChartJS
+      [ADC] Add computed output values for peaks + fix typo
+      [ADC] Document new options
+      [Plugin Stats] Add stats to plugins to support stats.
+      [Docs] Document accessing Plugin Stats
+      [Docs] Document typical task setup page and task value stats
+      [Plugin Stats] Enable Stats for Sysinfo tasks
+      [Plugin Stats] Reduce memory usage when no stats are used.
+      [Build] Do not limit build size for custom builds with VCC. (#4129)
+      [Plugin Stats] Make labels more clear.
+      [Plugin Stats] Fix strange issues PLUGIN_INIT
+      [Plugin Stats] Fix editing disabled tasks
+      [Plugin Stats] Fix memory leak / low loop count
+      [ESP32] Add cache for ExtraTaskSettings due to load speed on ESP32
+      [Build] Add apt-get update to build.yml
+      [Rules] Fix matching rules with system variables in on...do
+      [SendToHttp] Add option to add credentials in the URL
+      [Rules] Strip leading zeroes (#4134)
+      [Rules] Move logs regarding rules caching to debug
+      [Build] Disable ESPEasy p2p for minimal OTA builds
+      [sendToHTTP] Use same send_via_http as used in Adv. HTTP controller
+      [Cleanup] Reduce build size ESPEasySerial inline functions to .cpp
+      [ESP32] Move to Espressif32 SDK 2.0.4
+      [ESPEasySerial] Fix case sensitive include
+      [ESPEasySerial] Fix incorrect use of `static` for ESP8266
+      [SendToHTTP] Add Digest Auth
+      [SendToHttp] Clear Basic Auth before using Digest Auth
+      [HTTP] Use the same function for all HTTP controllers + fix timeout
+      [SendToHttp] Generate event with HTTP return code
+      [Web tools] Fix command via Tools page lower case
+      [ESP8285] Clearly state absence of separate ESP8285 builds in README.md
+      [Download] Update using new HTTP Digest Auth implementation
+      [Download] Fix missing include
+      [SendToHTTP] Allow to use http:// formatted URL
+      [HTTP] Document changes to handling HTTP calls + add follow redirects
+      [ADC] Improve factory calibration resolution (ESP32)
+      [ADC] Fix Binning
+      [ADC] Make multipoint charts more intuitive.
+      [ADC] Improve settings UI for Binning + adjust 2-point calibration
+      [ADC] Update docs
+      [ADC] Update documentation
+      [Build] Fix missing #include "ESPEasy_common.h"
+      [Build] Remove Notification code when notifiers disabled
+      [Build] Move some USES_xxx checks and add missing ESPEasy_common.h
+      [Dallas] Fix Dallas 1Wire plugins on ESP32
+      [Dallas] Reduce iRAM usage on ESP8266
+      [NewPing] Rename library from NewPingESP8266 to NewPing
+      [NewPing] Update Library to 1.9.4
+      [NewPing] Re-apply ESPEasy specific additions to NewPing library
+      [NewPing] Use Direct GPIO access to reduce jitter on ultrasonic sensors
+      [DHT] Use Direct GPIO access for DHTxx sensors
+      [DHT] Remove timing critical aspects from reading DHT sensors
+      [DHT] Remove short calls to delayMicroseconds
+      [DHT] Add delay right after waking sensor
+      [DHT] Add missing initialization
+      [DHT] Fix using correct index when recording timings + comments update
+      [DHT] Fix GPIO not yet set to input when DHT wake up.
+      [DHT] Fix switching pinMode(INPUT_PULLUP) way too slow
+      [Direct GPIO] Reduce iRAM usage
+      [DHT] Set the GPIO pull-up resistor explicitly
+      [DHT] Forgot to disable logic analyzer debug pin
+      Revert accidental commit of pre_custom_esp82xx.py
+      [Dallas] Fine tune timings for Dallas sensors
+      [Direct GPIO] Fix using GPIO-16 on ESP8266 (#4175)
+      [Dallas] Add retry to init read or collect data from temp sensor
+      Allow to use leading zeroes on HEX formatted strings
+      [ESP32] Move to framework core 2.0.4.1
+      [PulseCounter] Make ISR function smaller
+      [PulseCounter] Use direct GPIO access to read pin state
+      [PulseCount] Enable PluginStats for pulse counter
+      [Cleanup] Fix some signed/unsigned warnings
+      [Task Settings Cache] Fix save taskValueNames on ESP32
+
+Ton (1):
+      libraries/ITG3205: Missing 'paragraph' from library\nITG3205: Missing 'url' from library
+
+Ton Huisman (72):
+      [Docs] Add missing Tools/Advanced (Rules) screenshot
+      [Docs] Update extensions list for VSCode, remove Atom reference, update some text
+      [Docs] Fix some heading level warnings
+      [Docs] Update styling contrast, add gray and changed options, Retired plugin category, apply changed where appropriate
+      [Docs] Add improved reference to open PIO Terminal
+      [Docs] Updates on writing documentation, remove unused Linux pdf generation setup
+      [P128] Add Max brightness setting
+      [P128] Update documentation
+      [P128] Improvements: Rename variable
+      [Docs] Procedure for configuring a RTC chip
+      [Docs] Add alternatives for RTC configuration, update Rules options after recent change
+      [P116] Add support for ST7735 80x160px with inverted color
+      [P087] Add 'Serial Config' options
+      [P087] Lower minimum baudrate to 300 from 2400
+      [Helpers] enable parseString() family of functions optionally to not trim off white-space
+      [P087] Don't trim white-space from serialproxy_write command argument so f.e. CR/LF can be used to terminate a message
+      [TaskCache] Fix for TaskName not always loaded in cache
+      [TaskCache] Simplify code
+      [P128] [Build] Make FakeTV effect compile-time optional
+      [P128] Update documentation
+      [P128] Fix compiler warning
+      [P128] Fix typo (it's been a hot day)
+      [Build] Rename TEST builds to COLLECTION to reduce confusion about build-names
+      [Build] Remove TESTING tag from Stable plugins
+      [Build] Remove TESTING tag from Stable plugins, fix some plugin names
+      [Build] Update documentation to use COLLECTION instead of TESTING
+      [Build] Some documentation improvements
+      [Build] Update README.md and fix a documentation typo
+      [Build] Change FEATURE_SD to use 0/1 state
+      [Build] Change FEATURE_ARDUINO_OTA to use 0/1 state
+      [Build] Rename USE_DOWNLOAD to FEATURE_DOWNLOAD and use 0/1 state
+      [Build] Rename USE_CUSTOM_PROVISIONING to FEATURE_CUSTOM_PROVISIONING and use 0/1 state
+      [Build] Rename USE_SETTINGS_ARCHIVE to FEATURE_SETTINGS_ARCHIVE and use 0/1 state
+      [Build] Rename USE_TRIGONOMETRIC_FUNCTIONS_RULES to FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES and use 0/1 state
+      [Build] Change FEATURE_I2CMULTIPLEXER to use 0/1 state
+      [Build] Rename USES_SSDP to FEATURE_SSDP and use 0/1 state
+      [Build] Rename USES_TIMING_STATS to FEATURE_TIMING_STATS and use 0/1 state
+      [Build] Rename USE_EXT_RTC to FEATURE_EXT_RTC and use 0/1 state
+      [Build] Rename ENABLE_TOOLTIPS to FEATURE_TOOLTIPS and use 0/1 state
+      [Build] Fix typo in FEATURE_I2CMULTIPLEXER check
+      [Sysinfo json] Fix compilation error
+      [Build] Add check for renamed #define variables
+      [Build] Rename HAS_ETHERNET to FEATURE_ETHERNET and use 0/1 state
+      [Build] Move checks file to CustomBuild folder, move include to ESPEasy.ino to show warnings only once
+      [Build] Rename USES_DOMOTICZ to FEATURE_DOMOTICZ and use 0/1 state
+      [Build] Rename USES_FHEM to FEATURE_FHEM and use 0/1 state
+      [Build] Rename USES_FHEM to FEATURE_FHEM and use 0/1 state
+      [Build] Rename USES_HOMEASSISTANT_OPENHAB to FEATURE_HOMEASSISTANT_OPENHAB and use 0/1 state
+      [Build] Rename USES_PLUGIN_STATS to FEATURE_PLUGIN_STATS and use 0/1 state
+      [Build] Rename USES_CHART_JS to FEATURE_CHART_JS and use 0/1 state
+      [Build] Rename USE_SERVO to FEATURE_SERVO and use 0/1 state
+      [Build] Rename USE_SERVO to FEATURE_SERVO and use 0/1 state
+      [Build] Rename USE_RTTTL to FEATURE_RTTTL and use 0/1 state
+      [Build] Rename USE_RTTTL to FEATURE_RTTTL and use 0/1 state
+      [Build] Rename USE_I2C_DEVICE_SCAN to FEATURE_I2C_DEVICE_SCAN and use 0/1 state
+      [Build] Move checks file to CustomBuild folder, warnings will probably show multiple times
+      [Build] Remove unused #define
+      [Build] Change FEATURE_MDNS to use 0/1 state
+      [Build] Add some missing #define featureflag 0
+      [Build] Rename USES_NOTIFIER to FEATURE_NOTIFIER and use 0/1 state
+      [Build] Add check for FEATURE_MDNS and USES_NOTIFIER
+      [Build] Rename USES_MODBUS to FEATURE_MODBUS and use 0/1 state
+      [Build] Rename USE_NON_STANDARD_24_TASKS to FEATURE_NON_STANDARD_24_TASKS and use 0/1 state
+      [Build] Rename USES_PACKED_RAW_DATA to FEATURE_PACKED_RAW_DATA and use 0/1 state
+      [Build] Rename USES_BLYNK to FEATURE_BLYNK and use 0/1 state
+      [Build] Fix typo in USES_BLYNK to FEATURE_BLYNK
+      [Build] Change FEATURE_ADC_VCC to use 1/0 instead of true/false, fix issues with test for FEATURE_ADC_VCC active
+      [P037] Fix build errors on more/less limited builds, apply uncrustify improvements
+      [P037] Fix typo
+      [Build] Change FEATURE_REPORTING to use 1/0
+      [Build] Change FEATURE_DNS_SERVER to use 1/0 state
+      [Build] Correct a few FEATURE_flag checks
+
+dependabot[bot] (6):
+      Bump actions/github-script from 4 to 6
+      Bump actions/setup-python from 2 to 4
+      Bump actions/upload-artifact from 2 to 3
+      Bump actions/cache from 2 to 3
+      Bump actions/download-artifact from 2 to 3
+      Bump actions/checkout from 2 to 3
+
+fmuntean (9):
+      Allow sysinfo_json page to be enabled separately from the new Web UI
+      add support for: DEFAULT_MQTT_DELETE_OLDEST, DEFAULT_CONTROLLER_MUST_CHECK_REPLY flags
+      renamed DEFAULT_MQTT_DELETE_OLDEST to DEFAULT_CONTROLLER_DELETE_OLDEST
+      used addGpioHtml
+      Feature Flagging FEATURE_ESPEASY_P2P the ESP EASY P2P custom protocol
+      [Fix] rename to FEATURE_ESPEASY_P2P
+      enabled when PLUGIN_BUILD_CUSTOM  is not set
+      [FEATURE_ESPEASY_P2P] enable it by default if not defined
+      [Fix] Notification Page to display GPIO
+
+naveen (2):
+      chore: Set permissions for GitHub actions
+      chore: Included githubactions in the dependabot config
+
+
+-------------------------------------------------
 Changes in release mega-20220616 (since mega-20220427)
 -------------------------------------------------
 

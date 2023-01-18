@@ -17,7 +17,9 @@
 
 # include "src/Helpers/ESPEasy_time_calc.h"
 
+#ifndef BUILD_NO_DEBUG
 # define P003_PULSE_STATS_DEFAULT_LOG_LEVEL  LOG_LEVEL_DEBUG
+#endif
 # define P003_PULSE_STATS_ADHOC_LOG_LEVEL    LOG_LEVEL_INFO
 
 # define PLUGIN_003
@@ -51,9 +53,6 @@
 # define P003_CT_INDEX_TOTAL                2
 # define P003_CT_INDEX_COUNTER_TOTAL        3
 
-bool validIntFromString(const String& tBuf,
-                        int         & result);
-
 
 boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -74,6 +73,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].PluginLogsPeaks    = true;
       break;
     }
 
@@ -99,13 +100,13 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Debounce Time (mSec)"), F("p003_debounce")
+      addFormNumericBox(F("Debounce Time (mSec)"), F("debounce")
                         , PCONFIG(P003_IDX_DEBOUNCETIME));
 
       {
         uint8_t choice  = PCONFIG(P003_IDX_COUNTERTYPE);
         const __FlashStringHelper *options[P003_NR_COUNTERTYPES] = P003_COUNTERTYPE_LIST;
-        addFormSelector(F("Counter Type"), F("p003_countertype"), P003_NR_COUNTERTYPES, options, nullptr, choice);
+        addFormSelector(F("Counter Type"), F("countertype"), P003_NR_COUNTERTYPES, options, nullptr, choice);
         if (choice != 0) {
           addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));
         }
@@ -113,7 +114,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
       Internal_GPIO_pulseHelper::addGPIOtriggerMode(
         F("Mode Type"), 
-        F("p003_raisetype"), 
+        F("raisetype"), 
         static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE)));
 
       success = true;
@@ -122,9 +123,9 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(P003_IDX_DEBOUNCETIME) = getFormItemInt(F("p003_debounce"));
-      PCONFIG(P003_IDX_COUNTERTYPE)  = getFormItemInt(F("p003_countertype"));
-      PCONFIG(P003_IDX_MODETYPE)     = getFormItemInt(F("p003_raisetype"));
+      PCONFIG(P003_IDX_DEBOUNCETIME) = getFormItemInt(F("debounce"));
+      PCONFIG(P003_IDX_COUNTERTYPE)  = getFormItemInt(F("countertype"));
+      PCONFIG(P003_IDX_MODETYPE)     = getFormItemInt(F("raisetype"));
       success                        = true;
       break;
     }
@@ -133,7 +134,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
     {
       Internal_GPIO_pulseHelper::pulseCounterConfig config;
       config.setDebounceTime(PCONFIG(P003_IDX_DEBOUNCETIME));
-      config.gpio             = Settings.TaskDevicePin1[event->TaskIndex];
+      config.gpio             = CONFIG_PIN1;
       config.taskIndex        = event->TaskIndex;
       config.interruptPinMode = static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE));
       config.pullupPinMode    = Settings.TaskDevicePin1PullUp[event->TaskIndex] ? INPUT_PULLUP : INPUT;
@@ -147,7 +148,9 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P003_data) {
         #ifdef PULSE_STATISTIC
+        #ifndef BUILD_NO_DEBUG
         P003_data->pulseHelper.setStatsLogLevel(P003_PULSE_STATS_DEFAULT_LOG_LEVEL);
+        #endif
         #endif
 
         // Restore the total counter from the unused 4th UserVar value.
@@ -180,13 +183,13 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           String log; 
           if (log.reserve(20)) {
             log += F("INIT : PulsePin: "); 
-            log += Settings.TaskDevicePin1[event->TaskIndex];
+            log += CONFIG_PIN1;
             addLogMove(LOG_LEVEL_INFO, log);
           }
         }
 
         // set up device pin and estabish interupt handlers
-        P003_data->pulseHelper.init();
+        success = P003_data->pulseHelper.init();
       }
       break;
     }
@@ -246,8 +249,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         const String command      = parseString(string, 1);
         bool   mustCallPluginRead = false;
 
-        const bool cmd_resetpulsecounter    = command == F("resetpulsecounter");
-        const bool cmd_setpulsecountertotal = command == F("setpulsecountertotal");
+        const bool cmd_resetpulsecounter    = command.equals(F("resetpulsecounter"));
+        const bool cmd_setpulsecountertotal = command.equals(F("setpulsecountertotal"));
 
         if (cmd_resetpulsecounter || cmd_setpulsecountertotal)
         {
@@ -288,7 +291,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
           success = true;
         }
-        else if (command == F("logpulsestatistic"))
+        else if (command.equals(F("logpulsestatistic")))
         {
           # ifdef PULSE_STATISTIC
 
@@ -301,8 +304,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           //       i = increase the log level for regular statstic logs to "info"
 
           const String subcommand = parseString(string, 2);
-          const bool sub_i = subcommand == F("i");
-          const bool sub_r = subcommand == F("r");
+          const bool sub_i = subcommand.equals(F("i"));
+          const bool sub_r = subcommand.equals(F("r"));
 
           if ((sub_i) || (sub_r) || (subcommand.isEmpty())) {
             P003_data->pulseHelper.doStatisticLogging(P003_PULSE_STATS_ADHOC_LOG_LEVEL);
@@ -339,7 +342,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       P003_data_struct *P003_data =
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));

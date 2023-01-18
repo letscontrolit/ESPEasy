@@ -27,6 +27,7 @@
 
 // -V::569
 
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -166,17 +167,51 @@ unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHex
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
-String formatToHex(unsigned long value, const __FlashStringHelper * prefix) {
+void appendHexChar(uint8_t data, String& string)
+{
+  const char *hex_chars = "0123456789abcdef";
+  string += hex_chars[(data >> 4) & 0xF];
+  string += hex_chars[(data) & 0xF];
+}
+
+String formatToHex_array(const uint8_t* data, size_t size)
+{
+  String res;
+  res.reserve(2 * size);
+  for (size_t i = 0; i < size; ++i) {
+    appendHexChar(data[i], res);
+  }
+  return res;
+}
+
+String formatToHex(unsigned long value, 
+                   const __FlashStringHelper * prefix,
+                   unsigned int minimal_hex_digits) {
   String result = prefix;
   String hex(value, HEX);
 
   hex.toUpperCase();
+  if (hex.length() < minimal_hex_digits) {
+    const size_t leading_zeros = minimal_hex_digits - hex.length();
+    for (size_t i = 0; i < leading_zeros; ++i) {
+      result += '0';
+    }
+  }
   result += hex;
   return result;
 }
 
-String formatToHex(unsigned long value) {
-  return formatToHex(value, F("0x"));
+String formatToHex(unsigned long value,
+                   const __FlashStringHelper * prefix) {
+  return formatToHex(value, prefix, 0);
+}
+
+String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
+  return formatToHex(value, F("0x"), minimal_hex_digits);
+}
+
+String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
+  return formatToHex(value, F(""), minimal_hex_digits);
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
@@ -242,6 +277,10 @@ void removeExtraNewLine(String& line) {
   while (line.endsWith(F("\r\n\r\n"))) {
     line.remove(line.length() - 2);
   }
+}
+
+void removeChar(String& line, char character) {
+  line.replace(String(character), EMPTY_STRING);
 }
 
 void addNewLine(String& line) {
@@ -517,16 +556,41 @@ String to_json_value(const String& value, bool wrapInQuotes) {
   }
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
-    if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
-      // Must replace characters, so make a deepcopy
-      String tmpValue(value);
-      tmpValue.replace('\n', '^');
-      tmpValue.replace('\r', '^');
-      tmpValue.replace('"',  '\'');
-      return wrap_String(tmpValue, '"');
-    } else {
-      return wrap_String(value, '"');
+
+    // First we check for not allowed special characters.
+    const size_t val_length = value.length();
+    for (size_t i = 0; i < val_length; ++i) {
+      switch (value[i]) {
+        case '\n':
+        case '\r':
+        case '\t':
+        case '\\':
+        case '\b':
+        case '\f':
+        case '"':
+        {
+          // Special characters not allowed in JSON:
+          //  \b  Backspace (ascii code 08)
+          //  \f  Form feed (ascii code 0C)
+          //  \n  New line
+          //  \r  Carriage return
+          //  \t  Tab
+          //  \"  Double quote
+          //  \\  Backslash character
+          // Must replace characters, so make a deepcopy
+          String tmpValue(value);
+          tmpValue.replace('\n', '^');
+          tmpValue.replace('\r', '^');
+          tmpValue.replace('\t', ' ');
+          tmpValue.replace('\\', '^');
+          tmpValue.replace('\b', '^');
+          tmpValue.replace('\f', '^');
+          tmpValue.replace('"',  '\'');
+          return wrap_String(tmpValue, '"');
+        }
+      }
     }
+    return wrap_String(value, '"');
   } 
   // It is a numerical
   return value;
@@ -639,6 +703,10 @@ String to_internal_string(const String& input, char replaceSpace) {
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
+String parseString(const char * string, uint8_t indexFind, char separator, bool trimResult) {
+  return parseString(String(string), indexFind, separator, trimResult);
+}
+
 String parseString(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result = parseStringKeepCase(string, indexFind, separator, trimResult);
 
@@ -784,7 +852,6 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 String URLEncode(const String& msg)
 {
-  const char *hex = "0123456789abcdef";
   String encodedMsg;
 
   const size_t msg_length = msg.length();
@@ -799,8 +866,7 @@ String URLEncode(const String& msg)
       encodedMsg += ch;
     } else {
       encodedMsg += '%';
-      encodedMsg += hex[ch >> 4];
-      encodedMsg += hex[ch & 15];
+      appendHexChar(ch, encodedMsg);
     }
   }
   return encodedMsg;
@@ -943,6 +1009,9 @@ void parseSystemVariables(String& s, bool useURLencode)
 
 void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)
 {
+  if (s.indexOf('%') == -1) {
+    return;
+  }
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
   if (validTaskIndex(event->TaskIndex)) {
@@ -960,10 +1029,12 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
     }
   }
 
-  if (validTaskIndex(event->TaskIndex)) {
-    repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
-  } else {
-    repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
+  if (s.indexOf(F("%tskname%")) != -1) {
+    if (validTaskIndex(event->TaskIndex)) {
+      repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
+    } else {
+      repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
+    }
   }
 
   const bool vname_found = s.indexOf(F("%vname")) != -1;
@@ -1091,8 +1162,9 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2day%"),  toString(minutesToDay(data.arg1), 2))
   SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(data.arg1))
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
+  SMART_CONV(F("%c_m2hcm%"),  minutesToHourColonMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
-  SMART_CONV(F("%c_2hex%"),   formatToHex(data.arg1, F("")))
+  SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
   #undef SMART_CONV
 
   // Conversions with 2 parameters

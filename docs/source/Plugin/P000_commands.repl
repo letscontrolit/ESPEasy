@@ -112,6 +112,14 @@
 
     ``Debug,<1-4>``"
     "
+    Dec","
+    :red:`Internal`","
+    Decrement the value of variable n (1..INT_MAX) by 1 or an optional value.
+
+    ``Dec,<n>[,<value>]`` (``value`` = 1 by default)
+    
+    See also ``Let`` and ``Inc``."
+    "
     DeepSleep","
     :red:`Internal`","
     Switch the node to deep sleep.
@@ -191,6 +199,14 @@
 
     "
     "
+    Inc","
+    :red:`Internal`","
+    Increment the value of variable n (1..INT_MAX) by 1 or an optional value.
+
+    ``Inc,<n>[,<value>]`` (``value`` = 1 by default)
+    
+    See also ``Let`` and ``Dec``."
+    "
     IP","
     :red:`Internal`","
     Get or set IP address
@@ -203,9 +219,11 @@
     "
     Let","
     :red:`Internal`","
-    Set the value of n (1..16).
+    Set the value of variable n (1..INT_MAX).
 
-    ``Let,<n>,<value>``"
+    ``Let,<n>,<value>``
+    
+    See also ``Inc`` and ``Dec``."
     "
     Load","
     :red:`Internal`","
@@ -376,15 +394,39 @@
     :green:`Rules`","
     Send command to other ESP (using UDP)
 
-    ``SendTo,<unit nr>,<command>``"
+    ``SendTo,<unit nr>,<command>``
+    
+    If the ``<command>`` contains comma's or spaces, it should be quoted, like ``SendTo,<unit nr>,'<command>'``, the usual quotes can be used, double quotes, single quotes or backticks.
+    "
     "
     SendToHTTP","
     :green:`Rules`","
-    Send command to other network device using HTTP
+    Send command to other network device using HTTP (not HTTPS!)
 
-    ``SendToHTTP,<IP address>,<Portnumber>,<command>``
+    ``<host>`` can be either domain name or IP.
 
-    ``SendToHTTP,<domain>,<Portnumber>,</url>``"
+    ``<uri>`` is everything after the ``<host>`` in a normal url. 
+
+    Syntax:
+
+    ``SendToHTTP,<host>,<Portnumber>,<uri>``
+
+    ``SendToHTTP,<user>:<pass>@<host>,<Portnumber>,<uri>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<host>/</url>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<user>:<pass>@<host>/</url>``  Added: 2022/07/23
+
+    ``SendToHTTP,http://<host>:<Portnumber>/</url>``  Added: 2022/07/23
+    
+    ``SendToHTTP,http://<user>:<pass>@<host>:<Portnumber>/</url>``  Added: 2022/07/23
+
+    Example:
+
+    ``sendtohttp,192.168.10.114,80,'control?cmd=event,poff'``
+    
+    On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
+    "
     "
     SendToUDP","
     :green:`Rules`","

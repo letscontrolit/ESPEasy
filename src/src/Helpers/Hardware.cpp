@@ -19,35 +19,48 @@
 #include "../Helpers/StringConverter.h"
 
 
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif // if defined(ESP8266)
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif // if defined(ESP32)
+
 // #include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32
   # include <soc/soc.h>
   # include <soc/efuse_reg.h>
+  # include <soc/spi_reg.h>
+  # include <soc/rtc.h>
 
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
-    #  if CONFIG_IDF_TARGET_ESP32     // ESP32/PICO-D4
-      #   include <esp32/rom/spi_flash.h>
-      #   include <esp32/spiram.h>
-    #  elif CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2
+    #  if CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
       #   include <esp32s2/rom/spi_flash.h>
       #   include <esp32s2/spiram.h>
     #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
       #   include <esp32c3/rom/spi_flash.h>
       #   include <esp32c3/spiram.h>
-    #  else // if CONFIG_IDF_TARGET_ESP32
+    #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
+      #   include <esp32/rom/spi_flash.h>
+      #   include <esp32/spiram.h>
+    #  else // if CONFIG_IDF_TARGET_ESP32S2
       #   error Target CONFIG_IDF_TARGET is not supported
-    #  endif // if CONFIG_IDF_TARGET_ESP32
+    #  endif // if CONFIG_IDF_TARGET_ESP32S2
   # else // ESP32 Before IDF 4.0
     #  include <rom/spi_flash.h>
-  # endif // if ESP_IDF_VERSION_MAJOR > 3
+  # endif    // if ESP_IDF_VERSION_MAJOR > 3
 
-#endif // ifdef ESP32
+#endif       // ifdef ESP32
 
 
 #if FEATURE_SD
 # include <SD.h>
 #endif // if FEATURE_SD
+
+
+#include <SPI.h>
+#include <Wire.h>
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -87,6 +100,10 @@ void hardwareInit()
           uint8_t mode  = PIN_MODE_UNDEFINED;
           int8_t  init  = 0;
 
+          #ifdef ESP32
+          gpio_reset_pin(static_cast<gpio_num_t>(gpio));
+          #endif
+          
           switch (bootState)
           {
             case PinBootState::Default_state:
@@ -243,7 +260,7 @@ void initI2C() {
       #if defined(ESP8266)
     Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
       #endif // if defined(ESP8266)
-      #ifdef ESP32S2
+      #ifdef ESP32
     Wire.setTimeOut(Settings.WireClockStretchLimit);
       #endif // ifdef ESP32S2
   }
@@ -316,20 +333,31 @@ void I2CForceResetBus_swap_pins(uint8_t address) {
 }
 
 void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq) {
+  #ifdef ESP32
+  uint32_t lastI2CClockSpeed = Wire.getClock();
+  #else // ifdef ESP32
   static uint32_t lastI2CClockSpeed = 0;
-  static int8_t last_sda            = -1;
-  static int8_t last_scl            = -1;
+  #endif // ifdef ESP32
+  static int8_t last_sda = -1;
+  static int8_t last_scl = -1;
 
   if ((clockFreq == lastI2CClockSpeed) && (sda == last_sda) && (scl == last_scl)) {
     // No need to change the clock speed.
     return;
   }
+  #ifdef ESP32
+
+  if ((sda != last_sda) || (scl != last_scl)) {
+    Wire.end();
+  }
+  #endif // ifdef ESP32
   lastI2CClockSpeed = clockFreq;
   last_scl          = scl;
   last_sda          = sda;
 
   #ifdef ESP32
-  Wire.begin(sda, scl, clockFreq);
+  Wire.begin(sda, scl, clockFreq); // Will only set the clock when not yet initialized.
+  Wire.setClock(clockFreq);
   #else // ifdef ESP32
   Wire.begin(sda, scl);
   Wire.setClock(clockFreq);
@@ -473,7 +501,11 @@ int lastADCvalue = 0;
 
 int espeasy_analogRead(int pin) {
   if (!WiFiEventData.wifiConnectInProgress) {
-    lastADCvalue = analogRead(A0);
+    #if FEATURE_ADC_VCC
+      lastADCvalue = ESP.getVcc();
+    #else
+      lastADCvalue = analogRead(A0);
+    #endif // if FEATURE_ADC_VCC
   }
   return lastADCvalue;
 }
@@ -491,8 +523,10 @@ void initADC() {
   #  define DEFAULT_VREF 1100
   # endif // ifndef DEFAULT_VREF
   const adc_bits_width_t adc_bit_width = static_cast<adc_bits_width_t>(ADC_WIDTH_MAX - 1);
+
   for (size_t atten = 0; atten < ADC_ATTEN_MAX; ++atten) {
-    adc1_calibration_type = esp_adc_cal_characterize(ADC_UNIT_1, static_cast<adc_atten_t>(atten), adc_bit_width, DEFAULT_VREF, &adc_chars[atten]);
+    adc1_calibration_type =
+      esp_adc_cal_characterize(ADC_UNIT_1, static_cast<adc_atten_t>(atten), adc_bit_width, DEFAULT_VREF, &adc_chars[atten]);
   }
 }
 
@@ -601,8 +635,90 @@ uint32_t getFlashRealSizeInBytes() {
   return res;
 }
 
+#ifdef ESP32
+uint32_t getXtalFrequencyMHz() {
+  return rtc_clk_xtal_freq_get();
+}
+#endif // ifdef ESP32
+
+
 uint32_t getFlashChipSpeed() {
+  #ifdef ESP8266
   return ESP.getFlashChipSpeed();
+  #else // ifdef ESP8266
+  const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(FSPI));
+
+  if (spi_clock & BIT(31)) {
+    // spi_clk is equal to system clock
+    return getApbFrequency();
+  }
+  return spiClockDivToFrequency(spi_clock);
+  #endif // ifdef ESP8266
+}
+
+const __FlashStringHelper* getFlashChipMode() {
+#ifdef ESP8266
+
+  switch (ESP.getFlashChipMode()) {
+    case FM_QIO:     return F("QIO");
+    case FM_QOUT:    return F("QOUT");
+    case FM_DIO:     return F("DIO");
+    case FM_DOUT:    return F("DOUT");
+    case FM_UNKNOWN: break;
+  }
+  return F("Unknown");
+#else // ifdef ESP8266
+
+  // Source: https://github.com/letscontrolit/ESPEasy/pull/4200#issuecomment-1221607332
+  // + discussion: https://github.com/espressif/arduino-esp32/issues/7140#issuecomment-1222274417
+  const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
+
+  # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
+    #  if CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
+      if (spi_ctrl & SPI_FREAD_OCT) {  
+        return F("OCT");
+      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
+        return F("QIO");
+      } else if (spi_ctrl & SPI_FREAD_DUAL) {
+        return F("DIO");
+      }
+      return F("DOUT");
+    #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
+      if (spi_ctrl & SPI_FREAD_QUAD) { 
+        return F("QIO");
+      } else if (spi_ctrl & SPI_FREAD_DUAL) {
+        return F("DIO");
+      }
+      return F("DOUT");
+    #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
+      if (spi_ctrl & SPI_FREAD_QIO) {  
+        return F("QIO");
+      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
+        return F("QOUT");
+      } else if (spi_ctrl & SPI_FREAD_DIO) {
+        return F("DIO");
+      } else if (spi_ctrl & SPI_FREAD_DUAL) {
+        return F("DOUT");
+      } else if (spi_ctrl & SPI_FASTRD_MODE) {
+        return F("Fast");
+      }
+      return F("Slow");
+    #  endif // if CONFIG_IDF_TARGET_ESP32S2
+  # else // ESP32 Before IDF 4.0
+    if (spi_ctrl & (BIT(24))) {  
+      return F("QIO");
+    } else if (spi_ctrl & (BIT(20))) { 
+      return F("QOUT");
+    } else if (spi_ctrl & (BIT(23))) {
+      return F("DIO");
+    } else if (spi_ctrl & (BIT(14))) {
+      return F("DOUT");
+    } else if (spi_ctrl & (BIT(13))) {
+      return F("Fast");
+    }
+    return F("Slow");
+  # endif    // if ESP_IDF_VERSION_MAJOR > 3
+#endif // ifdef ESP8266
 }
 
 bool puyaSupport() {
@@ -713,7 +829,7 @@ const __FlashStringHelper* getChipModel() {
   bool single_core = (1 == chip_info.cores);
 
   if (chip_model < 2) { // ESP32
-# ifdef CONFIG_IDF_TARGET_ESP32
+# if CONFIG_IDF_TARGET_ESP32
 
     /* esptool:
         def get_pkg_version(self):
@@ -731,32 +847,32 @@ const __FlashStringHelper* getChipModel() {
     switch (pkg_version) {
       case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6:
 
-        if (single_core) { return F("ESP32-S0WDQ6"); }   // Max 240MHz, Single core, QFN 6*6
+        if (single_core) { return F("ESP32-S0WDQ6"); } // Max 240MHz, Single core, QFN 6*6
         else if (rev3)   { return F("ESP32-D0WDQ6-V3"); }  // Max 240MHz, Dual core, QFN 6*6
-        else {             return F("ESP32-D0WDQ6"); }   // Max 240MHz, Dual core, QFN 6*6
+        else {             return F("ESP32-D0WDQ6"); } // Max 240MHz, Dual core, QFN 6*6
       case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5:
 
-        if (single_core) { return F("ESP32-S0WD"); }     // Max 160MHz, Single core, QFN 5*5, ESP32-SOLO-1, ESP32-DevKitC
+        if (single_core) { return F("ESP32-S0WD"); }   // Max 160MHz, Single core, QFN 5*5, ESP32-SOLO-1, ESP32-DevKitC
         else if (rev3)   { return F("ESP32-D0WDQ5-V3"); }  // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32E, ESP32_WROVER-E, ESP32-DevKitC
-        else {             return F("ESP32-D0WDQ5"); }   // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32D, ESP32_WROVER-B, ESP32-DevKitC
+        else {             return F("ESP32-D0WDQ5"); } // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32D, ESP32_WROVER-B, ESP32-DevKitC
       case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:
-        return F("ESP32-D2WDQ5");                        // Max 160MHz, Dual core, QFN 5*5, 2MB embedded flash
+        return F("ESP32-D2WDQ5");                      // Max 160MHz, Dual core, QFN 5*5, 2MB embedded flash
       case 3:
 
         if (single_core) { return F("ESP32-S0WD-OEM"); } // Max 160MHz, Single core, QFN 5*5, Xiaomi Yeelight
         else {             return F("ESP32-D0WD-OEM"); } // Max 240MHz, Dual core, QFN 5*5
       case EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH:
         return F("ESP32-U4WDH");                         // Max 160MHz, Single core, QFN 5*5, 4MB embedded flash, ESP32-MINI-1,
-                                                         // ESP32-DevKitM-1
+      // ESP32-DevKitM-1
       case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4:
 
-        if (rev3)        { return F("ESP32-PICO-V3"); }  // Max 240MHz, Dual core, LGA 7*7, ESP32-PICO-V3-ZERO, ESP32-PICO-V3-ZERO-DevKit
-        else {             return F("ESP32-PICO-D4"); }  // Max 240MHz, Dual core, LGA 7*7, 4MB embedded flash, ESP32-PICO-KIT
+        if (rev3)        { return F("ESP32-PICO-V3"); } // Max 240MHz, Dual core, LGA 7*7, ESP32-PICO-V3-ZERO, ESP32-PICO-V3-ZERO-DevKit
+        else {             return F("ESP32-PICO-D4"); } // Max 240MHz, Dual core, LGA 7*7, 4MB embedded flash, ESP32-PICO-KIT
       case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302:
         return F("ESP32-PICO-V3-02");                    // Max 240MHz, Dual core, LGA 7*7, 8MB embedded flash, 2MB embedded PSRAM,
                                                          // ESP32-PICO-MINI-02, ESP32-PICO-DevKitM-2
     }
-# endif // CONFIG_IDF_TARGET_ESP32
+# endif // if CONFIG_IDF_TARGET_ESP32
     return F("ESP32");
   }
   else if (2 == chip_model) { // ESP32-S2
@@ -780,9 +896,9 @@ const __FlashStringHelper* getChipModel() {
 
     switch (pkg_version) {
       case 0:              return F("ESP32-S2");      // Max 240MHz, Single core, QFN 7*7, ESP32-S2-WROOM, ESP32-S2-WROVER,
-                                                      // ESP32-S2-Saola-1, ESP32-S2-Kaluga-1
+      // ESP32-S2-Saola-1, ESP32-S2-Kaluga-1
       case 1:              return F("ESP32-S2FH2");   // Max 240MHz, Single core, QFN 7*7, 2MB embedded flash, ESP32-S2-MINI-1,
-                                                      // ESP32-S2-DevKitM-1
+      // ESP32-S2-DevKitM-1
       case 2:              return F("ESP32-S2FH4");   // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash
       case 3:              return F("ESP32-S2FN4R2"); // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash, 2MB embedded PSRAM, ,
                                                       // ESP32-S2-MINI-1U, ESP32-S2-DevKitM-1U
@@ -876,7 +992,7 @@ const __FlashStringHelper* getChipModel() {
   return F("ESP32");
 #elif defined(ESP8266)
   return isESP8285() ? F("ESP8285") : F("ESP8266");
-#endif
+#endif // ifdef ESP32
   return F("Unknown");
 }
 
@@ -889,13 +1005,13 @@ bool isESP8285() {
     READ_PERI_REG(0x3ff0005c)
   };
 
-  return (
-      (efuse_blocks[0] & (1 << 4))
-      || (efuse_blocks[2] & (1 << 16))
-  );
-  #else
+  return
+    (efuse_blocks[0] & (1 << 4))
+    || (efuse_blocks[2] & (1 << 16))
+  ;
+  #else // ifdef ESP8266
   return false;
-  #endif
+  #endif // ifdef ESP8266
 }
 
 uint8_t getChipRevision() {
@@ -962,7 +1078,7 @@ bool CanUsePSRAM() {
 # ifdef HAS_PSRAM_FIX
   return true;
 # endif // ifdef HAS_PSRAM_FIX
-# ifdef CONFIG_IDF_TARGET_ESP32
+# if CONFIG_IDF_TARGET_ESP32
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
 
@@ -978,7 +1094,7 @@ bool CanUsePSRAM() {
   }
 #  endif // ESP_IDF_VERSION_MAJOR < 4
 
-# endif // CONFIG_IDF_TARGET_ESP32
+# endif // if CONFIG_IDF_TARGET_ESP32
   return true;
 }
 
@@ -1085,7 +1201,7 @@ void readBootCause() {
     case TG1WDT_CPU_RESET: lastBootCause  = BOOT_CAUSE_EXT_WD; break;
     case SUPER_WDT_RESET:   lastBootCause = BOOT_CAUSE_EXT_WD; break;
     case GLITCH_RTC_RESET:  lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break; // FIXME TD-er: Does this need a different reason?
-    case EFUSE_RESET:       break; // FIXME TD-er: No idea what may cause this reset reason.
+    case EFUSE_RESET:       break;                                            // FIXME TD-er: No idea what may cause this reset reason.
     # endif // ifdef ESP32S2
   }
 }
@@ -1183,10 +1299,9 @@ const __FlashStringHelper* getDeviceModelTypeString(DeviceModel model)
 }
 
 String getDeviceModelString(DeviceModel model) {
-  String result = getDeviceModelBrandString(model);
-
-  result += getDeviceModelTypeString(model);
-  return result;
+  return concat(
+    getDeviceModelBrandString(model), 
+    getDeviceModelTypeString(model));
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
@@ -1324,6 +1439,9 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
 // ********************************************************************************
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
+
+  input = GPIO_IS_VALID_GPIO(gpio);
+  output = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
 
 # ifdef ESP32S2
 
@@ -1469,9 +1587,9 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   #  endif // if FEATURE_ETHERNET
 
-# endif // ifdef ESP32S2
+# endif    // ifdef ESP32S2
 
-  if (UsePSRAM()) {
+  if (FoundPSRAM()) {
     // PSRAM can use GPIO 16 and 17
     // There will be a high frequency signal on those pins (flash frequency)
     // which makes them unusable for other purposes.
@@ -1567,7 +1685,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
       }
     } else {
       warning = true;
-      // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash 
+
+      // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash
       if (gpio == 9) {
         // GPIO9 is internally used to control the flash memory.
         input  = false;
@@ -1997,5 +2116,4 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
   Settings.TaskDevicePin1[taskIndex] = pin1;
   Settings.TaskDevicePin2[taskIndex] = pin2;
   Settings.TaskDevicePin3[taskIndex] = pin3;
-  SaveTaskSettings(taskIndex);
 }

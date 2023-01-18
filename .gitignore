@@ -15,6 +15,7 @@
 pre_extra_script.py
 *.code-workspace
 .pio
+.piopm
 
 ## Project #####################
 lib/readme.txt
@@ -53,6 +54,7 @@ build_output/
 **/__tmpfile.cpp
 
 src/_Custom.h
+src/_*Custom.h
 
 dist/Espressif_flash_download_tool_v3.8.5/logs/
 
@@ -61,3 +63,5 @@ dist/Espressif_flash_download_tool_v3.8.5/dl_temp/bin_tmp/
 dist/Espressif_flash_download_tool_v3.8.5/dl_temp/_temp_by_dltool/
 
 dist/Espressif_flash_download_tool_v3.8.5/configure/esp32/spi_download.conf
+src/CustomIR.h
+

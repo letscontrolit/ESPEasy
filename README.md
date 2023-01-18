@@ -7,7 +7,7 @@ For ways to *support* us, see [this announcement on the forum](https://www.letsc
 # ESPEasy (development branch)
 
 
-Introduction and wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Introduction
+Introduction https://espeasy.readthedocs.io/en/latest/ (and, mostly outdated, wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Introduction)
 
 **MEGA**
 This is the development branch of ESPEasy. All new features go into this branch, and it has become the current stable branch. If you want to do a bugfix, do it on this branch.
@@ -47,6 +47,7 @@ collection_B | Normal + plugin collection B              | Stable + Collection b
 collection_C | Normal + plugin collection C              | Stable + Collection base + set C |
 collection_D | Normal + plugin collection D              | Stable + Collection base + set D |
 collection_E | Normal + plugin collection E              | Stable + Collection base + set E |
+collection_F | Normal + plugin collection F              | Stable + Collection base + set F |
 max          | All available plugins                     | All available                    |
 energy       | All plugins related to energy measurement | Stable + Energy measurement      |
 display      | All plugins related to displays           | Stable + Displays                |
@@ -101,14 +102,14 @@ Flash size | Description                 |
 
 
 *[opt-build-features]* can be any of:
-Build features  | Description                                                              |
-----------------|--------------------------------------------------------------------------|
-LittleFS        | Use LittleFS instead of SPIFFS filesystem (SPIFFS is unstable \> 2 MB)    |
-VCC             | Analog input configured to measure VCC voltage                           |
-OTA             | Arduino OTA (Over The Air) update feature enabled                        |
-Domoticz        | Only Domoticz controllers (HTTP+MQTT) and plugins included               |
-FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included |
-ETH             | Ethernet interface enabled (ESP32 only)                                  |
+Build features  | Description                                                                |
+----------------|----------------------------------------------------------------------------|
+LittleFS        | Use LittleFS instead of SPIFFS filesystem (SPIFFS is unstable \> 2 MB)     |
+VCC             | Analog input configured to measure VCC voltage (ESP8266 only)              |
+OTA             | Arduino OTA (Over The Air) update feature enabled                          |
+Domoticz        | Only Domoticz controllers (HTTP+MQTT) and plugins included                 |
+FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included   |
+ETH             | Ethernet interface enabled (ESP32 only)                                    |
 
 Some example firmware names:
 Firmware name                                       | Hardware                       | Included plugins                 |

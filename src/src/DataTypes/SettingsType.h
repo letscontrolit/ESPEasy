@@ -20,7 +20,7 @@ public:
     SettingsType_MAX
   };
 
-  enum class SettingsFileEnum {
+  enum class SettingsFileEnum : uint8_t {
     FILE_CONFIG_type,
     FILE_NOTIFICATION_type,
     FILE_SECURITY_type,

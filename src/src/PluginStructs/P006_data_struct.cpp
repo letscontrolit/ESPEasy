@@ -48,14 +48,14 @@ bool P006_data_struct::begin()
   return true;
 }
 
-uint16_t P006_data_struct::readRawTemperature(void)
+uint16_t P006_data_struct::readRawTemperature()
 {
   I2C_write8_reg(BMP085_I2CADDR, BMP085_CONTROL, BMP085_READTEMPCMD);
   delay(5);
   return I2C_read16_reg(BMP085_I2CADDR, BMP085_TEMPDATA);
 }
 
-uint32_t P006_data_struct::readRawPressure(void)
+uint32_t P006_data_struct::readRawPressure()
 {
   uint32_t raw;
 
@@ -71,7 +71,7 @@ uint32_t P006_data_struct::readRawPressure(void)
   return raw;
 }
 
-int32_t P006_data_struct::readPressure(void)
+int32_t P006_data_struct::readPressure()
 {
   int32_t  UT, UP, B3, B5, B6, X1, X2, X3, p;
   uint32_t B4, B7;
@@ -80,8 +80,8 @@ int32_t P006_data_struct::readPressure(void)
   UP = readRawPressure();
 
   // do temperature calculations
-  X1 = (UT - (int32_t)(ac6)) * ((int32_t)(ac5)) / pow(2, 15);
-  X2 = ((int32_t)mc * pow(2, 11)) / (X1 + (int32_t)md);
+  X1 = (UT - (int32_t)(ac6)) * ((int32_t)(ac5)) / 32768.0f /*pow(2, 15)*/;
+  X2 = ((int32_t)mc * 2048.0f /*pow(2, 11)*/) / (X1 + (int32_t)md);
   B5 = X1 + X2;
 
   // do pressure calcs
@@ -113,7 +113,7 @@ int32_t P006_data_struct::readPressure(void)
   return p;
 }
 
-float P006_data_struct::readTemperature(void)
+float P006_data_struct::readTemperature()
 {
   int32_t UT, X1, X2, B5; // following ds convention
   float   temp;
@@ -121,10 +121,10 @@ float P006_data_struct::readTemperature(void)
   UT = readRawTemperature();
 
   // step 1
-  X1    = (UT - (int32_t)ac6) * ((int32_t)ac5) / pow(2, 15);
-  X2    = ((int32_t)mc * pow(2, 11)) / (X1 + (int32_t)md);
+  X1    = (UT - (int32_t)ac6) * ((int32_t)ac5) / 32768.0f /*pow(2, 15)*/;
+  X2    = ((int32_t)mc * 2048.0f /*pow(2, 11)*/) / (X1 + (int32_t)md);
   B5    = X1 + X2;
-  temp  = (B5 + 8) / pow(2, 4);
+  temp  = (B5 + 8) / 16.0f /*pow(2, 4)*/;
   temp /= 10;
 
   return temp;

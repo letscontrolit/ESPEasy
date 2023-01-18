@@ -103,8 +103,8 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
           portNames[x]  = 'P';
           portNames[x] += x;
         }
-        addFormSelectorI2C(F("plugin_019_i2c"), 16, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("plugin_019_port"), 8, portNames, portValues, port);
+        addFormSelectorI2C(F("pi2c"), 16, i2cAddressValues, address);
+        addFormSelector(F("Port"), F("pport"), 8, portNames, portValues, port);
         addFormNote(F("PCF8574 uses addresses 0x20..0x27, PCF8574<b>A</b> uses addresses 0x38..0x3F."));
       } else {
         success = intArrayContains(16, i2cAddressValues, event->Par1);
@@ -137,11 +137,11 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      uint8_t i2c = getFormItemInt(F("plugin_019_i2c"));
+      uint8_t i2c = getFormItemInt(F("pi2c"));
 
       if (i2c > 0x27) { i2c -= 0x10; }
 
-      uint8_t port = getFormItemInt(F("plugin_019_port"));
+      uint8_t port = getFormItemInt(F("pport"));
       CONFIG_PORT = (((i2c - 0x20) << 3) + port);
 
       SwitchWebformSave(
@@ -216,8 +216,8 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 
         // setPinState(PLUGIN_ID_019, CONFIG_PORT, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
         savePortStatus(key, newStatus);
+        success = true;
       }
-      success = true;
       break;
     }
 
@@ -311,9 +311,11 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       if ((state != -1) && (CONFIG_PORT >= 0)) {
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
         // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-        if (round(P019_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+        if (lround(P019_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."));
+          #endif
           PCONFIG_LONG(3) = 1;
         }
 
@@ -473,7 +475,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             // Create EVENT with value = 4 for SafeButton false positive detection
-            const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+            const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
             UserVar[event->BaseVarIndex] = 4;
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -570,7 +572,8 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
+    case PLUGIN_DEVICETIMER_IN:
     {
       // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;
@@ -582,28 +585,19 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       tempStatus.state = event->Par2;
       tempStatus.mode  = PIN_MODE_OUTPUT;
 
-      // sp          (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
-      tempStatus.forceMonitor = 1;
+      if (function == PLUGIN_TASKTIMER_IN) {
+        // sp      tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command
+        tempStatus.forceMonitor = 1;
+      } else {
+        tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command  
+      }
       savePortStatus(key, tempStatus);
-      GPIO_PCF_Write(event->Par1, event->Par2);
-
-      break;
-    }
-
-    case PLUGIN_ONLY_TIMER_IN:
-    {
-      // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-      portStatusStruct tempStatus;
-
-      // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_019, event->Par1);
-      tempStatus = globalMapPortStatus[key];
-
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
-      savePortStatus(key, tempStatus);
-      Plugin_019_Write(event->Par1, event->Par2);
+      Scheduler.clearGPIOTimer(PLUGIN_PCF, event->Par1);
+      if (function == PLUGIN_TASKTIMER_IN) {
+        GPIO_PCF_Write(event->Par1, event->Par2);
+      } else {
+        Plugin_019_Write(event->Par1, event->Par2);  
+      }
 
       break;
     }

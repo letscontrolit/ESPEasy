@@ -7,12 +7,14 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
+#if FEATURE_HTTP_CLIENT
 #ifdef ESP8266
 # include <ESP8266HTTPClient.h>
 #endif // ifdef ESP8266
 #ifdef ESP32
 # include <HTTPClient.h>
 #endif // ifdef ESP32
+#endif
 
 
 /*********************************************************************************************\
@@ -139,14 +141,22 @@ bool getSubnetRange(IPAddress& low, IPAddress& high);
 
 bool hasIPaddr();
 
+bool useStaticIP();
+
 // Check connection. Maximum timeout 500 msec.
 bool NetworkConnected(uint32_t timeout_ms);
 
 bool hostReachable(const IPAddress& ip);
 
+#if FEATURE_HTTP_CLIENT
 bool connectClient(WiFiClient& client, const char *hostname, uint16_t port, uint32_t timeout_ms = 100);
 
 bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t timeout_ms = 100);
+#endif // FEATURE_HTTP_CLIENT
+
+void scrubDNS();
+
+bool setDNS(int index, const IPAddress& dns);
 
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms = 1000);
 
@@ -176,6 +186,7 @@ bool splitUserPass_HostPortString(const String& hostPortString, String& user, St
 String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file);
 
 
+#if FEATURE_HTTP_CLIENT
 // Initiate the HTTP connection.
 // Also try to authenticate using either Basic auth or Digest.
 // @retval HTTP return code.
@@ -190,11 +201,11 @@ int http_authenticate(const String& logIdentifier,
                       const String& uri,
                       const String& HttpMethod,
                       const String& header,
-                      const String& postStr);
+                      const String& postStr,
+                      bool          must_check_reply);
 
 
 String send_via_http(const String& logIdentifier,
-                     WiFiClient  & client,
                      uint16_t      timeout,
                      const String& user,
                      const String& pass,
@@ -206,6 +217,7 @@ String send_via_http(const String& logIdentifier,
                      const String& postStr,
                      int         & httpCode,
                      bool          must_check_reply);
+#endif // FEATURE_HTTP_CLIENT
 
 #if FEATURE_DOWNLOAD
 

@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "ESPEasy_common.h"
+#include "include/ESPEasy_config.h"
 
 #include "src/CustomBuild/ESPEasyLimits.h"
 
@@ -41,6 +41,7 @@
 #include "src/Helpers/PortStatus.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
+#include "src/Helpers/StringGenerator_Plugin.h"
 #include "src/Helpers/StringParser.h"
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
@@ -53,7 +54,7 @@
 #include "src/WebServer/HTML_wrappers.h"
 #include "src/WebServer/Markup.h"
 #include "src/WebServer/Markup_Forms.h"
-#include "src/WebServer/WebServer.h"
+#include "src/WebServer/ESPEasy_WebServer.h"
 
 
 // Defines to make plugins more readable.
@@ -102,10 +103,12 @@ void                 initPluginTaskData(taskIndex_t          taskIndex,
                                         PluginTaskData_base *data);
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex);
+PluginTaskData_base* getPluginTaskDataBaseClassOnly(taskIndex_t taskIndex);
 
 bool                 pluginTaskData_initialized(taskIndex_t taskIndex);
 
 String               getPluginCustomArgName(int varNr);
+String               getPluginCustomArgName(const __FlashStringHelper * label, int varNr);
 
 int                  getFormItemIntCustomArgName(int varNr);
 
@@ -115,13 +118,13 @@ int                  getFormItemIntCustomArgName(int varNr);
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
 void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            uint8_t          varNr,
+                            uint8_t       varNr,
                             const __FlashStringHelper * label,
                             const String& value,
                             bool          addTrailingBreak = false);
 
 void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            uint8_t          varNr,
+                            uint8_t       varNr,
                             const String& label,
                             const String& value,
                             bool          addTrailingBreak = false);
@@ -142,10 +145,10 @@ void pluginWebformShowValue(const String& valName,
 // Return if parameter at given paramNr matches given taskIndex.
 bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
-                                          uint8_t          paramNr);
+                                          uint8_t       paramNr);
 
 bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, 
-                                      const String& newline,
+                                      const __FlashStringHelper * newline,
                                       String& description);
 
 int getValueCountForTask(taskIndex_t taskIndex);

@@ -1,0 +1,94 @@
+.. csv-table::
+    :escape: ^
+    :widths: 20, 30
+
+    "
+    Generic variables, available for all ``AdafruitGFX_Helper`` enabled plugins, currently: :ref:`P095_page`, :ref:`P096_page`, :ref:`P116_page`, :ref:`P131_page` and :ref:`P141_page`.
+    ","
+    Generic notes:
+
+    * If an argument has comma's or spaces, then that part should be 'wrapped' in either double quotes ``^"``, single quotes ``^'`` or back-ticks ``^```.
+    * The ``<taskname>`` part is the name of the Device task.
+    * True(1)/False(0) values can optionally return -1 to indicate an invalid request, like a missing Window Id.
+    * All sizes, lengths etc. are returned in pixels.
+    "
+    "
+    ``[<taskname>#win]``
+    ","
+    Get the currently active Window Id, expected range: 0..255.
+    "
+    "
+    ``[<taskname>#iswin,<windowId>]``
+    ","
+    Is the request Window Id valid, expected result: 1 = true, 0 = false.
+    "
+    "
+    ``[<taskname>#width]``
+    ","
+    Get the width of the currently active Window and rotation, expected range 0..<largest display dimension>.
+    "
+    "
+    ``[<taskname>#height]``
+    ","
+    Get the height of the currently active Window and rotation, expected range 0..<largest display dimension>.
+    "
+    "
+    ``[<taskname>#length,^"<text to measure>^"]``
+    ","
+    Get the length of the text in pixels for the current font and text scaling. Needs quotes if text contains space(s), comma(s) or quote(s).
+    "
+    "
+    ``[<taskname>#textheight,^"<text to measure>^"]``
+    ","
+    Get the height of the text in pixels for the current font and text scaling. Needs quotes if the text contains space(s), comma(s) or quote(s).
+    "
+    "
+    ``[<taskname>#rot]``
+    ","
+    Get the currently active rotation, expected range 0..3 (0 = 0 degrees, 1 = +90 degrees, 2 = +180 degrees, 3 = +270 degrees).
+    "
+    "
+    ``[<taskname>#txs]``
+    ","
+    Get the currently active text scaling, expected range 1..10, limited to the max. font scaling allowed for the display.
+    "
+    "
+    ``[<taskname>#tpm]``
+    ","
+    Get the currently active text print mode, expected range 0..3, see the ``tpm`` subcommand for details.
+    "
+
+.. csv-table::
+    :escape: ^
+    :widths: 20, 10
+
+    "
+    Example rules for centering a value (time) in a window:
+
+    .. code:: none
+
+      on centertime do  // NB: Comments & extra spaces should be removed to reduce rules size!
+        if [st7796#iswin,%eventvalue1|2%]=1 // default window: 2
+          let,120,[st7796#win]              // store current window
+          st77xx,win,%eventvalue1|2%        // switch to window
+          let,121,[st7796#txs]              // store textscaling
+          st77xx,txs,3                      // set text scaling
+          let,122,[st7796#rot]              // store rotation
+          st77xx,rot,%eventvalue2|0%        // set rotation, default: 0
+          let,123,([st7796#width]-[st7796#length,%systm_hm%])/2      // (width - textlength)/2
+          let,124,([st7796#height]-[st7796#textheight,%systm_hm%])/2 // (height - textheight)/2
+          st77xx,txtfull,[int#123],[int#124],3,red,black,%systm_hm%  // Display time red on black
+          st77xx,rot,%v122%                 // restore rotation
+          st77xx,txs,%v121%                 // restore text scaling
+          st77xx,win,%v120%                 // restore window
+        endif
+      endon
+      on Clock#Time=All,**:** do
+        asyncevent,centertime=2             // Update the display every minute
+      endon
+
+    ","
+    Display Task is named ``st7796``, using trigger ``st77xx``
+
+    Usage: ``asyncevent,centertime[=<win>[,<rot>]]``
+    "

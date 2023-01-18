@@ -1,6 +1,8 @@
 #include "../WebServer/TimingStats.h"
 
-#include "../WebServer/WebServer.h"
+#if defined(WEBSERVER_TIMINGSTATS) && FEATURE_TIMING_STATS
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
@@ -11,7 +13,6 @@
 #include "../Globals/Protocol.h"
 #include "../Globals/RamTracker.h"
 
-#if defined(WEBSERVER_TIMINGSTATS) && FEATURE_TIMING_STATS
 #include "../Globals/Device.h"
 
 
@@ -42,8 +43,8 @@ void handle_timingstats() {
   const float timespan = timeSinceLastReset / 1000.0f;
   addFormHeader(F("Statistics"));
   addRowLabel(F("Start Period"));
-  struct tm startPeriod = node_time.addSeconds(node_time.tm, -1.0f * timespan, false);
-  addHtml(ESPEasy_time::getDateTimeString(startPeriod, '-', ':', ' ', false));
+  struct tm startPeriod = node_time.addSeconds(node_time.local_tm, -1.0f * timespan, true, true);
+  addHtml(formatDateTimeString(startPeriod, '-', ':', ' ', false));
   addRowLabelValue(LabelType::LOCAL_TIME);
   addRowLabel(F("Time span"));
   addHtmlFloat(timespan);

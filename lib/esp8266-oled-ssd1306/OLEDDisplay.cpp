@@ -432,7 +432,7 @@ void OLEDDisplay::drawStringInternal(int16_t xMove, int16_t yMove, char* text, u
 }
 
 
-void OLEDDisplay::drawString(int16_t xMove, int16_t yMove, String strUser) {
+void OLEDDisplay::drawString(int16_t xMove, int16_t yMove, const String& strUser) {
   uint16_t lineHeight = pgm_read_byte(fontData + HEIGHT_POS);
 
   // char* text must be freed!
@@ -461,7 +461,7 @@ void OLEDDisplay::drawString(int16_t xMove, int16_t yMove, String strUser) {
   free(text);
 }
 
-void OLEDDisplay::drawStringMaxWidth(int16_t xMove, int16_t yMove, uint16_t maxLineWidth, String strUser) {
+void OLEDDisplay::drawStringMaxWidth(int16_t xMove, int16_t yMove, uint16_t maxLineWidth, const String& strUser) {
   uint16_t firstChar  = pgm_read_byte(fontData + FIRST_CHAR_POS);
   uint16_t lineHeight = pgm_read_byte(fontData + HEIGHT_POS);
 
@@ -524,7 +524,7 @@ uint16_t OLEDDisplay::getStringWidth(const char* text, uint16_t length) {
   return max(maxWidth, stringWidth);
 }
 
-uint16_t OLEDDisplay::getStringWidth(String strUser) {
+uint16_t OLEDDisplay::getStringWidth(const String& strUser) {
   char* text = utf8ascii(strUser);
   uint16_t length = strlen(text);
   uint16_t width = getStringWidth(text, length);
@@ -808,7 +808,7 @@ uint8_t OLEDDisplay::utf8ascii(uint8_t ascii) {
 }
 
 // You need to free the char!
-char* OLEDDisplay::utf8ascii(String str) {
+char* OLEDDisplay::utf8ascii(const String& str) {
   uint16_t k = 0;
   uint16_t length = str.length() + 1;
 

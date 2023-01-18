@@ -1,17 +1,78 @@
 #include "../PluginStructs/P095_data_struct.h"
 
 #ifdef USES_P095
-
 # include "../Helpers/Hardware.h"
+
+/****************************************************************************
+ * ILI9xxx_type_toString: Display-value for the device selected
+ ***************************************************************************/
+const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device) {
+  switch (device) {
+    case ILI9xxx_type_e::ILI9341_240x320: return F("ILI9341 240 x 320px");
+    case ILI9xxx_type_e::ILI9342_240x320: return F("ILI9342 240 x 320px (M5Stack)");
+    case ILI9xxx_type_e::ILI9481_320x480: return F("ILI9481 320 x 480px");
+    case ILI9xxx_type_e::ILI9481_CPT29_320x480: return F("ILI9481 320 x 480px (CPT29)");
+    case ILI9xxx_type_e::ILI9481_PVI35_320x480: return F("ILI9481 320 x 480px (PVI35)");
+    case ILI9xxx_type_e::ILI9481_AUO317_320x480: return F("ILI9481 320 x 480px (AUO317)");
+    case ILI9xxx_type_e::ILI9481_CMO35_320x480: return F("ILI9481 320 x 480px (CMO35)");
+    case ILI9xxx_type_e::ILI9481_RGB_320x480: return F("ILI9481 320 x 480px (RGB)");
+    case ILI9xxx_type_e::ILI9481_CMI7_320x480: return F("ILI9481 320 x 480px (CMI7)");
+    case ILI9xxx_type_e::ILI9481_CMI8_320x480: return F("ILI9481 320 x 480px (CMI8)");
+    # ifdef P095_ENABLE_ILI948X
+    case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
+    case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
+    # endif // ifdef P095_ENABLE_ILI948X
+  }
+  # ifndef BUILD_NO_DEBUG
+  return F("Unsupported type!");
+  # else // ifndef BUILD_NO_DEBUG
+  return F("");
+  # endif // ifndef BUILD_NO_DEBUG
+}
+
+/****************************************************************************
+ * ILI9xxx_type_toResolution: X and Y resolution for the selected type
+ ***************************************************************************/
+void ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
+                               uint16_t            & x,
+                               uint16_t            & y) {
+  switch (device) {
+    case ILI9xxx_type_e::ILI9341_240x320:
+    case ILI9xxx_type_e::ILI9342_240x320:
+      x = 240;
+      y = 320;
+      break;
+    case ILI9xxx_type_e::ILI9481_320x480:
+    case ILI9xxx_type_e::ILI9481_CPT29_320x480:
+    case ILI9xxx_type_e::ILI9481_PVI35_320x480:
+    case ILI9xxx_type_e::ILI9481_AUO317_320x480:
+    case ILI9xxx_type_e::ILI9481_CMO35_320x480:
+    case ILI9xxx_type_e::ILI9481_RGB_320x480:
+    case ILI9xxx_type_e::ILI9481_CMI7_320x480:
+    case ILI9xxx_type_e::ILI9481_CMI8_320x480:
+    # ifdef P095_ENABLE_ILI948X
+    case ILI9xxx_type_e::ILI9486_320x480:
+    case ILI9xxx_type_e::ILI9488_320x480:
+    # endif // ifdef P095_ENABLE_ILI948X
+      x = 320;
+      y = 480;
+      break;
+  }
+}
 
 /****************************************************************************
  * P095_CommandTrigger_toString: return the command string selected
  ***************************************************************************/
-const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd) {
+const __FlashStringHelper* P095_CommandTrigger_toString(const P095_CommandTrigger& cmd) {
   switch (cmd) {
     case P095_CommandTrigger::tft: return F("tft");
-    case P095_CommandTrigger::ili9341: return F("ili9341");
-    case P095_CommandTrigger::MAX: return F("None");
+    case P095_CommandTrigger::ili9341: break;
+    case P095_CommandTrigger::ili9342: return F("ili9342");
+    case P095_CommandTrigger::ili9481: return F("ili9481");
+    # ifdef P095_ENABLE_ILI948X
+    case P095_CommandTrigger::ili9486: return F("ili9486");
+    case P095_CommandTrigger::ili9488: return F("ili9488");
+    # endif // ifdef P095_ENABLE_ILI948X
   }
   return F("ili9341"); // Default command trigger
 }
@@ -19,7 +80,8 @@ const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd)
 /****************************************************************************
  * Constructor
  ***************************************************************************/
-P095_data_struct::P095_data_struct(uint8_t             rotation,
+P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
+                                   uint8_t             rotation,
                                    uint8_t             fontscaling,
                                    AdaGFXTextPrintMode textmode,
                                    int8_t              backlightPin,
@@ -29,14 +91,11 @@ P095_data_struct::P095_data_struct(uint8_t             rotation,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
                                    bool                textBackFill)
-  : _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
-  _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
-  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
+  : _displayType(displayType), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode),
+  _backlightPin(backlightPin), _backlightPercentage(backlightPercentage), _displayTimer(displayTimer),
+  _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
+  _textBackFill(textBackFill)
 {
-  _xpix = 240;
-  _ypix = 320;
-
-  updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
   _commandTriggerCmd += F("cmd");
@@ -46,27 +105,35 @@ P095_data_struct::P095_data_struct(uint8_t             rotation,
  * Destructor
  ***************************************************************************/
 P095_data_struct::~P095_data_struct() {
-  if (nullptr != gfxHelper) {
-    delete gfxHelper;
-    gfxHelper = nullptr;
-  }
+  delete gfxHelper;
+  delete tft;
+}
 
-  if (nullptr != tft) {
-    delete tft;
-    tft = nullptr;
-  }
+void P095_data_struct::init() {
+  _xpix = 240;
+  _ypix = 320;
+  ILI9xxx_type_toResolution(_displayType, _xpix, _ypix);
+
+  updateFontMetrics();
 }
 
 /****************************************************************************
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P095_data_struct::plugin_init(struct EventStruct *event) {
+  init();
   bool success = false;
 
   if (nullptr == tft) {
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("ILI9341: Init start."));
+    # endif // ifndef BUILD_NO_DEBUG
 
-    tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2));
+    tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2), static_cast<uint8_t>(_displayType), _xpix, _ypix);
+
+    if (nullptr != tft) {
+      tft->begin();
+    }
 
     # ifndef BUILD_NO_DEBUG
 
@@ -80,7 +147,9 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       if (nullptr == tft) {
         log += F("in");
       }
-      log += F("valid, commands: ");
+      log += F("valid, display: ");
+      log += ILI9xxx_type_toString(static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE));
+      log += F(", commands: ");
       log += _commandTrigger;
       log += '/';
       log += _commandTriggerCmd;
@@ -105,22 +174,31 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
                                                       _textBackFill);
 
     if (nullptr != gfxHelper) {
+      gfxHelper->initialize();
       gfxHelper->setRotation(_rotation);
       gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
       gfxHelper->setTxtfullCompensation(!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095) ? 0 : 1);
+      gfxHelper->invertDisplay(P095_CONFIG_FLAG_GET_INVERTDISPLAY);
     }
     updateFontMetrics();
-    tft->fillScreen(_bgcolor);             // fill screen with black color
-    tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+    tft->fillScreen(_bgcolor);             // fill screen with background color
+    tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and configured background
     tft->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
     tft->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
     displayOnOff(true);
     # ifdef P095_SHOW_SPLASH
-    uint16_t yPos = 0;
-    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
-    yPos += (3 * _fontheight);
-    gfxHelper->printText(String(F("ILI9341")).c_str(), 0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
-    delay(100); // Splash
+
+    if (P095_CONFIG_FLAG_GET_SHOW_SPLASH) {
+      uint16_t yPos = 0;
+      gfxHelper->printText(String(F("ESPEasy")).c_str(),         0, yPos, 3, ADAGFX_WHITE, ADAGFX_BLUE);
+      yPos += (3 * _fontheight);
+      gfxHelper->printText(String(F("ILI934x/ILI948x")).c_str(), 0, yPos, 2, ADAGFX_BLUE,  ADAGFX_WHITE);
+      _splashState   = true; // Splash
+      _splashCounter = P095_SPLASH_DURATION;
+      #  ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P095 Splash start"));
+      #  endif // ifndef BUILD_NO_DEBUG
+    }
     # endif // ifdef P095_SHOW_SPLASH
     updateFontMetrics();
 
@@ -150,20 +228,19 @@ void P095_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P095_data_struct::plugin_exit(struct EventStruct *event) {
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("ILI9341: Exit."));
+  # endif // ifndef BUILD_NO_DEBUG
 
   if ((nullptr != tft) && bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     tft->fillScreen(ADAGFX_BLACK); // fill screen with black color
     displayOnOff(false);
   }
 
-  if (nullptr != gfxHelper) { delete gfxHelper; }
+  delete gfxHelper;
   gfxHelper = nullptr;
 
-  if (nullptr != tft) {
-    // delete tft; // Library is not properly inherited so no destructor called
-    free(tft); // Free up some memory without calling the destructor chain
-  }
+  delete tft;
   tft = nullptr;
   return true;
 }
@@ -172,7 +249,7 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
  * plugin_read: Re-draw the default content
  ***************************************************************************/
 bool P095_data_struct::plugin_read(struct EventStruct *event) {
-  if (nullptr != tft) {
+  if ((nullptr != tft) && !_splashState) {
     String strings[P095_Nlines];
     LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
@@ -215,6 +292,27 @@ bool P095_data_struct::plugin_read(struct EventStruct *event) {
  * plugin_ten_per_second: check button, if any, that wakes up the display
  ***************************************************************************/
 bool P095_data_struct::plugin_ten_per_second(struct EventStruct *event) {
+  # ifdef P095_SHOW_SPLASH
+
+  if (_splashState) { // Decrement splash counter
+    _splashCounter--;
+    _splashState = _splashCounter != 0;
+
+    if (!_splashState) {
+      #  ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P095 Splash finished."));
+      #  endif // ifndef BUILD_NO_DEBUG
+
+      if (nullptr != tft) {
+        tft->fillScreen(_bgcolor); // fill screen with background color
+      }
+
+      // Schedule the surrogate initial PLUGIN_READ that has been suppressed by the splash
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+    }
+  }
+  # endif // ifdef P095_SHOW_SPLASH
+
   if ((P095_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != tft)) {
     displayOnOff(true);
     markButtonStateProcessed();
@@ -226,7 +324,7 @@ bool P095_data_struct::plugin_ten_per_second(struct EventStruct *event) {
  * plugin_once_a_second: Count down display timer, if any, and turn display off if countdown reached
  ***************************************************************************/
 bool P095_data_struct::plugin_once_a_second(struct EventStruct *event) {
-  if (_displayTimer > 0) {
+  if ((_displayTimer > 0) && !_splashState) {
     _displayTimer--;
 
     if ((nullptr != tft) && (_displayTimer == 0)) {
@@ -243,7 +341,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
   bool   success = false;
   String cmd     = parseString(string, 1);
 
-  if ((nullptr != tft) && cmd.equals(_commandTriggerCmd)) {
+  if ((nullptr != tft) && cmd.equals(_commandTriggerCmd) && !_splashState) {
     String arg1 = parseString(string, 2);
     success = true;
 
@@ -264,42 +362,30 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
       }
     }
     else if (arg1.equals(F("backlight"))) {
-      String arg2 = parseString(string, 3);
-      int    nArg2;
-
-      if ((P095_CONFIG_BACKLIGHT_PIN != -1) && // All is valid?
-          validIntFromString(arg2, nArg2) &&
-          (nArg2 > 0) &&
-          (nArg2 <= 100)) {
-        P095_CONFIG_BACKLIGHT_PERCENT = nArg2; // Set but don't store
+      if ((P095_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
+          (event->Par2 > 0) &&
+          (event->Par2 <= 100)) {
+        P095_CONFIG_BACKLIGHT_PERCENT = event->Par2; // Set but don't store
         displayOnOff(true);
       } else {
         success = false;
       }
     }
-    else if (arg1.equals(F("inv")))
-    {
-      String arg2 = parseString(string, 3);
-      int    nArg2;
-
-      if (validIntFromString(arg2, nArg2) &&
-          (nArg2 >= 0) &&
-          (nArg2 <= 1)) {
-        tft->invertDisplay(nArg2);
+    else if (arg1.equals(F("inv"))) {
+      if ((event->Par2 >= 0) &&
+          (event->Par2 <= 1)) {
+        tft->invertDisplay(event->Par2);
       } else {
         success = false;
       }
     }
-    else if (arg1.equals(F("rot")))
-    {
-      ///control?cmd=tftcmd,rot,0
-      // not working to verify
-      String arg2 = parseString(string, 3);
-      int    nArg2;
-
-      if (validIntFromString(arg2, nArg2) &&
-          (nArg2 >= 0)) {
-        tft->setRotation(nArg2 % 4);
+    else if (arg1.equals(F("rot"))) {
+      if ((event->Par2 >= 0)) {
+        if (nullptr != gfxHelper) {
+          gfxHelper->setRotation(event->Par2 % 4);
+        } else {
+          tft->setRotation(event->Par2 % 4);
+        }
       } else {
         success = false;
       }
@@ -308,7 +394,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
     }
   }
   else if (tft && (cmd.equals(_commandTrigger) ||
-                   (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
+                   (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd))) && !_splashState) {
     success = true;
 
     if (!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE)) { // Wake display?
@@ -334,6 +420,23 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
   return success;
 }
 
+# if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
+/****************************************************************************
+ * plugin_get_config_value: Retrieve values like [<taskname>#<valuename>]
+ ***************************************************************************/
+bool P095_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  bool success = false;
+
+  if (gfxHelper != nullptr) {
+    success = gfxHelper->pluginGetConfigValue(string);
+  }
+  return success;
+}
+
+# endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
 /****************************************************************************
  * displayOnOff: Turn display on or off
  ***************************************************************************/
@@ -347,18 +450,15 @@ void P095_data_struct::displayOnOff(bool state) {
     # endif // if defined(ESP32)
   }
 
-  if (state) {
-    tft->sendCommand(ILI9341_DISPON);
-  } else {
-    tft->sendCommand(ILI9341_DISPOFF);
-  }
+  tft->sendCommand(state ? ILI9341_DISPON : ILI9341_DISPOFF);
   _displayTimer = (state ? _displayTimeout : 0);
 }
 
 /****************************************************************************
  * registerButtonState: the button has been pressed, apply some debouncing
  ***************************************************************************/
-void P095_data_struct::registerButtonState(uint8_t newButtonState, bool bPin3Invers) {
+void P095_data_struct::registerButtonState(const uint8_t& newButtonState,
+                                           const bool   & bPin3Invers) {
   if ((ButtonLastState == 0xFF) || (bPin3Invers != (!!newButtonState))) {
     ButtonLastState = newButtonState;
     DebounceCounter++;

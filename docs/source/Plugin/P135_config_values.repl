@@ -1,0 +1,29 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#GetAltitude]``
+    ","
+    | Returns the current Altitude setting of the sensor in meters above sealevel.
+    "
+    "
+    | ``[<taskname>#GetTempOffset]``
+    ","
+    | Returns the current Temperature offset setting of the sensor in degrees Celcius. Includes by default 2 decimal positions, that can be adjusted using :ref:`Rules: Formatting referred values <Formatting values>`.
+    "
+    "
+    | ``[<taskname>#GetDataReady]``
+    ","
+    | Returns ``1`` if new data is available at the sensor, and ``0`` if not.
+    "
+    "
+    | ``[<taskname>#GetSelfCalibration]``
+    ","
+    | Returns ``1`` if Automatic Self Calibration is enabled at the sensor, and ``0`` if not.
+    "
+    "
+    | ``[<taskname>#SerialNumber]``
+    ","
+    | Returns the electronic serial number of the sensor.
+    "

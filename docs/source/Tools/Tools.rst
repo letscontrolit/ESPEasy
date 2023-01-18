@@ -94,7 +94,8 @@ The ``sysinfo`` page does show a lot of information about the system.
 * **Unit Number**: The assigned unit number of the node.
 * **Local Time**:	The local time as known by the node. This includes any set timezone and DST (Daylight Saving).
 * **Time Source**:	The origin of the current system time. (e.g. NTP / GPS / Manual set)
-* **Time Wander**:	Time drift of the crystal in msec/sec. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.
+* **UTC time stored in RTC**: When external RTC is configured and has a time set, the UTC time stored in this RTC will be shown. (Added: 2022/10/30)
+* **Time Wander**:	Time drift of the crystal in ppm. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.  (older ESPEasy builds used msec/sec as unit, but ppm is more relatable to crystal specs.)
 * **Uptime**:	Current uptime of the node
 * **Load**:	CPU load in percent. ``LC`` is the number of calls to the ``loop()`` function per second.
 * **CPU Eco Mode**:	Whether the ECO mode is enabled or not.
@@ -143,7 +144,7 @@ All these values are described in great detail in the Advanced section, where th
 
 * **Force WiFi B/G**:	Shows whether the ESPEasy node is forced into 802.11b/g mode.
 * **Restart WiFi Lost Conn**:	Shows whether the ESPEasy node is configured to restart the WiFi radio when connection is lost. When reporting false (the default), the WiFi radio is not restarted, but it just retries to connect to WiFi.
-* **Force WiFi No Sleep**:	``true`` indicates the WiFi radio is not allowed to enter low power mode to conserve energy.
+* **Force WiFi No Sleep**:	``true`` indicates the WiFi radio is not allowed to enter low power mode to conserve energy. The ESP may need to reconnect or sometimes even reboot to activate a change of this setting. It may sometimes not be able to reconnect on its own when changed, so be careful when changing this.
 * **Periodical send Gratuitous ARP**:	``true`` indicates the ESPEasy node will send Gratuitous ARP packets to improve reachability from the network to the node.
 * **Connection Failure Threshold**:	Counter indicating the number of failed connection attempts needed to perform a reboot.
 * **Max WiFi TX Power**:	The set maximum TX power in dBm.
@@ -152,6 +153,8 @@ All these values are described in great detail in the Advanced section, where th
 * **Send With Max TX Power**:	``true`` indicates the WiFi TX power will not be changed and thus is sending at maximum TX power for the active WiFi mode (802.11 b/g/n)
 * **Extra WiFi scan loops**:	The set number of extra scans of all channels when a WiFi scan is needed.
 * **Use Last Connected AP from RTC**:	``false`` means the ESPEasy node needs to scan at reboot and cannot reuse the last used connection before the reboot.
+
+.. note:: On ESP32, WiFi TX power settings are disabled as these may cause undesired behavior and also use more power compared to using the ECO mode.
 
 Firmware
 --------
@@ -406,6 +409,15 @@ Enabling this setting will allow OTA updates even when there is not enough free 
 This should best only be enabled if the configuration, and other files like rules, can be restored from an external source, or be re-entered manually.
 
 NB: If the OTA update is bigger than available flash + file-system size, the OTA update will fail, but as the file-system is already overwritten, any configuration and files are overwritten irreversibly!
+
+Web light/dark mode
+^^^^^^^^^^^^^^^^^^^
+
+Added: 2022-09-05
+
+When using Dark-mode as an Operating System or Web-browser setting, the ESPEasy Web interface defaults to using a Dark theme as well. For those that prefer to use non-dark mode, or use ESPEasy in dark mode while the OS/browser is not configured that way, this can be selected here.
+
+NB: If this option is not available, the regular non-dark mode will be used.
 
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^

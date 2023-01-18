@@ -236,9 +236,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   I2CMultiplexerOff();
   #endif // if FEATURE_I2CMULTIPLEXER
 
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectHighClockSpeed();  // Reset
-  }
+  I2CSelectHighClockSpeed();  // Reset
 }
 
 // Add an event to the event queue.
@@ -289,6 +287,9 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
     {
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
       if (validDeviceIndex(DeviceIndex)) {
+        if (Function == PLUGIN_INIT) {
+          LoadTaskSettings(taskIndex);
+        }
         TempEvent->setTaskIndex(taskIndex);
         TempEvent->sensorType   = Device[DeviceIndex].VType;
         if (event != nullptr) {
@@ -322,13 +323,13 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
         if (Function == PLUGIN_INIT) {
           #if FEATURE_PLUGIN_STATS
           if (Device[DeviceIndex].PluginStats) {
-            PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+            PluginTaskData_base *taskData = getPluginTaskData(taskIndex);
             if (taskData == nullptr) {
               // Plugin apparently does not have PluginTaskData.
               // Create Plugin Task data if it has "Stats" checked.
-              LoadTaskSettings(event->TaskIndex);
+              LoadTaskSettings(taskIndex);
               if (ExtraTaskSettings.anyEnabledPluginStats()) {
-                initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
+                initPluginTaskData(taskIndex, new (std::nothrow) _StatsOnly_data_struct());
               }
             }
           }
@@ -430,12 +431,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       int dotPos = command.indexOf('.');                      // Find first period
       if (Function == PLUGIN_WRITE                            // Only applicable on PLUGIN_WRITE function
         && dotPos > -1) {                                     // First precondition is just a quick check for a period (fail-fast strategy)
-        String arg0 = parseString(command, 1);                // Get first argument
+        const String arg0 = parseString(command, 1);                // Get first argument
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = parseString(arg0, 1, '.');    // Extract taskname prefix
-          thisTaskName.replace(F("["), EMPTY_STRING);         // Remove the optional square brackets
-          thisTaskName.replace(F("]"), EMPTY_STRING);
+          removeChar(thisTaskName, '[');                      // Remove the optional square brackets
+          removeChar(thisTaskName, ']');
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
             if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?
@@ -482,7 +483,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           if (1 == (lastTask - firstTask)) {
             // These plugin task data commands are generic, so only apply them on a specific task.
             // Don't try to match them on the first task that may have such data.
-            PluginTaskData_base *taskData = getPluginTaskData(task);
+            PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(task);
             if (nullptr != taskData) {
               if (taskData->plugin_write_base(event, command)) {
                 retval = true;
@@ -492,7 +493,10 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
 
         if (retval) {
-          CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, command);
+          EventStruct CPlugin_ack_event;
+          CPlugin_ack_event.deep_copy(TempEvent);
+          CPlugin_ack_event.setTaskIndex(task);
+          CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &CPlugin_ack_event, command);
           return true;
         }
       }
@@ -520,9 +524,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     {
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str);
-
-        if (retval) {
+        if (PluginCallForTask(taskIndex, Function, &TempEvent, str)) {
           #ifndef BUILD_NO_RAM_TRACKER
           checkRAM(F("PluginCallUDP"), taskIndex);
           #endif
@@ -590,14 +592,17 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_INIT:
     case PLUGIN_EXIT:
     case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
+    case PLUGIN_TASKTIMER_IN:
+    case PLUGIN_PROCESS_CONTROLLER_DATA:
     {
       // FIXME TD-er: Code duplication with PluginCallForTask
       if (!validTaskIndex(event->TaskIndex)) {
         return false;
       }
-      if (Function == PLUGIN_READ || Function == PLUGIN_INIT) {
+      if (Function == PLUGIN_READ || Function == PLUGIN_INIT || Function == PLUGIN_PROCESS_CONTROLLER_DATA) {
         if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
           return false;
         }
@@ -606,11 +611,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
       if (validDeviceIndex(DeviceIndex)) {
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          if (Function == PLUGIN_READ && !Device[DeviceIndex].ErrorStateValues) {
+          if (Function == PLUGIN_READ && Device[DeviceIndex].ErrorStateValues) {
             // PLUGIN_READ should not need to access ExtraTaskSettings except for what's already being cached.
             // Only exception is when ErrorStateValues is needed.
-            // Therefore no need to call LoadTaskSettings
-          } else {
+            // Therefore only need to call LoadTaskSettings for those tasks with ErrorStateValues
+            LoadTaskSettings(event->TaskIndex);
+          } else if (Function == PLUGIN_INIT || Function == PLUGIN_WEBFORM_LOAD) {
             // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
             LoadTaskSettings(event->TaskIndex);
           }
@@ -661,7 +667,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           } else {
             #if FEATURE_PLUGIN_STATS
-            PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+            PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
             if (taskData != nullptr) {
               taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
             }
@@ -691,7 +697,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           clearPluginTaskData(event->TaskIndex);
           initSerial();
           queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
-          clearTaskCaches(); // FIXME: To improve: Only remove current TaskIndex from cache
+          updateActiveTaskUseSerial0();
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
         post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
@@ -769,13 +775,25 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         START_TIMER;
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
+
+        // Calls may have updated ExtraTaskSettings, so validate them.
+        ExtraTaskSettings.validate();
+
+        if (Function == PLUGIN_GET_DEVICEVALUENAMES ||
+            Function == PLUGIN_WEBFORM_SAVE ||
+            Function == PLUGIN_SET_DEFAULTS ||
+            Function == PLUGIN_INIT_VALUE_RANGES) {
+          // Each of these may update ExtraTaskSettings, but it may not have been saved yet.
+          // Thus update the cache just in case something from it is requested from the cache.
+          Cache.updateExtraTaskSettingsCache();
+        }
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();
         }
         if (Function == PLUGIN_GET_CONFIG_VALUE && !retval) {
           // Try to match a statistical property of a task value.
           // e.g.: [taskname#valuename.avg]
-          PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+          PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
           if (nullptr != taskData) {
             if (taskData->plugin_get_config_value_base(event, str)) {
               retval = true;
@@ -793,9 +811,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           }
         }
-
-        // Calls may have updated ExtraTaskSettings, so validate them.
-        ExtraTaskSettings.validate();
         
         STOP_TIMER_TASK(DeviceIndex, Function);
         delay(0); // SMY: call delay(0) unconditionally

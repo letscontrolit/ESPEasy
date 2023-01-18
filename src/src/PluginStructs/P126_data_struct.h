@@ -6,16 +6,16 @@
 
 # include <ShiftRegister74HC595_NonTemplate.h>
 
-# ifndef LIMIT_BUILD_SIZE
+# ifndef BUILD_NO_DEBUG
 #  define P126_DEBUG_LOG // Enable for some (extra) logging
-# endif // ifndef LIMIT_BUILD_SIZE
+# endif
 
 # define P126_CONFIG_CHIP_COUNT       PCONFIG(0)
 # define P126_CONFIG_SHOW_OFFSET      PCONFIG(1)
 # define P126_CONFIG_DATA_PIN         PIN(0)
 # define P126_CONFIG_CLOCK_PIN        PIN(1)
 # define P126_CONFIG_LATCH_PIN        PIN(2)
-# define P126_CONFIG_FLAGS            PCONFIG_LONG(0)
+# define P126_CONFIG_FLAGS            PCONFIG_ULONG(0)
 
 # define P126_FLAGS_VALUES_DISPLAY    0 // 0/off = HEX, 1/on = BIN
 // Restore values from RTC after warm boot (default enabled, inverted logic)
@@ -56,7 +56,7 @@ public:
                    uint8_t chipCount);
 
   P126_data_struct() = delete;
-  ~P126_data_struct();
+  virtual ~P126_data_struct();
 
   const bool isInitialized() const {
     return nullptr != shift;

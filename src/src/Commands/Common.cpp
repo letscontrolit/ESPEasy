@@ -11,6 +11,7 @@
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
+#include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 
@@ -24,6 +25,16 @@ const __FlashStringHelper * return_command_success()
 const __FlashStringHelper * return_command_failed()
 {
   return F("\nFailed");
+}
+
+String return_command_success_str()
+{
+  return return_command_success();
+}
+
+String return_command_failed_str()
+{
+  return return_command_failed();
 }
 
 const __FlashStringHelper * return_incorrect_nr_arguments()
@@ -43,10 +54,11 @@ const __FlashStringHelper * return_not_connected()
 
 String return_result(struct EventStruct *event, const String& result)
 {
+  serialPrintln();
   serialPrintln(result);
 
   if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
-    return return_command_success();
+    return return_command_success_str();
   }
   return result;
 }
@@ -75,15 +87,12 @@ String Command_GetORSetIP(struct EventStruct *event,
       hasArgument = true;
 
       if (!str2ip(TmpStr1, IP)) {
-        String result = F("Invalid parameter: ");
-        result += TmpStr1;
-        return return_result(event, result);
+        return return_result(event, concat(F("Invalid parameter: "), TmpStr1));
       }
     }
   }
 
   if (!hasArgument) {
-    serialPrintln();
     String result = targetDescription;
 
     if (useStaticIP()) {
@@ -94,7 +103,7 @@ String Command_GetORSetIP(struct EventStruct *event,
     }
     return return_result(event, result);
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 String Command_GetORSetString(struct EventStruct *event,
@@ -114,10 +123,8 @@ String Command_GetORSetString(struct EventStruct *event,
       hasArgument = true;
 
       if (TmpStr1.length() > len) {
-        String result = targetDescription;
-        result += F(" is too large. max size is ");
+        String result = concat(targetDescription, F(" is too large. max size is "));
         result += len;
-        serialPrintln();
         return return_result(event, result);
       }
       safe_strncpy(target, TmpStr1, len);
@@ -125,12 +132,11 @@ String Command_GetORSetString(struct EventStruct *event,
   }
 
   if (hasArgument) {
-    serialPrintln();
     String result = targetDescription;
     result += target;
     return return_result(event, result);
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
 String Command_GetORSetBool(struct EventStruct *event,
@@ -160,13 +166,12 @@ String Command_GetORSetBool(struct EventStruct *event,
   }
 
   if (hasArgument) {
-    String result = targetDescription;
-    result += boolToString(*value);
-    return return_result(event, result);
+    return return_result(event, concat(targetDescription, boolToString(*value)));
   }
-  return return_command_success();
+  return return_command_success_str();
 }
 
+#if FEATURE_ETHERNET
 String Command_GetORSetETH(struct EventStruct *event,
                             const __FlashStringHelper * targetDescription,
                             const __FlashStringHelper * valueToString,
@@ -211,6 +216,7 @@ String Command_GetORSetETH(struct EventStruct *event,
   }
   return return_result(event, result);
 }
+#endif
 
 String Command_GetORSetInt8_t(struct EventStruct *event,
                             const __FlashStringHelper * targetDescription,
@@ -239,5 +245,5 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
     result += *value;
     return return_result(event, result);
   }
-  return return_command_success();
+  return return_command_success_str();
 }

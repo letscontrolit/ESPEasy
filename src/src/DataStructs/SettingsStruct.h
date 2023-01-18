@@ -2,13 +2,15 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/ChecksumType.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
-#include "../../ESPEasy_common.h"
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
@@ -163,6 +165,11 @@ class SettingsStruct_tmpl
   bool AllowTaskValueSetAllPlugins() const;
   void AllowTaskValueSetAllPlugins(bool value);
 
+  #if FEATURE_AUTO_DARK_MODE
+  uint8_t getCssMode() const;
+  void    setCssMode(uint8_t value);
+  #endif // FEATURE_AUTO_DARK_MODE
+
 
   void validate();
 
@@ -183,8 +190,6 @@ class SettingsStruct_tmpl
   void clearUnitNameSettings();
 
   void clearMisc();
-
-  void clearAll();
 
   void clearTask(taskIndex_t task);
 
@@ -320,11 +325,6 @@ class SettingsStruct_tmpl
   uint16_t      WebserverPort = 80;
   uint16_t      SyslogPort = 0;
 
-  // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
-  // make sure crc is the last value in the struct
-  // Try to extend settings to make the checksum 4-uint8_t aligned.
-//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-//  uint8_t       md5[16];
   int8_t          ETH_Phy_Addr = -1;
   int8_t          ETH_Pin_mdc = -1;
   int8_t          ETH_Pin_mdio = -1;
@@ -352,7 +352,16 @@ class SettingsStruct_tmpl
   int8_t        SPI_SCLK_pin = -1;
   int8_t        SPI_MISO_pin = -1;
   int8_t        SPI_MOSI_pin = -1;
-  int8_t        alignmentFiller0 = 0;  // Should be reused, just added to keep up with alignment
+  int8_t        ForceESPEasyNOWchannel = 0;
+
+  // Do not rename or move this checksum.
+  // Checksum calculation will work "around" this
+  uint8_t       md5[16]; // Store checksum of the settings.
+  
+//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
+
+
+  // Try to extend settings to make the checksum 4-uint8_t aligned.
 };
 
 /*

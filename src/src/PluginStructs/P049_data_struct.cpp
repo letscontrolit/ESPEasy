@@ -50,13 +50,12 @@ const PROGMEM uint8_t mhzCmdData[][3] = {
 };
 
 
-P049_data_struct::P049_data_struct() {
-  reset();
-  sensorResets = 0;
-}
 
 P049_data_struct::~P049_data_struct() {
-  reset();
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
 }
 
 void P049_data_struct::reset() {
@@ -101,25 +100,25 @@ bool P049_data_struct::plugin_write(struct EventStruct *event, const String& str
 {
   String command = parseString(string, 1);
 
-  if (command == F("mhzcalibratezero"))
+  if (command.equals(F("mhzcalibratezero")))
   {
     send_mhzCmd(mhzCmdCalibrateZero);
     addLog(LOG_LEVEL_INFO, F("MHZ19: Calibrated zero point!"));
     return true;
   }
-  else if (command == F("mhzreset"))
+  else if (command.equals(F("mhzreset")))
   {
     send_mhzCmd(mhzCmdReset);
     addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor reset!"));
     return true;
   }
-  else if (command == F("mhzabcenable"))
+  else if (command.equals(F("mhzabcenable")))
   {
     send_mhzCmd(mhzCmdABCEnable);
     addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
     return true;
   }
-  else if (command == F("mhzabcdisable"))
+  else if (command.equals(F("mhzabcdisable")))
   {
     send_mhzCmd(mhzCmdABCDisable);
     addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
@@ -128,25 +127,25 @@ bool P049_data_struct::plugin_write(struct EventStruct *event, const String& str
 
 # ifdef ENABLE_DETECTION_RANGE_COMMANDS
   else if (command.startsWith(F("mhzmeasurementrange"))) {
-    if (command == F("mhzmeasurementrange1000"))
+    if (command.equals(F("mhzmeasurementrange1000")))
     {
       send_mhzCmd(mhzCmdMeasurementRange1000);
       addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-1000PPM!"));
       return true;
     }
-    else if (command == F("mhzmeasurementrange2000"))
+    else if (command.equals(F("mhzmeasurementrange2000")))
     {
       send_mhzCmd(mhzCmdMeasurementRange2000);
       addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-2000PPM!"));
       return true;
     }
-    else if (command == F("mhzmeasurementrange3000"))
+    else if (command.equals(F("mhzmeasurementrange3000")))
     {
       send_mhzCmd(mhzCmdMeasurementRange3000);
       addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-3000PPM!"));
       return true;
     }
-    else if (command == F("mhzmeasurementrange5000"))
+    else if (command.equals(F("mhzmeasurementrange5000")))
     {
       send_mhzCmd(mhzCmdMeasurementRange5000);
       addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));

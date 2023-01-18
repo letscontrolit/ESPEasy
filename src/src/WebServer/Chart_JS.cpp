@@ -1,10 +1,10 @@
 #include "../WebServer/Chart_JS.h"
 
+#if FEATURE_CHART_JS
 
 #include "../Helpers/StringConverter.h"
 #include "../WebServer/HTML_wrappers.h"
 
-#if FEATURE_CHART_JS
   ChartJS_title::ChartJS_title() {
     align = F("center");
   }

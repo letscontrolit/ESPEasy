@@ -4,7 +4,10 @@
 
 
 P070_data_struct::~P070_data_struct() {
-  reset();
+  if (Plugin_070_pixels != nullptr) {
+    delete Plugin_070_pixels;
+    Plugin_070_pixels = nullptr;
+  }
 }
 
 void P070_data_struct::reset() {

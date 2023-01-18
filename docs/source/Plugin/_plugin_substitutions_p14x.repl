@@ -1,0 +1,38 @@
+.. |P141_name| replace:: :cyan:`PCD8544 Nokia 5110 LCD`
+.. |P141_type| replace:: :cyan:`Display`
+.. |P141_typename| replace:: :cyan:`Display - PCD8544 Nokia 5110 LCD`
+.. |P141_porttype| replace:: `.`
+.. |P141_status| replace:: :yellow:`DISPLAY`
+.. |P141_github| replace:: P141_PCD8544_Nokia5110.ino
+.. _P141_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P141_PCD8544_Nokia5110.ino
+.. |P141_usedby| replace:: `.`
+.. |P141_shortinfo| replace:: `Nokia 5110 monochrome LCD`
+.. |P141_maintainer| replace:: `tonhuisman`
+.. |P141_compileinfo| replace:: `.`
+.. |P141_usedlibraries| replace:: `https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library`
+
+.. |P143_name| replace:: :cyan:`I2C Rotary encoders`
+.. |P143_type| replace:: :cyan:`Switch input`
+.. |P143_typename| replace:: :cyan:`Switch input - I2C Rotary encoders`
+.. |P143_porttype| replace:: `.`
+.. |P143_status| replace:: :yellow:`COLLECTION C` :yellow:`DISPLAY`
+.. |P143_github| replace:: P143_I2C_Rotary.ino
+.. _P143_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P143_I2C_Rotary.ino
+.. |P143_usedby| replace:: `.`
+.. |P143_shortinfo| replace:: `I2C Rotary encoders`
+.. |P143_maintainer| replace:: `tonhuisman`
+.. |P143_compileinfo| replace:: `.`
+.. |P143_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_Seesaw`
+
+.. |P148_name| replace:: :cyan:`POWR3xxD/THR3xxD`
+.. |P148_type| replace:: :cyan:`Display`
+.. |P148_typename| replace:: :cyan:`Display - POWR3xxD/THR3xxD`
+.. |P148_porttype| replace:: `.`
+.. |P148_status| replace:: :yellow:`ENERGY` :yellow:`DISPLAY`
+.. |P148_github| replace:: P148_POWRxxD_THR3xxD.ino
+.. _P148_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P148_POWRxxD_THR3xxD.ino
+.. |P148_usedby| replace:: `.`
+.. |P148_shortinfo| replace:: `Display for Sonoff Elite POWR3xxD/THR3xxD`
+.. |P148_maintainer| replace:: `TD-er`
+.. |P148_compileinfo| replace:: `.`
+.. |P148_usedlibraries| replace:: `.`

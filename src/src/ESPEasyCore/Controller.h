@@ -13,7 +13,7 @@ void sendData(struct EventStruct *event);
 
 bool validUserVar(struct EventStruct *event);
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 /*********************************************************************************************\
 * Handle incoming MQTT messages
 \*********************************************************************************************/
@@ -45,7 +45,7 @@ String getLWT_messageConnect(const ControllerSettingsStruct& ControllerSettings)
 
 String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettings);
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -54,22 +54,25 @@ void SendStatusOnlyIfNeeded(struct EventStruct *event, bool param1, uint32_t key
 
 bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
 
+void SendStatus(struct EventStruct *event, const __FlashStringHelper * status);
 void SendStatus(struct EventStruct *event, const String& status);
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
+controllerIndex_t firstEnabledMQTT_ControllerIndex();
+
 bool MQTT_queueFull(controllerIndex_t controller_idx);
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained);
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained, bool callbackTask = false);
 
 // Publish using the move operator for topic and message
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained);
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained, bool callbackTask = false);
 
 
 /*********************************************************************************************\
 * Send status info back to channel where request came from
 \*********************************************************************************************/
 void MQTTStatus(struct EventStruct *event, const String& status);
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
 
 
 

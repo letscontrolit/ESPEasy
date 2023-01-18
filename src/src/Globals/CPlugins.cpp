@@ -96,6 +96,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_FLUSH:
     case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:
+    case CPlugin::Function::CPLUGIN_WRITE:
+    {
+      bool success = Function != CPlugin::Function::CPLUGIN_WRITE;
 
       if (Function == CPlugin::Function::CPLUGIN_INIT_ALL) {
         Function = CPlugin::Function::CPLUGIN_INIT;
@@ -105,11 +108,16 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
         if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
           protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
           event->ControllerIndex = x;
-          String dummy;
-          CPluginCall(ProtocolIndex, Function, event, dummy);
+          String command;
+          if (Function == CPlugin::Function::CPLUGIN_WRITE) command = str;
+          const bool success = CPluginCall(ProtocolIndex, Function, event, command);
+          if (success && Function == CPlugin::Function::CPLUGIN_WRITE) {
+            return success;
+          }
         }
       }
-      return true;
+      return success;
+    }
 
     // calls to specific controller
     case CPlugin::Function::CPLUGIN_INIT:
@@ -134,6 +142,11 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
           protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
           CPluginCall(ProtocolIndex, Function, event, str);
         }
+        #ifdef ESP32
+        if (Function == CPlugin::Function::CPLUGIN_EXIT) {
+          Cache.clearControllerSettings(controllerindex);
+        }
+        #endif
       }
       break;
     }

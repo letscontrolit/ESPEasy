@@ -1,8 +1,9 @@
 #ifndef HELPERS_WIFI_AP_CANDIDATESLIST_H
 #define HELPERS_WIFI_AP_CANDIDATESLIST_H
 
-#include "../DataStructs/WiFi_AP_Candidate.h"
 #include "../../ESPEasy_common.h"
+
+#include "../DataStructs/WiFi_AP_Candidate.h"
 
 #include <list>
 
@@ -10,6 +11,8 @@ typedef std::list<WiFi_AP_Candidate>::const_iterator WiFi_AP_Candidate_const_ite
 
 struct WiFi_AP_CandidatesList {
   WiFi_AP_CandidatesList();
+
+  ~WiFi_AP_CandidatesList();
 
   // Load the known credentials from the settings
   void load_knownCredentials();
@@ -23,10 +26,15 @@ struct WiFi_AP_CandidatesList {
 
   void purge_expired();
 
+#if !FEATURE_ESP8266_DIRECT_WIFI_SCAN
   // Add found WiFi access points to the list if they are possible candidates.
   void process_WiFiscan(uint8_t scancount);
+#endif
+
 #ifdef ESP8266
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
   void process_WiFiscan(const bss_info& ap);
+#endif  
 #endif
 
   void after_process_WiFiscan();
@@ -36,6 +44,9 @@ struct WiFi_AP_CandidatesList {
   bool                     getNext(bool scanAllowed);
 
   const WiFi_AP_Candidate& getCurrent() const;
+  
+  // Decrease attemptsLeft
+  void                     markAttempt();
 
   WiFi_AP_Candidate        getBestCandidate() const;
 
@@ -44,6 +55,8 @@ struct WiFi_AP_CandidatesList {
   // Make sure the current connection (from RTC) is set as first next candidate.
   // This will force a reconnect to the current AP if connection is lost.
   void markCurrentConnectionStable();
+
+  bool addedKnownCandidate() const { return _addedKnownCandidate; }
 
   int8_t scanComplete() const;
 
@@ -85,7 +98,9 @@ private:
   WiFi_AP_Candidate currentCandidate;
 
   bool _mustLoadCredentials = true;
-
+  bool _addedKnownCandidate = false;
+public:
+  int  attemptsLeft = 1;
 };
 
 #endif // ifndef HELPERS_WIFI_AP_CANDIDATESLIST_H

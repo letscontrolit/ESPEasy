@@ -5,7 +5,10 @@
 #ifdef USES_P093
 
 
+#ifndef BUILD_NO_DEBUG
 # define PLUGIN_093_DEBUG
+#endif
+
 
 /*
  *
@@ -32,6 +35,11 @@ struct P093_data_struct : public PluginTaskData_base {
                    const int16_t           serialRx,
                    const int16_t           serialTx,
                    bool                    includeStatus);
+
+  P093_data_struct() = delete;
+  virtual ~P093_data_struct() = default;
+
+  void init();
 
   bool sync();
 
@@ -252,7 +260,7 @@ private:
   ESPeasySerial  _serial;
   State          _state;
   bool           _fastBaudRate;
-  uint8_t        _readBuffer[READ_BUFFER_LEN];
+  uint8_t        _readBuffer[READ_BUFFER_LEN] = { 0 };
   uint8_t        _readPos;
   unsigned long  _writeTimeout;
   Values         _currentValues;

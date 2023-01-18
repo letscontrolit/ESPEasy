@@ -15,12 +15,18 @@
 
 
 P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
-  clearBuffer();
+  serial_buffer.reserve(P020_DATAGRAM_MAX_SIZE);
 }
 
 P020_Task::~P020_Task() {
-  stopServer();
-  serialEnd();
+  if (ser2netServer != nullptr) {
+    delete ser2netServer;
+    ser2netServer = nullptr;
+  }
+  if (ser2netSerial != nullptr) {
+    delete ser2netSerial;
+    ser2netSerial = nullptr;
+  }
 }
 
 bool P020_Task::serverActive(WiFiServer *server) {
@@ -79,7 +85,17 @@ bool P020_Task::hasClientConnected() {
   {
     if (ser2netClient) { ser2netClient.stop(); }
     ser2netClient = ser2netServer->available();
-    ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+
+    #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+    // See: https://github.com/espressif/arduino-esp32/pull/6676
+    ser2netClient.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
+    Client *pClient = &ser2netClient;
+    pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+    #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
+    #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
     sendConnectedEvent(true);
     addLog(LOG_LEVEL_INFO, F("Ser2Net   : Client connected!"));
   }

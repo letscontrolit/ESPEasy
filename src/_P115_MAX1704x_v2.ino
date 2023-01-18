@@ -47,8 +47,6 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 4;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
-
-      // Device[deviceCount].TimerOptional   = false;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].DecimalsOnly       = true;
       Device[deviceCount].PluginStats        = true;
@@ -80,46 +78,34 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
     {
       const sfe_max1704x_devices_e device = static_cast<sfe_max1704x_devices_e>(P115_DEVICESELECTOR);
       const int threshold                 = P115_THRESHOLD;
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P115_data_struct(P115_I2CADDR, device, threshold));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P115_data_struct(device, threshold));
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P115_data) {
-        success = P115_data->begin(); // Start the sensor
-      }
-      break;
-    }
-
-    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
-    {
-      /*
-         uint8_t choice          = P115_I2CADDR;
-         uint8_t  optionValues[1] = { 0x36 };
-         addFormSelectorI2C(F("plugin_115_i2c"), 1, optionValues, choice);
-       */
+      success = (nullptr != P115_data) && P115_data->begin(); // Start the sensor
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        unsigned int choice = P115_DEVICESELECTOR;
-        const __FlashStringHelper * options[4] = {
+        unsigned int choice                   = P115_DEVICESELECTOR;
+        const __FlashStringHelper *options[4] = {
           F("MAX17043"),
           F("MAX17044 (2S)"), // 2-cell version of the MAX17043 (full-scale range of 10V)
           F("MAX17048"),
-          F("MAX17049 (2S)") // 2-cell version of the MAX17048
+          F("MAX17049 (2S)")  // 2-cell version of the MAX17048
         };
         const int optionValues[4] = {
           MAX1704X_MAX17043,
           MAX1704X_MAX17044,
           MAX1704X_MAX17048,
           MAX1704X_MAX17049 };
-        addFormSelector(F("Device"), F("plugin_115_device"), 4, options, optionValues, choice);
+        addFormSelector(F("Device"), F("device"), 4, options, optionValues, choice);
       }
 
-      addFormNumericBox(F("Alert threshold"), F("plugin_115_threshold"), P115_THRESHOLD, 1, 32);
+      addFormNumericBox(F("Alert threshold"), F("threshold"), P115_THRESHOLD, 1, 32);
       addUnit('%');
-      addFormCheckBox(F("Send Event on Alert"), F("plugin_115_alertevent"), P115_ALERTEVENT);
+      addFormCheckBox(F("Send Event on Alert"), F("alertevent"), P115_ALERTEVENT);
 
       success = true;
       break;
@@ -127,10 +113,9 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      //      P115_I2CADDR = getFormItemInt(F("plugin_115_i2c"));
-      P115_THRESHOLD      = getFormItemInt(F("plugin_115_threshold"));
-      P115_ALERTEVENT     = isFormItemChecked(F("plugin_115_alertevent"));
-      P115_DEVICESELECTOR = getFormItemInt(F("plugin_115_device"));
+      P115_THRESHOLD      = getFormItemInt(F("threshold"));
+      P115_ALERTEVENT     = isFormItemChecked(F("alertevent"));
+      P115_DEVICESELECTOR = getFormItemInt(F("device"));
 
       success = true;
       break;
@@ -171,7 +156,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P115_data) && P115_data->initialized) {
         const String command = parseString(string, 1);
 
-        if ((command == F("max1704xclearalert")))
+        if ((command.equals(F("max1704xclearalert"))))
         {
           P115_data->clearAlert();
           success = true;
@@ -196,7 +181,6 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
                 if (validDeviceIndex(DeviceIndex)) {
-                  LoadTaskSettings(event->TaskIndex);
                   String newEvent = getTaskDeviceName(event->TaskIndex);
                   newEvent += '#';
                   newEvent += F("AlertTriggered");

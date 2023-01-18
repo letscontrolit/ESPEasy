@@ -20,11 +20,13 @@ String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
 }
 
 void serialHelper_log_GpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2) {
+  # ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Serial : ");
     log += serialHelper_getGpioDescription(typeHint, config_pin1, config_pin2, " ");
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 }
 
 String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2, const String& newline) {
@@ -100,7 +102,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
   {
     String id = F("i2cuart_addr");
     addRowLabel_tr_id(F("I2C Address"), id);
-    do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
+    do_addSelector_Head(id, F(""), EMPTY_STRING, false);
 
     if ((address < SC16IS752_I2C_BASE_ADDR) || (address >= (SC16IS752_I2C_BASE_ADDR + SC16IS752_I2C_ADDRESSES))) {
       // selected address is not in range
@@ -205,11 +207,11 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
           option += F(": ");
           option += formatGpioLabel(rxPin, false);
           option += ' ';
-          option += formatGpioDirection(gpio_input);
+          option += formatGpioDirection(gpio_direction::gpio_input);
           option += F("TX / ");
           option += formatGpioLabel(txPin, false);
           option += ' ';
-          option += formatGpioDirection(gpio_output);
+          option += formatGpioDirection(gpio_direction::gpio_output);
           option += F("RX");
           #endif // ifdef ESP8266
           break;
@@ -294,7 +296,7 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, uint8_t cu
   String id = F("serConf");
 
   addRowLabel_tr_id(F("Serial Config"), id);
-  do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
+  do_addSelector_Head(id, F(""), EMPTY_STRING, false);
 
   if (currentSelection == 0) {
     // Must truncate it to 1 uint8_t, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.

@@ -463,13 +463,13 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
       P096_CONFIG_FLAGS = lSettings;
 
-      String   color   = web_server.arg(F("p096_foregroundcolor"));
+      String   color   = webArg(F("p096_foregroundcolor"));
       uint16_t fgcolor = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK);             // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH)); // Reduce to rgb565
       }
-      color = web_server.arg(F("p096_backgroundcolor"));
+      color = webArg(F("p096_backgroundcolor"));
       uint16_t bgcolor = AdaGFXparseColor(color, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
 
       P096_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
@@ -478,7 +478,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       String error;
 
       for (uint8_t varNr = 0; varNr < P096_Nlines; varNr++) {
-        strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
+        strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
       error = SaveCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);
@@ -545,7 +545,6 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_ERROR, F("EPD  : SPI not enabled, init cancelled."));
       }
 
-      success = true;
       break;
     }
 

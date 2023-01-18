@@ -1,5 +1,7 @@
 #include "../Helpers/_CPlugin_Helper_webform.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../Globals/CPlugins.h"
@@ -7,7 +9,7 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/Networking.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
 
@@ -159,7 +161,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
         ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.ControllerUser[0]) - 1;
       addFormTextBox(displayName,
                      internalName,
-                     getControllerUser(controllerindex, ControllerSettings),
+                     getControllerUser(controllerindex, ControllerSettings, false),
                      fieldMaxLength);
       break;
     }

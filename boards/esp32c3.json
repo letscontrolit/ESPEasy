@@ -1,19 +1,21 @@
 {
   "build": {
     "arduino":{
-      "ldscript": "esp32c3_out.ld"
+      "ldscript": "esp32c3_out.ld",
+      "memory_type": "dio_qspi"
     },
     "core": "esp32",
-    "extra_flags": "-DARDUINO_USB_CDC_ON_BOOT=0 -DESP32_4M -DESP32C3",
+    "extra_flags": "-DARDUINO_USB_CDC_ON_BOOT=0 -DESP32_4M -DESP32C3 -DCONFIG_IDF_TARGET_ESP32C3=1",
     "f_cpu": "160000000L",
     "f_flash": "80000000L",
-    "flash_mode": "dout",
+    "flash_mode": "dio",
     "mcu": "esp32c3",
     "variant": "esp32c3",
     "partitions": "esp32_partition_app1810k_spiffs316k.csv"
   },
   "connectivity": [
-    "wifi"
+    "wifi",
+    "bluetooth"
   ],
   "debug": {
     "openocd_target": "esp32c3.cfg"

@@ -1,13 +1,19 @@
 #include "../Helpers/WiFi_AP_CandidatesList.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
 
-#include "../../ESPEasy_common.h"
 
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif // if defined(ESP8266)
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif // if defined(ESP32)
 
 #define WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     3
 #define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4
@@ -20,11 +26,21 @@ WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   load_knownCredentials();
 }
 
+WiFi_AP_CandidatesList::~WiFi_AP_CandidatesList() {
+  candidates.clear();
+  known.clear();
+  scanned.clear();
+  scanned_new.clear();
+}
+
 void WiFi_AP_CandidatesList::load_knownCredentials() {
   if (!_mustLoadCredentials) { return; }
   _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
+//  attemptsLeft = 1;
+  _addedKnownCandidate = false;
+//  addFromRTC();
 
   {
     // Add the known SSIDs
@@ -73,6 +89,7 @@ void WiFi_AP_CandidatesList::force_reload() {
 
 void WiFi_AP_CandidatesList::begin_sync_scan() {
   candidates.clear();
+  _addedKnownCandidate = false;
 }
 
 void WiFi_AP_CandidatesList::purge_expired() {
@@ -85,6 +102,7 @@ void WiFi_AP_CandidatesList::purge_expired() {
   }
 }
 
+#if !FEATURE_ESP8266_DIRECT_WIFI_SCAN
 void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   // Append or update found APs from scan.
   for (uint8_t i = 0; i < scancount; ++i) {
@@ -95,12 +113,15 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
 
   after_process_WiFiscan();
 }
+#endif
 
 #ifdef ESP8266
+#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
 void WiFi_AP_CandidatesList::process_WiFiscan(const bss_info& ap) {
   WiFi_AP_Candidate tmp(ap);
   scanned_new.push_back(tmp);
 }
+#endif
 #endif
 
 void WiFi_AP_CandidatesList::after_process_WiFiscan() {
@@ -108,6 +129,7 @@ void WiFi_AP_CandidatesList::after_process_WiFiscan() {
   scanned_new.unique();
   _mustLoadCredentials = true;
   WiFi.scanDelete();
+  attemptsLeft = 1;
 }
 
 bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
@@ -118,12 +140,12 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
       return false;
     }
     loadCandidatesFromScanned();
+    attemptsLeft = 1;
     if (candidates.empty()) { return false; }
   }
 
-  bool mustPop = true;
-
   currentCandidate = candidates.front();
+  bool mustPop = true;
 
   if (currentCandidate.isHidden) {
     // Iterate over the known credentials to try them all
@@ -141,24 +163,33 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
   }
 
   if (mustPop) {
-    if (currentCandidate.isHidden) {
-      // We tried to connect to hidden SSIDs in 1 run, so pop all hidden candidates.
-      for (auto cand_it = candidates.begin(); cand_it != candidates.end() && cand_it->isHidden; ) {
-        cand_it = candidates.erase(cand_it);
+    if (attemptsLeft == 0) {
+      if (currentCandidate.isHidden) {
+        // We tried to connect to hidden SSIDs in 1 run, so pop all hidden candidates.
+        for (auto cand_it = candidates.begin(); cand_it != candidates.end() && cand_it->isHidden; ) {
+          cand_it = candidates.erase(cand_it);
+        }
+      } else {
+        if (!candidates.empty()) {
+          candidates.pop_front();
+        }
       }
-    } else {
-      if (!candidates.empty()) {
-        candidates.pop_front();
-      }
-    }
 
-    known_it = known.begin();
+      known_it = known.begin();
+      attemptsLeft = 1;
+    } else {
+      markAttempt();
+    }
   }
   return currentCandidate.usable();
 }
 
 const WiFi_AP_Candidate& WiFi_AP_CandidatesList::getCurrent() const {
   return currentCandidate;
+}
+
+void WiFi_AP_CandidatesList::markAttempt() {
+  if (attemptsLeft > 0) attemptsLeft--;
 }
 
 WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestCandidate() const {
@@ -194,12 +225,18 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
   }
 
   candidates.clear();
+  _addedKnownCandidate = false;
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
 
 int8_t WiFi_AP_CandidatesList::scanComplete() const {
   size_t found = 0;
   for (auto scan = scanned.begin(); scan != scanned.end(); ++scan) {
+    if (!scan->expired()) {
+      ++found;
+    }
+  }
+  for (auto scan = scanned_new.begin(); scan != scanned_new.end(); ++scan) {
     if (!scan->expired()) {
       ++found;
     }
@@ -298,6 +335,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 
             if (tmp.usable()) {
               candidates.push_back(tmp);
+              _addedKnownCandidate = true;
 
               // Check all knowns as we may have several AP's with the same SSID and different passwords.
             }
@@ -307,6 +345,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       ++scan;
     }
   }
+  # ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const WiFi_AP_Candidate bestCandidate = getBestCandidate();
     if (bestCandidate.usable()) {
@@ -315,6 +354,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }
+  #endif
   candidates.sort();
   candidates.unique();
   addFromRTC();
@@ -406,8 +446,10 @@ void WiFi_AP_CandidatesList::purge_unusable() {
       it = candidates.erase(it);
     }
   }
-  candidates.sort();
-  candidates.unique();
+  if (candidates.size() > 1) {
+    candidates.sort();
+    candidates.unique();
+  }
 }
 
 bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& key) const {

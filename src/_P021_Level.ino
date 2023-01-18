@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-08-22, tonhuisman: Add setting to auto-save a changed setting after x minutes, size optimizations, add PCONFIG defines
 // 2021-12-29, tonhuisman: Add setting to enable/disable saving the settings when the Set Level value is changed using the config
 //                         command
 // 2021-12-28, tonhuisman: Avoid saving settings if no change on config command https://github.com/letscontrolit/ESPEasy/issues/3477,
@@ -14,12 +15,20 @@
 
 # include "src/Helpers/ESPEasy_math.h"
 # include "src/Helpers/Rules_calculate.h"
-# include "src/WebServer/WebServer.h"
+# include "src/WebServer/ESPEasy_WebServer.h"
 
 # define PLUGIN_021
 # define PLUGIN_ID_021          21
 # define PLUGIN_NAME_021        "Regulator - Level Control"
 # define PLUGIN_VALUENAME1_021  "Output"
+
+# define P021_CHECK_TASK          PCONFIG(0)
+# define P021_CHECK_VALUE         PCONFIG(1)
+# define P021_DONT_ALWAYS_SAVE    PCONFIG(2)
+# define P021_TRIGGER_LEVEL       PCONFIG_FLOAT(0)
+# define P021_TRIGGER_HYSTERESIS  PCONFIG_FLOAT(1)
+# define P021_TRIGGER_LAST_STORED PCONFIG_FLOAT(2)
+# define P021_AUTOSAVE_TIMER      PCONFIG_ULONG(0)
 
 boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -63,40 +72,48 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      PCONFIG(2) = 1; // Do not save
+      P021_DONT_ALWAYS_SAVE = 1; // Do not save
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       addRowLabel(F("Check Task"));
-      addTaskSelect(F("p021_task"), PCONFIG(0));
+      addTaskSelect(F("ptask"), P021_CHECK_TASK);
+      if (validTaskIndex(P021_CHECK_TASK)) {
+        addRowLabel(F("Check Value"));
+        addTaskValueSelect(F("pvalue"), P021_CHECK_VALUE, P021_CHECK_TASK);
+      }
 
-      LoadTaskSettings(PCONFIG(0)); // we need to load the values from another task for selection!
-      addRowLabel(F("Check Value"));
-      addTaskValueSelect(F("p021_value"), PCONFIG(1), PCONFIG(0));
+      addFormTextBox(F("Set Level"),  F("psetvalue"), toString(P021_TRIGGER_LEVEL),      8);
 
-      addFormTextBox(F("Set Level"),  F("p021_setvalue"), toString(PCONFIG_FLOAT(0)), 8);
+      addFormTextBox(F("Hysteresis"), F("physt"),     toString(P021_TRIGGER_HYSTERESIS), 8);
 
-      addFormTextBox(F("Hysteresis"), F("p021_hyst"),     toString(PCONFIG_FLOAT(1)), 8);
-
-      addFormCheckBox(F("Save 'Set Level' after change via <tt>config</tt> command"), F("p021_save_always"), PCONFIG(2) == 0); // inverted
-                                                                                                                               // flag!
+      // inverted flag!
+      addFormCheckBox(F("Save 'Set Level' after change via <pre>config</pre> command"), F("psave_always"), P021_DONT_ALWAYS_SAVE == 0);
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
+      # endif // ifndef BUILD_NO_DEBUG
 
-      // we need to restore our original taskvalues!
-      LoadTaskSettings(event->TaskIndex);
+      addFormNumericBox(F("Auto-save interval"), F("pautosave"), P021_AUTOSAVE_TIMER / 60, 0, 1440); // Present in minutes
+      addUnit(F("minutes"));
+      # ifndef BUILD_NO_DEBUG
+      addFormNote(F("Interval to check if 'Set Level' is changed via <pre>config</pre> command and saves it. Max. 24h, 0 = Off"));
+      # endif // ifndef BUILD_NO_DEBUG
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0)       = getFormItemInt(F("p021_task"));
-      PCONFIG(1)       = getFormItemInt(F("p021_value"));
-      PCONFIG(2)       = isFormItemChecked(F("p021_save_always")) ? 0 : 1; // inverted flag!
-      PCONFIG_FLOAT(0) = getFormItemFloat(F("p021_setvalue"));
-      PCONFIG_FLOAT(1) = getFormItemFloat(F("p021_hyst"));
+      P021_CHECK_TASK          = getFormItemInt(F("ptask"));
+      P021_CHECK_VALUE         = getFormItemInt(F("pvalue"));
+      P021_DONT_ALWAYS_SAVE    = isFormItemChecked(F("psave_always")) ? 0 : 1; // inverted flag!
+      P021_TRIGGER_LEVEL       = getFormItemFloat(F("psetvalue"));
+      P021_TRIGGER_LAST_STORED = P021_TRIGGER_LEVEL;
+      P021_TRIGGER_HYSTERESIS  = getFormItemFloat(F("physt"));
+      P021_AUTOSAVE_TIMER      = getFormItemInt(F("pautosave")) * 60; // Store in seconds
 
       success = true;
       break;
@@ -106,16 +123,29 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command == F("setlevel")) {
+      if (command.equals(F("setlevel"))) {
         String value  = parseString(string, 2);
         double result = 0.0;
 
         if (!isError(Calculate(value, result))) {
-          if (!essentiallyEqual(static_cast<double>(PCONFIG_FLOAT(0)), result)) { // Save only if different
-            PCONFIG_FLOAT(0) = result;
+          if (!essentiallyEqual(static_cast<double>(P021_TRIGGER_LEVEL), result)) { // Save only if different
+            P021_TRIGGER_LEVEL = result;
 
-            if (PCONFIG(2) == 0) {                                                // save only if explicitly enabled
+            if (P021_DONT_ALWAYS_SAVE == 0) {                                       // save only if explicitly enabled
+              P021_TRIGGER_LAST_STORED = P021_TRIGGER_LEVEL;
               SaveSettings();
+            } else {
+              UserVar.setUint32(event->TaskIndex, 2, 1);                     // Set flag for auto-save
+
+              if ((P021_AUTOSAVE_TIMER > 0) &&                               // - Autosave is set
+                  (P021_DONT_ALWAYS_SAVE != 0) &&                            // - Save is off
+                  ((UserVar.getUint32(event->TaskIndex, 3) == 0u) ||         // - Timer not yet started or uninitialized
+                   (UserVar.getUint32(event->TaskIndex, 3) > P021_AUTOSAVE_TIMER))) {
+                UserVar.setUint32(event->TaskIndex, 3, P021_AUTOSAVE_TIMER); // Start timer
+                # ifndef LIMIT_BUILD_SIZE
+                addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-save timer started."));
+                # endif // ifndef LIMIT_BUILD_SIZE
+              }
             }
           }
           success = true;
@@ -128,8 +158,8 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command == F("getlevel")) {
-        string  = PCONFIG_FLOAT(0);
+      if (command.equals(F("getlevel"))) {
+        string  = toString(P021_TRIGGER_LEVEL);
         success = true;
       }
       break;
@@ -137,7 +167,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      pinMode(CONFIG_PIN1, OUTPUT);
+      if (validGpio(CONFIG_PIN1)) {
+        pinMode(CONFIG_PIN1, OUTPUT);
+      }
       success = true;
       break;
     }
@@ -145,15 +177,19 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
     {
       // we're checking a var from another task, so calculate that basevar
-      taskIndex_t TaskIndex    = PCONFIG(0);
-      uint8_t     BaseVarIndex = TaskIndex * VARS_PER_TASK + PCONFIG(1);
+      taskIndex_t TaskIndex    = P021_CHECK_TASK;
+      if (!validTaskIndex(TaskIndex)) {
+        break;
+      }
+      uint8_t     BaseVarIndex = TaskIndex * VARS_PER_TASK + P021_CHECK_VALUE;
       float   value            = UserVar[BaseVarIndex];
       uint8_t state            = switchstate[event->TaskIndex];
 
       // compare with threshold value
-      bool  isZero             = essentiallyEqual(PCONFIG_FLOAT(1), 0.0f);
-      float valueLowThreshold  = PCONFIG_FLOAT(0) - (isZero ? 0.0f : (PCONFIG_FLOAT(1) / 2.0f));
-      float valueHighThreshold = PCONFIG_FLOAT(0) + (isZero ? 1.0f : (PCONFIG_FLOAT(1) / 2.0f)); // Include setvalue on 0-hysteresis
+      bool  isZero             = essentiallyZero(P021_TRIGGER_HYSTERESIS);
+      float valueLowThreshold  = P021_TRIGGER_LEVEL - (isZero ? 0.0f : (P021_TRIGGER_HYSTERESIS / 2.0f));
+      float valueHighThreshold = P021_TRIGGER_LEVEL + (isZero ? 1.0f : (P021_TRIGGER_HYSTERESIS / 2.0f)); // Include setvalue on
+                                                                                                          // 0-hysteresis
 
       if (!definitelyGreaterThan(value, valueLowThreshold)) {
         state = 1;
@@ -176,6 +212,27 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         sendData(event);
       }
 
+      success = true;
+      break;
+    }
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      // When set but not Save after change is set, don't want to save twice
+      if ((P021_AUTOSAVE_TIMER > 0) && (P021_DONT_ALWAYS_SAVE != 0) &&
+          (0 != UserVar.getUint32(event->TaskIndex, 3)) &&                                   // Only check if timer is running
+          (UserVar.getUint32(event->TaskIndex, 3) <= P021_AUTOSAVE_TIMER)) {
+        UserVar.setUint32(event->TaskIndex, 3, UserVar.getUint32(event->TaskIndex, 3) - 1u); // Count down per second
+
+        if (UserVar.getUint32(event->TaskIndex, 3) == 0) {
+          if ((UserVar.getUint32(event->TaskIndex, 2) != 0) &&
+              !essentiallyEqual(P021_TRIGGER_LEVEL, P021_TRIGGER_LAST_STORED)) {
+            addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-saving changed 'Set Level'."));
+            P021_TRIGGER_LAST_STORED = P021_TRIGGER_LEVEL;
+            SaveSettings();
+            UserVar.setUint32(event->TaskIndex, 2, 0);
+          }
+        }
+      }
       success = true;
       break;
     }

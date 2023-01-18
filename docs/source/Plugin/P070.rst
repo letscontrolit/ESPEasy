@@ -26,6 +26,11 @@ Supported hardware
 
 |P070_usedby|
 
+Power consumption
+~~~~~~~~~~~~~~~~~
+
+.. include:: NeoPixel_Power.rst
+
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
 

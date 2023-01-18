@@ -1,8 +1,6 @@
 #ifndef ESPEASY_CUSTOM_H
 #define ESPEASY_CUSTOM_H
 
-#include <Arduino.h>
-
 /*
     To modify the stock configuration without changing the EspEasy.ino file :
     1) rename this file to "Custom.h" (It is ignored by Git)
@@ -24,6 +22,7 @@
 // --- Feature Flagging ---------------------------------------------------------
 // Can be set to 1 to enable, 0 to disable, or not set to use the default (usually via define_plugin_sets.h)
 
+#define FEATURE_RULES_EASY_COLOR_CODE    1   // Use code highlighting, autocompletion and command suggestions in Rules
 #define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
 #define FEATURE_ARDUINO_OTA       1     //enables the Arduino OTA capabilities
 // #define FEATURE_SD                1     // Enable SD card support
@@ -94,6 +93,7 @@
 #define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
 
 #define DEFAULT_PORT        8080                                            // Enter your Server port value
+#define DEFAULT_CONTROLLER_TIMEOUT  100                                     // Default timeout in msec
 
 #define DEFAULT_PROTOCOL    0                                               // Protocol used for controller communications
                                                                             //   0 = Stand-alone (no controller set)
@@ -107,8 +107,18 @@
                                                                             //   8 = Generic HTTP
                                                                             //   9 = FHEM HTTP
 
+#ifdef ESP8266
 #define DEFAULT_PIN_I2C_SDA                     4
+#endif
+#ifdef ESP32
+#define DEFAULT_PIN_I2C_SDA                     -1                // Undefined
+#endif
+#ifdef ESP8266
 #define DEFAULT_PIN_I2C_SCL                     5
+#endif
+#ifdef ESP32
+#define DEFAULT_PIN_I2C_SCL                     -1                // Undefined
+#endif
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
 #define FEATURE_I2C_DEVICE_SCAN                 1
 
@@ -198,6 +208,11 @@
 #endif // ifdef ESP32
 #define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
+// Optional alternative CDN links:
+// Chart.js: (only used when FEATURE_CHART_JS is enabled)
+// #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+// JQuery:
+// #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
 
 
 // #define FEATURE_SETTINGS_ARCHIVE 1
@@ -206,6 +221,7 @@
 // #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
+// #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
 
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -262,10 +278,11 @@
 
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
+// #define FEATURE_AUTO_DARK_MODE           0 // Disable auto-dark mode
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
-#define SHOW_SYSINFO_JSON   //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
+#define SHOW_SYSINFO_JSON 1  //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
 
 /*
  #######################################################################################################
@@ -293,7 +310,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  #######################################################################################################
  */
 
-// #define USE_NON_STANDARD_24_TASKS
+// #define FEATURE_NON_STANDARD_24_TASKS  1
 
 /*
  #######################################################################################################
@@ -442,14 +459,25 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P115   // MAX1704x
 // #define USES_P116   // ST77xx
 // #define USES_P117   // SCD30
+// #define USES_P118   // Itho
 // #define USES_P119   // ITG3205 Gyro
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
+// #define USES_P129   // 74HC165 Input shiftregisters
+// #define USES_P131   // NeoMatrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
+// #define USES_P134   // A02YYUW
+// #define USES_P135   // SCD4x
+// #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+// #define USES_P141   // PCD8544 Nokia 5110 LCD
+// #define USES_P143   // I2C Rotary encoders
+// #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
+// #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
+// #define P143_FEATURE_COUNTER_COLORMAPPING 0 // Enabled by default, can be turned off here
 
 // #define USES_P128   // NeoPixelBusFX
 // #define P128_USES_GRB  // Default
@@ -461,14 +489,6 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 
 
-// Special plugins needing IR library
-// #define USES_P016   // IR
-// #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-// #define USES_P035   // IRTX
-// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
-                                 //common arguments for controlling all deeply supported A/C units
-// #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-// #define USES_P088   // Heatpump IR
 // #define USES_P108   // DDS238-x ZN Modbus energy meters
 
 

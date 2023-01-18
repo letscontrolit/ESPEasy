@@ -1,5 +1,7 @@
 #include "../DataStructs/EthernetEventData.h"
 
+#if FEATURE_ETHERNET
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 // Bit numbers for Eth status
@@ -41,6 +43,8 @@ void EthernetEventData_t::clearAll() {
   processedGotIP            = true;
   processedDHCPTimeout      = true;
   ethConnectAttemptNeeded  = true;
+  dns0_cache = IPAddress();
+  dns1_cache = IPAddress();
 }
 
 void EthernetEventData_t::markEthBegin() {
@@ -89,16 +93,21 @@ void EthernetEventData_t::setEthConnected() {
   setEthServicesInitialized();
 }
 
-void EthernetEventData_t::setEthServicesInitialized() {
+bool EthernetEventData_t::setEthServicesInitialized() {
   if (!unprocessedEthEvents() && !EthServicesInitialized()) {
     if (EthGotIP() && EthConnected()) {
+      dns0_cache = WiFi.dnsIP(0);
+      dns1_cache = WiFi.dnsIP(1);
+
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("Eth : Eth services initialized"));
       #endif
       bitSet(ethStatus, ESPEASY_ETH_SERVICES_INITIALIZED);
       ethConnectInProgress = false;
+      return true;
     }
   }
+  return false;
 }
 
 void EthernetEventData_t::markGotIP() {
@@ -115,6 +124,7 @@ void EthernetEventData_t::markLostIP() {
   bitClear(ethStatus, ESPEASY_ETH_GOT_IP);
   bitClear(ethStatus, ESPEASY_ETH_SERVICES_INITIALIZED);
   lastGetIPmoment.clear();
+  processedGotIP = false;
 }
 
 void EthernetEventData_t::markDisconnect() {
@@ -151,5 +161,6 @@ String EthernetEventData_t::ESPEasyEthStatusToString() const {
     }
   }
   return log;
-
 }
+
+#endif

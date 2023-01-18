@@ -1,17 +1,17 @@
 #include "../Helpers/StringGenerator_System.h"
 
-
-#include <Arduino.h>
-
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
 
+#include "../CustomBuild/CompiletimeDefines.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
-#include <PubSubClient.h>
+//#include <PubSubClient.h>
 #include "../Globals/MQTT.h"
 
 const __FlashStringHelper * getMQTT_state() {
@@ -31,7 +31,7 @@ const __FlashStringHelper * getMQTT_state() {
   return F("");
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /********************************************************************************************\
    Get system information
@@ -125,23 +125,23 @@ String getResetReasonString(uint8_t icore) {
 
 /*
   switch (reason) {
-  #if CONFIG_IDF_TARGET_ESP32
-    case POWERON_RESET:
-    case SW_CPU_RESET:
-    case DEEPSLEEP_RESET:
-    case SW_RESET:
-  #elif CONFIG_IDF_TARGET_ESP32S2
+  #if CONFIG_IDF_TARGET_ESP32S2
     case POWERON_RESET:
     case RTC_SW_CPU_RESET:
     case DEEPSLEEP_RESET:
     case RTC_SW_SYS_RESET:
+  #elif CONFIG_IDF_TARGET_ESP32
+    case POWERON_RESET:
+    case SW_CPU_RESET:
+    case DEEPSLEEP_RESET:
+    case SW_RESET:
   #endif
   }
 */
     return reason;
   }
 
-  return getUnknownString();
+  return F("Unknown");
 }
 
 #endif // ifdef ESP32
@@ -161,36 +161,45 @@ String getResetReasonString() {
 }
 
 String getSystemBuildString() {
-  String result;
+  return formatSystemBuildNr(get_build_nr());
+}
 
-  result += BUILD;
-  result += ' ';
-  result += F(BUILD_NOTES);
-  return result;
+String formatSystemBuildNr(uint16_t buildNr) {
+  if (buildNr < 20200) return String(buildNr);
+
+  // Build NR is used as a "revision" nr for settings
+  // As of 2022-08-18, it is the nr of days since 2022-08-18 + 20200
+  const uint32_t seconds_since_start = (buildNr - 20200) * 86400;
+  const uint32_t unix_time_start = 1660780800; // Thu Aug 18 2022 00:00:00 GMT+0000
+  struct tm build_time;
+  breakTime(unix_time_start + seconds_since_start, build_time);
+
+  String res = formatDateString(build_time, '\0');
+  return res;
 }
 
 String getPluginDescriptionString() {
-  String result;
-
+  return F(
+    ""
   #ifdef PLUGIN_BUILD_NORMAL
-  result += F(" [Normal]");
+  "[Normal]"
   #endif // ifdef PLUGIN_BUILD_NORMAL
   #ifdef PLUGIN_BUILD_COLLECTION
-  result += F(" [Collection]");
+  "[Collection]"
   #endif // ifdef PLUGIN_BUILD_COLLECTION
   #ifdef PLUGIN_BUILD_DEV
-  result += F(" [Development]");
+  "[Development]"
   #endif // ifdef PLUGIN_BUILD_DEV
   #ifdef PLUGIN_DESCR
-  result += F(" [");
-  result += F(PLUGIN_DESCR);
-  result += ']';
+  "[" PLUGIN_DESCR "]"
   #endif // ifdef PLUGIN_DESCR
-  #ifdef USE_NON_STANDARD_24_TASKS
-  result += F(" 24tasks");
-  #endif // ifdef USE_NON_STANDARD_24_TASKS
-  result.trim();
-  return result;
+  #ifdef BUILD_NO_DEBUG
+  "[No Debug Log]"
+  #endif
+  #if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
+  "[24tasks]"
+  #endif // if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
+  );
 }
 
 String getSystemLibraryString() {
@@ -234,3 +243,4 @@ String getLWIPversion() {
 }
 
 #endif // ifdef ESP8266
+

@@ -1,6 +1,9 @@
 #include "../WebServer/SysVarPage.h"
 
-#include "../WebServer/WebServer.h"
+
+#ifdef WEBSERVER_SYSVARS
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
@@ -11,7 +14,6 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/SystemVariables.h"
 
-#ifdef WEBSERVER_SYSVARS
 
 
 // ********************************************************************************
@@ -29,7 +31,7 @@ void handle_sysvars() {
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   html_BR();
   addHtml(F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>"));
@@ -124,6 +126,7 @@ void handle_sysvars() {
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
   addSysVar_html(F("%sysmonth% // %sysmonth_0%"));
+  addSysVar_enum_html(SystemVariables::SYSMONTH_S);
   addSysVar_html(F("%sysday%   // %sysday_0%"));
   addSysVar_html(F("%syshour%  // %syshour_0%"));
   addSysVar_html(F("%sysmin%   // %sysmin_0%"));
@@ -131,6 +134,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSSEC_D);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY_S);
+  addSysVar_enum_html(SystemVariables::SYSTZOFFSET);
 
   addTableSeparator(F("Sunrise/Sunset"), 3, 3);
   addSysVar_html(F("%sunset%"));
@@ -242,6 +246,7 @@ void handle_sysvars() {
   addSysVar_html(F("Mins to days: %c_m2day%(1900)"));
   addSysVar_html(F("Mins to dh:   %c_m2dh%(1900)"));
   addSysVar_html(F("Mins to dhm:  %c_m2dhm%(1900)"));
+  addSysVar_html(F("Mins to hcm:  %c_m2hcm%(482)"));
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
   addFormSeparator(3);
   addSysVar_html(F("To HEX: %c_2hex%(100000)"));
@@ -250,7 +255,7 @@ void handle_sysvars() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 
@@ -269,9 +274,7 @@ void addSysVar_html(const String& input) {
   html_TR_TD();
   {
     addHtml(F("<pre>")); // Make monospaced (<tt> tag?)
-    addHtml(F("<xmp>")); // Make sure HTML code is escaped. Tag depricated??
     addHtml(input);
-    addHtml(F("</xmp>"));
     addHtml(F("</pre>"));
   }
   html_TD();

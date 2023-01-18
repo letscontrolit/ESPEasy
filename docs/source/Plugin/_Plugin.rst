@@ -93,6 +93,8 @@ For example using just like normal task value data:
 
 * ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
+* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
 * ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
 * ``[bme#temp.min]`` See ``[bme#temp.max]`` 
 
@@ -203,7 +205,7 @@ Decimals
 The number of decimals set here will be used throughout ESPEasy whenever a task value has to be formatted.
 For example, when referring to a task value on a display via ``[bme#temperature]``, the value formatting will include the set number of decimals.
 
-See :ref:`Rules: Formatting refered values <Formatting values>` on how this can be customized.
+See :ref:`Rules: Formatting referred values <Formatting values>` on how this can be customized.
 Just remember such formatting cannot "make up" more decimals than what was set here in the task setup.
 
 
@@ -212,13 +214,13 @@ List of official plugins
 
 There are different released versions of ESP Easy:
 
-:green:`NORMAL` is the regular set of plugins, you can consider these plugins stable with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
+:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
 
-:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like the I2C multiplexer feature, RTTTL, tooltips, and some DEBUG logging.
+:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and some DEBUG logging.
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
-:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` are specialized builds holding all Energy-, Display-, Infra Red- (extended) and NeoPixel related plugins.
+:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
 
@@ -354,8 +356,15 @@ There are different released versions of ESP Easy:
    ":ref:`P126_page`","|P126_status|","P126"
    ":ref:`P127_page`","|P127_status|","P127"
    ":ref:`P128_page`","|P128_status|","P128"
+   ":ref:`P129_page`","|P129_status|","P129"
+   ":ref:`P131_page`","|P131_status|","P131"
    ":ref:`P132_page`","|P132_status|","P132"
    ":ref:`P133_page`","|P133_status|","P133"
+   ":ref:`P134_page`","|P134_status|","P134"
+   ":ref:`P135_page`","|P135_status|","P135"
+   ":ref:`P141_page`","|P141_status|","P141"
+   ":ref:`P143_page`","|P143_status|","P143"
+   ":ref:`P148_page`","|P148_status|","P148"
 
 
 Internal GPIO handling
@@ -452,6 +461,11 @@ Hardware
 Plugins: |Plugin_Hardware|
 
 Hardware: |P046_usedby|
+
+Input
+-----
+
+Plugins: |Plugin_Input|
 
 Keypad
 ------

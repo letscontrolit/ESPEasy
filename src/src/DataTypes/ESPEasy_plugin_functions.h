@@ -1,6 +1,8 @@
 #ifndef DATATYPES_ESPEASY_PLUGIN_DEFS_H
 #define DATATYPES_ESPEASY_PLUGIN_DEFS_H
 
+#include "../../ESPEasy_common.h"
+
 
 // ********************************************************************************
 //   Plugin (Task) function calls
@@ -25,7 +27,7 @@
 #define PLUGIN_SERIAL_IN                   18 // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
 #define PLUGIN_UDP_IN                      19 // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)
 #define PLUGIN_CLOCK_IN                    20 // Called every new minute
-#define PLUGIN_TIMER_IN                    21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+#define PLUGIN_TASKTIMER_IN                21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
 #define PLUGIN_FIFTY_PER_SECOND            22 // Called 50 times per second
 #define PLUGIN_SET_CONFIG                  23 // Counterpart of PLUGIN_GET_CONFIG_VALUE to allow to set a config via a command.
 #define PLUGIN_GET_DEVICEGPIONAMES         24 // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
@@ -37,8 +39,8 @@
 #define PLUGIN_MONITOR                     30 // Replaces PLUGIN_UNCONDITIONAL_POLL
 #define PLUGIN_SET_DEFAULTS                31 // Called when assigning a plugin to a task, to set some default config.
 #define PLUGIN_GET_PACKED_RAW_DATA         32 // Return all data in a compact binary format specific for that plugin.
-                                              // Needs USES_PACKED_RAW_DATA
-#define PLUGIN_ONLY_TIMER_IN               33 // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
+                                              // Needs FEATURE_PACKED_RAW_DATA
+#define PLUGIN_DEVICETIMER_IN              33 // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
 #define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34 // Show I2C parameters like address.
 #define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
 #define PLUGIN_MQTT_CONNECTION_STATE       36 // Signal when connection to MQTT broker is re-established
@@ -53,6 +55,8 @@
 #define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 43 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
 #define PLUGIN_INIT_VALUE_RANGES           44 // Initialize the ranges of values, called just before PLUGIN_INIT
 #define PLUGIN_READ_ERROR_OCCURED          45 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
+#define PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR 46 // Show the configuration for output type and what value to set to which taskvalue
+#define PLUGIN_PROCESS_CONTROLLER_DATA     47 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
 
 
 
@@ -83,6 +87,7 @@ public:
     CPLUGIN_FIFTY_PER_SECOND, // Called 50x per second (typical for checking new data instead of waiting)
     CPLUGIN_INIT_ALL,
     CPLUGIN_EXIT,
+    CPLUGIN_WRITE,            // Send commands to a controller.
 
 
     // new messages for autodiscover controller plugins (experimental) i.e. C014

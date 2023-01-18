@@ -18,7 +18,6 @@ const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
     case ST77xx_type_e::ST7789vw_240x280: return F("ST7789 240 x 280px");
     case ST77xx_type_e::ST7789vw_135x240: return F("ST7789 135 x 240px");
     case ST77xx_type_e::ST7796s_320x480: return F("ST7796 320 x 480px");
-    case ST77xx_type_e::ST77xx_MAX: break;
   }
   return F("Unsupported type!");
 }
@@ -61,8 +60,6 @@ void ST77xx_type_toResolution(ST77xx_type_e device, uint16_t& x, uint16_t& y) {
       x = 320;
       y = 480;
       break;
-    case ST77xx_type_e::ST77xx_MAX:
-      break;
   }
 }
 
@@ -75,7 +72,6 @@ const __FlashStringHelper* P116_CommandTrigger_toString(P116_CommandTrigger cmd)
     case P116_CommandTrigger::st7735: return F("st7735");
     case P116_CommandTrigger::st7789: return F("st7789");
     case P116_CommandTrigger::st7796: return F("st7796");
-    case P116_CommandTrigger::MAX: return F("None");
     case P116_CommandTrigger::st77xx: break;
   }
   return F("st77xx"); // Default command trigger
@@ -99,9 +95,6 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
   _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
   _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
 {
-  ST77xx_type_toResolution(_device, _xpix, _ypix);
-
-  updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
   _commandTriggerCmd += F("cmd");
@@ -118,6 +111,10 @@ P116_data_struct::~P116_data_struct() {
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P116_data_struct::plugin_init(struct EventStruct *event) {
+  ST77xx_type_toResolution(_device, _xpix, _ypix);
+
+  updateFontMetrics();
+
   bool success = false;
 
   ButtonState     = false; // button not touched
@@ -131,9 +128,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     switch (_device) {
       case ST77xx_type_e::ST7735s_128x128:
 
-        if (initRoptions == 0xFF) {
-          initRoptions = INITR_144GREENTAB; // 128x128px
-        }
+        initRoptions = INITR_144GREENTAB; // 128x128px
 
       // fall through
       case ST77xx_type_e::ST7735s_128x160:
@@ -187,8 +182,6 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         }
         break;
       }
-      case ST77xx_type_e::ST77xx_MAX:
-        break;
     }
 
     # ifndef BUILD_NO_DEBUG
@@ -227,30 +220,33 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
                                                       true,
                                                       _textBackFill);
 
-    displayOnOff(true);
+    if (nullptr != gfxHelper) {
+      displayOnOff(true);
 
-    gfxHelper->setRotation(_rotation);
-    st77xx->fillScreen(_bgcolor);             // fill screen with black color
-    st77xx->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+      gfxHelper->initialize();
+      gfxHelper->setRotation(_rotation);
+      st77xx->fillScreen(_bgcolor);             // fill screen with black color
+      st77xx->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
 
-    # ifdef P116_SHOW_SPLASH
-    uint16_t yPos = 0;
-    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
-    yPos += (3 * _fontheight);
-    gfxHelper->printText(String(F("ST77xx")).c_str(),  0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
-    delay(100); // Splash
-    # endif // ifdef P116_SHOW_SPLASH
+      # ifdef P116_SHOW_SPLASH
+      uint16_t yPos = 0;
+      gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
+      yPos += (3 * _fontheight);
+      gfxHelper->printText(String(F("ST77xx")).c_str(),  0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
+      delay(100); // Splash
+      # endif // ifdef P116_SHOW_SPLASH
 
-    gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
-    st77xx->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
-    st77xx->setCursor(0, 0);           // move cursor to position (0, 0) pixel
-    updateFontMetrics();
+      gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
+      st77xx->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
+      st77xx->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+      updateFontMetrics();
 
 
-    if (P116_CONFIG_BUTTON_PIN != -1) {
-      pinMode(P116_CONFIG_BUTTON_PIN, INPUT_PULLUP);
+      if (P116_CONFIG_BUTTON_PIN != -1) {
+        pinMode(P116_CONFIG_BUTTON_PIN, INPUT_PULLUP);
+      }
+      success = true;
     }
-    success = true;
   }
   return success;
 }
@@ -272,7 +268,9 @@ void P116_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P116_data_struct::plugin_exit(struct EventStruct *event) {
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("ST77xx: Exit."));
+  # endif // ifndef BUILD_NO_DEBUG
 
   if ((nullptr != st77xx) && bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     st77xx->fillScreen(ADAGFX_BLACK); // fill screen with black color
@@ -286,13 +284,13 @@ bool P116_data_struct::plugin_exit(struct EventStruct *event) {
  * cleanup: De-initialize pointers
  ***************************************************************************/
 void P116_data_struct::cleanup() {
-  if (nullptr != gfxHelper) { delete gfxHelper; }
+  delete gfxHelper;
   gfxHelper = nullptr;
 
-  if (nullptr != st7735) { delete st7735; }
+  delete st7735;
   st7735 = nullptr;
 
-  if (nullptr != st7789) { delete st7789; }
+  delete st7789;
   st7789 = nullptr;
   st77xx = nullptr; // Only used as a proxy
 }

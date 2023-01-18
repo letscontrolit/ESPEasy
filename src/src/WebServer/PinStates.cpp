@@ -1,6 +1,6 @@
 #include "../WebServer/PinStates.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 
 #include "../DataStructs/PinMode.h"

@@ -1,6 +1,8 @@
 #ifndef HELPERS_HARDWARE_H
 #define HELPERS_HARDWARE_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../DataStructs/GpioFactorySettingsStruct.h"
@@ -11,26 +13,29 @@
 
 #include "../Globals/ResetFactoryDefaultPref.h"
 
-#include "../../ESPEasy_common.h"
-
 #ifdef ESP32
 # include <driver/adc.h>
 
 // Needed to get ADC Vref
 # include <esp_adc_cal.h>
 # include <driver/adc.h>
-#endif
+#endif // ifdef ESP32
 
-# ifdef ESP32
-#  if CONFIG_IDF_TARGET_ESP32
-  #define MAX_ADC_VALUE 4095
-#  else // if CONFIG_IDF_TARGET_ESP32
-  #define MAX_ADC_VALUE ((1 << SOC_ADC_MAX_BITWIDTH) - 1)
-#  endif // if CONFIG_IDF_TARGET_ESP32
-# endif // ifdef ESP32
-# ifdef ESP8266
-  #define MAX_ADC_VALUE 1023
-# endif // ifdef ESP8266
+#ifdef ESP32
+# if CONFIG_IDF_TARGET_ESP32
+  #  define MAX_ADC_VALUE 4095
+# else // if CONFIG_IDF_TARGET_ESP32
+  #  define MAX_ADC_VALUE ((1 << SOC_ADC_MAX_BITWIDTH) - 1)
+# endif  // if CONFIG_IDF_TARGET_ESP32
+#endif  // ifdef ESP32
+#ifdef ESP8266
+  #if FEATURE_ADC_VCC
+  // Vcc in units of 1/1024 V
+  # define MAX_ADC_VALUE 4095
+  #else
+  # define MAX_ADC_VALUE 1023
+  #endif
+#endif // ifdef ESP8266
 
 
 /********************************************************************************************\
@@ -75,7 +80,7 @@ int espeasy_analogRead(int pin);
 #endif // ifdef ESP8266
 
 #ifdef ESP32
-void initADC();
+void                       initADC();
 
 bool                       hasADC_factory_calibration();
 const __FlashStringHelper* getADC_factory_calibration_type();
@@ -98,6 +103,12 @@ uint32_t                   getFlashChipId();
 uint32_t                   getFlashRealSizeInBytes();
 
 uint32_t                   getFlashChipSpeed();
+
+#ifdef ESP32
+uint32_t                   getXtalFrequencyMHz();
+#endif // ifdef ESP32
+
+const __FlashStringHelper* getFlashChipMode();
 
 bool                       puyaSupport();
 

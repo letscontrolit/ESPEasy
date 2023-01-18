@@ -5,7 +5,7 @@
 
 #ifdef USES_P002
 
-# include "src/Helpers/Hardware.h"
+# include "../Helpers/Hardware.h"
 # include <vector>
 
 # ifdef ESP32
@@ -93,7 +93,10 @@ struct P002_binningRange {
 };
 
 struct P002_data_struct : public PluginTaskData_base {
-  P002_data_struct(struct EventStruct *event);
+  P002_data_struct() = default;
+  virtual ~P002_data_struct() = default;
+
+  void init(struct EventStruct *event);
 
 private:
 

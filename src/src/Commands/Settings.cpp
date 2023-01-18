@@ -4,6 +4,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -15,19 +17,17 @@
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_System.h"
 
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line)
 {
 	if (HasArgv(Line, 2)) {
-		Settings.Build = event->Par1;
+	  Settings.Build = event->Par1;
 	} else {
-		serialPrintln();
-		String result = F("Build:");
-		result += Settings.Build;
-    return return_result(event, result);
+      return return_result(event, concat(F("Build:"), static_cast<int>(Settings.Build)));
 	}
-	return return_command_success();
+	return return_command_success_str();
 }
 
 String Command_Settings_Unit(struct EventStruct *event, const char* Line)
@@ -35,12 +35,9 @@ String Command_Settings_Unit(struct EventStruct *event, const char* Line)
 	if (HasArgv(Line, 2)) {
 		Settings.Unit = event->Par1;
 	}else  {
-		serialPrintln();
-		String result = F("Unit:");
-		result += Settings.Unit;
-    return return_result(event, result);
+      return return_result(event, concat(F("Unit:"), static_cast<int>(Settings.Unit)));
 	}
-	return return_command_success();
+	return return_command_success_str();
 }
 
 String Command_Settings_Name(struct EventStruct *event, const char* Line)
@@ -62,7 +59,7 @@ String Command_Settings_Password(struct EventStruct *event, const char* Line)
 				      );
 }
 
-String Command_Settings_Password_Clear(struct EventStruct *event, const char* Line)
+const __FlashStringHelper *  Command_Settings_Password_Clear(struct EventStruct *event, const char* Line)
 {
 	const String storedPassword = SecuritySettings.getPassword();
 	if (storedPassword.length() > 0) {
@@ -94,7 +91,7 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 
 	serialPrintln(F("System Info"));
 	serialPrint(F("  IP Address    : ")); serialPrintln(NetworkLocalIP().toString());
-	serialPrint(F("  Build         : ")); serialPrintln(String(static_cast<int>(BUILD)));
+	serialPrint(F("  Build         : ")); serialPrintln(String(get_build_nr()) + '/' + getSystemBuildString());
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
 	serialPrint(F("  Unit          : ")); serialPrintln(String(static_cast<int>(Settings.Unit)));
 	serialPrint(F("  WifiSSID      : ")); serialPrintln(SecuritySettings.WifiSSID);

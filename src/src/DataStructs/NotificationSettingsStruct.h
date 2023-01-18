@@ -1,6 +1,10 @@
 #ifndef DATASTRUCTS_NOTIFICATIONSETTINGSSTRUCT_H
 #define DATASTRUCTS_NOTIFICATIONSETTINGSSTRUCT_H
 
+#include "../../ESPEasy_common.h"
+
+#if FEATURE_NOTIFIER
+
 #include <Arduino.h>
 #include <memory> // For std::shared_ptr
 
@@ -29,6 +33,13 @@ struct NotificationSettingsStruct
 
 typedef std::shared_ptr<NotificationSettingsStruct> NotificationSettingsStruct_ptr_type;
 #define MakeNotificationSettings(T) NotificationSettingsStruct_ptr_type NotificationSettingsStruct_ptr(new (std::nothrow)  NotificationSettingsStruct());\
-                                    NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr;
+                                    NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr; \
+                                    if (NotificationSettingsStruct_ptr) { memset(&T, 0, sizeof(NotificationSettingsStruct)); }
 
+// Need to make sure every byte between the members is also zero
+// Otherwise the checksum will fail and settings will be saved too often.
+// The memset above is just for this.
+
+
+#endif
 #endif // DATASTRUCTS_NOTIFICATIONSETTINGSSTRUCT_H

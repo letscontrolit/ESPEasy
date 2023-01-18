@@ -6,15 +6,23 @@
 #include "../DataTypes/SPI_options.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
+#include "../Helpers/Misc.h"
 
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) { //-V730
-  clearAll();
+  clearMisc();
+  clearTimeSettings();
+  clearNotifications();
+  clearControllers();
+  clearTasks();
+  clearLogSettings();
+  clearUnitNameSettings();
   clearNetworkSettings();
 }
+
 
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -83,11 +91,7 @@ void SettingsStruct_tmpl<N_TASKS>::EcoPowerMode(bool value) {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep() const {
-  #ifdef ESP32
-  return true;
-  #else
   return bitRead(VariousBits1, 7);
-  #endif
 }
 
 template<unsigned int N_TASKS>
@@ -128,12 +132,18 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
+#ifdef USES_ESPEASY_NOW
   return bitRead(VariousBits1, 11);
+#else
+  return false;
+#endif
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow(bool value) {
+#ifdef USES_ESPEASY_NOW
   bitWrite(VariousBits1, 11, value);
+#endif
 }
 
 template<unsigned int N_TASKS>
@@ -305,6 +315,18 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHTTP_follow_redirects(bool value) {
   bitWrite(VariousBits1, 27, value);
 }
 
+#if FEATURE_AUTO_DARK_MODE
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getCssMode() const {
+  return get2BitFromUL(VariousBits1, 28); // Also occupies bit 29!
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setCssMode(uint8_t value) {
+  set2BitToUL(VariousBits1, 28, value); // Also occupies bit 29!
+}
+#endif // FEATURE_AUTO_DARK_MODE
+
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
   return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);
@@ -430,12 +452,15 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_i2c_scl              = DEFAULT_PIN_I2C_SCL;
   Pin_status_led           = DEFAULT_PIN_STATUS_LED;
   Pin_sd_cs                = -1;
+#ifdef ESP32
+  // Ethernet related settings are never used on ESP8266
   ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
   ETH_Pin_mdc              = DEFAULT_ETH_PIN_MDC;
   ETH_Pin_mdio             = DEFAULT_ETH_PIN_MDIO;
   ETH_Pin_power            = DEFAULT_ETH_PIN_POWER;
   ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
   ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
+#endif
   NetworkMedium            = DEFAULT_NETWORK_MEDIUM;
 
   I2C_clockSpeed_Slow      = DEFAULT_I2C_CLOCK_SPEED_SLOW;
@@ -494,21 +519,15 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
   SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
+  #ifdef USES_ESPEASY_NOW
+  UseESPEasyNow(DEFAULT_USE_ESPEASYNOW);
+  #else
+  UseESPEasyNow(false);
+  #endif
   ApDontForceSetup(DEFAULT_AP_DONT_FORCE_SETUP);
   DoNotStartAP(DEFAULT_DONT_ALLOW_START_AP);
 }
 
-template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::clearAll() {
-  clearMisc();
-  clearTimeSettings();
-  clearNetworkSettings();
-  clearNotifications();
-  clearControllers();
-  clearTasks();
-  clearLogSettings();
-  clearUnitNameSettings();
-}
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {

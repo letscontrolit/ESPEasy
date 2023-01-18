@@ -1,20 +1,29 @@
 #include "../PluginStructs/P094_data_struct.h"
 
+#ifdef USES_P094
+
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 #include <ESPeasySerial.h>
 
-#ifdef USES_P094
 #include <Regexp.h>
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"
 
 
-P094_data_struct::P094_data_struct() :  easySerial(nullptr) {}
+P094_data_struct::P094_data_struct() :  easySerial(nullptr) {
+  for (int i = 0; i < P094_NR_FILTERS; ++i) {
+    valueType_index[i] = P094_Filter_Value_Type::P094_not_used;
+    filter_comp[i] = P094_Filter_Comp::P094_Equal_OR;
+  }
+}
 
 P094_data_struct::~P094_data_struct() {
-  reset();
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
 }
 
 void P094_data_struct::reset() {
@@ -119,7 +128,6 @@ bool P094_data_struct::loop() {
               valid = false;
             }
           }
-
           if (valid) {
             fullSentenceReceived = true;
           }
@@ -130,7 +138,11 @@ bool P094_data_struct::loop() {
           // Ignore LF
           break;
         default:
-          sentence_part += c;
+          if (c >= 32 && c < 127) {
+            sentence_part += c;
+          } else {
+            current_sentence_errored = true;
+          }
           break;
       }
 
@@ -337,7 +349,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
               if (log.reserve(64)) {
-                log  = F("CUL Reader: ");
+                log += F("CUL Reader: ");
                 log += P094_FilterValueType_toString(valueType_index[f]);
                 log += F(":  in:");
                 log += inputString;

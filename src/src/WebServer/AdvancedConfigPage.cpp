@@ -1,10 +1,12 @@
 #include "../WebServer/AdvancedConfigPage.h"
 
+#ifdef WEBSERVER_ADVANCED
+
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 #include "../ESPEasyCore/ESPEasyWifi.h"
 
@@ -13,10 +15,8 @@
 #include "../Globals/TimeZone.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"
-
-
-#ifdef WEBSERVER_ADVANCED
 
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
@@ -33,7 +33,7 @@ void handle_advanced() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   if (!webArg(F("edit")).isEmpty())
   {
@@ -119,7 +119,12 @@ void handle_advanced() {
     Settings.EnableRulesCaching(isFormItemChecked(LabelType::ENABLE_RULES_CACHING));
 //    Settings.EnableRulesEventReorder(isFormItemChecked(LabelType::ENABLE_RULES_EVENT_REORDER)); // TD-er: Disabled for now
 
+#ifndef NO_HTTP_UPDATER
     Settings.AllowOTAUnlimited(isFormItemChecked(LabelType::ALLOW_OTA_UNLIMITED));
+#endif // NO_HTTP_UPDATER
+#if FEATURE_AUTO_DARK_MODE
+    Settings.setCssMode(getFormItemInt(getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE)));
+#endif // FEATURE_AUTO_DARK_MODE
 
     addHtmlError(SaveSettings());
 
@@ -163,7 +168,12 @@ void handle_advanced() {
 
   addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP());
   addFormTextBox(F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
+  #if FEATURE_EXT_RTC
   addFormExtTimeSourceSelect(F("External Time Source"), F("exttimesource"), Settings.ExtTimeSource());
+  if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
+    addFormNote(concat(getLabel(LabelType::EXT_RTC_UTC_TIME), F(": ")) + getValue(LabelType::EXT_RTC_UTC_TIME));
+  }
+  #endif
 
   addFormSubHeader(F("DST Settings"));
   addFormDstSelect(true,  Settings.DST_Start);
@@ -247,6 +257,20 @@ void handle_advanced() {
   addFormNote(F("When enabled, OTA updating can overwrite the filesystem and settings!"));
   addFormNote(F("Requires reboot to activate"));
   # endif // ifndef NO_HTTP_UPDATER
+  #if FEATURE_AUTO_DARK_MODE
+  const __FlashStringHelper * cssModeNames[] = {
+    F("Auto"),
+    F("Light"),
+    F("Dark"),
+  };
+  const int cssModeOptions[] = { 0, 1, 2};
+    addFormSelector(getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+                    getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+                    sizeof(cssModeOptions) / sizeof(int),
+                    cssModeNames,
+                    cssModeOptions,
+                    Settings.getCssMode());
+  #endif // FEATURE_AUTO_DARK_MODE
 
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
@@ -268,10 +292,8 @@ void handle_advanced() {
 #endif // ifdef ESP32
 
   addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
-#ifdef ESP8266
   addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());
   addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
-#endif
 #ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
 #endif // ifdef SUPPORT_ARP
@@ -314,7 +336,7 @@ void handle_advanced() {
   addHtml(F("<input type='hidden' name='edit' value='1'>"));
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 
@@ -385,6 +407,10 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
 
 void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {
+  #ifdef BUILD_NO_DEBUG
+  if (choice > LOG_LEVEL_INFO) choice = LOG_LEVEL_INFO;
+  #endif
+
   addRowLabel(getLabel(label));
   const __FlashStringHelper * options[LOG_LEVEL_NRELEMENTS + 1];
   int    optionValues[LOG_LEVEL_NRELEMENTS + 1] = { 0 };

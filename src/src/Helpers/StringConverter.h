@@ -1,6 +1,8 @@
 #ifndef HELPERS_STRINGCONVERTER_H
 #define HELPERS_STRINGCONVERTER_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../Globals/Plugins.h"
@@ -8,9 +10,28 @@
 
 #include "../Helpers/Convert.h"
 
-class IPAddress;
+#include <IPAddress.h>
 
 // -V::569
+
+/********************************************************************************************\
+   Concatenate using code which results in the smallest compiled code
+ \*********************************************************************************************/
+
+template <typename T>
+String concat(const __FlashStringHelper * str, const T &val) {
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
+template <typename T>
+String concat(const String& str, const T &val) {
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
 
 /********************************************************************************************\
    Convert a char string to integer
@@ -70,10 +91,22 @@ unsigned long long hexToULL(const String& input_c,
                             size_t        startpos,
                             size_t        nrHexDecimals);
 
+void appendHexChar(uint8_t data, String& string);
+
+// Binary data to HEX
+// Returned string length will be twice the size of the data array.
+String formatToHex_array(const uint8_t* data, size_t size);
+
+String formatToHex(unsigned long value,
+                   const __FlashStringHelper * prefix,
+                   unsigned int minimal_hex_digits);
+
 String formatToHex(unsigned long value,
                    const __FlashStringHelper * prefix);
 
-String formatToHex(unsigned long value);
+String formatToHex(unsigned long value, unsigned int minimal_hex_digits = 0);
+
+String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits = 0);
 
 String formatHumanReadable(unsigned long value,
                            unsigned long factor);
@@ -93,6 +126,9 @@ const __FlashStringHelper * boolToString(bool value);
    Typical string replace functions.
 \*********************************************************************************************/
 void   removeExtraNewLine(String& line);
+
+// Remove all occurences of given character from the string
+void   removeChar(String& line, char character);
 
 void   addNewLine(String& line);
 
@@ -208,6 +244,11 @@ String to_internal_string(const String& input,
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
+String parseString(const char *  string,
+                   uint8_t       indexFind,
+                   char          separator = ',',
+                   bool          trimResult = true);
+
 String parseString(const String& string,
                    uint8_t       indexFind,
                    char          separator = ',',

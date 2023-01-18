@@ -3,15 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
-
-
-
-struct LabelType;
-
-// enum LabelType::Enum : short;
-
 struct LabelType {
-  enum Enum : short {
+  enum Enum : uint8_t {
     UNIT_NR,
     UNIT_NAME,
     HOST_NAME,
@@ -19,6 +12,9 @@ struct LabelType {
     LOCAL_TIME,
     TIME_SOURCE,
     TIME_WANDER,
+    #if FEATURE_EXT_RTC
+    EXT_RTC_UTC_TIME,
+    #endif
     UPTIME,
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
@@ -69,6 +65,9 @@ struct LabelType {
 #ifndef BUILD_NO_RAM_TRACKER
     ENABLE_RAM_TRACKING,
 #endif
+#if FEATURE_AUTO_DARK_MODE
+    ENABLE_AUTO_DARK_MODE,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
@@ -87,9 +86,9 @@ struct LabelType {
     IP_ADDRESS_SUBNET,       // 192.168.1.123 / 255.255.255.0
     GATEWAY,                 // 192.168.1.1
     CLIENT_IP,               // 192.168.1.67
-  #ifdef FEATURE_MDNS
+    #if FEATURE_MDNS
     M_DNS,                   // breadboard.local
-  #endif // ifdef FEATURE_MDNS
+    #endif // if FEATURE_MDNS
     DNS,                     // 192.168.1.1 / (IP unset)
     DNS_1,
     DNS_2,
@@ -138,6 +137,10 @@ struct LabelType {
 
     ESP_CHIP_ID,
     ESP_CHIP_FREQ,
+#ifdef ESP32
+    ESP_CHIP_XTAL_FREQ,
+    ESP_CHIP_APB_FREQ,
+#endif
     ESP_CHIP_MODEL,
     ESP_CHIP_REVISION,
     ESP_CHIP_CORES,

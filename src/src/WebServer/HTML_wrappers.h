@@ -12,6 +12,7 @@ void wrap_html_tag(const __FlashStringHelper * tag, const String& text);
 void wrap_html_tag(const String& tag, const String& text);
 void wrap_html_tag(char tag, const String& text);
 
+void html_B(const __FlashStringHelper * text);
 void html_B(const String& text);
 
 void html_I(const String& text);
@@ -29,6 +30,8 @@ void html_TR();
 void html_TR_TD_height(int height);
 
 void html_TD();
+
+void html_TD(const __FlashStringHelper * style);
 
 void html_TD(int td_cnt);
 
@@ -93,10 +96,17 @@ void html_add_JQuery_script();
 #if FEATURE_CHART_JS
 void html_add_ChartJS_script();
 #endif // if FEATURE_CHART_JS
+
+#if FEATURE_RULES_EASY_COLOR_CODE
+void html_add_Easy_color_code_script();
+#endif
+
 void html_add_autosubmit_form();
 
 void html_add_script(const __FlashStringHelper * script, bool defer);
 void html_add_script(const String& script, bool defer);
+
+void html_add_script_arg(const __FlashStringHelper * script_arg, bool defer);
 
 void html_add_script(bool defer);
 

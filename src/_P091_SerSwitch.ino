@@ -120,7 +120,6 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         {
-          uint8_t choice = PCONFIG(0);
           const __FlashStringHelper * options[4] = {
             F("Yewelink/TUYA"),
             F("Sonoff Dual"),
@@ -128,61 +127,61 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             F("Moes Wifi Dimmer")
           };
           const int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
-          addFormSelector(F("Switch Type"), F("plugin_091_type"), 4, options, optionValues, choice);
+          addFormSelector(F("Switch Type"), F("type"), 4, options, optionValues, PCONFIG(0));
         }
 
         if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
-          uint8_t choice = PCONFIG(1);
-          const __FlashStringHelper * buttonOptions[4];
-          buttonOptions[0] = F("1");
-          buttonOptions[1] = F("2/Dimmer#2");
-          buttonOptions[2] = F("3/Dimmer#3");
-          buttonOptions[3] = F("4");
-          int buttonoptionValues[4] = { 1, 2, 3, 4 };
-          addFormSelector(F("Number of relays"), F("plugin_091_button"), 4, buttonOptions, buttonoptionValues, choice);
+          const __FlashStringHelper * buttonOptions[4] = {
+            F("1"),
+            F("2/Dimmer#2"),
+            F("3/Dimmer#3"),
+            F("4"),
+          };
+          const int buttonoptionValues[4] = { 1, 2, 3, 4 };
+          addFormSelector(F("Number of relays"), F("button"), 4, buttonOptions, buttonoptionValues, PCONFIG(1));
         }
 
         if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
-          uint8_t choice = PCONFIG(1);
-          const __FlashStringHelper * modeoptions[3];
-          modeoptions[0] = F("Normal");
-          modeoptions[1] = F("Exclude/Blinds mode");
-          modeoptions[2] = F("Simultaneous mode");
-          int modeoptionValues[3] = { 0, 1, 2 };
-          addFormSelector(F("Relay working mode"), F("plugin_091_mode"), 3, modeoptions, modeoptionValues, choice);
+          const __FlashStringHelper * modeoptions[3] = {
+            F("Normal"),
+            F("Exclude/Blinds mode"),
+            F("Simultaneous mode"),
+          };
+          const int modeoptionValues[3] = { 0, 1, 2 };
+          addFormSelector(F("Relay working mode"), F("mode"), 3, modeoptions, modeoptionValues, PCONFIG(1));
         }
 
         if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
           {
-            uint8_t choice = PCONFIG(1);
-            const __FlashStringHelper * buttonOptions[4];
-            buttonOptions[0] = F("1");
-            buttonOptions[1] = F("2");
-            buttonOptions[2] = F("3");
-            buttonOptions[3] = F("4");
-            int buttonoptionValues[4] = { 1, 2, 3, 4 };
-            addFormSelector(F("Number of relays"), F("plugin_091_button"), 4, buttonOptions, buttonoptionValues, choice);
+            const __FlashStringHelper * buttonOptions[4] = {
+              F("1"),
+              F("2"),
+              F("3"),
+              F("4"),
+            };
+            const int buttonoptionValues[4] = { 1, 2, 3, 4 };
+            addFormSelector(F("Number of relays"), F("button"), 4, buttonOptions, buttonoptionValues, PCONFIG(1));
           }
 
           {
-            uint8_t choice = PCONFIG(2);
-            const __FlashStringHelper * speedOptions[8];
-            speedOptions[0] = F("9600");
-            speedOptions[1] = F("19200");
-            speedOptions[2] = F("115200");
-            speedOptions[3] = F("1200");
-            speedOptions[4] = F("2400");
-            speedOptions[5] = F("4800");
-            speedOptions[6] = F("38400");
-            speedOptions[7] = F("57600");
-            addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, nullptr, choice);
+            const __FlashStringHelper * speedOptions[8] = {
+              F("9600"),
+              F("19200"),
+              F("115200"),
+              F("1200"),
+              F("2400"),
+              F("4800"),
+              F("38400"),
+              F("57600"),
+            };
+            addFormSelector(F("Serial speed"), F("speed"), 8, speedOptions, nullptr, PCONFIG(2));
           }
 
-          addFormCheckBox(F("Use command doubling"), F("plugin_091_dbl"), PCONFIG(3));
-          addFormCheckBox(F("Use IPD preamble"), F("plugin_091_ipd"), PCONFIG(4));
+          addFormCheckBox(F("Use command doubling"), F("dbl"), PCONFIG(3));
+          addFormCheckBox(F("Use IPD preamble"), F("ipd"), PCONFIG(4));
         }
 
         success = true;
@@ -192,21 +191,21 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
 
-        PCONFIG(0) = getFormItemInt(F("plugin_091_type"));
+        PCONFIG(0) = getFormItemInt(F("type"));
         if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
-          PCONFIG(1) = getFormItemInt(F("plugin_091_button"));
+          PCONFIG(1) = getFormItemInt(F("button"));
         }
         if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
-          PCONFIG(1) = getFormItemInt(F("plugin_091_mode"));
+          PCONFIG(1) = getFormItemInt(F("mode"));
         }
         if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
-          PCONFIG(1) = getFormItemInt(F("plugin_091_button"));
-          PCONFIG(2) = getFormItemInt(F("plugin_091_speed"));
-          PCONFIG(3) = isFormItemChecked(F("plugin_091_dbl"));
-          PCONFIG(4) = isFormItemChecked(F("plugin_091_ipd"));
+          PCONFIG(1) = getFormItemInt(F("button"));
+          PCONFIG(2) = getFormItemInt(F("speed"));
+          PCONFIG(3) = isFormItemChecked(F("dbl"));
+          PCONFIG(4) = isFormItemChecked(F("ipd"));
           Plugin_091_cmddbl = PCONFIG(3);
           Plugin_091_ipd    = PCONFIG(4);
         }
@@ -221,7 +220,6 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         String log;
-        LoadTaskSettings(event->TaskIndex);
         Plugin_091_ownindex = event->TaskIndex;
         Settings.UseSerial = true;         // make sure that serial enabled
         Settings.SerialLogLevel = 0;       // and logging disabled
@@ -237,13 +235,13 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
           log += F(" Yewe ");
           log += Plugin_091_numrelay;
           log += F(" btn");
-        }
+        } else
         if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
           Plugin_091_numrelay = 3; // 3rd button is the "wifi" button
           Serial.begin(19230, SERIAL_8N1);
           log += F(" Sonoff Dual");
-        }
+        } else
         if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
           Plugin_091_numrelay = PCONFIG(1);
@@ -286,7 +284,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
           log += F(" baud ");
           log += Plugin_091_numrelay;
           log += F(" btn");
-        }
+        } else
         if (PCONFIG(0) == SER_SWITCH_WIFIDIMMER)
         {
           Plugin_091_numrelay = 2; // 2nd button is the dimvalue
@@ -418,26 +416,19 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                       }
                     }
 
-                    log = F("SerSW   : State ");
-                    if (Plugin_091_ostate[0] != Plugin_091_switchstate[0]) {
-                      UserVar[event->BaseVarIndex] = Plugin_091_switchstate[0];
-                      log += F(" r0:");
-                      log += Plugin_091_switchstate[0];
+                    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                      log = F("SerSW   : State ");
                     }
-                    if (Plugin_091_ostate[1] != Plugin_091_switchstate[1]) {
-                      UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
-                      log += F(" r1:");
-                      log += Plugin_091_switchstate[1];
-                    }
-                    if (Plugin_091_ostate[2] != Plugin_091_switchstate[2]) {
-                      UserVar[event->BaseVarIndex + 2] = Plugin_091_switchstate[2];
-                      log += F(" r2:");
-                      log += Plugin_091_switchstate[2];
-                    }
-                    if (Plugin_091_ostate[3] != Plugin_091_switchstate[3]) {
-                      UserVar[event->BaseVarIndex + 3] = Plugin_091_switchstate[3];
-                      log += F(" r3:");
-                      log += Plugin_091_switchstate[3];
+                    for (int i = 0; i < 3; ++i) {
+                      if (Plugin_091_ostate[i] != Plugin_091_switchstate[i]) {
+                        UserVar[event->BaseVarIndex + i] = Plugin_091_switchstate[i];
+                        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                          log += F(" r");
+                          log += i;
+                          log += ':';
+                          log += Plugin_091_switchstate[i];
+                        }
+                      }
                     }
                     addLogMove(LOG_LEVEL_INFO, log);
                     if ( (Plugin_091_ostate[0] != Plugin_091_switchstate[0]) || (Plugin_091_ostate[1] != Plugin_091_switchstate[1]) || (Plugin_091_ostate[2] != Plugin_091_switchstate[2]) || (Plugin_091_ostate[3] != Plugin_091_switchstate[3]) ) {
@@ -583,7 +574,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
         if (Plugin_091_init)
         {
-          if ( command == F("relay") ) // deal with relay change command
+          if ( command.equals(F("relay"))) // deal with relay change command
           {
             success = true;
 
@@ -594,7 +585,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               rcmd = event->Par2;
             }
 
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if (event->Par2 == 2) { // toggle
@@ -631,9 +622,9 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               log += rcmd;
               addLogMove(LOG_LEVEL_INFO, log);
             }
-          }
+          } else
 
-          if ( command == F("relaypulse") )
+          if ( command.equals(F("relaypulse")))
           {
             success = true;
 
@@ -643,7 +634,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             if ((event->Par2 == 0) || (event->Par2 == 1)) {
               rcmd = event->Par2;
             }
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -683,9 +674,9 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               log += F(" mS");
               addLogMove(LOG_LEVEL_INFO, log);
             }
-          }
+          } else
 
-          if ( command == F("relaylongpulse") )
+          if ( command.equals(F("relaylongpulse")))
           {
             success = true;
 
@@ -695,7 +686,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             if ((event->Par2 == 0) || (event->Par2 == 1)) {
               rcmd = event->Par2;
             }
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -705,7 +696,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
             sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // init state
             //Scheduler.setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
-            Scheduler.setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
+            Scheduler.setPluginTaskTimer(timer, event->TaskIndex, rnum, !rcmd);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
               if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
                 UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
@@ -736,13 +727,13 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               log += F(" sec");
               addLogMove(LOG_LEVEL_INFO, log);
             }
-          }
-          if ( command == F("ydim") ) // deal with dimmer command
+          } else
+          if ( command.equals(F("ydim")) ) // deal with dimmer command
           {
             if (( (Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) { // only on tuya dimmer
               success = true;
 
-              LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+              // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
               event->setTaskIndex(Plugin_091_ownindex);
 
               sendmcudim(event->Par1, Plugin_091_globalpar0);
@@ -773,11 +764,11 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
       {
         uint8_t par3 = 0;
 
-        LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+        // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
         event->setTaskIndex(Plugin_091_ownindex);
 
         if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {

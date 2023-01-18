@@ -1,6 +1,8 @@
 #include "../WebServer/ToolsPage.h"
 
-#include "../WebServer/WebServer.h"
+#ifdef WEBSERVER_TOOLS
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -9,9 +11,6 @@
 #include "../Helpers/OTA.h"
 
 #include "../../ESPEasy-Globals.h"
-
-
-#ifdef WEBSERVER_TOOLS
 
 # include "../Commands/InternalCommands.h"
 # include "../Helpers/WebServer_commandHelper.h"

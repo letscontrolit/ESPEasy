@@ -20,6 +20,9 @@
  */
 
 struct P077_data_struct : public PluginTaskData_base {
+  P077_data_struct() = default;
+  virtual ~P077_data_struct() = default;
+
   bool processCseReceived(struct EventStruct *event);
 
   bool processSerialData();

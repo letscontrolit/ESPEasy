@@ -8,13 +8,26 @@
 P124_data_struct::P124_data_struct(int8_t  i2c_address,
                                    uint8_t relayCount,
                                    bool    changeAddress)
-  : _i2c_address(i2c_address), _relayCount(relayCount) {
+  : _i2c_address(i2c_address), _relayCount(relayCount), _changeAddress(changeAddress) 
+{}
+
+// **************************************************************************/
+// Destructor
+// **************************************************************************/
+P124_data_struct::~P124_data_struct() {
+  if (isInitialized()) {
+    delete relay;
+    relay = nullptr;
+  }
+}
+
+bool P124_data_struct::init() {
   relay = new (std::nothrow) Multi_Channel_Relay();
 
   if (isInitialized()) {
     relay->begin(_i2c_address);
 
-    if (changeAddress) {
+    if (_changeAddress) {
       // This increment shpould match with the range of addresses in _P124_MultiRelay.ino PLUGIN_I2C_HAS_ADDRESS
       uint8_t _new_address = _i2c_address == 0x18 ? 0x11 : _i2c_address + 1; // Set to next address
       relay->changeI2CAddress(_new_address, _i2c_address);
@@ -29,16 +42,7 @@ P124_data_struct::P124_data_struct(int8_t  i2c_address,
       # endif // ifndef BUILD_NO_DEBUG
     }
   }
-}
-
-// **************************************************************************/
-// Destructor
-// **************************************************************************/
-P124_data_struct::~P124_data_struct() {
-  if (isInitialized()) {
-    delete relay;
-    relay = nullptr;
-  }
+  return isInitialized();
 }
 
 uint8_t P124_data_struct::getChannelState() {

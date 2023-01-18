@@ -1,6 +1,6 @@
 #include "../WebServer/UploadPage.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
@@ -21,11 +21,11 @@ void handle_upload() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   addHtml(F(
             "<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>"));
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
   printWebString = String();
   printToWeb     = false;
@@ -43,12 +43,11 @@ void handle_upload_post() {
 
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  sendHeadandTail_stdtemplate(_HEAD);
 
   switch (uploadResult) {
     case uploadResult_e::Success:
       addHtml(F("Upload OK!<BR>You may need to reboot to apply all settings..."));
-      clearAllCaches();
       LoadSettings();
       break;
     case uploadResult_e::InvalidFile:
@@ -62,7 +61,7 @@ void handle_upload_post() {
   }
 
   addHtml(F("Upload finished"));
-  sendHeadandTail_stdtemplate(true);
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
   printWebString = String();
   printToWeb     = false;

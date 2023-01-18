@@ -2,9 +2,12 @@
 #define DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H
 
 
-#include "../DataStructs/RTCCacheStruct.h"
 
 #include "../../ESPEasy_common.h"
+
+#if FEATURE_RTC_CACHE_STORAGE
+
+#include "../DataStructs/RTCCacheStruct.h"
 
 #include <FS.h>
 #include <vector>
@@ -24,7 +27,7 @@
 #define CACHE_STORAGE_BEHIND_SPIFFS 3
 
 
-//#define RTC_STRUCT_DEBUG
+// #define RTC_STRUCT_DEBUG
 
 /********************************************************************************************\
    RTC located cache
@@ -33,16 +36,26 @@ struct RTC_cache_handler_struct
 {
   RTC_cache_handler_struct();
 
+  bool         init();
+
   unsigned int getFreeSpace();
 
   void         resetpeek();
+
+  bool         peekDataAvailable() const;
+
+  int          getPeekFilePos(int& peekFileNr);
+
+  int          getPeekFileSize(int peekFileNr) const;
+
+  void         setPeekFilePos(int peekFileNr, int peekReadPos);
 
   bool         peek(uint8_t     *data,
                     unsigned int size);
 
   // Write a single sample set to the buffer
-  bool write(const uint8_t     *data,
-             unsigned int size);
+  bool write(const uint8_t *data,
+             unsigned int   size);
 
   // Mark all content as being processed and empty buffer.
   bool flush();
@@ -51,9 +64,14 @@ struct RTC_cache_handler_struct
   // Will be empty if there is no file to process.
   String getReadCacheFileName(int& readPos);
 
-  String getPeekCacheFileName(bool& islast);
+  String getNextCacheFileName(int& fileNr, bool& islast);
 
   bool   deleteOldestCacheBlock();
+
+  bool   deleteAllCacheBlocks();
+
+  // When trying to access cache files, like deleting them, these files must be closed first.
+  void   closeOpenFiles();
 
 private:
 
@@ -75,6 +93,8 @@ private:
   // Return true if any cache file found
   bool     updateRTC_filenameCounters();
 
+  void     validateFilePos(int& fileNr, int& readPos);
+
   bool     prepareFileForWrite();
 
 #ifdef RTC_STRUCT_DEBUG
@@ -85,15 +105,16 @@ private:
 #ifdef ESP8266
   RTC_cache_struct    RTC_cache;
   std::vector<uint8_t>RTC_cache_data;
-#endif
-  fs::File            fw;
-  fs::File            fr;
-  fs::File            fp;
-  size_t              peekfilenr  = 0;
-  size_t              peekreadpos = 0;
+#endif // ifdef ESP8266
+  fs::File fw;  // File handler Write
+  fs::File fr;  // File handler Read
+  fs::File fp;  // File handler Peek
+  size_t   _peekfilenr  = 0;
+  size_t   _peekreadpos = 0;
 
   uint8_t storageLocation = CACHE_STORAGE_SPIFFS;
-  bool writeerror      = false;
+  bool    writeError      = false;
 };
 
+#endif
 #endif // ifndef DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H

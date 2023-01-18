@@ -2,7 +2,7 @@
 .. |P090_type| replace:: :cyan:`Gases`
 .. |P090_typename| replace:: :cyan:`Gases - CCS811 TVOC/eCO2`
 .. |P090_porttype| replace:: `.`
-.. |P090_status| replace:: :yellow:`COLLECTION A`
+.. |P090_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P090_github| replace:: P090_CCS811.ino
 .. _P090_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P090_CCS811.ino
 .. |P090_usedby| replace:: `.`
@@ -59,9 +59,9 @@
 .. |P094_compileinfo| replace:: `.`
 .. |P094_usedlibraries| replace:: `.`
 
-.. |P095_name| replace:: :cyan:`TFT 2.4 inches ILI9341`
+.. |P095_name| replace:: :cyan:`TFT ILI934x/ILI948x`
 .. |P095_type| replace:: :cyan:`Display`
-.. |P095_typename| replace:: :cyan:`Display - TFT 2.4 inches ILI9341`
+.. |P095_typename| replace:: :cyan:`Display - TFT ILI934x/ILI948x`
 .. |P095_porttype| replace:: `.`
 .. |P095_status| replace:: :yellow:`DISPLAY, COLLECTION`
 .. |P095_github| replace:: _P095_ILI9341.ino
@@ -70,7 +70,7 @@
 .. |P095_shortinfo| replace:: `.`
 .. |P095_maintainer| replace:: `TD-er`
 .. |P095_compileinfo| replace:: `.`
-.. |P095_usedlibraries| replace:: `Adafruit GFX, Adafruit ILI9341`
+.. |P095_usedlibraries| replace:: `Adafruit GFX, Adafruit ILI9341 (locally extended copy)`
 
 .. |P097_name| replace:: :cyan:`Touch ESP32`
 .. |P097_type| replace:: :cyan:`Internal`

@@ -72,7 +72,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
-//      Device[deviceCount].DuplicateDetection = true;
+      Device[deviceCount].DuplicateDetection = true;
       // FIXME TD-er: Not sure if access to any existing task data is needed when saving
       Device[deviceCount].ExitTaskBeforeSave = false;
       break;
@@ -329,7 +329,7 @@ String Plugin_094_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P094_QUERY_VALUE: return displayString ? F("Value")          : F("v");
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 void P094_html_show_matchForms(struct EventStruct *event) {
@@ -388,10 +388,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
             if (newLine) {
               // Label + first parameter
               ++filterSet;
-              String label;
-              label  = F("Filter ");
-              label += String(filterSet);
-              addRowLabel_tr_id(label, id);
+              addRowLabel_tr_id(concat(F("Filter "), static_cast<int>(filterSet)), id);
             } else {
               html_B(F("AND"));
               html_BR();
@@ -407,7 +404,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
                 options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
                 optionValues[i] = filterValueType;
               }
-              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, nullptr, capture, false, true, EMPTY_STRING);
+              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, nullptr, capture, false, true, F(""));
             }
 
             break;
@@ -429,13 +426,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
               optionValues[i] = enumValue;
             }
-            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, nullptr, comparator, false, true, EMPTY_STRING);
+            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, nullptr, comparator, false, true, F(""));
             break;
           }
           case 3:
           {
             // Compare with
-            addTextBox(id, filter, 8, false, false, EMPTY_STRING, EMPTY_STRING);
+            addTextBox(id, filter, 8, false, false, EMPTY_STRING, F(""));
             break;
           }
         }

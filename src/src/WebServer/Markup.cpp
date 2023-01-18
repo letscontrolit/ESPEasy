@@ -60,7 +60,7 @@ void addSelector(const String             & id,
                  int                        selectedIndex,
                  bool                       reloadonchange,
                  bool                       enabled,
-                 const String& classname
+                 const __FlashStringHelper * classname
                  #if FEATURE_TOOLTIPS
                  , const String           & tooltip
                  #endif // if FEATURE_TOOLTIPS
@@ -94,7 +94,7 @@ void addSelector_reloadOnChange(
                  int           selectedIndex,
                  const String& onChangeCall,
                  bool          enabled,
-                 const String& classname
+                 const __FlashStringHelper * classname
                  #if FEATURE_TOOLTIPS
                  ,
                  const String& tooltip
@@ -120,7 +120,7 @@ void addSelector(const String  & id,
                  int             selectedIndex,
                  bool            reloadonchange,
                  bool            enabled,
-                 const String& classname
+                 const __FlashStringHelper * classname
                  #if FEATURE_TOOLTIPS
                  , const String& tooltip
                  #endif // if FEATURE_TOOLTIPS
@@ -199,11 +199,19 @@ void addSelector_Head(const String& id) {
                       );
 }
 
+void addSelector_Head_reloadOnChange(const __FlashStringHelper * id) {
+  addSelector_Head_reloadOnChange(String(id), F("wide"), false);
+}
+
+/*
 void addSelector_Head_reloadOnChange(const String& id) {
   addSelector_Head_reloadOnChange(id, F("wide"), false);
 }
+*/
 
-void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled
+void addSelector_Head_reloadOnChange(const String& id, 
+                                     const __FlashStringHelper * classname, 
+                                     bool disabled
                                      #if FEATURE_TOOLTIPS
                                      , const String& tooltip
                                      #endif // if FEATURE_TOOLTIPS
@@ -215,7 +223,7 @@ void addSelector_Head_reloadOnChange(const String& id, const String& classname, 
                       );
 }
 
-void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled
+void addSelector_Head_reloadOnChange(const String& id, const __FlashStringHelper * classname, const String& onChangeCall, bool disabled
                                      #if FEATURE_TOOLTIPS
                                      , const String& tooltip
                                      #endif // if FEATURE_TOOLTIPS
@@ -227,7 +235,8 @@ void addSelector_Head_reloadOnChange(const String& id, const String& classname, 
                       );
 }
 
-void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled
+
+void do_addSelector_Head(const String& id, const __FlashStringHelper * classname, const String& onChangeCall, const bool& disabled
                          #if FEATURE_TOOLTIPS
                          , const String& tooltip
                          #endif // if FEATURE_TOOLTIPS
@@ -271,7 +280,11 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 
       switch (purpose) {
         case PinSelectPurpose::SPI:
+        case PinSelectPurpose::SPI_MISO:
           includeSPI = false;
+          if (purpose == PinSelectPurpose::SPI && !output) {
+            return;
+          }
           break;
         case PinSelectPurpose::Ethernet:
           #if FEATURE_ETHERNET
@@ -559,7 +572,7 @@ void addFormHeader(const __FlashStringHelper *header,
                    const __FlashStringHelper *rtdHelpButton)
 {
   html_TR();
-  html_table_header(header, helpButton, rtdHelpButton, 225);
+  html_table_header(header, helpButton, rtdHelpButton, 300);
   html_table_header(F(""));
 }
 
@@ -636,7 +649,7 @@ void addNumericBox(const __FlashStringHelper *id, int value, int min, int max)
 
 void addNumericBox(const String& id, int value, int min, int max
                    #if FEATURE_TOOLTIPS
-                   , const String& classname, const String& tooltip
+                   , const __FlashStringHelper * classname, const String& tooltip
                    #endif // if FEATURE_TOOLTIPS
                    )
 {
@@ -734,6 +747,10 @@ void addFloatNumberBox(const String& id, float value, float min, float max, unsi
 // ********************************************************************************
 // Add Textbox
 // ********************************************************************************
+void addTextBox(const __FlashStringHelper * id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern) {
+  addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"));
+}
+
 void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern) {
   addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"));
 }
@@ -744,7 +761,7 @@ void addTextBox(const String  & id,
                 bool            readonly,
                 bool            required,
                 const String  & pattern,
-                const String& classname
+                const __FlashStringHelper * classname
                 #if FEATURE_TOOLTIPS
                 , const String& tooltip
                 #endif // if FEATURE_TOOLTIPS
@@ -779,6 +796,8 @@ void addTextBox(const String  & id,
   #endif // if FEATURE_TOOLTIPS
   addHtml('>');
 }
+
+
 
 // ********************************************************************************
 // Add Textarea
@@ -856,7 +875,7 @@ void addHelpButton(const String& url, bool isRTD)
   addHtmlLink(
     F("button help"),
     makeDocLink(url, isRTD),
-    isRTD ? F("&#8505;") : F("&#10068;"));
+    isRTD ? F("i") : F("?"));
   #endif // ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 }
 

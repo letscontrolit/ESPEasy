@@ -1,8 +1,12 @@
 #include "../WebServer/JSON.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
+
+#include "../CustomBuild/CompiletimeDefines.h"
+
+#include "../DataStructs/TimingStats.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
@@ -16,6 +20,7 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy-Globals.h"
@@ -102,6 +107,7 @@ void handle_csvval()
 // ********************************************************************************
 void handle_json()
 {
+  START_TIMER
   const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
   const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
@@ -118,7 +124,7 @@ void handle_json()
   {
     const String view = webArg(F("view"));
 
-    if (view == F("sensorupdate")) {
+    if (view.equals(F("sensorupdate"))) {
       showSystem = false;
       showWifi   = false;
       #if FEATURE_ETHERNET
@@ -154,7 +160,12 @@ void handle_json()
         LabelType::SYSTEM_LIBRARIES,
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
+        LabelType::BUILD_TIME,
+        LabelType::BINARY_FILENAME,
         LabelType::LOCAL_TIME,
+        #if FEATURE_EXT_RTC
+        LabelType::EXT_RTC_UTC_TIME,
+        #endif
         LabelType::TIME_SOURCE,
         LabelType::TIME_WANDER,
         LabelType::ISNTP,
@@ -192,12 +203,22 @@ void handle_json()
         LabelType::PSRAM_MAX_FREE_BLOCK,
         #endif // BOARD_HAS_PSRAM
     #endif // ifdef ESP32
+        LabelType::ESP_CHIP_MODEL,
+    #ifdef ESP32
+        LabelType::ESP_CHIP_REVISION,
+    #endif // ifdef ESP32
 
         LabelType::SUNRISE,
         LabelType::SUNSET,
         LabelType::TIMEZONE_OFFSET,
         LabelType::LATITUDE,
         LabelType::LONGITUDE,
+        LabelType::SYSLOG_LOG_LEVEL,
+        LabelType::SERIAL_LOG_LEVEL,
+        LabelType::WEB_LOG_LEVEL,
+        #if FEATURE_SD
+        LabelType::SD_LOG_LEVEL,
+        #endif // if FEATURE_SD
 
 
         LabelType::MAX_LABEL
@@ -212,9 +233,9 @@ void handle_json()
       static const LabelType::Enum labels[] PROGMEM =
       {
         LabelType::HOST_NAME,
-      #ifdef FEATURE_MDNS
+        #if FEATURE_MDNS
         LabelType::M_DNS,
-      #endif // ifdef FEATURE_MDNS
+        #endif // if FEATURE_MDNS
         LabelType::IP_CONFIG,
         LabelType::IP_ADDRESS,
         LabelType::IP_SUBNET,
@@ -234,12 +255,14 @@ void handle_json()
         LabelType::WIFI_STORED_SSID2,
         LabelType::FORCE_WIFI_BG,
         LabelType::RESTART_WIFI_LOST_CONN,
-#ifdef ESP8266
         LabelType::FORCE_WIFI_NOSLEEP,
-#endif // ifdef ESP8266
 #ifdef SUPPORT_ARP
         LabelType::PERIODICAL_GRAT_ARP,
 #endif // ifdef SUPPORT_ARP
+#ifdef USES_ESPEASY_NOW
+        LabelType::USE_ESPEASY_NOW,
+        LabelType::FORCE_ESPEASY_NOW_CHANNEL,
+#endif
         LabelType::CONNECTION_FAIL_THRESH,
 #ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
         LabelType::WIFI_TX_MAX_PWR,
@@ -287,7 +310,7 @@ void handle_json()
     if (showNodes) {
       bool comma_between = false;
 
-      for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+      for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
       {
         if (it->second.ip[0] != 0)
         {
@@ -301,21 +324,21 @@ void handle_json()
           addHtml('{');
           stream_next_json_object_value(F("nr"), it->first);
           stream_next_json_object_value(F("name"),
-                                        (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
+                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.Name);
 
           if (it->second.build) {
-            stream_next_json_object_value(F("build"), it->second.build);
+            stream_next_json_object_value(F("build"), formatSystemBuildNr(it->second.build));
           }
 
           if (it->second.nodeType) {
-            String platform = getNodeTypeDisplayString(it->second.nodeType);
-
-            if (platform.length() > 0) {
-              stream_next_json_object_value(F("platform"), platform);
-            }
+            stream_next_json_object_value(F("platform"), it->second.getNodeTypeDisplayString());
           }
-          stream_next_json_object_value(F("ip"), it->second.ip.toString());
-          stream_last_json_object_value(F("age"), it->second.age);
+          const int8_t rssi = it->second.getRSSI();
+          if (rssi < 0) {
+            stream_next_json_object_value(F("rssi"), rssi);
+          }
+          stream_next_json_object_value(F("ip"), it->second.IP().toString());
+          stream_last_json_object_value(F("age"), it->second.getAge());
         } // if node info exists
       }   // for loop
 
@@ -426,6 +449,12 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
+        for(int i = 0; i < 3; i++) {
+          if (Settings.TaskDevicePin[i][TaskIndex] >= 0) {
+            stream_next_json_object_value(concat(F("TaskDeviceGPIO"), i + 1) , String(Settings.TaskDevicePin[i][TaskIndex]));
+          }
+        }
+
         #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
@@ -470,6 +499,7 @@ void handle_json()
   }
 
   TXBuffer.endStream();
+  STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
 }
 
 // ********************************************************************************
@@ -499,7 +529,7 @@ void handle_nodes_list_json() {
   json_init();
   json_open(true);
 
-  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+  for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
   {
     if (it->second.ip[0] != 0)
     {
@@ -511,12 +541,12 @@ void handle_nodes_list_json() {
       }
 
       json_number(F("first"), String(it->first));
-      json_prop(F("name"), isThisUnit ? Settings.Name : it->second.nodeName);
+      json_prop(F("name"), isThisUnit ? Settings.Name : it->second.getNodeName());
 
-      if (it->second.build) { json_prop(F("build"), String(it->second.build)); }
-      json_prop(F("type"), getNodeTypeDisplayString(it->second.nodeType));
+      if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
+      json_prop(F("type"), it->second.getNodeTypeDisplayString());
       json_prop(F("ip"),   it->second.ip.toString());
-      json_number(F("age"), String(it->second.age));
+      json_number(F("age"), String(it->second.getAge() / 1000)); // time in seconds
       json_close();
     }
   }
@@ -556,6 +586,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
+#if FEATURE_NOTIFIER
   {
     json_open(true, F("notifications"));
 
@@ -569,6 +600,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
+#endif
   json_prop(LabelType::BUILD_DESC);
   json_prop(LabelType::GIT_BUILD);
   json_prop(LabelType::SYSTEM_LIBRARIES);

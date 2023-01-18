@@ -1,5 +1,7 @@
 #include "../Helpers/StringParser.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/GPIO.h"
@@ -10,6 +12,7 @@
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
+#include "../Globals/Protocol.h"
 #include "../Globals/RuntimeData.h"
 
 #include "../Helpers/ESPEasy_math.h"
@@ -48,7 +51,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   START_TIMER;
 
   // Keep current loaded taskSettings to restore at the end.
-  uint8_t   currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  const taskIndex_t currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
 
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
@@ -128,28 +131,63 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         // For example: "[bme#temp]"
         // If value name is unknown, run a PLUGIN_GET_CONFIG_VALUE command.
         // For example: "[<taskname>#getLevel]"
-        taskIndex_t taskIndex = findTaskIndexByName(deviceName);
+        taskIndex_t taskIndex = findTaskIndexByName(deviceName, true); // Check for enabled/disabled is done separately
 
-        if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
-          uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+        if (validTaskIndex(taskIndex)) {
+          bool isHandled = false;
+          if (Settings.TaskDeviceEnabled[taskIndex]) {
+            uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
-          if (valueNr != VARS_PER_TASK) {
-            // here we know the task and value, so find the uservar
-            // Try to format and transform the values
-            bool   isvalid;
-            String value = formatUserVar(taskIndex, valueNr, isvalid);
+            if (valueNr != VARS_PER_TASK) {
+              // here we know the task and value, so find the uservar
+              // Try to format and transform the values
+              bool   isvalid;
+              String value = formatUserVar(taskIndex, valueNr, isvalid);
 
-            if (isvalid) {
-              transformValue(newString, minimal_lineSize, std::move(value), format, tmpString);
+              if (isvalid) {
+                transformValue(newString, minimal_lineSize, std::move(value), format, tmpString);
+                isHandled = true;
+              }
+            } else {
+              // try if this is a get config request
+              struct EventStruct TempEvent(taskIndex);
+              String tmpName = valueName;
+
+              if (PluginCall(PLUGIN_GET_CONFIG_VALUE, &TempEvent, tmpName))
+              {
+                transformValue(newString, minimal_lineSize, std::move(tmpName), format, tmpString);
+                isHandled = true;
+              }
             }
-          } else {
-            // try if this is a get config request
-            struct EventStruct TempEvent(taskIndex);
-            String tmpName = valueName;
+          }
+          if (!isHandled && valueName.startsWith(F("settings."))) {  // Task settings values
+            String value;
+            if (valueName.endsWith(F(".enabled"))) {           // Task state
+              value = Settings.TaskDeviceEnabled[taskIndex];
+            } else if (valueName.endsWith(F(".interval"))) {   // Task interval
+              value = Settings.TaskDeviceTimer[taskIndex];
+            } else if (valueName.endsWith(F(".valuecount"))) { // Task value count
+              value = getValueCountForTask(taskIndex);
+            } else if ((valueName.indexOf(F(".controller")) == 8) && valueName.length() >= 20) { // Task controller values
+              String ctrl = valueName.substring(19, 20);
+              int ctrlNr = 0;
+              if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
+                  Settings.ControllerEnabled[ctrlNr - 1]) { // Controller nr. valid and enabled
+                if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
+                  value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex];
+                } else if (valueName.endsWith(F(".idx"))) { // Task-controller idx value
+                  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
 
-            if (PluginCall(PLUGIN_GET_CONFIG_VALUE, &TempEvent, tmpName))
-            {
-              transformValue(newString, minimal_lineSize, std::move(tmpName), format, tmpString);
+                  if (validProtocolIndex(ProtocolIndex) && 
+                      Protocol[ProtocolIndex].usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
+                    value = Settings.TaskDeviceID[ctrlNr - 1][taskIndex];
+                  }
+                }
+              }
+            }
+            if (!value.isEmpty()) {
+              transformValue(newString, minimal_lineSize, std::move(value), format, tmpString);
+              // isHandled = true;
             }
           }
         }
@@ -173,7 +211,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Restore previous loaded taskSettings
-  if (currentTaskIndex != 255)
+  if (validTaskIndex(currentTaskIndex))
   {
     LoadTaskSettings(currentTaskIndex);
   }
@@ -198,6 +236,68 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
 /********************************************************************************************\
    Transform values
  \*********************************************************************************************/
+
+bool isTransformString(char c, bool logicVal, String& strValue)
+{
+  const __FlashStringHelper * value = F("");
+  char value_ch = '\0';
+  switch (c) {
+    case 'O':
+      value = logicVal == 0 ? F("OFF") : F(" ON"); // (equivalent to XOR operator)
+      break;
+    case 'C':
+      value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
+      break;
+    case 'c':
+      value = logicVal == 0 ? F("CLOSED") : F("  OPEN");
+      break;
+    case 'M':
+      value = logicVal == 0 ? F("AUTO") : F(" MAN");
+      break;
+    case 'm':
+      value_ch = logicVal == 0 ? 'A' : 'M';
+      break;
+    case 'H':
+      value = logicVal == 0 ? F("COLD") : F(" HOT");
+      break;
+    case 'U':
+      value = logicVal == 0 ? F("DOWN") : F("  UP");
+      break;
+    case 'u':
+      value_ch = logicVal == 0 ? 'D' : 'U';
+      break;
+    case 'Y':
+      value = logicVal == 0 ? F(" NO") : F("YES");
+      break;
+    case 'y':
+      value_ch = logicVal == 0 ? 'N' : 'Y';
+      break;
+    case 'X':
+      value_ch = logicVal == 0 ? 'O' : 'X';
+      break;
+    case 'I':
+      value = logicVal == 0 ? F("OUT") : F(" IN");
+      break;
+    case 'L':
+      value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
+      break;
+    case 'l':
+      value_ch = logicVal == 0 ? 'L' : 'R';
+      break;
+    case 'Z': // return "0" or "1"
+      value_ch = logicVal == 0 ? '0' : '1';
+      break;
+    default:
+      return false;
+  }
+  if (value_ch != '\0') {
+    strValue = value_ch;
+  } else {
+    strValue = value;
+  }
+  return true;
+}
+
 
 // Syntax: [task#value#transformation#justification]
 // valueFormat="transformation#justification"
@@ -239,7 +339,7 @@ void transformValue(
       if (validDoubleFromString(value, valFloat))
       {
         // to be used for binary values (0 or 1)
-        logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1;
+        logicVal = lround(static_cast<float>(valFloat)) == 0 ? 0 : 1;
       } else {
         if (value.length() > 0) {
           logicVal = 1;
@@ -270,133 +370,88 @@ void transformValue(
       // Check Transformation syntax
       if (tempValueFormatLength > 0)
       {
-        switch (tempValueFormat[0])
-        {
-          case 'V': // value = value without transformations
-            break;
-          case 'p': // Password hide using asterisks or custom character: pc
+        if (!isTransformString(tempValueFormat[0], logicVal, value)) {
+          switch (tempValueFormat[0])
           {
-            char maskChar = '*';
-
-            if (tempValueFormatLength > 1)
+            case 'V': // value = value without transformations
+              break;
+            case 'p': // Password hide using asterisks or custom character: pc
             {
-              maskChar = tempValueFormat[1];
-            }
+              char maskChar = '*';
 
-            if (value == F("0")) {
-              value = String();
-            } else {
-              const int valueLength = value.length();
-
-              for (int i = 0; i < valueLength; i++) {
-                value[i] = maskChar;
+              if (tempValueFormatLength > 1)
+              {
+                maskChar = tempValueFormat[1];
               }
-            }
-            break;
-          }
-          case 'O':
-            value = logicVal == 0 ? F("OFF") : F(" ON"); // (equivalent to XOR operator)
-            break;
-          case 'C':
-            value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
-            break;
-          case 'c':
-            value = logicVal == 0 ? F("CLOSED") : F("  OPEN");
-            break;
-          case 'M':
-            value = logicVal == 0 ? F("AUTO") : F(" MAN");
-            break;
-          case 'm':
-            value = logicVal == 0 ? 'A' : 'M';
-            break;
-          case 'H':
-            value = logicVal == 0 ? F("COLD") : F(" HOT");
-            break;
-          case 'U':
-            value = logicVal == 0 ? F("DOWN") : F("  UP");
-            break;
-          case 'u':
-            value = logicVal == 0 ? 'D' : 'U';
-            break;
-          case 'Y':
-            value = logicVal == 0 ? F(" NO") : F("YES");
-            break;
-          case 'y':
-            value = logicVal == 0 ? 'N' : 'Y';
-            break;
-          case 'X':
-            value = logicVal == 0 ? 'O' : 'X';
-            break;
-          case 'I':
-            value = logicVal == 0 ? F("OUT") : F(" IN");
-            break;
-          case 'L':
-            value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
-            break;
-          case 'l':
-            value = logicVal == 0 ? 'L' : 'R';
-            break;
-          case 'Z': // return "0" or "1"
-            value = logicVal == 0 ? '0' : '1';
-            break;
-          case 'D': // Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
-          case 'd': // like above but with spaces padding
-          {
-            int x;
-            int y;
-            x = 0;
-            y = 0;
 
-            switch (tempValueFormatLength)
+              if (value.equals(F("0"))) {
+                value = String();
+              } else {
+                const int valueLength = value.length();
+
+                for (int i = 0; i < valueLength; i++) {
+                  value[i] = maskChar;
+                }
+              }
+              break;
+            }
+            case 'D': // Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
+            case 'd': // like above but with spaces padding
             {
-              case 2: // Dx
+              int x = 0;
+              int y = 0;
 
-                if (isDigit(tempValueFormat[1]))
-                {
-                  x = static_cast<int>(tempValueFormat[1]) - '0';
-                }
-                break;
-              case 3: // D.y
+              switch (tempValueFormatLength)
+              {
+                case 2: // Dx
 
-                if ((tempValueFormat[1] == '.') && isDigit(tempValueFormat[2]))
-                {
-                  y = static_cast<int>(tempValueFormat[2]) - '0';
-                }
-                break;
-              case 4: // Dx.y
+                  if (isDigit(tempValueFormat[1]))
+                  {
+                    x = static_cast<int>(tempValueFormat[1]) - '0';
+                  }
+                  break;
+                case 3: // D.y
 
-                if (isDigit(tempValueFormat[1]) && (tempValueFormat[2] == '.') && isDigit(tempValueFormat[3]))
-                {
-                  x = static_cast<int>(tempValueFormat[1]) - '0';
-                  y = static_cast<int>(tempValueFormat[3]) - '0';
-                }
-                break;
-              case 1:  // D
-              default: // any other combination x=0; y=0;
-                break;
+                  if ((tempValueFormat[1] == '.') && isDigit(tempValueFormat[2]))
+                  {
+                    y = static_cast<int>(tempValueFormat[2]) - '0';
+                  }
+                  break;
+                case 4: // Dx.y
+
+                  if (isDigit(tempValueFormat[1]) && (tempValueFormat[2] == '.') && isDigit(tempValueFormat[3]))
+                  {
+                    x = static_cast<int>(tempValueFormat[1]) - '0';
+                    y = static_cast<int>(tempValueFormat[3]) - '0';
+                  }
+                  break;
+                case 1:  // D
+                default: // any other combination x=0; y=0;
+                  break;
+              }
+              bool trimTrailingZeros = false;
+              value = doubleToString(valFloat, y, trimTrailingZeros);
+              int indexDot = value.indexOf('.');
+
+              if (indexDot == -1) {
+                indexDot = value.length();
+              }
+
+              for (uint8_t f = 0; f < (x - indexDot); f++) {
+                value = (tempValueFormat[0] == 'd' ? ' ' : '0') + value;
+              }
+              break;
             }
-            bool trimTrailingZeros = false;
-            value = doubleToString(valFloat, y, trimTrailingZeros);
-            int indexDot = value.indexOf('.');
-
-            if (indexDot == -1) {
-              indexDot = value.length();
-            }
-
-            for (uint8_t f = 0; f < (x - indexDot); f++) {
-              value = (tempValueFormat[0] == 'd' ? ' ' : '0') + value;
-            }
-            break;
+            case 'F': // FLOOR (round down)
+              value = static_cast<int>(floor(valFloat));
+              break;
+            case 'E': // CEILING (round up)
+              value = static_cast<int>(ceil(valFloat));
+              break;
+            default:
+              value = F("ERR");
+              break;
           }
-          case 'F': // FLOOR (round down)
-            value = static_cast<int>(floorf(valFloat));
-            break;
-          case 'E': // CEILING (round up)
-            value = static_cast<int>(ceilf(valFloat));
-            break;
-          default:
-            value = F("ERR");
-            break;
         }
 
         // Check Justification syntax
@@ -542,8 +597,9 @@ void transformValue(
 
 // Find the first (enabled) task with given name
 // Return INVALID_TASK_INDEX when not found, else return taskIndex
-taskIndex_t findTaskIndexByName(const String& deviceName)
+taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
 {
+  deviceName.toLowerCase();
   // cache this, since LoadTaskSettings does take some time.
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
@@ -559,7 +615,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 
   for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
   {
-    if (Settings.TaskDeviceEnabled[taskIndex]) {
+    if (Settings.TaskDeviceEnabled[taskIndex] || allowDisabled) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
 
       if (!taskDeviceName.isEmpty())

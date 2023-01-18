@@ -3,7 +3,7 @@
 .. |P070_type| replace:: :cyan:`Output`
 .. |P070_typename| replace:: :cyan:`Output -  NeoPixel Ring Clock`
 .. |P070_porttype| replace:: `.`
-.. |P070_status| replace:: :yellow:`DISPLAY, NEOPIXEL, COLLECTION A`
+.. |P070_status| replace:: :yellow:`NEOPIXEL, COLLECTION A`
 .. |P070_github| replace:: P070_NeoPixel_Clock.ino
 .. _P070_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P070_NeoPixel_Clock.ino
 .. |P070_usedby| replace:: `.`
@@ -29,7 +29,7 @@
 .. |P072_type| replace:: :cyan:`Environment`
 .. |P072_typename| replace:: :cyan:`Environment - HDC1080 (I2C)`
 .. |P072_porttype| replace:: `.`
-.. |P072_status| replace:: :yellow:`COLLECTION A`
+.. |P072_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P072_github| replace:: P072_HDC1080.ino
 .. _P072_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P072_HDC1080.ino
 .. |P072_usedby| replace:: `.`
@@ -42,7 +42,7 @@
 .. |P073_type| replace:: :cyan:`Display`
 .. |P073_typename| replace:: :cyan:`Display - 7-segment display`
 .. |P073_porttype| replace:: `.`
-.. |P073_status| replace:: :green:`NORMAL`
+.. |P073_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P073_github| replace:: P073_7DGT.ino
 .. _P073_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P073_7DGT.ino
 .. |P073_usedby| replace:: `.`

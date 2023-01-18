@@ -5,10 +5,10 @@
 #include "../../_Plugin_Helper.h"
 #include "../Globals/Settings.h"
 
-#ifdef USES_BLYNK
+#if FEATURE_BLYNK
 # include "../Commands/Blynk.h"
 # include "../Commands/Blynk_c015.h"
-#endif // ifdef USES_BLYNK
+#endif // if FEATURE_BLYNK
 
 #include "../Commands/Common.h"
 #include "../Commands/Controller.h"
@@ -17,12 +17,14 @@
 #include "../Commands/HTTP.h"
 #include "../Commands/i2c.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 # include "../Commands/MQTT.h"
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 #include "../Commands/Networks.h"
+#if FEATURE_NOTIFIER
 #include "../Commands/Notifications.h"
+#endif
 #include "../Commands/Provisioning.h"
 #include "../Commands/RTC.h"
 #include "../Commands/Rules.h"
@@ -282,6 +284,7 @@ bool executeInternalCommand(command_case_data & data)
     case 'd': {
       COMMAND_CASE_R( "datetime", Command_DateTime,         2); // Time.h
       COMMAND_CASE_R(    "debug", Command_Debug,            1); // Diagnostic.h
+      COMMAND_CASE_A(      "dec", Command_Rules_Dec,       -1); // Rules.h
       COMMAND_CASE_R("deepsleep", Command_System_deepSleep, 1); // System.h
       COMMAND_CASE_R(    "delay", Command_Delay,            1); // Timers.h
       COMMAND_CASE_R(      "dns", Command_DNS,              1); // Network Command
@@ -316,6 +319,7 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 'i': {
       COMMAND_CASE_R("i2cscanner", Command_i2c_Scanner, -1); // i2c.h
+      COMMAND_CASE_A(       "inc", Command_Rules_Inc,   -1); // Rules.h
       COMMAND_CASE_R(        "ip", Command_IP,           1); // Network Command
       break;
     }
@@ -331,8 +335,8 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_A(       "logentry", Command_logentry,         -1); // Diagnostic.h
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
-      COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    3);    // GPIO.h
-      COMMAND_CASE_A(   "longpulse_ms", Command_GPIO_LongPulse_Ms, 3);    // GPIO.h
+      COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    5);    // GPIO.h
+      COMMAND_CASE_A(   "longpulse_ms", Command_GPIO_LongPulse_Ms, 5);    // GPIO.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(  "logportstatus", Command_logPortStatus,     0); // Diagnostic.h
       COMMAND_CASE_A(         "lowmem", Command_Lowmem,            0); // Diagnostic.h
@@ -340,6 +344,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'm': {
+#ifdef USES_P009
       if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
@@ -352,6 +357,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(   "mcpmoderange", Command_GPIO_ModeRange,    3); // Gpio.h   
         COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
+#endif
       COMMAND_CASE_A(          "monitor", Command_GPIO_Monitor,      2); // GPIO.h
       COMMAND_CASE_A(     "monitorrange", Command_GPIO_MonitorRange, 3); // GPIO.h   
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -365,13 +371,14 @@ bool executeInternalCommand(command_case_data & data)
     case 'n': {
       COMMAND_CASE_R(   "name", Command_Settings_Name,        1); // Settings.h
       COMMAND_CASE_R("nosleep", Command_System_NoSleep,       1); // System.h
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
       COMMAND_CASE_R( "notify", Command_Notifications_Notify, 2); // Notifications.h
 #endif
       COMMAND_CASE_R("ntphost", Command_NTPHost,              1); // Time.h
       break;
     }
     case 'p': {
+#ifdef USES_P019
       if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "pcfgpio", Command_GPIO,                 2); // Gpio.h
         COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange,   -1); // Gpio.h
@@ -384,19 +391,22 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(   "pcfmoderange", Command_GPIO_ModeRange,       3); // Gpio.h   ************
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
+#endif
       COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
       COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
+      #if FEATURE_NOTIFIER
       COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h
+      #endif
       COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_Provision,    0); // Provisioning.h
       COMMAND_CASE_A(        "provisionrules", Command_Provisioning_Rules,        1); // Provisioning.h
       COMMAND_CASE_A(     "provisionfirmware", Command_Provisioning_Firmware,     1); // Provisioning.h
 #endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
-#ifdef USES_MQTT
+#if FEATURE_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2); // MQTT.h
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }
@@ -422,7 +432,9 @@ bool executeInternalCommand(command_case_data & data)
                                                                   // of
                                                                   // arguments?
       #endif
+        #if FEATURE_SEND_TO_HTTP
         COMMAND_CASE_A("sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
+        #endif // FEATURE_SEND_TO_HTTP
         COMMAND_CASE_A( "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         COMMAND_CASE_R("serialfloat", Command_SerialFloat,    0); // Diagnostic.h
@@ -432,9 +444,9 @@ bool executeInternalCommand(command_case_data & data)
       }
       COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
-    #ifdef USES_MQTT
+    #if FEATURE_MQTT
       COMMAND_CASE_A("subscribe", Command_MQTT_Subscribe, 1);     // MQTT.h
-    #endif // USES_MQTT
+    #endif // if FEATURE_MQTT
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(  "sysload", Command_SysLoad,        0);     // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -590,13 +602,13 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   // Maybe ExecuteCommand can be scheduled?
   delay(0);
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     {
       String log = F("Command: ");
       log += cmd;
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
-#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
     {
       String parameters;
@@ -613,8 +625,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       parameters += TempEvent.Par5;
       addLogMove(LOG_LEVEL_DEBUG, parameters);
     }
-#endif // ifndef BUILD_NO_DEBUG
   }
+#endif // ifndef BUILD_NO_DEBUG
 
 
   if (tryInternal) {
@@ -628,6 +640,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     }
 
     if (handled) {
+//      addLog(LOG_LEVEL_INFO, F("executeInternalCommand accepted"));
       return true;
     }
   }
@@ -642,6 +655,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     // alter the string.
     String tmpAction(action);
     bool   handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
+//    if (handled) addLog(LOG_LEVEL_INFO, F("PLUGIN_WRITE accepted"));
     
     #ifndef BUILD_NO_DEBUG
     if (!tmpAction.equals(action)) {
@@ -655,6 +669,12 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     }
     #endif
 
+    if (!handled) {
+      // Try a controller
+      handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
+//      if (handled) addLog(LOG_LEVEL_INFO, F("CPLUGIN_WRITE accepted"));
+    }
+
     if (handled) {
       SendStatus(&TempEvent, return_command_success());
       return true;
@@ -664,6 +684,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   if (tryRemoteConfig) {
     if (remoteConfig(&TempEvent, action)) {
       SendStatus(&TempEvent, return_command_success());
+//      addLog(LOG_LEVEL_INFO, F("remoteConfig accepted"));
+
       return true;
     }
   }

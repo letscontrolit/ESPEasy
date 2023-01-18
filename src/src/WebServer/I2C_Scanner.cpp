@@ -1,6 +1,8 @@
 #include "../WebServer/I2C_Scanner.h"
 
-#include "../WebServer/WebServer.h"
+#ifdef WEBSERVER_I2C_SCANNER
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
@@ -10,7 +12,6 @@
 #include "../Helpers/StringConverter.h"
 
 
-#ifdef WEBSERVER_I2C_SCANNER
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -44,7 +45,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
       if ((error == 0) || (error == 4))
       {
         json_open();
-        json_prop(F("addr"), String(formatToHex(address)));
+        json_prop(F("addr"), formatToHex(address, 2));
         #if FEATURE_I2CMULTIPLEXER
         if (muxAddr != -1) {
           if (channel == -1){
@@ -194,6 +195,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x1D:
       result +=  F("ADXL345");
       break;
+    case 0x1E:
+      result +=  F("HMC5883L");
+      break;
     case 0x20:
     case 0x21:
     case 0x22:
@@ -215,26 +219,31 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("VL53L0X,VL53L1X");
       break;
     case 0x36:
-      result +=  F("MAX1704x");
+      result +=  F("MAX1704x,Adafruit Rotary enc");
+      break;
+    case 0x37:
+      result +=  F("Adafruit Rotary enc");
       break;
     case 0x38:
-      result +=  F("PCF8574A,AHT10/20/21");
+      result +=  F("LCD,PCF8574A,AHT10/20/21,VEML6070,Adafruit Rotary enc");
+      break;
+    case 0x39:
+      result +=  F("LCD,PCF8574A,TSL2561,APDS9960,AHT10,Adafruit Rotary enc");
       break;
     case 0x3A:
     case 0x3B:
-    case 0x3E:
-    case 0x3F:
-      result +=  F("PCF8574A");
-      break;
-    case 0x39:
-      result +=  F("PCF8574A,TSL2561,APDS9960,AHT10");
+      result +=  F("LCD,PCF8574A,Adafruit Rotary enc");
       break;
     case 0x3C:
     case 0x3D:
-      result +=  F("PCF8574A,OLED");
+      result +=  F("LCD,PCF8574A,OLED,Adafruit Rotary enc");
+      break;
+    case 0x3E:
+    case 0x3F:
+      result +=  F("LCD,PCF8574A");
       break;
     case 0x40:
-      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080");
+      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080,M5Stack Rotary enc");
       break;
     case 0x41:
     case 0x42:
@@ -267,6 +276,12 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x53:
       result +=  F("ADXL345,LTR390");
       break;
+    case 0x54:
+    case 0x55:
+    case 0x56:
+    case 0x57:
+      result +=  F("DFRobot Rotary enc");
+      break;
     case 0x58:
       result +=  F("SGP30");
       break;
@@ -289,7 +304,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO DO,SCD30");
       break;
     case 0x62:
-      result += F("Atlas EZO ORP");
+      result += F("Atlas EZO ORP,SCD4x");
       break;
     case 0x63:
       result += F("Atlas EZO pH");
@@ -298,7 +313,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO EC");
       break;
     case 0x68:
-      result +=  F("DS1307,DS3231,PCF8523,ITG3205,CDM7160");
+      result +=  F("MPU6050,DS1307,DS3231,PCF8523,ITG3205,CDM7160");
       break;
     case 0x69:
       result +=  F("ITG3205,CDM7160");
@@ -368,7 +383,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
           html_TD();
         }
         #endif // if FEATURE_I2CMULTIPLEXER
-        addHtml(formatToHex(address));
+        addHtml(formatToHex(address, 2));
         html_TD();
         String description = getKnownI2Cdevice(address);
 
@@ -385,14 +400,14 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       {
         html_TR_TD();
         addHtml(F("NACK on transmit data to address "));
-        addHtml(formatToHex(address));
+        addHtml(formatToHex(address, 2));
         break;
       }
       case 4:
       {
         html_TR_TD();
         addHtml(F("SDA low at address "));
-        addHtml(formatToHex(address));
+        addHtml(formatToHex(address, 2));
         I2CForceResetBus_swap_pins(address);
         addHtml(F(" Reset bus attempted"));
         break;

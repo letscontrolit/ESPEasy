@@ -6,6 +6,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -51,7 +53,7 @@ bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *
     String taskName;
     taskIndex_t tmpTaskIndex = taskIndex;
     if ((event->Par1 <= 0 || event->Par1 >= INVALID_TASK_INDEX) && GetArgv(Line, taskName, 2)) {
-      tmpTaskIndex = findTaskIndexByName(taskName);
+      tmpTaskIndex = findTaskIndexByName(taskName, true);
       if (tmpTaskIndex != INVALID_TASK_INDEX) {
         event->Par1 = tmpTaskIndex + 1;
       }
@@ -175,7 +177,7 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
-  const int    result       = round(UserVar[uservarIndex]);
+  const int    result       = lround(UserVar[uservarIndex]);
 
   if ((result == 0) || (result == 1)) {
     UserVar[uservarIndex] = (result == 0) ? 1.0f : 0.0f;
@@ -190,7 +192,10 @@ const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *even
   const __FlashStringHelper * returnvalue = taskValueSet(event, Line, taskIndex, success);
   if (success)
   {
+    START_TIMER;
     SensorSendTask(taskIndex);
+    STOP_TIMER(SENSOR_SEND_TASK);
+
     return return_command_success();
   }
   return returnvalue;
@@ -208,7 +213,10 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
     return F("TASK_NOT_ENABLED");
   }
 
+  START_TIMER;
   SensorSendTask(taskIndex);
+  STOP_TIMER(SENSOR_SEND_TASK);
+
   return return_command_success();
 }
 

@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -29,7 +29,7 @@ TEST_CASE("JsonObject::containsKey()") {
 
 #ifdef HAS_VARIABLE_LENGTH_ARRAY
   SECTION("key is a VLA") {
-    int i = 16;
+    size_t i = 16;
     char vla[i];
     strcpy(vla, "hello");
 

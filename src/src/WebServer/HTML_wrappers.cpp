@@ -6,6 +6,7 @@
 
 #include "../Helpers/StringConverter.h"
 
+#include "../Globals/Settings.h"
 
 // ********************************************************************************
 // HTML string re-use to keep the executable smaller
@@ -39,6 +40,10 @@ void wrap_html_tag(char tag, const String& text) {
   addHtml('<', '/');
   addHtml(tag);
   addHtml('>');
+}
+
+void html_B(const __FlashStringHelper * text) {
+  wrap_html_tag('b', text);
 }
 
 void html_B(const String& text) {
@@ -83,6 +88,12 @@ void html_TD() {
   addHtml(F("<TD>"));
 }
 
+void html_TD(const __FlashStringHelper * style) {
+  addHtml(F("<TD style=\""));
+  addHtml(style);
+  addHtml(F(";\">"));
+}
+
 void html_TD(int td_cnt) {
   for (int i = 0; i < td_cnt; ++i) {
     html_TD();
@@ -117,11 +128,11 @@ void html_table_class_normal() {
 }
 
 void html_table_class_multirow() {
-  html_table(F("multirow"), true);
+  html_table(F("multirow even"), true);
 }
 
 void html_table_class_multirow_noborder() {
-  html_table(F("multirow"), false);
+  html_table(F("multirow even"), false);
 }
 
 void html_table(const __FlashStringHelper * tableclass, bool boxed) {
@@ -270,19 +281,37 @@ void html_add_form() {
 }
 
 void html_add_JQuery_script() {
-  addHtml(F("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js\"></script>"));
+  #ifndef CDN_URL_JQUERY
+    #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+  #endif // ifndef CDN_URL_JQUERY
+  addHtml(F("<script src=\"" CDN_URL_JQUERY "\"></script>"));
 }
 
 #if FEATURE_CHART_JS
 void html_add_ChartJS_script() {
-  addHtml(F("<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>"));
+  // To update the CDN link go to: https://www.chartjs.org/docs/latest/getting-started/installation.html
+  // - Select a CDN (jsdelivr is fine)
+  // - Select the chart.js file (may be called chart.umd.min.js) and copy the url
+  // - Replace the url in below script src element, keeping the quotes
+  #ifndef CDN_URL_CHART_JS
+    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+  #endif // ifndef CDN_URL_CHART_JS
+  addHtml(F("<script src=\"" CDN_URL_CHART_JS "\"></script>"));
 }
 #endif // if FEATURE_CHART_JS
 
+#if FEATURE_RULES_EASY_COLOR_CODE
+void html_add_Easy_color_code_script() {
+  serve_JS(JSfiles_e::EasyColorCode_codemirror);
+  serve_JS(JSfiles_e::EasyColorCode_espeasy);
+  serve_JS(JSfiles_e::EasyColorCode_cm_plugins);
+}
+#endif
 
 void html_add_autosubmit_form() {
   addHtml(F("<script><!--\n"
             "function dept_onchange(frmselect) {frmselect.submit();}"
+            "function task_select_onchange(frmselect) {var element = document.getElementById('nosave'); if (typeof(element) != 'undefined' && element != null) {element.disabled = false; element.checked = true;} frmselect.submit();}"
             "function rules_set_onchange(rulesselect) {document.getElementById('rules').disabled = true; rulesselect.submit();}"
             "\n//--></script>"));
 }
@@ -300,12 +329,19 @@ void html_add_script(const String& script, bool defer) {
 }
 
 void html_add_script(bool defer) {
+  html_add_script_arg(F(""), defer);
+}
+
+void html_add_script_arg(const __FlashStringHelper * script_arg, bool defer) {
   addHtml(F("<script"));
+
+  addHtml(' ');
+  addHtml(script_arg);
 
   if (defer) {
     addHtml(F(" defer"));
   }
-  addHtml(F(" type='text/JavaScript'>"));
+  addHtml('>');
 }
 
 void html_add_script_end() {

@@ -19,6 +19,27 @@ SecurityStruct::SecurityStruct() {
   ZERO_FILL(Password);
 }
 
+ChecksumType SecurityStruct::computeChecksum() const {
+  constexpr size_t len_upto_md5 = offsetof(SecurityStruct, md5);
+  return ChecksumType(
+    reinterpret_cast<const uint8_t *>(this), 
+    sizeof(SecurityStruct),
+    len_upto_md5);
+}
+
+bool SecurityStruct::checksumMatch() const {
+  return computeChecksum().matchChecksum(md5);
+}
+
+bool SecurityStruct::updateChecksum() {
+  const ChecksumType checksum = computeChecksum();
+  if (checksum.matchChecksum(md5)) {
+    return false;
+  }
+  checksum.getChecksum(md5);
+  return true;
+}
+
 void SecurityStruct::validate() {
   ZERO_TERMINATE(WifiSSID);
   ZERO_TERMINATE(WifiKey);
@@ -55,7 +76,7 @@ void SecurityStruct::clearWiFiCredentials(SecurityStruct::WiFiCredentialsSlot sl
 }
 
 bool SecurityStruct::hasWiFiCredentials() const {
-  return hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first) || 
+  return hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first) ||
          hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::second);
 }
 

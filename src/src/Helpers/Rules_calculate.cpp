@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RamTracker.h"
 #include "../Helpers/ESPEasy_math.h"
@@ -569,38 +570,47 @@ String RulesCalculate_t::preProces(const String& input)
 {
   String preprocessed = input;
 
-  preProcessReplace(preprocessed, UnaryOperator::Not);
-  preProcessReplace(preprocessed, UnaryOperator::Log);
-  preProcessReplace(preprocessed, UnaryOperator::Ln);
-  preProcessReplace(preprocessed, UnaryOperator::Abs);
-  preProcessReplace(preprocessed, UnaryOperator::Exp);
-  preProcessReplace(preprocessed, UnaryOperator::Sqrt);
-  preProcessReplace(preprocessed, UnaryOperator::Sq);
-  preProcessReplace(preprocessed, UnaryOperator::Round);
-#if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+  const UnaryOperator operators[] = {
+    UnaryOperator::Not
+    ,UnaryOperator::Log
+    ,UnaryOperator::Ln
+    ,UnaryOperator::Abs
+    ,UnaryOperator::Exp
+    ,UnaryOperator::Sqrt
+    ,UnaryOperator::Sq
+    ,UnaryOperator::Round
+    #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
-  // Try the "arc" functions first, or else "sin" is already replaced when "asin" is tried.
-  if (preprocessed.indexOf(F("sin")) != -1) {
-    preProcessReplace(preprocessed, UnaryOperator::ArcSin);
-    preProcessReplace(preprocessed, UnaryOperator::ArcSin_d);
-    preProcessReplace(preprocessed, UnaryOperator::Sin);
-    preProcessReplace(preprocessed, UnaryOperator::Sin_d);
-  }
+    // Try the "arc" functions first or else "sin" is already replaced when "asin" is tried.
+    ,UnaryOperator::ArcSin
+    ,UnaryOperator::ArcSin_d
+    ,UnaryOperator::Sin
+    ,UnaryOperator::Sin_d
 
-  if (preprocessed.indexOf(F("cos")) != -1) {
-    preProcessReplace(preprocessed, UnaryOperator::ArcCos);
-    preProcessReplace(preprocessed, UnaryOperator::ArcCos_d);
-    preProcessReplace(preprocessed, UnaryOperator::Cos);
-    preProcessReplace(preprocessed, UnaryOperator::Cos_d);
-  }
+    ,UnaryOperator::ArcCos
+    ,UnaryOperator::ArcCos_d
+    ,UnaryOperator::Cos
+    ,UnaryOperator::Cos_d
 
-  if (preprocessed.indexOf(F("tan")) != -1) {
-    preProcessReplace(preprocessed, UnaryOperator::ArcTan);
-    preProcessReplace(preprocessed, UnaryOperator::ArcTan_d);
-    preProcessReplace(preprocessed, UnaryOperator::Tan);
-    preProcessReplace(preprocessed, UnaryOperator::Tan_d);
+    ,UnaryOperator::ArcTan
+    ,UnaryOperator::ArcTan_d
+    ,UnaryOperator::Tan
+    ,UnaryOperator::Tan_d
+    #endif // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+  };
+
+  constexpr size_t nrOperators = sizeof(operators) / sizeof(operators[0]);
+
+  for (size_t i = 0; i < nrOperators; ++i) {
+    const UnaryOperator op = operators[i];
+    if (op == UnaryOperator::ArcSin && preprocessed.indexOf(F("sin")) == -1) i += 3;
+    else if (op == UnaryOperator::ArcCos && preprocessed.indexOf(F("cos")) == -1) i += 3;
+    else if (op == UnaryOperator::ArcTan && preprocessed.indexOf(F("tan")) == -1) i += 3;
+    else {
+      preProcessReplace(preprocessed, op);
+    }
   }
-#endif // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   return preprocessed;
 }
 
@@ -608,7 +618,7 @@ String RulesCalculate_t::preProces(const String& input)
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
 int CalculateParam(const String& TmpStr) {
-  int returnValue;
+  int returnValue = 0;
 
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
@@ -640,6 +650,7 @@ int CalculateParam(const String& TmpStr) {
 CalculateReturnCode Calculate(const String& input,
                               double      & result)
 {
+  START_TIMER;
   CalculateReturnCode returnCode = RulesCalculate.doCalculate(
     RulesCalculate_t::preProces(input).c_str(),
     &result);
@@ -681,5 +692,6 @@ CalculateReturnCode Calculate(const String& input,
       addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
+  STOP_TIMER(COMPUTE_STATS);
   return returnCode;
 }

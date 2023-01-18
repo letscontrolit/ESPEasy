@@ -5,7 +5,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 
 
-#define MAX_SCHEDULER_WAIT_TIME 5 // Max delay used in the scheduler for passing idle time.
+#define MAX_SCHEDULER_WAIT_TIME 50 // Max delay used in the scheduler for passing idle time.
 
   msecTimerHandlerStruct::msecTimerHandlerStruct() : get_called(0), get_called_ret_id(0), max_queue_length(0),
     last_exec_time_usec(0), total_idle_time_usec(0),  idle_time_pct(0.0f), is_idle(false), eco_mode(true)
@@ -21,6 +21,11 @@
     timer_id_couple item(id, timer);
 
     insert(item);
+  }
+
+  void msecTimerHandlerStruct::remove(unsigned long id) {
+    timer_id_couple item(id, 0);
+    remove(item);
   }
 
   // Check if timeout has been reached and also return its set timer.
@@ -131,6 +136,13 @@
     // It should be a relative light operation, to insert into a sorted list.
     // Perhaps it is better to use std::set ????
     // Keep in mind: order is based on timer, uniqueness is based on id.
+  }
+
+  void msecTimerHandlerStruct::remove(const timer_id_couple& item) {
+    if (item._id == 0) { return; }
+
+    // Make sure only one is present with the same id.
+    _timer_ids.remove_if(match_id(item._id));
   }
 
   void msecTimerHandlerStruct::recordIdle() {

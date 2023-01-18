@@ -1,6 +1,8 @@
 #include "../WebServer/NotificationPage.h"
 
-#include "../WebServer/WebServer.h"
+#if FEATURE_NOTIFIER
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -20,7 +22,6 @@
 // Web Interface notifcations page
 // ********************************************************************************
 
-#ifdef USES_NOTIFIER
 
 #include "../Globals/NPlugins.h"
 
@@ -83,7 +84,7 @@ void handle_notifications() {
     addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct)));
     addHtmlError(SaveSettings());
 
-    if (web_server.hasArg(F("test"))) {
+    if (hasArg(F("test"))) {
       // Perform tests with the settings in the form.
       nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
@@ -243,4 +244,4 @@ void handle_notifications() {
   TXBuffer.endStream();
 }
 
-#endif // USES_NOTIFIER
+#endif // FEATURE_NOTIFIER

@@ -16,7 +16,7 @@
 
 ControllerSettingsStruct::ControllerSettingsStruct()
 {
-  reset();
+  safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 
 void ControllerSettingsStruct::reset() {
@@ -77,6 +77,10 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(LWTMessageDisconnect);
 }
 
+ChecksumType ControllerSettingsStruct::computeChecksum() const {
+  return ChecksumType(reinterpret_cast<const uint8_t *>(this), sizeof(ControllerSettingsStruct));
+}
+
 IPAddress ControllerSettingsStruct::getIP() const {
   IPAddress host(IP[0], IP[1], IP[2], IP[3]);
 
@@ -115,6 +119,7 @@ bool ControllerSettingsStruct::checkHostReachable(bool quick) {
   return hostReachable(getIP());
 }
 
+#if FEATURE_HTTP_CLIENT
 bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
@@ -134,6 +139,7 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   }
   return false;
 }
+#endif // FEATURE_HTTP_CLIENT
 
 bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   if (!checkHostReachable(true)) {

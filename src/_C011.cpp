@@ -176,6 +176,9 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
+      if (C011_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
       success = Create_schedule_HTTP_C011(event);
       break;
     }
@@ -199,9 +202,9 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c011_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C011_queue_element& element = static_cast<const C011_queue_element&>(element_base);
 // *INDENT-ON*
-  WiFiClient client;
 
   if (!NetworkConnected()) { return false; }
 
@@ -210,8 +213,7 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
   send_via_http(
     controller_number,
     ControllerSettings,
-    element.controller_idx,
-    client,
+    element._controller_idx,
     element.uri,
     element.HttpMethod,
     element.header,
@@ -260,13 +262,15 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
   // Add a new element to the queue with the minimal payload
-  bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));
+  std::unique_ptr<C011_queue_element> element(new C011_queue_element(event));
+  bool success = C011_DelayHandler->addToQueue(std::move(element));
 
   if (success) {
     // Element was added.
     // Now we try to append to the existing element
     // and thus preventing the need to create a long string only to copy it to a queue element.
-    C011_queue_element& element = C011_DelayHandler->sendQueue.back();
+    C011_queue_element& element = static_cast<C011_queue_element&>(*(C011_DelayHandler->sendQueue.back()));
+
 
     if (!load_C011_ConfigStruct(event->ControllerIndex, element.HttpMethod, element.uri, element.header, element.postStr))
     {

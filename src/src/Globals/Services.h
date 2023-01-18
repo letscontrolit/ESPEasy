@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 
-#ifdef FEATURE_MDNS
+#if FEATURE_MDNS
   //enable mDNS mode (adds about 6kb ram and some bytes IRAM)
   #ifdef ESP8266
     #include <ESP8266mDNS.h>
@@ -32,6 +32,7 @@
 #ifdef ESP32
 
   #include <WiFi.h>
+  #include <FS.h>
   #include <WebServer.h>
   
   extern WebServer web_server;
@@ -49,11 +50,11 @@
 #endif
 
 
-#ifdef FEATURE_DNS_SERVER
+#if FEATURE_DNS_SERVER
   #include <DNSServer.h>
   extern DNSServer  dnsServer;
   extern bool dnsServerActive;
-#endif
+#endif // if FEATURE_DNS_SERVER
 
 
 #endif // GLOBALS_SERVICES_H

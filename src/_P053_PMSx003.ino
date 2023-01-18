@@ -43,17 +43,17 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
+      Device[deviceCount].FormulaOption = true;
+      Device[deviceCount].ValueCount    = 4;
       # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 3;
+      Device[deviceCount].FormulaOption = false;
+      Device[deviceCount].ValueCount    = 3;
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      success                                = true;
+      Device[deviceCount].SendDataOption   = true;
+      Device[deviceCount].TimerOption      = true;
+      Device[deviceCount].GlobalSyncOption = true;
+      Device[deviceCount].PluginStats      = true;
+      success                              = true;
       break;
     }
 
@@ -182,7 +182,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(PMSx003_type::PMS5003_T),
           static_cast<int>(PMSx003_type::PMS5003_ST)
         };
-        addFormSelector(F("Sensor model"), F("p053_model"), unitModelCount, unitModels, unitModelOptions, PLUGIN_053_SENSOR_MODEL_SELECTOR);
+        addFormSelector(F("Sensor model"), F("model"), unitModelCount, unitModels, unitModelOptions, PLUGIN_053_SENSOR_MODEL_SELECTOR);
       }
 
       addFormSubHeader(F("Output"));
@@ -197,7 +197,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
           static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5),
           static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
-        addFormSelector(F("Output values"), F("p053_output"), 4, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
+        addFormSelector(F("Output values"), F("output"), 4, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
         addFormNote(F("Changing this reloads the page and updates task value names + nr decimals."));
       }
       {
@@ -211,7 +211,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde),
           static_cast<int>(PMSx003_event_datatype::Event_All_count_bins),
           static_cast<int>(PMSx003_event_datatype::Event_All) };
-        addFormSelector(F("Events for non-output values"), F("p053_events"), 4, eventOptions, eventOptionValues,
+        addFormSelector(F("Events for non-output values"), F("events"), 4, eventOptions, eventOptionValues,
                         PLUGIN_053_EVENT_OUT_SELECTOR);
         addFormNote(F(
                       "Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm2.5/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
@@ -220,16 +220,16 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Data Processing"));
       {
-        addFormNumericBox(F("Sensor init time after wake"), F("p053_delay_wake"),
+        addFormNumericBox(F("Sensor init time after wake"), F("delay_wake"),
                           PLUGIN_053_SEC_IGNORE_AFTER_WAKE, 0, 30);
         addUnit(F("sec"));
 
         # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-        addFormCheckBox(F("Oversampling"), F("p053_oversample"),
+        addFormCheckBox(F("Oversampling"), F("oversample"),
                         bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT));
 
 
-        addFormCheckBox(F("Split count bins"), F("p053_split_bins"),
+        addFormCheckBox(F("Split count bins"), F("split_bins"),
                         bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT));
         addFormNote(F("Subtract next \"count/0.1L\" bin counts to get counts per bin, not a range of bins"));
         # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
@@ -248,18 +248,18 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       const int oldOutputSelector = PLUGIN_053_OUTPUT_SELECTOR;
-      PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
-      PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("p053_output"));
-      PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("p053_events"));
-      PLUGIN_053_SEC_IGNORE_AFTER_WAKE = getFormItemInt(F("p053_delay_wake"));
+      PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("model"));
+      PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("output"));
+      PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("events"));
+      PLUGIN_053_SEC_IGNORE_AFTER_WAKE = getFormItemInt(F("delay_wake"));
 
-      if (isFormItemChecked(F("p053_oversample"))) {
+      if (isFormItemChecked(F("oversample"))) {
         bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
       } else {
         bitClear(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
       }
 
-      if (isFormItemChecked(F("p053_split_bins"))) {
+      if (isFormItemChecked(F("split_bins"))) {
         bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT);
       } else {
         bitClear(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT);
@@ -329,7 +329,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P053_data) {
-        success = P053_data->initialized();
+        success = P053_data->init();
       }
 
       break;
@@ -350,6 +350,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
           # endif // ifndef BUILD_NO_DEBUG
           success = P053_data->processData(event);
+          P053_data->clearPacket();
         }
       }
       break;
@@ -374,12 +375,12 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         String command    = parseString(string, 1);
         String subcommand = parseString(string, 2);
 
-        if (command == F("pmsx003")) {
-          if (subcommand == F("wake")) {
+        if (command.equals(F("pmsx003"))) {
+          if (subcommand.equals(F("wake"))) {
             success = P053_data->wakeSensor();
-          } else if (subcommand == F("sleep")) {
+          } else if (subcommand.equals(F("sleep"))) {
             success = P053_data->sleepSensor();
-          } else if (subcommand == F("reset")) {
+          } else if (subcommand.equals(F("reset"))) {
             success = P053_data->resetSensor();
           }
         }

@@ -28,10 +28,10 @@ bool remoteConfig(struct EventStruct *event, const String& string)
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command == F("config"))
+  if (command.equals(F("config")))
   {
     // Command: "config,task,<taskname>,<actual Set Config command>"
-    if (parseString(string, 2) == F("task"))
+    if (parseString(string, 2).equals(F("task")))
     {
       String configTaskName = parseStringKeepCase(string, 3);
 
@@ -128,10 +128,12 @@ void taskClear(taskIndex_t taskIndex, bool save)
   checkRAM(F("taskClear"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
   Settings.clearTask(taskIndex);
-  ExtraTaskSettings.clear(); // Invalidate any cached values.
+  clearTaskCache(taskIndex); // Invalidate any cached values.
+  ExtraTaskSettings.clear(); 
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
+    addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
     SaveTaskSettings(taskIndex);
     SaveSettings();
   }
@@ -289,7 +291,11 @@ void SendValueLogger(taskIndex_t TaskIndex)
   featureSD = true;
   # endif // if FEATURE_SD
 
-  if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (featureSD 
+      # ifndef BUILD_NO_DEBUG
+      || loglevelActiveFor(LOG_LEVEL_DEBUG)
+      #endif
+  ) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
 
     if (validDeviceIndex(DeviceIndex)) {
@@ -310,7 +316,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
         logger += formatUserVarNoCheck(TaskIndex, varNr);
         logger += F("\r\n");
       }
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, logger);
+      #endif
     }
   }
 #endif // if !defined(BUILD_NO_DEBUG) || FEATURE_SD

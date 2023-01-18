@@ -3,7 +3,7 @@
 
 #ifdef WEBSERVER_SETUP
 
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/AccessControl.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../WebServer/Markup.h"
@@ -52,14 +52,15 @@ void handle_setup() {
   const bool connected = NetworkConnected();
 
 
-  if (connected) {
-    navMenuIndex = MENU_INDEX_TOOLS;
+//  if (connected) {
+    navMenuIndex = MENU_INDEX_SETUP;
     sendHeadandTail_stdtemplate(_HEAD);
-  } else {
+/*  } else {
     sendHeadandTail(F("TmplAP"));
   }
+  */
 
-  const bool clearButtonPressed = web_server.hasArg(F("performclearcredentials"));
+  const bool clearButtonPressed = hasArg(F("performclearcredentials"));
   const bool clearWiFiCredentials = 
     isFormItemChecked(F("clearcredentials")) && clearButtonPressed;
 
@@ -87,7 +88,7 @@ void handle_setup() {
           passwordGiven = !password.isEmpty();
         }
         const bool emptyPassAllowed = isFormItemChecked(F("emptypass"));
-        const bool performRescan = web_server.hasArg(F("performrescan"));
+        const bool performRescan = hasArg(F("performrescan"));
         if (performRescan) {
           WiFiEventData.lastScanMoment.clear();
           WifiScan(false);
@@ -157,13 +158,16 @@ void handle_setup() {
 
       html_table_class_normal();
       html_TR();
-      
+#if defined(WEBSERVER_SYSINFO) && !defined(WEBSERVER_SYSINFO_MINIMAL)
       handle_sysinfo_NetworkServices();
+#endif
       if (connected) {
 
         //addFormHeader(F("Current network configuration"));
 
+#ifdef WEBSERVER_SYSINFO
         handle_sysinfo_Network();
+#endif
 
         addFormSeparator(2);
 
@@ -213,12 +217,12 @@ void handle_setup() {
 
     html_end_form();
   }
-  if (connected) {
+//  if (connected) {
     sendHeadandTail_stdtemplate(_TAIL);
-  } else {
+/*  } else {
     sendHeadandTail(F("TmplAP"), true);
   }
-
+*/
   TXBuffer.endStream();
   delay(10);
   if (clearWiFiCredentials) {
@@ -381,7 +385,7 @@ bool handle_setup_connectingStage(uint8_t refreshCount) {
     wait = 3;
   }
   addHtml(F("Please wait for <h1 id='countdown'>20..</h1>" 
-            "<script type='text/JavaScript'>"
+            "<script>"
             "function timedRefresh(timeoutPeriod) {"
             "var timer = setInterval(function() {"
             "if (timeoutPeriod > 0) {"

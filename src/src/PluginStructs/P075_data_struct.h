@@ -11,7 +11,7 @@
 // Configuration Settings. Custom Configuration Memory must be less than 1024 Bytes (per TD'er findings).
 // #define P75_Nlines 12            // Custom Config, Number of user entered Command Statment Lines. DO NOT USE!
 // #define P75_Nchars 64            // Custom Config, Length of user entered Command Statment Lines. DO NOT USE!
-# define P75_Nlines 10              // Custom Config, Number of user entered Command Statments.
+# define P75_Nlines 20              // Custom Config, Number of user entered Command Statments.
 # define P75_Nchars 51              // Custom Config, Length of user entered Command Statments.
 
 // Nextion defines
@@ -34,7 +34,8 @@ struct P075_data_struct : public PluginTaskData_base {
                    int               rx,
                    int               tx,
                    uint32_t          baud);
-  ~P075_data_struct();
+  P075_data_struct() = delete;
+  virtual ~P075_data_struct();
 
   void   loadDisplayLines(taskIndex_t taskIndex);
 

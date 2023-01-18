@@ -106,9 +106,8 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
         };
 
         for (uint8_t r = 0; r < VARS_PER_TASK; r++) {
-          String label = F("Power value ");
-          label += (r + 1);
-          addFormSelector(label, getPluginCustomArgName(r), INA3221_var_OPTION, varOptions, NULL, PCONFIG(P132_CONFIG_BASE + r));
+          addFormSelector(concat(F("Power value "), r + 1),
+                          getPluginCustomArgName(r), INA3221_var_OPTION, varOptions, NULL, PCONFIG(P132_CONFIG_BASE + r));
         }
       }
 
@@ -122,8 +121,8 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           F("0.01 ohm"),
           F("0.005 ohm"),
         };
-        int shuntvalue[] = { 1, 10, 20 };
-        addFormSelector(F("Shunt resistor"), F("p132_shunt"), INA3221_shunt_OPTION, varshuntptions, shuntvalue, P132_SHUNT);
+        const int shuntvalue[] = { 1, 10, 20 };
+        addFormSelector(F("Shunt resistor"), F("shunt"), INA3221_shunt_OPTION, varshuntptions, shuntvalue, P132_SHUNT);
         addFormNote(F("Select as is installed on the board."));
       }
 
@@ -141,9 +140,9 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           F("512"),
           F("1024"),
         };
-        int averageValue[] = { 0b000, 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
+        const int averageValue[] = { 0b000, 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
         addFormSelector(F("Averaging samples"),
-                        F("p132_average"),
+                        F("average"),
                         INA3221_average_OPTION,
                         averagingSamples,
                         averageValue,
@@ -164,17 +163,17 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           F("8.244 msec"),
         };
 
-        //                         140us  204us  332us  588us  1.1ms  2.1ms  4.1ms  8.2ms
-        int conversionValues[] = { 0b000, 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
+        //                               140us  204us  332us  588us  1.1ms  2.1ms  4.1ms  8.2ms
+        const int conversionValues[] = { 0b000, 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
         addFormSelector(F("Conversion rate Voltage"),
-                        F("p132_conversion_v"),
+                        F("conv_v"),
                         INA3221_conversion_OPTION,
                         conversionRates,
                         conversionValues,
                         P132_GET_CONVERSION_B);
 
         addFormSelector(F("Conversion rate Current"),
-                        F("p132_conversion_c"),
+                        F("conv_c"),
                         INA3221_conversion_OPTION,
                         conversionRates,
                         conversionValues,
@@ -192,12 +191,12 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t r = 0; r < VARS_PER_TASK; r++) {
         PCONFIG(P132_CONFIG_BASE + r) = getFormItemInt(getPluginCustomArgName(r));
       }
-      P132_SHUNT = getFormItemInt(F("p132_shunt"));
+      P132_SHUNT = getFormItemInt(F("shunt"));
 
       uint32_t lSettings = 0;
-      set3BitToUL(lSettings, P132_FLAG_AVERAGE,      getFormItemInt(F("p132_average")));
-      set3BitToUL(lSettings, P132_FLAG_CONVERSION_B, getFormItemInt(F("p132_conversion_v")));
-      set3BitToUL(lSettings, P132_FLAG_CONVERSION_S, getFormItemInt(F("p132_conversion_c")));
+      set3BitToUL(lSettings, P132_FLAG_AVERAGE,      getFormItemInt(F("average")));
+      set3BitToUL(lSettings, P132_FLAG_CONVERSION_B, getFormItemInt(F("conv_v")));
+      set3BitToUL(lSettings, P132_FLAG_CONVERSION_S, getFormItemInt(F("conv_c")));
       P132_CONFIG_FLAGS = lSettings;
 
       success = true;
@@ -209,11 +208,11 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P132_data_struct(event));
       P132_data_struct *P132_data = static_cast<P132_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P132_data) {
-        return success;
+      if (nullptr != P132_data) {
+        P132_data->setCalibration_INA3221(event);
+        success = true;
       }
 
-      success = true;
       break;
     }
 
