@@ -104,6 +104,7 @@ void                 initPluginTaskData(taskIndex_t          taskIndex,
                                         PluginTaskData_base *data);
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex);
+PluginTaskData_base* getPluginTaskDataBaseClassOnly(taskIndex_t taskIndex);
 
 bool                 pluginTaskData_initialized(taskIndex_t taskIndex);
 

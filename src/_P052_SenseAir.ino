@@ -243,16 +243,16 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             /*
                if (has_meas_mode) {
                const __FlashStringHelper * options[2] = { F("Continuous"), F("Single Measurement") };
-               addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, nullptr, meas_mode);
+               addFormSelector(F("Measurement Mode"), F("mode"), 2, options, nullptr, meas_mode);
                }
              */
             if (has_period) {
-              addFormNumericBox(F("Measurement Period"), F("p052_period"), period, 2, 65534);
+              addFormNumericBox(F("Measurement Period"), F("period"), period, 2, 65534);
               addUnit('s');
             }
 
             if (has_samp_meas) {
-              addFormNumericBox(F("Samples per measurement"), F("p052_samp_meas"), samp_meas, 1, 1024);
+              addFormNumericBox(F("Samples per measurement"), F("samp_meas"), samp_meas, 1, 1024);
             }
           }
         }
@@ -264,7 +264,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
          uint8_t choiceABCperiod = PCONFIG(4);
          const __FlashStringHelper * optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
          day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
-         addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
+         addFormSelector(F("ABC period"), F("ABC_period"), 9, optionsABCperiod,
          nullptr, choiceABCperiod);
        */
 
@@ -286,7 +286,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P052_data) && P052_data->isInitialized()) {
         bool changed  = false;
-        uint16_t mode = getFormItemInt(F("p052_mode"), 65535);
+        uint16_t mode = getFormItemInt(F("mode"), 65535);
 
         if (((mode == 0) || (mode == 1))) {
           uint8_t errorcode;
@@ -298,7 +298,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             changed = true;
           }
         }
-        uint16_t period = getFormItemInt(F("p052_period"), 0);
+        uint16_t period = getFormItemInt(F("period"), 0);
 
         if (period > 1) {
           uint8_t errorcode;
@@ -310,7 +310,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             changed = true;
           }
         }
-        uint16_t samp_meas = getFormItemInt(F("p052_samp_meas"), 0);
+        uint16_t samp_meas = getFormItemInt(F("samp_meas"), 0);
 
         if ((samp_meas > 0) && (samp_meas <= 1024)) {
           uint8_t errorcode;
@@ -336,7 +336,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       /*
          // ABC functionality disabled for now, due to a bug in the firmware.
          // See https://github.com/letscontrolit/ESPEasy/issues/759
-         PCONFIG(4) = getFormItemInt(F("p052_ABC_period"));
+         PCONFIG(4) = getFormItemInt(F("ABC_period"));
        */
 
       success = true;

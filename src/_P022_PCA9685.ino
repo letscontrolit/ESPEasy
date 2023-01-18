@@ -114,7 +114,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             m2Options[i] += F(" - (default)");
           }
         }
-        addFormSelector(F("MODE2"), F("p022_mode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
+        addFormSelector(F("MODE2"), F("pmode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
       }
       {
         String freqString = F("Frequency (");
@@ -122,7 +122,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         freqString += '-';
         freqString += PCA9685_MAX_FREQUENCY;
         freqString += ')';
-        addFormNumericBox(freqString, F("p022_freq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
+        addFormNumericBox(freqString, F("pfreq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
       }
       {
         String funitString = F("default ");
@@ -130,7 +130,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         addUnit(funitString);
       }
       {
-        addFormNumericBox(F("Range (1-10000)"), F("p022_range"), range, 1, 10000);
+        addFormNumericBox(F("Range (1-10000)"), F("prange"), range, 1, 10000);
         String runitString = F("default ");
         runitString += PCA9685_MAX_PWM;
         addUnit(runitString);
@@ -144,9 +144,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t oldAddress = CONFIG_PORT;
 
       CONFIG_PORT = getFormItemInt(F("i2c_addr"));
-      PCONFIG(0)  = getFormItemInt(F("p022_mode2"));
-      PCONFIG(1)  = getFormItemInt(F("p022_freq"));
-      PCONFIG(2)  = getFormItemInt(F("p022_range"));
+      PCONFIG(0)  = getFormItemInt(F("pmode2"));
+      PCONFIG(1)  = getFormItemInt(F("pfreq"));
+      PCONFIG(2)  = getFormItemInt(F("prange"));
 
       P022_data_struct *P022_data =
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -177,9 +177,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       P022_data_struct *P022_data =
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P022_data) {
-        success = true;
-      }
+      success = (nullptr != P022_data);
       break;
     }
 
@@ -198,10 +196,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
       if (dotPos > -1)
       {
-        LoadTaskSettings(event->TaskIndex);
         String name = command.substring(0, dotPos);
-        name.replace(F("["), EMPTY_STRING);
-        name.replace(F("]"), EMPTY_STRING);
+        removeChar(name, '[');
+        removeChar(name, ']');
 
         if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
           command         = command.substring(dotPos + 1);
@@ -354,8 +351,8 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, log);
         }
         else {
-          addLog(LOG_LEVEL_ERROR, 
-                 formatToHex(address, F("PCA 0x"), 2) + 
+          addLog(LOG_LEVEL_ERROR,
+                 formatToHex(address,     F("PCA 0x"),    2) +
                  formatToHex(event->Par1, F(" MODE2 0x"), 2) + F(" is out of range."));
         }
       }

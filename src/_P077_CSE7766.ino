@@ -61,13 +61,13 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      addFormNumericBox(F("U Ref"), F("p077_URef"), PCONFIG(0));
+      addFormNumericBox(F("U Ref"), F("URef"), PCONFIG(0));
       addUnit(F("uSec"));
 
-      addFormNumericBox(F("I Ref"), F("p077_IRef"), PCONFIG(1));
+      addFormNumericBox(F("I Ref"), F("IRef"), PCONFIG(1));
       addUnit(F("uSec"));
 
-      addFormNumericBox(F("P Ref"), F("p077_PRef"), PCONFIG(2));
+      addFormNumericBox(F("P Ref"), F("PRef"), PCONFIG(2));
       addUnit(F("uSec"));
       addFormNote(F("Use 0 to read values stored on chip / default values"));
 
@@ -76,9 +76,9 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      PCONFIG(0) = getFormItemInt(F("p077_URef"));
-      PCONFIG(1) = getFormItemInt(F("p077_IRef"));
-      PCONFIG(2) = getFormItemInt(F("p077_PRef"));
+      PCONFIG(0) = getFormItemInt(F("URef"));
+      PCONFIG(1) = getFormItemInt(F("IRef"));
+      PCONFIG(2) = getFormItemInt(F("PRef"));
       success    = true;
       break;
     }
@@ -130,9 +130,9 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
      */
 
     case PLUGIN_READ: {
-    # ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: plugin read"));
-    # endif // ifndef BUILD_NO_DEBUG
+      # endif // ifndef BUILD_NO_DEBUG
 
       //        sendData(event);
       //        Variables set in PLUGIN_SERIAL_IN as soon as there are new values!
@@ -152,12 +152,13 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
 
         /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
         if (P077_data->processSerialData()) {
-        # ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
-        # endif
+          # endif // ifndef BUILD_NO_DEBUG
 
           if (CseReceived(event)) {
             # ifndef BUILD_NO_DEBUG
+
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
               String log = F("CSE: adjustment ");
               log += P077_data->adjustment;
@@ -199,7 +200,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           UserVar[event->BaseVarIndex + 2] = P077_data->energy_current;
           UserVar[event->BaseVarIndex + 3] = P077_data->cf_pulses;
 
-# ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("CSE: time ");
@@ -220,7 +221,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
             log += P077_data->count_pkt;
             addLogMove(LOG_LEVEL_DEBUG, log);
           }
-# endif // ifndef BUILD_NO_DEBUG
+          # endif // ifndef BUILD_NO_DEBUG
           P077_data->t_all       = 0;
           P077_data->count_bytes = 0;
         }

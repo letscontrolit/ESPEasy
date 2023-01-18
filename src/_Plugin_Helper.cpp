@@ -76,10 +76,21 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {
   if (pluginTaskData_initialized(taskIndex)) {
+    
+    if (!Plugin_task_data[taskIndex]->baseClassOnly()) {
+      return Plugin_task_data[taskIndex];
+    }
+  }
+  return nullptr;
+}
+
+PluginTaskData_base* getPluginTaskDataBaseClassOnly(taskIndex_t taskIndex) {
+  if (pluginTaskData_initialized(taskIndex)) {
     return Plugin_task_data[taskIndex];
   }
   return nullptr;
 }
+
 
 bool pluginTaskData_initialized(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) {

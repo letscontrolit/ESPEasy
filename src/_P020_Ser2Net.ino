@@ -23,10 +23,13 @@
 # define PLUGIN_VALUENAME1_020 "Ser2Net"
 
 
-# define P020_SERVER_PORT          ExtraTaskSettings.TaskDevicePluginConfigLong[0]
-# define P020_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+# define P020_SET_SERVER_PORT      ExtraTaskSettings.TaskDevicePluginConfigLong[0]
+# define P020_SET_BAUDRATE         ExtraTaskSettings.TaskDevicePluginConfigLong[1]
 
-// #define P020_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+# define P020_GET_SERVER_PORT      Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 0)
+# define P020_GET_BAUDRATE         Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 1)
+
+// #define P020_SET_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
 # define P020_RX_WAIT              PCONFIG(4)
 # define P020_SERIAL_CONFIG        PCONFIG(1)
 # define P020_SERIAL_PROCESSING    PCONFIG(5)
@@ -80,8 +83,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P020_BAUDRATE         = P020_DEFAULT_BAUDRATE;
-      P020_SERVER_PORT      = P020_DEFAULT_SERVER_PORT;
+      P020_SET_BAUDRATE     = P020_DEFAULT_BAUDRATE;
+      P020_SET_SERVER_PORT  = P020_DEFAULT_SERVER_PORT;
       P020_RESET_TARGET_PIN = P020_DEFAULT_RESET_TARGET_PIN;
       P020_RX_BUFFER        = P020_DEFAULT_RX_BUFFER;
       success               = true;
@@ -112,8 +115,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("TCP Port"),  F("p020_port"), P020_SERVER_PORT, 0);
-      addFormNumericBox(F("Baud Rate"), F("p020_baud"), P020_BAUDRATE,    0);
+      addFormNumericBox(F("TCP Port"),  F("p020_port"), P020_GET_SERVER_PORT, 0);
+      addFormNumericBox(F("Baud Rate"), F("p020_baud"), P020_GET_BAUDRATE,    0);
       uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
@@ -143,8 +146,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P020_SERVER_PORT       = getFormItemInt(F("p020_port"));
-      P020_BAUDRATE          = getFormItemInt(F("p020_baud"));
+      P020_SET_SERVER_PORT   = getFormItemInt(F("p020_port"));
+      P020_SET_BAUDRATE      = getFormItemInt(F("p020_baud"));
       P020_SERIAL_CONFIG     = serialHelper_serialconfig_webformSave();
       P020_SERIAL_PROCESSING = getFormItemInt(F("p020_events"));
       P020_RX_WAIT           = getFormItemInt(F("p020_rxwait"));
@@ -160,9 +163,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      LoadTaskSettings(event->TaskIndex);
-
-      if ((P020_SERVER_PORT == 0) || (P020_BAUDRATE == 0)) {
+      if ((P020_GET_SERVER_PORT == 0) || (P020_GET_BAUDRATE == 0)) {
         clearPluginTaskData(event->TaskIndex);
         break;
       }
@@ -208,9 +209,9 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         log += F(" txPin=");
         log += txPin;
         log += F(" BAUDRATE=");
-        log += P020_BAUDRATE;
+        log += P020_GET_BAUDRATE;
         log += F(" SERVER_PORT=");
-        log += P020_SERVER_PORT;
+        log += P020_GET_SERVER_PORT;
         log += F(" SERIAL_PROCESSING=");
         log += P020_SERIAL_PROCESSING;
         addLogMove(LOG_LEVEL_INFO, log);
@@ -220,8 +221,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       // serial0 on esp32 is Ser2net: port=2 rxPin=3 txPin=1; serial1 on esp32 is Ser2net: port=4 rxPin=13 txPin=15; Serial2 on esp32 is
       // Ser2net: port=4 rxPin=16 txPin=17
       uint8_t serialconfig = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
-      task->serialBegin(port, rxPin, txPin, P020_BAUDRATE, serialconfig);
-      task->startServer(P020_SERVER_PORT);
+      task->serialBegin(port, rxPin, txPin, P020_GET_BAUDRATE, serialconfig);
+      task->startServer(P020_GET_SERVER_PORT);
 
       if (!task->isInit()) {
         clearPluginTaskData(event->TaskIndex);

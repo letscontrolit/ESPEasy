@@ -261,7 +261,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("TFT display model"),
                         F("dsptype"),
-                        static_cast<int>(ILI9xxx_type_e::ILI9xxx_MAX),
+                        sizeof(hardwareOptions) / sizeof(int),
                         hardwareTypes,
                         hardwareOptions,
                         P095_CONFIG_FLAG_GET_TYPE);
@@ -306,7 +306,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("Write Command trigger"),
                         F("commandtrigger"),
-                        static_cast<int>(P095_CommandTrigger::MAX),
+                        sizeof(commandTriggerOptions) / sizeof(int),
                         commandTriggers,
                         commandTriggerOptions,
                         P095_CONFIG_FLAG_GET_CMD_TRIGGER);

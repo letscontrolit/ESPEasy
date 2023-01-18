@@ -13,16 +13,31 @@
 
 void Caches::clearAllCaches()
 {
+  clearAllButTaskCaches();
+  clearAllTaskCaches();
+}
+
+void Caches::clearAllButTaskCaches() {
   clearFileCaches();
-  clearTaskCaches();
   WiFi_AP_Candidates.clearCache();
   rulesHelper.closeAllFiles();
 }
 
-void Caches::clearTaskCaches() {
+void Caches::clearAllTaskCaches() {
   taskIndexName.clear();
   taskIndexValueName.clear();
   extraTaskSettings_cache.clear();
+  updateActiveTaskUseSerial0();
+}
+
+void Caches::clearTaskCache(taskIndex_t TaskIndex) {
+  clearTaskIndexFromMaps(TaskIndex);
+
+  auto it = extraTaskSettings_cache.find(TaskIndex);
+
+  if (it != extraTaskSettings_cache.end()) {
+    extraTaskSettings_cache.erase(it);
+  }
   updateActiveTaskUseSerial0();
 }
 
@@ -30,6 +45,18 @@ void Caches::clearFileCaches()
 {
   fileExistsMap.clear();
   fileCacheClearMoment = 0;
+}
+
+bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const ChecksumType& checksum) const
+{
+  if (validTaskIndex(TaskIndex)) {
+    auto it = extraTaskSettings_cache.find(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return checksum == it->second.md5checksum;
+    }
+  }
+  return false;
 }
 
 void Caches::updateActiveTaskUseSerial0() {
@@ -76,21 +103,11 @@ uint8_t Caches::getTaskDeviceValueDecimals(taskIndex_t TaskIndex, uint8_t rel_in
 String Caches::getTaskDeviceName(taskIndex_t TaskIndex)
 {
   if (validTaskIndex(TaskIndex)) {
-  #ifdef ESP8266
-
-    // ESP8266 uses SPIFFS, which is fast enough to read the task settings
-    // Also RAM is limited, so don't waste it on caching where it is not needed.
-    LoadTaskSettings(TaskIndex);
-    return ExtraTaskSettings.TaskDeviceName;
-  #endif // ifdef ESP8266
-  #ifdef ESP32
-
     auto it = getExtraTaskSettings(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
       return it->second.TaskDeviceName;
     }
-  #endif // ifdef ESP32
   }
   return EMPTY_STRING;
 }
@@ -118,19 +135,23 @@ String Caches::getTaskDeviceValueName(taskIndex_t TaskIndex, uint8_t rel_index)
   return EMPTY_STRING;
 }
 
+bool Caches::hasFormula(taskIndex_t TaskIndex)
+{
+  if (validTaskIndex(TaskIndex)) {
+    // Just a quick test to see if we do have a formula present.
+    // Task Formula are not used very often, so we will probably almost always have to return an empty string.
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return it->second.hasFormula;
+    }
+  }
+  return false;
+}
+
 String Caches::getTaskDeviceFormula(taskIndex_t TaskIndex, uint8_t rel_index)
 {
-  if (validTaskIndex(TaskIndex) && (rel_index < VARS_PER_TASK)) {
-    {
-      // Just a quick test to see if we do have a formula present.
-      // Task Formula are not used very often, so we will probably almost always have to return an empty string.
-      auto it = getExtraTaskSettings(TaskIndex);
-
-      if (it != extraTaskSettings_cache.end()) {
-        if (!it->second.hasFormula) { return EMPTY_STRING; }
-      }
-    }
-
+  if ((rel_index < VARS_PER_TASK) && hasFormula(TaskIndex)) {
     LoadTaskSettings(TaskIndex);
     return ExtraTaskSettings.TaskDeviceFormula[rel_index];
   }
@@ -216,16 +237,20 @@ void Caches::updateExtraTaskSettingsCache()
   const taskIndex_t TaskIndex = ExtraTaskSettings.TaskIndex;
 
   if (validTaskIndex(TaskIndex)) {
+    ExtraTaskSettings_cache_t tmp;
+
     auto it = extraTaskSettings_cache.find(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
+      // We need to keep the original checksum, from when loaded from storage
+      tmp.md5checksum = it->second.md5checksum;
+
+      // Now clear it so we can create a fresh copy.
       extraTaskSettings_cache.erase(it);
+      clearTaskIndexFromMaps(TaskIndex);
     }
 
-    ExtraTaskSettings_cache_t tmp;
-      #ifdef ESP32
     tmp.TaskDeviceName = ExtraTaskSettings.TaskDeviceName;
-      #endif // ifdef ESP32
 
     #if FEATURE_PLUGIN_STATS
     tmp.enabledPluginStats = 0;
@@ -269,6 +294,32 @@ void Caches::updateExtraTaskSettingsCache()
   }
 }
 
+void Caches::updateExtraTaskSettingsCache_afterLoad_Save()
+{
+  if (!validTaskIndex(ExtraTaskSettings.TaskIndex)) {
+    return;
+  }
+
+  // Check if we need to update the cache
+  auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+
+  if (it != extraTaskSettings_cache.end()) {
+    if (ExtraTaskSettings.computeChecksum() == it->second.md5checksum) {
+      return;
+    }
+  }
+
+  // First update all other values
+  updateExtraTaskSettingsCache();
+
+  // Iterator has changed
+  it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+
+  if (it != extraTaskSettings_cache.end()) {
+    it->second.md5checksum = ExtraTaskSettings.computeChecksum();
+  }
+}
+
 ExtraTaskSettingsMap::const_iterator Caches::getExtraTaskSettings(taskIndex_t TaskIndex)
 {
   if (validTaskIndex(TaskIndex)) {
@@ -283,3 +334,69 @@ ExtraTaskSettingsMap::const_iterator Caches::getExtraTaskSettings(taskIndex_t Ta
   }
   return extraTaskSettings_cache.end();
 }
+
+void Caches::clearTaskIndexFromMaps(taskIndex_t TaskIndex)
+{
+  {
+    auto it = taskIndexName.begin();
+
+    for (; it != taskIndexName.end();) {
+      if (it->second == TaskIndex) {
+        it = taskIndexName.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+  {
+    const String searchstr = String('#') + TaskIndex;
+    auto it                = taskIndexValueName.begin();
+
+    for (; it != taskIndexValueName.end();) {
+      if (it->first.endsWith(searchstr)) {
+        it = taskIndexValueName.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+}
+
+  #ifdef ESP32
+bool Caches::getControllerSettings(controllerIndex_t index,  ControllerSettingsStruct& ControllerSettings) const
+{
+  if (!validControllerIndex(index)) { return false; }
+
+  auto it = controllerSetings_cache.find(index);
+
+  if (it == controllerSetings_cache.end()) {
+    return false;
+  }
+
+  ControllerSettings = it->second;
+  return true;
+}
+
+void Caches::setControllerSettings(controllerIndex_t index, const ControllerSettingsStruct& ControllerSettings)
+{
+  auto it = controllerSetings_cache.find(index);
+
+  if (it != controllerSetings_cache.end()) {
+    if (it->second.computeChecksum() == ControllerSettings.computeChecksum()) {
+      return;
+    }
+    controllerSetings_cache.erase(it);
+  }
+  controllerSetings_cache.emplace(index, ControllerSettings);
+}
+
+void Caches::clearControllerSettings(controllerIndex_t index)
+{
+  auto it = controllerSetings_cache.find(index);
+
+  if (it != controllerSetings_cache.end()) {
+    controllerSetings_cache.erase(it);
+  }
+}
+
+  #endif // ifdef ESP32

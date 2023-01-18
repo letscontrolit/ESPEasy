@@ -118,8 +118,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
       if ((I2C_ADDR_PCFG_P079 < 0x01) || (I2C_ADDR_PCFG_P079 > 0x7f)) { // Validate I2C Addr.
         I2C_ADDR_PCFG_P079 = DEF_I2C_ADDRESS_079;
       }
-      String i2c_addres_string = formatToHex(I2C_ADDR_PCFG_P079);
-      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"), i2c_addres_string, 4);
+      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"), formatToHex(I2C_ADDR_PCFG_P079), 4);
 
       // Validate Shield Type.
       bool valid = false;
@@ -141,7 +140,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper * options[] = { F("WEMOS V1.0"), F("LOLIN V2.0") };
         int indices[]          = { static_cast<int>(P079_BoardType::WemosMotorshield), static_cast<int>(P079_BoardType::LolinMotorshield) };
-        addFormSelector(F("Motor Shield Type"), F("p079_shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
+        addFormSelector(F("Motor Shield Type"), F("shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
       }
 
       if (Plugin_079_MotorShield_type == P079_BoardType::WemosMotorshield) {
@@ -159,7 +158,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE: {
       String i2c_address = webArg(F("i2c_addr"));
       I2C_ADDR_PCFG_P079   = (int)strtol(i2c_address.c_str(), 0, 16);
-      SHIELD_VER_PCFG_P079 = getFormItemInt(F("p079_shield_type"));
+      SHIELD_VER_PCFG_P079 = getFormItemInt(F("shield_type"));
 
       // Validate Shield Type.
       bool valid = false;
@@ -221,11 +220,10 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE: {
 
-      uint8_t   parse_error = false;
-      String tmpString   = string;
-      String ModeStr;
+      uint8_t parse_error = false;
+      String  ModeStr;
 
-      String cmd = parseString(tmpString, 1);
+      String cmd = parseString(string, 1);
 
       if (cmd.equalsIgnoreCase(F(CMD_NAME_WEMOS)) || cmd.equalsIgnoreCase(F(CMD_NAME_LOLIN))) {
         switch (Plugin_079_MotorShield_type) {
@@ -238,18 +236,18 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
         }
         ModeStr += F(" MotorShield");
 
-        String paramMotor     = parseString(tmpString, 2); // Motor 0 or 1
-        String paramDirection = parseString(tmpString, 3); // Direction, Forward/Backward/Stop
-        String paramSpeed     = parseString(tmpString, 4); // Speed, 0-100
+        String paramMotor     = parseString(string, 2); // Motor 0 or 1
+        String paramDirection = parseString(string, 3); // Direction, Forward/Backward/Stop
+        String paramSpeed     = parseString(string, 4); // Speed, 0-100
 
         if ((paramMotor.isEmpty()) && (paramDirection.isEmpty()) && (paramSpeed.isEmpty())) {
           switch (Plugin_079_MotorShield_type) {
             case P079_BoardType::WemosMotorshield:
-            # ifdef VERBOSE_P079
+              # ifdef VERBOSE_P079
               ModeStr += F(": Unknown CMD");
-            # else // ifdef VERBOSE_P079
+              # else // ifdef VERBOSE_P079
               ModeStr += F(": ?");
-            # endif // ifdef VERBOSE_P079
+              # endif // ifdef VERBOSE_P079
               break;
             case P079_BoardType::LolinMotorshield:
             {

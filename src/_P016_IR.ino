@@ -233,7 +233,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
       int irPin = CONFIG_PIN1;
 
-      if ((irReceiver == nullptr) && (irPin != -1))
+      if ((irReceiver == nullptr) && validGpio(irPin))
       {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, F("INIT: IR RX"));

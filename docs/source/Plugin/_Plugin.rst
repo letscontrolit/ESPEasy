@@ -205,7 +205,7 @@ Decimals
 The number of decimals set here will be used throughout ESPEasy whenever a task value has to be formatted.
 For example, when referring to a task value on a display via ``[bme#temperature]``, the value formatting will include the set number of decimals.
 
-See :ref:`Rules: Formatting refered values <Formatting values>` on how this can be customized.
+See :ref:`Rules: Formatting referred values <Formatting values>` on how this can be customized.
 Just remember such formatting cannot "make up" more decimals than what was set here in the task setup.
 
 
@@ -214,9 +214,9 @@ List of official plugins
 
 There are different released versions of ESP Easy:
 
-:green:`NORMAL` is the regular set of plugins, you can consider these plugins stable with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
+:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
 
-:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like the I2C multiplexer feature, RTTTL, tooltips, and some DEBUG logging.
+:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and some DEBUG logging.
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
@@ -363,6 +363,8 @@ There are different released versions of ESP Easy:
    ":ref:`P134_page`","|P134_status|","P134"
    ":ref:`P135_page`","|P135_status|","P135"
    ":ref:`P141_page`","|P141_status|","P141"
+   ":ref:`P143_page`","|P143_status|","P143"
+   ":ref:`P148_page`","|P148_status|","P148"
 
 
 Internal GPIO handling
