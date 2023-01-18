@@ -57,6 +57,10 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       if (C010_DelayHandler == nullptr) {
         break;
       }
+      if (C010_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
+
       const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       if (valueCount == 0) {

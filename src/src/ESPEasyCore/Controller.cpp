@@ -521,14 +521,11 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
   if (MQTTDelayHandler == nullptr) {
     return true;
   }
-  MQTT_queue_element dummy_element;
 
-  dummy_element._controller_idx = controller_idx;
-
-  if (MQTTDelayHandler->queueFull(dummy_element)) {
+  if (MQTTDelayHandler->queueFull(controller_idx)) {
     // The queue is full, try to make some room first.
     processMQTTdelayQueue();
-    return MQTTDelayHandler->queueFull(dummy_element);
+    return MQTTDelayHandler->queueFull(controller_idx);
   }
   return false;
 }

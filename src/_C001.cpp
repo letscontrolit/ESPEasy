@@ -53,6 +53,9 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
       if (C001_DelayHandler == nullptr || !validTaskIndex(event->TaskIndex)) {
         break;
       }
+      if (C001_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
 
       if (event->idx != 0)
       {

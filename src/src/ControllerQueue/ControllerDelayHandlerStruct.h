@@ -44,7 +44,7 @@ struct ControllerDelayHandlerStruct {
 
   bool readyToProcess(const Queue_element_base& element) const;
 
-  bool queueFull(const Queue_element_base& element) const;
+  bool queueFull(controllerIndex_t controller_idx) const;
 
   // Return true if message is already present in the queue
   bool isDuplicate(const Queue_element_base& element) const;

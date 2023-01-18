@@ -176,6 +176,9 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
+      if (C011_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
       success = Create_schedule_HTTP_C011(event);
       break;
     }

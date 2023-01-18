@@ -68,7 +68,7 @@ bool ControllerDelayHandlerStruct::readyToProcess(const Queue_element_base& elem
   return true;
 }
 
-bool ControllerDelayHandlerStruct::queueFull(const Queue_element_base& element) const {
+bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) const {
   if (sendQueue.size() >= max_queue_depth) { return true; }
 
   // Number of elements is not exceeding the limit, check memory
@@ -83,14 +83,19 @@ bool ControllerDelayHandlerStruct::queueFull(const Queue_element_base& element) 
       #endif // ifdef USE_SECOND_HEAP
   }
 
-  if (freeHeap > 5000) {
+#ifdef ESP32
+  if (freeHeap > 50000) 
+#else
+  if (freeHeap > 5000) 
+#endif
+  {
     return false; // Memory is not an issue.
   }
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Controller-");
-    log += element._controller_idx + 1;
+    log += controller_idx + 1;
     log += F(" : Memory used: ");
     log += getQueueMemorySize();
     log += F(" bytes ");
@@ -142,6 +147,9 @@ bool ControllerDelayHandlerStruct::isDuplicate(const Queue_element_base& element
 // Try to add to the queue, if permitted by "delete_oldest"
 // Return true when item was added, or skipped as it was considered a duplicate
 bool ControllerDelayHandlerStruct::addToQueue(std::unique_ptr<Queue_element_base>element) {
+  if (!element) { 
+    return false;
+  }
   if (isDuplicate(*element)) {
     return true;
   }
@@ -149,13 +157,13 @@ bool ControllerDelayHandlerStruct::addToQueue(std::unique_ptr<Queue_element_base
   if (delete_oldest) {
     // Force add to the queue.
     // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
-    while (queueFull(*element)) {
+    while (queueFull(element->_controller_idx)) {
       sendQueue.pop_front();
       attempt = 0;
     }
   }
 
-  if (!queueFull(*element)) {
+  if (!queueFull(element->_controller_idx)) {
     sendQueue.push_back(std::move(element));
 
     return true;

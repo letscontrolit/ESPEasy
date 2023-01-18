@@ -172,6 +172,9 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       if (C015_DelayHandler == nullptr) {
         break;
       }
+      if (C015_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
 
       if (!Settings.ControllerEnabled[event->ControllerIndex]) {
         break;

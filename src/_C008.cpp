@@ -59,6 +59,10 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
       if (C008_DelayHandler == nullptr) {
         break;
       }
+      if (C008_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
+
 
       String pubname;
       {

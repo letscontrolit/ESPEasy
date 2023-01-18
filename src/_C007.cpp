@@ -52,6 +52,10 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
       if (C007_DelayHandler == nullptr) {
         break;
       }
+      if (C007_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
+
 
       if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
         addLog(LOG_LEVEL_ERROR, F("emoncms : No support for Sensor_VType::SENSOR_TYPE_STRING"));

@@ -885,6 +885,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
+      if (MQTT_queueFull(event->ControllerIndex)) {
+        break;
+      }
+
       String pubname         = CPlugin_014_pubname;
       bool   mqtt_retainFlag = CPlugin_014_mqtt_retainFlag;
 

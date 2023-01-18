@@ -49,6 +49,10 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
       if (C003_DelayHandler == nullptr) {
         break;
       }
+      if (C003_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
+
 
       // We now create a URI for the request
       String url = F("variableset ");
