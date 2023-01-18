@@ -405,8 +405,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
     float rCal    = 0.0f;                   // Potential Rzero for calibration
     float value = 0.0f;                     // Return value
 
-    // Check if temperature/Humidity compensation is selected
-    if (compensation)
+    if (compensation) // Check if temperature/Humidity compensation is selected
     {
         value = getCorrectedPPM(rSensor, temperature, humidity);
         rCal = getCorrectedRZero(rSensor, temperature, humidity);
@@ -425,11 +424,11 @@ float P145_data_struct::readValue(float temperature, float humidity)
 
     if (loglevelActiveFor(LOG_LEVEL_INFO))
     {
-      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: level= "), value));         // Calculated sensor value
 #ifdef P145_DEBUG
       addLog(LOG_LEVEL_INFO, concat(concat(F("MQ-xx: Sensor type= "), sensorType), concat(F(": "), String(sensordef.name)))); 
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rload= "), rload));         // Load resistor Rload
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rzero= "), rzero));         // Rerefernce resistance Rzero
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Ratio= "), (rSensor/rzero)));  // Ratio, input for non-linear conversion
 #endif 
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rcal= "), rCal));           // Fresh calibrated Rzero when at ref level
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: RS= "), rSensor));          // Calculated sensor resistance Rsensor
@@ -444,6 +443,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
       {
         addLog(LOG_LEVEL_INFO, F("MQ-xx: Calibration enabled"));
       }
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: level= "), value));         // Calculated sensor value
 #endif
     }
 
