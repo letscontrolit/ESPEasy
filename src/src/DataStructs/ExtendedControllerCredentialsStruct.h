@@ -14,9 +14,8 @@ struct ExtendedControllerCredentialsStruct
   ExtendedControllerCredentialsStruct();
 
   // Compute checksum of the data.
-  // @param checksum The expected checksum. Will contain checksum after call finished.
   // @retval true when checksum matches
-  bool computeChecksum(uint8_t checksum[16]) const;
+  bool validateChecksum() const;
 
   void clear();
 
@@ -31,7 +30,7 @@ struct ExtendedControllerCredentialsStruct
 
 private:
 
-  String _strings[CONTROLLER_MAX * 2];
+  String _strings[CONTROLLER_MAX * 2]{};
 
   // TODO TD-er: Add extra WiFi credentials
 };

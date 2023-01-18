@@ -56,7 +56,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   if (handledCmd) {
     if (sendOK) {
       String reply = printWebString.isEmpty() ? F("OK") : printWebString;
-      reply.replace(F("\n"), EMPTY_STRING); // Don't use newline in JSON.
+      removeChar(reply, '\n'); // Don't use newline in JSON.
       if (printToWebJSON) {
         // Format "OK" to JSON format
         printWebString = F("{\"return\": \"");

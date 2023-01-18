@@ -48,17 +48,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
-        if (i < P043_NR_OUTPUT_VALUES) {
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_valuename(F("Output"), i, false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
-          ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
-        } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
-        }
-      }
+      ExtraTaskSettings.populateDeviceValueNamesSeq(F("Output"), P043_NR_OUTPUT_VALUES, 2, false);
       break;
     }
 

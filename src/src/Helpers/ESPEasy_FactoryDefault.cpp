@@ -219,12 +219,15 @@ void ResetFactory()
 //  Settings.UseSerial = DEFAULT_USE_SERIAL;
 //  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
 
+#ifdef ESP32
+  // Ethernet related settings are never used on ESP8266
   Settings.ETH_Phy_Addr   = gpio_settings.eth_phyaddr;
   Settings.ETH_Pin_mdc    = gpio_settings.eth_mdc;
   Settings.ETH_Pin_mdio   = gpio_settings.eth_mdio;
   Settings.ETH_Pin_power  = gpio_settings.eth_power;
   Settings.ETH_Phy_Type   = gpio_settings.eth_phytype;
   Settings.ETH_Clock_Mode = gpio_settings.eth_clock_mode;
+#endif
   Settings.NetworkMedium  = gpio_settings.network_medium;
 
   /*

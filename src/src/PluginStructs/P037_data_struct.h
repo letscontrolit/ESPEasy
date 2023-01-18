@@ -167,11 +167,11 @@ struct P037_data_struct : public PluginTaskData_base
 
   // The settings structures
   // The stuff we want to save between settings
-  String mqttTopics[VARS_PER_TASK];
-  String jsonAttributes[VARS_PER_TASK];
-  String globalTopicPrefix;
-  String valueArray[P037_ARRAY_SIZE]; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
-                                      // P037_START_FILTERS..P037_END_FILTERS = filters
+  String mqttTopics[VARS_PER_TASK] = {};
+  String jsonAttributes[VARS_PER_TASK] = {};
+  String globalTopicPrefix = {};
+  String valueArray[P037_ARRAY_SIZE] = {}; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
+                                           // P037_START_FILTERS..P037_END_FILTERS = filters
 
   String getFullMQTTTopic(uint8_t taskValueIndex) const;
 

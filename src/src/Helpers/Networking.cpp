@@ -35,7 +35,7 @@
 
 #include <IPAddress.h>
 #include <base64.h>
-#include <MD5Builder.h>
+#include <MD5Builder.h> // for getDigestAuth
 
 #include <lwip/dns.h>
 
@@ -404,25 +404,19 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
    Get IP address for unit
 \*********************************************************************************************/
 IPAddress getIPAddressForUnit(uint8_t unit) {
-  IPAddress remoteNodeIP;
-
   if (unit == 255) {
-    remoteNodeIP = { 255, 255, 255, 255 };
+    const IPAddress ip(255, 255, 255, 255);
+    return ip;
   }
-  else {
-    auto it = Nodes.find(unit);
+  auto it = Nodes.find(unit);
 
-    if (it == Nodes.end()) {
-      return remoteNodeIP;
-    }
-
-    if (it->second.ip[0] == 0) {
-      return remoteNodeIP;
-    }
-    return it->second.IP();
+  if (it == Nodes.end() || it->second.ip[0] == 0) {
+    IPAddress ip;
+    return ip;
   }
-  return remoteNodeIP;
+  return it->second.IP();
 }
+
 
 /*********************************************************************************************\
    Refresh aging for remote units, drop if too old...
@@ -1061,9 +1055,11 @@ bool setDNS(int index, const IPAddress& dns) {
   #ifdef ESP8266
   if(dns.isSet() && dns != WiFi.dnsIP(index)) {
     dns_setserver(index, dns);
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
     }
+    #endif
     return true;
   }
   #endif

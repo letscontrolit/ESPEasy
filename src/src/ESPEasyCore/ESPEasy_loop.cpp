@@ -33,7 +33,7 @@ void updateLoopStats() {
   const int64_t usecSince = usecPassedSince(lastLoopStart);
 
   #if FEATURE_TIMING_STATS
-  miscStats[LOOP_STATS].add(usecSince);
+  ADD_TIMER_STAT(LOOP_STATS, usecSince);
   #endif // if FEATURE_TIMING_STATS
 
   loop_usec_duration_total += usecSince;

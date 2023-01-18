@@ -6,11 +6,13 @@
 
 #include "../Helpers/FS_Helper.h"
 
+#include "../DataStructs/ChecksumType.h"
 #include "../DataStructs/ProvisioningStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
 #include "../DataTypes/SettingsType.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
+
 
 /********************************************************************************************\
    file system error handling
@@ -72,26 +74,17 @@ bool clearWiFiSDKpartition();
  \*********************************************************************************************/
 bool GarbageCollection();
 
-// Compute checksum of the data.
-// Skip the part where the checksum may be located in the data
-// @param checksum The expected checksum. Will contain checksum after call finished.
-// @retval true when checksum matches
-bool computeChecksum(
-  uint8_t checksum[16], 
-  uint8_t * data, 
-  size_t struct_size, 
-  size_t len_upto_md5,
-  bool updateChecksum = true);
 
+// Macros needed for template class types, like SettingsStruct
 #define COMPUTE_STRUCT_CHECKSUM_UPDATE(STRUCT,OBJECT) \
-   computeChecksum(OBJECT.md5,\
+   ChecksumType::computeChecksum(OBJECT.md5,\
                    reinterpret_cast<uint8_t *>(&OBJECT),\
                    sizeof(STRUCT),\
                    offsetof(STRUCT, md5),\
                    true)
 
 #define COMPUTE_STRUCT_CHECKSUM(STRUCT,OBJECT) \
-   computeChecksum(OBJECT.md5,\
+   ChecksumType::computeChecksum(OBJECT.md5,\
                    reinterpret_cast<uint8_t *>(&OBJECT),\
                    sizeof(STRUCT),\
                    offsetof(STRUCT, md5),\
@@ -312,10 +305,13 @@ size_t SpiffsFreeSpace();
 
 bool SpiffsFull();
 
+#if FEATURE_RTC_CACHE_STORAGE
 /********************************************************************************************\
    Handling cached data
  \*********************************************************************************************/
 String createCacheFilename(unsigned int count);
+
+bool isCacheFile(const String& fname);
 
 // Match string with an integer between '_' and ".bin"
 int getCacheFileCountFromFilename(const String& fname);
@@ -323,6 +319,7 @@ int getCacheFileCountFromFilename(const String& fname);
 // Look into the filesystem to see if there are any cache files present on the filesystem
 // Return true if any found.
 bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeHighest);
+#endif
 
 /********************************************************************************************\
    Get partition table information
