@@ -25,7 +25,7 @@ void handle_dumpcache() {
 
   C016_startCSVdump();
   unsigned long timestamp;
-  uint8_t  controller_idx;
+  uint8_t  pluginID;
   uint8_t  TaskIndex;
   Sensor_VType  sensorType;
   uint8_t  valueCount;
@@ -52,14 +52,14 @@ void handle_dumpcache() {
     csv_values[i] = 0.0f;
   }
 
-  while (C016_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
+  while (C016_getCSVline(timestamp, pluginID, TaskIndex, sensorType,
                          valueCount, val1, val2, val3, val4)) {
     {
       String html;
       html.reserve(64);
       html += timestamp;
       html += ';';
-      html += controller_idx;
+      html += pluginID;
       html += ';';
       html += static_cast<uint8_t>(sensorType);
       html += ';';
@@ -75,16 +75,12 @@ void handle_dumpcache() {
     csv_values[valindex++] = val4;
 
     for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-      String html;
-      html.reserve(12);
-      html += ';';
-
-      if (essentiallyEqual(csv_values[i], 0.0f)) {
-        html += '0';
+      if (essentiallyZero(csv_values[i])) {
+        addHtml(';', '0');
       } else {
-        html += String(csv_values[i], 6);
+        addHtml(';');
+        addHtmlFloat(csv_values[i], 6);
       }
-      addHtml(html);
     }
     html_BR();
     delay(0);
@@ -95,6 +91,9 @@ void handle_dumpcache() {
 void handle_cache_json() {
   if (!isLoggedIn()) { return; }
 
+  // Flush any data still in RTC memory to the cache files.
+  C016_startCSVdump();
+
   TXBuffer.startJsonStream();
   addHtml(F("{\"columns\": ["));
 
@@ -104,6 +103,10 @@ void handle_cache_json() {
   addHtml(to_json_value(F("UTC timestamp")));
   addHtml(',');
   addHtml(to_json_value(F("task index")));
+  if (hasArg(F("pluginID"))) {
+    addHtml(',');
+    addHtml(to_json_value(F("plugin ID")));
+  }
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     for (int j = 0; j < VARS_PER_TASK; ++j) {
@@ -115,24 +118,34 @@ void handle_cache_json() {
     }
   }
   addHtml(F("],\n"));
-  C016_startCSVdump();
   addHtml(F("\"files\": ["));
   bool islast = false;
   int  filenr = 0;
+  int fileCount = 0;
 
   while (!islast) {
-    String currentFile = C016_getCacheFileName(islast);
+    const String currentFile = C016_getCacheFileName(filenr, islast);
+    ++filenr;
 
     if (currentFile.length() > 0) {
-      if (filenr != 0) {
+      if (fileCount != 0) {
         addHtml(',');
       }
       addHtml(to_json_value(currentFile));
-      ++filenr;
+      ++fileCount;
     }
   }
   addHtml(F("],\n"));
-  stream_last_json_object_value(F("nrfiles"), filenr);
+  addHtml(F("\"pluginID\": ["));
+  for (taskIndex_t taskIndex = 0; validTaskIndex(taskIndex); ++taskIndex) {
+    if (taskIndex != 0) {
+      addHtml(',');
+    }
+    addHtmlInt(getPluginID_from_TaskIndex(taskIndex));
+  }
+  addHtml(F("],\n"));
+  stream_next_json_object_value(F("separator"), F(";"));
+  stream_last_json_object_value(F("nrfiles"), fileCount);
   addHtml('\n');
   TXBuffer.endStream();
 }
