@@ -1449,12 +1449,12 @@ void setupStaticIPconfig() {
   setUseStaticIP(WiFiUseStaticIP());
 
   if (!WiFiUseStaticIP()) { return; }
-  const IPAddress ip     = Settings.IP;
-  const IPAddress gw     = Settings.Gateway;
-  const IPAddress subnet = Settings.Subnet;
-  const IPAddress dns    = Settings.DNS;
+  const IPAddress ip     = IPAddress(Settings.IP);
+  const IPAddress gw     = IPAddress(Settings.Gateway);
+  const IPAddress subnet = IPAddress(Settings.Subnet);
+  const IPAddress dns    = IPAddress(Settings.DNS);
 
-  WiFiEventData.dns0_cache = Settings.DNS;
+  WiFiEventData.dns0_cache = dns;
 
   WiFi.config(ip, gw, subnet, dns);
 
