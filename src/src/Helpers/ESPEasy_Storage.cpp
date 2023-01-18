@@ -1164,6 +1164,8 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   checkRAM(F("SaveControllerSettings"));
   #endif
 
+  START_TIMER;
+
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
 
   const ChecksumType checksum(reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(ControllerSettingsStruct));
@@ -1178,6 +1180,10 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
                     reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(controller_settings));
 
   Cache.controllerSettings_checksums[ControllerIndex] = checksum;
+  #ifdef ESP32
+  Cache.setControllerSettings(ControllerIndex, controller_settings);
+  #endif
+  STOP_TIMER(SAVE_CONTROLLER_SETTINGS);
 
   return res;
 }
@@ -1190,6 +1196,12 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   checkRAM(F("LoadControllerSettings"));
   #endif
   START_TIMER
+  #ifdef ESP32
+  if (Cache.getControllerSettings(ControllerIndex, controller_settings)) {
+    STOP_TIMER(LOAD_CONTROLLER_SETTINGS_C);
+    return EMPTY_STRING;
+  }
+  #endif
   String result =
     LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                  reinterpret_cast<uint8_t *>(&controller_settings), sizeof(controller_settings));
@@ -1197,6 +1209,9 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
 
   Cache.controllerSettings_checksums[ControllerIndex] = controller_settings.computeChecksum();
+  #ifdef ESP32
+  Cache.setControllerSettings(ControllerIndex, controller_settings);
+  #endif
   STOP_TIMER(LOAD_CONTROLLER_SETTINGS);
   return result;
 }

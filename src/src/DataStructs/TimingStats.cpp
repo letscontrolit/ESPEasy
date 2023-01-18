@@ -222,6 +222,10 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::LOAD_TASK_SETTINGS:         return F("LoadTaskSettings()");
     case TimingStatsElements::SAVE_TASK_SETTINGS:         return F("SaveTaskSettings()");
     case TimingStatsElements::LOAD_CONTROLLER_SETTINGS:   return F("LoadControllerSettings()");
+    #ifdef ESP32
+    case TimingStatsElements::LOAD_CONTROLLER_SETTINGS_C: return F("LoadControllerSettings() (cached)");
+    #endif
+    case TimingStatsElements::SAVE_CONTROLLER_SETTINGS:   return F("SaveControllerSettings()");
     case TimingStatsElements::TRY_OPEN_FILE:              return F("TryOpenFile()");
     case TimingStatsElements::FS_GC_SUCCESS:              return F("ESPEASY_FS GC success");
     case TimingStatsElements::FS_GC_FAIL:                 return F("ESPEASY_FS GC fail");

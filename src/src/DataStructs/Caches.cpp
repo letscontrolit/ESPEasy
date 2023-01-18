@@ -150,7 +150,7 @@ bool Caches::hasFormula(taskIndex_t TaskIndex)
 
 String Caches::getTaskDeviceFormula(taskIndex_t TaskIndex, uint8_t rel_index)
 {
-  if (rel_index < VARS_PER_TASK && hasFormula(TaskIndex)) {
+  if ((rel_index < VARS_PER_TASK) && hasFormula(TaskIndex)) {
     LoadTaskSettings(TaskIndex);
     return ExtraTaskSettings.TaskDeviceFormula[rel_index];
   }
@@ -293,7 +293,7 @@ void Caches::updateExtraTaskSettingsCache()
   }
 }
 
-void Caches::updateExtraTaskSettingsCache_afterLoad_Save() 
+void Caches::updateExtraTaskSettingsCache_afterLoad_Save()
 {
   if (!validTaskIndex(ExtraTaskSettings.TaskIndex)) {
     return;
@@ -301,6 +301,7 @@ void Caches::updateExtraTaskSettingsCache_afterLoad_Save()
 
   // Check if we need to update the cache
   auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+
   if (it != extraTaskSettings_cache.end()) {
     if (ExtraTaskSettings.computeChecksum() == it->second.md5checksum) {
       return;
@@ -333,12 +334,12 @@ ExtraTaskSettingsMap::const_iterator Caches::getExtraTaskSettings(taskIndex_t Ta
   return extraTaskSettings_cache.end();
 }
 
-
 void Caches::clearTaskIndexFromMaps(taskIndex_t TaskIndex)
-{ 
+{
   {
     auto it = taskIndexName.begin();
-    for (; it != taskIndexName.end(); ) {
+
+    for (; it != taskIndexName.end();) {
       if (it->second == TaskIndex) {
         it = taskIndexName.erase(it);
       } else {
@@ -348,8 +349,9 @@ void Caches::clearTaskIndexFromMaps(taskIndex_t TaskIndex)
   }
   {
     const String searchstr = String('#') + TaskIndex;
-    auto it = taskIndexValueName.begin();
-    for (; it != taskIndexValueName.end(); ) {
+    auto it                = taskIndexValueName.begin();
+
+    for (; it != taskIndexValueName.end();) {
       if (it->first.endsWith(searchstr)) {
         it = taskIndexValueName.erase(it);
       } else {
@@ -358,3 +360,42 @@ void Caches::clearTaskIndexFromMaps(taskIndex_t TaskIndex)
     }
   }
 }
+
+  #ifdef ESP32
+bool Caches::getControllerSettings(controllerIndex_t index,  ControllerSettingsStruct& ControllerSettings) const
+{
+  if (!validControllerIndex(index)) { return false; }
+
+  auto it = controllerSetings_cache.find(index);
+
+  if (it == controllerSetings_cache.end()) {
+    return false;
+  }
+
+  ControllerSettings = it->second;
+  return true;
+}
+
+void Caches::setControllerSettings(controllerIndex_t index, const ControllerSettingsStruct& ControllerSettings)
+{
+  auto it = controllerSetings_cache.find(index);
+
+  if (it != controllerSetings_cache.end()) {
+    if (it->second.computeChecksum() == ControllerSettings.computeChecksum()) {
+      return;
+    }
+    controllerSetings_cache.erase(it);
+  }
+  controllerSetings_cache.emplace(index, ControllerSettings);
+}
+
+void Caches::clearControllerSettings(controllerIndex_t index)
+{
+  auto it = controllerSetings_cache.find(index);
+
+  if (it != controllerSetings_cache.end()) {
+    controllerSetings_cache.erase(it);
+  }
+}
+
+  #endif // ifdef ESP32

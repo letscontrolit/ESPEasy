@@ -140,7 +140,6 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
           P146_data_struct::prepareBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH);
         } else {
           // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
-          // FIXME TD-er: Maybe decimate this, so the broker does have an idea of where we are?
 
           if (P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
             int readFileNr    = 0;
