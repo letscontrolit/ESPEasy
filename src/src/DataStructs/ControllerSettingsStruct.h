@@ -13,9 +13,12 @@
 #include <WiFiUdp.h>
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/ChecksumType.h"
+
 #if FEATURE_MQTT_TLS
 #include "../DataTypes/TLS_types.h"
 #endif
+
 #include "../Globals/Plugins.h"
 
 // Minimum delay between messages for a controller to send in msec.
@@ -114,6 +117,8 @@ struct ControllerSettingsStruct
 
   void      validate();
 
+  ChecksumType computeChecksum() const;
+
   IPAddress getIP() const;
 
   String    getHost() const;
@@ -171,7 +176,6 @@ struct ControllerSettingsStruct
   String    getCertificateFilename(TLS_types tls_type) const;
 #endif
   
-
   bool         UseDNS;
   uint8_t      IP[4];
   unsigned int Port;

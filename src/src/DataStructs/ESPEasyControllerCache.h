@@ -1,6 +1,10 @@
 #ifndef DATASTRUCTS_ESPEASYCONTROLLERCACHE_H
 #define DATASTRUCTS_ESPEASYCONTROLLERCACHE_H
 
+#include "../../ESPEasy_common.h"
+
+#if FEATURE_RTC_CACHE_STORAGE
+
 #include <Arduino.h>
 
 #include "../DataStructs/RTC_cache_handler_struct.h"
@@ -33,21 +37,29 @@ struct ControllerCache_struct {
 
   bool   deleteAllCacheBlocks();
 
+  void   closeOpenFiles();
+
   void   resetpeek();
+
+  bool   peekDataAvailable() const;
+
+  int    getPeekFilePos(int& peekFileNr) const;
+
+  int    getPeekFileSize(int peekFileNr) const;
+
+  void   setPeekFilePos(int peekFileNr, int peekReadPos);
 
   // Read data without marking it as being read.
   bool   peek(uint8_t     *data,
               unsigned int size) const;
 
-  String getPeekCacheFileName(bool& islast) const;
-
-  int readFileNr = 0;
-  int readPos    = 0;
+  String getNextCacheFileName(int& fileNr, bool& islast);
 
 private:
 
   RTC_cache_handler_struct *_RTC_cache_handler = nullptr;
 };
 
+#endif
 
 #endif // ifndef DATASTRUCTS_ESPEASYCONTROLLERCACHE_H

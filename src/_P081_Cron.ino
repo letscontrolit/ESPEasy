@@ -83,8 +83,7 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
       String expression = webArg(F("p081_cron_exp"));
       String log;
       {
-        char expression_c[PLUGIN_081_EXPRESSION_SIZE];
-        ZERO_FILL(expression_c);
+        char expression_c[PLUGIN_081_EXPRESSION_SIZE] = {};
         safe_strncpy(expression_c, expression, PLUGIN_081_EXPRESSION_SIZE);
         log = SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&expression_c), PLUGIN_081_EXPRESSION_SIZE);
       }

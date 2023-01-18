@@ -1,5 +1,6 @@
 #include "../DataStructs/ESPEasyControllerCache.h"
 
+#if FEATURE_RTC_CACHE_STORAGE
 
 ControllerCache_struct::~ControllerCache_struct() {
   if (_RTC_cache_handler != nullptr) {
@@ -33,6 +34,9 @@ bool ControllerCache_struct::flush() {
 void ControllerCache_struct::init() {
   if (_RTC_cache_handler == nullptr) {
     _RTC_cache_handler = new (std::nothrow) RTC_cache_handler_struct;
+    if (_RTC_cache_handler != nullptr) {
+      _RTC_cache_handler->init();
+    }
   }
 }
 
@@ -50,6 +54,12 @@ bool ControllerCache_struct::deleteOldestCacheBlock() {
   return false;
 }
 
+void ControllerCache_struct::closeOpenFiles() {
+  if (_RTC_cache_handler != nullptr) {
+    _RTC_cache_handler->closeOpenFiles();
+  }
+}
+
 bool ControllerCache_struct::deleteAllCacheBlocks() {
   if (_RTC_cache_handler != nullptr) {
     return _RTC_cache_handler->deleteAllCacheBlocks();
@@ -63,6 +73,33 @@ void ControllerCache_struct::resetpeek() {
   }
 }
 
+bool ControllerCache_struct::peekDataAvailable() const {
+  if (_RTC_cache_handler == nullptr) {
+    return false;
+  }
+  return _RTC_cache_handler->peekDataAvailable();
+}
+
+int  ControllerCache_struct::getPeekFilePos(int& peekFileNr) const {
+  if (_RTC_cache_handler != nullptr) {
+    return _RTC_cache_handler->getPeekFilePos(peekFileNr);
+  }
+  return -1;
+}
+
+int  ControllerCache_struct::getPeekFileSize(int peekFileNr) const {
+  if (_RTC_cache_handler != nullptr) {
+    return _RTC_cache_handler->getPeekFileSize(peekFileNr);
+  }
+  return -1;
+}
+
+void ControllerCache_struct::setPeekFilePos(int peekFileNr, int peekReadPos) {
+  if (_RTC_cache_handler != nullptr) {
+    _RTC_cache_handler->setPeekFilePos(peekFileNr, peekReadPos);
+  }
+}
+
 // Read data without marking it as being read.
 bool ControllerCache_struct::peek(uint8_t *data, unsigned int size) const {
   if (_RTC_cache_handler == nullptr) {
@@ -71,9 +108,13 @@ bool ControllerCache_struct::peek(uint8_t *data, unsigned int size) const {
   return _RTC_cache_handler->peek(data, size);
 }
 
-String ControllerCache_struct::getPeekCacheFileName(bool& islast) const {
+String ControllerCache_struct::getNextCacheFileName(int& fileNr, bool& islast) {
   if (_RTC_cache_handler == nullptr) {
-    return "";
+    fileNr = -1;
+    islast = true;
+    return EMPTY_STRING;
   }
-  return _RTC_cache_handler->getPeekCacheFileName(islast);
+  return _RTC_cache_handler->getNextCacheFileName(fileNr, islast);
 }
+
+#endif
