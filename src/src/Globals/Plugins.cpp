@@ -694,9 +694,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           queueTaskEvent(F("TaskInit"), event->TaskIndex, retval);
         }
         if (Function == PLUGIN_EXIT) {
-          queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
           clearPluginTaskData(event->TaskIndex);
           initSerial();
+          queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
           updateActiveTaskUseSerial0();
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
