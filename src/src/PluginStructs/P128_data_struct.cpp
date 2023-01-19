@@ -363,7 +363,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
       _counter_mode_step = 0;
 
-      hex2rrggbb("000000");
+      hex2rrggbb(F("000000"));
     /*CLEAN ALL PIXELS */
       for (int i = 0; i < pixelCount; i++) {
       Plugin_128_pixels->SetPixelColor(i, rrggbb);
@@ -376,7 +376,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
           ? defaultspeed
           : str5i;
       ledi = str6.isEmpty()
-          ? int(1)
+          ? 1
           : str6i;
       ledf = str7.isEmpty()
           ? pixelCount
@@ -389,7 +389,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       mode    = P128_modetype::Dualscan;
 
       _counter_mode_step = 0;
- hex2rrggbb("000000");
+ hex2rrggbb(F("000000"));
     /*CLEAN ALL PIXELS */
       for (int i = 0; i < pixelCount; i++) {
       Plugin_128_pixels->SetPixelColor(i, rrggbb);
@@ -402,7 +402,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
           ? defaultspeed
           : str5i;
        ledi = str6.isEmpty()
-          ? int(1)
+          ? 1
           : str6i;
        ledf = str7.isEmpty()
           ? pixelCount
@@ -464,7 +464,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       if (!str4.isEmpty()) {
         hex2rrggbb(str4);
       } else {
-        hex2rrggbb("000000");
+        hex2rrggbb(F("000000"));
       }
 
       speed = str5.isEmpty()
@@ -483,7 +483,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       if (!str4.isEmpty()) {
         hex2rrggbb(str4);
       } else {
-        hex2rrggbb("000000");
+        hex2rrggbb(F("000000"));
       }
 
       speed = str5.isEmpty()
