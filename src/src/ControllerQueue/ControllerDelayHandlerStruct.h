@@ -37,7 +37,7 @@ typedef bool (*do_process_function)(int,
 * ControllerDelayHandlerStruct
 \*********************************************************************************************/
 struct ControllerDelayHandlerStruct {
-  ControllerDelayHandlerStruct();
+  ControllerDelayHandlerStruct() = default;
 
   bool configureControllerSettings(controllerIndex_t ControllerIndex);
   void configureControllerSettings(const ControllerSettingsStruct& settings);
@@ -89,7 +89,7 @@ struct ControllerDelayHandlerStruct {
   bool                                           must_check_reply       = false;
   bool                                           deduplicate            = false;
   bool                                           useLocalSystemTime     = false;
-  bool          enableESPEasyNowFallback = false;
+  bool                                           enableESPEasyNowFallback = false;
 };
 
 

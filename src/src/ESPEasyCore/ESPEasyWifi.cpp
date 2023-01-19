@@ -1542,15 +1542,16 @@ void setConnectionSpeed() {
 }
 
 void setupStaticIPconfig() {
+  const IPAddress ip      (Settings.IP);
+  const IPAddress gw      (Settings.Gateway);
+  const IPAddress subnet  (Settings.Subnet);
+  const IPAddress dns     (Settings.DNS);
+
+  WiFiEventData.dns0_cache = dns;
+
   setUseStaticIP(WiFiUseStaticIP());
 
   if (!WiFiUseStaticIP()) { return; }
-  const IPAddress ip     = Settings.IP;
-  const IPAddress gw     = Settings.Gateway;
-  const IPAddress subnet = Settings.Subnet;
-  const IPAddress dns    = Settings.DNS;
-
-  WiFiEventData.dns0_cache = Settings.DNS;
 
   WiFi.config(ip, gw, subnet, dns);
 

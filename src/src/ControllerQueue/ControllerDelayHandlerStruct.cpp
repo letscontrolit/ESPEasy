@@ -1,18 +1,6 @@
 #include "../ControllerQueue/ControllerDelayHandlerStruct.h"
 
 
-ControllerDelayHandlerStruct::ControllerDelayHandlerStruct() :
-  lastSend(0),
-  minTimeBetweenMessages(CONTROLLER_DELAY_QUEUE_DELAY_DFLT),
-  expire_timeout(0),
-  max_queue_depth(CONTROLLER_DELAY_QUEUE_DEPTH_DFLT),
-  attempt(0),
-  max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
-  delete_oldest(false),
-  must_check_reply(false),
-  deduplicate(false),
-  useLocalSystemTime(false) {}
-
 bool ControllerDelayHandlerStruct::configureControllerSettings(controllerIndex_t ControllerIndex)
 {
   MakeControllerSettings(ControllerSettings);
@@ -26,14 +14,16 @@ bool ControllerDelayHandlerStruct::configureControllerSettings(controllerIndex_t
 }
 
 void ControllerDelayHandlerStruct::configureControllerSettings(const ControllerSettingsStruct& settings) {
-  minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
-  max_queue_depth        = settings.MaxQueueDepth;
-  max_retries            = settings.MaxRetry;
-  delete_oldest          = settings.DeleteOldest;
-  must_check_reply       = settings.MustCheckReply;
-  deduplicate            = settings.deduplicate();
-  useLocalSystemTime     = settings.useLocalSystemTime();
-
+  minTimeBetweenMessages   = settings.MinimalTimeBetweenMessages;
+  max_queue_depth          = settings.MaxQueueDepth;
+  max_retries              = settings.MaxRetry;
+  delete_oldest            = settings.DeleteOldest;
+  must_check_reply         = settings.MustCheckReply;
+  deduplicate              = settings.deduplicate();
+  useLocalSystemTime       = settings.useLocalSystemTime();
+#ifdef USES_ESPEASY_NOW
+  enableESPEasyNowFallback = settings.enableESPEasyNowFallback();
+#endif
   if (settings.allowExpire()) {
     expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
 
@@ -62,14 +52,16 @@ bool ControllerDelayHandlerStruct::readyToProcess(const Queue_element_base& elem
     return false;
   }
 
-  if (Protocol[protocolIndex].needsNetwork) {
+  if (!enableESPEasyNowFallback && Protocol[protocolIndex].needsNetwork) {
     return NetworkConnected(10);
   }
   return true;
 }
 
 bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) const {
-  if (sendQueue.size() >= max_queue_depth) { return true; }
+  if (sendQueue.size() >= max_queue_depth) { 
+    return true; 
+  }
 
   // Number of elements is not exceeding the limit, check memory
   int freeHeap = FreeMem();
@@ -93,7 +85,7 @@ bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) c
   }
 #ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("Controller-");
     log += controller_idx + 1;
     log += F(" : Memory used: ");
@@ -264,7 +256,7 @@ void ControllerDelayHandlerStruct::process(
 
   if (element == nullptr) { return; }
 
-  if (readyToProcess(*element)) {
+  if (enableESPEasyNowFallback || readyToProcess(*element)) {
     MakeControllerSettings(ControllerSettings);
 
     if (AllocatedControllerSettings()) {

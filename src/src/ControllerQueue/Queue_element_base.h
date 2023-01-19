@@ -34,6 +34,7 @@ public:
   // Some formatting of values can be done when actually sending it.
   // This may require less RAM than keeping formatted strings in memory
   bool _processByController;
+  
 };
 
 #endif // ifndef CONTROLLERQUEUE_QUEUE_ELEMENT_BASE_H
