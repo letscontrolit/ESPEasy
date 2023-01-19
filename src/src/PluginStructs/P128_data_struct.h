@@ -2335,7 +2335,9 @@ private:
   const uint8_t  maxBright = 0;
 
   int16_t fadedelay = 20;
-
+  
+  uint16_t ledi = 0;
+  uint16_t ledf = 0;
 
   int8_t defaultspeed  = 25;
   int8_t rainbowspeed  = 1;

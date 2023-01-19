@@ -11,14 +11,14 @@ P128_data_struct::P128_data_struct(int8_t   _gpioPin,
                                    uint8_t  _maxBright)
     : gpioPin(_gpioPin), pixelCount(_pixelCount), maxBright(_maxBright) 
 {
-  # ifdef ESP8266
+   # ifdef ESP8266
   Plugin_128_pixels = new (std::nothrow) NEOPIXEL_LIB<FEATURE, METHOD>(min(pixelCount, static_cast<uint16_t>(ARRAYSIZE)));
   # endif // ifdef ESP8266
   # ifdef ESP32
   Plugin_128_pixels = new (std::nothrow) NEOPIXEL_LIB<FEATURE, METHOD>(min(pixelCount, static_cast<uint16_t>(ARRAYSIZE)),
                                                                         _gpioPin);
   # endif // ifdef ESP32
-
+  
   if (nullptr != Plugin_128_pixels) {
     Plugin_128_pixels->Begin(); // This initializes the NeoPixelBus library.
     Plugin_128_pixels->SetBrightness(maxBright);
@@ -363,6 +363,11 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
       _counter_mode_step = 0;
 
+      hex2rrggbb("000000");
+    /*CLEAN ALL PIXELS */
+      for (int i = 0; i < pixelCount; i++) {
+      Plugin_128_pixels->SetPixelColor(i, rrggbb);
+      }
       hex2rgb(str3);
 
       if (!str4.isEmpty()) { hex2rrggbb(str4); }
@@ -370,6 +375,13 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       speed = str5.isEmpty()
           ? defaultspeed
           : str5i;
+      ledi = str6.isEmpty()
+          ? int(1)
+          : str6i;
+      ledf = str7.isEmpty()
+          ? pixelCount
+          : str7i+1;
+          
     }
 
     else if (subCommand.equals(F("dualscan"))) {
@@ -377,7 +389,11 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       mode    = P128_modetype::Dualscan;
 
       _counter_mode_step = 0;
-
+ hex2rrggbb("000000");
+    /*CLEAN ALL PIXELS */
+      for (int i = 0; i < pixelCount; i++) {
+      Plugin_128_pixels->SetPixelColor(i, rrggbb);
+      }
       hex2rgb(str3);
 
       if (!str4.isEmpty()) { hex2rrggbb(str4); }
@@ -385,6 +401,12 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       speed = str5.isEmpty()
           ? defaultspeed
           : str5i;
+       ledi = str6.isEmpty()
+          ? int(1)
+          : str6i;
+       ledf = str7.isEmpty()
+          ? pixelCount
+          : str7i+1;
     }
 
     else if (subCommand.equals(F("twinkle"))) {
@@ -1112,19 +1134,20 @@ void P128_data_struct::theatre(void) {
  */
 void P128_data_struct::scan(void) {
   if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
-    if (_counter_mode_step > uint16_t((pixelCount * 2) - 2)) {
+    if (_counter_mode_step >= uint16_t(((ledf-ledi) * 2) - 2  )) {
       _counter_mode_step = 0;
+     
     }
     _counter_mode_step++;
 
-    int i = _counter_mode_step - (pixelCount - 1);
+    int i = _counter_mode_step - ((ledf-ledi)-1);
     i = abs(i);
 
     // Plugin_128_pixels->ClearTo(rrggbb);
-    for (int i = 0; i < pixelCount; i++) {
+    for (int i = ledi-1; i < ledf-1; i++) {
       Plugin_128_pixels->SetPixelColor(i, rrggbb);
     }
-    Plugin_128_pixels->SetPixelColor(abs(i), rgb);
+    Plugin_128_pixels->SetPixelColor(abs(i+(ledi-1)), rgb);
   }
 }
 
@@ -1132,22 +1155,24 @@ void P128_data_struct::scan(void) {
  * Runs two pixel back and forth in opposite directions.
  */
 void P128_data_struct::dualscan(void) {
-  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
-    if (_counter_mode_step > uint16_t((pixelCount * 2) - 2)) {
+   if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+    if (_counter_mode_step >= uint16_t(((ledf-ledi) * 2) - 2  )) {
       _counter_mode_step = 0;
+     
     }
-
     _counter_mode_step++;
 
-    int i = _counter_mode_step - (pixelCount - 1);
+    int i = _counter_mode_step - ((ledf-ledi)-1);
     i = abs(i);
 
-    // Plugin_128_pixels->ClearTo(rrggbb);
-    for (int i = 0; i < pixelCount; i++) {
+      for (int i = ledi-1; i < ledf-1; i++) {
       Plugin_128_pixels->SetPixelColor(i, rrggbb);
     }
-    Plugin_128_pixels->SetPixelColor(abs(i),               rgb);
-    Plugin_128_pixels->SetPixelColor(pixelCount - (i + 1), rgb);
+    Plugin_128_pixels->SetPixelColor(abs(i+(ledi-1)), rgb);
+    Plugin_128_pixels->SetPixelColor(((ledf-ledi) - (i + 1 ))+ledi-1, rgb);
+    //Plugin_128_pixels->SetPixelColor(abs(i),               rgb);
+    //Plugin_128_pixels->SetPixelColor(pixelCount - (i + 1 ), rgb);
+
   }
 }
 
