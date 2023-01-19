@@ -392,7 +392,10 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
 #endif
-      COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
+      COMMAND_CASE_R(  "password", Command_Settings_Password, 1); // Settings.h
+      #if FEATURE_POST_TO_HTTP
+      COMMAND_CASE_A("posttohttp", Command_HTTP_PostToHTTP,  -1); // HTTP.h
+      #endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
       COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
