@@ -1545,7 +1545,7 @@ int http_authenticate(const String& logIdentifier,
     eventQueue.addMove(std::move(event));
   }
 #ifndef BUILD_NO_DEBUG
-  log_http_result(http, logIdentifier, host, HttpMethod, httpCode, EMPTY_STRING);
+  log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
 #endif
   return httpCode;
 }

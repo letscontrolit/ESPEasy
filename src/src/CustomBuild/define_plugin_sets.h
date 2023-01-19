@@ -435,6 +435,11 @@ To create/register a plugin, you have to :
       #define NOTIFIER_SET_NONE
     #endif
 
+    #ifdef FEATURE_POST_TO_HTTP
+      #undef FEATURE_POST_TO_HTTP
+    #endif
+    #define FEATURE_POST_TO_HTTP  0 // Disabled
+
     #ifndef PLUGIN_SET_NONE
       #define PLUGIN_SET_NONE
     #endif
@@ -2162,6 +2167,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_SEND_TO_HTTP
   #endif
   #define FEATURE_SEND_TO_HTTP  0 // Disabled
+  #ifdef FEATURE_POST_TO_HTTP
+    #undef FEATURE_POST_TO_HTTP
+  #endif
+  #define FEATURE_POST_TO_HTTP  0 // Disabled
 #endif
 
 
@@ -2674,11 +2683,15 @@ To create/register a plugin, you have to :
   #define FEATURE_SEND_TO_HTTP  1 // Enabled by default
 #endif
 
+#ifndef FEATURE_POST_TO_HTTP
+  #define FEATURE_POST_TO_HTTP  1 // Enabled by default
+#endif
+
 #ifndef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
 #endif
 
-#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
+#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
   #undef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
 #endif
