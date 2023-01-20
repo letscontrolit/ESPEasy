@@ -1,8 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P042
-//#######################################################################################################
-//######################################## Plugin 042: NeoPixel Candle ##################################
-//#######################################################################################################
+
+// #######################################################################################################
+// ######################################## Plugin 042: NeoPixel Candle ##################################
+// #######################################################################################################
 
 // PROJECT INFO
 // Wifi Candle for ESPEasy by Dominik Schmidt (10.2016)
@@ -57,14 +58,14 @@
 // https://www.ruinelli.ch/rgb-to-hsv               Code
 // http://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both    Code Sammlung
 
-#include <Adafruit_NeoPixel.h>
+# include <Adafruit_NeoPixel.h>
 
 
-#define NUM_PIXEL       20         // Defines the amount of LED Pixel
-#define NUM_PIXEL_ROW    5         // Defines the amount of LED Pixel per Row
-#define RANDOM_PIXEL    70         // Defines the Flicker Level for Simple Candle
-#define BRIGHT_START   128         // Defines the Start Brightness
-#define BASE_TEMP       21         // Defines the Base Temp for TempRange Transformation
+# define NUM_PIXEL       20 // Defines the amount of LED Pixel
+# define NUM_PIXEL_ROW    5 // Defines the amount of LED Pixel per Row
+# define RANDOM_PIXEL    70 // Defines the Flicker Level for Simple Candle
+# define BRIGHT_START   128 // Defines the Start Brightness
+# define BASE_TEMP       21 // Defines the Base Temp for TempRange Transformation
 
 enum SimType {
   TypeOff,
@@ -82,27 +83,27 @@ enum ColorType {
   ColorSelected
 };
 
-uint8_t Candle_red = 0;
-uint8_t Candle_green = 0;
-uint8_t Candle_blue = 0;
-uint8_t Candle_bright = 128;
-SimType Candle_type = TypeSimpleCandle;
-ColorType Candle_color = ColorDefault;
+uint8_t   Candle_red    = 0;
+uint8_t   Candle_green  = 0;
+uint8_t   Candle_blue   = 0;
+uint8_t   Candle_bright = 128;
+SimType   Candle_type   = TypeSimpleCandle;
+ColorType Candle_color  = ColorDefault;
 
 // global variables
 unsigned long Candle_Update = 0;
-word Candle_Temp[4] = { 0, 0, 0 };     // Temp variables
-int Candle_Temp4 = 0;
-boolean GPIO_Set = false;
+word Candle_Temp[4]         = { 0, 0, 0 }; // Temp variables
+int  Candle_Temp4           = 0;
+boolean GPIO_Set            = false;
 
 Adafruit_NeoPixel *Candle_pixels;
 
-#define PLUGIN_042
-#define PLUGIN_ID_042         42
-#define PLUGIN_NAME_042       "Output - NeoPixel (Candle)"
-#define PLUGIN_VALUENAME1_042 "Color"
-#define PLUGIN_VALUENAME2_042 "Brightness"
-#define PLUGIN_VALUENAME3_042 "Type"
+# define PLUGIN_042
+# define PLUGIN_ID_042         42
+# define PLUGIN_NAME_042       "Output - NeoPixel (Candle)"
+# define PLUGIN_VALUENAME1_042 "Color"
+# define PLUGIN_VALUENAME2_042 "Brightness"
+# define PLUGIN_VALUENAME3_042 "Type"
 
 boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -110,397 +111,412 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_042;
-        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TRIPLE;
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 3;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].GlobalSyncOption = false;
-        break;
-      }
+    {
+      Device[++deviceCount].Number           = PLUGIN_ID_042;
+      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].Ports              = 0;
+      Device[deviceCount].PullUpOption       = false;
+      Device[deviceCount].InverseLogicOption = false;
+      Device[deviceCount].FormulaOption      = false;
+      Device[deviceCount].ValueCount         = 3;
+      Device[deviceCount].SendDataOption     = true;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].GlobalSyncOption   = false;
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_042);
-        break;
-      }
+    {
+      string = F(PLUGIN_NAME_042);
+      break;
+    }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_042));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_042));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_042));
-        break;
-      }
+    {
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_042));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_042));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_042));
+      break;
+    }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
-      {
-        event->String1 = formatGpioName_output(F("Data"));
-        break;
-      }
-      
+    {
+      event->String1 = formatGpioName_output(F("Data"));
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
+    {
+      addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
+
       {
-        addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
+        const __FlashStringHelper *options[8] = {
+          F("Off"),
+          F("Static Light"),
+          F("Simple Candle"),
+          F("Advanced Candle"),
+          F("Police"),
+          F("Blink"),
+          F("Strobe"),
+          F("Color Fader")
+        };
 
+        // int optionValues[8];
+
+        uint8_t choice = PCONFIG(4);
+
+        if (choice > sizeof(options) - 1)
         {
-          const __FlashStringHelper * options[8] = {
-            F("Off"),
-            F("Static Light"),
-            F("Simple Candle"),
-            F("Advanced Candle"),
-            F("Police"),
-            F("Blink"),
-            F("Strobe"),
-            F("Color Fader")
-          };
-          // int optionValues[8];
-
-          uint8_t choice = PCONFIG(4);
-          if (choice > sizeof(options) - 1)
-          {
-            choice = 2;
-          }
-
-          // Candle Type Selection
-          addFormSelector(F("Flame Type"), F("cType"), 8, options, nullptr, choice);
+          choice = 2;
         }
 
-        // Advanced Color options
-        Candle_color = static_cast<ColorType>(PCONFIG(5));
-        addRowLabel(F("Color Handling")); // checked
-        addHtml(F("<input type='radio' id='clrDefault' name='clrType' value='0'"));
-        if (Candle_color == ColorDefault) {
-          addHtml(F(" checked>"));
-        } else {
-          addHtml('>');
-        }
-        addHtml(F("<label for='clrDefault'> Use default color</label><br>"));
-        addHtml(F("<input type='radio' id='clrSelect' name='clrType' value='1'"));
-        if (Candle_color == ColorSelected) {
-          addHtml(F(" checked>"));
-        } else {
-          addHtml('>');
-        }
-        addHtml(F("<label for='clrSelect'> Use selected color</label><br>"));
-
-        // Color Selection
-        // char hexvalue[7] = {0};
-        // sprintf_P(hexvalue, PSTR("%02X%02X%02X"),     // Create Hex value for color
-        //           PCONFIG(0),
-        //           PCONFIG(1),
-        //           PCONFIG(2));
-
-        // http://jscolor.com/examples/
-        addRowLabel(F("Color"));
-        addHtml(F("<input data-jscolor=\"{onInput:'update(this)',position:'top',value:'#"));
-        addHtml(formatToHex_no_prefix(PCONFIG(0), 2));
-        addHtml(formatToHex_no_prefix(PCONFIG(1), 2));
-        addHtml(formatToHex_no_prefix(PCONFIG(2), 2));
-        addHtml(F("'}\">"));
-        addFormNumericBox(F("RGB Color"), F("wRed"), PCONFIG(0), 0, 255);
-        addNumericBox(F("wGreen"), PCONFIG(1), 0, 255);
-        addNumericBox(F("wBlue"), PCONFIG(2), 0, 255);
-
-        // Brightness Selection
-        addRowLabel(F("Brightness"));
-        addHtml(F("min<input type='range' id='brSlide' min='0' max='255' value='"));
-        addHtmlInt(PCONFIG(3));
-        addHtml(F("'> max"));
-
-        {
-          // char tmpString[128];
-          // sprintf_P(tmpString, PSTR("<input type='text' name='brText' id='brText' size='3' value='%u'>"), PCONFIG(3));
-          // addHtml(concat(F("<input type='text' name='brText' id='brText' size='3' value='"),) + F("'>"));
-          addFormNumericBox(F("Brightness Value"), F("brText"), PCONFIG(3), 0, 255);
-        }
-
-        // Some Javascript we need to update the items
-        addHtml(F("<script script type='text/javascript'>"));
-        // "function update(picker) {"
-        // "    document.getElementById('wRed').value = Math.round(picker.rgb[0]);"
-        // "    document.getElementById('wGreen').value = Math.round(picker.rgb[1]);"
-        // "    document.getElementById('wBlue').value = Math.round(picker.rgb[2]);"
-        // '}'
-        // Minified:
-        addHtml(F("function update(e){document.getElementById('wRed').value=Math.round(e.channel('R')),document.getElementById('wGreen').value=Math.round(e.channel('G')),document.getElementById('wBlue').value=Math.round(e.channel('B'))}"));
-
-        // "window.addEventListener('load', function(){"
-        // "var slider = document.getElementById('brSlide');"
-        // "slider.addEventListener('change', function(){"
-        // "document.getElementById('brText').value = this.value;"
-        // "});"
-        // "});</script>"
-        // Minified:
-        addHtml(F("window.addEventListener('load',function(){document.getElementById('brSlide').addEventListener('input',function(){document.getElementById('brText').value=this.value})});"));
-        addHtml(F("</script>"));
-
-        success = true;
-        break;
+        // Candle Type Selection
+        addFormSelector(F("Flame Type"), F("cType"), 8, options, nullptr, choice);
       }
+
+      // Advanced Color options
+      Candle_color = static_cast<ColorType>(PCONFIG(5));
+      addRowLabel(F("Color Handling")); // checked
+      addHtml(F("<input type='radio' id='clrDefault' name='clrType' value='0'"));
+
+      if (Candle_color == ColorDefault) {
+        addHtml(F(" checked>"));
+      } else {
+        addHtml('>');
+      }
+      addHtml(F("<label for='clrDefault'> Use default color</label><br>"));
+      addHtml(F("<input type='radio' id='clrSelect' name='clrType' value='1'"));
+
+      if (Candle_color == ColorSelected) {
+        addHtml(F(" checked>"));
+      } else {
+        addHtml('>');
+      }
+      addHtml(F("<label for='clrSelect'> Use selected color</label><br>"));
+
+      // Color Selection
+      // char hexvalue[7] = {0};
+      // sprintf_P(hexvalue, PSTR("%02X%02X%02X"),     // Create Hex value for color
+      //           PCONFIG(0),
+      //           PCONFIG(1),
+      //           PCONFIG(2));
+
+      // http://jscolor.com/examples/
+      addRowLabel(F("Color"));
+      addHtml(F("<input data-jscolor=\"{onInput:'update(this)',position:'top',value:'#"));
+      addHtml(formatToHex_no_prefix(PCONFIG(0), 2));
+      addHtml(formatToHex_no_prefix(PCONFIG(1), 2));
+      addHtml(formatToHex_no_prefix(PCONFIG(2), 2));
+      addHtml(F("'}\">"));
+      addFormNumericBox(F("RGB Color"), F("wRed"), PCONFIG(0), 0, 255);
+      addNumericBox(F("wGreen"), PCONFIG(1), 0, 255);
+      addNumericBox(F("wBlue"),  PCONFIG(2), 0, 255);
+
+      // Brightness Selection
+      addRowLabel(F("Brightness"));
+      addHtml(F("min<input type='range' id='brSlide' min='0' max='255' value='"));
+      addHtmlInt(PCONFIG(3));
+      addHtml(F("'> max"));
+
+      {
+        // char tmpString[128];
+        // sprintf_P(tmpString, PSTR("<input type='text' name='brText' id='brText' size='3' value='%u'>"), PCONFIG(3));
+        // addHtml(concat(F("<input type='text' name='brText' id='brText' size='3' value='"),) + F("'>"));
+        addFormNumericBox(F("Brightness Value"), F("brText"), PCONFIG(3), 0, 255);
+      }
+
+      // Some Javascript we need to update the items
+      addHtml(F("<script script type='text/javascript'>"));
+
+      // "function update(picker) {"
+      // "    document.getElementById('wRed').value = Math.round(picker.rgb[0]);"
+      // "    document.getElementById('wGreen').value = Math.round(picker.rgb[1]);"
+      // "    document.getElementById('wBlue').value = Math.round(picker.rgb[2]);"
+      // '}'
+      // Minified:
+      addHtml(F(
+                "function update(e){document.getElementById('wRed').value=Math.round(e.channel('R')),document.getElementById('wGreen').value=Math.round(e.channel('G')),document.getElementById('wBlue').value=Math.round(e.channel('B'))}"));
+
+      // "window.addEventListener('load', function(){"
+      // "var slider = document.getElementById('brSlide');"
+      // "slider.addEventListener('change', function(){"
+      // "document.getElementById('brText').value = this.value;"
+      // "});"
+      // "});</script>"
+      // Minified:
+      addHtml(F(
+                "window.addEventListener('load',function(){document.getElementById('brSlide').addEventListener('input',function(){document.getElementById('brText').value=this.value})});"));
+      addHtml(F("</script>"));
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_SAVE:
-      {
-        PCONFIG(0) = getFormItemInt(F("wRed"));
-        PCONFIG(1) = getFormItemInt(F("wGreen"));
-        PCONFIG(2) = getFormItemInt(F("wBlue"));
-        PCONFIG(3) = getFormItemInt(F("brText"));
-        PCONFIG(4) = getFormItemInt(F("cType"));
-        PCONFIG(5) = getFormItemInt(F("clrType"));
+    {
+      PCONFIG(0) = getFormItemInt(F("wRed"));
+      PCONFIG(1) = getFormItemInt(F("wGreen"));
+      PCONFIG(2) = getFormItemInt(F("wBlue"));
+      PCONFIG(3) = getFormItemInt(F("brText"));
+      PCONFIG(4) = getFormItemInt(F("cType"));
+      PCONFIG(5) = getFormItemInt(F("clrType"));
 
-        Candle_red = PCONFIG(0);
-        Candle_green = PCONFIG(1);
-        Candle_blue = PCONFIG(2);
-        if (Candle_bright > 255) {
-          Candle_bright = 255;
-        }
-        Candle_bright = PCONFIG(3);
-        Candle_type = (SimType)PCONFIG(4);
-        Candle_color = (ColorType)PCONFIG(5);
+      Candle_red   = PCONFIG(0);
+      Candle_green = PCONFIG(1);
+      Candle_blue  = PCONFIG(2);
 
-        success = true;
-        break;
+      if (Candle_bright > 255) {
+        Candle_bright = 255;
       }
+      Candle_bright = PCONFIG(3);
+      Candle_type   = (SimType)PCONFIG(4);
+      Candle_color  = (ColorType)PCONFIG(5);
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_INIT:
-      {
-        Candle_red = PCONFIG(0);
-        Candle_green = PCONFIG(1);
-        Candle_blue = PCONFIG(2);
-        Candle_bright = PCONFIG(3);
-        if (Candle_red == 0 && Candle_green == 0 && Candle_blue == 0) {
-          Candle_bright = BRIGHT_START;
-        }
-        Candle_type = static_cast<SimType>(PCONFIG(4));
-        Candle_color = static_cast<ColorType>(PCONFIG(5));
+    {
+      Candle_red    = PCONFIG(0);
+      Candle_green  = PCONFIG(1);
+      Candle_blue   = PCONFIG(2);
+      Candle_bright = PCONFIG(3);
 
-        if (!Candle_pixels || GPIO_Set == false)
-        {
-          GPIO_Set = validGpio(CONFIG_PIN1);
-          if (Candle_pixels) {
-            delete Candle_pixels;
-          }
-          Candle_pixels = new (std::nothrow) Adafruit_NeoPixel(NUM_PIXEL, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
-          if (Candle_pixels != nullptr) {
-            SetPixelsBlack();
-            Candle_pixels->setBrightness(Candle_bright);
-            Candle_pixels->begin();
-          }
-
-          #ifndef BUILD_NO_DEBUG
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : Init WS2812 Pin : "), static_cast<int>(CONFIG_PIN1)));
-          }
-          #endif
-        }
-
-        success = Candle_pixels != nullptr;
-        break;
+      if ((Candle_red == 0) && (Candle_green == 0) && (Candle_blue == 0)) {
+        Candle_bright = BRIGHT_START;
       }
+      Candle_type  = static_cast<SimType>(PCONFIG(4));
+      Candle_color = static_cast<ColorType>(PCONFIG(5));
+
+      if (!Candle_pixels || (GPIO_Set == false))
+      {
+        GPIO_Set = validGpio(CONFIG_PIN1);
+
+        if (Candle_pixels) {
+          delete Candle_pixels;
+        }
+        Candle_pixels = new (std::nothrow) Adafruit_NeoPixel(NUM_PIXEL, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+
+        if (Candle_pixels != nullptr) {
+          SetPixelsBlack();
+          Candle_pixels->setBrightness(Candle_bright);
+          Candle_pixels->begin();
+        }
+
+          # ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : Init WS2812 Pin : "), static_cast<int>(CONFIG_PIN1)));
+        }
+          # endif // ifndef BUILD_NO_DEBUG
+      }
+
+      success = Candle_pixels != nullptr;
+      break;
+    }
 
     case PLUGIN_EXIT:
-      {
-        if (Candle_pixels != nullptr) {
-          delete Candle_pixels;
-          Candle_pixels = nullptr;
-        }
-        break;
+    {
+      if (Candle_pixels != nullptr) {
+        delete Candle_pixels;
+        Candle_pixels = nullptr;
       }
+      break;
+    }
 
     case PLUGIN_ONCE_A_SECOND:
-      {
-        Candle_pixels->setBrightness(Candle_bright);
-        Candle_pixels->show(); // This sends the updated pixel color to the hardware.
-        success = true;
-        break;
-      }
+    {
+      Candle_pixels->setBrightness(Candle_bright);
+      Candle_pixels->show(); // This sends the updated pixel color to the hardware.
+      success = true;
+      break;
+    }
 
     case PLUGIN_FIFTY_PER_SECOND:
+    {
+      switch (Candle_type)
       {
-        switch (Candle_type)
+        case 0: // "Update" for OFF
         {
-          case 0:   // "Update" for OFF
-            {
-              type_Off();
-              break;
-            }
-
-          case 1:   // Update for LIGHT
-            {
-              type_Static_Light();
-              break;
-            }
-
-          case 2: // Random Updates for Simple Candle, Advanced Candle, Fire Simulation
-          case 3:
-            {
-              if (timeOutReached(Candle_Update)) {
-                if (Candle_type == 2) {
-                  type_Simple_Candle();
-                }
-                if (Candle_type == 3) {
-                  type_Advanced_Candle();
-                }
-                Candle_Update = millis() + random(25, 150);
-              }
-              break;
-            }
-
-          case 4:   // Update for Police
-            {
-              if (timeOutReached(Candle_Update)) {
-                type_Police();
-                Candle_Update = millis() + 150;
-              }
-              break;
-            }
-
-          case 5:   // Update for Blink
-            {
-              if (timeOutReached(Candle_Update)) {
-                type_BlinkStrobe();
-                Candle_Update = millis() + 100;
-              }
-              break;
-            }
-
-          case 6:   // Update for Strobe
-            {
-              type_BlinkStrobe();
-              break;
-            }
-          case 7:   // Update for ColorFader
-            {
-              if (timeOutReached(Candle_Update)) {
-                type_ColorFader();
-                Candle_Update = millis() + 2000;
-              }
-              break;
-            }
+          type_Off();
+          break;
         }
 
-        Candle_pixels->show();
+        case 1: // Update for LIGHT
+        {
+          type_Static_Light();
+          break;
+        }
 
-        success = true;
-        break;
+        case 2: // Random Updates for Simple Candle, Advanced Candle, Fire Simulation
+        case 3:
+        {
+          if (timeOutReached(Candle_Update)) {
+            if (Candle_type == 2) {
+              type_Simple_Candle();
+            }
+
+            if (Candle_type == 3) {
+              type_Advanced_Candle();
+            }
+            Candle_Update = millis() + random(25, 150);
+          }
+          break;
+        }
+
+        case 4: // Update for Police
+        {
+          if (timeOutReached(Candle_Update)) {
+            type_Police();
+            Candle_Update = millis() + 150;
+          }
+          break;
+        }
+
+        case 5: // Update for Blink
+        {
+          if (timeOutReached(Candle_Update)) {
+            type_BlinkStrobe();
+            Candle_Update = millis() + 100;
+          }
+          break;
+        }
+
+        case 6: // Update for Strobe
+        {
+          type_BlinkStrobe();
+          break;
+        }
+        case 7: // Update for ColorFader
+        {
+          if (timeOutReached(Candle_Update)) {
+            type_ColorFader();
+            Candle_Update = millis() + 2000;
+          }
+          break;
+        }
       }
+
+      Candle_pixels->show();
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_READ:
-      {
-        UserVar[event->BaseVarIndex] = Candle_red * 65536 + Candle_green * 256 + Candle_blue;
-        UserVar[event->BaseVarIndex + 1] = Candle_bright;
-        UserVar[event->BaseVarIndex + 2] = Candle_type;
+    {
+      UserVar[event->BaseVarIndex]     = Candle_red * 65536 + Candle_green * 256 + Candle_blue;
+      UserVar[event->BaseVarIndex + 1] = Candle_bright;
+      UserVar[event->BaseVarIndex + 2] = Candle_type;
 
-        success = true;
-        break;
-      }
+      success = true;
+      break;
+    }
 
     case PLUGIN_WRITE:
-      {
-        String tmpString  = string;
+    {
+      String tmpString = string;
 
-        // Test
-        // MQTT   : mosquitto_pub -d -t sensors/espeasy/ESP_Candle/cmd  -m "CANDLE_OFF"
-        // HTTP   : http://192.168.30.183/tools?cmd=CANDLE%3A5%3AFF0000%3A200
-        //          http://192.168.30.183/tools?cmd=CANDLE:4:FF0000:200
-        // SERIAL : CANDLE:4:FF0000:200<CR><LF>
+      // Test
+      // MQTT   : mosquitto_pub -d -t sensors/espeasy/ESP_Candle/cmd  -m "CANDLE_OFF"
+      // HTTP   : http://192.168.30.183/tools?cmd=CANDLE%3A5%3AFF0000%3A200
+      //          http://192.168.30.183/tools?cmd=CANDLE:4:FF0000:200
+      // SERIAL : CANDLE:4:FF0000:200<CR><LF>
 
-        // Commands
-        // CANDLE:<FlameType>:<Color>:<Brightness>
-        //    <FlameType>  : 1 Static Light, 2 Simple Candle, 3 Advanced Candle, 4 Police, 5 Blink, 6 Strobe, 7 Color Fader
-        //    <Color>      : n.def.  Use the default color
-        //                   RRGGBB  Use color in RRGGBB style (red, green blue) as HEX
-        //    <Brightness> : 0-255
-        // Samples:   CANDLE:2::100           Simple Candle with Default color and Brigthness at 100
-        //            CANDLE:5:FF0000:200     Blink with RED Color and Brigthness at 200
-        //            CANDLE:0::              Candle OFF
-        //            CANDLE:1::255           Candle ON - White and full brigthness
+      // Commands
+      // CANDLE:<FlameType>:<Color>:<Brightness>
+      //    <FlameType>  : 1 Static Light, 2 Simple Candle, 3 Advanced Candle, 4 Police, 5 Blink, 6 Strobe, 7 Color Fader
+      //    <Color>      : n.def.  Use the default color
+      //                   RRGGBB  Use color in RRGGBB style (red, green blue) as HEX
+      //    <Brightness> : 0-255
+      // Samples:   CANDLE:2::100           Simple Candle with Default color and Brigthness at 100
+      //            CANDLE:5:FF0000:200     Blink with RED Color and Brigthness at 200
+      //            CANDLE:0::              Candle OFF
+      //            CANDLE:1::255           Candle ON - White and full brigthness
 
-        if (tmpString.startsWith(F("CANDLE:"))){
-          int idx1 = tmpString.indexOf(':');
-          int idx2 = tmpString.indexOf(':', idx1+1);
-          int idx3 = tmpString.indexOf(':', idx2+1);
-          int idx4 = tmpString.indexOf(':', idx3+1);
-          String val_Type = tmpString.substring(idx1+1, idx2);
-          String val_Color = tmpString.substring(idx2+1, idx3);
-          String val_Bright = tmpString.substring(idx3+1, idx4);
+      if (tmpString.startsWith(F("CANDLE:"))) {
+        int idx1          = tmpString.indexOf(':');
+        int idx2          = tmpString.indexOf(':', idx1 + 1);
+        int idx3          = tmpString.indexOf(':', idx2 + 1);
+        int idx4          = tmpString.indexOf(':', idx3 + 1);
+        String val_Type   = tmpString.substring(idx1 + 1, idx2);
+        String val_Color  = tmpString.substring(idx2 + 1, idx3);
+        String val_Bright = tmpString.substring(idx3 + 1, idx4);
 
-          if (!val_Type.isEmpty()) {
-             if (val_Type.toInt() > -1 && val_Type.toInt() < 8) {
-                PCONFIG(4) = val_Type.toInt();     // Type
-                Candle_type = static_cast<SimType>(PCONFIG(4));
-                #ifndef BUILD_NO_DEBUG
-                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : CMD - Type : "), val_Type));
-                }
-                #endif
-             }
-          }
+        if (!val_Type.isEmpty()) {
+          if ((val_Type.toInt() > -1) && (val_Type.toInt() < 8)) {
+            PCONFIG(4)  = val_Type.toInt(); // Type
+            Candle_type = static_cast<SimType>(PCONFIG(4));
+                # ifndef BUILD_NO_DEBUG
 
-          if (!val_Bright.isEmpty()) {
-             if (val_Bright.toInt() > -1 && val_Bright.toInt() < 256) {
-                PCONFIG(3) = val_Bright.toInt();     // Brightness
-                Candle_bright = PCONFIG(3);
-                #ifndef BUILD_NO_DEBUG
-                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : CMD - Bright : "), val_Bright));
-                }
-                #endif
-             }
-          }
-
-          if (!val_Color.isEmpty()) {
-            long number = strtol( &val_Color[0], nullptr, 16);
-            // Split RGB to r, g, b values
-            uint8_t r = number >> 16;
-            uint8_t g = number >> 8 & 0xFF;
-            uint8_t b = number & 0xFF;
-
-            PCONFIG(0) = r;   // R
-            PCONFIG(1) = g;   // G
-            PCONFIG(2) = b;   // B
-            Candle_red = PCONFIG(0);
-            Candle_green = PCONFIG(1);
-            Candle_blue = PCONFIG(2);
-            PCONFIG(5) = 1;
-            Candle_color = static_cast<ColorType>(PCONFIG(5));   // ColorType (ColorSelected)
-
-            #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              String log = F("CAND : CMD - R ");
-              log += r;
-              log += F(" G ");
-              log += g;
-              log += F(" B ");
-              log += b;
-              addLogMove(LOG_LEVEL_DEBUG, log);
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : CMD - Type : "), val_Type));
             }
-            #endif
-          } else {
-            PCONFIG(5) = 0;
-            Candle_color = static_cast<ColorType>(PCONFIG(5));   // ColorType (ColorDefault)
-            #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, F("CAND : CMD - Color : DEFAULT"));
-            #endif
+                # endif // ifndef BUILD_NO_DEBUG
           }
-
-          //SaveTaskSettings(event->TaskIndex);
-          //SaveSettings();
-
-          success = true;
         }
 
-        break;
+        if (!val_Bright.isEmpty()) {
+          if ((val_Bright.toInt() > -1) && (val_Bright.toInt() < 256)) {
+            PCONFIG(3)    = val_Bright.toInt(); // Brightness
+            Candle_bright = PCONFIG(3);
+                # ifndef BUILD_NO_DEBUG
+
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : CMD - Bright : "), val_Bright));
+            }
+                # endif // ifndef BUILD_NO_DEBUG
+          }
+        }
+
+        if (!val_Color.isEmpty()) {
+          long number = strtol(&val_Color[0], nullptr, 16);
+
+          // Split RGB to r, g, b values
+          uint8_t r = number >> 16;
+          uint8_t g = number >> 8 & 0xFF;
+          uint8_t b = number & 0xFF;
+
+          PCONFIG(0)   = r; // R
+          PCONFIG(1)   = g; // G
+          PCONFIG(2)   = b; // B
+          Candle_red   = PCONFIG(0);
+          Candle_green = PCONFIG(1);
+          Candle_blue  = PCONFIG(2);
+          PCONFIG(5)   = 1;
+          Candle_color = static_cast<ColorType>(PCONFIG(5)); // ColorType (ColorSelected)
+
+            # ifndef BUILD_NO_DEBUG
+
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            String log = F("CAND : CMD - R ");
+            log += r;
+            log += F(" G ");
+            log += g;
+            log += F(" B ");
+            log += b;
+            addLogMove(LOG_LEVEL_DEBUG, log);
+          }
+            # endif // ifndef BUILD_NO_DEBUG
+        } else {
+          PCONFIG(5) = 0;
+          Candle_color = static_cast<ColorType>(PCONFIG(5)); // ColorType (ColorDefault)
+            # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("CAND : CMD - Color : DEFAULT"));
+            # endif // ifndef BUILD_NO_DEBUG
+        }
+
+        // SaveTaskSettings(event->TaskIndex);
+        // SaveSettings();
+
+        success = true;
       }
 
+      break;
+    }
   }
   return success;
 }
@@ -522,7 +538,7 @@ void type_Off() {
 void type_Static_Light() {
   for (int i = 0; i < NUM_PIXEL; i++) {
     if (Candle_color == ColorDefault) {
-      Candle_pixels->setPixelColor(i, 255, 255, 255);     // Default is white
+      Candle_pixels->setPixelColor(i, 255, 255, 255); // Default is white
     } else {
       Candle_pixels->setPixelColor(i, Candle_red, Candle_green, Candle_blue);
     }
@@ -531,10 +547,11 @@ void type_Static_Light() {
 
 void type_Simple_Candle() {
   int r, g, b;
+
   if (Candle_color == ColorDefault) {
-    r = 226, g = 42, b =  35;   // Regular (orange) flame
-    //r = 158, g =   8, b = 148;   // Purple flame
-    //r =  74, g = 150, b =  12;   // Green flame
+    r = 226, g = 42, b =  35; // Regular (orange) flame
+    // r = 158, g =   8, b = 148;   // Purple flame
+    // r =  74, g = 150, b =  12;   // Green flame
   } else {
     r = Candle_red, g = Candle_green, b = Candle_blue;
   }
@@ -542,20 +559,23 @@ void type_Simple_Candle() {
   //  Flicker, based on our initial RGB values
   for (int i = 0; i < NUM_PIXEL; i++) {
     int flicker = random(0, RANDOM_PIXEL);
-    int r1 = r - flicker;
-    int g1 = g - flicker;
-    int b1 = b - flicker;
-    if (g1 < 0) g1 = 0;
-    if (r1 < 0) r1 = 0;
-    if (b1 < 0) b1 = 0;
+    int r1      = r - flicker;
+    int g1      = g - flicker;
+    int b1      = b - flicker;
+
+    if (g1 < 0) { g1 = 0; }
+
+    if (r1 < 0) { r1 = 0; }
+
+    if (b1 < 0) { b1 = 0; }
     Candle_pixels->setPixelColor(i, r1, g1, b1);
   }
 }
 
 void type_Advanced_Candle() {
-  Candle_Temp[0] = random(1, 4); // 1..4  LEDs in RED
+  Candle_Temp[0] = random(1, 4);                  // 1..4  LEDs in RED
   Candle_Temp[1] = random(1, 4) + Candle_Temp[0]; // 1..3  LEDs in Yellow / Orange
-  Candle_Temp[2] = random(0, 2); // 0..1  Choose Yellow = 0 / Orange = 1
+  Candle_Temp[2] = random(0, 2);                  // 0..1  Choose Yellow = 0 / Orange = 1
 
   int colorbase[3];
   int color1[3];
@@ -563,37 +583,42 @@ void type_Advanced_Candle() {
   int color3[3];
 
   if (Candle_color == ColorDefault) {
-    colorbase[0] = 255; colorbase[1] = 120; colorbase[2] = 0;   // Light Orange #FF7800
-    color1[0] = 115; color1[1] = 50; color1[2] = 0;             // Brown      #733200
-    color2[0] = 180; color2[1] = 80; color2[2] = 0;             // Orange     #B45000
-    color3[0] =  70; color3[1] = 30; color3[2] = 0;              // Dark brown #4A2000
+    colorbase[0] = 255; colorbase[1] = 120; colorbase[2] = 0; // Light Orange #FF7800
+    color1[0]    = 115; color1[1] = 50; color1[2] = 0;        // Brown      #733200
+    color2[0]    = 180; color2[1] = 80; color2[2] = 0;        // Orange     #B45000
+    color3[0]    =  70; color3[1] = 30; color3[2] = 0;        // Dark brown #4A2000
   } else {
     colorbase[0] = Candle_red; colorbase[1] = Candle_green; colorbase[2] = Candle_blue;
     double hsv[3];
+
     // Calc HSV
     RGBtoHSV(Candle_red, Candle_green, Candle_blue, hsv);
     double newH = hsv[0] - 5;
+
     if (newH < 0) { newH += 359; }
-    double newV = hsv[2] / 2;
+    double newV  = hsv[2] / 2;
     double newV2 = hsv[2] / 4;
+
     // Calc new RGBs
-    HSVtoRGB(newH, hsv[1], hsv[2], color1);
-    HSVtoRGB(hsv[0], hsv[1], newV, color2);
-    HSVtoRGB(newH, hsv[1], newV2, color3);
+    HSVtoRGB(newH,   hsv[1], hsv[2], color1);
+    HSVtoRGB(hsv[0], hsv[1], newV,   color2);
+    HSVtoRGB(newH,   hsv[1], newV2,  color3);
   }
 
   for (int j = 0; j < 4; j++) {
-    for (unsigned int i = 1; i < 6; i++){
+    for (unsigned int i = 1; i < 6; i++) {
       if (i <= Candle_Temp[0]) {
         Candle_pixels->setPixelColor(j * 5 + i - 1, colorbase[0], colorbase[1], colorbase[2]);
       }
-      if (i > Candle_Temp[0] && i <= Candle_Temp[1]) {
-        if (Candle_Temp[2] == 0){
+
+      if ((i > Candle_Temp[0]) && (i <= Candle_Temp[1])) {
+        if (Candle_Temp[2] == 0) {
           Candle_pixels->setPixelColor(j * 5 + i - 1, color1[0], color1[1], color1[2]);
         } else {
           Candle_pixels->setPixelColor(j * 5 + i - 1, color2[0], color2[1], color2[2]);
         }
       }
+
       if (i > Candle_Temp[1]) {
         Candle_pixels->setPixelColor(j * 5 + i - 1, color3[0], color3[1], color3[2]);
       }
@@ -603,6 +628,7 @@ void type_Advanced_Candle() {
 
 void type_Police() {
   Candle_Temp[0]++;
+
   if (Candle_Temp[0] > 3) {
     Candle_Temp[0] = 0;
   }
@@ -627,6 +653,7 @@ void type_Police() {
 
 void type_BlinkStrobe() {
   Candle_Temp[0]++;
+
   if (Candle_Temp[0] > 1) {
     Candle_Temp[0] = 0;
   }
@@ -636,7 +663,7 @@ void type_BlinkStrobe() {
       Candle_pixels->setPixelColor(i, 0, 0, 0);
     } else {
       if (Candle_color == ColorDefault) {
-        Candle_pixels->setPixelColor(i, 255, 255, 255);     // Default is white
+        Candle_pixels->setPixelColor(i, 255, 255, 255); // Default is white
       } else {
         Candle_pixels->setPixelColor(i, Candle_red, Candle_green, Candle_blue);
       }
@@ -647,11 +674,13 @@ void type_BlinkStrobe() {
 void type_ColorFader() {
   int colors[3];
   double hsv[3];
+
   if (Candle_color != ColorDefault) {
-    if (Candle_Temp[0] > 254 && Candle_Temp[1] == 1) {
+    if ((Candle_Temp[0] > 254) && (Candle_Temp[1] == 1)) {
       Candle_Temp[1] = 0;
     }
-    if (Candle_Temp[0] < 55 && Candle_Temp[1] == 0) {
+
+    if ((Candle_Temp[0] < 55) && (Candle_Temp[1] == 0)) {
       Candle_Temp[1] = 1;
     }
 
@@ -675,6 +704,7 @@ void type_ColorFader() {
     }
   } else {
     Candle_Temp[0]++;
+
     if (Candle_Temp[0] > 359) {
       Candle_Temp[0] = 0;
     }
@@ -691,84 +721,90 @@ void type_ColorFader() {
 // Convert HSV Color to RGB Color
 void HSVtoRGB(int hue, int sat, int val, int colors[3]) {
   // hue: 0-359, sat: 0-255, val (lightness): 0-255
-  int r=0, g=0, b=0, base=0;
+  int r = 0, g = 0, b = 0, base = 0;
 
   if (sat == 0) { // Achromatic color (gray).
-    colors[0]=val;
-    colors[1]=val;
-    colors[2]=val;
+    colors[0] = val;
+    colors[1] = val;
+    colors[2] = val;
   }
   else  {
-    base = ((255 - sat) * val)>>8;
-    switch(hue/60) {
-    case 0:
-      r = val;
-      g = (((val-base)*hue)/60)+base;
-      b = base;
-      break;
-    case 1:
-      r = (((val-base)*(60-(hue%60)))/60)+base;
-      g = val;
-      b = base;
-      break;
-    case 2:
-      r = base;
-      g = val;
-      b = (((val-base)*(hue%60))/60)+base;
-      break;
-    case 3:
-      r = base;
-      g = (((val-base)*(60-(hue%60)))/60)+base;
-      b = val;
-      break;
-    case 4:
-      r = (((val-base)*(hue%60))/60)+base;
-      g = base;
-      b = val;
-      break;
-    case 5:
-      r = val;
-      g = base;
-      b = (((val-base)*(60-(hue%60)))/60)+base;
-      break;
+    base = ((255 - sat) * val) >> 8;
+
+    switch (hue / 60) {
+      case 0:
+        r = val;
+        g = (((val - base) * hue) / 60) + base;
+        b = base;
+        break;
+      case 1:
+        r = (((val - base) * (60 - (hue % 60))) / 60) + base;
+        g = val;
+        b = base;
+        break;
+      case 2:
+        r = base;
+        g = val;
+        b = (((val - base) * (hue % 60)) / 60) + base;
+        break;
+      case 3:
+        r = base;
+        g = (((val - base) * (60 - (hue % 60))) / 60) + base;
+        b = val;
+        break;
+      case 4:
+        r = (((val - base) * (hue % 60)) / 60) + base;
+        g = base;
+        b = val;
+        break;
+      case 5:
+        r = val;
+        g = base;
+        b = (((val - base) * (60 - (hue % 60))) / 60) + base;
+        break;
     }
-    colors[0]=r;
-    colors[1]=g;
-    colors[2]=b;
+    colors[0] = r;
+    colors[1] = g;
+    colors[2] = b;
   }
 }
 
 // Convert RGB Color to HSV Color
 void RGBtoHSV(uint8_t r, uint8_t g, uint8_t b, double hsv[3]) {
-    double rd = (double) r/255;
-    double gd = (double) g/255;
-    double bd = (double) b/255;
-    double maxval = rd;
-    if (gd > maxval) { maxval = gd; }
-    if (bd > maxval) { maxval = bd; }
-    double minval = rd;
-    if (gd < minval) { minval = gd; }
-    if (bd < minval) { minval = bd; }
-    double h = 0, s, v = maxval;
-    double d = maxval - minval;
+  double rd     = (double)r / 255;
+  double gd     = (double)g / 255;
+  double bd     = (double)b / 255;
+  double maxval = rd;
 
-    s = maxval == 0 ? 0 : d / maxval;
+  if (gd > maxval) { maxval = gd; }
 
-    if (maxval == minval) {
-        h = 0; // achromatic
-    } else {
-        if (maxval == rd) {
-            h = (gd - bd) / d + (gd < bd ? 6 : 0);
-        } else if (maxval == gd) {
-            h = (bd - rd) / d + 2;
-        } else if (maxval == bd) {
-            h = (rd - gd) / d + 4;
-        }
-        h /= 6;
+  if (bd > maxval) { maxval = bd; }
+  double minval = rd;
+
+  if (gd < minval) { minval = gd; }
+
+  if (bd < minval) { minval = bd; }
+  double h = 0, s, v = maxval;
+  double d = maxval - minval;
+
+  s = maxval == 0 ? 0 : d / maxval;
+
+  if (maxval == minval) {
+    h = 0; // achromatic
+  } else {
+    if (maxval == rd) {
+      h = (gd - bd) / d + (gd < bd ? 6 : 0);
+    } else if (maxval == gd) {
+      h = (bd - rd) / d + 2;
+    } else if (maxval == bd) {
+      h = (rd - gd) / d + 4;
     }
+    h /= 6;
+  }
 
-    hsv[0] = h * 360;
-    hsv[1] = s * 255;
-    hsv[2] = v * 255;
+  hsv[0] = h * 360;
+  hsv[1] = s * 255;
+  hsv[2] = v * 255;
 }
+
 #endif // USES_P042
