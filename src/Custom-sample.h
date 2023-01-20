@@ -223,6 +223,7 @@
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 // #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
+// #define FEATURE_POST_TO_HTTP 1 // Enable availability of the PostToHTTP command
 
 
 #if FEATURE_CUSTOM_PROVISIONING
