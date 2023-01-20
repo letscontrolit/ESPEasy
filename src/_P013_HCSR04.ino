@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-01-20 tonhuisman: Limit trigger-range to 10-20 usec. (20 already seems to be on the high side)
+ *                        Reduce build-size by disabling new features on 1M builds and leaving out some non-essential messages
+ *                        Move #define stuff and #includes to src/PluginStructs/P013_data_struct.h
  * 2022-12-31 tonhuisman: Code improvements, change start-trigger range to 10-50 usec.
  *                        Optionally not send regular Interval events when using State mode
  * 2022-12-29 tonhuisman: Add start-trigger setting, range 10-30 usec. See https://github.com/letscontrolit/ESPEasy/issues/3857
@@ -18,39 +21,10 @@
 # define PLUGIN_NAME_013       "Position - HC-SR04, RCW-0001, etc."
 # define PLUGIN_VALUENAME1_013 "Distance"
 
-# include <map>
-# include <NewPing.h>
-
-// PlugIn specific defines
-// operatingMode
-# define OPMODE_VALUE        (0)
-# define OPMODE_STATE        (1)
-
-// measuringUnit
-# define UNIT_CM             (0)
-# define UNIT_INCH           (1)
-
-// filterType
-# define FILTER_NONE         (0)
-# define FILTER_MEDIAN       (1)
-
-# define P013_TRIGGER_PIN       CONFIG_PIN1
-# define P013_ECHO_PIN          CONFIG_PIN2
-
-# define P013_OPERATINGMODE     PCONFIG(0)
-# define P013_THRESHOLD         PCONFIG(1)
-# define P013_MAX_DISTANCE      PCONFIG(2)
-# define P013_MEASURINGUNIT     PCONFIG(3)
-# define P013_FILTERTYPE        PCONFIG(4)
-# define P013_FILTER_SIZE       PCONFIG(5)
-# define P013_TRIGGER_WIDTH     PCONFIG(6)
-# define P013_SEND_STATE_VALUE  PCONFIG(7)
-
-# define P013_DEFAULT_FILTER_SIZE     (5)
-# define P013_DEFAULT_TRIGGER_WIDTH   (10)
+# include "src/PluginStructs/P013_data_struct.h"
 
 // map of sensors
-std::map<unsigned int, std::shared_ptr<NewPing> >P_013_sensordefs;
+std::map<unsigned int, std::shared_ptr<NewPing> > P_013_sensordefs;
 
 // Forward declarations
 float                      Plugin_013_read(struct EventStruct *event);
@@ -100,20 +74,16 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P013_FILTER_SIZE   = P013_DEFAULT_FILTER_SIZE;
+      P013_FILTER_SIZE = P013_DEFAULT_FILTER_SIZE;
+      # if P013_FEATURE_TRIGGERWIDTH
       P013_TRIGGER_WIDTH = P013_DEFAULT_TRIGGER_WIDTH;
+      # endif // if P013_FEATURE_TRIGGERWIDTH
 
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      // default filtersize
-      if (P013_FILTER_SIZE == 0) { P013_FILTER_SIZE = P013_DEFAULT_FILTER_SIZE; }
-
-      // default trigger width
-      if (P013_TRIGGER_WIDTH == 0) { P013_TRIGGER_WIDTH = P013_DEFAULT_TRIGGER_WIDTH; }
-
       const __FlashStringHelper *strUnit = (P013_MEASURINGUNIT == UNIT_CM) ? F("cm") : F("inch");
 
       {
@@ -126,11 +96,13 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       }
 
       if (P013_OPERATINGMODE == OPMODE_STATE) {
+        # if P013_FEATURE_INTERVALEVENT
         addFormCheckBox(F("State event (also) on Interval"), F("pevent"), P013_SEND_STATE_VALUE == 0);
-        addFormNumericBox(F("Threshold"), F("pthreshold"), P013_THRESHOLD);
+        # endif // if P013_FEATURE_INTERVALEVENT
+        addFormNumericBox(F("Threshold"), F("thres"), P013_THRESHOLD);
         addUnit(strUnit);
       }
-      addFormNumericBox(F("Max Distance"), F("pmax_distance"), P013_MAX_DISTANCE, 0, 500);
+      addFormNumericBox(F("Max Distance"), F("max_d"), P013_MAX_DISTANCE, 0, 500);
       addUnit(strUnit);
 
       {
@@ -148,17 +120,21 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           F("None"),
           F("Median"),
         };
-        addFormSelector(F("Filter"), F("fltrType"), 2, optionsFilter, optionValuesFilter, P013_FILTERTYPE);
+        addFormSelector(F("Filter"), F("fltr"), 2, optionsFilter, optionValuesFilter, P013_FILTERTYPE);
       }
 
       // enable filtersize option if filter is used,
       if (P013_FILTERTYPE != FILTER_NONE) {
-        addFormNumericBox(F("Number of Pings"), F("fltrSize"), P013_FILTER_SIZE, 2, 20);
+        addFormNumericBox(F("Number of Pings"), F("size"), P013_FILTER_SIZE, 2, 20);
+        # if P013_EXTENDED_LOG
         addUnit(F("2..20"));
+        # endif // if P013_EXTENDED_LOG
       }
 
-      addFormNumericBox(F("Trigger width"), F("trigWidth"), P013_TRIGGER_WIDTH, 10, 50);
-      addUnit(F("10..50 &micro;sec"));
+      # if P013_FEATURE_TRIGGERWIDTH
+      addFormNumericBox(F("Trigger width"), F("wdth"), P013_TRIGGER_WIDTH, 10, 20);
+      addUnit(F("10..20 &micro;sec"));
+      # endif // if P013_FEATURE_TRIGGERWIDTH
 
       success = true;
       break;
@@ -172,18 +148,22 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       P013_OPERATINGMODE = getFormItemInt(F("pmode"));
 
       if (prevOperatingMode == OPMODE_STATE) {
+        # if P013_FEATURE_INTERVALEVENT
         P013_SEND_STATE_VALUE = isFormItemChecked(F("pevent")) ? 0 : 1; // Inverted state
-        P013_THRESHOLD        = getFormItemInt(F("pthreshold"));
+        # endif // if P013_FEATURE_INTERVALEVENT
+        P013_THRESHOLD = getFormItemInt(F("thres"));
       }
-      P013_MAX_DISTANCE = getFormItemInt(F("pmax_distance"));
+      P013_MAX_DISTANCE = getFormItemInt(F("max_d"));
 
       P013_MEASURINGUNIT = getFormItemInt(F("pUnit"));
-      P013_FILTERTYPE    = getFormItemInt(F("fltrType"));
+      P013_FILTERTYPE    = getFormItemInt(F("fltr"));
 
       if (prevFilterType != FILTER_NONE) {
-        P013_FILTER_SIZE = getFormItemInt(F("fltrSize"));
+        P013_FILTER_SIZE = getFormItemInt(F("size"));
       }
-      P013_TRIGGER_WIDTH = getFormItemInt(F("trigWidth"));
+      # if P013_FEATURE_TRIGGERWIDTH
+      P013_TRIGGER_WIDTH = getFormItemInt(F("wdth"));
+      # endif // if P013_FEATURE_TRIGGERWIDTH
 
       success = true;
       break;
@@ -193,7 +173,10 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
     {
       if (P013_FILTER_SIZE == 0) { P013_FILTER_SIZE = P013_DEFAULT_FILTER_SIZE; }
 
+      # if P013_FEATURE_TRIGGERWIDTH
+
       if (P013_TRIGGER_WIDTH == 0) { P013_TRIGGER_WIDTH = P013_DEFAULT_TRIGGER_WIDTH; }
+      # endif // if P013_FEATURE_TRIGGERWIDTH
 
       int16_t max_distance_cm = (P013_MEASURINGUNIT == UNIT_CM) ? P013_MAX_DISTANCE : static_cast<float>(P013_MAX_DISTANCE) * 2.54f;
 
@@ -214,7 +197,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         log += P013_ECHO_PIN;
 
         if (nullptr != P_013_sensordefs[event->TaskIndex]) { // Initialization successful
-          log += F(" TrigWidth [usec]: ");
+          # if P013_EXTENDED_LOG
+          log += F(" width [usec]: ");
           log += P013_TRIGGER_WIDTH;
           log += F(" max dist ");
           log += (P013_MEASURINGUNIT == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");
@@ -236,6 +220,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
           log += F(" nr_tasks: ");
           log += P_013_sensordefs.size();
+          # endif // if P013_EXTENDED_LOG
         } else {
           log    += F(" CONSTRUCTOR FAILED!");
           success = false; // Initialization failed
@@ -261,9 +246,12 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("ULTRASONIC : TaskNr: ");
           log += event->TaskIndex + 1;
+          # if P013_EXTENDED_LOG
           log += F(" Distance: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          log += (P013_MEASURINGUNIT == UNIT_CM) ? F(" cm ") : F(" inch ");
+          log += ' ';
+          log += (P013_MEASURINGUNIT == UNIT_CM) ? F("cm") : F("inch");
+          # endif // if P013_EXTENDED_LOG
 
           if (essentiallyEqual(value, NO_ECHO)) {
             log += F(" Error: ");
@@ -272,11 +260,16 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
           addLogMove(LOG_LEVEL_INFO, log);
         }
-        success = true;                 // Only send out when actually using Value mode
-      }
+        success = true; // Only send out when actually using Value mode
+      } else {
+        # if P013_FEATURE_INTERVALEVENT
 
-      if (P013_SEND_STATE_VALUE == 0) { // Also send on Interval when using State mode
+        if (P013_SEND_STATE_VALUE == 0) { // Also send on Interval when using State mode
+          success = true;
+        }
+        # else // if P013_FEATURE_INTERVALEVENT
         success = true;
+        # endif // if P013_FEATURE_INTERVALEVENT
       }
       break;
     }
@@ -284,8 +277,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
     case PLUGIN_TEN_PER_SECOND: // If we select state mode, do more frequent checks and send only state changes
     {
       if (P013_OPERATINGMODE == OPMODE_STATE) {
-        uint8_t state = 0;
-        float   value = Plugin_013_read(event);
+        uint8_t state     = 0;
+        const float value = Plugin_013_read(event);
 
         if (!essentiallyEqual(value, NO_ECHO) && definitelyLessThan(value, P013_THRESHOLD)) {
           state = 1;
@@ -324,8 +317,8 @@ float Plugin_013_read(struct EventStruct *event)
 
 /*********************************************************************/
 {
-  if (P_013_sensordefs.count(event->TaskIndex) == 0) {
-    return 0;
+  if (P_013_sensordefs.count(event->TaskIndex) == 0u) {
+    return 0.0f;
   }
 
   int16_t max_distance_cm = (P013_MEASURINGUNIT == UNIT_CM) ? P013_MAX_DISTANCE : static_cast<float>(P013_MAX_DISTANCE) * 2.54f;
@@ -339,8 +332,10 @@ float Plugin_013_read(struct EventStruct *event)
     case FILTER_MEDIAN:
       echoTime = (P_013_sensordefs[event->TaskIndex])->ping_median(P013_FILTER_SIZE, max_distance_cm);
       break;
+    # if P013_EXTENDED_LOG
     default:
-      addLog(LOG_LEVEL_ERROR, F("invalid Filter Type setting!"));
+      addLog(LOG_LEVEL_ERROR, F("invalid Filter Type setting!")); // Should not be possible...
+    # endif // if P013_EXTENDED_LOG
   }
 
   if (P013_MEASURINGUNIT == UNIT_CM) {
@@ -361,31 +356,39 @@ const __FlashStringHelper* Plugin_013_getErrorStatusString(struct EventStruct *e
   }
 
   switch ((P_013_sensordefs[event->TaskIndex])->getErrorState()) {
-    case NewPing::STATUS_SENSOR_READY: {
+    case NewPing::STATUS_SENSOR_READY: { // 0
+      # if P013_EXTENDED_LOG
       return F("Sensor ready");
+      # endif // if P013_EXTENDED_LOG
     }
 
-    case NewPing::STATUS_MEASUREMENT_VALID: {
+    case NewPing::STATUS_MEASUREMENT_VALID: { // 1
+      # if P013_EXTENDED_LOG
       return F("no error, measurement valid");
+      # endif // if P013_EXTENDED_LOG
     }
 
-    case NewPing::STATUS_ECHO_TRIGGERED: {
+    case NewPing::STATUS_ECHO_TRIGGERED: { // 2
+      # if P013_EXTENDED_LOG
       return F("Echo triggered, waiting for Echo end");
+      # else // if P013_EXTENDED_LOG
+      return F("Ok");
+      # endif // if P013_EXTENDED_LOG
     }
 
-    case NewPing::STATUS_ECHO_STATE_ERROR: {
-      return F("Echo pulse error, Echopin not low on trigger");
+    case NewPing::STATUS_ECHO_STATE_ERROR: { // 6
+      return F("Error, Echopin not low on trigger");
     }
 
-    case NewPing::STATUS_ECHO_START_TIMEOUT_50ms: {
-      return F("Echo timeout error, no echo start whithin 50 ms");
+    case NewPing::STATUS_ECHO_START_TIMEOUT_50ms: { // 4
+      return F("Error, no echo start whithin 50 ms");
     }
 
-    case NewPing::STATUS_ECHO_START_TIMEOUT_DISTANCE: {
-      return F("Echo timeout error, no echo start whithin time for max. distance");
+    case NewPing::STATUS_ECHO_START_TIMEOUT_DISTANCE: { // 5
+      return F("Error, no echo start whithin time for max. distance");
     }
 
-    case NewPing::STATUS_MAX_DISTANCE_EXCEEDED: {
+    case NewPing::STATUS_MAX_DISTANCE_EXCEEDED: { // 3
       return F("Echo too late, maximum distance exceeded");
     }
 
