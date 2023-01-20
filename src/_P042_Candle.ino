@@ -7,6 +7,12 @@
 // PROJECT INFO
 // Wifi Candle for ESPEasy by Dominik Schmidt (10.2016)
 
+/** Changelog:
+ * 2023-01-20 tonhuisman: Minify jacascript code, reduce string usage, minor code improvements
+ *                        Update to support current jscolor version/features
+ *                        TODO: Code improvements and deduplication, like HSV2RGB() instead of local HSVtoRGB()
+ *                        TODO: Allow configuration of number of pixels
+ */
 
 // INCLUDE jscolor (http://jscolor.com/)
 //   * Download the lib from here: http://jscolor.com/release/latest.zip
@@ -165,68 +171,77 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
           }
 
           // Candle Type Selection
-          addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, nullptr, choice);
+          addFormSelector(F("Flame Type"), F("cType"), 8, options, nullptr, choice);
         }
 
         // Advanced Color options
-        Candle_color = (ColorType)PCONFIG(5);
-        addHtml(F("<TR><TD>Color Handling:<TD>")); // checked
-        addHtml(F("<input type='radio' id='web_Color_Default' name='web_Color_Type' value='0'"));
+        Candle_color = static_cast<ColorType>(PCONFIG(5));
+        addRowLabel(F("Color Handling")); // checked
+        addHtml(F("<input type='radio' id='clrDefault' name='clrType' value='0'"));
         if (Candle_color == ColorDefault) {
           addHtml(F(" checked>"));
         } else {
           addHtml('>');
         }
-        addHtml(F("<label for='web_Color_Default'> Use default color</label><br>"));
-        addHtml(F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'"));
+        addHtml(F("<label for='clrDefault'> Use default color</label><br>"));
+        addHtml(F("<input type='radio' id='clrSelect' name='clrType' value='1'"));
         if (Candle_color == ColorSelected) {
           addHtml(F(" checked>"));
         } else {
           addHtml('>');
         }
-        addHtml(F("<label for='web_Color_Selected'> Use selected color</label><br>"));
+        addHtml(F("<label for='clrSelect'> Use selected color</label><br>"));
 
         // Color Selection
-        char hexvalue[7] = {0};
-        sprintf_P(hexvalue, PSTR("%02X%02X%02X"),     // Create Hex value for color
-                  PCONFIG(0),
-                  PCONFIG(1),
-                  PCONFIG(2));
+        // char hexvalue[7] = {0};
+        // sprintf_P(hexvalue, PSTR("%02X%02X%02X"),     // Create Hex value for color
+        //           PCONFIG(0),
+        //           PCONFIG(1),
+        //           PCONFIG(2));
 
         // http://jscolor.com/examples/
-        addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));
-        addHtml(hexvalue);
-        addHtml('\'', '>');
-        addFormNumericBox(F("RGB Color"), F("web_RGB_Red"), PCONFIG(0), 0, 255);
-        addNumericBox(F("web_RGB_Green"), PCONFIG(1), 0, 255);
-        addNumericBox(F("web_RGB_Blue"), PCONFIG(2), 0, 255);
+        addRowLabel(F("Color"));
+        addHtml(F("<input data-jscolor=\"{onInput:'update(this)',position:'top',value:'#"));
+        addHtml(formatToHex_no_prefix(PCONFIG(0), 2));
+        addHtml(formatToHex_no_prefix(PCONFIG(1), 2));
+        addHtml(formatToHex_no_prefix(PCONFIG(2), 2));
+        addHtml(F("'}\">"));
+        addFormNumericBox(F("RGB Color"), F("wRed"), PCONFIG(0), 0, 255);
+        addNumericBox(F("wGreen"), PCONFIG(1), 0, 255);
+        addNumericBox(F("wBlue"), PCONFIG(2), 0, 255);
 
         // Brightness Selection
-        addHtml(F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='"));
+        addRowLabel(F("Brightness"));
+        addHtml(F("min<input type='range' id='brSlide' min='0' max='255' value='"));
         addHtmlInt(PCONFIG(3));
         addHtml(F("'> max"));
 
         {
-          char tmpString[128];
-          sprintf_P(tmpString, PSTR("<TR><TD>Brightness Value:<TD><input type='text' name='web_Bright_Text' id='web_Bright_Text' size='3' value='%u'>"), PCONFIG(3));
-          addHtml(tmpString);
+          // char tmpString[128];
+          // sprintf_P(tmpString, PSTR("<input type='text' name='brText' id='brText' size='3' value='%u'>"), PCONFIG(3));
+          // addHtml(concat(F("<input type='text' name='brText' id='brText' size='3' value='"),) + F("'>"));
+          addFormNumericBox(F("Brightness Value"), F("brText"), PCONFIG(3), 0, 255);
         }
 
         // Some Javascript we need to update the items
         addHtml(F("<script script type='text/javascript'>"));
-        addHtml(F("function update(picker) {"));
-        addHtml(F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);"));
-        addHtml(F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);"));
-        addHtml(F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);"));
-        addHtml('}');
-        addHtml(F("</script>"));
+        // "function update(picker) {"
+        // "    document.getElementById('wRed').value = Math.round(picker.rgb[0]);"
+        // "    document.getElementById('wGreen').value = Math.round(picker.rgb[1]);"
+        // "    document.getElementById('wBlue').value = Math.round(picker.rgb[2]);"
+        // '}'
+        // Minified:
+        addHtml(F("function update(e){document.getElementById('wRed').value=Math.round(e.channel('R')),document.getElementById('wGreen').value=Math.round(e.channel('G')),document.getElementById('wBlue').value=Math.round(e.channel('B'))}"));
 
-        addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(){"));
-        addHtml(F("var slider = document.getElementById('web_Bright_Slide');"));
-        addHtml(F("slider.addEventListener('change', function(){"));
-        addHtml(F("document.getElementById('web_Bright_Text').value = this.value;"));
-        addHtml(F("});"));
-        addHtml(F("});</script>"));
+        // "window.addEventListener('load', function(){"
+        // "var slider = document.getElementById('brSlide');"
+        // "slider.addEventListener('change', function(){"
+        // "document.getElementById('brText').value = this.value;"
+        // "});"
+        // "});</script>"
+        // Minified:
+        addHtml(F("window.addEventListener('load',function(){document.getElementById('brSlide').addEventListener('input',function(){document.getElementById('brText').value=this.value})});"));
+        addHtml(F("</script>"));
 
         success = true;
         break;
@@ -234,12 +249,12 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("web_RGB_Red"));
-        PCONFIG(1) = getFormItemInt(F("web_RGB_Green"));
-        PCONFIG(2) = getFormItemInt(F("web_RGB_Blue"));
-        PCONFIG(3) = getFormItemInt(F("web_Bright_Text"));
-        PCONFIG(4) = getFormItemInt(F("web_Candle_Type"));
-        PCONFIG(5) = getFormItemInt(F("web_Color_Type"));
+        PCONFIG(0) = getFormItemInt(F("wRed"));
+        PCONFIG(1) = getFormItemInt(F("wGreen"));
+        PCONFIG(2) = getFormItemInt(F("wBlue"));
+        PCONFIG(3) = getFormItemInt(F("brText"));
+        PCONFIG(4) = getFormItemInt(F("cType"));
+        PCONFIG(5) = getFormItemInt(F("clrType"));
 
         Candle_red = PCONFIG(0);
         Candle_green = PCONFIG(1);
@@ -264,8 +279,8 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
         if (Candle_red == 0 && Candle_green == 0 && Candle_blue == 0) {
           Candle_bright = BRIGHT_START;
         }
-        Candle_type = (SimType)PCONFIG(4);
-        Candle_color = (ColorType)PCONFIG(5);
+        Candle_type = static_cast<SimType>(PCONFIG(4));
+        Candle_color = static_cast<ColorType>(PCONFIG(5));
 
         if (!Candle_pixels || GPIO_Set == false)
         {
@@ -282,9 +297,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
 
           #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log = F("CAND : Init WS2812 Pin : ");
-            log += CONFIG_PIN1;
-            addLogMove(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : Init WS2812 Pin : "), static_cast<int>(CONFIG_PIN1)));
           }
           #endif
         }
@@ -423,12 +436,10 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
           if (!val_Type.isEmpty()) {
              if (val_Type.toInt() > -1 && val_Type.toInt() < 8) {
                 PCONFIG(4) = val_Type.toInt();     // Type
-                Candle_type = (SimType)PCONFIG(4);
+                Candle_type = static_cast<SimType>(PCONFIG(4));
                 #ifndef BUILD_NO_DEBUG
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  String log = F("CAND : CMD - Type : ");
-                  log += val_Type;
-                  addLogMove(LOG_LEVEL_DEBUG, log);
+                  addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : CMD - Type : "), val_Type));
                 }
                 #endif
              }
@@ -440,9 +451,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
                 Candle_bright = PCONFIG(3);
                 #ifndef BUILD_NO_DEBUG
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  String log = F("CAND : CMD - Bright : ");
-                  log += val_Bright;
-                  addLogMove(LOG_LEVEL_DEBUG, log);
+                  addLogMove(LOG_LEVEL_DEBUG, concat(F("CAND : CMD - Bright : "), val_Bright));
                 }
                 #endif
              }
@@ -462,7 +471,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
             Candle_green = PCONFIG(1);
             Candle_blue = PCONFIG(2);
             PCONFIG(5) = 1;
-            Candle_color = (ColorType)PCONFIG(5);   // ColorType (ColorSelected)
+            Candle_color = static_cast<ColorType>(PCONFIG(5));   // ColorType (ColorSelected)
 
             #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -477,7 +486,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
             #endif
           } else {
             PCONFIG(5) = 0;
-            Candle_color = (ColorType)PCONFIG(5);   // ColorType (ColorDefault)
+            Candle_color = static_cast<ColorType>(PCONFIG(5));   // ColorType (ColorDefault)
             #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("CAND : CMD - Color : DEFAULT"));
             #endif
@@ -679,7 +688,7 @@ void type_ColorFader() {
   }
 }
 
-// Convert HSC Color to RGB Color
+// Convert HSV Color to RGB Color
 void HSVtoRGB(int hue, int sat, int val, int colors[3]) {
   // hue: 0-359, sat: 0-255, val (lightness): 0-255
   int r=0, g=0, b=0, base=0;
