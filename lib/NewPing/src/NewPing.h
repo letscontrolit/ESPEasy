@@ -188,8 +188,8 @@
 	#define ONE_PIN_ENABLED true    // Set to "false" to disable one pin mode which saves around 14-26 bytes of binary size. Default=true
 	#define ROUNDING_ENABLED false  // Set to "true" to enable distance rounding which also adds 64 bytes to binary size. Default=false
 	#define URM37_ENABLED false     // Set to "true" to enable support for the URM37 sensor in PWM mode. Default=false
-	#define DEFAULT_TRIGGER_WIDTH 10 // Length of the pulse	that starts the measurement. Default=10usec.
-	#define MAX_TRIGGER_WIDTH 50 		 // Max. length of the pulse	that starts the measurement.
+	#define DEFAULT_TRIGGER_WIDTH 10 // Length of the pulse that starts the measurement. Default=10usec.
+	#define MAX_TRIGGER_WIDTH 20 		 // Max. length of the pulse that starts the measurement.
 
 	// Probably shouldn't change these values unless you really know what you're doing.
 	#define NO_ECHO 0               // Value returned if there's no ping echo within the specified MAX_SENSOR_DISTANCE or max_cm_distance. Default=0
