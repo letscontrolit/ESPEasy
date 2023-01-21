@@ -11,6 +11,9 @@
 #include "../DataTypes/ESPEasyTimeSource.h"
 #include "../DataTypes/SPI_options.h"
 
+#if FEATURE_MQTT
+#include "../ESPEasyCore/Controller.h"
+#endif
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -46,9 +49,11 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#if FEATURE_RTC_CACHE_STORAGE
+# include "../Globals/C016_ControllerCache.h"
+#endif
 
 #ifdef ESP32
-#include <MD5Builder.h>
 #include <esp_partition.h>
 #endif
 
@@ -122,7 +127,7 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
   SPIFFS_CHECK(f,                   fname.c_str());
   SPIFFS_CHECK(f.write(data, size), fname.c_str());
   f.close();
-  return "";
+  return EMPTY_STRING;
 }
 
 bool fileExists(const __FlashStringHelper * fname)
@@ -146,7 +151,14 @@ bool fileExists(const String& fname) {
     res = SD.exists(patched_fname);
   }
   #endif
-  Cache.fileExistsMap[patched_fname] = res;
+  // Only keep track of existing files or non-existing filenames that may be requested several times.
+  // Not the non-existing files from the cache controller
+  #if FEATURE_RTC_CACHE_STORAGE
+  if (res || !isCacheFile(patched_fname)) 
+  #endif
+  {
+    Cache.fileExistsMap[patched_fname] = res;
+  }
   if (Cache.fileCacheClearMoment == 0) {
     if (node_time.timeSource == timeSource_t::No_time_source) {
       // use some random value as we don't have a time yet
@@ -208,6 +220,11 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
 bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
+    #if FEATURE_RTC_CACHE_STORAGE
+    if (isCacheFile(fname)) {
+      ControllerCache.closeOpenFiles();
+    }
+    #endif
     if (fileMatchesTaskSettingsType(fname)) {
       clearAllCaches();
     } else {
@@ -490,40 +507,6 @@ bool GarbageCollection() {
   #endif // ifdef CORE_POST_2_6_0
 }
 
-bool computeChecksum(
-  uint8_t checksum[16], 
-  uint8_t * data, 
-  size_t struct_size, 
-  size_t len_upto_md5,
-  bool updateChecksum)
-{
-  if (len_upto_md5 > struct_size) len_upto_md5 = struct_size;
-  MD5Builder md5;
-  md5.begin();
-
-  if (len_upto_md5 > 0) {
-    md5.add(data, len_upto_md5);
-  }
-  if ((len_upto_md5 + 16) < struct_size) {
-    data += len_upto_md5 + 16;
-    const int len_after_md5 = struct_size - 16 - len_upto_md5;
-    if (len_after_md5 > 0) {
-      md5.add(data, len_after_md5);
-    }
-  }
-  md5.calculate();
-  uint8_t    tmp_md5[16] = { 0 };
-  md5.getBytes(tmp_md5);
-  if (memcmp(tmp_md5, checksum, 16) != 0) {
-    // Data has changed, copy computed checksum
-    if (updateChecksum) {
-      memcpy(checksum, tmp_md5, 16);
-    }
-    return false;
-  }
-  return true;
-}
-
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
@@ -581,7 +564,7 @@ String SaveSecuritySettings() {
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
 
-  if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SecurityStruct, SecuritySettings)) {
+  if (SecuritySettings.updateChecksum()) {
     // Settings have changed, save to file.
     err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
@@ -680,7 +663,7 @@ String LoadSettings()
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
 
 #ifndef BUILD_NO_DEBUG
-  if (COMPUTE_STRUCT_CHECKSUM(SecurityStruct, SecuritySettings)) {
+  if (SecuritySettings.checksumMatch()) {
     addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
 
     if (memcmp(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16) != 0) {
@@ -1014,23 +997,18 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   START_TIMER
   String err;
 
-  uint8_t checksum[16] = {0};
-  constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
-  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
-  if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, checksum)) {
+  if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, ExtraTaskSettings.computeChecksum())) {
     ExtraTaskSettings.validate(); // Validate before saving will reduce nr of saves as it is more likely to not have changed the next time it will be saved.
 
     // Call to validate() may have changed the content, so re-compute the checksum.
-    computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
-
     // This is how it is now stored, so we can now also update the 
     // ExtraTaskSettings cache. This may prevent a reload.
-    Cache.updateExtraTaskSettingsCache(checksum);
+    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
 
     err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
                             TaskIndex,
                             reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
-                            structSize);
+                            sizeof(struct ExtraTaskSettingsStruct));
 
 #if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
     if (err.isEmpty()) {
@@ -1060,29 +1038,24 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     return EMPTY_STRING; // Un-initialized task index.
   }
   START_TIMER
-  constexpr size_t structSize = sizeof(struct ExtraTaskSettingsStruct);
 
   ExtraTaskSettings.clear();
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
   if (!validDeviceIndex(DeviceIndex)) {
     // No need to load from storage, as there is no plugin assigned to this task.
     ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
-    uint8_t checksum[16] = {0};
-    computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
-    Cache.updateExtraTaskSettingsCache(checksum);
-    STOP_TIMER(LOAD_TASK_SETTINGS_CACHED);
+    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
     return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadTaskSettings"));
   #endif
 
-  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize);
-
-  // Need to compute checksum as how it is stored on the file system, 
-  // not including any patches made below
-//  uint8_t checksum[16] = {0};
-//  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
+  const String result = LoadFromFile(
+    SettingsType::Enum::TaskSettings_Type, 
+    TaskIndex, 
+    reinterpret_cast<uint8_t *>(&ExtraTaskSettings), 
+    sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -1103,9 +1076,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
-  uint8_t checksum[16] = {0};
-  computeChecksum(checksum, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), structSize, structSize, true);
-  Cache.updateExtraTaskSettingsCache(checksum);
+  Cache.updateExtraTaskSettingsCache_afterLoad_Save();
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
@@ -1192,9 +1163,29 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveControllerSettings"));
   #endif
+
+  START_TIMER;
+
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
-  return SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
+
+  const ChecksumType checksum(reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(ControllerSettingsStruct));
+
+  if (checksum == (Cache.controllerSettings_checksums[ControllerIndex])) {
+#ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_INFO, concat(F("Skip saving ControllerSettings: "), checksum.toString()));
+#endif
+    return EMPTY_STRING;
+  }
+  const String res = SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                     reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(controller_settings));
+
+  Cache.controllerSettings_checksums[ControllerIndex] = checksum;
+  #ifdef ESP32
+  Cache.setControllerSettings(ControllerIndex, controller_settings);
+  #endif
+  STOP_TIMER(SAVE_CONTROLLER_SETTINGS);
+
+  return res;
 }
 
 /********************************************************************************************\
@@ -1204,10 +1195,24 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadControllerSettings"));
   #endif
+  START_TIMER
+  #ifdef ESP32
+  if (Cache.getControllerSettings(ControllerIndex, controller_settings)) {
+    STOP_TIMER(LOAD_CONTROLLER_SETTINGS_C);
+    return EMPTY_STRING;
+  }
+  #endif
   String result =
     LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                  reinterpret_cast<uint8_t *>(&controller_settings), sizeof(controller_settings));
+
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
+
+  Cache.controllerSettings_checksums[ControllerIndex] = controller_settings.computeChecksum();
+  #ifdef ESP32
+  Cache.setControllerSettings(ControllerIndex, controller_settings);
+  #endif
+  STOP_TIMER(LOAD_CONTROLLER_SETTINGS);
   return result;
 }
 
@@ -1623,6 +1628,9 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if (!fileExists(fname)) {
     InitFile(settingsType);
   }
+#ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) + concat(F(" index: "), index));
+#endif
   return SaveToFile(fname.c_str(), offset + posInBlock, memAddress, datasize);
 }
 
@@ -1736,6 +1744,7 @@ bool SpiffsFull() {
   return SpiffsFreeSpace() == 0;
 }
 
+#if FEATURE_RTC_CACHE_STORAGE
 /********************************************************************************************\
    Handling cached data
  \*********************************************************************************************/
@@ -1754,6 +1763,7 @@ String createCacheFilename(unsigned int count) {
 
 // Match string with an integer between '_' and ".bin"
 int getCacheFileCountFromFilename(const String& fname) {
+  if (!isCacheFile(fname)) return -1;
   int startpos = fname.indexOf('_');
 
   if (startpos < 0) { return -1; }
@@ -1768,6 +1778,10 @@ int getCacheFileCountFromFilename(const String& fname) {
     return result;
   }
   return -1;
+}
+
+bool isCacheFile(const String& fname) {
+  return fname.indexOf(F("cache_")) != -1;
 }
 
 // Look into the filesystem to see if there are any cache files present on the filesystem
@@ -1815,8 +1829,10 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
             highest         = count;
             filesizeHighest = file.size();
           }
+#ifndef BUILD_NO_DEBUG
         } else {
           addLog(LOG_LEVEL_INFO, String(F("RTC  : Cannot get count from: ")) + fname);
+#endif
         }
       }
     }
@@ -1831,6 +1847,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   highest = 0;
   return false;
 }
+#endif
 
 /********************************************************************************************\
    Get partition table information
