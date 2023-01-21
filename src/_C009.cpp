@@ -74,14 +74,15 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      if (C009_DelayHandler == nullptr) {
-        break;
-      }
-      {
-        C009_queue_element element(event);
+      if (C009_DelayHandler != nullptr) {
+        if (C009_DelayHandler->queueFull(event->ControllerIndex)) {
+          break;
+        }
+
+        std::unique_ptr<C009_queue_element> element(new C009_queue_element(event));
         success = C009_DelayHandler->addToQueue(std::move(element));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
       }
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
       break;
     }
 
@@ -104,7 +105,8 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c009_delay_queue(int controller_number, const C009_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c009_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C009_queue_element& element = static_cast<const C009_queue_element&>(element_base);
 // *INDENT-ON*
   String jsonString;
   // Make an educated guess on the actual length, based on earlier requests.
@@ -176,9 +178,9 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
             jsonString += x;
             jsonString += F("\":{");
             {
-              jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element.TaskIndex));
+              jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element._taskIndex));
               jsonString += ',';
-              jsonString += to_json_object_value(F("valueName"), getTaskValueName(element.TaskIndex, x));
+              jsonString += to_json_object_value(F("valueName"), getTaskValueName(element._taskIndex, x));
               jsonString += ',';
               jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
               jsonString += ',';
@@ -205,7 +207,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   send_via_http(
     controller_number,
     ControllerSettings,
-    element.controller_idx,
+    element._controller_idx,
     F("/ESPEasy"),
     F("POST"),
     EMPTY_STRING,

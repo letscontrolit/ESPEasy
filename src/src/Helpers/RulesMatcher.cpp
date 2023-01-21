@@ -238,8 +238,8 @@ bool getEventFromRulesLine(const String& line, String& event, String& action)
   event.trim();
 
   // Ignore escape char
-  event.replace(F("["), EMPTY_STRING);
-  event.replace(F("]"), EMPTY_STRING);
+  removeChar(event, '[');
+  removeChar(event, ']');
 
   // action: The optional part after the " do"
   action = line.substring(pos_do + 3);
