@@ -10,6 +10,7 @@
 #include "src/ControllerQueue/C019_queue_element.h"
 #include "src/Globals/ESPEasy_now_handler.h"
 #include "src/Helpers/C019_ESPEasyNow_helper.h"
+#include "src/ControllerQueue/C019_queue_element.h"
 
 
 #define CPLUGIN_019
@@ -64,7 +65,9 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      success = C019_DelayHandler->addToQueue(C019_queue_element(event));
+      std::unique_ptr<C019_queue_element> element(new C019_queue_element(event));
+
+      success = C019_DelayHandler->addToQueue(std::move(element));
 
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C019_DELAY_QUEUE, C019_DelayHandler->getNextScheduleTime());
       break;
@@ -99,7 +102,9 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
   return success;
 }
 
-bool do_process_c019_delay_queue(int controller_number, const C019_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c019_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C019_queue_element& element = static_cast<const C019_queue_element&>(element_base);
+
   ESPEasy_Now_p2p_data data;
 
   const taskIndex_t taskIndex = element.event.TaskIndex;
@@ -108,7 +113,7 @@ bool do_process_c019_delay_queue(int controller_number, const C019_queue_element
   data.sourceTaskIndex = taskIndex;
   data.plugin_id       = getPluginID_from_TaskIndex(taskIndex);
   data.sourceUnit      = Settings.Unit;
-  data.idx             = Settings.TaskDeviceID[element.controller_idx][taskIndex];
+  data.idx             = Settings.TaskDeviceID[element._controller_idx][taskIndex];
   data.sensorType      = element.event.sensorType;
   data.valueCount      = getValueCountForTask(taskIndex);
 

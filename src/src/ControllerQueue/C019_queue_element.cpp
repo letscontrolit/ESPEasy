@@ -12,24 +12,11 @@ String getPackedFromPlugin(struct EventStruct *event,
                            uint8_t             sampleSetCount);
 #endif
 
-#ifdef USE_SECOND_HEAP
-C019_queue_element::C019_queue_element(const C019_queue_element& other) :
-  packed(other.packed),
-  _timestamp(other._timestamp),
-  TaskIndex(other.TaskIndex),
-  controller_idx(other.controller_idx),
-  plugin_id(other.plugin_id)
-#ifdef USES_ESPEASY_NOW
-  , MessageRouteInfo(other.MessageRouteInfo)
-#endif
+C019_queue_element::C019_queue_element(struct EventStruct *event_p)
 {
-   event.deep_copy(other.event);
-}
-#endif
+  _controller_idx = event_p->ControllerIndex;
+  _taskIndex      = event_p->TaskIndex;
 
-C019_queue_element::C019_queue_element(struct EventStruct *event_p) :
-  controller_idx(event_p->ControllerIndex)
-{
   event.deep_copy(event_p);
   #if FEATURE_PACKED_RAW_DATA
   packed = getPackedFromPlugin(event_p, 0);
@@ -49,11 +36,13 @@ size_t C019_queue_element::getSize() const {
   return sizeof(*this) + packed.length();
 }
 
-bool C019_queue_element::isDuplicate(const C019_queue_element& other) const {
-  if ((other.controller_idx != controller_idx) ||
-      (other.TaskIndex != TaskIndex) ||
-      (other.plugin_id != plugin_id) ||
-      (other.packed != packed)) {
+bool C019_queue_element::isDuplicate(const Queue_element_base& other) const {
+  const C019_queue_element& oth = static_cast<const C019_queue_element&>(other);
+
+  if ((oth._controller_idx != _controller_idx) ||
+      (oth._taskIndex != _taskIndex) ||
+      (oth.plugin_id != plugin_id) ||
+      (oth.packed != packed)) {
     return false;
   }
 
