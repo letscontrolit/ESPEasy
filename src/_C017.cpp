@@ -63,8 +63,12 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
       if (C017_DelayHandler == nullptr) {
         break;
       }
+      if (C017_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
 
-      success = C017_DelayHandler->addToQueue(C017_queue_element(event));
+      std::unique_ptr<C017_queue_element> element(new C017_queue_element(event));
+      success = C017_DelayHandler->addToQueue(std::move(element));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());
       break;
     }
@@ -84,9 +88,9 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c017_delay_queue(int controller_number, const C017_queue_element& element, ControllerSettingsStruct& ControllerSettings)
+bool do_process_c017_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C017_queue_element& element = static_cast<const C017_queue_element&>(element_base);
 // *INDENT-ON*
-{
   if (element.valueCount == 0) {
     return true; // exit if we don't have anything to send.
   }
@@ -116,7 +120,7 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
     // Populate JSON with the data
     for (uint8_t i = 0; i < element.valueCount; i++)
     {
-      const String taskValueName = getTaskValueName(element.TaskIndex, i);
+      const String taskValueName = getTaskValueName(element._taskIndex, i);
       if (taskValueName.isEmpty()) {
         continue;                                    // Zabbix will ignore an empty key anyway
       }
