@@ -73,7 +73,7 @@ Sensor
 * **Unit**: You can show the output value as imperial without the need to do it using the formula function.
 * **Filter**: The signal might be a bit shaky for some applications, try to use the ``Median`` filtering
   setting in that case.
-* **Trigger width**: For hardware that doesn't exactly follow the timing guidelines, it may be needed to extend the pulse delay somewhat to receive a usable echo. The default is 10 microsoconds, and can be increased in small steps to max. 50 microseconds.
+* **Trigger width**: For hardware that doesn't exactly follow the timing guidelines, it may be needed to extend the pulse delay somewhat to receive a usable echo. The default is 10 microsoconds, and can be increased in small steps to max. 20 microseconds.
 
 
 Data acquisition
