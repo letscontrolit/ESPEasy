@@ -45,7 +45,7 @@ void P068_SHT3X::readFromSensor()
       hum = ((((data[3] << 8) | data[4]) * 100.0f) / 65535.0f);
 
       // Humidity temperature compensation borrowed from P028 BME280
-      if (!essentiallyEqual(tmpOff, 0.0f)) {
+      if (!essentiallyZero(tmpOff)) {
         float last_dew_temp_val = compute_dew_point_temp(tmp + (tmpOff / 2.0f), hum);
         hum = compute_humidity_from_dewpoint(tmp + tmpOff, last_dew_temp_val);
         tmp = tmp + tmpOff;

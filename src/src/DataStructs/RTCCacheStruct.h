@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_RTC_CACHE_STORAGE
+
 /********************************************************************************************\
    RTC_cache_struct
  \*********************************************************************************************/
@@ -24,5 +26,7 @@ struct RTC_cache_struct
   uint16_t writePos         = 0; // Write position in the RTC memory
   uint32_t checksumMetadata = 0;
 };
+
+#endif
 
 #endif // ifndef DATASTRUCTS_RTC_CACHE_STRUCT_H

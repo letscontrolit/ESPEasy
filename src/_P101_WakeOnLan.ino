@@ -175,7 +175,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE: {
       char   ipString[IP_BUFF_SIZE_P101]   = {0};
       char   macString[MAC_BUFF_SIZE_P101] = {0};
-      char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101];
+      char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101] = {};
       String errorStr;
       String msgStr;
       const String wolStr = F(LOG_NAME_P101);
