@@ -7,6 +7,7 @@
 
 /*
    History:
+   2023-01-22 tonhuisman: Disable some strings in BUILD_NO_DEBUG builds to reduce size, minor optimizations
    2022-12-04 tonhuisman: Fix initialization issue (hanginging ESP...) when GPIO pins are not configured correctly
    2022-12-03 tonhuisman: Add Get Config values for tag value and bits received
    2022-08-02 tonhuisman: Enable multi-instance use, handle interrupts multi-instance compatible
@@ -130,26 +131,32 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormCheckBox(F("Enable backward compatibility mode"), F("compatible"), P008_COMPATIBILITY == 0);
+      addFormCheckBox(F("Enable backward compatibility mode"), F("comp"), P008_COMPATIBILITY == 0);
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Earlier versions of this plugin have used GPIO pins inverted, giving different Tag results."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       addFormNumericBox(F("Wiegand Type (bits)"), F("ptype"), P008_DATA_BITS, 26, 64);
       addUnit(F("26..64 bits"));
+      # ifdef BUILD_NO_DEBUG
       addFormNote(F("Select the number of bits to be received, f.e. 26, 34, 37."));
+      # endif // ifdef BUILD_NO_DEBUG
 
-      addFormCheckBox(F("Present hex as decimal value"), F("hexdec"), P008_HEX_AS_DEC == 1);
+      addFormCheckBox(F("Present hex as decimal value"), F("hdec"), P008_HEX_AS_DEC == 1);
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Useful only for numeric keypad input!"));
+      # endif // ifndef BUILD_NO_DEBUG
 
-      addFormCheckBox(F("Automatic Tag removal"), F("autoremove"), P008_AUTO_REMOVE == 0);                      // Inverted state!
+      addFormCheckBox(F("Automatic Tag removal"), F("autormv"), P008_AUTO_REMOVE == 0);                   // Inverted state!
 
-      if (P008_REMOVE_TIMEOUT == 0) { P008_REMOVE_TIMEOUT = 500; } // Defaulty 500 mSec (was hardcoded value)
-      addFormNumericBox(F("Automatic Tag removal after"), F("removetimeout"), P008_REMOVE_TIMEOUT, 250, 60000); // 0.25 to 60 seconds
+      if (P008_REMOVE_TIMEOUT == 0) { P008_REMOVE_TIMEOUT = 500; } // Default 500 mSec (was hardcoded value)
+      addFormNumericBox(F("Automatic Tag removal after"), F("rmvtime"), P008_REMOVE_TIMEOUT, 250, 60000); // 0.25 to 60 seconds
       addUnit(F("mSec."));
 
       // Max allowed is int = 0x7FFFFFFF ...
-      addFormNumericBox(F("Value to set on Tag removal"), F("removevalue"), P008_REMOVE_VALUE, 0, 2147483647);
+      addFormNumericBox(F("Value to set on Tag removal"), F("rmvval"), P008_REMOVE_VALUE, 0);
 
-      addFormCheckBox(F("Event on Tag removal"), F("resetevent"), P008_REMOVE_EVENT == 1); // Normal state!
+      addFormCheckBox(F("Event on Tag removal"), F("rstevt"), P008_REMOVE_EVENT == 1); // Normal state!
 
       success = true;
       break;
@@ -158,12 +165,12 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P008_DATA_BITS      = getFormItemInt(F("ptype"));
-      P008_HEX_AS_DEC     = isFormItemChecked(F("hexdec")) ? 1 : 0;
-      P008_AUTO_REMOVE    = isFormItemChecked(F("autoremove")) ? 0 : 1; // Inverted logic!
-      P008_REMOVE_EVENT   = isFormItemChecked(F("resetevent")) ? 1 : 0;
-      P008_COMPATIBILITY  = isFormItemChecked(F("compatible")) ? 0 : 1; // Inverted logic!
-      P008_REMOVE_VALUE   = getFormItemInt(F("removevalue"));
-      P008_REMOVE_TIMEOUT = getFormItemInt(F("removetimeout"));
+      P008_HEX_AS_DEC     = isFormItemChecked(F("hdec")) ? 1 : 0;
+      P008_AUTO_REMOVE    = isFormItemChecked(F("autormv")) ? 0 : 1; // Inverted logic!
+      P008_REMOVE_EVENT   = isFormItemChecked(F("rstevt")) ? 1 : 0;
+      P008_COMPATIBILITY  = isFormItemChecked(F("comp")) ? 0 : 1;    // Inverted logic!
+      P008_REMOVE_VALUE   = getFormItemInt(F("rmvval"));
+      P008_REMOVE_TIMEOUT = getFormItemInt(F("rmvtime"));
 
       // uint64_t keyMask = 0LL;
       // keyMask = (0x1ull << (P008_DATA_BITS - 2));

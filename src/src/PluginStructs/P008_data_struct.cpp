@@ -59,25 +59,22 @@ bool P008_data_struct::plugin_init(struct EventStruct *event) {
     pinMode(_pin1, INPUT_PULLUP);
     pinMode(_pin2, INPUT_PULLUP);
 
-    if (P008_COMPATIBILITY == 0) { // Keep 'old' setting for backward compatibility
-      attachInterruptArg(digitalPinToInterrupt(_pin1),
-                         reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt1),
-                         this,
-                         FALLING);
-      attachInterruptArg(digitalPinToInterrupt(_pin2),
-                         reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt2),
-                         this,
-                         FALLING);
-    } else {
-      attachInterruptArg(digitalPinToInterrupt(_pin1),
-                         reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt2),
-                         this,
-                         FALLING);
-      attachInterruptArg(digitalPinToInterrupt(_pin2),
-                         reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt1),
-                         this,
-                         FALLING);
+    // Keep 'old' setting for backward compatibility
+    uint8_t _p1 = _pin1;
+    uint8_t _p2 = _pin2;
+
+    if (P008_COMPATIBILITY != 0) {
+      _p1 = _pin2; // Original code had the pins swapped, swap 'm back to be Wiegand compatible
+      _p2 = _pin1;
     }
+    attachInterruptArg(digitalPinToInterrupt(_p1),
+                       reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt1),
+                       this,
+                       FALLING);
+    attachInterruptArg(digitalPinToInterrupt(_p2),
+                       reinterpret_cast<void (*)(void *)>(Plugin_008_interrupt2),
+                       this,
+                       FALLING);
     initialised = true;
   }
   return initialised;
@@ -116,7 +113,7 @@ bool P008_data_struct::plugin_once_a_second(struct EventStruct *event) {
 
         if (timeoutCount > P008_TIMEOUT_LIMIT) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLogMove(LOG_LEVEL_INFO, concat(F("RFID : reset bits: "), (int)bitCount));
+            addLogMove(LOG_LEVEL_INFO, concat(F("RFID : reset bits: "), static_cast<int>(bitCount)));
           }
 
           // reset after ~5 sec
