@@ -63,18 +63,18 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     {
       char hostname[PLUGIN_089_HOSTNAME_SIZE];
       LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
-      addFormTextBox(F("Hostname"), F("p089_ping_host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
+      addFormTextBox(F("Hostname"), F("host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      char hostname[PLUGIN_089_HOSTNAME_SIZE];
+      char hostname[PLUGIN_089_HOSTNAME_SIZE] = {};
 
       // Reset "Fails" if settings updated
       UserVar[event->BaseVarIndex] = 0;
-      strncpy(hostname, webArg(F("p089_ping_host")).c_str(), sizeof(hostname));
+      strncpy(hostname, webArg(F("host")).c_str(), sizeof(hostname));
       SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
       success = true;
       break;

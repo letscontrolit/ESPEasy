@@ -12,6 +12,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/Networking.h"
 
 #include <ETH.h>
 #include <lwip/dns.h>
@@ -54,35 +55,8 @@ void ethSetupStaticIPconfig() {
     addLogMove(LOG_LEVEL_INFO, log);
   }
   ETH.config(ip, gw, subnet, dns);
-  ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
-}
-
-void ethSetDNS(const IPAddress& dns0, const IPAddress& dns1) 
-{
-  ip_addr_t d;
-  d.type = IPADDR_TYPE_V4;
-  bool set_dns = false;
-
-  if(dns0 != (uint32_t)0x00000000 && dns0 != INADDR_NONE) {
-    // Set DNS0-Server
-    d.u_addr.ip4.addr = static_cast<uint32_t>(dns0);
-    dns_setserver(0, &d);
-    set_dns = true;
-  }
-
-  if(dns1 != (uint32_t)0x00000000 && dns1 != INADDR_NONE) {
-    // Set DNS1-Server
-    d.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
-    dns_setserver(1, &d);
-    set_dns = true;
-  }
-  if (set_dns && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ETH IP   : Set DNS: ");
-    log += formatIP(dns0);
-    log += '/';
-    log += formatIP(dns1);
-    addLogMove(LOG_LEVEL_INFO, log);
-  }
+  setDNS(0, EthEventData.dns0_cache);
+  setDNS(1, EthEventData.dns1_cache);
 }
 
 bool ethCheckSettings() {

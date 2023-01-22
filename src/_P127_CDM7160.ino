@@ -106,9 +106,7 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P127_data_struct(P127_CONFIG_I2C_ADDRESS, P127_CONFIG_ALTITUDE));
       P127_data_struct *P127_data = static_cast<P127_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P127_data) {
-        success = P127_data->init();
-      }
+      success = (nullptr != P127_data) && P127_data->init();
 
       break;
     }
