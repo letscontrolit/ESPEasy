@@ -2538,8 +2538,12 @@ To create/register a plugin, you have to :
   #undef USES_P148   // Sonoff POWR3xxD and THR3xxD display
 #endif
 
-#ifndef FEATURE_ZEROFILL_APPEND_UNITNUMBER 
-  #define FEATURE_ZEROFILL_APPEND_UNITNUMBER    1
+#ifndef FEATURE_ZEROFILL_APPEND_UNITNUMBER
+  #ifdef ESP8266_1M
+    #define FEATURE_ZEROFILL_APPEND_UNITNUMBER    0
+  #else
+    #define FEATURE_ZEROFILL_APPEND_UNITNUMBER    1
+  #endif
 #endif
 
 
