@@ -208,6 +208,11 @@
 #endif // ifdef ESP32
 #define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
+// Optional alternative CDN links:
+// Chart.js: (only used when FEATURE_CHART_JS is enabled)
+// #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+// JQuery:
+// #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
 
 
 // #define FEATURE_SETTINGS_ARCHIVE 1
@@ -217,6 +222,7 @@
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 // #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
+// #define FEATURE_POST_TO_HTTP 1 // Enable availability of the PostToHTTP command
 
 
 #if FEATURE_CUSTOM_PROVISIONING

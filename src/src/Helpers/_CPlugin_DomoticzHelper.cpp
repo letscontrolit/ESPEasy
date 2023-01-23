@@ -218,7 +218,9 @@ bool deserializeDomoticzJson(const String& json,
   if (root.isNull()) {
     return false;
   }
-  idx       = root[F("idx")];
+  // Use long here as intermediate object type to prevent ArduinoJSON from adding a new template variant to the code.
+  const long idx_long = root[F("idx")];
+  idx       = idx_long;
   nvalue    = root[F("nvalue")];
   nvaluealt = root[F("nvalue")];
 
@@ -269,7 +271,7 @@ String serializeDomoticzJson(struct EventStruct *event)
         json += ',';
         json += to_json_object_value(F("command"), F("switchlight"));
 
-        if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
+        if (essentiallyZero(UserVar[event->BaseVarIndex])) {
           json += ',';
           json += to_json_object_value(F("switchcmd"), F("Off"));
         }
@@ -282,7 +284,7 @@ String serializeDomoticzJson(struct EventStruct *event)
         json += ',';
         json += to_json_object_value(F("command"), F("switchlight"));
 
-        if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
+        if (essentiallyZero(UserVar[event->BaseVarIndex])) {
           json += ',';
           json += to_json_object_value(F("switchcmd"), F("Off"));
         }

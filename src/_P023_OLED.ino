@@ -119,7 +119,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
 
       // FIXME TD-er: This is a huge stack allocated object.
-      char   deviceTemplate[P23_Nlines][P23_Nchars];
+      char   deviceTemplate[P23_Nlines][P23_Nchars] = {};
       String error;
 
       for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++) {

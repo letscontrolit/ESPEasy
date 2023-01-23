@@ -15,10 +15,10 @@ struct C013_SensorInfoStruct
 
   bool isValid() const;
 
-  uint8_t        header          = 255;
-  uint8_t        ID              = 3;
-  uint8_t        sourceUnit      = 0;
-  uint8_t        destUnit        = 0;
+  uint8_t     header          = 255;
+  uint8_t     ID              = 3;
+  uint8_t     sourceUnit      = 0;
+  uint8_t     destUnit        = 0;
   taskIndex_t sourceTaskIndex = INVALID_TASK_INDEX;
   taskIndex_t destTaskIndex   = INVALID_TASK_INDEX;
   pluginID_t  deviceNumber    = INVALID_PLUGIN_ID;
@@ -32,10 +32,10 @@ struct C013_SensorDataStruct
 
   bool isValid() const;
 
-  uint8_t        header          = 255;
-  uint8_t        ID              = 5;
-  uint8_t        sourceUnit      = 0;
-  uint8_t        destUnit        = 0;
+  uint8_t     header          = 255;
+  uint8_t     ID              = 5;
+  uint8_t     sourceUnit      = 0;
+  uint8_t     destUnit        = 0;
   taskIndex_t sourceTaskIndex = INVALID_TASK_INDEX;
   taskIndex_t destTaskIndex   = INVALID_TASK_INDEX;
   float       Values[VARS_PER_TASK];
