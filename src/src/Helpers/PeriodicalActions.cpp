@@ -271,7 +271,16 @@ void runEach30Seconds()
 
 void scheduleNextMQTTdelayQueue() {
   if (MQTTDelayHandler != nullptr) {
-    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+    unsigned long nextScheduled(MQTTDelayHandler->getNextScheduleTime());
+    #ifdef USES_ESPEASY_NOW
+    if (!MQTTclient_connected) {
+      // Sending via the mesh may be retried at shorter intervals
+      if (timePassedSince(nextScheduled) < -5) {
+        nextScheduled = millis() + 5;
+      }
+    }
+    #endif
+    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, nextScheduled);
   }
 }
 
@@ -320,13 +329,25 @@ void processMQTTdelayQueue() {
     struct EventStruct TempEvent(element->_taskIndex);
     String dummy;
 
-    // FIXME TD-er: Do we need anything from the element in the event?
-//    TempEvent.String1 = element->_topic;
-//    TempEvent.String2 = element->_payload;
     if (PluginCall(PLUGIN_PROCESS_CONTROLLER_DATA, &TempEvent, dummy)) {
       processed = true;
     }
-  } else
+  } else if (element->_call_PLUGIN_FILTEROUT_CONTROLLER_DATA) {
+    struct EventStruct TempEvent(element->_taskIndex);
+    String dummy;
+
+    // FIXME TD-er: Find a way to not having to copy these strings
+    TempEvent.String1 = element->_topic;
+    TempEvent.String2 = element->_payload;
+
+    // Filter function to check if data should be forwarded or not.
+    // Since all plugins/tasks not supporting this function call will return false, 
+    // the "true" result is about the non-standard action; to filter out the message.
+    if (PluginCall(PLUGIN_FILTEROUT_CONTROLLER_DATA, &TempEvent, dummy)) {
+      processed = true;
+    }
+
+  }
   if (!processed) {
 #ifdef USES_ESPEASY_NOW
     MessageRouteInfo_t messageRouteInfo;
@@ -368,7 +389,7 @@ void processMQTTdelayQueue() {
   }
 
 
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 1); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }

@@ -21,9 +21,9 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #ifdef USES_ESPEASY_NOW
-#include "../Globals/ESPEasy_now_handler.h"
-#include "../Globals/SendData_DuplicateChecker.h"
-#endif
+# include "../Globals/ESPEasy_now_handler.h"
+# include "../Globals/SendData_DuplicateChecker.h"
+#endif // ifdef USES_ESPEASY_NOW
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Protocol.h"
@@ -47,7 +47,7 @@ void sendData(struct EventStruct *event)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendData"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-//  LoadTaskSettings(event->TaskIndex);
+  //  LoadTaskSettings(event->TaskIndex);
 
   if (Settings.UseRules) {
     createRuleEvents(event);
@@ -57,7 +57,7 @@ void sendData(struct EventStruct *event)
     SendValueLogger(event->TaskIndex);
   }
 
-//  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
+  //  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
@@ -95,7 +95,6 @@ void sendData(struct EventStruct *event)
   STOP_TIMER(SEND_DATA_STATS);
 }
 
-
 // ********************************************************************************
 // Send to controllers, via a duplicate check
 // Some plugins may receive the same data among nodes, so check first if
@@ -107,25 +106,27 @@ void sendData_checkDuplicates(struct EventStruct *event, const String& compare_k
 {
 #ifdef USES_ESPEASY_NOW
   uint32_t key = SendData_DuplicateChecker.add(event, compare_key);
+
   if (key != SendData_DuplicateChecker_struct::DUPLICATE_CHECKER_INVALID_KEY) {
     // Must send out request to other nodes to see if any other has already processed it.
     uint8_t broadcastMac[6];
     ESPEasy_now_handler.sendSendData_DuplicateCheck(
-      key, 
-      ESPEasy_Now_DuplicateCheck::message_t::KeyToCheck, 
+      key,
+      ESPEasy_Now_DuplicateCheck::message_t::KeyToCheck,
       broadcastMac);
   }
-#else
+#else // ifdef USES_ESPEASY_NOW
   sendData(event);
-#endif
+#endif // ifdef USES_ESPEASY_NOW
 }
 
 bool validUserVar(struct EventStruct *event) {
-  if (!validTaskIndex(event->TaskIndex)) return false;
+  if (!validTaskIndex(event->TaskIndex)) { return false; }
   const Sensor_VType vtype = event->getSensorType();
-  if (vtype == Sensor_VType::SENSOR_TYPE_LONG || 
-      vtype == Sensor_VType::SENSOR_TYPE_STRING  // FIXME TD-er: Must look at length of event->String2 ?
-  ) return true;
+
+  if ((vtype == Sensor_VType::SENSOR_TYPE_LONG) ||
+      (vtype == Sensor_VType::SENSOR_TYPE_STRING) // FIXME TD-er: Must look at length of event->String2 ?
+      ) { return true; }
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
@@ -205,7 +206,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   MQTTclient_next_connect_attempt.setNow();
   ++mqtt_reconnect_count;
 
-  MakeControllerSettings(ControllerSettings); //-V522
+  MakeControllerSettings(ControllerSettings); // -V522
 
   if (!AllocatedControllerSettings()) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
@@ -220,7 +221,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
   }
-  
+
   updateMQTTclient_connected();
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
@@ -230,19 +231,20 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply 
+  const uint32_t timeout = ControllerSettings.MustCheckReply
     ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
   Client *pClient = &mqtt;
   pClient->setTimeout(timeout);
-  #else
-  mqtt.setTimeout(timeout); // in msec as it should be!  
-  #endif
-  
+  # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  mqtt.setTimeout(timeout); // in msec as it should be!
+  # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
   MQTTclient.setClient(mqtt);
 
   if (ControllerSettings.UseDNS) {
@@ -255,12 +257,12 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   // MQTT needs a unique clientname to subscribe to broker
   const String clientid = getMQTTclientID(ControllerSettings);
 
-  const String  LWTTopic             = getLWT_topic(ControllerSettings);
-  const String  LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
-  bool          MQTTresult           = false;
-  const uint8_t willQos              = 0;
-  const bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
-  const bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
+  const String LWTTopic             = getLWT_topic(ControllerSettings);
+  const String LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
+  bool MQTTresult                   = false;
+  const uint8_t willQos             = 0;
+  const bool    willRetain          = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
+  const bool    cleanSession        = ControllerSettings.mqtt_cleanSession(); // As suggested here:
 
   if (MQTTclient_should_reconnect) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
@@ -299,6 +301,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
     return false;
   }
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log += F("MQTT : Connected to broker with client ID: ");
@@ -309,8 +312,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   parseSystemVariables(subscribeTo, false);
   MQTTclient.subscribe(subscribeTo.c_str());
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log  = F("Subscribed to: ");
+    String log = F("Subscribed to: ");
     log += subscribeTo;
     addLogMove(LOG_LEVEL_INFO, log);
   }
@@ -376,7 +380,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     String LWTTopic, LWTMessageConnect;
     bool   willRetain = false;
     {
-      MakeControllerSettings(ControllerSettings); //-V522
+      MakeControllerSettings(ControllerSettings); // -V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
@@ -501,7 +505,7 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
   return false;
 }
 
-void SendStatus(struct EventStruct *event, const __FlashStringHelper * status)
+void SendStatus(struct EventStruct *event, const __FlashStringHelper *status)
 {
   SendStatus(event, String(status));
 }
@@ -537,6 +541,7 @@ void SendStatus(struct EventStruct *event, const String& status)
 controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+
     if (validProtocolIndex(ProtocolIndex)) {
       if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
         return i;
@@ -559,11 +564,17 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
   return false;
 }
 
-#ifdef USES_ESPEASY_NOW
+# ifdef USES_ESPEASY_NOW
 
-bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const MessageRouteInfo_t& messageRouteInfo, bool retained, bool callbackTask)
+bool MQTTpublish(controllerIndex_t         controller_idx,
+                 taskIndex_t               taskIndex,
+                 const ESPEasy_now_merger& message,
+                 const MessageRouteInfo_t& messageRouteInfo,
+                 bool                      retained,
+                 bool                      callbackTask)
 {
   bool success = false;
+
   if (!MQTT_queueFull(controller_idx))
   {
     {
@@ -571,18 +582,23 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
       const size_t payloadSize = message.getPayloadSize();
       MessageRouteInfo_t routeinfo = messageRouteInfo;
       String topic, payload;
+
       if (message.getString(topic, pos) && message.getString(payload, pos)) {
-        success = true;
         const size_t bytesLeft = payloadSize - pos;
+
         if (bytesLeft >= 4) {
           bool validMessageRouteInfo = false;
+
           // There is some MessageRouteInfo left
           MessageRouteInfo_t::uint8_t_vector routeInfoData;
           routeInfoData.resize(bytesLeft);
+
           // Use temp position as we don't yet know the true size of the message route info
           size_t tmp_pos = pos;
+
           if (message.getBinaryData(&routeInfoData[0], bytesLeft, tmp_pos) == bytesLeft) {
             validMessageRouteInfo = routeinfo.deserialize(routeInfoData);
+
             if (validMessageRouteInfo) {
               // Move pos for the actual number of bytes we read.
               pos += routeinfo.getSerializedSize();
@@ -595,26 +611,28 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
               addLog(LOG_LEVEL_INFO, log);
             }
           }
+
           if (!validMessageRouteInfo) {
             // Whatever may have been present, it could not be loaded, so clear just to be sure.
             routeinfo = messageRouteInfo;
           }
+
           // Append our own unit number
           routeinfo.appendUnit(Settings.Unit);
         }
-      }
-      if (success) {
-       std::unique_ptr<MQTT_queue_element> element = std::unique_ptr<MQTT_queue_element>(
-        new MQTT_queue_element(
-          controller_idx,
-          INVALID_TASK_INDEX,
-          std::move(topic),
-          std::move(payload),
-          retained,
-          callbackTask));
+        std::unique_ptr<MQTT_queue_element> element = std::unique_ptr<MQTT_queue_element>(
+          new MQTT_queue_element(
+            controller_idx,
+            taskIndex,
+            std::move(topic),
+            std::move(payload),
+            retained,
+            callbackTask));
+
         if (element) {
+          element->_call_PLUGIN_FILTEROUT_CONTROLLER_DATA = validTaskIndex(taskIndex);
           element->MessageRouteInfo = routeinfo;
-          success = MQTTDelayHandler->addToQueue(std::move(element));
+          success                   = MQTTDelayHandler->addToQueue(std::move(element));
         }
       }
     }
@@ -623,26 +641,56 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
   return success;
 }
 
-#endif
+# endif // ifdef USES_ESPEASY_NOW
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const char *topic, const char *payload, bool retained, bool callbackTask)
+bool MQTTpublish(controllerIndex_t controller_idx,
+                 taskIndex_t       taskIndex,
+                 const char       *topic,
+                 const char       *payload,
+                 bool              retained,
+                 bool              callbackTask)
 {
   if (MQTTDelayHandler == nullptr) {
     return false;
   }
 
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
+  std::unique_ptr<MQTT_queue_element> element =
+    std::unique_ptr<MQTT_queue_element>(
+      new MQTT_queue_element(
+        controller_idx,
+        taskIndex,
+        topic,
+        payload,
+        retained,
+        callbackTask));
+
+  if (!element) { return false; }
+
+  const bool success = MQTTDelayHandler->addToQueue(std::move(element));
 
   scheduleNextMQTTdelayQueue();
   return success;
 }
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained, bool callbackTask) {
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained,
+                 bool callbackTask) {
   if (MQTTDelayHandler == nullptr) {
     return false;
   }
 
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
+  std::unique_ptr<MQTT_queue_element> element =
+    std::unique_ptr<MQTT_queue_element>(
+      new MQTT_queue_element(
+        controller_idx,
+        taskIndex,
+        std::move(topic),
+        std::move(payload),
+        retained,
+        callbackTask));
+
+  if (!element) { return false; }
+
+  const bool success = MQTTDelayHandler->addToQueue(std::move(element));
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -666,7 +714,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     bool   mqtt_retainFlag;
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings); //-V522
+      MakeControllerSettings(ControllerSettings); // -V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot send status, out of RAM"));
@@ -732,12 +780,15 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
 
     const uint8_t valueCount = getValueCountForTask(TaskIndex);
+
     // Store the previous value, in case %pvalue% is used in the formula
     String preValue[VARS_PER_TASK];
+
     if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(TaskIndex)) {
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         const String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
+
         if (!formula.isEmpty())
         {
           if (formula.indexOf(F("%pvalue%")) != -1) {
@@ -762,6 +813,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
         for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
           String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
+
           if (!formula.isEmpty())
           {
             START_TIMER;

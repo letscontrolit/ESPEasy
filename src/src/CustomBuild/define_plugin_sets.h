@@ -2062,6 +2062,9 @@ To create/register a plugin, you have to :
   #ifndef USES_C018
     #define USES_C018 // TTN RN2483
   #endif
+  #ifndef USES_C019
+    #define USES_C019 // ESPEasy-NOW
+  #endif
 
   // Notifiers
 

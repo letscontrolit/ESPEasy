@@ -118,7 +118,28 @@ ESPEasy_now_handler_t::~ESPEasy_now_handler_t()
   }
 }
 
+void ESPEasy_now_handler_t::setConfig(const C019_ConfigStruct& config)
+{
+  // FIXME TD-er: Must configure other settings too.
+  // Perhaps add C019_ConfigStruct as a member too?
+  _filterTaskCallback = config.filterMQTT_forward ? config.filterTaskIndex : INVALID_TASK_INDEX;
+}
+
 bool ESPEasy_now_handler_t::begin()
+{
+  if (!Settings.UseESPEasyNow()) { return false; }
+  // Check to see if we have an ESPEasy_NOW controller defined.
+  // Call CPLUGIN_INIT on it to load the settings.
+  const controllerIndex_t ESPEasy_NOW_controller_idx = get_ESPEasy_NOW_controller_index();
+  if (validControllerIndex(ESPEasy_NOW_controller_idx) && Settings.ControllerEnabled[ESPEasy_NOW_controller_idx]) {
+    struct EventStruct tmpEvent;
+    tmpEvent.ControllerIndex = ESPEasy_NOW_controller_idx;
+    if (!CPluginCall(CPlugin::Function::CPLUGIN_INIT, &tmpEvent)) return false;
+  }
+  return do_begin();
+}
+
+bool ESPEasy_now_handler_t::do_begin()
 {
   if (!Settings.UseESPEasyNow()) { return false; }
   if (use_EspEasy_now) { return true; }
@@ -269,6 +290,16 @@ bool ESPEasy_now_handler_t::loop()
     begin();
   }
   return somethingProcessed;
+}
+
+controllerIndex_t ESPEasy_now_handler_t::get_ESPEasy_NOW_controller_index()
+{
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
+    if (Settings.Protocol[x] == 19) {
+      return x;
+    }
+  }
+  return INVALID_CONTROLLER_INDEX;
 }
 
 void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
@@ -1066,7 +1097,12 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
         }
       }
       
-      success = MQTTpublish(controllerIndex, message, MessageRouteInfo, _mqtt_retainFlag);
+      success = MQTTpublish(
+        controllerIndex, 
+        _filterTaskCallback,
+        message, 
+        MessageRouteInfo, 
+        _mqtt_retainFlag);
       if (!success) {
         mustKeep = false;
         return success;

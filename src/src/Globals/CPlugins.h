@@ -10,9 +10,6 @@
 #include "../DataTypes/ControllerIndex.h"
 #include "../DataTypes/ProtocolIndex.h"
 
-#include <map>
-//#include <vector>
-
 
 /********************************************************************************************\
    Structures to address the Cplugins (controllers) and their configurations.
@@ -26,11 +23,19 @@
    - Controller -> A selected instance of a CPlugin (analog to "task" for plugins, shown in the Controllers tab in the web interface)
    - Protocol   -> A CPlugin included in the build.
 
+   Addressing these:
+   - cpluginID_t -> Unique ID of a Cplugin, like '1' for _C001.ino. '0' is the invalid cpluginID_t
+   - protocolIndex_t -> Counter for the included CPlugins in the build. 
+                        Highest used protocolIndex_t will thus always be at most the highest CPluginID.
+
    We have the following one-to-one relations:
-   - CPlugin_id_to_ProtocolIndex - Map from CPlugin ID to Protocol Index.
+   - CPlugin_id_to_ProtocolIndex - Vector from CPlugin ID to Protocol Index.
    - ProtocolIndex_to_CPlugin_id - Vector from ProtocolIndex to CPlugin ID.
    - CPlugin_ptr - Array of function pointers to call Cplugins.
    - Protocol    - Vector of ProtocolStruct containing Cplugin specific information.
+
+   Since we only have a limited nr of CPlugins, and most builds will include almost all of them,
+   thus: CPlugin_id_to_ProtocolIndex is a vector and not a std::map as with the Plugins.
  \*********************************************************************************************/
 
 
@@ -51,8 +56,8 @@ bool CPluginCall(protocolIndex_t     protocolIndex,
 bool              anyControllerEnabled();
 controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid);
 
-// Map to match a controller ID to a "ProtocolIndex"
-extern std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;
+// Vector to match a controller ID to a "ProtocolIndex"
+extern protocolIndex_t CPlugin_id_to_ProtocolIndex[CPLUGIN_MAX + 1];
 
 // Vector to match a "ProtocolIndex" to a controller ID.
 // INVALID_CONTROLLER_INDEX may be used as index for this array.

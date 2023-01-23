@@ -11,7 +11,7 @@
 
 
 // FIXME TD-er: Make these private and add functions to access its content.
-std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;
+protocolIndex_t CPlugin_id_to_ProtocolIndex[CPLUGIN_MAX + 1];
 cpluginID_t ProtocolIndex_to_CPlugin_id[CPLUGIN_MAX + 1];
 
 bool (*CPlugin_ptr[CPLUGIN_MAX])(CPlugin::Function,
@@ -178,6 +178,7 @@ bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, stru
     START_TIMER;
     bool ret = CPlugin_ptr[protocolIndex](Function, event, str);
     STOP_TIMER_CONTROLLER(protocolIndex, Function);
+    /*
     #ifndef BUILD_NO_DEBUG
     if (Function == CPlugin::Function::CPLUGIN_INIT) {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -197,6 +198,7 @@ bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, stru
       }
     }
     #endif
+    */
     return ret;
   }
   return false;
@@ -238,11 +240,10 @@ bool validControllerIndex(controllerIndex_t index)
 
 bool validCPluginID(cpluginID_t cpluginID)
 {
-  if (cpluginID == INVALID_C_PLUGIN_ID) {
-    return false;
+  if (cpluginID != INVALID_C_PLUGIN_ID && cpluginID <= CPLUGIN_MAX) {
+    return validProtocolIndex(CPlugin_id_to_ProtocolIndex[cpluginID]);
   }
-  auto it = CPlugin_id_to_ProtocolIndex.find(cpluginID);
-  return it != CPlugin_id_to_ProtocolIndex.end();
+  return false;
 }
 
 bool supportedCPluginID(cpluginID_t cpluginID)
@@ -273,24 +274,8 @@ cpluginID_t getCPluginID_from_ControllerIndex(controllerIndex_t index) {
 
 protocolIndex_t getProtocolIndex(cpluginID_t cpluginID)
 {
-  if (cpluginID != INVALID_C_PLUGIN_ID) {
-    auto it = CPlugin_id_to_ProtocolIndex.find(cpluginID);
-
-    if (it != CPlugin_id_to_ProtocolIndex.end())
-    {
-      if (!validProtocolIndex(it->second)) { return INVALID_PROTOCOL_INDEX; }
-      #ifndef BUILD_NO_DEBUG
-      if (Protocol[it->second].Number != cpluginID) {
-        // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
-        String log = F("getProtocolIndex error in Protocol Vector. CPluginID: ");
-        log += String(cpluginID);
-        log += F(" p_index: ");
-        log += String(it->second);
-        addLogMove(LOG_LEVEL_ERROR, log);
-      }
-      #endif
-      return it->second;
-    }
+  if (cpluginID != INVALID_C_PLUGIN_ID && cpluginID <= CPLUGIN_MAX) {
+    return CPlugin_id_to_ProtocolIndex[cpluginID];
   }
   return INVALID_PROTOCOL_INDEX;
 }
@@ -318,7 +303,7 @@ String getCPluginNameFromCPluginID(cpluginID_t cpluginID) {
 
 
 bool addCPlugin(cpluginID_t cpluginID, protocolIndex_t x) {
-  if (x < CPLUGIN_MAX) { 
+  if (x < CPLUGIN_MAX && cpluginID <= CPLUGIN_MAX) { 
     ProtocolIndex_to_CPlugin_id[x] = cpluginID; 
     CPlugin_id_to_ProtocolIndex[cpluginID] = x;
     return true;

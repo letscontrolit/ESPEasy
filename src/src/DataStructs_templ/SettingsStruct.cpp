@@ -133,6 +133,16 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
 #ifdef USES_ESPEASY_NOW
+  // First check to see if we have the controller present and enabled
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
+    if (ControllerEnabled[x] && Protocol[x] == 19) {
+      if (supportedCPluginID(Protocol[x])) {
+        return ControllerEnabled[x];
+      }
+    }
+  }
+
+  // FIXME TD-er: Must either remove this bit, or make a settings transition.
   return bitRead(VariousBits1, 11);
 #else
   return false;
@@ -142,6 +152,15 @@ bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow(bool value) {
 #ifdef USES_ESPEASY_NOW
+  // Update controller enabled state
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
+    if (ControllerEnabled[x] != value && Protocol[x] == 19) {
+      if (supportedCPluginID(Protocol[x])) {
+        ControllerEnabled[x] = value;
+      }
+    }
+  }
+
   bitWrite(VariousBits1, 11, value);
 #endif
 }

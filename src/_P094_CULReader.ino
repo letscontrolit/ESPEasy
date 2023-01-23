@@ -322,6 +322,38 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
       break;
     }
+
+    case PLUGIN_FILTEROUT_CONTROLLER_DATA:
+    {
+      // event->String1 => topic;
+      // event->String2 => payload;
+      if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
+        // FIXME TD-er: Need to add checking for stats too
+        if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
+          success = true;
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log;
+
+            if (log.reserve(128)) {
+              log = F("CUL Reader: Sending: ");
+              const size_t messageLength = event->String2.length();
+
+              if (messageLength < 100) {
+                log += event->String2;
+              } else {
+                // Split string so we get start and end
+                log += event->String2.substring(0, 40);
+                log += F("...");
+                log += event->String2.substring(messageLength - 40);
+              }
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
+          }
+        }
+      }
+
+      break;
+    }
   }
   return success;
 }

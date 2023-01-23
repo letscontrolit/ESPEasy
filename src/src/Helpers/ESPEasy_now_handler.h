@@ -5,6 +5,8 @@
 
 #ifdef USES_ESPEASY_NOW
 
+# include "../Controller_config/C019_config.h"
+
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
 # include "../DataStructs/ESPEasy_Now_NTP_query.h"
 # include "../DataStructs/ESPEasy_Now_p2p_data.h"
@@ -24,13 +26,19 @@ public:
 
   ~ESPEasy_now_handler_t();
 
+  void setConfig(const C019_ConfigStruct& config);
+
   bool begin();
+
+  bool do_begin();
 
   void end();
 
   bool loop();
 
 private:
+
+  static controllerIndex_t get_ESPEasy_NOW_controller_index();
 
   void loop_check_ESPEasyNOW_run_state();
 
@@ -133,6 +141,7 @@ private:
   uint8_t _usedWiFiChannel           = 0;
   uint8_t _lastScannedChannel        = 0;
   controllerIndex_t _controllerIndex = INVALID_CONTROLLER_INDEX;
+  taskIndex_t _filterTaskCallback    = INVALID_TASK_INDEX;
   bool _scanChannelsMode             = true;
   bool _enableESPEasyNowFallback     = false;
   bool _mqtt_retainFlag              = false;

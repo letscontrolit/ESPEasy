@@ -27,15 +27,17 @@ void CPluginInit()
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
+  // FIXME TD-er: Why would this ever be called at CPLUGIN_MAX index?
   ProtocolIndex_to_CPlugin_id[CPLUGIN_MAX] = INVALID_C_PLUGIN_ID;
+  CPlugin_id_to_ProtocolIndex[CPLUGIN_MAX] = INVALID_PROTOCOL_INDEX;
   uint8_t x;
 
-  // Clear pointer table for all plugins
+  // Clear pointer table for all Cplugins
   for (x = 0; x < CPLUGIN_MAX; x++)
   {
     CPlugin_ptr[x]                 = nullptr;
     ProtocolIndex_to_CPlugin_id[x] = INVALID_C_PLUGIN_ID;
-    // Do not initialize CPlugin_id_to_ProtocolIndex[x] to an invalid value. (it is map)
+    CPlugin_id_to_ProtocolIndex[x] = INVALID_PROTOCOL_INDEX;
   }
 
   x = 0;

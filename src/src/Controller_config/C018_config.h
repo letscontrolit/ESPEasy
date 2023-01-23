@@ -27,7 +27,7 @@ struct C018_ConfigStruct
   void reset();
 
   // Send all to the web interface
-  void webform_load(C018_data_struct* C018_data);
+  void webform_load(C018_data_struct *C018_data) const;
 
   // Collect all data from the web interface
   void webform_save();
