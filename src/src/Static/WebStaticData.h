@@ -469,79 +469,82 @@ static const char DATA_REBOOT_JS[] PROGMEM = {0x69,0x3d,0x64,0x6f,0x63,0x75,0x6d
 
 static const char jsToastMessageBegin[] PROGMEM = {
   "function toasting() {"
-    "var x = document.getElementById('toastmessage');"
-    "x.innerHTML = '"
+    "var x=document.getElementById('toastmessage');"
+    "x.innerHTML='"
 };
 
 static const char jsToastMessageEnd[] PROGMEM = {
-  "'; x.className = 'show';"
-  " setTimeout(function(){x.innerHTML = '';"
-  " x.className = x.className.replace('show', '');"
-  " }, 2000);"
+  "';x.className='show';"
+  "setTimeout(function(){x.innerHTML='';"
+  // "x.className=x.className.replace('show','');"
+  "x.className='';"
+  " },2000);"
   "} "
 };
 
 static const char jsClipboardCopyPart1[] PROGMEM = {
-  "<script>function setClipboard() { var clipboard = '';"
-  " max_loop = 100;"
-  " for (var i = 1; i < max_loop; i++){"
-  " var cur_id = '"
+  "<script>function setClipboard(){var cb='';"
+  // " max_loop = 100;"
+  "for(var i=1;i<100;i++){"
+  "var cur_id='"
 };
 
 static const char jsClipboardCopyPart2[] PROGMEM = {
-  "_' + i;"
-  " var test = document.getElementById(cur_id);"
-  " if (test == null){ i = max_loop + 1;"
-  "  } else {"
-  " clipboard += test.innerHTML.replace(/<[Bb][Rr]\\s*\\/?>/gim,'\\n') + '"
+  "_'+i;"
+  "var t=document.getElementById(cur_id);"
+  // "if(t==null){i= max_loop + 1;"
+  "if(t==null){i=101;"
+  "}else{"
+  "cb+=t.innerHTML.replace(/<[Bb][Rr]\\s*\\/?>/gim,'\\n')+'"
 };
 
 //Fix HTML
 static const char jsClipboardCopyPart3[] PROGMEM = {
-  "'; } }"
-  "clipboard = clipboard.replace(/<\\/[Dd][Ii][Vv]\\s*\\/?>/gim,'\\n');"
-  "clipboard = clipboard.replace(/<[^>]*>/gim,'');"
-  "var tempInput = document.createElement('textarea');"
-  "tempInput.style = 'position: absolute;"
-  "left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;"
-  "document.body.appendChild(tempInput);"
-  "tempInput.select();"
+  "';}}"
+  "cb=cb.replace(/<\\/[Dd][Ii][Vv]\\s*\\/?>/gim,'\\n');"
+  "cb=cb.replace(/<[^>]*>/gim,'');"
+  "var ti=document.createElement('textarea');"
+  "ti.style='position:absolute;"
+  "left:-1000px;top:-1000px';ti.innerHTML=cb;"
+  "document.body.appendChild(ti);"
+  "ti.select();"
   "document.execCommand('copy');"
-  "document.body.removeChild(tempInput);"
-  "alert('Copied: \"' + clipboard + '\" to clipboard!') }"
+  "document.body.removeChild(ti);"
+  "alert('Copied: \"' + cb + '\" to clipboard!') }"
   "</script>"
 };
 
 #ifdef WEBSERVER_INCLUDE_JS
+// Manually minified js
 static const char jsSaveRules[] PROGMEM = {
 "function saveRulesFile() {"
-"\"use strict\";"
-"let e = document.getElementById(\"size\");"
-"let t = document.getElementById(\"rules\").value;"
-"t = t.replace(/\\r?\\n/g, \"\\r\\n\");"
-"let n = document.getElementById(\"set\").value;"
-"let l = new File([t],\"rules\" + n + \".txt\",{"
-"type: \"text/plain\""
+"'use strict';"
+"let e=document.getElementById('size');"
+"let t=document.getElementById('rules').value;"
+"t=t.replace(/\\r?\\n/g, '\\r\\n');"
+"let n=document.getElementById('set').value;"
+"let l=new File([t],'rules'+n+'.txt',{"
+"type:'text/plain'"
 "});"
-"let a = new FormData();"
-"a.append(\"file\", l);"
-"a.append(\"enctype\", \"multipart/form-data\");"
-"let o = \"/rules\" + n + \".txt?callback=\" + Date.now();"
+"let a=new FormData();"
+"a.append('file',l);"
+"a.append('enctype','multipart/form-data');"
+"let o='/rules'+n+'.txt?callback='+Date.now();"
 "fetch(o).then(e=>e.text()).then(l=>{"
-"if (t === l)"
-"console.log(\"nothing to save...\");"
-"else {"
-"fetch(\"/upload\", {"
-"method: \"POST\","
-"body: a"
+"if(t===l)"
+"console.log('nothing to save...');"
+"else{"
+"fetch('/upload',{"
+"method:'POST',"
+"body:a"
 "}).then(e=>e.text()).then(l=>{"
-"let a = \"/rules\" + n + \".txt?callback=\" + Date.now();"
+"let a='/rules'+n+'.txt?callback='+Date.now();"
 "fetch(a).then(e=>e.text()).then(n=>{"
-"if (t === n) {"
+"if(t===n){"
 "toasting();"
-"e.innerHTML = t.length;"
-"} else {"
-"console.log(\"error when saving...\");"
+"e.innerHTML=t.length;"
+"}else{"
+"console.log('error when saving...');"
 "}});"
 "});"
 "}});"
@@ -554,7 +557,8 @@ static const char jsSaveRules[] PROGMEM = {
 // This will replace the newlines, tabs and spaces with '$' 
 // and splits it over the fields with class 'query-input'
 static const char jsSplitMultipleFields[] PROGMEM = {
-  "function split(t,i){var n=$(i);n.each(function(i){$(this).on(\"paste\",function(){if(document.getElementById(\"splitpaste\").checked){var i=$(this);setTimeout(function(){var s=i.val().split(/\\r?\\n/).join(t).split(/\\s+/).join(t).split(/\\t/).join(t).split(t);n.each(function(t){$(this).val(s[t])})},1)}})})}split(\"$\",\".query-input\");"
+  "function split(t,i){var n=$(i);n.each(function(i){$(this).on('paste',function(){if(document.getElementById('splitpaste').checked){var i=$(this);"
+  "setTimeout(function(){var s=i.val().split(/\\r?\\n/).join(t).split(/\\s+/).join(t).split(/\\t/).join(t).split(t);n.each(function(t){$(this).val(s[t])})},1)}})})}split('$','.query-input');"
 };
 
 #ifdef WEBSERVER_INCLUDE_JS
