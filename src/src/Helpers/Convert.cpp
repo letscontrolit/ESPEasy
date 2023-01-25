@@ -248,8 +248,16 @@ float ul2float(unsigned long ul)
 String toString(const float& value, unsigned int decimalPlaces)
 {
   if (decimalPlaces == 0) {
-    const int64_t ll_value = static_cast<int64_t>(roundf(value));
-    return ll2String(ll_value);
+    if (value > -1e9f && value < 1e9f) {
+      // Work-around to perform a faster conversion
+      return String(static_cast<int32_t>(roundf(value)));
+    }
+
+    if (value > -1e18f && value < 1e18f) {
+      // Work-around to perform a faster conversion
+      const int64_t ll_value = static_cast<int64_t>(roundf(value));
+      return ll2String(ll_value);
+    }
   }
 
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code

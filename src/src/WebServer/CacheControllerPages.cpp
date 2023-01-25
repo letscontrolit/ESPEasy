@@ -2,22 +2,21 @@
 
 #ifdef USES_C016
 
-#include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/AccessControl.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/JSON.h"
-#include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataStructs/DeviceStruct.h"
-#include "../DataTypes/TaskIndex.h"
-#include "../Globals/C016_ControllerCache.h"
-#include "../Globals/Cache.h"
-#include "../Globals/ESPEasy_time.h"
-#include "../Globals/Settings.h"
-#include "../Helpers/ESPEasy_math.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Misc.h"
-
+# include "../WebServer/ESPEasy_WebServer.h"
+# include "../WebServer/AccessControl.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/JSON.h"
+# include "../CustomBuild/ESPEasyLimits.h"
+# include "../DataStructs/DeviceStruct.h"
+# include "../DataTypes/TaskIndex.h"
+# include "../Globals/C016_ControllerCache.h"
+# include "../Globals/Cache.h"
+# include "../Globals/ESPEasy_time.h"
+# include "../Globals/Settings.h"
+# include "../Helpers/ESPEasy_math.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/ESPEasy_time_calc.h"
+# include "../Helpers/Misc.h"
 
 
 // ********************************************************************************
@@ -28,8 +27,10 @@ void handle_dumpcache() {
   if (!isLoggedIn()) { return; }
 
   char separator = ';';
+
   if (hasArg(F("separator"))) {
     String sep = webArg(F("separator"));
+
     if (isWrappedWithQuotes(sep)) {
       removeChar(sep, sep[0]);
     }
@@ -37,10 +38,11 @@ void handle_dumpcache() {
   }
 
   bool joinTimestamp = false;
+
   if (hasArg(F("jointimestamp"))) {
     joinTimestamp = true;
   }
-  
+
   // First backup the peek file positions.
   int peekFileNr;
   const int peekFilePos = ControllerCache.getPeekFilePos(peekFileNr);
@@ -56,6 +58,7 @@ void handle_dumpcache() {
     str += Settings.Name;
     str += F("_U");
     str += Settings.Unit;
+
     if (node_time.systemTimePresent())
     {
       str += '_';
@@ -66,48 +69,69 @@ void handle_dumpcache() {
     sendHeader(F("Content-Disposition"), str);
     TXBuffer.startStream(F("application/octet-stream"), F("*"), 200);
   }
+
+  // Allocate a String per taskvalue instead of per task
+  // This way the small strings will hardly ever need heap allocation.
+  constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
+  String  csv_values[nrTaskValues];
+  uint8_t nrDecimals[nrTaskValues] = { 0 };
+  bool    includeTask[TASKS_MAX]   = { 0 };
+  {
+    // Initialize arrays
+    const String sep_zero = String(separator) + '0';
+
+    for (size_t i = 0; i < nrTaskValues; ++i) {
+      csv_values[i] = sep_zero;
+      nrDecimals[i] = Cache.getTaskDeviceValueDecimals(i / VARS_PER_TASK, i % VARS_PER_TASK);
+    }
+
+    for (size_t task = 0; validTaskIndex(task); ++task) {
+      includeTask[task] = Settings.TaskDeviceEnabled[task];
+    }
+  }
+
+
   {
     // CSV header
-    String header(F("UNIX timestamp;UTC timestamp;taskindex;plugin ID"));
+    String header(F("UNIX timestamp;UTC timestamp"));
+
+    if (!joinTimestamp) {
+      // Does not make sense to have taskindex and plugin ID
+      // in a table where separate samples may have been combined.
+      header += F(";taskindex;plugin ID");
+    }
+
     if (separator != ';') { header.replace(';', separator); }
     addHtml(header);
+
     for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-      for (int j = 0; j < VARS_PER_TASK; ++j) {
-        addHtml(separator);
-        addHtml(getTaskDeviceName(i));
-        addHtml('#');
-        addHtml(getTaskValueName(i, j));
+      if (includeTask[i]) {
+        for (int j = 0; j < VARS_PER_TASK; ++j) {
+          addHtml(separator);
+          addHtml(getTaskDeviceName(i));
+          addHtml('#');
+          addHtml(getTaskValueName(i, j));
+        }
       }
     }
     addHtml('\r', '\n');
   }
 
-  // Allocate a String per taskvalue instead of per task
-  // This way the small strings will hardly ever need heap allocation.
-  constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
-  String csv_values[nrTaskValues];
-  uint8_t nrDecimals[nrTaskValues] = {0};
 
-  {
-    // Initialize arrays
-    const String sep_zero = String(separator) + '0';
-    for (size_t i = 0; i < nrTaskValues; ++i) {
-      csv_values[i] = sep_zero;
-      nrDecimals[i] = Cache.getTaskDeviceValueDecimals(i / VARS_PER_TASK, i % VARS_PER_TASK);
-    }
-  }
-
+  // Fetch samples from Cache Controller bin files.
   C016_binary_element element;
 
-  uint32_t lastTimestamp = 0;
-  bool csv_values_left = false;
+  uint32_t lastTimestamp   = 0;
+  bool     csv_values_left = false;
 
   while (C016_getTaskSample(element)) {
-    if (!joinTimestamp || lastTimestamp != static_cast<uint32_t>(element._timestamp)) {
+    if (!joinTimestamp || (lastTimestamp != static_cast<uint32_t>(element._timestamp))) {
       // Flush the collected CSV values
       if (csv_values_left) {
         for (size_t i = 0; i < nrTaskValues; ++i) {
-          addHtml(csv_values[i]);
+          if (includeTask[i / VARS_PER_TASK]) {
+            addHtml(csv_values[i]);
+          }
         }
         addHtml('\r', '\n');
       }
@@ -119,19 +143,24 @@ void handle_dumpcache() {
       struct tm ts;
       breakTime(element._timestamp, ts);
       addHtml(formatDateTimeString(ts));
-      addHtml(separator);
-      addHtmlInt(element.TaskIndex);
-      addHtml(separator);
-      addHtmlInt(element.pluginID);
 
-      lastTimestamp = static_cast<uint32_t>(element._timestamp);
+      if (!joinTimestamp) {
+        addHtml(separator);
+        addHtmlInt(element.TaskIndex);
+        addHtml(separator);
+        addHtmlInt(element.pluginID);
+      }
+
+      lastTimestamp   = static_cast<uint32_t>(element._timestamp);
       csv_values_left = true;
     }
 
     // Collect the task values for this row in the CSV
     size_t valindex = element.TaskIndex * VARS_PER_TASK;
+
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
       csv_values[valindex] = separator;
+
       if (essentiallyZero(element.values[i])) {
         csv_values[valindex] += '0';
       } else {
@@ -143,7 +172,9 @@ void handle_dumpcache() {
 
   if (csv_values_left) {
     for (size_t i = 0; i < nrTaskValues; ++i) {
-      addHtml(csv_values[i]);
+      if (includeTask[i / VARS_PER_TASK]) {
+        addHtml(csv_values[i]);
+      }
     }
     addHtml('\r', '\n');
   }
@@ -152,7 +183,6 @@ void handle_dumpcache() {
 
   // Restore peek file positions.
   ControllerCache.setPeekFilePos(peekFileNr, peekFilePos);
-
 }
 
 void handle_cache_json() {
@@ -170,6 +200,7 @@ void handle_cache_json() {
   addHtml(to_json_value(F("UTC timestamp")));
   addHtml(',');
   addHtml(to_json_value(F("task index")));
+
   if (hasArg(F("pluginID"))) {
     addHtml(',');
     addHtml(to_json_value(F("plugin ID")));
@@ -186,9 +217,9 @@ void handle_cache_json() {
   }
   addHtml(F("],\n"));
   addHtml(F("\"files\": ["));
-  bool islast = false;
-  int  filenr = 0;
-  int fileCount = 0;
+  bool islast    = false;
+  int  filenr    = 0;
+  int  fileCount = 0;
 
   while (!islast) {
     const String currentFile = C016_getCacheFileName(filenr, islast);
@@ -204,6 +235,7 @@ void handle_cache_json() {
   }
   addHtml(F("],\n"));
   addHtml(F("\"pluginID\": ["));
+
   for (taskIndex_t taskIndex = 0; validTaskIndex(taskIndex); ++taskIndex) {
     if (taskIndex != 0) {
       addHtml(',');
