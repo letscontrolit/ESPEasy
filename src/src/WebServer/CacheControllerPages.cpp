@@ -11,6 +11,8 @@
 #include "../DataTypes/TaskIndex.h"
 #include "../Globals/C016_ControllerCache.h"
 #include "../Globals/Cache.h"
+#include "../Globals/ESPEasy_time.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -33,6 +35,11 @@ void handle_dumpcache() {
     }
     separator = sep[0];
   }
+
+  bool joinTimestamp = false;
+  if (hasArg(F("jointimestamp"))) {
+    joinTimestamp = true;
+  }
   
   // First backup the peek file positions.
   int peekFileNr;
@@ -43,22 +50,37 @@ void handle_dumpcache() {
 
   C016_flush();
 
-  TXBuffer.startStream();
   {
+    // Send HTTP headers to directly save the dump as a CSV file
+    String str =  F("attachment; filename=cachedump_");
+    str += Settings.Name;
+    str += F("_U");
+    str += Settings.Unit;
+    if (node_time.systemTimePresent())
+    {
+      str += '_';
+      str += node_time.getDateTimeString('\0', '\0', '\0');
+    }
+    str += F(".csv");
+
+    sendHeader(F("Content-Disposition"), str);
+    TXBuffer.startStream(F("application/octet-stream"), F("*"), 200);
+  }
+  {
+    // CSV header
     String header(F("UNIX timestamp;UTC timestamp;taskindex;plugin ID"));
     if (separator != ';') { header.replace(';', separator); }
     addHtml(header);
-  }
-
-  for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-    for (int j = 0; j < VARS_PER_TASK; ++j) {
-      addHtml(separator);
-      addHtml(getTaskDeviceName(i));
-      addHtml('#');
-      addHtml(getTaskValueName(i, j));
+    for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
+      for (int j = 0; j < VARS_PER_TASK; ++j) {
+        addHtml(separator);
+        addHtml(getTaskDeviceName(i));
+        addHtml('#');
+        addHtml(getTaskValueName(i, j));
+      }
     }
+    addHtml('\r', '\n');
   }
-  html_BR();
 
   // Allocate a String per taskvalue instead of per task
   // This way the small strings will hardly ever need heap allocation.
@@ -77,38 +99,55 @@ void handle_dumpcache() {
 
   C016_binary_element element;
 
+  uint32_t lastTimestamp = 0;
+  bool csv_values_left = false;
+
   while (C016_getTaskSample(element)) {
-    addHtmlInt(static_cast<uint32_t>(element._timestamp));
-    addHtml(separator);
-    struct tm ts;
-    breakTime(element._timestamp, ts);
-    addHtml(formatDateTimeString(ts));
-    addHtml(separator);
-    addHtmlInt(element.TaskIndex);
-    addHtml(separator);
-    addHtmlInt(element.pluginID);
+    if (!joinTimestamp || lastTimestamp != static_cast<uint32_t>(element._timestamp)) {
+      // Flush the collected CSV values
+      if (csv_values_left) {
+        for (size_t i = 0; i < nrTaskValues; ++i) {
+          addHtml(csv_values[i]);
+        }
+        addHtml('\r', '\n');
+      }
+
+      // Start writing a new line in the CSV file
+      // Begin with the non taskvalues
+      addHtmlInt(static_cast<uint32_t>(element._timestamp));
+      addHtml(separator);
+      struct tm ts;
+      breakTime(element._timestamp, ts);
+      addHtml(formatDateTimeString(ts));
+      addHtml(separator);
+      addHtmlInt(element.TaskIndex);
+      addHtml(separator);
+      addHtmlInt(element.pluginID);
+
+      lastTimestamp = static_cast<uint32_t>(element._timestamp);
+      csv_values_left = true;
+    }
+
+    // Collect the task values for this row in the CSV
     size_t valindex = element.TaskIndex * VARS_PER_TASK;
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
       csv_values[valindex] = separator;
       if (essentiallyZero(element.values[i])) {
         csv_values[valindex] += '0';
       } else {
-        const int decimals = static_cast<int>(nrDecimals[valindex]);
-        if (decimals == 0) {
-          csv_values[valindex] += static_cast<int>(element.values[i]);
-        } else {
-          csv_values[valindex] += String(element.values[i], decimals);
-        }
+        csv_values[valindex] += toString(element.values[i], static_cast<unsigned int>(nrDecimals[valindex]));
       }
       ++valindex;
     }
+  }
 
+  if (csv_values_left) {
     for (size_t i = 0; i < nrTaskValues; ++i) {
       addHtml(csv_values[i]);
     }
-    html_BR();
-//    delay(0);
+    addHtml('\r', '\n');
   }
+
   TXBuffer.endStream();
 
   // Restore peek file positions.

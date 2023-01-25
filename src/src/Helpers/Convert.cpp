@@ -1,6 +1,6 @@
 #include "../Helpers/Convert.h"
 
-
+#include "../Helpers/StringConverter.h"
 
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
@@ -247,6 +247,11 @@ float ul2float(unsigned long ul)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces)
 {
+  if (decimalPlaces == 0) {
+    const int64_t ll_value = static_cast<int64_t>(roundf(value));
+    return ll2String(ll_value);
+  }
+
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
 //  #ifdef ESP8266
