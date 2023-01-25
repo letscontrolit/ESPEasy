@@ -9,6 +9,7 @@
 # include "../DataStructs/ESPEasyControllerCache.h"
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../DataStructs/DeviceStruct.h"
+# include "../ControllerQueue/C016_queue_element.h"
 
 extern ControllerCache_struct ControllerCache;
 
@@ -26,16 +27,7 @@ bool   C016_deleteOldestCacheBlock();
 
 bool   C016_deleteAllCacheBlocks();
 
-bool   C016_getCSVline(
-  unsigned long& timestamp,
-  uint8_t      & pluginID,
-  uint8_t      & TaskIndex,
-  Sensor_VType & sensorType,
-  uint8_t      & valueCount,
-  float        & val1,
-  float        & val2,
-  float        & val3,
-  float        & val4);
+bool   C016_getTaskSample(C016_binary_element& element);
 
 struct EventStruct C016_getTaskSample(
   unsigned long& timestamp,

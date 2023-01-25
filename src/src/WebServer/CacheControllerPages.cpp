@@ -10,8 +10,10 @@
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/TaskIndex.h"
 #include "../Globals/C016_ControllerCache.h"
+#include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 
 
@@ -23,69 +25,95 @@
 void handle_dumpcache() {
   if (!isLoggedIn()) { return; }
 
+  char separator = ';';
+  if (hasArg(F("separator"))) {
+    String sep = webArg(F("separator"));
+    if (isWrappedWithQuotes(sep)) {
+      removeChar(sep, sep[0]);
+    }
+    separator = sep[0];
+  }
+  
+  // First backup the peek file positions.
+  int peekFileNr;
+  const int peekFilePos = ControllerCache.getPeekFilePos(peekFileNr);
+
+  // Set peek file position to first entry:
+  ControllerCache.setPeekFilePos(0, 0);
+
   C016_flush();
-  unsigned long timestamp;
-  uint8_t  pluginID;
-  uint8_t  TaskIndex;
-  Sensor_VType  sensorType;
-  uint8_t  valueCount;
-  float val1;
-  float val2;
-  float val3;
-  float val4;
 
   TXBuffer.startStream();
-  addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
+  {
+    String header(F("UNIX timestamp;UTC timestamp;taskindex;plugin ID"));
+    if (separator != ';') { header.replace(';', separator); }
+    addHtml(header);
+  }
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     for (int j = 0; j < VARS_PER_TASK; ++j) {
-      addHtml(';');
+      addHtml(separator);
       addHtml(getTaskDeviceName(i));
       addHtml('#');
       addHtml(getTaskValueName(i, j));
     }
   }
   html_BR();
-  float csv_values[VARS_PER_TASK * TASKS_MAX];
 
-  for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-    csv_values[i] = 0.0f;
+  // Allocate a String per taskvalue instead of per task
+  // This way the small strings will hardly ever need heap allocation.
+  constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
+  String csv_values[nrTaskValues];
+  uint8_t nrDecimals[nrTaskValues] = {0};
+
+  {
+    // Initialize arrays
+    const String sep_zero = String(separator) + '0';
+    for (size_t i = 0; i < nrTaskValues; ++i) {
+      csv_values[i] = sep_zero;
+      nrDecimals[i] = Cache.getTaskDeviceValueDecimals(i / VARS_PER_TASK, i % VARS_PER_TASK);
+    }
   }
 
-  while (C016_getCSVline(timestamp, pluginID, TaskIndex, sensorType,
-                         valueCount, val1, val2, val3, val4)) {
-    {
-      String html;
-      html.reserve(64);
-      html += timestamp;
-      html += ';';
-      html += pluginID;
-      html += ';';
-      html += static_cast<uint8_t>(sensorType);
-      html += ';';
-      html += TaskIndex;
-      html += ';';
-      html += valueCount;
-      addHtml(html);
-    }
-    int valindex = TaskIndex * VARS_PER_TASK;
-    csv_values[valindex++] = val1;
-    csv_values[valindex++] = val2;
-    csv_values[valindex++] = val3;
-    csv_values[valindex++] = val4;
+  C016_binary_element element;
 
-    for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-      if (essentiallyZero(csv_values[i])) {
-        addHtml(';', '0');
+  while (C016_getTaskSample(element)) {
+    addHtmlInt(static_cast<uint32_t>(element._timestamp));
+    addHtml(separator);
+    struct tm ts;
+    breakTime(element._timestamp, ts);
+    addHtml(formatDateTimeString(ts));
+    addHtml(separator);
+    addHtmlInt(element.TaskIndex);
+    addHtml(separator);
+    addHtmlInt(element.pluginID);
+    size_t valindex = element.TaskIndex * VARS_PER_TASK;
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      csv_values[valindex] = separator;
+      if (essentiallyZero(element.values[i])) {
+        csv_values[valindex] += '0';
       } else {
-        addHtml(';');
-        addHtmlFloat(csv_values[i], 6);
+        const int decimals = static_cast<int>(nrDecimals[valindex]);
+        if (decimals == 0) {
+          csv_values[valindex] += static_cast<int>(element.values[i]);
+        } else {
+          csv_values[valindex] += String(element.values[i], decimals);
+        }
       }
+      ++valindex;
+    }
+
+    for (size_t i = 0; i < nrTaskValues; ++i) {
+      addHtml(csv_values[i]);
     }
     html_BR();
-    delay(0);
+//    delay(0);
   }
   TXBuffer.endStream();
+
+  // Restore peek file positions.
+  ControllerCache.setPeekFilePos(peekFileNr, peekFilePos);
+
 }
 
 void handle_cache_json() {
