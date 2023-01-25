@@ -7,8 +7,11 @@
 
 ControllerCache_struct ControllerCache;
 
-bool C016_startCSVdump() {
+void C016_flush() {
   ControllerCache.flush();
+}
+
+bool C016_CacheInitialized() {
   return ControllerCache.isInitialized();
 }
 

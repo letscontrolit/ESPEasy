@@ -245,6 +245,9 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
             P146_data->sendTaskInfoInBulk(event->TaskIndex, 0);
             success = true;
           }
+        } else if (subcommand.equals(F("flush"))) {
+          P146_data_struct::flush();
+          success = true;
         }
       }
       break;

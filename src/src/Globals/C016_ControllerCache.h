@@ -15,7 +15,9 @@ extern ControllerCache_struct ControllerCache;
 // ********************************************************************************
 // Helper functions used in the webserver to access the cache data
 // ********************************************************************************
-bool   C016_startCSVdump();
+void   C016_flush();
+
+bool   C016_CacheInitialized();
 
 String C016_getCacheFileName(int & fileNr,
                              bool& islast);

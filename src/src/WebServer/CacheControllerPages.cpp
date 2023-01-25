@@ -23,7 +23,7 @@
 void handle_dumpcache() {
   if (!isLoggedIn()) { return; }
 
-  C016_startCSVdump();
+  C016_flush();
   unsigned long timestamp;
   uint8_t  pluginID;
   uint8_t  TaskIndex;
@@ -92,7 +92,7 @@ void handle_cache_json() {
   if (!isLoggedIn()) { return; }
 
   // Flush any data still in RTC memory to the cache files.
-  C016_startCSVdump();
+  C016_flush();
 
   TXBuffer.startJsonStream();
   addHtml(F("{\"columns\": ["));
