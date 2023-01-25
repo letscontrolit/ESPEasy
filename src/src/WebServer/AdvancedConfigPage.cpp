@@ -8,7 +8,6 @@
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 
-#include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/ESPEasy_time.h"
@@ -126,9 +125,6 @@ void handle_advanced() {
 #if FEATURE_AUTO_DARK_MODE
     Settings.setCssMode(getFormItemInt(getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE)));
 #endif // FEATURE_AUTO_DARK_MODE
-#if FEATURE_ZEROFILL_APPEND_UNITNUMBER
-    Settings.zerofillUnitNumber(isFormItemChecked(LabelType::ZEROFILL_APPEND_UNITNUMBER));
-#endif // if FEATURE_ZEROFILL_APPEND_UNITNUMBER
 
     addHtmlError(SaveSettings());
 
@@ -275,13 +271,6 @@ void handle_advanced() {
                     cssModeOptions,
                     Settings.getCssMode());
   #endif // FEATURE_AUTO_DARK_MODE
-
-  #if FEATURE_ZEROFILL_APPEND_UNITNUMBER
-  addFormCheckBox(LabelType::ZEROFILL_APPEND_UNITNUMBER, Settings.zerofillUnitNumber());
-  if (Settings.zerofillUnitNumber()) {
-    addFormNote(concat(F("Hostname: "), NetworkCreateRFCCompliantHostname(true)));
-  }
-  #endif // if FEATURE_ZEROFILL_APPEND_UNITNUMBER
 
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());

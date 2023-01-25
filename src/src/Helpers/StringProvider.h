@@ -6,6 +6,9 @@
 struct LabelType {
   enum Enum : uint8_t {
     UNIT_NR,
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    UNIT_NR_0,
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     UNIT_NAME,
     HOST_NAME,
 
@@ -67,9 +70,6 @@ struct LabelType {
 #endif
 #if FEATURE_AUTO_DARK_MODE
     ENABLE_AUTO_DARK_MODE,
-#endif
-#if FEATURE_ZEROFILL_APPEND_UNITNUMBER
-    ZEROFILL_APPEND_UNITNUMBER,
 #endif
 
     BOOT_TYPE,               // Cold boot
