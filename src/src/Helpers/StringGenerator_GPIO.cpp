@@ -188,6 +188,8 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   }
 
   if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
+    if (isGpioUsedInETHClockMode(Settings.ETH_Clock_Mode, gpio)) { return F("Eth Clock"); }
+
     if (Settings.ETH_Pin_mdc == gpio) { return F("Eth MDC"); }
 
     if (Settings.ETH_Pin_mdio == gpio) { return F("Eth MDIO"); }
