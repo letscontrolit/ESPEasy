@@ -124,6 +124,9 @@ To create/register a plugin, you have to :
     #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS
       #define EMBED_ESPEASY_DEFAULT_MIN_CSS
     #endif
+    #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ // Use gzipped minified css (saves ~3.7 kB of .bin size)
+      #define EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ
+    #endif
   #endif
 #endif
 
