@@ -135,7 +135,7 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
         jsonString += F("\"ESP\":{");
         {
           // Create nested objects in "ESP":
-          jsonString += to_json_object_value(F("name"), Settings.Name);
+          jsonString += to_json_object_value(F("name"), Settings.getUnitname());
           jsonString += ',';
           jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
           jsonString += ',';

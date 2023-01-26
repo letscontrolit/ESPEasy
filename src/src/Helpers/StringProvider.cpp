@@ -262,7 +262,7 @@ String getValue(LabelType::Enum label) {
       return _unit;
     }
     #endif // FEATURE_ZEROFILLED_UNITNUMBER
-    case LabelType::UNIT_NAME:              return String(Settings.Name); // Only return the set name, no appended unit.
+    case LabelType::UNIT_NAME:              return Settings.getUnitname(); // Only return the set name, no appended unit.
     case LabelType::HOST_NAME:              return NetworkGetHostname();
 
 

@@ -84,7 +84,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
 
       String name = topicSplit[4];
 
-      if (name == Settings.Name)
+      if (name.equals(Settings.getUnitname()))
       {
         String cmd = topicSplit[5];
         cmd += ',';

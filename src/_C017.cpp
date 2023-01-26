@@ -125,7 +125,7 @@ bool do_process_c017_delay_queue(int controller_number, const Queue_element_base
         continue;                                    // Zabbix will ignore an empty key anyway
       }
       JsonObject block = data.createNestedObject();
-      block[F("host")] = Settings.Name;              // Zabbix hostname, Unit Name for the ESP easy
+      block[F("host")] = Settings.getUnitname();     // Zabbix hostname, Unit Name for the ESP easy
       block[F("key")]  = taskValueName;              // Zabbix item key // Value Name for the ESP easy
       float value = 0.0f;
       validFloatFromString(element.txt[i], value);

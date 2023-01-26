@@ -211,7 +211,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         errorCounter = 0;
 
         pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
-        pubname.replace(F("%sysname%"), Settings.Name);
+        pubname.replace(F("%sysname%"), Settings.getUnitname());
 
 # ifdef CPLUGIN_014_V3
 
@@ -262,7 +262,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
       // send autodiscover header
       pubname = CPLUGIN_014_BASE_TOPIC;           // Scheme to form device messages
-      pubname.replace(F("%sysname%"), Settings.Name);
+      pubname.replace(F("%sysname%"), Settings.getUnitname());
       int deviceCount = 1;                        // minimum the SYSTEM device exists
       int nodeCount   = 1;                        // minimum the cmd node exists
       errorCounter = 0;
@@ -270,7 +270,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       if (lastBootCause != BOOT_CAUSE_DEEP_SLEEP) // skip sending autodiscover data when returning from deep sleep
       {
         String nodename = CPLUGIN_014_BASE_VALUE; // Scheme to form node messages
-        nodename.replace(F("%sysname%"), Settings.Name);
+        nodename.replace(F("%sysname%"), Settings.getUnitname());
         String nodesList;                         // build comma separated List for nodes
         String valuesList;                        // build comma separated List for values
         String deviceName;                        // current Device Name nr:name
@@ -285,7 +285,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$homie"), F(CPLUGIN_014_HOMIE_VERSION), errorCounter);
 
         // $name	Device → Controller	Friendly name of the device	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$name"),  Settings.Name,             errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$name"),  Settings.getUnitname(),       errorCounter);
 
         // $localip	Device → Controller	IP of the device on the local network	Yes	Yes
 # ifdef CPLUGIN_014_V3
@@ -663,7 +663,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_GOT_INVALID:
     {
       pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
-      pubname.replace(F("%sysname%"), Settings.Name);
+      pubname.replace(F("%sysname%"), Settings.getUnitname());
 
       // disconnected: this is the state the device is in when it is cleanly disconnected from the MQTT broker. You must send this message
       // before cleanly disconnecting
@@ -671,10 +671,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("C014 : Device: ");
-        log += Settings.Name;
+        log += Settings.getUnitname();
+        log += F(" got invalid (disconnect");
 
-        if (success) { log += F(" got invalid (disconnected)."); }
-        else { log += F(" got invaild (disconnect) failed!"); }
+        if (success) { log += F("ed)."); }
+        else { log += F(") failed!"); }
         addLogMove(LOG_LEVEL_INFO, log);
       }
       break;
@@ -683,7 +684,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_FLUSH:
     {
       pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
-      pubname.replace(F("%sysname%"), Settings.Name);
+      pubname.replace(F("%sysname%"), Settings.getUnitname());
 
       // sleeping: this is the state the device is in when the device is sleeping. You have to send this message before sleeping.
       success = CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("sleeping"), errorCounter);
@@ -982,7 +983,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           if (valueInt == 1) { valueBool = F("true"); }
 
           String topic = CPLUGIN_014_PUBLISH; // ControllerSettings.Publish not used because it can be modified by the user!
-          topic.replace(F("%sysname%"), Settings.Name);
+          topic.replace(F("%sysname%"), Settings.getUnitname());
           topic.replace(F("%tskname%"), F(CPLUGIN_014_SYSTEM_DEVICE));
           topic.replace(F("%valname%"), String(F(CPLUGIN_014_GPIO_VALUE)) + toString(port, 0));
 
@@ -1018,7 +1019,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           if (validTaskVarIndex(taskVarIndex)) {
             userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;
             String topic                = CPLUGIN_014_PUBLISH;
-            topic.replace(F("%sysname%"), Settings.Name);
+            topic.replace(F("%sysname%"), Settings.getUnitname());
             int deviceIndex = event->Par1; // parseString(string, 2).toInt();
             LoadTaskSettings(deviceIndex - 1);
             const String deviceName = getTaskDeviceName(event->TaskIndex);
