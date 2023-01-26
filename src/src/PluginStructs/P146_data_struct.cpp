@@ -296,6 +296,10 @@ bool P146_data_struct::setPeekFilePos(int peekFileNr, int peekReadPos)
   return true;
 }
 
+void P146_data_struct::flush() {
+  C016_flush();
+}
+
 String P146_data_struct::getTopic(int index, taskIndex_t P146_TaskIndex) const {
   if ((index != P146_TaskInfoTopicIndex) && (index != P146_PublishTopicIndex)) {
     return EMPTY_STRING;
