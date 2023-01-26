@@ -123,9 +123,24 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
+    case CPlugin::Function::CPLUGIN_WRITE:
+    {
+      if (C016_CacheInitialized()) {
+        const String command    = parseString(string, 1);
+        if (command.equals(F("cachecontroller"))) {
+          const String subcommand = parseString(string, 2);
+          if (subcommand.equals(F("flush"))) {
+            C016_flush();
+            success = true;
+          }
+        }
+      }
+      break;
+    }
+
     case CPlugin::Function::CPLUGIN_FLUSH:
     {
-      process_c016_delay_queue();
+      C016_flush();
       delay(0);
       break;
     }
