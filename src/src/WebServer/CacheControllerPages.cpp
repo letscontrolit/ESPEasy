@@ -38,11 +38,10 @@ void handle_dumpcache() {
     if (isWrappedWithQuotes(sep)) {
       removeChar(sep, sep[0]);
     }
-    separator = sep[0];
-  }
 
-  if (hasArg(F("jointimestamp"))) {
-    joinTimestamp = true;
+    if (sep.equalsIgnoreCase(F("Tab"))) { separator = '\t'; }
+    else if (sep.equalsIgnoreCase(F("Comma"))) { separator = ','; }
+    else if (sep.equalsIgnoreCase(F("Semicolon"))) { separator = ';'; }
   }
 
   if (hasArg(F("jointimestamp"))) {
