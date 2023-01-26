@@ -1405,6 +1405,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_A
@@ -1538,6 +1541,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
    #ifndef USES_P148
      #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
    #endif
@@ -1603,6 +1609,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
@@ -1761,6 +1770,9 @@ To create/register a plugin, you have to :
   #endif
   #ifdef ESP8266
     #define FEATURE_CHART_JS  0
+  #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
   #endif
 #endif
 
