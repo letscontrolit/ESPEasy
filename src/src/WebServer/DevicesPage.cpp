@@ -132,6 +132,8 @@ void handle_devices() {
   taskIndex_t taskIndex       = getFormItemInt(F("index"), 0);
   boolean     taskIndexNotSet = taskIndex == 0;
 
+  const bool nosave = isFormItemChecked(F("nosave"));
+
   if (!taskIndexNotSet) {
     --taskIndex;
 //    LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
@@ -153,8 +155,12 @@ void handle_devices() {
     if (taskdevicenumber != 0) {
       // Task index has a task device number, so it makes sense to save.
       // N.B. When calling delete, the settings were already saved.
-      addHtmlError(SaveTaskSettings(taskIndex));
-      addHtmlError(SaveSettings());
+      if (nosave) {
+        Cache.updateExtraTaskSettingsCache();
+      } else {
+        addHtmlError(SaveTaskSettings(taskIndex));
+        addHtmlError(SaveSettings());
+      }
 
       struct EventStruct TempEvent(taskIndex);
       String dummy;
@@ -283,7 +289,6 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   struct EventStruct TempEvent(taskIndex);
 
   ExtraTaskSettings.clear();
-  Cache.clearTaskCaches();
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   // Save selected output type.
@@ -381,11 +386,13 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   }
   ExtraTaskSettings.clearUnusedValueNames(valueCount);
 
+  // ExtraTaskSettings has changed.
+  // The content of it is needed for sending CPLUGIN_TASK_CHANGE_NOTIFICATION and TaskInit/TaskExit events
+  Cache.updateExtraTaskSettingsCache();
+
   // allow the plugin to save plugin-specific form settings.
   {
     String dummy;
-
-    SaveTaskSettings(taskIndex);
     if (Device[DeviceIndex].ExitTaskBeforeSave) {
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
     }
@@ -400,8 +407,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     // Make sure the task needs to reload using the new settings.
     if (!Device[DeviceIndex].ExitTaskBeforeSave) {
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
-    }
+    }    
   }
+
+  // ExtraTaskSettings may have changed during PLUGIN_WEBFORM_SAVE, so again update the cache.
+  Cache.updateExtraTaskSettingsCache();
 
   // notify controllers: CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)

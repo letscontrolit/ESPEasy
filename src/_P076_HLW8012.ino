@@ -554,7 +554,7 @@ void Plugin076_SaveMultipliers() {
   if (StoredTaskIndex < 0) {
     return; // Not yet initialized.
   }
-  double hlwMultipliers[3];
+  double hlwMultipliers[3]{};
 
   if (Plugin076_ReadMultipliers(hlwMultipliers[0], hlwMultipliers[1], hlwMultipliers[2])) {
     SaveCustomTaskSettings(StoredTaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),

@@ -743,11 +743,18 @@ You must not use the task names ``Plugin``, ``var`` ``int`` as these have specia
 
 ``[Plugin#PCF#Pinstate#N]`` to get the pin state of a PCF pin.
 
+Since 2022-12-27: (Enabled for all builds with flash size > 1MB)
+
+- For GPIO, MCP or PCF pins set to PWM or SERVO output, the last set duty-cycle is returned instead of the current pin state (that was of no use).
+
+- For any plugin that registers the used pin(s), the last set pin state can be retrieved, either regular pin state or PWM state, by using this syntax: ``[Plugin#<pluginId>#Pinstate#N]``. Some plugins that use pin registration are 59 (:ref:`p059_page`), 22 (:ref:`p022_page`), 11 (:ref:`p011_page`) and 63 (:ref:`p063_page`)
+
+
 For expanders you can use also the following:
 
-``[Plugin#MCP#PinRange#x-y]`` to get the pin state of a range of MCP pins from x o y.
+``[Plugin#MCP#PinRange#x-y]`` to get the pin state of a range of MCP pins from x to y.
 
-``[Plugin#PCF#PinRange#x-y]`` to get the pin state of a range of PCF pins from x o y.
+``[Plugin#PCF#PinRange#x-y]`` to get the pin state of a range of PCF pins from x to y.
 
 ``Var`` and ``int`` are used for internal variables. 
 The variables set with the ``Let`` command will be available in rules
