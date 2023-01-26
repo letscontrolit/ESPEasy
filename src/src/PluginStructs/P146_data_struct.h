@@ -31,6 +31,8 @@ public:
   static bool setPeekFilePos(int peekFileNr,
                              int peekReadPos);
 
+  static void flush();
+
 private:
 
   String getTopic(int         index,

@@ -58,8 +58,8 @@ bool getIPallowedRange(IPAddress& low, IPAddress& high)
       }
       return getSubnetRange(low, high);
     case ONLY_IP_RANGE_ALLOWED:
-      low  = SecuritySettings.AllowedIPrangeLow;
-      high = SecuritySettings.AllowedIPrangeHigh;
+      low  = IPAddress(SecuritySettings.AllowedIPrangeLow);
+      high = IPAddress(SecuritySettings.AllowedIPrangeHigh);
       break;
     default:
       low  = IPAddress(0, 0, 0, 0);

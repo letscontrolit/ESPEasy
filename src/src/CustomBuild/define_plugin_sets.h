@@ -124,6 +124,9 @@ To create/register a plugin, you have to :
     #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS
       #define EMBED_ESPEASY_DEFAULT_MIN_CSS
     #endif
+    #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ // Use gzipped minified css (saves ~3.7 kB of .bin size)
+      #define EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ
+    #endif
   #endif
 #endif
 
@@ -434,6 +437,11 @@ To create/register a plugin, you have to :
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
     #endif
+
+    #ifdef FEATURE_POST_TO_HTTP
+      #undef FEATURE_POST_TO_HTTP
+    #endif
+    #define FEATURE_POST_TO_HTTP  0 // Disabled
 
     #ifndef PLUGIN_SET_NONE
       #define PLUGIN_SET_NONE
@@ -1397,6 +1405,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_A
@@ -1530,6 +1541,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
    #ifndef USES_P148
      #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
    #endif
@@ -1595,6 +1609,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
@@ -1753,6 +1770,9 @@ To create/register a plugin, you have to :
   #endif
   #ifdef ESP8266
     #define FEATURE_CHART_JS  0
+  #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
   #endif
 #endif
 
@@ -2162,6 +2182,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_SEND_TO_HTTP
   #endif
   #define FEATURE_SEND_TO_HTTP  0 // Disabled
+  #ifdef FEATURE_POST_TO_HTTP
+    #undef FEATURE_POST_TO_HTTP
+  #endif
+  #define FEATURE_POST_TO_HTTP  0 // Disabled
 #endif
 
 
@@ -2674,11 +2698,15 @@ To create/register a plugin, you have to :
   #define FEATURE_SEND_TO_HTTP  1 // Enabled by default
 #endif
 
+#ifndef FEATURE_POST_TO_HTTP
+  #define FEATURE_POST_TO_HTTP  1 // Enabled by default
+#endif
+
 #ifndef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
 #endif
 
-#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
+#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
   #undef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
 #endif
