@@ -715,6 +715,7 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
+    if (isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
     if (ETH_Pin_mdc == pin) return true;
     if (ETH_Pin_mdio == pin) return true;
     if (ETH_Pin_power == pin) return true;

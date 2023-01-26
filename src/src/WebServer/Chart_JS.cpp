@@ -122,16 +122,16 @@ void add_ChartJS_chart_header(
   addHtml(F("></canvas>"));
   addHtml(F("<script>const "));
   addHtml(id);
-  addHtml(F("_ctx = document.getElementById('"));
+  addHtml(F("c=document.getElementById('"));
   addHtml(id);
   addHtml(F("');const my_"));
   addHtml(id);
-  addHtml(F("_Chart = new Chart("));
+  addHtml(F("_C=new Chart("));
   addHtml(id);
-  addHtml(F("_ctx, {type: '"));
+  addHtml(F("c,{type:'"));
   addHtml(chartType);
   addHtml('\'', ',');
-  addHtml(F("options: {responsive: false,plugins: {legend: {position: 'top',},title: {display: true,text: '"));
+  addHtml(F("options:{responsive:false,plugins:{legend:{position:'top',},title:{display:true,text:'"));
   addHtml(chartTitle);
   addHtml('\'', '}'); // end title
   addHtml('}',  ','); // end plugins
@@ -141,14 +141,14 @@ void add_ChartJS_chart_header(
   }
 
   addHtml(F("},")); // end options
-  addHtml(F("data: {labels: ["));
+  addHtml(F("data:{labels:["));
 }
 
 void add_ChartJS_chart_labels(
   int       valueCount,
   const int labels[]) {
   add_ChartJS_array(valueCount, labels);
-  addHtml(F("],datasets: ["));
+  addHtml(F("],datasets:["));
 }
 
 void add_ChartJS_chart_labels(
@@ -156,7 +156,7 @@ void add_ChartJS_chart_labels(
   const String labels[])
 {
   add_ChartJS_array(valueCount, labels);
-  addHtml(F("],datasets: ["));
+  addHtml(F("],datasets:["));
 }
 
 void add_ChartJS_dataset(
@@ -198,16 +198,16 @@ void add_ChartJS_dataset_header(
   const String& color) 
 {
   addHtml('{');
-  addHtml(F("label: '"));
+  addHtml(F("label:'"));
   addHtml(label);
   addHtml('\'', ',');
-  addHtml(F("backgroundColor: '"));
+  addHtml(F("backgroundColor:'"));
   addHtml(color);
   addHtml('\'', ',');
-  addHtml(F("borderColor: '"));
+  addHtml(F("borderColor:'"));
   addHtml(color);
   addHtml('\'', ',');
-  addHtml(F("data: ["));
+  addHtml(F("data:["));
 }
 
 
@@ -216,7 +216,7 @@ void add_ChartJS_dataset_footer(bool hidden, const String& options) {
   addHtml(']', ',');
 
   if (hidden) {
-    addHtml(F("hidden: true,"));
+    addHtml(F("hidden:true,"));
   }
 
   if (!options.isEmpty()) {
