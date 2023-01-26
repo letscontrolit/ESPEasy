@@ -378,11 +378,11 @@
 
     Example using syntax format 1:
 
-    ``PostToHTTP,user:password@192.168.1.100,8888,/someurl,'header1:value1%LF%header2:value2,`{'this':{'string':'can','be':'JSON','data':{'one':1,'two':2.0,'bool':true}}}```
+    ``PostToHTTP,user:password@192.168.1.100,8888,/someurl,'header1:value1%LF%header2:value2',`{'this':{'string':'can','be':'JSON','data':{'one':1,'two':2.0,'bool':true}}}```
 
     Example using syntax format 2:
 
-    ``PostToHTTP,http://user:password@192.168.1.100:8888/someurl,'header1:value1%LF%header2:value2,`{'this':{'string':'can','be':'JSON','data':{'one':1,'two':2.0,'bool':true}}}```
+    ``PostToHTTP,http://user:password@192.168.1.100:8888/someurl,'header1:value1%LF%header2:value2',`{'this':{'string':'can','be':'JSON','data':{'one':1,'two':2.0,'bool':true}}}```
     
     On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
 
