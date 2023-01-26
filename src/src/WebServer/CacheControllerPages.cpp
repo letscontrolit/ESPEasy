@@ -26,7 +26,11 @@
 void handle_dumpcache() {
   if (!isLoggedIn()) { return; }
 
-  char separator = ';';
+  // Filters/export settings
+  char separator     = ';';
+  bool joinTimestamp = false;
+  bool onlySetTasks  = false;
+
 
   if (hasArg(F("separator"))) {
     String sep = webArg(F("separator"));
@@ -37,11 +41,39 @@ void handle_dumpcache() {
     separator = sep[0];
   }
 
-  bool joinTimestamp = false;
+  if (hasArg(F("jointimestamp"))) {
+    joinTimestamp = true;
+  }
 
   if (hasArg(F("jointimestamp"))) {
     joinTimestamp = true;
   }
+
+  if (hasArg(F("onlysettasks"))) {
+    onlySetTasks = true;
+  }
+
+
+  // Allocate a String per taskvalue instead of per task
+  // This way the small strings will hardly ever need heap allocation.
+  constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
+  String  csv_values[nrTaskValues];
+  uint8_t nrDecimals[nrTaskValues] = { 0 };
+  bool    includeTask[TASKS_MAX]   = { 0 };
+  {
+    // Initialize arrays
+    const String sep_zero = String(separator) + '0';
+
+    for (size_t i = 0; i < nrTaskValues; ++i) {
+      csv_values[i] = sep_zero;
+      nrDecimals[i] = Cache.getTaskDeviceValueDecimals(i / VARS_PER_TASK, i % VARS_PER_TASK);
+    }
+
+    for (size_t task = 0; validTaskIndex(task); ++task) {
+      includeTask[task] = onlySetTasks ? validPluginID(Settings.TaskDeviceNumber[task]) : true;
+    }
+  }
+
 
   // First backup the peek file positions.
   int peekFileNr;
@@ -70,32 +102,14 @@ void handle_dumpcache() {
     TXBuffer.startStream(F("application/octet-stream"), F("*"), 200);
   }
 
-  // Allocate a String per taskvalue instead of per task
-  // This way the small strings will hardly ever need heap allocation.
-  constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
-  String  csv_values[nrTaskValues];
-  uint8_t nrDecimals[nrTaskValues] = { 0 };
-  bool    includeTask[TASKS_MAX]   = { 0 };
-  {
-    // Initialize arrays
-    const String sep_zero = String(separator) + '0';
-
-    for (size_t i = 0; i < nrTaskValues; ++i) {
-      csv_values[i] = sep_zero;
-      nrDecimals[i] = Cache.getTaskDeviceValueDecimals(i / VARS_PER_TASK, i % VARS_PER_TASK);
-    }
-
-    for (size_t task = 0; validTaskIndex(task); ++task) {
-      includeTask[task] = Settings.TaskDeviceEnabled[task];
-    }
-  }
-
-
   {
     // CSV header
     String header(F("UNIX timestamp;UTC timestamp"));
 
-    if (!joinTimestamp) {
+    if (joinTimestamp) {
+      // Add column with nr of joined samples
+      header += F(";nrJoinedSamples");
+    } else {
       // Does not make sense to have taskindex and plugin ID
       // in a table where separate samples may have been combined.
       header += F(";taskindex;plugin ID");
@@ -121,19 +135,26 @@ void handle_dumpcache() {
   // Fetch samples from Cache Controller bin files.
   C016_binary_element element;
 
-  uint32_t lastTimestamp   = 0;
-  bool     csv_values_left = false;
+  uint32_t lastTimestamp = 0;
+  int csv_values_left    = 0;
 
   while (C016_getTaskSample(element)) {
     if (!joinTimestamp || (lastTimestamp != static_cast<uint32_t>(element._timestamp))) {
       // Flush the collected CSV values
-      if (csv_values_left) {
+      if (csv_values_left > 0) {
+        if (joinTimestamp) {
+          // Add column with nr of joined samples
+          addHtml(';');
+          addHtmlInt(csv_values_left);
+        }
+
         for (size_t i = 0; i < nrTaskValues; ++i) {
           if (includeTask[i / VARS_PER_TASK]) {
             addHtml(csv_values[i]);
           }
         }
         addHtml('\r', '\n');
+        csv_values_left = 0;
       }
 
       // Start writing a new line in the CSV file
@@ -151,9 +172,9 @@ void handle_dumpcache() {
         addHtmlInt(element.pluginID);
       }
 
-      lastTimestamp   = static_cast<uint32_t>(element._timestamp);
-      csv_values_left = true;
+      lastTimestamp = static_cast<uint32_t>(element._timestamp);
     }
+    ++csv_values_left;
 
     // Collect the task values for this row in the CSV
     size_t valindex = element.TaskIndex * VARS_PER_TASK;
@@ -170,7 +191,13 @@ void handle_dumpcache() {
     }
   }
 
-  if (csv_values_left) {
+  if (csv_values_left > 0) {
+    if (joinTimestamp) {
+      // Add column with nr of joined samples
+      addHtml(';');
+      addHtmlInt(csv_values_left);
+    }
+
     for (size_t i = 0; i < nrTaskValues; ++i) {
       if (includeTask[i / VARS_PER_TASK]) {
         addHtml(csv_values[i]);
