@@ -305,7 +305,7 @@ void handle_root() {
         html_TD();
 
         if (isThisUnit) {
-          addHtml(Settings.getUnitname());
+          addHtml(Settings.getName());
         }
         else {
           addHtml(it->second.getNodeName());

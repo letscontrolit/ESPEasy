@@ -573,7 +573,7 @@ String SettingsStruct_tmpl<N_TASKS>::getHostname() const {
 
 template<unsigned int N_TASKS>
 String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
-  String hostname = this->getUnitname();
+  String hostname = this->getName();
 
   if ((this->Unit != 0) && appendUnit) { // only append non-zero unit number
     hostname += '_';
@@ -583,7 +583,7 @@ String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
 }
 
 template<unsigned int N_TASKS>
-String SettingsStruct_tmpl<N_TASKS>::getUnitname() const {
+String SettingsStruct_tmpl<N_TASKS>::getName() const {
   String unitname = this->Name;
   return parseTemplate(unitname);
 }

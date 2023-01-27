@@ -324,7 +324,7 @@ void handle_json()
           addHtml('{');
           stream_next_json_object_value(F("nr"), it->first);
           stream_next_json_object_value(F("name"),
-                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.getUnitname());
+                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.getName());
 
           if (it->second.build) {
             stream_next_json_object_value(F("build"), formatSystemBuildNr(it->second.build));
@@ -541,7 +541,7 @@ void handle_nodes_list_json() {
       }
 
       json_number(F("first"), String(it->first));
-      json_prop(F("name"), isThisUnit ? Settings.getUnitname() : it->second.getNodeName());
+      json_prop(F("name"), isThisUnit ? Settings.getName() : it->second.getNodeName());
 
       if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
       json_prop(F("type"), it->second.getNodeTypeDisplayString());

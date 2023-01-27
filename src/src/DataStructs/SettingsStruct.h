@@ -199,7 +199,7 @@ class SettingsStruct_tmpl
   String getHostname(bool appendUnit) const;
 
   // Return the name of the unit, without unitnr appended, with template parsing applied, replacement for Settings.Name in most places
-  String getUnitname() const;
+  String getName() const;
 
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);

@@ -32,7 +32,7 @@ void handle_download()
   }
 
   String str = F("attachment; filename=config_");
-  str += Settings.getUnitname();
+  str += Settings.getName();
   str += F("_U");
   str += Settings.Unit;
   str += F("_Build");
