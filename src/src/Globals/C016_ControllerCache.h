@@ -5,34 +5,38 @@
 
 #ifdef USES_C016
 
-#include <Arduino.h>
-#include "../DataStructs/ESPEasyControllerCache.h"
-#include "../DataStructs/DeviceStruct.h"
+# include <Arduino.h>
+# include "../DataStructs/ESPEasyControllerCache.h"
+# include "../DataStructs/ESPEasy_EventStruct.h"
+# include "../DataStructs/DeviceStruct.h"
+# include "../ControllerQueue/C016_queue_element.h"
 
 extern ControllerCache_struct ControllerCache;
 
-//********************************************************************************
+// ********************************************************************************
 // Helper functions used in the webserver to access the cache data
-//********************************************************************************
-bool C016_startCSVdump();
+// ********************************************************************************
+void   C016_flush();
 
-String C016_getCacheFileName(bool& islast);
+bool   C016_CacheInitialized();
 
-bool C016_deleteOldestCacheBlock();
+String C016_getCacheFileName(int & fileNr,
+                             bool& islast);
 
-bool C016_deleteAllCacheBlocks();
+bool   C016_deleteOldestCacheBlock();
 
-bool C016_getCSVline(
+bool   C016_deleteAllCacheBlocks();
+
+bool   C016_getTaskSample(C016_binary_element& element);
+
+struct EventStruct C016_getTaskSample(
   unsigned long& timestamp,
-  uint8_t& controller_idx,
-  uint8_t& TaskIndex,
-  Sensor_VType& sensorType,
-  uint8_t& valueCount,
-  float& val1,
-  float& val2,
-  float& val3,
-  float& val4);
+  uint8_t      & valueCount,
+  float        & val1,
+  float        & val2,
+  float        & val3,
+  float        & val4);
 
-#endif
+#endif // ifdef USES_C016
 
-#endif
+#endif // ifndef GLOBALS_C016_CONTROLLERCACHE_H

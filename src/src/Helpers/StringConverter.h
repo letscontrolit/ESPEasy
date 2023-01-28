@@ -10,7 +10,7 @@
 
 #include "../Helpers/Convert.h"
 
-class IPAddress;
+#include <IPAddress.h>
 
 // -V::569
 
@@ -126,6 +126,9 @@ const __FlashStringHelper * boolToString(bool value);
    Typical string replace functions.
 \*********************************************************************************************/
 void   removeExtraNewLine(String& line);
+
+// Remove all occurences of given character from the string
+void   removeChar(String& line, char character);
 
 void   addNewLine(String& line);
 

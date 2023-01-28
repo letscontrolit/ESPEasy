@@ -56,7 +56,8 @@
 #define PLUGIN_INIT_VALUE_RANGES           44 // Initialize the ranges of values, called just before PLUGIN_INIT
 #define PLUGIN_READ_ERROR_OCCURED          45 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
 #define PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR 46 // Show the configuration for output type and what value to set to which taskvalue
-#define PLUGIN_WEBFORM_PRE_SERIAL_PARAMS   47 // Before serial parameters, convert additional parameters like baudrate or specific serial config
+#define PLUGIN_PROCESS_CONTROLLER_DATA     47 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
+#define PLUGIN_WEBFORM_PRE_SERIAL_PARAMS   48 // Before serial parameters, convert additional parameters like baudrate or specific serial config
 
 
 

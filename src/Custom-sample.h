@@ -222,6 +222,7 @@
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 // #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
+// #define FEATURE_POST_TO_HTTP 1 // Enable availability of the PostToHTTP command
 
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -473,6 +474,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
 // #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+// #define USES_P138   // IP5306
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
 // #define USES_P143   // I2C Rotary encoders
 // #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
