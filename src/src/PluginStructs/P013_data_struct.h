@@ -12,11 +12,13 @@
 # ifdef ESP8266_1M // Exclude trigger-width feature on size-restricted builds
 #  define P013_FEATURE_TRIGGERWIDTH   0
 #  define P013_FEATURE_INTERVALEVENT  0
+#  define P013_FEATURE_COMBINED_MODE  0
 #  define P013_EXTENDED_LOG           0
 # endif // ifdef ESP8266_1M
 # ifndef P013_FEATURE_TRIGGERWIDTH
 #  define P013_FEATURE_TRIGGERWIDTH   1 // Enabled by default
 #  define P013_FEATURE_INTERVALEVENT  1
+#  define P013_FEATURE_COMBINED_MODE  1
 #  define P013_EXTENDED_LOG           1
 # endif // ifndef P013_FEATURE_TRIGGERWIDTH
 
@@ -24,6 +26,7 @@
 // operatingMode
 # define OPMODE_VALUE        (0)
 # define OPMODE_STATE        (1)
+# define OPMODE_COMBINED     (2)
 
 // measuringUnit
 # define UNIT_CM             (0)

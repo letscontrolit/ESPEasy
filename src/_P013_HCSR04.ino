@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-01-28 tonhuisman: Add Combined mode, as started in https://github.com/letscontrolit/ESPEasy/pull/3157
  * 2023-01-20 tonhuisman: Limit trigger-range to 10-20 usec. (20 already seems to be on the high side)
  *                        Reduce build-size by disabling new features on 1M builds and leaving out some non-essential messages
  *                        Move #define stuff and #includes to src/PluginStructs/P013_data_struct.h
@@ -20,6 +21,7 @@
 # define PLUGIN_ID_013        13
 # define PLUGIN_NAME_013       "Position - HC-SR04, RCW-0001, etc."
 # define PLUGIN_VALUENAME1_013 "Distance"
+# define PLUGIN_VALUENAME2_013 "Switch"
 
 # include "src/PluginStructs/P013_data_struct.h"
 
@@ -62,6 +64,9 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_013));
+      # if P013_FEATURE_COMBINED_MODE
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_013));
+      # endif // if P013_FEATURE_COMBINED_MODE
       break;
     }
 
@@ -71,6 +76,23 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       event->String2 = formatGpioName_input(F("Echo, 5V"));
       break;
     }
+
+    # if P013_FEATURE_COMBINED_MODE
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P013_OPERATINGMODE == OPMODE_COMBINED ? 2 : 1;
+      success     = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(P013_OPERATINGMODE == OPMODE_COMBINED ? 2 : 1);
+      event->idx        = P013_OPERATINGMODE == OPMODE_COMBINED ? 2 : 1;
+      success           = true;
+      break;
+    }
+    # endif // if P013_FEATURE_COMBINED_MODE
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -87,15 +109,34 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       const __FlashStringHelper *strUnit = (P013_MEASURINGUNIT == UNIT_CM) ? F("cm") : F("inch");
 
       {
-        const int optionValuesOpMode[] = { OPMODE_VALUE, OPMODE_STATE };
+        const int optionValuesOpMode[] = {
+          OPMODE_VALUE,
+          OPMODE_STATE,
+          # if P013_FEATURE_COMBINED_MODE
+          OPMODE_COMBINED,
+          # endif // if P013_FEATURE_COMBINED_MODE
+        };
         const __FlashStringHelper *optionsOpMode[] {
           F("Value"),
           F("State"),
+          # if P013_FEATURE_COMBINED_MODE
+          F("Combined"),
+          # endif // if P013_FEATURE_COMBINED_MODE
         };
-        addFormSelector(F("Mode"), F("pmode"), 2, optionsOpMode, optionValuesOpMode, P013_OPERATINGMODE);
+        addFormSelector(F("Mode"), F("pmode"),
+                        # if P013_FEATURE_COMBINED_MODE
+                        3
+                        # else // if P013_FEATURE_COMBINED_MODE
+                        2
+                        # endif // if P013_FEATURE_COMBINED_MODE
+                        , optionsOpMode, optionValuesOpMode, P013_OPERATINGMODE);
       }
 
-      if (P013_OPERATINGMODE == OPMODE_STATE) {
+      if ((P013_OPERATINGMODE == OPMODE_STATE)
+          # if P013_FEATURE_COMBINED_MODE
+          || (P013_OPERATINGMODE == OPMODE_COMBINED)
+          # endif // if P013_FEATURE_COMBINED_MODE
+          ) {
         # if P013_FEATURE_INTERVALEVENT
         addFormCheckBox(F("State event (also) on Interval"), F("pevent"), P013_SEND_STATE_VALUE == 0);
         # endif // if P013_FEATURE_INTERVALEVENT
@@ -147,7 +188,11 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
       P013_OPERATINGMODE = getFormItemInt(F("pmode"));
 
-      if (prevOperatingMode == OPMODE_STATE) {
+      if ((prevOperatingMode == OPMODE_STATE)
+          # if P013_FEATURE_COMBINED_MODE
+          || (prevOperatingMode == OPMODE_COMBINED)
+          # endif // if P013_FEATURE_COMBINED_MODE
+          ) {
         # if P013_FEATURE_INTERVALEVENT
         P013_SEND_STATE_VALUE = isFormItemChecked(F("pevent")) ? 0 : 1; // Inverted state
         # endif // if P013_FEATURE_INTERVALEVENT
@@ -239,7 +284,11 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
     case PLUGIN_READ: // If we select value mode, read and send the value based on global timer
     {
-      if (P013_OPERATINGMODE == OPMODE_VALUE) {
+      if ((P013_OPERATINGMODE == OPMODE_VALUE)
+          # if P013_FEATURE_COMBINED_MODE
+          || (P013_OPERATINGMODE == OPMODE_COMBINED)
+          # endif // if P013_FEATURE_COMBINED_MODE
+          ) {
         const float value = Plugin_013_read(event);
         UserVar[event->BaseVarIndex] = value;
 
@@ -276,7 +325,11 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
     case PLUGIN_TEN_PER_SECOND: // If we select state mode, do more frequent checks and send only state changes
     {
-      if (P013_OPERATINGMODE == OPMODE_STATE) {
+      if ((P013_OPERATINGMODE == OPMODE_STATE)
+          # if P013_FEATURE_COMBINED_MODE
+          || (P013_OPERATINGMODE == OPMODE_COMBINED)
+          # endif // if P013_FEATURE_COMBINED_MODE
+          ) {
         uint8_t state     = 0;
         const float value = Plugin_013_read(event);
 
