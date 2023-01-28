@@ -3,7 +3,7 @@
 .. |P070_type| replace:: :cyan:`Output`
 .. |P070_typename| replace:: :cyan:`Output -  NeoPixel Ring Clock`
 .. |P070_porttype| replace:: `.`
-.. |P070_status| replace:: :yellow:`NEOPIXEL, COLLECTION A`
+.. |P070_status| replace:: :yellow:`NEOPIXEL` :yellow:`COLLECTION A`
 .. |P070_github| replace:: P070_NeoPixel_Clock.ino
 .. _P070_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P070_NeoPixel_Clock.ino
 .. |P070_usedby| replace:: `.`
@@ -68,7 +68,7 @@
 .. |P075_type| replace:: :cyan:`Display`
 .. |P075_typename| replace:: :cyan:`Display - Nextion`
 .. |P075_porttype| replace:: `.`
-.. |P075_status| replace:: :yellow:`DISPLAY, COLLECTION`
+.. |P075_status| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION`
 .. |P075_github| replace:: P075_Nextion.ino
 .. _P075_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P075_Nextion.ino
 .. |P075_usedby| replace:: `.`

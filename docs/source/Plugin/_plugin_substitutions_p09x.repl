@@ -38,7 +38,7 @@
 .. |P093_name| replace:: :cyan:`Mitsubishi Heat Pump`
 .. |P093_type| replace:: :cyan:`Energy (Heat)`
 .. |P093_typename| replace:: :cyan:`Energy (Heat) - Mitsubishi Heat Pump`
-.. |P093_status| replace:: :yellow:`ENERGY, COLLECTION D`
+.. |P093_status| replace:: :yellow:`ENERGY` :yellow:`COLLECTION D`
 .. |P093_github| replace:: P093_MitsubishiHP.ino
 .. _P093_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P093_MitsubishiHP.ino
 .. |P093_usedby| replace:: `.`
@@ -63,7 +63,7 @@
 .. |P095_type| replace:: :cyan:`Display`
 .. |P095_typename| replace:: :cyan:`Display - TFT ILI934x/ILI948x`
 .. |P095_porttype| replace:: `.`
-.. |P095_status| replace:: :yellow:`DISPLAY, COLLECTION`
+.. |P095_status| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION`
 .. |P095_github| replace:: _P095_ILI9341.ino
 .. _P095_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P095_ILI9341.ino
 .. |P095_usedby| replace:: `.`

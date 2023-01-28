@@ -67,7 +67,7 @@
 .. |P137_type| replace:: :cyan:`Power mgt`
 .. |P137_typename| replace:: :cyan:`Power mgt - AXP192 Power management ESP32`
 .. |P137_porttype| replace:: `.`
-.. |P137_status| replace:: :yellow:`COLLECTION, DISPLAY, ENERGY, NEOPIXEL`
+.. |P137_status| replace:: :yellow:`COLLECTION` :yellow:`DISPLAY` :yellow:`ENERGY` :yellow:`NEOPIXEL`
 .. |P137_github| replace:: P137_AXP192.ino
 .. _P137_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P137_AXP192.ino
 .. |P137_usedby| replace:: `.`
