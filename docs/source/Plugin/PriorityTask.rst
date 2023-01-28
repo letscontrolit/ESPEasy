@@ -35,6 +35,10 @@ When viewing the log during startup, these extra log messages are available at t
   
   An enabled Priority task can not be disabled, or re-enabled, using the ``TaskEnable,<task>`` and ``TaskDisable,<task>`` commands, to avoid hardware dead-lock situations.
 
+.. note::
+
+  When a Priority task is enabled, on the Hardware tab the I2C GPIO configuration can not be changed anymore, as that could inhibit the correct working of the related plugin, and block the entire ESP unit from working as intended.
+
 Now that the Power management controller is enabled and configured as a Priority task, the dependent hardware can be configured, in this case the SPI controller on the Hardware page.
 
 After configuring the SPI settings, any Device that needs the SPI interface, like a TFT controller, can be configured as usual. Configuring the SPI settings may require to reset or power cycle the device.
