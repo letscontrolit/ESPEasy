@@ -112,6 +112,14 @@
 
     ``Debug,<1-4>``"
     "
+    Dec","
+    :red:`Internal`","
+    Decrement the value of variable n (1..INT_MAX) by 1 or an optional value.
+
+    ``Dec,<n>[,<value>]`` (``value`` = 1 by default)
+    
+    See also ``Let`` and ``Inc``."
+    "
     DeepSleep","
     :red:`Internal`","
     Switch the node to deep sleep.
@@ -191,6 +199,14 @@
 
     "
     "
+    Inc","
+    :red:`Internal`","
+    Increment the value of variable n (1..INT_MAX) by 1 or an optional value.
+
+    ``Inc,<n>[,<value>]`` (``value`` = 1 by default)
+    
+    See also ``Let`` and ``Dec``."
+    "
     IP","
     :red:`Internal`","
     Get or set IP address
@@ -203,9 +219,11 @@
     "
     Let","
     :red:`Internal`","
-    Set the value of n (1..16).
+    Set the value of variable n (1..INT_MAX).
 
-    ``Let,<n>,<value>``"
+    ``Let,<n>,<value>``
+    
+    See also ``Inc`` and ``Dec``."
     "
     Load","
     :red:`Internal`","
@@ -299,12 +317,77 @@
 
     ``Name,<new name>``"
     "
+    NTPHost[,<host-name_or_ip>]","
+    :red:`Internal`","
+    Set the name of the NTP-host
+
+    ``NTPHost,192.168.1.1`` -> Set an IP for the NTP host (local NTP server)
+    
+    ``NTPHost,""`` or ``NTPHost,`` -> Clear the NTP host so a default host from pool.ntp.org will be used. (As second argument *is* provided but empty.)"
+    "
     Password","
     :red:`Internal`","
     Set the password of the unit.
     See also ``ClearPassword``.
 
     ``Password,<new password>``"
+    "
+    PostToHTTP","
+    :green:`Rules`","
+    *Syntax format 1:*
+
+    ``PostToHTTP,[<user>:<password>@]<host>,<port>,<uri>,[<headers>][,<postdata>]``
+
+    Post a command to other network device via HTTP using the http ``POST`` method.
+
+    ``<host>`` can be either a domain name or IP address.
+
+    ``<port>`` is the port to connect to, usually 80 for a HTTP site.
+
+    ``<uri>`` the path on the server to post the message to.
+
+    *Syntax format 2:*
+
+    ``PostToHTTP,http://[<user>:<password>@]<url>,[<headers>][,<postdata>]``
+
+    ``<url>`` is the full hostname (or IP address) and path on the server to post the content to.
+
+    *For both syntax formats:*
+
+    ``<user>`` is an optional user to supply for Basic authentication.
+
+    ``<password>`` is an optional password to supply for Basic authentication.
+
+    ``<headers>`` when provided will be added to the header of the ``POST`` message, has to be in ``<name>:<value>`` format. Can be used to supply a ``Authorization: Bearer <token>`` and/or ``api-key:<key>`` (instead of a user/password Basic authentication) and a ``Content-Type: <content-type>``. Multiple entries have to be separated by a NewLine (``%LF%``) to be processed correctly. When not used (empty) and ``<postdata>`` *is used*, the comma should still be included!
+
+    ``<postdata>`` is the optional content to include in the ``POST`` message. Can be anything, f.e. a JSON formatted string, like in the example below.
+
+    Syntax examples:
+
+    ``PostToHTTP,<host>,<Portnumber>,<uri>,[<headers>][,<postdata>]``
+
+    ``PostToHTTP,<user>:<pass>@<host>,<Portnumber>,<uri>,[<headers>][,<postdata>]``
+
+    ``PostToHTTP,http://<host>/<url>,[<headers>][,<postdata>]``
+
+    ``PostToHTTP,http://<user>:<pass>@<host>/<url>,[<headers>][,<postdata>]``
+
+    ``PostToHTTP,http://<host>:<Portnumber>/<url>,[<headers>][,<postdata>]``
+    
+    ``PostToHTTP,http://<user>:<pass>@<host>:<Portnumber>/<url>,[<headers>][,<postdata>]``
+
+    Example using syntax format 1:
+
+    ``PostToHTTP,user:password@192.168.1.100,8888,/someurl,'header1:value1%LF%header2:value2',`{'this':{'string':'can','be':'JSON','data':{'one':1,'two':2.0,'bool':true}}}```
+
+    Example using syntax format 2:
+
+    ``PostToHTTP,http://user:password@192.168.1.100:8888/someurl,'header1:value1%LF%header2:value2',`{'this':{'string':'can','be':'JSON','data':{'one':1,'two':2.0,'bool':true}}}```
+    
+    On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
+
+    Added: 2023-01-15
+    "
     "
     ProvisionConfig","
     :red:`Internal`","
@@ -395,13 +478,13 @@
 
     ``SendToHTTP,<user>:<pass>@<host>,<Portnumber>,<uri>``  Added: 2022/07/23
 
-    ``SendToHTTP,http://<host>/</url>``  Added: 2022/07/23
+    ``SendToHTTP,http://<host>/<url>``  Added: 2022/07/23
 
-    ``SendToHTTP,http://<user>:<pass>@<host>/</url>``  Added: 2022/07/23
+    ``SendToHTTP,http://<user>:<pass>@<host>/<url>``  Added: 2022/07/23
 
-    ``SendToHTTP,http://<host>:<Portnumber>/</url>``  Added: 2022/07/23
+    ``SendToHTTP,http://<host>:<Portnumber>/<url>``  Added: 2022/07/23
     
-    ``SendToHTTP,http://<user>:<pass>@<host>:<Portnumber>/</url>``  Added: 2022/07/23
+    ``SendToHTTP,http://<user>:<pass>@<host>:<Portnumber>/<url>``  Added: 2022/07/23
 
     Example:
 

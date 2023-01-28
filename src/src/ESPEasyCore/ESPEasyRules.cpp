@@ -463,6 +463,41 @@ void parse_string_commands(String& line) {
             && arg2valid) {
           replacement = arg3.substring(startpos, endpos);
         }
+      } else if (cmd_s_lower.equals(F("indexof")) || cmd_s_lower.equals(F("indexof_ci"))) {
+        // indexOf arduino style (0-based position of first char returned, -1 if not found, case sensitive), 3rd argument is search-offset
+        // indexOf_ci : case-insensitive
+        // Syntax like {indexof:HELLO:"ANOTHER HELLO WORLD"} => 8, {indexof:hello:"ANOTHER HELLO WORLD"} => -1, {indexof_ci:Hello:"ANOTHER HELLO WORLD"} => 8
+        // or like {indexof_ci:hello:"ANOTHER HELLO WORLD":10} => -1
+
+        if (!arg1.isEmpty()
+            && !arg2.isEmpty()) {
+          unsigned int offset = 0;
+          validUIntFromString(arg3, offset);
+          bool caseInsensitive = cmd_s_lower.endsWith(F("_ci"));
+          if (caseInsensitive) {
+            String arg1copy(arg1);
+            String arg2copy(arg2);
+            arg1copy.toLowerCase();
+            arg2copy.toLowerCase();
+            replacement = arg2copy.indexOf(arg1copy, offset);
+          } else {
+            replacement = arg2.indexOf(arg1, offset);
+          }
+        }
+      } else if (cmd_s_lower.equals(F("equals")) || cmd_s_lower.equals(F("equals_ci"))) {
+        // equals: compare strings 1 = equal, 0 = unequal (case sensitive)
+        // equals_ci: case-insensitive compare
+        // Syntax like {equals:HELLO:HELLO} => 1, {equals:hello:HELLO} => 0, {equals_ci:hello:HELLO} => 1, {equals_ci:hello:BLA} => 0
+
+        if (!arg1.isEmpty()
+            && !arg2.isEmpty()) {
+          bool caseInsensitive = cmd_s_lower.endsWith(F("_ci"));
+          if (caseInsensitive) {
+            replacement = arg2.equalsIgnoreCase(arg1);
+          } else {
+            replacement = arg2.equals(arg1);
+          }
+        }
       // #ifndef LIMIT_BUILD_SIZE
       } else if (cmd_s_lower.equals(F("timetomin")) || cmd_s_lower.equals(F("timetosec"))) {
         // time to minutes, transform a substring hh:mm to minutes
@@ -780,6 +815,7 @@ void processMatchedRule(String& action, const String& event,
   String lcAction = action;
 
   lcAction.toLowerCase();
+  lcAction.trim();
 
   if (fakeIfBlock) {
     isCommand = false;
@@ -790,7 +826,7 @@ void processMatchedRule(String& action, const String& event,
     }
   }
   int split =
-    lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
+    lcAction.startsWith(F("elseif ")) ? 0 : -1; // check for optional "elseif" condition
 
   if (split != -1) {
     // Found "elseif" condition
@@ -822,7 +858,7 @@ void processMatchedRule(String& action, const String& event,
     }
   } else {
     // check for optional "if" condition
-    split = lcAction.indexOf(F("if "));
+    split = lcAction.startsWith(F("if ")) ? 0 : -1;
 
     if (split != -1) {
       if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {

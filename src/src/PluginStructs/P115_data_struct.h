@@ -11,10 +11,9 @@
 struct P115_data_struct : public PluginTaskData_base {
 public:
 
-  P115_data_struct(uint8_t                i2c_addr,
-                   sfe_max1704x_devices_e device,
+  P115_data_struct(sfe_max1704x_devices_e device,
                    int                    threshold);
-  P115_data_struct() = delete;
+  P115_data_struct()          = delete;
   virtual ~P115_data_struct() = default;
 
   bool begin();

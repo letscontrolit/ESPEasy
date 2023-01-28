@@ -35,7 +35,7 @@ Starting October 2019, Python 3.x is supported in all build tools we use for ESP
 Please follow `these steps <https://docs.platformio.org/en/latest/faq.html#faq-install-python>`_ to 
 install Pyton in Windows for PlatformIO.
 
-**Do not forget to check "Add Python xxx to PATH".**
+.. warning:: Do not forget to check "Add Python xxx to PATH".
 
 .. Windows ExecutionPolicy
 .. -----------------------
@@ -141,18 +141,20 @@ For example:
 Make a custom build using PlatformIO
 ------------------------------------
 
-The easiest is to go for the environment "custom_ESP8266_4M1M" and unfold that one.
-Then select "Build" to see if it will start building.
+The easiest is to go for the environment ``custom_ESP8266_4M1M`` and unfold that one.
+Then select ``Build`` to see if it will start building.
 
-If that's working, you can open the file "pre_custom_esp8266.py" and add or remove the plugins and controllers you need.
-That Python file is used in the "env:custom_ESP8266_4M1M" (or any "custom" ESP8266 build environment) to define what should be embedded and what not.
+If that's working, you can open the file ``pre_custom_esp8266.py`` and add or remove the plugins and controllers you need.
+That Python file is used in the ``env:custom_ESP8266_4M1M`` (or any ``custom`` build environment) to define what should be embedded and what not.
 
-For example to have only the controller "C014", you can remove "CONTROLLER_SET_ALL", and just add "USES_C014", 
+For example to have only the controller ``C014``, you can remove ``CONTROLLER_SET_ALL``, and just add ``USES_C014``, 
 The same for the plugins you need.
 
-The file is built in the ".pio/build/...." directory right under the main repository directory (the one with the platformio.ini in it)
+The file is built in the ``.pio/build/....`` directory right under the main repository directory (the one with the platformio.ini in it)
 
-Instead of modifying "pre_custom_esp8266.py" (or "pre_custom_esp32.py" for that matter), one can also copy "src/Custom-sample.h" to "src/Custom.h" and make the desired changed in this file. This file is excluded from Github, so can be adjusted to your own requirements. When the Custom.h file is there (mind the uppercase C!), it will be used by the build scripts instead of the defaults set by "pre_custom_esp8266.py" (or "pre_custom_esp32.py").
+Instead of modifying ``pre_custom_esp8266.py`` (or ``pre_custom_esp32.py`` for that matter), one can also copy ``src/Custom-sample.h`` to ``src/Custom.h`` and make the desired changed in this file. This file is excluded from Github, so can be adjusted to your own requirements. When the Custom.h file is there (mind the uppercase C!), it will be used by the build scripts instead of the defaults set by ``pre_custom_esp8266.py`` (or ``pre_custom_esp32.py``).
+
+.. note:: Custom IR builds have their own ``pre_custom_esp8266_IR.py`` or ``pre_custom_esp32_IR.py`` file.
 
 All builds will be made in a directory with the same name as the environment used.
 

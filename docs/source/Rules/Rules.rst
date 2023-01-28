@@ -725,8 +725,27 @@ If none is set, "No variables set" will be shown.
 
 If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
 
-.. note: Interval variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without loosing power), please use a dummy task for this.
+.. note:: Internal variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without losing power), please use a dummy task for this.
 
+
+Task-specific settings
+----------------------
+
+(Added 2022-12-17)
+
+For retrieving some generic task-specific settings, below variables have been added. They can be formatted using the :ref:`Formatting referred values <Formatting values>` options.
+
+``[<TaskName>#settings.enabled]`` to get the enabled/disabled state (1/0) for a specific task (by name only)
+
+``[<TaskName>#settings.interval]`` to get the Interval setting for the named task. Possible range = 0..65535.
+
+``[<TaskName>#settings.valuecount]`` to get the number of values, available in the named task. Range: 0..4. For tasks with a configurable number of values, like the SysInfo plugin, it will return the *currently* set number of values.
+
+``[<TaskName>#settings.controllerN.enabled]`` to get the enabled/disabled state (1/0) for controller N (1..3) of the named task. The controller has to be enabled too, to return an enabled state!
+
+``[<TaskName>#settings.controllerN.idx]`` to get the Idx value for controller N (1..3) of the named task, when supported by that Controller. The controller has to be enabled too, to return an idx!
+
+These settings will be returned independent of the task being enabled or disabled, as that state can be retrieved separately.
 
 
 Special task names
@@ -741,11 +760,18 @@ You must not use the task names ``Plugin``, ``var`` ``int`` as these have specia
 
 ``[Plugin#PCF#Pinstate#N]`` to get the pin state of a PCF pin.
 
+Since 2022-12-27: (Enabled for all builds with flash size > 1MB)
+
+- For GPIO, MCP or PCF pins set to PWM or SERVO output, the last set duty-cycle is returned instead of the current pin state (that was of no use).
+
+- For any plugin that registers the used pin(s), the last set pin state can be retrieved, either regular pin state or PWM state, by using this syntax: ``[Plugin#<pluginId>#Pinstate#N]``. Some plugins that use pin registration are 59 (:ref:`p059_page`), 22 (:ref:`p022_page`), 11 (:ref:`p011_page`) and 63 (:ref:`p063_page`)
+
+
 For expanders you can use also the following:
 
-``[Plugin#MCP#PinRange#x-y]`` to get the pin state of a range of MCP pins from x o y.
+``[Plugin#MCP#PinRange#x-y]`` to get the pin state of a range of MCP pins from x to y.
 
-``[Plugin#PCF#PinRange#x-y]`` to get the pin state of a range of PCF pins from x o y.
+``[Plugin#PCF#PinRange#x-y]`` to get the pin state of a range of PCF pins from x to y.
 
 ``Var`` and ``int`` are used for internal variables. 
 The variables set with the ``Let`` command will be available in rules
@@ -805,10 +831,10 @@ N.B. these extra quotes are removed from the parameter when used, as well as tra
 The reason this behavior was changed from before 2019/11 was that the old implementation could lead to unpredictable results.
 
 
-Formatting refered values
--------------------------
-
 .. _Formatting values:
+
+Formatting referred values
+--------------------------
 
 When referring another value, some basic formatting can be used.
 
@@ -937,6 +963,56 @@ For example (bit useless example, just for illustrative purposes):
  221350 : Info  : ACT  : logentry,87
  221351 : Info  : Command: logentry
  221353 : Info  : 87
+
+IndexOf and IndexOf_ci
+^^^^^^^^^^^^^^^^^^^^^^
+
+Determining the position of a substring in a string, using the Arduino ``indexOf()`` function.
+
+Usage:
+
+* ``{indexof:<substring>:<string_to_search_in>[:<offset>]}``  Determine the position of ``substring`` within ``string_to_search_in``, starting from the optional 0-based ``offset``, 0-based result, -1 if not found.
+* ``{indexof_ci:<substring>:<string_to_search_in>[:<offset>]}``  Determine the position of ``substring`` within ``string_to_search_in``, starting from the optional 0-based ``offset``, 0-based result, -1 if not found. This command ignores the character case.
+
+String values containing spaces or commas have to be wrapped in quotes.
+
+Example:
+
+.. code-block:: none
+
+  on HandleCommands#* do // syntax: event,handleCommands#run=parameters
+    if {indexof_ci:run:%eventpar%}=0 // command starts with 'run'
+      LogEntry,'Running command: %eventpar% with arguments: %eventvalue0%'
+      if {indexof:Admin:%eventpar%:3}=3 // command is 'runAdmin', demonstrating the use of an offset, and case-sensitive
+        LogEntry,'Run command as Admin: %eventpar% with arguments: %eventvalue0%'
+      endif
+    endif
+  endon
+
+Equals and Equals_ci
+^^^^^^^^^^^^^^^^^^^^
+
+Compare 2 string values to determine equality, optionally case-insensitive.
+
+Usage:
+
+* ``{equals:<string1>:<string2>``  Compare ``string1`` and ``string2`` for equality, returns 1 for equal and 0 for inequal.
+* ``{equals_ci:<string1>:<string2>``  Compare ``string1`` and ``string2`` for equality, returns 1 for equal and 0 for inequal. Ignore character case.
+
+String values containing spaces or commas have to be wrapped in quotes.
+
+Example:
+
+.. code-block:: none
+
+  on HandleCommands#* do // syntax: event,handleCommands#start=parameters or event,handleCommands#stop=parameters
+    if {equals_ci:start:%eventpar%}=1 and {equals:GO:`%eventvalue1%`} // command is 'start=GO' (eventvalue1 can contain spaces or commas, so quoted using back-ticks)
+      LogEntry,'Starting with arguments: %eventvalue0%'
+    elseif {equals_ci:stop:%eventpar%}=1 // command is 'stop', not case-sensitive
+      LogEntry,'Stopping with arguments: %eventvalue0%'
+    endif
+  endon
+
 
 strtol
 ^^^^^^

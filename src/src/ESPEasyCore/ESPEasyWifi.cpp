@@ -21,6 +21,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
+#include "../Helpers/StringProvider.h"
 
 #ifdef ESP32
 #include <WiFiGeneric.h>
@@ -1039,7 +1040,13 @@ void WifiScan(bool async, uint8_t channel) {
       processScanDone();
     }
   }
-  STOP_TIMER(async ? WIFI_SCAN_ASYNC : WIFI_SCAN_SYNC);
+#if FEATURE_TIMING_STATS
+  if (async) {
+    STOP_TIMER(WIFI_SCAN_ASYNC);
+  } else {
+    STOP_TIMER(WIFI_SCAN_SYNC);
+  }
+#endif
 
 #ifdef ESP32
   RTC.clearLastWiFi();
@@ -1442,23 +1449,22 @@ void setupStaticIPconfig() {
   setUseStaticIP(WiFiUseStaticIP());
 
   if (!WiFiUseStaticIP()) { return; }
-  const IPAddress ip     = Settings.IP;
-  const IPAddress gw     = Settings.Gateway;
-  const IPAddress subnet = Settings.Subnet;
-  const IPAddress dns    = Settings.DNS;
+  const IPAddress ip     (Settings.IP);
+  const IPAddress gw     (Settings.Gateway);
+  const IPAddress subnet (Settings.Subnet);
+  const IPAddress dns    (Settings.DNS);
+
+  WiFiEventData.dns0_cache = dns;
+
+  WiFi.config(ip, gw, subnet, dns);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
+    log += concat(F(" GW: "), formatIP(gw));
+    log += concat(F(" SN: "), formatIP(subnet));
+    log += concat(F(" DNS: "), getValue(LabelType::DNS));
     addLogMove(LOG_LEVEL_INFO, log);
   }
-  WiFi.config(ip, gw, subnet, dns);
 }
 
 // ********************************************************************************

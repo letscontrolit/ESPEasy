@@ -11,8 +11,8 @@
 # include <vector>
 
 # ifndef BUILD_NO_DEBUG
-# define P131_DEBUG_LOG  // Enable for some (extra) logging
-#endif
+#  define P131_DEBUG_LOG // Enable for some (extra) logging
+# endif // ifndef BUILD_NO_DEBUG
 
 # define P131_Nlines  16 // The number of different lines which can be displayed
 # define P131_Nchars  50
@@ -74,7 +74,6 @@
 enum class P131_CommandTrigger : uint8_t {
   neomatrix = 0u,
   neo       = 1u,
-  MAX       = 2u // Keep as last item!
 };
 
 const __FlashStringHelper* P131_CommandTrigger_toString(P131_CommandTrigger cmd);
@@ -166,6 +165,7 @@ private:
 
   String strings[P131_Nlines]; // Read once
   bool   stringsInitialized = false;
+  bool   stringsHasContent  = false;
 
   std::vector<P131_content_struct>content;
   bool                            contentInitialized = false;

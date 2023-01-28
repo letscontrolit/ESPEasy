@@ -18,7 +18,6 @@ const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
     case ST77xx_type_e::ST7789vw_240x280: return F("ST7789 240 x 280px");
     case ST77xx_type_e::ST7789vw_135x240: return F("ST7789 135 x 240px");
     case ST77xx_type_e::ST7796s_320x480: return F("ST7796 320 x 480px");
-    case ST77xx_type_e::ST77xx_MAX: break;
   }
   return F("Unsupported type!");
 }
@@ -61,8 +60,6 @@ void ST77xx_type_toResolution(ST77xx_type_e device, uint16_t& x, uint16_t& y) {
       x = 320;
       y = 480;
       break;
-    case ST77xx_type_e::ST77xx_MAX:
-      break;
   }
 }
 
@@ -75,7 +72,6 @@ const __FlashStringHelper* P116_CommandTrigger_toString(P116_CommandTrigger cmd)
     case P116_CommandTrigger::st7735: return F("st7735");
     case P116_CommandTrigger::st7789: return F("st7789");
     case P116_CommandTrigger::st7796: return F("st7796");
-    case P116_CommandTrigger::MAX: return F("None");
     case P116_CommandTrigger::st77xx: break;
   }
   return F("st77xx"); // Default command trigger
@@ -186,8 +182,6 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         }
         break;
       }
-      case ST77xx_type_e::ST77xx_MAX:
-        break;
     }
 
     # ifndef BUILD_NO_DEBUG
@@ -234,13 +228,13 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       st77xx->fillScreen(_bgcolor);             // fill screen with black color
       st77xx->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
 
-    # ifdef P116_SHOW_SPLASH
+      # ifdef P116_SHOW_SPLASH
       uint16_t yPos = 0;
       gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
       yPos += (3 * _fontheight);
       gfxHelper->printText(String(F("ST77xx")).c_str(),  0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
       delay(100); // Splash
-    # endif // ifdef P116_SHOW_SPLASH
+      # endif // ifdef P116_SHOW_SPLASH
 
       gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
       st77xx->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
@@ -250,6 +244,15 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
 
       if (P116_CONFIG_BUTTON_PIN != -1) {
         pinMode(P116_CONFIG_BUTTON_PIN, INPUT_PULLUP);
+      }
+
+      if (!stringsLoaded) {
+        LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
+        stringsLoaded = true;
+
+        for (uint8_t x = 0; x < P116_Nlines && !stringsHasContent; x++) {
+          stringsHasContent = !strings[x].isEmpty();
+        }
       }
       success = true;
     }
@@ -274,7 +277,9 @@ void P116_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P116_data_struct::plugin_exit(struct EventStruct *event) {
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("ST77xx: Exit."));
+  # endif // ifndef BUILD_NO_DEBUG
 
   if ((nullptr != st77xx) && bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     st77xx->fillScreen(ADAGFX_BLACK); // fill screen with black color
@@ -288,13 +293,13 @@ bool P116_data_struct::plugin_exit(struct EventStruct *event) {
  * cleanup: De-initialize pointers
  ***************************************************************************/
 void P116_data_struct::cleanup() {
-  if (nullptr != gfxHelper) { delete gfxHelper; }
+  delete gfxHelper;
   gfxHelper = nullptr;
 
-  if (nullptr != st7735) { delete st7735; }
+  delete st7735;
   st7735 = nullptr;
 
-  if (nullptr != st7789) { delete st7789; }
+  delete st7789;
   st7789 = nullptr;
   st77xx = nullptr; // Only used as a proxy
 }
@@ -304,16 +309,7 @@ void P116_data_struct::cleanup() {
  ***************************************************************************/
 bool P116_data_struct::plugin_read(struct EventStruct *event) {
   if (nullptr != st77xx) {
-    String strings[P116_Nlines];
-    LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
-
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P116_Nlines && !hasContent; x++) {
-      hasContent = !strings[x].isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
 
       int yPos = 0;

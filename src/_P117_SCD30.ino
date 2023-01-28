@@ -98,29 +98,29 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Altitude"), F("plugin_117_SCD30_alt"), P117_SENSOR_ALTITUDE, 0, 2000);
+      addFormNumericBox(F("Altitude"), F("alt"), P117_SENSOR_ALTITUDE, 0, 2000);
       addUnit(F("0..2000 m"));
 
-      addFormTextBox(F("Temp offset"), F("plugin_117_SCD30_tmp"), toString(P117_TEMPERATURE_OFFSET, 2), 5);
+      addFormTextBox(F("Temp offset"), F("tmp"), toString(P117_TEMPERATURE_OFFSET, 2), 5);
       addUnit(F("&deg;C"));
 
-      addFormNumericBox(F("Measurement Interval"), F("plugin_117_interval"), P117_MEASURE_INTERVAL, 2, 1800);
+      addFormNumericBox(F("Measurement Interval"), F("pinterval"), P117_MEASURE_INTERVAL, 2, 1800);
       addUnit(F("2..1800 sec."));
 
-      addFormCheckBox(F("Automatic Self Calibration"), F("plugin_117_abc"), P117_AUTO_CALIBRATION == 1);
+      addFormCheckBox(F("Automatic Self Calibration"), F("abc"), P117_AUTO_CALIBRATION == 1);
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      uint16_t alt = getFormItemInt(F("plugin_117_SCD30_alt"));
+      uint16_t alt = getFormItemInt(F("alt"));
 
       if (alt > 2000) { alt = 2000; }
       P117_SENSOR_ALTITUDE    = alt;
-      P117_TEMPERATURE_OFFSET = getFormItemFloat(F("plugin_117_SCD30_tmp"));
-      P117_AUTO_CALIBRATION   = isFormItemChecked(F("plugin_117_abc")) ? 1 : 0;
-      uint16_t interval = getFormItemInt(F("plugin_117_interval"));
+      P117_TEMPERATURE_OFFSET = getFormItemFloat(F("tmp"));
+      P117_AUTO_CALIBRATION   = isFormItemChecked(F("abc")) ? 1 : 0;
+      uint16_t interval = getFormItemInt(F("pinterval"));
 
       if (interval < 2) { interval = 2; }
 
@@ -142,10 +142,8 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
                                                              P117_MEASURE_INTERVAL));
       P117_data_struct *P117_data = static_cast<P117_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P117_data) {
-        return success;
-      }
-      success = true;
+      success = (nullptr != P117_data);
+
       break;
     }
     case PLUGIN_READ:
@@ -169,8 +167,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 2] = scd30_Temp;
           UserVar[event->BaseVarIndex + 3] = scd30_CO2;
 
-          if (scd30_CO2EAvg > 5000)
-          {
+          if (scd30_CO2EAvg > 5000) {
             addLog(LOG_LEVEL_INFO, F("SCD30: Sensor saturated! > 5000 ppm"));
           }
           break;

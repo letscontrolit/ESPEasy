@@ -545,7 +545,6 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_ERROR, F("EPD  : SPI not enabled, init cancelled."));
       }
 
-      success = true;
       break;
     }
 

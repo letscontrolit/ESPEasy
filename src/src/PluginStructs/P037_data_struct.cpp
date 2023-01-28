@@ -12,17 +12,18 @@
 # include "../ESPEasyCore/ESPEasyRules.h"
 
 
-P037_data_struct::P037_data_struct(taskIndex_t taskIndex) : _taskIndex(taskIndex) 
+P037_data_struct::P037_data_struct(taskIndex_t taskIndex) : _taskIndex(taskIndex)
 {}
 
 P037_data_struct::~P037_data_struct() {
   # if P037_JSON_SUPPORT
+
   if (nullptr != root) {
     root->clear();
     delete root;
     root = nullptr;
   }
-  #endif
+  # endif // if P037_JSON_SUPPORT
 }
 
 /**
@@ -196,8 +197,8 @@ bool P037_data_struct::webform_load(
   if (jsonEnabled) {
     addRowLabel(F("MQTT Topic"));
     html_table(EMPTY_STRING, false); // Sub-table
-    html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("Topic"),          500);
+    html_table_header(F("&nbsp;#&nbsp;"),  30);
+    html_table_header(F("Topic"),          350);
     html_table_header(F("JSON Attribute"), 200);
   }
   # endif // ifdef P037_JSON_SUPPORT
@@ -248,10 +249,10 @@ bool P037_data_struct::webform_load(
     addRowLabel(F("Filter"));
     #  endif // ifdef P037_FILTER_PER_TOPIC
     html_table(F(""), false); // Sub-table
-    html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("Name[;Index]"));
-    html_table_header(F("Operand"), 180);
-    html_table_header(F("Value"));
+    html_table_header(F("&nbsp;#&nbsp;"), 30);
+    html_table_header(F("Name[;Index]"),  350);
+    html_table_header(F("Operand"),       180);
+    html_table_header(F("Value"),         550);
 
     const __FlashStringHelper *filterOptions[] = {
       F("equals"), // map name to value
@@ -284,7 +285,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0),
                    parseStringKeepCase(valueArray[filterOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, F(""));
+                   32, false, false, EMPTY_STRING, F("xwide"));
       }
       {
         html_TD();
@@ -322,7 +323,7 @@ bool P037_data_struct::webform_load(
         addHtmlInt(filterNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, false, false, EMPTY_STRING, F("xwide"));
       }
       {
         html_TD();
@@ -370,10 +371,10 @@ bool P037_data_struct::webform_load(
 
     addRowLabel(F("Mapping"));
     html_table(F(""), false); // Sub-table
-    html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("Name"));
-    html_table_header(F("Operand"), 180);
-    html_table_header(F("Value"));
+    html_table_header(F("&nbsp;#&nbsp;"), 30);
+    html_table_header(F("Name"),          300);
+    html_table_header(F("Operand"),       180);
+    html_table_header(F("Value"),         300);
 
     const __FlashStringHelper *operandOptions[] = {
       F("map"),                          // map name to int
