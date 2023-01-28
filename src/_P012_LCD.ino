@@ -129,7 +129,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       P012_INVERSE_BTN = isFormItemChecked(F("pinv_btn")) ? 1 : 0;
 
       // FIXME TD-er: This is a huge stack allocated object.
-      char   deviceTemplate[P12_Nlines][P12_Nchars];
+      char   deviceTemplate[P12_Nlines][P12_Nchars] = {};
       String error;
 
       for (uint8_t varNr = 0; varNr < P12_Nlines; varNr++)

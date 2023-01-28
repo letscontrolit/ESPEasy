@@ -1040,7 +1040,13 @@ void WifiScan(bool async, uint8_t channel) {
       processScanDone();
     }
   }
-  STOP_TIMER(async ? WIFI_SCAN_ASYNC : WIFI_SCAN_SYNC);
+#if FEATURE_TIMING_STATS
+  if (async) {
+    STOP_TIMER(WIFI_SCAN_ASYNC);
+  } else {
+    STOP_TIMER(WIFI_SCAN_SYNC);
+  }
+#endif
 
 #ifdef ESP32
   RTC.clearLastWiFi();
@@ -1443,12 +1449,12 @@ void setupStaticIPconfig() {
   setUseStaticIP(WiFiUseStaticIP());
 
   if (!WiFiUseStaticIP()) { return; }
-  const IPAddress ip     = Settings.IP;
-  const IPAddress gw     = Settings.Gateway;
-  const IPAddress subnet = Settings.Subnet;
-  const IPAddress dns    = Settings.DNS;
+  const IPAddress ip     (Settings.IP);
+  const IPAddress gw     (Settings.Gateway);
+  const IPAddress subnet (Settings.Subnet);
+  const IPAddress dns    (Settings.DNS);
 
-  WiFiEventData.dns0_cache = Settings.DNS;
+  WiFiEventData.dns0_cache = dns;
 
   WiFi.config(ip, gw, subnet, dns);
 

@@ -222,7 +222,7 @@ void WebServerInit()
 
 #ifdef USES_C016
 
-  // web_server.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
+  web_server.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
   web_server.on(F("/cache_json"), handle_cache_json); // C016 specific entrie
   web_server.on(F("/cache_csv"),  handle_cache_csv);  // C016 specific entrie
 #endif // USES_C016
