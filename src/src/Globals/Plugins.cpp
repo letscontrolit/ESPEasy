@@ -452,8 +452,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = parseString(arg0, 1, '.');    // Extract taskname prefix
-          thisTaskName.replace(F("["), EMPTY_STRING);         // Remove the optional square brackets
-          thisTaskName.replace(F("]"), EMPTY_STRING);
+          removeChar(thisTaskName, '[');                      // Remove the optional square brackets
+          removeChar(thisTaskName, ']');
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
             if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?
@@ -644,12 +644,13 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
     case PLUGIN_TASKTIMER_IN:
+    case PLUGIN_PROCESS_CONTROLLER_DATA:
     {
       // FIXME TD-er: Code duplication with PluginCallForTask
       if (!validTaskIndex(event->TaskIndex)) {
         return false;
       }
-      if (Function == PLUGIN_READ || Function == PLUGIN_INIT) {
+      if (Function == PLUGIN_READ || Function == PLUGIN_INIT || Function == PLUGIN_PROCESS_CONTROLLER_DATA) {
         if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
           return false;
         }

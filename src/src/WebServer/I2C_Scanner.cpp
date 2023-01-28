@@ -330,8 +330,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("HT16K33,TCA9543a/6a/8a I2C multiplexer");
       break;
     case 0x74:
-    case 0x75:
       result +=  F("HT16K33,TCA9546a/8a I2C multiplexer");
+      break;
+    case 0x75:
+      result +=  F("HT16K33,TCA9546a/8a I2C multiplexer,IP5306");
       break;
     case 0x76:
       result +=  F("BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");

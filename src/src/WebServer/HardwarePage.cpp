@@ -188,7 +188,12 @@ void handle_hardware() {
   #ifdef ESP32
   {
     // Script to show GPIO pins for User-defined SPI GPIOs
-    html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 9 ? '' : 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
+    // html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 9 ? '' : 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
+    // Minified:
+    html_add_script(F("function spiOptionChanged(e){var i=9==e.value?'':'none';"
+                      "document.getElementById('tr_spipinsclk').style.display=i,"
+                      "document.getElementById('tr_spipinmiso').style.display=i,"
+                      "document.getElementById('tr_spipinmosi').style.display=i}"),
                     false);
     const __FlashStringHelper * spi_options[] = {
       getSPI_optionToString(SPI_Options_e::None), 

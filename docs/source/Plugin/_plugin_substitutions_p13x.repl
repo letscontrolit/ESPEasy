@@ -75,3 +75,16 @@
 .. |P137_maintainer| replace:: `tonhuisman`
 .. |P137_compileinfo| replace:: `.`
 .. |P137_usedlibraries| replace:: `https://github.com/tanakamasayuki/I2C_AXP192`
+
+.. |P138_name| replace:: :cyan:`IP5306 Power management`
+.. |P138_type| replace:: :cyan:`Power mgt`
+.. |P138_typename| replace:: :cyan:`Power mgt - IP5306 Power management`
+.. |P138_porttype| replace:: `.`
+.. |P138_status| replace:: :yellow:`COLLECTION` :yellow:`DISPLAY` :yellow:`ENERGY` :yellow:`NEOPIXEL`
+.. |P138_github| replace:: P138_IP5306.ino
+.. _P138_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P138_IP5306.ino
+.. |P138_usedby| replace:: `.`
+.. |P138_shortinfo| replace:: `Power management controller`
+.. |P138_maintainer| replace:: `tonhuisman`
+.. |P138_compileinfo| replace:: `.`
+.. |P138_usedlibraries| replace:: `https://github.com/codewitch-honey-crisis/htcw_ip5306`
