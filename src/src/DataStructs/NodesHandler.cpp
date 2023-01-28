@@ -10,6 +10,10 @@
 #include "../Globals/ESPEasy_now_state.h"
 #endif
 
+#if FEATURE_MQTT
+#include "../ESPEasyCore/Controller.h"
+#endif
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"

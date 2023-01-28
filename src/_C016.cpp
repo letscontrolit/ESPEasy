@@ -113,29 +113,34 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     {
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      C016_queue_element element(
+      const C016_queue_element element(
         event, 
         valueCount, 
         C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime());
-      success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&element), sizeof(element));
 
-      /*
-              if (C016_DelayHandler == nullptr) {
-                break;
-              }
+      const C016_binary_element binary_element = element.getBinary();
+      success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&binary_element), sizeof(C016_binary_element));
+      break;
+    }
 
-              MakeControllerSettings(ControllerSettings); //-V522
-              LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-              success = C016_DelayHandler->addToQueue(std::move(element));
-              Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C016_DELAY_QUEUE,
-                 C016_DelayHandler->getNextScheduleTime());
-       */
+    case CPlugin::Function::CPLUGIN_WRITE:
+    {
+      if (C016_CacheInitialized()) {
+        const String command    = parseString(string, 1);
+        if (command.equals(F("cachecontroller"))) {
+          const String subcommand = parseString(string, 2);
+          if (subcommand.equals(F("flush"))) {
+            C016_flush();
+            success = true;
+          }
+        }
+      }
       break;
     }
 
     case CPlugin::Function::CPLUGIN_FLUSH:
     {
-      process_c016_delay_queue();
+      C016_flush();
       delay(0);
       break;
     }
@@ -151,7 +156,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 // ********************************************************************************
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c016_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
   return true;
 
