@@ -121,8 +121,10 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   message += peekReadPos;
   message += ';';
 
-  const size_t messageLength = message.length();
-  const size_t data_left     = (maxMessageSize - messageLength);
+  // Need to compute the nr. of chunks.
+  // For this we need to 'reserve' some positions for this nr of chunks value.
+  // Used an estimate of 5 here.
+  const size_t data_left     = (maxMessageSize - message.length() - 5);
   const size_t chunkSize     = sizeof(C016_binary_element);
   size_t nrChunks            = data_left / ((2 * chunkSize) + 1);
 
@@ -134,6 +136,10 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
       nrChunks = chunksLeftInFile;
     }
   }
+
+  message += nrChunks;
+  message += ';';
+  const size_t messageLength = message.length();
 
   const size_t expectedMessageSize = messageLength + (nrChunks * ((2 * chunkSize) + 1));
 
