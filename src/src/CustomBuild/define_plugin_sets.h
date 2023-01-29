@@ -2064,6 +2064,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
+  #ifndef USES_P151
+    #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
 
 
 
