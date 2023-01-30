@@ -51,8 +51,18 @@ struct P145_SENSORDEF
   float corf;          // CORF
   float corg;          // CORG
   P145_algorithm alg;  // Preferred/tuned algorithm
-  char name[8];        // Sensor type name
-  char gas[8];         // Measured gas concentration
+  int   name;      // Sensor type name
+  int   gas;       // Measured gas 
+};
+
+// State for heater control algorithm
+enum P145_heaterState
+{
+  P145HeaterDisabled,   // Heater control is disabled (default)
+  P145HeaterWarmup,     // Warming up after switching on
+  P145HeaterHighVolt,   // Apply high voltage to heater
+  P145HeaterLowVolt,    // Apply low volgate to heater
+  P145HeaterMeasure,    // Measurement phase
 };
 
 struct P145_data_struct : public PluginTaskData_base 
@@ -68,7 +78,8 @@ struct P145_data_struct : public PluginTaskData_base
     float  last_ain = 0.0;  // Oversampling algorithm last measured analog input value
     /* Calibration static data */
     ulong  last_cal = 0U;   // Last calibration timestamp
-    float  rcal = 0.0f;     // Rcal, calibration resistance [Ohm]
+    float  cal_data = 0.0f; // Building calibration resistance [Ohm]
+    float  rcal_act = 0.0f; // Rzero estimation for actual measurement assuming refLevel
     /* Sensor value conversion parameters */
     float rload = 0.0f;     // Rload, load resistor [Ohm]
     float rzero = 0.0f;     // R0, reference resistance [Ohm]
@@ -80,19 +91,27 @@ struct P145_data_struct : public PluginTaskData_base
     int  sensorType = -1;                 // Selected sensor type
     P145_algorithm algorithm = p145AlgNone; // conversion algorithm
     int  analogPin = P145_SENSOR_PIN;     // Analog input pin connected to the sensor
+    /* Heater control */
+    P145_heaterState heaterState = P145HeaterDisabled;  // Statemachine 
+    int heaterPin = -1;                   // Digital output pin for heater control
+    int lastHeaterPin = -1;               // Last actuated output pin for heater control
+    ulong heaterChangeTime = 0U;          // Last time the heater control changed state
+    float latchedAnalogInput = 0.0f;      // Analog input measured while heater control enabled
 
     public:
     float readValue(float temperature, float humidity);
     bool plugin_init();
     bool plugin_ten_per_second();
     void setSensorData(int stype, bool comp, bool cal, bool vcclow, float load, float zero, float ref);
+    void setSensorPins(int analogPin, int heaterPin);
     float getCalibrationValue() const;
     float getAutoCalibrationValue() const;
     static const String getTypeName( int stype);
     static const String getGasName( int stype);
     static int getNbrOfTypes();
     void dump() const;
-    
+    void heaterControl(void);
+
     private:
     void  calibrate (float Rcal);
     float getAnalogValue();

@@ -54,7 +54,7 @@
 // Calibration algorithm:
 // Each measurement calculate Rcal assuming the concentration is at the reference level
 // Remember the lowest value of Rcal assuming it belongs to measuring the lowest concentration 
-///################################### Configuration data ###############################################
+//################################### Configuration data ###############################################
 // This plugin uses the following predefined static data storage 
 // P145_PCONFIG_RLOAD  PCONFIG_FLOAT(0)  RLOAD   [Ohm] 
 // P145_PCONFIG_RZERO  PCONFIG_FLOAT(1)  RZERO   [Ohm]
@@ -93,9 +93,10 @@
 #define P145_PCONFIG_SENSORT     PCONFIG(5)
 
 // PIN/port configuration is stored in the following:
-#define CONFIG_PIN_AIN      CONFIG_PIN1
+#define P145_CONFIG_PIN_AIN      CONFIG_PIN1
+#define P145_CONFIG_PIN_HEATER   CONFIG_PIN2
 
-// Form IDs used on the device setup page
+// Form IDs used on the device setup page. Should be a short unique string.
 #define P145_GUID_TYPE       "f01"
 #define P145_GUID_RLOAD      "f02"
 #define P145_GUID_RZERO      "f03"
@@ -107,6 +108,8 @@
 #define P145_GUID_TEMP_V     "f09"
 #define P145_GUID_HUM_T      "f10"
 #define P145_GUID_HUM_V      "f11"
+#define P145_GUID_AINPIN     "f12"
+#define P145_GUID_HEATPIN    "f13"
 
 // A plugin has to implement the following function
 // ------------------------------------------------
@@ -119,7 +122,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number = PLUGIN_ID_145;
-      Device[deviceCount].Type = DEVICE_TYPE_ANALOG;
+      Device[deviceCount].Type = DEVICE_TYPE_CUSTOM0;
       Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports = 0;
       Device[deviceCount].PullUpOption = false;
@@ -146,6 +149,10 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      bool compensate = P145_PCONFIG_FLAGS & 0x0001;        // Compensation enable flag
+      bool calibrate = (P145_PCONFIG_FLAGS >> 1) & 0x0001;  // Calibreation enable flag
+      bool lowvcc = (P145_PCONFIG_FLAGS >> 2) & 0x0001;     // Low voltage power supply indicator
+      
       // FormSelector with all predefined "Sensor - Gas" options
       String options[P145_MAXTYPES] = {};
       int optionValues[P145_MAXTYPES] = {};
@@ -163,9 +170,10 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 
 # ifdef ESP32
       // Analog input selection
-      addRowLabel(F("Analog Pin"));
-      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN_AIN);
+      addRowLabel(formatGpioName_input(F("Analog Pin ")));
+      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F(P145_GUID_AINPIN), P145_CONFIG_PIN_AIN);
 # endif // ifdef ESP32
+      addFormPinSelect( PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Heater Pin ")), F(P145_GUID_HEATPIN), P145_CONFIG_PIN_HEATER);
 
       addFormFloatNumberBox(F("Load Resistance"), F(P145_GUID_RLOAD), P145_PCONFIG_RLOAD, 0.0f, 10e6f, 2U);
       addUnit(F("Ohm"));
@@ -182,15 +190,11 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
           addFormNote(String(F("Current measurement suggests Rzero= ")) + String(calVal));
         }
       }
-      bool lowvcc = (P145_PCONFIG_FLAGS >> 2) & 0x0001;
       addFormCheckBox(F("Low sensor supply voltage"), F(P145_GUID_LOWVCC), lowvcc);
 
       addFormSeparator(2);
       // Auto calibration and Temp/hum compensation flags are bitfields in P145_PCONFIG_FLAGS
-      bool compensate = P145_PCONFIG_FLAGS & 0x0001;
-      bool calibrate = (P145_PCONFIG_FLAGS >> 1) & 0x0001;
       addFormCheckBox(F("Enable automatic calibration"), F(P145_GUID_CAL), calibrate);
-      //addFormCheckBox(F("Enable temp/humid compensation"), F("plugin_145_enable_compensation"), compensate);
       addFormSelector_YesNo(F("Enable temp/humid compensation"), F(P145_GUID_COMP), compensate, true);
       // Above selector will fore reloading the page and thus updating the compensate flag
       // Show the compensation details only when compensation is enabled
@@ -228,8 +232,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       P145_PCONFIG_RLOAD     = getFormItemFloat(F(P145_GUID_RLOAD));
       P145_PCONFIG_RZERO     = getFormItemFloat(F(P145_GUID_RZERO));
       P145_PCONFIG_REF       = getFormItemFloat(F(P145_GUID_RREFLEVEL));
-      //bool compensate        = isFormItemChecked(F("plugin_145_enable_compensation") );
-      bool compensate = (getFormItemInt(F(P145_GUID_COMP)) == 1);
+      bool compensate        = (getFormItemInt(F(P145_GUID_COMP)) == 1);
       bool calibrate         = isFormItemChecked(F(P145_GUID_CAL));
       bool lowvcc            = isFormItemChecked(F(P145_GUID_LOWVCC));
       P145_PCONFIG_FLAGS     = compensate + (calibrate << 1) + (lowvcc << 2);
@@ -237,11 +240,16 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       P145_PCONFIG_TEMP_VAL  = getFormItemInt(F(P145_GUID_TEMP_V));
       P145_PCONFIG_HUM_TASK  = getFormItemInt(F(P145_GUID_HUM_T));
       P145_PCONFIG_HUM_VAL   = getFormItemInt(F(P145_GUID_HUM_V));
+# ifdef ESP32
+      P145_CONFIG_PIN_AIN    = getFormItemInt(F(P145_GUID_AINPIN));
+#endif
+      P145_CONFIG_PIN_HEATER = getFormItemInt(F(P145_GUID_HEATPIN));
 
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P145_data != nullptr)
       {
         P145_data->setSensorData(P145_PCONFIG_SENSORT, compensate, calibrate, lowvcc, P145_PCONFIG_RLOAD, P145_PCONFIG_RZERO, P145_PCONFIG_REF);
+        P145_data->setSensorPins(P145_CONFIG_PIN_AIN, P145_CONFIG_PIN_HEATER);
         P145_data->dump();
       }
       success = true;
@@ -259,6 +267,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
         {
           P145_data->plugin_init();
           P145_data->setSensorData(P145_PCONFIG_SENSORT, P145_PCONFIG_FLAGS & 0x0001, (P145_PCONFIG_FLAGS >> 1) & 0x0001, (P145_PCONFIG_FLAGS >> 2) & 0x0001, P145_PCONFIG_RLOAD, P145_PCONFIG_RZERO, P145_PCONFIG_REF);
+          P145_data->setSensorPins(P145_CONFIG_PIN_AIN, P145_CONFIG_PIN_HEATER);
           P145_data->dump();
         }
       }
@@ -298,15 +307,16 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
-      // Update Rzero in case of autocalibration
-      // TODO is there an event to signal the plugin code that the value has been updated to prevent polling?
-      if ((P145_PCONFIG_FLAGS >> 1) & 0x0001)
+      P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (P145_data != nullptr)
       {
-        P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
-        if (P145_data != nullptr)
+        if ((P145_PCONFIG_FLAGS >> 1) & 0x0001)   // Calibration fleag
         {
-          P145_PCONFIG_RZERO = P145_data->getAutoCalibrationValue();
+          // Update Rzero in case of autocalibration
+          // TODO is there an event to signal the plugin code that the value has been updated to prevent polling?
+          P145_PCONFIG_RZERO = P145_data->getAutoCalibrationValue();    // Store autocalibration value 
         }
+        P145_data->heaterControl();   // Execute heater control algorithm
       }
       break;
     }
