@@ -9,12 +9,11 @@
 # define P151_MIN_PRESSURE_VALUE    -1e9f
 # define P151_MAX_PRESSURE_VALUE    1e9f
 
-# define P151_I2C_ADDR                        PCONFIG(0)
-#define P151_OUTPUT_MIN  PCONFIG(1)
-#define P151_OUTPUT_MAX  PCONFIG(2)
-#define P151_PRESSURE_MIN  PCONFIG_FLOAT(0)
-#define P151_PRESSURE_MAX  PCONFIG_FLOAT(1)
-
+# define P151_I2C_ADDR      PCONFIG(0)
+# define P151_OUTPUT_MIN    PCONFIG(1)
+# define P151_OUTPUT_MAX    PCONFIG(2)
+# define P151_PRESSURE_MIN  PCONFIG_FLOAT(0)
+# define P151_PRESSURE_MAX  PCONFIG_FLOAT(1)
 
 
 /*******************************************
@@ -29,7 +28,6 @@ public:
   bool plugin_read(struct EventStruct *event) const;
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_fifty_per_second(struct EventStruct *event);
-
 };
 
 #endif // ifdef USES_P151

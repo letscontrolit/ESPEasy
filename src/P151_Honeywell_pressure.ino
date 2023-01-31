@@ -74,8 +74,13 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
         0x88 >> 1,
         0x98 >> 1
       };
-      constexpr size_t addrLength = sizeof(i2cAddressValues) / sizeof(uint8_t);
-      addFormSelectorI2C(F("pi2c"), addrLength, i2cAddressValues, P151_I2C_ADDR);
+      constexpr size_t addrCount = sizeof(i2cAddressValues) / sizeof(uint8_t);
+
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("pi2c"), addrCount, i2cAddressValues, P151_I2C_ADDR);
+      } else {
+        success = intArrayContains(addrCount, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -133,7 +138,7 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
-
+/*
     case PLUGIN_TEN_PER_SECOND:
     {
       P151_data_struct *P151_data = static_cast<P151_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -155,6 +160,7 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+*/
   }
   return success;
 }
