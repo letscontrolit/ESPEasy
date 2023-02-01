@@ -28,34 +28,6 @@
 # define PLUGIN_VALUENAME1_146 "FileNr"
 # define PLUGIN_VALUENAME2_146 "FilePos"
 
-# define P146_TASKVALUE_FILENR  UserVar[event->BaseVarIndex + 0]
-# define P146_TASKVALUE_FILEPOS UserVar[event->BaseVarIndex + 1]
-
-# define P146_GET_SEND_BINARY    bitRead(PCONFIG(0), 0)
-# define P146_SET_SEND_BINARY(X) bitWrite(PCONFIG(0), 0, X)
-
-# define P146_GET_SEND_BULK      bitRead(PCONFIG(0), 1)
-# define P146_SET_SEND_BULK(X) bitWrite(PCONFIG(0), 1, X)
-
-# define P146_GET_SEND_TIMESTAMP    bitRead(PCONFIG(0), 2)
-# define P146_SET_SEND_TIMESTAMP(X) bitWrite(PCONFIG(0), 2, X)
-
-# define P146_GET_SEND_READ_POS    bitRead(PCONFIG(0), 3)
-# define P146_SET_SEND_READ_POS(X) bitWrite(PCONFIG(0), 3, X)
-
-# define P146_GET_JOIN_TIMESTAMP    bitRead(PCONFIG(0), 4)
-# define P146_SET_JOIN_TIMESTAMP(X) bitWrite(PCONFIG(0), 4, X)
-
-# define P146_GET_ONLY_SET_TASKS    bitRead(PCONFIG(0), 5)
-# define P146_SET_ONLY_SET_TASKS(X) bitWrite(PCONFIG(0), 5, X)
-
-# define P146_SEPARATOR_CHARACTER   PCONFIG(1)
-
-
-# define P146_MINIMAL_SEND_INTERVAL             PCONFIG_LONG(0)
-# define P146_MQTT_MESSAGE_LENGTH               PCONFIG_LONG(1)
-# define P146_MQTT_SEND_TASKVALUENAMES_INTERVAL PCONFIG_LONG(2)
-
 
 # include "src/ControllerQueue/C016_queue_element.h"
 # include "src/Globals/C016_ControllerCache.h"
@@ -133,7 +105,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
         P146_TASKVALUE_FILENR,
         P146_TASKVALUE_FILEPOS);
       initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P146_data_struct(event->TaskIndex));
+                         new (std::nothrow) P146_data_struct(event));
       P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P146_data) {
@@ -316,7 +288,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
           P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr != P146_data) {
-            P146_data->sendTaskInfoInBulk(event->TaskIndex, 0);
+            P146_data->sendTaskInfoInBulk(event);
             success = true;
           }
         } else if (subcommand.equals(F("flush"))) {
