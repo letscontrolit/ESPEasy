@@ -6,6 +6,7 @@
 
 
 # include "../DataStructs/ESPEasyControllerCache_CSV_dumper.h"
+# include <list>
 
 # define P146_Nlines                            2
 # define P146_Nchars                            128
@@ -26,12 +27,13 @@ public:
   uint32_t sendBinaryInBulk(taskIndex_t P146_TaskIndex,
                             uint32_t    messageSize) const;
 
-  uint32_t sendCSVInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize);
-  
-  bool prepareCSVInBulk(taskIndex_t P146_TaskIndex,
-                         bool        joinTimestamp,
-                         bool        onlySetTasks,
-                         char        separator);
+  uint32_t sendCSVInBulk(taskIndex_t P146_TaskIndex,
+                         uint32_t    maxMessageSize);
+
+  bool     prepareCSVInBulk(taskIndex_t P146_TaskIndex,
+                            bool        joinTimestamp,
+                            bool        onlySetTasks,
+                            char        separator);
 
   static bool prepare_BulkMQTT_message(taskIndex_t P146_TaskIndex);
 
@@ -45,17 +47,18 @@ public:
 
 private:
 
-  bool getPeekFilePos(int &peekFileNr, int &peekReadPos, int &peekFileSize) const;
+  bool getPeekFilePos(int& peekFileNr,
+                      int& peekReadPos,
+                      int& peekFileSize) const;
 
   String getTopic(int         index,
                   taskIndex_t P146_TaskIndex) const;
 
   String _topics[P146_Nlines];
 
-  ESPEasyControllerCache_CSV_dumper* dumper = nullptr;
+  ESPEasyControllerCache_CSV_dumper *dumper = nullptr;
 
   std::list<ESPEasyControllerCache_CSV_element> lines;
-
 };
 
 
