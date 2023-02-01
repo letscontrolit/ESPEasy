@@ -11,9 +11,10 @@
 void ESPEasyControllerCache_CSV_element::markBegin()
 {
   line.clear();
-  if (endFileNr != 0 && endPos != 0) {
+
+  if ((endFileNr != 0) && (endPos != 0)) {
     startFileNr = endFileNr;
-    startPos = endPos;
+    startPos    = endPos;
   } else {
     startPos = ControllerCache.getPeekFilePos(startFileNr);
   }
@@ -122,14 +123,14 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
   _outputLine.markBegin();
 
 
-  uint32_t lastTimestamp = 0;
+  uint32_t lastTimestamp   = 0;
   uint32_t csv_values_left = 0;
-  String   taskIndex_str, pluginID_str;
+
+  _taskIndex_str.clear();
+  _pluginID_str.clear();
 
 
   // Fetch samples from Cache Controller bin files.
-  constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
-
   if (_element_processed) {
     if (!C016_getTaskSample(_element)) {
       return !_outputLine.line.isEmpty();
@@ -142,26 +143,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
     if (!_joinTimestamp || (lastTimestamp != static_cast<uint32_t>(_element._timestamp))) {
       // Flush the collected CSV values
       if (csv_values_left > 0) {
-        if (_joinTimestamp) {
-          // Add column with nr of joined samples
-          _outputLine.line += _separator;
-          _outputLine.line += csv_values_left;
-          _outputLine.line += _separator;
-          _outputLine.line += taskIndex_str;
-          _outputLine.line += _separator;
-          _outputLine.line += pluginID_str;
-        }
-
-        for (size_t i = 0; i < nrTaskValues; ++i) {
-          if (_includeTask[i / VARS_PER_TASK]) {
-            _outputLine.line += _csv_values[i];
-          }
-        }
-
-        if (_target == Target::CSV_file) {
-          _outputLine.line += '\r';
-          _outputLine.line += '\n';
-        }
+        flushValuesLeft(csv_values_left);
         return !_outputLine.line.isEmpty();
       }
 
@@ -199,12 +181,12 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
       }
 
       if (_joinTimestamp) {
-        if (!taskIndex_str.isEmpty()) { taskIndex_str += '/'; }
+        if (!_taskIndex_str.isEmpty()) { _taskIndex_str += '/'; }
 
-        if (!pluginID_str.isEmpty()) { pluginID_str += '/'; }
+        if (!_pluginID_str.isEmpty()) { _pluginID_str += '/'; }
 
-        taskIndex_str += _element.TaskIndex;
-        pluginID_str  += _element.pluginID;
+        _taskIndex_str += _element.TaskIndex;
+        _pluginID_str  += _element.pluginID;
       }
       ++csv_values_left;
     }
@@ -213,22 +195,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
   }
 
   if (csv_values_left > 0) {
-    if (_joinTimestamp) {
-      // Add column with nr of joined samples
-      _outputLine.line += _separator;
-      _outputLine.line += csv_values_left;
-    }
-
-    for (size_t i = 0; i < nrTaskValues; ++i) {
-      if (_includeTask[i / VARS_PER_TASK]) {
-        _outputLine.line += _csv_values[i];
-      }
-    }
-
-    if (_target == Target::CSV_file) {
-      _outputLine.line += '\r';
-      _outputLine.line += '\n';
-    }
+    flushValuesLeft(csv_values_left);
   }
   return !_outputLine.line.isEmpty();
 }
@@ -237,6 +204,31 @@ void ESPEasyControllerCache_CSV_dumper::setPeekFilePos(int peekFileNr, int peekR
 {
   ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
   _element_processed = true;
+}
+
+void ESPEasyControllerCache_CSV_dumper::flushValuesLeft(uint32_t csv_values_left)
+{
+  if (_joinTimestamp) {
+    _outputLine.line += _separator;
+    _outputLine.line += csv_values_left; // Add column with nr of joined samples
+    _outputLine.line += _separator;
+    _outputLine.line += _taskIndex_str;
+    _outputLine.line += _separator;
+    _outputLine.line += _pluginID_str;
+  }
+
+  constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
+
+  for (size_t i = 0; i < nrTaskValues; ++i) {
+    if (_includeTask[i / VARS_PER_TASK]) {
+      _outputLine.line += _csv_values[i];
+    }
+  }
+
+  if (_target == Target::CSV_file) {
+    _outputLine.line += '\r';
+    _outputLine.line += '\n';
+  }
 }
 
 #endif // if FEATURE_RTC_CACHE_STORAGE
