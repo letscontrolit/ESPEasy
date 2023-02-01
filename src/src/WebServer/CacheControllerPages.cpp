@@ -72,9 +72,12 @@ void handle_dumpcache() {
   }
 
 
-  ESPEasyControllerCache_CSV_dumper dumper(joinTimestamp, onlySetTasks, separator);
+  ESPEasyControllerCache_CSV_dumper dumper(
+    joinTimestamp, 
+    onlySetTasks, 
+    separator, 
+    ESPEasyControllerCache_CSV_dumper::Target::CSV_file);
 
-  dumper.setTarget(ESPEasyControllerCache_CSV_dumper::Target::CSV_file);
   dumper.generateCSVHeader(true);
 
   while (dumper.createCSVLine()) {

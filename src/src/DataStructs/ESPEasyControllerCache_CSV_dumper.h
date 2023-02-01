@@ -7,15 +7,28 @@
 #if FEATURE_RTC_CACHE_STORAGE
 
 # include "../ControllerQueue/C016_queue_element.h"
+
+struct ESPEasyControllerCache_CSV_element {
+  void markBegin();
+  void markEnd();
+
+  String line;
+  int    startFileNr = 0;
+  int    startPos    = 0;
+  int    endFileNr   = 0;
+  int    endPos      = 0;
+};
+
 struct ESPEasyControllerCache_CSV_dumper {
   enum class Target {
     CSV_file,
     MQTT
   };
 
-  ESPEasyControllerCache_CSV_dumper(bool joinTimestamp,
-                                    bool onlySetTasks,
-                                    char separator);
+  ESPEasyControllerCache_CSV_dumper(bool   joinTimestamp,
+                                    bool   onlySetTasks,
+                                    char   separator,
+                                    Target target);
 
   ~ESPEasyControllerCache_CSV_dumper();
 
@@ -23,13 +36,20 @@ struct ESPEasyControllerCache_CSV_dumper {
 
   bool   createCSVLine();
 
-  size_t writeCSVLine(bool send) const {
-    return writeToTarget(_outputLine, send);
+  size_t getCSVlineLength() const {
+    return _outputLine.line.length();
   }
 
-  void setTarget(Target target) {
-    _target = target;
+  const ESPEasyControllerCache_CSV_element& getCSVline() const {
+    return _outputLine;
   }
+
+  size_t writeCSVLine(bool send) const {
+    return writeToTarget(_outputLine.line, send);
+  }
+
+  void setPeekFilePos(int peekFileNr,
+                      int peekReadPos);
 
 private:
 
@@ -46,9 +66,9 @@ private:
   bool    _onlySetTasks                          = true;
   char    _separator                             = ',';
 
-  C016_binary_element element;
-  bool                _element_processed = false;
-  String              _outputLine;
+  C016_binary_element                _element;
+  bool                               _element_processed = true;
+  ESPEasyControllerCache_CSV_element _outputLine;
 
 
   int _backup_peekFileNr  = 0;
