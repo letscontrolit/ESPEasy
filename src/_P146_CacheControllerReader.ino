@@ -34,8 +34,8 @@
 # define P146_GET_SEND_BINARY    bitRead(PCONFIG(0), 0)
 # define P146_SET_SEND_BINARY(X) bitWrite(PCONFIG(0), 0, X)
 
-# define P146_GET_APPEND_BINARY_TOPIC    bitRead(PCONFIG(0), 1)
-# define P146_SET_APPEND_BINARY_TOPIC(X) bitWrite(PCONFIG(0), 1, X)
+# define P146_GET_SEND_BULK      bitRead(PCONFIG(0), 1)
+# define P146_SET_SEND_BULK(X) bitWrite(PCONFIG(0), 1, X)
 
 # define P146_GET_SEND_TIMESTAMP    bitRead(PCONFIG(0), 2)
 # define P146_SET_SEND_TIMESTAMP(X) bitWrite(PCONFIG(0), 2, X)
@@ -102,7 +102,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       P146_SET_SEND_BINARY(0);
-      P146_SET_APPEND_BINARY_TOPIC(0);
+      P146_SET_SEND_BULK(1);
       P146_SET_SEND_TIMESTAMP(1);
       P146_SET_SEND_READ_POS(1);
       P146_SET_JOIN_TIMESTAMP(1);
@@ -147,8 +147,17 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       if (ControllerCache.peekDataAvailable()) {
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P146_MINIMAL_SEND_INTERVAL);
 
-        if (P146_GET_SEND_BINARY) {
-          P146_data_struct::prepareBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH);
+        if (P146_GET_SEND_BULK) {
+          if (P146_GET_SEND_BINARY) {
+            P146_data_struct::prepare_BulkMQTT_message(event->TaskIndex);
+          } else {
+            P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+            if (nullptr != P146_data) {
+              const char separator = static_cast<char>(P146_SEPARATOR_CHARACTER);
+              P146_data->prepareCSVInBulk(event->TaskIndex, P146_GET_JOIN_TIMESTAMP, P146_GET_ONLY_SET_TASKS, separator);
+            }
+          }
         } else {
           // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
 
@@ -169,11 +178,19 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_PROCESS_CONTROLLER_DATA:
     {
-      if (P146_GET_SEND_BINARY) {
+      if (P146_GET_SEND_BULK) {
         P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P146_data) {
-          if (0 != P146_data->sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH)) {
+          bool data_sent = false;
+
+          if (P146_GET_SEND_BINARY) {
+            data_sent = (0 != P146_data->sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH));
+          } else {
+            data_sent = (0 != P146_data->sendCSVInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH));
+          }
+
+          if (data_sent) {
             int readFileNr    = 0;
             const int readPos = ControllerCache.getPeekFilePos(readFileNr);
             P146_TASKVALUE_FILENR  = readFileNr;
@@ -189,9 +206,9 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("MQTT Output Options"));
-      addFormCheckBox(F("HEX encoded Binary"), F("binary"), P146_GET_SEND_BINARY);
+      addFormCheckBox(F("Send Bulk"),          F("sendbulk"), P146_GET_SEND_BULK);
+      addFormCheckBox(F("HEX encoded Binary"), F("binary"),   P146_GET_SEND_BINARY);
 
-      //      addFormCheckBox(F("Append 'bin' to topic"), F("appendbintopic"), P146_GET_APPEND_BINARY_TOPIC);
       //      addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
       addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
       addFormNumericBox(F("Max Message Size"),
@@ -255,9 +272,9 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      P146_SET_SEND_BULK(isFormItemChecked(F("sendbulk")));
       P146_SET_SEND_BINARY(isFormItemChecked(F("binary")));
 
-      //      P146_SET_APPEND_BINARY_TOPIC(isFormItemChecked(F("appendbintopic")));
       //      P146_SET_SEND_READ_POS(isFormItemChecked(F("sendreadpos")));
       //      P146_SET_SEND_TIMESTAMP(isFormItemChecked(F("sendtimestamp")));
 

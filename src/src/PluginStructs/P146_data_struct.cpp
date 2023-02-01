@@ -13,8 +13,12 @@ P146_data_struct::P146_data_struct(taskIndex_t P146_TaskIndex)
 }
 
 P146_data_struct::~P146_data_struct()
-{}
-
+{
+  if (dumper != nullptr) {
+    delete dumper;
+    dumper = nullptr;
+  }
+}
 
 uint32_t writeToMqtt(const String& str, bool send) {
   if (send) {
@@ -86,31 +90,9 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
 
 
   // Keep the current peek position, so we can reset it when we fail to deliver the data to the controller.
-  int peekFileNr  = 0;
-  int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+  int peekFileNr, peekReadPos, peekFileSize;
 
-  if (peekFileNr <= 0) {
-    return 0;
-  }
-
-  int peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
-
-  if (peekFileSize < 0) {
-    // Peek file is not opened. Setting peek file pos will try to open it.
-    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
-    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
-    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
-  }
-
-  // FIXME TD-er: This is messy, but needed to increment peek file nr.
-  if (peekReadPos >= peekFileSize) {
-    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
-    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
-    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
-  }
-
-  if (peekFileSize < 0) {
-    // peek file still not open.
+  if (!getPeekFilePos(peekFileNr, peekReadPos, peekFileSize)) {
     return 0;
   }
 
@@ -193,7 +175,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   return expectedMessageSize;
 }
 
-bool P146_data_struct::prepareBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t messageSize)
+bool P146_data_struct::prepare_BulkMQTT_message(taskIndex_t P146_TaskIndex)
 {
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -209,11 +191,129 @@ bool P146_data_struct::prepareBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t 
   return MQTTpublish(enabledMqttController, P146_TaskIndex, std::move(topic), std::move(message), false, callbackTask);
 }
 
-uint32_t P146_data_struct::sendCSVInBulk(taskIndex_t P146_TaskIndex, bool joinTimestamp, bool onlySetTasks, char separator) const
+bool P146_data_struct::prepareCSVInBulk(taskIndex_t P146_TaskIndex,
+                                        bool        joinTimestamp,
+                                        bool        onlySetTasks,
+                                        char        separator)
 {
-  uint32_t count = 0;
+  if (dumper == nullptr) {
+    dumper = new (std::nothrow) ESPEasyControllerCache_CSV_dumper(
+      joinTimestamp,
+      onlySetTasks,
+      separator,
+      ESPEasyControllerCache_CSV_dumper::Target::MQTT);
+  }
 
-  return count;
+  if (dumper == nullptr) { return false; }
+  return prepare_BulkMQTT_message(P146_TaskIndex);
+}
+
+uint32_t P146_data_struct::sendCSVInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
+{
+  if (dumper == nullptr) {
+    return 0;
+  }
+  const controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+
+  if (!validControllerIndex(enabledMqttController)) {
+    return 0;
+  }
+
+  int startFileNr = 0;
+  int startPos    = 0;
+  int endFileNr   = 0;
+  int endPos      = 0;
+
+  size_t count    = 0;
+  size_t nrChunks = 0;
+  bool   done     = false;
+
+  for (auto it = lines.begin(); !done && it != lines.end(); ++it) {
+    if (nrChunks == 0) {
+      startFileNr = it->startFileNr;
+      startPos    = it->startPos;
+    }
+
+    const size_t lineLength = it->line.length();
+
+    if ((count + lineLength) < maxMessageSize) {
+      ++nrChunks;
+      ++count; // CSV line separator
+      count    += lineLength;
+      endFileNr = it->endFileNr;
+      endPos    = it->endPos;
+    } else {
+      done = true;
+    }
+  }
+
+  while (!done) {
+    if (ESP.getFreeHeap() < 5000) {
+      done = true;
+    } else {
+      if (!dumper->createCSVLine()) {
+        done = true;
+      } else {
+        lines.push_back(dumper->getCSVline());
+        const size_t lineLength = lines.back().line.length();
+
+        if (nrChunks == 0) {
+          startFileNr = lines.back().startFileNr;
+          startPos    = lines.back().startPos;
+        }
+
+        if ((count + lineLength) < maxMessageSize) {
+          ++nrChunks;
+          ++count; // CSV line separator
+          count    += lineLength;
+          endFileNr = lines.back().endFileNr;
+          endPos    = lines.back().endPos;
+        } else {
+          done = true;
+        }
+      }
+    }
+  }
+
+  if (nrChunks == 0) { return 0; }
+
+  String message;
+
+  message += startFileNr;
+  message += ';';
+  message += startPos;
+  message += ';';
+  message += endFileNr;
+  message += ';';
+  message += endPos;
+  message += ';';
+  message += nrChunks;
+  message += ';';
+  message += count;
+
+  const size_t messageLength       = message.length();
+  const size_t expectedMessageSize = messageLength + count;
+
+  const String topic = getTopic(P146_PublishTopicIndex, P146_TaskIndex);
+
+  if (!MQTTclient.beginPublish(topic.c_str(), expectedMessageSize, false)) {
+    // Can't start a message
+    return 0;
+  }
+  writeToMqtt(message, true);
+
+  for (int chunk = 0; chunk < nrChunks; ++chunk) {
+    dumper->createCSVLine();
+    writeToMqtt('\n',               true); // Separator
+    writeToMqtt(lines.front().line, true);
+    lines.pop_front();
+  }
+
+  MQTTclient.endPublish();
+  nrChunks = 0;
+  count    = 0;
+
+  return expectedMessageSize;
 }
 
 bool P146_data_struct::sendViaOriginalTask(
@@ -311,6 +411,37 @@ bool P146_data_struct::setPeekFilePos(int peekFileNr, int peekReadPos)
 
 void P146_data_struct::flush() {
   C016_flush();
+}
+
+bool P146_data_struct::getPeekFilePos(int& peekFileNr, int& peekReadPos, int& peekFileSize) const {
+  peekFileNr  = 0;
+  peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+
+  if (peekFileNr <= 0) {
+    return false;
+  }
+
+  peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+
+  if (peekFileSize < 0) {
+    // Peek file is not opened. Setting peek file pos will try to open it.
+    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
+    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+  }
+
+  // FIXME TD-er: This is messy, but needed to increment peek file nr.
+  if (peekReadPos >= peekFileSize) {
+    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
+    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+  }
+
+  if (peekFileSize < 0) {
+    // peek file still not open.
+    return false;
+  }
+  return true;
 }
 
 String P146_data_struct::getTopic(int index, taskIndex_t P146_TaskIndex) const {

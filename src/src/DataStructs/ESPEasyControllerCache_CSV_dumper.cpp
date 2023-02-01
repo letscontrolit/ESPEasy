@@ -8,9 +8,24 @@
 
 # include "../../_Plugin_Helper.h"
 
+void ESPEasyControllerCache_CSV_element::markBegin()
+{
+  line.clear();
+  if (endFileNr != 0 && endPos != 0) {
+    startFileNr = endFileNr;
+    startPos = endPos;
+  } else {
+    startPos = ControllerCache.getPeekFilePos(startFileNr);
+  }
+}
 
-ESPEasyControllerCache_CSV_dumper::ESPEasyControllerCache_CSV_dumper(bool joinTimestamp, bool onlySetTasks, char separator)
-  : _joinTimestamp(joinTimestamp), _onlySetTasks(onlySetTasks), _separator(separator)
+void ESPEasyControllerCache_CSV_element::markEnd()
+{
+  endPos = ControllerCache.getPeekFilePos(endFileNr);
+}
+
+ESPEasyControllerCache_CSV_dumper::ESPEasyControllerCache_CSV_dumper(bool joinTimestamp, bool onlySetTasks, char separator, Target target)
+  : _joinTimestamp(joinTimestamp), _onlySetTasks(onlySetTasks), _separator(separator), _target(target)
 {
   // Initialize arrays
   const String sep_zero = String(separator);
@@ -26,18 +41,21 @@ ESPEasyControllerCache_CSV_dumper::ESPEasyControllerCache_CSV_dumper(bool joinTi
     _includeTask[task] = _onlySetTasks ? validPluginID(Settings.TaskDeviceNumber[task]) : true;
   }
 
-  // First backup the peek file positions.
-  _backup_peekFilePos = ControllerCache.getPeekFilePos(_backup_peekFileNr);
+  if (_target == Target::CSV_file) {
+    // First backup the peek file positions.
+    _backup_peekFilePos = ControllerCache.getPeekFilePos(_backup_peekFileNr);
 
-  // Set peek file position to first entry:
-  ControllerCache.setPeekFilePos(0, 0);
-
+    // Set peek file position to first entry:
+    ControllerCache.setPeekFilePos(0, 0);
+  }
   C016_flush();
 }
 
 ESPEasyControllerCache_CSV_dumper::~ESPEasyControllerCache_CSV_dumper() {
-  // Restore peek file positions.
-  ControllerCache.setPeekFilePos(_backup_peekFileNr, _backup_peekFilePos);
+  if ((_backup_peekFileNr != 0) && (_backup_peekFilePos != 0)) {
+    // Restore peek file positions.
+    ControllerCache.setPeekFilePos(_backup_peekFileNr, _backup_peekFilePos);
+  }
 }
 
 uint32_t ESPEasyControllerCache_CSV_dumper::writeToTarget(const String& str, bool send) const {
@@ -72,11 +90,10 @@ size_t ESPEasyControllerCache_CSV_dumper::generateCSVHeader(bool send) const
   if (_joinTimestamp) {
     // Add column with nr of joined samples
     header += F(";nrJoinedSamples");
-  } else {
-    // Does not make sense to have taskindex and plugin ID
-    // in a table where separate samples may have been combined.
-    header += F(";taskindex;plugin ID");
   }
+
+  // TaskIndex and Plugin ID will be a list of numbers when lines are joined.
+  header += F(";taskindex;plugin ID");
 
   if (_separator != ';') { header.replace(';', _separator); }
   count += writeToTarget(header, send);
@@ -102,101 +119,124 @@ size_t ESPEasyControllerCache_CSV_dumper::generateCSVHeader(bool send) const
 
 bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
 {
-  _outputLine.clear();
+  _outputLine.markBegin();
 
-  uint32_t lastTimestamp   = 0;
+
+  uint32_t lastTimestamp = 0;
   uint32_t csv_values_left = 0;
+  String   taskIndex_str, pluginID_str;
 
 
   // Fetch samples from Cache Controller bin files.
   constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
 
   if (_element_processed) {
-    if (!C016_getTaskSample(element)) {
-      return !_outputLine.isEmpty();
+    if (!C016_getTaskSample(_element)) {
+      return !_outputLine.line.isEmpty();
     }
+    _outputLine.markEnd();
     _element_processed = false;
   }
 
   while (!_element_processed) {
-    if (!_joinTimestamp || (lastTimestamp != static_cast<uint32_t>(element._timestamp))) {
+    if (!_joinTimestamp || (lastTimestamp != static_cast<uint32_t>(_element._timestamp))) {
       // Flush the collected CSV values
       if (csv_values_left > 0) {
         if (_joinTimestamp) {
           // Add column with nr of joined samples
-          _outputLine += _separator;
-          _outputLine += csv_values_left;
+          _outputLine.line += _separator;
+          _outputLine.line += csv_values_left;
+          _outputLine.line += _separator;
+          _outputLine.line += taskIndex_str;
+          _outputLine.line += _separator;
+          _outputLine.line += pluginID_str;
         }
 
         for (size_t i = 0; i < nrTaskValues; ++i) {
           if (_includeTask[i / VARS_PER_TASK]) {
-            _outputLine += _csv_values[i];
+            _outputLine.line += _csv_values[i];
           }
         }
 
         if (_target == Target::CSV_file) {
-          _outputLine += '\r';
-          _outputLine += '\n';
+          _outputLine.line += '\r';
+          _outputLine.line += '\n';
         }
-        return !_outputLine.isEmpty();
+        return !_outputLine.line.isEmpty();
       }
 
       // Start writing a new line in the CSV file
       // Begin with the non taskvalues
-      _outputLine += element._timestamp;
-      _outputLine += _separator;
+      _outputLine.line += _element._timestamp;
+      _outputLine.line += _separator;
       struct tm ts;
-      breakTime(element._timestamp, ts);
-      _outputLine += formatDateTimeString(ts);
+      breakTime(_element._timestamp, ts);
+      _outputLine.line += formatDateTimeString(ts);
 
       if (!_joinTimestamp) {
-        _outputLine += _separator;
-        _outputLine += element.TaskIndex;
-        _outputLine += _separator;
-        _outputLine += element.pluginID;
+        _outputLine.line += _separator;
+        _outputLine.line += _element.TaskIndex;
+        _outputLine.line += _separator;
+        _outputLine.line += _element.pluginID;
       }
 
-      lastTimestamp = static_cast<uint32_t>(element._timestamp);
+      lastTimestamp = static_cast<uint32_t>(_element._timestamp);
     }
 
-    if (validTaskIndex(element.TaskIndex)) {
+    if (validTaskIndex(_element.TaskIndex)) {
       // Collect the task values for this row in the CSV
-      size_t valindex = element.TaskIndex * VARS_PER_TASK;
+      size_t valindex = _element.TaskIndex * VARS_PER_TASK;
 
       for (size_t i = 0; i < VARS_PER_TASK; ++i) {
         _csv_values[valindex] = _separator;
 
-        if (essentiallyZero(element.values[i])) {
+        if (essentiallyZero(_element.values[i])) {
           _csv_values[valindex] += '0';
         } else {
-          _csv_values[valindex] += toString(element.values[i], static_cast<unsigned int>(_nrDecimals[valindex]));
+          _csv_values[valindex] += toString(_element.values[i], static_cast<unsigned int>(_nrDecimals[valindex]));
         }
         ++valindex;
       }
+
+      if (_joinTimestamp) {
+        if (!taskIndex_str.isEmpty()) { taskIndex_str += '/'; }
+
+        if (!pluginID_str.isEmpty()) { pluginID_str += '/'; }
+
+        taskIndex_str += _element.TaskIndex;
+        pluginID_str  += _element.pluginID;
+      }
       ++csv_values_left;
     }
-    _element_processed = !C016_getTaskSample(element);
+    _outputLine.markEnd();
+    _element_processed = !C016_getTaskSample(_element);
   }
 
   if (csv_values_left > 0) {
     if (_joinTimestamp) {
       // Add column with nr of joined samples
-      _outputLine += _separator;
-      _outputLine += csv_values_left;
+      _outputLine.line += _separator;
+      _outputLine.line += csv_values_left;
     }
 
     for (size_t i = 0; i < nrTaskValues; ++i) {
       if (_includeTask[i / VARS_PER_TASK]) {
-        _outputLine += _csv_values[i];
+        _outputLine.line += _csv_values[i];
       }
     }
 
     if (_target == Target::CSV_file) {
-      _outputLine += '\r';
-      _outputLine += '\n';
+      _outputLine.line += '\r';
+      _outputLine.line += '\n';
     }
   }
-  return !_outputLine.isEmpty();
+  return !_outputLine.line.isEmpty();
+}
+
+void ESPEasyControllerCache_CSV_dumper::setPeekFilePos(int peekFileNr, int peekReadPos)
+{
+  ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+  _element_processed = true;
 }
 
 #endif // if FEATURE_RTC_CACHE_STORAGE
