@@ -320,6 +320,7 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("password"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   addHtmlAttribute(F("maxlength"), maxlength);
 
   #if FEATURE_TOOLTIPS
@@ -359,6 +360,7 @@ void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
   addHtmlAttribute(F("class"), F("wide"));
   addHtmlAttribute(F("type"),  F("text"));
   addHtmlAttribute(F("name"),  id);
+  addHtmlAttribute(F("id"),    id);
   addHtmlAttribute(F("value"), (empty_IP) ? EMPTY_STRING : formatIP(ip));
   addHtml('>');
 }

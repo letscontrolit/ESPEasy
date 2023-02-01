@@ -144,6 +144,10 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
       // Load
       loadContent(event);
 
+      for (uint8_t x = 0; x < P131_Nlines && !stringsHasContent; x++) {
+        stringsHasContent = !strings[x].isEmpty();
+      }
+
       // Setup initial scroll position
       for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
         content[x].pixelPos = 0;
@@ -243,13 +247,7 @@ bool P131_data_struct::plugin_read(struct EventStruct *event) {
   if (isInitialized() && !_splashState) {
     loadContent(event);
 
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT && !hasContent; x++) {
-      hasContent = !parseStringKeepCase(strings[x], 1).isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       display_content(event);
     }
   }

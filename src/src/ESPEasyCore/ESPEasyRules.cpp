@@ -814,6 +814,7 @@ void processMatchedRule(String& action, const String& event,
   String lcAction = action;
 
   lcAction.toLowerCase();
+  lcAction.trim();
 
   if (fakeIfBlock) {
     isCommand = false;
@@ -824,7 +825,7 @@ void processMatchedRule(String& action, const String& event,
     }
   }
   int split =
-    lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
+    lcAction.startsWith(F("elseif ")) ? 0 : -1; // check for optional "elseif" condition
 
   if (split != -1) {
     // Found "elseif" condition
@@ -856,7 +857,7 @@ void processMatchedRule(String& action, const String& event,
     }
   } else {
     // check for optional "if" condition
-    split = lcAction.indexOf(F("if "));
+    split = lcAction.startsWith(F("if ")) ? 0 : -1;
 
     if (split != -1) {
       if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {

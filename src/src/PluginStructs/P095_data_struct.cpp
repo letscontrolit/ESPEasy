@@ -206,6 +206,15 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     if (P095_CONFIG_BUTTON_PIN != -1) {
       pinMode(P095_CONFIG_BUTTON_PIN, INPUT_PULLUP);
     }
+
+    if (!stringsLoaded) {
+      LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
+      stringsLoaded = true;
+
+      for (uint8_t x = 0; x < P095_Nlines && !stringsHasContent; x++) {
+        stringsHasContent = !strings[x].isEmpty();
+      }
+    }
     success = true;
   }
   return success;
@@ -250,16 +259,7 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
  ***************************************************************************/
 bool P095_data_struct::plugin_read(struct EventStruct *event) {
   if ((nullptr != tft) && !_splashState) {
-    String strings[P095_Nlines];
-    LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
-
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P095_Nlines && !hasContent; x++) {
-      hasContent = !strings[x].isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
 
       int yPos = 0;

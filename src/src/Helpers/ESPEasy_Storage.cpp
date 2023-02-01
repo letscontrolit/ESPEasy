@@ -434,7 +434,7 @@ void fileSystemCheck()
     if (f) { 
       f.close(); 
     } else {
-      ResetFactory();
+      ResetFactory(false);
     }
   }
   else
