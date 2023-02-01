@@ -59,7 +59,7 @@ private:
   uint32_t writeToTarget(const char& c,
                          bool        send = true) const;
 
-  void flushValuesLeft(uint32_t csv_values_left);
+  void     flushValuesLeft(uint32_t csv_values_left);
 
   String  _csv_values[VARS_PER_TASK * TASKS_MAX];
   uint8_t _nrDecimals[VARS_PER_TASK * TASKS_MAX] = { 0 };
@@ -71,8 +71,7 @@ private:
   C016_binary_element                _element;
   bool                               _element_processed = true;
   ESPEasyControllerCache_CSV_element _outputLine;
-  String   _taskIndex_str, _pluginID_str;
-
+  String                             _taskIndex_str, _pluginID_str;
 
 
   int _backup_peekFileNr  = 0;

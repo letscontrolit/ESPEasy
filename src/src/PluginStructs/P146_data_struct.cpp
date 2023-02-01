@@ -7,9 +7,14 @@
 # include "../Globals/MQTT.h"
 
 
-P146_data_struct::P146_data_struct(taskIndex_t P146_TaskIndex)
+P146_data_struct::P146_data_struct(struct EventStruct *event)
 {
-  LoadCustomTaskSettings(P146_TaskIndex, _topics, P146_Nlines, 0);
+  LoadCustomTaskSettings(event->TaskIndex, _topics, P146_Nlines, 0);
+  const char separator = static_cast<char>(P146_SEPARATOR_CHARACTER);
+
+  dumper = new (std::nothrow) ESPEasyControllerCache_CSV_dumper(
+    P146_GET_JOIN_TIMESTAMP, P146_GET_ONLY_SET_TASKS, separator,
+    ESPEasyControllerCache_CSV_dumper::Target::MQTT);
 }
 
 P146_data_struct::~P146_data_struct()
@@ -68,14 +73,23 @@ uint32_t createTaskInfoJson(bool send) {
   return expected_size;
 }
 
-uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize) const
+uint32_t P146_data_struct::sendTaskInfoInBulk(struct EventStruct *event) const
 {
-  const String topic         = getTopic(P146_TaskInfoTopicIndex, P146_TaskIndex);
-  const size_t expected_size = createTaskInfoJson(false);
+  const String topic   = getTopic(P146_TaskInfoTopicIndex, event->TaskIndex);
+  size_t expected_size = 0;
 
-  if (MQTTclient.beginPublish(topic.c_str(), expected_size, false)) {
-    createTaskInfoJson(true);
-    MQTTclient.endPublish();
+  if (P146_GET_SEND_BINARY) { expected_size = createTaskInfoJson(false); }
+  else if (dumper != nullptr) { expected_size = dumper->generateCSVHeader(false); }
+
+  if (expected_size > 0) {
+    if (MQTTclient.beginPublish(topic.c_str(), expected_size, false)) {
+      if (P146_GET_SEND_BINARY) {
+        createTaskInfoJson(true);
+      } else {
+        dumper->generateCSVHeader(true);
+      }
+      MQTTclient.endPublish();
+    }
   }
   return 0;
 }
