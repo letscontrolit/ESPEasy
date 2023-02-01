@@ -124,9 +124,9 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   // Need to compute the nr. of chunks.
   // For this we need to 'reserve' some positions for this nr of chunks value.
   // Used an estimate of 5 here.
-  const size_t data_left     = (maxMessageSize - message.length() - 5);
-  const size_t chunkSize     = sizeof(C016_binary_element);
-  size_t nrChunks            = data_left / ((2 * chunkSize) + 1);
+  const size_t data_left = (maxMessageSize - message.length() - 5);
+  const size_t chunkSize = sizeof(C016_binary_element);
+  size_t nrChunks        = data_left / ((2 * chunkSize) + 1);
 
   if (peekReadPos < peekFileSize) {
     // Try to serve the rest of the file in 1 go.
@@ -207,6 +207,13 @@ bool P146_data_struct::prepareBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t 
   const bool callbackTask = true;
 
   return MQTTpublish(enabledMqttController, P146_TaskIndex, std::move(topic), std::move(message), false, callbackTask);
+}
+
+uint32_t P146_data_struct::sendCSVInBulk(taskIndex_t P146_TaskIndex, bool joinTimestamp, bool onlySetTasks, char separator) const
+{
+  uint32_t count = 0;
+
+  return count;
 }
 
 bool P146_data_struct::sendViaOriginalTask(

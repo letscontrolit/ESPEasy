@@ -9,6 +9,8 @@
 # define P146_Nchars                            128
 # define P146_TaskInfoTopicIndex                0
 # define P146_PublishTopicIndex                 1
+
+
 struct P146_data_struct : public PluginTaskData_base {
 public:
 
@@ -16,11 +18,16 @@ public:
 
   virtual ~P146_data_struct();
 
-  uint32_t    sendTaskInfoInBulk(taskIndex_t P146_TaskIndex,
-                                 uint32_t    maxMessageSize) const;
+  uint32_t sendTaskInfoInBulk(taskIndex_t P146_TaskIndex,
+                              uint32_t    maxMessageSize) const;
 
-  uint32_t    sendBinaryInBulk(taskIndex_t P146_TaskIndex,
-                               uint32_t    messageSize) const;
+  uint32_t sendBinaryInBulk(taskIndex_t P146_TaskIndex,
+                            uint32_t    messageSize) const;
+
+  uint32_t sendCSVInBulk(taskIndex_t P146_TaskIndex,
+                         bool        joinTimestamp,
+                         bool        onlySetTasks,
+                         char        separator) const;
 
   static bool prepareBinaryInBulk(taskIndex_t P146_TaskIndex,
                                   uint32_t    messageSize);
