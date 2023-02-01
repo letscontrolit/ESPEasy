@@ -110,6 +110,9 @@ Some sensors require manipulation of the heater part (e.g. MQ-7). An optional di
 Note that when heater control is switched on the gas level is measured and updated once per 150 seconds. The ouput pin can be used to bypass a series resistor for the heater part of the sensor. 
 The value of this series resistor can be calculated from the sensor specifications in the datasheets.
 
+.. image:: P145_heaterCircuit.png
+   :alt: MQ-7 heater circuit
+
 Final thoughts about the sensors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -184,6 +187,8 @@ Device
 
 * **Sensor type** Dropdown box to select one of the predefined sensors. Used to determine the correct conversion algorithm.
 
+* **Heater Pin** Optional selection of a heater control pin. If a valid pin is selected heater control algoritm is switched on
+
 * **Load Resistance** Value of the connected load resistor (``Rload``)
 
 * **R Zero** Reference resistance value for the sensor (``Rzero``). This is the main calibration value, see sensor description.
@@ -204,6 +209,12 @@ Device
 
 * **Humidity Value** Dropdown box to select the value for the compensation humidity.
 
+.. image:: P145_DeviceSettings32.png
+   :alt: Device configuration
+
+On ESP32 the analog input can be selected.
+
+* **Analog Pin** Select one of the available analog input pins on the ESP32
 Commands
 ----------
 
