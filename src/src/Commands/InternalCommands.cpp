@@ -411,7 +411,7 @@ bool executeInternalCommand(command_case_data & data)
 #endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #if FEATURE_MQTT
-      COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2); // MQTT.h
+      COMMAND_CASE_A( "publish", Command_MQTT_Publish,     -1); // MQTT.h
 #endif // if FEATURE_MQTT
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
