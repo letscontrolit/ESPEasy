@@ -553,10 +553,13 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         const int freemem_begin = ESP.getFreeHeap();
         #endif
 
-        PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
+        bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
 
-        #ifndef BUILD_NO_DEBUG
         if (Function == PLUGIN_INIT) {
+          if (!retval) {
+            Settings.TaskDeviceEnabled[taskIndex] = false; // Initialization failed: Disable plugin!
+          }
+          #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             // See also logMemUsageAfter()
             const int freemem_end = ESP.getFreeHeap();
@@ -581,8 +584,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               addLogMove(LOG_LEVEL_DEBUG, log);
             }
           }
+          #endif
         }
-        #endif
       }
 
       return true;
@@ -676,22 +679,26 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
         }
         if (Function == PLUGIN_INIT) {
-          #if FEATURE_PLUGIN_STATS
-          if (Device[DeviceIndex].PluginStats) {
-            PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
-            if (taskData == nullptr) {
-              // Plugin apparently does not have PluginTaskData.
-              // Create Plugin Task data if it has "Stats" checked.
-              LoadTaskSettings(event->TaskIndex);
-              if (ExtraTaskSettings.anyEnabledPluginStats()) {
-                initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
+          if (!retval) {
+            Settings.TaskDeviceEnabled[event->TaskIndex] = false; // Initialization failed: Disable plugin!
+          } else {
+            #if FEATURE_PLUGIN_STATS
+            if (Device[DeviceIndex].PluginStats) {
+              PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+              if (taskData == nullptr) {
+                // Plugin apparently does not have PluginTaskData.
+                // Create Plugin Task data if it has "Stats" checked.
+                LoadTaskSettings(event->TaskIndex);
+                if (ExtraTaskSettings.anyEnabledPluginStats()) {
+                  initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
+                }
               }
             }
+            #endif // if FEATURE_PLUGIN_STATS
+            // Schedule the plugin to be read.
+            Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
+            queueTaskEvent(F("TaskInit"), event->TaskIndex, retval);
           }
-          #endif // if FEATURE_PLUGIN_STATS
-          // Schedule the plugin to be read.
-          Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
-          queueTaskEvent(F("TaskInit"), event->TaskIndex, retval);
         }
         if (Function == PLUGIN_EXIT) {
           clearPluginTaskData(event->TaskIndex);

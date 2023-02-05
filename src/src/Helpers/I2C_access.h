@@ -3,6 +3,12 @@
 
 #include "../DataStructs/I2CTypes.h"
 
+#include "../DataTypes/TaskIndex.h"
+
+#include "../Globals/Plugins.h"
+
+#include <vector>
+
 I2C_bus_state I2C_check_bus(int8_t scl, int8_t sda);
 
 // **************************************************************************/
@@ -100,5 +106,16 @@ int16_t I2C_readS16_reg(uint8_t i2caddr,
 int16_t I2C_readS16_LE_reg(uint8_t i2caddr,
                            uint8_t    reg);
 
+// *************************************************************************/
+// Checks if a device is responding on the address
+// Should be used in any I2C plugin case PLUGIN_INIT: before any initialization
+// Can be used in any I2C plugin case PLUGIN_READ: to check if the device is still connected/responding
+// if (!I2C_deviceCheck(configured_I2C_address)) {
+//   break; // Will return the default false for success
+// }
+// *************************************************************************/
+bool I2C_deviceCheck(uint8_t     i2caddr,
+                     taskIndex_t taskIndex  = INVALID_TASK_INDEX,
+                     uint8_t     maxRetries = 0);
 
 #endif // HELPERS_I2C_ACCESS_H
