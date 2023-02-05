@@ -161,6 +161,8 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       const uint8_t unit = (CONFIG_PORT - 1) / 8;
       uint8_t address    = 0x20 + unit;
 
@@ -169,6 +171,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       if (!I2C_deviceCheck(address)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
 
       // apply INIT only if PIN is in range. Do not start INIT if pin not set in the device page.
       if (CONFIG_PORT >= 0)
@@ -294,6 +297,8 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
      */
     case PLUGIN_TEN_PER_SECOND:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       const uint8_t unit = (CONFIG_PORT - 1) / 8;
       uint8_t address    = 0x20 + unit;
 
@@ -302,6 +307,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       if (!I2C_deviceCheck(address, event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       const int8_t state                            = Plugin_019_Read(CONFIG_PORT);
       const __FlashStringHelper *monitorEventString = F("PCF");
 

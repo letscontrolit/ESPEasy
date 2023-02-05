@@ -124,9 +124,12 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(P047_I2C_ADDR)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       success = true;
       break;
     }
@@ -153,9 +156,12 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
           // valid sensor
         }
         else {
+          # if FEATURE_I2C_DEVICE_CHECK
+
           if (!I2C_deviceCheck(P047_I2C_ADDR, event->TaskIndex, 10)) {
             break; // Will return the default false for success
           }
+          # endif // if FEATURE_I2C_DEVICE_CHECK
           addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Version, no Sensor?"));
           I2C_write8(P047_I2C_ADDR, SOILMOISTURESENSOR_RESET);
           break;

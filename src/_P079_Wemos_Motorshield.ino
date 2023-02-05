@@ -193,9 +193,12 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_INIT: {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(I2C_ADDR_PCFG_P079)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       // Validate Shield Type.
       bool valid = false;
 
@@ -223,9 +226,12 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE: {
 
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(I2C_ADDR_PCFG_P079, event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       uint8_t parse_error = false;
       String  ModeStr;
 

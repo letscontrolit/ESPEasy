@@ -172,9 +172,12 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(P061_CONFIG_I2C_ADDRESS)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P061_data_struct(P061_CONFIG_I2C_ADDRESS, P061_CONFIG_KEYPAD_TYPE));
       P061_data_struct *P061_data = static_cast<P061_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -189,9 +192,12 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(P061_CONFIG_I2C_ADDRESS, event->TaskIndex, 100)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       P061_data_struct *P061_data = static_cast<P061_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P061_data) {

@@ -187,9 +187,12 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(P090_I2C_ADDR)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P090_data_struct(P090_I2C_ADDR));
       P090_data_struct *P090_data =
         static_cast<P090_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -238,9 +241,12 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(P090_I2C_ADDR, event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       P090_data_struct *P090_data =
         static_cast<P090_data_struct *>(getPluginTaskData(event->TaskIndex));
 

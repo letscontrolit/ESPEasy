@@ -6,14 +6,14 @@
 // ######################################################################################################
 
 
-#define PLUGIN_072
-#define PLUGIN_ID_072         72
-#define PLUGIN_NAME_072       "Environment - HDC1080 (I2C)"
-#define PLUGIN_VALUENAME1_072 "Temperature"
-#define PLUGIN_VALUENAME2_072 "Humidity"
+# define PLUGIN_072
+# define PLUGIN_ID_072         72
+# define PLUGIN_NAME_072       "Environment - HDC1080 (I2C)"
+# define PLUGIN_VALUENAME1_072 "Temperature"
+# define PLUGIN_VALUENAME2_072 "Humidity"
 
 
-#define HDC1080_I2C_ADDRESS      0x40 // I2C address for the sensor
+# define HDC1080_I2C_ADDRESS      0x40 // I2C address for the sensor
 
 boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -59,19 +59,25 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(0x40)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       success = true;
       break;
     }
 
     case PLUGIN_READ:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(0x40, event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
-      uint8_t hdc1080_msb, hdc1080_lsb;
+      # endif // if FEATURE_I2C_DEVICE_CHECK
+      uint8_t  hdc1080_msb, hdc1080_lsb;
       uint16_t hdc1080_rawtemp, hdc1080_rawhum;
       float    hdc1080_temp, hdc1080_hum;
 
@@ -104,7 +110,7 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
 
       UserVar[event->BaseVarIndex]     = hdc1080_temp;
       UserVar[event->BaseVarIndex + 1] = hdc1080_hum;
-      
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("HDC1080: Temperature: ");
         log += formatUserVarNoCheck(event->TaskIndex, 0);

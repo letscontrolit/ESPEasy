@@ -222,9 +222,12 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(P109_CONFIG_I2CADDRESS)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P109_data_struct());
       P109_data_struct *P109_data = static_cast<P109_data_struct *>(getPluginTaskData(event->TaskIndex));
 

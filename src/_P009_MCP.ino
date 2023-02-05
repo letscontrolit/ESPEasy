@@ -160,12 +160,15 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       const uint8_t unit    = (CONFIG_PORT - 1) / 16;
       const uint8_t address = 0x20 + unit;
 
       if (!I2C_deviceCheck(address)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
 
       // Turn on Pullup resistor
       setMCPInputAndPullupMode(CONFIG_PORT, true);
@@ -238,12 +241,15 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       const uint8_t unit    = (CONFIG_PORT - 1) / 16;
       const uint8_t address = 0x20 + unit;
 
       if (!I2C_deviceCheck(address, event->TaskIndex, 100)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       const int8_t state                            = GPIO_MCP_Read(CONFIG_PORT);
       const __FlashStringHelper *monitorEventString = F("MCP");
 

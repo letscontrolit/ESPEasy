@@ -97,18 +97,24 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(PCONFIG(0))) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       success = true;
       break;
     }
 
     case PLUGIN_READ:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       AS_BH1750 sensor = AS_BH1750(PCONFIG(0));
 
       // replaced the 8 lines below to optimize code

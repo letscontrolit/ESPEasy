@@ -102,9 +102,12 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(PCONFIG(0))) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P068_SHT3X(PCONFIG(0)));
       P068_SHT3X *P068_data = static_cast<P068_SHT3X *>(getPluginTaskData(event->TaskIndex));
 
@@ -114,9 +117,12 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       P068_SHT3X *sht3x = static_cast<P068_SHT3X *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == sht3x) {

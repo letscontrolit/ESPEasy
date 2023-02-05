@@ -463,9 +463,12 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(P143_I2C_ADDR)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P143_data_struct(event));
       P143_data_struct *P143_data = static_cast<P143_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -518,9 +521,12 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(P143_I2C_ADDR, event->TaskIndex, 100)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       P143_data_struct *P143_data = static_cast<P143_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P143_data) {

@@ -254,9 +254,12 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(PCONFIG(0))) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       bool tbUseCalibration = bitRead(P062_CONFIG_FLAGS, P062_FLAGS_USE_CALIBRATION);
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P062_data_struct());
@@ -300,9 +303,12 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 100)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       P062_data_struct *P062_data =
         static_cast<P062_data_struct *>(getPluginTaskData(event->TaskIndex));
 

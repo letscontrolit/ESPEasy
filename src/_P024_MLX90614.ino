@@ -84,9 +84,12 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(0x51)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       uint8_t unit    = CONFIG_PORT;
       uint8_t address = 0x5A + unit;
 
@@ -108,9 +111,12 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(0x51, event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       P024_data_struct *P024_data =
         static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 

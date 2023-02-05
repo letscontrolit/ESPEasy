@@ -76,9 +76,12 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(0x36)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       const sfe_max1704x_devices_e device = static_cast<sfe_max1704x_devices_e>(P115_DEVICESELECTOR);
       const int threshold                 = P115_THRESHOLD;
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P115_data_struct(device, threshold));

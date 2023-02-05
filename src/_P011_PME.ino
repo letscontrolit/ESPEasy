@@ -71,18 +71,24 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(0x7f)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       success = true;
       break;
     }
 
     case PLUGIN_READ:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(0x7f, event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       UserVar[event->BaseVarIndex] = Plugin_011_Read(PCONFIG(0), CONFIG_PORT);
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event->TaskIndex, 0)));

@@ -157,12 +157,15 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
       const uint8_t unit    = (CONFIG_PORT - 1) / 4;
       const uint8_t address = 0x48 + unit;
 
       if (!I2C_deviceCheck(address)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       success = true;
       break;
     }
@@ -173,9 +176,12 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       uint8_t port          = CONFIG_PORT - (unit * 4);
       const uint8_t address = 0x48 + unit;
 
+      # if FEATURE_I2C_DEVICE_CHECK
+
       if (!I2C_deviceCheck(address, event->TaskIndex, 10)) {
         break; // Will return the default false for success
       }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       uint8_t var = 0;
 
       for (; var < P007_NR_OUTPUT_VALUES; ++port, ++var) {
