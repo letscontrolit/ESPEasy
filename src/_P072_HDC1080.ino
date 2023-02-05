@@ -59,12 +59,18 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x40)) {
+        break; // Will return the default false for success
+      }
       success = true;
       break;
     }
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(0x40, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       uint8_t hdc1080_msb, hdc1080_lsb;
       uint16_t hdc1080_rawtemp, hdc1080_rawhum;
       float    hdc1080_temp, hdc1080_hum;

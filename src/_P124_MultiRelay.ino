@@ -184,6 +184,9 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(P124_CONFIG_I2C_ADDRESS)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P124_data_struct(P124_CONFIG_I2C_ADDRESS, P124_CONFIG_RELAY_COUNT));
       P124_data_struct *P124_data = static_cast<P124_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -267,6 +270,9 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
+      if (!I2C_deviceCheck(P124_CONFIG_I2C_ADDRESS, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P124_data_struct *P124_data = static_cast<P124_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P124_data) {

@@ -244,6 +244,10 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // this case defines code to be executed when the plugin is initialised
+      // For I2C plugins check if the hardware is connected properly:
+      // if (!I2C_deviceCheck(Pxxx_I2C_ADDR)) {
+      //   break; // Cancel, hardware not ready/available at configured address
+      // }
 
       // after the plugin has been initialised successfuly, set success and break
       success = true;

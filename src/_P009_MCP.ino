@@ -93,11 +93,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        String  portNames[16];
-        int     portValues[16];
-        uint8_t unit    = (CONFIG_PORT - 1) / 16;
-        uint8_t port    = CONFIG_PORT - (unit * 16);
-        uint8_t address = 0x20 + unit;
+        String portNames[16];
+        int    portValues[16];
+        const uint8_t unit    = (CONFIG_PORT - 1) / 16;
+        const uint8_t port    = CONFIG_PORT - (unit * 16);
+        const uint8_t address = 0x20 + unit;
 
         for (uint8_t x = 0; x < 16; x++) {
           portValues[x] = x + 1;
@@ -160,6 +160,13 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      const uint8_t unit    = (CONFIG_PORT - 1) / 16;
+      const uint8_t address = 0x20 + unit;
+
+      if (!I2C_deviceCheck(address)) {
+        break; // Will return the default false for success
+      }
+
       // Turn on Pullup resistor
       setMCPInputAndPullupMode(CONFIG_PORT, true);
 
@@ -231,6 +238,12 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
+      const uint8_t unit    = (CONFIG_PORT - 1) / 16;
+      const uint8_t address = 0x20 + unit;
+
+      if (!I2C_deviceCheck(address, event->TaskIndex, 100)) {
+        break; // Will return the default false for success
+      }
       const int8_t state                            = GPIO_MCP_Read(CONFIG_PORT);
       const __FlashStringHelper *monitorEventString = F("MCP");
 
@@ -258,9 +271,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
         if (lround(P009_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
-          #ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."));
-          #endif
+          # endif // ifndef BUILD_NO_DEBUG
           PCONFIG_LONG(3) = 1;
         }
 

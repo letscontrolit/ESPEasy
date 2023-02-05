@@ -78,6 +78,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(2) = 1; // RGB values: Calibrated RGB
       PCONFIG(3) = 1; // Value #4: Color Temperature (DN40)
 
+      if (!I2C_deviceCheck(0x29)) {
+        break;        // Will return the default false for success
+      }
       P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
       if (nullptr != P050_data) {
@@ -98,35 +101,39 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
     {
       uint8_t choiceMode = PCONFIG(0);
       {
-        const __FlashStringHelper *optionsMode[6];
-        optionsMode[0] = F("2.4 ms");
-        optionsMode[1] = F("24 ms");
-        optionsMode[2] = F("50 ms");
-        optionsMode[3] = F("101 ms");
-        optionsMode[4] = F("154 ms");
-        optionsMode[5] = F("700 ms");
-        int optionValuesMode[6];
-        optionValuesMode[0] = TCS34725_INTEGRATIONTIME_2_4MS;
-        optionValuesMode[1] = TCS34725_INTEGRATIONTIME_24MS;
-        optionValuesMode[2] = TCS34725_INTEGRATIONTIME_50MS;
-        optionValuesMode[3] = TCS34725_INTEGRATIONTIME_101MS;
-        optionValuesMode[4] = TCS34725_INTEGRATIONTIME_154MS;
-        optionValuesMode[5] = TCS34725_INTEGRATIONTIME_700MS;
+        const __FlashStringHelper *optionsMode[] = {
+          F("2.4 ms"),
+          F("24 ms"),
+          F("50 ms"),
+          F("101 ms"),
+          F("154 ms"),
+          F("700 ms"),
+        };
+        const int optionValuesMode[] = {
+          TCS34725_INTEGRATIONTIME_2_4MS,
+          TCS34725_INTEGRATIONTIME_24MS,
+          TCS34725_INTEGRATIONTIME_50MS,
+          TCS34725_INTEGRATIONTIME_101MS,
+          TCS34725_INTEGRATIONTIME_154MS,
+          TCS34725_INTEGRATIONTIME_700MS,
+        };
         addFormSelector(F("Integration Time"), F("inttime"), 6, optionsMode, optionValuesMode, choiceMode);
       }
 
       uint8_t choiceMode2 = PCONFIG(1);
       {
-        const __FlashStringHelper *optionsMode2[4];
-        optionsMode2[0] = F("1x");
-        optionsMode2[1] = F("4x");
-        optionsMode2[2] = F("16x");
-        optionsMode2[3] = F("60x");
-        int optionValuesMode2[4];
-        optionValuesMode2[0] = TCS34725_GAIN_1X;
-        optionValuesMode2[1] = TCS34725_GAIN_4X;
-        optionValuesMode2[2] = TCS34725_GAIN_16X;
-        optionValuesMode2[3] = TCS34725_GAIN_60X;
+        const __FlashStringHelper *optionsMode2[] = {
+          F("1x"),
+          F("4x"),
+          F("16x"),
+          F("60x"),
+        };
+        const int optionValuesMode2[] = {
+          TCS34725_GAIN_1X,
+          TCS34725_GAIN_4X,
+          TCS34725_GAIN_16X,
+          TCS34725_GAIN_60X,
+        };
         addFormSelector(F("Gain"), F("gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
       }
 
@@ -253,6 +260,10 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x29)) {
+        break; // Will return the default false for success
+      }
+
       /* Initialise with specific int time and gain values */
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1)));
       P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -272,6 +283,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(0x29, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P050_data) {

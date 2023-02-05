@@ -156,6 +156,9 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x53)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P133_data_struct(static_cast<P133_selectMode_e>(P133_SELECT_MODE),
                                                                                static_cast<ltr390_gain_t>(P133_UVGAIN),
                                                                                static_cast<ltr390_resolution_t>(P133_UVRESOLUTION),
@@ -181,6 +184,9 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
+      if (!I2C_deviceCheck(0x53, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P133_data_struct *P133_data = static_cast<P133_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P133_data) {

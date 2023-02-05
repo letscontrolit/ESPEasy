@@ -6,14 +6,14 @@
 // #######################################################################################################
 
 
-#include "src/PluginStructs/P024_data_struct.h"
+# include "src/PluginStructs/P024_data_struct.h"
 
 // MyMessage *msgTemp024; // Mysensors
 
-#define PLUGIN_024
-#define PLUGIN_ID_024 24
-#define PLUGIN_NAME_024 "Environment - MLX90614"
-#define PLUGIN_VALUENAME1_024 "Temperature"
+# define PLUGIN_024
+# define PLUGIN_ID_024 24
+# define PLUGIN_NAME_024 "Environment - MLX90614"
+# define PLUGIN_VALUENAME1_024 "Temperature"
 
 boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -59,10 +59,9 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-        #define MLX90614_OPTION 2
+      # define MLX90614_OPTION 2
 
-      uint8_t choice = PCONFIG(0);
-      const __FlashStringHelper * options[MLX90614_OPTION] = {
+      const __FlashStringHelper *options[MLX90614_OPTION] = {
         F("IR object temperature"),
         F("Ambient temperature")
       };
@@ -70,7 +69,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         (0x07),
         (0x06)
       };
-      addFormSelector(F("Option"), F("option"), MLX90614_OPTION, options, optionValues, choice);
+      addFormSelector(F("Option"), F("option"), MLX90614_OPTION, options, optionValues, PCONFIG(0));
 
       success = true;
       break;
@@ -78,13 +77,16 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0)      = getFormItemInt(F("option"));
-      success         = true;
+      PCONFIG(0) = getFormItemInt(F("option"));
+      success    = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x51)) {
+        break; // Will return the default false for success
+      }
       uint8_t unit    = CONFIG_PORT;
       uint8_t address = 0x5A + unit;
 
@@ -93,6 +95,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = (nullptr != P024_data);
+
       //        if (!msgTemp024) // Mysensors
       //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
       //        present(event->BaseVarIndex, S_TEMP); //Mysensors
@@ -105,16 +108,21 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(0x51, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P024_data_struct *P024_data =
         static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P024_data) {
         UserVar[event->BaseVarIndex] = P024_data->readTemperature(PCONFIG(0));
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MLX90614  : Temperature: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
           addLogMove(LOG_LEVEL_INFO, log);
         }
+
         //        send(msgObjTemp024->set(UserVar[event->BaseVarIndex], 1)); // Mysensors
         success = true;
       }

@@ -73,6 +73,9 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x77)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P006_data_struct());
       P006_data_struct *P006_data =
         static_cast<P006_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -83,6 +86,9 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(0x77, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P006_data_struct *P006_data =
         static_cast<P006_data_struct *>(getPluginTaskData(event->TaskIndex));
 

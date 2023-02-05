@@ -91,6 +91,9 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x58)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P083_data_struct());
       P083_data_struct *P083_data =
         static_cast<P083_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -115,6 +118,9 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
+      if (!I2C_deviceCheck(0x58, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P083_data_struct *P083_data =
         static_cast<P083_data_struct *>(getPluginTaskData(event->TaskIndex));
 

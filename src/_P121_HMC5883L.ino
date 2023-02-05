@@ -105,6 +105,9 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x1E)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P121_data_struct());
       P121_data_struct *P121_data = static_cast<P121_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -114,6 +117,9 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(0x1E, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P121_data_struct *P121_data = static_cast<P121_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P121_data) {

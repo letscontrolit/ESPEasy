@@ -139,6 +139,9 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x62)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P135_data_struct(event->TaskIndex,
                                                                                P135_SENSOR_TYPE,
                                                                                P135_SENSOR_ALTITUDE,
@@ -157,6 +160,9 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(0x62, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P135_data_struct *P135_data = static_cast<P135_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P135_data) {

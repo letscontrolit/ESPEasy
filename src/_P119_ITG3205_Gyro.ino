@@ -134,6 +134,9 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(P119_I2C_ADDR)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P119_data_struct(P119_I2C_ADDR, P119_RAW_DATA, P119_AVERAGE_BUFFER));
       P119_data_struct *P119_data = static_cast<P119_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -155,6 +158,9 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
+      if (!I2C_deviceCheck(P119_I2C_ADDR, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P119_data_struct *P119_data = static_cast<P119_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P119_data) {

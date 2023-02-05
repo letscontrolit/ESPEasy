@@ -156,6 +156,9 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(P120_I2C_ADDR)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER));
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -203,6 +206,9 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
     case PLUGIN_FIFTY_PER_SECOND:
     {
+      if (!I2C_deviceCheck(P120_I2C_ADDR, event->TaskIndex, 100)) {
+        break; // Will return the default false for success
+      }
       if (((function == PLUGIN_TEN_PER_SECOND) && (P120_FREQUENCY == P120_FREQUENCY_10)) ||
           ((function == PLUGIN_FIFTY_PER_SECOND) && (P120_FREQUENCY == P120_FREQUENCY_50))) {
         P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));

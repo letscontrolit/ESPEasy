@@ -110,6 +110,9 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(VEML6040_ADDR)) {
+        break; // Will return the default false for success
+      }
       VEML6040_Init(PCONFIG(1));
 
       success = true;
@@ -118,6 +121,9 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(VEML6040_ADDR, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       float R, G, B, W;
 
       R = VEML6040_GetValue(0x08);

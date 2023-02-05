@@ -138,6 +138,9 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(PCONFIG(0))) {
+        break; // Will return the default false for success
+      }
       uint8_t type                           = 0;
       P023_data_struct::Spacing font_spacing = P023_data_struct::Spacing::normal;
 
@@ -214,6 +217,9 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {

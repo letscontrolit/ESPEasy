@@ -144,6 +144,10 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(PCONFIG(0))) {
+        break; // Will return the default false for success
+      }
+
       // int value = 0;
       // uint8_t unit = (CONFIG_PORT - 1) / 4;
       // uint8_t port = CONFIG_PORT - (unit * 4);
@@ -158,6 +162,9 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P025_data) {

@@ -241,6 +241,9 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(AS7265X_ADDR)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P112_data_struct());
       P112_data_struct *P112_data =
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -302,6 +305,9 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_TEN_PER_SECOND:
     {
+      if (!I2C_deviceCheck(AS7265X_ADDR, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P112_data_struct *P112_data =
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
 

@@ -165,6 +165,10 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x24)) {
+        break; // Will return the default false for success
+      }
+
       // set clock stretch to 2000, if its not set via advanced settings yet
       // something that Martinus figured out and added: https://github.com/esp8266/Arduino/issues/1541
       // if (!Settings.WireClockStretchLimit)

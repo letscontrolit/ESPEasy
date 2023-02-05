@@ -131,6 +131,9 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x61)) {
+        break; // Will return the default false for success
+      }
       uint16_t interval = P117_MEASURE_INTERVAL;
 
       if (interval < 2) { interval = 2; }
@@ -148,6 +151,9 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(0x61, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P117_data_struct *P117_data = static_cast<P117_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P117_data) {

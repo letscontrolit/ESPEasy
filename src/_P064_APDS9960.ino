@@ -237,6 +237,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x39)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P064_data_struct());
       P064_data_struct *P064_data = static_cast<P064_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -277,6 +280,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
+      if (!I2C_deviceCheck(0x39, event->TaskIndex, 100)) {
+        break; // Will return the default false for success
+      }
       P064_data_struct *P064_data = static_cast<P064_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr == P064_data) || (P064_MODE != PLUGIN_MODE_GPL_064) || !P064_data->sensor.isGestureAvailable()) {

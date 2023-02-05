@@ -133,6 +133,9 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(P015_I2C_ADDR)) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P015_data_struct(P015_I2C_ADDR, P015_GAIN, P015_INTEGRATION));
       P015_data_struct *P015_data =
         static_cast<P015_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -143,6 +146,9 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(P015_I2C_ADDR, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P015_data_struct *P015_data =
         static_cast<P015_data_struct *>(getPluginTaskData(event->TaskIndex));
 

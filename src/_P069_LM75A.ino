@@ -85,9 +85,11 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t address = PCONFIG(0);
+      if (!I2C_deviceCheck(PCONFIG(0))) {
+        break; // Will return the default false for success
+      }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P069_data_struct(address));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P069_data_struct(static_cast<uint8_t>(PCONFIG(0))));
       P069_data_struct *P069_data =
         static_cast<P069_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -97,6 +99,9 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P069_data_struct *P069_data =
         static_cast<P069_data_struct *>(getPluginTaskData(event->TaskIndex));
 

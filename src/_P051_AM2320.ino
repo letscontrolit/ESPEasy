@@ -78,12 +78,18 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(0x5c)) {
+        break; // Will return the default false for success
+      }
       success = true;
       break;
     }
 
     case PLUGIN_READ:
     {
+      if (!I2C_deviceCheck(0x5c, event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       AM2320 th;
 
       switch (th.Read()) {

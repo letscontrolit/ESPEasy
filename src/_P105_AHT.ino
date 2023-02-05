@@ -148,6 +148,9 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      if (!I2C_deviceCheck(PCONFIG(0))) {
+        break; // Will return the default false for success
+      }
       initPluginTaskData(event->TaskIndex,
                          new (std::nothrow) P105_data_struct(PCONFIG(0), static_cast<AHTx_device_type>(PCONFIG(1))));
       P105_data_struct *P105_data =
@@ -160,6 +163,9 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
+      if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 10)) {
+        break; // Will return the default false for success
+      }
       P105_data_struct *P105_data =
         static_cast<P105_data_struct *>(getPluginTaskData(event->TaskIndex));
 

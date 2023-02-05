@@ -155,9 +155,11 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t address = PCONFIG(0);
+      if (!I2C_deviceCheck(PCONFIG(0))) {
+        break; // Will return the default false for success
+      }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(address));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(PCONFIG(0)));
       P057_data_struct *P057_data =
         static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -222,9 +224,9 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
         String lowerString = string;
         lowerString.toLowerCase();
-        lowerString.replace(F("  "), " ");
-        lowerString.replace(F(" ="), "=");
-        lowerString.replace(F("= "), "=");
+        lowerString.replace(F("  "), F(" "));
+        lowerString.replace(F(" ="), F("="));
+        lowerString.replace(F("= "), F("="));
 
         param = parseString(lowerString, paramIdx++);
 
