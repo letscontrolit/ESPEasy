@@ -153,7 +153,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   }
   writeToMqtt(message, true);
 
-  for (int chunk = 0; chunk < nrChunks; ++chunk) {
+  for (size_t chunk = 0; chunk < nrChunks; ++chunk) {
     C016_binary_element element;
 
     if (ControllerCache.peek(reinterpret_cast<uint8_t *>(&element), chunkSize))
