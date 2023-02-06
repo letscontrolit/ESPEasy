@@ -8,6 +8,10 @@
 
 #ifdef USES_P145
 
+// Enable testing 
+//#define P145_TEST
+//#define P145_CALIBRATION_INTERVAL (5*60*1000)
+
 #include "../Globals/ESPEasyWiFiEvent.h"   // Need to know when WiFi is ruining the ADC measurements
 #include "../Helpers/Hardware.h"           // Need to know the ADC properties
 
@@ -234,7 +238,7 @@ void P145_data_struct::calibrate (float currentRcal)
   long time = timePassedSince(last_cal);
   float lastRcal = cal_data;  // Last calculated Rcal this calibration sequence
   
-  if ((currentRcal < lastRcal) || lastRcal <= 0.0f)
+  if ((currentRcal > lastRcal) || lastRcal <= 0.0f)
   {
     cal_data = currentRcal;
   }
@@ -429,7 +433,7 @@ float P145_data_struct::getCorrectedPPM(float rSensor, float temperature, float 
       // No correction
       c = 1.0f;
   }
-  if (c <=0)  // In case no or wrong correction factors are spefified disable correction (multiplier = 1.0)
+  if (c <=0.0f)  // In case no or wrong correction factors are specified disable correction (multiplier = 1.0)
   {
     c = 1.0f;
   }
@@ -532,6 +536,20 @@ float P145_data_struct::readValue(float temperature, float humidity)
     float rSensor = 0.0f;         // Sensor resistance Rs
     float value = 0.0f;           // Return value
 
+#ifdef P145_TEST
+    static float injector = 50.0f;
+    static float injstep = 50.0f;
+    ain = injector;
+    injector += injstep;
+    if (injector >= 400.0f)
+    {
+      injstep = -50.0f;
+    }
+    if (injector <= 100)
+    {
+      injstep = 50.0f;
+    }
+#else
     if (validGpio(heaterPin))     // Check if heater control is enabled
     {
       ain = latchedAnalogInput;   // Use value measured by heater control cycle
@@ -541,6 +559,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
       ain = getAnalogValue();     // Use acually being measured value
       resetOversampling();        // Reset the oversampling variables.
     }
+#endif
     rSensor = getResistance(ain); // Convert to Rsensor value
     if (compensation) // Check if temperature/Humidity compensation is selected
     {
