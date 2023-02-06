@@ -56,7 +56,7 @@ void handle_dumpcache() {
   {
     // Send HTTP headers to directly save the dump as a CSV file
     String str =  F("attachment; filename=cachedump_");
-    str += Settings.Name;
+    str += Settings.getName();
     str += F("_U");
     str += Settings.Unit;
 
