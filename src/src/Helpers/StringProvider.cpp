@@ -49,6 +49,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
   switch (label)
   {
     case LabelType::UNIT_NR:                return F("Unit Number");
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    case LabelType::UNIT_NR_0:              return F("Unit Number 0-filled");
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     case LabelType::UNIT_NAME:              return F("Unit Name");
     case LabelType::HOST_NAME:              return F("Hostname");
 
@@ -249,7 +252,17 @@ String getValue(LabelType::Enum label) {
   switch (label)
   {
     case LabelType::UNIT_NR:                return String(Settings.Unit);
-    case LabelType::UNIT_NAME:              return String(Settings.Name); // Only return the set name, no appended unit.
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    case LabelType::UNIT_NR_0: // Fixed 3-digit unitnumber
+    {
+      String _unit;
+      if (Settings.Unit < 10) { _unit += '0'; }
+      if (Settings.Unit < 100) { _unit += '0'; }
+      _unit += Settings.Unit;
+      return _unit;
+    }
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
+    case LabelType::UNIT_NAME:              return Settings.getName(); // Only return the set name, no appended unit.
     case LabelType::HOST_NAME:              return NetworkGetHostname();
 
 
@@ -343,7 +356,6 @@ String getValue(LabelType::Enum label) {
 #if FEATURE_AUTO_DARK_MODE
     case LabelType::ENABLE_AUTO_DARK_MODE:      return toString(Settings.getCssMode());
 #endif // FEATURE_AUTO_DARK_MODE
-
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
