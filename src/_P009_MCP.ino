@@ -113,6 +113,16 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      const uint8_t unit = (CONFIG_PORT - 1) / 16;
+      event->Par1 = 0x20 + unit;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       // @giig1967g: set current task value for taking actions after changes
@@ -160,16 +170,6 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      const uint8_t unit    = (CONFIG_PORT - 1) / 16;
-      const uint8_t address = 0x20 + unit;
-
-      if (!I2C_deviceCheck(address)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
-
       // Turn on Pullup resistor
       setMCPInputAndPullupMode(CONFIG_PORT, true);
 
@@ -246,7 +246,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t unit    = (CONFIG_PORT - 1) / 16;
       const uint8_t address = 0x20 + unit;
 
-      if (!I2C_deviceCheck(address, event->TaskIndex, 100)) {
+      if (!I2C_deviceCheck(address, event->TaskIndex, 10, PLUGIN_I2C_GET_ADDRESS)) { // Generate stats
         break; // Will return the default false for success
       }
       # endif // if FEATURE_I2C_DEVICE_CHECK

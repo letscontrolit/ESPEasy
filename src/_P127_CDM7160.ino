@@ -78,6 +78,15 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P127_CONFIG_I2C_ADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // No decimals needed
@@ -103,12 +112,6 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P127_CONFIG_I2C_ADDRESS)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P127_data_struct(P127_CONFIG_I2C_ADDRESS, P127_CONFIG_ALTITUDE));
       P127_data_struct *P127_data = static_cast<P127_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -118,12 +121,6 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_ONCE_A_SECOND:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P127_CONFIG_I2C_ADDRESS, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P127_data_struct *P127_data = static_cast<P127_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P127_data) {

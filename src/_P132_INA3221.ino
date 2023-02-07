@@ -78,6 +78,15 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P132_I2C_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       P132_VALUE_1 = 0; // Configure randomly
@@ -205,12 +214,6 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P132_I2C_ADDR)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P132_data_struct(event));
       P132_data_struct *P132_data = static_cast<P132_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -224,12 +227,6 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P132_I2C_ADDR, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P132_data_struct *P132_data = static_cast<P132_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P132_data) {

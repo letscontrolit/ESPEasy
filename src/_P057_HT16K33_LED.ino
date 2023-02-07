@@ -113,6 +113,15 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = PCONFIG(0);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("7-Seg. Clock"));
@@ -155,13 +164,6 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(PCONFIG(0))) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
-
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(PCONFIG(0)));
       P057_data_struct *P057_data =
         static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));

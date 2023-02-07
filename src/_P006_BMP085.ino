@@ -6,13 +6,13 @@
 // #######################################################################################################
 
 
-#include "src/PluginStructs/P006_data_struct.h"
+# include "src/PluginStructs/P006_data_struct.h"
 
-#define PLUGIN_006
-#define PLUGIN_ID_006        6
-#define PLUGIN_NAME_006       "Environment - BMP085/180"
-#define PLUGIN_VALUENAME1_006 "Temperature"
-#define PLUGIN_VALUENAME2_006 "Pressure"
+# define PLUGIN_006
+# define PLUGIN_ID_006        6
+# define PLUGIN_NAME_006       "Environment - BMP085/180"
+# define PLUGIN_VALUENAME1_006 "Temperature"
+# define PLUGIN_VALUENAME2_006 "Pressure"
 
 
 boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
@@ -57,6 +57,15 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x77;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormNumericBox(F("Altitude [m]"), F("elev"), PCONFIG(1));
@@ -73,12 +82,6 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x77)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P006_data_struct());
       P006_data_struct *P006_data =
         static_cast<P006_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -89,12 +92,6 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x77, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P006_data_struct *P006_data =
         static_cast<P006_data_struct *>(getPluginTaskData(event->TaskIndex));
 

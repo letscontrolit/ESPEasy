@@ -66,6 +66,15 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x58;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Sensor"));
@@ -91,12 +100,6 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x58)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P083_data_struct());
       P083_data_struct *P083_data =
         static_cast<P083_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -121,12 +124,6 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x58, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P083_data_struct *P083_data =
         static_cast<P083_data_struct *>(getPluginTaskData(event->TaskIndex));
 

@@ -88,6 +88,14 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P014_I2C_ADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -148,16 +156,6 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (P014_I2C_ADDRESS == 0) {
-        P014_I2C_ADDRESS = SI70xx_I2C_ADDRESS; // Use default address if not (yet) set
-      }
-
-      if (!I2C_deviceCheck(P014_I2C_ADDRESS)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P014_data_struct());
       P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -181,12 +179,6 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
         P014_I2C_ADDRESS = SI70xx_I2C_ADDRESS; // Use default address if not (yet) set
       }
 
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P014_I2C_ADDRESS, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       event->sensorType = static_cast<Sensor_VType>(P014_VALUES_COUNT);
 
       P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));

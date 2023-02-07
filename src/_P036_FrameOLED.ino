@@ -238,6 +238,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P036_ADR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = F("Btn: ");
@@ -616,12 +625,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       P036_CheckHeap(F("_INIT: Entering"));
 # endif // P036_CHECK_HEAP
 
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P036_ADR)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P036_data_struct());
 # ifdef P036_CHECK_HEAP
       P036_CheckHeap(F("_INIT: Before (*P036_data = static_cast<P036_data_struct *>)"));

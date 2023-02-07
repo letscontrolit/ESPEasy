@@ -93,6 +93,15 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P027_I2C_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       {
@@ -120,12 +129,6 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P027_I2C_ADDR)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       const uint8_t i2caddr =  P027_I2C_ADDR;
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P027_data_struct(i2caddr));
@@ -182,12 +185,6 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
       // busvoltage = getBusVoltage_V();
       // current_mA = getCurrent_mA();
       // loadvoltage = getBusVoltage_V() + (getShuntVoltage_mV() / 1000);
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P027_I2C_ADDR, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P027_data_struct *P027_data =
         static_cast<P027_data_struct *>(getPluginTaskData(event->TaskIndex));
 

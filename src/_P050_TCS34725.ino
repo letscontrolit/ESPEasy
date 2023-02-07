@@ -100,6 +100,15 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x29;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       uint8_t choiceMode = PCONFIG(0);
@@ -263,13 +272,6 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x29)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
-
       /* Initialise with specific int time and gain values */
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1)));
       P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -289,12 +291,6 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x29, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P050_data) {

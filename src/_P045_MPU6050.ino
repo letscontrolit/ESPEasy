@@ -117,6 +117,15 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = PCONFIG(0);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       uint8_t choice = PCONFIG(1);
@@ -178,13 +187,6 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(PCONFIG(0))) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
-
       // Initialize the MPU6050. This *can* be done multiple times per instance and device address.
       uint8_t devAddr = PCONFIG(0);
 
@@ -212,12 +214,6 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND: // FIXME TD-er: Is this fast enough? Earlier comments in the code suggest 10x per sec.
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P045_data_struct *P045_data =
         static_cast<P045_data_struct *>(getPluginTaskData(event->TaskIndex));
 

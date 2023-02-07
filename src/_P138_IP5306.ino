@@ -103,6 +103,15 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x75;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(0)                      = static_cast<int>(P138_valueOptions_e::StopVoltage);
@@ -177,12 +186,6 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x75)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P138_data_struct(event));
       P138_data_struct *P138_data = static_cast<P138_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -205,12 +208,6 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x75, event->TaskIndex, 100)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P138_data_struct *P138_data = static_cast<P138_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P138_data) {

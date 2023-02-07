@@ -116,6 +116,15 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x24;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = F("RST: ");
@@ -165,13 +174,6 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x24)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
-
       // set clock stretch to 2000, if its not set via advanced settings yet
       // something that Martinus figured out and added: https://github.com/esp8266/Arduino/issues/1541
       // if (!Settings.WireClockStretchLimit)

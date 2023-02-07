@@ -118,7 +118,8 @@ int16_t I2C_readS16_LE_reg(uint8_t i2caddr,
 
 bool I2C_deviceCheck(uint8_t     i2caddr,
                      taskIndex_t taskIndex  = INVALID_TASK_INDEX,
-                     uint8_t     maxRetries = 0);
+                     uint8_t     maxRetries = 0,
+                     uint8_t     function   = 0);
 # endif // if FEATURE_I2C_DEVICE_CHECK
 
 #endif // HELPERS_I2C_ACCESS_H

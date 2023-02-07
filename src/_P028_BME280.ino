@@ -96,12 +96,6 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P028_I2C_ADDRESS)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       const float tempOffset = P028_TEMPERATURE_OFFSET / 10.0f;
       initPluginTaskData(event->TaskIndex,
                          new (std::nothrow) P028_data_struct(P028_I2C_ADDRESS, tempOffset));
@@ -126,6 +120,15 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P028_I2C_ADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -237,12 +240,6 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P028_I2C_ADDRESS, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P028_data_struct *P028_data =
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 

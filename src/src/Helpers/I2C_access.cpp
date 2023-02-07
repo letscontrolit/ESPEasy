@@ -1,5 +1,6 @@
 #include "../Helpers/I2C_access.h"
 
+#include "../DataStructs/TimingStats.h"
 #include "../Globals/I2Cdev.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -345,9 +346,13 @@ int16_t I2C_readS16_LE_reg(uint8_t i2caddr, uint8_t reg) {
 #if FEATURE_I2C_DEVICE_CHECK
 static std::vector<uint8_t> deviceCheckI2C;
 
-bool I2C_deviceCheck(uint8_t i2caddr,
+bool I2C_deviceCheck(uint8_t     i2caddr,
                      taskIndex_t taskIndex,
-                     uint8_t     maxRetries) {
+                     uint8_t     maxRetries,
+                     uint8_t     function) {
+  if (!Settings.CheckI2Cdevice()) { return true; } // Check disabled, continue
+
+  START_TIMER;
   Wire.beginTransmission(i2caddr);
 
   const bool retval = 0 == Wire.endTransmission(); // Only 0 indicates Success
@@ -367,6 +372,9 @@ bool I2C_deviceCheck(uint8_t i2caddr,
         }
       }
     }
+  }
+  if (function != 0) {
+    STOP_TIMER_TASK(getDeviceIndex(taskIndex), function);
   }
   return retval;
 }

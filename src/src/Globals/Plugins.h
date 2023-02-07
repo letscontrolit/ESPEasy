@@ -89,6 +89,10 @@ String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
 #if FEATURE_I2C_DEVICE_SCAN
 bool          checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress);
 #endif // if FEATURE_I2C_DEVICE_SCAN
+#if FEATURE_I2C_GET_ADDRESS
+uint8_t getPluginI2CAddressFromDeviceIndex(struct EventStruct *event, deviceIndex_t deviceIndex);
+#endif // if FEATURE_I2C_GET_ADDRESS
+
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();

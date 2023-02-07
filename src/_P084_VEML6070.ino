@@ -76,6 +76,15 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x38;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper * optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
@@ -95,12 +104,6 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x38)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       success = VEML6070_Init(PCONFIG(0));
 
       if (!success) {
@@ -112,12 +115,6 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x38, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       uint16_t uv_raw;
       double   uv_risk, uv_power;
       bool     read_status;

@@ -74,6 +74,15 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = TSL2591_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD: {
       //        P074_data_struct* P074_data =
       //        static_cast<P074_data_struct*>(getPluginTaskData(event->TaskIndex));
@@ -121,12 +130,6 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_INIT: {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(TSL2591_ADDR)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P074_data_struct());
       P074_data_struct *P074_data =
         static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -169,12 +172,6 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_TEN_PER_SECOND: {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(TSL2591_ADDR, event->TaskIndex, 100)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P074_data_struct *P074_data =
         static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -216,12 +213,6 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_READ: {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(TSL2591_ADDR, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P074_data_struct *P074_data =
         static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
 

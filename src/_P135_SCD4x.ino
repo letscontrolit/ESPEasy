@@ -75,6 +75,15 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x62;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // CO2 value is an integer
@@ -139,12 +148,6 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x62)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P135_data_struct(event->TaskIndex,
                                                                                P135_SENSOR_TYPE,
                                                                                P135_SENSOR_ALTITUDE,
@@ -163,12 +166,6 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x62, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P135_data_struct *P135_data = static_cast<P135_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P135_data) {

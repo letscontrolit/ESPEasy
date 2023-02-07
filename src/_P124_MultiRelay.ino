@@ -96,6 +96,15 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P124_CONFIG_I2C_ADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper *optionsMode2[] = {
@@ -184,12 +193,6 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(P124_CONFIG_I2C_ADDRESS)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P124_data_struct(P124_CONFIG_I2C_ADDRESS, P124_CONFIG_RELAY_COUNT));
       P124_data_struct *P124_data = static_cast<P124_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -275,7 +278,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
     {
       # if FEATURE_I2C_DEVICE_CHECK
 
-      if (!I2C_deviceCheck(P124_CONFIG_I2C_ADDRESS, event->TaskIndex, 10)) {
+      if (!I2C_deviceCheck(P124_CONFIG_I2C_ADDRESS, event->TaskIndex, 10, PLUGIN_I2C_GET_ADDRESS)) {
         break; // Will return the default false for success
       }
       # endif // if FEATURE_I2C_DEVICE_CHECK

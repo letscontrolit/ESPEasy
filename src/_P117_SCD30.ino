@@ -80,6 +80,15 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x61;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       P117_MEASURE_INTERVAL                        = 2; // Default Measurement Interval
@@ -131,12 +140,6 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x61)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       uint16_t interval = P117_MEASURE_INTERVAL;
 
       if (interval < 2) { interval = 2; }
@@ -154,12 +157,6 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_READ:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(0x61, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P117_data_struct *P117_data = static_cast<P117_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P117_data) {

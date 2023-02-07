@@ -69,6 +69,15 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = PCONFIG(0);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       success = true;
@@ -85,13 +94,6 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(PCONFIG(0))) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
-
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P069_data_struct(static_cast<uint8_t>(PCONFIG(0))));
       P069_data_struct *P069_data =
         static_cast<P069_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -102,12 +104,6 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(PCONFIG(0), event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P069_data_struct *P069_data =
         static_cast<P069_data_struct *>(getPluginTaskData(event->TaskIndex));
 

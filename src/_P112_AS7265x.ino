@@ -75,6 +75,15 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = AS7265X_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG_LONG(0) = AS7265X_GAIN_37X;               // Set Gain (AS7265X_GAIN_37X) => This is 3.7x
@@ -241,12 +250,6 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(AS7265X_ADDR)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P112_data_struct());
       P112_data_struct *P112_data =
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -308,12 +311,6 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_TEN_PER_SECOND:
     {
-      # if FEATURE_I2C_DEVICE_CHECK
-
-      if (!I2C_deviceCheck(AS7265X_ADDR, event->TaskIndex, 10)) {
-        break; // Will return the default false for success
-      }
-      # endif // if FEATURE_I2C_DEVICE_CHECK
       P112_data_struct *P112_data =
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
 
