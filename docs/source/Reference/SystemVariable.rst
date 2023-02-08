@@ -197,6 +197,10 @@ More uses of these system variables can be seen in the rules section and formula
      - 32
      - Unit number.
      - Yes
+   * - ``%unit_0%``
+     - 001, 032, 110
+     - Unit number, prefixed with zeros to a total size of 3 digits.
+     - Yes
    * - ``%ssid%``
      - H4XX0R njietwork!
      - Name of current WiFi.
