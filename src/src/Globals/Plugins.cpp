@@ -160,13 +160,14 @@ bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2c
 #endif // if FEATURE_I2C_DEVICE_SCAN
 
 #if FEATURE_I2C_GET_ADDRESS
-uint8_t getPluginI2CAddressFromDeviceIndex(struct EventStruct *event, deviceIndex_t deviceIndex) {
+uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
   uint8_t getI2CAddress = 0;
+  const uint8_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
-  if ((nullptr != event) && validDeviceIndex(deviceIndex)) {
+  if (validTaskIndex(taskIndex) && validDeviceIndex(deviceIndex)) {
     String dummy;
     struct EventStruct TempEvent;
-    TempEvent.setTaskIndex(event->TaskIndex);
+    TempEvent.setTaskIndex(taskIndex);
     TempEvent.Par1 = 0;
     if (Plugin_ptr[deviceIndex](PLUGIN_I2C_GET_ADDRESS, &TempEvent, dummy)) {
       getI2CAddress = TempEvent.Par1;
@@ -319,7 +320,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
         #if FEATURE_I2C_DEVICE_CHECK
         bool i2cStatusOk = true;
         if ((Function == PLUGIN_INIT) && (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && !Device[DeviceIndex].I2CNoDeviceCheck) {
-          const uint8_t i2cAddr = getPluginI2CAddressFromDeviceIndex(event, DeviceIndex);
+          const uint8_t i2cAddr = getTaskI2CAddress(event->TaskIndex);
           if (i2cAddr > 0) {
             START_TIMER;
             i2cStatusOk = I2C_deviceCheck(i2cAddr);
@@ -680,7 +681,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         bool i2cStatusOk = true;
         if (((Function == PLUGIN_INIT) || (Function == PLUGIN_READ))
             && (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && !Device[DeviceIndex].I2CNoDeviceCheck) {
-          const uint8_t i2cAddr = getPluginI2CAddressFromDeviceIndex(event, DeviceIndex);
+          const uint8_t i2cAddr = getTaskI2CAddress(event->TaskIndex);
           if (i2cAddr > 0) {
             START_TIMER;
             // Disable task when device is unreachable for 10 PLUGIN_READs or 1 PLUGIN_INIT
