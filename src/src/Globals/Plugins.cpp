@@ -317,16 +317,16 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           return false;
         }
         #if FEATURE_I2C_DEVICE_CHECK
-        bool i2cError = false;
+        bool i2cStatusOk = true;
         if ((Function == PLUGIN_INIT) && (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && !Device[DeviceIndex].I2CNoDeviceCheck) {
-          uint8_t i2cAddr = getPluginI2CAddressFromDeviceIndex(event, DeviceIndex);
+          const uint8_t i2cAddr = getPluginI2CAddressFromDeviceIndex(event, DeviceIndex);
           if (i2cAddr > 0) {
             START_TIMER;
-            i2cError = I2C_deviceCheck(i2cAddr);
+            i2cStatusOk = I2C_deviceCheck(i2cAddr);
             STOP_TIMER_TASK(DeviceIndex, PLUGIN_I2C_GET_ADDRESS);
           }
         }
-        if (!i2cError) {
+        if (i2cStatusOk) {
         #endif // if FEATURE_I2C_DEVICE_CHECK
           #ifndef BUILD_NO_RAM_TRACKER
           switch (Function) {
@@ -578,6 +578,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       if (Function == PLUGIN_INIT_ALL) {
         Function = PLUGIN_INIT;
       }
+      bool result = true;
 
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
@@ -590,6 +591,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_INIT) {
           if (!retval) {
             Settings.TaskDeviceEnabled[taskIndex] = false; // Initialization failed: Disable plugin!
+            result = false;
           }
           #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -620,7 +622,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
       }
 
-      return true;
+      return result;
     }
 
     // Call to specific task which may interact with the hardware
@@ -675,16 +677,18 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
         bool retval = false;
         #if FEATURE_I2C_DEVICE_CHECK
-        bool i2cError = false;
-        if ((Function == PLUGIN_READ) && (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && !Device[DeviceIndex].I2CNoDeviceCheck) {
-          uint8_t i2cAddr = getPluginI2CAddressFromDeviceIndex(event, DeviceIndex);
+        bool i2cStatusOk = true;
+        if (((Function == PLUGIN_INIT) || (Function == PLUGIN_READ))
+            && (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && !Device[DeviceIndex].I2CNoDeviceCheck) {
+          const uint8_t i2cAddr = getPluginI2CAddressFromDeviceIndex(event, DeviceIndex);
           if (i2cAddr > 0) {
             START_TIMER;
-            i2cError = I2C_deviceCheck(i2cAddr, event->TaskIndex, 10); // Disable task when device is unreachable for 10 PLUGIN_READs
+            // Disable task when device is unreachable for 10 PLUGIN_READs or 1 PLUGIN_INIT
+            i2cStatusOk = I2C_deviceCheck(i2cAddr, event->TaskIndex, Function == PLUGIN_INIT ? 1 : 10);
             STOP_TIMER_TASK(DeviceIndex, PLUGIN_I2C_GET_ADDRESS);
           }
         }
-        if (!i2cError) {
+        if (i2cStatusOk) {
         #endif // if FEATURE_I2C_DEVICE_CHECK
           START_TIMER;
 
