@@ -544,7 +544,7 @@ void SSDP_schema(WiFiClient& client) {
                  "<device>"
                  "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
                  "<friendlyName>"));
-  client.print(Settings.Name);
+  client.print(Settings.getName());
   client.print(F("</friendlyName>"
                  "<presentationURL>/</presentationURL>"
                  "<serialNumber>"));
