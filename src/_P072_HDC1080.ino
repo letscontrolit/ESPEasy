@@ -5,6 +5,11 @@
 // ####################### Plugin 072: Temperature and Humidity sensor HDC1080 (I2C) ####################
 // ######################################################################################################
 
+/** Changelog:
+ * 2023-02-09 tonhuisman: Fix typo in temperature calculation (was 65526.0f instead of 65536.0f (2^16))
+ * 2023-02-08 tonhuisman: Add PLUGIN_I2C_GET_ADDRESS support
+ * 2023-02-09 tonhuisman: Start changelog
+ */
 
 # define PLUGIN_072
 # define PLUGIN_ID_072         72
@@ -53,14 +58,14 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
-      success = (event->Par1 == 0x40);
+      success = (event->Par1 == HDC1080_I2C_ADDRESS);
       break;
     }
 
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = 0x40;
+      event->Par1 = HDC1080_I2C_ADDRESS;
       success     = true;
       break;
     }
@@ -93,7 +98,7 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
       hdc1080_msb     = Wire.read();
       hdc1080_lsb     = Wire.read();
       hdc1080_rawtemp = hdc1080_msb << 8 | hdc1080_lsb;
-      hdc1080_temp    = (static_cast<float>(hdc1080_rawtemp) / 65526.0f) * 165.0f - 40.0f;
+      hdc1080_temp    = (static_cast<float>(hdc1080_rawtemp) / 65536.0f) * 165.0f - 40.0f;
 
       Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
       Wire.write(0x01);                            // sends HDC1080_HUMIDITY
