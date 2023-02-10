@@ -27,11 +27,11 @@ C016_queue_element::C016_queue_element(C016_queue_element&& other)
   }
 }
 
-C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count, unsigned long unixTime) :
+C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count) :
+  unixTime(event->timestamp),
   sensorType(event->sensorType),
   valueCount(value_count)
 {
-  _timestamp      = unixTime;
   _controller_idx = event->ControllerIndex;
   _taskIndex      = event->TaskIndex;
 
@@ -50,6 +50,7 @@ C016_queue_element& C016_queue_element::operator=(C016_queue_element&& other) {
   _controller_idx = other._controller_idx;
   sensorType      = other.sensorType;
   valueCount      = other.valueCount;
+  unixTime        = other.unixTime;
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     values[i] = other.values[i];
@@ -85,7 +86,7 @@ C016_binary_element C016_queue_element::getBinary() const {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     element.values[i] = values[i];
   }
-  element._timestamp = _timestamp;
+  element.unixTime   = unixTime;
   element.TaskIndex  = _taskIndex;
   element.sensorType = sensorType;
   element.valueCount = valueCount;

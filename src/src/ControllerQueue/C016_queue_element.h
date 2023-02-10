@@ -19,7 +19,7 @@ struct EventStruct;
 // Do NOT change order of members!
 struct C016_binary_element {
   float             values[VARS_PER_TASK]{};
-  unsigned long     _timestamp{}; // Unix timestamp
+  unsigned long     unixTime{};
   taskIndex_t       TaskIndex{INVALID_TASK_INDEX};
   pluginID_t        pluginID{INVALID_PLUGIN_ID};
   Sensor_VType      sensorType{Sensor_VType::SENSOR_TYPE_NONE};
@@ -43,8 +43,7 @@ public:
   C016_queue_element(C016_queue_element&& other);
 
   C016_queue_element(const struct EventStruct *event,
-                     uint8_t                   value_count,
-                     unsigned long             unixTime);
+                     uint8_t                   value_count);
 
   C016_queue_element      & operator=(C016_queue_element&& other);
 
@@ -64,6 +63,7 @@ public:
   C016_binary_element getBinary() const;
 
   float values[VARS_PER_TASK]{};
+  unsigned long unixTime = 0;
   Sensor_VType sensorType{Sensor_VType::SENSOR_TYPE_NONE};
   uint8_t valueCount{};
 };
