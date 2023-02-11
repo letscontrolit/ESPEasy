@@ -2,6 +2,39 @@
 
 #ifdef USES_P077
 
+P077_data_struct::~P077_data_struct() {
+  delete easySerial;
+  easySerial = nullptr;
+}
+
+void P077_data_struct::reset() {
+  delete easySerial;
+  easySerial = nullptr;
+}
+
+bool P077_data_struct::isInitialized() const {
+  return easySerial != nullptr;
+}
+
+bool P077_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate,
+                            uint8_t config) {
+  if ((serial_rx < 0) && (serial_tx < 0)) {
+    return false;
+  }
+  reset();
+  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+
+  if (isInitialized()) {
+    # if defined(ESP8266)
+    easySerial->begin(baudrate, (SerialConfig)config);
+    # elif defined(ESP32)
+    easySerial->begin(baudrate, config);
+    # endif // if defined(ESP8266)
+    return true;
+  }
+  return false;
+}
+
 bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   uint8_t header = serial_in_buffer[0];
 
@@ -106,8 +139,8 @@ bool P077_data_struct::processSerialData() {
   long t_start = millis();
   bool found   = false;
 
-  while (Serial.available() > 0 && !found) {
-    uint8_t serial_in_byte = Serial.read();
+  while (nullptr != easySerial && easySerial->available() > 0 && !found) {
+    uint8_t serial_in_byte = easySerial->read();
     count_bytes++;
     checksum -= serial_in_buffer[2];             // substract from checksum data to be removed
     memmove(serial_in_buffer, serial_in_buffer + 1,

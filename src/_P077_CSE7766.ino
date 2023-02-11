@@ -7,6 +7,11 @@
 // ###################################### stefan@clumsy.ch      ##########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-02-10 tonhuisman: Move from HWSerial0 to EasySerial to allow flexible serial configuration
+ * 2023-02-10 tonhuisman: Add changelog
+ */
+
 # include "src/PluginStructs/P077_data_struct.h"
 
 # define PLUGIN_077
@@ -28,6 +33,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_077;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -60,6 +66,53 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P077_SERIAL_CONFIG = SERIAL_8E1;
+      CONFIG_PIN1        = 3; // Former default HWSerial0
+      CONFIG_PIN2        = 1;
+      CONFIG_PORT        = static_cast<int>(ESPEasySerialPort::serial0);
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+    {
+      if ((CONFIG_PIN1 == -1) && (CONFIG_PIN2 == -1) && (CONFIG_PORT == 0)) {
+        CONFIG_PIN1        = 3; // Former default HWSerial0
+        CONFIG_PIN2        = 1;
+        CONFIG_PORT        = static_cast<int>(ESPEasySerialPort::serial0);
+        P077_SERIAL_CONFIG = SERIAL_8E1;
+      }
+      string += serialHelper_getSerialTypeLabel(event);
+      success = true;
+      break;
+    }
+
+    // case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    // {
+    //   if (P077_SERIAL_CONFIG == 0) {
+    //     P077_SERIAL_CONFIG = SERIAL_8E1;
+    //   }
+
+    // String log = F("P077 Serial, pin1: ");
+    // log += CONFIG_PIN1;
+    // log += F(", pin2: ");
+    // log += CONFIG_PIN2;
+    // log += F(", port: ");
+    // log += CONFIG_PORT;
+    // addLog(LOG_LEVEL_INFO, log);
+
+    // if ((CONFIG_PIN1 == -1) && (CONFIG_PIN2 == -1) && (CONFIG_PORT == 0)) {
+    //   CONFIG_PIN1        = 3; // Former default HWSerial0
+    //   CONFIG_PIN2        = 1;
+    //   CONFIG_PORT        = static_cast<int>(ESPEasySerialPort::serial0);
+    //   P077_SERIAL_CONFIG = SERIAL_8E1;
+    // }
+    // uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P077_SERIAL_CONFIG);
+    // serialHelper_serialconfig_webformLoad(event, serialConfChoice);
+    //   break;
+    // }
+
     case PLUGIN_WEBFORM_LOAD: {
       addFormNumericBox(F("U Ref"), F("URef"), PCONFIG(0));
       addUnit(F("uSec"));
@@ -84,7 +137,20 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_INIT: {
+      if ((CONFIG_PIN1 == -1) && (CONFIG_PIN2 == -1) && (CONFIG_PORT == 0)) {
+        CONFIG_PIN1 = 3; // Former default HWSerial0
+        CONFIG_PIN2 = 1;
+        CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);
+      }
+      const int16_t serial_rx      = CONFIG_PIN1;
+      const int16_t serial_tx      = CONFIG_PIN2;
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
+      P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P077_data) {
+        return success;
+      }
 
       if (PCONFIG(0) == 0) { PCONFIG(0) = HLW_UREF_PULSE; }
 
@@ -92,13 +158,18 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
 
       if (PCONFIG(2) == 0) { PCONFIG(2) = HLW_PREF_PULSE; }
 
-      Settings.UseSerial = true; // Enable Serial port
-      disableSerialLog();        // disable logging on serial port (used for CSE7766
-                                 // communication)
-      Settings.BaudRate = 4800;  // set BaudRate for CSE7766
-      Serial.flush();
-      Serial.begin(Settings.BaudRate, SERIAL_8E1);
-      success = true;
+      if (P077_data->init(port, serial_rx, serial_tx, 4800, static_cast<uint8_t>(SERIAL_8E1))) {
+        success = true;
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
+      }
+
+      // Settings.UseSerial = true; // Enable Serial port
+      // disableSerialLog();        // disable logging on serial port (used for CSE7766
+      //                            // communication)
+      // Settings.BaudRate = 4800;  // set BaudRate for CSE7766
+      // Serial.flush();
+      // Serial.begin(Settings.BaudRate, SERIAL_8E1);
+      // success = true;
       break;
     }
 
