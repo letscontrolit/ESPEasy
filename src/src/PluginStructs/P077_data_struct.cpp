@@ -2,6 +2,8 @@
 
 #ifdef USES_P077
 
+#include <ESPeasySerial.h>
+
 P077_data_struct::~P077_data_struct() {
   delete easySerial;
   easySerial = nullptr;
@@ -18,7 +20,7 @@ bool P077_data_struct::isInitialized() const {
 
 bool P077_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate,
                             uint8_t config) {
-  if ((serial_rx < 0) && (serial_tx < 0)) {
+  if (serial_rx < 0) {
     return false;
   }
   reset();
@@ -90,8 +92,6 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   cf_pulses = serial_in_buffer[21] << 8 |
               serial_in_buffer[22];
 
-  //  if (energy_power_on) {  // Powered on
-
   if (adjustment & 0x40) { // Voltage valid
     energy_voltage = static_cast<float>(PCONFIG(0) * CSE_UREF) / static_cast<float>(voltage_cycle);
   }
@@ -124,14 +124,6 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     }
   }
 
-  // } else {  // Powered off
-  //    power_cycle_first = 0;
-  //    energy_voltage = 0;
-  //    energy_power = 0;
-  //    energy_current = 0;
-  //  }
-
-
   return true;
 }
 
@@ -139,7 +131,7 @@ bool P077_data_struct::processSerialData() {
   long t_start = millis();
   bool found   = false;
 
-  while (nullptr != easySerial && easySerial->available() > 0 && !found) {
+  while (isInitialized() && (easySerial->available() > 0) && !found) {
     uint8_t serial_in_byte = easySerial->read();
     count_bytes++;
     checksum -= serial_in_buffer[2];             // substract from checksum data to be removed

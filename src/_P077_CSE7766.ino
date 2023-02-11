@@ -61,57 +61,25 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES: {
-      // No pins selectable, all hard coded
-      break;
-    }
-
     case PLUGIN_SET_DEFAULTS:
     {
-      P077_SERIAL_CONFIG = SERIAL_8E1;
-      CONFIG_PIN1        = 3; // Former default HWSerial0
-      CONFIG_PIN2        = 1;
-      CONFIG_PORT        = static_cast<int>(ESPEasySerialPort::serial0);
+      CONFIG_PIN1 = 3; // Former default HWSerial0
+      CONFIG_PIN2 = 1;
+      CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);
       break;
     }
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       if ((CONFIG_PIN1 == -1) && (CONFIG_PIN2 == -1) && (CONFIG_PORT == 0)) {
-        CONFIG_PIN1        = 3; // Former default HWSerial0
-        CONFIG_PIN2        = 1;
-        CONFIG_PORT        = static_cast<int>(ESPEasySerialPort::serial0);
-        P077_SERIAL_CONFIG = SERIAL_8E1;
+        CONFIG_PIN1 = 3; // Former default HWSerial0
+        CONFIG_PIN2 = 1;
+        CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);
       }
       string += serialHelper_getSerialTypeLabel(event);
       success = true;
       break;
     }
-
-    // case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
-    // {
-    //   if (P077_SERIAL_CONFIG == 0) {
-    //     P077_SERIAL_CONFIG = SERIAL_8E1;
-    //   }
-
-    // String log = F("P077 Serial, pin1: ");
-    // log += CONFIG_PIN1;
-    // log += F(", pin2: ");
-    // log += CONFIG_PIN2;
-    // log += F(", port: ");
-    // log += CONFIG_PORT;
-    // addLog(LOG_LEVEL_INFO, log);
-
-    // if ((CONFIG_PIN1 == -1) && (CONFIG_PIN2 == -1) && (CONFIG_PORT == 0)) {
-    //   CONFIG_PIN1        = 3; // Former default HWSerial0
-    //   CONFIG_PIN2        = 1;
-    //   CONFIG_PORT        = static_cast<int>(ESPEasySerialPort::serial0);
-    //   P077_SERIAL_CONFIG = SERIAL_8E1;
-    // }
-    // uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P077_SERIAL_CONFIG);
-    // serialHelper_serialconfig_webformLoad(event, serialConfChoice);
-    //   break;
-    // }
 
     case PLUGIN_WEBFORM_LOAD: {
       addFormNumericBox(F("U Ref"), F("URef"), PCONFIG(0));
@@ -163,42 +131,8 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
       }
 
-      // Settings.UseSerial = true; // Enable Serial port
-      // disableSerialLog();        // disable logging on serial port (used for CSE7766
-      //                            // communication)
-      // Settings.BaudRate = 4800;  // set BaudRate for CSE7766
-      // Serial.flush();
-      // Serial.begin(Settings.BaudRate, SERIAL_8E1);
-      // success = true;
       break;
     }
-
-    /* currently not needed!
-       case PLUGIN_TEN_PER_SECOND:
-          {
-
-            long cf_frequency = 0;
-
-            if (CSE_PULSES_NOT_INITIALIZED == cf_pulses_last_time) {
-              cf_pulses_last_time = cf_pulses;  // Init after restart
-            } else {
-              if (cf_pulses < cf_pulses_last_time) {  // Rolled over after 65535
-       pulses
-                cf_frequency = (65536 - cf_pulses_last_time) + cf_pulses;
-              } else {
-                cf_frequency = cf_pulses - cf_pulses_last_time;
-              }
-              if (cf_frequency)  {
-                cf_pulses_last_time = cf_pulses;
-       //           energy_kWhtoday_delta += (cf_frequency *
-       energy_power_calibration) / 36;
-       //           EnergyUpdateToday();
-              }
-            }
-            success = true;
-            break;
-          }
-     */
 
     case PLUGIN_READ: {
       # ifndef BUILD_NO_DEBUG

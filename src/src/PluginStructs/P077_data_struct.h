@@ -5,21 +5,13 @@
 #ifdef USES_P077
 
 
-# define CSE_NOT_CALIBRATED           0xAA
-# define CSE_PULSES_NOT_INITIALIZED   -1
-# define CSE_PREF                     1000
-# define CSE_UREF                     100
-# define HLW_PREF_PULSE               12530 // was 4975us = 201Hz = 1000W
-# define HLW_UREF_PULSE               1950  // was 1666us = 600Hz = 220V
-# define HLW_IREF_PULSE               3500  // was 1666us = 600Hz = 4.545A
-
-# define P077_SERIAL_CONFIG           PCONFIG_LONG(1)
-
-/*
-   unsigned long energy_power_calibration = HLW_PREF_PULSE;
-   unsigned long energy_voltage_calibration = HLW_UREF_PULSE;
-   unsigned long energy_current_calibration = HLW_IREF_PULSE;
- */
+# define CSE_NOT_CALIBRATED          0xAA
+# define CSE_PULSES_NOT_INITIALIZED  -1
+# define CSE_PREF                    1000
+# define CSE_UREF                    100
+# define HLW_PREF_PULSE              12530 // was 4975us = 201Hz = 1000W
+# define HLW_UREF_PULSE              1950  // was 1666us = 600Hz = 220V
+# define HLW_IREF_PULSE              3500  // was 1666us = 600Hz = 4.545A
 
 struct P077_data_struct : public PluginTaskData_base {
 public:
