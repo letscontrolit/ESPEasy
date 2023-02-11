@@ -30,6 +30,8 @@ public:
             unsigned long     baudrate,
             uint8_t           config);
 
+  bool plugin_write(struct EventStruct *event,
+                    String             string);
   void reset();
   bool isInitialized() const;
 

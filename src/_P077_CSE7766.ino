@@ -8,6 +8,10 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-02-10 tonhuisman: Add PLUGIN_WRITE support for csereset and csecalibrate,[URef],[IRef],[PRef]
+ *                        Handle serial input also in PLUGIN_FIFTY_PER_SECOND, so other configurations than
+ *                        HWSerial0 will also be processed
+ *                        Add labels for RX/TX GPIO pins
  * 2023-02-10 tonhuisman: Move from HWSerial0 to EasySerial to allow flexible serial configuration
  * 2023-02-10 tonhuisman: Add changelog
  */
@@ -66,6 +70,11 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       CONFIG_PIN1 = 3; // Former default HWSerial0
       CONFIG_PIN2 = 1;
       CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEGPIONAMES: {
+      serialHelper_getGpioNames(event);
       break;
     }
 
@@ -139,17 +148,14 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: plugin read"));
       # endif // ifndef BUILD_NO_DEBUG
 
-      //        sendData(event);
-      //        Variables set in PLUGIN_SERIAL_IN as soon as there are new values!
-      //        UserVar[event->BaseVarIndex] = energy_voltage;
-      //        UserVar[event->BaseVarIndex + 1] = energy_power;
-      //        UserVar[event->BaseVarIndex + 2] = energy_current;
-      //        UserVar[event->BaseVarIndex + 3] = cf_pulses;
+      // Variables set in PLUGIN_SERIAL_IN/PLUGIN_FIFTY_PER_SECOND as soon as there are new values!
       success = true;
       break;
     }
 
-    case PLUGIN_SERIAL_IN: {
+    case PLUGIN_SERIAL_IN:        // When using HWSerial0
+    case PLUGIN_FIFTY_PER_SECOND: // When using other than HWSerial0
+    {
       P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P077_data) {
@@ -230,6 +236,16 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           P077_data->t_all       = 0;
           P077_data->count_bytes = 0;
         }
+      }
+      break;
+    }
+
+    case PLUGIN_WRITE:
+    {
+      P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P077_data) {
+        success = P077_data->plugin_write(event, string);
       }
       break;
     }

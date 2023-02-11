@@ -2,7 +2,7 @@
 
 #ifdef USES_P077
 
-#include <ESPeasySerial.h>
+# include <ESPeasySerial.h>
 
 P077_data_struct::~P077_data_struct() {
   delete easySerial;
@@ -161,6 +161,58 @@ bool P077_data_struct::processSerialData() {
   }
 
   return found;
+}
+
+/**
+ * plugin_write: Handle commands
+ * csereset: reset calibration values
+ * csecalibrate,[voltage],[current],[power]: set calibration values, 0 value(s) will be skipped
+ * Saves (all) settings if a calibration value is updated, or csereset is used
+ */
+bool P077_data_struct::plugin_write(struct EventStruct *event,
+                                    String              string) {
+  const String cmd = parseString(string, 1);
+  bool success     = false;
+  bool changed     = false;
+
+  if (cmd.equals(F("csereset"))) { // Reset to defaults
+    PCONFIG(0) = HLW_UREF_PULSE;
+    PCONFIG(1) = HLW_IREF_PULSE;
+    PCONFIG(2) = HLW_PREF_PULSE;
+    success    = true;
+    changed    = true;
+  } else if (cmd.equals(F("csecalibrate"))) { // Set 1 or more calibration values, 0 will skip that value
+    success = true;
+    float CalibVolt  = 0.0f;
+    float CalibCurr  = 0.0f;
+    float CalibAcPwr = 0.0f;
+
+    if (validFloatFromString(parseString(string, 2), CalibVolt)) {
+      if (validFloatFromString(parseString(string, 3), CalibCurr)) {
+        validFloatFromString(parseString(string, 4), CalibAcPwr);
+      }
+    }
+
+    if (definitelyGreaterThan(CalibVolt, 0.0f)) {
+      PCONFIG(0) = static_cast<uint16_t>(static_cast<float>(PCONFIG(0)) * (CalibVolt / energy_voltage));
+      changed    = true;
+    }
+
+    if (definitelyGreaterThan(CalibCurr, 0.0f)) {
+      PCONFIG(1) = static_cast<uint16_t>(static_cast<float>(PCONFIG(1)) * (CalibCurr / energy_current));
+      changed    = true;
+    }
+
+    if (definitelyGreaterThan(CalibAcPwr, 0.0f)) {
+      PCONFIG(2) = static_cast<uint16_t>(static_cast<float>(PCONFIG(2)) * (CalibAcPwr / energy_power));
+      changed    = true;
+    }
+  }
+
+  if (changed) {
+    SaveSettings(); // FIXME tonhuisman: Doubting if by default the changes should be saved
+  }
+  return success;
 }
 
 #endif // ifdef USES_P077
