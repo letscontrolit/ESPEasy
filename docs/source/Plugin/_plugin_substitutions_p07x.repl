@@ -97,8 +97,8 @@
 .. |P077_status| replace:: :yellow:`ENERGY`
 .. |P077_github| replace:: P077_CSE7766.ino
 .. _P077_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P077_CSE7766.ino
-.. |P077_usedby| replace:: `Sonoff S31, Sonoff Pow R2, Sonoff POW R3xx(D), Sonoff TH R3xx(D), Sonoff Dual R3`
-.. |P077_shortinfo| replace:: This plugin is specifically made for Sonoff devices Sonoff S31, Sonoff Pow R2 and Sonoff POW/TH/Dual R3 models.
+.. |P077_usedby| replace:: `Sonoff S31, Sonoff Pow R2, Sonoff POW R3xx(D), Sonoff Dual R3`
+.. |P077_shortinfo| replace:: This plugin is specifically made for Sonoff devices Sonoff S31, Sonoff Pow R2 and Sonoff POW/Dual R3 models.
 .. |P077_maintainer| replace:: `.`
 .. |P077_compileinfo| replace:: `.`
 .. |P077_usedlibraries| replace:: `ESPEasySerial`

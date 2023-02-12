@@ -1,14 +1,14 @@
 .. include:: ../Plugin/_plugin_substitutions_p07x.repl
-.. _P077thr3xx_page:
+.. _P077pow3xx_page:
 
-Sonoff THR3xx
--------------
+Sonoff POWR3xx
+--------------
 
 Overview
 --------
 
-The Sonoff THR316, THR316D, THR320 and THR320D 
+The Sonoff POWR316, POWR316D, POWR320 and POWR320D 
 
-.. image:: P077_Sonoff-THR316-001.jpeg
+.. image:: P077_Sonoff-POWR316-001.jpeg
 
 An image showing the serial connector pin layout, to facilitate the initial load of ESPEasy on the unit.

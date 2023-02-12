@@ -21,12 +21,18 @@ Maintainer: |P077_maintainer|
 
 Used libraries: |P077_usedlibraries|
 
+.. warning:: 
+  This device is intended to be connected to mains power (110V/220V).
+  Safety is of utmost importance, so the unit should not be connected to a computer if it also connected to the mains power, and it should be sufficiently isolated to prevent touching parts that can be connected to mains power!
+
+  See :ref:`safety_page`
+
 Supported hardware
 ------------------
 
 |P077_usedby|
 
-:ref:`P077thr3xx_page`
+:ref:`P077pow3xx_page`
 
 Introduction
 ------------
