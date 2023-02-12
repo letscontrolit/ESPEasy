@@ -46,7 +46,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
   // Get chip calibration data (coefficients) and use as initial defaults
-  if (HLW_UREF_PULSE == PCONFIG(0)) {
+  if (CSE_UREF_PULSE == PCONFIG(0)) {
     long voltage_coefficient = 191200; // uSec
 
     if (CSE_NOT_CALIBRATED != header) {
@@ -57,7 +57,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     PCONFIG(0) = voltage_coefficient / CSE_UREF;
   }
 
-  if (HLW_IREF_PULSE == PCONFIG(1)) {
+  if (CSE_IREF_PULSE == PCONFIG(1)) {
     long current_coefficient = 16140; // uSec
 
     if (CSE_NOT_CALIBRATED != header) {
@@ -68,7 +68,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     PCONFIG(1) = current_coefficient;
   }
 
-  if (HLW_PREF_PULSE == PCONFIG(2)) {
+  if (CSE_PREF_PULSE == PCONFIG(2)) {
     long power_coefficient = 5364000; // uSec
 
     if (CSE_NOT_CALIBRATED != header) {
@@ -176,9 +176,9 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
   bool changed     = false;
 
   if (cmd.equals(F("csereset"))) { // Reset to defaults
-    PCONFIG(0) = HLW_UREF_PULSE;
-    PCONFIG(1) = HLW_IREF_PULSE;
-    PCONFIG(2) = HLW_PREF_PULSE;
+    PCONFIG(0) = CSE_UREF_PULSE;
+    PCONFIG(1) = CSE_IREF_PULSE;
+    PCONFIG(2) = CSE_PREF_PULSE;
     success    = true;
     changed    = true;
   } else if (cmd.equals(F("csecalibrate"))) { // Set 1 or more calibration values, 0 will skip that value
@@ -214,5 +214,15 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
   }
   return success;
 }
+
+# ifndef BUILD_NO_DEBUG
+int P077_data_struct::serial_Available() {
+  if (isInitialized()) {
+    return easySerial->available();
+  }
+  return 0;
+}
+
+# endif // ifndef BUILD_NO_DEBUG
 
 #endif // ifdef USES_P077

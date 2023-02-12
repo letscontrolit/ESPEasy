@@ -9,9 +9,9 @@
 # define CSE_PULSES_NOT_INITIALIZED  -1
 # define CSE_PREF                    1000
 # define CSE_UREF                    100
-# define HLW_PREF_PULSE              12530 // was 4975us = 201Hz = 1000W
-# define HLW_UREF_PULSE              1950  // was 1666us = 600Hz = 220V
-# define HLW_IREF_PULSE              3500  // was 1666us = 600Hz = 4.545A
+# define CSE_PREF_PULSE              12530 // was 4975us = 201Hz = 1000W
+# define CSE_UREF_PULSE              1950  // was 1666us = 600Hz = 220V
+# define CSE_IREF_PULSE              3500  // was 1666us = 600Hz = 4.545A
 
 struct P077_data_struct : public PluginTaskData_base {
 public:
@@ -31,9 +31,13 @@ public:
             uint8_t           config);
 
   bool plugin_write(struct EventStruct *event,
-                    String             string);
+                    String              string);
   void reset();
   bool isInitialized() const;
+
+  # ifndef BUILD_NO_DEBUG
+  int  serial_Available();
+  # endif // ifndef BUILD_NO_DEBUG
 
   //  uint8_t cse_receive_flag = 0;
 

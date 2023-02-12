@@ -8,7 +8,9 @@
 // #######################################################################################################
 
 /** Changelog:
- * 2023-02-10 tonhuisman: Add PLUGIN_WRITE support for csereset and csecalibrate,[URef],[IRef],[PRef]
+ * 2023-02-12 tonhuisman: Separate PLUGIN_SERIAL_IN and PLUGIN_TEN_PER_SECOND (changed from PLUGIN_FIFTY_PER_SECOND) handling
+ *                        Fixed some minor code-issues
+ * 2023-02-11 tonhuisman: Add PLUGIN_WRITE support for csereset and csecalibrate,[Voltage],[Current],[Power]
  *                        Handle serial input also in PLUGIN_FIFTY_PER_SECOND, so other configurations than
  *                        HWSerial0 will also be processed
  *                        Add labels for RX/TX GPIO pins
@@ -129,11 +131,11 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         return success;
       }
 
-      if (PCONFIG(0) == 0) { PCONFIG(0) = HLW_UREF_PULSE; }
+      if (PCONFIG(0) == 0) { PCONFIG(0) = CSE_UREF_PULSE; }
 
-      if (PCONFIG(1) == 0) { PCONFIG(1) = HLW_IREF_PULSE; }
+      if (PCONFIG(1) == 0) { PCONFIG(1) = CSE_IREF_PULSE; }
 
-      if (PCONFIG(2) == 0) { PCONFIG(2) = HLW_PREF_PULSE; }
+      if (PCONFIG(2) == 0) { PCONFIG(2) = CSE_PREF_PULSE; }
 
       if (P077_data->init(port, serial_rx, serial_tx, 4800, static_cast<uint8_t>(SERIAL_8E1))) {
         success = true;
@@ -148,14 +150,20 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: plugin read"));
       # endif // ifndef BUILD_NO_DEBUG
 
-      // Variables set in PLUGIN_SERIAL_IN/PLUGIN_FIFTY_PER_SECOND as soon as there are new values!
+      // Variables set in PLUGIN_SERIAL_IN/PLUGIN_TEN_PER_SECOND as soon as there are new values!
       success = true;
       break;
     }
 
-    case PLUGIN_SERIAL_IN:        // When using HWSerial0
-    case PLUGIN_FIFTY_PER_SECOND: // When using other than HWSerial0
+    case PLUGIN_SERIAL_IN:      // When using HWSerial0
+    case PLUGIN_TEN_PER_SECOND: // When using other than HWSerial0
     {
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+
+      if (((ESPEasySerialPort::serial0 == port) && (PLUGIN_TEN_PER_SECOND == function)) || // Negative checks...
+          ((ESPEasySerialPort::serial0 != port) && (PLUGIN_SERIAL_IN == function))) {
+        return success;
+      }
       P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P077_data) {
@@ -226,7 +234,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
             log += '/';
             log += P077_data->count_max;
             log += '/';
-            log += Serial.available();
+            log += P077_data->serial_Available();
             addLogMove(LOG_LEVEL_DEBUG, log);
             log  = F("CSE: nr ");
             log += P077_data->count_pkt;
