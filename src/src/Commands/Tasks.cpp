@@ -242,7 +242,7 @@ const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, 
   String par2;
   if (GetArgv(Line, par2, 2)) {
     if (validUIntFromString(par2, msecFromNow)) {
-      Scheduler.schedule_task_device_timer(taskIndex, msecFromNow);
+      Scheduler.schedule_task_device_timer(taskIndex, millis() + msecFromNow);
       return return_command_success();
     }
   }
