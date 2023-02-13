@@ -8,6 +8,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringParser.h"
 
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
@@ -364,7 +365,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1 << 30)) { VariousBits1 = 0; }
+  if (VariousBits1 > (1 << 30)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 
@@ -576,13 +577,19 @@ String SettingsStruct_tmpl<N_TASKS>::getHostname() const {
 
 template<unsigned int N_TASKS>
 String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
-  String hostname = this->Name;
+  String hostname = this->getName();
 
   if ((this->Unit != 0) && appendUnit) { // only append non-zero unit number
     hostname += '_';
     hostname += this->Unit;
   }
   return hostname;
+}
+
+template<unsigned int N_TASKS>
+String SettingsStruct_tmpl<N_TASKS>::getName() const {
+  String unitname = this->Name;
+  return parseTemplate(unitname);
 }
 
 

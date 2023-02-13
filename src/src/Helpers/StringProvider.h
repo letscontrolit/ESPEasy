@@ -6,6 +6,9 @@
 struct LabelType {
   enum Enum : uint8_t {
     UNIT_NR,
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    UNIT_NR_0,
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     UNIT_NAME,
     HOST_NAME,
 

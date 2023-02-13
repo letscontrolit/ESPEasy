@@ -447,9 +447,9 @@
     "
     Publish","
     :green:`Rules`","
-    Send command using MQTT broker service
+    Send command using MQTT broker service. Uses the first enabled MQTT Controller.
 
-    ``Publish,<topic>,<value>``"
+    ``Publish,<topic>[,<payload>]``"
     "
     Reboot","
     :red:`Internal`","

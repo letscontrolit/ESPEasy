@@ -457,6 +457,11 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_TIMING_STATS  0
 
+    #ifdef FEATURE_ZEROFILLED_UNITNUMBER
+        #undef FEATURE_ZEROFILLED_UNITNUMBER
+    #endif
+    #define FEATURE_ZEROFILLED_UNITNUMBER  0
+
     #ifndef USES_P001
         #define USES_P001   // switch
     #endif
@@ -1299,7 +1304,6 @@ To create/register a plugin, you have to :
     #define USES_P028   // BME280
     #define USES_P029   // Output
 
-//    #define USES_P030   // BMP280   (Made obsolete, now BME280 can handle both)
     #define USES_P031   // SHT1X
     #define USES_P032   // MS5611
     #define USES_P033   // Dummy
@@ -2114,7 +2118,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -2548,6 +2552,13 @@ To create/register a plugin, you have to :
   #undef USES_P148   // Sonoff POWR3xxD and THR3xxD display
 #endif
 
+#ifndef FEATURE_ZEROFILLED_UNITNUMBER
+  #ifdef ESP8266_1M
+    #define FEATURE_ZEROFILLED_UNITNUMBER    0
+  #else
+    #define FEATURE_ZEROFILLED_UNITNUMBER    1
+  #endif
+#endif
 
 
 

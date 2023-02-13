@@ -111,6 +111,9 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::SYSBUILD_GIT:      label = LabelType::GIT_BUILD; break;
     case SystemVariables::SYSSTACK:          label = LabelType::FREE_STACK; break;
     case SystemVariables::UNIT_sysvar:       label = LabelType::UNIT_NR; break;
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    case SystemVariables::UNIT_0_sysvar:     label = LabelType::UNIT_NR_0; break;
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     case SystemVariables::FLASH_FREQ:        label = LabelType::FLASH_CHIP_SPEED; break;
     case SystemVariables::FLASH_SIZE:        label = LabelType::FLASH_CHIP_REAL_SIZE; break;
     case SystemVariables::FLASH_CHIP_VENDOR: label = LabelType::FLASH_CHIP_VENDOR; break;
@@ -414,6 +417,9 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::S_CR:               return F("R");
     case Enum::S_LF:               return F("N");
     case Enum::UNIT_sysvar:        return F("unit");
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    case Enum::UNIT_0_sysvar:      return F("unit_0");
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     case Enum::UNIXDAY:            return F("unixday");
     case Enum::UNIXDAY_SEC:        return F("unixday_sec");
     case Enum::UNIXTIME:           return F("unixtime");
