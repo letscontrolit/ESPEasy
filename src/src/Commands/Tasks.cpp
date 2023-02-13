@@ -141,9 +141,8 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
 const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
-  unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+  if (!validateAndParseTaskIndexValueArguments(event, Line, taskIndex)) {
     return F("INVALID_PARAMETERS"); 
   }
 
@@ -162,9 +161,7 @@ const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, con
 const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
 {
   taskIndex_t  taskIndex;
-  unsigned int varNr;
-
-  if (validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+  if (validateAndParseTaskIndexValueArguments(event, Line, taskIndex)) {
     // This is a command so no guarantee the taskIndex is correct in the event
     event->setTaskIndex(taskIndex);
 
