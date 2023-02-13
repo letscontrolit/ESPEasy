@@ -140,7 +140,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
   }
 
   while (!_element_processed) {
-    if (!_joinTimestamp || (lastTimestamp != static_cast<uint32_t>(_element._timestamp))) {
+    if (!_joinTimestamp || (lastTimestamp != static_cast<uint32_t>(_element.unixTime))) {
       // Flush the collected CSV values
       if (csv_values_left > 0) {
         flushValuesLeft(csv_values_left);
@@ -149,10 +149,10 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
 
       // Start writing a new line in the CSV file
       // Begin with the non taskvalues
-      _outputLine.line += _element._timestamp;
+      _outputLine.line += _element.unixTime;
       _outputLine.line += _separator;
       struct tm ts;
-      breakTime(_element._timestamp, ts);
+      breakTime(_element.unixTime, ts);
       _outputLine.line += formatDateTimeString(ts);
 
       if (!_joinTimestamp) {
@@ -162,7 +162,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
         _outputLine.line += _element.pluginID;
       }
 
-      lastTimestamp = static_cast<uint32_t>(_element._timestamp);
+      lastTimestamp = static_cast<uint32_t>(_element.unixTime);
     }
 
     if (validTaskIndex(_element.TaskIndex)) {

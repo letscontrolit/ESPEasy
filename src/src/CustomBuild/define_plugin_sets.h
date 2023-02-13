@@ -2230,6 +2230,9 @@ To create/register a plugin, you have to :
 
   #endif
   #ifdef ESP8266_1M
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
+    #endif
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
     #endif
@@ -2802,6 +2805,14 @@ To create/register a plugin, you have to :
   #else
     #define FEATURE_PINSTATE_EXTENDED           1 // Enable by default for all other builds
   #endif
+#endif
+
+
+// Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
+// Please note that the TOUT pin has to be disconnected in this mode
+// Use the "System Info" device to read the VCC value
+#ifndef FEATURE_ADC_VCC
+  #define FEATURE_ADC_VCC                  0
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

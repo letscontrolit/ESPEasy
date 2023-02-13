@@ -917,6 +917,11 @@ bool GetTLS_Certificate(String& cert, bool caRoot)
 \*********************************************************************************************/
 void SensorSendTask(taskIndex_t TaskIndex)
 {
+  SensorSendTask(TaskIndex, 0);
+}
+
+void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestamp)
+{
   if (!validTaskIndex(TaskIndex)) { return; }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SensorSendTask"));
@@ -930,6 +935,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
     if (!validDeviceIndex(DeviceIndex)) { return; }
 
     struct EventStruct TempEvent(TaskIndex);
+    TempEvent.timestamp = timestamp;
     checkDeviceVTypeForTask(&TempEvent);
 
 

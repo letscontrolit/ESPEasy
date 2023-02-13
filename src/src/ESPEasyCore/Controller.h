@@ -94,6 +94,7 @@ bool GetTLS_Certificate(String& cert, bool caRoot);
  * send specific sensor task data, effectively calling PluginCall(PLUGIN_READ...)
 \*********************************************************************************************/
 void SensorSendTask(taskIndex_t TaskIndex);
+void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestamp);
 
 
 #endif

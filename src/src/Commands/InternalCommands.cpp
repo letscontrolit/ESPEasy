@@ -423,7 +423,9 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 's': {
-      COMMAND_CASE_R(    "save", Command_Settings_Save, 0); // Settings.h
+      COMMAND_CASE_R(           "save", Command_Settings_Save, 0); // Settings.h
+      COMMAND_CASE_A("scheduletaskrun", Command_ScheduleTask_Run, 2); // Tasks.h
+
     #if FEATURE_SD
       COMMAND_CASE_R(  "sdcard", Command_SD_LS,         0); // SDCARDS.h
       COMMAND_CASE_R("sdremove", Command_SD_Remove,     1); // SDCARDS.h
@@ -462,6 +464,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_R( "taskdisable", Command_Task_Disable,  1);             // Tasks.h
         COMMAND_CASE_R(  "taskenable", Command_Task_Enable,   1);             // Tasks.h
         COMMAND_CASE_A(           "taskrun", Command_Task_Run,            1); // Tasks.h
+        COMMAND_CASE_A(         "taskrunat", Command_Task_Run,            2); // Tasks.h
         COMMAND_CASE_A(      "taskvalueset", Command_Task_ValueSet,       3); // Tasks.h
         COMMAND_CASE_A(   "taskvaluetoggle", Command_Task_ValueToggle,    2); // Tasks.h
         COMMAND_CASE_A("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3); // Tasks.h
