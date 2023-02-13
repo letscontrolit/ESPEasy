@@ -224,7 +224,7 @@ There are different released versions of ESP Easy:
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
 
-:gray:`RETIRED` plugin has been retired from ESPEasy (though the source code is still available). Not included in any build.
+:gray:`RETIRED` plugin has been retired and removed from ESPEasy.
 
 2022-07-22: :yellow:`TESTING` builds renamed to :yellow:`COLLECTION`.
 
@@ -425,7 +425,7 @@ Environment
 
 Plugins: |Plugin_Environment|
 
-Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|, |P030_usedby|
+Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|
 
 Extra IO
 --------
