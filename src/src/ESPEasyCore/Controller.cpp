@@ -900,29 +900,18 @@ bool GetTLS_Certificate(String& cert, bool caRoot)
 
 
 /*********************************************************************************************\
-* send all sensordata
-\*********************************************************************************************/
-
-// void SensorSendAll()
-// {
-//   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
-//   {
-//     SensorSendTask(x);
-//   }
-// }
-
-
-/*********************************************************************************************\
 * send specific sensor task data, effectively calling PluginCall(PLUGIN_READ...)
 \*********************************************************************************************/
-void SensorSendTask(taskIndex_t TaskIndex)
+void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime)
 {
-  SensorSendTask(TaskIndex, 0);
+  SensorSendTask(TaskIndex, timestampUnixTime, millis());
 }
 
-void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestamp)
+void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
   if (!validTaskIndex(TaskIndex)) { return; }
+  Scheduler.reschedule_task_device_timer(TaskIndex, lasttimer);
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SensorSendTask"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
@@ -935,7 +924,7 @@ void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestamp)
     if (!validDeviceIndex(DeviceIndex)) { return; }
 
     struct EventStruct TempEvent(TaskIndex);
-    TempEvent.timestamp = timestamp;
+    TempEvent.timestamp = timestampUnixTime;
     checkDeviceVTypeForTask(&TempEvent);
 
 
