@@ -1,5 +1,6 @@
 #include "../Helpers/Hardware.h"
 
+#include "../Commands/GPIO.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/SPI_options.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
@@ -62,6 +63,9 @@
 #include <SPI.h>
 #include <Wire.h>
 
+
+# define GPIO_PLUGIN_ID  1
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -80,7 +84,7 @@ void hardwareInit()
       #endif // ifdef ESP32
 
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
-        PinBootState bootState = Settings.getPinBootState(gpio);
+        const PinBootState bootState = Settings.getPinBootState(gpio);
       #if FEATURE_ETHERNET
 
         if (Settings.ETH_Pin_power == gpio)
@@ -95,77 +99,56 @@ void hardwareInit()
 
       #endif // if FEATURE_ETHERNET
 
+        #ifdef ESP32
         if (bootState != PinBootState::Default_state) {
-          int8_t  state = -1;
-          uint8_t mode  = PIN_MODE_UNDEFINED;
-          int8_t  init  = 0;
-
-          #ifdef ESP32
           gpio_reset_pin(static_cast<gpio_num_t>(gpio));
-          #endif
+        }
+        #endif
           
-          switch (bootState)
-          {
-            case PinBootState::Default_state:
-              // At startup, pins are configured as INPUT
-              break;
-            case PinBootState::Output_low:
-              pinMode(gpio, OUTPUT);
-              digitalWrite(gpio, LOW);
-              state = LOW;
-              mode  = PIN_MODE_OUTPUT;
-              init  = 1;
+        switch (bootState)
+        {
+          case PinBootState::Default_state:
+            // At startup, pins are configured as INPUT
+            break;
+          case PinBootState::Output_low:
+            createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, 0);
+            GPIO_Write(GPIO_PLUGIN_ID, gpio, LOW, PIN_MODE_OUTPUT);
 
-              // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
-              break;
-            case PinBootState::Output_high:
-              pinMode(gpio, OUTPUT);
-              digitalWrite(gpio, HIGH);
-              state = HIGH;
-              mode  = PIN_MODE_OUTPUT;
-              init  = 1;
+            // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
+            break;
+          case PinBootState::Output_high:
+            createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, 0);
+            GPIO_Write(GPIO_PLUGIN_ID, gpio, HIGH, PIN_MODE_OUTPUT);
 
-              // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
-              break;
-            case PinBootState::Input_pullup:
+            // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
+            break;
+          case PinBootState::Input_pullup:
 
-              if (hasPullUp) {
-                pinMode(gpio, INPUT_PULLUP);
-                state = 0;
-                mode  = PIN_MODE_INPUT_PULLUP;
-                init  = 1;
+            if (hasPullUp) {
+              createAndSetPortStatus_Mode_State(key, PIN_MODE_INPUT_PULLUP, 0);
+              pinMode(gpio, INPUT_PULLUP);
+            }
+            break;
+          case PinBootState::Input_pulldown:
+
+            if (hasPullDown) {
+              createAndSetPortStatus_Mode_State(key, PIN_MODE_INPUT_PULLDOWN, 0);
+
+              #ifdef ESP8266
+
+              if (gpio == 16) {
+                pinMode(gpio, INPUT_PULLDOWN_16);
               }
-              break;
-            case PinBootState::Input_pulldown:
-
-              if (hasPullDown) {
-                #ifdef ESP8266
-
-                if (gpio == 16) {
-                  pinMode(gpio, INPUT_PULLDOWN_16);
-                }
-                #endif // ifdef ESP8266
-                #ifdef ESP32
-                pinMode(gpio, INPUT_PULLDOWN);
-                #endif // ifdef ESP32
-                state = 0;
-                mode  = PIN_MODE_INPUT_PULLDOWN;
-                init  = 1;
-              }
-              break;
-            case PinBootState::Input:
-              pinMode(gpio, INPUT);
-              state = 0;
-              mode  = PIN_MODE_INPUT;
-              init  = 1;
-              break;
-          }
-
-          if (init == 1) {
-            globalMapPortStatus[key].state = state;
-            globalMapPortStatus[key].mode  = mode;
-            globalMapPortStatus[key].init  = init;
-          }
+              #endif // ifdef ESP8266
+              #ifdef ESP32
+              pinMode(gpio, INPUT_PULLDOWN);
+              #endif // ifdef ESP32
+            }
+            break;
+          case PinBootState::Input:
+            createAndSetPortStatus_Mode_State(key, PIN_MODE_INPUT, 0);
+            pinMode(gpio, INPUT);
+            break;
         }
       }
     }
