@@ -328,6 +328,18 @@ void SettingsStruct_tmpl<N_TASKS>::setCssMode(uint8_t value) {
 }
 #endif // FEATURE_AUTO_DARK_MODE
 
+#if FEATURE_I2C_DEVICE_CHECK
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice() const { // Inverted
+  return !bitRead(VariousBits1, 30);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice(bool value) { // Inverted
+  bitWrite(VariousBits1, 30, !value);
+}
+#endif // if FEATURE_I2C_DEVICE_CHECK
+
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
   return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);
@@ -361,7 +373,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1 << 30)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
+  if (VariousBits1 > (1 << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 

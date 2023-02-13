@@ -94,11 +94,11 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        String  portNames[4];
-        int     portValues[4];
-        uint8_t unit    = (CONFIG_PORT - 1) / 4;
-        uint8_t port    = CONFIG_PORT - (unit * 4);
-        uint8_t address = 0x48 + unit;
+        String portNames[4];
+        int    portValues[4];
+        const uint8_t unit    = (CONFIG_PORT - 1) / 4;
+        const uint8_t port    = CONFIG_PORT - (unit * 4);
+        const uint8_t address = 0x48 + unit;
 
         for (uint8_t x = 0; x < 4; x++) {
           portValues[x] = x + 1;
@@ -114,6 +114,16 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      const uint8_t unit = (CONFIG_PORT - 1) / 4;
+      event->Par1 = 0x48 + unit;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -163,9 +173,9 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      uint8_t unit    = (CONFIG_PORT - 1) / 4;
-      uint8_t port    = CONFIG_PORT - (unit * 4);
-      uint8_t address = 0x48 + unit;
+      const uint8_t unit    = (CONFIG_PORT - 1) / 4;
+      uint8_t port          = CONFIG_PORT - (unit * 4);
+      const uint8_t address = 0x48 + unit;
 
       uint8_t var = 0;
 
