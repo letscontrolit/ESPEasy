@@ -2,6 +2,9 @@
 #define CONTROLLERQUEUE_C016_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#ifdef USES_C016
+
+
 #include "../ControllerQueue/Queue_element_base.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
@@ -10,9 +13,6 @@
 #include "../Globals/Plugins.h"
 
 struct EventStruct;
-
-
-#ifdef USES_C016
 
 
 // The binary format to store the samples using the Cache Controller

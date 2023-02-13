@@ -1,11 +1,11 @@
 #include "../ControllerQueue/C016_queue_element.h"
 
+#ifdef USES_C016
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RuntimeData.h"
 #include "../Helpers/ESPEasy_math.h"
-
-#ifdef USES_C016
 
 C016_queue_element::C016_queue_element() :  sensorType(
     Sensor_VType::SENSOR_TYPE_NONE) {
