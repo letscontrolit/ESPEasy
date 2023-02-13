@@ -462,6 +462,16 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_ZEROFILLED_UNITNUMBER  0
 
+    #if defined(FEATURE_I2C_DEVICE_CHECK)
+      #undef FEATURE_I2C_DEVICE_CHECK
+    #endif
+    #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
+
+    #if defined(FEATURE_I2C_GET_ADDRESS)
+      #undef FEATURE_I2C_GET_ADDRESS
+    #endif
+    #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching I2C device address
+
     #ifndef USES_P001
         #define USES_P001   // switch
     #endif
@@ -1564,6 +1574,12 @@ To create/register a plugin, you have to :
        #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
        #define KEEP_I2C_MULTIPLEXER
      #endif
+   #endif
+   #if defined(ESP8266)
+     #if defined(FEATURE_I2C_DEVICE_CHECK)
+       #undef FEATURE_I2C_DEVICE_CHECK
+     #endif
+     #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
    #endif
    #if !defined(FEATURE_SD) && !defined(ESP8266)
      #define FEATURE_SD 1
@@ -2715,6 +2731,27 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
+#endif
+
+#ifndef FEATURE_I2C_DEVICE_CHECK
+  #ifdef ESP8266_1M
+    #define FEATURE_I2C_DEVICE_CHECK  0 // Disabled by default for 1M units
+  #else
+    #define FEATURE_I2C_DEVICE_CHECK  1 // Enabled by default
+  #endif
+#endif
+
+#ifndef FEATURE_I2C_GET_ADDRESS
+  #ifdef ESP8266_1M
+    #define FEATURE_I2C_GET_ADDRESS   0 // Disabled by default for 1M units
+  #else
+    #define FEATURE_I2C_GET_ADDRESS   1 // Enabled by default
+  #endif
+#endif
+
+#if FEATURE_I2C_DEVICE_CHECK && !FEATURE_I2C_GET_ADDRESS
+  #undef FEATURE_I2C_GET_ADDRESS
+  #define FEATURE_I2C_GET_ADDRESS     1 // Needed by FEATURE_I2C_DEVICE_CHECK
 #endif
 
 #if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))

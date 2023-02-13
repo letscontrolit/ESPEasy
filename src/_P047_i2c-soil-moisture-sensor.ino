@@ -87,6 +87,15 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P047_I2C_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Send sensor to sleep"), F("sleep"),   P047_SENSOR_SLEEP);
