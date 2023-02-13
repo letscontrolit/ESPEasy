@@ -1287,28 +1287,19 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += '`';
     eventQueue.addMove(std::move(eventString));    
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
-    String eventString;
-    eventString.reserve(128); // Enough for most use cases, prevent lots of memory allocations.
-    eventString += getTaskDeviceName(event->TaskIndex);
-    eventString += F("#All=");
+    String eventvalues;
+    eventvalues.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
 
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       if (varNr != 0) {
-        eventString += ',';
+        eventvalues += ',';
       }
-      eventString += formatUserVarNoCheck(event, varNr);
+      eventvalues += formatUserVarNoCheck(event, varNr);
     }
-    eventQueue.addMove(std::move(eventString));
+    eventQueue.add(event->TaskIndex, F("All"), eventvalues);
   } else {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-      String eventString;
-      eventString.reserve(64); // Enough for most use cases, prevent lots of memory allocations.
-      eventString += getTaskDeviceName(event->TaskIndex);
-      eventString += '#';
-      eventString += getTaskValueName(event->TaskIndex, varNr);
-      eventString += '=';
-      eventString += formatUserVarNoCheck(event, varNr);
-      eventQueue.addMove(std::move(eventString));
+      eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
     }
   }
 }

@@ -1292,16 +1292,7 @@ const __FlashStringHelper* P36_eventId_toString(uint8_t eventId)
 }
 
 void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue) {
-  if (Settings.UseRules) {
-    String RuleEvent;
-    RuleEvent.reserve(32); // Guesstimate
-    RuleEvent += getTaskDeviceName(event->TaskIndex);
-    RuleEvent += '#';
-    RuleEvent += P36_eventId_toString(eventId);
-    RuleEvent += '=';
-    RuleEvent += eventValue;
-    eventQueue.addMove(std::move(RuleEvent));
-  }
+  eventQueue.add(event->TaskIndex, P36_eventId_toString(eventId), String(eventValue));
 }
 
 # endif // ifdef P036_SEND_EVENTS
