@@ -722,7 +722,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               #if FEATURE_PLUGIN_STATS
               PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
               if (taskData != nullptr) {
-                taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
+                taskData->pushPluginStatsValues(event, !Device[DeviceIndex].TaskLogsOwnPeaks);
               }
               #endif // if FEATURE_PLUGIN_STATS
               saveUserVarToRTC();

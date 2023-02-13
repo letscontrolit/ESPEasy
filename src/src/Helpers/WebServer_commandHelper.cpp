@@ -27,7 +27,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   printToWebJSON = false;
 
   // in case of event, store to buffer and return...
-  String command = parseString(webrequest, 1);
+  const String command = parseString(webrequest, 1);
 
   if ((command.equals(F("event"))) || (command.equals(F("asyncevent"))))
   {
@@ -35,6 +35,8 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     handledCmd = true;
     sendOK     = true;
   } else if (command.equals(F("taskrun")) ||
+             command.equals(F("taskrunat")) ||
+             command.equals(F("scheduletaskrun")) ||
              command.equals(F("taskvalueset")) ||
              command.equals(F("taskvaluesetandrun")) ||
              command.equals(F("taskvaluetoggle")) ||
