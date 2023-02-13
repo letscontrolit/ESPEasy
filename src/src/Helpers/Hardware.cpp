@@ -84,7 +84,7 @@ void hardwareInit()
       #endif // ifdef ESP32
 
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
-        const PinBootState bootState = Settings.getPinBootState(gpio);
+        PinBootState bootState = Settings.getPinBootState(gpio);
       #if FEATURE_ETHERNET
 
         if (Settings.ETH_Pin_power == gpio)
