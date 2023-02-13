@@ -3,13 +3,6 @@
 .. |P030_typename| replace:: :cyan:`Environment - BMP280`
 .. |P030_porttype| replace:: `.`
 .. |P030_status| replace:: :gray:`RETIRED`
-.. |P030_github| replace:: P030_BMP280.ino
-.. _P030_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P030_BMP280.ino
-.. |P030_usedby| replace:: :ref:`P030_BMP280_page`
-.. |P030_shortinfo| replace:: Temperature and pressure for the BMP280 sensors. Superseded by :ref:`P028_page`
-.. |P030_maintainer| replace:: `.`
-.. |P030_compileinfo| replace:: `.`
-.. |P030_usedlibraries| replace:: `.`
 
 .. |P031_name| replace:: :cyan:`SHT1X`
 .. |P031_type| replace:: :cyan:`Environment`

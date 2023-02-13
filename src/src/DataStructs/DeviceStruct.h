@@ -98,6 +98,7 @@ struct __attribute__((__packed__)) DeviceStruct
   bool ErrorStateValues   : 1;       // Support Error State Values, can be called to retrieve surrogate values when PLUGIN_READ returns false
   bool PluginStats        : 1;       // Support for PluginStats to record last N task values, show charts etc.
   bool PluginLogsPeaks    : 1;       // When PluginStats is enabled, a call to PLUGIN_READ will also check for peaks. With this enabled, the plugin must call to check for peaks itself.
+  bool I2CNoDeviceCheck   : 1;       // When enabled, NO I2C check will be done on the I2C address returned from PLUGIN_I2C_GET_ADDRESS function call
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 
