@@ -265,6 +265,7 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
     validUIntFromString(par2, unixTime);
   }
 
+  Scheduler.reschedule_task_device_timer(taskIndex, millis());
   START_TIMER;
   SensorSendTask(taskIndex, unixTime);
   STOP_TIMER(SENSOR_SEND_TASK);
