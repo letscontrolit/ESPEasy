@@ -218,6 +218,7 @@ const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *even
   const __FlashStringHelper * returnvalue = taskValueSet(event, Line, taskIndex, success);
   if (success)
   {
+    Scheduler.reschedule_task_device_timer(taskIndex, millis());
     START_TIMER;
     SensorSendTask(taskIndex);
     STOP_TIMER(SENSOR_SEND_TASK);
