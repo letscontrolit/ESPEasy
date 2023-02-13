@@ -461,7 +461,7 @@ BLYNK_WRITE_DEFAULT() {
   if (Settings.UseRules) {
     String eventCommand = F("blynkv");
     eventCommand += vPin;
-    eventCommand += F("=");
+    eventCommand += '=';
     eventCommand += pinValue;
     eventQueue.addMove(std::move(eventCommand));
   }

@@ -58,10 +58,7 @@ bool P138_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
     int8_t src = static_cast<int8_t>(_ip5306->power_source());
 
     if (_lastPowerSource != src) { // Changed?
-      String eventCommand = getTaskDeviceName(event->TaskIndex);
-      eventCommand += F("#PowerChanged=");
-      eventCommand += src;         // 0 = battery, 1 = Vin
-      eventQueue.add(eventCommand);
+      eventQueue.add(event->TaskIndex, F("PowerChanged"), src); // 0 = battery, 1 = Vin
       _lastPowerSource = src;      // Keep current
     }
   }
