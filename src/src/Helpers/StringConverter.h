@@ -18,6 +18,9 @@
    Concatenate using code which results in the smallest compiled code
  \*********************************************************************************************/
 
+String concat(const __FlashStringHelper * str, const String &val);
+String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
+
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
   String res(str);
@@ -32,6 +35,15 @@ String concat(const String& str, const T &val) {
   return res;
 }
 
+bool equals(const String& str, const __FlashStringHelper * f_str);
+bool equals(const String& str, const char& c);
+
+/*
+template <typename T>
+bool equals(const String& str, const T &val) {
+  return str.equals(String(val));
+}
+*/
 
 /********************************************************************************************\
    Convert a char string to integer

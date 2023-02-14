@@ -342,41 +342,41 @@ bool p073_plugin_write(struct EventStruct *event,
 
   const String text = parseStringToEndKeepCase(string, 2);
 
-  if (cmd.equals(F("7dn"))) {
+  if (equals(cmd, F("7dn"))) {
     return p073_plugin_write_7dn(event, text);
-  } else if (cmd.equals(F("7dt"))) {
+  } else if (equals(cmd, F("7dt"))) {
     return p073_plugin_write_7dt(event, text);
   # ifdef P073_7DDT_COMMAND
-  } else if (cmd.equals(F("7ddt"))) {
+  } else if (equals(cmd, F("7ddt"))) {
     return p073_plugin_write_7ddt(event, text);
   # endif // ifdef P073_7DDT_COMMAND
-  } else if (cmd.equals(F("7dst"))) {
+  } else if (equals(cmd, F("7dst"))) {
     return p073_plugin_write_7dst(event);
-  } else if (cmd.equals(F("7dsd"))) {
+  } else if (equals(cmd, F("7dsd"))) {
     return p073_plugin_write_7dsd(event);
-  } else if (cmd.equals(F("7dtext"))) {
+  } else if (equals(cmd, F("7dtext"))) {
     return p073_plugin_write_7dtext(event, text);
   # ifdef P073_EXTRA_FONTS
-  } else if (cmd.equals(F("7dfont"))) {
+  } else if (equals(cmd, F("7dfont"))) {
     return p073_plugin_write_7dfont(event, text);
   # endif // P073_EXTRA_FONTS
   # ifdef P073_7DBIN_COMMAND
-  } else if (cmd.equals(F("7dbin"))) {
+  } else if (equals(cmd, F("7dbin"))) {
     return p073_plugin_write_7dbin(event, text);
   # endif // P073_7DBIN_COMMAND
   } else {
     bool p073_validcmd  = false;
     bool p073_displayon = false;
 
-    if (cmd.equals(F("7don"))) {
+    if (equals(cmd, F("7don"))) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
       p073_displayon = true;
       p073_validcmd  = true;
-    } else if (cmd.equals(F("7doff"))) {
+    } else if (equals(cmd, F("7doff"))) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
       p073_displayon = false;
       p073_validcmd  = true;
-    } else if (cmd.equals(F("7db"))) {
+    } else if (equals(cmd, F("7db"))) {
       if ((event->Par1 >= 0) && (event->Par1 < 16)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("7DGT : Brightness=");
@@ -388,7 +388,7 @@ bool p073_plugin_write(struct EventStruct *event,
         p073_displayon        = true;
         p073_validcmd         = true;
       }
-    } else if (cmd.equals(F("7output"))) {
+    } else if (equals(cmd, F("7output"))) {
       if ((event->Par1 >= 0) && (event->Par1 < 6)) { // 0:"Manual",1:"Clock 24h - Blink",2:"Clock 24h - No Blink",
                                                      // 3:"Clock 12h - Blink",4:"Clock 12h - No Blink",5:"Date"
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {

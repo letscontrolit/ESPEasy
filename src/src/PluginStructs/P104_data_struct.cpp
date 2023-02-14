@@ -934,7 +934,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
   bool   success = false;
   String command = parseString(string, 1);
 
-  if ((nullptr != P) && command.equals(F("dotmatrix"))) { // main command: dotmatrix
+  if ((nullptr != P) && equals(command, F("dotmatrix"))) { // main command: dotmatrix
     String sub = parseString(string, 2);
 
     int zoneIndex;
@@ -945,14 +945,14 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
     # endif // ifdef P104_USE_COMMANDS
 
     // Global subcommands
-    if (sub.equals(F("clear")) && // subcommand: clear[,all]
+    if (equals(sub, F("clear")) && // subcommand: clear[,all]
         (string4.isEmpty() ||
          string4.equalsIgnoreCase(F("all")))) {
       P->displayClear();
       success = true;
     }
 
-    if (sub.equals(F("update")) && // subcommand: update[,all]
+    if (equals(sub, F("update")) && // subcommand: update[,all]
         (string4.isEmpty() ||
          string4.equalsIgnoreCase(F("all")))) {
       updateZone(0, P104_zone_struct(0));
@@ -966,13 +966,13 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
       // subcommands are processed in the same order as they are presented in the UI
       for (auto it = zones.begin(); it != zones.end() && !success; ++it) {
         if ((it->zone == zoneIndex)) {  // This zone
-          if (sub.equals(F("clear"))) { // subcommand: clear,<zone>
+          if (equals(sub, F("clear"))) { // subcommand: clear,<zone>
             P->displayClear(zoneIndex - 1);
             success = true;
             break;
           }
 
-          if (sub.equals(F("update"))) { // subcommand: update,<zone>
+          if (equals(sub, F("update"))) { // subcommand: update,<zone>
             updateZone(zoneIndex, *it);
             success = true;
             break;
@@ -980,7 +980,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           # ifdef P104_USE_COMMANDS
 
-          if (sub.equals(F("size")) && // subcommand: size,<zone>,<size> (1..)
+          if (equals(sub, F("size")) && // subcommand: size,<zone>,<size> (1..)
               (value4 > 0) &&
               (value4 <= P104_MAX_MODULES_PER_ZONE)) {
             reconfigure = (it->size != value4);
@@ -990,11 +990,11 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           }
           # endif // ifdef P104_USE_COMMANDS
 
-          if ((sub.equals(F("txt")) ||                                                          // subcommand: [set]txt,<zone>,<text> (only
-               sub.equals(F("settxt"))) &&                                                      // allowed for zones with Text content)
+          if ((equals(sub, F("txt")) ||                                                          // subcommand: [set]txt,<zone>,<text> (only
+               equals(sub, F("settxt"))) &&                                                      // allowed for zones with Text content)
               ((it->content == P104_CONTENT_TEXT) || (it->content == P104_CONTENT_TEXT_REV))) { // no length check, so longer than the UI
                                                                                                 // allows is made possible
-            if (sub.equals(F("settxt")) &&                                                      // subcommand: settxt,<zone>,<text> (stores
+            if (equals(sub, F("settxt")) &&                                                      // subcommand: settxt,<zone>,<text> (stores
                 (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) {                          // the text in the settings, is not saved)
               it->text = string4;                                                               // Only if not too long, could 'blow up' the
             }                                                                                   // settings when saved
@@ -1005,7 +1005,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           # ifdef P104_USE_COMMANDS
 
-          if (sub.equals(F("content")) && // subcommand: content,<zone>,<contenttype> (0..<P104_CONTENT_count>-1)
+          if (equals(sub, F("content")) && // subcommand: content,<zone>,<contenttype> (0..<P104_CONTENT_count>-1)
               (value4 >= 0) &&
               (value4 < P104_CONTENT_count)) {
             reconfigure = (it->content != value4);
@@ -1014,7 +1014,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("alignment")) &&                             // subcommand: alignment,<zone>,<alignment> (0..3)
+          if (equals(sub, F("alignment")) &&                             // subcommand: alignment,<zone>,<alignment> (0..3)
               (value4 >= 0) &&
               (value4 <= static_cast<int>(textPosition_t::PA_RIGHT))) { // last item in the enum
             it->alignment = value4;
@@ -1022,14 +1022,14 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("anim.in")) && // subcommand: anim.in,<zone>,<animation> (1..)
+          if (equals(sub, F("anim.in")) && // subcommand: anim.in,<zone>,<animation> (1..)
               isAnimationAvailable(value4)) {
             it->animationIn = value4;
             success         = true;
             break;
           }
 
-          if (sub.equals(F("speed")) && // subcommand: speed,<zone>,<speed_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
+          if (equals(sub, F("speed")) && // subcommand: speed,<zone>,<speed_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
               (value4 >= 0) &&
               (value4 <= P104_MAX_SPEED_PAUSE_VALUE)) {
             it->speed = value4;
@@ -1037,14 +1037,14 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("anim.out")) && // subcommand: anim.out,<zone>,<animation> (0..)
+          if (equals(sub, F("anim.out")) && // subcommand: anim.out,<zone>,<animation> (0..)
               isAnimationAvailable(value4, true)) {
             it->animationOut = value4;
             success          = true;
             break;
           }
 
-          if (sub.equals(F("pause")) && // subcommand: pause,<zone>,<pause_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
+          if (equals(sub, F("pause")) && // subcommand: pause,<zone>,<pause_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
               (value4 >= 0) &&
               (value4 <= P104_MAX_SPEED_PAUSE_VALUE)) {
             it->pause = value4;
@@ -1052,7 +1052,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("font")) && // subcommand: font,<zone>,<font id> (only for incuded font id's)
+          if (equals(sub, F("font")) && // subcommand: font,<zone>,<font id> (only for incuded font id's)
               (
                 (value4 == 0)
                 #  ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -1084,7 +1084,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("inverted")) && // subcommand: inverted,<zone>,<invertedstate> (disable/enable)
+          if (equals(sub, F("inverted")) && // subcommand: inverted,<zone>,<invertedstate> (disable/enable)
               (value4 >= 0) &&
               (value4 <= 1)) {
             reconfigure  = (it->inverted != value4);
@@ -1095,7 +1095,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           #  if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
-          if (sub.equals(F("layout")) && // subcommand: layout,<zone>,<layout> (0..2), only when double-height font is available
+          if (equals(sub, F("layout")) && // subcommand: layout,<zone>,<layout> (0..2), only when double-height font is available
               (value4 >= 0) &&
               (value4 <= P104_LAYOUT_DOUBLE_LOWER)) {
             reconfigure = (it->layout != value4);
@@ -1105,7 +1105,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           }
           #  endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
-          if (sub.equals(F("specialeffect")) && // subcommand: specialeffect,<zone>,<effect> (0..3)
+          if (equals(sub, F("specialeffect")) && // subcommand: specialeffect,<zone>,<effect> (0..3)
               (value4 >= 0) &&
               (value4 <= P104_SPECIAL_EFFECT_BOTH)) {
             reconfigure       = (it->specialEffect != value4);
@@ -1114,7 +1114,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("offset")) && // subcommand: offset,<zone>,<size> (0..<size>-1)
+          if (equals(sub, F("offset")) && // subcommand: offset,<zone>,<size> (0..<size>-1)
               (value4 >= 0) &&
               (value4 < P104_MAX_MODULES_PER_ZONE) &&
               (value4 < it->size)) {
@@ -1124,7 +1124,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("brightness")) && // subcommand: brightness,<zone>,<brightness> (0..15)
+          if (equals(sub, F("brightness")) && // subcommand: brightness,<zone>,<brightness> (0..15)
               (value4 >= 0) &&
               (value4 <= P104_BRIGHTNESS_MAX)) {
             it->brightness = value4;
@@ -1133,7 +1133,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("repeat")) && // subcommand: repeaat,<zone>,<repeat_sec> (-1..86400 = 24h)
+          if (equals(sub, F("repeat")) && // subcommand: repeaat,<zone>,<repeat_sec> (-1..86400 = 24h)
               (value4 >= -1) &&
               (value4 <= P104_MAX_REPEATDELAY_VALUE)) {
             it->repeatDelay = value4;
@@ -1160,10 +1160,10 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           # ifdef P104_USE_BAR_GRAPH
 
-          if ((sub.equals(F("bar")) ||                                 // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones
-               sub.equals(F("setbar"))) &&                             // with Bargraph content) no length check, so longer than the UI
+          if ((equals(sub, F("bar")) ||                                 // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones
+               equals(sub, F("setbar"))) &&                             // with Bargraph content) no length check, so longer than the UI
               (it->content == P104_CONTENT_BAR_GRAPH)) {               // allows is made possible
-            if (sub.equals(F("setbar")) &&                             // subcommand: setbar,<zone>,<graph-string> (stores the graph-string
+            if (equals(sub, F("setbar")) &&                             // subcommand: setbar,<zone>,<graph-string> (stores the graph-string
                 (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) { // in the settings, is not saved)
               it->text = string4;                                      // Only if not too long, could 'blow up' the settings when saved
             }

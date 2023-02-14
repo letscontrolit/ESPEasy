@@ -828,7 +828,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           // in case of event, store to buffer and return...
           String command = parseString(cmd, 1);
 
-          if ((command.equals(F("event"))) || (command.equals(F("asyncevent"))))
+          if ((equals(command, F("event"))) || (equals(command, F("asyncevent"))))
           {
             if (Settings.UseRules) {
               String newEvent = parseStringToEnd(cmd, 2);

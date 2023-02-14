@@ -183,7 +183,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
       String command = parseString(string, 1);
 
-      if (command.equals(F("mprint")))
+      if (equals(command, F("mprint")))
       {
         String text = parseStringToEnd(string, 2);
 
@@ -207,7 +207,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
           success = true;
         }
       }
-      else if (command.equals(F("mbr"))) {
+      else if (equals(command, F("mbr"))) {
         String param = parseString(string, 2);
         int    brightness;
 
@@ -218,7 +218,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
         }
         success = true;
       }
-      else if ((command.equals(F("m"))) || (command.equals(F("mx"))) || (command.equals(F("mnum"))))
+      else if ((equals(command, F("m"))) || (equals(command, F("mx"))) || (equals(command, F("mnum"))))
       {
         String   param;
         String   paramKey;
@@ -243,7 +243,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_DEBUG_MORE, param);
             #endif
 
-            if (param.equals(F("log")))
+            if (equals(param, F("log")))
             {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("MX   : ");
@@ -258,7 +258,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
               success = true;
             }
 
-            else if (param.equals(F("test")))
+            else if (equals(param, F("test")))
             {
               for (uint8_t i = 0; i < 8; i++) {
                 P057_data->ledMatrix.SetRow(i, 1 << i);
@@ -266,7 +266,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
               success = true;
             }
 
-            else if (param.equals(F("clear")))
+            else if (equals(param, F("clear")))
             {
               P057_data->ledMatrix.ClearRowBuffer();
               success = true;
@@ -287,7 +287,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
                 paramVal = param;
               }
 
-              if (command.equals(F("mnum")))
+              if (equals(command, F("mnum")))
               {
                 value = paramVal.toInt();
 
@@ -298,7 +298,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
                   P057_data->ledMatrix.SetRow(seg, value);
                 }
               }
-              else if (command.equals(F("mx")))
+              else if (equals(command, F("mx")))
               {
                 char *ep;
                 value = strtol(paramVal.c_str(), &ep, 16);

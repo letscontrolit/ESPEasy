@@ -27,6 +27,23 @@
 
 // -V::569
 
+String concat(const __FlashStringHelper * str, const String &val) {
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
+String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
+  return concat(str, String(val));
+}
+
+bool equals(const String& str, const __FlashStringHelper * f_str) {
+  return str.equals(String(f_str));
+}
+
+bool equals(const String& str, const char& c) {
+  return str.equals(String(c));
+}
 
 /********************************************************************************************\
    Convert a char string to integer
