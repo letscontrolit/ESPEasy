@@ -557,16 +557,11 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     if (current != _encoderPosition) {
       // Generate event
       if (Settings.UseRules) {
-        String taskEvent;
-        taskEvent.reserve(64);
-        taskEvent += getTaskDeviceName(event->TaskIndex);
-        taskEvent += '#';
-        taskEvent += getTaskValueName(event->TaskIndex, 0);
-        taskEvent += '=';
-        taskEvent += current;                    // Position
-        taskEvent += ',';
-        taskEvent += current - _encoderPosition; // Delta, positive = clock-wise
-        eventQueue.addMove(std::move(taskEvent));
+        String eventvalues;
+        eventvalues += current;              // Position
+        eventvalues += ',';
+        eventvalues += current - _encoderPosition; // Delta, positive = clock-wise
+        eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, 0), eventvalues);
       }
 
       // Set task value
@@ -852,14 +847,7 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
       // Generate event
       if (Settings.UseRules) {
-        String taskEvent;
-        taskEvent.reserve(64);
-        taskEvent += getTaskDeviceName(event->TaskIndex);
-        taskEvent += '#';
-        taskEvent += getTaskValueName(event->TaskIndex, 1);
-        taskEvent += '=';
-        taskEvent += state; // New state
-        eventQueue.addMove(std::move(taskEvent));
+        eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, 1), state);
       }
 
       // Set task value
@@ -893,12 +881,11 @@ void P143_data_struct::m5stack_setPixelColor(uint8_t pixel,
                                              uint8_t red,
                                              uint8_t green,
                                              uint8_t blue) {
-  uint8_t data[4];
-
-  data[0] = pixel;
-  data[1] = applyBrightness(red);
-  data[2] = applyBrightness(green);
-  data[3] = applyBrightness(blue);
+  uint8_t data[4] = {
+   pixel,
+   applyBrightness(red),
+   applyBrightness(green),
+   applyBrightness(blue)};
   I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
 }
 

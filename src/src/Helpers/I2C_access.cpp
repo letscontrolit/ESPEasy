@@ -1,6 +1,8 @@
 #include "../Helpers/I2C_access.h"
 
+#include "../DataStructs/TimingStats.h"
 #include "../Globals/I2Cdev.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
 enum class I2C_clear_bus_state {
@@ -331,5 +333,51 @@ int16_t I2C_readS16_reg(uint8_t i2caddr, uint8_t reg) {
 int16_t I2C_readS16_LE_reg(uint8_t i2caddr, uint8_t reg) {
   return (int16_t)I2C_read16_LE_reg(i2caddr, reg);
 }
+
+// *************************************************************************/
+// Checks if a device is responding on the address
+// Should be used in any I2C plugin case PLUGIN_INIT: before any initialization
+// Can be used in any I2C plugin case PLUGIN_READ: to check if the device is still connected/responding
+// if (!I2C_deviceCheck(configured_I2C_address)) {
+//   break; // Will return the default false for success
+// }
+// *************************************************************************/
+
+#if FEATURE_I2C_DEVICE_CHECK
+static std::vector<uint8_t> deviceCheckI2C;
+
+bool I2C_deviceCheck(uint8_t     i2caddr,
+                     taskIndex_t taskIndex,
+                     uint8_t     maxRetries,
+                     uint8_t     function) {
+  if (!Settings.CheckI2Cdevice()) { return true; } // Check disabled, continue
+
+  START_TIMER;
+  Wire.beginTransmission(i2caddr);
+
+  const bool retval = 0 == Wire.endTransmission(); // Only 0 indicates Success
+
+  if (validTaskIndex(taskIndex)) {
+    if (deviceCheckI2C.size() < taskIndex) {
+      deviceCheckI2C.resize(TASKS_MAX, 0);
+    }
+
+    if (retval) {
+      deviceCheckI2C[taskIndex] = 0;
+    } else {
+      if (maxRetries > 0) {
+        deviceCheckI2C[taskIndex]++;
+        if (deviceCheckI2C[taskIndex] >= maxRetries) {
+          Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reeached, disable the device
+        }
+      }
+    }
+  }
+  if (function != 0) {
+    STOP_TIMER_TASK(getDeviceIndex(taskIndex), function);
+  }
+  return retval;
+}
+# endif // if FEATURE_I2C_DEVICE_CHECK
 
 #undef END_TRANSMISSION_FLAG

@@ -53,11 +53,19 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x7f;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      uint8_t   choice     = PCONFIG(0);
       const __FlashStringHelper * options[2] = { F("Digital"), F("Analog") };
-      addFormSelector(F("Port Type"), F("p011"), 2, options, nullptr, choice);
+      addFormSelector(F("Port Type"), F("p011"), 2, options, nullptr, PCONFIG(0));
 
       success = true;
       break;
@@ -80,9 +88,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
     {
       UserVar[event->BaseVarIndex] = Plugin_011_Read(PCONFIG(0), CONFIG_PORT);
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("PME  : PortValue: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 0);
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event->TaskIndex, 0)));
       }
       success = true;
       break;
