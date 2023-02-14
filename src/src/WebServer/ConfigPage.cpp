@@ -117,9 +117,7 @@ void handle_config() {
 
     #ifdef USES_ESPEASY_NOW
     for (int peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
-      String id = F("peer");
-      id += String(peer);
-      String peer_mac  = webArg(id);
+      String peer_mac = webArg(concat(F("peer"), peer));
       if (peer_mac.length() == 0) {
         peer_mac = F("00:00:00:00:00:00");
       }
@@ -159,7 +157,7 @@ void handle_config() {
   Settings.Name[25]             = 0;
   SecuritySettings.Password[25] = 0;
   addFormTextBox(F("Unit Name"), F("name"), Settings.Name, 25);
-  addFormNote(String(F("Hostname: ")) + NetworkCreateRFCCompliantHostname());
+  addFormNote(concat(F("Hostname: "), NetworkCreateRFCCompliantHostname()));
   addFormNumericBox(F("Unit Number"), F("unit"), Settings.Unit, 0, UNIT_NUMBER_MAX);
   addFormCheckBox(F("Append Unit Number to hostname"), F("appendunittohostname"), Settings.appendUnitToHostname());
   addFormPasswordBox(F("Admin Password"), F("password"), SecuritySettings.Password, 25);
@@ -228,11 +226,9 @@ void handle_config() {
 #ifdef USES_ESPEASY_NOW
   addFormSubHeader(F("ESPEasy-NOW"));
   for (int peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
-    String label = F("Peer ");
-    label += String(peer + 1);
-    String id = F("peer");
-    id += String(peer);
-    addFormMACBox(label, id, SecuritySettings.EspEasyNowPeerMAC[peer]);
+    addFormMACBox(concat(F("Peer "), peer + 1),
+                  concat(F("peer"), peer), 
+                  SecuritySettings.EspEasyNowPeerMAC[peer]);
 
     bool match_STA;
     const NodeStruct* nodeInfo = Nodes.getNodeByMac(SecuritySettings.EspEasyNowPeerMAC[peer], match_STA);
@@ -256,10 +252,7 @@ void handle_config() {
   int dsmax = getDeepSleepMax();
   addFormNumericBox(F("Sleep time"), F("delay"), Settings.Delay, 0, dsmax); // limited by hardware
   {
-    String maxSleeptimeUnit = F("sec (max: ");
-    maxSleeptimeUnit += String(dsmax);
-    maxSleeptimeUnit += ')';
-    addUnit(maxSleeptimeUnit);
+    addUnit(concat(F("sec (max: "), dsmax) + ')');
   }
 
   addFormCheckBox(F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);

@@ -422,8 +422,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         if (activeFix != curFixStatus) {
           // Fix status changed, send events.
           if (Settings.UseRules) {
-            String event = curFixStatus ? F("GPS#GotFix") : F("GPS#LostFix");
-            eventQueue.addMove(std::move(event));
+            eventQueue.add(curFixStatus ? F("GPS#GotFix") : F("GPS#LostFix"));
           }
           activeFix = curFixStatus;
         }

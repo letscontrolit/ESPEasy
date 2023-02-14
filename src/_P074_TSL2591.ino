@@ -74,6 +74,15 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = TSL2591_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD: {
       //        P074_data_struct* P074_data =
       //        static_cast<P074_data_struct*>(getPluginTaskData(event->TaskIndex));
