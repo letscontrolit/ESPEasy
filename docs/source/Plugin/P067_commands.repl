@@ -1,0 +1,22 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``tarechana``
+
+        ","
+        Use the last measured value for Channel A as the Offset/Tare value.
+
+        NB: Use ``save`` to actually save this as the new Offset. Saving the value is not required, 0-calibration should be applied after every start of the device, and on a regular basis, because external influences on the load cell will (slightly) change measurements.
+        "
+        "
+        ``tarechanb``
+
+        ","
+        Use the last measured value for Channel B as the Offset/Tare value.
+
+        NB: Use ``save`` to actually save this as the new Offset.
+
+        NB2: When setting the Tare for both A and B channel, use ``save`` after setting *both* values, to reduce wear of the ESP Flash memory.
+        "

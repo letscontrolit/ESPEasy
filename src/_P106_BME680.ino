@@ -78,6 +78,15 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2FEATURE_I2C_GET_ADDRESSC_DEVICE_CHECK
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = PCONFIG(0);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormNumericBox(F("Altitude"), F("elev"), PCONFIG(1));

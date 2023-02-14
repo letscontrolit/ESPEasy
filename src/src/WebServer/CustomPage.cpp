@@ -93,7 +93,7 @@ bool handle_custom(const String& path) {
           name += it->second.getNodeName();
         }
         else {
-          name += Settings.Name;
+          name += Settings.getName();
         }
         addSelector_Item(name, it->first, choice == it->first);
       }

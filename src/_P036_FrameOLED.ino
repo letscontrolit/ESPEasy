@@ -238,6 +238,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P036_ADR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = F("Btn: ");
@@ -615,6 +624,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # ifdef P036_CHECK_HEAP
       P036_CheckHeap(F("_INIT: Entering"));
 # endif // P036_CHECK_HEAP
+
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P036_data_struct());
 # ifdef P036_CHECK_HEAP
       P036_CheckHeap(F("_INIT: Before (*P036_data = static_cast<P036_data_struct *>)"));
@@ -1282,16 +1292,7 @@ const __FlashStringHelper* P36_eventId_toString(uint8_t eventId)
 }
 
 void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue) {
-  if (Settings.UseRules) {
-    String RuleEvent;
-    RuleEvent.reserve(32); // Guesstimate
-    RuleEvent += getTaskDeviceName(event->TaskIndex);
-    RuleEvent += '#';
-    RuleEvent += P36_eventId_toString(eventId);
-    RuleEvent += '=';
-    RuleEvent += eventValue;
-    eventQueue.addMove(std::move(RuleEvent));
-  }
+  eventQueue.add(event->TaskIndex, P36_eventId_toString(eventId), eventValue);
 }
 
 # endif // ifdef P036_SEND_EVENTS
