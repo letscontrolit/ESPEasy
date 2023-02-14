@@ -1237,7 +1237,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     success = false;
     # endif  // if ADAGFX_FONTS_INCLUDED
   }
-  else if (equals(subcommand, F("l")) && (argCount == 5)) { // l: Line
+  else if (equals(subcommand, 'l') && (argCount == 5)) { // l: Line
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1348,7 +1348,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # endif // if ADAGFX_ENABLE_EXTRA_CMDS
-  else if (equals(subcommand, F("r")) && (argCount == 5)) { // r: Rectangle
+  else if (equals(subcommand, 'r') && (argCount == 5)) { // r: Rectangle
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1373,7 +1373,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
-  else if (equals(subcommand, F("c")) && (argCount == 4)) { // c: Circle
+  else if (equals(subcommand, 'c') && (argCount == 4)) { // c: Circle
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1398,7 +1398,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
   }
-  else if (equals(subcommand, F("t")) && (argCount == 7)) { // t: Triangle
+  else if (equals(subcommand, 't') && (argCount == 7)) { // t: Triangle
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -2345,7 +2345,7 @@ String AdaGFXcolorToString(const uint16_t        & color,
                            bool                    blackIsEmpty) {
   String result = AdaGFXcolorToString_internal(color, colorDepth, blackIsEmpty);
 
-  if (equals(result, F("*"))) {
+  if (equals(result, '*')) {
     result  = '#';
     result += String(color, HEX);
     result.toUpperCase();

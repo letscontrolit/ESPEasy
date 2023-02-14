@@ -696,7 +696,7 @@ void substitute_eventvalue(String& line, const String& event) {
           const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
           int argc                = -1;
 
-          if (equals(nr, F("0"))) {
+          if (equals(nr, '0')) {
             // Replace %eventvalue0% with the entire list of arguments.
             line.replace(eventvalue, argString);
           } else {

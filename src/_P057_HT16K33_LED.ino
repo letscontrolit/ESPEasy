@@ -218,7 +218,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
         }
         success = true;
       }
-      else if ((equals(command, F("m"))) || (equals(command, F("mx"))) || (equals(command, F("mnum"))))
+      else if ((equals(command, 'm')) || (equals(command, F("mx"))) || (equals(command, F("mnum"))))
       {
         String   param;
         String   paramKey;
