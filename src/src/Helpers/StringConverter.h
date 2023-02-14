@@ -279,6 +279,26 @@ String tolerantParseStringKeepCase(const String& string,
                                    char          separator = ',',
                                    bool          trimResult = true);
 
+
+
+/*********************************************************************************************\
+   GetTextIndexed: Get text from large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L937
+\*********************************************************************************************/
+char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index, const char* haystack);
+
+/*********************************************************************************************\
+   GetCommandCode: Find string in large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L967
+\*********************************************************************************************/
+int GetCommandCode(char* destination, size_t destination_size, const char* needle, const char* haystack);
+
+
+
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,
                       String& esc);
