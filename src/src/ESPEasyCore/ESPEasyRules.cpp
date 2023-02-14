@@ -501,7 +501,7 @@ void parse_string_commands(String& line) {
       } else {
 
         char tmp[12]{};
-        int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), bitwise_functions);
+        int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), string_commands);
         if (command_i != -1) {
           const string_commands_e command = static_cast<string_commands_e>(command_i);
 
