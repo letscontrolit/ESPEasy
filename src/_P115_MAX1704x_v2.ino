@@ -74,6 +74,15 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x36;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_INIT:
     {
       const sfe_max1704x_devices_e device = static_cast<sfe_max1704x_devices_e>(P115_DEVICESELECTOR);
@@ -181,14 +190,10 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
                 if (validDeviceIndex(DeviceIndex)) {
-                  String newEvent = getTaskDeviceName(event->TaskIndex);
-                  newEvent += '#';
-                  newEvent += F("AlertTriggered");
-                  newEvent += '=';
-                  newEvent += formatUserVarNoCheck(event, 0); // Voltage
-                  newEvent += ',';
-                  newEvent += formatUserVarNoCheck(event, 1); // State Of Charge
-                  eventQueue.addMove(std::move(newEvent));
+                  String eventvalues = formatUserVarNoCheck(event, 0); // Voltage
+                  eventvalues += ',';
+                  eventvalues += formatUserVarNoCheck(event, 1); // State Of Charge
+                  eventQueue.add(event->TaskIndex, F("AlertTriggered"), eventvalues);
                 }
               }
             }

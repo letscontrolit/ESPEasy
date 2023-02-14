@@ -7,14 +7,23 @@
 # include "../Globals/MQTT.h"
 
 
-P146_data_struct::P146_data_struct(taskIndex_t P146_TaskIndex)
+P146_data_struct::P146_data_struct(struct EventStruct *event)
 {
-  LoadCustomTaskSettings(P146_TaskIndex, _topics, P146_Nlines, 0);
+  LoadCustomTaskSettings(event->TaskIndex, _topics, P146_Nlines, 0);
+  const char separator = static_cast<char>(P146_SEPARATOR_CHARACTER);
+
+  dumper = new (std::nothrow) ESPEasyControllerCache_CSV_dumper(
+    P146_GET_JOIN_TIMESTAMP, P146_GET_ONLY_SET_TASKS, separator,
+    ESPEasyControllerCache_CSV_dumper::Target::MQTT);
 }
 
 P146_data_struct::~P146_data_struct()
-{}
-
+{
+  if (dumper != nullptr) {
+    delete dumper;
+    dumper = nullptr;
+  }
+}
 
 uint32_t writeToMqtt(const String& str, bool send) {
   if (send) {
@@ -64,14 +73,23 @@ uint32_t createTaskInfoJson(bool send) {
   return expected_size;
 }
 
-uint32_t P146_data_struct::sendTaskInfoInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize) const
+uint32_t P146_data_struct::sendTaskInfoInBulk(struct EventStruct *event) const
 {
-  const String topic         = getTopic(P146_TaskInfoTopicIndex, P146_TaskIndex);
-  const size_t expected_size = createTaskInfoJson(false);
+  const String topic   = getTopic(P146_TaskInfoTopicIndex, event->TaskIndex);
+  size_t expected_size = 0;
 
-  if (MQTTclient.beginPublish(topic.c_str(), expected_size, false)) {
-    createTaskInfoJson(true);
-    MQTTclient.endPublish();
+  if (P146_GET_SEND_BINARY) { expected_size = createTaskInfoJson(false); }
+  else if (dumper != nullptr) { expected_size = dumper->generateCSVHeader(false); }
+
+  if (expected_size > 0) {
+    if (MQTTclient.beginPublish(topic.c_str(), expected_size, false)) {
+      if (P146_GET_SEND_BINARY) {
+        createTaskInfoJson(true);
+      } else {
+        dumper->generateCSVHeader(true);
+      }
+      MQTTclient.endPublish();
+    }
   }
   return 0;
 }
@@ -86,31 +104,9 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
 
 
   // Keep the current peek position, so we can reset it when we fail to deliver the data to the controller.
-  int peekFileNr  = 0;
-  int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+  int peekFileNr, peekReadPos, peekFileSize;
 
-  if (peekFileNr <= 0) {
-    return 0;
-  }
-
-  int peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
-
-  if (peekFileSize < 0) {
-    // Peek file is not opened. Setting peek file pos will try to open it.
-    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
-    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
-    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
-  }
-
-  // FIXME TD-er: This is messy, but needed to increment peek file nr.
-  if (peekReadPos >= peekFileSize) {
-    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
-    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
-    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
-  }
-
-  if (peekFileSize < 0) {
-    // peek file still not open.
+  if (!getPeekFilePos(peekFileNr, peekReadPos, peekFileSize)) {
     return 0;
   }
 
@@ -121,10 +117,12 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   message += peekReadPos;
   message += ';';
 
-  const size_t messageLength = message.length();
-  const size_t data_left     = (maxMessageSize - messageLength);
-  const size_t chunkSize     = sizeof(C016_binary_element);
-  size_t nrChunks            = data_left / ((2 * chunkSize) + 1);
+  // Need to compute the nr. of chunks.
+  // For this we need to 'reserve' some positions for this nr of chunks value.
+  // Used an estimate of 5 here.
+  const size_t data_left = (maxMessageSize - message.length() - 5);
+  const size_t chunkSize = sizeof(C016_binary_element);
+  size_t nrChunks        = data_left / ((2 * chunkSize) + 1);
 
   if (peekReadPos < peekFileSize) {
     // Try to serve the rest of the file in 1 go.
@@ -134,6 +132,10 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
       nrChunks = chunksLeftInFile;
     }
   }
+
+  message += nrChunks;
+  message += ';';
+  const size_t messageLength = message.length();
 
   const size_t expectedMessageSize = messageLength + (nrChunks * ((2 * chunkSize) + 1));
 
@@ -187,7 +189,7 @@ uint32_t P146_data_struct::sendBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t
   return expectedMessageSize;
 }
 
-bool P146_data_struct::prepareBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t messageSize)
+bool P146_data_struct::prepare_BulkMQTT_message(taskIndex_t P146_TaskIndex)
 {
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -201,6 +203,131 @@ bool P146_data_struct::prepareBinaryInBulk(taskIndex_t P146_TaskIndex, uint32_t 
   const bool callbackTask = true;
 
   return MQTTpublish(enabledMqttController, P146_TaskIndex, std::move(topic), std::move(message), false, callbackTask);
+}
+
+bool P146_data_struct::prepareCSVInBulk(taskIndex_t P146_TaskIndex,
+                                        bool        joinTimestamp,
+                                        bool        onlySetTasks,
+                                        char        separator)
+{
+  if (dumper == nullptr) {
+    dumper = new (std::nothrow) ESPEasyControllerCache_CSV_dumper(
+      joinTimestamp,
+      onlySetTasks,
+      separator,
+      ESPEasyControllerCache_CSV_dumper::Target::MQTT);
+  }
+
+  if (dumper == nullptr) { return false; }
+  return prepare_BulkMQTT_message(P146_TaskIndex);
+}
+
+uint32_t P146_data_struct::sendCSVInBulk(taskIndex_t P146_TaskIndex, uint32_t maxMessageSize)
+{
+  if (dumper == nullptr) {
+    return 0;
+  }
+  const controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+
+  if (!validControllerIndex(enabledMqttController)) {
+    return 0;
+  }
+
+  int startFileNr = 0;
+  int startPos    = 0;
+  int endFileNr   = 0;
+  int endPos      = 0;
+
+  size_t count    = 0;
+  size_t nrChunks = 0;
+  bool   done     = false;
+
+  for (auto it = lines.begin(); !done && it != lines.end(); ++it) {
+    if (nrChunks == 0) {
+      startFileNr = it->startFileNr;
+      startPos    = it->startPos;
+    }
+
+    const size_t lineLength = it->line.length();
+
+    if ((count + lineLength) < maxMessageSize) {
+      ++nrChunks;
+      ++count; // CSV line separator
+      count    += lineLength;
+      endFileNr = it->endFileNr;
+      endPos    = it->endPos;
+    } else {
+      done = true;
+    }
+  }
+
+  while (!done) {
+    if (ESP.getFreeHeap() < 5000) {
+      done = true;
+    } else {
+      if (!dumper->createCSVLine()) {
+        done = true;
+      } else {
+        lines.push_back(dumper->getCSVline());
+        const size_t lineLength = lines.back().line.length();
+
+        if (nrChunks == 0) {
+          startFileNr = lines.back().startFileNr;
+          startPos    = lines.back().startPos;
+        }
+
+        if ((count + lineLength) < maxMessageSize) {
+          ++nrChunks;
+          ++count; // CSV line separator
+          count    += lineLength;
+          endFileNr = lines.back().endFileNr;
+          endPos    = lines.back().endPos;
+        } else {
+          done = true;
+        }
+      }
+    }
+  }
+
+  if (nrChunks == 0) { return 0; }
+
+  String message;
+
+  message += startFileNr;
+  message += ';';
+  message += startPos;
+  message += ';';
+  message += endFileNr;
+  message += ';';
+  message += endPos;
+  message += ';';
+  message += nrChunks;
+  message += ';';
+  message += count;
+
+  const size_t messageLength       = message.length();
+  const size_t expectedMessageSize = messageLength + count;
+
+  const String topic = getTopic(P146_PublishTopicIndex, P146_TaskIndex);
+
+  if (!MQTTclient.beginPublish(topic.c_str(), expectedMessageSize, false)) {
+    // Can't start a message
+    return 0;
+  }
+  writeToMqtt(message, true);
+
+  for (int chunk = 0; chunk < nrChunks; ++chunk) {
+    dumper->createCSVLine();
+    writeToMqtt('\n',               true); // Separator
+    writeToMqtt(lines.front().line, true);
+    lines.pop_front();
+  }
+
+  MQTTclient.endPublish();
+  nrChunks = 0;
+  count    = 0;
+
+  return expectedMessageSize;
 }
 
 bool P146_data_struct::sendViaOriginalTask(
@@ -298,6 +425,37 @@ bool P146_data_struct::setPeekFilePos(int peekFileNr, int peekReadPos)
 
 void P146_data_struct::flush() {
   C016_flush();
+}
+
+bool P146_data_struct::getPeekFilePos(int& peekFileNr, int& peekReadPos, int& peekFileSize) const {
+  peekFileNr  = 0;
+  peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+
+  if (peekFileNr <= 0) {
+    return false;
+  }
+
+  peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+
+  if (peekFileSize < 0) {
+    // Peek file is not opened. Setting peek file pos will try to open it.
+    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
+    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+  }
+
+  // FIXME TD-er: This is messy, but needed to increment peek file nr.
+  if (peekReadPos >= peekFileSize) {
+    ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
+    peekReadPos  = ControllerCache.getPeekFilePos(peekFileNr);
+    peekFileSize = ControllerCache.getPeekFileSize(peekFileNr);
+  }
+
+  if (peekFileSize < 0) {
+    // peek file still not open.
+    return false;
+  }
+  return true;
 }
 
 String P146_data_struct::getTopic(int index, taskIndex_t P146_TaskIndex) const {

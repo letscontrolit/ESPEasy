@@ -481,6 +481,13 @@
 
     ``Save``"
     "
+    ScheduleTaskRun","
+    :red:`Internal`","
+    (Added: 2023/02/10)
+    Schedule a call to ``TaskRun`` of the given task/device at given msec from now.
+    
+    ``ScheduleTaskRun,<task nr/task name>,<msec from now>``"
+    "
     SendTo","
     :green:`Rules`","
     Send command to other ESP (using UDP)
@@ -578,6 +585,22 @@
     Run/excecute the given task/device, use to manually force an update/read of the task.
 
     ``TaskRun,<task nr/task name>``"
+    "
+    TaskRunAt","
+    :red:`Internal`","
+    (Added: 2023/02/10)
+    Run/excecute the given task/device, use to manually force an update/read of the task.
+    Difference with ``TaskRun`` is the 2nd parameter which represents a UnixTime which should be used by the connected controller instead of the current time.
+    Typical use case is to combine samples of various tasks as if they were taken at the same time.
+
+    .. note:: Not all plugins do immediately produce a result, as some re-schedule themselves after the measurement has completed. Those will not keep this suggested timestamp.
+              Dummy tasks do keep this suggested timestamp.
+              Not all controllers will use the suggested timestamp. The Cache Controller does use this.
+
+    N.B. This does not schedule to run a task in the future, but only provides a suggested timestamp to hand over to the controller(s).
+    For scheduling to run a task, see ``ScheduleTaskRun``.
+
+    ``TaskRunAt,<task nr/task name>,<UnixTime timestamp>``"
     "
     TaskValueSet","
     :green:`Rules`","
