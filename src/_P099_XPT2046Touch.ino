@@ -541,12 +541,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                         P099_data->TouchStates[selectedObjectIndex] = !P099_data->TouchStates[selectedObjectIndex];
                         P099_data->TouchTimers[selectedObjectIndex] = 0;
 
-                        String eventValue;
+                        bool eventValue = P099_data->TouchStates[selectedObjectIndex];
+
                         if (bitRead(P099_data->StoredSettings.TouchObjects[selectedObjectIndex].flags, P099_FLAGS_INVERT_BUTTON)) {
-                          eventValue = (P099_data->TouchStates[selectedObjectIndex] ? '0' : '1'); // Act like an inverted button, 0 = On,
-                                                                                                     // 1 = Off
-                        } else {
-                          eventValue = (P099_data->TouchStates[selectedObjectIndex] ? '1' : '0'); // Act like a button, 1 = On, 0 = Off
+                          eventValue = !eventValue; // Act like an inverted button, 0 = On, 1 = Off
                         }
                         eventQueue.add(event->TaskIndex, selectedObjectName, eventValue);
                       }

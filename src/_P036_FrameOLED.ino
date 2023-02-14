@@ -1292,7 +1292,7 @@ const __FlashStringHelper* P36_eventId_toString(uint8_t eventId)
 }
 
 void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue) {
-  eventQueue.add(event->TaskIndex, P36_eventId_toString(eventId), String(eventValue));
+  eventQueue.add(event->TaskIndex, P36_eventId_toString(eventId), eventValue);
 }
 
 # endif // ifdef P036_SEND_EVENTS
