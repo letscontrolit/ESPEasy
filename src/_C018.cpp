@@ -436,7 +436,7 @@ private:
       {
         cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
-        if (cacheDevAddr == F("00000000")) {
+        if (equals(cacheDevAddr, F("00000000"))) {
           cacheDevAddr = String();
         }
       }

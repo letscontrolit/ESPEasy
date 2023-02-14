@@ -197,8 +197,8 @@ String Command_GetORSetETH(struct EventStruct *event,
 
 
       // WiFi/Eth mode
-      else if (TmpStr1.equals(F("wifi"))) { *value = 0; }
-      else if (TmpStr1.equals(F("ethernet"))) { *value = 1; }
+      else if (equals(TmpStr1, F("wifi"))) { *value = 0; }
+      else if (equals(TmpStr1, F("ethernet"))) { *value = 1; }
 
       // ETH clockMode
       else if (TmpStr1.startsWith(F("ext"))) { *value = 0; }

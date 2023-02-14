@@ -433,7 +433,7 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
     return false;
   }
 
-  if (cmd_s_lower.equals(F("constrain"))) {
+  if (equals(cmd_s_lower, F("constrain"))) {
     // Contrain a value X to be within range of A to B
     // Syntax like {constrain:x:a:b} to constrain x in range a...b
     if (validFloatFromString(arg2, farg2) && validFloatFromString(arg3, farg3)) {
@@ -696,7 +696,7 @@ void substitute_eventvalue(String& line, const String& event) {
           const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
           int argc                = -1;
 
-          if (nr.equals(F("0"))) {
+          if (equals(nr, F("0"))) {
             // Replace %eventvalue0% with the entire list of arguments.
             line.replace(eventvalue, argString);
           } else {
@@ -943,7 +943,7 @@ void processMatchedRule(String& action, const String& event,
     }
   }
 
-  if ((lcAction.equals(F("else"))) && !fakeIfBlock) // in case of an "else" block of
+  if ((equals(lcAction, F("else"))) && !fakeIfBlock) // in case of an "else" block of
                                                // actions, set ifBranche to
                                                // false
   {
@@ -961,7 +961,7 @@ void processMatchedRule(String& action, const String& event,
 #endif // ifndef BUILD_NO_DEBUG
   }
 
-  if (lcAction.equals(F("endif"))) // conditional block ends here
+  if (equals(lcAction, F("endif"))) // conditional block ends here
   {
     if (fakeIfBlock) {
       fakeIfBlock--;
@@ -977,7 +977,7 @@ void processMatchedRule(String& action, const String& event,
   if (isCommand) {
     substitute_eventvalue(action, event);
 
-    const bool executeRestricted = parseString(action, 1).equals(F("restrict"));
+    const bool executeRestricted = equals(parseString(action, 1), F("restrict"));
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String actionlog = executeRestricted ? F("ACT  : (restricted) ") : F("ACT  : ");

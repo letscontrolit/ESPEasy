@@ -1295,7 +1295,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         if (optCount > 0) { optCount--; }
       }
       mloop     = !sParams[optCount].isEmpty();
-      closeLine = sParams[optCount].equals(F("c"));
+      closeLine = equals(sParams[optCount], 'c');
 
       if (mloop) { parCount++; optCount++; } // Next argument
 
@@ -2262,7 +2262,7 @@ void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
                                            AdaGFXColorDepth colorDepth) {
   const __FlashStringHelper *clr = AdaGFXcolorToString_internal(color, colorDepth, false);
 
-  if (clr != F("*")) {
+  if (!equals(clr, '*')) {
     addHtml(F("<option value=\""));
     addHtml(clr);
     addHtml(F("\">"));
@@ -2345,7 +2345,7 @@ String AdaGFXcolorToString(const uint16_t        & color,
                            bool                    blackIsEmpty) {
   String result = AdaGFXcolorToString_internal(color, colorDepth, blackIsEmpty);
 
-  if (result.equals(F("*"))) {
+  if (equals(result, F("*"))) {
     result  = '#';
     result += String(color, HEX);
     result.toUpperCase();

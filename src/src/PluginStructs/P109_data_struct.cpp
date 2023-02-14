@@ -760,7 +760,7 @@ void P109_data_struct::setHeatRelay(const uint8_t& state) {
  */
 void P109_data_struct::setHeater(const String& heater) {
   if (_setpointDelay == 0) {
-    if ((heater.charAt(0) == '1') || (heater.equals(F("on"))) ||
+    if ((heater.charAt(0) == '1') || (equals(heater, F("on"))) ||
         ((heater.length() == 0) && (UserVar[_varIndex + 1] == 0))) {
       UserVar[_varIndex + 1] = 1;
       setHeatRelay(HIGH);

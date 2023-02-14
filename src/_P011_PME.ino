@@ -228,7 +228,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (equals(command, F("status"))) {
-        if (parseString(string, 2).equals(F("ext")))
+        if (equals(parseString(string, 2), F("ext")))
         {
           success = true;
           const uint32_t key = createKey(PLUGIN_ID_011, event->Par2); // WARNING: 'status' uses Par2 instead of Par1

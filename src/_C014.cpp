@@ -708,7 +708,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         int lastindex = event->String1.lastIndexOf('/');
         errorCounter = 0;
 
-        if (event->String1.substring(lastindex + 1).equals(F("set")))
+        if (equals(event->String1.substring(lastindex + 1), F("set")))
         {
           pubname   = event->String1.substring(0, lastindex);
           lastindex = pubname.lastIndexOf('/');
@@ -735,7 +735,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               cmd  = F("GPIO,");
               cmd += valueName.substring(gpio_value_tag_length).toInt();                    // get the GPIO
 
-              if ((event->String2.equals(F("true"))) || (event->String2.equals(F("1")))) { cmd += F(",1"); }
+              if ((equals(event->String2, F("true"))) || (equals(event->String2, F("1")))) { cmd += F(",1"); }
               else { cmd += F(",0"); }
               validTopic = true;
             } else if (valueName.equals(F(CPLUGIN_014_CMD_VALUE))) // msg to send a command
@@ -974,7 +974,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       if (!string.isEmpty()) {
         String commandName = parseString(string, 1); // could not find a way to get the command out of the event structure.
 
-        if (commandName.equals(F("gpio")))                // !ToDo : As gpio is like any other plugin commands should be integrated below!
+        if (equals(commandName, F("gpio")))                // !ToDo : As gpio is like any other plugin commands should be integrated below!
         {
           int port         = event->Par1;            // parseString(string, 2).toInt();
           int valueInt     = event->Par2;            // parseString(string, 3).toInt();
@@ -1029,7 +1029,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             String valueStr;
             int    valueInt = 0;
 
-            if ((commandName.equals(F("taskvalueset"))) || (commandName.equals(F("dummyvalueset")))) // should work for both
+            if ((equals(commandName, F("taskvalueset"))) || (equals(commandName, F("dummyvalueset")))) // should work for both
             {
               valueStr = formatUserVarNoCheck(event, taskVarIndex);                        // parseString(string, 4);
               success  = MQTTpublish(CPLUGIN_ID_014, INVALID_TASK_INDEX, topic.c_str(), valueStr.c_str(), false);
@@ -1059,7 +1059,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log += F(" ERROR!");
                 addLogMove(LOG_LEVEL_ERROR, log);
               }
-            } else if (parseString(commandName, 1).equals(F("homievalueset"))) { // acknolages value form P086 Homie Receiver
+            } else if (equals(parseString(commandName, 1), F("homievalueset"))) { // acknolages value form P086 Homie Receiver
               switch (Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex]) {
                 case 0:                                                     // PLUGIN_085_VALUE_INTEGER
                   valueInt = static_cast<int>(UserVar[userVarIndex]);

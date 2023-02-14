@@ -584,7 +584,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       }
 
       if (!str7.isEmpty()) {
-        if (str7.equals(F("off"))) {
+        if (equals(str7, F("off"))) {
           rgb_s_off = true;
         } else if (str7.length() <= 6) {
           const uint32_t hcolorui = rgbStr2Num(str7);
@@ -624,7 +624,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       }
 
       if (!str7.isEmpty()) {
-        if (str7.equals(F("off"))) {
+        if (equals(str7, F("off"))) {
           rgb_s_off = true;
         } else {
           const uint32_t hcolorui = rgbStr2Num(str7);

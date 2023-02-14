@@ -801,13 +801,13 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
     String fontArg = parseString(text, 1);
     int    fontNr  = -1;
 
-    if ((fontArg.equals(F("default"))) || (fontArg.equals(F("7dgt")))) {
+    if ((equals(fontArg, F("default"))) || (equals(fontArg, F("7dgt")))) {
       fontNr = 0;
-    } else if (fontArg.equals(F("siekoo"))) {
+    } else if (equals(fontArg, F("siekoo"))) {
       fontNr = 1;
-    } else if (fontArg.equals(F("siekoo_upper"))) {
+    } else if (equals(fontArg, F("siekoo_upper"))) {
       fontNr = 2;
-    } else if (fontArg.equals(F("dseg7"))) {
+    } else if (equals(fontArg, F("dseg7"))) {
       fontNr = 3;
     } else if (!validIntFromString(text, fontNr)) {
       fontNr = -1; // reset if invalid
