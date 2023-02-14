@@ -540,36 +540,24 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                                                                                     // elapsed?
                         P099_data->TouchStates[selectedObjectIndex] = !P099_data->TouchStates[selectedObjectIndex];
                         P099_data->TouchTimers[selectedObjectIndex] = 0;
-                        String eventCommand;
-                        eventCommand.reserve(48);
-                        eventCommand += getTaskDeviceName(event->TaskIndex);
-                        eventCommand += '#';
-                        eventCommand += selectedObjectName;
-                        eventCommand += '=';                                                         // Add arguments
+
+                        bool eventValue = P099_data->TouchStates[selectedObjectIndex];
 
                         if (bitRead(P099_data->StoredSettings.TouchObjects[selectedObjectIndex].flags, P099_FLAGS_INVERT_BUTTON)) {
-                          eventCommand += (P099_data->TouchStates[selectedObjectIndex] ? '0' : '1'); // Act like an inverted button, 0 = On,
-                                                                                                     // 1 = Off
-                        } else {
-                          eventCommand += (P099_data->TouchStates[selectedObjectIndex] ? '1' : '0'); // Act like a button, 1 = On, 0 = Off
+                          eventValue = !eventValue; // Act like an inverted button, 0 = On, 1 = Off
                         }
-                        eventQueue.addMove(std::move(eventCommand));
+                        eventQueue.add(event->TaskIndex, selectedObjectName, eventValue);
                       }
                     }
                   } else {
                     // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
-                    String eventCommand;
-                    eventCommand.reserve(48);
-                    eventCommand += getTaskDeviceName(event->TaskIndex);
-                    eventCommand += '#';
-                    eventCommand += selectedObjectName;
-                    eventCommand += '='; // Add arguments
-                    eventCommand += x;
-                    eventCommand += ',';
-                    eventCommand += y;
-                    eventCommand += ',';
-                    eventCommand += z;
-                    eventQueue.addMove(std::move(eventCommand));
+                    String eventValues;
+                    eventValues += x;
+                    eventValues += ',';
+                    eventValues += y;
+                    eventValues += ',';
+                    eventValues += z;
+                    eventQueue.add(event->TaskIndex, selectedObjectName, eventValues);
                   }
                 }
               }
