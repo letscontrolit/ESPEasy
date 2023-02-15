@@ -14,10 +14,10 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   webrequest.trim();
   if (webrequest.isEmpty()) { return HandledWebCommand_result::NoCommand; }
 
-  addLog(LOG_LEVEL_INFO,  String(F("HTTP: ")) + webrequest);
+  addLogMove(LOG_LEVEL_INFO,  concat(F("HTTP: "), webrequest));
   webrequest = parseTemplate(webrequest);
 #ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP after parseTemplate: ")) + webrequest);
+  addLogMove(LOG_LEVEL_DEBUG, concat(F("HTTP after parseTemplate: "), webrequest));
 #endif // ifndef BUILD_NO_DEBUG
 
   bool handledCmd = false;

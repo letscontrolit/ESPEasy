@@ -735,7 +735,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               cmd  = F("GPIO,");
               cmd += valueName.substring(gpio_value_tag_length).toInt();                    // get the GPIO
 
-              if ((equals(event->String2, F("true"))) || (equals(event->String2, F("1")))) { cmd += F(",1"); }
+              if ((equals(event->String2, F("true"))) || (equals(event->String2, '1'))) { cmd += F(",1"); }
               else { cmd += F(",0"); }
               validTopic = true;
             } else if (valueName.equals(F(CPLUGIN_014_CMD_VALUE))) // msg to send a command
