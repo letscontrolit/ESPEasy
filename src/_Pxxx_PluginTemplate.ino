@@ -308,11 +308,11 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
       // parse string to extract the command
       String tmpString = parseString(string, 1); // already converted to lowercase
 
-      if (tmpString.equals(F("dothis"))) {
+      if (equals(tmpString, F("dothis"))) {
         String subcmd = parseString(string, 2);
-        if (subcmd.equals(F("sub1"))) {
+        if (equals(subcmd, F("sub1"))) {
           // do subcommand 1
-        } else if (subcmd.equals(F("sub2"))) {
+        } else if (equals(subcmd, F("sub2"))) {
           // do something else
         } else {
           // do non-specific subcommand
