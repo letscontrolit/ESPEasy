@@ -113,19 +113,36 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     {
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+      if (event->timestamp == 0) {
+        event->timestamp = C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime();
+      }
       const C016_queue_element element(
         event, 
-        valueCount, 
-        C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime());
+        valueCount);
 
       const C016_binary_element binary_element = element.getBinary();
       success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&binary_element), sizeof(C016_binary_element));
       break;
     }
 
+    case CPlugin::Function::CPLUGIN_WRITE:
+    {
+      if (C016_CacheInitialized()) {
+        const String command    = parseString(string, 1);
+        if (command.equals(F("cachecontroller"))) {
+          const String subcommand = parseString(string, 2);
+          if (subcommand.equals(F("flush"))) {
+            C016_flush();
+            success = true;
+          }
+        }
+      }
+      break;
+    }
+
     case CPlugin::Function::CPLUGIN_FLUSH:
     {
-      process_c016_delay_queue();
+      C016_flush();
       delay(0);
       break;
     }

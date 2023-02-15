@@ -224,7 +224,7 @@ There are different released versions of ESP Easy:
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
 
-:gray:`RETIRED` plugin has been retired from ESPEasy (though the source code is still available). Not included in any build.
+:gray:`RETIRED` plugin has been retired and removed from ESPEasy.
 
 2022-07-22: :yellow:`TESTING` builds renamed to :yellow:`COLLECTION`.
 
@@ -362,6 +362,7 @@ There are different released versions of ESP Easy:
    ":ref:`P133_page`","|P133_status|","P133"
    ":ref:`P134_page`","|P134_status|","P134"
    ":ref:`P135_page`","|P135_status|","P135"
+   ":ref:`P138_page`","|P138_status|","P138"
    ":ref:`P141_page`","|P141_status|","P141"
    ":ref:`P143_page`","|P143_status|","P143"
    ":ref:`P148_page`","|P148_status|","P148"
@@ -424,7 +425,7 @@ Environment
 
 Plugins: |Plugin_Environment|
 
-Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|, |P030_usedby|
+Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|
 
 Extra IO
 --------
@@ -510,6 +511,11 @@ Position
 Plugins: |Plugin_Position|
 
 Hardware: |P013_usedby|, |P082_usedby|
+
+Power management
+----------------
+
+Plugins: |Plugin_PowerMgt|
 
 Regulator
 ---------

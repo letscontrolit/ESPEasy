@@ -235,37 +235,24 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x,
  * Checks if the name doesn't exceed the max. length.
  */
 bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state, uint8_t checkObjectCount) {
-  if (touchObject.isEmpty() || touchObject.substring(0, 1).equals(F("_"))) { return false; }
-  String findObject = (state ? F("_") : F("")); // When enabling, try to find a disabled object
-
-  findObject += touchObject;
-  String thisObject;
+  if (touchObject.isEmpty() || touchObject[0] == '_') { return false; }
+  const String findObject = concat((state ? F("_") : F("")), touchObject); // When enabling, try to find a disabled object
   bool   success = false;
 
-  thisObject.reserve(P099_MaxObjectNameLength);
-
   for (uint8_t objectNr = 0; objectNr < checkObjectCount; objectNr++) {
-    thisObject = String(StoredSettings.TouchObjects[objectNr].objectname);
+    const String thisObject(StoredSettings.TouchObjects[objectNr].objectname);
 
     if ((thisObject.length() > 0) && findObject.equalsIgnoreCase(thisObject)) {
       if (state) {
-        success = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, thisObject.substring(1), P099_MaxObjectNameLength); // Keep
-                                                                                                                                     // original
-                                                                                                                                     // character
-                                                                                                                                     // casing
+        // Keep original character casing
+        success = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, thisObject.substring(1), P099_MaxObjectNameLength); 
       } else {
-        if (thisObject.length() < P099_MaxObjectNameLength - 2) {                                                                    // Leave
-                                                                                                                                     // room
-                                                                                                                                     // for
-                                                                                                                                     // the
-                                                                                                                                     // underscore
-                                                                                                                                     // and
-                                                                                                                                     // the
-                                                                                                                                     // terminating
-                                                                                                                                     // 0.
-          String disabledObject = F("_");
-          disabledObject += thisObject;
-          success         = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, disabledObject, P099_MaxObjectNameLength);
+        if (thisObject.length() < P099_MaxObjectNameLength - 2) {                                                                    
+          // Leave room for the underscore and the terminating 0.
+          success = safe_strncpy(
+            StoredSettings.TouchObjects[objectNr].objectname, 
+            concat(F("_"), thisObject),  // disabledObject
+            P099_MaxObjectNameLength);
         }
       }
       StoredSettings.TouchObjects[objectNr].objectname[P099_MaxObjectNameLength - 1] = 0; // Just to be safe

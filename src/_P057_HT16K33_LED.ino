@@ -113,6 +113,15 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = PCONFIG(0);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("7-Seg. Clock"));
@@ -155,9 +164,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t address = PCONFIG(0);
-
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(address));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(PCONFIG(0)));
       P057_data_struct *P057_data =
         static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -222,9 +229,9 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
         String lowerString = string;
         lowerString.toLowerCase();
-        lowerString.replace(F("  "), " ");
-        lowerString.replace(F(" ="), "=");
-        lowerString.replace(F("= "), "=");
+        lowerString.replace(F("  "), F(" "));
+        lowerString.replace(F(" ="), F("="));
+        lowerString.replace(F("= "), F("="));
 
         param = parseString(lowerString, paramIdx++);
 

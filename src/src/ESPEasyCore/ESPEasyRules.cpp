@@ -815,6 +815,7 @@ void processMatchedRule(String& action, const String& event,
   String lcAction = action;
 
   lcAction.toLowerCase();
+  lcAction.trim();
 
   if (fakeIfBlock) {
     isCommand = false;
@@ -825,7 +826,7 @@ void processMatchedRule(String& action, const String& event,
     }
   }
   int split =
-    lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
+    lcAction.startsWith(F("elseif ")) ? 0 : -1; // check for optional "elseif" condition
 
   if (split != -1) {
     // Found "elseif" condition
@@ -857,7 +858,7 @@ void processMatchedRule(String& action, const String& event,
     }
   } else {
     // check for optional "if" condition
-    split = lcAction.indexOf(F("if "));
+    split = lcAction.startsWith(F("if ")) ? 0 : -1;
 
     if (split != -1) {
       if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {
@@ -1287,28 +1288,19 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += '`';
     eventQueue.addMove(std::move(eventString));    
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
-    String eventString;
-    eventString.reserve(128); // Enough for most use cases, prevent lots of memory allocations.
-    eventString += getTaskDeviceName(event->TaskIndex);
-    eventString += F("#All=");
+    String eventvalues;
+    eventvalues.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
 
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       if (varNr != 0) {
-        eventString += ',';
+        eventvalues += ',';
       }
-      eventString += formatUserVarNoCheck(event, varNr);
+      eventvalues += formatUserVarNoCheck(event, varNr);
     }
-    eventQueue.addMove(std::move(eventString));
+    eventQueue.add(event->TaskIndex, F("All"), eventvalues);
   } else {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-      String eventString;
-      eventString.reserve(64); // Enough for most use cases, prevent lots of memory allocations.
-      eventString += getTaskDeviceName(event->TaskIndex);
-      eventString += '#';
-      eventString += getTaskValueName(event->TaskIndex, varNr);
-      eventString += '=';
-      eventString += formatUserVarNoCheck(event, varNr);
-      eventQueue.addMove(std::move(eventString));
+      eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
     }
   }
 }
