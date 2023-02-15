@@ -345,13 +345,13 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
     String arg1 = parseString(string, 2);
     success = true;
 
-    if (arg1.equals(F("off"))) {
+    if (equals(arg1, F("off"))) {
       displayOnOff(false);
     }
-    else if (arg1.equals(F("on"))) {
+    else if (equals(arg1, F("on"))) {
       displayOnOff(true);
     }
-    else if (arg1.equals(F("clear")))
+    else if (equals(arg1, F("clear")))
     {
       String arg2 = parseString(string, 3);
 
@@ -361,7 +361,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
         tft->fillScreen(_bgcolor);
       }
     }
-    else if (arg1.equals(F("backlight"))) {
+    else if (equals(arg1, F("backlight"))) {
       if ((P095_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
           (event->Par2 > 0) &&
           (event->Par2 <= 100)) {
@@ -371,7 +371,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
         success = false;
       }
     }
-    else if (arg1.equals(F("inv"))) {
+    else if (equals(arg1, F("inv"))) {
       if ((event->Par2 >= 0) &&
           (event->Par2 <= 1)) {
         tft->invertDisplay(event->Par2);
@@ -379,7 +379,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
         success = false;
       }
     }
-    else if (arg1.equals(F("rot"))) {
+    else if (equals(arg1, F("rot"))) {
       if ((event->Par2 >= 0)) {
         if (nullptr != gfxHelper) {
           gfxHelper->setRotation(event->Par2 % 4);

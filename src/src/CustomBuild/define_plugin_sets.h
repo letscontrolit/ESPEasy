@@ -462,6 +462,16 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_ZEROFILLED_UNITNUMBER  0
 
+    #if defined(FEATURE_I2C_DEVICE_CHECK)
+      #undef FEATURE_I2C_DEVICE_CHECK
+    #endif
+    #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
+
+    #if defined(FEATURE_I2C_GET_ADDRESS)
+      #undef FEATURE_I2C_GET_ADDRESS
+    #endif
+    #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching I2C device address
+
     #ifndef USES_P001
         #define USES_P001   // switch
     #endif
@@ -1304,7 +1314,6 @@ To create/register a plugin, you have to :
     #define USES_P028   // BME280
     #define USES_P029   // Output
 
-//    #define USES_P030   // BMP280   (Made obsolete, now BME280 can handle both)
     #define USES_P031   // SHT1X
     #define USES_P032   // MS5611
     #define USES_P033   // Dummy
@@ -1565,6 +1574,12 @@ To create/register a plugin, you have to :
        #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
        #define KEEP_I2C_MULTIPLEXER
      #endif
+   #endif
+   #if defined(ESP8266)
+     #if defined(FEATURE_I2C_DEVICE_CHECK)
+       #undef FEATURE_I2C_DEVICE_CHECK
+     #endif
+     #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
    #endif
    #if !defined(FEATURE_SD) && !defined(ESP8266)
      #define FEATURE_SD 1
@@ -2122,7 +2137,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -2220,6 +2235,9 @@ To create/register a plugin, you have to :
 
   #endif
   #ifdef ESP8266_1M
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
+    #endif
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
     #endif
@@ -2731,6 +2749,27 @@ To create/register a plugin, you have to :
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
 #endif
 
+#ifndef FEATURE_I2C_DEVICE_CHECK
+  #ifdef ESP8266_1M
+    #define FEATURE_I2C_DEVICE_CHECK  0 // Disabled by default for 1M units
+  #else
+    #define FEATURE_I2C_DEVICE_CHECK  1 // Enabled by default
+  #endif
+#endif
+
+#ifndef FEATURE_I2C_GET_ADDRESS
+  #ifdef ESP8266_1M
+    #define FEATURE_I2C_GET_ADDRESS   0 // Disabled by default for 1M units
+  #else
+    #define FEATURE_I2C_GET_ADDRESS   1 // Enabled by default
+  #endif
+#endif
+
+#if FEATURE_I2C_DEVICE_CHECK && !FEATURE_I2C_GET_ADDRESS
+  #undef FEATURE_I2C_GET_ADDRESS
+  #define FEATURE_I2C_GET_ADDRESS     1 // Needed by FEATURE_I2C_DEVICE_CHECK
+#endif
+
 #if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
   #undef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
@@ -2763,6 +2802,14 @@ To create/register a plugin, you have to :
   #else
     #define FEATURE_PINSTATE_EXTENDED           1 // Enable by default for all other builds
   #endif
+#endif
+
+
+// Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
+// Please note that the TOUT pin has to be disconnected in this mode
+// Use the "System Info" device to read the VCC value
+#ifndef FEATURE_ADC_VCC
+  #define FEATURE_ADC_VCC                  0
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

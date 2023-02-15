@@ -94,6 +94,10 @@ bool          getPluginDisplayParametersFromTaskIndex(taskIndex_t taskIndex,
                                                       uint16_t  & y,
                                                       uint16_t  & r,
                                                       uint16_t  & colorDepth);
+#if FEATURE_I2C_GET_ADDRESS
+uint8_t getTaskI2CAddress(taskIndex_t taskIndex);
+#endif // if FEATURE_I2C_GET_ADDRESS
+
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();

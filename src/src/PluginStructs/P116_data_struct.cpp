@@ -377,16 +377,16 @@ bool P116_data_struct::plugin_write(struct EventStruct *event,
     String arg1 = parseString(string, 2);
     success = true;
 
-    if (arg1.equals(F("off"))) {
+    if (equals(arg1, F("off"))) {
       displayOnOff(false);
     }
-    else if (arg1.equals(F("on"))) {
+    else if (equals(arg1, F("on"))) {
       displayOnOff(true);
     }
-    else if (arg1.equals(F("clear"))) {
+    else if (equals(arg1, F("clear"))) {
       st77xx->fillScreen(_bgcolor);
     }
-    else if (arg1.equals(F("backlight"))) {
+    else if (equals(arg1, F("backlight"))) {
       String arg2 = parseString(string, 3);
       int    nArg2;
 
