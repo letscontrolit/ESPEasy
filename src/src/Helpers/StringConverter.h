@@ -22,6 +22,9 @@ unsigned int count_newlines(const String& str);
    Concatenate using code which results in the smallest compiled code
  \*********************************************************************************************/
 
+String concat(const __FlashStringHelper * str, const String &val);
+String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
+
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
   String res(str);
@@ -36,6 +39,15 @@ String concat(const String& str, const T &val) {
   return res;
 }
 
+bool equals(const String& str, const __FlashStringHelper * f_str);
+bool equals(const String& str, const char& c);
+
+/*
+template <typename T>
+bool equals(const String& str, const T &val) {
+  return str.equals(String(val));
+}
+*/
 
 /********************************************************************************************\
    Convert a char string to integer
@@ -282,6 +294,26 @@ String tolerantParseStringKeepCase(const String& string,
                                    uint8_t       indexFind,
                                    char          separator = ',',
                                    bool          trimResult = true);
+
+
+
+/*********************************************************************************************\
+   GetTextIndexed: Get text from large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L937
+\*********************************************************************************************/
+char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index, const char* haystack);
+
+/*********************************************************************************************\
+   GetCommandCode: Find string in large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L967
+\*********************************************************************************************/
+int GetCommandCode(char* destination, size_t destination_size, const char* needle, const char* haystack);
+
+
 
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,

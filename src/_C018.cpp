@@ -436,7 +436,7 @@ private:
       {
         cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
-        if (cacheDevAddr == F("00000000")) {
+        if (equals(cacheDevAddr, F("00000000"))) {
           cacheDevAddr = String();
         }
       }
@@ -871,9 +871,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         if (C018_data->isInitialized())
         {
           const String command    = parseString(string, 1);
-          if (command.equals(F("lorawan"))) {
+          if (equals(command, F("lorawan"))) {
             const String subcommand = parseString(string, 2);
-            if (subcommand.equals(F("write"))) {
+            if (equals(subcommand, F("write"))) {
               const String loraWriteCommand = parseStringToEnd(string, 3);
               const String res = C018_data->sendRawCommand(loraWriteCommand);
               String logstr = F("LoRaWAN cmd: ");

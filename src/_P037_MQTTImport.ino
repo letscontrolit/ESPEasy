@@ -844,7 +844,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   // Test for multi-level wildcard (#) see: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718107 (for MQTT 3 and
   // MQTT 5)
 
-  if (tmpSub.equals(F("#"))) { return true; } // If the subscription is for '#' then all topics are accepted
+  if (equals(tmpSub, '#')) { return true; } // If the subscription is for '#' then all topics are accepted
 
   if (tmpSub.endsWith(F("/#"))) {           // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
     bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));
@@ -904,7 +904,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
     //  If the subtopics match then OK - otherwise fail
     if (pSub == "#") { return true; }
 
-    if ((pTopic != pSub) && (!pSub.equals(F("+")))) { return false; }
+    if ((pTopic != pSub) && (!equals(pSub, '+'))) { return false; }
 
     count = count + 1;
   }

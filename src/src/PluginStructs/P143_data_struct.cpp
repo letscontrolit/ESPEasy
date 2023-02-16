@@ -311,10 +311,10 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
   bool success     = false;
   const String cmd = parseString(string, 1);
 
-  if (_initialized && cmd.equals(F("i2cencoder"))) {
+  if (_initialized && equals(cmd, F("i2cencoder"))) {
     const String sub = parseString(string, 2);
 
-    if ((sub.equals(F("led1")) || sub.equals(F("led2"))) // led1,<r>,<g>,<b> (Adafruit and M5Stack)
+    if ((equals(sub, F("led1")) || equals(sub, F("led2"))) // led1,<r>,<g>,<b> (Adafruit and M5Stack)
         && (event->Par2 >= 0) && (event->Par2 <= 255)    // led2,<r>,<g>,<b> (M5Stack only)
         && (event->Par3 >= 0) && (event->Par3 <= 255) &&
         (event->Par4 >= 0) && (event->Par4 <= 255)
@@ -322,7 +322,7 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
         && _device != P143_DeviceType_e::DFRobotEncoder
         # endif // if P143_FEATURE_INCLUDE_DFROBOT
         ) {
-      const bool led1      = sub.equals(F("led1"));
+      const bool led1      = equals(sub, F("led1"));
       uint32_t   lSettings = 0u;
 
       if (led1) {
@@ -367,7 +367,7 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
         # endif // if P143_FEATURE_INCLUDE_DFROBOT
       }
     } else
-    if (sub.equals(F("bright")) // bright,<b> (range 1..255, Adafruit and M5Stack only)
+    if (equals(sub, F("bright")) // bright,<b> (range 1..255, Adafruit and M5Stack only)
         && (event->Par2 >= 1) && (event->Par2 <= 255)
         # if P143_FEATURE_INCLUDE_DFROBOT
         && _device != P143_DeviceType_e::DFRobotEncoder
@@ -408,7 +408,7 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
       }
     # if P143_FEATURE_INCLUDE_DFROBOT
     } else
-    if (sub.equals(F("gain")) // gain,<gain> (Range 1..51, DFRobot only)
+    if (equals(sub, F("gain")) // gain,<gain> (Range 1..51, DFRobot only)
         && (event->Par2 >= P143_DFROBOT_MIN_GAIN) && (event->Par2 <= P143_DFROBOT_MAX_GAIN)
         && (_device == P143_DeviceType_e::DFRobotEncoder)
         ) {
@@ -416,7 +416,7 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
       success               = true;
     # endif // if P143_FEATURE_INCLUDE_DFROBOT
     } else
-    if (sub.equals(F("set"))) { // set,<position>[,<initialOffset>] (initial offset only for DFRobot)
+    if (equals(sub, F("set"))) { // set,<position>[,<initialOffset>] (initial offset only for DFRobot)
       _encoderPosition = event->Par2;
 
       switch (_device) {

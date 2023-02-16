@@ -155,7 +155,7 @@ bool C005_parse_command(struct EventStruct *event) {
   const String lastPartTopic = event->String1.substring(lastindex + 1);
   const bool has_cmd_arg_index = event->String1.lastIndexOf(F("cmd_arg")) != -1;
 
-  if (lastPartTopic.equals(F("cmd"))) {
+  if (equals(lastPartTopic, F("cmd"))) {
     // Example:
     // Topic: ESP_Easy/Bathroom_pir_env/cmd
     // Message: gpio,14,0
@@ -235,7 +235,7 @@ bool C005_parse_command(struct EventStruct *event) {
     // in case of event, store to buffer and return...
     const String command = parseString(cmd, 1);
 
-    if ((command.equals(F("event"))) || (command.equals(F("asyncevent")))) {
+    if ((equals(command, F("event"))) || (equals(command, F("asyncevent")))) {
       if (Settings.UseRules) {
         // Need to sanitize the event a bit to allow for sending event values as MQTT messages.
         // For example:
