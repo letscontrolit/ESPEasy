@@ -680,26 +680,13 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   P002_ATTENUATION         = getFormItemInt(F("attn"));
   # endif // ifdef ESP32
 
-  {
-    // Map the input "point" values to the nearest int.
-    const float adc1 = getFormItemFloat(F("adc1"));
-    const float adc2 = getFormItemFloat(F("adc2"));
-
-    const float out1 = getFormItemFloat(F("out1"));
-    const float out2 = getFormItemFloat(F("out2"));
-
-
-    P002_CALIBRATION_POINT1 = lround(adc1);
-    P002_CALIBRATION_POINT2 = lround(adc2);
-    P002_CALIBRATION_VALUE1 = mapADCtoFloat(
-      P002_CALIBRATION_POINT1,
-      adc1, adc2,
-      out1, out2);
-    P002_CALIBRATION_VALUE2 = mapADCtoFloat(
-      P002_CALIBRATION_POINT2,
-      adc1, adc2,
-      out1, out2);
-  }
+  // Map the input "point" values to the nearest int.
+  setTwoPointCalibration(
+    event,
+    getFormItemFloat(F("adc1")),
+    getFormItemFloat(F("adc2")),
+    getFormItemFloat(F("out1")),
+    getFormItemFloat(F("out2")));
 
 # ifndef LIMIT_BUILD_SIZE
   P002_MULTIPOINT_ENABLED = isFormItemChecked(F("multi_en"));
@@ -1195,6 +1182,66 @@ float P002_data_struct::mapADCtoFloat(float float_value,
     float_value = normalized * (out2 - out1) + out1;
   }
   return float_value;
+}
+
+void P002_data_struct::setTwoPointCalibration(
+  struct EventStruct *event,
+  float adc1,
+  float adc2,
+  float out1,
+  float out2)
+{
+    P002_CALIBRATION_POINT1 = lround(adc1);
+    P002_CALIBRATION_POINT2 = lround(adc2);
+    P002_CALIBRATION_VALUE1 = mapADCtoFloat(
+      P002_CALIBRATION_POINT1,
+      adc1, adc2,
+      out1, out2);
+    P002_CALIBRATION_VALUE2 = mapADCtoFloat(
+      P002_CALIBRATION_POINT2,
+      adc1, adc2,
+      out1, out2);
+}
+
+
+/*****************************************************
+ * plugin_write
+ ****************************************************/
+bool P002_data_struct::plugin_set_config(struct EventStruct *event,
+                                    String            & string) {
+  bool success     = false;
+  const String cmd = parseString(string, 1);
+
+  if (equals(cmd, F("setcalib"))) {
+    const String sub = parseString(string, 2);
+    if (equals(sub, F("twopoint"))) {
+      // Command:
+      // 1 point : adcsetcalib,twopoint,ADC1,out1
+      // 2 points: adcsetcalib,twopoint,ADC1,out1,ADC2,out2
+      float adc1{};
+      float out1{};
+      float adc2{};
+      float out2{};
+
+      if (validFloatFromString(parseString(string, 3), adc1) &&
+          validFloatFromString(parseString(string, 4), out1)) 
+      {
+        success = true;
+      }
+      if (!validFloatFromString(parseString(string, 5), adc2) ||
+          !validFloatFromString(parseString(string, 6), out2)) 
+      {
+        // Not a complete 2nd calibration point, so make sure to set both values to 0.
+        adc2 = 0;
+        out2 = 0;
+      }
+      if (success) {
+        setTwoPointCalibration(event, adc1, adc2, out1, out2);
+      }
+    }
+  }
+
+  return success;
 }
 
 
