@@ -1205,7 +1205,7 @@ void P002_data_struct::setTwoPointCalibration(
 
 
 /*****************************************************
- * plugin_write
+ * plugin_set_config
  ****************************************************/
 bool P002_data_struct::plugin_set_config(struct EventStruct *event,
                                     String            & string) {
