@@ -211,7 +211,7 @@ bool P067_data_struct::plugin_write(struct EventStruct *event,
 
   String command = parseString(string, 1);
 
-  if (command.equals(F("tarechana"))) {
+  if (equals(command, F("tarechana"))) {
     P067_float2int(-UserVar[event->BaseVarIndex + 2], &P067_OFFSET_CHANNEL_A_1, &P067_OFFSET_CHANNEL_A_2);
     P067_int2float(P067_OFFSET_CHANNEL_A_1, P067_OFFSET_CHANNEL_A_2, &_offsetChanA);
     OversamplingValueChanA = 0;
@@ -219,7 +219,7 @@ bool P067_data_struct::plugin_write(struct EventStruct *event,
 
     addLog(LOG_LEVEL_INFO, F("HX711: tare channel A"));
     success = true;
-  } else if (command.equals(F("tarechanb"))) {
+  } else if (equals(command, F("tarechanb"))) {
     P067_float2int(-UserVar[event->BaseVarIndex + 3], &P067_OFFSET_CHANNEL_B_1, &P067_OFFSET_CHANNEL_B_2);
     P067_int2float(P067_OFFSET_CHANNEL_B_1, P067_OFFSET_CHANNEL_B_2, &_offsetChanB);
     OversamplingValueChanB = 0;

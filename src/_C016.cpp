@@ -129,9 +129,9 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     {
       if (C016_CacheInitialized()) {
         const String command    = parseString(string, 1);
-        if (command.equals(F("cachecontroller"))) {
+        if (equals(command, F("cachecontroller"))) {
           const String subcommand = parseString(string, 2);
-          if (subcommand.equals(F("flush"))) {
+          if (equals(subcommand, F("flush"))) {
             C016_flush();
             success = true;
           }
