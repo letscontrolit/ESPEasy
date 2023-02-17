@@ -864,7 +864,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_DEVICEVALUENAMES ||
             Function == PLUGIN_WEBFORM_SAVE ||
             Function == PLUGIN_SET_DEFAULTS ||
-            Function == PLUGIN_INIT_VALUE_RANGES) {
+            Function == PLUGIN_INIT_VALUE_RANGES ||
+           (Function == PLUGIN_SET_CONFIG && retval)) {
           // Each of these may update ExtraTaskSettings, but it may not have been saved yet.
           // Thus update the cache just in case something from it is requested from the cache.
           Cache.updateExtraTaskSettingsCache();
