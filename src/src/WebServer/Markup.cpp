@@ -661,6 +661,7 @@ void addNumericBox(const String& id, int value, int min, int max
   #endif  // if FEATURE_TOOLTIPS
   addHtmlAttribute(F("type"),  F("number"));
   addHtmlAttribute(F("name"),  id);
+  addHtmlAttribute(F("id"),    id);
 
   #if FEATURE_TOOLTIPS
 
@@ -771,6 +772,7 @@ void addTextBox(const String  & id,
   addHtmlAttribute(F("class"),     classname);
   addHtmlAttribute(F("type"),      F("search"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
   }
@@ -818,6 +820,7 @@ void addTextArea(const String  & id,
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("text"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
   }

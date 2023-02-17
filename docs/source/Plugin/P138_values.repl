@@ -1,0 +1,34 @@
+.. csv-table::
+    :escape: ^
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#batterycurrent]``
+    ","
+    The current measured at the Battery connection.
+    "
+    "
+    ``[<taskname>#chargeundervoltage]``
+    ","
+    The (fixed) voltage at which charging of the battery is started by the controller.
+    "
+    "
+    ``[<taskname>#stopvoltage]``
+    ","
+    The (fixed) configured voltage at which the battery is no longer being charged.
+    "
+    "
+    ``[<taskname>#inputcurrent]``
+    ","
+    The input current used by the controller.
+    "
+    "
+    ``[<taskname>#chargelevel]``
+    ","
+    The charge level of the battery.
+    "
+    "
+    ``[<taskname>#powersource]``
+    ","
+    The power source used by the ESP, 0 = battery, 1 = External (USB) power.
+    "

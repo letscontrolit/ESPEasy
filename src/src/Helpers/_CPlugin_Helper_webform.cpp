@@ -89,7 +89,7 @@ String getControllerParameterName(protocolIndex_t                   ProtocolInde
   if (!displayName) {
     // Change name to lower case and remove spaces to make it an internal name.
     name.toLowerCase();
-    name.replace(F(" "), EMPTY_STRING);
+    removeChar(name, ' ');
   }
   return name;
 }

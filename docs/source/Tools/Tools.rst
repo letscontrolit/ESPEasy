@@ -397,6 +397,17 @@ If this is the fix, where ESPEasy is not able to resolve the lockec I2C bus on i
 
 Default: unchecked
 
+Check I2C devices when enabled
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-02-07
+
+To ensure that I2C connected devices work as intended, a device-available-check can be performed when the task is initialized, and when the taskdata is read every Interval seconds. If the device doesn't respond during task init, or after 10 consecutive failed reads, the task will be disabled.
+
+Default: checked
+
+NB: This option is excluded from the build if this setting is not available.
+
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

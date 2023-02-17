@@ -134,19 +134,19 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
       int    value;
       bool   valueValid = validIntFromString(param, value);
 
-      if (valueValid && command.equals(F("play")))
+      if (valueValid && equals(command, F("play")))
       {
         Plugin_065_Play(value);
         success = true;
       }
 
-      if (command.equals(F("stop")))
+      if (equals(command, F("stop")))
       {
         Plugin_065_SendCmd(0x0E, 0);
         success = true;
       }
 
-      if (valueValid && command.equals(F("vol")))
+      if (valueValid && equals(command, F("vol")))
       {
         if (value == 0) { value = 30; }
         PCONFIG(0) = value;
@@ -154,19 +154,19 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         success = true;
       }
 
-      if (valueValid && command.equals(F("eq")))
+      if (valueValid && equals(command, F("eq")))
       {
         Plugin_065_SetEQ(value);
         success = true;
       }
 
-      if (valueValid && command.equals(F("mode")))
+      if (valueValid && equals(command, F("mode")))
       {
         Plugin_065_SetMode(value);
         success = true;
       }
 
-      if (valueValid && command.equals(F("repeat")))
+      if (valueValid && equals(command, F("repeat")))
       {
         Plugin_065_SetRepeat(value);
         success = true;
@@ -178,7 +178,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         log  = F("MP3  : ");
         log += command;
 
-        if (!command.equals(F("stop"))) {
+        if (!equals(command, F("stop"))) {
           log += '=';
           log += value;
         }

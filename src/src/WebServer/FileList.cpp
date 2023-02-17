@@ -341,17 +341,17 @@ void handle_SDfilelist() {
   for (uint8_t i = 0; i < web_server.args(); i++) {
     // FIXME TD-er: This only checks for arguments in the URL, not in POST args
     // It also takes only the last matching argument.
-    if (web_server.argName(i).equals(F("delete")))
+    if (equals(web_server.argName(i), F("delete")))
     {
       fdelete = webArg(i);
     }
 
-    if (web_server.argName(i).equals(F("deletedir")))
+    if (equals(web_server.argName(i), F("deletedir")))
     {
       ddelete = webArg(i);
     }
 
-    if (web_server.argName(i).equals(F("chgto")))
+    if (equals(web_server.argName(i), F("chgto")))
     {
       change_to_dir = webArg(i);
     }

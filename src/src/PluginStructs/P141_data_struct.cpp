@@ -118,6 +118,15 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
       if (P141_CONFIG_BUTTON_PIN != -1) {
         pinMode(P141_CONFIG_BUTTON_PIN, INPUT_PULLUP);
       }
+
+      if (!stringsLoaded) {
+        LoadCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
+        stringsLoaded = true;
+
+        for (uint8_t x = 0; x < P141_Nlines && !stringsHasContent; x++) {
+          stringsHasContent = !strings[x].isEmpty();
+        }
+      }
       success = true;
     }
   }
@@ -172,16 +181,7 @@ void P141_data_struct::cleanup() {
  ***************************************************************************/
 bool P141_data_struct::plugin_read(struct EventStruct *event) {
   if (nullptr != pcd8544) {
-    String strings[P141_Nlines];
-    LoadCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
-
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P141_Nlines && !hasContent; x++) {
-      hasContent = !strings[x].isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
       uint8_t  yPos  = 0;                 // Bound to the display
       int16_t  dum   = 0;
@@ -255,17 +255,17 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
     String arg1 = parseString(string, 2);
     success = true;
 
-    if (arg1.equals(F("off"))) {               // Screen off
+    if (equals(arg1, F("off"))) {               // Screen off
       displayOnOff(false);
     }
-    else if (arg1.equals(F("on"))) {           // Screen on
+    else if (equals(arg1, F("on"))) {           // Screen on
       displayOnOff(true);
     }
-    else if (arg1.equals(F("clear"))) {        // Empty screen
+    else if (equals(arg1, F("clear"))) {        // Empty screen
       pcd8544->fillScreen(_bgcolor);
       pcd8544->display();                      // Put on display
     }
-    else if (arg1.equals(F("inv")) &&          // Invert display
+    else if (equals(arg1, F("inv")) &&          // Invert display
              (event->Par2 >= 0) && (event->Par2 <= 1)) {
       if (parseString(string, 3).isEmpty()) {  // No argument: flip previous state
         _displayInverted = !_displayInverted;
@@ -283,7 +283,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       }
       pcd8544->display();                            // Put on display
     }
-    else if (arg1.equals(F("backlight"))) {          // Backlight percentage
+    else if (equals(arg1, F("backlight"))) {          // Backlight percentage
       if ((P141_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
           (event->Par2 >= 0) &&
           (event->Par2 <= 100)) {
@@ -294,7 +294,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
         success = false;
       }
     }
-    else if (arg1.equals(F("contrast")) && // Display contrast
+    else if (equals(arg1, F("contrast")) && // Display contrast
              (event->Par2 >= 0) &&
              (event->Par2 <= 100)) {
       P141_CONFIG_CONTRAST = event->Par2;  // Set but don't store

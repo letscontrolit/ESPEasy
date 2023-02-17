@@ -142,6 +142,11 @@ class SettingsStruct_tmpl
   bool SendToHTTP_follow_redirects() const;
   void SendToHTTP_follow_redirects(bool value);
 
+  #if FEATURE_I2C_DEVICE_CHECK
+  // Check if an I2C device is found at configured address at plugin_INIT and plugin_READ
+  bool CheckI2Cdevice() const;
+  void CheckI2Cdevice(bool value);
+  #endif // if FEATURE_I2C_DEVICE_CHECK
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
@@ -198,6 +203,9 @@ class SettingsStruct_tmpl
 
   // Return hostname with explicit set append unit.
   String getHostname(bool appendUnit) const;
+
+  // Return the name of the unit, without unitnr appended, with template parsing applied, replacement for Settings.Name in most places
+  String getName() const;
 
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);

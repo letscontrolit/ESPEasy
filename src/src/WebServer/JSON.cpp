@@ -124,7 +124,7 @@ void handle_json()
   {
     const String view = webArg(F("view"));
 
-    if (view.equals(F("sensorupdate"))) {
+    if (equals(view, F("sensorupdate"))) {
       showSystem = false;
       showWifi   = false;
       #if FEATURE_ETHERNET
@@ -327,7 +327,7 @@ void handle_json()
           addHtml('{');
           stream_next_json_object_value(F("nr"), it->first);
           stream_next_json_object_value(F("name"),
-                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.Name);
+                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.getName());
 
           if (it->second.build) {
             stream_next_json_object_value(F("build"), formatSystemBuildNr(it->second.build));
@@ -544,7 +544,7 @@ void handle_nodes_list_json() {
       }
 
       json_number(F("first"), String(it->first));
-      json_prop(F("name"), isThisUnit ? Settings.Name : it->second.getNodeName());
+      json_prop(F("name"), isThisUnit ? Settings.getName() : it->second.getNodeName());
 
       if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
       json_prop(F("type"), it->second.getNodeTypeDisplayString());

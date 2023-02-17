@@ -144,6 +144,10 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
       // Load
       loadContent(event);
 
+      for (uint8_t x = 0; x < P131_Nlines && !stringsHasContent; x++) {
+        stringsHasContent = !strings[x].isEmpty();
+      }
+
       // Setup initial scroll position
       for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
         content[x].pixelPos = 0;
@@ -243,13 +247,7 @@ bool P131_data_struct::plugin_read(struct EventStruct *event) {
   if (isInitialized() && !_splashState) {
     loadContent(event);
 
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT && !hasContent; x++) {
-      hasContent = !parseStringKeepCase(strings[x], 1).isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       display_content(event);
     }
   }
@@ -374,7 +372,7 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
       int16_t x   = event->Par2 - 1;
       success = true;
 
-      if (sub.equals(F("clear"))) {
+      if (equals(sub, F("clear"))) {
         matrix->fillScreen(_bgcolor);
       } else if (sub.startsWith(F("bright")) && (event->Par2 >= 0) && (event->Par2 <= 255)) {
         if (parseString(string, 3).isEmpty()) {                     // No argument, then
@@ -382,15 +380,15 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
         } else {
           matrix->setBrightness(std::min(_maxbright, static_cast<uint8_t>(event->Par2)));
         }
-      } else if (sub.equals(F("settext"))
+      } else if (equals(sub, F("settext"))
                  && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT))) { // line
         String tmpString = parseStringToEnd(strings[x], 2);                            // settings to be transferred
         strings[x]  = wrapWithQuotesIfContainsParameterSeparatorChar(parseStringToEndKeepCase(string, 4));
         strings[x] += ',';
         strings[x] += tmpString;
-      } else if ((sub.equals(F("setscroll")) ||                                     // neomatrixcmd,setscroll,<line>,0|1
-                  sub.equals(F("setempty")) ||                                      // neomatrixcmd,setempty,<line>,0|1
-                  sub.equals(F("setright"))                                         // neomatrixcmd,setright,<line>,0|1
+      } else if ((equals(sub, F("setscroll")) ||                                     // neomatrixcmd,setscroll,<line>,0|1
+                  equals(sub, F("setempty")) ||                                      // neomatrixcmd,setempty,<line>,0|1
+                  equals(sub, F("setright"))                                         // neomatrixcmd,setright,<line>,0|1
                   )
                  && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT)) // line
                  && ((event->Par3 >= 0) && (event->Par3 <= 1))) {                   // on/off
@@ -413,7 +411,7 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
         strings[x] += optBits;
         strings[x] += ',';
         strings[x] += tmpString3;
-      } else if (sub.equals(F("setstep"))                                            // neomatrixcmd,setstep,<line>,1..16
+      } else if (equals(sub, F("setstep"))                                            // neomatrixcmd,setstep,<line>,1..16
                  && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT))  // line
                  && ((event->Par3 > 0) && (event->Par3 <= P131_MAX_SCROLL_STEPS))) { // 1..16
         String   tmpString1 = parseStringKeepCase(strings[x], 1);                    // settings to be transferred
@@ -428,7 +426,7 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
         strings[x] += optBits;
         strings[x] += ',';
         strings[x] += tmpString3;
-      } else if (sub.equals(F("setspeed"))                                           // neomatrixcmd,setspeed,<line>,1..600
+      } else if (equals(sub, F("setspeed"))                                           // neomatrixcmd,setspeed,<line>,1..600
                  && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT))  // line
                  && ((event->Par3 > 0) && (event->Par3 <= P131_MAX_SCROLL_SPEED))) { // 1..600
         String tmpString1 = parseStringKeepCase(strings[x], 1);                      // settings to be transferred

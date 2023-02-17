@@ -24,7 +24,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c, cons
 {
   const size_t ssid_length = ssid_c.length();
 
-  if ((ssid_length == 0) || ssid_c.equals(F("ssid"))) {
+  if ((ssid_length == 0) || equals(ssid_c, F("ssid"))) {
     return;
   }
 
