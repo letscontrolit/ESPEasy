@@ -208,9 +208,7 @@ bool ESPEasy_now_handler_t::do_begin()
   //    WiFi.softAPdisconnect(false);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(ESPEASY_NOW_NAME ": begin on channel ");
-    log += _usedWiFiChannel;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": begin on channel "),  _usedWiFiChannel));
   }
 
   if (!WifiEspNow.begin()) {
@@ -237,9 +235,7 @@ bool ESPEasy_now_handler_t::do_begin()
         const MAC_address mac(it->bssid);
         sendDiscoveryAnnounce(mac, _usedWiFiChannel);
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F(ESPEASY_NOW_NAME ": Send discovery to ");
-          log += mac.toString();
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": Send discovery to "),  mac.toString()));
         }
       }
     }
@@ -255,7 +251,9 @@ void ESPEasy_now_handler_t::end()
   _controllerIndex = INVALID_CONTROLLER_INDEX;
   _usedWiFiChannel = 0;
   use_EspEasy_now  = false;
-  RTC.clearLastWiFi(); // Force a WiFi scan
+  if (!Settings.UseLastWiFiFromRTC()) {
+    RTC.clearLastWiFi(); // Force a WiFi scan
+  }
   if (_last_used != 0) {
     // Only call WifiEspNow.end() if it was started.
     WifiEspNow.end();
@@ -341,7 +339,7 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
         addLog(LOG_LEVEL_INFO, F(ESPEASY_NOW_NAME ": Inactive due to not receiving trace routes"));
         end();
         temp_disable_EspEasy_now_timer = millis() + 10000;
-        WifiScan(true);
+        WifiScan(true, Nodes.getESPEasyNOW_channel());
         return;
       }
     }
@@ -619,11 +617,6 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
 
 void ESPEasy_now_handler_t::sendDiscoveryAnnounce(int channel)
 {
-  MAC_address broadcast;
-
-  for (int i = 0; i < 6; ++i) {
-    broadcast.mac[i] = 0xFF;
-  }
   sendDiscoveryAnnounce(ESPEasy_now_peermanager.getBroadcastMAC(), channel);
 }
 
@@ -633,6 +626,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
 
   if (thisNode == nullptr) {
     // Should not happen
+    addLog(LOG_LEVEL_ERROR, F("Cannot send DiscoveryAnnounce, No ThisNode"));
     return;
   }
 
@@ -659,28 +653,37 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
       return;
     }
   }
+  const unsigned long start = millis();
   if (channel < 0) {
     // Send to all channels
-
-    const unsigned long start = millis();
-
     // FIXME TD-er: Not sure whether we can send to channels > 11 in all countries.
     for (int ch = 1; ch < ESPEASY_NOW_MAX_CHANNEL; ++ch) {
       msg.send(mac, ch);
       delay(0);
     }
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F(ESPEASY_NOW_NAME ": Sent discovery to all channels in ");
-      log += String(timePassedSince(start));
+      String log = concat(F(ESPEASY_NOW_NAME ": Sent discovery to all channels in "), timePassedSince(start));
       log += F(" ms");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   } else {
     if (mac.all_one()) {
+//      size_t count = 0;
+      size_t sent_count = 0;
       for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-        if (it->second.getAge() > ESPEASY_NOW_SINCE_LAST_BROADCAST) {
+//        ++count;
+//        if (it->second.getAge() > ESPEASY_NOW_SINCE_LAST_BROADCAST) {
+          ++sent_count;
           msg.send(it->second.ESPEasy_Now_MAC(), channel);
-        }
+//        }
+      }
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = concat(F(ESPEASY_NOW_NAME ": Sent discovery to "), sent_count);
+//        log += '/';
+//        log += count;
+        log += concat(F(" Nodes in "), timePassedSince(start));
+        log += F(" ms");
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
 
@@ -823,8 +826,7 @@ void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& 
     }
   }
 
-  MAC_address broadcast = ESPEasy_now_peermanager.getBroadcastMAC();
-  sendTraceRoute(broadcast, traceRoute, channel);
+  sendTraceRoute(ESPEasy_now_peermanager.getBroadcastMAC(), traceRoute, Nodes.getESPEasyNOW_channel());
 }
 
 
@@ -855,19 +857,16 @@ void ESPEasy_now_handler_t::sendTraceRoute(const MAC_address& mac, const ESPEasy
       delay(0);
     }
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F(ESPEASY_NOW_NAME ": Sent Traceroute to all channels in ");
-      log += timePassedSince(start);
+      String log = concat(F(ESPEASY_NOW_NAME ": Sent Traceroute to all channels in "), timePassedSince(start));
       log += F(" ms");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   } else {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-      log += F(ESPEASY_NOW_NAME ": sendTraceRoute ");
-      log += traceRoute.toString();
-      log += F(" ch: ");
-      log += channel;
-      addLog(LOG_LEVEL_INFO, log);
+      String log = concat(F(ESPEASY_NOW_NAME ": sendTraceRoute "), traceRoute.toString());
+      log += concat(F(" ch: "), channel);
+      log += concat(F(" to: "), mac.toString());
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     msg.send(mac, channel);

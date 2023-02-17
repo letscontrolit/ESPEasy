@@ -572,14 +572,16 @@ bool NodesHandler::isEndpoint() const
 #ifdef USES_ESPEASY_NOW
 uint8_t NodesHandler::getESPEasyNOW_channel() const
 {
-  if (active_network_medium == NetworkMedium_t::WIFI && NetworkConnected()) {
-    return WiFi.channel();
-  }
   if (Settings.ForceESPEasyNOWchannel > 0) {
     return Settings.ForceESPEasyNOWchannel;
   }
+  if (active_network_medium == NetworkMedium_t::WIFI && NetworkConnected()) {
+    // FIXME TD-er: We can't be sure about the actual WiFi channel reported here.
+    return WiFi.channel();
+  }
   if (isEndpoint()) {
     if (active_network_medium == NetworkMedium_t::WIFI) {
+      // FIXME TD-er: We can't be sure about the actual WiFi channel reported here.
       return WiFi.channel();
     }
   }
@@ -672,7 +674,6 @@ ESPEasy_Now_MQTT_QueueCheckState::Enum NodesHandler::getMQTTQueueState(uint8_t u
     return it->second.getMQTTQueueState();
   }
   return ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset;
-
 }
 
 void NodesHandler::setMQTTQueueState(uint8_t unit, ESPEasy_Now_MQTT_QueueCheckState::Enum state)

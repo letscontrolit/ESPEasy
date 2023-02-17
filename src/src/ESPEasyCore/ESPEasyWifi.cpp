@@ -1101,7 +1101,9 @@ void WifiScan(bool async, uint8_t channel) {
 #endif
 
 #ifdef ESP32
-  RTC.clearLastWiFi();
+  if (!Settings.UseLastWiFiFromRTC()) {
+    RTC.clearLastWiFi();
+  }
   if (WiFiConnected()) {
     # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("WiFi : Disconnect after scan"));

@@ -58,7 +58,7 @@ else:
 #   "-DUSES_C015",  # Blynk
 #   "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483
-#    "-DUSES_C019",  # ESPEasy-NOW
+    "-DUSES_C019",  # ESPEasy-NOW
 
     "-DUSES_ESPEASY_NOW",
 #    "-DFEATURE_MDNS=1",
