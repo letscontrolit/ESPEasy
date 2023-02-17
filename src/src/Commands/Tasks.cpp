@@ -182,9 +182,8 @@ const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event
 const __FlashStringHelper * Command_PriorityTask_DisableTask(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
-  unsigned int varNr;
 
-  if (validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+  if (validateAndParseTaskIndexArguments(event, Line, taskIndex)) {
     // This is a command so no guarantee the taskIndex is correct in the event
     event->setTaskIndex(taskIndex);
 
