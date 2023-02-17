@@ -213,7 +213,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     #if FEATURE_ADC_VCC
     case VCC:               return String(vcc);
     #else // if FEATURE_ADC_VCC
-    case VCC:               return String(-1);
+    case VCC:               return F("-1");
     #endif // if FEATURE_ADC_VCC
     case WI_CH:             return String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel());
 

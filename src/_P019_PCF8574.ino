@@ -90,11 +90,11 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        String  portNames[8];
-        int     portValues[8];
-        uint8_t unit    = (CONFIG_PORT - 1) / 8;
-        uint8_t port    = CONFIG_PORT - (unit * 8);
-        uint8_t address = 0x20 + unit;
+        String portNames[8];
+        int    portValues[8];
+        const uint8_t unit = (CONFIG_PORT - 1) / 8;
+        const uint8_t port = CONFIG_PORT - (unit * 8);
+        uint8_t address    = 0x20 + unit;
 
         if (unit > 7) { address += 0x10; }
 
@@ -111,6 +111,20 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      const uint8_t unit = (CONFIG_PORT - 1) / 8;
+      uint8_t address    = 0x20 + unit;
+
+      if (unit > 7) { address += 0x10; }
+
+      event->Par1 = address;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -285,6 +299,17 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
      */
     case PLUGIN_TEN_PER_SECOND:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
+      const uint8_t unit = (CONFIG_PORT - 1) / 8;
+      uint8_t address    = 0x20 + unit;
+
+      if (unit > 7) { address += 0x10; }
+
+      if (!I2C_deviceCheck(address, event->TaskIndex, 10, PLUGIN_I2C_GET_ADDRESS)) {
+        break; // Will return the default false for success
+      }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       const int8_t state                            = Plugin_019_Read(CONFIG_PORT);
       const __FlashStringHelper *monitorEventString = F("PCF");
 
@@ -315,7 +340,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
         {
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."));
-          #endif
+          # endif // ifndef BUILD_NO_DEBUG
           PCONFIG_LONG(3) = 1;
         }
 
@@ -589,14 +614,15 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
         // sp      tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command
         tempStatus.forceMonitor = 1;
       } else {
-        tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command  
+        tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command
       }
       savePortStatus(key, tempStatus);
       Scheduler.clearGPIOTimer(PLUGIN_PCF, event->Par1);
+
       if (function == PLUGIN_TASKTIMER_IN) {
         GPIO_PCF_Write(event->Par1, event->Par2);
       } else {
-        Plugin_019_Write(event->Par1, event->Par2);  
+        Plugin_019_Write(event->Par1, event->Par2);
       }
 
       break;

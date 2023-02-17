@@ -59,6 +59,7 @@
 #define PLUGIN_PROCESS_CONTROLLER_DATA     47 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
 #define PLUGIN_PRIORITY_INIT_ALL           48 // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
 #define PLUGIN_PRIORITY_INIT               49 // Pre-initialize a singe plugins that is set to PowerManager priority
+#define PLUGIN_I2C_GET_ADDRESS             50 // Get the current I2C addresses from the plugin, output in 'event->Par1' and 'success'
 
 
 

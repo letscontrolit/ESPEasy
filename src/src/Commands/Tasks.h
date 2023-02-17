@@ -14,6 +14,7 @@ const __FlashStringHelper * Command_PriorityTask_Disable(struct EventStruct *eve
 const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *event, const char* Line);
+const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_RemoteConfig(struct EventStruct *event, const char* Line);
 

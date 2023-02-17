@@ -75,17 +75,11 @@ void MQTTStatus(struct EventStruct *event, const String& status);
 #endif //if FEATURE_MQTT
 
 
-
-/*********************************************************************************************\
- * send all sensordata
-\*********************************************************************************************/
-// void SensorSendAll();
-
-
 /*********************************************************************************************\
  * send specific sensor task data, effectively calling PluginCall(PLUGIN_READ...)
 \*********************************************************************************************/
-void SensorSendTask(taskIndex_t TaskIndex);
+void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime = 0);
+void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime, unsigned long lasttimer);
 
 
 #endif

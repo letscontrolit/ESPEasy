@@ -7,7 +7,8 @@ DeviceStruct::DeviceStruct() :
   Custom(false), SendDataOption(false), GlobalSyncOption(false),
   TimerOption(false), TimerOptional(false), DecimalsOnly(false),
   DuplicateDetection(false), ExitTaskBeforeSave(true), ErrorStateValues(false), 
-  PluginStats(false), PluginLogsPeaks(false), PowerManager(false) {}
+  PluginStats(false), PluginLogsPeaks(false), PowerManager(false),
+  TaskLogsOwnPeaks(false), I2CNoDeviceCheck(false) {}
 
 bool DeviceStruct::connectedToGPIOpins() const {
   switch(Type) {
