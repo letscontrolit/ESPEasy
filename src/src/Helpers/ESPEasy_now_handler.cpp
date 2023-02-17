@@ -668,19 +668,20 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
     }
   } else {
     if (mac.all_one()) {
-//      size_t count = 0;
+      size_t count = 0;
       size_t sent_count = 0;
       for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-//        ++count;
+        ++count;
 //        if (it->second.getAge() > ESPEASY_NOW_SINCE_LAST_BROADCAST) {
-          ++sent_count;
-          msg.send(it->second.ESPEasy_Now_MAC(), channel);
+          
+          if (msg.send(it->second.ESPEasy_Now_MAC(), channel))
+            ++sent_count;
 //        }
       }
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = concat(F(ESPEASY_NOW_NAME ": Sent discovery to "), sent_count);
-//        log += '/';
-//        log += count;
+        log += '/';
+        log += count;
         log += concat(F(" Nodes in "), timePassedSince(start));
         log += F(" ms");
         addLogMove(LOG_LEVEL_INFO, log);

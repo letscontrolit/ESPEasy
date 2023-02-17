@@ -511,7 +511,10 @@ void processProbeRequestAPmode() {
     // FIXME TD-er: Must create an answer for ESPEasy-NOW node discovery
     #ifdef USES_ESPEASY_NOW
     if (Settings.UseESPEasyNow()) {
-      ESPEasy_now_handler.sendDiscoveryAnnounce(mac, Nodes.getESPEasyNOW_channel());
+      const NodeStruct * node = Nodes.getNodeByMac(mac);
+      ESPEasy_now_handler.sendDiscoveryAnnounce(
+        (node != nullptr && node->ESPEasyNowPeer) ? node->ESPEasy_Now_MAC() : mac,
+        Nodes.getESPEasyNOW_channel());
     }
     #endif
   }

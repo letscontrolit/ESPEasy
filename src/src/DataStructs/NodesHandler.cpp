@@ -603,21 +603,23 @@ bool NodesHandler::recentlyBecameDistanceZero() {
   return true;
 }
 
-void NodesHandler::setRSSI(const MAC_address& mac, int rssi)
+bool NodesHandler::setRSSI(const MAC_address& mac, int rssi)
 {
-  setRSSI(getNodeByMac(mac), rssi);
+  return setRSSI(getNodeByMac(mac), rssi);
 }
 
-void NodesHandler::setRSSI(uint8_t unit, int rssi)
+bool NodesHandler::setRSSI(uint8_t unit, int rssi)
 {
-  setRSSI(getNode(unit), rssi);
+  return setRSSI(getNode(unit), rssi);
 }
 
-void NodesHandler::setRSSI(NodeStruct * node, int rssi)
+bool NodesHandler::setRSSI(NodeStruct * node, int rssi)
 {
   if (node != nullptr) {
     node->setRSSI(rssi);
+    return true;
   }
+  return false;
 }
 
 bool NodesHandler::lastTimeValidDistanceExpired() const

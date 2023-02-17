@@ -89,10 +89,10 @@ public:
 
   bool    recentlyBecameDistanceZero();
 
-  void    setRSSI(const MAC_address& mac,
+  bool    setRSSI(const MAC_address& mac,
                   int                rssi);
 
-  void    setRSSI(uint8_t unit,
+  bool    setRSSI(uint8_t unit,
                   int     rssi);
 
 #ifdef USES_ESPEASY_NOW
@@ -122,7 +122,7 @@ public:
 
 private:
 
-  void setRSSI(NodeStruct *node,
+  bool setRSSI(NodeStruct *node,
                int         rssi);
 
   unsigned long _lastTimeValidDistance = 0;

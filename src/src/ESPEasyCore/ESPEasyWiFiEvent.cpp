@@ -106,7 +106,11 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
 
     case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
       // Receive probe request packet in soft-AP interface
-      // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
+      #ifdef USES_ESPEASY_NOW
+      WiFiEventData.processedProbeRequestAPmode = false;
+      APModeProbeRequestReceived_list.push_back(info.wifi_ap_probereqrecved);
+      #endif
+
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
       #endif
