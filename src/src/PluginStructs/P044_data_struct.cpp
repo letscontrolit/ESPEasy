@@ -305,13 +305,7 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
     # endif // ifndef BUILD_NO_DEBUG
     blinkLED();
 
-    if (Settings.UseRules)
-    {
-      LoadTaskSettings(event->TaskIndex);
-      String eventString = getTaskDeviceName(event->TaskIndex);
-      eventString += F("#Data");
-      eventQueue.addMove(std::move(eventString));
-    }
+    eventQueue.add(event->TaskIndex, F("Data"), EMPTY_STRING);
   } // done
 }
 

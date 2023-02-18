@@ -336,16 +336,7 @@ bool P020_Task::isInit() const {
 
 void P020_Task::sendConnectedEvent(bool connected)
 {
-  if (Settings.UseRules)
-  {
-    String RuleEvent;
-    RuleEvent += getTaskDeviceName(_taskIndex);
-    RuleEvent += '#';
-    RuleEvent += F("Client");
-    RuleEvent += '=';
-    RuleEvent += (connected ? 1 : 0);
-    eventQueue.addMove(std::move(RuleEvent));
-  }
+  eventQueue.add(_taskIndex, F("Client"), (connected ? 1 : 0));
 }
 
 void P020_Task::blinkLED() {

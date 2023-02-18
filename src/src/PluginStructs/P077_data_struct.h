@@ -9,23 +9,35 @@
 # define CSE_PULSES_NOT_INITIALIZED  -1
 # define CSE_PREF                    1000
 # define CSE_UREF                    100
-# define HLW_PREF_PULSE              12530 // was 4975us = 201Hz = 1000W
-# define HLW_UREF_PULSE              1950  // was 1666us = 600Hz = 220V
-# define HLW_IREF_PULSE              3500  // was 1666us = 600Hz = 4.545A
-
-/*
-   unsigned long energy_power_calibration = HLW_PREF_PULSE;
-   unsigned long energy_voltage_calibration = HLW_UREF_PULSE;
-   unsigned long energy_current_calibration = HLW_IREF_PULSE;
- */
+# define CSE_PREF_PULSE              12530 // was 4975us = 201Hz = 1000W
+# define CSE_UREF_PULSE              1950  // was 1666us = 600Hz = 220V
+# define CSE_IREF_PULSE              3500  // was 1666us = 600Hz = 4.545A
 
 struct P077_data_struct : public PluginTaskData_base {
-  P077_data_struct() = default;
-  virtual ~P077_data_struct() = default;
+public:
+
+  P077_data_struct() {}
+
+  ~P077_data_struct();
 
   bool processCseReceived(struct EventStruct *event);
 
   bool processSerialData();
+
+  bool init(ESPEasySerialPort port,
+            const int16_t     serial_rx,
+            const int16_t     serial_tx,
+            unsigned long     baudrate,
+            uint8_t           config);
+
+  bool plugin_write(struct EventStruct *event,
+                    String              string);
+  void reset();
+  bool isInitialized() const;
+
+  # ifndef BUILD_NO_DEBUG
+  int  serial_Available();
+  # endif // ifndef BUILD_NO_DEBUG
 
   //  uint8_t cse_receive_flag = 0;
 
@@ -51,8 +63,11 @@ struct P077_data_struct : public PluginTaskData_base {
   uint16_t count_pkt   = 0;
   uint8_t  checksum    = 0;
   uint8_t  adjustment  = 0;
-};
 
+private:
+
+  ESPeasySerial *easySerial = nullptr;
+};
 
 #endif // ifdef USES_P077
 #endif // ifndef PLUGINSTRUCTS_P077_DATA_STRUCT_H

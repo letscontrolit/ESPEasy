@@ -452,13 +452,13 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != task) {
         String command = parseString(string, 1);
 
-        if (command.equals(F("serialsend"))) {
+        if (equals(command, F("serialsend"))) {
           task->ser2netSerial->write(string.substring(11).c_str());
           task->ser2netSerial->flush();
           success = true;
         }
 
-        if ((command.equals(F("ser2netclientsend"))) && (task->hasClientConnected())) {
+        if ((equals(command, F("ser2netclientsend"))) && (task->hasClientConnected())) {
           task->ser2netClient.print(string.substring(18));
           task->ser2netClient.flush();
           success = true;
