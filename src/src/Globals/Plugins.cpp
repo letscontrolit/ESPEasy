@@ -674,7 +674,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         if ((Function == PLUGIN_PRIORITY_INIT) && isPriority) { // If this is a priority task, then initialize it, next PLUGIN_INIT call must be self-ignored by plugin!
           clearPluginTaskData(taskIndex);                       // Make sure any task data is actually cleared.
-          if (PluginCallForTask(taskIndex, PLUGIN_INIT, &TempEvent, str, event)) {
+          if (PluginCallForTask(taskIndex, PLUGIN_INIT, &TempEvent, str, event) &&
+              loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log;
             log.reserve(80);
             log += concat(F("INIT : Started Priority task "), static_cast<int>(taskIndex + 1));
@@ -767,7 +768,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str); // Initialize value range(s)
           }
 
-          if (Function == PLUGIN_INIT) {
+          if ((Function == PLUGIN_INIT)
+              #if FEATURE_PLUGIN_PRIORITY
+              && !Settings.isPriorityTask(event->TaskIndex) // Don't clear already initialized PriorityTask data
+              #endif // if FEATURE_PLUGIN_PRIORITY
+             ) {
             // Make sure any task data is actually cleared.
             clearPluginTaskData(event->TaskIndex);
           }
