@@ -58,9 +58,9 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         const __FlashStringHelper * options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
-        int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021 };
+        const int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021 };
 
-        addFormSelector(F("Sensor model"), F("p005_dhttype"), 5, options, indices, PCONFIG(0) );
+        addFormSelector(F("Sensor model"), F("dhttype"), 5, options, indices, PCONFIG(0) );
 
         success = true;
         break;
@@ -68,7 +68,7 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("p005_dhttype"));
+        PCONFIG(0) = getFormItemInt(F("dhttype"));
 
         success = true;
         break;

@@ -100,6 +100,7 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
     displayOnOff(true);
 
     if (nullptr != gfxHelper) {
+      gfxHelper->initialize();
       pcd8544->setContrast(_contrast);
       gfxHelper->invertDisplay(_displayInverted);
       gfxHelper->setRotation(_rotation);
@@ -116,6 +117,15 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
 
       if (P141_CONFIG_BUTTON_PIN != -1) {
         pinMode(P141_CONFIG_BUTTON_PIN, INPUT_PULLUP);
+      }
+
+      if (!stringsLoaded) {
+        LoadCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
+        stringsLoaded = true;
+
+        for (uint8_t x = 0; x < P141_Nlines && !stringsHasContent; x++) {
+          stringsHasContent = !strings[x].isEmpty();
+        }
       }
       success = true;
     }
@@ -171,16 +181,7 @@ void P141_data_struct::cleanup() {
  ***************************************************************************/
 bool P141_data_struct::plugin_read(struct EventStruct *event) {
   if (nullptr != pcd8544) {
-    String strings[P141_Nlines];
-    LoadCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
-
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P141_Nlines && !hasContent; x++) {
-      hasContent = !strings[x].isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
       uint8_t  yPos  = 0;                 // Bound to the display
       int16_t  dum   = 0;
@@ -331,9 +332,12 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
  * updateValues: put x and y coordinates in Values 0 and 1
  ***************************************************************************/
 void P141_data_struct::updateValues(struct EventStruct *event) {
-  int16_t curX, curY;
+  int16_t curX = 0;
+  int16_t curY = 0;
 
-  gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
+  if (nullptr != gfxHelper) {
+    gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
+  }
   UserVar[event->BaseVarIndex]     = curX;
   UserVar[event->BaseVarIndex + 1] = curY;
 }
@@ -361,7 +365,7 @@ bool P141_data_struct::plugin_get_config_value(struct EventStruct *event,
  * displayOnOff: Turn display on or off
  ***************************************************************************/
 void P141_data_struct::displayOnOff(bool state) {
-  if (_backlightPin != -1) {
+  if (validGpio(_backlightPin)) {
     # if defined(ESP8266)
     analogWrite(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0);
     # endif // if defined(ESP8266)

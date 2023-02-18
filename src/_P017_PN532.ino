@@ -130,23 +130,23 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       addFormPinSelect(PinSelectPurpose::Generic, F("Reset Pin"), F("taskdevicepin3"), CONFIG_PIN3);
 
       const bool autoTagRemoval = P017_AUTO_TAG_REMOVAL == 0; // Inverted state!
-      addFormCheckBox(F("Automatic Tag removal"), F("p017_autotagremoval"), autoTagRemoval);
+      addFormCheckBox(F("Automatic Tag removal"), F("tagremove"), autoTagRemoval);
 
       if (P017_REMOVAL_TIMEOUT == 0) { 
         P017_REMOVAL_TIMEOUT = 500; // Defaulty 500 mSec (was hardcoded value)
       }
       // 0.25 to 60 seconds
-      addFormNumericBox(F("Automatic Tag removal after"), F("p017_removaltimeout"), P017_REMOVAL_TIMEOUT, 250, 60000); 
+      addFormNumericBox(F("Automatic Tag removal after"), F("removetime"), P017_REMOVAL_TIMEOUT, 250, 60000); 
       addUnit(F("mSec."));
 
       
-      addFormNumericBox(F("Value to set on Tag removal"), F("p017_removalvalue"), P017_NO_TAG_DETECTED_VALUE, 0, 2147483647); 
+      addFormNumericBox(F("Value to set on Tag removal"), F("removevalue"), P017_NO_TAG_DETECTED_VALUE, 0, 2147483647); 
       // Max allowed is int
       // =
       // 0x7FFFFFFF ...
 
       const bool eventOnRemoval = P017_EVENT_ON_TAG_REMOVAL == 1; // Normal state!
-      addFormCheckBox(F("Event on Tag removal"), F("p017_sendreset"), eventOnRemoval);
+      addFormCheckBox(F("Event on Tag removal"), F("eventremove"), eventOnRemoval);
 
       success = true;
       break;
@@ -154,10 +154,10 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P017_AUTO_TAG_REMOVAL      = isFormItemChecked(F("p017_autotagremoval")) ? 0 : 1; // Inverted logic!
-      P017_EVENT_ON_TAG_REMOVAL  = isFormItemChecked(F("p017_sendreset")) ? 1 : 0;
-      P017_NO_TAG_DETECTED_VALUE = getFormItemInt(F("p017_removalvalue"));
-      P017_REMOVAL_TIMEOUT       = getFormItemInt(F("p017_removaltimeout"));
+      P017_AUTO_TAG_REMOVAL      = isFormItemChecked(F("tagremove")) ? 0 : 1; // Inverted logic!
+      P017_EVENT_ON_TAG_REMOVAL  = isFormItemChecked(F("eventremove")) ? 1 : 0;
+      P017_NO_TAG_DETECTED_VALUE = getFormItemInt(F("removevalue"));
+      P017_REMOVAL_TIMEOUT       = getFormItemInt(F("removetime"));
 
       success = true;
       break;
@@ -185,6 +185,7 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t x = 0; x < 3; x++)
       {
         if (Plugin_017_Init(CONFIG_PIN3)) {
+          success = true;
           break;
         }
         delay(100);

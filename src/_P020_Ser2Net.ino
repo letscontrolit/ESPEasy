@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2022-12-12 tonhuisman: Add character conversion for the received serial data, act on Space and/or Newline
  * 2022-10-11 tonhuisman: Add option for including the message in P1 #data event
  * 2022-10-09 tonhuisman: Check P044 migration on PLUGIN_INIT too, still needs a manual save (from UI or by save command)
  * 2022-10-08 tonhuisman: Merged code from P044 into this plugin, and use a global flag to emulate P044 with P020
@@ -32,7 +33,7 @@
 # define PLUGIN_NAME_020_044   "Communication - P1 Wifi Gateway"
 
 bool P020_Emulate_P044 = false; // Global flag
-# ifdef USES_P044
+# if defined(USES_P044) && !defined(USES_P044_ORG)
 
 // Emulate P044 using P020 with a global flag
 boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string) {
@@ -57,6 +58,7 @@ bool P020_ConvertP044Settings(struct EventStruct *event) {
     CONFIG_PIN2 = 1;                                                       // P044 TX pin
 
     // Former P044 defaults
+    P020_FLAGS = 0u;                                                       // Reset
     bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);                             // Led enabled...
     P020_LED_PIN           = P020_STATUS_LED;                              // ...and connected to GPIO-12
     P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing
@@ -65,7 +67,7 @@ bool P020_ConvertP044Settings(struct EventStruct *event) {
   return false;
 }
 
-# endif // ifdef USES_P044
+# endif // if defined(USES_P044) && !defined(USES_P044_ORG)
 
 boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -106,16 +108,20 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         CONFIG_PORT            = static_cast<int>(ESPEasySerialPort::serial0); // P044 Serial port
         CONFIG_PIN1            = 3;                                            // P044 RX pin
         CONFIG_PIN2            = 1;                                            // P044 TX pin
-        P020_BAUDRATE          = P020_DEFAULT_P044_BAUDRATE;
-        P020_SERVER_PORT       = P020_DEFAULT_P044_SERVER_PORT;
+        P020_SET_BAUDRATE      = P020_DEFAULT_P044_BAUDRATE;
+        P020_SET_SERVER_PORT   = P020_DEFAULT_P044_SERVER_PORT;
         P020_RESET_TARGET_PIN  = P020_DEFAULT_RESET_TARGET_PIN;
         P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing (only)
         P020_LED_PIN           = P020_STATUS_LED;
+        P020_RX_WAIT           = 0;
+        P020_REPLACE_SPACE     = 0;                                            // Force empty
+        P020_REPLACE_NEWLINE   = 0;
+        P020_FLAGS             = 0u;                                           // Reset
         bitSet(P020_FLAGS, P020_FLAG_LED_ENABLED);
         bitSet(P020_FLAGS, P020_FLAG_P044_MODE_SAVED);                         // Inital config, no conversion needed
       } else {
-        P020_BAUDRATE         = P020_DEFAULT_BAUDRATE;
-        P020_SERVER_PORT      = P020_DEFAULT_SERVER_PORT;
+        P020_SET_BAUDRATE     = P020_DEFAULT_BAUDRATE;
+        P020_SET_SERVER_PORT  = P020_DEFAULT_SERVER_PORT;
         P020_RESET_TARGET_PIN = P020_DEFAULT_RESET_TARGET_PIN;
         P020_RX_BUFFER        = P020_DEFAULT_RX_BUFFER;
         P020_LED_PIN          = -1;
@@ -166,12 +172,12 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("TCP Port"), F("pport"), P020_SERVER_PORT, 0);
+      addFormNumericBox(F("TCP Port"), F("pport"), P020_GET_SERVER_PORT, 0);
       # ifndef LIMIT_BUILD_SIZE
       addUnit(F("0..65535"));
       # endif // ifndef LIMIT_BUILD_SIZE
 
-      addFormNumericBox(F("Baud Rate"), F("pbaud"), P020_BAUDRATE, 0);
+      addFormNumericBox(F("Baud Rate"), F("pbaud"), P020_GET_BAUDRATE, 0);
       uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
@@ -196,6 +202,14 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("When enabled, passes the entire message in the event. <B>Warning:</B> can cause memory overflow issues!"));
         # endif // ifndef LIMIT_BUILD_SIZE
+
+        if (!P020_Emulate_P044) { // Not appropriate for P1 WiFi Gateway
+          addFormSeparatorCharInput(F("Replace spaces in event by"),   F("replspace"),
+                                    P020_REPLACE_SPACE, F(P020_REPLACE_CHAR_SET), F(""));
+
+          addFormSeparatorCharInput(F("Replace newlines in event by"), F("replcrlf"),
+                                    P020_REPLACE_NEWLINE, F(P020_REPLACE_CHAR_SET), F(""));
+        }
 
         addFormCheckBox(F("Process events without client"), F("pignoreclient"), P020_IGNORE_CLIENT_CONNECTED);
         # ifndef LIMIT_BUILD_SIZE
@@ -231,8 +245,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P020_SERVER_PORT      = getFormItemInt(F("pport"));
-      P020_BAUDRATE         = getFormItemInt(F("pbaud"));
+      P020_SET_SERVER_PORT  = getFormItemInt(F("pport"));
+      P020_SET_BAUDRATE     = getFormItemInt(F("pbaud"));
       P020_SERIAL_CONFIG    = serialHelper_serialconfig_webformSave();
       P020_RX_WAIT          = getFormItemInt(F("prxwait"));
       P020_RESET_TARGET_PIN = getFormItemInt(F("presetpin"));
@@ -242,6 +256,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       } else {
         P020_SERIAL_PROCESSING = getFormItemInt(F("pevents"));
         P020_RX_BUFFER         = getFormItemInt(F("prx_buffer"));
+        P020_REPLACE_SPACE     = getFormItemInt(F("replspace"));
+        P020_REPLACE_NEWLINE   = getFormItemInt(F("replcrlf"));
       }
       P020_LED_PIN = getFormItemInt(F("pledpin"));
 
@@ -274,14 +290,12 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // ifdef USES_P044
 
-      LoadTaskSettings(event->TaskIndex);
-
       if (P020_GET_LED_ENABLED && validGpio(P020_LED_PIN)) {
         pinMode(P020_LED_PIN, OUTPUT);
         digitalWrite(P020_LED_PIN, P020_GET_LED_INVERTED ? 1 : 0);
       }
 
-      if ((P020_SERVER_PORT == 0) || (P020_BAUDRATE == 0)) {
+      if ((P020_GET_SERVER_PORT == 0) || (P020_GET_BAUDRATE == 0)) {
         clearPluginTaskData(event->TaskIndex);
         break;
       }
@@ -321,8 +335,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         log += concat(F(" port="), static_cast<int>(CONFIG_PORT));
         log += concat(F(" rxPin="), static_cast<int>(rxPin));
         log += concat(F(" txPin="), static_cast<int>(txPin));
-        log += concat(F(" BAUDRATE="), static_cast<int>(P020_BAUDRATE));
-        log += concat(F(" SERVER_PORT="), static_cast<int>(P020_SERVER_PORT));
+        log += concat(F(" BAUDRATE="), static_cast<int>(P020_GET_BAUDRATE));
+        log += concat(F(" SERVER_PORT="), static_cast<int>(P020_GET_SERVER_PORT));
         log += concat(F(" SERIAL_PROCESSING="), static_cast<int>(P020_SERIAL_PROCESSING));
         addLogMove(LOG_LEVEL_INFO, log);
       }
@@ -331,8 +345,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       // serial0 on esp32 is Ser2net: port=2 rxPin=3 txPin=1; serial1 on esp32 is Ser2net: port=4 rxPin=13 txPin=15; Serial2 on esp32 is
       // Ser2net: port=4 rxPin=16 txPin=17
       uint8_t serialconfig = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
-      task->serialBegin(port, rxPin, txPin, P020_BAUDRATE, serialconfig);
-      task->startServer(P020_SERVER_PORT);
+      task->serialBegin(port, rxPin, txPin, P020_GET_BAUDRATE, serialconfig);
+      task->startServer(P020_GET_SERVER_PORT);
 
       if (!task->isInit()) {
         clearPluginTaskData(event->TaskIndex);
@@ -359,7 +373,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       task->blinkLED();
 
       if (task->serial_processing == P020_Events::P1WiFiGateway) {
-        task->_CRCcheck = P020_BAUDRATE == 115200;
+        task->_CRCcheck = P020_GET_BAUDRATE == 115200;
         # ifndef BUILD_NO_DEBUG
 
         if (task->_CRCcheck) {

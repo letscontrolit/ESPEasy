@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RamTracker.h"
 #include "../Helpers/ESPEasy_math.h"
@@ -617,7 +618,7 @@ String RulesCalculate_t::preProces(const String& input)
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
 int CalculateParam(const String& TmpStr) {
-  int returnValue;
+  int returnValue = 0;
 
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
@@ -649,6 +650,7 @@ int CalculateParam(const String& TmpStr) {
 CalculateReturnCode Calculate(const String& input,
                               double      & result)
 {
+  START_TIMER;
   CalculateReturnCode returnCode = RulesCalculate.doCalculate(
     RulesCalculate_t::preProces(input).c_str(),
     &result);
@@ -690,5 +692,6 @@ CalculateReturnCode Calculate(const String& input,
       addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
+  STOP_TIMER(COMPUTE_STATS);
   return returnCode;
 }

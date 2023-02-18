@@ -10,7 +10,7 @@
 
 #include "../Helpers/Convert.h"
 
-class IPAddress;
+#include <IPAddress.h>
 
 // -V::569
 
@@ -91,6 +91,12 @@ unsigned long long hexToULL(const String& input_c,
                             size_t        startpos,
                             size_t        nrHexDecimals);
 
+void appendHexChar(uint8_t data, String& string);
+
+// Binary data to HEX
+// Returned string length will be twice the size of the data array.
+String formatToHex_array(const uint8_t* data, size_t size);
+
 String formatToHex(unsigned long value,
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits);
@@ -120,6 +126,9 @@ const __FlashStringHelper * boolToString(bool value);
    Typical string replace functions.
 \*********************************************************************************************/
 void   removeExtraNewLine(String& line);
+
+// Remove all occurences of given character from the string
+void   removeChar(String& line, char character);
 
 void   addNewLine(String& line);
 

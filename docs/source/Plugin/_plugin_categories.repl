@@ -1,7 +1,7 @@
 .. |Plugin_Analog_input| replace:: :ref:`P002_page`, :ref:`P007_page`, :ref:`P025_page`, :ref:`P060_page`, :ref:`P097_page`
 .. |Plugin_Acceleration| replace:: :ref:`P120_page`, :ref:`P125_page`
 .. |Plugin_Communication| replace:: :ref:`P016_page`, :ref:`P020_page`, :ref:`P035_page`, :ref:`P044_page`, :ref:`P054_page`, :ref:`P071_page`, :ref:`P087_page`, :ref:`P089_page`, :ref:`P094_page`, :ref:`P101_page`, :ref:`P118_page`
-.. |Plugin_Display| replace:: :ref:`P012_page`, :ref:`P023_page`, :ref:`P036_page`, :ref:`P057_page`, :ref:`P073_page`, :ref:`P075_page`, :ref:`P095_page`, :ref:`P104_page`, :ref:`P116_page`, :ref:`P131_page`
+.. |Plugin_Display| replace:: :ref:`P012_page`, :ref:`P023_page`, :ref:`P036_page`, :ref:`P057_page`, :ref:`P073_page`, :ref:`P075_page`, :ref:`P095_page`, :ref:`P104_page`, :ref:`P116_page`, :ref:`P131_page`, :ref:`P148_page`
 .. |Plugin_Distance| replace:: :ref:`P110_page`, :ref:`P113_page`
 .. |Plugin_Dust| replace:: :ref:`P018_page`, :ref:`P053_page`, :ref:`P056_page`
 .. |Plugin_Energy_AC| replace:: :ref:`P076_page`, :ref:`P077_page`, :ref:`P078_page`, :ref:`P102_page`, :ref:`P108_page`
@@ -23,9 +23,10 @@
 .. |Plugin_Notify| replace:: :ref:`P055_page`, :ref:`P065_page`
 .. |Plugin_Output| replace:: :ref:`P029_page`, :ref:`P038_page`, :ref:`P041_page`, :ref:`P042_page`, :ref:`P043_page`, :ref:`P070_page`, :ref:`P124_page`, :ref:`P126_page`, :ref:`P128_page`
 .. |Plugin_Position| replace:: :ref:`P013_page`, :ref:`P082_page`, :ref:`P121_page`
+.. |Plugin_PowerMgt| replace:: :ref:`P138_page`
 .. |Plugin_Regulator| replace:: :ref:`P021_page`
 .. |Plugin_RFID| replace:: :ref:`P008_page`, :ref:`P017_page`, :ref:`P040_page`, :ref:`P111_page`
-.. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P009_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`, :ref:`P091_page`, :ref:`P097_page`
+.. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P009_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`, :ref:`P091_page`, :ref:`P097_page`, :ref:`P143_page`
 .. |Plugin_Touch| replace:: :ref:`P097_page`, :ref:`P099_page`
 .. |Plugin_Weight| replace:: :ref:`P067_page`
 

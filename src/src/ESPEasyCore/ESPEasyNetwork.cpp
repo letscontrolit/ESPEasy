@@ -9,6 +9,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Network.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/MDNS_Helper.h"
 
@@ -41,7 +42,7 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
   }
   statusLED(true);
   active_network_medium = new_medium;
-  addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
+  addLog(LOG_LEVEL_INFO, concat(F("Set Network mode: "), toString(active_network_medium)));
 }
 
 
@@ -116,7 +117,8 @@ IPAddress NetworkGatewayIP() {
   return WiFi.gatewayIP();
 }
 
-IPAddress NetworkDnsIP (uint8_t dns_no) {
+IPAddress NetworkDnsIP(uint8_t dns_no) {
+  scrubDNS();
   #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(EthEventData.ethInitSuccess) {
@@ -164,52 +166,48 @@ String NetworkGetHostNameFromSettings(bool force_add_unitnr)
 }
 
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr) {
-  return createRFCCompliantHostname(NetworkGetHostNameFromSettings(force_add_unitnr));
-}
-
-// Create hostname with - instead of spaces
-String createRFCCompliantHostname(const String& oldString) {
-  String result(oldString);
+  String hostname(NetworkGetHostNameFromSettings(force_add_unitnr));
+  // Create hostname with - instead of spaces
 
   // See RFC952.
   // Allowed chars:
   // * letters (a-z, A-Z)
   // * numerals (0-9)
   // * Hyphen (-)
-  replaceUnicodeByChar(result, '-');
-  for (size_t i = 0; i < result.length(); ++i) {
-    const char c = result[i];
+  replaceUnicodeByChar(hostname, '-');
+  for (size_t i = 0; i < hostname.length(); ++i) {
+    const char c = hostname[i];
     if (!isAlphaNumeric(c)) {
-      result[i] = '-';
+      hostname[i] = '-';
     }
   }
 
-
   // May not start or end with a hyphen
-  while (result.startsWith(String('-'))) {
-    result = result.substring(1);
+  const String dash('-');
+  while (hostname.startsWith(dash)) {
+    hostname = hostname.substring(1);
   }
-  while (result.endsWith(String('-'))) {
-    result = result.substring(0, result.length() - 1);
+  while (hostname.endsWith(dash)) {
+    hostname = hostname.substring(0, hostname.length() - 1);
   }
 
   // May not contain only numerals
   bool onlyNumerals = true;
-  for (size_t i = 0; onlyNumerals && i < result.length(); ++i) {
-    const char c = result[i];
+  for (size_t i = 0; onlyNumerals && i < hostname.length(); ++i) {
+    const char c = hostname[i];
     if (!isdigit(c)) {
       onlyNumerals = false;
     }
   }
   if (onlyNumerals) {
-    result = String(F("ESPEasy-")) + result;
+    hostname = concat(F("ESPEasy-"), hostname);
   }
 
-  if (result.length() > 24) {
-    result = result.substring(0, 24);
+  if (hostname.length() > 24) {
+    hostname = hostname.substring(0, 24);
   }
 
-  return result;
+  return hostname;
 }
 
 MAC_address WifiSoftAPmacAddress() {

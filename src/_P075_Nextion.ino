@@ -101,7 +101,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         F("115200")
       };
 
-      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
+      addFormSelector(F("Baud Rate"), F("baud"), 4, options, nullptr, P075_BaudRate);
       addUnit(F("baud"));
       break;
     }
@@ -146,7 +146,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE: {
       {
         // FIXME TD-er: This is a huge object allocated on the Stack.
-        char deviceTemplate[P75_Nlines][P75_Nchars];
+        char deviceTemplate[P75_Nlines][P75_Nchars] = {};
         String error;
 
         for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++)
@@ -167,7 +167,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       }
 
       //        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
-      P075_BaudRate      = getFormItemInt(F("p075_baud"));
+      P075_BaudRate      = getFormItemInt(F("baud"));
       P075_IncludeValues = isFormItemChecked(F("IncludeValues"));
 
       /* Task will be stopped and restarted, so no reason to reload the display here
@@ -226,34 +226,34 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
               if ((nbars < -100) || (nbars >= 0)) {
                 barVal = 0;
               }
-              else if ((nbars >= -100) && (nbars < -95)) {
+              else if ((nbars < -95)) {
                 barVal = 5;
               }
-              else if ((nbars >= -95) && (nbars < -90)) {
+              else if ((nbars < -90)) {
                 barVal = 10;
               }
-              else if ((nbars >= -90) && (nbars < -85)) {
+              else if ((nbars < -85)) {
                 barVal = 20;
               }
-              else if ((nbars >= -85) && (nbars < -80)) {
+              else if ((nbars < -80)) {
                 barVal = 30;
               }
-              else if ((nbars >= -80) && (nbars < -75)) {
+              else if ((nbars < -75)) {
                 barVal = 45;
               }
-              else if ((nbars >= -75) && (nbars < -70)) {
+              else if ((nbars < -70)) {
                 barVal = 60;
               }
-              else if ((nbars >= -70) && (nbars < -65)) {
+              else if ((nbars < -65)) {
                 barVal = 70;
               }
-              else if ((nbars >= -65) && (nbars < -55)) {
+              else if ((nbars < -55)) {
                 barVal = 80;
               }
-              else if ((nbars >= -55) && (nbars < -50)) {
+              else if ((nbars < -50)) {
                 barVal = 90;
               }
-              else if (nbars >= -50) {
+              else {
                 barVal = 100;
               }
 

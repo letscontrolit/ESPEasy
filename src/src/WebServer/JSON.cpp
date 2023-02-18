@@ -6,6 +6,8 @@
 
 #include "../CustomBuild/CompiletimeDefines.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
@@ -105,6 +107,7 @@ void handle_csvval()
 // ********************************************************************************
 void handle_json()
 {
+  START_TIMER
   const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
   const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
@@ -252,9 +255,7 @@ void handle_json()
         LabelType::WIFI_STORED_SSID2,
         LabelType::FORCE_WIFI_BG,
         LabelType::RESTART_WIFI_LOST_CONN,
-#ifdef ESP8266
         LabelType::FORCE_WIFI_NOSLEEP,
-#endif // ifdef ESP8266
 #ifdef SUPPORT_ARP
         LabelType::PERIODICAL_GRAT_ARP,
 #endif // ifdef SUPPORT_ARP
@@ -448,6 +449,12 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
+        for(int i = 0; i < 3; i++) {
+          if (Settings.TaskDevicePin[i][TaskIndex] >= 0) {
+            stream_next_json_object_value(concat(F("TaskDeviceGPIO"), i + 1) , String(Settings.TaskDevicePin[i][TaskIndex]));
+          }
+        }
+
         #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
@@ -492,6 +499,7 @@ void handle_json()
   }
 
   TXBuffer.endStream();
+  STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
 }
 
 // ********************************************************************************

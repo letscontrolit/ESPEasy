@@ -6,6 +6,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -190,7 +192,10 @@ const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *even
   const __FlashStringHelper * returnvalue = taskValueSet(event, Line, taskIndex, success);
   if (success)
   {
+    START_TIMER;
     SensorSendTask(taskIndex);
+    STOP_TIMER(SENSOR_SEND_TASK);
+
     return return_command_success();
   }
   return returnvalue;
@@ -208,7 +213,10 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
     return F("TASK_NOT_ENABLED");
   }
 
+  START_TIMER;
   SensorSendTask(taskIndex);
+  STOP_TIMER(SENSOR_SEND_TASK);
+
   return return_command_success();
 }
 

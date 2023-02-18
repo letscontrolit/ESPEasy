@@ -10,7 +10,6 @@ const __FlashStringHelper* P131_CommandTrigger_toString(P131_CommandTrigger cmd)
   switch (cmd) {
     case P131_CommandTrigger::neomatrix: return F("neomatrix");
     case P131_CommandTrigger::neo: return F("neo");
-    case P131_CommandTrigger::MAX: break;
   }
   return F("None");
 }
@@ -116,6 +115,7 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
     success = (nullptr != gfxHelper);
 
     if (success) {
+      gfxHelper->initialize();
       gfxHelper->setRotation(_rotation);
       matrix->setBrightness(std::min(_maxbright, _brightness)); // Set brightness, so we don't get blinded by the light
       matrix->fillScreen(_bgcolor);                             // fill screen with black color
@@ -143,6 +143,10 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
 
       // Load
       loadContent(event);
+
+      for (uint8_t x = 0; x < P131_Nlines && !stringsHasContent; x++) {
+        stringsHasContent = !strings[x].isEmpty();
+      }
 
       // Setup initial scroll position
       for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
@@ -243,13 +247,7 @@ bool P131_data_struct::plugin_read(struct EventStruct *event) {
   if (isInitialized() && !_splashState) {
     loadContent(event);
 
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT && !hasContent; x++) {
-      hasContent = !parseStringKeepCase(strings[x], 1).isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       display_content(event);
     }
   }

@@ -125,7 +125,7 @@ void run_compiletime_checks() {
   check_size<C013_SensorDataStruct,                 24u>();
   #endif
   #ifdef USES_C016
-  check_size<C016_queue_element,                    24u>();
+  check_size<C016_binary_element,                   24u>();
   #endif
 
 
@@ -215,13 +215,13 @@ bool SettingsCheck(String& error) {
 
 String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
-  #ifndef LIMIT_BUILD_SIZE
+  #if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
   if (err.length() > 0) return err;
   if (!ExtraTaskSettings.checkUniqueValueNames()) {
     return F("Use unique value names");
   }
   if (!ExtraTaskSettings.checkInvalidCharInNames()) {
-    return F("Invalid character in name. Do not use ',-+/*=^%!#[]{}()' or space.");
+    return concat(F("Invalid character in name. Do not use space or '"), ExtraTaskSettingsStruct::getInvalidCharsForNames()) + '\'';
   }
   String deviceName = ExtraTaskSettings.TaskDeviceName;
   NumericalType detectedType;
@@ -249,7 +249,7 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   }
 
   err += LoadTaskSettings(taskIndex);
-  #endif
+  #endif 
   return err;
 }
 #endif

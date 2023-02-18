@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2022-12-13, tonhuisman: Implement separator character input selector
  * 2022-11-14, tonhuisman: Add support for selecting JSON sub-attributes, using the . notation, like main.sub (1 level only)
  * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
  *                         features were added
@@ -145,8 +146,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSubHeader(F("Options"));
-
       # if P037_JSON_SUPPORT
       addFormSelector_YesNo(F("Parse JSON messages"), F("pjson"),     P037_PARSE_JSON,     true);
       # endif // if P037_JSON_SUPPORT
@@ -161,6 +160,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Changing a Yes/No option will reload the page. Changing to No will clear corresponding settings!"));
       #  endif // if !defined(P037_LIMIT_BUILD_SIZE)
       # endif  // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
+
+      addFormSubHeader(F("Options"));
+
       addFormCheckBox(F("Generate events for accepted topics"),
                       F("p037_send_events"), P037_SEND_EVENTS);
       # if !defined(P037_LIMIT_BUILD_SIZE)
@@ -193,11 +195,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       }
       # if P037_REPLACE_BY_COMMA_SUPPORT
       {
-        String character = F(" ");
-        character[0] = (P037_REPLACE_BY_COMMA == 0 ? 0x20 : static_cast<uint8_t>(P037_REPLACE_BY_COMMA));
-        addRowLabel(F("To replace by comma in event"));
-        addTextBox(F("preplch"), character, 1, false, false, F("[!@$%^ &*;:.|/\\]"), F("widenumber"));
-        addUnit(F("Single character only, limited to: <b>! @ $ % ^ & * ; : . | / \\</b> is replaced by: <b>,</b> "));
+        addFormSeparatorCharInput(F("To replace by comma in event"), F("preplch"),
+                                  P037_REPLACE_BY_COMMA, F(P037_REPLACE_CHAR_SET), F(""));
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
@@ -234,7 +233,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P037_data) {
         return success;
       }
-      P037_data->loadSettings();  // FIXME TD-er: Is this loadSettings still needed or even desired?
+      P037_data->loadSettings(); // FIXME TD-er: Is this loadSettings still needed or even desired?
 
       # if P037_JSON_SUPPORT
       P037_PARSE_JSON = getFormItemInt(F("pjson"));
@@ -248,13 +247,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       P037_SEND_EVENTS        = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
       P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("pdedupe")) ? 1 : 0;
       P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("pquedepth"));
-      # if P037_REPLACE_BY_COMMA_SUPPORT
-      String character = webArg(F("preplch"));
-      P037_REPLACE_BY_COMMA = character[0];
 
-      if (P037_REPLACE_BY_COMMA == 0x20) { // Space -> 0
-        P037_REPLACE_BY_COMMA = 0x0;
-      }
+      # if P037_REPLACE_BY_COMMA_SUPPORT
+      P037_REPLACE_BY_COMMA = getFormItemInt(F("preplch"));
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
       success = P037_data->webform_save(
@@ -279,7 +274,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P037_data && P037_data->loadSettings()) {
+      if ((nullptr != P037_data) && P037_data->loadSettings()) {
         // When we edit the subscription data from the webserver, the plugin is called again with init.
         // In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
         if (MQTTclient_connected) {
@@ -346,7 +341,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      String unparsedPayload;             // To keep an unprocessed copy
+      String unparsedPayload; // To keep an unprocessed copy
 
       bool checkJson = false;
 

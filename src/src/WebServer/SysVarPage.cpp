@@ -126,6 +126,7 @@ void handle_sysvars() {
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
   addSysVar_html(F("%sysmonth% // %sysmonth_0%"));
+  addSysVar_enum_html(SystemVariables::SYSMONTH_S);
   addSysVar_html(F("%sysday%   // %sysday_0%"));
   addSysVar_html(F("%syshour%  // %syshour_0%"));
   addSysVar_html(F("%sysmin%   // %sysmin_0%"));
@@ -133,6 +134,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSSEC_D);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY_S);
+  addSysVar_enum_html(SystemVariables::SYSTZOFFSET);
 
   addTableSeparator(F("Sunrise/Sunset"), 3, 3);
   addSysVar_html(F("%sunset%"));
@@ -272,9 +274,7 @@ void addSysVar_html(const String& input) {
   html_TR_TD();
   {
     addHtml(F("<pre>")); // Make monospaced (<tt> tag?)
-    addHtml(F("<xmp>")); // Make sure HTML code is escaped. Tag depricated??
     addHtml(input);
-    addHtml(F("</xmp>"));
     addHtml(F("</pre>"));
   }
   html_TD();

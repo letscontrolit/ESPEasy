@@ -320,6 +320,7 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("password"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   addHtmlAttribute(F("maxlength"), maxlength);
 
   #if FEATURE_TOOLTIPS
@@ -359,6 +360,7 @@ void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
   addHtmlAttribute(F("class"), F("wide"));
   addHtmlAttribute(F("type"),  F("text"));
   addHtmlAttribute(F("name"),  id);
+  addHtmlAttribute(F("id"),    id);
   addHtmlAttribute(F("value"), (empty_IP) ? EMPTY_STRING : formatIP(ip));
   addHtml('>');
 }
@@ -387,6 +389,32 @@ void addFormIPaccessControlSelect(const __FlashStringHelper * label, const __Fla
 {
   addRowLabel_tr_id(label, id);
   addIPaccessControlSelect(id, choice);
+}
+
+// ********************************************************************************
+// a Separator character selector
+// ********************************************************************************
+void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
+                               const __FlashStringHelper *id,
+                               int                        value,
+                               const String             & charset,
+                               const __FlashStringHelper *additionalText) {
+  const int len = charset.length() + 1;
+  String    charList[len];
+  int charOpts[len];
+
+  charList[0] = F("None");
+  charOpts[0] = 0;
+
+  for (uint16_t i = 0; i < charset.length(); i++) {
+    charList[i + 1] = charset[i];
+    charOpts[i + 1] = static_cast<int>(charset[i]);
+  }
+  addFormSelector(rowLabel, id, len, charList, charOpts, value);
+
+  if (!String(additionalText).isEmpty()) {
+    addUnit(additionalText);
+  }
 }
 
 // ********************************************************************************

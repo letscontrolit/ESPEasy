@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   generate-matrix:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -32,7 +32,7 @@ jobs:
 
   build:
     needs: generate-matrix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -56,7 +56,7 @@ jobs:
           key: ${{ runner.os }}-esp8266-${{ hashFiles('platformio*.ini') }}
       - name: Dependencies
         run: |
-          sudo apt install binutils build-essential libffi-dev python-dev libgit2-dev
+          sudo apt install binutils build-essential libffi-dev libgit2-dev
           pip install -r requirements.txt
           platformio update
       - name: Build and archive
@@ -74,7 +74,7 @@ jobs:
 
   prepare-dist:
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -106,7 +106,7 @@ jobs:
 
   prepare-notes:
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       notes: ${{ steps.release-notes.outputs.result }}
     steps:
@@ -131,7 +131,7 @@ jobs:
     permissions:
       contents: write # for ncipollo/release-action
     needs: [build, prepare-dist, prepare-notes]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/setup-python@v4
         with:
