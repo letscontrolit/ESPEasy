@@ -135,6 +135,8 @@ jobs:
           ls -R
           sudo apt install zipmerge zip
           cd artifacts/Binaries
+          mkdir bin
+          mv * bin
           find . -name '*ESP82*' |zip -@ ../../ESPEasy_ESP82xx.zip
           find . -name '*ESP32*' |zip -@ ../../ESPEasy_ESP32.zip 
           cd ../..
@@ -145,7 +147,7 @@ jobs:
           zipmerge ESPEasy_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: actions/upload-artifact@v3
         with:
-          name: Distribution
+          name: Pre-release-${{ github.event.repository.updated_at }}
           path: |
             ESPEasy_ESP82xx_binaries.zip
             ESPEasy_ESP32_binaries.zip
