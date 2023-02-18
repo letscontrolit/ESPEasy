@@ -131,7 +131,7 @@ jobs:
       - name: Get current date
         id: date
         run: |
-          echo "{date}={$(date +'%Y-%m-%d')}" >> $GITHUB_STATE
+          echo "builddate={$(date +'%Y-%m-%d')}" >> $GITHUB_OUTPUT
       - uses: actions/download-artifact@v3
         with:
           path: artifacts/
@@ -151,7 +151,7 @@ jobs:
           zipmerge ESPEasy_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: actions/upload-artifact@v3
         with:
-          name: Pre-release-${{ env.date }}_${{ github.run_id }}
+          name: Pre-release-${{ steps.date.outputs.builddate }}_${{ github.run_id }}
           path: |
             ESPEasy_ESP82xx_binaries.zip
             ESPEasy_ESP32_binaries.zip
