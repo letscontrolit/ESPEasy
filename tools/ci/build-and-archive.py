@@ -22,7 +22,7 @@ def cmd(*, env, pio_can_fail):
             raise
 
     output = "build_output"
-    dirs = [os.path.join(output, "bin"), os.path.join(output, "debug")]
+    dirs = [os.path.join(output, "bin")]
 
     # Notice that we also have build_output/reject containing .elf that cannot
     # be made into a flashable .bin

@@ -95,5 +95,4 @@ jobs:
           name: Binaries
           path: |
             bin
-            debug
           if-no-files-found: ignore
