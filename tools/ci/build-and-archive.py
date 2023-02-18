@@ -1,6 +1,7 @@
 import os
 import enum
 import subprocess
+from distutils.dir_util import copy_tree
 
 
 class CannotArchive(Exception):
@@ -26,16 +27,9 @@ def cmd(*, env, pio_can_fail):
     # Notice that we also have build_output/reject containing .elf that cannot
     # be made into a flashable .bin
 
-    archive = "ESPEasy_{}.zip".format(env)
-    if built:
-        if not all([os.path.isdir(d) for d in dirs]):
-            raise CannotArchive(
-                "Built, but build_output does not have expected directories"
-            )
-        cmd = ["zip", "-q", "-rr", archive]
-        cmd.extend(dirs)
+    for _dir in dirs:
+      copy_tree(_dir, os.path.basename(_dir))
 
-        subprocess.check_call(cmd)
 
 
 if __name__ == "__main__":
