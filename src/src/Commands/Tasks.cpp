@@ -11,35 +11,64 @@
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/Serial.h"
 
+#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
-//      taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
-//	varNr = event->Par2 - 1;
-bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned int& varNr)
+// taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
+bool validTaskIndexVar(struct EventStruct *event, taskIndex_t& taskIndex)
 {
   if (event == nullptr) { return false; }
 
   if (event->Par1 <= 0) { return false; }
-  taskIndex_t tmp_taskIndex = static_cast<taskIndex_t>(event->Par1 - 1);
-
-  varNr = 0;
-
-  if (event->Par2 > 0) {
-    varNr = event->Par2 - 1;
-  }
+  const taskIndex_t tmp_taskIndex = static_cast<taskIndex_t>(event->Par1 - 1);
 
   if (!validTaskIndex(tmp_taskIndex)) { return false; }
 
-  if (varNr >= VARS_PER_TASK) { return false; }
-
   taskIndex = tmp_taskIndex;
 
+  return true;
+}
+
+// taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
+// varNr = event->Par2 - 1;
+bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned int& varNr)
+{
+  if (event == nullptr) { return false; }
+
+  taskIndex_t tmp_taskIndex;
+  if (!validTaskIndexVar(event, tmp_taskIndex)) { return false; }
+
+  varNr = 0;
+
+  if (event->Par2 > 0 && event->Par2 <= VARS_PER_TASK) {
+    varNr = event->Par2 - 1;
+    taskIndex = tmp_taskIndex;
+    return true;
+  }
+
+  return false;
+}
+
+bool validateAndParseTaskIndexArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex)
+{
+  if (!validTaskIndexVar(event, taskIndex)) {
+    String taskName;
+    taskIndex_t tmpTaskIndex = taskIndex;
+    if ((event->Par1 <= 0 || event->Par1 >= INVALID_TASK_INDEX) && GetArgv(Line, taskName, 2)) {
+      tmpTaskIndex = findTaskIndexByName(taskName, true);
+      if (tmpTaskIndex != INVALID_TASK_INDEX) {
+        event->Par1 = tmpTaskIndex + 1;
+      }
+    }
+    return validTaskIndexVar(event, taskIndex);
+  }
   return true;
 }
 
@@ -112,9 +141,8 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
 const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
-  unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+  if (!validateAndParseTaskIndexArguments(event, Line, taskIndex)) {
     return F("INVALID_PARAMETERS"); 
   }
 
@@ -133,9 +161,7 @@ const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, con
 const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
 {
   taskIndex_t  taskIndex;
-  unsigned int varNr;
-
-  if (validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+  if (validateAndParseTaskIndexArguments(event, Line, taskIndex)) {
     // This is a command so no guarantee the taskIndex is correct in the event
     event->setTaskIndex(taskIndex);
 
@@ -201,20 +227,46 @@ const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *even
   return returnvalue;
 }
 
-const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, const char* Line)
 {
   taskIndex_t  taskIndex;
-  unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+  if (!validateAndParseTaskIndexArguments(event, Line, taskIndex) || event->Par2 < 0) {
     return F("INVALID_PARAMETERS");
   }
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
     return F("TASK_NOT_ENABLED");
   }
 
+  unsigned int msecFromNow = 0;
+  String par2;
+  if (GetArgv(Line, par2, 2)) {
+    if (validUIntFromString(par2, msecFromNow)) {
+      Scheduler.schedule_task_device_timer(taskIndex, millis() + msecFromNow);
+      return return_command_success();
+    }
+  }
+  return F("INVALID_PARAMETERS");  
+}
+
+const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const char *Line)
+{
+  taskIndex_t  taskIndex;
+
+  if (!validateAndParseTaskIndexArguments(event, Line, taskIndex) || event->Par2 < 0) {
+    return F("INVALID_PARAMETERS");
+  }
+  if (!Settings.TaskDeviceEnabled[taskIndex]) {
+    return F("TASK_NOT_ENABLED");
+  }
+  unsigned int unixTime = 0;
+  String par2;
+  if (GetArgv(Line, par2, 2)) {
+    validUIntFromString(par2, unixTime);
+  }
+
   START_TIMER;
-  SensorSendTask(taskIndex);
+  SensorSendTask(taskIndex, unixTime);
   STOP_TIMER(SENSOR_SEND_TASK);
 
   return return_command_success();

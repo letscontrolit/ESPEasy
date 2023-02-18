@@ -432,27 +432,27 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
         command    = parseString(string, 1);
         subcommand = parseString(string, 2);
 
-        if (command.equals(F("touch"))) {
+        if (equals(command, F("touch"))) {
           P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr == P099_data) {
             return success;
           }
 
-          if (subcommand.equals(F("rot"))) { // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
+          if (equals(subcommand, F("rot"))) { // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
             uint8_t rot_ = static_cast<uint8_t>(parseString(string, 3).toInt() % 4);
 
             P099_data->setRotation(rot_);
             success = true;
-          } else if (subcommand.equals(F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
+          } else if (equals(subcommand, F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
             bool flip_ = (parseString(string, 3).toInt() > 0);
 
             P099_data->setRotationFlipped(flip_);
             success = true;
-          } else if (subcommand.equals(F("enable"))) {  // touch,enable,<objectName> : Enables a disabled objectname (with a leading
+          } else if (equals(subcommand, F("enable"))) {  // touch,enable,<objectName> : Enables a disabled objectname (with a leading
                                                         // underscore)
             success = P099_data->setTouchObjectState(parseString(string, 3), true, P099_CONFIG_OBJECTCOUNT);
-          } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName> : Disables an enabled objectname (without a leading
+          } else if (equals(subcommand, F("disable"))) { // touch,disable,<objectName> : Disables an enabled objectname (without a leading
                                                         // underscore)
             success = P099_data->setTouchObjectState(parseString(string, 3), false, P099_CONFIG_OBJECTCOUNT);
           }
@@ -540,36 +540,24 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                                                                                     // elapsed?
                         P099_data->TouchStates[selectedObjectIndex] = !P099_data->TouchStates[selectedObjectIndex];
                         P099_data->TouchTimers[selectedObjectIndex] = 0;
-                        String eventCommand;
-                        eventCommand.reserve(48);
-                        eventCommand += getTaskDeviceName(event->TaskIndex);
-                        eventCommand += '#';
-                        eventCommand += selectedObjectName;
-                        eventCommand += '=';                                                         // Add arguments
+
+                        bool eventValue = P099_data->TouchStates[selectedObjectIndex];
 
                         if (bitRead(P099_data->StoredSettings.TouchObjects[selectedObjectIndex].flags, P099_FLAGS_INVERT_BUTTON)) {
-                          eventCommand += (P099_data->TouchStates[selectedObjectIndex] ? '0' : '1'); // Act like an inverted button, 0 = On,
-                                                                                                     // 1 = Off
-                        } else {
-                          eventCommand += (P099_data->TouchStates[selectedObjectIndex] ? '1' : '0'); // Act like a button, 1 = On, 0 = Off
+                          eventValue = !eventValue; // Act like an inverted button, 0 = On, 1 = Off
                         }
-                        eventQueue.addMove(std::move(eventCommand));
+                        eventQueue.add(event->TaskIndex, selectedObjectName, eventValue);
                       }
                     }
                   } else {
                     // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
-                    String eventCommand;
-                    eventCommand.reserve(48);
-                    eventCommand += getTaskDeviceName(event->TaskIndex);
-                    eventCommand += '#';
-                    eventCommand += selectedObjectName;
-                    eventCommand += '='; // Add arguments
-                    eventCommand += x;
-                    eventCommand += ',';
-                    eventCommand += y;
-                    eventCommand += ',';
-                    eventCommand += z;
-                    eventQueue.addMove(std::move(eventCommand));
+                    String eventValues;
+                    eventValues += x;
+                    eventValues += ',';
+                    eventValues += y;
+                    eventValues += ',';
+                    eventValues += z;
+                    eventQueue.add(event->TaskIndex, selectedObjectName, eventValues);
                   }
                 }
               }

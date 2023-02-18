@@ -1487,7 +1487,7 @@ int http_authenticate(const String& logIdentifier,
   }
 
   // start connection and send HTTP header (and body)
-  if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+  if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
     httpCode = http.sendRequest(HttpMethod.c_str());
   } else {
     httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
@@ -1519,7 +1519,7 @@ int http_authenticate(const String& logIdentifier,
       http.addHeader(F("Authorization"), authorization);
 
       // start connection and send HTTP header (and body)
-      if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+      if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
         httpCode = http.sendRequest(HttpMethod.c_str());
       } else {
         httpCode = http.sendRequest(HttpMethod.c_str(), postStr);

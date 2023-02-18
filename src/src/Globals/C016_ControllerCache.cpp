@@ -45,7 +45,7 @@ struct EventStruct C016_getTaskSample(
     return EventStruct();
   }
 
-  timestamp  = element._timestamp;
+  timestamp  = element.unixTime;
   valueCount = element.valueCount;
   val1       = element.values[0];
   val2       = element.values[1];

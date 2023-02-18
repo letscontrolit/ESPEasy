@@ -1,6 +1,7 @@
 #include "../Helpers/Numerical.h"
 
 #include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\
    Check if string is valid float
@@ -242,7 +243,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
       } else {
-        if (result.equals(F("-"))) {
+        if (equals(result, '-')) {
           detectedType = NumericalType::Not_a_number;
           return emptyString;
         }
@@ -306,7 +307,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
     }
   }
 
-  if (result.equals(F("-"))) {
+  if (equals(result, '-')) {
     detectedType = NumericalType::Not_a_number;
     return emptyString;
   }

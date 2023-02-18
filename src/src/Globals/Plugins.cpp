@@ -722,7 +722,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               #if FEATURE_PLUGIN_STATS
               PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
               if (taskData != nullptr) {
-                taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
+                taskData->pushPluginStatsValues(event, !Device[DeviceIndex].TaskLogsOwnPeaks);
               }
               #endif // if FEATURE_PLUGIN_STATS
               saveUserVarToRTC();
@@ -842,7 +842,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_DEVICEVALUENAMES ||
             Function == PLUGIN_WEBFORM_SAVE ||
             Function == PLUGIN_SET_DEFAULTS ||
-            Function == PLUGIN_INIT_VALUE_RANGES) {
+            Function == PLUGIN_INIT_VALUE_RANGES ||
+           (Function == PLUGIN_SET_CONFIG && retval)) {
           // Each of these may update ExtraTaskSettings, but it may not have been saved yet.
           // Thus update the cache just in case something from it is requested from the cache.
           Cache.updateExtraTaskSettingsCache();
