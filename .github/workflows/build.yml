@@ -136,7 +136,7 @@ jobs:
           sudo apt install zipmerge zip
           cd artifacts/Binaries
           mkdir bin
-          mv * bin
+          mv !(bin) bin
           find . -name '*ESP82*' |zip -@ ../../ESPEasy_ESP82xx.zip
           find . -name '*ESP32*' |zip -@ ../../ESPEasy_ESP32.zip 
           cd ../..
