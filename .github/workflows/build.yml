@@ -133,18 +133,16 @@ jobs:
           path: artifacts/
       - run: |
           ls -R
-          sudo apt install zipmerge zip unzip
-          cd artifacts
-          unzip Binaries
-          rm Binaries.zip
-          find . -name '*ESP82*'' |zip -@ ESPEasy_ESP82xx.zip
-          find . -name '*ESP32*'' |zip -@ ESPEasy_ESP32.zip 
-          cd ..
-          unzip artifacts/Distribution ESPEasy_dist*
+          sudo apt install zipmerge zip
+          cd artifacts/Binaries
+          find . -name '*ESP82*'' |zip -@ ../../ESPEasy_ESP82xx.zip
+          find . -name '*ESP32*'' |zip -@ ../../ESPEasy_ESP32.zip 
+          cd ../..
+          mv artifacts/Distribution/ESPEasy_dist* .
           cp ESPEasy_dist.zip ESPEasy_ESP82xx_binaries.zip
           mv ESPEasy_dist.zip ESPEasy_ESP32_binaries.zip
-          zipmerge ESPEasy_ESP82xx_binaries.zip artifacts/ESPEasy_ESP82xx.zip
-          zipmerge ESPEasy_ESP32_binaries.zip artifacts/ESPEasy_ESP32.zip
+          zipmerge ESPEasy_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
+          zipmerge ESPEasy_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: actions/upload-artifact@v3
         with:
           name: Distribution
