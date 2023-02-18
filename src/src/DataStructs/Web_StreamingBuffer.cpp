@@ -323,11 +323,11 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   if (length > 0) { web_server.sendContent(data); }
   web_server.sendContent("\r\n");
 #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-  unsigned int timeout = 1;
+  unsigned int timeout = 300;
 
-  if (freeBeforeSend < 5000) { timeout = 100; }
+  if (freeBeforeSend < 5000) { timeout = 400; }
 
-  if (freeBeforeSend < 4000) { timeout = 300; }
+  if (freeBeforeSend < 4000) { timeout = 500; }
   web_server.sendContent(data);
 
   data.clear();
