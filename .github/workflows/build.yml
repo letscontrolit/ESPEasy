@@ -135,8 +135,8 @@ jobs:
           ls -R
           sudo apt install zipmerge zip
           cd artifacts/Binaries
-          find . -name '*ESP82*'' |zip -@ ../../ESPEasy_ESP82xx.zip
-          find . -name '*ESP32*'' |zip -@ ../../ESPEasy_ESP32.zip 
+          find . -name '*ESP82*' |zip -@ ../../ESPEasy_ESP82xx.zip
+          find . -name '*ESP32*' |zip -@ ../../ESPEasy_ESP32.zip 
           cd ../..
           mv artifacts/Distribution/ESPEasy_dist* .
           cp ESPEasy_dist.zip ESPEasy_ESP82xx_binaries.zip
