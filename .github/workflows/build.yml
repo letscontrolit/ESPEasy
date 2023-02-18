@@ -134,7 +134,7 @@ jobs:
       - run: |
           ls -R
           sudo apt install zipmerge zip unzip
-          cd artifact
+          cd artifacts
           unzip Binaries
           rm Binaries.zip
           find . -name '*ESP82*'' |zip -@ ESPEasy_ESP82xx.zip
