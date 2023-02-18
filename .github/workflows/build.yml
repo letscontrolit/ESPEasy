@@ -128,6 +128,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+      - name: Get current date
+        id: date
+        run: |
+          echo "{date}={$(date +'%Y-%m-%d')}" >> $GITHUB_STATE
       - uses: actions/download-artifact@v3
         with:
           path: artifacts/
@@ -136,7 +140,7 @@ jobs:
           sudo apt install zipmerge zip
           cd artifacts/Binaries
           mkdir bin
-          mv !(bin) bin
+          mv *.* bin
           find . -name '*ESP82*' |zip -@ ../../ESPEasy_ESP82xx.zip
           find . -name '*ESP32*' |zip -@ ../../ESPEasy_ESP32.zip 
           cd ../..
@@ -147,7 +151,7 @@ jobs:
           zipmerge ESPEasy_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: actions/upload-artifact@v3
         with:
-          name: Pre-release-${{ github.event.repository.updated_at }}
+          name: Pre-release-${{ env.date }}_${{ github.run_id }}
           path: |
             ESPEasy_ESP82xx_binaries.zip
             ESPEasy_ESP32_binaries.zip
