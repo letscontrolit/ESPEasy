@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-02-19 tonhuisman: Suggested modification with variable trigger width was only partly accepted by NewPing library, and as
+ *                        we already have a modified library using the DIRECT_Gpio functions, I'm not merging back that change
+ *                        (compile-time setting, default now: 12 usec) but keep the proposed changes for a runtime configurable setting.
  * 2023-01-28 tonhuisman: Add Combined mode, as started in https://github.com/letscontrolit/ESPEasy/pull/3157
  * 2023-01-20 tonhuisman: Limit trigger-range to 10-20 usec. (20 already seems to be on the high side)
  *                        Reduce build-size by disabling new features on 1M builds and leaving out some non-essential messages
