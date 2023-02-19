@@ -97,8 +97,8 @@ jobs:
             bin
           if-no-files-found: ignore
 
-  # Testing here instead of running a release
-  prepare-dist:
+  # Repackage separately for ESP82xx and ESP32
+  repackage:
     needs: build
     runs-on: ubuntu-22.04
     steps:
@@ -110,24 +110,6 @@ jobs:
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
-      - name: Package utilities
-        run: |
-          cd dist
-          zip -r -qq ../ESPEasy_dist.zip *
-          cd ..
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Distribution
-          path: |
-            ESPEasy_dist.zip
-
-  pre-release:
-    needs: [build, prepare-dist]
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
       - name: Get current date
         id: date
         run: |
@@ -135,24 +117,34 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           path: artifacts/
-      - run: |
-          ls -R
-          sudo apt install zipmerge zip
+      - name: Prepare artifacts
+        run: |
+          mkdir ESPEasy_dist_ESP82xx
+          mkdir ESPEasy_dist_ESP32
+          cd dist
+          find . --exec cp {} ../ESPEasy_dist_ESP82xx \;
+          find . --exec cp {} ../ESPEasy_dist_ESP32 \;
+          cd ..
+          cd ESPEasy_dist_ESP32
+          rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
+          cd ..
           cd artifacts/Binaries
-          mkdir bin
-          mv *.* bin
-          find . -not -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP82xx.zip
-          find . -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP32.zip 
+          find . -not -name '*ESP32*' -exec mv {} ../../ESPEasy_dist_ESP82xx/bin/ \;
+          find . -name '*ESP32*' -exec mv {} ../../ESPEasy_dist_ESP32/bin \;
           cd ../..
-          mv artifacts/Distribution/ESPEasy_dist* .
-          cp ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
-          mv ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
-          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
-          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: actions/upload-artifact@v3
         with:
-          name: Pre-release-${{ steps.date.outputs.builddate }}_PR#${{ github.event.number }}_${{ github.run_id }}
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
-            ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
+            ESPEasy_dist_ESP32/*
           if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP82xx/*
+          if-no-files-found: ignore
+    # When successfully re-packaged, the original Binaries _can_ optionally be removed
+    # - uses: geekyeggo/delete-artifact@v2
+    #   with:
+    #       name: Binaries
