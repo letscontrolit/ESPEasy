@@ -144,7 +144,8 @@ jobs:
           path: |
             ESPEasy_dist_ESP82xx/*
           if-no-files-found: ignore
-    # When successfully re-packaged, the original Binaries _can_ optionally be removed
-    # - uses: geekyeggo/delete-artifact@v2
-    #   with:
-    #       name: Binaries
+      # When successfully re-packaged, the original Binaries can be removed
+      # comment below 3 lines to not remove the Binaries artifact after repackaging
+      - uses: geekyeggo/delete-artifact@v2
+        with:
+            name: Binaries
