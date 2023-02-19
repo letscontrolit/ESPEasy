@@ -131,7 +131,7 @@ jobs:
       - name: Get current date
         id: date
         run: |
-          echo "builddate={$(date +'%Y-%m-%d')}" >> $GITHUB_OUTPUT
+          echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - uses: actions/download-artifact@v3
         with:
           path: artifacts/
@@ -141,8 +141,8 @@ jobs:
           cd artifacts/Binaries
           mkdir bin
           mv *.* bin
-          find . -name '*ESP82*' |zip -@ ../../ESPEasy_ESP82xx.zip
-          find . -name '*ESP32*' |zip -@ ../../ESPEasy_ESP32.zip 
+          find . -not -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP82xx.zip
+          find . -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP32.zip 
           cd ../..
           mv artifacts/Distribution/ESPEasy_dist* .
           cp ESPEasy_dist.zip ESPEasy_ESP82xx_binaries.zip
