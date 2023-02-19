@@ -155,6 +155,7 @@ jobs:
           mv artifacts/Distribution/ESPEasy_dist* .
           cp ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
           mv ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
+          zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip "ESP.Easy.Flasher.exe" "bin/blank_1MB.bin" "bin/blank_2MB.bin" "bin/ESPEasy_2step_UploaderMega_1024.bin"
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: ncipollo/release-action@v1
