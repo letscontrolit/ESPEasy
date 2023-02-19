@@ -180,7 +180,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x,
     String objectName = String(StoredSettings.TouchObjects[objectNr].objectname);
 
     if ((objectName.length() > 0)
-        && !objectName.substring(0, 1).equals(F("_"))                    // Ignore if name starts with an underscore
+        && !equals(objectName.substring(0, 1), '_')                    // Ignore if name starts with an underscore
         && (StoredSettings.TouchObjects[objectNr].bottom_right.x > 0)
         && (StoredSettings.TouchObjects[objectNr].bottom_right.y > 0)) { // Not initial could be valid
       if (SurfaceAreas[objectNr] == 0) {                                 // Need to calculate the surface area

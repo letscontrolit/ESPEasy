@@ -168,7 +168,7 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P127_data) {
         String command = parseString(string, 1);
 
-        if (command.equals(F("cdmrst"))) {
+        if (equals(command, F("cdmrst"))) {
           addLog(LOG_LEVEL_INFO, F("CDM7160: reset"));
           P127_data->setReset();
           success = true;

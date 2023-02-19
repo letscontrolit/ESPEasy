@@ -175,13 +175,13 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
   bool success     = false;
   bool changed     = false;
 
-  if (cmd.equals(F("csereset"))) { // Reset to defaults
+  if (equals(cmd, F("csereset"))) { // Reset to defaults
     PCONFIG(0) = CSE_UREF_PULSE;
     PCONFIG(1) = CSE_IREF_PULSE;
     PCONFIG(2) = CSE_PREF_PULSE;
     success    = true;
     changed    = true;
-  } else if (cmd.equals(F("csecalibrate"))) { // Set 1 or more calibration values, 0 will skip that value
+  } else if (equals(cmd, F("csecalibrate"))) { // Set 1 or more calibration values, 0 will skip that value
     success = true;
     float CalibVolt  = 0.0f;
     float CalibCurr  = 0.0f;
