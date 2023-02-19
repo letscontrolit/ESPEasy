@@ -58,10 +58,7 @@ bool P138_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
     int8_t src = static_cast<int8_t>(_ip5306->power_source());
 
     if (_lastPowerSource != src) { // Changed?
-      String eventCommand = getTaskDeviceName(event->TaskIndex);
-      eventCommand += F("#PowerChanged=");
-      eventCommand += src;         // 0 = battery, 1 = Vin
-      eventQueue.add(eventCommand);
+      eventQueue.add(event->TaskIndex, F("PowerChanged"), src); // 0 = battery, 1 = Vin
       _lastPowerSource = src;      // Keep current
     }
   }
@@ -101,13 +98,13 @@ bool P138_data_struct::plugin_write(struct EventStruct *event,
 
   // String cmd     = parseString(string, 1);
 
-  // if (isInitialized() && cmd.equals(F("ip5306"))) { // Command trigger
+  // if (isInitialized() && equals(cmd, F("ip5306"))) { // Command trigger
   //   cmd = parseString(string, 2);                // sub command
   //   const bool empty3 = parseString(string, 3).isEmpty();
   //   const bool empty4 = parseString(string, 4).isEmpty();
   //   success = true;
 
-  //   if (cmd.equals(F("??")) && !empty3) {         // ip5306,??,<value>
+  //   if (equals(cmd, F("??")) && !empty3) {         // ip5306,??,<value>
   //   } else {
   //     success = false;
   //   }
@@ -125,17 +122,17 @@ bool P138_data_struct::plugin_get_config_value(struct EventStruct *event,
   String command = parseString(string, 1);
   float  value;
 
-  if (command.equals(F("batcurrent"))) {         // batcurrent
+  if (equals(command, F("batcurrent"))) {         // batcurrent
     value = read_value(P138_valueOptions_e::BatteryCurrent);
-  } else if (command.equals(F("chundervolt"))) { // chundervolt
+  } else if (equals(command, F("chundervolt"))) { // chundervolt
     value = read_value(P138_valueOptions_e::ChargeUnderVoltage);
-  } else if (command.equals(F("stopvolt"))) {  // stopvolt
+  } else if (equals(command, F("stopvolt"))) {  // stopvolt
     value = read_value(P138_valueOptions_e::StopVoltage);
-  } else if (command.equals(F("inpcurrent"))) {  // inpcurrent
+  } else if (equals(command, F("inpcurrent"))) {  // inpcurrent
     value = read_value(P138_valueOptions_e::InCurrent);
-  } else if (command.equals(F("chargelvl"))) {   // chargelvl
+  } else if (equals(command, F("chargelvl"))) {   // chargelvl
     value = read_value(P138_valueOptions_e::ChargeLevel);
-  } else if (command.equals(F("pwrsource"))) {   // pwrsource
+  } else if (equals(command, F("pwrsource"))) {   // pwrsource
     value = read_value(P138_valueOptions_e::PowerSource);
   } else {
     success = false;

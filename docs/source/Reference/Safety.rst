@@ -1,3 +1,5 @@
+.. _Safety_page:
+
 Safety
 ******
 
@@ -24,8 +26,8 @@ This hole may seem like an invitation to connect some external sensor to these d
 HWL8012 & CSE7766
 =================
 
-Some ESP8266 powered devices have an energy monitoring sensor on board.
-Well known examples are the Sonoff POW and POW r2, but there are many others.
+Some ESP8266 and ESP32 powered devices have an energy monitoring sensor on board.
+Well known examples are the Sonoff POW, POW r2, POW R3xx(D) and Shelly PLUG S, but there are many others.
 Almost all use either the HWL8012 or CSE7766 chip.
 
 These chips are not isolated from mains power, which means all electronics connected

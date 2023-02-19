@@ -193,6 +193,40 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    // START: For I2C plugins only:
+
+    // When multiple I2C addresses can be used for the hardware:
+    // case PLUGIN_I2C_HAS_ADDRESS:
+    // case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    // {
+    //   const uint8_t i2cAddressValues[] = { 0x40, 0x41, 0x42, 0x43 }; // A list of usable I2C addresses, length 4 must be adjusted below
+
+    //   if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+    //     addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, PCONFIG(0));
+    //   } else {
+    //     success = intArrayContains(4, i2cAddressValues, event->Par1);
+    //   }
+    //   break;
+    // }
+
+    // When only 1 I2C address can be used
+    // case PLUGIN_I2C_HAS_ADDRESS:
+    // {
+    //   success = event->Par1 == 0x53;
+    //   break;
+    // }
+
+    // # if FEATURE_I2C_GET_ADDRESS
+    // case PLUGIN_I2C_GET_ADDRESS:
+    // {
+    //   event->Par1 = 0x77; // or: = PCONFIG(0);
+    //   success     = true;
+    //   break;
+    // }
+    // # endif // if FEATURE_I2C_GET_ADDRESS
+
+    // END: For I2C plugins only
+
     case PLUGIN_SET_DEFAULTS:
     {
       // Set a default config here, which will be called when a plugin is assigned to a task.
@@ -271,20 +305,18 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      // FIXME TD-er: This one is not using parseString* function
       // parse string to extract the command
-      String tmpString = string;
-      int    argIndex  = tmpString.indexOf(',');
+      String tmpString = parseString(string, 1); // already converted to lowercase
 
-      if (argIndex) {
-        tmpString = tmpString.substring(0, argIndex);
-      }
-
-      String tmpStr = string;
-      int    comma1 = tmpStr.indexOf(',');
-
-      if (tmpString.equalsIgnoreCase(F("dothis"))) {
-        // do something
+      if (equals(tmpString, F("dothis"))) {
+        String subcmd = parseString(string, 2);
+        if (equals(subcmd, F("sub1"))) {
+          // do subcommand 1
+        } else if (equals(subcmd, F("sub2"))) {
+          // do something else
+        } else {
+          // do non-specific subcommand
+        }
         success = true; // set to true only if plugin has executed a command successfully
       }
 
