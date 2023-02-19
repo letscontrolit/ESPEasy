@@ -145,14 +145,14 @@ jobs:
           find . -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP32.zip 
           cd ../..
           mv artifacts/Distribution/ESPEasy_dist* .
-          cp ESPEasy_dist.zip ESPEasy_mega_-${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
-          mv ESPEasy_dist.zip ESPEasy_mega_-${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
-          zipmerge ESPEasy_mega_-${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
-          zipmerge ESPEasy_mega_-${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32.zip
+          cp ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
+          mv ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: actions/upload-artifact@v3
         with:
-          name: Pre-release-${{ steps.date.outputs.builddate }}_${{ github.run_id }}
+          name: Pre-release-${{ steps.date.outputs.builddate }}_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_mega_-${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
-            ESPEasy_mega_-${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
+            ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
+            ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
           if-no-files-found: ignore
