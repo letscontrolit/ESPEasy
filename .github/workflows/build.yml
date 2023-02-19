@@ -122,8 +122,8 @@ jobs:
           mkdir ESPEasy_dist_ESP82xx
           mkdir ESPEasy_dist_ESP32
           cd dist
-          find . -exec cp {} ../ESPEasy_dist_ESP82xx \;
-          find . -exec cp {} ../ESPEasy_dist_ESP32 \;
+          find . -exec cp -r {} ../ESPEasy_dist_ESP82xx \;
+          find . -exec cp -r {} ../ESPEasy_dist_ESP32 \;
           cd ..
           cd ESPEasy_dist_ESP32
           rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
