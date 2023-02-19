@@ -150,7 +150,7 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
         lowerString.toLowerCase();
         String command = parseString(lowerString, 1);
 
-        if (command.equals(F("dmx")))
+        if (equals(command, F("dmx")))
         {
           String param;
           String paramKey;
@@ -172,7 +172,7 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_DEBUG_MORE, param);
               #endif
 
-              if (param.equals(F("log")))
+              if (equals(param, F("log")))
               {
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("DMX  : ");
@@ -186,7 +186,7 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
                 success = true;
               }
 
-              else if (param.equals(F("test")))
+              else if (equals(param, F("test")))
               {
                 for (int16_t i = 0; i < Plugin_054_DMXSize; i++)
                   //Plugin_054_DMXBuffer[i] = i+1;
@@ -194,13 +194,13 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
                 success = true;
               }
 
-              else if (param.equals(F("on")))
+              else if (equals(param, F("on")))
               {
                 memset(Plugin_054_DMXBuffer, 255, Plugin_054_DMXSize);
                 success = true;
               }
 
-              else if (param.equals(F("off")))
+              else if (equals(param, F("off")))
               {
                 memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
                 success = true;
