@@ -42,6 +42,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].ValueCount         = 0;
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].I2CNoDeviceCheck   = true;
       break;
     }
 
@@ -64,6 +65,15 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
       // FIXME TD-er: Why not using addFormSelectorI2C here?
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = Plugin_048_MotorShield_address;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -108,6 +118,12 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WRITE: {
+      # if FEATURE_I2C_DEVICE_CHECK
+
+      if (!I2C_deviceCheck(Plugin_048_MotorShield_address, event->TaskIndex, 10, PLUGIN_I2C_GET_ADDRESS)) {
+        break; // Will return the default false for success
+      }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       String cmd = parseString(string, 1);
 
       // Commands:

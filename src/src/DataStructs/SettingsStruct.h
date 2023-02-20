@@ -142,6 +142,12 @@ class SettingsStruct_tmpl
   bool SendToHTTP_follow_redirects() const;
   void SendToHTTP_follow_redirects(bool value);
 
+  #if FEATURE_I2C_DEVICE_CHECK
+  // Check if an I2C device is found at configured address at plugin_INIT and plugin_READ
+  bool CheckI2Cdevice() const;
+  void CheckI2Cdevice(bool value);
+  #endif // if FEATURE_I2C_DEVICE_CHECK
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
