@@ -496,28 +496,28 @@ void processProbeRequestAPmode() {
 
   Nodes.setRSSI(mac, rssi);
 
-  static MAC_address last_probed_mac;
-  if (last_probed_mac != mac) {
-    last_probed_mac = mac;
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String    log                 = F("AP Mode: Probe Request: ");
-      log += mac.toString();
-      log += F(" (");
-      log += rssi;
-      log += F(" dBm)");
-      addLog(LOG_LEVEL_INFO, log);
-    }
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String    log                 = F("AP Mode: Probe Request: ");
+    log += mac.toString();
+    log += F(" (");
+    log += rssi;
+    log += F(" dBm)");
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+
+//  static MAC_address last_probed_mac;
+//  if (last_probed_mac != mac) {
+//    last_probed_mac = mac;
 
     // FIXME TD-er: Must create an answer for ESPEasy-NOW node discovery
     #ifdef USES_ESPEASY_NOW
     if (Settings.UseESPEasyNow()) {
-      const NodeStruct * node = Nodes.getNodeByMac(mac);
       ESPEasy_now_handler.sendDiscoveryAnnounce(
-        (node != nullptr && node->ESPEasyNowPeer) ? node->ESPEasy_Now_MAC() : mac,
-        Nodes.getESPEasyNOW_channel());
+        mac, Nodes.getESPEasyNOW_channel());
     }
     #endif
-  }
+//  }
 
   APModeProbeRequestReceived_list.pop_front();
   WiFiEventData.processedProbeRequestAPmode = APModeProbeRequestReceived_list.size() == 0;

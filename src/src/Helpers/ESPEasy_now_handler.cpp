@@ -70,8 +70,6 @@ static uint64_t ICACHE_FLASH_ATTR mac_to_key(const uint8_t *mac, ESPEasy_now_hdr
 ESPEasy_Mutex ESPEasy_now_in_queue_mutex;
 std::map<uint64_t, ESPEasy_now_merger> ESPEasy_now_in_queue;
 
-std::list<ESPEasy_now_traceroute_struct> ESPEasy_now_traceroute_queue;
-std::list<MAC_address> ESPEasy_now_MQTT_check_queue;
 
 void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
   START_TIMER;
@@ -429,36 +427,39 @@ void ESPEasy_now_handler_t::loop_process_ESPEasyNOW_send_queue()
   // Only process one every 100 msec.
   static unsigned long last_queue_processed = 0;
   if (timePassedSince(last_queue_processed) > 100) {
-    if (!ESPEasy_now_traceroute_queue.empty()) {
-      ESPEasy_now_traceroute_queue.sort();
-      const ESPEasy_now_traceroute_struct route = ESPEasy_now_traceroute_queue.front();
+    if (!Nodes.ESPEasy_now_traceroute_queue.empty()) {
+      Nodes.ESPEasy_now_traceroute_queue.sort();
+      const ESPEasy_now_traceroute_struct route = Nodes.ESPEasy_now_traceroute_queue.front();
       sendTraceRoute(route);
       _last_traceroute_received = millis();
       last_queue_processed = millis();
       // Remove possible duplicate routes and keep the best 2
       size_t nrRoutes = 0;
-      for (auto it = ESPEasy_now_traceroute_queue.begin(); it != ESPEasy_now_traceroute_queue.end();) {
-        if (route.sameRoute(*it) || nrRoutes >= 2) {
-          it = ESPEasy_now_traceroute_queue.erase(it);
+      for (auto it = Nodes.ESPEasy_now_traceroute_queue.begin(); it != Nodes.ESPEasy_now_traceroute_queue.end();) {
+        addLog(LOG_LEVEL_INFO, concat(F("TraceRoutes: "), it->toString()));
+        if (route.sameRoute(*it) || nrRoutes >= 5) {
+          it = Nodes.ESPEasy_now_traceroute_queue.erase(it);
         } else {
           ++nrRoutes;
           ++it;
         }
       }
-    } else if (!ESPEasy_now_MQTT_check_queue.empty()) {
-      const MAC_address mac = ESPEasy_now_MQTT_check_queue.front();
-      const NodeStruct * node = Nodes.getNodeByMac(mac);
-      if (node != nullptr) {
-        const uint8_t channel = node->channel;
-        sendMQTTCheckControllerQueue(mac, channel);
-        last_queue_processed = millis();
-      }
-      // Remove duplicate entries in the list.
-      for (auto it = ESPEasy_now_MQTT_check_queue.begin(); it != ESPEasy_now_MQTT_check_queue.end();) {
-        if (*it == mac) {
-          it = ESPEasy_now_MQTT_check_queue.erase(it);
-        } else {
-          ++it;
+    } else if (!Nodes.ESPEasy_now_MQTT_check_queue.empty()) {
+      while (!Nodes.ESPEasy_now_MQTT_check_queue.empty()) {
+        const MAC_address mac = Nodes.ESPEasy_now_MQTT_check_queue.front();
+        const NodeStruct * node = Nodes.getNodeByMac(mac);
+        if (node != nullptr) {
+          const uint8_t channel = node->channel;
+          sendMQTTCheckControllerQueue(mac, channel);
+          last_queue_processed = millis();
+        }
+        // Remove duplicate entries in the list.
+        for (auto it = Nodes.ESPEasy_now_MQTT_check_queue.begin(); it != Nodes.ESPEasy_now_MQTT_check_queue.end();) {
+          if (*it == mac) {
+            it = Nodes.ESPEasy_now_MQTT_check_queue.erase(it);
+          } else {
+            ++it;
+          }
         }
       }
     }
@@ -688,6 +689,13 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
       }
     }
 
+    const NodeStruct* node = Nodes.getNodeByMac(mac);
+    if (node != nullptr) {
+      const MAC_address espeasynow_mac = node->ESPEasy_Now_MAC();
+      if (espeasynow_mac != mac) {
+        msg.send(espeasynow_mac, channel);
+      }
+    }
     msg.send(mac, channel);
   }
 //  WifiScan(true, channel);
@@ -821,10 +829,10 @@ void ESPEasy_now_handler_t::sendTraceRoute()
 void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& traceRoute, int channel)
 {
   for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-    if (it->second.getAge() > ESPEASY_NOW_SINCE_LAST_BROADCAST) {
+//    if (it->second.getAge() > ESPEASY_NOW_SINCE_LAST_BROADCAST) {
       const int peer_channel = it->second.channel == 0 ? channel : it->second.channel;
       sendTraceRoute(it->second.ESPEasy_Now_MAC(), traceRoute, peer_channel);
-    }
+//    }
   }
 
   sendTraceRoute(ESPEasy_now_peermanager.getBroadcastMAC(), traceRoute, Nodes.getESPEasyNOW_channel());
@@ -847,6 +855,7 @@ void ESPEasy_now_handler_t::sendTraceRoute(const MAC_address& mac, const ESPEasy
     addLog(LOG_LEVEL_ERROR, F(ESPEASY_NOW_NAME ": sendTraceRoute error adding trace route"));;
     return;
   }
+  if (mac.all_zero()) return;
   if (channel < 0) {
     // Send to all channels
 
@@ -884,19 +893,27 @@ bool ESPEasy_now_handler_t::handle_TraceRoute(const ESPEasy_now_merger& message,
       ESPEasy_now_traceroute_struct traceroute(traceroute_size);
       if (message.getBinaryData(traceroute.get(), traceroute_size, payload_pos) == traceroute_size) {
         if (traceroute.getDistance() < 255) {
-          const uint8_t thisunit = Settings.Unit;
-          if (!traceroute.unitInTraceRoute(thisunit)) {
-            MAC_address mac;
-            message.getMac(mac);
-            Nodes.setTraceRoute(mac, traceroute);
-            if (thisunit != 0 && thisunit != 255 && !Nodes.isEndpoint()) {
-              // Do not forward the trace route if we're an endpoint.
-              traceroute.addUnit(thisunit);
-              traceroute.setSuccessRate_last_node(thisunit, Nodes.getSuccessRate(thisunit));
-              ESPEasy_now_traceroute_queue.push_back(traceroute);
-              // Send MQTT queue check to the node we received the traceroute from
-              // It may be a viable path to send MQTT to, so stay informed of its MQTT queue state
-              ESPEasy_now_MQTT_check_queue.push_back(mac);
+          if (Nodes.getDistance() == 0) {
+            Nodes.ESPEasy_now_traceroute_queue.clear();
+            Nodes.ESPEasy_now_MQTT_check_queue.clear();
+          } else {
+            const uint8_t thisunit = Settings.Unit;
+            if (!traceroute.unitInTraceRoute(thisunit)) {
+              MAC_address mac;
+              message.getMac(mac);
+              Nodes.setTraceRoute(mac, traceroute);
+              if (thisunit != 0 && thisunit != 255 && !Nodes.isEndpoint()) {
+                // Do not forward the trace route if we're an endpoint.
+                uint8_t successrate;
+                const uint8_t lastUnit = traceroute.getUnit(traceroute.getDistance(), successrate);
+                successrate = Nodes.getSuccessRate(lastUnit);
+                traceroute.addUnit(thisunit);
+                traceroute.setSuccessRate_last_node(thisunit, successrate);
+                Nodes.ESPEasy_now_traceroute_queue.push_back(traceroute);
+                // Send MQTT queue check to the node we received the traceroute from
+                // It may be a viable path to send MQTT to, so stay informed of its MQTT queue state
+                Nodes.ESPEasy_now_MQTT_check_queue.push_back(mac);
+              }
             }
           }
         }
@@ -1016,7 +1033,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(
       switch (Nodes.getMQTTQueueState(preferred->unit)) {
         case ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset:
         case ESPEasy_Now_MQTT_QueueCheckState::Enum::Full:
-          ESPEasy_now_MQTT_check_queue.push_back(mac);
+          Nodes.updateMQTT_checkQueue();
           return false;
         case ESPEasy_Now_MQTT_QueueCheckState::Enum::Empty:
           break;
@@ -1063,7 +1080,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(
         case WifiEspNowSendStatus::FAIL:
         {
           Nodes.setMQTTQueueState(preferred->unit, ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset);
-          ESPEasy_now_MQTT_check_queue.push_back(mac);
+          Nodes.ESPEasy_now_MQTT_check_queue.push_back(mac);
           ++_send_failed_count;
           break;
         }

@@ -57,8 +57,8 @@ public:
 
 
   const NodeStruct                   * getPreferredNode() const;
-  const NodeStruct                   * getPreferredNode_notMatching(uint8_t unit_nr) const;
-  const NodeStruct                   * getPreferredNode_notMatching(const MAC_address& not_matching) const;
+  const NodeStruct                   * getPreferredNode_notMatching(uint8_t unit_nr, bool checkMQTT_QueueState = false) const;
+  const NodeStruct                   * getPreferredNode_notMatching(const MAC_address& not_matching, bool checkMQTT_QueueState = false) const;
 
 #ifdef USES_ESPEASY_NOW
   const ESPEasy_now_traceroute_struct* getTraceRoute(uint8_t unit) const;
@@ -119,6 +119,12 @@ public:
     return _ntp_candidate.getUnixTime(unix_time, unit);
   }
 
+
+#ifdef USES_ESPEASY_NOW
+  void updateMQTT_checkQueue();
+  std::list<ESPEasy_now_traceroute_struct> ESPEasy_now_traceroute_queue;
+  std::list<MAC_address> ESPEasy_now_MQTT_check_queue;
+#endif
 
 private:
 
