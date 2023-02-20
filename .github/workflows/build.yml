@@ -99,9 +99,18 @@ jobs:
 
   # Repackage separately for ESP82xx and ESP32
   repackage:
-    needs: build
+    needs: [documentation, generate-matrix]
     runs-on: ubuntu-22.04
     steps:
+      - name: Wait for build to succeed
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: wait-for-build
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: build
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          timeoutSeconds: 3600
+          intervalSeconds: 30
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
