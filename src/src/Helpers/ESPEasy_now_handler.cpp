@@ -1033,6 +1033,8 @@ bool ESPEasy_now_handler_t::sendToMQTT(
       switch (Nodes.getMQTTQueueState(preferred->unit)) {
         case ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset:
         case ESPEasy_Now_MQTT_QueueCheckState::Enum::Full:
+          // We need this one now, so add as first 
+          Nodes.ESPEasy_now_MQTT_check_queue.push_front(mac);
           Nodes.updateMQTT_checkQueue();
           return false;
         case ESPEasy_Now_MQTT_QueueCheckState::Enum::Empty:

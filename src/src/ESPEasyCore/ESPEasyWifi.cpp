@@ -519,7 +519,10 @@ bool prepareWiFi() {
   WiFiEventData.warnedNoValidWiFiSettings = false;
   #ifdef USES_ESPEASY_NOW
   if (Settings.UseESPEasyNow()) {
-    setWifiMode(WIFI_AP_STA);
+    temp_disable_EspEasy_now_timer = millis() + WIFI_RECONNECT_WAIT;
+    ESPEasy_now_handler.end();
+    setSTA(true);
+//    setWifiMode(WIFI_AP_STA);
   } else {
     setSTA(true);
   }

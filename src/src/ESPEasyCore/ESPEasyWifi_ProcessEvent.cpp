@@ -638,7 +638,7 @@ void processScanDone() {
   #ifdef USES_ESPEASY_NOW
   if (Settings.UseESPEasyNow()) {
     ESPEasy_now_handler.addPeerFromWiFiScan();
-    if (!NetworkConnected() && (temp_disable_EspEasy_now_timer == 0 || timeOutReached(temp_disable_EspEasy_now_timer))) {
+    if (!NetworkConnected()) {
       if (WiFi_AP_Candidates.addedKnownCandidate()) {
         WiFi_AP_Candidates.force_reload();
         if (!WiFiEventData.wifiConnectInProgress) {
