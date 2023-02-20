@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   documentation:
     runs-on: ubuntu-22.04
@@ -103,14 +107,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Wait for build to succeed
-        uses: fountainhead/action-wait-for-check@v1.1.0
+        uses: yogeshlonkar/wait-for-jobs@v0
         id: wait-for-build
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: build
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          timeoutSeconds: 3600
-          intervalSeconds: 30
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          jobs: 'build'
+          interval: 10000
+          ttl: 15
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
