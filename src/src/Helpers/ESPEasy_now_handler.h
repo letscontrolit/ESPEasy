@@ -42,11 +42,11 @@ private:
 
   static controllerIndex_t get_ESPEasy_NOW_controller_index();
 
-  void loop_check_ESPEasyNOW_run_state();
+  void                     loop_check_ESPEasyNOW_run_state();
 
-  bool loop_process_ESPEasyNOW_in_queue();
+  bool                     loop_process_ESPEasyNOW_in_queue();
 
-  void loop_process_ESPEasyNOW_send_queue();
+  void                     loop_process_ESPEasyNOW_send_queue();
 
 public:
 
@@ -144,9 +144,9 @@ private:
   uint8_t _lastScannedChannel        = 0;
   controllerIndex_t _controllerIndex = INVALID_CONTROLLER_INDEX;
   C019_ConfigStruct_ptr customConfig;
-  bool _scanChannelsMode             = true;
-  bool _enableESPEasyNowFallback     = false;
-  bool _mqtt_retainFlag              = false;
+  bool _scanChannelsMode         = true;
+  bool _enableESPEasyNowFallback = false;
+  bool _mqtt_retainFlag          = false;
 };
 
 
