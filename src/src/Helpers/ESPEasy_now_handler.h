@@ -28,6 +28,8 @@ public:
 
   void setConfig(const C019_ConfigStruct& config);
 
+  void loadConfig(struct EventStruct *event);
+
   bool begin();
 
   bool do_begin();
@@ -141,7 +143,7 @@ private:
   uint8_t _usedWiFiChannel           = 0;
   uint8_t _lastScannedChannel        = 0;
   controllerIndex_t _controllerIndex = INVALID_CONTROLLER_INDEX;
-  taskIndex_t _filterTaskCallback    = INVALID_TASK_INDEX;
+  C019_ConfigStruct_ptr customConfig;
   bool _scanChannelsMode             = true;
   bool _enableESPEasyNowFallback     = false;
   bool _mqtt_retainFlag              = false;

@@ -47,7 +47,8 @@ else:
 
 #   "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
-#   "-DUSES_P094",  # CUL Reader
+    "-DUSES_P094",  # CUL Reader
+    "-DP094_DEBUG_OPTIONS=1",
 #   "-DUSES_P095",  # TFT ILI9341
     "-DUSES_P097",  # Touch (ESP32)
     "-DUSES_P098",  # PWM motor

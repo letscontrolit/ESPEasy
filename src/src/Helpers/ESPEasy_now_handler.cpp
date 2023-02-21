@@ -5,7 +5,6 @@
 # include "../Helpers/_CPlugin_Helper.h"
 
 
-
 # include "../ControllerQueue/MQTT_queue_element.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
 # include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
@@ -73,8 +72,9 @@ std::map<uint64_t, ESPEasy_now_merger> ESPEasy_now_in_queue;
 
 void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
   START_TIMER;
-  const size_t payload_length  = count - sizeof(ESPEasy_now_hdr);
-  if (count < sizeof(ESPEasy_now_hdr) || (payload_length > ESPEasy_Now_packet::getMaxPayloadSize())) {
+  const size_t payload_length = count - sizeof(ESPEasy_now_hdr);
+
+  if ((count < sizeof(ESPEasy_now_hdr)) || (payload_length > ESPEasy_Now_packet::getMaxPayloadSize())) {
     STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
     return; // Too small
   }
@@ -86,7 +86,7 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
     return;
   }
 
-  const uint8_t *payload = buf + sizeof(ESPEasy_now_hdr);
+  const uint8_t *payload  = buf + sizeof(ESPEasy_now_hdr);
   const uint16_t checksum = calc_CRC16(reinterpret_cast<const char *>(payload), payload_length);
 
   if (header.checksum != checksum) {
@@ -116,23 +116,28 @@ ESPEasy_now_handler_t::~ESPEasy_now_handler_t()
   }
 }
 
-void ESPEasy_now_handler_t::setConfig(const C019_ConfigStruct& config)
+void ESPEasy_now_handler_t::loadConfig(struct EventStruct *event)
 {
-  // FIXME TD-er: Must configure other settings too.
-  // Perhaps add C019_ConfigStruct as a member too?
-  _filterTaskCallback = config.filterMQTT_forward ? config.filterTaskIndex : INVALID_TASK_INDEX;
+  customConfig.reset(new (std::nothrow) C019_ConfigStruct);
+
+  if (customConfig) {
+    customConfig->init(event);
+  }
 }
 
 bool ESPEasy_now_handler_t::begin()
 {
   if (!Settings.UseESPEasyNow()) { return false; }
+
   // Check to see if we have an ESPEasy_NOW controller defined.
   // Call CPLUGIN_INIT on it to load the settings.
   const controllerIndex_t ESPEasy_NOW_controller_idx = get_ESPEasy_NOW_controller_index();
+
   if (validControllerIndex(ESPEasy_NOW_controller_idx) && Settings.ControllerEnabled[ESPEasy_NOW_controller_idx]) {
     struct EventStruct tmpEvent;
     tmpEvent.ControllerIndex = ESPEasy_NOW_controller_idx;
-    if (!CPluginCall(CPlugin::Function::CPLUGIN_INIT, &tmpEvent)) return false;
+
+    if (!CPluginCall(CPlugin::Function::CPLUGIN_INIT, &tmpEvent)) { return false; }
   }
   return do_begin();
 }
@@ -140,11 +145,14 @@ bool ESPEasy_now_handler_t::begin()
 bool ESPEasy_now_handler_t::do_begin()
 {
   if (!Settings.UseESPEasyNow()) { return false; }
+
   if (use_EspEasy_now) { return true; }
-  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING || !WiFiEventData.processedScanDone) { return false;}
+
+  if ((WiFi.scanComplete() == WIFI_SCAN_RUNNING) || !WiFiEventData.processedScanDone) { return false; }
+
   if (WiFiEventData.wifiConnectInProgress) {
     /*
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       if (log.reserve(64)) {
         log = F(ESPEASY_NOW_NAME);
@@ -269,13 +277,15 @@ void ESPEasy_now_handler_t::end()
 bool ESPEasy_now_handler_t::loop()
 {
   loop_check_ESPEasyNOW_run_state();
-  if (!use_EspEasy_now) return false;
+
+  if (!use_EspEasy_now) { return false; }
   bool somethingProcessed = loop_process_ESPEasyNOW_in_queue();
 
   loop_process_ESPEasyNOW_send_queue();
 
   if (_send_failed_count > 30 /*|| !active()*/) {
     _send_failed_count = 0;
+
     // FIXME TD-er: Must check/mark so this becomes true: isESPEasy_now_only()
 
     // Start scanning the next channel to see if we may end up with a new found node
@@ -556,17 +566,20 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(const WiFi_AP_Candidate& peer)
 
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bool& mustKeep)
 {
-  bool handled = false;
+  bool handled        = false;
   bool considerActive = false;
+
   mustKeep = false;
 
   {
     // Check if message is sent by this node
     MAC_address receivedMAC;
     message.getMac(receivedMAC.mac);
-    if (WifiSoftAPmacAddress() == receivedMAC || 
-        WifiSTAmacAddress()    == receivedMAC) return handled;
+
+    if ((WifiSoftAPmacAddress() == receivedMAC) ||
+        (WifiSTAmacAddress()    == receivedMAC)) { return handled; }
   }
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, concat(F(ESPEASY_NOW_NAME ": received "),  message.getLogString()));
   }
@@ -585,22 +598,22 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
       handled = handle_NTPquery(message, mustKeep);
       break;
     case ESPEasy_now_hdr::message_t::MQTTControllerMessage:
-      handled = handle_MQTTControllerMessage(message, mustKeep);
+      handled        = handle_MQTTControllerMessage(message, mustKeep);
       considerActive = true;
       break;
     case ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue:
-      handled = handle_MQTTCheckControllerQueue(message, mustKeep);
+      handled        = handle_MQTTCheckControllerQueue(message, mustKeep);
       considerActive = true;
       break;
     case ESPEasy_now_hdr::message_t::SendData_DuplicateCheck:
       handled = handle_SendData_DuplicateCheck(message, mustKeep);
       break;
     case ESPEasy_now_hdr::message_t::P2P_data:
-      handled = handle_ESPEasyNow_p2p(message, mustKeep);
+      handled        = handle_ESPEasyNow_p2p(message, mustKeep);
       considerActive = true;
       break;
     case ESPEasy_now_hdr::message_t::TraceRoute:
-      handled = handle_TraceRoute(message, mustKeep);
+      handled        = handle_TraceRoute(message, mustKeep);
       considerActive = true;
       break;
   }
@@ -997,10 +1010,10 @@ bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message, b
 // *************************************************************
 
 bool ESPEasy_now_handler_t::sendToMQTT(
-  controllerIndex_t controllerIndex, 
-  const String& topic, 
-  const String& payload, 
-  const MessageRouteInfo_t* messageRouteInfo)
+  controllerIndex_t         controllerIndex,
+  const String            & topic,
+  const String            & payload,
+  const MessageRouteInfo_t *messageRouteInfo)
 {
   if (!use_EspEasy_now) { return false; }
 
@@ -1063,11 +1076,13 @@ bool ESPEasy_now_handler_t::sendToMQTT(
       if (topic_length != msg.addString(topic)) {
         return false;
       }
+
       if (payload_length != msg.addString(payload)) {
         return false;
       }
-      if (routeInfo_length != 0 && routeInfo_length != msg.addBinaryData(&(routeInfo[0]), routeInfo_length)) {
-//        return false;
+
+      if ((routeInfo_length != 0) && (routeInfo_length != msg.addBinaryData(&(routeInfo[0]), routeInfo_length))) {
+        //        return false;
       }
 
       WifiEspNowSendStatus sendStatus = msg.send(mac, _ClientTimeout, preferred->channel);
@@ -1098,8 +1113,12 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
   # if FEATURE_MQTT
 
   // FIXME TD-er: Quick hack to just echo all data to the first enabled MQTT controller
+  controllerIndex_t controllerIndex = get_ESPEasy_NOW_controller_index();
+  if (!validControllerIndex(controllerIndex)) {
+    controllerIndex = firstEnabledMQTT_ControllerIndex();
+  }
 
-  controllerIndex_t controllerIndex = firstEnabledMQTT_ControllerIndex();
+
 
   if (validControllerIndex(controllerIndex)) {
     load_ControllerSettingsCache(controllerIndex);
@@ -1115,13 +1134,24 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
           MessageRouteInfo.unit = node->unit;
         }
       }
+
+      taskIndex_t filterTaskCallback = INVALID_TASK_INDEX;
+      if (customConfig) {
+        if (customConfig->filterMQTT_forward) {
+          String topic;
+          size_t pos = 0;
+          message.getString(topic, pos);
+          filterTaskCallback = customConfig->matchTopic(topic);
+        }
+      }
       
       success = MQTTpublish(
         controllerIndex, 
-        _filterTaskCallback,
+        filterTaskCallback,
         message, 
         MessageRouteInfo, 
-        _mqtt_retainFlag);
+        _mqtt_retainFlag,
+        validTaskIndex(filterTaskCallback));
       if (!success) {
         mustKeep = false;
         return success;
@@ -1163,20 +1193,21 @@ bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(controllerIndex_t contr
   }
   const NodeStruct *preferred = Nodes.getPreferredNode();
 
-  if (preferred != nullptr && Nodes.getDistance() > preferred->distance) {
+  if ((preferred != nullptr) && (Nodes.getDistance() > preferred->distance)) {
     return sendMQTTCheckControllerQueue(preferred->ESPEasy_Now_MAC(), preferred->channel);
   }
   return false;
 }
 
-bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(const MAC_address                             & mac,
-                                                         int                                             channel,
+bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(const MAC_address                    & mac,
+                                                         int                                    channel,
                                                          ESPEasy_Now_MQTT_QueueCheckState::Enum state) {
   ESPEasy_Now_MQTT_queue_check_packet query;
 
   query.state = state;
   const size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue, len);
+
   if (len != msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len)) {
     return false;
   }
@@ -1330,37 +1361,42 @@ bool ESPEasy_now_handler_t::handle_SendData_DuplicateCheck(const ESPEasy_now_mer
 
 void ESPEasy_now_handler_t::load_ControllerSettingsCache(controllerIndex_t controllerIndex)
 {
-  if (validControllerIndex(controllerIndex) && controllerIndex != _controllerIndex)
+  if (validControllerIndex(controllerIndex) && (controllerIndex != _controllerIndex))
   {
     // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
     MakeControllerSettings(ControllerSettings);
+
     if (AllocatedControllerSettings()) {
       LoadControllerSettings(controllerIndex, ControllerSettings);
       _enableESPEasyNowFallback = ControllerSettings.enableESPEasyNowFallback();
-      _ClientTimeout            = ControllerSettings.ClientTimeout;
-      _mqtt_retainFlag          = ControllerSettings.mqtt_retainFlag();
-      _controllerIndex          = controllerIndex;
+
+      if ((Settings.Protocol[controllerIndex] == 19) && customConfig) {
+        _enableESPEasyNowFallback = customConfig->forwardMQTT;
+      }
+      _ClientTimeout   = ControllerSettings.ClientTimeout;
+      _mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+      _controllerIndex = controllerIndex;
     }
   }
 }
 
-
-
 // *************************************************************
-// * ESPEasyNow p2p 
+// * ESPEasyNow p2p
 // *************************************************************
 bool ESPEasy_now_handler_t::sendESPEasyNow_p2p(controllerIndex_t controllerIndex, const MAC_address& mac, const ESPEasy_Now_p2p_data& data) {
   if (!use_EspEasy_now) { return false; }
 
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::P2P_data, data.getTotalSize());
+
   // Add the first part of the data object, without the data array.
   if (data.dataOffset != msg.addBinaryData(reinterpret_cast<const uint8_t *>(&data), data.dataOffset)) {
     return false;
   }
-  
+
   // Fetch the data array information, will also update size.
-  size_t size = 0;
-  const uint8_t* data_ptr = data.getBinaryData(0, size);
+  size_t size             = 0;
+  const uint8_t *data_ptr = data.getBinaryData(0, size);
+
   if (size != msg.addBinaryData(data_ptr, size)) {
     return false;
   }
@@ -1408,14 +1444,16 @@ bool ESPEasy_now_handler_t::handle_ESPEasyNow_p2p(const ESPEasy_now_merger& mess
     log += F(" payload_pos: ");
     log += data.dataOffset;
     addLog(LOG_LEVEL_ERROR, log);
-//    return false;
+
+    //    return false;
   }
 
   // Call C019 controller with event containing this data object as a pointer.
   EventStruct event;
+
   event.ControllerIndex = controller_index;
-  event.Par1 = sizeof(ESPEasy_Now_p2p_data);
-  event.Data = reinterpret_cast<uint8_t *>(&data);
+  event.Par1            = sizeof(ESPEasy_Now_p2p_data);
+  event.Data            = reinterpret_cast<uint8_t *>(&data);
   CPluginCall(CPlugin::Function::CPLUGIN_PROTOCOL_RECV, &event);
 
   return true;

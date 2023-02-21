@@ -808,7 +808,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
     #ifndef BUILD_NO_DEBUG
     return F("Invalid index for custom settings");
     #else
-    return F("Save error");
+    return F("Load error");
     #endif
   }
 

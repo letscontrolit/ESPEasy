@@ -332,21 +332,6 @@ void processMQTTdelayQueue() {
     if (PluginCall(PLUGIN_PROCESS_CONTROLLER_DATA, &TempEvent, dummy)) {
       processed = true;
     }
-  } else if (element->_call_PLUGIN_FILTEROUT_CONTROLLER_DATA) {
-    struct EventStruct TempEvent(element->_taskIndex);
-    String dummy;
-
-    // FIXME TD-er: Find a way to not having to copy these strings
-    TempEvent.String1 = element->_topic;
-    TempEvent.String2 = element->_payload;
-
-    // Filter function to check if data should be forwarded or not.
-    // Since all plugins/tasks not supporting this function call will return false, 
-    // the "true" result is about the non-standard action; to filter out the message.
-    if (PluginCall(PLUGIN_FILTEROUT_CONTROLLER_DATA, &TempEvent, dummy)) {
-      processed = true;
-    }
-
   }
   if (!processed) {
 #ifdef USES_ESPEASY_NOW

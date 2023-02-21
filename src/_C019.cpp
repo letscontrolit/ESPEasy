@@ -29,7 +29,7 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
     {
       Protocol[++protocolCount].Number       = CPLUGIN_ID_019;
       Protocol[protocolCount].usesMQTT       = false;
-      Protocol[protocolCount].usesTemplate   = true;
+      Protocol[protocolCount].usesTemplate   = false;
       Protocol[protocolCount].usesAccount    = false;
       Protocol[protocolCount].usesPassword   = false;
       Protocol[protocolCount].usesExtCreds   = false;
@@ -57,26 +57,18 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
       //      success = init_c019_delay_queue(event->ControllerIndex);
       if (use_EspEasy_now) { ESPEasy_now_handler.end(); }
 
-      // Load settings into ESPEasy_now_handler
-      std::shared_ptr<C019_ConfigStruct> customConfig(new (std::nothrow) C019_ConfigStruct);
-
-      if (customConfig) {
-        LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C019_ConfigStruct));
-        ESPEasy_now_handler.setConfig(*customConfig);
-        ESPEasy_now_handler.do_begin();
-        success = true;
-      }
-
+      ESPEasy_now_handler.loadConfig(event);
+      ESPEasy_now_handler.do_begin();
+      success = true;
       break;
     }
 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
-      std::shared_ptr<C019_ConfigStruct> customConfig(new (std::nothrow) C019_ConfigStruct);
+      C019_ConfigStruct_ptr customConfig(new (std::nothrow) C019_ConfigStruct);
 
       if (customConfig) {
-        LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C019_ConfigStruct));
-        customConfig->webform_load();
+        customConfig->webform_load(event);
       }
 
       break;
@@ -84,11 +76,10 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
-      std::shared_ptr<C019_ConfigStruct> customConfig(new (std::nothrow) C019_ConfigStruct);
+      C019_ConfigStruct_ptr customConfig(new (std::nothrow) C019_ConfigStruct);
 
       if (customConfig) {
-        LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C019_ConfigStruct));
-        customConfig->webform_save();
+        customConfig->webform_save(event);
       }
 
       break;
@@ -96,10 +87,10 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
-      std::shared_ptr<C019_ConfigStruct> customConfig(new (std::nothrow) C019_ConfigStruct);
+      C019_ConfigStruct_ptr customConfig(new (std::nothrow) C019_ConfigStruct);
 
       if (customConfig) {
-        customConfig->webform_save();
+        //        customConfig->webform_save(event);
       }
       break;
     }

@@ -586,6 +586,23 @@ bool MQTTpublish(controllerIndex_t         controller_idx,
       if (message.getString(topic, pos) && message.getString(payload, pos)) {
         const size_t bytesLeft = payloadSize - pos;
 
+        if (callbackTask && validTaskIndex(taskIndex)) {
+          struct EventStruct TempEvent(taskIndex);
+          String dummy;
+          TempEvent.String1 = std::move(topic);
+          TempEvent.String2 = std::move(payload);
+
+          // Filter function to check if data should be forwarded or not.
+          // Since all plugins/tasks not supporting this function call will return false, 
+          // the "true" result is about the non-standard action; to filter out the message.
+          if (PluginCall(PLUGIN_FILTEROUT_CONTROLLER_DATA, &TempEvent, dummy)) {
+            scheduleNextMQTTdelayQueue();
+            return true;
+          } 
+          topic   = std::move(TempEvent.String1);
+          payload = std::move(TempEvent.String2);
+        }
+
         if (bytesLeft >= 4) {
           bool validMessageRouteInfo = false;
 
@@ -627,10 +644,9 @@ bool MQTTpublish(controllerIndex_t         controller_idx,
             std::move(topic),
             std::move(payload),
             retained,
-            callbackTask));
+            false));
 
         if (element) {
-          element->_call_PLUGIN_FILTEROUT_CONTROLLER_DATA = validTaskIndex(taskIndex);
           element->MessageRouteInfo = routeinfo;
           success                   = MQTTDelayHandler->addToQueue(std::move(element));
         }
