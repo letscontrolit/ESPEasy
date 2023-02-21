@@ -58,7 +58,7 @@ jobs:
 
   build:
     name: build-matrix
-    needs: generate-matrix
+    needs: generate-all
     runs-on: ubuntu-22.04
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
@@ -112,7 +112,7 @@ jobs:
         id: wait-for-build
         with:
           gh-token: ${{ secrets.GITHUB_TOKEN }}
-          jobs: 'build-matrix'
+          jobs: 'build-all'
           interval: 10000
           ttl: 15
       - uses: actions/checkout@v3
