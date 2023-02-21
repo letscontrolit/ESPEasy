@@ -57,8 +57,8 @@ jobs:
           python tools/ci/generate-matrix.py
 
   build:
-    name: build-matrix
-    needs: generate-all
+    name: build-all
+    needs: generate-matrix
     runs-on: ubuntu-22.04
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
