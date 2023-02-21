@@ -57,6 +57,7 @@ jobs:
           python tools/ci/generate-matrix.py
 
   build:
+    name: build-matrix
     needs: generate-matrix
     runs-on: ubuntu-22.04
     strategy:
@@ -111,7 +112,7 @@ jobs:
         id: wait-for-build
         with:
           gh-token: ${{ secrets.GITHUB_TOKEN }}
-          jobs: 'build'
+          jobs: 'build-matrix'
           interval: 10000
           ttl: 15
       - uses: actions/checkout@v3
