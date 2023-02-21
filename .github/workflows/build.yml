@@ -57,7 +57,6 @@ jobs:
           python tools/ci/generate-matrix.py
 
   build:
-    name: build-all
     needs: generate-matrix
     runs-on: ubuntu-22.04
     strategy:
@@ -104,17 +103,9 @@ jobs:
 
   # Repackage separately for ESP82xx and ESP32
   repackage:
-    needs: [documentation, generate-matrix]
+    needs: build
     runs-on: ubuntu-22.04
     steps:
-      - name: Wait for build to succeed
-        uses: yogeshlonkar/wait-for-jobs@v0
-        id: wait-for-build
-        with:
-          gh-token: ${{ secrets.GITHUB_TOKEN }}
-          jobs: 'build-all'
-          interval: 10000
-          ttl: 15
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
