@@ -165,7 +165,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P115_data) && P115_data->initialized) {
         const String command = parseString(string, 1);
 
-        if ((command.equals(F("max1704xclearalert"))))
+        if ((equals(command, F("max1704xclearalert"))))
         {
           P115_data->clearAlert();
           success = true;
@@ -190,14 +190,10 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
                 if (validDeviceIndex(DeviceIndex)) {
-                  String newEvent = getTaskDeviceName(event->TaskIndex);
-                  newEvent += '#';
-                  newEvent += F("AlertTriggered");
-                  newEvent += ',';
-                  newEvent += formatUserVarNoCheck(event, 0); // Voltage
-                  newEvent += ',';
-                  newEvent += formatUserVarNoCheck(event, 1); // State Of Charge
-                  eventQueue.addMove(std::move(newEvent));
+                  String eventvalues = formatUserVarNoCheck(event, 0); // Voltage
+                  eventvalues += ',';
+                  eventvalues += formatUserVarNoCheck(event, 1); // State Of Charge
+                  eventQueue.add(event->TaskIndex, F("AlertTriggered"), eventvalues);
                 }
               }
             }

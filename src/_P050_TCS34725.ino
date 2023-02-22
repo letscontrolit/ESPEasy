@@ -409,25 +409,22 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
         // First RGB events
         if ((PCONFIG(5) == 1) && (t != 0)) { // Not if invalid read/data
-          String RuleEvent;
           float tr, tg, tb, nr, ng, nb;
-          RuleEvent.reserve(48);
 
           for (int i = 0; i < 6; i++) {
             if (i != PCONFIG(2)) { // Skip currently selected RGB output to keep nr. of events a bit limited
+              const __FlashStringHelper* varName = F("");
+              String eventValues;
               sRGBFactor = 1.0f;
-              RuleEvent.clear();
-              RuleEvent += getTaskDeviceName(event->TaskIndex);
-              RuleEvent += '#';
 
               switch (i) {
                 case 0:
-                  RuleEvent += F("RawRGB=");
-                  RuleEvent += r;
-                  RuleEvent += ',';
-                  RuleEvent += g;
-                  RuleEvent += ',';
-                  RuleEvent += b;
+                  varName = F("RawRGB");
+                  eventValues += r;
+                  eventValues += ',';
+                  eventValues += g;
+                  eventValues += ',';
+                  eventValues += b;
                   break;
                 case 3:
                   sRGBFactor = 255.0f;
@@ -437,24 +434,24 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
                 case 5:
 
                   if (i == 1) {
-                    RuleEvent += F("RawRGBtransformed=");
+                    varName = F("RawRGBtransformed");
                     P050_data->applyTransformation(r, g, b, &tr, &tg, &tb);
                   } else {
                     if (i == 3) {
-                      RuleEvent += F("NormRGBtransformed=");
+                      varName = F("NormRGBtransformed");
                     } else {
-                      RuleEvent += F("NormSRGBtransformed=");
+                      varName = F("NormSRGBtransformed");
                     }
                     nr = static_cast<float>(r) / t * sRGBFactor;
                     ng = static_cast<float>(g) / t * sRGBFactor;
                     nb = static_cast<float>(b) / t * sRGBFactor;
                     P050_data->applyTransformation(nr, ng, nb, &tr, &tg, &tb);
                   }
-                  RuleEvent += toString(tr, 4);
-                  RuleEvent += ',';
-                  RuleEvent += toString(tg, 4);
-                  RuleEvent += ',';
-                  RuleEvent += toString(tb, 4);
+                  eventValues += toString(tr, 4);
+                  eventValues += ',';
+                  eventValues += toString(tg, 4);
+                  eventValues += ',';
+                  eventValues += toString(tb, 4);
                   break;
                 case 2:
                   sRGBFactor = 255.0f;
@@ -463,23 +460,23 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
                 case 4:
 
                   if (i == 2) {
-                    RuleEvent += F("NormRGB=");
+                    varName = F("NormRGB");
                   } else {
-                    RuleEvent += F("NormSRGB=");
+                    varName = F("NormSRGB");
                   }
-                  RuleEvent += toString(static_cast<float>(r) / t * sRGBFactor, 4);
-                  RuleEvent += ',';
-                  RuleEvent += toString(static_cast<float>(g) / t * sRGBFactor, 4);
-                  RuleEvent += ',';
-                  RuleEvent += toString(static_cast<float>(b) / t * sRGBFactor, 4);
+                  eventValues += toString(static_cast<float>(r) / t * sRGBFactor, 4);
+                  eventValues += ',';
+                  eventValues += toString(static_cast<float>(g) / t * sRGBFactor, 4);
+                  eventValues += ',';
+                  eventValues += toString(static_cast<float>(b) / t * sRGBFactor, 4);
                   break;
                 default:
-                  RuleEvent.clear();
+                  eventValues.clear();
                   break;
               }
 
-              if (!RuleEvent.isEmpty()) {
-                eventQueue.addMove(std::move(RuleEvent));
+              if (!eventValues.isEmpty()) {
+                eventQueue.add(event->TaskIndex, varName, eventValues);
               }
             }
           }
@@ -488,38 +485,22 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
         // Then Values #4 events
         if (PCONFIG(4) == 1) {
-          String RuleEvent;
-          RuleEvent.reserve(48);
-
           for (int i = 0; i < 4; i++) {
-            RuleEvent.clear();
-            RuleEvent += getTaskDeviceName(event->TaskIndex);
-            RuleEvent += '#';
-
             switch (i) {
               case 0:
-                RuleEvent += F("CCT=");
-                RuleEvent += P050_data->tcs.calculateColorTemperature(r, g, b);
+                eventQueue.add(event->TaskIndex, F("CCT"), P050_data->tcs.calculateColorTemperature(r, g, b));
                 break;
               case 1:
-                RuleEvent += F("CCT_DN40=");
-                RuleEvent += P050_data->tcs.calculateColorTemperature_dn40(r, g, b, c);
+                eventQueue.add(event->TaskIndex, F("CCT_DN40"), P050_data->tcs.calculateColorTemperature_dn40(r, g, b, c));
                 break;
               case 2:
-                RuleEvent += F("Lux=");
-                RuleEvent += P050_data->tcs.calculateLux(r, g, b);
+                eventQueue.add(event->TaskIndex, F("Lux"), P050_data->tcs.calculateLux(r, g, b));
                 break;
               case 3:
-                RuleEvent += F("Clear=");
-                RuleEvent += c;
+                eventQueue.add(event->TaskIndex, F("Clear"), String(c));
                 break;
               default:
-                RuleEvent.clear();
                 break;
-            }
-
-            if (!RuleEvent.isEmpty()) {
-              eventQueue.addMove(std::move(RuleEvent));
             }
           }
         }

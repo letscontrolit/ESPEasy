@@ -126,12 +126,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (Settings.TaskDeviceTimer[event->TaskIndex] == 0) { // Is interval timer disabled?
-        if (P075_IncludeValues) {
-          addFormNote(F("Interval Timer OFF, Nextion Lines (above) and Values (below) <b>NOT</b> scheduled for updates"));
-        }
-        else {
-          addFormNote(F("Interval Timer OFF, Nextion Lines (above) <b>NOT</b> scheduled for updates"));
-        }
+        addFormNote(concat(F("Interval Timer OFF, Nextion Lines (above)"), P075_IncludeValues 
+          ? F(" and Values (below) <b>NOT</b> scheduled for updates")
+          : F(" <b>NOT</b> scheduled for updates")));
       }
 
       addFormSeparator(2);
@@ -257,7 +254,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
                 barVal = 100;
               }
 
-              newString += String(barVal, DEC);
+              newString += barVal;
             }
             else {
               newString = parseTemplate(tmpString);
@@ -300,12 +297,12 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
     // Nextion commands received from events (including http) get processed here. PLUGIN_WRITE
     // does NOT process publish commands that are sent.
     case PLUGIN_WRITE: {
-      String command = parseString(string, 1);
+      const String command = parseString(string, 1);
 
       // If device names match we have a command to write.
       if (command.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
         success = true; // Set true only if plugin found a command to execute.
-        String nextionArguments = parseStringToEndKeepCase(string, 2);
+        const String nextionArguments = parseStringToEndKeepCase(string, 2);
         P075_sendCommand(event->TaskIndex, nextionArguments.c_str());
         {
           String log;
@@ -354,7 +351,8 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (P075_data->easySerial == nullptr) { break; // P075_data->easySerial missing, exit.
+      if (P075_data->easySerial == nullptr) { 
+        break; // P075_data->easySerial missing, exit.
       }
       {
         uint16_t i;
@@ -471,9 +469,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
                   if (argIndex) { Nvalue = tmpString.substring(argIndex + 2, argEnd); }
 
-                  if (Nvalue.equals(F("On"))) { Svalue = '1'; }
+                  if (equals(Nvalue, F("On"))) { Svalue = '1'; }
 
-                  if (Nvalue.equals(F("Off"))) { Svalue = '0'; }
+                  if (equals(Nvalue, F("Off"))) { Svalue = '0'; }
                   break;
               }
 

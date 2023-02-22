@@ -189,7 +189,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       {
         String command = parseString(string, 1);
 
-        if (command.equals(F("encwrite")))
+        if (equals(command, F("encwrite")))
         {
           if (event->Par1 >= 0)
           {

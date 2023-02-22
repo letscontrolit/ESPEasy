@@ -433,15 +433,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 }
 
 void queueEvent(taskIndex_t TaskIndex, int wavelength, float value) {
-  String RuleEvent;
-
-  RuleEvent.reserve(45);
-  RuleEvent  = getTaskDeviceName(TaskIndex);
-  RuleEvent += '#';
-  RuleEvent += wavelength;
-  RuleEvent += '=';
-  RuleEvent += toString(value, 2);
-  eventQueue.addMove(std::move(RuleEvent));
+  eventQueue.add(TaskIndex, String(wavelength), toString(value, 2));
 }
 
 #endif // USES_P112

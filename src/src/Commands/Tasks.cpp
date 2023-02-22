@@ -56,7 +56,7 @@ bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned i
   return false;
 }
 
-bool validateAndParseTaskIndexValueArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex)
+bool validateAndParseTaskIndexArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex)
 {
   if (!validTaskIndexVar(event, taskIndex)) {
     String taskName;
@@ -142,7 +142,7 @@ const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const 
 {
   taskIndex_t  taskIndex;
 
-  if (!validateAndParseTaskIndexValueArguments(event, Line, taskIndex)) {
+  if (!validateAndParseTaskIndexArguments(event, Line, taskIndex)) {
     return F("INVALID_PARAMETERS"); 
   }
 
@@ -161,7 +161,7 @@ const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, con
 const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
 {
   taskIndex_t  taskIndex;
-  if (validateAndParseTaskIndexValueArguments(event, Line, taskIndex)) {
+  if (validateAndParseTaskIndexArguments(event, Line, taskIndex)) {
     // This is a command so no guarantee the taskIndex is correct in the event
     event->setTaskIndex(taskIndex);
 
@@ -231,7 +231,7 @@ const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, 
 {
   taskIndex_t  taskIndex;
 
-  if (!validateAndParseTaskIndexValueArguments(event, Line, taskIndex) || event->Par2 < 0) {
+  if (!validateAndParseTaskIndexArguments(event, Line, taskIndex) || event->Par2 < 0) {
     return F("INVALID_PARAMETERS");
   }
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
@@ -242,7 +242,7 @@ const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, 
   String par3;
   if (GetArgv(Line, par3, 3)) {
     if (validUIntFromString(par3, msecFromNow)) {
-      Scheduler.schedule_task_device_timer(taskIndex, msecFromNow);
+      Scheduler.schedule_task_device_timer(taskIndex, millis() + msecFromNow);
       return return_command_success();
     }
   }
@@ -253,7 +253,7 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
 {
   taskIndex_t  taskIndex;
 
-  if (!validateAndParseTaskIndexValueArguments(event, Line, taskIndex) || event->Par2 < 0) {
+  if (!validateAndParseTaskIndexArguments(event, Line, taskIndex) || event->Par2 < 0) {
     return F("INVALID_PARAMETERS");
   }
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
