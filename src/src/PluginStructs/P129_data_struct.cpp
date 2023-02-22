@@ -79,10 +79,10 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
 
   const String command = parseString(string, 1);
 
-  if (command.equals(F("shiftin"))) {
+  if (equals(command, F("shiftin"))) {
     const String subcommand = parseString(string, 2);
 
-    if (subcommand.equals(F("pinevent"))) { // ShiftIn,pinevent,<pin>,<0|1>
+    if (equals(subcommand, F("pinevent"))) { // ShiftIn,pinevent,<pin>,<0|1>
       const uint8_t pin   = event->Par2 - 1;
       const uint8_t value = event->Par3;
 
@@ -110,7 +110,7 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         }
         # endif // ifdef P129_DEBUG_LOG
       }
-    } else if (subcommand.equals(F("chipevent"))) { // ShiftIn,chipevent,<chip>,<0|1>
+    } else if (equals(subcommand, F("chipevent"))) { // ShiftIn,chipevent,<chip>,<0|1>
       const int8_t chip  = event->Par2 - 1;
       const uint8_t value = event->Par3;
 
@@ -138,20 +138,20 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         }
         # endif // ifdef P129_DEBUG_LOG
       }
-    } else if (subcommand.equals(F("setchipcount"))) { // ShiftIn,setchipcount,<count>
+    } else if (equals(subcommand, F("setchipcount"))) { // ShiftIn,setchipcount,<count>
       if ((event->Par2 >= 1) && (event->Par2 <= P129_MAX_CHIP_COUNT)) {
         P129_CONFIG_CHIP_COUNT = event->Par2;
         _chipCount             = event->Par2;
         success                = true;
       }
-    } else if (subcommand.equals(F("samplefrequency"))) { // ShiftIn,samplefrequency,<0|1>
+    } else if (equals(subcommand, F("samplefrequency"))) { // ShiftIn,samplefrequency,<0|1>
       if ((event->Par2 == 0) || (event->Par2 == 1)) {
         uint32_t lSettings = P129_CONFIG_FLAGS;
         bitWrite(lSettings, P129_FLAGS_READ_FREQUENCY, event->Par2 == 1);
         P129_CONFIG_FLAGS = lSettings;
         success           = true;
       }
-    } else if (subcommand.equals(F("eventperpin"))) { // ShiftIn,eventperpin,<0|1>
+    } else if (equals(subcommand, F("eventperpin"))) { // ShiftIn,eventperpin,<0|1>
       if ((event->Par2 == 0) || (event->Par2 == 1)) {
         uint32_t lSettings = P129_CONFIG_FLAGS;
         bitWrite(lSettings, P129_FLAGS_SEPARATE_EVENTS, event->Par2 == 1);

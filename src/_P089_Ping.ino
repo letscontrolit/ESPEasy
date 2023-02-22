@@ -109,7 +109,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command.equals(F("pingset")))
+      if (equals(command, F("pingset")))
       {
         String taskName       = parseString(string, 2);
         taskIndex_t taskIndex = findTaskIndexByName(taskName);
