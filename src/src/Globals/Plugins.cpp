@@ -789,6 +789,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT:
     case PLUGIN_INIT_VALUE_RANGES:
+    case PLUGIN_FILTEROUT_CONTROLLER_DATA:
 
     // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
     //case PLUGIN_MQTT_CONNECTION_STATE:
