@@ -21,24 +21,24 @@
 // Below the defines used to represent these enums
 
 // Gas type identifiers used to condense the sensorDefs table to fixed format
-#define GAS_USER    0
-#define GAS_CO2     1
-#define GAS_H2      2
-#define GAS_ALCOHOL 3
-#define GAS_CH4     4
-#define GAS_LPG     5
-#define GAS_CO      6
+#define P145_GASUSER    0
+#define P145_GASCO2     1
+#define P145_GASH2      2
+#define P145_GASALCOHOL 3
+#define P145_GASCH4     4
+#define P145_GASLPG     5
+#define P145_GASCO      6
 
 // Sensor type identifier used to condense the SensorDefs table to fixed format
-#define SENS_USER   0
-#define SENS_MQ135  1
-#define SENS_MQ2    2
-#define SENS_MQ3    3
-#define SENS_MQ4    4
-#define SENS_MQ5    5
-#define SENS_MQ6    6
-#define SENS_MQ7    7
-#define SENS_MQ8    8
+#define P145_SENSUSER   0
+#define P145_SENSMQ135  1
+#define P145_SENSMQ2    2
+#define P145_SENSMQ3    3
+#define P145_SENSMQ4    4
+#define P145_SENSMQ5    5
+#define P145_SENSMQ6    6
+#define P145_SENSMQ7    7
+#define P145_SENSMQ8    8
 
 
 
@@ -62,8 +62,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG
       p145AlgNone,  // preferred/tuned algorithm
-      SENS_USER,    // Name
-      GAS_USER,     // gas
+      P145_SENSUSER, // Name
+      P145_GASUSER, // gas
   },
   // *** MQ-135 - CO2 ***
   {
@@ -78,8 +78,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       -0.001923077f,// CORF
       1.130128205f, // CORG
       p145AlgA,     // preferred/tuned algorithm
-      SENS_MQ135,   // Name
-      GAS_CO2,      // gas
+      P145_SENSMQ135,  // Name
+      P145_GASCO2,  // gas
   },
     // *** MQ-2 - H2 ***
   {
@@ -94,8 +94,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
-      SENS_MQ2,     // Name
-      GAS_H2,       // gas
+      P145_SENSMQ2, // Name
+      P145_GASH2,   // gas
   },
   // *** MQ-3 - alcohol ***
   {
@@ -110,8 +110,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
-      SENS_MQ3,     // Name
-      GAS_ALCOHOL,  // gas
+      P145_SENSMQ3, // Name
+      P145_GASALCOHOL,  // gas
   },
   // *** MQ-4 - CH4 ***
   {
@@ -126,8 +126,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
-      SENS_MQ4,     // Name
-      GAS_CH4,      // gas
+      P145_SENSMQ4, // Name
+      P145_GASCH4,  // gas
   },
     // *** MQ-5 - H2 ***
   {
@@ -142,8 +142,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
-      SENS_MQ5,     // Name
-      GAS_CH4,      // gas
+      P145_SENSMQ5, // Name
+      P145_GASCH4,  // gas
   },
      // *** MQ-5 - LPG ***
   {
@@ -158,8 +158,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
-      SENS_MQ5,     // Name
-      GAS_LPG,      // gas
+      P145_SENSMQ5, // Name
+      P145_GASLPG,  // gas
   },
   // *** MQ-6 - LPG ***
   {
@@ -174,8 +174,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG
       p145AlgB,     // preferred/tuned algorithm
-      SENS_MQ6,     // Name
-      GAS_LPG,      // gas
+      P145_SENSMQ6, // Name
+      P145_GASLPG,  // gas
   },
   // *** MQ-7 - CO ***
   {
@@ -190,8 +190,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG   
       p145AlgB,     // preferred/tuned algorithm
-      SENS_MQ7,     // Name
-      GAS_CO,       // gas
+      P145_SENSMQ7, // Name
+      P145_GASCO,   // gas
   },
   // *** MQ-8 - H2 ***
   {
@@ -206,8 +206,8 @@ const struct P145_SENSORDEF sensorDefs[] PROGMEM =
       0.0f,         // CORF
       0.0f,         // CORG   
       p145AlgB,     // preferred/tuned algorithm
-      SENS_MQ8,     // Name
-      GAS_H2,       // gas
+      P145_SENSMQ8, // Name
+      P145_GASH2,   // gas
   }
 };
 /// @brief The number of types stored in the sensorDefs[] table
@@ -222,47 +222,6 @@ constexpr const int nbrOfTypes = (int)(sizeof(sensorDefs) / sizeof(struct P145_S
 #define HEATER_ON_TIME (60*1000)
 #define HEATER_OFF_TIME (60*1000)
 #define HEATER_MEAS_TIME (30*1000)
-
-/*****************************************************************************/
-/*!
-@brief  Perform the calibration algorithm
-@param[in] currentRcal  Value for Rzero determined with current measurement
-@return Void
-@note   Collect the highest Rzero during the calibration period
-        At the end of the period take mean value of current and calculated Rzero
-*/
-/*****************************************************************************/
-void P145_data_struct::calibrate (float currentRcal)
-{
-  unsigned long now = millis();
-  long time = timePassedSince(last_cal);
-  float lastRcal = cal_data;  // Last calculated Rcal this calibration sequence
-  
-  if ((currentRcal > lastRcal) || lastRcal <= 0.0f)
-  {
-    cal_data = currentRcal;
-  }
-  const bool doit = (time > P145_CALIBRATION_INTERVAL) && (cal_data > 0.0f);
-  if (doit)
-  {
-    rzero = cal_data;     // Update Rzero as determined by calibration
-    cal_data = 0.0f;      // Restart calibration cycle with no value
-    last_cal = now;   // Remember calibration moment
-  }
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO))
-  {
-#ifdef P145_DEBUG
-    // Calculated Rzero if calibration concentration is applied
-    // Rcal as calculated previous sample
-    addLog(LOG_LEVEL_INFO, concat(concat(F("MQ-xx: Calibration with Rcal =  "), currentRcal), concat(F(" Rlast = "), lastRcal))); 
-#endif
-    if (doit)
-    {
-      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ***Calibrating*** Rzero =  "), cal_data));
-    }
-  }
-}
 
 /*****************************************************************************/
 /*!
@@ -347,21 +306,8 @@ float P145_data_struct::getRZero(float rSensor) const
 /*****************************************************************************/
 float P145_data_struct::getCorrectedRZero(float rSensor, float temperature, float humidity) const
 {
-  float c;    // Correction factor
-
-  if (sensordef.cora <= 0.0f)
-  {
-    return (getRZero(rSensor));
-  }
-  else if (temperature < 20.0f) //TODO this is an ugly constant associated with the MQ-135 sensor only
-  {
-    c = sensordef.cora * temperature * temperature - sensordef.corb * temperature + sensordef.corc - (humidity - 33.0f) * sensordef.cord;
-  }
-  else
-  {
-    c = sensordef.core * temperature + sensordef.corf * humidity + sensordef.corg;
-  }
-  return (rSensor / c) * powf((refLevel / sensordef.para), (1.0f / sensordef.parb));
+  float c = getTempHumCorrection(temperature, humidity);
+  return getRZero(rSensor/c);
 }
 
 /*****************************************************************************/
@@ -407,31 +353,48 @@ float P145_data_struct::getPPM(float rSensor)
 /*****************************************************************************/
 float P145_data_struct::getCorrectedPPM(float rSensor, float temperature, float humidity)
 {
-  float c = 1.0f;   // Correction factor
-  switch (algorithm)
+  float c = getTempHumCorrection(temperature, humidity);
+  return getPPM(rSensor/c);
+}
+
+/*****************************************************************************/
+/*!
+@brief  Get the correction factor for temperature & humidity correction
+@param[in] temperature  The ambient air temperature
+@param[in] humidity     The relative humidity
+@return The correction factor for Rzero to compensate temperature & humidity
+@note Datasheet suggests temp & hum relation to Rzero is a multiplication factor c
+      here we try to calculate this factor.
+*/
+/*****************************************************************************/
+float P145_data_struct::getTempHumCorrection(float temperature, float humidity) const
+{
+  float c = 1.0f;   // Correction factor, default no correction, factor is 1.0
+  if (compensation)
   {
-    case p145AlgA:
-      if (temperature < 20.0f)
-      {
-        c = sensordef.cora * temperature * temperature - sensordef.corb * temperature + sensordef.corc - (humidity - 33.0f) * sensordef.cord;
-      }
-      else
-      {
-        c = sensordef.core * temperature + sensordef.corf * humidity + sensordef.corg;
-      }
-      break;
-    case p145AlgB:
-    case p145AlgC:
-      // Assume a 2nd order polynomial for temperature and 1st order poynomial for humidit
-      // A + B*t + C*t*t + D*h
-      c = (((sensordef.corc * temperature ) + sensordef.corb) * temperature) + sensordef.cora + (sensordef.cord * humidity);
-      break;
-    case p145AlgNone:
-      // no correction
-      break;
-    default:
-      // No correction
-      c = 1.0f;
+    switch (algorithm)
+    {
+      case p145AlgA:
+        if (temperature < 20.0f)
+        {
+          c = sensordef.cora * temperature * temperature - sensordef.corb * temperature + sensordef.corc - (humidity - 33.0f) * sensordef.cord;
+        }
+        else
+        {
+          c = sensordef.core * temperature + sensordef.corf * humidity + sensordef.corg;
+        }
+        break;
+      case p145AlgB:
+      case p145AlgC:
+        // Assume a 2nd order polynomial for temperature and 1st order poynomial for humidit
+        // A + B*t + C*t*t + D*h
+        c = (((sensordef.corc * temperature ) + sensordef.corb) * temperature) + sensordef.cora + (sensordef.cord * humidity);
+        break;
+      case p145AlgNone:
+      default:
+        // No correction
+        c = 1.0f;
+    }   
   }
   if (c <=0.0f)  // In case no or wrong correction factors are specified disable correction (multiplier = 1.0)
   {
@@ -440,7 +403,7 @@ float P145_data_struct::getCorrectedPPM(float rSensor, float temperature, float 
 #ifdef P145_DEBUG
   addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: correction= "), c)); 
 #endif
-  return getPPM(rSensor/c);  // Default value should never be returned
+  return c;
 }
 
 /*****************************************************************************/
@@ -487,8 +450,8 @@ float P145_data_struct::getAnalogValue()
 /*****************************************************************************/
 void P145_data_struct::setSensorData(int stype, bool comp, bool cal, bool vcclow, float load, float zero, float ref)
 {
-  /* Each MQ-xxx sensor comes with its own set cof constants */
-  /* Copy the correct set from program meory space           */
+  /* Each MQ-xxx sensor comes with its own set of constants */
+  /* Copy the correct set from program meory space          */
   if ((stype != sensorType) && (stype < nbrOfTypes) && (stype >= 0))
   {
     memcpy_P(&sensordef, &sensorDefs[stype], sizeof(struct P145_SENSORDEF));
@@ -501,13 +464,15 @@ void P145_data_struct::setSensorData(int stype, bool comp, bool cal, bool vcclow
   rload = load;           // Rload, load resistor [Ohm]
   rzero = zero;           // R0, reference resistance [Ohm]
   refLevel = ref;         // Reference level for calibration [ppm]
+  rcal_act = 0.0f;        // Reset Rzero estimation
+  cal_data = 0.0f;        // Reset autocalibration
 }
 
 /*****************************************************************************/
 /*!
 @brief  Set the connection pins for the sensor  
-@param[in] analogPin   Analog pin for the analog sensor input value
-@param[in] heaterPin   Ootput pin for heater control
+@param[in] aPin   Analog pin for the analog sensor input value
+@param[in] hPin   Ootput pin for heater control
 @note   These values must be set before the plugin can measure the level
         They are determined by the plugin configuration
 /*****************************************************************************/
@@ -535,7 +500,9 @@ float P145_data_struct::readValue(float temperature, float humidity)
     float ain = 0.0f;             // Analog measured and filtered data 
     float rSensor = 0.0f;         // Sensor resistance Rs
     float value = 0.0f;           // Return value
-
+#ifdef P145_DEBUG
+    uint  ovs = 0;                // Oversampling count (for debugging)
+#endif
 #ifdef P145_TEST
     static float injector = 50.0f;
     static float injstep = 50.0f;
@@ -557,27 +524,24 @@ float P145_data_struct::readValue(float temperature, float humidity)
     else
     {
       ain = getAnalogValue();     // Use acually being measured value
+#ifdef P145_DEBUG
+      ovs = ovs_cnt;
+#endif
       resetOversampling();        // Reset the oversampling variables.
     }
 #endif
-    rSensor = getResistance(ain); // Convert to Rsensor value
-    if (compensation) // Check if temperature/Humidity compensation is selected
+    if (ain > 0.0f)   // Skip unsuccesful measurements
     {
-        value = getCorrectedPPM(rSensor, temperature, humidity);
-        rcal_act = getCorrectedRZero(rSensor, temperature, humidity);
-    }
-    else
-    {
-        value = getPPM(rSensor);
-        rcal_act = getRZero(rSensor);
-    }
+      rSensor = getResistance(ain); // Convert to Rsensor value
+      value = getCorrectedPPM(rSensor, temperature, humidity);
+      rcal_act = getCorrectedRZero(rSensor, temperature, humidity);
 
-    // Perform calibration if functionality is enabled
-    if (calibration && (rcal_act < 1.0e6f)) 
-    { 
+      // Perform calibration if functionality is enabled
+      if (calibration && (rcal_act < 1.0e6f)) 
+      { 
         calibrate(rcal_act);
+      }
     }
-
     if (loglevelActiveFor(LOG_LEVEL_INFO))
     {
 #ifdef P145_DEBUG
@@ -593,7 +557,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Temp= "), temperature));    // Temperature for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Hum= "), humidity));        // Humidity for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ain= "), ain));             // Measured analog input value
-      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ovs= "), ovs_cnt));         // Oversampling count
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ovs= "), ovs));             // Oversampling count
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: algorithm= "), algorithm)); // Conversion algorithm
       if (calibration)
       {
@@ -718,6 +682,7 @@ void P145_data_struct::dump() const
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: CORF "), sensordef.corf));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: CORG "), sensordef.corg));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: rzero "), rzero));
+    addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: rcal  "), rcal_act));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: analog PIN: "), analogPin));
     addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: heater PIN: "), heaterPin));
   }
@@ -736,16 +701,16 @@ const String P145_data_struct::getTypeName(int stype)
 {
   switch (sensorDefs[stype].name)
   {
-    case SENS_MQ135:  return F("MQ135");
-    case SENS_MQ2:    return F("MQ-2");
-    case SENS_MQ3:    return F("MQ-3");
-    case SENS_MQ4:    return F("MQ-4");
-    case SENS_MQ5:    return F("MQ-5");
-    case SENS_MQ6:    return F("MQ-6");
-    case SENS_MQ7:    return F("MQ-7");
-    case SENS_MQ8:    return F("MQ-8");
-    case SENS_USER:   return F("user");
-    default:          return F("invalid");
+    case P145_SENSMQ135: return F("MQ135");
+    case P145_SENSMQ2:   return F("MQ-2");
+    case P145_SENSMQ3:   return F("MQ-3");
+    case P145_SENSMQ4:   return F("MQ-4");
+    case P145_SENSMQ5:   return F("MQ-5");
+    case P145_SENSMQ6:   return F("MQ-6");
+    case P145_SENSMQ7:   return F("MQ-7");
+    case P145_SENSMQ8:   return F("MQ-8");
+    case P145_SENSUSER:  return F("user");
+    default:             return F("invalid");
   }
 }
 
@@ -761,14 +726,14 @@ const String P145_data_struct::getGasName(int stype)
 {
   switch (sensorDefs[stype].gas)
   {
-    case GAS_USER:    return F("user");
-    case GAS_CH4:     return F("CH4");
-    case GAS_CO2:     return F("CO2");
-    case GAS_CO:      return F("CO");
-    case GAS_H2:      return F("H2");
-    case GAS_LPG:     return F("LPG");
-    case GAS_ALCOHOL: return F("alcohol");
-    default:          return F("invalid");
+    case P145_GASUSER:    return F("user");
+    case P145_GASCH4:     return F("CH4");
+    case P145_GASCO2:     return F("CO2");
+    case P145_GASCO:      return F("CO");
+    case P145_GASH2:      return F("H2");
+    case P145_GASLPG:     return F("LPG");
+    case P145_GASALCOHOL: return F("alcohol");
+    default:              return F("invalid");
   }
 }
 
@@ -781,6 +746,47 @@ const String P145_data_struct::getGasName(int stype)
 int   P145_data_struct::getNbrOfTypes()
 {
   return nbrOfTypes;
+}
+
+/*****************************************************************************/
+/*!
+@brief  Perform the calibration algorithm
+@param[in] currentRcal  Value for Rzero determined with current measurement
+@return Void
+@note   Collect the highest Rzero during the calibration period
+        At the end of the period use it to set the Rzero for next calculations
+*/
+/*****************************************************************************/
+void P145_data_struct::calibrate (float currentRcal)
+{
+  unsigned long now = millis();
+  long time = timePassedSince(last_cal);
+  float lastRcal = cal_data;  // Last calculated Rcal this calibration sequence
+  
+  if (currentRcal > lastRcal)
+  {
+    cal_data = currentRcal;  // Remember highest estimated Rzero during calibration period
+  }
+  const bool doit = (time > P145_CALIBRATION_INTERVAL) && (cal_data > 0.0f);
+  if (doit)
+  {
+    rzero = cal_data; // Update Rzero as determined by calibration
+    cal_data = 0.0f;  // Restart calibration cycle with no value
+    last_cal = now;   // Remember calibration moment
+  }
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO))
+  {
+#ifdef P145_DEBUG
+    // Calculated Rzero if calibration concentration is applied
+    // Rcal as calculated previous sample
+    addLog(LOG_LEVEL_INFO, concat(concat(F("MQ-xx: Calibration with Rcal =  "), currentRcal), concat(F(" Rlast = "), lastRcal))); 
+#endif
+    if (doit)
+    {
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ***Calibrating*** Rzero =  "), cal_data));
+    }
+  }
 }
 
 /**************************************************************************/

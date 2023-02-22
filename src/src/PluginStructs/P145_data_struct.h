@@ -117,6 +117,7 @@ struct P145_data_struct : public PluginTaskData_base
     float getAnalogValue();
     float getResistance(float val) const;
     float getRZero(float rSensor) const;
+    float getTempHumCorrection(float temperature, float humidity) const;
     float getCorrectedRZero(float rSensor, float temperature, float humidity) const;
     float getPPM(float rSensor);
     float getCorrectedPPM(float rSensor, float temperature, float humidity);

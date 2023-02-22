@@ -59,12 +59,12 @@
 // P145_PCONFIG_RLOAD  PCONFIG_FLOAT(0)  RLOAD   [Ohm] 
 // P145_PCONFIG_RZERO  PCONFIG_FLOAT(1)  RZERO   [Ohm]
 // P145_PCONFIG_REF    PCONFIG_FLOAT(2)  REF. level [ppm]
-// P145_PCONFIG_FLAGS        PCONFIG(0)        Enable compensation & Enable Calibration & use low Vcc
-// P145_PCONFIG_TEMP_TASK    PCONFIG(1)        Temperature compensation task
-// P145_PCONFIG_TEMP_VAL     PCONFIG(2)        Temperature compensation value
-// P145_PCONFIG_HUM_TASK     PCONFIG(3)        Humidity compensation task
-// P145_PCONFIG_HUM_VAL      PCONFIG(4)        Humidity compensation value
-// P145_PCONFIG_SENSORT      PCONFIG(5)        Sensor type
+// P145_PCONFIG_FLAGS        PCONFIG(0)  Enable compensation & Enable Calibration & use low Vcc
+// P145_PCONFIG_TEMP_TASK    PCONFIG(1)  Temperature compensation task
+// P145_PCONFIG_TEMP_VAL     PCONFIG(2)  Temperature compensation value
+// P145_PCONFIG_HUM_TASK     PCONFIG(3)  Humidity compensation task
+// P145_PCONFIG_HUM_VAL      PCONFIG(4)  Humidity compensation value
+// P145_PCONFIG_SENSORT      PCONFIG(5)  Sensor type
 //#######################################################################################################
 
 #include "_Plugin_Helper.h"
@@ -119,6 +119,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 
   switch (function)
   {
+    // Make the plugin known with its options
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number = PLUGIN_ID_145;
@@ -135,18 +136,39 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       break;
     }
     
+    // Return the DEVICENAME for this plugin
     case PLUGIN_GET_DEVICENAME:
     {
       string = F(PLUGIN_NAME_145);
       break;
     }
 
+    // Setup the value names for the task
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_145));
       break;
     }
 
+    // Add custom GPIO description on device overview page
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("AIN: ");
+# ifdef ESP32
+      string += formatGpioLabel(P145_CONFIG_PIN_AIN, false);
+#else
+      string += F("ADC (TOUT)");
+#endif
+      if (validGpio(P145_CONFIG_PIN_HEATER))
+      {
+        string += F("<BR>HEAT: ");
+        string += formatGpioLabel(P145_CONFIG_PIN_HEATER, false);
+      }
+      success = true;
+      break;
+    }
+
+    // Setup the web form for the task
     case PLUGIN_WEBFORM_LOAD:
     {
       bool compensate = P145_PCONFIG_FLAGS & 0x0001;        // Compensation enable flag
@@ -226,6 +248,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    // Save setting from web form for the task
     case PLUGIN_WEBFORM_SAVE:
     {
       P145_PCONFIG_SENSORT   = getFormItemInt(F(P145_GUID_TYPE));
@@ -256,6 +279,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    // Initialize the task
     case PLUGIN_INIT:
     {
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -275,6 +299,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    // Execute at 10Hz
     case PLUGIN_TEN_PER_SECOND:
     {
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -285,6 +310,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    // Read fresh data from the task
     case PLUGIN_READ:
     {
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -305,6 +331,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    // Execute each second
     case PLUGIN_ONCE_A_SECOND:
     {
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
