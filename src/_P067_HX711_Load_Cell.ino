@@ -17,6 +17,7 @@
 // Datasheet: https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 
 /** Changelog:
+ * 2023-02-23 tonhuisman: Ignore first PLUGIN_READ after startup, as no samples have been read yet so no measurement data is available
  * 2023-01-01 tonhuisman: Minor string reductions
  * 2022-12-30 tonhuisman: Fix no longer generating events, use DIRECT_pinRead() and DIRECT_pinWrite() to ensure proper working on ESP32,
  *                        include Task number when logging values, reset any previous values on init, change Pin names to match board text
