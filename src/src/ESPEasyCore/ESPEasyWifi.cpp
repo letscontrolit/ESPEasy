@@ -414,6 +414,13 @@ void AttemptWiFiConnect() {
     return;
   }
 
+  if (active_network_medium != NetworkMedium_t::WIFI &&
+      active_network_medium != NetworkMedium_t::ESPEasyNOW_only) 
+  {
+    return;
+  }
+
+
   if (WiFiEventData.wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
     RTC.clearLastWiFi(); // Force slow connect

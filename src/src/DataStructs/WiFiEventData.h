@@ -104,8 +104,8 @@ struct WiFiEventData_t {
   MAC_address             lastMacConnectedAPmode;
   MAC_address             lastMacDisconnectedAPmode;
 
-  IPAddress dns0_cache{};
-  IPAddress dns1_cache{};
+  IPAddress dns0_cache{0u};
+  IPAddress dns1_cache{0u};
 
   // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
   // This can cause recursion, so a semaphore is needed here.

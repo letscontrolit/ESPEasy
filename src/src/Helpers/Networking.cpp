@@ -1065,7 +1065,7 @@ bool setDNS(int index, const IPAddress& dns) {
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
-  if (dns != (uint32_t)0x00000000 && dns  != INADDR_NONE) {
+  if (dns.v4() != (uint32_t)0x00000000 && dns != INADDR_NONE) {
     // Set DNS0-Server
     d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
     const ip_addr_t* cur_dns = dns_getserver(index);

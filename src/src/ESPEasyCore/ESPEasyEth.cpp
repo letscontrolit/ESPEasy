@@ -69,12 +69,15 @@ bool ethCheckSettings() {
       && (Settings.ETH_Pin_power <= MAX_GPIO);
 }
 
+void ethSetHostname()
+{
+  char hostname[40];
+  safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
+  ETH.setHostname(hostname);
+}
+
 bool ethPrepare() {
-  {
-    char hostname[40];
-    safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
-    ETH.setHostname(hostname);
-  }
+  ethSetHostname();
   ethSetupStaticIPconfig();
   return true;
 }
@@ -145,6 +148,9 @@ bool ETHConnectRelaxed() {
   // Re-register event listener
   removeEthEventHandler();
 
+  // Need to set the hostname first, 
+  // or else the first DHCP request may be using the default hostname.
+  ethSetHostname();
   ethPower(true);
   EthEventData.markEthBegin();
 
