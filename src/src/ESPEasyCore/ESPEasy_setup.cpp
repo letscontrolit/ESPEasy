@@ -5,6 +5,7 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
 #include "../CustomBuild/CompiletimeDefines.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -497,6 +498,13 @@ void ESPEasy_setup()
     event += bitRead(gpio_strap, 3); // GPIO-2
     rulesProcessing(event);
   }
+  #endif
+
+  #if FEATURE_ETHERNET
+  if (Settings.ETH_Pin_power != -1) {
+    GPIO_Write(1, Settings.ETH_Pin_power, 1);
+  }
+
   #endif
 
   NetworkConnectRelaxed();
