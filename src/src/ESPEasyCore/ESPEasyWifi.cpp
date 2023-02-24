@@ -405,8 +405,7 @@ void AttemptWiFiConnect() {
     return;
   }
 
-  if (active_network_medium != NetworkMedium_t::WIFI &&
-      active_network_medium != NetworkMedium_t::ESPEasyNOW_only) 
+  if (active_network_medium != NetworkMedium_t::WIFI) 
   {
     return;
   }
