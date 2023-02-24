@@ -353,7 +353,16 @@ void ESPEasy_setup()
   active_network_medium = Settings.NetworkMedium;
   #endif // if FEATURE_ETHERNET
 
-  if (active_network_medium == NetworkMedium_t::WIFI) {
+  bool initWiFi = active_network_medium == NetworkMedium_t::WIFI;
+
+  #ifdef USES_ESPEASY_NOW
+  if (isESPEasy_now_only() || Settings.UseESPEasyNow()) {
+    initWiFi = true;
+  }
+  #endif
+
+
+  if (initWiFi) {
     WiFi_AP_Candidates.load_knownCredentials();
     setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
@@ -368,7 +377,9 @@ void ESPEasy_setup()
     // Always perform WiFi scan
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
-    WifiScan(false);
+    if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) {
+      WifiScan(false);
+    }
     setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
