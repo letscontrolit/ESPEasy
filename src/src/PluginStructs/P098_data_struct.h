@@ -54,6 +54,9 @@ struct P098_config_struct {
 
   bool encoder_pu = false;
   bool pwm_soft_startstop = false;
+
+  uint32_t virtualSpeed = 0; // steps per ms
+  int pos0supplement = 0; // steps
 };
 
 struct P098_limit_switch_state {
@@ -127,6 +130,7 @@ struct P098_data_struct : public PluginTaskData_base {
   void getLimitSwitchPositions(int& limitA,
                                int& limitB) const;
 
+  void timeChanged();
 
   State state       = State::Idle;
   bool  initialized = false;
@@ -138,10 +142,12 @@ private:
   volatile P098_limit_switch_state limitB;
   volatile int                     position = 0;
   volatile uint64_t                enc_lastChanged_us = 0;
+  uint64_t                         lastVirtualSpeedApplied_us = 0;
   int                              pos_dest = 0;
   int                              pos_overshoot = 0;
 
   void        startMoving();
+  void        updatePosition();
 
   void        checkLimit(volatile P098_limit_switch_state& switch_state);
   void        checkPosition();

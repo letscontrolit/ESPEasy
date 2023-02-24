@@ -29,6 +29,8 @@
 # define P098_LIMIT_SWB_DEBOUNCE PCONFIG(5)
 # define P098_ENC_TIMEOUT        PCONFIG(6)
 # define P098_PWM_DUTY           PCONFIG(7)
+# define P098_VIRTUAL_SPEED      PCONFIG(8)
+# define P098_POS_0_SUPPLEMENT   PCONFIG(9)
 
 
 # define P098_FLAGBIT_LIM_A_PULLUP         0
@@ -57,8 +59,8 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
       Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].SendDataOption     = true;
+      Device[deviceCount].TimerOption        = true;
       Device[deviceCount].TimerOptional      = true;
       break;
     }
@@ -140,6 +142,8 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       P098_LIMIT_SWA_DEBOUNCE = 100;
       P098_LIMIT_SWB_DEBOUNCE = 100;
       P098_ENC_TIMEOUT        = 100;
+      P098_VIRTUAL_SPEED      = 0;
+      P098_POS_0_SUPPLEMENT   = 0;
       P098_MOTOR_CONTROL      = 0; // No PWM
       P098_PWM_FREQ           = 1000;
       P098_PWM_DUTY           = 1023;
@@ -198,6 +202,12 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Encoder Timeout"), F("enc_timeout"), P098_ENC_TIMEOUT, 0, 1000);
       addUnit(F("ms"));
 
+      addFormNumericBox(F("Virtual speed"), F("virtual_speed"), P098_VIRTUAL_SPEED, 0, 2147483647);
+      addUnit(F("steps/ms"));
+
+      addFormNumericBox(F("Position 0 Supplement"), F("pos0_supplement"), P098_POS_0_SUPPLEMENT, -2147483648, 2147483647);
+      addUnit(F("steps"));
+
 
       # ifdef ESP32
       {
@@ -241,6 +251,8 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       CONFIG_PIN3 = getFormItemInt(F("taskdevicepin3"));
 
       P098_ENC_TIMEOUT = getFormItemInt(F("enc_timeout"));
+      P098_VIRTUAL_SPEED = getFormItemInt(F("virtual_speed"));
+      P098_POS_0_SUPPLEMENT = getFormItemInt(F("pos0_supplement"));
 
       P098_LIMIT_SWA_GPIO     = getFormItemInt(F("limit_a"));
       P098_LIMIT_SWB_GPIO     = getFormItemInt(F("limit_b"));
@@ -283,6 +295,8 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       config.motorRev.gpio    = CONFIG_PIN2;
       config.encoder.gpio     = CONFIG_PIN3;
       config.encoder.timer_us = P098_ENC_TIMEOUT * 1000;
+      config.virtualSpeed     = P098_VIRTUAL_SPEED;
+      config.pos0supplement   = P098_POS_0_SUPPLEMENT;
       config.limitA.gpio      = P098_LIMIT_SWA_GPIO;
       config.limitB.gpio      = P098_LIMIT_SWB_GPIO;
       config.limitA.timer_us  = P098_LIMIT_SWA_DEBOUNCE * 1000;
@@ -326,7 +340,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         bool limitA_triggered, limitB_triggered = false;
         P098_data->getLimitSwitchStates(limitA_triggered, limitB_triggered);
 
-        if (!P098_data->loop()) {}
+        P098_data->loop();
 
         switch (P098_data->state) {
           case P098_data_struct::State::Idle:
@@ -369,7 +383,20 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 1] = limitA_triggered ? 1 : 0;
         UserVar[event->BaseVarIndex + 2] = limitB_triggered ? 1 : 0;
         UserVar[event->BaseVarIndex + 3] = limitApos;
+
+        success = true;
       }
+      break;
+    }
+
+    case PLUGIN_TIME_CHANGE:
+    {
+      P098_data_struct *P098_data =
+        static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      P098_data->timeChanged();
+      success = true;
+
       break;
     }
 
@@ -379,7 +406,18 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P098_data) {
-        // What to do here?
+        bool limitA_triggered, limitB_triggered = false;
+        P098_data->getLimitSwitchStates(limitA_triggered, limitB_triggered);
+
+        int limitApos, limitBpos;
+        P098_data->getLimitSwitchPositions(limitApos, limitBpos);
+
+        UserVar[event->BaseVarIndex + 0] = P098_data->getPosition();
+        UserVar[event->BaseVarIndex + 1] = limitA_triggered ? 1 : 0;
+        UserVar[event->BaseVarIndex + 2] = limitB_triggered ? 1 : 0;
+        UserVar[event->BaseVarIndex + 3] = limitApos;
+
+        success = true;
       }
       break;
     }
