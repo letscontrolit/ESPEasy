@@ -393,8 +393,11 @@ void ESPEasy_Scheduler::setIntervalTimer(IntervalTimer_e id, unsigned long lastt
     // The timers for all delay queues will be set according to their own settings as long as there is something to process.
     case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C001_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C002_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C003_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C004_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C005_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C006_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C007_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C008_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C009_DELAY_QUEUE:
@@ -468,6 +471,9 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
       }
       break;
     case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C002_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C005_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C006_DELAY_QUEUE:
 #if FEATURE_MQTT
       processMQTTdelayQueue();
 #endif // if FEATURE_MQTT
