@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-02-25 tonhuisman: Make Interval optional, and also disable the added feature P013_FEATURE_INTERVALEVENT, as setting Interval
+ *                        to 0 is effectively the same. (Small code reduction)
+ *                        Changed second value label for Combined mode to State
  * 2023-02-19 tonhuisman: Suggested modification with variable trigger width was only partly accepted by NewPing library, and as
  *                        we already have a modified library using the DIRECT_Gpio functions, I'm not merging back that change
  *                        (compile-time setting, default now: 12 usec) but keep the proposed changes for a runtime configurable setting.
@@ -21,10 +24,10 @@
  */
 
 # define PLUGIN_013
-# define PLUGIN_ID_013        13
+# define PLUGIN_ID_013         13
 # define PLUGIN_NAME_013       "Position - HC-SR04, RCW-0001, etc."
 # define PLUGIN_VALUENAME1_013 "Distance"
-# define PLUGIN_VALUENAME2_013 "Switch"
+# define PLUGIN_VALUENAME2_013 "State"
 
 # include "src/PluginStructs/P013_data_struct.h"
 
@@ -52,6 +55,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       Device[deviceCount].ValueCount       = 1;
       Device[deviceCount].SendDataOption   = true;
       Device[deviceCount].TimerOption      = true;
+      Device[deviceCount].TimerOptional    = true;
       Device[deviceCount].GlobalSyncOption = true;
       Device[deviceCount].PluginStats      = true;
 
@@ -201,6 +205,12 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         # endif // if P013_FEATURE_INTERVALEVENT
         P013_THRESHOLD = getFormItemInt(F("thres"));
       }
+      # if P013_FEATURE_COMBINED_MODE
+
+      if ((P013_OPERATINGMODE == OPMODE_COMBINED) && (ExtraTaskSettings.TaskDeviceValueNames[1][0] == '\0')) {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_013));
+      }
+      # endif // if P013_FEATURE_COMBINED_MODE
       P013_MAX_DISTANCE = getFormItemInt(F("max_d"));
 
       P013_MEASURINGUNIT = getFormItemInt(F("pUnit"));

@@ -17,7 +17,7 @@
 # endif // ifdef ESP8266_1M
 # ifndef P013_FEATURE_TRIGGERWIDTH
 #  define P013_FEATURE_TRIGGERWIDTH   1 // Enabled by default
-#  define P013_FEATURE_INTERVALEVENT  1
+#  define P013_FEATURE_INTERVALEVENT  0
 #  define P013_FEATURE_COMBINED_MODE  1
 #  define P013_EXTENDED_LOG           1
 # endif // ifndef P013_FEATURE_TRIGGERWIDTH
