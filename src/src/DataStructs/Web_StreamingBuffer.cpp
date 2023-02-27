@@ -265,6 +265,7 @@ void Web_StreamingBuffer::endStream() {
 
     finalRam = ESP.getFreeHeap();
 
+/*
 #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = String("Ram usage: Webserver only: ") + maxServerUsage +
@@ -274,6 +275,7 @@ void Web_StreamingBuffer::endStream() {
         addLog(LOG_LEVEL_DEBUG, log);
         }
 #endif // ifndef BUILD_NO_DEBUG
+*/
 
   } else {
     addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
