@@ -7,7 +7,7 @@
 /****************************************************************************
  * ST77xx_type_toString: Display-value for the device selected
  ***************************************************************************/
-const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
+const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device) {
   switch (device) {
     case ST77xx_type_e::ST7735s_128x128: return F("ST7735 128 x 128px");
     case ST77xx_type_e::ST7735s_128x160: return F("ST7735 128 x 160px");
@@ -25,7 +25,9 @@ const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
 /****************************************************************************
  * ST77xx_type_toResolution: X and Y resolution for the selected type
  ***************************************************************************/
-void ST77xx_type_toResolution(ST77xx_type_e device, uint16_t& x, uint16_t& y) {
+void ST77xx_type_toResolution(const ST77xx_type_e& device,
+                              uint16_t           & x,
+                              uint16_t           & y) {
   switch (device) {
     case ST77xx_type_e::ST7735s_128x128:
       x = 128;
@@ -66,7 +68,7 @@ void ST77xx_type_toResolution(ST77xx_type_e device, uint16_t& x, uint16_t& y) {
 /****************************************************************************
  * P116_CommandTrigger_toString: return the command string selected
  ***************************************************************************/
-const __FlashStringHelper* P116_CommandTrigger_toString(P116_CommandTrigger cmd) {
+const __FlashStringHelper* P116_CommandTrigger_toString(const P116_CommandTrigger& cmd) {
   switch (cmd) {
     case P116_CommandTrigger::tft: return F("tft");
     case P116_CommandTrigger::st7735: return F("st7735");
@@ -366,7 +368,8 @@ bool P116_data_struct::plugin_once_a_second(struct EventStruct *event) {
 /****************************************************************************
  * plugin_write: Handle commands
  ***************************************************************************/
-bool P116_data_struct::plugin_write(struct EventStruct *event, const String& string) {
+bool P116_data_struct::plugin_write(struct EventStruct *event,
+                                    const String      & string) {
   bool   success = false;
   String cmd     = parseString(string, 1);
 
@@ -427,6 +430,23 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
   return success;
 }
 
+# if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
+/****************************************************************************
+ * plugin_get_config_value: Retrieve values like [<taskname>#<valuename>]
+ ***************************************************************************/
+bool P116_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  bool success = false;
+
+  if (gfxHelper != nullptr) {
+    success = gfxHelper->pluginGetConfigValue(string);
+  }
+  return success;
+}
+
+# endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
 /****************************************************************************
  * displayOnOff: Turn display on or off
  ***************************************************************************/
@@ -446,7 +466,8 @@ void P116_data_struct::displayOnOff(bool state) {
 /****************************************************************************
  * registerButtonState: the button has been pressed, apply some debouncing
  ***************************************************************************/
-void P116_data_struct::registerButtonState(uint8_t newButtonState, bool bPin3Invers) {
+void P116_data_struct::registerButtonState(uint8_t newButtonState,
+                                           bool    bPin3Invers) {
   if ((ButtonLastState == 0xFF) || (bPin3Invers != (!!newButtonState))) {
     ButtonLastState = newButtonState;
     DebounceCounter++;
