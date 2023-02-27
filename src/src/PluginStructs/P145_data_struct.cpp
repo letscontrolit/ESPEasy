@@ -546,25 +546,23 @@ float P145_data_struct::readValue(float temperature, float humidity)
     {
 #ifdef P145_DEBUG
       addLog(LOG_LEVEL_INFO, concat(concat(F("MQ-xx: Sensor type= "), sensorType), concat(F(": "), getTypeName(sensorType)))); 
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: algorithm= "), algorithm)); // Conversion algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rload= "), rload));         // Load resistor Rload
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rzero= "), rzero));         // Rerefernce resistance Rzero
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Ratio= "), (rSensor/rzero)));  // Ratio, input for non-linear conversion
-#endif 
-      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rcal= "), rcal_act));       // Fresh calibrated Rzero when at ref level
-#ifdef P145_DEBUG
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: RS= "), rSensor));          // Calculated sensor resistance Rsensor
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Ref= "), refLevel));        // Reference level for calibration
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Temp= "), temperature));    // Temperature for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Hum= "), humidity));        // Humidity for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ain= "), ain));             // Measured analog input value
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ovs= "), ovs));             // Oversampling count
-      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: algorithm= "), algorithm)); // Conversion algorithm
       if (calibration)
       {
         addLog(LOG_LEVEL_INFO, F("MQ-xx: Calibration enabled"));
       }
 #endif
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: level= "), value));         // Calculated sensor value
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Rcal= "), rcal_act));       // Fresh calibrated Rzero when at ref level
     }
 
     return(value);
