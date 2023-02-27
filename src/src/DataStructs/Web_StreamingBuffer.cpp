@@ -260,15 +260,12 @@ void Web_StreamingBuffer::endStream() {
     if (buf.length() > 0) { sendContentBlocking(buf); }
     buf.clear();
     sendContentBlocking(buf);
-    #ifdef ESP8266
-    web_server.client().flush(100);
-    #endif
-    #ifdef ESP32
+
     web_server.client().flush();
-    #endif
+
     finalRam = ESP.getFreeHeap();
 
-    /*
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = String("Ram usage: Webserver only: ") + maxServerUsage +
                     " including Core: " + maxCoreUsage +
@@ -276,7 +273,8 @@ void Web_StreamingBuffer::endStream() {
                     " flashStringData: " + flashStringData;
         addLog(LOG_LEVEL_DEBUG, log);
         }
-      */
+#endif // ifndef BUILD_NO_DEBUG
+
   } else {
     addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
     lowMemorySkip = false;
@@ -323,14 +321,16 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   if (length > 0) { web_server.sendContent(data); }
   web_server.sendContent("\r\n");
 #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-  unsigned int timeout = 300;
+  unsigned int timeout = 100;
 
-  if (freeBeforeSend < 5000) { timeout = 400; }
-
-  if (freeBeforeSend < 4000) { timeout = 500; }
   web_server.sendContent(data);
 
-  data.clear();
+  if (data.length() > CHUNKED_BUFFER_SIZE) {
+    data = String(); // Clear also allocated memory
+  } else {
+    data.clear();
+  }
+
   const uint32_t beginWait = millis();
   while ((!data.reserve(CHUNKED_BUFFER_SIZE) || (ESP.getFreeHeap() < 4000 /*freeBeforeSend*/ )) &&
          !timeOutReached(beginWait + timeout)) {
@@ -375,12 +375,9 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   }
   web_server.send(httpCode, content_type, EMPTY_STRING);
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  unsigned int timeout          = 0;
+  unsigned int timeout          = 100;
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
 
-  if (freeBeforeSend < 5000) { timeout = 100; }
-
-  if (freeBeforeSend < 4000) { timeout = 1000; }
   const uint32_t beginWait = millis();
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   web_server.sendHeader(F("Cache-Control"), F("no-cache"));
