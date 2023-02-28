@@ -5,6 +5,7 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
 #include "../CustomBuild/CompiletimeDefines.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -353,7 +354,16 @@ void ESPEasy_setup()
   active_network_medium = Settings.NetworkMedium;
   #endif // if FEATURE_ETHERNET
 
-  if (active_network_medium == NetworkMedium_t::WIFI) {
+  bool initWiFi = active_network_medium == NetworkMedium_t::WIFI;
+
+  #ifdef USES_ESPEASY_NOW
+  if (isESPEasy_now_only() || Settings.UseESPEasyNow()) {
+    initWiFi = true;
+  }
+  #endif
+
+
+  if (initWiFi) {
     WiFi_AP_Candidates.load_knownCredentials();
     setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
@@ -368,7 +378,9 @@ void ESPEasy_setup()
     // Always perform WiFi scan
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
-    WifiScan(false);
+    if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) {
+      WifiScan(false);
+    }
     setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
@@ -486,6 +498,13 @@ void ESPEasy_setup()
     event += bitRead(gpio_strap, 3); // GPIO-2
     rulesProcessing(event);
   }
+  #endif
+
+  #if FEATURE_ETHERNET
+  if (Settings.ETH_Pin_power != -1) {
+    GPIO_Write(1, Settings.ETH_Pin_power, 1);
+  }
+
   #endif
 
   NetworkConnectRelaxed();
