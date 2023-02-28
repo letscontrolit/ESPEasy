@@ -7,7 +7,7 @@
 # sudo apt-get update
 # sudo apt-get upgrade
 # sudo apt install python3-minimal virtualenv build-essential zip binutils
-# For Python 3.8:
+# For Python 3.10:
 # sudo apt install -y software-properties-common
 # sudo add-apt-repository ppa:deadsnakes/ppa
 # sudo apt install -y python3.8
@@ -140,7 +140,7 @@ if (( $HELP != 0 )); then
    echo "  sudo apt-get update"
    echo "  sudo apt-get upgrade"
    echo "  sudo apt install python3-minimal virtualenv build-essential zip binutils coreutils"
-   echo "For Python 3.8:"
+   echo "For Python 3.10:"
    echo "  sudo apt install -y software-properties-common"
    echo "  sudo add-apt-repository ppa:deadsnakes/ppa"
    echo "  sudo apt install -y python3.8"
