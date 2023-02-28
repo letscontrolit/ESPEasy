@@ -344,7 +344,7 @@ int16_t I2C_readS16_LE_reg(uint8_t i2caddr, uint8_t reg) {
 // *************************************************************************/
 
 #if FEATURE_I2C_DEVICE_CHECK
-static std::vector<uint8_t> deviceCheckI2C;
+static uint8_t deviceCheckI2C[TASKS_MAX]{};
 
 bool I2C_deviceCheck(uint8_t     i2caddr,
                      taskIndex_t taskIndex,
@@ -358,10 +358,6 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
   const bool retval = 0 == Wire.endTransmission(); // Only 0 indicates Success
 
   if (validTaskIndex(taskIndex)) {
-    if (deviceCheckI2C.size() < taskIndex) {
-      deviceCheckI2C.resize(TASKS_MAX, 0);
-    }
-
     if (retval) {
       deviceCheckI2C[taskIndex] = 0;
     } else {
@@ -372,9 +368,9 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
         }
       }
     }
-  }
-  if (function != 0) {
-    STOP_TIMER_TASK(getDeviceIndex(taskIndex), function);
+    if (function != 0) {
+      STOP_TIMER_TASK(getDeviceIndex_from_TaskIndex(taskIndex), function);
+    }
   }
   return retval;
 }
