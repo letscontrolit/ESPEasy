@@ -4,6 +4,7 @@
 #include "../Globals/I2Cdev.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 enum class I2C_clear_bus_state {
   Start,
@@ -364,7 +365,10 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
       if (maxRetries > 0) {
         deviceCheckI2C[taskIndex]++;
         if (deviceCheckI2C[taskIndex] >= maxRetries) {
-          Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reeached, disable the device
+          Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reached, disable the device
+          #ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_ERROR, concat(F("I2C  : Device doesn't respond for task: "), static_cast<int>(taskIndex + 1)));
+          #endif
         }
       }
     }
