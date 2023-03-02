@@ -58,10 +58,11 @@ void P068_SHT3X::readFromSensor()
     hum = NAN;
 
     // Set to periodic mode
-    Wire.beginTransmission(_i2c_device_address);
-    Wire.write(0x20); // periodic 0.5mps
-    Wire.write(0x32); // repeatability high
-    Wire.endTransmission();
+    I2C_write8_reg(
+      _i2c_device_address,
+      0x20, // periodic 0.5mps
+      0x32  // repeatability high
+      );
   }
 }
 
