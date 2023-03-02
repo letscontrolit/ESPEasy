@@ -13,13 +13,13 @@ public:
   P025_data_struct()          = delete;
   virtual ~P025_data_struct() = default;
 
-  int16_t read();
-  uint8_t getMux();
+  int16_t read() const;
+  uint8_t getMux() const;
 
 private:
 
-  uint16_t readConversionRegister025(void);
-  bool     isReady025(void);
+  uint16_t readConversionRegister025() const;
+  bool     isReady025() const;
 
   uint8_t pga; // Gain
   uint8_t mux; // Input multiplexer

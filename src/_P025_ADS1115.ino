@@ -167,7 +167,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
+      const P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P025_data) {
         const int16_t value = P025_data->read();
@@ -186,10 +186,10 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
         if (PCONFIG(3)) // Calibration?
         {
-          int adc1   = PCONFIG_LONG(0);
-          int adc2   = PCONFIG_LONG(1);
-          float out1 = PCONFIG_FLOAT(0);
-          float out2 = PCONFIG_FLOAT(1);
+          const int adc1   = PCONFIG_LONG(0);
+          const int adc2   = PCONFIG_LONG(1);
+          const float out1 = PCONFIG_FLOAT(0);
+          const float out2 = PCONFIG_FLOAT(1);
 
           if (adc1 != adc2)
           {
