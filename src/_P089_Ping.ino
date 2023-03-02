@@ -70,7 +70,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      char hostname[PLUGIN_089_HOSTNAME_SIZE];
+      char hostname[PLUGIN_089_HOSTNAME_SIZE] = {};
 
       // Reset "Fails" if settings updated
       UserVar[event->BaseVarIndex] = 0;
@@ -109,7 +109,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command.equals(F("pingset")))
+      if (equals(command, F("pingset")))
       {
         String taskName       = parseString(string, 2);
         taskIndex_t taskIndex = findTaskIndexByName(taskName);

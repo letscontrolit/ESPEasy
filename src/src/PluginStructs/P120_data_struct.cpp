@@ -771,7 +771,9 @@ void P120_data_struct::plugin_get_device_value_names(struct EventStruct *event)
         sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
 
       // Set decimals for RAW values to 0, Others to 2 decimals
-      ExtraTaskSettings.TaskDeviceValueDecimals[i] = (choice <= 3) ? 0 : 2;
+      if (choice <= 3) {
+        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
+      }
     } else {
       ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
     }

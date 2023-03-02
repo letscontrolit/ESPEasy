@@ -142,6 +142,11 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
           protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
           CPluginCall(ProtocolIndex, Function, event, str);
         }
+        #ifdef ESP32
+        if (Function == CPlugin::Function::CPLUGIN_EXIT) {
+          Cache.clearControllerSettings(controllerindex);
+        }
+        #endif
       }
       break;
     }

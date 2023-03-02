@@ -53,6 +53,9 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
       if (C001_DelayHandler == nullptr || !validTaskIndex(event->TaskIndex)) {
         break;
       }
+      if (C001_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
 
       if (event->idx != 0)
       {
@@ -72,7 +75,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
               url += event->idx;
               url += F("&switchcmd=");
 
-              if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
+              if (essentiallyZero(UserVar[event->BaseVarIndex])) {
                 url += F("Off");
               } else {
                 if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
@@ -112,7 +115,9 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
           url += mapVccToDomoticz();
             # endif // if FEATURE_ADC_VCC
 
-          success = C001_DelayHandler->addToQueue(C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
+          std::unique_ptr<C001_queue_element> element(new C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
+
+          success = C001_DelayHandler->addToQueue(std::move(element));
           Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C001_DELAY_QUEUE,
                                            C001_DelayHandler->getNextScheduleTime());
         }
@@ -139,7 +144,9 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c001_delay_queue(int controller_number, const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c001_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C001_queue_element& element = static_cast<const C001_queue_element&>(element_base);
+
 // *INDENT-ON*
   # ifndef BUILD_NO_DEBUG
 
@@ -152,7 +159,7 @@ bool do_process_c001_delay_queue(int controller_number, const C001_queue_element
   send_via_http(
     controller_number,
     ControllerSettings,
-    element.controller_idx,
+    element._controller_idx,
     element.txt,
     F("GET"),
     EMPTY_STRING,

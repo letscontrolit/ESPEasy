@@ -80,6 +80,9 @@ void handle_sysvars() {
 
   addTableSeparator(F("System"), 3, 3);
   addSysVar_enum_html(SystemVariables::UNIT_sysvar);
+  #if FEATURE_ZEROFILLED_UNITNUMBER
+  addSysVar_enum_html(SystemVariables::UNIT_0_sysvar);
+  #endif // FEATURE_ZEROFILLED_UNITNUMBER
   addSysVar_enum_html(SystemVariables::SYSLOAD);
   addSysVar_enum_html(SystemVariables::SYSHEAP);
   addSysVar_enum_html(SystemVariables::SYSSTACK);

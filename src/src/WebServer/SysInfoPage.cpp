@@ -45,7 +45,7 @@
 
 #if FEATURE_MQTT
 # include "../Globals/MQTT.h"
-# include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
+# include "../ESPEasyCore/Controller.h" // For finding enabled MQTT controller
 #endif
 
 #ifdef ESP32

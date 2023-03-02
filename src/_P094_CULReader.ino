@@ -280,7 +280,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       String cmd = parseString(string, 1);
 
       if (cmd.startsWith(F("culreader"))) {
-        if (cmd.equals(F("culreader_write"))) {
+        if (equals(cmd, F("culreader_write"))) {
           P094_data_struct *P094_data =
             static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 

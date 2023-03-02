@@ -222,7 +222,7 @@ void WebServerInit()
 
 #ifdef USES_C016
 
-  // web_server.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
+  web_server.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
   web_server.on(F("/cache_json"), handle_cache_json); // C016 specific entrie
   web_server.on(F("/cache_csv"),  handle_cache_csv);  // C016 specific entrie
 #endif // USES_C016
@@ -380,7 +380,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   const bool addMeta = true;
 
 /*
-  if (tmplName.equals(F("TmplAP")))
+  if (equals(tmplName, F("TmplAP")))
   {
 
     getWebPageTemplateDefaultHead(parser, addMeta, !addJS);
@@ -404,7 +404,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   }
   else 
   */
-  if (tmplName.equals(F("TmplMsg")))
+  if (equals(tmplName, F("TmplMsg")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
     if (!parser.isTail()) {
@@ -418,7 +418,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-  else if (tmplName.equals(F("TmplDsh")))
+  else if (equals(tmplName, F("TmplDsh")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
     parser.process(F("<body"));

@@ -166,8 +166,9 @@ void handle_devices() {
       String dummy;
 
       if (Settings.TaskDeviceEnabled[taskIndex]) {
-        PluginCall(PLUGIN_INIT, &TempEvent, dummy);
-        PluginCall(PLUGIN_READ, &TempEvent, dummy);
+        if (PluginCall(PLUGIN_INIT, &TempEvent, dummy)) {
+          PluginCall(PLUGIN_READ, &TempEvent, dummy);
+        }
       } else {
         PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
       }
@@ -386,6 +387,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   }
   ExtraTaskSettings.clearUnusedValueNames(valueCount);
 
+  // ExtraTaskSettings has changed.
+  // The content of it is needed for sending CPLUGIN_TASK_CHANGE_NOTIFICATION and TaskInit/TaskExit events
+  Cache.updateExtraTaskSettingsCache();
+
   // allow the plugin to save plugin-specific form settings.
   {
     String dummy;
@@ -406,8 +411,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     }    
   }
 
-  // ExtraTaskSetting has changed.
-  // The content of it is needed for sending CPLUGIN_TASK_CHANGE_NOTIFICATION
+  // ExtraTaskSettings may have changed during PLUGIN_WEBFORM_SAVE, so again update the cache.
   Cache.updateExtraTaskSettingsCache();
 
   // notify controllers: CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION
@@ -774,6 +778,13 @@ void format_originating_node(uint8_t remoteUnit) {
 void format_I2C_port_description(taskIndex_t x)
 {
   addHtml(F("I2C"));
+  # if FEATURE_I2C_GET_ADDRESS
+  const uint8_t i2cAddr = getTaskI2CAddress(x);
+  if (i2cAddr > 0) {
+    addHtml(' ');
+    addHtml(formatToHex(i2cAddr, 2));
+  }
+  # endif // if FEATURE_I2C_GET_ADDRESS
   # if FEATURE_I2CMULTIPLEXER
 
   if (isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(x)) {

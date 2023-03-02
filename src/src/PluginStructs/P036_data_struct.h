@@ -139,7 +139,7 @@ typedef struct {
 } tScrollLine;
 
 typedef struct {
-  tScrollLine SLine[P36_MAX_LinesPerPage];
+  tScrollLine SLine[P36_MAX_LinesPerPage]{};
   uint16_t    wait = 0; // waiting time before scrolling
 } tScrollingLines;
 
@@ -150,8 +150,8 @@ typedef struct {
 } tScrollingPageLines;
 
 typedef struct {
-  tScrollingPageLines In[P36_MAX_LinesPerPage];
-  tScrollingPageLines Out[P36_MAX_LinesPerPage];
+  tScrollingPageLines In[P36_MAX_LinesPerPage]{};
+  tScrollingPageLines Out[P36_MAX_LinesPerPage]{};
   int                 dPixSum          = 0; // act pix change
   uint8_t             Scrolling        = 0; // 0=Ready, 1=Scrolling
   uint8_t             dPix             = 0; // pix change per scroll time (25ms)
@@ -218,7 +218,7 @@ struct tDisplayLines_storage {
 };
 
 struct tDisplayLines_storage_full {
-  tDisplayLines_storage lines[P36_Nlines];
+  tDisplayLines_storage lines[P36_Nlines]{};
 };
 
 typedef struct {
@@ -364,8 +364,8 @@ struct P036_data_struct : public PluginTaskData_base {
   // Instantiate display here - does not work to do this within the INIT call
   OLEDDisplay *display = nullptr;
 
-  tScrollingLines ScrollingLines;
-  tScrollingPages ScrollingPages;
+  tScrollingLines ScrollingLines{};
+  tScrollingPages ScrollingPages{};
 
   // CustomTaskSettings
   P036_LineContent *LineContent = nullptr;
@@ -403,7 +403,7 @@ struct P036_data_struct : public PluginTaskData_base {
 
   OLEDDISPLAY_TEXT_ALIGNMENT textAlignment = TEXT_ALIGN_CENTER;
 
-  tLineSettings LineSettings[P36_Nlines];
+  tLineSettings LineSettings[P36_Nlines]{};
   uint16_t CalcPixLength(uint8_t LineNo);
 
 private:

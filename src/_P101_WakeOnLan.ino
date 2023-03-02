@@ -175,7 +175,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE: {
       char   ipString[IP_BUFF_SIZE_P101]   = {0};
       char   macString[MAC_BUFF_SIZE_P101] = {0};
-      char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101];
+      char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101] = {};
       String errorStr;
       String msgStr;
       const String wolStr = F(LOG_NAME_P101);
@@ -426,10 +426,10 @@ uint8_t safeName(taskIndex_t index) {
     safeCode = NAME_MISSING;
   }
 
-  if (devName.equals(F("reboot"))) {
+  if (equals(devName, F("reboot"))) {
     safeCode = NAME_UNSAFE;
   }
-  else if (devName.equals(F("reset"))) {
+  else if (equals(devName, F("reset"))) {
     safeCode = NAME_UNSAFE;
   }
 

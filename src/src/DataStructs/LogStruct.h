@@ -56,7 +56,7 @@ struct LogStruct {
       return (idx + 1) % LOG_STRUCT_MESSAGE_LINES;
     }
 
-    String Message[LOG_STRUCT_MESSAGE_LINES];
+    String Message[LOG_STRUCT_MESSAGE_LINES] = {};
     unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES] = {0};
     int write_idx = 0;
     int read_idx = 0;

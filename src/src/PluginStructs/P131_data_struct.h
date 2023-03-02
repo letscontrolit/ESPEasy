@@ -165,6 +165,7 @@ private:
 
   String strings[P131_Nlines]; // Read once
   bool   stringsInitialized = false;
+  bool   stringsHasContent  = false;
 
   std::vector<P131_content_struct>content;
   bool                            contentInitialized = false;

@@ -92,9 +92,9 @@ void run_compiletime_checks() {
   check_size<ExtraTaskSettingsStruct,               536u>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
-  check_size<EventStruct,                           116u>(); // Is not stored
+  check_size<EventStruct,                           120u>(); // Is not stored
   #else
-  check_size<EventStruct,                           96u>(); // Is not stored
+  check_size<EventStruct,                           100u>(); // Is not stored
   #endif
 
 
@@ -125,7 +125,7 @@ void run_compiletime_checks() {
   check_size<C013_SensorDataStruct,                 24u>();
   #endif
   #ifdef USES_C016
-  check_size<C016_queue_element,                    24u>();
+  check_size<C016_binary_element,                   24u>();
   #endif
 
 

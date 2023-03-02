@@ -49,10 +49,10 @@
 #    undef P037_MAPPING_SUPPORT
 #    define P037_MAPPING_SUPPORT  0
 #   endif // if P037_MAPPING_SUPPORT
-#   if FEATURE_ADC_VCC && P037_FILTER_SUPPORT
+#   if (defined(FEATURE_ADC_VCC) || defined(P037_LIMIT_BUILD_SIZE)) && P037_FILTER_SUPPORT
 #    undef P037_FILTER_SUPPORT
 #    define P037_FILTER_SUPPORT 0
-#   endif // if FEATURE_ADC_VCC && P037_FILTER_SUPPORT
+#   endif
 
 // #if P037_JSON_SUPPORT
 //   #undef P037_JSON_SUPPORT
@@ -167,11 +167,11 @@ struct P037_data_struct : public PluginTaskData_base
 
   // The settings structures
   // The stuff we want to save between settings
-  String mqttTopics[VARS_PER_TASK];
-  String jsonAttributes[VARS_PER_TASK];
-  String globalTopicPrefix;
-  String valueArray[P037_ARRAY_SIZE]; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
-                                      // P037_START_FILTERS..P037_END_FILTERS = filters
+  String mqttTopics[VARS_PER_TASK] = {};
+  String jsonAttributes[VARS_PER_TASK] = {};
+  String globalTopicPrefix = {};
+  String valueArray[P037_ARRAY_SIZE] = {}; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
+                                           // P037_START_FILTERS..P037_END_FILTERS = filters
 
   String getFullMQTTTopic(uint8_t taskValueIndex) const;
 

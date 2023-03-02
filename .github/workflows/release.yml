@@ -136,15 +136,30 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+      - name: Get current date
+        id: date
+        run: |
+          echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - uses: actions/download-artifact@v3
         with:
           path: artifacts/
       - run: |
           ls -R
-          sudo apt install zipmerge
-          zipmerge ESPEasy_binaries.zip artifacts/Binaries/*.zip
+          sudo apt install zipmerge zip
+          cd artifacts/Binaries
+          mkdir bin
+          mv *.* bin
+          find . -not -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP82xx.zip
+          find . -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP32.zip 
+          cd ../..
+          mv artifacts/Distribution/ESPEasy_dist* .
+          cp ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
+          mv ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
+          zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip "ESP.Easy.Flasher.exe" "bin/blank_1MB.bin" "bin/blank_2MB.bin" "bin/ESPEasy_2step_UploaderMega_1024.bin"
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "ESPEasy_binaries.zip,artifacts/Distribution/*.zip"
+          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,artifacts/Distribution/*.zip"
           body: ${{ needs.prepare-notes.outputs.notes }}
           token: ${{ secrets.GITHUB_TOKEN }}
