@@ -10,14 +10,15 @@ public:
   P025_data_struct(uint8_t i2c_addr,
                    uint8_t _pga,
                    uint8_t _mux);
-  P025_data_struct() = delete;
+  P025_data_struct()          = delete;
   virtual ~P025_data_struct() = default;
 
-  int16_t read();
+  int16_t read() const;
 
 private:
 
-  uint16_t readRegister025(uint8_t reg);
+  uint16_t readConversionRegister025() const;
+  bool     isReady025() const;
 
   uint8_t pga; // Gain
   uint8_t mux; // Input multiplexer
