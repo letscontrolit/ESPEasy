@@ -45,7 +45,7 @@ else:
     "-DUSES_P085",  # AcuDC24x
     "-DUSES_P098",  # PWM motor
 
-#   "-DUSES_P100",  # Pulse Counter - DS2423
+    "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
     "-DUSES_P094",  # CUL Reader
     "-DP094_DEBUG_OPTIONS=1",
