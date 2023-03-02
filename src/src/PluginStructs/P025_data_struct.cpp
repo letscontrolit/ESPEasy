@@ -34,11 +34,6 @@ int16_t P025_data_struct::read() const {
   return (int16_t)readConversionRegister025();
 }
 
-uint8_t P025_data_struct::getMux() const
-{
-  return mux;
-}
-
 uint16_t P025_data_struct::readConversionRegister025() const {
   bool is_ok                         = false;
   const uint16_t wConversionRegister = I2C_read16_reg(i2cAddress, P025_CONVERSION_REGISTER, &is_ok);

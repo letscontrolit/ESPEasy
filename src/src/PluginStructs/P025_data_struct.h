@@ -14,7 +14,6 @@ public:
   virtual ~P025_data_struct() = default;
 
   int16_t read() const;
-  uint8_t getMux() const;
 
 private:
 
