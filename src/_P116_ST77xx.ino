@@ -8,7 +8,7 @@
 
 
 // History:
-// 2022-06-05 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
+// 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
 // 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
 // 2021-11-16 tonhuisman: P116: Change state from Development to Testing
 // 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
