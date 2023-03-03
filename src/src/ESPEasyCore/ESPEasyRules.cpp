@@ -714,9 +714,7 @@ void substitute_eventvalue(String& line, const String& event) {
             } else {
               // Just remove the invalid eventvalue variable
               if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                String log = F("Rules : Syntax error, invalid variable: ");
-                log += eventvalue;
-                addLog(LOG_LEVEL_ERROR, log);
+                addLog(LOG_LEVEL_ERROR, concat(F("Rules : Syntax error, invalid variable: "), eventvalue));
               }
               line.replace(eventvalue, EMPTY_STRING);
             }
@@ -1178,13 +1176,10 @@ int balanceParentheses(String& string) {
   int left = 0;
   int right = 0;
   for (unsigned int i = 0; i < string.length(); i++) {
-    switch (string[i]) {
-      case '(':
-        left++;
-        break;
-      case ')':
-        right++;
-        break;
+    if (string[i] == '(') {
+      left++;
+    } else if (string[i] == ')') {
+      right++;
     }
   }
   if (left != right) {
@@ -1196,7 +1191,7 @@ int balanceParentheses(String& string) {
     }
   } else if (right > left) {
     for (int i = 0; i < right - left; i++) {
-      string = String(F("(")) + string; // This is quite 'expensive'
+      string = String('(') + string; // This is quite 'expensive'
     }
   }
   return left - right;
