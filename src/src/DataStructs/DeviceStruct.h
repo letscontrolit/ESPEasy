@@ -47,6 +47,10 @@ enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_LONG            =   20,
   SENSOR_TYPE_WIND            =   21,
   SENSOR_TYPE_STRING          =   22,
+  SENSOR_TYPE_ULONG_SINGLE    =   30,
+  SENSOR_TYPE_ULONG_DUAL      =   31,
+  SENSOR_TYPE_ULONG_TRIPLE    =   32,
+  SENSOR_TYPE_ULONG_QUAD      =   33,
 
   SENSOR_TYPE_NOT_SET         = 255
 };

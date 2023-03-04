@@ -372,9 +372,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     }
   }
 
-
-  const uint8_t   valueCount = getValueCountForTask(event->TaskIndex);
-  Sensor_VType sensorType = event->getSensorType();
+  const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
+  const Sensor_VType sensorType = event->getSensorType();
 
   if (valueCount <= rel_index) {
     isvalid = false;
@@ -394,14 +393,16 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  switch (sensorType) {
-    case Sensor_VType::SENSOR_TYPE_LONG:
-      return String(UserVar.getSensorTypeLong(event->TaskIndex));
-    case Sensor_VType::SENSOR_TYPE_STRING:
-      return event->String2;
+  if (isULongOutputDataType(sensorType)) {
+    return String(UserVar.getUint32(event->TaskIndex, rel_index));
+  }
 
-    default:
-      break;
+  if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+    return String(UserVar.getSensorTypeLong(event->TaskIndex));
+  }
+
+  if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+    return event->String2;
   }
 
   float f(UserVar[event->BaseVarIndex + rel_index]);
@@ -1109,15 +1110,12 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
 
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
-      if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
-        SMART_REPL(F("%val1%"), String(UserVar.getSensorTypeLong(event->TaskIndex)))
-      } else {
-        for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
-          String valstr = F("%val");
-          valstr += (i + 1);
-          valstr += '%';
-          SMART_REPL(valstr, formatUserVarNoCheck(event, i));
-        }
+      const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) ? 1 : getValueCountForTask(event->TaskIndex);
+      for (uint8_t i = 0; i < valueCount; ++i) {
+        String valstr = F("%val");
+        valstr += (i + 1);
+        valstr += '%';
+        SMART_REPL(valstr, formatUserVarNoCheck(event, i));
       }
     }
   }

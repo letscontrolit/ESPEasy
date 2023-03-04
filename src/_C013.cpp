@@ -1,9 +1,9 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C013
 
-#if FEATURE_ESPEASY_P2P == 0
-  #error "Controller C013 ESPEasy P2P requires the FEATURE_ESPEASY_P2P enabled"
-#endif
+# if FEATURE_ESPEASY_P2P == 0
+  #  error "Controller C013 ESPEasy P2P requires the FEATURE_ESPEASY_P2P enabled"
+# endif // if FEATURE_ESPEASY_P2P == 0
 
 
 # include "src/Globals/Nodes.h"
@@ -23,9 +23,15 @@
 WiFiUDP C013_portUDP;
 
 // Forward declarations
-void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t destTaskIndex);
-void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t destTaskIndex);
-void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size);
+void C013_SendUDPTaskInfo(uint8_t destUnit,
+                          uint8_t sourceTaskIndex,
+                          uint8_t destTaskIndex);
+void C013_SendUDPTaskData(struct EventStruct *event,
+                          uint8_t             destUnit,
+                          uint8_t             destTaskIndex);
+void C013_sendUDP(uint8_t        unit,
+                  const uint8_t *data,
+                  uint8_t        size);
 void C013_Receive(struct EventStruct *event);
 
 
@@ -62,7 +68,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      C013_SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
+      C013_SendUDPTaskData(event, 0, event->TaskIndex);
       success = true;
       break;
     }
@@ -135,7 +141,7 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   delay(50);
 }
 
-void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t destTaskIndex)
+void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t destTaskIndex)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -143,14 +149,22 @@ void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   struct C013_SensorDataStruct dataReply;
 
   dataReply.sourceUnit      = Settings.Unit;
-  dataReply.sourceTaskIndex = sourceTaskIndex;
+  dataReply.sourceTaskIndex = event->TaskIndex;
   dataReply.destTaskIndex   = destTaskIndex;
 
-  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
-    const userVarIndex_t userVarIndex = dataReply.sourceTaskIndex * VARS_PER_TASK + x;
+  // FIXME TD-er: We should check for sensorType and pluginID on both sides.
+  // For example sending different sensor type data from one dummy to another is probably not going to work well
+  const Sensor_VType sensorType = event->getSensorType();
 
-    if (validUserVarIndex(userVarIndex)) {
-      dataReply.Values[x] = UserVar[userVarIndex];
+  for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x) {
+    if (isULongOutputDataType(sensorType)) {
+      dataReply.Values_uint32_t[x] = UserVar.getUint32(event->TaskIndex, x);
+    } else {
+      const userVarIndex_t userVarIndex = event->BaseVarIndex + x;
+
+      if (validUserVarIndex(userVarIndex)) {
+        dataReply.Values[x] = UserVar[userVarIndex];
+      }
     }
   }
 
@@ -193,6 +207,7 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 
   FeedSW_watchdog();
   const IPAddress remoteNodeIP = getIPAddressForUnit(unit);
+
   if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) { return; }
   C013_portUDP.write(data, size);
   C013_portUDP.endPacket();
@@ -248,6 +263,11 @@ void C013_Receive(struct EventStruct *event) {
           Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber;
           Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourceUnit; // remote feed store unit nr sending the data
 
+          if ((infoReply.deviceNumber == 33) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
+            // Received a dummy device and the sensor type is actually set
+            Settings.TaskDevicePluginConfig[infoReply.destTaskIndex][0] = static_cast<int16_t>(infoReply.sensorType);
+          }
+
           for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
             Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
           }
@@ -278,20 +298,47 @@ void C013_Receive(struct EventStruct *event) {
       if (event->Par2 < count) { count = event->Par2; }
       memcpy(reinterpret_cast<uint8_t *>(&dataReply), event->Data, count);
 
+      // FIXME TD-er: We should check for sensorType and pluginID on both sides.
+      // For example sending different sensor type data from one dummy to another is probably not going to work well
       if (dataReply.isValid()) {
         // only if this task has a remote feed, update values
         const uint8_t remoteFeed = Settings.TaskDeviceDataFeed[dataReply.destTaskIndex];
 
         if ((remoteFeed != 0) && (remoteFeed == dataReply.sourceUnit))
         {
-          for (uint8_t x = 0; x < VARS_PER_TASK; x++)
-          {
-            UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
-          }
-
-          if (Settings.UseRules) {
+          if (!dataReply.matchesPluginID(Settings.TaskDeviceNumber[dataReply.destTaskIndex])) {
+            // Mismatch in plugin ID from sending node
+            if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+              String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
+              log += concat(F(" from unit "), dataReply.sourceUnit);
+              addLogMove(LOG_LEVEL_ERROR, log);
+            }
+          } else {
             struct EventStruct TempEvent(dataReply.destTaskIndex);
-            createRuleEvents(&TempEvent);
+
+            const Sensor_VType sensorType = TempEvent.getSensorType();
+
+            if (dataReply.matchesSensorType(sensorType)) {
+              for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
+              {
+                if (isULongOutputDataType(sensorType)) {
+                  UserVar.setUint32(dataReply.destTaskIndex, x, dataReply.Values_uint32_t[x]);
+                } else {
+                  UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
+                }
+              }
+
+              if (Settings.UseRules) {
+                createRuleEvents(&TempEvent);
+              }
+            } else {
+              // Mismatch in sensor types
+              if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                String log = concat(F("P2P data : SensorType mismatch for task "), dataReply.destTaskIndex + 1);
+                log += concat(F(" from unit "), dataReply.sourceUnit);
+                addLogMove(LOG_LEVEL_ERROR, log);
+              }
+            }
           }
         }
       }

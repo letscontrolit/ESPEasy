@@ -10,7 +10,7 @@
 # For Python 3.10:
 # sudo apt install -y software-properties-common
 # sudo add-apt-repository ppa:deadsnakes/ppa
-# sudo apt install -y python3.8
+# sudo apt install -y python3.10
 
 
 
@@ -102,7 +102,7 @@ esac
 shift
 done
 
-VENV=`echo "${SRC}/venv/python3.8"`
+VENV=`echo "${SRC}/venv/python3.10"`
 TMP_DIST=`echo "${SRC}/ESPEasy_collect_dist"`
 
 
@@ -143,7 +143,7 @@ if (( $HELP != 0 )); then
    echo "For Python 3.10:"
    echo "  sudo apt install -y software-properties-common"
    echo "  sudo add-apt-repository ppa:deadsnakes/ppa"
-   echo "  sudo apt install -y python3.8"
+   echo "  sudo apt install -y python3.10"
    echo "For Sphinx (convert):"
    echo "  sudo apt install imagemagick"
    echo ""
@@ -202,10 +202,10 @@ fi
 if [ ! -d ${VENV} ]; then
   echo "Creating Python virtual env in: ${VENV}"
   mkdir -p ${VENV}
-  virtualenv -p python3.8 ${VENV}
+  virtualenv -p python3.10 ${VENV}
   if [ $? -ne 0 ]; then
     echo "Could not create Python virtual env:"
-    echo "  virtualenv -p python3.8 ${VENV}"
+    echo "  virtualenv -p python3.10 ${VENV}"
     exit 1
   fi
 fi

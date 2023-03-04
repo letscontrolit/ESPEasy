@@ -2,7 +2,7 @@
 
 
 #include "../../ESPEasy_common.h"
-
+#include "../../_Plugin_Helper.h"
 
 #include "../Commands/Common.h"
 
@@ -118,9 +118,15 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
     success = false;
     return F("TASK_NOT_ENABLED");
   }
+  const uint8_t valueCount = getValueCountForTask(taskIndex);
+  if (valueCount <= varNr) {
+    success = false;
+    return F("INVALID_VAR_INDEX");
+  }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
+  EventStruct tmpEvent(taskIndex);
   if (GetArgv(Line, TmpStr1, 4)) {
     // Perform calculation with float result.
     double result = 0;
@@ -129,10 +135,17 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
       success = false;
       return F("CALCULATION_ERROR");
     }
-    UserVar[uservarIndex] = result;
+    const Sensor_VType sensorType = tmpEvent.getSensorType();
+    if (isULongOutputDataType(sensorType)) {
+      UserVar.setUint32(taskIndex, varNr, result);
+    } else if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+      UserVar.setSensorTypeLong(taskIndex, result);
+    } else {
+      UserVar[uservarIndex] = result;
+    }
   } else  {
     // TODO: Get Task description and var name
-    serialPrintln(toString(UserVar[uservarIndex]));
+    serialPrintln(formatUserVarNoCheck(&tmpEvent, varNr));
   }
   success = true;
   return return_command_success();
@@ -201,6 +214,8 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
     return F("TASK_NOT_ENABLED");
   }
+
+  // FIXME TD-er: Check for ULong types
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
   const int    result       = lround(UserVar[uservarIndex]);
