@@ -355,7 +355,7 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
                      uint8_t     function) {
   if (!Settings.CheckI2Cdevice()) { return true; } // Check disabled, continue
 
-  bool retval = false;
+  bool retval = true;
 
   if (validTaskIndex(taskIndex)) {
     if (Settings.TaskDeviceDataFeed[taskIndex] != 0) { return true; } // Remote device can't be checked
