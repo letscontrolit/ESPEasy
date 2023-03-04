@@ -389,17 +389,6 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIME_CHANGE:
-    {
-      P098_data_struct *P098_data =
-        static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      P098_data->timeChanged();
-      success = true;
-
-      break;
-    }
-
     case PLUGIN_READ:
     {
       P098_data_struct *P098_data =

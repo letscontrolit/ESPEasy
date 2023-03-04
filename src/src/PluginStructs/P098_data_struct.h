@@ -130,8 +130,6 @@ struct P098_data_struct : public PluginTaskData_base {
   void getLimitSwitchPositions(int& limitA,
                                int& limitB) const;
 
-  void timeChanged();
-
   State state       = State::Idle;
   bool  initialized = false;
 

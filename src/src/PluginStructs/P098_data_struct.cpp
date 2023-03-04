@@ -202,13 +202,6 @@ void P098_data_struct::getLimitSwitchPositions(int& limitApos, int& limitBpos) c
   limitBpos = limitB.switchposSet ? limitB.switchpos : 0;
 }
 
-void P098_data_struct::timeChanged()
-{
-  if(lastVirtualSpeedApplied_us > 0) {
-    lastVirtualSpeedApplied_us = getMicros64();
-  }
-}
-
 void P098_data_struct::startMoving()
 {
   if(pos_dest == 0) {
