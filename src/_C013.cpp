@@ -324,7 +324,7 @@ void C013_Receive(struct EventStruct *event) {
                 if (isULongOutputDataType(sensorType)) {
                   UserVar.setUint32(dataReply.destTaskIndex, x, dataReply.Values_uint32_t[x]);
                 } else {
-                  UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
+                  UserVar[TempEvent.BaseVarIndex + x] = dataReply.Values[x];
                 }
               }
 

@@ -680,13 +680,7 @@ void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime, unsi
             double result = 0;
 
             if (!isError(Calculate(parseTemplate(formula), result))) {
-              if (isULongOutputDataType(TempEvent.sensorType)) {
-                UserVar.setUint32(TaskIndex, varNr, result);
-              } else if (TempEvent.sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
-                UserVar.setSensorTypeLong(TaskIndex, result);
-              } else {
-                UserVar[TempEvent.BaseVarIndex + varNr] = result;
-              }
+              UserVar.set(TaskIndex, varNr, result, TempEvent.sensorType);
             }
 
             STOP_TIMER(COMPUTE_FORMULA_STATS);

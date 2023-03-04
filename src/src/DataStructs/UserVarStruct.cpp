@@ -2,6 +2,7 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Plugins.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 
 UserVarStruct::UserVarStruct()
 {
@@ -80,6 +81,18 @@ void UserVarStruct::setUint32(taskIndex_t taskIndex, uint8_t varNr, uint32_t val
   float tmp;
   memcpy(&tmp, &value, sizeof(float));
   _data[baseVarIndex + varNr] = tmp;
+}
+
+void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const double& value, Sensor_VType sensorType)
+{
+  if (isULongOutputDataType(sensorType)) {
+    setUint32(taskIndex, varNr, value);
+  } else if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+    setSensorTypeLong(taskIndex, value);
+  } else {
+    const unsigned int baseVarIndex = taskIndex * VARS_PER_TASK;
+    _data[baseVarIndex + varNr] = value;
+  }
 }
 
 size_t UserVarStruct::getNrElements() const

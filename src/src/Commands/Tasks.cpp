@@ -124,8 +124,6 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
     return F("INVALID_VAR_INDEX");
   }
 
-  unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
-
   EventStruct tmpEvent(taskIndex);
   if (GetArgv(Line, TmpStr1, 4)) {
     // Perform calculation with float result.
@@ -136,13 +134,7 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
       return F("CALCULATION_ERROR");
     }
     const Sensor_VType sensorType = tmpEvent.getSensorType();
-    if (isULongOutputDataType(sensorType)) {
-      UserVar.setUint32(taskIndex, varNr, result);
-    } else if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
-      UserVar.setSensorTypeLong(taskIndex, result);
-    } else {
-      UserVar[uservarIndex] = result;
-    }
+    UserVar.set(taskIndex, varNr, result, sensorType);
   } else  {
     // TODO: Get Task description and var name
     serialPrintln(formatUserVarNoCheck(&tmpEvent, varNr));

@@ -15,7 +15,8 @@ C016_queue_element::C016_queue_element() :  sensorType(
   _taskIndex      = INVALID_TASK_INDEX;
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    values[i] = 0.0f;
+    // IEEE 754 floating points have same bit representation as int for value 0.
+    values_uint32_t[i] = 0;
   }
 }
 
@@ -52,11 +53,8 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t 
         values[i] = UserVar[event->BaseVarIndex + i];
       }
     } else {
-      if (isULongOutputDataType(sensorType)) {
-        values_uint32_t[i] = 0;
-      } else {
-        values[i] = 0.0f;
-      }
+      // IEEE 754 floating points have same bit representation as int for value 0.
+      values_uint32_t[i] = 0;
     }
   }
 }

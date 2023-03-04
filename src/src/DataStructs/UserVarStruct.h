@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/DeviceStruct.h"
+
 #include "../DataTypes/TaskIndex.h"
 
 #include <vector>
@@ -24,6 +26,8 @@ struct UserVarStruct {
   void     setUint32(taskIndex_t taskIndex,
                      uint8_t        varNr,
                      uint32_t    value);
+
+  void set(taskIndex_t taskIndex, uint8_t varNr, const double& value, Sensor_VType sensorType);
 
 
   size_t getNrElements() const;
