@@ -215,13 +215,19 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
     return F("TASK_NOT_ENABLED");
   }
 
-  // FIXME TD-er: Check for ULong types
+  EventStruct tmpEvent(taskIndex);
+  const Sensor_VType sensorType = tmpEvent.getSensorType();
+  if (isULongOutputDataType(sensorType)) {
+    UserVar.setUint32(taskIndex, varNr, !UserVar.getUint32(taskIndex, varNr));
+  } else if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+    UserVar.setSensorTypeLong(taskIndex, !UserVar.getSensorTypeLong(taskIndex));
+  } else {
+    const unsigned int uservarIndex = tmpEvent.BaseVarIndex + varNr;
+    const int    result       = lround(UserVar[uservarIndex]);
 
-  unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
-  const int    result       = lround(UserVar[uservarIndex]);
-
-  if ((result == 0) || (result == 1)) {
-    UserVar[uservarIndex] = (result == 0) ? 1.0f : 0.0f;
+    if ((result == 0) || (result == 1)) {
+      UserVar[uservarIndex] = (result == 0) ? 1.0f : 0.0f;
+    }
   }
   return return_command_success();
 }

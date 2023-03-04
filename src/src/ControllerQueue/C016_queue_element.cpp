@@ -52,7 +52,11 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t 
         values[i] = UserVar[event->BaseVarIndex + i];
       }
     } else {
-      values[i] = 0.0f;
+      if (isULongOutputDataType(sensorType)) {
+        values_uint32_t[i] = 0;
+      } else {
+        values[i] = 0.0f;
+      }
     }
   }
 }
