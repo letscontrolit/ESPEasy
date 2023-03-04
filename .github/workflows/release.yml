@@ -144,7 +144,8 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           path: artifacts/
-      - run: |
+      - name: Repackage for release upload
+        run: |
           ls -R
           sudo apt install zipmerge zip
           cd artifacts/Binaries
