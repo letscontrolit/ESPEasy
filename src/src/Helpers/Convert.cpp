@@ -14,23 +14,27 @@ const __FlashStringHelper * getBearing(int degrees)
   int bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nr_directions;
 
   if (bearing_idx >= 0) {
-    switch (bearing_idx) {
-      case 0: return F("N");
-      case 1: return F("NNE");
-      case 2: return F("NE");
-      case 3: return F("ENE");
-      case 4: return F("E");
-      case 5: return F("ESE");
-      case 6: return F("SE");
-      case 7: return F("SSE");
-      case 8: return F("S");
-      case 9: return F("SSW");
-      case 10: return F("SW");
-      case 11: return F("WSW");
-      case 12: return F("W");
-      case 13: return F("WNW");
-      case 14: return F("NW");
-      case 15: return F("NNW");
+    const __FlashStringHelper* strings[] {
+      F("N"),
+      F("NNE"),
+      F("NE"),
+      F("ENE"),
+      F("E"),
+      F("ESE"),
+      F("SE"),
+      F("SSE"),
+      F("S"),
+      F("SSW"),
+      F("SW"),
+      F("WSW"),
+      F("W"),
+      F("WNW"),
+      F("NW"),
+      F("NNW")
+    };
+    constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+    if (static_cast<size_t>(bearing_idx) < nrStrings) {
+      return strings[bearing_idx];
     }
   }
   return F("");
@@ -41,30 +45,15 @@ float CelsiusToFahrenheit(float celsius) {
 }
 
 int m_secToBeaufort(float m_per_sec) {
-  if (m_per_sec < 0.3f) { return 0; }
-
-  if (m_per_sec < 1.6f) { return 1; }
-
-  if (m_per_sec < 3.4f) { return 2; }
-
-  if (m_per_sec < 5.5f) { return 3; }
-
-  if (m_per_sec < 8.0f) { return 4; }
-
-  if (m_per_sec < 10.8f) { return 5; }
-
-  if (m_per_sec < 13.9f) { return 6; }
-
-  if (m_per_sec < 17.2f) { return 7; }
-
-  if (m_per_sec < 20.8f) { return 8; }
-
-  if (m_per_sec < 24.5f) { return 9; }
-
-  if (m_per_sec < 28.5f) { return 10; }
-
-  if (m_per_sec < 32.6f) { return 11; }
-  return 12;
+  // Use ints wit 0.1 m/sec resolution to reduce size.
+  const uint16_t dm_per_sec = 10 * m_per_sec;
+  const uint16_t speeds[]{3, 16, 34, 55, 80, 108, 139, 172, 208, 245, 285, 326};  
+  constexpr int nrElements = sizeof(speeds) / sizeof(speeds[0]);
+  
+  for (int bft = 0; bft < nrElements; ++bft) {
+    if (dm_per_sec < speeds[bft]) return bft;
+  }
+  return nrElements;  
 }
 
 String centimeterToImperialLength(float cm) {
