@@ -301,6 +301,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
   const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
 
+  addRTDControllerButton(Protocol[ProtocolIndex].Number);
+
   if (Settings.Protocol[controllerindex])
   {
     {
