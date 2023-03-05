@@ -8,6 +8,7 @@
 
 
 // History:
+// 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
 // 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
 // 2021-11-16 tonhuisman: P116: Change state from Development to Testing
 // 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
@@ -247,7 +248,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       uint32_t lSettings = 0;
       bitWrite(lSettings, P116_CONFIG_FLAG_NO_WAKE,       !isFormItemChecked(F("NoDisplay")));    // Bit 0 NoDisplayOnReceivingText,
-      // reverse logic, default=checked!
+                                                                                                  // reverse logic, default=checked!
       bitWrite(lSettings, P116_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("buttonInverse"))); // Bit 1 buttonInverse
       bitWrite(lSettings, P116_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("clearOnExit")));   // Bit 2 ClearOnExit
       bitWrite(lSettings, P116_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("colrow")));        // Bit 3 Col/Row addressing
@@ -273,13 +274,12 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
 
       String strings[P116_Nlines];
-      String error;
 
       for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
         strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
-      error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
+      const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
       if (!error.isEmpty()) {
         addHtmlError(error);
@@ -391,6 +391,19 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P116_data) {
+        success = P116_data->plugin_get_config_value(event, string); // GetConfig operation, handle variables, fully delegated to
+                                                                     // AdafruitGFX_helper
+      }
+      break;
+    }
+    # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
   }
   return success;
 }
