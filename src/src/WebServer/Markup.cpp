@@ -907,7 +907,7 @@ void addRTDPluginButton(pluginID_t taskDeviceNumber) {
 void addRTDControllerButton(protocolIndex_t protocolIndex) {
   String url;
 
-  url.reserve(16);
+  url.reserve(20);
   url = F("Controller/C");
 
   if (protocolIndex < 100) { url += '0'; }
