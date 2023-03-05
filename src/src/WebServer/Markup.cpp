@@ -895,17 +895,15 @@ void addRTDPluginButton(pluginID_t taskDeviceNumber) {
   url += F(".html");
   addRTDHelpButton(url);
 
-  switch (taskDeviceNumber) {
-    case 76:
-    case 77:
-      addHtmlLink(
-        F("button help"),
-        makeDocLink(F("Reference/Safety.html"), true),
-        F("&#9889;")); // High voltage sign
-      break;
+  if ((taskDeviceNumber == 76) || (taskDeviceNumber == 77)) {
+    addHtmlLink(
+      F("button help"),
+      makeDocLink(F("Reference/Safety.html"), true),
+      F("&#9889;")); // High voltage sign
   }
 }
 
+# ifndef LIMIT_BUILD_SIZE
 void addRTDControllerButton(protocolIndex_t protocolIndex) {
   String url;
 
@@ -919,6 +917,7 @@ void addRTDControllerButton(protocolIndex_t protocolIndex) {
   url += F(".html");
   addRTDHelpButton(url);
 }
+# endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url, bool isRTD) {
   String result;

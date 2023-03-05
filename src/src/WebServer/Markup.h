@@ -316,7 +316,9 @@ void   addHelpButton(const String& url,
                      bool          isRTD);
 
 void   addRTDPluginButton(pluginID_t taskDeviceNumber);
+# ifndef LIMIT_BUILD_SIZE
 void   addRTDControllerButton(protocolIndex_t protocolIndex);
+# endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url,
                    bool          isRTD);
