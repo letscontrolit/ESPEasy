@@ -19,7 +19,7 @@ bool P052_data_struct::isInitialized() const {
 }
 
 const __FlashStringHelper * P052_data_struct::Plugin_052_valuename(uint8_t value_nr, bool displayString) {
-  const __FlashStringHelper* strings[] {
+  const __FlashStringHelper *strings[] {
     F("Empty"),                  F(""),
     F("Carbon Dioxide"),         F("co2"),
     F("Temperature"),            F("T"),
@@ -29,8 +29,9 @@ const __FlashStringHelper * P052_data_struct::Plugin_052_valuename(uint8_t value
     F("ABC period"),             F("abc_per"),
     F("Error Status"),           F("err")
   };
-  const size_t index = 2* value_nr + displayString ? 0 : 1;
+  const size_t index         = 2 * value_nr + (displayString ? 0 : 1);
   constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+
   if (index < nrStrings) {
     return strings[index];
   }

@@ -41,7 +41,7 @@ const __FlashStringHelper* Plugin_026_valuename(uint8_t value_nr, bool displaySt
     F("WiFi TX pwr")  , F("txpwr"),
     F("Free 2nd Heap"), F("free2ndheap")
   };
-  const size_t index = 2* value_nr + displayString ? 0 : 1;
+  const size_t index = 2* value_nr + (displayString ? 0 : 1);
   constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
   if (index < nrStrings) {
     return strings[index];
