@@ -6,13 +6,13 @@
 // #######################################################################################################
 
 
-#include "src/PluginStructs/P006_data_struct.h"
+# include "src/PluginStructs/P006_data_struct.h"
 
-#define PLUGIN_006
-#define PLUGIN_ID_006        6
-#define PLUGIN_NAME_006       "Environment - BMP085/180"
-#define PLUGIN_VALUENAME1_006 "Temperature"
-#define PLUGIN_VALUENAME2_006 "Pressure"
+# define PLUGIN_006
+# define PLUGIN_ID_006        6
+# define PLUGIN_NAME_006       "Environment - BMP085/180"
+# define PLUGIN_VALUENAME1_006 "Temperature"
+# define PLUGIN_VALUENAME2_006 "Pressure"
 
 
 boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
@@ -56,6 +56,15 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
       success = (event->Par1 == 0x77);
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x77;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
     {

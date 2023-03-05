@@ -123,7 +123,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command.equals(F("setlevel"))) {
+      if (equals(command, F("setlevel"))) {
         String value  = parseString(string, 2);
         double result = 0.0;
 
@@ -158,7 +158,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command.equals(F("getlevel"))) {
+      if (equals(command, F("getlevel"))) {
         string  = toString(P021_TRIGGER_LEVEL);
         success = true;
       }

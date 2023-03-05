@@ -91,6 +91,7 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
     case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
     case PLUGIN_PROCESS_CONTROLLER_DATA: return F("PROCESS_CONTROLLER_DATA");
+    case PLUGIN_I2C_GET_ADDRESS:       return F("I2C_CHECK_DEVICE");
   }
   return F("Unknown");
 }
@@ -126,6 +127,7 @@ bool mustLogFunction(int function) {
     case PLUGIN_GET_CONFIG_VALUE:      return false;
     case PLUGIN_UNCONDITIONAL_POLL:    return false;
     case PLUGIN_REQUEST:               return true;
+    case PLUGIN_I2C_GET_ADDRESS:       return true;
     case PLUGIN_PROCESS_CONTROLLER_DATA: return true;
   }
   return false;

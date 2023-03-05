@@ -28,26 +28,6 @@
 # define PLUGIN_VALUENAME1_146 "FileNr"
 # define PLUGIN_VALUENAME2_146 "FilePos"
 
-# define P146_TASKVALUE_FILENR  UserVar[event->BaseVarIndex + 0]
-# define P146_TASKVALUE_FILEPOS UserVar[event->BaseVarIndex + 1]
-
-# define P146_GET_SEND_BINARY    bitRead(PCONFIG(0), 0)
-# define P146_SET_SEND_BINARY(X) bitWrite(PCONFIG(0), 0, X)
-
-# define P146_GET_APPEND_BINARY_TOPIC    bitRead(PCONFIG(0), 1)
-# define P146_SET_APPEND_BINARY_TOPIC(X) bitWrite(PCONFIG(0), 1, X)
-
-# define P146_GET_SEND_TIMESTAMP    bitRead(PCONFIG(0), 2)
-# define P146_SET_SEND_TIMESTAMP(X) bitWrite(PCONFIG(0), 2, X)
-
-# define P146_GET_SEND_READ_POS    bitRead(PCONFIG(0), 3)
-# define P146_SET_SEND_READ_POS(X) bitWrite(PCONFIG(0), 3, X)
-
-
-# define P146_MINIMAL_SEND_INTERVAL             PCONFIG_LONG(0)
-# define P146_MQTT_MESSAGE_LENGTH               PCONFIG_LONG(1)
-# define P146_MQTT_SEND_TASKVALUENAMES_INTERVAL PCONFIG_LONG(2)
-
 
 # include "src/ControllerQueue/C016_queue_element.h"
 # include "src/Globals/C016_ControllerCache.h"
@@ -94,9 +74,12 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       P146_SET_SEND_BINARY(0);
-      P146_SET_APPEND_BINARY_TOPIC(0);
+      P146_SET_SEND_BULK(1);
       P146_SET_SEND_TIMESTAMP(1);
       P146_SET_SEND_READ_POS(1);
+      P146_SET_JOIN_TIMESTAMP(1);
+      P146_SET_ONLY_SET_TASKS(1);
+      P146_SEPARATOR_CHARACTER = ',';
 
       P146_MINIMAL_SEND_INTERVAL = 100;
       P146_MQTT_MESSAGE_LENGTH   = 800;
@@ -122,7 +105,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
         P146_TASKVALUE_FILENR,
         P146_TASKVALUE_FILEPOS);
       initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P146_data_struct(event->TaskIndex));
+                         new (std::nothrow) P146_data_struct(event));
       P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P146_data) {
@@ -136,8 +119,17 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       if (ControllerCache.peekDataAvailable()) {
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P146_MINIMAL_SEND_INTERVAL);
 
-        if (P146_GET_SEND_BINARY) {
-          P146_data_struct::prepareBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH);
+        if (P146_GET_SEND_BULK) {
+          if (P146_GET_SEND_BINARY) {
+            P146_data_struct::prepare_BulkMQTT_message(event->TaskIndex);
+          } else {
+            P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+            if (nullptr != P146_data) {
+              const char separator = static_cast<char>(P146_SEPARATOR_CHARACTER);
+              P146_data->prepareCSVInBulk(event->TaskIndex, P146_GET_JOIN_TIMESTAMP, P146_GET_ONLY_SET_TASKS, separator);
+            }
+          }
         } else {
           // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
 
@@ -158,11 +150,19 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_PROCESS_CONTROLLER_DATA:
     {
-      if (P146_GET_SEND_BINARY) {
+      if (P146_GET_SEND_BULK) {
         P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P146_data) {
-          if (0 != P146_data->sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH)) {
+          bool data_sent = false;
+
+          if (P146_GET_SEND_BINARY) {
+            data_sent = (0 != P146_data->sendBinaryInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH));
+          } else {
+            data_sent = (0 != P146_data->sendCSVInBulk(event->TaskIndex, P146_MQTT_MESSAGE_LENGTH));
+          }
+
+          if (data_sent) {
             int readFileNr    = 0;
             const int readPos = ControllerCache.getPeekFilePos(readFileNr);
             P146_TASKVALUE_FILENR  = readFileNr;
@@ -178,9 +178,10 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("MQTT Output Options"));
-      addFormCheckBox(F("HEX encoded Binary"),    F("binary"),         P146_GET_SEND_BINARY);
-//      addFormCheckBox(F("Append 'bin' to topic"), F("appendbintopic"), P146_GET_APPEND_BINARY_TOPIC);
-//      addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
+      addFormCheckBox(F("Send Bulk"),          F("sendbulk"), P146_GET_SEND_BULK);
+      addFormCheckBox(F("HEX encoded Binary"), F("binary"),   P146_GET_SEND_BINARY);
+
+      //      addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
       addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
       addFormNumericBox(F("Max Message Size"),
                         F("maxmsgsize"),
@@ -194,8 +195,48 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       addFormTextBox(F("Publish Topic"),  getPluginCustomArgName(P146_PublishTopicIndex),  strings[P146_PublishTopicIndex],  P146_Nchars);
 
 
-//      addFormSubHeader(F("Non MQTT Output Options"));
-//      addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);
+      //      addFormSubHeader(F("Non MQTT Output Options"));
+      //      addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);
+
+      addTableSeparator(F("Export to CSV"), 2, 3);
+
+      {
+        const __FlashStringHelper *separatorLabels[] = {
+          F("Tab"),
+          F("Comma"),
+          F("Semicolon")
+        };
+        const int separatorOptions[] = {
+          '\t',
+          ',',
+          ';'
+        };
+        addFormSelector(F("Separator"), F("separator"), 3, separatorLabels, separatorOptions, P146_SEPARATOR_CHARACTER);
+      }
+      addFormCheckBox(F("Join Samples with same Timestamp"), F("jointimestamp"), P146_GET_JOIN_TIMESTAMP);
+      addFormCheckBox(F("Export only set tasks"),            F("onlysettasks"),  P146_GET_ONLY_SET_TASKS);
+
+      addFormNote(F("Download button link only updated after saving"));
+
+      addRowLabel(EMPTY_STRING);
+      html_add_button_prefix();
+      addHtml(F("dumpcache?separator="));
+
+      switch (static_cast<char>(P146_SEPARATOR_CHARACTER)) {
+        case '\t': addHtml(F("Tab")); break;
+        case ',':  addHtml(F("Comma")); break;
+        case ';':
+        default:   addHtml(F("Semicolon")); break;
+      }
+
+      if (P146_GET_JOIN_TIMESTAMP) {
+        addHtml(F("&jointimestamp=1"));
+      }
+
+      if (P146_GET_ONLY_SET_TASKS) {
+        addHtml(F("&onlysettasks=1"));
+      }
+      addHtml(F("'>Download as CSV</a>"));
 
       success = true;
       break;
@@ -203,13 +244,18 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      P146_SET_SEND_BULK(isFormItemChecked(F("sendbulk")));
       P146_SET_SEND_BINARY(isFormItemChecked(F("binary")));
-//      P146_SET_APPEND_BINARY_TOPIC(isFormItemChecked(F("appendbintopic")));
-//      P146_SET_SEND_READ_POS(isFormItemChecked(F("sendreadpos")));
-//      P146_SET_SEND_TIMESTAMP(isFormItemChecked(F("sendtimestamp")));
+
+      //      P146_SET_SEND_READ_POS(isFormItemChecked(F("sendreadpos")));
+      //      P146_SET_SEND_TIMESTAMP(isFormItemChecked(F("sendtimestamp")));
 
       P146_MINIMAL_SEND_INTERVAL = getFormItemInt(F("minsendinterval"));
       P146_MQTT_MESSAGE_LENGTH   = getFormItemInt(F("maxmsgsize"));
+
+      P146_SET_JOIN_TIMESTAMP(isFormItemChecked(F("jointimestamp")));
+      P146_SET_ONLY_SET_TASKS(isFormItemChecked(F("onlysettasks")));
+      P146_SEPARATOR_CHARACTER = getFormItemInt(F("separator"));
 
       String strings[P146_Nlines];
       String error;
@@ -234,17 +280,20 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       const String command    = parseString(string, 1);
       const String subcommand = parseString(string, 2);
 
-      if (command.equals(F("cachereader"))) {
-        if (subcommand.equals(F("setreadpos"))) {
+      if (equals(command, F("cachereader"))) {
+        if (equals(subcommand, F("setreadpos"))) {
           P146_data_struct::setPeekFilePos(event->Par2, event->Par3);
           success = true;
-        } else if (subcommand.equals(F("sendtaskinfo"))) {
+        } else if (equals(subcommand, F("sendtaskinfo"))) {
           P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr != P146_data) {
-            P146_data->sendTaskInfoInBulk(event->TaskIndex, 0);
+            P146_data->sendTaskInfoInBulk(event);
             success = true;
           }
+        } else if (equals(subcommand, F("flush"))) {
+          P146_data_struct::flush();
+          success = true;
         }
       }
       break;

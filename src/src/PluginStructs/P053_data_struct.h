@@ -161,7 +161,7 @@ public:
 private:
 
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-  void sendEvent(const String& baseEvent,
+  void sendEvent(taskIndex_t TaskIndex,
                  uint8_t       index);
 
   bool hasFormaldehyde() const;

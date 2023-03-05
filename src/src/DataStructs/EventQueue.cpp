@@ -2,6 +2,9 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../Globals/Settings.h"
+#include "../Helpers/Misc.h"
+
 
 void EventQueueStruct::add(const String& event, bool deduplicate)
 {
@@ -43,6 +46,43 @@ void EventQueueStruct::addMove(String&& event, bool deduplicate)
 
   if (!deduplicate || !isDuplicate(event)) {
     _eventQueue.emplace_back(std::move(event));
+  }
+}
+
+void EventQueueStruct::add(taskIndex_t TaskIndex, const String& varName, const String& eventValue)
+{
+  if (Settings.UseRules) {
+    String eventCommand = getTaskDeviceName(TaskIndex);
+    eventCommand.reserve(eventCommand.length() + 2 + varName.length() + eventValue.length());
+    eventCommand += '#';
+    eventCommand += varName;
+
+    if (!eventValue.isEmpty()) {
+      eventCommand += '='; // Add arguments
+      eventCommand += eventValue;
+    }
+    addMove(std::move(eventCommand));
+  }
+}
+
+void EventQueueStruct::add(taskIndex_t TaskIndex, const String& varName, int eventValue)
+{
+  if (Settings.UseRules) {
+    add(TaskIndex, varName, String(eventValue));
+  }
+}
+
+void EventQueueStruct::add(taskIndex_t TaskIndex, const __FlashStringHelper *varName, const String& eventValue)
+{
+  if (Settings.UseRules) {
+    add(TaskIndex, String(varName), eventValue);
+  }
+}
+
+void EventQueueStruct::add(taskIndex_t TaskIndex, const __FlashStringHelper *varName, int eventValue)
+{
+  if (Settings.UseRules) {
+    add(TaskIndex, String(varName), String(eventValue));
   }
 }
 

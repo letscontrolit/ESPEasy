@@ -374,7 +374,7 @@ void NodesHandler::updateThisNode() {
 
   thisNode.unit  = Settings.Unit;
   thisNode.build = Settings.Build;
-  memcpy(thisNode.nodeName, Settings.Name, 25);
+  memcpy(thisNode.nodeName, Settings.getName().c_str(), 25);
   thisNode.nodeType = NODE_TYPE_ID;
 
   thisNode.webgui_portnumber = Settings.WebserverPort;

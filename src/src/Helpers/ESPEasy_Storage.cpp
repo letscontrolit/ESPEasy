@@ -173,14 +173,14 @@ bool fileExists(const String& fname) {
 fs::File tryOpenFile(const String& fname, const String& mode) {
   START_TIMER;
   fs::File f;
-  if (fname.isEmpty() || fname.equals(F("/"))) {
+  if (fname.isEmpty() || equals(fname, '/')) {
     return f;
   }
 
   bool exists = fileExists(fname);
 
   if (!exists) {
-    if (mode.equals(F("r"))) {
+    if (equals(mode, 'r')) {
       return f;
     }
     clearFileCaches();
@@ -434,7 +434,7 @@ void fileSystemCheck()
     if (f) { 
       f.close(); 
     } else {
-      ResetFactory();
+      ResetFactory(false);
     }
   }
   else
