@@ -84,11 +84,11 @@ enum class P116_CommandTrigger : uint8_t {
   st7796 = 4u,
 };
 
-const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device);
-const __FlashStringHelper* P116_CommandTrigger_toString(P116_CommandTrigger cmd);
-void                       ST77xx_type_toResolution(ST77xx_type_e device,
-                                                    uint16_t    & x,
-                                                    uint16_t    & y);
+const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device);
+const __FlashStringHelper* P116_CommandTrigger_toString(const P116_CommandTrigger& cmd);
+void                       ST77xx_type_toResolution(const ST77xx_type_e& device,
+                                                    uint16_t           & x,
+                                                    uint16_t           & y);
 
 struct P116_data_struct : public PluginTaskData_base {
 public:
@@ -112,6 +112,10 @@ public:
   bool plugin_read(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
+  # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string);
+  # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_once_a_second(struct EventStruct *event);
 
