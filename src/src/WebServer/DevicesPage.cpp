@@ -915,7 +915,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       addPinConfig = true;
     }
 
-    if (addPinConfig) {
+    if (addPinConfig || (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)) {
       switch (Device[DeviceIndex].Type) {
         case DEVICE_TYPE_SERIAL:
         case DEVICE_TYPE_SERIAL_PLUS1:
@@ -938,7 +938,9 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
           devicePage_show_pin_config(taskIndex, DeviceIndex);
           addPinConfig = false;
 
-          devicePage_show_I2C_config(taskIndex);
+          if (Settings.TaskDeviceDataFeed[taskIndex] == 0) {
+            devicePage_show_I2C_config(taskIndex);
+          }
 
           break;
         }
