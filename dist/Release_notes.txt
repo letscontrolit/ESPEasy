@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20230306 (since mega-20230304)
+-------------------------------------------------
+
+Release date: ma  6 mrt 2023 21:12:53 CET
+
+Ton Huisman (13):
+      [I2C] Don't check device availability for remote I2C devices
+      [Devices] Don't show Pin/Port/Address options for P2P remote devices
+      [Release] Remove duplicated release notes
+      [Release] Improved step name in release.yml
+      [I2C] Fix scope error.
+      [I2C] Set default response for I2C check to true
+      [Plugins] Ignore `PLUGIN_INIT` return value if plugin is actually remote
+      [Controllers] Add RTD Help button to Controller config page
+      [Controllers] Add RTD Controller Help button only when space allows, replace `switch` by `if`
+      [Controllers] RTD Controller Help button match String.reserve() size
+      [Build] Update to newer Arduino platform lib (2023.01.02)
+      [P037] Always return success on PLUGIN_INIT
+      [Device] Show I2C options correctly for local devices
+
+
+-------------------------------------------------
 Changes in release mega-20230304 (since mega-20221224)
 -------------------------------------------------
 
