@@ -38,4 +38,29 @@ const __FlashStringHelper * P052_data_struct::Plugin_052_valuename(uint8_t value
   return F("");
 }
 
+void P052_data_struct::setABCperiod(int hours)
+{
+  // Enable: write 1 ... 65534 to HR14 and bit1 set to 0 at HR19
+  // Disable: write 0 or 65535 to HR14 and bit1 set to 1 at HR19
+
+
+  // Read HR19
+  uint8_t   errorcode = 0;
+  int value     = modbus.readHoldingRegister(P052_HR19_METER_CONTROL, errorcode);
+  // Clear bit 1 in register and write back HR19
+  if (bitRead(value, 1)) {
+    bitClear(value, 1);
+    modbus.writeSingleRegister(P052_HR19_METER_CONTROL, value, errorcode);
+  }
+
+  // Read HR14 and verify desired ABC period
+  value = modbus.readHoldingRegister(P052_HR14_ABC_PERIOD, errorcode);
+
+  // If HR14 (ABC period) is not the desired period,
+  // write desired ABC period to HR14
+  if (value != hours) {
+    modbus.writeSingleRegister(P052_HR14_ABC_PERIOD, hours, errorcode);
+  }
+}
+
 #endif // ifdef USES_P052
