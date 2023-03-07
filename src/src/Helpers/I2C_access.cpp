@@ -355,12 +355,16 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
                      uint8_t     function) {
   if (!Settings.CheckI2Cdevice()) { return true; } // Check disabled, continue
 
-  START_TIMER;
-  Wire.beginTransmission(i2caddr);
-
-  const bool retval = 0 == Wire.endTransmission(); // Only 0 indicates Success
+  bool retval = true;
 
   if (validTaskIndex(taskIndex)) {
+    if (Settings.TaskDeviceDataFeed[taskIndex] != 0) { return true; } // Remote device can't be checked
+
+    START_TIMER;
+    Wire.beginTransmission(i2caddr);
+
+    retval = 0 == Wire.endTransmission(); // Only 0 indicates Success
+
     if (retval) {
       deviceCheckI2C[taskIndex] = 0;
     } else {
