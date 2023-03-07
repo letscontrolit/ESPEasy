@@ -45,8 +45,9 @@ void P052_data_struct::setABCperiod(int hours)
 
 
   // Read HR19
-  uint8_t   errorcode = 0;
-  int value     = modbus.readHoldingRegister(P052_HR19_METER_CONTROL, errorcode);
+  uint8_t errorcode = 0;
+  int     value     = modbus.readHoldingRegister(P052_HR19_METER_CONTROL, errorcode);
+
   // Clear bit 1 in register and write back HR19
   if (bitRead(value, 1)) {
     bitClear(value, 1);
@@ -62,5 +63,34 @@ void P052_data_struct::setABCperiod(int hours)
     modbus.writeSingleRegister(P052_HR14_ABC_PERIOD, hours, errorcode);
   }
 }
+
+uint32_t P052_data_struct::getSensorID()
+{
+  uint8_t errorcode       = 0;
+  const uint32_t sensorId = (modbus.readInputRegister(P052_IR30_SENSOR_ID_HIGH, errorcode) << 16) |
+                            modbus.readInputRegister(P052_IR31_SENSOR_ID_LOW, errorcode);
+
+  if (errorcode == 0) {
+    return sensorId;
+  }
+  return 0;
+}
+
+bool P052_data_struct::readInputRegister(short addr, int& value)
+{
+  uint8_t errorcode = 0;
+
+  value = modbus.readInputRegister(addr, errorcode);
+  return errorcode == 0;
+}
+
+bool P052_data_struct::readHoldingRegister(short addr, int& value)
+{
+  uint8_t errorcode = 0;
+
+  value = modbus.readHoldingRegister(addr, errorcode);
+  return errorcode == 0;
+}
+
 
 #endif // ifdef USES_P052

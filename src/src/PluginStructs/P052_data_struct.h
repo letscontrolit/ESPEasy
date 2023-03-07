@@ -109,6 +109,14 @@ struct P052_data_struct : public PluginTaskData_base {
 
   void setABCperiod(int hours);
 
+  uint32_t getSensorID();
+
+  // Return true, when read was successful
+  bool readInputRegister(short addr, int& value);
+
+  // Return true, when read was successful
+  bool readHoldingRegister(short addr, int& value);
+
   ModbusRTU_struct modbus;
 };
 

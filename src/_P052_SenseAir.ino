@@ -134,27 +134,20 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       if ((nullptr != P052_data) && P052_data->isInitialized()) {
         addFormSubHeader(F("Device Information"));
         {
-          uint8_t errorcode = 0;
-          int     value = 0;
+          int value = 0;
+
           if (P052_data->modbus.detected_device_description.length() > 0) {
             addRowLabel(F("Detected Device"));
             addHtml(P052_data->modbus.detected_device_description);
           }
-          value = P052_data->modbus.readInputRegister(P052_IR29_FW_REV, errorcode);
 
-          if (errorcode == 0) {
+          if (P052_data->readInputRegister(P052_IR29_FW_REV, value)) {
             addRowLabel(F("FW rev."));
             addHtmlInt(value);
           }
 
-          const uint32_t sensorId = (P052_data->modbus.readInputRegister(P052_IR30_SENSOR_ID_HIGH, errorcode) << 16) |
-                    P052_data->modbus.readInputRegister(P052_IR31_SENSOR_ID_LOW, errorcode);
-
-
-          if (errorcode == 0) {
-            addRowLabel(F("Sensor ID"));
-            addHtml(formatToHex_decimal(sensorId));
-          }
+          addRowLabel(F("Sensor ID"));
+          addHtml(formatToHex_decimal(P052_data->getSensorID()));
 
 
           addRowLabel(F("Checksum (pass/fail/nodata)"));
@@ -170,54 +163,40 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             addHtml(chksumStats);
           }
 
-          value = P052_data->modbus.readInputRegister(P052_IR7_MEASUREMENT_COUNT, errorcode);
-
-          if (errorcode == 0) {
+          if (P052_data->readInputRegister(P052_IR7_MEASUREMENT_COUNT, value)) {
             addRowLabel(F("Measurement Count"));
             addHtmlInt(value);
           }
 
-          value = P052_data->modbus.readInputRegister(P052_IR8_MEASUREMENT_CYCLE_TIME, errorcode);
-
-          if (errorcode == 0) {
+          if (P052_data->readInputRegister(P052_IR8_MEASUREMENT_CYCLE_TIME, value)) {
             addRowLabel(F("Measurement Cycle time"));
             addHtmlInt(value * 2);
             addUnit('s');
           }
 
-          value = P052_data->modbus.readInputRegister(P052_IR9_MEASURED_UNFILTERED_CO2, errorcode);
-
-          if (errorcode == 0) {
+          if (P052_data->readInputRegister(P052_IR9_MEASURED_UNFILTERED_CO2, value)) {
             addRowLabel(F("Unfiltered CO2"));
             addHtmlInt(value);
           }
 
-          value = P052_data->modbus.readHoldingRegister(P052_HR11_MEASUREMENT_MODE, errorcode);
-
-          if (errorcode == 0) {
+          if (P052_data->readHoldingRegister(P052_HR11_MEASUREMENT_MODE, value)) {
             addRowLabel(F("Measurement Mode"));
             addHtml(value == 0 ? F("Continuous") : F("Single Measurement"));
           }
 
-          value = P052_data->modbus.readHoldingRegister(P052_HR14_ABC_PERIOD, errorcode);
-
-          if (errorcode == 0) {
+          if (P052_data->readHoldingRegister(P052_HR14_ABC_PERIOD, value)) {
             addRowLabel(F("ABC Period"));
             addHtmlInt(value);
             addUnit('h');
           }
 
-          value = P052_data->modbus.readHoldingRegister(P052_HR5_ABC_TIME, errorcode);
-
-          if (errorcode == 0) {
+          if (P052_data->readHoldingRegister(P052_HR5_ABC_TIME, value)) {
             addRowLabel(F("Time Since ABC"));
             addHtmlInt(value);
             addUnit('h');
           }
 
-          value = P052_data->modbus.readHoldingRegister(P052_HR19_METER_CONTROL, errorcode);
-
-          if (errorcode == 0) {
+          if (P052_data->readHoldingRegister(P052_HR19_METER_CONTROL, value)) {
             addRowLabel(F("HR19"));
             addHtmlInt(value);
             addRowLabel(F("nRDY"));
@@ -230,37 +209,28 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             addEnabled(bitRead(value, 3) == 0);
             addRowLabel(F("Pressure Compensation"));
             addEnabled(bitRead(value, 4) == 0);
-
           }
         }
 
         {
-          uint8_t errorcode = 0;
+          int value = 0;
 
-          // int  meas_mode     = P052_data->modbus.readHoldingRegister(P052_HR11_MEASUREMENT_MODE, errorcode);
-          // bool has_meas_mode = errorcode == 0;
-          int  period        = P052_data->modbus.readHoldingRegister(P052_HR12_MEASUREMENT_PERIOD, errorcode);
-          bool has_period    = errorcode == 0;
-          int  samp_meas     = P052_data->modbus.readHoldingRegister(P052_HR13_NR_OF_SAMPLES, errorcode);
-          bool has_samp_meas = errorcode == 0;
+          /*
+              if (P052_data->readHoldingRegister(P052_HR11_MEASUREMENT_MODE, value)) {
+                // Disable selector for now, since single measurement not yet supported.
 
-          if (/* has_meas_mode || */ has_period || has_samp_meas) {
-            // Disable selector for now, since single measurement not yet supported.
+                const __FlashStringHelper *options[2] = { F("Continuous"), F("Single Measurement") };
+                addFormSelector(F("Measurement Mode"), F("mode"), 2, options, nullptr, value);
+              }
+           */
 
-            /*
-               if (has_meas_mode) {
-               const __FlashStringHelper * options[2] = { F("Continuous"), F("Single Measurement") };
-               addFormSelector(F("Measurement Mode"), F("mode"), 2, options, nullptr, meas_mode);
-               }
-             */
-            if (has_period) {
-              addFormNumericBox(F("Measurement Period"), F("period"), period, 2, 65534);
-              addUnit('s');
-            }
+          if (P052_data->readHoldingRegister(P052_HR12_MEASUREMENT_PERIOD, value)) {
+            addFormNumericBox(F("Measurement Period"), F("period"), value, 2, 65534);
+            addUnit('s');
+          }
 
-            if (has_samp_meas) {
-              addFormNumericBox(F("Samples per measurement"), F("samp_meas"), samp_meas, 1, 1024);
-            }
+          if (P052_data->readHoldingRegister(P052_HR13_NR_OF_SAMPLES, value)) {
+            addFormNumericBox(F("Samples per measurement"), F("samp_meas"), value, 1, 1024);
           }
         }
         {
@@ -556,23 +526,23 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
                        period);
                 success = true;
               }
-            } else if (equals(subcommand, F("setrelay"))) {
-              int state = 0;
+            }
+          } else if (equals(subcommand, F("setrelay"))) {
+            int state = 0;
 
-              if (validIntFromString(parseString(string, 3), state)) {
-                short relaystatus = 0; // 0x3FFF represents 100% output.
-                success = true;
+            if (validIntFromString(parseString(string, 3), state)) {
+              short relaystatus = 0; // 0x3FFF represents 100% output.
+              success = true;
 
-                //  Refer to sensor model’s specification for voltage at 100% output.
-                if (state == 0) { relaystatus = 0; }
-                else if (state == 1) { relaystatus = 0x3FFF; }
-                else if (state == 1) { relaystatus = 0x7FFF; }
-                else { success = false; }
+              //  Refer to sensor model’s specification for voltage at 100% output.
+              if (state == 0) { relaystatus = 0; }
+              else if (state == 1) { relaystatus = 0x3FFF; }
+              else if (state == 1) { relaystatus = 0x7FFF; }
+              else { success = false; }
 
-                if (success) {
-                  P052_data->modbus.writeSingleRegister(0x18, relaystatus);
-                  addLog(LOG_LEVEL_INFO, concat(F("Senseair command: relay="), state));
-                }
+              if (success) {
+                P052_data->modbus.writeSingleRegister(0x18, relaystatus);
+                addLog(LOG_LEVEL_INFO, concat(F("Senseair command: relay="), state));
               }
             }
           }
