@@ -155,6 +155,9 @@ The Data Acquisition, Send to Controller and Interval settings are standard avai
 
 * **Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec.
 
+.. note:: 
+  The initial READ of the plugin, immediately after it is initializaed, will not return any data, as no measurement is read from the sensor yet. Only after the next Interval seconds a valid result is returned, as by then some data will have been collected.
+
 Values
 ^^^^^^
 
