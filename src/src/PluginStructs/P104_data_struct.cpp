@@ -938,7 +938,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
     String sub = parseString(string, 2);
 
     int zoneIndex;
-    String string4 = parseStringKeepCase(string, 4);
+    String string4 = parseStringKeepCase(string, 4, ',', false);
     # ifdef P104_USE_COMMANDS
     int value4;
     validIntFromString(string4, value4);
