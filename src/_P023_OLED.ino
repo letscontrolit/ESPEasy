@@ -264,7 +264,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         }
         else if (equals(cmd, F("oled"))) {
           success = true;
-          String text = parseStringToEndKeepCase(string, 4, ',', false);
+          String text = parseStringToEndKeepCaseNoTrim(string, 4);
           text = P023_data->parseTemplate(text, 16);
           P023_data->sendStrXY(text.c_str(), event->Par1 - 1, event->Par2 - 1);
         }

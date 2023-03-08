@@ -153,7 +153,7 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
         content[x].pixelPos = 0;
 
         if (content[x].active) {
-          String   tmpString = parseStringKeepCase(strings[x], 1);
+          String   tmpString = parseStringKeepCaseNoTrim(strings[x], 1);
           String   newString = AdaGFXparseTemplate(tmpString, _textcols, gfxHelper);
           uint16_t h;
           content[x].length = gfxHelper->getTextSize(newString, h);
@@ -277,7 +277,7 @@ void P131_data_struct::display_content(struct EventStruct *event,
     for (; x < x_end; x++) {
       if (!scrollOnly ||
           (scrollOnly && content[x].active)) {
-        String   tmpString = parseStringKeepCase(strings[x], 1);
+        String   tmpString = parseStringKeepCaseNoTrim(strings[x], 1);
         String   newString = AdaGFXparseTemplate(tmpString, _textcols, gfxHelper);
         uint16_t h;
         content[x].length = gfxHelper->getTextSize(newString, h);

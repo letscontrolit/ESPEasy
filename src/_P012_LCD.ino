@@ -259,7 +259,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           success = true;
           int colPos  = event->Par2 - 1;
           int rowPos  = event->Par1 - 1;
-          String text = parseStringKeepCase(string, 4, ',', false);
+          String text = parseStringKeepCaseNoTrim(string, 4);
           text = P012_data->P012_parseTemplate(text, P012_data->Plugin_012_cols);
 
           P012_data->lcdWrite(text, colPos, rowPos);

@@ -1182,7 +1182,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           // content functions
           success = true;
           String *currentLine = &P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content;
-          *currentLine = parseStringKeepCase(string, 3, ',', false);
+          *currentLine = parseStringKeepCaseNoTrim(string, 3);
           *currentLine = P036_data->P36_parseTemplate(*currentLine, LineNo - 1);
 
           // calculate Pix length of new Content
