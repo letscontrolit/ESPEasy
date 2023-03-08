@@ -115,7 +115,7 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
         log += F("NO NEW VALUE");
       }
       addLogMove(LOG_LEVEL_INFO, log);
-      success = true;
+      success = !firstRead;
     }
 
     // Channel B activated?
@@ -152,8 +152,9 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
         log += F("NO NEW VALUE");
       }
       addLogMove(LOG_LEVEL_INFO, log);
-      success = true;
+      success = !firstRead;
     }
+    firstRead = false;
   }
   return success;
 }

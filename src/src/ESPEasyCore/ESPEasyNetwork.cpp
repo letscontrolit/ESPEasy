@@ -39,6 +39,8 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
         WifiDisconnect();
       }
       break;
+    case NetworkMedium_t::NotSet:
+      return;
   }
   statusLED(true);
   active_network_medium = new_medium;
