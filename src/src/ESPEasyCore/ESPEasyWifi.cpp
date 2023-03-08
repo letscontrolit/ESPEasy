@@ -229,7 +229,7 @@ bool WiFiConnected() {
   static uint32_t lastCheckedTime = 0;
   static bool lastState = false;
 
-  if (timePassedSince(lastCheckedTime) < 10) {
+  if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 10) {
     // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
     return lastState;
   }
@@ -414,8 +414,12 @@ void AttemptWiFiConnect() {
     return;
   }
 
-  if (active_network_medium != NetworkMedium_t::WIFI &&
-      active_network_medium != NetworkMedium_t::ESPEasyNOW_only) 
+  setNetworkMedium(NetworkMedium_t::WIFI);
+  if (active_network_medium != NetworkMedium_t::WIFI 
+  #ifdef USES_ESPEASY_NOW
+      && active_network_medium != NetworkMedium_t::ESPEasyNOW_only
+  #endif
+  ) 
   {
     return;
   }
@@ -457,6 +461,8 @@ void AttemptWiFiConnect() {
     if (prepareWiFi()) {
       setNetworkMedium(NetworkMedium_t::WIFI);
       RTC.clearLastWiFi();
+      RTC.lastWiFiSettingsIndex = candidate.index;
+      
       float tx_pwr = 0; // Will be set higher based on RSSI when needed.
       // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
       #ifdef ESP8266
@@ -468,10 +474,12 @@ void AttemptWiFiConnect() {
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
       WiFiEventData.wifiConnectInProgress = true;
+      const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
+
       if (candidate.allowQuickConnect() && !candidate.isHidden) {
-        WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
+        WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
-        WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
+        WiFi.begin(candidate.ssid.c_str(), key.c_str());
       }
       delay(1);
     } else {
@@ -939,9 +947,11 @@ void WifiDisconnect()
   #endif
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_UNSPECIFIED);
+  /*
   if (!Settings.UseLastWiFiFromRTC()) {
     RTC.clearLastWiFi();
   }
+  */
   delay(100);
   WiFiEventData.processingDisconnect.clear();
   WiFiEventData.processedDisconnect = false;

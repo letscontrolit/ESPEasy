@@ -7,6 +7,7 @@
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -352,11 +353,14 @@ void ESPEasy_setup()
   active_network_medium = Settings.NetworkMedium;
   #endif // if FEATURE_ETHERNET
 
+  setNetworkMedium(Settings.NetworkMedium);
+
   bool initWiFi = active_network_medium == NetworkMedium_t::WIFI;
   // FIXME TD-er: Must add another check for 'delayed start WiFi' for poorly designed ESP8266 nodes.
 
 
   if (initWiFi) {
+    WiFi_AP_Candidates.clearCache();
     WiFi_AP_Candidates.load_knownCredentials();
     setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
@@ -371,10 +375,17 @@ void ESPEasy_setup()
     // Always perform WiFi scan
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
-    if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) {
+    if (!WiFi_AP_Candidates.hasCandidates()) {
+      WifiScan(false, RTC.lastWiFiChannel);
+    }
+    WiFi_AP_Candidates.clearCache();
+    processScanDone();
+    WiFi_AP_Candidates.load_knownCredentials();
+    if (!WiFi_AP_Candidates.hasCandidates()) {
+      addLog(LOG_LEVEL_INFO, F("Setup: Scan all channels"));
       WifiScan(false);
     }
-    setWifiMode(WIFI_OFF);
+//    setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("WifiScan()"));

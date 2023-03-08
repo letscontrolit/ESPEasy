@@ -11,15 +11,9 @@ bool isValid(NetworkMedium_t medium) {
     case NetworkMedium_t::ESPEasyNOW_only:
 #endif
       return true;
-    case NetworkMedium_t::ESPEasyNOW_only:
-      #ifdef USES_ESPEASY_NOW
-      return true;
-      #else
-      return false;
-      #endif
 
     case NetworkMedium_t::NotSet:
-      return false;
+      break;
 
       // Do not use default: as this allows the compiler to detect any missing cases.
   }

@@ -29,6 +29,7 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
     return;
   }
   bool process_exit_active_medium = true;
+#ifdef USES_ESPEASY_NOW
   if (new_medium == NetworkMedium_t::ESPEasyNOW_only) {
     if (!Settings.UseESPEasyNow()) {
       return;
@@ -54,6 +55,7 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
 
     #endif
   }
+#endif
   if (process_exit_active_medium) {
     switch (active_network_medium) {
       case NetworkMedium_t::Ethernet:
@@ -72,15 +74,15 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
           WifiDisconnect();
         }
         break;
+#ifdef USES_ESPEASY_NOW
       case NetworkMedium_t::ESPEasyNOW_only:
-        #ifdef USES_ESPEASY_NOW
         if (use_EspEasy_now) {
           ESPEasy_now_handler.end();
         }
-        #endif
 
         //WiFiEventData.clearAll();
         break;
+#endif
       case NetworkMedium_t::NotSet:
         break;
     }
@@ -282,8 +284,11 @@ void CheckRunningServices() {
     node_time.initTime();
   }
   #ifdef ESP8266
-  if (active_network_medium == NetworkMedium_t::WIFI || 
-      active_network_medium == NetworkMedium_t::ESPEasyNOW_only) 
+  if (active_network_medium == NetworkMedium_t::WIFI 
+  #ifdef USES_ESPEASY_NOW
+      || active_network_medium == NetworkMedium_t::ESPEasyNOW_only
+  #endif
+  ) 
   {
     SetWiFiTXpower();
   }
