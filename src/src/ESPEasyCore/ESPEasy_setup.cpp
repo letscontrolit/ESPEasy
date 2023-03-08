@@ -355,12 +355,7 @@ void ESPEasy_setup()
   #endif // if FEATURE_ETHERNET
 
   bool initWiFi = active_network_medium == NetworkMedium_t::WIFI;
-
-  #ifdef USES_ESPEASY_NOW
-  if (isESPEasy_now_only() || Settings.UseESPEasyNow()) {
-    initWiFi = true;
-  }
-  #endif
+  // FIXME TD-er: Must add another check for 'delayed start WiFi' for poorly designed ESP8266 nodes.
 
 
   if (initWiFi) {
