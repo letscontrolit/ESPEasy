@@ -671,8 +671,10 @@ void initWiFi()
   // those WiFi connections will take a long time to make or sometimes will not work at all.
   WiFi.disconnect(false);
   delay(1);
-  setSTA(true);
-  WifiScan(false);
+  if (active_network_medium != NetworkMedium_t::NotSet) {
+    setSTA(true);
+    WifiScan(false);
+  }
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)

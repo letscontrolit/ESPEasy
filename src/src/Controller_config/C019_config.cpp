@@ -68,7 +68,7 @@ void C019_ConfigStruct::webform_load(struct EventStruct *event) {
                 ESPEASY_NOW_NAME
                 "-only mode (0 = use any channel)"));
 
-  addFormCheckBox(F("Forward MQTT from " ESPEASY_NOW_NAME), F("fwd_mqtt"), forwardMQTT);
+  addFormCheckBox(F("Forward from " ESPEASY_NOW_NAME " to MQTT"), F("fwd_mqtt"), forwardMQTT);
 
   addTableSeparator(F("MQTT Forward Filtering"), 2, 3);
   addFormCheckBox(F("Filter Forward MQTT"), F("filter_fwd"), filterMQTT_forward);
