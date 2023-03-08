@@ -60,7 +60,7 @@ struct RTCStruct
   uint8_t       deepSleepState        = 0;
   uint8_t       bootFailedCount       = 0;
   uint8_t       flashDayCounter       = 0;
-  uint8_t       lastWiFiSettingsIndex = 0;
+  int8_t        lastWiFiSettingsIndex = -1;
   unsigned long flashCounter          = 0;
   unsigned long bootCounter           = 0;
   unsigned long lastMixedSchedulerId  = 0;

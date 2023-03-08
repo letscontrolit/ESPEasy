@@ -34,7 +34,7 @@ WiFi_AP_CandidatesList::~WiFi_AP_CandidatesList() {
 }
 
 void WiFi_AP_CandidatesList::load_knownCredentials() {
-  if (!_mustLoadCredentials) { return; }
+  if (!_mustLoadCredentials && !known.empty()) { return; }
   _mustLoadCredentials = false;
   known.clear();
   candidates.clear();

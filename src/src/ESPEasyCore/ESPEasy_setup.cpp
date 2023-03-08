@@ -9,6 +9,7 @@
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -354,6 +355,8 @@ void ESPEasy_setup()
   active_network_medium = Settings.NetworkMedium;
   #endif // if FEATURE_ETHERNET
 
+  setNetworkMedium(Settings.NetworkMedium);
+
   bool initWiFi = active_network_medium == NetworkMedium_t::WIFI;
   // FIXME TD-er: Must add another check for 'delayed start WiFi' for poorly designed ESP8266 nodes.
 
@@ -376,7 +379,8 @@ void ESPEasy_setup()
     if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) {
       WifiScan(false);
     }
-    setWifiMode(WIFI_OFF);
+    processScanDone();
+//    setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("WifiScan()"));

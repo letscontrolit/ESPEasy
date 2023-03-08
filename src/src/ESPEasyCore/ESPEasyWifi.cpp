@@ -225,7 +225,7 @@ bool WiFiConnected() {
   static uint32_t lastCheckedTime = 0;
   static bool lastState = false;
 
-  if (timePassedSince(lastCheckedTime) < 10) {
+  if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 10) {
     // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
     return lastState;
   }
@@ -405,6 +405,7 @@ void AttemptWiFiConnect() {
     return;
   }
 
+  setNetworkMedium(NetworkMedium_t::WIFI);
   if (active_network_medium != NetworkMedium_t::WIFI) 
   {
     return;
