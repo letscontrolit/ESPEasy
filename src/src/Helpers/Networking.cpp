@@ -22,7 +22,6 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
