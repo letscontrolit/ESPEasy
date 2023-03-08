@@ -25,6 +25,7 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
     case Sensor_VType::SENSOR_TYPE_SWITCH:
     case Sensor_VType::SENSOR_TYPE_DIMMER:
     case Sensor_VType::SENSOR_TYPE_LONG: // single LONG value, stored in two floats (rfid tags)
+    case Sensor_VType::SENSOR_TYPE_STRING:     // String type data stored in the event->String2
       return 1;
     case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
     case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
@@ -40,8 +41,6 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
     case Sensor_VType::SENSOR_TYPE_QUAD:
     case Sensor_VType::SENSOR_TYPE_ULONG_QUAD: // 4x uint32_t
       return 4;
-    case Sensor_VType::SENSOR_TYPE_STRING:     // String type data stored in the event->String2
-      return 1;
     case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
   }
   addLog(LOG_LEVEL_ERROR, F("getValueCountFromSensorType: Unknown sensortype"));

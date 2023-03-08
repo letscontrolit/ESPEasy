@@ -69,7 +69,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: Binaries
-          path: ESPEasy_${{ matrix.env }}.zip
+          path: |
+            bin
           if-no-files-found: ignore
 
   prepare-dist:
@@ -143,7 +144,8 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           path: artifacts/
-      - run: |
+      - name: Repackage for release upload
+        run: |
           ls -R
           sudo apt install zipmerge zip
           cd artifacts/Binaries

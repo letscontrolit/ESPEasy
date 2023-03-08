@@ -1,10 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20230306 (since mega-20230304)
+-------------------------------------------------
+
+Release date: ma  6 mrt 2023 21:12:53 CET
+
+Ton Huisman (13):
+      [I2C] Don't check device availability for remote I2C devices
+      [Devices] Don't show Pin/Port/Address options for P2P remote devices
+      [Release] Remove duplicated release notes
+      [Release] Improved step name in release.yml
+      [I2C] Fix scope error.
+      [I2C] Set default response for I2C check to true
+      [Plugins] Ignore `PLUGIN_INIT` return value if plugin is actually remote
+      [Controllers] Add RTD Help button to Controller config page
+      [Controllers] Add RTD Controller Help button only when space allows, replace `switch` by `if`
+      [Controllers] RTD Controller Help button match String.reserve() size
+      [Build] Update to newer Arduino platform lib (2023.01.02)
+      [P037] Always return success on PLUGIN_INIT
+      [Device] Show I2C options correctly for local devices
+
+
+-------------------------------------------------
 Changes in release mega-20230304 (since mega-20221224)
 -------------------------------------------------
 
-Release date: za  4 mrt 2023 11:55:37 CET
+Release date: za  4 mrt 2023 13:54:56 CET
 
-TD-er (133):
+TD-er (135):
       [CacheReader] Play back the recorded CacheController data
       [CacheReader] Add rate limiter + command to set readpos
       [Cleanup] Speedup dumpcache page serving
@@ -138,8 +160,10 @@ TD-er (133):
       [P025] Uncrustify code
       [ADS1115] Cleanup I2C code + add read timeout
       [ADS1115] Further clean-up of the code
+      automatically updated release notes for mega-20230304
+      [Build] Replace all Python 3.8 to 3.10
 
-Ton Huisman (160):
+Ton Huisman (161):
       [P138] Add Power mgt - IP5306 plugin
       [P138] Add IP5306 library to lib folder
       [P138] Fix some typos, clean up some obsolete comments
@@ -300,6 +324,7 @@ Ton Huisman (160):
       [P116][P131] Update documentation
       [P028] Align INFO logging with other plugins
       [I2C] Log error if unresponsive device gets disabled
+      [Release] Upload correct files in Binaries artifact
 
 christian-gosse (2):
       Add some log about current conversion channel number

@@ -111,6 +111,7 @@ void processEthernetConnected() {
 
   // FIXME TD-er: Must differentiate among reconnects for WiFi and Ethernet.
   ++WiFiEventData.wifi_reconnects;
+  addLog(LOG_LEVEL_INFO, F("processEthernetConnected()"));
   EthEventData.setEthConnected();
   EthEventData.processedConnect = true;
 

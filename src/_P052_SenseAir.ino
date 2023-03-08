@@ -537,7 +537,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
               //  Refer to sensor model’s specification for voltage at 100% output.
               if (state == 0) { relaystatus = 0; }
               else if (state == 1) { relaystatus = 0x3FFF; }
-              else if (state == 1) { relaystatus = 0x7FFF; }
+              else if (state == -1) { relaystatus = 0x7FFF; }
               else { success = false; }
 
               if (success) {
