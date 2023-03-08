@@ -40,7 +40,7 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       }
       break;
     case NetworkMedium_t::NotSet:
-      return;
+      break;
   }
   statusLED(true);
   active_network_medium = new_medium;

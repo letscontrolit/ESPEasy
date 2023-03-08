@@ -19,8 +19,8 @@
 #define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
 
 
-WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c, const String& pass) :
-  rssi(0), channel(0), index(index_c), isHidden(false)
+WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
+  last_seen(0), rssi(0), channel(0), index(index_c), flags(0)
 {
   const size_t ssid_length = ssid_c.length();
 
@@ -30,13 +30,10 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c, cons
 
   if (ssid_length > 32) { return; }
 
-  if (pass.length() > 64) { return; }
-
   ssid = ssid_c;
-  key  = pass;
 }
 
-WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
+WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
   ssid    = WiFi.SSID(networkItem);
   rssi    = WiFi.RSSI(networkItem);
   channel = WiFi.channel(networkItem);
@@ -130,7 +127,7 @@ bool WiFi_AP_Candidate::usable() const {
     }
   }
   if (!isHidden && (ssid.isEmpty())) { return false; }
-  return true;
+  return !expired();
 }
 
 bool WiFi_AP_Candidate::expired() const {
