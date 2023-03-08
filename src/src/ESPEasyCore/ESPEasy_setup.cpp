@@ -362,6 +362,7 @@ void ESPEasy_setup()
 
 
   if (initWiFi) {
+    WiFi_AP_Candidates.clearCache();
     WiFi_AP_Candidates.load_knownCredentials();
     setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
@@ -376,10 +377,16 @@ void ESPEasy_setup()
     // Always perform WiFi scan
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
-    if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) {
+    if (!WiFi_AP_Candidates.hasCandidates()) {
+      WifiScan(false, RTC.lastWiFiChannel);
+    }
+    WiFi_AP_Candidates.clearCache();
+    processScanDone();
+    WiFi_AP_Candidates.load_knownCredentials();
+    if (!WiFi_AP_Candidates.hasCandidates()) {
+      addLog(LOG_LEVEL_INFO, F("Setup: Scan all channels"));
       WifiScan(false);
     }
-    processScanDone();
 //    setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER

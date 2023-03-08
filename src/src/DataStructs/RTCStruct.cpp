@@ -22,9 +22,9 @@
       lastBSSID[i] = 0;
     }
     lastWiFiChannel = 0;
-    lastWiFiSettingsIndex = -1;
+    lastWiFiSettingsIndex = 0;
   }
 
   bool RTCStruct::lastWiFi_set() const {
-    return lastBSSID[0] != 0 && lastWiFiChannel != 0 && lastWiFiSettingsIndex != -1;
+    return lastBSSID[0] != 0 && lastWiFiChannel != 0 && lastWiFiSettingsIndex != 0;
   }
