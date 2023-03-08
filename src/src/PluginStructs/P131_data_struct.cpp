@@ -386,9 +386,9 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
         strings[x]  = wrapWithQuotesIfContainsParameterSeparatorChar(parseStringToEndKeepCase(string, 4));
         strings[x] += ',';
         strings[x] += tmpString;
-      } else if ((equals(sub, F("setscroll")) ||                                     // neomatrixcmd,setscroll,<line>,0|1
-                  equals(sub, F("setempty")) ||                                      // neomatrixcmd,setempty,<line>,0|1
-                  equals(sub, F("setright"))                                         // neomatrixcmd,setright,<line>,0|1
+      } else if ((equals(sub, F("setscroll")) ||                                    // neomatrixcmd,setscroll,<line>,0|1
+                  equals(sub, F("setempty")) ||                                     // neomatrixcmd,setempty,<line>,0|1
+                  equals(sub, F("setright"))                                        // neomatrixcmd,setright,<line>,0|1
                   )
                  && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT)) // line
                  && ((event->Par3 >= 0) && (event->Par3 <= 1))) {                   // on/off
@@ -411,7 +411,7 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
         strings[x] += optBits;
         strings[x] += ',';
         strings[x] += tmpString3;
-      } else if (equals(sub, F("setstep"))                                            // neomatrixcmd,setstep,<line>,1..16
+      } else if (equals(sub, F("setstep"))                                           // neomatrixcmd,setstep,<line>,1..16
                  && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT))  // line
                  && ((event->Par3 > 0) && (event->Par3 <= P131_MAX_SCROLL_STEPS))) { // 1..16
         String   tmpString1 = parseStringKeepCase(strings[x], 1);                    // settings to be transferred
@@ -426,7 +426,7 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
         strings[x] += optBits;
         strings[x] += ',';
         strings[x] += tmpString3;
-      } else if (equals(sub, F("setspeed"))                                           // neomatrixcmd,setspeed,<line>,1..600
+      } else if (equals(sub, F("setspeed"))                                          // neomatrixcmd,setspeed,<line>,1..600
                  && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT))  // line
                  && ((event->Par3 > 0) && (event->Par3 <= P131_MAX_SCROLL_SPEED))) { // 1..600
         String tmpString1 = parseStringKeepCase(strings[x], 1);                      // settings to be transferred
@@ -476,6 +476,23 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
   }
   return success;
 }
+
+# if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
+/****************************************************************************
+ * plugin_get_config_value: Retrieve values like [<taskname>#<valuename>]
+ ***************************************************************************/
+bool P131_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  bool success = false;
+
+  if (gfxHelper != nullptr) {
+    success = gfxHelper->pluginGetConfigValue(string);
+  }
+  return success;
+}
+
+# endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
 
 /****************************************************************************
  * plugin_ten_per_second: Re-draw the default content that should be scrolled
