@@ -23,7 +23,6 @@ WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   known.clear();
   candidates.clear();
   known_it = known.begin();
-  load_knownCredentials();
 }
 
 WiFi_AP_CandidatesList::~WiFi_AP_CandidatesList() {
@@ -34,7 +33,7 @@ WiFi_AP_CandidatesList::~WiFi_AP_CandidatesList() {
 }
 
 void WiFi_AP_CandidatesList::load_knownCredentials() {
-  if (!_mustLoadCredentials) { return; }
+  if (!_mustLoadCredentials && !known.empty()) { return; }
   _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
@@ -44,14 +43,14 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
 
   {
     // Add the known SSIDs
-    String ssid, key;
+    String ssid;
     uint8_t   index = 1; // Index 0 is the "unset" value
 
     bool done = false;
 
     while (!done) {
-      if (get_SSID_key(index, ssid, key)) {
-        known.emplace_back(index, ssid, key);
+      if (get_SSID(index, ssid)) {
+        known.emplace_back(index, ssid);
         if (SettingsIndexMatchCustomCredentials(index)) {
           if (SettingsIndexMatchEmergencyFallback(index)) {
             known.back().isEmergencyFallback = true;
@@ -152,7 +151,6 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
     // Hidden SSID stations do not broadcast their SSID, so we must fill it in ourselves.
     if (known_it != known.end()) {
       currentCandidate.ssid  = known_it->ssid;
-      currentCandidate.key   = known_it->key;
       currentCandidate.index = known_it->index;
       ++known_it;
     }
@@ -202,6 +200,10 @@ WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestCandidate() const {
 bool WiFi_AP_CandidatesList::hasKnownCredentials() {
   load_knownCredentials();
   return !known.empty();
+}
+
+bool WiFi_AP_CandidatesList::hasCandidates() const {
+  return !candidates.empty();
 }
 
 void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
@@ -328,7 +330,6 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
         for (auto kn_it = known.begin(); kn_it != known.end(); ++kn_it) {
           if (scan->ssid.equals(kn_it->ssid)) {
             WiFi_AP_Candidate tmp = *scan;
-            tmp.key   = kn_it->key;
             tmp.index = kn_it->index;
             tmp.lowPriority = kn_it->lowPriority;
             tmp.isEmergencyFallback = kn_it->isEmergencyFallback;
@@ -369,13 +370,13 @@ void WiFi_AP_CandidatesList::addFromRTC() {
     return;
   }
 
-  String ssid, key;
+  String ssid;
 
-  if (!get_SSID_key(RTC.lastWiFiSettingsIndex, ssid, key)) {
+  if (!get_SSID(RTC.lastWiFiSettingsIndex, ssid)) {
     return;
   }
 
-  WiFi_AP_Candidate fromRTC(RTC.lastWiFiSettingsIndex, ssid, key);
+  WiFi_AP_Candidate fromRTC(RTC.lastWiFiSettingsIndex, ssid);
   fromRTC.bssid   = RTC.lastBSSID;
   fromRTC.channel = RTC.lastWiFiChannel;
 
@@ -452,7 +453,7 @@ void WiFi_AP_CandidatesList::purge_unusable() {
   }
 }
 
-bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& key) const {
+bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& key)  {
   switch (index) {
     case 1:
       ssid = SecuritySettings.WifiSSID;
@@ -506,4 +507,18 @@ bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& k
 
   // Spaces are allowed in both SSID and pass phrase, so make sure to not trim the ssid and key.
   return true;
+}
+
+bool WiFi_AP_CandidatesList::get_SSID(uint8_t index, String& ssid)
+{
+  String key;
+  return get_SSID_key(index, ssid, key);
+}
+
+String WiFi_AP_CandidatesList::get_key(uint8_t index)
+{
+  String ssid, key;
+  if (get_SSID_key(index, ssid, key))
+    return key;
+  return EMPTY_STRING;
 }
