@@ -78,6 +78,15 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P127_CONFIG_I2C_ADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // No decimals needed
@@ -159,7 +168,7 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P127_data) {
         String command = parseString(string, 1);
 
-        if (command.equals(F("cdmrst"))) {
+        if (equals(command, F("cdmrst"))) {
           addLog(LOG_LEVEL_INFO, F("CDM7160: reset"));
           P127_data->setReset();
           success = true;

@@ -238,6 +238,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P036_ADR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = F("Btn: ");
@@ -615,6 +624,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # ifdef P036_CHECK_HEAP
       P036_CheckHeap(F("_INIT: Entering"));
 # endif // P036_CHECK_HEAP
+
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P036_data_struct());
 # ifdef P036_CHECK_HEAP
       P036_CheckHeap(F("_INIT: Before (*P036_data = static_cast<P036_data_struct *>)"));
@@ -991,12 +1001,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       bool sendEvents = bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS); // Bit 28 Send Events
       # endif // ifdef P036_SEND_EVENTS
 
-      if ((command.equals(F("oledframedcmd"))) && P036_data->isInitialized()) {
-        if (subcommand.equals(F("display"))) {
+      if ((equals(command, F("oledframedcmd"))) && P036_data->isInitialized()) {
+        if (equals(subcommand, F("display"))) {
           // display functions
           String para1 = parseString(string, 3);
 
-          if (para1.equals(F("on"))) {
+          if (equals(para1, F("on"))) {
             success                 = true;
             P036_data->displayTimer = P036_TIMER;
             P036_data->display->displayOn();
@@ -1010,7 +1020,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             # endif // ifdef P036_SEND_EVENTS
           }
 
-          if (para1.equals(F("off"))) {
+          if (equals(para1, F("off"))) {
             success                 = true;
             P036_data->displayTimer = 0;
             P036_data->display->displayOff();
@@ -1024,7 +1034,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             # endif // ifdef P036_SEND_EVENTS
           }
 
-          if (para1.equals(F("low"))) {
+          if (equals(para1, F("low"))) {
             success = true;
             P036_data->setContrast(OLED_CONTRAST_LOW);
             # ifdef P036_SEND_EVENTS
@@ -1040,7 +1050,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_SetDisplayOn(1); //  Save the fact that the display is now ON
           }
 
-          if (para1.equals(F("med"))) {
+          if (equals(para1, F("med"))) {
             success = true;
             P036_data->setContrast(OLED_CONTRAST_MED);
             # ifdef P036_SEND_EVENTS
@@ -1056,7 +1066,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_SetDisplayOn(1); //  Save the fact that the display is now ON
           }
 
-          if (para1.equals(F("high"))) {
+          if (equals(para1, F("high"))) {
             success = true;
             P036_data->setContrast(OLED_CONTRAST_HIGH);
             # ifdef P036_SEND_EVENTS
@@ -1072,7 +1082,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_SetDisplayOn(1); //  Save the fact that the display is now ON
           }
 
-          if ((para1 == F("user")) &&
+          if (equals(para1, F("user")) &&
               (event->Par3 >= 1) && (event->Par3 <= 255) && // contrast
               (event->Par4 >= 0) && (event->Par4 <= 255) && // precharge
               (event->Par5 >= 0) && (event->Par5 <= 255))   // comdetect
@@ -1092,7 +1102,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             # endif // ifdef P036_SEND_EVENTS
             P036_SetDisplayOn(1); //  Save the fact that the display is now ON
           }
-        } else if ((subcommand.equals(F("frame"))) &&
+        } else if ((equals(subcommand, F("frame"))) &&
                    (event->Par2 >= 0) &&
                    (event->Par2 <= P036_data->MaxFramesToDisplay + 1)) {
           success = true;
@@ -1119,7 +1129,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           # endif // ifdef P036_SEND_EVENTS
         }
         # ifdef P036_ENABLE_LINECOUNT
-        else if ((subcommand.equals(F("linecount"))) &&
+        else if ((equals(subcommand, F("linecount"))) &&
                  (event->Par2 >= 1) &&
                  (event->Par2 <= 4)) {
           success = true;
@@ -1137,7 +1147,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
         # endif // P036_ENABLE_LINECOUNT
         # ifdef P036_ENABLE_LEFT_ALIGN
-        else if ((subcommand.equals(F("leftalign"))) &&
+        else if ((equals(subcommand, F("leftalign"))) &&
                  ((event->Par2 == 0) ||
                   (event->Par2 == 1))) {
           success = true;
@@ -1147,7 +1157,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           set2BitToUL(lSettings, P036_FLAG_LEFT_ALIGNED, static_cast<uint8_t>(aAlignment)); // Alignment
           P036_FLAGS_1 = lSettings;
         }
-        else if ((subcommand == F("align")) &&
+        else if (equals(subcommand, F("align")) &&
                  ((event->Par2 == 0) ||
                   (event->Par2 == 1) ||
                   (event->Par2 == 2))) {
@@ -1282,16 +1292,7 @@ const __FlashStringHelper* P36_eventId_toString(uint8_t eventId)
 }
 
 void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue) {
-  if (Settings.UseRules) {
-    String RuleEvent;
-    RuleEvent.reserve(32); // Guesstimate
-    RuleEvent += getTaskDeviceName(event->TaskIndex);
-    RuleEvent += '#';
-    RuleEvent += P36_eventId_toString(eventId);
-    RuleEvent += '=';
-    RuleEvent += eventValue;
-    eventQueue.addMove(std::move(RuleEvent));
-  }
+  eventQueue.add(event->TaskIndex, P36_eventId_toString(eventId), eventValue);
 }
 
 # endif // ifdef P036_SEND_EVENTS

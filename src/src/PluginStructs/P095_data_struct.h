@@ -119,7 +119,7 @@ public:
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    bool                textBackFill = true);
-  P095_data_struct() = delete;
+  P095_data_struct()                                = delete;
   virtual ~P095_data_struct();
 
   void init();
@@ -187,6 +187,10 @@ private:
   # ifdef P095_SHOW_SPLASH
   uint8_t _splashCounter = P095_SPLASH_DURATION;
   # endif // ifdef P095_SHOW_SPLASH
+
+  String strings[P095_Nlines];
+  bool   stringsLoaded     = false;
+  bool   stringsHasContent = false;
 };
 
 

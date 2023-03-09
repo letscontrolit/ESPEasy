@@ -65,6 +65,15 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = PCONFIG(0);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Oversampling"), F("oversampling"), PCONFIG(1));
@@ -105,9 +114,7 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t address = PCONFIG(0);
-
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P060_data_struct(address));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P060_data_struct(PCONFIG(0)));
       P060_data_struct *P060_data =
         static_cast<P060_data_struct *>(getPluginTaskData(event->TaskIndex));
 

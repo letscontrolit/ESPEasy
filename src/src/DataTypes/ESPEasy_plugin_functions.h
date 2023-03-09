@@ -51,12 +51,13 @@
 #define PLUGIN_WEBFORM_LOAD_SHOW_STATS     40 // Show PluginStats on task config page
 #endif // if FEATURE_PLUGIN_STATS
 #define PLUGIN_I2C_HAS_ADDRESS             41 // Check the I2C addresses from the plugin, output in 'success'
-#define PLUGIN_GET_DISPLAY_PARAMETERS      42 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
-#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 43 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
-#define PLUGIN_INIT_VALUE_RANGES           44 // Initialize the ranges of values, called just before PLUGIN_INIT
-#define PLUGIN_READ_ERROR_OCCURED          45 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
-#define PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR 46 // Show the configuration for output type and what value to set to which taskvalue
-#define PLUGIN_PROCESS_CONTROLLER_DATA     47 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
+#define PLUGIN_I2C_GET_ADDRESS             42 // Get the current I2C addresses from the plugin, output in 'event->Par1' and 'success'
+#define PLUGIN_GET_DISPLAY_PARAMETERS      43 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
+#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 44 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
+#define PLUGIN_INIT_VALUE_RANGES           45 // Initialize the ranges of values, called just before PLUGIN_INIT
+#define PLUGIN_READ_ERROR_OCCURED          46 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
+#define PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR 47 // Show the configuration for output type and what value to set to which taskvalue
+#define PLUGIN_PROCESS_CONTROLLER_DATA     48 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
 
 
 

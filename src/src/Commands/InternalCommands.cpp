@@ -392,7 +392,10 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
 #endif
-      COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
+      COMMAND_CASE_R(  "password", Command_Settings_Password, 1); // Settings.h
+      #if FEATURE_POST_TO_HTTP
+      COMMAND_CASE_A("posttohttp", Command_HTTP_PostToHTTP,  -1); // HTTP.h
+      #endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
       COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
@@ -405,7 +408,7 @@ bool executeInternalCommand(command_case_data & data)
 #endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #if FEATURE_MQTT
-      COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2); // MQTT.h
+      COMMAND_CASE_A( "publish", Command_MQTT_Publish,     -1); // MQTT.h
 #endif // if FEATURE_MQTT
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
@@ -420,7 +423,9 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 's': {
-      COMMAND_CASE_R(    "save", Command_Settings_Save, 0); // Settings.h
+      COMMAND_CASE_R(           "save", Command_Settings_Save, 0); // Settings.h
+      COMMAND_CASE_A("scheduletaskrun", Command_ScheduleTask_Run, 2); // Tasks.h
+
     #if FEATURE_SD
       COMMAND_CASE_R(  "sdcard", Command_SD_LS,         0); // SDCARDS.h
       COMMAND_CASE_R("sdremove", Command_SD_Remove,     1); // SDCARDS.h
@@ -459,6 +464,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_R( "taskdisable", Command_Task_Disable,  1);             // Tasks.h
         COMMAND_CASE_R(  "taskenable", Command_Task_Enable,   1);             // Tasks.h
         COMMAND_CASE_A(           "taskrun", Command_Task_Run,            1); // Tasks.h
+        COMMAND_CASE_A(         "taskrunat", Command_Task_Run,            2); // Tasks.h
         COMMAND_CASE_A(      "taskvalueset", Command_Task_ValueSet,       3); // Tasks.h
         COMMAND_CASE_A(   "taskvaluetoggle", Command_Task_ValueToggle,    2); // Tasks.h
         COMMAND_CASE_A("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3); // Tasks.h

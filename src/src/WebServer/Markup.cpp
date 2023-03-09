@@ -676,6 +676,7 @@ void addNumericBox(const String& id, int value, int min, int max
   #endif  // if FEATURE_TOOLTIPS
   addHtmlAttribute(F("type"),  F("number"));
   addHtmlAttribute(F("name"),  id);
+  addHtmlAttribute(F("id"),    id);
 
   #if FEATURE_TOOLTIPS
 
@@ -786,6 +787,7 @@ void addTextBox(const String  & id,
   addHtmlAttribute(F("class"),     classname);
   addHtmlAttribute(F("type"),      F("search"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
   }
@@ -833,6 +835,7 @@ void addTextArea(const String  & id,
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("text"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
   }
@@ -907,16 +910,29 @@ void addRTDPluginButton(pluginID_t taskDeviceNumber) {
   url += F(".html");
   addRTDHelpButton(url);
 
-  switch (taskDeviceNumber) {
-    case 76:
-    case 77:
-      addHtmlLink(
-        F("button help"),
-        makeDocLink(F("Reference/Safety.html"), true),
-        F("&#9889;")); // High voltage sign
-      break;
+  if ((taskDeviceNumber == 76) || (taskDeviceNumber == 77)) {
+    addHtmlLink(
+      F("button help"),
+      makeDocLink(F("Reference/Safety.html"), true),
+      F("&#9889;")); // High voltage sign
   }
 }
+
+# ifndef LIMIT_BUILD_SIZE
+void addRTDControllerButton(protocolIndex_t protocolIndex) {
+  String url;
+
+  url.reserve(20);
+  url = F("Controller/C");
+
+  if (protocolIndex < 100) { url += '0'; }
+
+  if (protocolIndex < 10) { url += '0'; }
+  url += String(protocolIndex);
+  url += F(".html");
+  addRTDHelpButton(url);
+}
+# endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url, bool isRTD) {
   String result;

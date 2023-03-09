@@ -237,10 +237,10 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P148_data) {
         const String command = parseString(string, 1);
 
-        if (command.equals(F("tm1621"))) {
+        if (equals(command, F("tm1621"))) {
           const String subcommand = parseString(string, 2);
 
-          if (subcommand.equals(F("raw"))) {
+          if (equals(subcommand, F("raw"))) {
             // Write raw data to the display
             // Typical use case: testing fonts
             const String rawdata_str = parseString(string, 3);
@@ -250,13 +250,13 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
               success = true;
               P148_data->writeRawData(rawdata);
             }
-          } else if (subcommand.equals(F("writerow"))) {
+          } else if (equals(subcommand, F("writerow"))) {
             // tm1621write,<rownr>,<string>
             const bool firstrow = event->Par2 <= 1;
             P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None, firstrow);
             P148_data->writeString(firstrow, parseString(string, 4));
             success = true;
-          } else if (subcommand.equals(F("write"))) {
+          } else if (equals(subcommand, F("write"))) {
             // tm1621write,<string1>,<string2>
             P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None);
             const String str1 = parseString(string, 3);
@@ -268,27 +268,27 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
               P148_data->writeStrings(str1, str2);
             }
             success = true;
-          } else if (subcommand.equals(F("voltamp"))) {
+          } else if (equals(subcommand, F("voltamp"))) {
             // tm1621voltamp,<volt>,<amp>
             P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp);
             P148_data->writeStrings(parseString(string, 3), parseString(string, 4));
             success = true;
-          } else if (subcommand.equals(F("energy"))) {
+          } else if (equals(subcommand, F("energy"))) {
             // tm1621energy,<kWh>,<Watt>
             P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt);
             P148_data->writeStrings(parseString(string, 3), parseString(string, 4));
             success = true;
-          } else if (subcommand.equals(F("celcius"))) {
+          } else if (equals(subcommand, F("celcius"))) {
             // tm1621celcius,<temperture>
             P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Celsius, true);
             P148_data->writeString(true, parseString(string, 3));
             success = true;
-          } else if (subcommand.equals(F("fahrenheit"))) {
+          } else if (equals(subcommand, F("fahrenheit"))) {
             // tm1621fahrenheit,<temperture>
             P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit, true);
             P148_data->writeString(true, parseString(string, 3));
             success = true;
-          } else if (subcommand.equals(F("humidity"))) {
+          } else if (equals(subcommand, F("humidity"))) {
             // tm1621humidity,<%humidity>
             P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Humidity, false);
             P148_data->writeString(false, parseString(string, 3));

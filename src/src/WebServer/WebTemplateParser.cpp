@@ -8,6 +8,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 
 #include "../Static/WebStaticData.h"
 
@@ -212,10 +213,10 @@ void WebTemplateParser::processVarName()
   if (!varName.length()) { return; }
   varName.toLowerCase();
 
-  if (varName.equals(F("error"))) {
+  if (equals(varName, F("error"))) {
     getErrorNotifications();
   }
-  else if (varName.equals(F("meta"))) {
+  else if (equals(varName, F("meta"))) {
     if (Rebooting) {
       addHtml(F("<meta http-equiv='refresh' content='10 url=/'>"));
     }
@@ -253,17 +254,17 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
   // (varValue.length()) ;serialPrint("after:  ");
   // varValue = "";
 
-  if (varName.equals(F("name")))
+  if (equals(varName, F("name")))
   {
-    addHtml(Settings.Name);
+    addHtml(Settings.getName());
   }
 
-  else if (varName.equals(F("unit")))
+  else if (equals(varName, F("unit")))
   {
     addHtmlInt(Settings.Unit);
   }
   
-  else if (varName.equals(F("build")))
+  else if (equals(varName, F("build")))
   {
     #if BUILD_IN_WEBFOOTER
     // In the footer, show full build binary name, will be 'firmware.bin' when compiled using Arduino IDE.
@@ -271,7 +272,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif
   }
 
-  else if (varName.equals(F("date")))
+  else if (equals(varName, F("date")))
   {
     #if BUILD_IN_WEBFOOTER
     // Add the compile-date
@@ -279,7 +280,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif
   }
 
-  else if (varName.equals(F("menu")))
+  else if (equals(varName, F("menu")))
   {
     addHtml(F("<div class='menubar'>"));
 
@@ -313,7 +314,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     addHtml(F("</div>"));
   }
 
-  else if (varName.equals(F("logo")))
+  else if (equals(varName, F("logo")))
   {
     if (fileExists(F("esp.png")))
     {
@@ -321,7 +322,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     }
   }
 
-  else if (varName.equals(F("css")))
+  else if (equals(varName, F("css")))
   {
     serve_favicon();
     if (MENU_INDEX_SETUP == navMenuIndex) {
@@ -339,7 +340,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
   }
 
 
-  else if (varName.equals(F("js")))
+  else if (equals(varName, F("js")))
   {
     html_add_JQuery_script();
 
@@ -361,12 +362,12 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     serve_JS(JSfiles_e::Toasting);
   }
 
-  else if (varName.equals(F("error")))
+  else if (equals(varName, F("error")))
   {
     // print last error - not implemented yet
   }
 
-  else if (varName.equals(F("debug")))
+  else if (equals(varName, F("debug")))
   {
     // print debug messages - not implemented yet
   }

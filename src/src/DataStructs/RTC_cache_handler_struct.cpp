@@ -101,7 +101,7 @@ void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekRead
   validateFilePos(newPeekFileNr, newPeekReadPos);
 
   if (fp) {
-    if (newPeekReadPos < fp.position()) {
+    if (newPeekReadPos < static_cast<int>(fp.position())) {
       _peekfilenr = newPeekFileNr;
       _peekreadpos = newPeekReadPos;
       fp.close();
@@ -111,7 +111,7 @@ void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekRead
       newPeekReadPos = 0;
       validateFilePos(newPeekFileNr, newPeekReadPos);
     }
-    if (_peekfilenr != newPeekFileNr) {
+    if (static_cast<int>(_peekfilenr) != newPeekFileNr) {
       // Not the same file
       fp.close();
       _peekfilenr = newPeekFileNr;

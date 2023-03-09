@@ -88,22 +88,22 @@ bool P093_data_struct::read(String& result) const {
 void P093_data_struct::write(const String& command, const String& value) {
     # define lookup(x, list, placeholder) findByMapping(x, list, sizeof(list) / sizeof(Tuple), placeholder)
 
-  if (command.equals(F("temperature"))) {
+  if (equals(command, F("temperature"))) {
     float temperature = 0;
 
     if (string2float(value, temperature) && (temperature >= 16) && (temperature <= 31)) {
       _wantedSettings.temperature = temperature;
       _writeStatus.set(Temperature);
     }
-  } else if ((command.equals(F("power"))) && lookup(value, _mappings.power, _wantedSettings.power)) {
+  } else if ((equals(command, F("power"))) && lookup(value, _mappings.power, _wantedSettings.power)) {
     _writeStatus.set(Power);
-  } else if ((command.equals(F("mode"))) && lookup(value, _mappings.mode, _wantedSettings.mode)) {
+  } else if ((equals(command, F("mode"))) && lookup(value, _mappings.mode, _wantedSettings.mode)) {
     _writeStatus.set(Mode);
-  } else if ((command.equals(F("fan"))) && lookup(value, _mappings.fan, _wantedSettings.fan)) {
+  } else if ((equals(command, F("fan"))) && lookup(value, _mappings.fan, _wantedSettings.fan)) {
     _writeStatus.set(Fan);
-  } else if ((command.equals(F("vane"))) && lookup(value, _mappings.vane, _wantedSettings.vane)) {
+  } else if ((equals(command, F("vane"))) && lookup(value, _mappings.vane, _wantedSettings.vane)) {
     _writeStatus.set(Vane);
-  } else if ((command.equals(F("widevane"))) && lookup(value, _mappings.wideVane, _wantedSettings.wideVane)) {
+  } else if ((equals(command, F("widevane"))) && lookup(value, _mappings.wideVane, _wantedSettings.wideVane)) {
     _writeStatus.set(WideVane);
   }
 
