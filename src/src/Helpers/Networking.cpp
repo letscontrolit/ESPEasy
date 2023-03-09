@@ -1049,6 +1049,12 @@ void scrubDNS() {
   }
 }
 
+bool valid_DNS_address(const IPAddress& dns) {
+  return (dns.v4() != (uint32_t)0x00000000 && 
+          dns.v4() != (uint32_t)0xFD000000 && 
+          dns != INADDR_NONE);
+}
+
 bool setDNS(int index, const IPAddress& dns) {
   if (index >= 2) return false;
   #ifdef ESP8266
@@ -1066,7 +1072,7 @@ bool setDNS(int index, const IPAddress& dns) {
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
-  if (dns.v4() != (uint32_t)0x00000000 && dns != INADDR_NONE) {
+  if (valid_DNS_address(dns)) {
     // Set DNS0-Server
     d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
     const ip_addr_t* cur_dns = dns_getserver(index);
