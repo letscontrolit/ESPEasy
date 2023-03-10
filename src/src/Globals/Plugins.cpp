@@ -612,7 +612,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
 
         if (Function == PLUGIN_INIT) {
-          if (!retval) {
+          if (!retval && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
             Settings.TaskDeviceEnabled[taskIndex] = false; // Initialization failed: Disable plugin!
             result = false;
           }
@@ -751,7 +751,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           }
           if (Function == PLUGIN_INIT) {
-            if (!retval) {
+            if (!retval && Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
               Settings.TaskDeviceEnabled[event->TaskIndex] = false; // Initialization failed: Disable plugin!
             } else {
               #if FEATURE_PLUGIN_STATS
