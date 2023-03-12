@@ -70,7 +70,7 @@ void P137_CheckPredefinedParameters(struct EventStruct *event) {
         P137_REG_DCDC2_LDO2     = (P137_valueToSetting(-1, P137_CONST_MAX_DCDC2) << 16) | P137_valueToSetting(3300, P137_CONST_MAX_LDO);
         P137_REG_DCDC3_LDO3     = (P137_valueToSetting(3300, P137_CONST_MAX_DCDC) << 16) | P137_valueToSetting(3300, P137_CONST_MAX_LDO);
         P137_REG_LDOIO          =  P137_valueToSetting(3300, P137_CONST_MAX_LDOIO);
-        P137_CONFIG_DISABLEBITS = 0b1111111000; // NC pins disabled
+        P137_CONFIG_DISABLEBITS = 0b1111111000;   // NC pins disabled
         break;
       }
       case P137_PredefinedDevices_e::UserDefined: // User defined
@@ -224,78 +224,108 @@ float P137_data_struct::read_value(P137_valueOptions_e value) {
 // **************************************************************************/
 // plugin_write: Process commands
 // **************************************************************************/
+const char P137_subcommands[] PROGMEM = "ldo2|ldo3|ldoio|gpio0|gpio1|gpio2|gpio3|gpio4|dcdc2|dcdc3|ldo2perc|lco3perc|ldoioperc|"
+                                        "dcdc2perc|dcdc3pers|ldo2map|lco3map|ldoiomap|dcdc2map|dcdc3map|";
+enum class P137_subcommands_e : int8_t {
+  invalid = -1,
+  ldo2    = 0,
+  ldo3,
+  ldoio,
+  gpio0,
+  gpio1,
+  gpio2,
+  gpio3,
+  gpio4,
+  dcdc2,
+  dcdc3,
+  ldo2perc,
+  ldo3perc,
+  ldoioperc,
+  dcdc2perc,
+  dcdc3perc,
+  ldo2map,
+  ldo3map,
+  ldoiomap,
+  dcdc2map,
+  dcdc3map,
+};
+
 bool P137_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
   bool   success = false;
   String cmd     = parseString(string, 1);
 
-  if (isInitialized() && cmd.equals(F("axp"))) { // Command trigger
-    cmd = parseString(string, 2);                // sub command
+  if (isInitialized() && equals(cmd, F("axp"))) { // Command trigger
+    cmd = parseString(string, 2);                 // sub command
+    char tmp[10]{};
+    const int subcommand_i          = GetCommandCode(tmp, sizeof(tmp), cmd.c_str(), P137_subcommands);
+    const P137_subcommands_e subcmd = static_cast<P137_subcommands_e>(subcommand_i);
+
     String var3       = parseString(string, 3);
     const bool empty3 = var3.isEmpty();
     const bool empty4 = parseString(string, 4).isEmpty();
     const bool state3 = !empty3 && (event->Par2 == 0 || event->Par2 == 1);
     success = true;
 
-    if (cmd.equals(F("ldo2")) && !empty3 &&
+    if ((P137_subcommands_e::ldo2 == subcmd) && !empty3 &&
         !bitRead(P137_CONFIG_DISABLEBITS, 0)) {        // axp,ldo2,<voltage>
       axp192->setLDO2(event->Par2);                    // Range checking done by function
       ldo2_value = event->Par2;
-    } else if (cmd.equals(F("ldo3")) && !empty3 &&
+    } else if ((P137_subcommands_e::ldo3 == subcmd) && !empty3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 1)) { // axp,ldo3,<voltage>
       axp192->setLDO3(event->Par2);                    // Range checking done by function
       ldo3_value = event->Par2;
-    } else if (cmd.equals(F("ldoio")) && !empty3 &&
+    } else if ((P137_subcommands_e::ldoio == subcmd) && !empty3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 2)) { // axp,ldoio,<voltage>
       axp192->setLDOIO(event->Par2);                   // Range checking done by function
       ldoio_value = event->Par2;
-    } else if (cmd.equals(F("gpio0")) && state3 &&
+    } else if ((P137_subcommands_e::gpio0 == subcmd) && state3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 3)) { // axp,gpio0,state
       axp192->setGPIO0(event->Par2);                   // Range checking done before
-    } else if (cmd.equals(F("gpio1")) && state3 &&
+    } else if ((P137_subcommands_e::gpio1 == subcmd) && state3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 4)) { // axp,gpio1,state
       axp192->setGPIO1(event->Par2);                   // Range checking done before
-    } else if (cmd.equals(F("gpio2")) && state3 &&
+    } else if ((P137_subcommands_e::gpio2 == subcmd) && state3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 5)) { // axp,gpio2,state
       axp192->setGPIO2(event->Par2);                   // Range checking done before
-    } else if (cmd.equals(F("gpio3")) && state3 &&
+    } else if ((P137_subcommands_e::gpio3 == subcmd) && state3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 6)) { // axp,gpio3,state
       axp192->setGPIO3(event->Par2);                   // Range checking done before
-    } else if (cmd.equals(F("gpio4")) && state3 &&
+    } else if ((P137_subcommands_e::gpio4 == subcmd) && state3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 7)) { // axp,gpio4,state
       axp192->setGPIO4(event->Par2);                   // Range checking done before
-    } else if (cmd.equals(F("dcdc2")) && !empty3 &&
+    } else if ((P137_subcommands_e::dcdc2 == subcmd) && !empty3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 8)) { // axp,dcdc2,<voltage>
       axp192->setDCDC2(event->Par2);                   // Range checking done by function
       dcdc2_value = event->Par2;
-    } else if (cmd.equals(F("dcdc3")) && !empty3 &&
+    } else if ((P137_subcommands_e::dcdc3 == subcmd) && !empty3 &&
                !bitRead(P137_CONFIG_DISABLEBITS, 9)) { // axp,dcdc3,<voltage>
       axp192->setDCDC3(event->Par2);                   // Range checking done by function
       dcdc3_value = event->Par2;
     } else if ((event->Par2 >= 0) && (event->Par2 <= P137_CONST_100_PERCENT) && !empty3 && empty4) {
       // percentage 0..100, 0 turns off
-      if (cmd.equals(F("ldo2perc")) && !bitRead(P137_CONFIG_DISABLEBITS, 0)) { // axp,ldo2perc,<percentage>
+      if ((P137_subcommands_e::ldo2perc == subcmd) && !bitRead(P137_CONFIG_DISABLEBITS, 0)) { // axp,ldo2perc,<percentage>
         ldo2_value = event->Par2 > 0 ? map(event->Par2,
                                            P137_CONST_1_PERCENT, P137_CONST_100_PERCENT,
                                            ldo2_range[0], ldo2_range[1]) : 0;
         axp192->setLDO2(ldo2_value);
-      } else if (cmd.equals(F("ldo3perc")) && !bitRead(P137_CONFIG_DISABLEBITS, 1)) { // axp,ldo3perc,<percentage>
+      } else if ((P137_subcommands_e::ldo3perc == subcmd) && !bitRead(P137_CONFIG_DISABLEBITS, 1)) { // axp,ldo3perc,<percentage>
         ldo3_value = event->Par2 > 0 ? map(event->Par2,
                                            P137_CONST_1_PERCENT, P137_CONST_100_PERCENT,
                                            ldo3_range[0], ldo3_range[1]) : 0;
         axp192->setLDO3(ldo3_value);
-      } else if (cmd.equals(F("ldoioperc")) && (event->Par2 > 0) &&
+      } else if ((P137_subcommands_e::ldoioperc == subcmd) && (event->Par2 > 0) &&
                  !bitRead(P137_CONFIG_DISABLEBITS, 2)) { // axp,ldoioperc,<percentage>
         ldoio_value = map(event->Par2,
                           P137_CONST_1_PERCENT, P137_CONST_100_PERCENT,
                           ldoio_range[0], ldoio_range[1]);
         axp192->setLDOIO(ldoio_value);
-      } else if (cmd.equals(F("dcdc2perc")) && !bitRead(P137_CONFIG_DISABLEBITS, 8)) { // axp,dcdc2perc,<percentage>
+      } else if ((P137_subcommands_e::dcdc2perc == subcmd) && !bitRead(P137_CONFIG_DISABLEBITS, 8)) { // axp,dcdc2perc,<percentage>
         dcdc2_value = event->Par2 > 0 ? map(event->Par2,
                                             P137_CONST_1_PERCENT, P137_CONST_100_PERCENT,
                                             dcdc2_range[0], dcdc2_range[1]) : 0;
         axp192->setDCDC2(dcdc2_value);
-      } else if (cmd.equals(F("dcdc3perc")) && !bitRead(P137_CONFIG_DISABLEBITS, 9)) { // axp,dcdc3perc,<percentage>
+      } else if ((P137_subcommands_e::dcdc3perc == subcmd) && !bitRead(P137_CONFIG_DISABLEBITS, 9)) { // axp,dcdc3perc,<percentage>
         dcdc3_value = event->Par2 > 0 ? map(event->Par2,
                                             P137_CONST_1_PERCENT, P137_CONST_100_PERCENT,
                                             dcdc3_range[0], dcdc3_range[1]) : 0;
@@ -305,21 +335,21 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
       }
     } else if ((event->Par2 >= 0) && (event->Par3 <= P137_CONST_MAX_LDO) && (event->Par2 < event->Par3) && !empty3 && !empty4) {
       // map range <low>,<high>
-      if (cmd.equals(F("ldo2map")) && !bitRead(P137_CONFIG_DISABLEBITS, 0)) {        // axp,ldo2map,<low>,<high>
+      if ((P137_subcommands_e::ldo2map == subcmd) && !bitRead(P137_CONFIG_DISABLEBITS, 0)) {        // axp,ldo2map,<low>,<high>
         ldo2_range[0] = event->Par2;
         ldo2_range[1] = event->Par3;
-      } else if (cmd.equals(F("ldo3map")) && !bitRead(P137_CONFIG_DISABLEBITS, 1)) { // axp,ldo3map,<low>,<high>
+      } else if ((P137_subcommands_e::ldo3map == subcmd) && !bitRead(P137_CONFIG_DISABLEBITS, 1)) { // axp,ldo3map,<low>,<high>
         ldo3_range[0] = event->Par2;
         ldo3_range[1] = event->Par3;
-      } else if (cmd.equals(F("ldoiomap")) && (event->Par2 >= P137_CONST_MIN_LDOIO) &&
+      } else if ((P137_subcommands_e::ldoiomap == subcmd) && (event->Par2 >= P137_CONST_MIN_LDOIO) &&
                  !bitRead(P137_CONFIG_DISABLEBITS, 2)) { // axp,ldoiomap,<low>,<high>
         ldoio_range[0] = event->Par2;
         ldoio_range[1] = event->Par3;
-      } else if (cmd.equals(F("dcdc2map")) && (event->Par3 <= P137_CONST_MAX_DCDC2) &&
-                 !bitRead(P137_CONFIG_DISABLEBITS, 8)) {                              // axp,dcdc2map,<low>,<high>
+      } else if ((P137_subcommands_e::dcdc2map == subcmd) && (event->Par3 <= P137_CONST_MAX_DCDC2) &&
+                 !bitRead(P137_CONFIG_DISABLEBITS, 8)) {                                             // axp,dcdc2map,<low>,<high>
         dcdc2_range[0] = event->Par2;
         dcdc2_range[1] = event->Par3;
-      } else if (cmd.equals(F("dcdc3map")) && !bitRead(P137_CONFIG_DISABLEBITS, 9)) { // axp,dcdc3map,<low>,<high>
+      } else if ((P137_subcommands_e::dcdc3map == subcmd) && !bitRead(P137_CONFIG_DISABLEBITS, 9)) { // axp,dcdc3map,<low>,<high>
         dcdc3_range[0] = event->Par2;
         dcdc3_range[1] = event->Par3;
       } else {
@@ -336,41 +366,65 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
 /****************************************************************************
  * plugin_get_config_value: Retrieve values like [<taskname>#<valuename>]
  ***************************************************************************/
+const char P137_getvalues[] PROGMEM = "batvoltage|batdischarge|batcharge|batpower|inpvoltage|inpcurrent|vbusvolt|vbuscurr|"
+                                      "inttemp|apsvolt|ldo2volt|ldo3volt|ldoiovolt|dcdc2volt|dcdc3volt|";
+enum class P137_getvalues_e : int8_t {
+  invalid    = -1,
+  batvoltage = 0,
+  batdischarge,
+  batcharge,
+  batpower,
+  inpvoltage,
+  inpcurrent,
+  vbusvolt,
+  vbuscurr,
+  inttemp,
+  apsvolt,
+  ldo2volt,
+  ldo3volt,
+  ldoiovolt,
+  dcdc2volt,
+  dcdc3volt,
+};
+
 bool P137_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
   bool   success = true;
   String command = parseString(string, 1);
   float  value;
+  char   tmp[14]{};
+  const int getvalue_i          = GetCommandCode(tmp, sizeof(tmp), command.c_str(), P137_getvalues);
+  const P137_getvalues_e getval = static_cast<P137_getvalues_e>(getvalue_i);
 
-  if (command.equals(F("batvoltage"))) {          // batvoltage
+  if (P137_getvalues_e::batvoltage == getval) {          // batvoltage
     value = read_value(P137_valueOptions_e::BatteryVoltage);
-  } else if (command.equals(F("batdischarge"))) { // batdischarge
+  } else if (P137_getvalues_e::batdischarge == getval) { // batdischarge
     value = read_value(P137_valueOptions_e::BatteryDischargeCurrent);
-  } else if (command.equals(F("batcharge"))) {    // batcharge
+  } else if (P137_getvalues_e::batcharge == getval) {    // batcharge
     value = read_value(P137_valueOptions_e::BatteryChargeCurrent);
-  } else if (command.equals(F("batpower"))) {     // batpower
+  } else if (P137_getvalues_e::batpower == getval) {     // batpower
     value = read_value(P137_valueOptions_e::BatteryPower);
-  } else if (command.equals(F("inpvoltage"))) {   // inpvoltage
+  } else if (P137_getvalues_e::inpvoltage == getval) {   // inpvoltage
     value = read_value(P137_valueOptions_e::AcinVoltage);
-  } else if (command.equals(F("inpcurrent"))) {   // inpcurrent
+  } else if (P137_getvalues_e::inpcurrent == getval) {   // inpcurrent
     value = read_value(P137_valueOptions_e::AcinCurrent);
-  } else if (command.equals(F("vbusvolt"))) {     // vbusvolt
+  } else if (P137_getvalues_e::vbusvolt == getval) {     // vbusvolt
     value = read_value(P137_valueOptions_e::VbusVoltage);
-  } else if (command.equals(F("vbuscurr"))) {     // vbuscurr
+  } else if (P137_getvalues_e::vbuscurr == getval) {     // vbuscurr
     value = read_value(P137_valueOptions_e::VbusCurrent);
-  } else if (command.equals(F("inttemp"))) {      // inttemp
+  } else if (P137_getvalues_e::inttemp == getval) {      // inttemp
     value = read_value(P137_valueOptions_e::InternalTemperature);
-  } else if (command.equals(F("apsvolt"))) {      // apsvolt
+  } else if (P137_getvalues_e::apsvolt == getval) {      // apsvolt
     value = read_value(P137_valueOptions_e::ApsVoltage);
-  } else if (command.equals(F("ldo2volt"))) {     // ldo2volt
+  } else if (P137_getvalues_e::ldo2volt == getval) {     // ldo2volt
     value = read_value(P137_valueOptions_e::LDO2);
-  } else if (command.equals(F("ldo3volt"))) {     // ldo3volt
+  } else if (P137_getvalues_e::ldo3volt == getval) {     // ldo3volt
     value = read_value(P137_valueOptions_e::LDO3);
-  } else if (command.equals(F("ldoiovolt"))) {    // ldoiovolt
+  } else if (P137_getvalues_e::ldoiovolt == getval) {    // ldoiovolt
     value = read_value(P137_valueOptions_e::LDOIO);
-  } else if (command.equals(F("dcdc2volt"))) {    // dcdc2volt
+  } else if (P137_getvalues_e::dcdc2volt == getval) {    // dcdc2volt
     value = read_value(P137_valueOptions_e::DCDC2);
-  } else if (command.equals(F("dcdc3volt"))) {    // dcdc3volt
+  } else if (P137_getvalues_e::dcdc3volt == getval) {    // dcdc3volt
     value = read_value(P137_valueOptions_e::DCDC3);
   } else {
     success = false;
