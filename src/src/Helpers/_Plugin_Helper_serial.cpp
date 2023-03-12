@@ -191,7 +191,11 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
   int    ids[NR_ESPEASY_SERIAL_TYPES];
   String attr[NR_ESPEASY_SERIAL_TYPES];
 
+  #ifndef DISABLE_SC16IS752_Serial
   int index = NR_ESPEASY_SERIAL_TYPES - 1; // Place I2C Serial at the end
+  #else // ifndef DISABLE_SC16IS752_Serial
+  int index = 0;
+  #endif // ifndef DISABLE_SC16IS752_Serial
 
   for (int i = 0; (index < NR_ESPEASY_SERIAL_TYPES) && (i < static_cast<int>(ESPEasySerialPort::MAX_SERIAL_TYPE)); ++i) {
     int rxPin, txPin;
@@ -203,6 +207,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
       option = serialHelper_getSerialTypeLabel(serType);
 
       switch (serType) {
+        #ifndef DISABLE_SOFTWARE_SERIAL
         case ESPEasySerialPort::software:
         {
           if (!allowSoftwareSerial) {
@@ -210,10 +215,13 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
           }
           break;
         }
+        #endif // ifndef DISABLE_SOFTWARE_SERIAL
+        #ifndef DISABLE_SC16IS752_Serial
         case ESPEasySerialPort::sc16is752:
         {
           break;
         }
+        #endif // ifndef DISABLE_SC16IS752_Serial
         case ESPEasySerialPort::serial0:
         case ESPEasySerialPort::serial0_swap:
         case ESPEasySerialPort::serial1:
@@ -241,8 +249,10 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
       options[index] = option;
       ids[index]     = i;
       ++index;
+      #ifndef DISABLE_SC16IS752_Serial
 
       if (index == NR_ESPEASY_SERIAL_TYPES) { index = 0; } // Restart at begin of list
+      #endif // ifndef DISABLE_SC16IS752_Serial
     }
   }
   addFormSelector_script(F("Serial Port"), F("serPort"), NR_ESPEASY_SERIAL_TYPES,
