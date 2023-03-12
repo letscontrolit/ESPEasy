@@ -2,6 +2,7 @@
 #define WEBSERVER_WEBSERVER_MARKUP_H
 
 #include "../WebServer/common.h"
+#include "../DataTypes/ProtocolIndex.h"
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -318,6 +319,9 @@ void   addHelpButton(const String& url,
                      bool          isRTD);
 
 void   addRTDPluginButton(pluginID_t taskDeviceNumber);
+# ifndef LIMIT_BUILD_SIZE
+void   addRTDControllerButton(protocolIndex_t protocolIndex);
+# endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url,
                    bool          isRTD);

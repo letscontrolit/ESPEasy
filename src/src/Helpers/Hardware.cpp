@@ -86,7 +86,7 @@ void hardwareInit()
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
         PinBootState bootState = Settings.getPinBootState(gpio);
       #if FEATURE_ETHERNET
-
+/*
         if (Settings.ETH_Pin_power == gpio)
         {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -96,7 +96,7 @@ void hardwareInit()
           }
           bootState = PinBootState::Output_low;
         }
-
+*/
       #endif // if FEATURE_ETHERNET
 
         #ifdef ESP32
