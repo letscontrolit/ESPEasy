@@ -9,6 +9,7 @@
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
 // Change history:
+// 2023-03-12, tonhuisman: Set default serial port for ESP8266 too, and set a default volume value
 // 2023-03-11, tonhuisman: Change plugin from DEVICE_TYPE_SINGLE to DEVICE_TYPE_SERIAL, so it can be used on ESP32 (default: Serial1)
 //                         Initially switch CONFIG_PIN1 to CONFIG_PIN2 and always reset CONFIG_PIN1 to -1 on PLUGIN_WEBFORM_SAVE
 //                         Handle initial volume after ca. 0.5 sec delay to allow proper initialization of the player
@@ -46,8 +47,9 @@
 
 # include <ESPeasySerial.h>
 
-# define P065_VOLUME_DELAY      6 // At least 500 milliseconds delay to allow proper initialization of the player before setting the default
-                                  // volume
+# define P065_DEFAULT_VOLUME    15 // Set initial volume
+# define P065_VOLUME_DELAY      6  // At least 500 milliseconds delay to allow proper initialization of the player before setting the
+                                   // default volume
 ESPeasySerial *P065_easySerial = nullptr;
 uint8_t P065_initialVolumeSet  = P065_VOLUME_DELAY;
 
@@ -93,13 +95,17 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # ifdef ESP32
     case PLUGIN_SET_DEFAULTS:
     {
-      CONFIG_PORT = static_cast<uint8_t>(ESPEasySerialPort::serial1); // Set default to Serial1 for ESP32
+      # ifdef ESP8266
+      CONFIG_PORT = static_cast<uint8_t>(ESPEasySerialPort::software); // Set default to SoftwareSerial for ESP8266
+      # endif // ifdef ESP8266
+      # ifdef ESP32
+      CONFIG_PORT = static_cast<uint8_t>(ESPEasySerialPort::serial1);  // Set default to Serial1 for ESP32
+      # endif // ifdef ESP32
+      PCONFIG(0) = P065_DEFAULT_VOLUME;
       break;
     }
-    # endif // ifdef ESP32
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
