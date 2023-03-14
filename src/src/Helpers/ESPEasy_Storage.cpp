@@ -1984,7 +1984,9 @@ String downloadFileType(const String& url, const String& user, const String& pas
       String filename_bak = filename;
       filename_bak += F("_bak");
       if (fileExists(filename_bak)) {
-        return F("Could not rename to _bak");
+        if (!ResetFactoryDefaultPreference.delete_Bak_Files() || !tryDeleteFile(filename_bak)) {
+          return F("Could not rename to _bak");
+        }
       }
 
       // Must download it to a tmp file.
@@ -2025,9 +2027,6 @@ String downloadFileType(const String& url, const String& user, const String& pas
 
 String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 {
-  if (!ResetFactoryDefaultPreference.allowFetchByCommand()) {
-    return F("Not Allowed");
-  }
   String url, user, pass;
 
   {
@@ -2035,6 +2034,11 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 
     if (AllocatedProvisioningSettings()) {
       loadProvisioningSettings(ProvisioningSettings);
+
+      if (!ProvisioningSettings.fetchFileTypeAllowed(filetype, filenr)) {
+        return F("Not Allowed");
+      }
+
       url  = ProvisioningSettings.url;
       user = ProvisioningSettings.user;
       pass = ProvisioningSettings.pass;
