@@ -21,6 +21,7 @@
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
+#include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
