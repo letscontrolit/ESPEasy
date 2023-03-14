@@ -18,6 +18,11 @@
    and to test other devices for reachability (this is why SendDataOption is enabled)
    Maintainer: Denys Fedoryshchenko, denys AT nuclearcat.com
  */
+/** Changelog:
+ * 2023-03-14 tonhuisman: Change command handling to not require the taskname as the second argument if no 3rd argument is given.
+ *                        Set decimals to 0 whan adding the task.
+ * 2023-03 Started changelog, not registered before.
+ */
 
 
 # define PLUGIN_089
@@ -56,6 +61,12 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_089));
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // Count doesn't include decimals
       break;
     }
 
@@ -112,17 +123,22 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
       if (equals(command, F("pingset")))
       {
         String taskName       = parseString(string, 2);
+        String param1         = parseString(string, 3);
         taskIndex_t taskIndex = findTaskIndexByName(taskName);
 
-        if ((taskIndex != TASKS_MAX) && (taskIndex == event->TaskIndex)) {
-          success = true;
-          String param1 = parseString(string, 3);
-          int    val_new;
+        if (param1.isEmpty() ||
+            (!param1.isEmpty() && (taskIndex != TASKS_MAX) && (taskIndex == event->TaskIndex))) {
+          int val_new;
+
+          if (param1.isEmpty()) {
+            param1 = taskName;
+          }
 
           if (validIntFromString(param1, val_new)) {
             // Avoid overflow and weird values
             if ((val_new > -1024) && (val_new < 1024)) {
               UserVar[event->BaseVarIndex] = val_new;
+              success                      = true;
             }
           }
         }
@@ -132,6 +148,5 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
 
 #endif // if defined(USES_P089) && defined(ESP8266)
