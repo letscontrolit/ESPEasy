@@ -915,41 +915,42 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       addPinConfig = true;
     }
 
-    switch (Device[DeviceIndex].Type) {
-      case DEVICE_TYPE_SERIAL:
-      case DEVICE_TYPE_SERIAL_PLUS1:
-      {
-        # ifdef PLUGIN_USES_SERIAL
-        devicePage_show_serial_config(taskIndex);
-        # else // ifdef PLUGIN_USES_SERIAL
-        addHtml(F("PLUGIN_USES_SERIAL not defined"));
-        # endif // ifdef PLUGIN_USES_SERIAL
+    if (addPinConfig || (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)) {
+      switch (Device[DeviceIndex].Type) {
+        case DEVICE_TYPE_SERIAL:
+        case DEVICE_TYPE_SERIAL_PLUS1:
+        {
+          # ifdef PLUGIN_USES_SERIAL
+          devicePage_show_serial_config(taskIndex);
+          # else // ifdef PLUGIN_USES_SERIAL
+          addHtml(F("PLUGIN_USES_SERIAL not defined"));
+          # endif // ifdef PLUGIN_USES_SERIAL
 
-        if (addPinConfig) {
           devicePage_show_pin_config(taskIndex, DeviceIndex);
           addPinConfig = false;
+
+          html_add_script(F("document.getElementById('serPort').onchange();"), false);
+          break;
         }
 
-        html_add_script(F("document.getElementById('serPort').onchange();"), false);
-        break;
-      }
-
-      case DEVICE_TYPE_I2C:
-      {
-        if (addPinConfig) {
+        case DEVICE_TYPE_I2C:
+        {
           devicePage_show_pin_config(taskIndex, DeviceIndex);
           addPinConfig = false;
-        }
-        devicePage_show_I2C_config(taskIndex);
 
-        break;
+          if (Settings.TaskDeviceDataFeed[taskIndex] == 0) {
+            devicePage_show_I2C_config(taskIndex);
+          }
+
+          break;
+        }
+
+        default: break;
       }
 
-      default: break;
-    }
-
-    if (addPinConfig) {
-      devicePage_show_pin_config(taskIndex, DeviceIndex);
+      if (addPinConfig) {
+        devicePage_show_pin_config(taskIndex, DeviceIndex);
+      }
     }
 
     addFormSubHeader(F("Device Settings"));

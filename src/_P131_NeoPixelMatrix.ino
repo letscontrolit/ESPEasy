@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
  * 2022-07-30 tonhuisman: Add commands to set scroll-options (settext, setscroll, setstep, setspeed, setempty, setright)
  *                        Fix issue that on startup the display wasn't cleared (unit reset should turn off the display)
  *                        Changed initial Text print mode to 'Truncate exceeding message' to enable Scroll mode
@@ -432,6 +433,19 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P131_data_struct *P131_data = static_cast<P131_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P131_data) {
+        success = P131_data->plugin_get_config_value(event, string); // GetConfig operation, handle variables, fully delegated to
+                                                                     // AdafruitGFX_helper
+      }
+      break;
+    }
+    # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
   }
   return success;
 }

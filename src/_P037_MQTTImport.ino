@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2023-03-06, tonhuisman: Fix PLUGIN_INIT behavior to now always return success = true
  * 2022-12-13, tonhuisman: Implement separator character input selector
  * 2022-11-14, tonhuisman: Add support for selecting JSON sub-attributes, using the . notation, like main.sub (1 level only)
  * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
@@ -280,8 +281,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         if (MQTTclient_connected) {
           // Subscribe to ALL the topics from ALL instance of this import module
           MQTTSubscribe_037(event);
-          success = true;
         }
+        success = true;
       }
       break;
     }
