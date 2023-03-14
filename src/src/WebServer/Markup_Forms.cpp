@@ -336,7 +336,7 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
 bool getFormPassword(const String& id, String& password)
 {
   password = webArg(id);
-  return !password.equals(F("*****"));
+  return !equals(password, F("*****"));
 }
 
 // ********************************************************************************
@@ -768,7 +768,7 @@ bool isFormItemChecked(const __FlashStringHelper * id)
 
 bool isFormItemChecked(const String& id)
 {
-  return webArg(id).equals(F("on"));
+  return equals(webArg(id), F("on"));
 }
 
 bool isFormItemChecked(const LabelType::Enum& id)

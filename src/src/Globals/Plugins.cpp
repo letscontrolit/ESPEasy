@@ -590,7 +590,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
 
         if (Function == PLUGIN_INIT) {
-          if (!retval) {
+          if (!retval && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
             Settings.TaskDeviceEnabled[taskIndex] = false; // Initialization failed: Disable plugin!
             result = false;
           }
@@ -729,7 +729,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           }
           if (Function == PLUGIN_INIT) {
-            if (!retval) {
+            if (!retval && Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
               Settings.TaskDeviceEnabled[event->TaskIndex] = false; // Initialization failed: Disable plugin!
             } else {
               #if FEATURE_PLUGIN_STATS
@@ -842,7 +842,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_DEVICEVALUENAMES ||
             Function == PLUGIN_WEBFORM_SAVE ||
             Function == PLUGIN_SET_DEFAULTS ||
-            Function == PLUGIN_INIT_VALUE_RANGES) {
+            Function == PLUGIN_INIT_VALUE_RANGES ||
+           (Function == PLUGIN_SET_CONFIG && retval)) {
           // Each of these may update ExtraTaskSettings, but it may not have been saved yet.
           // Thus update the cache just in case something from it is requested from the cache.
           Cache.updateExtraTaskSettingsCache();

@@ -611,27 +611,27 @@ unsigned short Plugin_096_ParseColor(const String& colorString)
 
   s.toLowerCase();
 
-  if (s.equals(F("black"))) {
+  if (equals(s, F("black"))) {
     return EPD_BLACK;
   }
 
-  if (s.equals(F("white"))) {
+  if (equals(s, F("white"))) {
     return EPD_WHITE;
   }
 
-  if (s.equals(F("inverse"))) {
+  if (equals(s, F("inverse"))) {
     return EPD_INVERSE;
   }
 
-  if (s.equals(F("red"))) {
+  if (equals(s, F("red"))) {
     return EPD_RED;
   }
 
-  if (s.equals(F("dark"))) {
+  if (equals(s, F("dark"))) {
     return EPD_DARK;
   }
 
-  if (s.equals(F("light"))) {
+  if (equals(s, F("light"))) {
     return EPD_LIGHT;
   }
   return EPD_WHITE;

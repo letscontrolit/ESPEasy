@@ -91,7 +91,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command.equals(F("dummyvalueset")))
+      if (equals(command, F("dummyvalueset")))
       {
         // TODO tonhuisman: Remove this command, as TaskValueSet is more versatile
         addLog(LOG_LEVEL_INFO, F("dummyvalueset: Command deprecated, use TaskValueSet instead!"));

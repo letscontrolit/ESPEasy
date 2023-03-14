@@ -74,8 +74,8 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       newString += tmpString.substring(lastStartpos, startpos);
 
       // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
-      const bool devNameEqInt = deviceName.equals(F("int"));
-      if (devNameEqInt || deviceName.equals(F("var")))
+      const bool devNameEqInt = equals(deviceName, F("int"));
+      if (devNameEqInt || equals(deviceName, F("var")))
       {
         // Address an internal variable either as float or as int
         // For example: Let,10,[VAR#9]
@@ -101,7 +101,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             tmpString);
         }
       }
-      else if (deviceName.equals(F("plugin")))
+      else if (equals(deviceName, F("plugin")))
       {
         // Handle a plugin request.
         // For example: "[Plugin#GPIO#Pinstate#N]"
@@ -384,7 +384,7 @@ void transformValue(
                 maskChar = tempValueFormat[1];
               }
 
-              if (value.equals(F("0"))) {
+              if (equals(value, '0')) {
                 value = String();
               } else {
                 const int valueLength = value.length();

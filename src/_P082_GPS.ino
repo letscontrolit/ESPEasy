@@ -528,18 +528,18 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         const String command    = parseString(string, 1);
         const String subcommand = parseString(string, 2);
 
-        if (command.equals(F("gps"))) {
-          if (subcommand.equals(F("wake"))) {
+        if (equals(command, F("gps"))) {
+          if (equals(subcommand, F("wake"))) {
             success = P082_data->wakeUp();
-          } else if (subcommand.equals(F("sleep"))) {
+          } else if (equals(subcommand, F("sleep"))) {
             success = P082_data->powerDown();
           }
 # ifdef P082_USE_U_BLOX_SPECIFIC
-          else if (subcommand.equals(F("maxperf"))) {
+          else if (equals(subcommand, F("maxperf"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Max_Performance);
-          } else if (subcommand.equals(F("powersave"))) {
+          } else if (equals(subcommand, F("powersave"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Power_Save);
-          } else if (subcommand.equals(F("eco"))) {
+          } else if (equals(subcommand, F("eco"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Eco);
           }
 # endif // P082_USE_U_BLOX_SPECIFIC

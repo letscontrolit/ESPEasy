@@ -306,6 +306,18 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
   return argument.length() > 0;
 }
 
+const char bitwise_functions[] PROGMEM = "bitread|bitset|bitclear|bitwrite|xor|and|or";
+enum class bitwise_functions_e {
+  bitread,
+  bitset,
+  bitclear,
+  bitwrite,
+  xor_e,  // protected keywords, thus appended _e
+  and_e,
+  or_e
+};
+
+
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -332,6 +344,13 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
     return false;
   }
 
+  char tmp[10]{};
+  int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), bitwise_functions);
+  if (command_i == -1) {
+    // No matching function found
+    return false;
+  }
+  
   if (cmd_s_lower.startsWith(F("bit"))) {
     #define bitSetULL(value, bit) ((value) |= (1ULL << (bit)))
     #define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
@@ -343,32 +362,37 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       return false;
     }
 
-    if (cmd_s_lower.equals(F("bitread"))) {
-      // Syntax like {bitread:0:123} to get a single decimal '1'
-      result = bitRead(iarg2, bitnr);
-    } else if (cmd_s_lower.equals(F("bitset"))) {
-      // Syntax like {bitset:0:122} to set least significant bit of the given nr '122' to '1' => '123'
-      result = iarg2;
-      bitSetULL(result, bitnr);
-    } else if (cmd_s_lower.equals(F("bitclear"))) {
-      // Syntax like {bitclear:0:123} to set least significant bit of the given nr '123' to '0' => '122'
-      result = iarg2;
-      bitClearULL(result, bitnr);
-    } else if (cmd_s_lower.equals(F("bitwrite"))) {
-      uint32_t iarg3 = 0;
-
-      // Syntax like {bitwrite:0:122:1} to set least significant bit of the given nr '122' to '1' => '123'
-      if (validUIntFromString(arg3, iarg3)) {
-        const int bitvalue = (iarg3 & 1); // Only use the last bit of the given parameter
+    switch(static_cast<bitwise_functions_e>(command_i)) {
+      case bitwise_functions_e::bitread:
+        // Syntax like {bitread:0:123} to get a single decimal '1'
+        result = bitRead(iarg2, bitnr);
+        break;
+      case bitwise_functions_e::bitset:
+        // Syntax like {bitset:0:122} to set least significant bit of the given nr '122' to '1' => '123'
         result = iarg2;
-        bitWriteULL(result, bitnr, bitvalue);
-      } else {
-        // Need 3 parameters, but 3rd one is not a valid uint
-        return false;
+        bitSetULL(result, bitnr);
+        break;
+      case bitwise_functions_e::bitclear:
+        // Syntax like {bitclear:0:123} to set least significant bit of the given nr '123' to '0' => '122'
+        result = iarg2;
+        bitClearULL(result, bitnr);
+        break;
+      case bitwise_functions_e::bitwrite:
+      {
+        uint32_t iarg3 = 0;
+        // Syntax like {bitwrite:0:122:1} to set least significant bit of the given nr '122' to '1' => '123'
+        if (validUIntFromString(arg3, iarg3)) {
+          const int bitvalue = (iarg3 & 1); // Only use the last bit of the given parameter
+          result = iarg2;
+          bitWriteULL(result, bitnr, bitvalue);
+        } else {
+          // Need 3 parameters, but 3rd one is not a valid uint
+          return false;
+        }
+        break;
       }
-    } else {
-      // Starts with "bit", but no matching function found
-      return false;
+      default: 
+        return false;
     }
 
     // all functions starting with "bit" are checked
@@ -381,18 +405,22 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
     return false;
   }
 
-  if (cmd_s_lower.equals(F("xor"))) {
-    // Syntax like {xor:127:15} to XOR the binary values 1111111 and 1111 => 1110000
-    result = iarg1 ^ iarg2;
-  } else if (cmd_s_lower.equals(F("and"))) {
-    // Syntax like {and:254:15} to AND the binary values 11111110 and 1111 => 1110
-    result = iarg1 & iarg2;
-  } else if (cmd_s_lower.equals(F("or"))) {
-    // Syntax like {or:254:15} to OR the binary values 11111110 and 1111 => 11111111
-    result = iarg1 | iarg2;
-  } else {
-    // No matching function found
-    return false;
+  switch(static_cast<bitwise_functions_e>(command_i)) {
+    case bitwise_functions_e::xor_e:
+      // Syntax like {xor:127:15} to XOR the binary values 1111111 and 1111 => 1110000
+      result = iarg1 ^ iarg2;
+      break;
+    case bitwise_functions_e::and_e:
+      // Syntax like {and:254:15} to AND the binary values 11111110 and 1111 => 1110
+      result = iarg1 & iarg2;
+      break;
+    case bitwise_functions_e::or_e:
+      // Syntax like {or:254:15} to OR the binary values 11111110 and 1111 => 11111111
+      result = iarg1 | iarg2;
+      break;
+    default: 
+      return false;
+
   }
   return true;
 }
@@ -405,7 +433,7 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
     return false;
   }
 
-  if (cmd_s_lower.equals(F("constrain"))) {
+  if (equals(cmd_s_lower, F("constrain"))) {
     // Contrain a value X to be within range of A to B
     // Syntax like {constrain:x:a:b} to constrain x in range a...b
     if (validFloatFromString(arg2, farg2) && validFloatFromString(arg3, farg3)) {
@@ -425,6 +453,23 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
   return true;
 }
 
+const char string_commands[] PROGMEM = "substring|indexof|indexof_ci|equals|equals_ci|timetomin|timetosec|strtol|tobin|tohex|ord|urlencode";
+enum class string_commands_e {
+  substring,
+  indexof,
+  indexof_ci,
+  equals,
+  equals_ci,
+  timetomin,
+  timetosec,
+  strtol,
+  tobin,
+  tohex,
+  ord,
+  urlencode
+};
+
+
 void parse_string_commands(String& line) {
   int startIndex = 0;
   int closingIndex;
@@ -441,8 +486,6 @@ void parse_string_commands(String& line) {
 
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
-      //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
-
       uint64_t iarg1, iarg2 = 0;
       double   fresult = 0.0;
       int64_t  iresult = 0;
@@ -455,116 +498,119 @@ void parse_string_commands(String& line) {
         replacement = doubleToString(fresult, maxNrDecimals_double(fresult), trimTrailingZeros);
       } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
         replacement = ull2String(iresult);
-      } else if (cmd_s_lower.equals(F("substring"))) {
-        // substring arduino style (first char included, last char excluded)
-        // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
+      } else {
 
-        if (arg1valid
-            && arg2valid) {
-          replacement = arg3.substring(startpos, endpos);
-        }
-      } else if (cmd_s_lower.equals(F("indexof")) || cmd_s_lower.equals(F("indexof_ci"))) {
-        // indexOf arduino style (0-based position of first char returned, -1 if not found, case sensitive), 3rd argument is search-offset
-        // indexOf_ci : case-insensitive
-        // Syntax like {indexof:HELLO:"ANOTHER HELLO WORLD"} => 8, {indexof:hello:"ANOTHER HELLO WORLD"} => -1, {indexof_ci:Hello:"ANOTHER HELLO WORLD"} => 8
-        // or like {indexof_ci:hello:"ANOTHER HELLO WORLD":10} => -1
+        char tmp[12]{};
+        int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), string_commands);
+        if (command_i != -1) {
+          const string_commands_e command = static_cast<string_commands_e>(command_i);
 
-        if (!arg1.isEmpty()
-            && !arg2.isEmpty()) {
-          unsigned int offset = 0;
-          validUIntFromString(arg3, offset);
-          bool caseInsensitive = cmd_s_lower.endsWith(F("_ci"));
-          if (caseInsensitive) {
-            String arg1copy(arg1);
-            String arg2copy(arg2);
-            arg1copy.toLowerCase();
-            arg2copy.toLowerCase();
-            replacement = arg2copy.indexOf(arg1copy, offset);
-          } else {
-            replacement = arg2.indexOf(arg1, offset);
+          //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
+
+          switch (command) {
+            case string_commands_e::substring:
+              // substring arduino style (first char included, last char excluded)
+              // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
+
+              if (arg1valid
+                  && arg2valid) {
+                replacement = arg3.substring(startpos, endpos);
+              }
+              break;
+            case string_commands_e::indexof:
+            case string_commands_e::indexof_ci:
+              // indexOf arduino style (0-based position of first char returned, -1 if not found, case sensitive), 3rd argument is search-offset
+              // indexOf_ci : case-insensitive
+              // Syntax like {indexof:HELLO:"ANOTHER HELLO WORLD"} => 8, {indexof:hello:"ANOTHER HELLO WORLD"} => -1, {indexof_ci:Hello:"ANOTHER HELLO WORLD"} => 8
+              // or like {indexof_ci:hello:"ANOTHER HELLO WORLD":10} => -1
+
+              if (!arg1.isEmpty()
+                  && !arg2.isEmpty()) {
+                unsigned int offset = 0;
+                validUIntFromString(arg3, offset);
+                if (command == string_commands_e::indexof_ci) {
+                  String arg1copy(arg1);
+                  String arg2copy(arg2);
+                  arg1copy.toLowerCase();
+                  arg2copy.toLowerCase();
+                  replacement = arg2copy.indexOf(arg1copy, offset);
+                } else {
+                  replacement = arg2.indexOf(arg1, offset);
+                }
+              }
+              break;
+            case string_commands_e::equals:
+            case string_commands_e::equals_ci:
+              // equals: compare strings 1 = equal, 0 = unequal (case sensitive)
+              // equals_ci: case-insensitive compare
+              // Syntax like {equals:HELLO:HELLO} => 1, {equals:hello:HELLO} => 0, {equals_ci:hello:HELLO} => 1, {equals_ci:hello:BLA} => 0
+
+              if (!arg1.isEmpty()
+                  && !arg2.isEmpty()) {
+                if (command == string_commands_e::equals_ci) {
+                  replacement = arg2.equalsIgnoreCase(arg1);
+                } else {
+                  replacement = arg2.equals(arg1);
+                }
+              }
+              break;
+            case string_commands_e::timetomin:
+            case string_commands_e::timetosec:
+              // time to minutes, transform a substring hh:mm to minutes
+              // time to seconds, transform a substring hh:mm:ss to seconds
+              // syntax similar to substring
+
+              if (arg1valid
+                  && arg2valid) {
+                int timeSeconds = 0;
+                String timeString;
+                if(timeStringToSeconds(arg3.substring(startpos, endpos), timeSeconds, timeString)) {
+                  if (command == string_commands_e::timetosec) {
+                    replacement = timeSeconds;
+                  } else { // timetomin
+                    replacement = timeSeconds / 60;
+                  }
+                }
+              }
+              break;
+            case string_commands_e::strtol:
+              // string to long integer (from cstdlib)
+              // Syntax like 1234{strtol:16:38}7890
+              if (validUInt64FromString(arg1, iarg1)
+                  && validUInt64FromString(arg2, iarg2)) {
+                replacement = String(strtoul(arg2.c_str(), nullptr, iarg1));
+              }
+              break;
+            case string_commands_e::tobin:
+              // Convert to binary string
+              // Syntax like 1234{tobin:15}7890
+              if (validUInt64FromString(arg1, iarg1)) {
+                replacement = ull2String(iarg1, BIN);
+              }
+              break;
+            case string_commands_e::tohex:
+              // Convert to HEX string
+              // Syntax like 1234{tohex:15}7890
+              if (validUInt64FromString(arg1, iarg1)) {
+                replacement = ull2String(iarg1, HEX);
+              }
+              break;
+            case string_commands_e::ord:
+              {
+                // Give the ordinal/integer value of the first character of a string
+                // Syntax like let 1,{ord:B}
+                uint8_t uval = arg1.c_str()[0];
+                replacement = String(uval);
+              }
+              break;
+            case string_commands_e::urlencode:
+              // Convert to url-encoded string
+              // Syntax like {urlencode:"string to/encode"}
+              if (!arg1.isEmpty()) {
+                replacement = URLEncode(arg1);
+              }
+              break;
           }
-        }
-      } else if (cmd_s_lower.equals(F("equals")) || cmd_s_lower.equals(F("equals_ci"))) {
-        // equals: compare strings 1 = equal, 0 = unequal (case sensitive)
-        // equals_ci: case-insensitive compare
-        // Syntax like {equals:HELLO:HELLO} => 1, {equals:hello:HELLO} => 0, {equals_ci:hello:HELLO} => 1, {equals_ci:hello:BLA} => 0
-
-        if (!arg1.isEmpty()
-            && !arg2.isEmpty()) {
-          bool caseInsensitive = cmd_s_lower.endsWith(F("_ci"));
-          if (caseInsensitive) {
-            replacement = arg2.equalsIgnoreCase(arg1);
-          } else {
-            replacement = arg2.equals(arg1);
-          }
-        }
-      // #ifndef LIMIT_BUILD_SIZE
-      } else if (cmd_s_lower.equals(F("timetomin")) || cmd_s_lower.equals(F("timetosec"))) {
-        // time to minutes, transform a substring hh:mm to minutes
-        // time to seconds, transform a substring hh:mm:ss to seconds
-        // syntax similar to substring
-
-        if (arg1valid
-            && arg2valid) {
-          int timeSeconds = 0;
-          String timeString;
-          if(timeStringToSeconds(arg3.substring(startpos, endpos), timeSeconds, timeString)) {
-            if (cmd_s_lower.equals(F("timetosec"))) {
-              replacement = timeSeconds;
-            } else { // timetomin
-              replacement = timeSeconds / 60;
-            }
-          }
-        }
-      // #endif // ifndef LIMIT_BUILD_SIZE
-      } else if (cmd_s_lower.equals(F("strtol"))) {
-        // string to long integer (from cstdlib)
-        // Syntax like 1234{strtol:16:38}7890
-        if (validUInt64FromString(arg1, iarg1)
-            && validUInt64FromString(arg2, iarg2)) {
-          replacement = String(strtoul(arg2.c_str(), nullptr, iarg1));
-        }
-
-        // FIXME TD-er: removed for now as it is too specific.
-        // Maybe introduce one using 2 or 3 parameters ({div:100:255:3} for *100/255 3 decimals)
-
-        /*
-           } else if (cmd_s_lower.equals(F("div100ths"))) {
-           // division and giving the 100ths as integer
-           // 5 / 100 would yield 5
-           // useful for fractions that use a full uint8_t gaining a
-           // precision/granularity of 1/256 instead of only 1/100
-           // Syntax like XXX{div100ths:24:256}XXX
-           if (validUInt64FromString(arg1, iarg1)
-            && validUInt64FromString(arg2, iarg2)) {
-           float val = (100.0 * iarg1) / (1.0 * iarg2);
-           char sval[10];
-           sprintf_P(sval, PSTR("%02d"), (int)val);
-           replacement = String(sval);
-           }
-         */
-      } else if (cmd_s_lower.equals(F("tobin"))) {
-        // Convert to binary string
-        // Syntax like 1234{tobin:15}7890
-        if (validUInt64FromString(arg1, iarg1)) {
-          replacement = ull2String(iarg1, BIN);
-        }
-      } else if (cmd_s_lower.equals(F("tohex"))) {
-        // Convert to HEX string
-        // Syntax like 1234{tohex:15}7890
-        if (validUInt64FromString(arg1, iarg1)) {
-          replacement = ull2String(iarg1, HEX);
-        }
-      } else if (cmd_s_lower.equals(F("ord"))) {
-        // Give the ordinal/integer value of the first character of a string
-        // Syntax like let 1,{ord:B}
-        uint8_t uval = arg1.c_str()[0];
-        replacement = String(uval);
-      } else if (cmd_s_lower.equals(F("urlencode"))) {
-        // Convert to url-encoded string
-        // Syntax like {urlencode:"string to/encode"}
-        if (!arg1.isEmpty()) {
-          replacement = URLEncode(arg1);
         }
       }
 
@@ -650,7 +696,7 @@ void substitute_eventvalue(String& line, const String& event) {
           const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
           int argc                = -1;
 
-          if (nr.equals(F("0"))) {
+          if (equals(nr, '0')) {
             // Replace %eventvalue0% with the entire list of arguments.
             line.replace(eventvalue, argString);
           } else {
@@ -897,7 +943,7 @@ void processMatchedRule(String& action, const String& event,
     }
   }
 
-  if ((lcAction.equals(F("else"))) && !fakeIfBlock) // in case of an "else" block of
+  if ((equals(lcAction, F("else"))) && !fakeIfBlock) // in case of an "else" block of
                                                // actions, set ifBranche to
                                                // false
   {
@@ -915,7 +961,7 @@ void processMatchedRule(String& action, const String& event,
 #endif // ifndef BUILD_NO_DEBUG
   }
 
-  if (lcAction.equals(F("endif"))) // conditional block ends here
+  if (equals(lcAction, F("endif"))) // conditional block ends here
   {
     if (fakeIfBlock) {
       fakeIfBlock--;
@@ -931,7 +977,7 @@ void processMatchedRule(String& action, const String& event,
   if (isCommand) {
     substitute_eventvalue(action, event);
 
-    const bool executeRestricted = parseString(action, 1).equals(F("restrict"));
+    const bool executeRestricted = equals(parseString(action, 1), F("restrict"));
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String actionlog = executeRestricted ? F("ACT  : (restricted) ") : F("ACT  : ");

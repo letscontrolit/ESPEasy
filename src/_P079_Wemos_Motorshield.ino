@@ -263,7 +263,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           return true;                             // Exit now. Info Log shows Lolin Info.
         }
         else {
-          if ((paramMotor.equals(F("0"))) || (paramMotor.equals(F("1")))) {
+          if ((equals(paramMotor, '0')) || (equals(paramMotor, '1'))) {
             motor_number = paramMotor.toInt();
           }
           else {

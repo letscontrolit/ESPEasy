@@ -22,7 +22,6 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
@@ -1050,6 +1049,12 @@ void scrubDNS() {
   }
 }
 
+bool valid_DNS_address(const IPAddress& dns) {
+  return (dns.v4() != (uint32_t)0x00000000 && 
+          dns.v4() != (uint32_t)0xFD000000 && 
+          dns != INADDR_NONE);
+}
+
 bool setDNS(int index, const IPAddress& dns) {
   if (index >= 2) return false;
   #ifdef ESP8266
@@ -1067,7 +1072,7 @@ bool setDNS(int index, const IPAddress& dns) {
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
-  if (dns != (uint32_t)0x00000000 && dns  != INADDR_NONE) {
+  if (valid_DNS_address(dns)) {
     // Set DNS0-Server
     d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
     const ip_addr_t* cur_dns = dns_getserver(index);
@@ -1487,7 +1492,7 @@ int http_authenticate(const String& logIdentifier,
   }
 
   // start connection and send HTTP header (and body)
-  if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+  if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
     httpCode = http.sendRequest(HttpMethod.c_str());
   } else {
     httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
@@ -1519,7 +1524,7 @@ int http_authenticate(const String& logIdentifier,
       http.addHeader(F("Authorization"), authorization);
 
       // start connection and send HTTP header (and body)
-      if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+      if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
         httpCode = http.sendRequest(HttpMethod.c_str());
       } else {
         httpCode = http.sendRequest(HttpMethod.c_str(), postStr);

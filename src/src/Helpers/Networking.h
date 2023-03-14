@@ -156,6 +156,8 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 
 void scrubDNS();
 
+bool valid_DNS_address(const IPAddress& dns);
+
 bool setDNS(int index, const IPAddress& dns);
 
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms = 1000);

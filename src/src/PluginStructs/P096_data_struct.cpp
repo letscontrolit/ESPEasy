@@ -305,13 +305,13 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
   if ((nullptr != eInkScreen) && cmd.equals(_commandTriggerCmd)) {
     String arg1 = parseString(string, 2);
 
-    if (arg1.equals(F("off"))) { // Not supported 'on' and 'off' as commands
+    if (equals(arg1, F("off"))) { // Not supported 'on' and 'off' as commands
       success = false;
     }
-    else if (arg1.equals(F("on"))) {
+    else if (equals(arg1, F("on"))) {
       success = false;
     }
-    else if (arg1.equals(F("clear"))) {
+    else if (equals(arg1, F("clear"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
@@ -325,13 +325,13 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       eInkScreen->clearBuffer();
       success = true;
     }
-    else if (arg1.equals(F("backlight"))) { // not supported
+    else if (equals(arg1, F("backlight"))) { // not supported
       success = false;
     }
-    else if (arg1.equals(F("deepsleep"))) {
+    else if (equals(arg1, F("deepsleep"))) {
       eInkScreen->deepSleep();
     }
-    else if (arg1.equals(F("seq_start"))) {
+    else if (equals(arg1, F("seq_start"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
@@ -342,7 +342,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       plugin_096_sequence_in_progress = true;
       success                         = true;
     }
-    else if (arg1.equals(F("seq_end"))) {
+    else if (equals(arg1, F("seq_end"))) {
       // # ifndef BUILD_NO_DEBUG
       //             TimingStats s;
       //             const unsigned statisticsTimerStart(micros());
@@ -357,7 +357,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       plugin_096_sequence_in_progress = false;
       success                         = true;
     }
-    else if (arg1.equals(F("inv"))) {
+    else if (equals(arg1, F("inv"))) {
       String arg2 = parseString(string, 3);
       int    nArg2;
 
@@ -369,7 +369,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
         success = true;
       }
     }
-    else if (arg1.equals(F("rot"))) {
+    else if (equals(arg1, F("rot"))) {
       ///control?cmd=epdcmd,rot,0
       // not working to verify
       String arg2 = parseString(string, 3);

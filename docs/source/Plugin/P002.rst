@@ -188,8 +188,48 @@ When entered in the 2-point calibration fields, the page will reload with these 
 * 241 mV => 9.0041
 * 565 mV => 19.9832
 
+Set Calibration via Rules
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Added: 2023/02/17
 
+Calibration values are device specific, since they depend on parts like resistors which each have some tolerance.
+This makes mass deployment of rules and settings to a number of devices somewhat impractical as these values are stored in the settings file.
+
+To ease mass deployment of rules and settings, one can set the calibration values from a separate rules file.
+For example:
+
+* ``rules1.txt`` Generic rules file with rules applying to all nodes. May be updated every now and then.
+* ``rules2.txt`` Rules file with node specific values, like node nr, calibration values, etc.
+
+Command structure to set the ADC 2-Point Calibration:
+
+* Only set first point (2nd is set to 0): ``config,task,<taskname>,SetCalib,TwoPoint,<ADC1>,<Out1>``
+* Set both points: ``config,task,<taskname>,SetCalib,TwoPoint,<ADC1>,<Out1>,<ADC2>,<Out2>``
+
+Example rules block for setting ADC calibration + unit nr based on the last 3 bytes of the MAC address:
+
+.. code-block:: none
+
+  On LoadCalibration Do
+    if %cpu_id% = 0x1280E0
+      config,task,bat,SetCalib,TwoPoint,392,13.9846,571,19.9924
+      config,task,batBackup,SetCalib,TwoPoint,1785,10.000
+      unit,2
+    elseif %cpu_id% = 0x0C17E4
+      config,task,bat,SetCalib,TwoPoint,370.8615,13,520.857,18
+      config,task,batBackup,SetCalib,TwoPoint,1785,10.000
+      unit,3
+    endif
+  EndOn
+
+This can then be activated at boot like this:
+
+.. code-block:: none
+
+  On System#Boot Do
+    Event,LoadCalibration
+  Endon
 
 Multipoint Processing
 ---------------------

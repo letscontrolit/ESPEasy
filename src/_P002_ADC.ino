@@ -153,6 +153,20 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    case PLUGIN_SET_CONFIG:
+    {
+      P002_data_struct *P002_data =
+        static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (P002_data != nullptr) {
+        success = P002_data->plugin_set_config(event, string);
+        if (success) {
+          P002_data->init(event);
+        }
+      }
+      break;
+    }
   }
   return success;
 }

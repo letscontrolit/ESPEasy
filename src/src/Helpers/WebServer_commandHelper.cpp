@@ -14,10 +14,10 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   webrequest.trim();
   if (webrequest.isEmpty()) { return HandledWebCommand_result::NoCommand; }
 
-  addLog(LOG_LEVEL_INFO,  String(F("HTTP: ")) + webrequest);
+  addLogMove(LOG_LEVEL_INFO,  concat(F("HTTP: "), webrequest));
   webrequest = parseTemplate(webrequest);
 #ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP after parseTemplate: ")) + webrequest);
+  addLogMove(LOG_LEVEL_DEBUG, concat(F("HTTP after parseTemplate: "), webrequest));
 #endif // ifndef BUILD_NO_DEBUG
 
   bool handledCmd = false;
@@ -29,21 +29,21 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   // in case of event, store to buffer and return...
   const String command = parseString(webrequest, 1);
 
-  if ((command.equals(F("event"))) || (command.equals(F("asyncevent"))))
+  if ((equals(command, F("event"))) || (equals(command, F("asyncevent"))))
   {
     eventQueue.addMove(parseStringToEndKeepCase(webrequest, 2));
     handledCmd = true;
     sendOK     = true;
-  } else if (command.equals(F("taskrun")) ||
-             command.equals(F("taskrunat")) ||
-             command.equals(F("scheduletaskrun")) ||
-             command.equals(F("taskvalueset")) ||
-             command.equals(F("taskvaluesetandrun")) ||
-             command.equals(F("taskvaluetoggle")) ||
-             command.equals(F("let")) ||
-             command.equals(F("logportstatus")) ||
-             command.equals(F("jsonportstatus")) ||
-             command.equals(F("rules"))) {
+  } else if (equals(command, F("taskrun")) ||
+             equals(command, F("taskrunat")) ||
+             equals(command, F("scheduletaskrun")) ||
+             equals(command, F("taskvalueset")) ||
+             equals(command, F("taskvaluesetandrun")) ||
+             equals(command, F("taskvaluetoggle")) ||
+             equals(command, F("let")) ||
+             equals(command, F("logportstatus")) ||
+             equals(command, F("jsonportstatus")) ||
+             equals(command, F("rules"))) {
     printToWeb = true;
     handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
     sendOK     = true;

@@ -225,20 +225,20 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 
   const String command = parseString(string, 1);
 
-  if (command.equals(F("scd4x"))) {
+  if (equals(command, F("scd4x"))) {
     const String sub = parseString(string, 2);
     # if P135_FEATURE_RESET_COMMANDS
-    const bool doSelftest = sub.equals(F("selftest"));
+    const bool doSelftest = equals(sub, F("selftest"));
     # endif // if P135_FEATURE_RESET_COMMANDS
 
     // scd4x,storesettings : SLOW! Store current Altitude and temperatureCorrection in on-sensor EEPROM
-    if (sub.equals(F("storesettings"))) {
+    if (equals(sub, F("storesettings"))) {
       success = scd4x->persistSettings(); // This may take up to 800 mSec
     # if P135_FEATURE_RESET_COMMANDS
 
       // scd4x,factoryreset[,code] : SLOWER! Restore factory settings for sensor, code logged at ERROR level
       // scd4x,selftest[,code] : SLOWEST! Self-test for sensor, code logged at ERROR level
-    } else if ((sub.equals(F("factoryreset"))) || doSelftest) {
+    } else if ((equals(sub, F("factoryreset"))) || doSelftest) {
       if (factoryResetCode.isEmpty()) {
         factoryResetCode = F("Scd4x");
 
@@ -292,7 +292,7 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
       }
 
       // scd4x,setfrc,co2level : Correct the current level reference to this, externally determined, co2level
-    } else if ((sub.equals(F("setfrc"))) && (event->Par2 >= 400) &&
+    } else if ((equals(sub, F("setfrc"))) && (event->Par2 >= 400) &&
                (((_sensorType == scd4x_sensor_type_e::SCD4x_SENSOR_SCD40) && (event->Par2 <= 2000)) ||
                 ((_sensorType == scd4x_sensor_type_e::SCD4x_SENSOR_SCD41) && (event->Par2 <= 5000)))) {
       addLog(LOG_LEVEL_INFO, F("SCD4x: Forced Recalibration starting... (may take up to 1 second!)"));
@@ -323,19 +323,19 @@ bool P135_data_struct::plugin_get_config_value(struct EventStruct *event,
 
   const String var = parseString(string, 1);
 
-  if (var.equals(F("getaltitude"))) {               // [<taskname>#getaltitude] = get sensor altitude
+  if (equals(var, F("getaltitude"))) {               // [<taskname>#getaltitude] = get sensor altitude
     string  = scd4x->getSensorAltitude();
     success = true;
-  } else if (var.equals(F("gettempoffset"))) {      // [<taskname>#gettempoffset] = get sensor temperature offset
+  } else if (equals(var, F("gettempoffset"))) {      // [<taskname>#gettempoffset] = get sensor temperature offset
     string  = toString(scd4x->getTemperatureOffset(), 2);
     success = true;
-  } else if (var.equals(F("getdataready"))) {       // [<taskname>#getdataready] = is data ready? (1/0)
+  } else if (equals(var, F("getdataready"))) {       // [<taskname>#getdataready] = is data ready? (1/0)
     string  = scd4x->getDataReadyStatus();
     success = true;
-  } else if (var.equals(F("getselfcalibration"))) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
+  } else if (equals(var, F("getselfcalibration"))) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
     string  = scd4x->getAutomaticSelfCalibrationEnabled();
     success = true;
-  } else if (var.equals(F("serialnumber"))) {       // [<taskname>#serialnumber] = the devices electronic serial number
+  } else if (equals(var, F("serialnumber"))) {       // [<taskname>#serialnumber] = the devices electronic serial number
     string  = String(serialNumber);
     success = true;
   }

@@ -469,9 +469,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
                   if (argIndex) { Nvalue = tmpString.substring(argIndex + 2, argEnd); }
 
-                  if (Nvalue.equals(F("On"))) { Svalue = '1'; }
+                  if (equals(Nvalue, F("On"))) { Svalue = '1'; }
 
-                  if (Nvalue.equals(F("Off"))) { Svalue = '0'; }
+                  if (equals(Nvalue, F("Off"))) { Svalue = '0'; }
                   break;
               }
 

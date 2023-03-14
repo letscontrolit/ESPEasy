@@ -228,7 +228,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       String command = parseString(string, 1);
 
       if ((P007_OUTPUT_MODE == P007_OUTPUT_ENABLED) &&
-          command.equals(F("analogout")) &&
+          equals(command, F("analogout")) &&
           (event->Par1 >= 0) && (event->Par1 <= 255)) {
         uint8_t unit    = (CONFIG_PORT - 1) / 4;
         uint8_t address = 0x48 + unit;

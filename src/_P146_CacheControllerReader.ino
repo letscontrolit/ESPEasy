@@ -280,18 +280,18 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       const String command    = parseString(string, 1);
       const String subcommand = parseString(string, 2);
 
-      if (command.equals(F("cachereader"))) {
-        if (subcommand.equals(F("setreadpos"))) {
+      if (equals(command, F("cachereader"))) {
+        if (equals(subcommand, F("setreadpos"))) {
           P146_data_struct::setPeekFilePos(event->Par2, event->Par3);
           success = true;
-        } else if (subcommand.equals(F("sendtaskinfo"))) {
+        } else if (equals(subcommand, F("sendtaskinfo"))) {
           P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr != P146_data) {
             P146_data->sendTaskInfoInBulk(event);
             success = true;
           }
-        } else if (subcommand.equals(F("flush"))) {
+        } else if (equals(subcommand, F("flush"))) {
           P146_data_struct::flush();
           success = true;
         }

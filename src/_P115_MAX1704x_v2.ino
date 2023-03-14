@@ -165,7 +165,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P115_data) && P115_data->initialized) {
         const String command = parseString(string, 1);
 
-        if ((command.equals(F("max1704xclearalert"))))
+        if ((equals(command, F("max1704xclearalert"))))
         {
           P115_data->clearAlert();
           success = true;
