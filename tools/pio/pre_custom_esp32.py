@@ -21,10 +21,44 @@ if os.path.isfile('src/Custom.h'):
   custom_defines=["-DUSE_CUSTOM_H"]
 else:
   custom_defines=[
-    "-DPLUGIN_BUILD_MAX_ESP32",
+    "-DCONTROLLER_SET_ALL",
+    "-DNOTIFIER_SET_NONE",
+    "-DPLUGIN_BUILD_NONE",
+    "-DUSES_P001",  # Switch
+    "-DUSES_P002",  # ADC
+    "-DUSES_P003",  # Generic pulse counter
+    "-DUSES_P004",  # Dallas DS18b20
+    "-DUSES_P026",  # System info
+    "-DUSES_P027",  # INA219
+    "-DUSES_P028",  # BME280
+    "-DUSES_P033",  # Dummy
+    "-DUSES_P036",  # FrameOLED
+    "-DUSES_P038",  # Neopixel
+    "-DUSES_P045",  # MPU6050
+    "-DUSES_P049",  # MHZ19
+    "-DUSES_P052",  # SenseAir
+    "-DUSES_P056",  # SDS011-Dust
+    "-DUSES_P059",  # Encoder
+    "-DUSES_P080",  # Dallas iButton
+    "-DUSES_P081",  # Cron
+    "-DUSES_P082",  # GPS
+    "-DUSES_P085",  # AcuDC24x
+    "-DUSES_P098",  # PWM motor
 
-    "-DFEATURE_ARDUINO_OTA=1",
+    "-DUSES_P100",  # Pulse Counter - DS2423
+#   "-DUSES_P087",  # Serial Proxy
+#   "-DUSES_P094",  # CUL Reader
+#   "-DUSES_P095",  # TFT ILI9341
+    "-DUSES_P097",  # Touch (ESP32)
+    "-DUSES_P106",  # BME680
+    "-DUSES_P107",  # SI1145 UV index
 
+    "-DUSES_P146",  # Cache Reader
+    
+
+    "-DUSES_C016",  # Cache Controller
+    "-DUSES_C018",  # TTN/RN2483
+#   "-DUSES_C015",  # Blynk
 
     "-DFEATURE_MQTT_TLS=1",
     "-DFEATURE_EXT_RTC=1",
@@ -37,17 +71,7 @@ else:
 
     "-DFEATURE_SETTINGS_ARCHIVE=1",
     "-DFEATURE_ESPEASY_P2P=1",
-    "-DFEATURE_CUSTOM_PROVISIONING=1",
-    "-DDEFAULT_FACTORY_DEFAULT_DEVICE_MODEL=0",
-    "-DDEFAULT_PROVISIONING_FETCH_RULES1=true",
-    "-DDEFAULT_PROVISIONING_FETCH_RULES2=true",
-    "-DDEFAULT_PROVISIONING_FETCH_SECURITY=true",
-    "-DDEFAULT_PROVISIONING_FETCH_CONFIG=true",
-    "-DDEFAULT_PROVISIONING_FETCH_PROVISIONING=true",
-    "-DDEFAULT_PROVISIONING_SAVE_URL=true",
-    "-DDEFAULT_PROVISIONING_SAVE_CREDENTIALS=true",
-    "-DDEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND=true"
-
+    "-DFEATURE_CUSTOM_PROVISIONING=1"
   ]
 
 
