@@ -13,6 +13,11 @@
 // ################################# Controller Plugin 0014: Homie 3/4 ###################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-03-15 tonhuisman: Replace use of deprecated DummyValueSet with TaskValueSet
+ * 2023-03 Changelog started
+ */
+
 # define CPLUGIN_014
 # define CPLUGIN_ID_014              14
 
@@ -757,13 +762,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               int pluginID = Device[deviceIndex].Number;
 
               if (pluginID == 33)                   // Plugin 33 Dummy Device
-              {                                     // DummyValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with
+              {                                     // TaskValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with
                                                     // new version of P033!
                 valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
                 if (valueNr != VARS_PER_TASK)       // value Name identified
                 {
-                  cmd        = F("DummyValueSet,"); // Set a Dummy Device Value
+                  cmd        = F("TaskValueSet,");  // Set a Dummy Device Value
                   cmd       += (taskIndex + 1);     // set the device Number
                   cmd       += ',';
                   cmd       += (valueNr + 1);       // set the value Number
