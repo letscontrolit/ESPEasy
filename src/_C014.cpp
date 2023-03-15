@@ -777,7 +777,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   validTopic = true;
                 }
               } else if (pluginID == 86) {          // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the
-                                                    // value. Use HomieValueSet to save the value. This will acknolage back to the
+                                                    // value. Use HomieValueSet to save the value. This will acknowledge back to the
                                                     // controller too.
                 valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
@@ -787,17 +787,15 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   cmd += '=';
 
                   if (Settings.TaskDevicePluginConfig[taskIndex][valueNr] == 3) { // Quote Sting parameters. PLUGIN_086_VALUE_STRING
-                    cmd += '"';
-                    cmd += event->String2;
-                    cmd += '"';
+                    cmd += wrapWithQuotes(event->String2);
                   } else {
                     if (Settings.TaskDevicePluginConfig[taskIndex][valueNr] == 4) { // Enumeration parameter, find Number of item.
                                                                                     // PLUGIN_086_VALUE_ENUM
                       String enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
                       int    i        = 1;
 
-                      while (!parseString(enumList, i).isEmpty()) { // lookup result in enum List
-                        if (parseString(enumList, i) == event->String2) { break; }
+                      while (!parseString(enumList, i).isEmpty()) { // lookup result in enum List is changed to lowercase
+                        if (parseString(enumList, i).equalsIgnoreCase(event->String2)) { break; }
                         i++;
                       }
                       cmd += i;
