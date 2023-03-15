@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2023-02-26 tonhuisman: Use GetCommandCode() / PROGMEM for parsing of commands and colors to reduce .bin size.
  * 2022-10-05 tonhuisman: No longer trim off spaces from arguments to commands
  * 2022-09-23 tonhuisman: Allow backlight percentage from 0% instead of from 1% to be able to completely turn it off
  * 2022-09-12 tonhuisman: Add line-spacing option for Column/Row mode, default set to auto, optional 0..14 pixels line-spacing
@@ -495,10 +496,9 @@ public:
   }
 
   void invertDisplay(bool i);
+  void initialize();
 
 private:
-
-  void initialize();
 
   # if ADAGFX_ARGUMENT_VALIDATION
   bool invalidCoordinates(const int  X,
@@ -516,7 +516,7 @@ private:
   # endif // if ADAGFX_ENABLE_BUTTON_DRAW
 
   Adafruit_GFX *_display = nullptr;
-  Adafruit_SPITFT *_tft  = nullptr;
+  Adafruit_SPITFT *_tft = nullptr;
   String _trigger;
   uint16_t _res_x;
   uint16_t _res_y;
@@ -527,10 +527,10 @@ private:
   uint16_t _bgcolor;
   bool _useValidation;
   bool _textBackFill;
-  uint16_t _textcols;
-  uint16_t _textrows;
-  int16_t _lastX;
-  int16_t _lastY;
+  uint16_t _textcols     = 0;
+  uint16_t _textrows     = 0;
+  int16_t _lastX         = 0;
+  int16_t _lastY         = 0;
   uint8_t _fontwidth     = 6; // Default font characteristics
   uint8_t _fontheight    = 10;
   int8_t _heightOffset   = 0;
@@ -542,8 +542,8 @@ private:
   bool _displayInverted  = false;
   int8_t _lineSpacing    = 15; // Default fontheight * fontsize
 
-  uint16_t _display_x;
-  uint16_t _display_y;
+  uint16_t _display_x = 0;
+  uint16_t _display_y = 0;
   # if ADAGFX_ENABLE_BMP_DISPLAY
   uint16_t readLE16(void);
   uint32_t readLE32(void);

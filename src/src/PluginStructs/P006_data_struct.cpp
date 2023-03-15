@@ -48,14 +48,14 @@ bool P006_data_struct::begin()
   return true;
 }
 
-uint16_t P006_data_struct::readRawTemperature(void)
+uint16_t P006_data_struct::readRawTemperature()
 {
   I2C_write8_reg(BMP085_I2CADDR, BMP085_CONTROL, BMP085_READTEMPCMD);
   delay(5);
   return I2C_read16_reg(BMP085_I2CADDR, BMP085_TEMPDATA);
 }
 
-uint32_t P006_data_struct::readRawPressure(void)
+uint32_t P006_data_struct::readRawPressure()
 {
   uint32_t raw;
 
@@ -71,7 +71,7 @@ uint32_t P006_data_struct::readRawPressure(void)
   return raw;
 }
 
-int32_t P006_data_struct::readPressure(void)
+int32_t P006_data_struct::readPressure()
 {
   int32_t  UT, UP, B3, B5, B6, X1, X2, X3, p;
   uint32_t B4, B7;
@@ -113,7 +113,7 @@ int32_t P006_data_struct::readPressure(void)
   return p;
 }
 
-float P006_data_struct::readTemperature(void)
+float P006_data_struct::readTemperature()
 {
   int32_t UT, X1, X2, B5; // following ds convention
   float   temp;

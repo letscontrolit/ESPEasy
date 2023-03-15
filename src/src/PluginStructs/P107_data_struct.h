@@ -8,6 +8,10 @@
 
 
 struct P107_data_struct : public PluginTaskData_base {
+  P107_data_struct() = default;
+  
+  virtual ~P107_data_struct() = default;
+
   bool begin();
 
   Adafruit_SI1145 uv;

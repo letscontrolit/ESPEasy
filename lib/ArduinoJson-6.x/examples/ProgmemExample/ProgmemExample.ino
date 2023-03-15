@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 //
 // This example shows the different ways you can use Flash strings with
@@ -14,8 +14,6 @@
 #include <ArduinoJson.h>
 
 void setup() {
-#ifdef PROGMEM  // <- check that Flash strings are supported
-
   DynamicJsonDocument doc(1024);
 
   // You can use a Flash String as your JSON input.
@@ -46,12 +44,6 @@ void setup() {
   if (obj["sensor"] == F("gps")) {
     // ...
   }
-
-#else
-
-#warning PROGMEM is not supported on this platform
-
-#endif
 }
 
 void loop() {

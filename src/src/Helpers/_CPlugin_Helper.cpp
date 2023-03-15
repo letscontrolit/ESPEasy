@@ -272,14 +272,21 @@ String send_via_http(int                             controller_number,
 
 
 
-String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
+String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, bool doParseTemplate)
 {
   if (!validControllerIndex(controller_idx)) { return EMPTY_STRING; }
 
+  String res;
   if (ControllerSettings.useExtendedCredentials()) {
-    return ExtendedControllerCredentials.getControllerUser(controller_idx);
+    res = ExtendedControllerCredentials.getControllerUser(controller_idx);
+  } else {
+    res = String(SecuritySettings.ControllerUser[controller_idx]);
   }
-  return SecuritySettings.ControllerUser[controller_idx];
+  res.trim();
+  if (doParseTemplate) {
+    res = parseTemplate(res);
+  }
+  return res;
 }
 
 String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
@@ -289,7 +296,9 @@ String getControllerPass(controllerIndex_t controller_idx, const ControllerSetti
   if (ControllerSettings.useExtendedCredentials()) {
     return ExtendedControllerCredentials.getControllerPass(controller_idx);
   }
-  return SecuritySettings.ControllerPassword[controller_idx];
+  String res(SecuritySettings.ControllerPassword[controller_idx]);
+  res.trim();
+  return res;
 }
 
 void setControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value)
@@ -316,6 +325,6 @@ void setControllerPass(controllerIndex_t controller_idx, const ControllerSetting
 
 bool hasControllerCredentialsSet(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
 {
-  return !getControllerUser(controller_idx, ControllerSettings).isEmpty() &&
+  return !getControllerUser(controller_idx, ControllerSettings, false).isEmpty() &&
          !getControllerPass(controller_idx, ControllerSettings).isEmpty();
 }

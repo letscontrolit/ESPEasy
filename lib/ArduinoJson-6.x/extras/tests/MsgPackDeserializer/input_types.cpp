@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -72,7 +72,7 @@ TEST_CASE("deserializeMsgPack(std::istream&)") {
 
 #ifdef HAS_VARIABLE_LENGTH_ARRAY
 TEST_CASE("deserializeMsgPack(VLA)") {
-  int i = 16;
+  size_t i = 16;
   char vla[i];
   memcpy(vla, "\xDE\x00\x01\xA5Hello\xA5world", 15);
 

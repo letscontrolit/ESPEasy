@@ -58,7 +58,7 @@ public:
 
   P094_data_struct();
 
-  ~P094_data_struct();
+  virtual ~P094_data_struct();
 
   void reset();
 

@@ -121,7 +121,8 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     {
       // FIXME TD-er: Split functionality of this plugin into 2 new ones:
       // - switch/dimmer input
-      // - switch output (relays)
+      // - switch output (relays) and pwm output (led) - show the duty cycle as a value
+      // [ https://github.com/letscontrolit/ESPEasy/issues/4400 ]
       event->String1 = formatGpioName_bidirectional(F(""));
       break;
     }
@@ -262,8 +263,8 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         if (P001_LP_MIN_INT < SWITCH_LONGPRESS_MIN_INTERVAL) {
           P001_LP_MIN_INT = SWITCH_LONGPRESS_MIN_INTERVAL;
         }
+        success = true;
       }
-      success = true;
       break;
     }
 
@@ -663,36 +664,6 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // ifndef BUILD_NO_DEBUG
       success = true;
-      break;
-    }
-
-    case PLUGIN_WRITE:
-    {
-      const String command(parseString(string, 1));
-
-      // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
-
-
-      if (command.equals(F("inputswitchstate"))) {
-        success = true;
-
-        // @giig1967g deprecated since 2019-11-26
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          addLogMove(LOG_LEVEL_ERROR, concat(F("inputswitchstate is deprecated"), string));
-        }
-
-        /*        portStatusStruct tempStatus;
-                const uint32_t key = createKey(PLUGIN_ID_001, Settings.TaskDevicePin1[event->Par1]);
-
-                // WARNING: operator [] creates an entry in the map if key does not exist
-                // So the next command should be part of each command:
-                tempStatus = globalMapPortStatus[key];
-
-                UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
-                tempStatus.output                    = event->Par2;
-                tempStatus.command                   = 1;
-                savePortStatus(key, tempStatus); */
-      }
       break;
     }
 

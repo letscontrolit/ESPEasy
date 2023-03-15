@@ -104,6 +104,9 @@ void json_prop(LabelType::Enum label);
 // ********************************************************************************
 // Add a task select dropdown list
 // This allows to select a task index based on the existing tasks.
+// When changing a selected task, the page reloads with the new settings applied.
+// However, these changes will not trigger a save, so make sure to store those in 
+// PCONFIG() and not in extra settings
 // ********************************************************************************
 void addTaskSelect(const String& name,
                    taskIndex_t   choice);

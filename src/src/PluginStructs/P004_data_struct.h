@@ -26,12 +26,17 @@ struct P004_data_struct : public PluginTaskData_base {
   \*********************************************************************************************/
 
   // @param pin  The GPIO pin used to communicate to the Dallas sensors in this task
-  // @param addr Address of the (1st) Dallas sensor (index = 0) in this task
   // @param res  The resolution of the Dallas sensor(s) used in this task
-  P004_data_struct(int8_t        pin_rx,
-                   int8_t        pin_tx,
-                   const uint8_t addr[],
-                   uint8_t       res);
+  P004_data_struct(taskIndex_t taskIndex,
+                   int8_t      pin_rx,
+                   int8_t      pin_tx,
+                   uint8_t     res,
+                   bool        scanOnInit);
+  virtual ~P004_data_struct() = default;
+
+  void init();
+
+  bool sensorAddressSet() const;
 
   // Add extra sensor address
   // @param addr The address to add
@@ -50,7 +55,7 @@ struct P004_data_struct : public PluginTaskData_base {
   bool          read_temp(float & value,
                           uint8_t index = 0) const;
 
-  String        get_formatted_address(uint8_t index = 0) const;
+  String        get_formatted_address(uint8_t index) const;
 
   unsigned long get_timer() const {
     return _timer;
@@ -61,31 +66,32 @@ struct P004_data_struct : public PluginTaskData_base {
   }
 
   int8_t get_gpio_rx() const {
-      return _gpio_rx;
+    return _gpio_rx;
   }
 
   int8_t get_gpio_tx() const {
-      return _gpio_tx;
+    return _gpio_tx;
   }
 
-  bool measurement_active() const;
-  bool measurement_active(uint8_t index) const;
-  void set_measurement_inactive();
+  bool              measurement_active() const;
+  bool              measurement_active(uint8_t index) const;
+  void              set_measurement_inactive();
 
   Dallas_SensorData get_sensor_data(uint8_t index) const;
-
 
 private:
 
   // Do not set the _timer to 0, since it may cause issues
   // if this object is created (settings edited or task enabled)
   // while the node is up some time between 24.9 and 49.7 days.
-  unsigned long   _timer            = millis();
-  unsigned long   _measurementStart = millis();
-  Dallas_SensorData _sensors[4];
-  int8_t          _gpio_rx = -1;
-  int8_t          _gpio_tx = -1;
-  uint8_t         _res  = 0;
+  unsigned long     _timer;
+  unsigned long     _measurementStart;
+  Dallas_SensorData _sensors[VARS_PER_TASK];
+  taskIndex_t       _taskIndex;
+  int8_t            _gpio_rx;
+  int8_t            _gpio_tx;
+  uint8_t           _res;
+  bool              _scanOnInit;
 };
 
 #endif // ifdef USES_P004

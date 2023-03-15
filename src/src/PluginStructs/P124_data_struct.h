@@ -27,7 +27,9 @@ public:
                    bool    changeAddress = false);
 
   P124_data_struct() = delete;
-  ~P124_data_struct();
+  virtual ~P124_data_struct();
+
+  bool init();
 
   bool isInitialized() {
     return relay != nullptr;
@@ -55,8 +57,9 @@ private:
 
   Multi_Channel_Relay *relay = nullptr;
 
-  int8_t  _i2c_address;
-  uint8_t _relayCount;
+  const int8_t  _i2c_address;
+  const uint8_t _relayCount;
+  const bool _changeAddress;
   uint8_t _getLoop     = 0;
   bool    _loopEnabled = false;
 };

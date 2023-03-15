@@ -64,7 +64,7 @@ public:
                    bool   rfLog);
 
   P118_data_struct() = delete;
-  ~P118_data_struct();
+  virtual ~P118_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);

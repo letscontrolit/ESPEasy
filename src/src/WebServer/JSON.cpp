@@ -6,6 +6,8 @@
 
 #include "../CustomBuild/CompiletimeDefines.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
@@ -105,6 +107,7 @@ void handle_csvval()
 // ********************************************************************************
 void handle_json()
 {
+  START_TIMER
   const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
   const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
@@ -121,7 +124,7 @@ void handle_json()
   {
     const String view = webArg(F("view"));
 
-    if (view.equals(F("sensorupdate"))) {
+    if (equals(view, F("sensorupdate"))) {
       showSystem = false;
       showWifi   = false;
       #if FEATURE_ETHERNET
@@ -160,7 +163,9 @@ void handle_json()
         LabelType::BUILD_TIME,
         LabelType::BINARY_FILENAME,
         LabelType::LOCAL_TIME,
+        #if FEATURE_EXT_RTC
         LabelType::EXT_RTC_UTC_TIME,
+        #endif
         LabelType::TIME_SOURCE,
         LabelType::TIME_WANDER,
         LabelType::ISNTP,
@@ -250,9 +255,7 @@ void handle_json()
         LabelType::WIFI_STORED_SSID2,
         LabelType::FORCE_WIFI_BG,
         LabelType::RESTART_WIFI_LOST_CONN,
-#ifdef ESP8266
         LabelType::FORCE_WIFI_NOSLEEP,
-#endif // ifdef ESP8266
 #ifdef SUPPORT_ARP
         LabelType::PERIODICAL_GRAT_ARP,
 #endif // ifdef SUPPORT_ARP
@@ -321,7 +324,7 @@ void handle_json()
           addHtml('{');
           stream_next_json_object_value(F("nr"), it->first);
           stream_next_json_object_value(F("name"),
-                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.Name);
+                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.getName());
 
           if (it->second.build) {
             stream_next_json_object_value(F("build"), formatSystemBuildNr(it->second.build));
@@ -446,6 +449,12 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
+        for(int i = 0; i < 3; i++) {
+          if (Settings.TaskDevicePin[i][TaskIndex] >= 0) {
+            stream_next_json_object_value(concat(F("TaskDeviceGPIO"), i + 1) , String(Settings.TaskDevicePin[i][TaskIndex]));
+          }
+        }
+
         #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
@@ -490,6 +499,7 @@ void handle_json()
   }
 
   TXBuffer.endStream();
+  STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
 }
 
 // ********************************************************************************
@@ -531,7 +541,7 @@ void handle_nodes_list_json() {
       }
 
       json_number(F("first"), String(it->first));
-      json_prop(F("name"), isThisUnit ? Settings.Name : it->second.getNodeName());
+      json_prop(F("name"), isThisUnit ? Settings.getName() : it->second.getNodeName());
 
       if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
       json_prop(F("type"), it->second.getNodeTypeDisplayString());

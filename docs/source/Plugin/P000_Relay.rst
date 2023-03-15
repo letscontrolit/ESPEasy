@@ -207,7 +207,7 @@ Rules examples
 .. code-block:: none
 
     On Switch#State Do
-     if [Switch#State]=1
+     if %eventvalue1%=1
       GPIO,12,1
      else
       GPIO,12,0
@@ -215,6 +215,10 @@ Rules examples
     EndOn
 
 This rule will turn the relay ON when the button is pressed, and OFF when released.
+
+.. note::
+  Events may be handled from an event queue, so by the time the event is being handled, the state of the switch can already be different.
+  Therefore it is best to use the state of the switch at the time the event was generated,using ``%eventvalue1%`` .
 
 Indicators (recommended settings)
 ---------------------------------

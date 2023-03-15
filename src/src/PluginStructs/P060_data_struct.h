@@ -8,6 +8,8 @@ struct P060_data_struct : public PluginTaskData_base {
 public:
 
   P060_data_struct(uint8_t i2c_addr);
+  P060_data_struct() = delete;
+  virtual ~P060_data_struct() = default;
 
   void  overSampleRead();
 

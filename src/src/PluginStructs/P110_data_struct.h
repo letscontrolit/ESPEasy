@@ -32,6 +32,8 @@ public:
   P110_data_struct(uint8_t i2c_addr,
                    int     timing,
                    bool    range);
+  P110_data_struct() = delete;
+  virtual ~P110_data_struct() = default;
 
   bool begin();
   long readDistance();

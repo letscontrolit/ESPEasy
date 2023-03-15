@@ -87,12 +87,6 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
   _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _commandTrigger(commandTrigger),
   _fgcolor(fgcolor), _bgcolor(bgcolor), _colorDepth(colorDepth), _textBackFill(textBackFill)
 {
-  # if P096_USE_EXTENDED_SETTINGS
-
-  EPD_type_toResolution(_display, _xpix, _ypix);
-  # endif // if P096_USE_EXTENDED_SETTINGS
-
-  updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
   _commandTriggerCmd += F("cmd");
@@ -117,6 +111,13 @@ P096_data_struct::~P096_data_struct() {
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P096_data_struct::plugin_init(struct EventStruct *event) {
+  # if P096_USE_EXTENDED_SETTINGS
+
+  EPD_type_toResolution(_display, _xpix, _ypix);
+  # endif // if P096_USE_EXTENDED_SETTINGS
+
+  updateFontMetrics();
+
   bool success = false;
 
   if (nullptr == eInkScreen) {
@@ -158,6 +159,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       #  if P096_USE_EXTENDED_SETTINGS
 
       if (nullptr != gfxHelper) {
+        gfxHelper->initialize();
         gfxHelper->setRotation(_rotation);
         gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
         gfxHelper->setTxtfullCompensation(!bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096) ? 0 : 1); // Inverted
@@ -201,6 +203,15 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       eInkScreen->setTextColor(_fgcolor);
       eInkScreen->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
       eInkScreen->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+
+      if (!stringsLoaded) {
+        LoadCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);
+        stringsLoaded = true;
+
+        for (uint8_t x = 0; x < P096_Nlines && !stringsHasContent; x++) {
+          stringsHasContent = !strings[x].isEmpty();
+        }
+      }
     }
 
     success = true;
@@ -250,16 +261,7 @@ bool P096_data_struct::plugin_read(struct EventStruct *event) {
   # if P096_USE_EXTENDED_SETTINGS
 
   if (nullptr != eInkScreen) {
-    String strings[P096_Nlines];
-    LoadCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);
-
-    bool hasContent = false;
-
-    for (uint8_t x = 0; x < P096_Nlines && !hasContent; x++) {
-      hasContent = !strings[x].isEmpty();
-    }
-
-    if (hasContent) {
+    if (stringsHasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
 
       eInkScreen->clearBuffer();
@@ -303,13 +305,13 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
   if ((nullptr != eInkScreen) && cmd.equals(_commandTriggerCmd)) {
     String arg1 = parseString(string, 2);
 
-    if (arg1.equals(F("off"))) { // Not supported 'on' and 'off' as commands
+    if (equals(arg1, F("off"))) { // Not supported 'on' and 'off' as commands
       success = false;
     }
-    else if (arg1.equals(F("on"))) {
+    else if (equals(arg1, F("on"))) {
       success = false;
     }
-    else if (arg1.equals(F("clear"))) {
+    else if (equals(arg1, F("clear"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
@@ -323,13 +325,13 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       eInkScreen->clearBuffer();
       success = true;
     }
-    else if (arg1.equals(F("backlight"))) { // not supported
+    else if (equals(arg1, F("backlight"))) { // not supported
       success = false;
     }
-    else if (arg1.equals(F("deepsleep"))) {
+    else if (equals(arg1, F("deepsleep"))) {
       eInkScreen->deepSleep();
     }
-    else if (arg1.equals(F("seq_start"))) {
+    else if (equals(arg1, F("seq_start"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
@@ -340,7 +342,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       plugin_096_sequence_in_progress = true;
       success                         = true;
     }
-    else if (arg1.equals(F("seq_end"))) {
+    else if (equals(arg1, F("seq_end"))) {
       // # ifndef BUILD_NO_DEBUG
       //             TimingStats s;
       //             const unsigned statisticsTimerStart(micros());
@@ -355,7 +357,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       plugin_096_sequence_in_progress = false;
       success                         = true;
     }
-    else if (arg1.equals(F("inv"))) {
+    else if (equals(arg1, F("inv"))) {
       String arg2 = parseString(string, 3);
       int    nArg2;
 
@@ -367,7 +369,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
         success = true;
       }
     }
-    else if (arg1.equals(F("rot"))) {
+    else if (equals(arg1, F("rot"))) {
       ///control?cmd=epdcmd,rot,0
       // not working to verify
       String arg2 = parseString(string, 3);

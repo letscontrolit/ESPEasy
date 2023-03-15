@@ -19,6 +19,9 @@
 #include <SparkFun_AS7265X.h>
 
 struct P112_data_struct : public PluginTaskData_base {
+  P112_data_struct() = default;
+  virtual ~P112_data_struct() = default;
+  
   bool begin();
   AS7265X sensor;
   bool initialized = false;

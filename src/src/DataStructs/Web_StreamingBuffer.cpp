@@ -17,7 +17,7 @@
 #ifdef ESP8266
 #define CHUNKED_BUFFER_SIZE         512
 #else 
-#define CHUNKED_BUFFER_SIZE         1360
+#define CHUNKED_BUFFER_SIZE         4096
 #endif
 
 Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
@@ -64,7 +64,7 @@ Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const __FlashStringHelper* 
   return addFlashString((PGM_P)str);
 }
 
-Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
+Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str, int length) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -82,11 +82,12 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
     const char* cur_char = str;
     while (!done) {
       const uint8_t ch = mmu_get_uint8(cur_char++);
-      if (ch == 0) return *this;
+      if (length == 0 || ch == 0) return *this;
       if (this->buf.length() >= CHUNKED_BUFFER_SIZE) {
         flush();
       }
       this->buf += (char)ch;
+      --length;
     }
   }
   #endif
@@ -94,7 +95,9 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   ++flashStringCalls;
 
   if (lowMemorySkip) { return *this; }
-  const unsigned int length = strlen_P((PGM_P)str);
+  if (length < 0) {
+    length = strlen_P((PGM_P)str);
+  }
 
   if (length == 0) { return *this; }
   flashStringData += length;
@@ -116,7 +119,7 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   */
   {
     // Copy to internal buffer and send in chunks
-    unsigned int pos          = 0;
+    int pos          = 0;
     while (pos < length) {
       if (flush_step == 0) {
         flush();
@@ -257,15 +260,13 @@ void Web_StreamingBuffer::endStream() {
     if (buf.length() > 0) { sendContentBlocking(buf); }
     buf.clear();
     sendContentBlocking(buf);
-    #ifdef ESP8266
-    web_server.client().flush(100);
-    #endif
-    #ifdef ESP32
+
     web_server.client().flush();
-    #endif
+
     finalRam = ESP.getFreeHeap();
 
-    /*
+/*
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = String("Ram usage: Webserver only: ") + maxServerUsage +
                     " including Core: " + maxCoreUsage +
@@ -273,7 +274,9 @@ void Web_StreamingBuffer::endStream() {
                     " flashStringData: " + flashStringData;
         addLog(LOG_LEVEL_DEBUG, log);
         }
-      */
+#endif // ifndef BUILD_NO_DEBUG
+*/
+
   } else {
     addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
     lowMemorySkip = false;
@@ -320,14 +323,16 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   if (length > 0) { web_server.sendContent(data); }
   web_server.sendContent("\r\n");
 #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-  unsigned int timeout = 1;
+  unsigned int timeout = 100;
 
-  if (freeBeforeSend < 5000) { timeout = 100; }
-
-  if (freeBeforeSend < 4000) { timeout = 300; }
   web_server.sendContent(data);
 
-  data.clear();
+  if (data.length() > CHUNKED_BUFFER_SIZE) {
+    data = String(); // Clear also allocated memory
+  } else {
+    data.clear();
+  }
+
   const uint32_t beginWait = millis();
   while ((!data.reserve(CHUNKED_BUFFER_SIZE) || (ESP.getFreeHeap() < 4000 /*freeBeforeSend*/ )) &&
          !timeOutReached(beginWait + timeout)) {
@@ -372,12 +377,9 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   }
   web_server.send(httpCode, content_type, EMPTY_STRING);
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  unsigned int timeout          = 0;
+  unsigned int timeout          = 100;
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
 
-  if (freeBeforeSend < 5000) { timeout = 100; }
-
-  if (freeBeforeSend < 4000) { timeout = 1000; }
   const uint32_t beginWait = millis();
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   web_server.sendHeader(F("Cache-Control"), F("no-cache"));

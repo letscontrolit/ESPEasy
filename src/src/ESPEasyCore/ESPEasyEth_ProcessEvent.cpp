@@ -18,9 +18,11 @@
 # include "../Globals/Settings.h"
 
 # include "../Helpers/Network.h"
+# include "../Helpers/Networking.h"
 # include "../Helpers/PeriodicalActions.h"
 # include "../Helpers/StringConverter.h"
 
+# include <ETH.h>
 
 void handle_unprocessedEthEvents() {
   if (EthEventData.unprocessedEthEvents()) {
@@ -83,15 +85,24 @@ void check_Eth_DNS_valid() {
       (active_network_medium == NetworkMedium_t::Ethernet) &&
       EthEventData.ethInitSuccess &&
       !ethUseStaticIP()) {
-    const bool has_cache = !EthEventData.dns0_cache && !EthEventData.dns1_cache;
+    const bool has_cache = 
+      valid_DNS_address(EthEventData.dns0_cache) || 
+      valid_DNS_address(EthEventData.dns1_cache);
 
     if (has_cache) {
-      const IPAddress dns0 = NetworkDnsIP(0);
-      const IPAddress dns1 = NetworkDnsIP(1);
+      const IPAddress dns0 = ETH.dnsIP(0);
+      const IPAddress dns1 = ETH.dnsIP(1);
 
-      if (!dns0 && !dns1) {
-        addLog(LOG_LEVEL_ERROR, F("ETH  : DNS server was cleared, use cached DNS IP"));
-        ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
+      if (!valid_DNS_address(dns0) && !valid_DNS_address(dns1)) {
+        static uint32_t lastLog = 0;
+        if (timePassedSince(lastLog) > 1000) {
+          addLogMove(LOG_LEVEL_ERROR, concat(
+            F("ETH  : DNS server was cleared, use cached DNS IP: "), 
+            EthEventData.dns0_cache.toString()));
+          lastLog = millis();
+        }
+        setDNS(0, EthEventData.dns0_cache);
+        setDNS(1, EthEventData.dns1_cache);
       }
     }
   }
@@ -102,6 +113,7 @@ void processEthernetConnected() {
 
   // FIXME TD-er: Must differentiate among reconnects for WiFi and Ethernet.
   ++WiFiEventData.wifi_reconnects;
+  addLog(LOG_LEVEL_INFO, F("processEthernetConnected()"));
   EthEventData.setEthConnected();
   EthEventData.processedConnect = true;
 
@@ -143,13 +155,14 @@ void processEthernetGotIP() {
   const IPAddress gw     = NetworkGatewayIP();
   const IPAddress subnet = NetworkSubnetMask();
 
-  IPAddress dns0                              = NetworkDnsIP(0);
-  IPAddress dns1                              = NetworkDnsIP(1);
+  IPAddress dns0                              = ETH.dnsIP(0);
+  IPAddress dns1                              = ETH.dnsIP(1);
   const LongTermTimer::Duration dhcp_duration = EthEventData.lastConnectMoment.timeDiff(EthEventData.lastGetIPmoment);
 
   if (!dns0 && !dns1) {
     addLog(LOG_LEVEL_ERROR, F("ETH  : No DNS server received via DHCP, use cached DNS IP"));
-    ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
+    setDNS(0, EthEventData.dns0_cache);
+    setDNS(1, EthEventData.dns1_cache);
   } else {
     EthEventData.dns0_cache = dns0;
     EthEventData.dns1_cache = dns1;

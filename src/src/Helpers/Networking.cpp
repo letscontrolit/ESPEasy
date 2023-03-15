@@ -10,6 +10,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 
@@ -21,7 +22,6 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
@@ -34,8 +34,9 @@
 
 #include <IPAddress.h>
 #include <base64.h>
-#include <MD5Builder.h>
+#include <MD5Builder.h> // for getDigestAuth
 
+#include <lwip/dns.h>
 
 // Generic Networking routines
 
@@ -402,25 +403,19 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
    Get IP address for unit
 \*********************************************************************************************/
 IPAddress getIPAddressForUnit(uint8_t unit) {
-  IPAddress remoteNodeIP;
-
   if (unit == 255) {
-    remoteNodeIP = { 255, 255, 255, 255 };
+    const IPAddress ip(255, 255, 255, 255);
+    return ip;
   }
-  else {
-    auto it = Nodes.find(unit);
+  auto it = Nodes.find(unit);
 
-    if (it == Nodes.end()) {
-      return remoteNodeIP;
-    }
-
-    if (it->second.ip[0] == 0) {
-      return remoteNodeIP;
-    }
-    return it->second.IP();
+  if (it == Nodes.end() || it->second.ip[0] == 0) {
+    IPAddress ip;
+    return ip;
   }
-  return remoteNodeIP;
+  return it->second.IP();
 }
+
 
 /*********************************************************************************************\
    Refresh aging for remote units, drop if too old...
@@ -548,7 +543,7 @@ void SSDP_schema(WiFiClient& client) {
                  "<device>"
                  "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
                  "<friendlyName>"));
-  client.print(Settings.Name);
+  client.print(Settings.getName());
   client.print(F("</friendlyName>"
                  "<presentationURL>/</presentationURL>"
                  "<serialNumber>"));
@@ -1038,6 +1033,63 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 }
 #endif // FEATURE_HTTP_CLIENT
 
+void scrubDNS() {
+  #if FEATURE_ETHERNET
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    if (EthEventData.EthServicesInitialized()) {
+      setDNS(0, EthEventData.dns0_cache);
+      setDNS(1, EthEventData.dns1_cache);
+    }
+    return;
+  }
+  #endif
+  if (WiFiEventData.WiFiServicesInitialized()) {
+    setDNS(0, WiFiEventData.dns0_cache);
+    setDNS(1, WiFiEventData.dns1_cache);
+  }
+}
+
+bool valid_DNS_address(const IPAddress& dns) {
+  return (dns.v4() != (uint32_t)0x00000000 && 
+          dns.v4() != (uint32_t)0xFD000000 && 
+          dns != INADDR_NONE);
+}
+
+bool setDNS(int index, const IPAddress& dns) {
+  if (index >= 2) return false;
+  #ifdef ESP8266
+  if(dns.isSet() && dns != WiFi.dnsIP(index)) {
+    dns_setserver(index, dns);
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
+    }
+    #endif
+    return true;
+  }
+  #endif
+  #ifdef ESP32
+  ip_addr_t d;
+  d.type = IPADDR_TYPE_V4;
+
+  if (valid_DNS_address(dns)) {
+    // Set DNS0-Server
+    d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
+    const ip_addr_t* cur_dns = dns_getserver(index);
+    if (cur_dns != nullptr && cur_dns->u_addr.ip4.addr == d.u_addr.ip4.addr) {
+      // Still the same as before
+      return false;
+    }
+    dns_setserver(index, &d);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
+    }
+    return true;
+  }
+  #endif
+  return false;
+}
+
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms) {
   START_TIMER;
 
@@ -1046,6 +1098,9 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeo
   }
 
   FeedSW_watchdog();
+
+  // FIXME TD-er: Must try to restore DNS server entries.
+  scrubDNS();
 
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
@@ -1354,23 +1409,24 @@ int http_authenticate(const String& logIdentifier,
 {
   if (!uri.startsWith(F("/"))) {
     return http_authenticate(
-      logIdentifier, 
-      client, 
-      http, 
-      timeout, 
-      user, 
-      pass, 
-      host, 
-      port, 
-      String(F("/")) + uri,
-      HttpMethod, 
-      header, 
+      logIdentifier,
+      client,
+      http,
+      timeout,
+      user,
+      pass,
+      host,
+      port,
+      concat(F("/"), uri),
+      HttpMethod,
+      header,
       postStr,
       must_check_reply);
   }
   int httpCode = 0;
+  const bool hasCredentials = !user.isEmpty() && !pass.isEmpty();
 
-  if (user.length() && pass.length()) {
+  if (hasCredentials) {
     must_check_reply = true;
     http.setAuthorization(user.c_str(), pass.c_str());
   } else {
@@ -1406,6 +1462,7 @@ int http_authenticate(const String& logIdentifier,
   http.addHeader(F("X-Forwarded-For"), NetworkLocalIP().toString());
 
   delay(0);
+  scrubDNS();
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
 #else // if defined(CORE_POST_2_6_0) || defined(ESP32)
@@ -1420,19 +1477,29 @@ int http_authenticate(const String& logIdentifier,
     String name, value;
 
     while (splitHeaders(headerpos, header, name, value)) {
-      http.addHeader(name, value);
+      // Disabled the check to exclude "Authorization", due to: 
+      //   https://github.com/letscontrolit/ESPEasy/issues/4364
+      // Check was added for: https://github.com/letscontrolit/ESPEasy/issues/4355
+      // However, I doubt this was the actual bug. More likely the supplied credential strings were not entirely empty for whatever reason.
+      //
+      // Work-around to not add Authorization header since the HTTPClient code
+      // only ignores this when base64Authorication is set.
+      
+//      if (!name.equalsIgnoreCase(F("Authorization"))) {
+        http.addHeader(name, value);
+//      }
     }
   }
 
   // start connection and send HTTP header (and body)
-  if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+  if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
     httpCode = http.sendRequest(HttpMethod.c_str());
   } else {
     httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
   }
 
   // Check to see if we need to try digest auth
-  if (httpCode == 401 && must_check_reply) {
+  if ((httpCode == 401) && must_check_reply) {
     const String authReq = http.header(String(F("WWW-Authenticate")).c_str());
 
     if (authReq.indexOf(F("Digest")) != -1) {
@@ -1457,7 +1524,7 @@ int http_authenticate(const String& logIdentifier,
       http.addHeader(F("Authorization"), authorization);
 
       // start connection and send HTTP header (and body)
-      if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+      if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
         httpCode = http.sendRequest(HttpMethod.c_str());
       } else {
         httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
@@ -1483,7 +1550,7 @@ int http_authenticate(const String& logIdentifier,
     eventQueue.addMove(std::move(event));
   }
 #ifndef BUILD_NO_DEBUG
-  log_http_result(http, logIdentifier, host, HttpMethod, httpCode, EMPTY_STRING);
+  log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
 #endif
   return httpCode;
 }

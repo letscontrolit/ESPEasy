@@ -5,9 +5,11 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
 #include "../CustomBuild/CompiletimeDefines.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -44,6 +46,9 @@
 #include <soc/boot_mode.h>
 #include <soc/gpio_reg.h>
 #include <soc/efuse_reg.h>
+
+#include <esp_pm.h>
+
 #endif
 
 
@@ -269,6 +274,37 @@ void ESPEasy_setup()
   logMemUsageAfter(F("LoadSettings()"));
   #endif
 
+#ifdef ESP32
+  if (Settings.EcoPowerMode()) {
+    // Configure dynamic frequency scaling:
+    // maximum and minimum frequencies are set in sdkconfig,
+    // automatic light sleep is enabled if tickless idle support is enabled.
+#if CONFIG_IDF_TARGET_ESP32
+    esp_pm_config_esp32_t pm_config = {
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32S2
+    esp_pm_config_esp32s2_t pm_config = {
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32C3
+    esp_pm_config_esp32c3_t pm_config = {
+            .max_freq_mhz = 160,
+#elif CONFIG_IDF_TARGET_ESP32S3
+    esp_pm_config_esp32s3_t pm_config = {
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32C2
+    esp_pm_config_esp32c2_t pm_config = {
+            .max_freq_mhz = 120,
+#endif
+            .min_freq_mhz = 80,
+#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
+            .light_sleep_enable = true
+#endif
+    };
+    esp_pm_configure(&pm_config);
+  }
+#endif
+
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
@@ -319,7 +355,14 @@ void ESPEasy_setup()
   active_network_medium = Settings.NetworkMedium;
   #endif // if FEATURE_ETHERNET
 
-  if (active_network_medium == NetworkMedium_t::WIFI) {
+  setNetworkMedium(Settings.NetworkMedium);
+
+  bool initWiFi = active_network_medium == NetworkMedium_t::WIFI;
+  // FIXME TD-er: Must add another check for 'delayed start WiFi' for poorly designed ESP8266 nodes.
+
+
+  if (initWiFi) {
+    WiFi_AP_Candidates.clearCache();
     WiFi_AP_Candidates.load_knownCredentials();
     setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
@@ -334,8 +377,17 @@ void ESPEasy_setup()
     // Always perform WiFi scan
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
-    WifiScan(false);
-    setWifiMode(WIFI_OFF);
+    if (!WiFi_AP_Candidates.hasCandidates()) {
+      WifiScan(false, RTC.lastWiFiChannel);
+    }
+    WiFi_AP_Candidates.clearCache();
+    processScanDone();
+    WiFi_AP_Candidates.load_knownCredentials();
+    if (!WiFi_AP_Candidates.hasCandidates()) {
+      addLog(LOG_LEVEL_INFO, F("Setup: Scan all channels"));
+      WifiScan(false);
+    }
+//    setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("WifiScan()"));
@@ -452,6 +504,13 @@ void ESPEasy_setup()
     event += bitRead(gpio_strap, 3); // GPIO-2
     rulesProcessing(event);
   }
+  #endif
+
+  #if FEATURE_ETHERNET
+  if (Settings.ETH_Pin_power != -1) {
+    GPIO_Write(1, Settings.ETH_Pin_power, 1);
+  }
+
   #endif
 
   NetworkConnectRelaxed();

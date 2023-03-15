@@ -76,7 +76,8 @@ struct tCommandLinesV2 {
 struct P016_data_struct : public PluginTaskData_base {
 public:
 
-  P016_data_struct();
+  P016_data_struct() = default;
+  virtual ~P016_data_struct() = default;
 
   void        init(struct EventStruct *event,
                    uint16_t            CmdInhibitTime);

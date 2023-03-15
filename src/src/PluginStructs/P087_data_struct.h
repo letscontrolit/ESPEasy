@@ -40,9 +40,9 @@ enum P087_Match_Type {
 struct P087_data_struct : public PluginTaskData_base {
 public:
 
-  P087_data_struct();
+  P087_data_struct() = default;
 
-  ~P087_data_struct();
+  virtual ~P087_data_struct();
 
   void reset();
 

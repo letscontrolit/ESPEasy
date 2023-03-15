@@ -52,14 +52,16 @@ public:
                    bool        useSingleShot);
 
   P135_data_struct() = delete;
-  ~P135_data_struct();
+  virtual ~P135_data_struct();
+
+  bool init();
 
   bool plugin_read(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
                     String            & string);
   bool plugin_get_config_value(struct EventStruct *event,
                                String            & string);
-  bool isInitialized() {
+  bool isInitialized() const {
     return initialized;
   }
 

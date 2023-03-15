@@ -1,0 +1,12 @@
+.. csv-table::
+    :header: "Event", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``<taskname>#PowerChanged=<source>``
+
+    | ``source``: ``0`` (Battery power) or ``1`` (External / USB power).
+
+    ","
+    | Event generated when the **Event on PowerSource change** is enabled.
+    "

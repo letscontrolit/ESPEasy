@@ -99,14 +99,14 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
 
   float value;
 
-  if (command.equals(F("min"))) {        // [taskname#valuename.min] Lowest value seen since value reset
+  if (equals(command, F("min"))) {        // [taskname#valuename.min] Lowest value seen since value reset
     value   = getPeakLow();
     success = true;
-  } else if (command.equals(F("max"))) { // [taskname#valuename.max] Highest value seen since value reset
+  } else if (equals(command, F("max"))) { // [taskname#valuename.max] Highest value seen since value reset
     value   = getPeakHigh();
     success = true;
   } else if (command.startsWith(F("avg"))) {
-    if (command.equals(F("avg"))) { // [taskname#valuename.avg] Average value of the last N kept samples
+    if (equals(command, F("avg"))) { // [taskname#valuename.avg] Average value of the last N kept samples
       value   = getSampleAvg();
       success = true;
     } else {
@@ -122,7 +122,7 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
       }
     }
   } else if (command.startsWith(F("stddev"))) {
-    if (command.equals(F("stddev"))) { // [taskname#valuename.stddev] Std deviation of the last N kept samples
+    if (equals(command, F("stddev"))) { // [taskname#valuename.stddev] Std deviation of the last N kept samples
       value   = getSampleStdDev();
       success = true;
     } else {
@@ -333,12 +333,14 @@ uint8_t PluginStats_array::nrSamplesPresent() const
 
 void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
 {
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) {
-      _plugin_stats[i]->push(UserVar[event->BaseVarIndex + i]);
+  if (validTaskIndex(event->TaskIndex)) {
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      if (_plugin_stats[i] != nullptr) {
+        _plugin_stats[i]->push(UserVar[event->BaseVarIndex + i]);
 
-      if (trackPeaks) {
-        _plugin_stats[i]->trackPeak(UserVar[event->BaseVarIndex + i]);
+        if (trackPeaks) {
+          _plugin_stats[i]->trackPeak(UserVar[event->BaseVarIndex + i]);
+        }
       }
     }
   }
@@ -369,8 +371,8 @@ bool PluginStats_array::plugin_write_base(struct EventStruct *event, const Strin
   bool success     = false;
   const String cmd = parseString(string, 1);               // command
 
-  const bool resetPeaks   = cmd.equals(F("resetpeaks"));   // Command: "taskname.resetPeaks"
-  const bool clearSamples = cmd.equals(F("clearsamples")); // Command: "taskname.clearSamples"
+  const bool resetPeaks   = equals(cmd, F("resetpeaks"));   // Command: "taskname.resetPeaks"
+  const bool clearSamples = equals(cmd, F("clearsamples")); // Command: "taskname.clearSamples"
 
   if (resetPeaks || clearSamples) {
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {

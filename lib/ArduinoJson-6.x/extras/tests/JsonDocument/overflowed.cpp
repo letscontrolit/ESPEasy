@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -33,6 +33,12 @@ TEST_CASE("JsonDocument::overflowed()") {
     StaticJsonDocument<JSON_ARRAY_SIZE(1) + 8> doc;
     doc.add(std::string("example"));
     CHECK(doc.overflowed() == false);
+  }
+
+  SECTION("returns true after a failed member add") {
+    StaticJsonDocument<1> doc;
+    doc["example"] = true;
+    CHECK(doc.overflowed() == true);
   }
 
   SECTION("returns true after a failed deserialization") {

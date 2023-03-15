@@ -134,7 +134,7 @@ public:
 	#endif
 
 private:
-	T buffer[S];
+	T buffer[S] = {0};
 	T *head;
 	T *tail;
 #ifndef CIRCULAR_BUFFER_INT_SAFE

@@ -5,53 +5,58 @@
 
 #if FEATURE_MQTT
 
-#include "../DataStructs/UnitMessageCount.h"
-#include "../Globals/CPlugins.h"
+# include "../ControllerQueue/Queue_element_base.h"
+# include "../DataStructs/UnitMessageCount.h"
+# include "../Globals/CPlugins.h"
 
 /*********************************************************************************************\
 * MQTT_queue_element for all MQTT base controllers
 \*********************************************************************************************/
-class MQTT_queue_element {
+class MQTT_queue_element : public Queue_element_base {
 public:
 
   MQTT_queue_element() = default;
 
-#ifdef USE_SECOND_HEAP
+# ifdef USE_SECOND_HEAP
   MQTT_queue_element(const MQTT_queue_element& other) = default;
-#else
+# else // ifdef USE_SECOND_HEAP
   MQTT_queue_element(const MQTT_queue_element& other) = delete;
-#endif
-  
+# endif // ifdef USE_SECOND_HEAP
+
   MQTT_queue_element(MQTT_queue_element&& other) = default;
 
   explicit MQTT_queue_element(int           ctrl_idx,
                               taskIndex_t   TaskIndex,
                               const String& topic,
                               const String& payload,
-                              bool          retained);
+                              bool          retained,
+                              bool          callbackTask);
 
   explicit MQTT_queue_element(int         ctrl_idx,
                               taskIndex_t TaskIndex,
                               String   && topic,
                               String   && payload,
-                              bool        retained);
+                              bool        retained,
+                              bool        callbackTask);
 
-  size_t getSize() const;
+  size_t                    getSize() const;
 
-  bool isDuplicate(const MQTT_queue_element& other) const;
+  bool                      isDuplicate(const Queue_element_base& other) const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const { return &UnitMessageCount; }
-  UnitMessageCount_t* getUnitMessageCount() { return &UnitMessageCount; }
+  const UnitMessageCount_t* getUnitMessageCount() const {
+    return &UnitMessageCount;
+  }
+
+  UnitMessageCount_t* getUnitMessageCount() {
+    return &UnitMessageCount;
+  }
 
   void removeEmptyTopics();
 
-  String _topic;
-  String _payload;
-  unsigned long _timestamp         = millis();
-  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
-  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
-  bool _retained                   = false;
-  UnitMessageCount_t UnitMessageCount;
+  String _topic{};
+  String _payload{};
+  UnitMessageCount_t UnitMessageCount{};
+  bool _retained = false; 
 };
 
 #endif // if FEATURE_MQTT

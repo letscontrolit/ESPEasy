@@ -1,0 +1,47 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``i2cencoder,bright,<brightness>``
+
+    | ``<brightness>``: Range 1..255.
+    ","
+    | Set the brightness of the Led(s). NeoPixel leds can be quite bright, to reduce the amount of light, and current used, the brightness can be adjusted.
+
+    | NB: Not applicable for DFRobot.
+    "
+    "
+    | ``i2cencoder,led1,<red>,<green>,<blue>``
+    ","
+    | Set the color of the first led to the provided RGB color, with ``brightness`` applied.
+
+    | NB: Not applicable for DFRobot encoder.
+    "
+    "
+    | ``i2cencoder,led2,<red>,<green>,<blue>``
+    ","
+    | Set the color of the second led to the provided RGB color, with ``brightness`` applied.
+
+    | NB: **ONLY** available for M5Stack encoder.
+    "
+    "
+    | ``i2cencoder,gain,<gain>``
+
+    | ``<gain>``: Range 1..51.
+    ","
+    | Set the Led vs. rotation gain, the relation between the number of detents the encoder is rotated, and the number of leds lighting up. It can be configured between 51: 1 led/detent (1 rotation lights up all leds) and 1: ~2.5 rotation lighting up 1 additional led (or reducing the number of leds when turning counter-clockwise).
+
+    | NB: **ONLY** available for DFRobot encoder.
+    "
+    "
+    | ``i2cencoder,set,<position>[,<initialOffset>]``
+
+    | ``<position>``: Numeric value. 0 will be used when not provided.
+
+    | ``<initialOffset>``: Range: 0..1023. Not set when not provided.
+    ","
+    | Set the current encoder position.
+    
+    | For DFRobot encoder, the initial offset can be updated (optional). The device configuration setting will also be updated with this value, but not saved.
+    "

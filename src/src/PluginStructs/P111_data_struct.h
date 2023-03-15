@@ -32,7 +32,8 @@ enum class P111_initPhases : uint8_t {
 struct P111_data_struct : public PluginTaskData_base {
   P111_data_struct(int8_t csPin,
                    int8_t rstPin);
-  ~P111_data_struct();
+  P111_data_struct() = delete;
+  virtual ~P111_data_struct();
 
   void init();
   bool plugin_ten_per_second(struct EventStruct *event);

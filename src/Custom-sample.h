@@ -22,6 +22,7 @@
 // --- Feature Flagging ---------------------------------------------------------
 // Can be set to 1 to enable, 0 to disable, or not set to use the default (usually via define_plugin_sets.h)
 
+#define FEATURE_RULES_EASY_COLOR_CODE    1   // Use code highlighting, autocompletion and command suggestions in Rules
 #define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
 #define FEATURE_ARDUINO_OTA       1     //enables the Arduino OTA capabilities
 // #define FEATURE_SD                1     // Enable SD card support
@@ -207,6 +208,11 @@
 #endif // ifdef ESP32
 #define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
+// Optional alternative CDN links:
+// Chart.js: (only used when FEATURE_CHART_JS is enabled)
+// #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+// JQuery:
+// #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
 
 
 // #define FEATURE_SETTINGS_ARCHIVE 1
@@ -216,6 +222,9 @@
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 // #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
+// #define FEATURE_POST_TO_HTTP 1 // Enable availability of the PostToHTTP command
+// #define FEATURE_I2C_DEVICE_CHECK 0 // Disable the I2C Device check feature
+// #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching the I2C address from I2C plugins. Will be enabled when FEATURE_I2C_DEVICE_CHECK is enabled
 
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -467,7 +476,12 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
 // #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+// #define USES_P138   // IP5306
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
+// #define USES_P143   // I2C Rotary encoders
+// #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
+// #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
+// #define P143_FEATURE_COUNTER_COLORMAPPING 0 // Enabled by default, can be turned off here
 
 // #define USES_P128   // NeoPixelBusFX
 // #define P128_USES_GRB  // Default
@@ -479,15 +493,6 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 
 
-// Special plugins needing IR library
-// #define USES_P016   // IR
-// #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-// #define P016_FEATURE_COMMAND_HANDLING 0 // By default set to 1 to have the command table, that can be dsabled here
-// #define USES_P035   // IRTX
-// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
-                                 //common arguments for controlling all deeply supported A/C units
-// #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-// #define USES_P088   // Heatpump IR
 // #define USES_P108   // DDS238-x ZN Modbus energy meters
 
 

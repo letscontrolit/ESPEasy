@@ -2290,7 +2290,7 @@ public:
                    uint8_t  _maxBright);
 
   P128_data_struct() = delete;
-  ~P128_data_struct();
+  virtual ~P128_data_struct();
 
   bool plugin_fifty_per_second(struct EventStruct *event);
   bool plugin_read(struct EventStruct *event);
@@ -2330,9 +2330,9 @@ private:
            rgb_s      = HtmlColor(0xFF0000);
 # endif // if defined(RGBW) || defined(GRBW)
 
-  int8_t   gpioPin;
-  uint16_t pixelCount;
-  uint8_t  maxBright;
+  const int8_t   gpioPin = -1;
+  const uint16_t pixelCount = 0;
+  const uint8_t  maxBright = 0;
 
   int16_t fadedelay = 20;
 

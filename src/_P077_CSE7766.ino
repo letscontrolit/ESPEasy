@@ -7,6 +7,17 @@
 // ###################################### stefan@clumsy.ch      ##########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-02-12 tonhuisman: Separate PLUGIN_SERIAL_IN and PLUGIN_TEN_PER_SECOND (changed from PLUGIN_FIFTY_PER_SECOND) handling
+ *                        Fixed some minor code-issues
+ * 2023-02-11 tonhuisman: Add PLUGIN_WRITE support for csereset and csecalibrate,[Voltage],[Current],[Power]
+ *                        Handle serial input also in PLUGIN_FIFTY_PER_SECOND, so other configurations than
+ *                        HWSerial0 will also be processed
+ *                        Add labels for RX/TX GPIO pins
+ * 2023-02-10 tonhuisman: Move from HWSerial0 to EasySerial to allow flexible serial configuration
+ * 2023-02-10 tonhuisman: Add changelog
+ */
+
 # include "src/PluginStructs/P077_data_struct.h"
 
 # define PLUGIN_077
@@ -28,6 +39,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_077;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -55,19 +67,39 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      CONFIG_PIN1 = 3; // Former default HWSerial0
+      CONFIG_PIN2 = 1;
+      CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);
+      break;
+    }
+
     case PLUGIN_GET_DEVICEGPIONAMES: {
-      // No pins selectable, all hard coded
+      serialHelper_getGpioNames(event);
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+    {
+      if ((CONFIG_PIN1 == -1) && (CONFIG_PIN2 == -1) && (CONFIG_PORT == 0)) {
+        CONFIG_PIN1 = 3; // Former default HWSerial0
+        CONFIG_PIN2 = 1;
+        CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);
+      }
+      string += serialHelper_getSerialTypeLabel(event);
+      success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      addFormNumericBox(F("U Ref"), F("p077_URef"), PCONFIG(0));
+      addFormNumericBox(F("U Ref"), F("URef"), PCONFIG(0));
       addUnit(F("uSec"));
 
-      addFormNumericBox(F("I Ref"), F("p077_IRef"), PCONFIG(1));
+      addFormNumericBox(F("I Ref"), F("IRef"), PCONFIG(1));
       addUnit(F("uSec"));
 
-      addFormNumericBox(F("P Ref"), F("p077_PRef"), PCONFIG(2));
+      addFormNumericBox(F("P Ref"), F("PRef"), PCONFIG(2));
       addUnit(F("uSec"));
       addFormNote(F("Use 0 to read values stored on chip / default values"));
 
@@ -76,75 +108,62 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      PCONFIG(0) = getFormItemInt(F("p077_URef"));
-      PCONFIG(1) = getFormItemInt(F("p077_IRef"));
-      PCONFIG(2) = getFormItemInt(F("p077_PRef"));
+      PCONFIG(0) = getFormItemInt(F("URef"));
+      PCONFIG(1) = getFormItemInt(F("IRef"));
+      PCONFIG(2) = getFormItemInt(F("PRef"));
       success    = true;
       break;
     }
 
     case PLUGIN_INIT: {
+      if ((CONFIG_PIN1 == -1) && (CONFIG_PIN2 == -1) && (CONFIG_PORT == 0)) {
+        CONFIG_PIN1 = 3; // Former default HWSerial0
+        CONFIG_PIN2 = 1;
+        CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial0);
+      }
+      const int16_t serial_rx      = CONFIG_PIN1;
+      const int16_t serial_tx      = CONFIG_PIN2;
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
+      P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (PCONFIG(0) == 0) { PCONFIG(0) = HLW_UREF_PULSE; }
+      if (nullptr == P077_data) {
+        return success;
+      }
 
-      if (PCONFIG(1) == 0) { PCONFIG(1) = HLW_IREF_PULSE; }
+      if (PCONFIG(0) == 0) { PCONFIG(0) = CSE_UREF_PULSE; }
 
-      if (PCONFIG(2) == 0) { PCONFIG(2) = HLW_PREF_PULSE; }
+      if (PCONFIG(1) == 0) { PCONFIG(1) = CSE_IREF_PULSE; }
 
-      Settings.UseSerial = true; // Enable Serial port
-      disableSerialLog();        // disable logging on serial port (used for CSE7766
-                                 // communication)
-      Settings.BaudRate = 4800;  // set BaudRate for CSE7766
-      Serial.flush();
-      Serial.begin(Settings.BaudRate, SERIAL_8E1);
-      success = true;
+      if (PCONFIG(2) == 0) { PCONFIG(2) = CSE_PREF_PULSE; }
+
+      if (P077_data->init(port, serial_rx, serial_tx, 4800, static_cast<uint8_t>(SERIAL_8E1))) {
+        success = true;
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
+      }
+
       break;
     }
-
-    /* currently not needed!
-       case PLUGIN_TEN_PER_SECOND:
-          {
-
-            long cf_frequency = 0;
-
-            if (CSE_PULSES_NOT_INITIALIZED == cf_pulses_last_time) {
-              cf_pulses_last_time = cf_pulses;  // Init after restart
-            } else {
-              if (cf_pulses < cf_pulses_last_time) {  // Rolled over after 65535
-       pulses
-                cf_frequency = (65536 - cf_pulses_last_time) + cf_pulses;
-              } else {
-                cf_frequency = cf_pulses - cf_pulses_last_time;
-              }
-              if (cf_frequency)  {
-                cf_pulses_last_time = cf_pulses;
-       //           energy_kWhtoday_delta += (cf_frequency *
-       energy_power_calibration) / 36;
-       //           EnergyUpdateToday();
-              }
-            }
-            success = true;
-            break;
-          }
-     */
 
     case PLUGIN_READ: {
-    # ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: plugin read"));
-    # endif // ifndef BUILD_NO_DEBUG
+      # endif // ifndef BUILD_NO_DEBUG
 
-      //        sendData(event);
-      //        Variables set in PLUGIN_SERIAL_IN as soon as there are new values!
-      //        UserVar[event->BaseVarIndex] = energy_voltage;
-      //        UserVar[event->BaseVarIndex + 1] = energy_power;
-      //        UserVar[event->BaseVarIndex + 2] = energy_current;
-      //        UserVar[event->BaseVarIndex + 3] = cf_pulses;
+      // Variables set in PLUGIN_SERIAL_IN/PLUGIN_TEN_PER_SECOND as soon as there are new values!
       success = true;
       break;
     }
 
-    case PLUGIN_SERIAL_IN: {
+    case PLUGIN_SERIAL_IN:      // When using HWSerial0
+    case PLUGIN_TEN_PER_SECOND: // When using other than HWSerial0
+    {
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+
+      if (((ESPEasySerialPort::serial0 == port) && (PLUGIN_TEN_PER_SECOND == function)) || // Negative checks...
+          ((ESPEasySerialPort::serial0 != port) && (PLUGIN_SERIAL_IN == function))) {
+        return success;
+      }
       P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P077_data) {
@@ -152,12 +171,13 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
 
         /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
         if (P077_data->processSerialData()) {
-        # ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
-        # endif
+          # endif // ifndef BUILD_NO_DEBUG
 
           if (CseReceived(event)) {
             # ifndef BUILD_NO_DEBUG
+
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
               String log = F("CSE: adjustment ");
               log += P077_data->adjustment;
@@ -199,7 +219,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           UserVar[event->BaseVarIndex + 2] = P077_data->energy_current;
           UserVar[event->BaseVarIndex + 3] = P077_data->cf_pulses;
 
-# ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("CSE: time ");
@@ -214,16 +234,26 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
             log += '/';
             log += P077_data->count_max;
             log += '/';
-            log += Serial.available();
+            log += P077_data->serial_Available();
             addLogMove(LOG_LEVEL_DEBUG, log);
             log  = F("CSE: nr ");
             log += P077_data->count_pkt;
             addLogMove(LOG_LEVEL_DEBUG, log);
           }
-# endif // ifndef BUILD_NO_DEBUG
+          # endif // ifndef BUILD_NO_DEBUG
           P077_data->t_all       = 0;
           P077_data->count_bytes = 0;
         }
+      }
+      break;
+    }
+
+    case PLUGIN_WRITE:
+    {
+      P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P077_data) {
+        success = P077_data->plugin_write(event, string);
       }
       break;
     }

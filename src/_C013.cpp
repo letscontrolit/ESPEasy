@@ -63,6 +63,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
       C013_SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
+      success = true;
       break;
     }
 

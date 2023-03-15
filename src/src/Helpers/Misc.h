@@ -150,6 +150,11 @@ void HSV2RGBW(float H,
               float I,
               int   rgbw[4]);
 
+void RGB2HSV(uint8_t r,
+             uint8_t g,
+             uint8_t b,
+             float   hsv[3]);
+
 // Simple bitwise get/set functions
 
 uint8_t get8BitFromUL(uint32_t number,

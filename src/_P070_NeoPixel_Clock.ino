@@ -145,7 +145,7 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
 
       P070_data_struct *P070_data = static_cast<P070_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P070_data) && (command.equals(F("clock")))) {
+      if ((nullptr != P070_data) && (equals(command, F("clock")))) {
         int val_Mode;
 
         if (validIntFromString(param1, val_Mode)) {

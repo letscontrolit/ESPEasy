@@ -81,7 +81,7 @@
 struct P052_data_struct : public PluginTaskData_base {
   P052_data_struct() = default;
 
-  ~P052_data_struct();
+  virtual ~P052_data_struct();
 
   void reset();
 

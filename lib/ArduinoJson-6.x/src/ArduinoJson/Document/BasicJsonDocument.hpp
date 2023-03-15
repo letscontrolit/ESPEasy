@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -14,7 +14,6 @@ template <typename TAllocator>
 class AllocatorOwner {
  public:
   AllocatorOwner() {}
-  AllocatorOwner(const AllocatorOwner& src) : _allocator(src._allocator) {}
   AllocatorOwner(TAllocator a) : _allocator(a) {}
 
   void* allocate(size_t size) {
@@ -98,7 +97,9 @@ class BasicJsonDocument : AllocatorOwner<TAllocator>, public JsonDocument {
 
   template <typename T>
   BasicJsonDocument& operator=(const T& src) {
-    reallocPoolIfTooSmall(src.memoryUsage());
+    size_t requiredSize = src.memoryUsage();
+    if (requiredSize > capacity())
+      reallocPool(requiredSize);
     set(src);
     return *this;
   }
@@ -136,8 +137,9 @@ class BasicJsonDocument : AllocatorOwner<TAllocator>, public JsonDocument {
     return MemoryPool(reinterpret_cast<char*>(this->allocate(capa)), capa);
   }
 
-  void reallocPoolIfTooSmall(size_t requiredSize) {
-    if (requiredSize <= capacity())
+  void reallocPool(size_t requiredSize) {
+    size_t capa = addPadding(requiredSize);
+    if (capa == _pool.capacity())
       return;
     freePool();
     replacePool(allocPool(addPadding(requiredSize)));
@@ -148,7 +150,7 @@ class BasicJsonDocument : AllocatorOwner<TAllocator>, public JsonDocument {
   }
 
   void copyAssignFrom(const JsonDocument& src) {
-    reallocPoolIfTooSmall(src.capacity());
+    reallocPool(src.capacity());
     set(src);
   }
 

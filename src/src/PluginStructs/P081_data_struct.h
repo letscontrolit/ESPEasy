@@ -25,6 +25,7 @@ extern "C"
 struct P081_data_struct : public PluginTaskData_base {
   P081_data_struct() = delete;
   explicit P081_data_struct(const String& expression);
+  virtual ~P081_data_struct() = default;
 
   bool isInitialized() const {
     return _initialized;

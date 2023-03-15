@@ -73,7 +73,12 @@ boolean Plugin_093(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_INIT: {
       const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P093_data_struct(port, CONFIG_PIN1, CONFIG_PIN2, P093_REQUEST_STATUS));
-      success = getPluginTaskData(event->TaskIndex) != nullptr;
+      P093_data_struct *heatPump = static_cast<P093_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (heatPump != nullptr) {
+        heatPump->init();
+        success = true;
+      }
       break;
     }
 

@@ -44,7 +44,7 @@
 
 
 struct ModbusRTU_struct  {
-  ModbusRTU_struct();
+  ModbusRTU_struct() = default;
 
   ~ModbusRTU_struct();
 

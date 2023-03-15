@@ -1,12 +1,12 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
 #if defined(__clang__)
-#define CONFLICTS_WITH_BUILTIN_OPERATOR
+#  define CONFLICTS_WITH_BUILTIN_OPERATOR
 #endif
 
 TEST_CASE("unsigned char[]") {

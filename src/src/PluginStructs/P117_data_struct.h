@@ -19,6 +19,7 @@ public:
                    uint16_t interval);
 
   P117_data_struct() = delete;
+  virtual ~P117_data_struct() = default;
 
   uint32_t read_sensor(uint16_t *scd30_CO2,
                        uint16_t *scd30_CO2EAvg,
@@ -59,8 +60,8 @@ private:
 
   bool init_sensor();
 
-  uint16_t _altitude;
-  float    _temperatureOffset;
+  const uint16_t _altitude;
+  const float    _temperatureOffset;
   bool     _autoCalibration;
   uint16_t _interval;
 

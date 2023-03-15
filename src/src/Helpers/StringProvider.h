@@ -6,13 +6,18 @@
 struct LabelType {
   enum Enum : uint8_t {
     UNIT_NR,
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    UNIT_NR_0,
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     UNIT_NAME,
     HOST_NAME,
 
     LOCAL_TIME,
     TIME_SOURCE,
     TIME_WANDER,
+    #if FEATURE_EXT_RTC
     EXT_RTC_UTC_TIME,
+    #endif
     UPTIME,
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
@@ -60,6 +65,9 @@ struct LabelType {
     TASKVALUESET_ALL_PLUGINS,
     ALLOW_OTA_UNLIMITED,
     ENABLE_CLEAR_HUNG_I2C_BUS,
+    #if FEATURE_I2C_DEVICE_CHECK
+    ENABLE_I2C_DEVICE_CHECK,
+    #endif // if FEATURE_I2C_DEVICE_CHECK
 #ifndef BUILD_NO_RAM_TRACKER
     ENABLE_RAM_TRACKING,
 #endif

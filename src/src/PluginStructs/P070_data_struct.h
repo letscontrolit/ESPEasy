@@ -13,7 +13,7 @@
 struct P070_data_struct : public PluginTaskData_base {
   P070_data_struct() = default;
 
-  ~P070_data_struct();
+  virtual ~P070_data_struct();
 
   void reset();
 

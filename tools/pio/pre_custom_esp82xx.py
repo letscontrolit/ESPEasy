@@ -42,15 +42,16 @@ else:
 #    "-DUSES_P080",  # Dallas iButton
     "-DUSES_P081",  # Cron
     "-DUSES_P082",  # GPS
-    "-DUSES_P085",  # AcuDC24x
+#   "-DUSES_P085",  # AcuDC24x
     "-DUSES_P098",  # PWM motor
-
-    "-DUSES_P100",  # Pulse Counter - DS2423
+#   "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
 #   "-DUSES_P094",  # CUL Reader
 #   "-DUSES_P095",  # TFT ILI9341
 #    "-DUSES_P106",  # BME680
 #    "-DUSES_P107",  # SI1145 UV index
+
+    "-DUSES_P146",  # Cache Reader
 
     "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483

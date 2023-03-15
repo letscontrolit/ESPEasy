@@ -20,7 +20,7 @@ public:
   P008_data_struct(struct EventStruct *event);
 
   P008_data_struct() = delete;
-  ~P008_data_struct();
+  virtual ~P008_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_once_a_second(struct EventStruct *event);

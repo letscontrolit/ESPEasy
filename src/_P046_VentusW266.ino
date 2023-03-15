@@ -309,6 +309,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             break;
           }
         }
+        success = (nullptr != P046_data);
         break;
       }
 

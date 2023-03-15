@@ -36,7 +36,13 @@ struct ProvisioningStruct
 
 typedef std::shared_ptr<ProvisioningStruct> ProvisioningStruct_ptr_type;
 # define MakeProvisioningSettings(T) ProvisioningStruct_ptr_type ProvisioningStruct_ptr(new (std::nothrow)  ProvisioningStruct()); \
-  ProvisioningStruct& T = *ProvisioningStruct_ptr;
+  ProvisioningStruct& T = *ProvisioningStruct_ptr;  \
+  if (ProvisioningStruct_ptr) { memset(&T, 0, sizeof(ProvisioningStruct)); }
+
+// Need to make sure every byte between the members is also zero
+// Otherwise the checksum will fail and settings will be saved too often.
+// The memset above is just for this.
+
 
 // Check to see if MakeProvisioningSettings was successful
 # define AllocatedProvisioningSettings() (ProvisioningStruct_ptr.get() != nullptr)

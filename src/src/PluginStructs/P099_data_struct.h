@@ -6,30 +6,31 @@
 
 #ifdef USES_P099
 
-#include <XPT2046_Touchscreen.h>
+# include <XPT2046_Touchscreen.h>
 
 // #define PLUGIN_099_DEBUG    // Additional debugging information
 
 // Define default values for both ESP32/lolin32 and D1 Mini
-#ifdef ESP32
-  #define P099_TS_CS 12
-#else // ESP8266/ESP8285
-  #define P099_TS_CS  0 // D3
-#endif // ESP32
+# ifdef ESP32
+  #  define P099_TS_CS 12
+# else // ESP8266/ESP8285
+  #  define P099_TS_CS  0            // D3
+# endif // ESP32
 
-#define P099_MaxObjectNameLength 15 // 14 character objectnames + terminating 0
-#define P099_MaxObjectCount      40 // This count of touchobjects should be enough, because of limited settings storage, 960 bytes + 8 bytes calibration coordinates
+# define P099_MaxObjectNameLength 15 // 14 character objectnames + terminating 0
+# define P099_MaxObjectCount      40 // This count of touchobjects should be enough, because of limited settings storage, 960 bytes + 8
+                                     // bytes calibration coordinates
 
-#define P099_FLAGS_ON_OFF_BUTTON 0 // TouchObjects.flags On/Off Button function
-#define P099_FLAGS_INVERT_BUTTON 1 // TouchObjects.flags Inverted On/Off Button function
+# define P099_FLAGS_ON_OFF_BUTTON 0  // TouchObjects.flags On/Off Button function
+# define P099_FLAGS_INVERT_BUTTON 1  // TouchObjects.flags Inverted On/Off Button function
 
 // Data structure
 struct P099_data_struct : public PluginTaskData_base
 {
-  P099_data_struct();
-  ~P099_data_struct();
+  P099_data_struct() = default;
+  virtual ~P099_data_struct();
 
-  void      reset();
+  void reset();
   bool init(taskIndex_t taskIndex,
             uint8_t     cs,
             uint8_t     rotation,
@@ -43,32 +44,41 @@ struct P099_data_struct : public PluginTaskData_base
   bool isInitialized() const;
   void loadTouchObjects(taskIndex_t taskIndex);
   bool touched();
-	void readData(uint16_t *x, uint16_t *y, uint8_t *z);
+  void readData(uint16_t *x,
+                uint16_t *y,
+                uint8_t  *z);
   void setRotation(uint8_t n);
   void setRotationFlipped(bool _flipped);
   bool isCalibrationActive();
-  bool isValidAndTouchedTouchObject(uint16_t x, uint16_t y, String &selectedObjectName, int &selectedObjectIndex, uint8_t checkObjectCount);
-  bool setTouchObjectState(const String& touchObject, bool state, uint8_t checkObjectCount);
-  void scaleRawToCalibrated(uint16_t &x, uint16_t &y);
+  bool isValidAndTouchedTouchObject(uint16_t x,
+                                    uint16_t y,
+                                    String & selectedObjectName,
+                                    int    & selectedObjectIndex,
+                                    uint8_t  checkObjectCount);
+  bool setTouchObjectState(const String& touchObject,
+                           bool          state,
+                           uint8_t       checkObjectCount);
+  void scaleRawToCalibrated(uint16_t& x,
+                            uint16_t& y);
 
   // This is initialized by calling init()
-  XPT2046_Touchscreen *touchscreen = nullptr;
-  uint8_t  _address_ts_cs = 0;
-  uint8_t  _rotation = 0;
-  bool     _flipped = 0;
-  uint8_t  _z_treshold = 0;
-  bool     _send_xy = 0;
-  bool     _send_z = 0;
-  bool     _useCalibration = 0;
-  uint16_t _ts_x_res = 0;
-  uint16_t _ts_y_res = 0;
+  XPT2046_Touchscreen *touchscreen     = nullptr;
+  uint8_t              _address_ts_cs  = 0;
+  uint8_t              _rotation       = 0;
+  bool                 _flipped        = 0;
+  uint8_t              _z_treshold     = 0;
+  bool                 _send_xy        = 0;
+  bool                 _send_z         = 0;
+  bool                 _useCalibration = 0;
+  uint16_t             _ts_x_res       = 0;
+  uint16_t             _ts_y_res       = 0;
 
   // This is filled during checking of a touchobject
-  uint32_t SurfaceAreas[P099_MaxObjectCount] = {0};
+  uint32_t SurfaceAreas[P099_MaxObjectCount] = { 0 };
 
   // Counters for debouncing touch button
-  uint32_t TouchTimers[P099_MaxObjectCount] = {0};
-  bool     TouchStates[P099_MaxObjectCount] = {0};
+  uint32_t TouchTimers[P099_MaxObjectCount] = { 0 };
+  bool     TouchStates[P099_MaxObjectCount] = { 0 };
 
   // The settings structures
   // Lets define our own coordinate point
@@ -82,7 +92,7 @@ struct P099_data_struct : public PluginTaskData_base
   struct tP099_Touchobjects
   {
     char        objectname[P099_MaxObjectNameLength] = { 0 };
-    uint8_t        flags = 0;
+    uint8_t     flags                                = 0;
     tP099_Point top_left;
     tP099_Point bottom_right;
   };

@@ -154,7 +154,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   uint8_t timings[16] = { 0 };
 
 
-  noInterrupts();
+  ISR_noInterrupts();
   receive_start = waitState(0) && waitState(1) && waitState(0);
 
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
@@ -238,7 +238,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
       }
     }
   }
-  interrupts();
+  ISR_interrupts();
 
 
   if (!receive_start) {

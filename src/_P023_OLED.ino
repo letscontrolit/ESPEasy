@@ -65,6 +65,15 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = PCONFIG(0);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = F("Btn: ");
@@ -119,7 +128,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
 
       // FIXME TD-er: This is a huge stack allocated object.
-      char   deviceTemplate[P23_Nlines][P23_Nchars];
+      char   deviceTemplate[P23_Nlines][P23_Nchars] = {};
       String error;
 
       for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++) {
@@ -238,21 +247,21 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P023_data) {
         String cmd = parseString(string, 1); // Changes to lowercase
 
-        if (cmd.equals(F("oledcmd"))) {
+        if (equals(cmd, F("oledcmd"))) {
           success = true;
           String param = parseString(string, 2);
 
-          if (param.equals(F("off"))) {
+          if (equals(param, F("off"))) {
             P023_data->displayOff();
           }
-          else if (param.equals(F("on"))) {
+          else if (equals(param, F("on"))) {
             P023_data->displayOn();
           }
-          else if (param.equals(F("clear"))) {
+          else if (equals(param, F("clear"))) {
             P023_data->clearDisplay();
           }
         }
-        else if (cmd.equals(F("oled"))) {
+        else if (equals(cmd, F("oled"))) {
           success = true;
           String text = parseStringToEndKeepCase(string, 4);
           text = P023_data->parseTemplate(text, 16);

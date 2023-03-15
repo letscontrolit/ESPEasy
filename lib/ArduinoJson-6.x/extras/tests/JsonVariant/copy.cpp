@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -82,5 +82,14 @@ TEST_CASE("JsonVariant::set(JsonVariant)") {
 
     REQUIRE(doc1.memoryUsage() == JSON_STRING_SIZE(7));
     REQUIRE(doc2.memoryUsage() == JSON_STRING_SIZE(7));
+  }
+
+  SECTION("destination is unbound") {
+    JsonVariant unboundVariant;
+
+    unboundVariant.set(var1);
+
+    REQUIRE(unboundVariant.isUnbound());
+    REQUIRE(unboundVariant.isNull());
   }
 }

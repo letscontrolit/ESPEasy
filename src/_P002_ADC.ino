@@ -35,7 +35,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].PluginLogsPeaks    = true;
+      Device[deviceCount].TaskLogsOwnPeaks   = true;
       break;
     }
 
@@ -60,9 +60,10 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         P002_data->webformLoad(event);
         success = true;
       } else {
-        P002_data = new (std::nothrow) P002_data_struct(event);
+        P002_data = new (std::nothrow) P002_data_struct();
 
         if (nullptr != P002_data) {
+          P002_data->init(event);
           P002_data->webformLoad(event);
           success = true;
           delete P002_data;
@@ -94,11 +95,14 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct(event));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct());
       P002_data_struct *P002_data =
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P002_data);
+      if (nullptr != P002_data) {
+        success = true;
+        P002_data->init(event);
+      }
       break;
     }
     case PLUGIN_TEN_PER_SECOND:
@@ -147,6 +151,20 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         success = false;
       }
 
+      break;
+    }
+
+    case PLUGIN_SET_CONFIG:
+    {
+      P002_data_struct *P002_data =
+        static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (P002_data != nullptr) {
+        success = P002_data->plugin_set_config(event, string);
+        if (success) {
+          P002_data->init(event);
+        }
+      }
       break;
     }
   }

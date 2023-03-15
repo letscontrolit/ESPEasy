@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -9,40 +9,26 @@
 
 namespace ARDUINOJSON_NAMESPACE {
 
-template <typename TAdaptedString>
-inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool) {
+struct SlotKeySetter {
+  SlotKeySetter(VariantSlot* instance) : _instance(instance) {}
+
+  template <typename TStoredString>
+  void operator()(TStoredString s) {
+    if (!s)
+      return;
+    ARDUINOJSON_ASSERT(_instance != 0);
+    _instance->setKey(s);
+  }
+
+  VariantSlot* _instance;
+};
+
+template <typename TAdaptedString, typename TStoragePolicy>
+inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool,
+                       TStoragePolicy storage) {
   if (!var)
     return false;
-  return slotSetKey(var, key, pool, typename TAdaptedString::storage_policy());
-}
-
-template <typename TAdaptedString>
-inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool,
-                       storage_policies::decide_at_runtime) {
-  if (key.isStatic()) {
-    return slotSetKey(var, key, pool, storage_policies::store_by_address());
-  } else {
-    return slotSetKey(var, key, pool, storage_policies::store_by_copy());
-  }
-}
-
-template <typename TAdaptedString>
-inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool*,
-                       storage_policies::store_by_address) {
-  ARDUINOJSON_ASSERT(var);
-  var->setKey(key.data(), storage_policies::store_by_address());
-  return true;
-}
-
-template <typename TAdaptedString>
-inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool,
-                       storage_policies::store_by_copy) {
-  const char* dup = pool->saveString(key);
-  if (!dup)
-    return false;
-  ARDUINOJSON_ASSERT(var);
-  var->setKey(dup, storage_policies::store_by_copy());
-  return true;
+  return storage.store(key, pool, SlotKeySetter(var));
 }
 
 inline size_t slotSize(const VariantSlot* var) {

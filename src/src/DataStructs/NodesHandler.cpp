@@ -10,6 +10,10 @@
 #include "../Globals/ESPEasy_now_state.h"
 #endif
 
+#if FEATURE_MQTT
+#include "../ESPEasyCore/Controller.h"
+#endif
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -19,7 +23,6 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PeriodicalActions.h"
@@ -370,7 +373,7 @@ void NodesHandler::updateThisNode() {
 
   thisNode.unit  = Settings.Unit;
   thisNode.build = Settings.Build;
-  memcpy(thisNode.nodeName, Settings.Name, 25);
+  memcpy(thisNode.nodeName, Settings.getName().c_str(), 25);
   thisNode.nodeType = NODE_TYPE_ID;
 
   thisNode.webgui_portnumber = Settings.WebserverPort;

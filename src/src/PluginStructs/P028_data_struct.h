@@ -119,6 +119,8 @@ struct P028_data_struct : public PluginTaskData_base {
 
   P028_data_struct(uint8_t addr,
                    float   tempOffset);
+  P028_data_struct() = delete;
+  virtual ~P028_data_struct() = default;
 
 private:
 

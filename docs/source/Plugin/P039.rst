@@ -343,6 +343,14 @@ For LM7x device family you have multiple options to be configured.
 .. note:: At the given point in time LM7x device family is only supported experimental. Communication is tested to be present, but correct reading of values is not proven, due to missing hardware for testing.
 
 
+Value validation
+----------------
+
+.. image:: P039_LowTemperatureThreshold.png
+  :width: 600
+
+* **Low temperature threshold**: To avoid sending out unrealistic temperatures when the sensor is still initializing and not yet returning valid temperatures, a Low threshold can be configured, that will result in lower values *not* being seen (and sent to controllers) as valid. Default is 0 K (-273.15°C) and the max. allowed input is 1000.0°C
+
 Generic Plugin Configuration
 ----------------------------
 

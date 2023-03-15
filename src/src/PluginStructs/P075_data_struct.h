@@ -34,7 +34,8 @@ struct P075_data_struct : public PluginTaskData_base {
                    int               rx,
                    int               tx,
                    uint32_t          baud);
-  ~P075_data_struct();
+  P075_data_struct() = delete;
+  virtual ~P075_data_struct();
 
   void   loadDisplayLines(taskIndex_t taskIndex);
 

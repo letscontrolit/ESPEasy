@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -18,8 +18,7 @@ static void testCodepoint(uint32_t codepoint, std::string expected) {
   CAPTURE(codepoint);
   Utf8::encodeCodepoint(codepoint, str);
 
-  str.append('\0');
-  REQUIRE(str.c_str() == expected);
+  REQUIRE(str.str().c_str() == expected);
 }
 
 TEST_CASE("Utf8::encodeCodepoint()") {

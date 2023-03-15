@@ -193,7 +193,7 @@ public:
 
   CC1101(int8_t CSpin   = PIN_SPI_SS,
          int8_t MISOpin = MISO);
-  ~CC1101();
+  virtual ~CC1101();
 
   // spi
   void    spi_waitMiso();

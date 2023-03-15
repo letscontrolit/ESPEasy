@@ -48,6 +48,8 @@ public:
   P061_data_struct(uint8_t i2c_addr,
                    uint8_t keypadType)
     : _i2c_addr(i2c_addr), _keypadType(keypadType) {}
+  P061_data_struct() = delete;
+  virtual ~P061_data_struct() = default;
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_fifty_per_second(struct EventStruct *event);

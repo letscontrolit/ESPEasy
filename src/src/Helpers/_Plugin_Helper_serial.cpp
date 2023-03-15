@@ -157,15 +157,23 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
   #ifdef ESP8266
 
   // Script to show GPIO pins for SoftwareSerial or I2C addresses for the I2C to UART bridge
-  html_add_script(F(
-                    "function serialPortChanged(elem) {var style = elem.value == 6 ? '' : 'none';var i2cstyle = elem.value == 1 ? '' : 'none';document.getElementById('tr_taskdevicepin1').style.display = style;document.getElementById('tr_taskdevicepin2').style.display = style;document.getElementById('tr_i2cuart_addr').style.display = i2cstyle;document.getElementById('tr_i2cuart_ch').style.display = i2cstyle;}"),
+                    // "function serialPortChanged(elem) {var style = elem.value == 6 ? '' : 'none';var i2cstyle = elem.value == 1 ? '' : 'none';document.getElementById('tr_taskdevicepin1').style.display = style;document.getElementById('tr_taskdevicepin2').style.display = style;document.getElementById('tr_i2cuart_addr').style.display = i2cstyle;document.getElementById('tr_i2cuart_ch').style.display = i2cstyle;}"),
+  html_add_script(F("function serialPortChanged(e){var t=6==e.value?'':'none',l=1==e.value?'':'none';"
+                    "document.getElementById('tr_taskdevicepin1').style.display=t,"
+                    "document.getElementById('tr_taskdevicepin2').style.display=t,"
+                    "document.getElementById('tr_i2cuart_addr').style.display=l,"
+                    "document.getElementById('tr_i2cuart_ch').style.display=l}"),
                   false);
   #endif // ifdef ESP8266
   #ifdef ESP32
 
   // Script to show GPIO pins for HW serial ports or I2C addresses for the I2C to UART bridge
-  html_add_script(F(
-                    "function serialPortChanged(elem) {var style = (elem.value == 2 || elem.value == 4 || elem.value == 5) ? '' : 'none';var i2cstyle = elem.value == 1 ? '' : 'none';document.getElementById('tr_taskdevicepin1').style.display = style;document.getElementById('tr_taskdevicepin2').style.display = style;document.getElementById('tr_i2cuart_addr').style.display = i2cstyle;document.getElementById('tr_i2cuart_ch').style.display = i2cstyle;}"),
+                    // "function serialPortChanged(elem) {var style = (elem.value == 2 || elem.value == 4 || elem.value == 5) ? '' : 'none';var i2cstyle = elem.value == 1 ? '' : 'none';document.getElementById('tr_taskdevicepin1').style.display = style;document.getElementById('tr_taskdevicepin2').style.display = style;document.getElementById('tr_i2cuart_addr').style.display = i2cstyle;document.getElementById('tr_i2cuart_ch').style.display = i2cstyle;}"),
+  html_add_script(F("function serialPortChanged(e){var t=2==e.value||4==e.value||5==e.value?'':'none',l=1==e.value?'':'none';"
+                    "document.getElementById('tr_taskdevicepin1').style.display=t,"
+                    "document.getElementById('tr_taskdevicepin2').style.display=t,"
+                    "document.getElementById('tr_i2cuart_addr').style.display=l,"
+                    "document.getElementById('tr_i2cuart_ch').style.display=l}"),
                   false);
   #endif // ifdef ESP32
 

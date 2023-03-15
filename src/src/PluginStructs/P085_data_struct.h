@@ -46,9 +46,9 @@
 # include "src/DataStructs/ESPEasy_packed_raw_data.h"
 
 struct P085_data_struct : public PluginTaskData_base {
-  P085_data_struct() {}
+  P085_data_struct() = default;
 
-  ~P085_data_struct();
+  virtual ~P085_data_struct();
 
   void reset();
 

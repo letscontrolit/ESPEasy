@@ -1,8 +1,7 @@
 #include "../PluginStructs/P015_data_struct.h"
 #ifdef USES_P015
 
-#include "../Helpers/Misc.h"
-
+# include "../Helpers/Misc.h"
 
 
 # define TSL2561_CMD           0x80
@@ -108,13 +107,6 @@ bool P015_data_struct::performRead(float& luxVal,
     }
   }
   return success;
-}
-
-bool P015_data_struct::useAutoGain() const
-{
-  const bool autoGain = _gain == P015_AUTO_GAIN || _gain == P015_EXT_AUTO_GAIN;
-
-  return autoGain;
 }
 
 bool P015_data_struct::begin()

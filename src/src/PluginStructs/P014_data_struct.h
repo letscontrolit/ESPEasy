@@ -115,6 +115,8 @@ struct P014_data_struct : public PluginTaskData_base {
 public:
    P014_data_struct();
 
+   virtual ~P014_data_struct() = default;
+
    // Only perform the measurements with big interval to prevent the sensor from warming up.
    //This method runs the FSM step by step on each call
    bool update(uint8_t i2caddr, uint8_t resolution, uint8_t filter_power);

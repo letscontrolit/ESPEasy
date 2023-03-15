@@ -92,9 +92,9 @@ void run_compiletime_checks() {
   check_size<ExtraTaskSettingsStruct,               536u>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
-  check_size<EventStruct,                           116u>(); // Is not stored
+  check_size<EventStruct,                           120u>(); // Is not stored
   #else
-  check_size<EventStruct,                           96u>(); // Is not stored
+  check_size<EventStruct,                           100u>(); // Is not stored
   #endif
 
 
@@ -115,7 +115,7 @@ void run_compiletime_checks() {
   #if FEATURE_ESPEASY_P2P
   check_size<NodeStruct,                            66u>();
   #endif
-  check_size<systemTimerStruct,                     24u>();
+  check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
@@ -125,7 +125,7 @@ void run_compiletime_checks() {
   check_size<C013_SensorDataStruct,                 24u>();
   #endif
   #ifdef USES_C016
-  check_size<C016_queue_element,                    24u>();
+  check_size<C016_binary_element,                   24u>();
   #endif
 
 
@@ -215,13 +215,13 @@ bool SettingsCheck(String& error) {
 
 String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
-  #ifndef LIMIT_BUILD_SIZE
+  #if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
   if (err.length() > 0) return err;
   if (!ExtraTaskSettings.checkUniqueValueNames()) {
     return F("Use unique value names");
   }
   if (!ExtraTaskSettings.checkInvalidCharInNames()) {
-    return F("Invalid character in name. Do not use ',-+/*=^%!#[]{}()' or space.");
+    return concat(F("Invalid character in name. Do not use space or '"), ExtraTaskSettingsStruct::getInvalidCharsForNames()) + '\'';
   }
   String deviceName = ExtraTaskSettings.TaskDeviceName;
   NumericalType detectedType;
@@ -249,7 +249,7 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   }
 
   err += LoadTaskSettings(taskIndex);
-  #endif
+  #endif 
   return err;
 }
 #endif

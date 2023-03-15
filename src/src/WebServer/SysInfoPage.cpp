@@ -45,7 +45,7 @@
 
 #if FEATURE_MQTT
 # include "../Globals/MQTT.h"
-# include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
+# include "../ESPEasyCore/Controller.h" // For finding enabled MQTT controller
 #endif
 
 #ifdef ESP32
@@ -290,9 +290,11 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    #if FEATURE_EXT_RTC
     if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
       addRowLabelValue(LabelType::EXT_RTC_UTC_TIME);
     }
+    #endif
     addRowLabelValue(LabelType::TIME_SOURCE);
     addRowLabelValue(LabelType::TIME_WANDER);
     addUnit(F("ppm"));
@@ -473,9 +475,7 @@ void handle_sysinfo_WiFiSettings() {
   addTableSeparator(F("WiFi Settings"), 2, 3);
   addRowLabelValue(LabelType::FORCE_WIFI_BG);
   addRowLabelValue(LabelType::RESTART_WIFI_LOST_CONN);
-# ifdef ESP8266
   addRowLabelValue(LabelType::FORCE_WIFI_NOSLEEP);
-# endif // ifdef ESP8266
 # ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
 # endif // ifdef SUPPORT_ARP

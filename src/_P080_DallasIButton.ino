@@ -81,7 +81,6 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
       Dallas_plugin_get_addr(addr, event->TaskIndex);
       string  = Dallas_format_address(addr);
@@ -103,8 +102,8 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
         Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
         delay(800); // give it time to do intial conversion
+        success = true;
       }
-      success = true;
       break;
     }
 

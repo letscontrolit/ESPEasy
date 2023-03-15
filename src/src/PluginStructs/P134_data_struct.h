@@ -37,21 +37,20 @@ public:
                    int8_t  config_pin2);
 
   P134_data_struct() = delete;
-  ~P134_data_struct();
+  virtual ~P134_data_struct();
 
   bool plugin_read(struct EventStruct *event);
-  bool isInitialized() {
-    return initialised;
+  bool isInitialized() const {
+    return P134_Serial != nullptr;
   }
 
 private:
 
   ESPeasySerial *P134_Serial = nullptr;
 
-  uint8_t _config_port;
-  int8_t  _config_pin1;
-  int8_t  _config_pin2;
-  bool    initialised = false;
+  const uint8_t _config_port;
+  const int8_t  _config_pin1;
+  const int8_t  _config_pin2;
 };
 
 #endif // ifdef USES_P134

@@ -144,7 +144,7 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
   bool   success = false;
   String cmd     = parseString(string, 1);
 
-  if (cmd.equals(F("state"))) {
+  if (equals(cmd, F("state"))) {
     success = true;
 
     switch (event->Par1) {

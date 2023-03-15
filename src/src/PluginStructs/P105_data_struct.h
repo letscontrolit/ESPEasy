@@ -4,13 +4,13 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P105
 
-enum class AHTx_device_type {
+enum class AHTx_device_type : uint8_t {
   AHT10_DEVICE = 10,
   AHT20_DEVICE = 20,
   AHT21_DEVICE = 21,
 };
 
-enum class AHTx_state {
+enum class AHTx_state : uint8_t {
   AHTx_Uninitialized = 0,
   AHTx_Initialized,
   AHTx_Trigger_measurement,
@@ -24,6 +24,7 @@ public:
 
   AHTx_Device(uint8_t          addr,
               AHTx_device_type type);
+  AHTx_Device() = delete;
 
   const __FlashStringHelper* getDeviceName() const;
 
@@ -45,13 +46,15 @@ protected:
 
   const uint8_t i2cAddress;
   const AHTx_device_type device_type;
-  float last_hum_val;
-  float last_temp_val;
+  float last_hum_val  = 0.0f;
+  float last_temp_val = 0.0f;
 };
 
 struct P105_data_struct : public PluginTaskData_base {
   P105_data_struct(uint8_t          addr,
                    AHTx_device_type dev);
+  P105_data_struct()          = delete;
+  virtual ~P105_data_struct() = default;
 
   inline String getDeviceName() const {
     return device.getDeviceName();

@@ -76,6 +76,15 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x38;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper * optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
@@ -95,13 +104,12 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      bool status = VEML6070_Init(PCONFIG(0));
+      success = VEML6070_Init(PCONFIG(0));
 
-      if (!status) {
+      if (!success) {
         addLog(LOG_LEVEL_INFO, F("VEML6070: Not available!"));
       }
 
-      success = status;
       break;
     }
 

@@ -394,7 +394,7 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
   volatile P098_limit_switch_state& switch_state,
   int                               position)
 {
-  noInterrupts();
+  ISR_noInterrupts();
   {
     // Don't call gpio_config.readState() here
     const bool pinState        = gpio_config.inverted ? digitalRead(gpio_config.gpio) == 0 : digitalRead(gpio_config.gpio) != 0;
@@ -434,7 +434,7 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
         break;
     }
   }
-  interrupts(); // enable interrupts again.
+  ISR_interrupts(); // enable interrupts again.
 }
 
 void ICACHE_RAM_ATTR P098_data_struct::ISRlimitA(P098_data_struct *self)
@@ -449,7 +449,7 @@ void ICACHE_RAM_ATTR P098_data_struct::ISRlimitB(P098_data_struct *self)
 
 void ICACHE_RAM_ATTR P098_data_struct::ISRencoder(P098_data_struct *self)
 {
-  noInterrupts();
+  ISR_noInterrupts();
 
   switch (self->state) {
     case P098_data_struct::State::RunFwd:
@@ -459,11 +459,11 @@ void ICACHE_RAM_ATTR P098_data_struct::ISRencoder(P098_data_struct *self)
       --(self->position);
       break;
     default:
-      interrupts(); // enable interrupts again.
+      ISR_interrupts(); // enable interrupts again.
       return;
   }
   self->enc_lastChanged_us = getMicros64();
-  interrupts(); // enable interrupts again.
+  ISR_interrupts(); // enable interrupts again.
 }
 
 #endif // ifdef USES_P098

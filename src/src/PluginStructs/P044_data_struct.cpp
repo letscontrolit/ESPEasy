@@ -13,13 +13,15 @@
 #define P044_RX_WAIT              PCONFIG(0)
 
 
-P044_Task::P044_Task() {
-  clearBuffer();
-}
-
 P044_Task::~P044_Task() {
-  stopServer();
-  serialEnd();
+  if (P1GatewayServer != nullptr) {
+    delete P1GatewayServer;
+    P1GatewayServer = nullptr;
+  }
+  if (P1EasySerial != nullptr) {
+    delete P1EasySerial;
+    P1EasySerial = nullptr;
+  }
 }
 
 bool P044_Task::serverActive(WiFiServer *server) {
@@ -276,13 +278,7 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
 #endif
     blinkLED();
 
-    if (Settings.UseRules)
-    {
-      LoadTaskSettings(event->TaskIndex);
-      String eventString = getTaskDeviceName(event->TaskIndex);
-      eventString += F("#Data");
-      eventQueue.addMove(std::move(eventString));
-    }
+    eventQueue.add(event->TaskIndex, F("Data"), EMPTY_STRING);
   } // done
 }
 

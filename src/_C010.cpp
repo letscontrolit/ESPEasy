@@ -57,6 +57,10 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       if (C010_DelayHandler == nullptr) {
         break;
       }
+      if (C010_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
+
       const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       if (valueCount == 0) {
@@ -64,7 +68,9 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
-      C010_queue_element element(event, valueCount);
+
+      std::unique_ptr<C010_queue_element> element(new C010_queue_element(event, valueCount));
+
 
       {
         String pubname;
@@ -86,12 +92,12 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           const String formattedValue = formatUserVar(event, x, isvalid);
 
           if (isvalid) {
-            element.txt[x] = pubname;
-            parseSingleControllerVariable(element.txt[x], event, x, false);
-            element.txt[x].replace(F("%value%"), formattedValue);
+            element->txt[x] = pubname;
+            parseSingleControllerVariable(element->txt[x], event, x, false);
+            element->txt[x].replace(F("%value%"), formattedValue);
 #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
-              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+              addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
 #endif
           }
         }
@@ -122,7 +128,8 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c010_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C010_queue_element& element = static_cast<const C010_queue_element&>(element_base);
 // *INDENT-ON*
   while (element.txt[element.valuesSent].isEmpty()) {
     // A non valid value, which we are not going to send.

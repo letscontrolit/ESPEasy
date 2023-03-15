@@ -52,6 +52,9 @@ P053_data_struct::P053_data_struct(
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   )
   : _taskIndex(TaskIndex),
+  _rxPin(rxPin),
+  _txPin(txPin),
+  _port(port),
   _sensortype(sensortype),
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _oversample(oversample),
@@ -59,16 +62,18 @@ P053_data_struct::P053_data_struct(
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _delay_read_after_wakeup_ms(delay_read_after_wakeup_ms),
   _resetPin(resetPin), _pwrPin(pwrPin)
-{
+{}
+
+bool P053_data_struct::init() {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log.reserve(25);
     log  = F("PMSx003 : config ");
-    log += rxPin;
+    log += _rxPin;
     log += ' ';
-    log += txPin;
+    log += _txPin;
     log += ' ';
     log += _resetPin;
     log += ' ';
@@ -77,12 +82,17 @@ P053_data_struct::P053_data_struct(
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  if (port == ESPEasySerialPort::software) {
+  if (_port == ESPEasySerialPort::software) {
     addLog(LOG_LEVEL_INFO, F("PMSx003 : using software serial"));
   } else {
     addLog(LOG_LEVEL_INFO, F("PMSx003 : using hardware serial"));
   }
-  _easySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
+  if (_easySerial != nullptr) {
+    delete _easySerial;
+    _easySerial = nullptr;
+  }
+    
+  _easySerial = new (std::nothrow) ESPeasySerial(_port, _rxPin, _txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
 
   if (_easySerial != nullptr) {
     _easySerial->begin(9600);
@@ -97,6 +107,7 @@ P053_data_struct::P053_data_struct(
     setActiveReadingMode();
   }
   clearReceivedData();
+  return initialized();
 }
 
 P053_data_struct::~P053_data_struct() {
@@ -200,24 +211,16 @@ bool P053_data_struct::packetAvailable()
 }
 
 # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-void P053_data_struct::sendEvent(const String& baseEvent,
+void P053_data_struct::sendEvent(taskIndex_t TaskIndex,
                                  uint8_t       index) {
   float value = 0.0f;
 
   if (!getValue(index, value)) { return; }
 
-
-  String valueEvent;
-
-  valueEvent.reserve(32);
   const unsigned char nrDecimals = getNrDecimals(index, _oversample);
 
   // Temperature
-  valueEvent  = baseEvent;
-  valueEvent += getEventString(index);
-  valueEvent += '=';
-  valueEvent += toString(value, nrDecimals);
-  eventQueue.addMove(std::move(valueEvent));
+  eventQueue.add(TaskIndex, getEventString(index), toString(value, nrDecimals));
 }
 
 bool P053_data_struct::hasFormaldehyde() const {
@@ -459,12 +462,6 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
       && (GET_PLUGIN_053_EVENT_OUT_SELECTOR != PMSx003_event_datatype::Event_None)
       && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) {
     // Events not applicable to PMS2003 & PMS3003 models
-    String baseEvent;
-    baseEvent.reserve(21);
-    baseEvent  = getTaskDeviceName(event->TaskIndex);
-    baseEvent += '#';
-
-
     // Send out events for those values not present in the task output
     switch (GET_PLUGIN_053_EVENT_OUT_SELECTOR) {
       case PMSx003_event_datatype::Event_None: break;
@@ -472,7 +469,7 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
       {
         // Send all remaining
         for (uint8_t i = PMS_PM1_0_ug_m3_normal; i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
-          sendEvent(baseEvent, i);
+          sendEvent(event->TaskIndex, i);
         }
         break;
       }
@@ -489,7 +486,7 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
         };
 
         for (uint8_t i = 0; i < 6; ++i) {
-          sendEvent(baseEvent, indices[i]);
+          sendEvent(event->TaskIndex, indices[i]);
         }
         break;
       }
@@ -497,7 +494,7 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
       {
         // Thexe values are sequential, so just use a simple for loop.
         for (uint8_t i = PMS_cnt0_3_100ml; i <= PMS_cnt10_0_100ml; ++i) {
-          sendEvent(baseEvent, i);
+          sendEvent(event->TaskIndex, i);
         }
         break;
       }

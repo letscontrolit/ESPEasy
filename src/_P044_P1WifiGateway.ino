@@ -20,8 +20,12 @@
 #define PLUGIN_NAME_044       "Communication - P1 Wifi Gateway"
 
 
-#define P044_WIFI_SERVER_PORT     ExtraTaskSettings.TaskDevicePluginConfigLong[0]
-#define P044_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+#define P044_SET_WIFI_SERVER_PORT     ExtraTaskSettings.TaskDevicePluginConfigLong[0]
+#define P044_SET_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+#define P044_GET_WIFI_SERVER_PORT     Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 0)
+#define P044_GET_BAUDRATE             Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 1)
+
+
 #define P044_RX_WAIT              PCONFIG(0)
 #define P044_SERIAL_CONFIG        PCONFIG(1)
 #define P044_RESET_TARGET_PIN     CONFIG_PIN1
@@ -52,9 +56,8 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        LoadTaskSettings(event->TaskIndex);
-      	addFormNumericBox(F("TCP Port"), F("p044_port"), P044_WIFI_SERVER_PORT, 0);
-      	addFormNumericBox(F("Baud Rate"), F("p044_baud"), P044_BAUDRATE, 0);
+      	addFormNumericBox(F("TCP Port"), F("p044_port"), P044_GET_WIFI_SERVER_PORT, 0);
+      	addFormNumericBox(F("Baud Rate"), F("p044_baud"), P044_GET_BAUDRATE, 0);
 
         uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
         serialHelper_serialconfig_webformLoad(event, serialConfChoice);
@@ -70,9 +73,8 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        LoadTaskSettings(event->TaskIndex);
-        P044_WIFI_SERVER_PORT = getFormItemInt(F("p044_port"));
-        P044_BAUDRATE = getFormItemInt(F("p044_baud"));
+        P044_SET_WIFI_SERVER_PORT = getFormItemInt(F("p044_port"));
+        P044_SET_BAUDRATE = getFormItemInt(F("p044_baud"));
         P044_RX_WAIT = getFormItemInt(F("p044_rxwait"));
         P044_SERIAL_CONFIG = serialHelper_serialconfig_webformSave();
 
@@ -85,8 +87,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
         pinMode(P044_STATUS_LED, OUTPUT);
         digitalWrite(P044_STATUS_LED, 0);
 
-        LoadTaskSettings(event->TaskIndex);
-        if ((P044_WIFI_SERVER_PORT == 0) || (P044_BAUDRATE == 0)) {
+        if ((P044_GET_WIFI_SERVER_PORT == 0) || (P044_GET_BAUDRATE == 0)) {
           clearPluginTaskData(event->TaskIndex);
           break;
         }
@@ -109,8 +110,8 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
         // FIXME TD-er: Must use proper pin settings and standard ESPEasySerial wrapper
         ESPeasySerialType::getSerialTypePins(ESPEasySerialPort::serial0, rxPin, txPin);
         uint8_t serialconfig = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
-        task->serialBegin(ESPEasySerialPort::not_set,  rxPin, txPin, P044_BAUDRATE, serialconfig);
-        task->startServer(P044_WIFI_SERVER_PORT);
+        task->serialBegin(ESPEasySerialPort::not_set,  rxPin, txPin, P044_GET_BAUDRATE, serialconfig);
+        task->startServer(P044_GET_WIFI_SERVER_PORT);
 
         if (!task->isInit()) {
           clearPluginTaskData(event->TaskIndex);
@@ -126,7 +127,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
         }
 
         task->blinkLED();
-        if (P044_BAUDRATE == 115200) {
+        if (P044_GET_BAUDRATE == 115200) {
           #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
           #endif
@@ -144,6 +145,13 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
+        P044_Task *task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != task) {
+          task->stopServer();
+          task->serialEnd();
+        }
+
         success = true;
         break;
       }

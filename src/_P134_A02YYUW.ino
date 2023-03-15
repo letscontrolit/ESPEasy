@@ -77,9 +77,7 @@ boolean Plugin_134(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P134_data_struct(CONFIG_PORT, CONFIG_PIN1, CONFIG_PIN2));
       P134_data_struct *P134_data = static_cast<P134_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P134_data) {
-        success = P134_data->isInitialized();
-      }
+      success = (nullptr != P134_data) && P134_data->isInitialized();
 
       break;
     }

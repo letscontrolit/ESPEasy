@@ -17,7 +17,9 @@
 # define MPU6050_PWR1_CLKSEL_BIT             2
 # define MPU6050_PWR1_CLKSEL_LENGTH          3
 
-P045_data_struct::P045_data_struct(uint8_t i2c_addr) : i2cAddress(i2c_addr)
+P045_data_struct::P045_data_struct(uint8_t i2c_addr) : i2cAddress(i2c_addr) {}
+
+void P045_data_struct::init()
 {
   // Initialize the MPU6050, for details look at the MPU6050 library: MPU6050::Initialize
   writeBits(MPU6050_RA_PWR_MGMT_1,   MPU6050_PWR1_CLKSEL_BIT,     MPU6050_PWR1_CLKSEL_LENGTH,     MPU6050_CLOCK_PLL_XGYRO);

@@ -71,6 +71,8 @@ When receiving multiple-value attributes, like ``"svalue":"28.1;17.8;2;1010.3;0"
 
 When receiving a JSON payload, an event can (in addition to the standard event when receiving a numeric value) be generated for the received Attribute, or for all attributes if no specific attribute is configured.
 
+When receiving a multi-level JSON-object payload, an attribute of the second level can be selected by using the . notation, f.e. when receiving ``{"Time":"2022-11-14T15:24:00","SML":{"Verbrauch":1.474,"Einspeisung":0.770,"Watt":26.000}}``, you can get at the Watt value by using ``SML.Watt`` for attribute. NB: Only 1 sub-level, like in the example, is supported.
+
 The event for such attribute looks like ``<topic>#<attribute>=<attribute_value>``, for example, when, on MQTT Topic ``zigbee2mqtt/eria_dimswitch_1``, receiving this JSON payload: ``{"action":"on","linkquality":5}`` will generate these events: ``zigbee2mqtt/eria_dimswitch_1#action=on`` and ``zigbee2mqtt/eria_dimswitch_1#linkquality=5``. If Mappings are configured, then the value *after* applying the mappings will be used!
 
 In addition, for each accepted JSON attribute also an event is generated, like ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``. If Mappings are used, again the value after mapping is provided.

@@ -33,14 +33,14 @@ public:
   P132_data_struct(struct EventStruct *event);
 
   P132_data_struct() = delete;
-  ~P132_data_struct();
+  virtual ~P132_data_struct() = default;
 
   float getShuntVoltage_mV(byte reg);
   float getBusVoltage_V(byte reg);
 
-private:
+  void  setCalibration_INA3221(struct EventStruct *event);
 
-  void    setCalibration_INA3221(struct EventStruct *event);
+private:
   int16_t getBusVoltage_raw(byte reg);
   int16_t getShuntVoltage_raw(byte reg);
 

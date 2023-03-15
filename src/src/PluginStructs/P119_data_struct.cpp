@@ -43,7 +43,7 @@ bool P119_data_struct::read_sensor() {
       log  = F("ITG3205: i2caddress: 0x");
       log += String(_i2cAddress, HEX);
       log += F(", initialized: ");
-      log += String(initialized() ? F("true") : F("false"));
+      log += initialized() ? F("true") : F("false");
       log += F(", ID=0x");
       log += String(itg3205->readWhoAmI(), HEX);
       addLogMove(LOG_LEVEL_DEBUG, log);
@@ -76,7 +76,7 @@ bool P119_data_struct::read_sensor() {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG) &&
         log.reserve(40)) {
       log  = F("ITG3205: ");
-      log += (_rawData ? F("raw ") : F(""));
+      log += _rawData ? F("raw ") : F("");
       log += F(", X: ");
       log += itg3205->g.x;
       log += F(", Y: ");

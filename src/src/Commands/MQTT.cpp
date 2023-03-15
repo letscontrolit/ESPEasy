@@ -34,10 +34,10 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
   const String topic = parseStringKeepCase(Line, 2);
   const String value = tolerantParseStringKeepCase(Line, 3);
   # ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
+  addLog(LOG_LEVEL_DEBUG, concat(F("Publish: "), topic) + value);
   #endif
 
-  if ((topic.length() > 0) && (value.length() > 0)) {
+  if (!topic.isEmpty()) {
 
     bool mqtt_retainFlag;
     {

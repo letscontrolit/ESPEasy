@@ -23,7 +23,8 @@
 
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
-#define MQTT_MAX_PACKET_SIZE 1024 // need to fix this here, because this define cannot be overruled within the Arduino sketch...
+  // need to fix this here, because this define cannot be overruled within the Arduino sketch...
+  #define MQTT_MAX_PACKET_SIZE 1024
 #endif
 
 // MQTT_KEEPALIVE : keepAlive interval in Seconds
@@ -109,18 +110,25 @@ private:
    uint16_t readPacket(uint8_t*);
    boolean readByte(uint8_t * result);
    boolean readByte(uint8_t * result, uint16_t * index);
-   boolean write(uint8_t header, uint8_t* buf, uint16_t length);
+   boolean write(uint8_t header, uint8_t* buf, uint32_t length);
    uint16_t writeString(const char* string, uint8_t* buf, uint16_t pos);
    // Build up the header ready to send
    // Returns the size of the header
    // Note: the header is built at the end of the first MQTT_MAX_HEADER_SIZE bytes, so will start
    //       (MQTT_MAX_HEADER_SIZE - <returned size>) bytes into the buffer
-   size_t buildHeader(uint8_t header, uint8_t* buf, uint16_t length);
+   size_t buildHeader(uint8_t header, uint8_t* buf, uint32_t length);
+
+   // Add to buffer and flush if full (only to be used with beginPublish/endPublish)
+   size_t appendBuffer(uint8_t data);
+   size_t appendBuffer(const uint8_t *data, size_t size);
+   size_t flushBuffer();
+
    IPAddress ip;
    String domain;
    uint16_t port;
    Stream* stream;
    int _state;
+   int _bufferWritePos = 0;
 public:
    PubSubClient();
    PubSubClient(Client& client);
@@ -174,6 +182,10 @@ public:
    // Write size bytes from buffer into the payload (only to be used with beginPublish/endPublish)
    // Returns the number of bytes written
    virtual size_t write(const uint8_t *buffer, size_t size);
+   // Write string into the payload (only to be used with beginPublish/endPublish)
+   size_t write(const String& message);
+
+
    boolean subscribe(const char* topic);
    boolean subscribe(const char* topic, uint8_t qos);
    boolean unsubscribe(const char* topic);

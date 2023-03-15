@@ -10,7 +10,7 @@
     "
     | ``[<taskname>#GetTempOffset]``
     ","
-    | Returns the current Temperature offset setting of the sensor in degrees Celcius. Includes by default 2 decimal positions, that can be adjusted using :ref:`Rules: Formatting refered values <Formatting values>`.
+    | Returns the current Temperature offset setting of the sensor in degrees Celcius. Includes by default 2 decimal positions, that can be adjusted using :ref:`Rules: Formatting referred values <Formatting values>`.
     "
     "
     | ``[<taskname>#GetDataReady]``

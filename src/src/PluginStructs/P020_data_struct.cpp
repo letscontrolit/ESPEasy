@@ -15,12 +15,18 @@
 
 
 P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
-  clearBuffer();
+  serial_buffer.reserve(P020_DATAGRAM_MAX_SIZE);
 }
 
 P020_Task::~P020_Task() {
-  stopServer();
-  serialEnd();
+  if (ser2netServer != nullptr) {
+    delete ser2netServer;
+    ser2netServer = nullptr;
+  }
+  if (ser2netSerial != nullptr) {
+    delete ser2netSerial;
+    ser2netSerial = nullptr;
+  }
 }
 
 bool P020_Task::serverActive(WiFiServer *server) {
@@ -288,16 +294,7 @@ bool P020_Task::isInit() const {
 
 void P020_Task::sendConnectedEvent(bool connected)
 {
-  if (Settings.UseRules)
-  {
-    String RuleEvent;
-    RuleEvent += getTaskDeviceName(_taskIndex);
-    RuleEvent += '#';
-    RuleEvent += F("Client");
-    RuleEvent += '=';
-    RuleEvent += (connected ? 1 : 0);
-    eventQueue.addMove(std::move(RuleEvent));
-  }
+  eventQueue.add(_taskIndex, F("Client"), (connected ? 1 : 0));
 }
 
 #endif // ifdef USES_P020

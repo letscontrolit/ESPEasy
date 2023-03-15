@@ -4,7 +4,7 @@
 
 
 P108_data_struct::~P108_data_struct() {
-  reset();
+  modbus.reset();
 }
 
 void P108_data_struct::reset() {

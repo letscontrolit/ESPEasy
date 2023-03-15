@@ -33,7 +33,7 @@ public:
                    bool                initReset);
 
   P133_data_struct() = delete;
-  ~P133_data_struct();
+  virtual ~P133_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_read(struct EventStruct *event);
@@ -55,12 +55,12 @@ private:
 
   ltr390_mode_t mode = LTR390_MODE_UVS;
 
-  P133_selectMode_e   _selectMode;
-  ltr390_gain_t       _uvGain;
-  ltr390_resolution_t _uvResolution;
-  ltr390_gain_t       _alsGain;
-  ltr390_resolution_t _alsResolution;
-  bool                _initReset;
+  const P133_selectMode_e   _selectMode;
+  const ltr390_gain_t       _uvGain;
+  const ltr390_resolution_t _uvResolution;
+  const ltr390_gain_t       _alsGain;
+  const ltr390_resolution_t _alsResolution;
+  const bool                _initReset;
 };
 
 #endif // ifdef USES_P133

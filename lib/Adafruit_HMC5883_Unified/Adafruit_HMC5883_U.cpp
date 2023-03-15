@@ -25,18 +25,9 @@
  * BSD license, all text above must be included in any redistribution
  */
 
-#if ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
-#ifdef __AVR_ATtiny85__
-#include "TinyWireM.h"
-#define Wire TinyWireM
-#else
 #include <Wire.h>
-#endif
 
 #include <limits.h>
 
@@ -59,13 +50,8 @@ static float _hmc5883_Gauss_LSB_Z = 980.0F;   // Varies with gain
 /**************************************************************************/
 void Adafruit_HMC5883_Unified::write8(byte address, byte reg, byte value) {
   Wire.beginTransmission(address);
-#if ARDUINO >= 100
   Wire.write((uint8_t)reg);
   Wire.write((uint8_t)value);
-#else
-  Wire.send(reg);
-  Wire.send(value);
-#endif
   Wire.endTransmission();
 }
 
@@ -78,18 +64,10 @@ byte Adafruit_HMC5883_Unified::read8(byte address, byte reg) {
   byte value;
 
   Wire.beginTransmission(address);
-#if ARDUINO >= 100
   Wire.write((uint8_t)reg);
-#else
-  Wire.send(reg);
-#endif
   Wire.endTransmission();
   Wire.requestFrom(address, (byte)1);
-#if ARDUINO >= 100
   value = Wire.read();
-#else
-  value = Wire.receive();
-#endif
   Wire.endTransmission();
 
   return value;
@@ -103,34 +81,25 @@ byte Adafruit_HMC5883_Unified::read8(byte address, byte reg) {
 void Adafruit_HMC5883_Unified::read() {
   // Read the magnetometer
   Wire.beginTransmission((byte)HMC5883_ADDRESS_MAG);
-#if ARDUINO >= 100
   Wire.write(HMC5883_REGISTER_MAG_OUT_X_H_M);
-#else
-  Wire.send(HMC5883_REGISTER_MAG_OUT_X_H_M);
-#endif
   Wire.endTransmission();
   Wire.requestFrom((byte)HMC5883_ADDRESS_MAG, (byte)6);
 
-  // Wait around until enough data is available
-  while (Wire.available() < 6)
-    ;
-
-// Note high before low (different than accel)
-#if ARDUINO >= 100
-  uint8_t xhi = Wire.read();
-  uint8_t xlo = Wire.read();
-  uint8_t zhi = Wire.read();
-  uint8_t zlo = Wire.read();
-  uint8_t yhi = Wire.read();
-  uint8_t ylo = Wire.read();
-#else
-  uint8_t xhi = Wire.receive();
-  uint8_t xlo = Wire.receive();
-  uint8_t zhi = Wire.receive();
-  uint8_t zlo = Wire.receive();
-  uint8_t yhi = Wire.receive();
-  uint8_t ylo = Wire.receive();
-#endif
+  uint8_t xhi = 0;
+  uint8_t xlo = 0;
+  uint8_t zhi = 0;
+  uint8_t zlo = 0;
+  uint8_t yhi = 0;
+  uint8_t ylo = 0;
+  if (Wire.available() == 6) {
+    // Note high before low (different than accel)
+    xhi = Wire.read();
+    xlo = Wire.read();
+    zhi = Wire.read();
+    zlo = Wire.read();
+    yhi = Wire.read();
+    ylo = Wire.read();
+  }
 
   // Shift values to create properly formed integer (low byte first)
   _magData.x = (int16_t)(xlo | ((int16_t)xhi << 8));
@@ -138,7 +107,7 @@ void Adafruit_HMC5883_Unified::read() {
   _magData.z = (int16_t)(zlo | ((int16_t)zhi << 8));
 
   // ToDo: Calculate orientation
-  _magData.orientation = 0.0;
+  _magData.orientation = 0.0f;
 }
 
 /***************************************************************************
@@ -188,32 +157,32 @@ void Adafruit_HMC5883_Unified::setMagGain(hmc5883MagGain gain) {
 
   switch (gain) {
   case HMC5883_MAGGAIN_1_3:
-    _hmc5883_Gauss_LSB_XY = 1100;
-    _hmc5883_Gauss_LSB_Z = 980;
+    _hmc5883_Gauss_LSB_XY = 1100.0f;
+    _hmc5883_Gauss_LSB_Z = 980.0f;
     break;
   case HMC5883_MAGGAIN_1_9:
-    _hmc5883_Gauss_LSB_XY = 855;
-    _hmc5883_Gauss_LSB_Z = 760;
+    _hmc5883_Gauss_LSB_XY = 855.0f;
+    _hmc5883_Gauss_LSB_Z = 760.0f;
     break;
   case HMC5883_MAGGAIN_2_5:
-    _hmc5883_Gauss_LSB_XY = 670;
-    _hmc5883_Gauss_LSB_Z = 600;
+    _hmc5883_Gauss_LSB_XY = 670.0f;
+    _hmc5883_Gauss_LSB_Z = 600.0f;
     break;
   case HMC5883_MAGGAIN_4_0:
-    _hmc5883_Gauss_LSB_XY = 450;
-    _hmc5883_Gauss_LSB_Z = 400;
+    _hmc5883_Gauss_LSB_XY = 450.0f;
+    _hmc5883_Gauss_LSB_Z = 400.0f;
     break;
   case HMC5883_MAGGAIN_4_7:
-    _hmc5883_Gauss_LSB_XY = 400;
-    _hmc5883_Gauss_LSB_Z = 255;
+    _hmc5883_Gauss_LSB_XY = 400.0f;
+    _hmc5883_Gauss_LSB_Z = 255.0f;
     break;
   case HMC5883_MAGGAIN_5_6:
-    _hmc5883_Gauss_LSB_XY = 330;
-    _hmc5883_Gauss_LSB_Z = 295;
+    _hmc5883_Gauss_LSB_XY = 330.0f;
+    _hmc5883_Gauss_LSB_Z = 295.0f;
     break;
   case HMC5883_MAGGAIN_8_1:
-    _hmc5883_Gauss_LSB_XY = 230;
-    _hmc5883_Gauss_LSB_Z = 205;
+    _hmc5883_Gauss_LSB_XY = 230.0f;
+    _hmc5883_Gauss_LSB_Z = 205.0f;
     break;
   }
 }
@@ -260,7 +229,7 @@ void Adafruit_HMC5883_Unified::getSensor(sensor_t *sensor) {
   sensor->sensor_id = _sensorID;
   sensor->type = SENSOR_TYPE_MAGNETIC_FIELD;
   sensor->min_delay = 0;
-  sensor->max_value = 800;  // 8 gauss == 800 microTesla
-  sensor->min_value = -800; // -8 gauss == -800 microTesla
-  sensor->resolution = 0.2; // 2 milligauss == 0.2 microTesla
+  sensor->max_value = 800.0f;  // 8 gauss == 800 microTesla
+  sensor->min_value = -800.0f; // -8 gauss == -800 microTesla
+  sensor->resolution = 0.2f; // 2 milligauss == 0.2 microTesla
 }

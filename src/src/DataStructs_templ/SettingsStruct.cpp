@@ -7,6 +7,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringParser.h"
 
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
@@ -22,6 +23,7 @@ SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPrefere
   clearUnitNameSettings();
   clearNetworkSettings();
 }
+
 
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -90,11 +92,7 @@ void SettingsStruct_tmpl<N_TASKS>::EcoPowerMode(bool value) {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep() const {
-  #ifdef ESP32
-  return true;
-  #else
   return bitRead(VariousBits1, 7);
-  #endif
 }
 
 template<unsigned int N_TASKS>
@@ -330,6 +328,18 @@ void SettingsStruct_tmpl<N_TASKS>::setCssMode(uint8_t value) {
 }
 #endif // FEATURE_AUTO_DARK_MODE
 
+#if FEATURE_I2C_DEVICE_CHECK
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice() const { // Inverted
+  return !bitRead(VariousBits1, 30);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice(bool value) { // Inverted
+  bitWrite(VariousBits1, 30, !value);
+}
+#endif // if FEATURE_I2C_DEVICE_CHECK
+
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
   return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);
@@ -363,7 +373,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1 << 30)) { VariousBits1 = 0; }
+  if (VariousBits1 > (1 << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 
@@ -455,12 +465,15 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_i2c_scl              = DEFAULT_PIN_I2C_SCL;
   Pin_status_led           = DEFAULT_PIN_STATUS_LED;
   Pin_sd_cs                = -1;
+#ifdef ESP32
+  // Ethernet related settings are never used on ESP8266
   ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
   ETH_Pin_mdc              = DEFAULT_ETH_PIN_MDC;
   ETH_Pin_mdio             = DEFAULT_ETH_PIN_MDIO;
   ETH_Pin_power            = DEFAULT_ETH_PIN_POWER;
   ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
   ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
+#endif
   NetworkMedium            = DEFAULT_NETWORK_MEDIUM;
 
   I2C_clockSpeed_Slow      = DEFAULT_I2C_CLOCK_SPEED_SLOW;
@@ -572,13 +585,19 @@ String SettingsStruct_tmpl<N_TASKS>::getHostname() const {
 
 template<unsigned int N_TASKS>
 String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
-  String hostname = this->Name;
+  String hostname = this->getName();
 
   if ((this->Unit != 0) && appendUnit) { // only append non-zero unit number
     hostname += '_';
     hostname += this->Unit;
   }
   return hostname;
+}
+
+template<unsigned int N_TASKS>
+String SettingsStruct_tmpl<N_TASKS>::getName() const {
+  String unitname = this->Name;
+  return parseTemplate(unitname);
 }
 
 
@@ -713,6 +732,7 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
+    if (isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
     if (ETH_Pin_mdc == pin) return true;
     if (ETH_Pin_mdio == pin) return true;
     if (ETH_Pin_power == pin) return true;

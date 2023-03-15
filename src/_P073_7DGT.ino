@@ -201,54 +201,34 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P073_data) {
-        return success;
-      }
+      if (nullptr != P073_data) {
+        P073_data->init(event);
 
-      // FIXME tonhuisman: Move to constructor?!
-      P073_data->pin1         = CONFIG_PIN1;
-      P073_data->pin2         = CONFIG_PIN2;
-      P073_data->pin3         = CONFIG_PIN3;
-      P073_data->displayModel = PCONFIG(0);
-      P073_data->output       = PCONFIG(1);
-      P073_data->brightness   = PCONFIG(2);
-      P073_data->periods      = bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD);
-      P073_data->hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
-      # ifdef P073_SCROLL_TEXT
-      P073_data->txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
-      P073_data->scrollFull   = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL);
-      P073_data->setScrollSpeed(PCONFIG(3));
-      # endif // P073_SCROLL_TEXT
-      P073_data->rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
-      P073_data->timesep               = true;
-      # ifdef P073_EXTRA_FONTS
-      P073_data->fontset = PCONFIG(4);
-      # endif // P073_EXTRA_FONTS
+        switch (P073_data->displayModel) {
+          case P073_TM1637_4DGTCOLON:
+          case P073_TM1637_4DGTDOTS:
+          case P073_TM1637_6DGT: {
+            tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, PCONFIG(2) / 2, true);
 
-      switch (P073_data->displayModel) {
-        case P073_TM1637_4DGTCOLON:
-        case P073_TM1637_4DGTDOTS:
-        case P073_TM1637_6DGT: {
-          tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
-          tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, PCONFIG(2) / 2, true);
-
-          if (PCONFIG(1) == P073_DISP_MANUAL) {
-            tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            if (PCONFIG(1) == P073_DISP_MANUAL) {
+              tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
+            }
+            break;
           }
-          break;
-        }
-        case P073_MAX7219_8DGT: {
-          max7219_InitDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
-          delay(10); // small poweroff/poweron delay
-          max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
+          case P073_MAX7219_8DGT: {
+            max7219_InitDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            delay(10); // small poweroff/poweron delay
+            max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
 
-          if (PCONFIG(1) == P073_DISP_MANUAL) {
-            max7219_ClearDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            if (PCONFIG(1) == P073_DISP_MANUAL) {
+              max7219_ClearDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+            }
+            break;
           }
-          break;
         }
+        success = true;
       }
-      success = true;
       break;
     }
 
@@ -356,46 +336,47 @@ bool p073_plugin_write(struct EventStruct *event,
     return false;
   }
 
-  const String cmd  = parseString(string, 1);
-  if (cmd.length() < 3 || cmd[0] != '7') return false;
+  const String cmd = parseString(string, 1);
+
+  if ((cmd.length() < 3) || (cmd[0] != '7')) { return false; }
 
   const String text = parseStringToEndKeepCase(string, 2);
 
-  if (cmd.equals(F("7dn"))) {
+  if (equals(cmd, F("7dn"))) {
     return p073_plugin_write_7dn(event, text);
-  } else if (cmd.equals(F("7dt"))) {
+  } else if (equals(cmd, F("7dt"))) {
     return p073_plugin_write_7dt(event, text);
   # ifdef P073_7DDT_COMMAND
-  } else if (cmd.equals(F("7ddt"))) {
+  } else if (equals(cmd, F("7ddt"))) {
     return p073_plugin_write_7ddt(event, text);
   # endif // ifdef P073_7DDT_COMMAND
-  } else if (cmd.equals(F("7dst"))) {
+  } else if (equals(cmd, F("7dst"))) {
     return p073_plugin_write_7dst(event);
-  } else if (cmd.equals(F("7dsd"))) {
+  } else if (equals(cmd, F("7dsd"))) {
     return p073_plugin_write_7dsd(event);
-  } else if (cmd.equals(F("7dtext"))) {
+  } else if (equals(cmd, F("7dtext"))) {
     return p073_plugin_write_7dtext(event, text);
   # ifdef P073_EXTRA_FONTS
-  } else if (cmd.equals(F("7dfont"))) {
+  } else if (equals(cmd, F("7dfont"))) {
     return p073_plugin_write_7dfont(event, text);
   # endif // P073_EXTRA_FONTS
   # ifdef P073_7DBIN_COMMAND
-  } else if (cmd.equals(F("7dbin"))) {
+  } else if (equals(cmd, F("7dbin"))) {
     return p073_plugin_write_7dbin(event, text);
   # endif // P073_7DBIN_COMMAND
   } else {
     bool p073_validcmd  = false;
     bool p073_displayon = false;
 
-    if (cmd.equals(F("7don"))) {
+    if (equals(cmd, F("7don"))) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
       p073_displayon = true;
       p073_validcmd  = true;
-    } else if (cmd.equals(F("7doff"))) {
+    } else if (equals(cmd, F("7doff"))) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
       p073_displayon = false;
       p073_validcmd  = true;
-    } else if (cmd.equals(F("7db"))) {
+    } else if (equals(cmd, F("7db"))) {
       if ((event->Par1 >= 0) && (event->Par1 < 16)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("7DGT : Brightness=");
@@ -407,7 +388,7 @@ bool p073_plugin_write(struct EventStruct *event,
         p073_displayon        = true;
         p073_validcmd         = true;
       }
-    } else if (cmd.equals(F("7output"))) {
+    } else if (equals(cmd, F("7output"))) {
       if ((event->Par1 >= 0) && (event->Par1 < 6)) { // 0:"Manual",1:"Clock 24h - Blink",2:"Clock 24h - No Blink",
                                                      // 3:"Clock 12h - Blink",4:"Clock 12h - No Blink",5:"Date"
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -511,7 +492,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
   }
 
   float p073_temptemp    = 0;
-  bool   p073_tempflagdot = false;
+  bool  p073_tempflagdot = false;
 
   if (!text.isEmpty()) {
     validFloatFromString(text, p073_temptemp);
@@ -528,10 +509,10 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
     case P073_TM1637_4DGTDOTS:
     case P073_TM1637_6DGT:
     {
-      if ((p073_temptemp > 999) || (p073_temptemp < -99.9)) {
+      if ((p073_temptemp > 999.0f) || (p073_temptemp < -99.9f)) {
         P073_data->FillBufferWithDash();
       } else {
-        if ((p073_temptemp < 100) && (p073_temptemp > -10)) {
+        if ((p073_temptemp < 100.0f) && (p073_temptemp > -10.0f)) {
           p073_temptemp    = roundf(p073_temptemp * 10.0f);
           p073_tempflagdot = true;
         }
@@ -585,7 +566,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
 
   float p073_lefttemp    = 0.0f;
   float p073_righttemp   = 0.0f;
-  bool   p073_tempflagdot = false;
+  bool  p073_tempflagdot = false;
 
   if (!text.isEmpty()) {
     validFloatFromString(parseString(text, 1), p073_lefttemp);
@@ -820,13 +801,13 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
     String fontArg = parseString(text, 1);
     int    fontNr  = -1;
 
-    if ((fontArg.equals(F("default"))) || (fontArg.equals(F("7dgt")))) {
+    if ((equals(fontArg, F("default"))) || (equals(fontArg, F("7dgt")))) {
       fontNr = 0;
-    } else if (fontArg.equals(F("siekoo"))) {
+    } else if (equals(fontArg, F("siekoo"))) {
       fontNr = 1;
-    } else if (fontArg.equals(F("siekoo_upper"))) {
+    } else if (equals(fontArg, F("siekoo_upper"))) {
       fontNr = 2;
-    } else if (fontArg.equals(F("dseg7"))) {
+    } else if (equals(fontArg, F("dseg7"))) {
       fontNr = 3;
     } else if (!validIntFromString(text, fontNr)) {
       fontNr = -1; // reset if invalid

@@ -66,7 +66,6 @@ tCommandLinesV2::tCommandLinesV2(const tCommandLinesV1& lineV1, uint8_t i)
 
 # endif // ifdef P16_SETTINGS_V1
 
-P016_data_struct::P016_data_struct() {}
 
 void P016_data_struct::init(struct EventStruct *event, uint16_t CmdInhibitTime) {
   # if P016_FEATURE_COMMAND_HANDLING
@@ -187,7 +186,7 @@ void P016_data_struct::AddCode(uint64_t Code, decode_type_t DecodeType, uint16_t
     String log;
 
     if (log.reserve(80)) { // estimated
-      log  = F("[P36] AddCode: ");
+      log  = F("[P016] AddCode: ");
       log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
       log += F(" code: 0x");
       log += uint64ToString(Code, 16);
@@ -231,7 +230,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
           String log;
 
           if (log.reserve(128)) { // estimated
-            log  = F("[P36] Execute: ");
+            log  = F("[P016] Execute: ");
             log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
             log += F(" Code: 0x");
             log += uint64ToString(Code, 16);
@@ -257,7 +256,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
       String log;
 
       if (log.reserve(128)) { // estimated
-        log  = F("[P36] ValidateCode failed: ");
+        log  = F("[P016] ValidateCode failed: ");
         log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
         log += F(" Code: 0x");
         log += uint64ToString(Code, 16);

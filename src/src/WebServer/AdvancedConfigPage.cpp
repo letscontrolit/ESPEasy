@@ -107,6 +107,9 @@ void handle_advanced() {
     Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
     Settings.AllowTaskValueSetAllPlugins(isFormItemChecked(LabelType::TASKVALUESET_ALL_PLUGINS));
     Settings.EnableClearHangingI2Cbus(isFormItemChecked(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS));
+    #if FEATURE_I2C_DEVICE_CHECK
+    Settings.CheckI2Cdevice(isFormItemChecked(LabelType::ENABLE_I2C_DEVICE_CHECK));
+    #endif // if FEATURE_I2C_DEVICE_CHECK
 
 #ifndef BUILD_NO_RAM_TRACKER
     Settings.EnableRAMTracking(isFormItemChecked(LabelType::ENABLE_RAM_TRACKING));
@@ -168,10 +171,12 @@ void handle_advanced() {
 
   addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP());
   addFormTextBox(F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
+  #if FEATURE_EXT_RTC
   addFormExtTimeSourceSelect(F("External Time Source"), F("exttimesource"), Settings.ExtTimeSource());
   if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
     addFormNote(concat(getLabel(LabelType::EXT_RTC_UTC_TIME), F(": ")) + getValue(LabelType::EXT_RTC_UTC_TIME));
   }
+  #endif
 
   addFormSubHeader(F("DST Settings"));
   addFormDstSelect(true,  Settings.DST_Start);
@@ -249,6 +254,9 @@ void handle_advanced() {
 
   addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
   addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
+  #if FEATURE_I2C_DEVICE_CHECK
+  addFormCheckBox(LabelType::ENABLE_I2C_DEVICE_CHECK, Settings.CheckI2Cdevice());
+  #endif // if FEATURE_I2C_DEVICE_CHECK
 
   # ifndef NO_HTTP_UPDATER
   addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());
@@ -290,10 +298,8 @@ void handle_advanced() {
 #endif // ifdef ESP32
 
   addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
-#ifdef ESP8266
   addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());
   addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
-#endif
 #ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
 #endif // ifdef SUPPORT_ARP

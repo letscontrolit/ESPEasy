@@ -58,9 +58,8 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
 #if FEATURE_PLUGIN_STATS
     const uint8_t valueCount = getValueCountForTask(taskIndex);
-    LoadTaskSettings(taskIndex);
     for (size_t i = 0; i < valueCount; ++i) {
-      if (ExtraTaskSettings.enabledPluginStats(i)) {
+      if (Cache.enabledPluginStats(taskIndex, i)) {
         Plugin_task_data[taskIndex]->initPluginStats(i);
       }
     }
@@ -77,10 +76,21 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {
   if (pluginTaskData_initialized(taskIndex)) {
+    
+    if (!Plugin_task_data[taskIndex]->baseClassOnly()) {
+      return Plugin_task_data[taskIndex];
+    }
+  }
+  return nullptr;
+}
+
+PluginTaskData_base* getPluginTaskDataBaseClassOnly(taskIndex_t taskIndex) {
+  if (pluginTaskData_initialized(taskIndex)) {
     return Plugin_task_data[taskIndex];
   }
   return nullptr;
 }
+
 
 bool pluginTaskData_initialized(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) {

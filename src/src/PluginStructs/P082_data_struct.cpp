@@ -63,14 +63,13 @@ const __FlashStringHelper* toString(P082_DynamicModel model) {
   return F("");
 }
 
-P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {}
-
-P082_data_struct::~P082_data_struct() {
-  powerDown();
-  reset();
+P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {
+  for (size_t i = 0; i < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
+    _cache[i] = 0.0f;
+  }
 }
 
-void P082_data_struct::reset() {
+P082_data_struct::~P082_data_struct() {
   if (gps != nullptr) {
     delete gps;
     gps = nullptr;
@@ -82,11 +81,34 @@ void P082_data_struct::reset() {
   }
 }
 
+/*
+void P082_data_struct::reset() {
+  if (gps != nullptr) {
+    delete gps;
+    gps = nullptr;
+  }
+
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
+}
+*/
+
 bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx) {
   if (serial_rx < 0) {
     return false;
   }
-  reset();
+  if (gps != nullptr) {
+    delete gps;
+    gps = nullptr;
+  }
+
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
+  }
+
   gps        = new (std::nothrow) TinyGPSPlus();
   easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
 

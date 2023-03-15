@@ -30,8 +30,11 @@ public:
     TIMER_GRATUITOUS_ARP,
     TIMER_MQTT_DELAY_QUEUE,
     TIMER_C001_DELAY_QUEUE,
+    TIMER_C002_DELAY_QUEUE, // MQTT controller
     TIMER_C003_DELAY_QUEUE,
     TIMER_C004_DELAY_QUEUE,
+    TIMER_C005_DELAY_QUEUE, // MQTT controller
+    TIMER_C006_DELAY_QUEUE, // MQTT controller
     TIMER_C007_DELAY_QUEUE,
     TIMER_C008_DELAY_QUEUE,
     TIMER_C009_DELAY_QUEUE,
@@ -127,6 +130,9 @@ public:
   void                 setNextTimeInterval(unsigned long     & timer,
                                            const unsigned long step);
 
+  void                 setNextStrictTimeInterval(unsigned long     & timer,
+                                                 const unsigned long step);
+
   void                 setIntervalTimer(IntervalTimer_e id);
   void                 setIntervalTimerAt(IntervalTimer_e id,
                                           unsigned long   newtimer);
@@ -217,7 +223,8 @@ public:
                     int           pinnr,
                     int           state = 0,
                     int           repeatInterval = 0,
-                    int           recurringCount = 0);
+                    int           recurringCount = 0,
+                    int           alternateInterval = 0);
 
   void clearGPIOTimer(pluginID_t pluginID, int pinnr);
 
