@@ -73,6 +73,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
+      P146_SET_ERASE_BINFILES(0);
       P146_SET_SEND_BINARY(0);
       P146_SET_SEND_BULK(1);
       P146_SET_SEND_TIMESTAMP(1);
@@ -136,6 +137,14 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
           if (P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
             int readFileNr    = 0;
             const int readPos = ControllerCache.getPeekFilePos(readFileNr);
+
+            if (P146_GET_ERASE_BINFILES) {
+              // Check whether we must delete the oldest file
+              if (P146_TASKVALUE_FILENR != 0 && P146_TASKVALUE_FILENR  < readFileNr) {
+                ControllerCache.deleteCacheBlock(P146_TASKVALUE_FILENR);
+              }
+            }
+
             P146_TASKVALUE_FILENR  = readFileNr;
             P146_TASKVALUE_FILEPOS = readPos;
           }
@@ -165,6 +174,14 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
           if (data_sent) {
             int readFileNr    = 0;
             const int readPos = ControllerCache.getPeekFilePos(readFileNr);
+
+            if (P146_GET_ERASE_BINFILES) {
+              // Check whether we must delete the oldest file
+              if (P146_TASKVALUE_FILENR != 0 && P146_TASKVALUE_FILENR  < readFileNr) {
+                ControllerCache.deleteCacheBlock(P146_TASKVALUE_FILENR);
+              }
+            }
+
             P146_TASKVALUE_FILENR  = readFileNr;
             P146_TASKVALUE_FILEPOS = readPos;
           }
@@ -177,6 +194,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormCheckBox(F("Delete Cache Files After Send"), F("deletebin"), P146_GET_ERASE_BINFILES);
       addFormSubHeader(F("MQTT Output Options"));
       addFormCheckBox(F("Send Bulk"),          F("sendbulk"), P146_GET_SEND_BULK);
       addFormCheckBox(F("HEX encoded Binary"), F("binary"),   P146_GET_SEND_BINARY);
@@ -244,6 +262,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      P146_SET_ERASE_BINFILES(isFormItemChecked(F("deletebin")));
       P146_SET_SEND_BULK(isFormItemChecked(F("sendbulk")));
       P146_SET_SEND_BINARY(isFormItemChecked(F("binary")));
 
