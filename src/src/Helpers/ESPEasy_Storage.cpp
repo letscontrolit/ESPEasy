@@ -2206,7 +2206,9 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
       pass = ProvisioningSettings.pass;
     }
   }
-  return downloadFileType(url, user, pass, filetype, filenr);
+  String res = downloadFileType(url, user, pass, filetype, filenr);
+  clearAllCaches();
+  return res;
 }
 
 #endif // if FEATURE_CUSTOM_PROVISIONING
