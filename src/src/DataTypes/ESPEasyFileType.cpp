@@ -20,8 +20,7 @@ bool isProtectedFileType(const String& filename)
          matchFileType(filename, FileType::PROVISIONING_DAT);
 }
 
-const __FlashStringHelper * getFileName(FileType::Enum filetype) {
-
+const __FlashStringHelper* getFileName(FileType::Enum filetype) {
   switch (filetype)
   {
     case FileType::CONFIG_DAT:       return F("config.dat");
@@ -58,14 +57,12 @@ String getRulesFileName(unsigned int filenr) {
 }
 
 bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
-  bool isChecked = false;
-
   switch (filetype) {
-    case FileType::CONFIG_DAT: return ResetFactoryDefaultPreference.fetchConfigDat(); 
-    case FileType::SECURITY_DAT: return ResetFactoryDefaultPreference.fetchSecurityDat(); 
-    case FileType::NOTIFICATION_DAT: return ResetFactoryDefaultPreference.fetchNotificationDat(); 
-    case FileType::RULES_TXT: return ResetFactoryDefaultPreference.fetchRulesTXT(filenr); 
-    case FileType::PROVISIONING_DAT: return ResetFactoryDefaultPreference.fetchProvisioningDat(); 
+    case FileType::CONFIG_DAT:       return ResetFactoryDefaultPreference.fetchConfigDat();
+    case FileType::SECURITY_DAT:     return ResetFactoryDefaultPreference.fetchSecurityDat();
+    case FileType::NOTIFICATION_DAT: return ResetFactoryDefaultPreference.fetchNotificationDat();
+    case FileType::RULES_TXT:        return ResetFactoryDefaultPreference.fetchRulesTXT(filenr);
+    case FileType::PROVISIONING_DAT: return ResetFactoryDefaultPreference.fetchProvisioningDat();
       break;
 
     case FileType::MAX_FILETYPE:
