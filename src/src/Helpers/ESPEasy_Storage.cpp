@@ -2112,25 +2112,7 @@ String downloadFileType(const String& url, const String& user, const String& pas
   }
 
   String filename = getFileName(filetype, filenr);
-  String fullUrl;
-
-  fullUrl.reserve(url.length() + filename.length() + 1); // May need to add an extra slash
-  fullUrl = url;
-  fullUrl = parseTemplate(fullUrl, true);                // URL encode
-
-  // URLEncode may also encode the '/' into "%2f"
-  // FIXME TD-er: Can this really occur?
-  fullUrl.replace(F("%2f"), F("/"));
-
-  while (filename.startsWith(F("/"))) {
-    filename = filename.substring(1);
-  }
-
-  if (!fullUrl.endsWith(F("/"))) {
-    fullUrl += F("/");
-  }
-  fullUrl += filename;
-
+  String fullUrl = joinUrlFilename(url, filename);
   String error;
 
   if (ResetFactoryDefaultPreference.deleteFirst()) {
