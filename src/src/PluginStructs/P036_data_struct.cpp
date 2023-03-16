@@ -121,6 +121,7 @@ const __FlashStringHelper * tFontSettings::FontName() const {
   }
 
 #  ifndef P036_LIMIT_BUILD_SIZE
+
   if (fontData == Dialog_plain_18) {
     return F("Dialog_18");
   }
@@ -131,6 +132,7 @@ const __FlashStringHelper * tFontSettings::FontName() const {
   }
 
 #  ifndef P036_LIMIT_BUILD_SIZE
+
   if (fontData == Dialog_plain_12) {
     return F("Dialog_12");
   }
@@ -1476,6 +1478,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
         }
         ScrollingPages.linesPerFrameIn = i + 1;
         CreateScrollingPageLine(&ScrollingPages.In[i], lineCounter + i);
+        currentLines[i] = ScrollingPages.In[i].SPLcontent;
 
         if (ScrollingPages.In[i].SPLcontent.length() > 0) { foundText = true; }
       }
@@ -1803,8 +1806,22 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
   }
   uint32_t iAlignment =
     get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+
   ScrollingPageLine->Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
   ScrollingPageLine->SPLidx    = Counter; // index to LineSettings[]
+}
+
+bool P036_data_struct::web_show_values() {
+  bool result = true;
+
+  for (uint8_t i = 0; i < ScrollingPages.linesPerFrameDef; i++) {
+    addHtmlDiv(F("div_l"), currentLines[i], F(""));
+
+    if (i != ScrollingPages.linesPerFrameDef - 1) {
+      addHtmlDiv(F("div_br"));
+    }
+  }
+  return result;
 }
 
 #endif // ifdef USES_P036

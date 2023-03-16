@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2023-03-16
+// ADD: Show current content of the display on the Devices overview page (1..4 lines)
 // @tonhuisman: 2023-01-02
 // CHG: Reduce string sizes for input fields, uncrustify source (causing some changelog comments to be wrapped...)
 // @uwekaditz: 2022-10-17
@@ -971,6 +973,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    {
+      P036_data_struct *P036_data =
+        static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P036_data) {
+        success = P036_data->web_show_values();
+      }
       break;
     }
 

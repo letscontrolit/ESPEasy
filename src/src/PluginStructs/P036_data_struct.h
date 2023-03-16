@@ -144,9 +144,9 @@ typedef struct {
 } tScrollingLines;
 
 typedef struct {
-  String                     SPLcontent; // content
+  String                     SPLcontent;    // content
   OLEDDISPLAY_TEXT_ALIGNMENT Alignment = TEXT_ALIGN_LEFT;
-  uint8_t                    SPLidx = 0;     // index to DisplayLinesV1
+  uint8_t                    SPLidx    = 0; // index to DisplayLinesV1
 } tScrollingPageLines;
 
 typedef struct {
@@ -229,9 +229,9 @@ typedef struct {
 
 typedef struct {
   uint8_t fontIdx = 0; // font index for this line setting
-  uint8_t Top = 0;     // top in pix for this line setting
-  uint8_t Height = 0;  // font height in pix
-  int8_t  Space = 0;   // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
+  uint8_t Top     = 0; // top in pix for this line setting
+  uint8_t Height  = 0; // font height in pix
+  int8_t  Space   = 0; // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
 # ifdef P036_FONT_CALC_LOG
   const __FlashStringHelper* FontName() const;
 # endif // ifdef P036_FONT_CALC_LOG
@@ -247,15 +247,15 @@ typedef struct {
 } tSizeSettings;
 
 typedef struct {
-  uint8_t frame = 0;           // frame for this line
+  uint8_t frame           = 0; // frame for this line
   uint8_t DisplayedPageNo = 0; // number of shown pages for this line, set in CalcMaxPageCount()
-  uint8_t ypos = 0;            // ypos for this line
-  uint8_t fontIdx = 0;         // font index for this line
-  uint8_t FontHeight = 0;      // font height for this line
+  uint8_t ypos            = 0; // ypos for this line
+  uint8_t fontIdx         = 0; // font index for this line
+  uint8_t FontHeight      = 0; // font height for this line
 } tLineSettings;
 
 typedef struct {
-  uint8_t NextLineNo = 0;            // number of next line or 0xFF if settings do not fit
+  uint8_t NextLineNo            = 0; // number of next line or 0xFF if settings do not fit
   uint8_t IdxForBiggestFontUsed = 0; // ypos for this line
 } tIndividualFontSettings;
 
@@ -361,6 +361,8 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t                    GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment);
 # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
+  bool                       web_show_values();
+
   // Instantiate display here - does not work to do this within the INIT call
   OLEDDisplay *display = nullptr;
 
@@ -405,6 +407,7 @@ struct P036_data_struct : public PluginTaskData_base {
 
   tLineSettings LineSettings[P36_Nlines]{};
   uint16_t CalcPixLength(uint8_t LineNo);
+  String currentLines[P36_MAX_LinesPerPage]{};
 
 private:
 
