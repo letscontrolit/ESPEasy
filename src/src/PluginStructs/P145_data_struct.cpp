@@ -47,167 +47,167 @@
 // This table is stored in PROGMEM to save space in RAM
 // The data for the selected sensor type is copied to RAM, see P145_data_struct
 /******************************************************************************/
-const struct P145_SENSORDEF sensorDefs[] PROGMEM =
+const P145_SENSORDEF sensorDefs[] PROGMEM 
 {
   // User defined, output plain ratio (Rsensor/Rzero)
   {     
-      0.0f,         // cleanRatio
-      0.0f,         // PARA scaling factor value
-      0.0f,         // PARB exponent value
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgNone,  // preferred/tuned algorithm
-      P145_SENSUSER, // Name
-      P145_GASUSER, // gas
+      .cleanRatio = 0.0f,         // cleanRatio
+      .para       = 0.0f,         // PARA scaling factor value
+      .parb       = 0.0f,         // PARB exponent value
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG
+      .alg        = p145AlgNone,  // preferred/tuned algorithm
+      .name       = P145_SENSUSER, // Name
+      .gas        = P145_GASUSER, // gas
   },
   // *** MQ-135 - CO2 ***
   {
-      0.0f,         // cleanRatio
-      116.6020682f, // PARA scaling factor value
-      2.769034857f, // PARB exponent value
-      0.00035f,     // CORA
-      0.02718f,     // CORB
-      1.39538f,     // CORC
-      0.0018f,      // CORD
-      -0.003333333f,// CORE
-      -0.001923077f,// CORF
-      1.130128205f, // CORG
-      p145AlgA,     // preferred/tuned algorithm
-      P145_SENSMQ135,  // Name
-      P145_GASCO2,  // gas
+      .cleanRatio = 0.0f,         // cleanRatio
+      .para       = 116.6020682f, // PARA scaling factor value
+      .parb       = 2.769034857f, // PARB exponent value
+      .cora       = 0.00035f,     // CORA
+      .corb       = 0.02718f,     // CORB
+      .corc       = 1.39538f,     // CORC
+      .cord       = 0.0018f,      // CORD
+      .core       = -0.003333333f,// CORE
+      .corf       = -0.001923077f,// CORF
+      .corg       = 1.130128205f, // CORG
+      .alg        = p145AlgA,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ135,  // Name
+      .gas        = P145_GASCO2,  // gas
   },
     // *** MQ-2 - H2 ***
   {
-      9.83f,        // cleanRatio
-      987.99f,      // PARA scaling factor
-      -2.162f,      // PARB exponent value
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ2, // Name
-      P145_GASH2,   // gas
+      .cleanRatio = 9.83f,        // cleanRatio
+      .para       = 987.99f,      // PARA scaling factor
+      .parb       = -2.162f,      // PARB exponent value
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG
+      .alg        = p145AlgB,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ2, // Name
+      .gas        = P145_GASH2,   // gas
   },
   // *** MQ-3 - alcohol ***
   {
-      60.0f,        // cleanRatio
-      0.3934f,      // PARA scaling factor
-      -1.504f,      // PARB exponent value
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ3, // Name
-      P145_GASALCOHOL,  // gas
+      .cleanRatio = 60.0f,        // cleanRatio
+      .para       = 0.3934f,      // PARA scaling factor
+      .parb       = -1.504f,      // PARB exponent value
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG
+      .alg        = p145AlgB,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ3, // Name
+      .gas        = P145_GASALCOHOL,  // gas
   },
   // *** MQ-4 - CH4 ***
   {
-      4.4f,         // cleanRatio
-      1012.7f,      // PARA scaling
-      -2.786f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ4, // Name
-      P145_GASCH4,  // gas
+      .cleanRatio = 4.4f,         // cleanRatio
+      .para       = 1012.7f,      // PARA scaling
+      .parb       = -2.786f,      // PARB exponent
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG
+      .alg        = p145AlgB,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ4, // Name
+      .gas        = P145_GASCH4,  // gas
   },
     // *** MQ-5 - H2 ***
   {
-      5.5f,         // cleanRatio
-      1163.8f,      // PARA scaling
-      -3.874f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ5, // Name
-      P145_GASCH4,  // gas
+      .cleanRatio = 5.5f,         // cleanRatio
+      .para       = 1163.8f,      // PARA scaling
+      .parb       = -3.874f,      // PARB exponent
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG
+      .alg        = p145AlgB,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ5, // Name
+      .gas        = P145_GASCH4,  // gas
   },
      // *** MQ-5 - LPG ***
   {
-      5.5f,         // cleanRatio
-      80.897f,      // PARA scaling
-      -2.431f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ5, // Name
-      P145_GASLPG,  // gas
+      .cleanRatio = 5.5f,         // cleanRatio
+      .para       = 80.897f,      // PARA scaling
+      .parb       = -2.431f,      // PARB exponent
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG
+      .alg        = p145AlgB,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ5, // Name
+      .gas        = P145_GASLPG,  // gas
   },
   // *** MQ-6 - LPG ***
   {
-      10.0f,        // cleanRatio
-      1009.2f,      // PARA scaling
-      -2.35f,       // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ6, // Name
-      P145_GASLPG,  // gas
+      .cleanRatio = 10.0f,        // cleanRatio
+      .para       = 1009.2f,      // PARA scaling
+      .parb       = -2.35f,       // PARB exponent
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG
+      .alg        = p145AlgB,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ6, // Name
+      .gas        = P145_GASLPG,  // gas
   },
   // *** MQ-7 - CO ***
   {
-      27.5f,        // cleanRatio
-      491204.0f,    // PARA scaling
-      -5.826f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG   
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ7, // Name
-      P145_GASCO,   // gas
+      .cleanRatio = 27.5f,        // cleanRatio
+      .para       = 491204.0f,    // PARA scaling
+      .parb       = -5.826f,      // PARB exponent
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG   
+      .alg        = p145AlgB,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ7, // Name
+      .gas        = P145_GASCO,   // gas
   },
   // *** MQ-8 - H2 ***
   {
-      70.0f,        // cleanRatio
-      976.97f,      // PARA scaling
-      -0.688f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG   
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ8, // Name
-      P145_GASH2,   // gas
+      .cleanRatio = 70.0f,        // cleanRatio
+      .para       = 976.97f,      // PARA scaling
+      .parb       = -0.688f,      // PARB exponent
+      .cora       = 0.0f,         // CORA
+      .corb       = 0.0f,         // CORB
+      .corc       = 0.0f,         // CORC
+      .cord       = 0.0f,         // CORD
+      .core       = 0.0f,         // CORE
+      .corf       = 0.0f,         // CORF
+      .corg       = 0.0f,         // CORG   
+      .alg        = p145AlgB,     // preferred/tuned algorithm
+      .name       = P145_SENSMQ8, // Name
+      .gas        = P145_GASH2,   // gas
   }
 };
 /// @brief The number of types stored in the sensorDefs[] table
