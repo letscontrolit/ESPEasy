@@ -17,6 +17,8 @@ struct mBusPacket_header_t {
 
   bool          isValid() const;
 
+  bool          matchSerial(uint32_t serialNr) const;
+
   void          clear();
 
   // Use for stats as key:
@@ -32,6 +34,10 @@ struct mBusPacket_t {
 public:
 
   bool parse(const String& payload);
+
+  bool matchSerial(uint32_t serialNr) const;
+
+  uint32_t getDeviceSerial() const;
 
 private:
 

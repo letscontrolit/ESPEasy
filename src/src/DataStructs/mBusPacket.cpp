@@ -71,6 +71,20 @@ void mBusPacket_header_t::clear()
   _length       = 0;
 }
 
+bool mBusPacket_header_t::matchSerial(uint32_t serialNr) const
+{
+  return isValid() && _serialNr == serialNr;
+}
+
+uint32_t mBusPacket_t::getDeviceSerial() const
+{
+  // FIXME TD-er: Which deviceID is the device and which the wrapper?
+
+  if (_deviceId2.isValid()) return _deviceId2._serialNr;
+  if (_deviceId1.isValid()) return _deviceId1._serialNr;
+  return 0;
+}
+
 bool mBusPacket_t::parse(const String& payload)
 {
   mBusPacket_data payloadWithoutChecksums;
@@ -89,7 +103,7 @@ bool mBusPacket_t::parse(const String& payload)
 
   const uint16_t lqi_rssi = hexToUL(payload, pos_semicolon - 4, 4);
 
-  _LQI  = (lqi_rssi >> 8) & 0x7f; // Bit 7 = CRC OK Bit
+  _LQI = (lqi_rssi >> 8) & 0x7f; // Bit 7 = CRC OK Bit
 
   int rssi = lqi_rssi & 0xFF;
 
@@ -98,6 +112,11 @@ bool mBusPacket_t::parse(const String& payload)
   }
   _rssi = (rssi / 2) - 74;
   return parseHeaders(payloadWithoutChecksums);
+}
+
+bool mBusPacket_t::matchSerial(uint32_t serialNr) const
+{
+  return _deviceId1.matchSerial(serialNr) || _deviceId2.matchSerial(serialNr);
 }
 
 bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
@@ -227,10 +246,11 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameA(const String& payload, uint3
       result.push_back(hexToByte(payload, sourceIndex));
       sourceIndex += 2; // 2 hex chars
     }
+
     // [2 bytes CRC]
-    checksum <<= 8;
-    checksum ^= hexToUL(payload, sourceIndex, 4);
-    sourceIndex += 4;   // Skip 2 bytes CRC => 4 hex chars
+    checksum   <<= 8;
+    checksum    ^= hexToUL(payload, sourceIndex, 4);
+    sourceIndex += 4; // Skip 2 bytes CRC => 4 hex chars
     targetIndex += blockSize;
   }
   return result;
@@ -275,9 +295,10 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload, uint3
     result.push_back(hexToByte(payload, sourceIndex));
     sourceIndex += 2; // 2 hex chars
   }
+
   // [2 bytes CRC]
-  checksum <<= 8;
-  checksum ^= hexToUL(payload, sourceIndex, 4);
+  checksum   <<= 8;
+  checksum    ^= hexToUL(payload, sourceIndex, 4);
   sourceIndex += 4; // Skip 2 bytes CRC => 4 hex chars
 
   if (expectedMessageSize > 126) {
@@ -289,9 +310,10 @@ mBusPacket_data mBusPacket_t::removeChecksumsFrameB(const String& payload, uint3
       result.push_back(hexToByte(payload, sourceIndex));
       sourceIndex += 2; // 2 hex chars
     }
+
     // [2 bytes CRC]
     checksum <<= 8;
-    checksum ^= hexToUL(payload, sourceIndex, 4);
+    checksum  ^= hexToUL(payload, sourceIndex, 4);
   }
 
   // remove the checksums and the 1st byte from the actual message length, so that the meaning of this byte is the same as in Frame A

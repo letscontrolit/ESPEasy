@@ -38,7 +38,8 @@ void P094_data_struct::reset() {
 bool P094_data_struct::init(ESPEasySerialPort port,
                             const int16_t     serial_rx,
                             const int16_t     serial_tx,
-                            unsigned long     baudrate) {
+                            unsigned long     baudrate,
+                            bool              intervalFilterEnabled) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
@@ -49,6 +50,7 @@ bool P094_data_struct::init(ESPEasySerialPort port,
     return false;
   }
   easySerial->begin(baudrate);
+  interval_filter_enabled = intervalFilterEnabled;
   return true;
 }
 
@@ -561,7 +563,7 @@ bool P094_data_struct::disableFilterWindowActive() const {
   return false;
 }
 
-bool P094_data_struct::parsePacket(const String& received) const {
+bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet) const {
   size_t strlength = received.length();
 
   if (strlength == 0) {
@@ -583,9 +585,6 @@ bool P094_data_struct::parsePacket(const String& received) const {
     }
 
     // Decoded packet
-
-    mBusPacket_t packet;
-
     if (!packet.parse(received)) { return false; }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -829,6 +828,17 @@ const __FlashStringHelper * P094_data_struct::P094_FilterComp_toString(P094_Filt
     case P094_Filter_Comp::P094_NotEqual_MUST: return F("!= (must)");
   }
   return F("");
+}
+
+bool P094_data_struct::interval_filter_add(const mBusPacket_t& packet) {
+  if (interval_filter_enabled) {
+    return interval_filter.add(packet);
+  }
+  return true;
+}
+
+void P094_data_struct::interval_filter_purgeExpired() {
+  interval_filter.purgeExpired();
 }
 
 bool P094_data_struct::max_length_reached() const {

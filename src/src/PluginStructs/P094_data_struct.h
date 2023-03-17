@@ -4,12 +4,15 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P094
 
+# include "../Helpers/CUL_interval_filter.h"
+
+
 # include <ESPeasySerial.h>
 # include <Regexp.h>
 
 # ifndef P094_DEBUG_OPTIONS
 #  define P094_DEBUG_OPTIONS 0
-# endif
+# endif // ifndef P094_DEBUG_OPTIONS
 
 
 # define P094_REGEX_POS             0
@@ -69,7 +72,8 @@ public:
   bool init(ESPEasySerialPort port,
             const int16_t     serial_rx,
             const int16_t     serial_tx,
-            unsigned long     baudrate);
+            unsigned long     baudrate,
+            bool              intervalFilterEnabled);
 
   void          post_init();
 
@@ -111,7 +115,8 @@ public:
 
   bool                              disableFilterWindowActive() const;
 
-  bool                              parsePacket(const String& received) const;
+  bool                              parsePacket(const String& received,
+                                                mBusPacket_t& packet) const;
 
   static const __FlashStringHelper* MatchType_toString(P094_Match_Type matchType);
   static const __FlashStringHelper* P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
@@ -123,14 +128,20 @@ public:
 
   static size_t P094_Get_filter_base_index(size_t filterLine);
 
-#if P094_DEBUG_OPTIONS
-  // Get (and increment) debug counter
-  uint32_t      getDebugCounter();
+# if P094_DEBUG_OPTIONS
 
-  void          setGenerate_DebugCulData(bool value) {
+  // Get (and increment) debug counter
+  uint32_t getDebugCounter();
+
+  void     setGenerate_DebugCulData(bool value) {
     debug_generate_CUL_data = value;
   }
-#endif
+
+# endif // if P094_DEBUG_OPTIONS
+
+  bool interval_filter_add(const mBusPacket_t& packet);
+
+  void interval_filter_purgeExpired();
 
 private:
 
@@ -144,14 +155,17 @@ private:
   bool           current_sentence_errored = false;
   uint32_t       length_last_received     = 0;
   unsigned long  disable_filter_window    = 0;
-  #if P094_DEBUG_OPTIONS
-  uint32_t       debug_counter            = 0;
-  bool           debug_generate_CUL_data  = false;
-  #endif
+  # if P094_DEBUG_OPTIONS
+  uint32_t debug_counter           = 0;
+  bool     debug_generate_CUL_data = false;
+  # endif // if P094_DEBUG_OPTIONS
+  bool interval_filter_enabled = false;
 
   bool                   filterValueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = { 0 };
   P094_Filter_Value_Type filterLine_valueType[P094_NR_FILTERS];
   P094_Filter_Comp       filterLine_compare[P094_NR_FILTERS];
+
+  CUL_interval_filter interval_filter;
 };
 
 

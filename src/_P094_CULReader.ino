@@ -35,6 +35,10 @@
 # define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0), 1, X)
 #endif
 
+# define P094_GET_INTERVAL_FILTER    bitRead(PCONFIG(0), 2)
+# define P094_SET_INTERVAL_FILTER(X) bitWrite(PCONFIG(0), 2, X)
+
+
 # define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 # define P094_NR_OUTPUT_OPTIONS  1
 
@@ -167,6 +171,8 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       addFormCheckBox(F("(debug) Generate CUL data"), F("debug_data"), P094_GET_GENERATE_DEBUG_CUL_DATA);
 #endif
 
+      addFormCheckBox(F("Enable Interval Filter"), F("interval_filter"), P094_GET_INTERVAL_FILTER);
+
       success = true;
       break;
     }
@@ -192,6 +198,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 #if P094_DEBUG_OPTIONS
       P094_SET_GENERATE_DEBUG_CUL_DATA(isFormItemChecked(F("debug_data")));
 #endif
+      P094_SET_INTERVAL_FILTER(isFormItemChecked(F("interval_filter")));
 
       break;
     }
@@ -208,7 +215,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         return success;
       }
 
-      if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE)) {
+      if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE, P094_GET_INTERVAL_FILTER)) {
         LoadCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0);
         P094_data->post_init();
 #if P094_DEBUG_OPTIONS
@@ -219,6 +226,17 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
       } else {
         clearPluginTaskData(event->TaskIndex);
+      }
+      break;
+    }
+
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      P094_data_struct *P094_data =
+          static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P094_data) {
+        P094_data->interval_filter_purgeExpired();
       }
       break;
     }
@@ -367,17 +385,25 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received)
     return false;
   }
 
-
   if (P094_data->disableFilterWindowActive()) {
     addLog(LOG_LEVEL_INFO, F("CUL Reader: Disable Filter Window active"));
     return true;
   }
 
-  bool res = P094_data->parsePacket(received);
+  mBusPacket_t packet;
+  bool res = P094_data->parsePacket(received, packet);
 
   if (P094_data->invertMatch()) {
     addLog(LOG_LEVEL_INFO, F("CUL Reader: invert filter"));
-    return !res;
+
+    res = !res;
+  }
+
+  if (res) {
+    if (!P094_data->interval_filter_add(packet)) {
+      // Already processed recently
+      return false;
+    }
   }
   return res;
 }
