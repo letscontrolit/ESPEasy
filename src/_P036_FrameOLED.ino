@@ -827,12 +827,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     // Switch off display after displayTimer seconds, update header content
     case PLUGIN_ONCE_A_SECOND:
     {
-      if (Settings.TaskDeviceEnabled[event->TaskIndex] == false) {
-# ifdef PLUGIN_036_DEBUG
-        addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_ONCE_A_SECOND Not enabled"));
-# endif // PLUGIN_036_DEBUG
-        return success;
-      }
       P036_data_struct *P036_data =
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -887,12 +881,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TASKTIMER_IN:
     {
-      if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
-# ifdef PLUGIN_036_DEBUG
-        addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_TIMER_IN Not enabled"));
-# endif // PLUGIN_036_DEBUG
-        return success;
-      }
       P036_data_struct *P036_data =
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -931,13 +919,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      if (Settings.TaskDeviceEnabled[event->TaskIndex] == false) {
-# ifdef PLUGIN_036_DEBUG
-        addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ Not enabled"));
-# endif // PLUGIN_036_DEBUG
-        return success;
-      }
-
       P036_data_struct *P036_data =
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -1171,17 +1152,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_FLAGS_1 = lSettings;
         }
         else if (equals(subcommand, F("align")) &&
-                 ((event->Par2 == 0) ||
-                  (event->Par2 == 1) ||
-                  (event->Par2 == 2))) {
+                 ((event->Par2 >= 0) &&
+                  (event->Par2 <= 2))) {
           success = true;
-          eAlignment aAlignment;
+          const eAlignment aAlignment = static_cast<eAlignment>(event->Par2);
 
-          switch (event->Par2) {
-            case 1: aAlignment  = eAlignment::eLeft; break;
-            case 2: aAlignment  = eAlignment::eRight; break;
-            default: aAlignment = eAlignment::eCenter; break;
-          }
           P036_data->setTextAlignment(aAlignment);
           uint32_t lSettings = P036_FLAGS_1;
           set2BitToUL(lSettings, P036_FLAG_LEFT_ALIGNED, static_cast<uint8_t>(aAlignment)); // Alignment
