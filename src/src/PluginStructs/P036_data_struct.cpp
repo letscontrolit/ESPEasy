@@ -1814,13 +1814,16 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
 bool P036_data_struct::web_show_values() {
   bool result = true;
 
+  addHtml(F("<pre>")); // To keep spaces etc. in the shown output
+
   for (uint8_t i = 0; i < ScrollingPages.linesPerFrameDef; i++) {
-    addHtmlDiv(F("div_l"), currentLines[i], F(""));
+    addHtmlDiv(F("div_l"), currentLines[i]);
 
     if (i != ScrollingPages.linesPerFrameDef - 1) {
       addHtmlDiv(F("div_br"));
     }
   }
+  addHtml(F("</pre>"));
   return result;
 }
 
