@@ -85,13 +85,15 @@ void check_Eth_DNS_valid() {
       (active_network_medium == NetworkMedium_t::Ethernet) &&
       EthEventData.ethInitSuccess &&
       !ethUseStaticIP()) {
-    const bool has_cache = EthEventData.dns0_cache || EthEventData.dns1_cache;
+    const bool has_cache = 
+      valid_DNS_address(EthEventData.dns0_cache) || 
+      valid_DNS_address(EthEventData.dns1_cache);
 
     if (has_cache) {
       const IPAddress dns0 = ETH.dnsIP(0);
       const IPAddress dns1 = ETH.dnsIP(1);
 
-      if (!dns0 && !dns1) {
+      if (!valid_DNS_address(dns0) && !valid_DNS_address(dns1)) {
         static uint32_t lastLog = 0;
         if (timePassedSince(lastLog) > 1000) {
           addLogMove(LOG_LEVEL_ERROR, concat(
@@ -111,6 +113,7 @@ void processEthernetConnected() {
 
   // FIXME TD-er: Must differentiate among reconnects for WiFi and Ethernet.
   ++WiFiEventData.wifi_reconnects;
+  addLog(LOG_LEVEL_INFO, F("processEthernetConnected()"));
   EthEventData.setEthConnected();
   EthEventData.processedConnect = true;
 
