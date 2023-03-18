@@ -1744,19 +1744,11 @@ uint16_t P036_data_struct::TrimStringTo255Chars(tScrollingPageLines *ScrollingPa
   return PixLengthLine;
 }
 
-void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines *ScrollingPageLine, uint16_t Width,
+void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines       *ScrollingPageLine,
+                                             uint16_t                   Width,
                                              OLEDDISPLAY_TEXT_ALIGNMENT textAlignment) {
-  int LeftOffset;
+  int16_t LeftOffset = 0;
 
-  switch (textAlignment) {
-    case TEXT_ALIGN_LEFT: LeftOffset = -P36_MaxDisplayWidth;
-      break;
-    case TEXT_ALIGN_RIGHT: LeftOffset = 0;
-      break;
-    default:
-      LeftOffset = 0;
-      break;
-  }
   display->setFont(FontSizes[LineSettings[ScrollingPageLine->SPLidx].fontIdx].fontData);
 
   if (Width > 0) {
@@ -1769,6 +1761,10 @@ void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines *ScrollingPageL
   } else {
     // line is kept aligned while scrolling page
     display->setTextAlignment(ScrollingPageLine->Alignment);
+
+    if (textAlignment == TEXT_ALIGN_LEFT) {
+      LeftOffset = -P36_MaxDisplayWidth;
+    }
 
     // textAlignment=TEXT_ALIGN_LEFT: for non-scrolling pages ScrollingPages.dPixSum=P36_MaxDisplayWidth -> therefore the calculation must
     // use P36_MaxDisplayWidth, too
@@ -1804,7 +1800,7 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
       ScrollingPageLine->SPLcontent.replace(F("<|>"), tmpString); // replace in final line the split token with space chars
     }
   }
-  uint32_t iAlignment =
+  uint8_t iAlignment =
     get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
 
   ScrollingPageLine->Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
@@ -1817,7 +1813,7 @@ bool P036_data_struct::web_show_values() {
   addHtml(F("<pre>")); // To keep spaces etc. in the shown output
 
   for (uint8_t i = 0; i < ScrollingPages.linesPerFrameDef; i++) {
-    addHtmlDiv(F("div_l"), currentLines[i]);
+    addHtmlDiv(F("div_l"), currentLines[i], EMPTY_STRING, F("style='font-size:75%;'"));
 
     if (i != ScrollingPages.linesPerFrameDef - 1) {
       addHtmlDiv(F("div_br"));

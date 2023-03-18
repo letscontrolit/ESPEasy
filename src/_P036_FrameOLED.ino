@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2023-03-18
+// CHG: Reduce font-size for Show Values content to 75%, code optimizations
 // @tonhuisman: 2023-03-16
 // ADD: Show current content of the display on the Devices overview page (1..4 lines)
 // @tonhuisman: 2023-01-02

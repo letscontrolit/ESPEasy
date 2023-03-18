@@ -92,7 +92,7 @@
 # define P036_FLAG_LEFT_ALIGNED        0  // Bit1-0 Layout left aligned
 # define P036_FLAG_REDUCE_LINE_NO      2  // Bit 2 Reduce line number to fit individual line font settings
 
-enum class eHeaderContent {
+enum class eHeaderContent : uint8_t {
   eSSID     = 1,
   eSysName  = 2,
   eIP       = 3,
@@ -109,13 +109,13 @@ enum class eHeaderContent {
   ePageNo   = 14,
 };
 
-enum class p036_resolution {
+enum class p036_resolution : uint8_t {
   pix128x64 = 0,
   pix128x32 = 1,
   pix64x48  = 2
 };
 
-enum class ePageScrollSpeed {
+enum class ePageScrollSpeed : uint8_t {
   ePSS_VerySlow = 1, // 800ms
   ePSS_Slow     = 2, // 400ms
   ePSS_Fast     = 4, // 200ms
@@ -123,7 +123,7 @@ enum class ePageScrollSpeed {
   ePSS_Instant  = 32 // 20ms
 };
 
-enum class eP036pinmode {
+enum class eP036pinmode : uint8_t {
   ePPM_Input       = 0,
   ePPM_InputPullUp = 1
 };
@@ -160,7 +160,7 @@ typedef struct {
   uint8_t             linesPerFrameOut = 0; // the number of lines in frame out
 } tScrollingPages;
 
-enum class eModifyFont {
+enum class eModifyFont : uint8_t {
   eMinimize = 4,
   eReduce   = 3,
   eNone     = 7, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
@@ -168,7 +168,7 @@ enum class eModifyFont {
   eMaximize = 2
 };
 
-enum class eAlignment {
+enum class eAlignment : uint8_t {
   eGlobal = 7, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
   eLeft   = 1,
   eCenter = 0,
@@ -359,7 +359,7 @@ struct P036_data_struct : public PluginTaskData_base {
   void                       setTextAlignment(eAlignment aAlignment);
   OLEDDISPLAY_TEXT_ALIGNMENT getTextAlignment(eAlignment aAlignment);
   uint8_t                    GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment);
-# endif // ifdef P036_ENABLE_LEFT_ALIGN
+  # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
   bool                       web_show_values();
 
@@ -407,7 +407,6 @@ struct P036_data_struct : public PluginTaskData_base {
 
   tLineSettings LineSettings[P36_Nlines]{};
   uint16_t CalcPixLength(uint8_t LineNo);
-  String currentLines[P36_MAX_LinesPerPage]{};
 
 private:
 
@@ -424,6 +423,8 @@ private:
                                  OLEDDISPLAY_TEXT_ALIGNMENT textAlignment);
   void     CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine,
                                    uint8_t              Counter);
+
+  String currentLines[P36_MAX_LinesPerPage]{};
 };
 
 #endif // ifdef USES_P036
