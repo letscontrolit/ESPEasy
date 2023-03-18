@@ -7,6 +7,11 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-03-18 tonhuisman: Show current on-display content on Devices page (75% size, omits trailing empty lines)
+ *                        Manually set content via command: oled,x,y,<content> is included in the Devices page content
+ *                        Make Interval optional
+ *                        Move PLUGIN_READ and PLUGIN_WRITE code into P023_data_struct source
+ *                        Several optimizations, like reading the template into memory only once
  * 2022-10-09 tonhuisman: Deduplicate code by moving the OLed I2C Address check to OLed_helper
  * 2022-10: Start changelog, latest on top.
  */
@@ -42,6 +47,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 0;
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       break;
     }
 
@@ -79,6 +85,12 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       string  = F("Btn: ");
       string += formatGpioLabel(CONFIG_PIN3, false);
       success = true;
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(4) = 1; // Default to Normal font width
       break;
     }
 
@@ -168,18 +180,15 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         type |= P023_data_struct::OLED_rotated;
       }
 
-      switch (static_cast<P023_data_struct::Spacing>(PCONFIG(4))) {
-        case P023_data_struct::Spacing::normal:
-        case P023_data_struct::Spacing::optimized:
-          font_spacing = static_cast<P023_data_struct::Spacing>(PCONFIG(4));
-          break;
+      if (PCONFIG(4) > 0) {
+        font_spacing = static_cast<P023_data_struct::Spacing>(PCONFIG(4));
       }
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(PCONFIG(0), type, font_spacing, PCONFIG(2), PCONFIG(5)));
       P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {
-        P023_data->StartUp_OLED();
+        P023_data->StartUp_OLED(event);
         P023_data->clearDisplay();
 
         if (PCONFIG(1) == 2) {
@@ -226,17 +235,20 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {
-        String strings[P23_Nlines];
-        LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
-
-        for (uint8_t x = 0; x < 8; x++) {
-          if (strings[x].length()) {
-            String newString = P023_data->parseTemplate(strings[x], 16);
-            P023_data->sendStrXY(newString.c_str(), x, 0);
-          }
-        }
+        P023_data->plugin_read(event);
       }
       success = false;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    {
+      P023_data_struct *P023_data =
+        static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P023_data) {
+        success = P023_data->web_show_values();
+      }
       break;
     }
 
@@ -245,28 +257,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {
-        String cmd = parseString(string, 1); // Changes to lowercase
-
-        if (equals(cmd, F("oledcmd"))) {
-          success = true;
-          String param = parseString(string, 2);
-
-          if (equals(param, F("off"))) {
-            P023_data->displayOff();
-          }
-          else if (equals(param, F("on"))) {
-            P023_data->displayOn();
-          }
-          else if (equals(param, F("clear"))) {
-            P023_data->clearDisplay();
-          }
-        }
-        else if (equals(cmd, F("oled"))) {
-          success = true;
-          String text = parseStringToEndKeepCase(string, 4);
-          text = P023_data->parseTemplate(text, 16);
-          P023_data->sendStrXY(text.c_str(), event->Par1 - 1, event->Par2 - 1);
-        }
+        success = P023_data->plugin_write(event, string);
       }
       break;
     }
