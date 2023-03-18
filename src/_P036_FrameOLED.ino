@@ -12,10 +12,11 @@
 //
 // Major work on this plugin has been done by 'Namirda'
 // Added to the main repository with some optimizations and some limitations.
-// Al long as the device is not selected, no RAM is waisted.
+// As long as the device is not enabled, no RAM is wasted.
 //
 // @tonhuisman: 2023-03-18
 // CHG: Reduce font-size for Show Values content to 75%, code optimizations
+// CHG: Make Interval optional
 // @tonhuisman: 2023-03-16
 // ADD: Show current content of the display on the Devices overview page (1..4 lines)
 // @tonhuisman: 2023-01-02
@@ -219,6 +220,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 0;
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       break;
     }
 
