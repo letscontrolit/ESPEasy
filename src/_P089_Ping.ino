@@ -19,6 +19,7 @@
    Maintainer: Denys Fedoryshchenko, denys AT nuclearcat.com
  */
 /** Changelog:
+ * 2023-03-19 tonhuisman: Show hostname in GPIO column of Devices page
  * 2023-03-14 tonhuisman: Change command handling to not require the taskname as the second argument if no 3rd argument is given.
  *                        Set decimals to 0 whan adding the task.
  * 2023-03 Started changelog, not registered before.
@@ -39,7 +40,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number           = PLUGIN_ID_089;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
+      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM0;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].ValueCount         = 1;
@@ -70,9 +71,18 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
+      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+      string  = hostname;
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      char hostname[PLUGIN_089_HOSTNAME_SIZE];
+      char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
       LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
       addFormTextBox(F("Hostname"), F("host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
       success = true;
@@ -81,7 +91,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      char hostname[PLUGIN_089_HOSTNAME_SIZE] = {};
+      char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
 
       // Reset "Fails" if settings updated
       UserVar[event->BaseVarIndex] = 0;
