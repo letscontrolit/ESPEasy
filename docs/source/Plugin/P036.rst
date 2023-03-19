@@ -128,11 +128,6 @@ The user defined texts may also contain a split token ``<|>`` to display the lin
 * **Interval** By default, Interval will be set to 0. If set to a non-zero value, the pre-configured content will be updated automatically using that interval (seconds).
 
 
-.. Supported hardware
-.. ------------------
-
-.. |P036_usedby|
-
 General
 -------
 
