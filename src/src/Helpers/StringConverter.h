@@ -291,6 +291,8 @@ String tolerantParseStringKeepCase(const String& string,
                                    char          separator = ',',
                                    bool          trimResult = true);
 
+String parseHexTextString(const String& argument,
+                          int           index = 2);
 
 
 /*********************************************************************************************\
