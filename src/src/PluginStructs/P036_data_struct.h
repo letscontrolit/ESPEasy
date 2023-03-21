@@ -24,11 +24,12 @@
 // # define P036_CHECK_HEAP        // Enable to add extra logging during Plugin_036()
 // # define P036_CHECK_INDIVIDUAL_FONT // /Enable to add extra logging for individual font calculation
 # define P036_FEATURE_DISPLAY_PREVIEW   1
+# define P036_FEATURE_ALIGN_PREVIEW     1
 
-# if defined(ESP8266_1M) && defined(P036_FEATURE_DISPLAY_PREVIEW) && P036_FEATURE_DISPLAY_PREVIEW
-#  undef P036_FEATURE_DISPLAY_PREVIEW
-#  define P036_FEATURE_DISPLAY_PREVIEW   0 // Disable for 1M builds
-# endif // if defined(ESP8266_1M) && defined(P036_FEATURE_DISPLAY_PREVIEW) && P036_FEATURE_DISPLAY_PREVIEW
+# if defined(ESP8266_1M) && defined(P036_FEATURE_ALIGN_PREVIEW) && P036_FEATURE_ALIGN_PREVIEW
+#  undef P036_FEATURE_ALIGN_PREVIEW
+#  define P036_FEATURE_ALIGN_PREVIEW   0 // Disable for 1M builds
+# endif // if defined(ESP8266_1M) && defined(P036_FEATURE_ALIGN_PREVIEW) && P036_FEATURE_ALIGN_PREVIEW
 
 # ifndef P036_LIMIT_BUILD_SIZE
 #  define P036_SEND_EVENTS       // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line

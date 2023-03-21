@@ -17,7 +17,7 @@
 // @tonhuisman: 2023-03-21
 // CHG: Apply Center-/Right-alignment on on-display preview in the Devices overview page
 // CHG: Code optimizations
-// CHG: Make on-Display preview optional, and exclude from 1M ESP8266 builds for size
+// CHG: Make on-Display preview optional, and exclude alignment feature from 1M ESP8266 builds for size
 // @tonhuisman: 2023-03-18
 // CHG: Reduce font-size for Show Values content to 75%, code optimizations
 // CHG: Make Interval optional

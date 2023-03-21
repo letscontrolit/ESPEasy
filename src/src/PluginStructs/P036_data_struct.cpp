@@ -1484,7 +1484,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
         if (ScrollingPages.In[i].SPLcontent.length() > 0) {
           foundText = true;
 
-          # if P036_FEATURE_DISPLAY_PREVIEW
+          # if P036_FEATURE_DISPLAY_PREVIEW && P036_FEATURE_ALIGN_PREVIEW
 
           // Preview: Center or Right-Align add spaces on the left
           const bool isAlignCenter = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_CENTER;
@@ -1509,7 +1509,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
               }
             }
           }
-          # endif // if P036_FEATURE_DISPLAY_PREVIEW
+          # endif // if P036_FEATURE_DISPLAY_PREVIEW && P036_FEATURE_ALIGN_PREVIEW
         }
       }
 
