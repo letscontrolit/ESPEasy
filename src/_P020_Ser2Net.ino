@@ -456,7 +456,14 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
           task->ser2netSerial->write(string.substring(11).c_str());
           task->ser2netSerial->flush();
           success = true;
-        }
+        } else
+
+        if (equals(command, F("serialsendmix"))) {
+          String argument = parseHexTextString(string);
+          task->ser2netSerial->write(argument.c_str());
+          task->ser2netSerial->flush();
+          success = true;
+        } else
 
         if ((equals(command, F("ser2netclientsend"))) && (task->hasClientConnected())) {
           task->ser2netClient.print(string.substring(18));
