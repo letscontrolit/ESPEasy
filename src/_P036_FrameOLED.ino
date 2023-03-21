@@ -14,6 +14,10 @@
 // Added to the main repository with some optimizations and some limitations.
 // As long as the device is not enabled, no RAM is wasted.
 //
+// @tonhuisman: 2023-03-21
+// CHG: Apply Center-/Right-alignment on on-display preview in the Devices overview page
+// CHG: Code optimizations
+// CHG: Make on-Display preview optional, and exclude from 1M ESP8266 builds for size
 // @tonhuisman: 2023-03-18
 // CHG: Reduce font-size for Show Values content to 75%, code optimizations
 // CHG: Make Interval optional
@@ -961,6 +965,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if P036_FEATURE_DISPLAY_PREVIEW
     case PLUGIN_WEBFORM_SHOW_VALUES:
     {
       P036_data_struct *P036_data =
@@ -971,6 +976,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+    # endif // if P036_FEATURE_DISPLAY_PREVIEW
 
     case PLUGIN_WRITE:
     {

@@ -503,9 +503,8 @@ void P036_data_struct::display_indicator() {
       image = inactiveSymbole;
     }
 
-    int x, y;
-
-    y = P036_IndicatorTop + TopLineOffset; // 2022-01-31 Removed unneeded offset '+ 2'
+    int x;
+    const int y = P036_IndicatorTop + TopLineOffset; // 2022-01-31 Removed unneeded offset '+ 2'
 
     // I would like a margin of 20 pixels on each side of the indicator.
     // Therefore the width of the indicator should be 128-40=88 and so space between indicator dots is 88/(framecount-1)
@@ -574,7 +573,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
     switch (static_cast<eModifyFont>(iModifyFont)) {
       case eModifyFont::eEnlarge:
-        lFontIndex -= 1;
+        lFontIndex--;
 
         if (lFontIndex < IdxForBiggestFont) { lFontIndex = IdxForBiggestFont; }
         result.IdxForBiggestFontUsed = lFontIndex;
@@ -584,7 +583,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
         result.IdxForBiggestFontUsed = lFontIndex;
         break;
       case eModifyFont::eReduce:
-        lFontIndex += 1;
+        lFontIndex++;
 
         if (lFontIndex > (P36_MaxFontCount - 1)) {
           lFontIndex = P36_MaxFontCount - 1;
@@ -1000,7 +999,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 
     // reduce line content for page scrolling to max width
     if (PixLengthLineIn > MaxPixWidthForPageScrolling) {
-      int strlen = ScrollingPages.In[j].SPLcontent.length();
+      const int strlen = ScrollingPages.In[j].SPLcontent.length();
 # ifdef P036_SCROLL_CALC_LOG
       String LineInStr = ScrollingPages.In[j].SPLcontent;
 # endif // P036_SCROLL_CALC_LOG
@@ -1063,7 +1062,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     // reduce line content for page scrolling to max width
 
     if (PixLengthLineOut > MaxPixWidthForPageScrolling) {
-      int strlen = ScrollingPages.Out[j].SPLcontent.length();
+      const int strlen = ScrollingPages.Out[j].SPLcontent.length();
       # ifdef P036_SCROLL_CALC_LOG
       String LineOutStr = ScrollingPages.Out[j].SPLcontent;
       # endif // P036_SCROLL_CALC_LOG
@@ -1315,7 +1314,7 @@ bool P036_data_struct::display_wifibars() {
   const int x         = getDisplaySizeSettings(disp_resolution).WiFiIndicatorLeft;
   const int y         = TopLineOffset;
   int size_x          = getDisplaySizeSettings(disp_resolution).WiFiIndicatorWidth;
-  int size_y          = GetHeaderHeight() - 2;
+  const int size_y    = GetHeaderHeight() - 2;
   const int nbars     = 5;
   const int16_t width = (size_x / nbars);
 
@@ -1432,7 +1431,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     while (!foundText) {
       //        Stop after framecount loops if no data found
-      ntries += 1;
+      ntries++;
 
       if (ntries > (NFrames + 1)) {
         // do not leave the while loop to early
@@ -1478,9 +1477,40 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
         }
         ScrollingPages.linesPerFrameIn = i + 1;
         CreateScrollingPageLine(&ScrollingPages.In[i], lineCounter + i);
+        # if P036_FEATURE_DISPLAY_PREVIEW
         currentLines[i] = ScrollingPages.In[i].SPLcontent;
+        # endif // if P036_FEATURE_DISPLAY_PREVIEW
 
-        if (ScrollingPages.In[i].SPLcontent.length() > 0) { foundText = true; }
+        if (ScrollingPages.In[i].SPLcontent.length() > 0) {
+          foundText = true;
+
+          # if P036_FEATURE_DISPLAY_PREVIEW
+
+          // Preview: Center or Right-Align add spaces on the left
+          const bool isAlignCenter = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_CENTER;
+          const bool isAlignRight  = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_RIGHT;
+
+          if (isAlignRight || isAlignCenter) {
+            const uint16_t maxlength  = getDisplaySizeSettings(disp_resolution).Width;
+            const uint16_t pixlength  = display->getStringWidth(currentLines[i]); // pix length for entire string
+            const uint16_t charlength = display->getStringWidth(F(" "));          // pix length for a space char
+            int16_t addSpaces         = (maxlength - pixlength) / charlength;
+
+            if (isAlignCenter) {
+              addSpaces /= 2;
+            }
+
+            if (addSpaces > 0) {
+              currentLines[i].reserve(currentLines[i].length() + addSpaces);
+
+              while (addSpaces > 0) {
+                currentLines[i] = ' ' + currentLines[i];
+                addSpaces--;
+              }
+            }
+          }
+          # endif // if P036_FEATURE_DISPLAY_PREVIEW
+        }
       }
 
       if (foundText) {
@@ -1513,8 +1543,8 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     update_display();
 
-    bool bScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24);                            // Bit 24
-    bool bScrollLines       = bitRead(PCONFIG_LONG(0), 17);                            // Bit 17
+    const bool bScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24);                      // Bit 24
+    const bool bScrollLines       = bitRead(PCONFIG_LONG(0), 17);                      // Bit 17
     bLineScrollEnabled = (bScrollLines && (NetworkConnected() || bScrollWithoutWifi)); // scroll lines only if WifiIsConnected,
     // otherwise too slow
 
@@ -1557,7 +1587,7 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
      const char euro_oled[3] = {0xc2, 0x80, 0}; // Euro symbol OLED display font
      result.replace(euro, euro_oled);
    */
-  uint32_t iAlignment =
+  const uint32_t iAlignment =
     get3BitFromUL(LineContent->DisplayLinesV1[lineIdx].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
 
   switch (getTextAlignment(static_cast<eAlignment>(iAlignment))) {
@@ -1568,7 +1598,7 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
         if (tmpString[l] != ' ') {
           break;
         }
-        result = " " + result;
+        result = ' ' + result;
       }
       break;
     case TEXT_ALIGN_RIGHT:
@@ -1578,7 +1608,7 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
         if (tmpString[l] != ' ') {
           break;
         }
-        result = result + " ";
+        result += ' ';
       }
       break;
     default:
@@ -1734,9 +1764,9 @@ uint16_t P036_data_struct::TrimStringTo255Chars(tScrollingPageLines *ScrollingPa
 
     if (PixLengthLine > 255) {
       // shorten string because OLED controller can not handle such long strings
-      int   strlen         = ScrollingPageLine->SPLcontent.length();
-      float fAvgPixPerChar = static_cast<float>(PixLengthLine) / strlen;
-      int   iCharToRemove  = ceil((static_cast<float>(PixLengthLine - 255)) / fAvgPixPerChar);
+      const int   strlen         = ScrollingPageLine->SPLcontent.length();
+      const float fAvgPixPerChar = static_cast<float>(PixLengthLine) / strlen;
+      const int   iCharToRemove  = ceil((static_cast<float>(PixLengthLine - 255)) / fAvgPixPerChar);
       ScrollingPageLine->SPLcontent = ScrollingPageLine->SPLcontent.substring(0, strlen - iCharToRemove);
       PixLengthLine                 = display->getStringWidth(ScrollingPageLine->SPLcontent);
     }
@@ -1780,36 +1810,35 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
   ScrollingPageLine->SPLcontent = P36_parseTemplate(tmpString, Counter);
 
   if (ScrollingPageLine->SPLcontent.length() > 0) {
-    int splitIdx = ScrollingPageLine->SPLcontent.indexOf("<|>"); // check for split token
+    const int splitIdx = ScrollingPageLine->SPLcontent.indexOf(F("<|>")); // check for split token
 
     if (splitIdx >= 0) {
       // split line into left and right part
       tmpString = ScrollingPageLine->SPLcontent;
-      tmpString.replace(F("<|>"), " ");                         // replace in tmpString the split token with one space char
+      tmpString.replace(F("<|>"), F(" "));                            // replace in tmpString the split token with one space char
       display->setFont(FontSizes[LineSettings[Counter].fontIdx].fontData);
-      uint16_t pixlength = display->getStringWidth(tmpString);  // pixlength without split token but with one space char
-      tmpString = " ";
-      uint16_t charlength = display->getStringWidth(tmpString); // pix length for a space char
+      uint16_t pixlength = display->getStringWidth(tmpString);        // pixlength without split token but with one space char
+      tmpString = ' ';
+      const uint16_t charlength = display->getStringWidth(tmpString); // pix length for a space char
       pixlength += charlength;
 
       while (pixlength <= getDisplaySizeSettings(disp_resolution).Width) {
         // add more space chars until pixlength of the final line is almost the display width
-        tmpString += " ";                                         // add another space char
+        tmpString += ' ';                                         // add another space char
         pixlength += charlength;
       }
       ScrollingPageLine->SPLcontent.replace(F("<|>"), tmpString); // replace in final line the split token with space chars
     }
   }
-  uint8_t iAlignment =
+  const uint8_t iAlignment =
     get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
 
   ScrollingPageLine->Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
   ScrollingPageLine->SPLidx    = Counter; // index to LineSettings[]
 }
 
+# if P036_FEATURE_DISPLAY_PREVIEW
 bool P036_data_struct::web_show_values() {
-  bool result = true;
-
   addHtml(F("<pre>")); // To keep spaces etc. in the shown output
 
   for (uint8_t i = 0; i < ScrollingPages.linesPerFrameDef; i++) {
@@ -1820,7 +1849,9 @@ bool P036_data_struct::web_show_values() {
     }
   }
   addHtml(F("</pre>"));
-  return result;
+  return true;
 }
+
+# endif // if P036_FEATURE_DISPLAY_PREVIEW
 
 #endif // ifdef USES_P036

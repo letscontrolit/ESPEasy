@@ -23,6 +23,12 @@
 // # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)
 // # define P036_CHECK_HEAP        // Enable to add extra logging during Plugin_036()
 // # define P036_CHECK_INDIVIDUAL_FONT // /Enable to add extra logging for individual font calculation
+# define P036_FEATURE_DISPLAY_PREVIEW   1
+
+# if defined(ESP8266_1M) && defined(P036_FEATURE_DISPLAY_PREVIEW) && P036_FEATURE_DISPLAY_PREVIEW
+#  undef P036_FEATURE_DISPLAY_PREVIEW
+#  define P036_FEATURE_DISPLAY_PREVIEW   0 // Disable for 1M builds
+# endif // if defined(ESP8266_1M) && defined(P036_FEATURE_DISPLAY_PREVIEW) && P036_FEATURE_DISPLAY_PREVIEW
 
 # ifndef P036_LIMIT_BUILD_SIZE
 #  define P036_SEND_EVENTS       // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
@@ -361,7 +367,9 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t                    GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment);
   # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
-  bool                       web_show_values();
+  # if P036_FEATURE_DISPLAY_PREVIEW
+  bool web_show_values();
+  # endif // if P036_FEATURE_DISPLAY_PREVIEW
 
   // Instantiate display here - does not work to do this within the INIT call
   OLEDDisplay *display = nullptr;
@@ -424,7 +432,9 @@ private:
   void     CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine,
                                    uint8_t              Counter);
 
+  # if P036_FEATURE_DISPLAY_PREVIEW
   String currentLines[P36_MAX_LinesPerPage]{};
+  # endif // if P036_FEATURE_DISPLAY_PREVIEW
 };
 
 #endif // ifdef USES_P036
