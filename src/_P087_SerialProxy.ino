@@ -10,6 +10,8 @@
 //
 /**
  * Changelog:
+ * 2023-03-22 tonhuisman: Add command serialproxy_writemix to handle mixed hex characters and text to send
+ *                        using parseHexTextString()
  * 2022-07-08 tonhuisman: Allow baudrate lowest value to 300 (from 2400)
  *                        Don't trim off pre/post white-space from string to send
  * 2022-07-07 tonhuisman: Add selection for serial protocol configuration (databits, parity, nr. of stopbits)
@@ -233,18 +235,25 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WRITE: {
-      String cmd = parseString(string, 1);
 
 
-      if (cmd.equalsIgnoreCase(F("serialproxy_write"))) {
-        P087_data_struct *P087_data =
-          static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P087_data_struct *P087_data =
+        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if ((nullptr != P087_data)) {
-          String param1 = parseStringKeepCase(string, 2, ',', false); // Don't trim off white-space
-          parseSystemVariables(param1, false);
+      if ((nullptr != P087_data)) {
+        String cmd      = parseString(string, 1);
+        bool   writeMix = cmd.equals(F("serialproxy_writemix"));
+
+        if (cmd.equals(F("serialproxy_write")) || writeMix) {
+          String param1;
+          if (writeMix) {
+            param1 = parseHexTextString(string);
+          } else {
+            param1 = parseStringKeepCase(string, 2, ',', false); // Don't trim off white-space
+          }
+          parseSystemVariables(param1, false);                   // FIXME tonhuisman: Doesn't seem to be needed?
           P087_data->sendString(param1);
-          addLogMove(LOG_LEVEL_INFO, param1);
+          addLogMove(LOG_LEVEL_INFO, param1);                    // FIXME tonhuisman: Should we always want to write to the log?
           success = true;
         }
       }
