@@ -15,6 +15,10 @@ struct mBusPacket_header_t {
 
   String        toString() const;
 
+  uint64_t      encode_toUInt64() const;
+
+  void          decode_fromUint64(uint64_t encodedValue);
+
   bool          isValid() const;
 
   bool          matchSerial(uint32_t serialNr) const;
@@ -22,30 +26,43 @@ struct mBusPacket_header_t {
   void          clear();
 
   // Use for stats as key:
-  uint32_t _serialNr     = 0;
-  uint16_t _manufacturer = 0;
-  uint8_t  _meterType    = 0;
+  union {
+    uint64_t _encodedValue{};
+    struct {
+      uint64_t _serialNr     : 32;
+      uint64_t _manufacturer : 16;
+      uint64_t _meterType    : 8;
 
-  // Use for filtering
-  uint8_t  _length       = 0;
+      // Use for filtering
+      uint64_t _length : 8;
+    };
+  };
 };
 
 struct mBusPacket_t {
 public:
 
-  bool parse(const String& payload);
+  bool     parse(const String& payload);
 
-  bool matchSerial(uint32_t serialNr) const;
+  static  int16_t decode_LQI_RSSI(uint16_t lqi_rssi, uint8_t& LQI);
+
+  bool     matchSerial(uint32_t serialNr) const;
 
   uint32_t getDeviceSerial() const;
+
+  String   toString() const;
+
+  uint64_t deviceID_toUInt64() const;
 
 private:
 
   static uint8_t         hexToByte(const String& str,
                                    size_t        index);
 
-  static mBusPacket_data removeChecksumsFrameA(const String& payload, uint32_t& checksum);
-  static mBusPacket_data removeChecksumsFrameB(const String& payload, uint32_t& checksum);
+  static mBusPacket_data removeChecksumsFrameA(const String& payload,
+                                               uint32_t    & checksum);
+  static mBusPacket_data removeChecksumsFrameB(const String& payload,
+                                               uint32_t    & checksum);
 
   bool                   parseHeaders(const mBusPacket_data& payloadWithoutChecksums);
 
@@ -53,27 +70,26 @@ public:
 
   mBusPacket_header_t _deviceId1;
   mBusPacket_header_t _deviceId2;
-  int16_t             _rssi = 0;
-  uint8_t             _LQI  = 0;
+  uint16_t _lqi_rssi{};
 
 
-/*
-  // Statistics:
-  // Key:
-  deviceID1:
-  - manufacturer
-  - metertype   
-  - serialnr
+  /*
+     // Statistics:
+     // Key:
+     deviceID1:
+     - manufacturer
+     - metertype
+     - serialnr
 
-  // Value:
-  - message count
-  - rssi
-  - lqi???
-*/
+     // Value:
+     - message count
+     - rssi
+     - lqi???
+   */
 
 
   // Checksum based on the XOR of all removed checksums from the message
-  uint32_t            _checksum = 0;
+  uint32_t _checksum = 0;
 };
 
 #endif // ifndef DATASTRUCTS_MBUSPACKET_H

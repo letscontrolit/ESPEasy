@@ -39,7 +39,8 @@ bool P094_data_struct::init(ESPEasySerialPort port,
                             const int16_t     serial_rx,
                             const int16_t     serial_tx,
                             unsigned long     baudrate,
-                            bool              intervalFilterEnabled) {
+                            bool              intervalFilterEnabled,
+                            bool              collectStats) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
@@ -51,6 +52,7 @@ bool P094_data_struct::init(ESPEasySerialPort port,
   }
   easySerial->begin(baudrate);
   interval_filter_enabled = intervalFilterEnabled;
+  collect_stats           = collectStats;
   return true;
 }
 
@@ -588,34 +590,7 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
     if (!packet.parse(received)) { return false; }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-
-      if (log.reserve(128)) {
-        log = F("CUL Reader: ");
-
-        if (packet._deviceId1.isValid()) {
-          log += F(" deviceId1: ");
-          log += packet._deviceId1.toString();
-          log += '(';
-          log += packet._deviceId1._length;
-          log += ')';
-        }
-
-        if (packet._deviceId2.isValid()) {
-          log += F(" deviceId2: ");
-          log += packet._deviceId2.toString();
-          log += '(';
-          log += packet._deviceId2._length;
-          log += ')';
-        }
-        log += F(" chksum: ");
-        log += formatToHex(packet._checksum, 8);
-        log += F(" LQI: ");
-        log += packet._LQI;
-        log += F(" RSSI: ");
-        log += packet._rssi;
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
+      addLogMove(LOG_LEVEL_INFO, concat(F("CUL Reader: "), packet.toString()));
     }
 
     bool filter_matches[P094_NR_FILTERS];
@@ -682,11 +657,14 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
                   break;
                 case P094_rssi:
                 {
-                  receivedValue = packet._rssi;
+                  uint8_t LQI    = 0;
+                  const int rssi = mBusPacket_t::decode_LQI_RSSI(packet._lqi_rssi, LQI);
+
+                  receivedValue = rssi;
                   int int_value = 0;
 
                   if (validIntFromString(valueString, int_value)) {
-                    match = int_value > packet._rssi;
+                    match = int_value > rssi;
                   }
                   break;
                 }
@@ -839,6 +817,26 @@ bool P094_data_struct::interval_filter_add(const mBusPacket_t& packet) {
 
 void P094_data_struct::interval_filter_purgeExpired() {
   interval_filter.purgeExpired();
+}
+
+bool P094_data_struct::collect_stats_add(const mBusPacket_t& packet) {
+  if (collect_stats) {
+    return mBus_stats[firstStatsIndexActive ? 0 : 1].add(packet);
+  }
+  return false;
+}
+
+void P094_data_struct::prepare_dump_stats() {
+  firstStatsIndexActive = !firstStatsIndexActive;
+}
+
+bool P094_data_struct::dump_next_stats(String& str) {
+  const uint8_t dumpStatsIndex = firstStatsIndexActive ? 1 : 0;
+  if (mBus_stats[dumpStatsIndex]._mBusStatsMap.empty()) return false;
+
+  str = concat(F("stats;"), mBus_stats[dumpStatsIndex].getFront());
+
+  return true;
 }
 
 bool P094_data_struct::max_length_reached() const {

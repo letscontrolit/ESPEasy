@@ -5,6 +5,7 @@
 #ifdef USES_P094
 
 # include "../Helpers/CUL_interval_filter.h"
+# include "../Helpers/CUL_stats.h"
 
 
 # include <ESPeasySerial.h>
@@ -73,7 +74,8 @@ public:
             const int16_t     serial_rx,
             const int16_t     serial_tx,
             unsigned long     baudrate,
-            bool              intervalFilterEnabled);
+            bool              intervalFilterEnabled,
+            bool              collectStats);
 
   void          post_init();
 
@@ -140,8 +142,11 @@ public:
 # endif // if P094_DEBUG_OPTIONS
 
   bool interval_filter_add(const mBusPacket_t& packet);
-
   void interval_filter_purgeExpired();
+
+  bool collect_stats_add(const mBusPacket_t& packet);
+  void prepare_dump_stats();
+  bool dump_next_stats(String& str);
 
 private:
 
@@ -160,12 +165,18 @@ private:
   bool     debug_generate_CUL_data = false;
   # endif // if P094_DEBUG_OPTIONS
   bool interval_filter_enabled = false;
+  bool collect_stats           = false;
+
+  bool firstStatsIndexActive   = false;
 
   bool                   filterValueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = { 0 };
   P094_Filter_Value_Type filterLine_valueType[P094_NR_FILTERS];
   P094_Filter_Comp       filterLine_compare[P094_NR_FILTERS];
 
   CUL_interval_filter interval_filter;
+  
+  // Alternating stats, one being flushed, the other used to collect new stats
+  CUL_Stats           mBus_stats[2]; 
 };
 
 

@@ -55,6 +55,21 @@ String mBusPacket_header_t::toString() const
   return res;
 }
 
+uint64_t mBusPacket_header_t::encode_toUInt64() const
+{
+  mBusPacket_header_t tmp;
+
+  tmp._encodedValue = _encodedValue;
+  tmp._length       = 0;
+  return tmp._encodedValue;
+}
+
+void mBusPacket_header_t::decode_fromUint64(uint64_t encodedValue)
+{
+  _encodedValue = encodedValue;
+  _length       = 1; // To pass isValid() check
+}
+
 bool mBusPacket_header_t::isValid() const
 {
   return _manufacturer != 0 &&
@@ -80,8 +95,19 @@ uint32_t mBusPacket_t::getDeviceSerial() const
 {
   // FIXME TD-er: Which deviceID is the device and which the wrapper?
 
-  if (_deviceId2.isValid()) return _deviceId2._serialNr;
-  if (_deviceId1.isValid()) return _deviceId1._serialNr;
+  if (_deviceId2.isValid()) { return _deviceId2._serialNr; }
+
+  if (_deviceId1.isValid()) { return _deviceId1._serialNr; }
+  return 0;
+}
+
+uint64_t mBusPacket_t::deviceID_toUInt64() const
+{
+  // FIXME TD-er: Which deviceID is the device and which the wrapper?
+
+  if (_deviceId2.isValid()) { return _deviceId2.encode_toUInt64(); }
+
+  if (_deviceId1.isValid()) { return _deviceId1.encode_toUInt64(); }
   return 0;
 }
 
@@ -101,17 +127,20 @@ bool mBusPacket_t::parse(const String& payload)
 
   if (pos_semicolon == -1) { pos_semicolon = payload.length(); }
 
-  const uint16_t lqi_rssi = hexToUL(payload, pos_semicolon - 4, 4);
+  _lqi_rssi = hexToUL(payload, pos_semicolon - 4, 4);
+  return parseHeaders(payloadWithoutChecksums);
+}
 
-  _LQI = (lqi_rssi >> 8) & 0x7f; // Bit 7 = CRC OK Bit
+int16_t mBusPacket_t::decode_LQI_RSSI(uint16_t lqi_rssi, uint8_t& LQI)
+{
+  LQI = (lqi_rssi >> 8) & 0x7f; // Bit 7 = CRC OK Bit
 
   int rssi = lqi_rssi & 0xFF;
 
   if (rssi >= 128) {
     rssi -= 256; // 2-complement
   }
-  _rssi = (rssi / 2) - 74;
-  return parseHeaders(payloadWithoutChecksums);
+  return (rssi / 2) - 74;
 }
 
 bool mBusPacket_t::matchSerial(uint32_t serialNr) const
@@ -196,6 +225,43 @@ bool mBusPacket_t::parseHeaders(const mBusPacket_data& payloadWithoutChecksums)
   }
 
   return _deviceId1.isValid();
+}
+
+String mBusPacket_t::toString() const
+{
+  static size_t expectedSize = 96;
+  String res;
+
+  if (res.reserve(expectedSize)) {
+    if (_deviceId1.isValid()) {
+      res += F(" deviceId1: ");
+      res += _deviceId1.toString();
+      res += '(';
+      res += static_cast<uint8_t>(_deviceId1._length);
+      res += ')';
+    }
+
+    if (_deviceId2.isValid()) {
+      res += F(" deviceId2: ");
+      res += _deviceId2.toString();
+      res += '(';
+      res += static_cast<uint8_t>(_deviceId2._length);
+      res += ')';
+    }
+    res += F(" chksum: ");
+    res += formatToHex(_checksum, 8);
+
+    uint8_t LQI        = 0;
+    const int16_t rssi = decode_LQI_RSSI(_lqi_rssi, LQI);
+    res += F(" LQI: ");
+    res += LQI;
+    res += F(" RSSI: ");
+    res += rssi;
+  }
+
+  if (res.length() > expectedSize) { expectedSize = res.length(); }
+
+  return res;
 }
 
 uint8_t mBusPacket_t::hexToByte(const String& str, size_t index)

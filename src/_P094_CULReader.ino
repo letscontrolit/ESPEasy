@@ -30,13 +30,16 @@
 # define P094_GET_APPEND_RECEIVE_SYSTIME    bitRead(PCONFIG(0), 0)
 # define P094_SET_APPEND_RECEIVE_SYSTIME(X) bitWrite(PCONFIG(0), 0, X)
 
-#if P094_DEBUG_OPTIONS
-# define P094_GET_GENERATE_DEBUG_CUL_DATA    bitRead(PCONFIG(0), 1)
-# define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0), 1, X)
-#endif
+# if P094_DEBUG_OPTIONS
+#  define P094_GET_GENERATE_DEBUG_CUL_DATA    bitRead(PCONFIG(0), 1)
+#  define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0), 1, X)
+# endif // if P094_DEBUG_OPTIONS
 
 # define P094_GET_INTERVAL_FILTER    bitRead(PCONFIG(0), 2)
 # define P094_SET_INTERVAL_FILTER(X) bitWrite(PCONFIG(0), 2, X)
+
+# define P094_GET_COLLECT_STATS    bitRead(PCONFIG(0), 3)
+# define P094_SET_COLLECT_STATS(X) bitWrite(PCONFIG(0), 3, X)
 
 
 # define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
@@ -166,12 +169,13 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
       addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
 
-      addFormCheckBox(F("Append system time"),        F("systime"),    P094_GET_APPEND_RECEIVE_SYSTIME);
-#if P094_DEBUG_OPTIONS
-      addFormCheckBox(F("(debug) Generate CUL data"), F("debug_data"), P094_GET_GENERATE_DEBUG_CUL_DATA);
-#endif
+      addFormCheckBox(F("Append system time"),        F("systime"),         P094_GET_APPEND_RECEIVE_SYSTIME);
+# if P094_DEBUG_OPTIONS
+      addFormCheckBox(F("(debug) Generate CUL data"), F("debug_data"),      P094_GET_GENERATE_DEBUG_CUL_DATA);
+# endif // if P094_DEBUG_OPTIONS
 
-      addFormCheckBox(F("Enable Interval Filter"), F("interval_filter"), P094_GET_INTERVAL_FILTER);
+      addFormCheckBox(F("Enable Interval Filter"),    F("interval_filter"), P094_GET_INTERVAL_FILTER);
+      addFormCheckBox(F("Collect Stats"),             F("collect_stats"),   P094_GET_COLLECT_STATS);
 
       success = true;
       break;
@@ -195,10 +199,11 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       }
 
       P094_SET_APPEND_RECEIVE_SYSTIME(isFormItemChecked(F("systime")));
-#if P094_DEBUG_OPTIONS
+# if P094_DEBUG_OPTIONS
       P094_SET_GENERATE_DEBUG_CUL_DATA(isFormItemChecked(F("debug_data")));
-#endif
+# endif // if P094_DEBUG_OPTIONS
       P094_SET_INTERVAL_FILTER(isFormItemChecked(F("interval_filter")));
+      P094_SET_COLLECT_STATS(isFormItemChecked(F("collect_stats")));
 
       break;
     }
@@ -215,12 +220,12 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         return success;
       }
 
-      if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE, P094_GET_INTERVAL_FILTER)) {
+      if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE, P094_GET_INTERVAL_FILTER, P094_GET_COLLECT_STATS)) {
         LoadCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0);
         P094_data->post_init();
-#if P094_DEBUG_OPTIONS
+# if P094_DEBUG_OPTIONS
         P094_data->setGenerate_DebugCulData(P094_GET_GENERATE_DEBUG_CUL_DATA);
-#endif
+# endif // if P094_DEBUG_OPTIONS
         success = true;
 
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
@@ -233,10 +238,17 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_ONCE_A_SECOND:
     {
       P094_data_struct *P094_data =
-          static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+        static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P094_data) {
         P094_data->interval_filter_purgeExpired();
+
+        if (P094_data->dump_next_stats(event->String2)) {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLogMove(LOG_LEVEL_INFO, concat(F("CUL Reader: "), event->String2));
+          }
+          sendData(event);
+        }
       }
       break;
     }
@@ -253,7 +265,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           P094_data->getSentence(event->String2, P094_GET_APPEND_RECEIVE_SYSTIME);
 
           if (event->String2.length() > 0) {
-            if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
+            const bool fromCUL = true;
+
+            if (Plugin_094_match_all(event->TaskIndex, event->String2, fromCUL)) {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log;
 
@@ -293,7 +307,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P094_data)) {
-          #if P094_DEBUG_OPTIONS
+          # if P094_DEBUG_OPTIONS
           const uint32_t debug_count = P094_data->getDebugCounter();
           event->String2.reserve(P094_DEBUG_SENTENCE_LENGTH);
           event->String2 += String(debug_count);
@@ -303,7 +317,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           for (long i = event->String2.length(); i < P094_DEBUG_SENTENCE_LENGTH; ++i) {
             event->String2 += c;
           }
-          #endif
+          # endif // if P094_DEBUG_OPTIONS
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("CUL Reader: Sending: ");
@@ -334,6 +348,14 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             addLogMove(LOG_LEVEL_INFO, param1);
             success = true;
           }
+        } else if (equals(cmd, F("culreader_dumpstats"))) {
+          P094_data_struct *P094_data =
+            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if ((nullptr != P094_data)) {
+            P094_data->prepare_dump_stats();
+            success = true;
+          }
         }
       }
 
@@ -346,9 +368,11 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       // event->String1 => topic;
       // event->String2 => payload;
       if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
-        // FIXME TD-er: Need to add checking for stats too
-        if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
+        const bool fromCUL = false;
+
+        if (Plugin_094_match_all(event->TaskIndex, event->String2, fromCUL)) {
           success = true;
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log;
 
@@ -376,7 +400,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
   return success;
 }
 
-bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received)
+bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fromCUL)
 {
   P094_data_struct *P094_data =
     static_cast<P094_data_struct *>(getPluginTaskData(taskIndex));
@@ -398,6 +422,19 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received)
 
     res = !res;
   }
+
+  #ifdef ESP8266
+  if (res) {
+  #endif
+  if (fromCUL) {
+    // Only collect stats from the actual CUL receiver, not when processing forwarded packets.
+    // On ESP8266: only collect stats on the filtered nodes or else we will likely run out of memory
+    P094_data->collect_stats_add(packet);
+  }
+  #ifdef ESP8266
+  }
+  #endif
+
 
   if (res) {
     if (!P094_data->interval_filter_add(packet)) {
