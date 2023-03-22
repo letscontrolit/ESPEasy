@@ -807,7 +807,7 @@ String parseHexTextString(const String& argument, int index) {
   String result;
 
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
-  const String skipChars = F(" -:");
+  const String skipChars = F(" -:,.;");
 
   result.reserve(argument.length()); // longer than needed, most likely
   int i      = index;
@@ -820,7 +820,7 @@ String parseHexTextString(const String& argument, int index) {
       while (j < arg.length()) {
         int hex = -1;
 
-        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > -1) && (hex < 256)) {
+        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > 0) && (hex < 256)) {
           result += char(hex);
         }
         j += 2;
