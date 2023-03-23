@@ -323,35 +323,7 @@ String RTC_cache_handler_struct::getNextCacheFileName(int& fileNr, bool& islast)
 bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
   if (updateRTC_filenameCounters()) {
     const int nrCacheFiles = RTC_cache.writeFileNr - RTC_cache.readFileNr;
-
-    if (nrCacheFiles > 1) {
-      // read and write file nr are not the same file, remove the read file nr.
-      String fname = createCacheFilename(RTC_cache.readFileNr);
-
-      writeError = false;
-
-      // Make sure the read and peek file handles cannot be used on possibly deleted files.
-      if (fr) {
-        fr.close();
-      }
-
-      if (fp) {
-        fp.close();
-      }
-
-      if (tryDeleteFile(fname)) {
-          #ifdef RTC_STRUCT_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("RTC  : Removed file from FS: ");
-          log += fname;
-          addLogMove(LOG_LEVEL_INFO, log);
-        }
-          #endif // ifdef RTC_STRUCT_DEBUG
-        updateRTC_filenameCounters();
-        return true;
-      }
-    }
+    return deleteCacheBlock(RTC_cache.readFileNr);
   }
 #ifdef RTC_STRUCT_DEBUG
 
@@ -378,7 +350,7 @@ bool RTC_cache_handler_struct::deleteAllCacheBlocks()
   if (updateRTC_filenameCounters()) {
     const int nrCacheFiles = RTC_cache.writeFileNr - RTC_cache.readFileNr;
 
-    if (nrCacheFiles > 1) {
+    if (RTC_cache.readFileNr < RTC_cache.writeFileNr) {
       bool fileDeleted = false;
       int  count       = 0;
 
@@ -407,6 +379,41 @@ bool RTC_cache_handler_struct::deleteAllCacheBlocks()
     }
   }
   return false;
+}
+
+bool RTC_cache_handler_struct::deleteCacheBlock(int fileNr)
+{
+  bool fileDeleted = false;
+  if (updateRTC_filenameCounters()) {
+    while ((RTC_cache.readFileNr < RTC_cache.writeFileNr) && (RTC_cache.readFileNr <= fileNr)) {
+      // read and write file nr are not the same file, remove the read file nr.
+      String fname = createCacheFilename(RTC_cache.readFileNr);
+
+      writeError = false;
+
+      // Make sure the read and peek file handles cannot be used on possibly deleted files.
+      if (fr) {
+        fr.close();
+      }
+
+      if (fp) {
+        fp.close();
+      }
+
+      if (tryDeleteFile(fname)) {
+        fileDeleted = true;
+        #ifdef RTC_STRUCT_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLogMove(LOG_LEVEL_INFO, concat(F("RTC  : Removed file from FS: "), fname));
+        }
+        #endif // ifdef RTC_STRUCT_DEBUG
+
+        updateRTC_filenameCounters();
+        backgroundtasks();
+      }
+    }
+  }
+  return fileDeleted;
 }
 
 bool RTC_cache_handler_struct::loadMetaData()
@@ -544,10 +551,10 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
   //      return false;
   //    }
   if (SpiffsFull()) {
+    writeError = true;
       #ifdef RTC_STRUCT_DEBUG
     addLog(LOG_LEVEL_ERROR, F("RTC  : FS full"));
       #endif // ifdef RTC_STRUCT_DEBUG
-    return false;
   }
 
   // Make sure the read and peek file handles cannot be used on possibly deleted files.
