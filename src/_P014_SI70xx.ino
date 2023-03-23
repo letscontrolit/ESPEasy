@@ -52,6 +52,7 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 3;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].I2CNoDeviceCheck   = true;
 
       // Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats    = true;
