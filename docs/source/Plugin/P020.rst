@@ -103,6 +103,11 @@ Data Acquisition
 The Data Acquisition and Send to Controller settings are standard available configuration items. Send to Controller only when one or more Controllers are configured. *Single event with all values* option is not applicable for this plugin.
 
 
+Commands
+~~~~~~~~
+
+.. include:: P020_commands.repl
+
 Change log
 ----------
 
