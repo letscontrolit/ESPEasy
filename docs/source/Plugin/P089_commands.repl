@@ -1,0 +1,29 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``pingset,<value>``
+
+        ``pingset,<taskname>,<value>`` (deprecated)
+
+        ``<taskname>``: Name of the ``Ping`` task.
+
+        ``<value>``: The value to set the Fails counter to, range: -1023 .. 1023.
+
+        Examples:
+
+        ``pingset,ping,0``: Reset the Fails counter for task ``ping``. (deprecated)
+
+        **Preferred syntax:**
+
+        ``pingset,0``: Reset the Fails counter (alternative syntax)
+
+        ``[ping1].pingset,-10``: Set a specific instance of the Ping plugin.
+
+        ``[ping2].pingset,0``: Set another instance of the Ping plugin.
+        ","
+        Set the Fails counter for the task.
+
+        The deprecated syntax was instated *before* the generic task-specific command addressing, using ``[<taskname>].`` prefixing, was introduced.
+        "
