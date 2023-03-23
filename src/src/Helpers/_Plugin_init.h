@@ -11,7 +11,7 @@
 
 struct EventStruct;
 
-void PluginInit();
+void PluginInit(bool priorityOnly = false);
 
 // Macro to forward declare the Plugin_NNN functions.
 //

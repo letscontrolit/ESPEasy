@@ -54,7 +54,7 @@
 .. |P115_type| replace:: :cyan:`Energy`
 .. |P115_typename| replace:: :cyan:`Energy - MAX1704x`
 .. |P115_porttype| replace:: `.`
-.. |P115_status| replace:: :yellow:`ENERGY, COLLECTION B`
+.. |P115_status| replace:: :yellow:`ENERGY` :yellow:`COLLECTION B`
 .. |P115_github| replace:: _P115_MAX1704x_v2.ino
 .. _P115_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P115_MAX1704x_v2.ino
 .. |P115_usedby| replace:: `.`

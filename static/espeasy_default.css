@@ -154,6 +154,11 @@ textarea,
 	border: .1px solid gray;
 }
 
+input[disabled],
+input[disabled]:hover {
+	background-color: var(--bg7);
+}
+
 .button.link.wide {
 	display: inline-block;
 	text-align: center;
