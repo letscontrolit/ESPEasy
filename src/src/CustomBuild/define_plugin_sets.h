@@ -1050,6 +1050,11 @@ To create/register a plugin, you have to :
         #define FEATURE_RULES_EASY_COLOR_CODE 1
     #endif
 
+    #ifdef FEATURE_CUSTOM_PROVISIONING
+        #undef FEATURE_CUSTOM_PROVISIONING
+    #endif
+    #define FEATURE_CUSTOM_PROVISIONING 1
+
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_COLLECTION_ESP32 section at end,

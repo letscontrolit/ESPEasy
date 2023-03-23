@@ -227,11 +227,15 @@ String send_via_http(const String& logIdentifier,
 // If the URL ends with a /, the file part will be assumed the same as file_save.
 // If file_save is empty, the file part from the URL will be used as local file name.
 // Return true when successful.
-bool downloadFile(const String& url, String file_save);
+bool downloadFile(String file_save, String error);
 
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error);
 
-bool downloadFirmware(const String& url, String& error);
+bool downloadFirmware(String filename, String& error);
+bool downloadFirmware(const String& url, String& file_save, String& user, String& pass, String& error);
+
+// Return the full url including filename
+String joinUrlFilename(const String& url, String& filename);
 
 #endif // if FEATURE_DOWNLOAD
 
