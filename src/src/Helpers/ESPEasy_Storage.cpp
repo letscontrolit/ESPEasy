@@ -1950,25 +1950,7 @@ String downloadFileType(const String& url, const String& user, const String& pas
   }
 
   String filename = getFileName(filetype, filenr);
-  String fullUrl;
-
-  fullUrl.reserve(url.length() + filename.length() + 1); // May need to add an extra slash
-  fullUrl = url;
-  fullUrl = parseTemplate(fullUrl, true);                // URL encode
-
-  // URLEncode may also encode the '/' into "%2f"
-  // FIXME TD-er: Can this really occur?
-  fullUrl.replace(F("%2f"), F("/"));
-
-  while (filename.startsWith(F("/"))) {
-    filename = filename.substring(1);
-  }
-
-  if (!fullUrl.endsWith(F("/"))) {
-    fullUrl += F("/");
-  }
-  fullUrl += filename;
-
+  String fullUrl = joinUrlFilename(url, filename);
   String error;
 
   if (ResetFactoryDefaultPreference.deleteFirst()) {
@@ -1984,7 +1966,9 @@ String downloadFileType(const String& url, const String& user, const String& pas
       String filename_bak = filename;
       filename_bak += F("_bak");
       if (fileExists(filename_bak)) {
-        return F("Could not rename to _bak");
+        if (!ResetFactoryDefaultPreference.delete_Bak_Files() || !tryDeleteFile(filename_bak)) {
+          return F("Could not rename to _bak");
+        }
       }
 
       // Must download it to a tmp file.
@@ -2025,9 +2009,6 @@ String downloadFileType(const String& url, const String& user, const String& pas
 
 String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 {
-  if (!ResetFactoryDefaultPreference.allowFetchByCommand()) {
-    return F("Not Allowed");
-  }
   String url, user, pass;
 
   {
@@ -2035,12 +2016,19 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 
     if (AllocatedProvisioningSettings()) {
       loadProvisioningSettings(ProvisioningSettings);
+
+      if (!ProvisioningSettings.fetchFileTypeAllowed(filetype, filenr)) {
+        return F("Not Allowed");
+      }
+
       url  = ProvisioningSettings.url;
       user = ProvisioningSettings.user;
       pass = ProvisioningSettings.pass;
     }
   }
-  return downloadFileType(url, user, pass, filetype, filenr);
+  String res = downloadFileType(url, user, pass, filetype, filenr);
+  clearAllCaches();
+  return res;
 }
 
 #endif // if FEATURE_CUSTOM_PROVISIONING

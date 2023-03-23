@@ -43,7 +43,6 @@ void ResetFactory(bool formatFS)
     ResetFactoryDefaultPreference.fetchProvisioningDat(DEFAULT_PROVISIONING_FETCH_PROVISIONING);
     ResetFactoryDefaultPreference.saveURL(DEFAULT_PROVISIONING_SAVE_URL);
     ResetFactoryDefaultPreference.storeCredentials(DEFAULT_PROVISIONING_SAVE_CREDENTIALS);
-    ResetFactoryDefaultPreference.allowFetchByCommand(DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND);
   }
   #endif
 

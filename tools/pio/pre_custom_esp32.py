@@ -95,4 +95,3 @@ print("\u001b[32m ------------------------------- \u001b[0m")
 if (len(my_defines) == 0):
   print("\u001b[31m No defines are set, probably configuration error. \u001b[0m")
   raise ValueError
-

@@ -114,6 +114,9 @@ void run_compiletime_checks() {
   #if FEATURE_ESPEASY_P2P
   check_size<NodeStruct,                            66u>();
   #endif
+  #if FEATURE_CUSTOM_PROVISIONING
+  check_size<ProvisioningStruct,                    256u>();
+  #endif
   check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
@@ -154,6 +157,13 @@ void run_compiletime_checks() {
 
     const unsigned int md5_offset = ProgmemMd5_offset + 16;
     static_assert(md5_offset == offsetof(SecurityStruct, md5), "");
+
+    #if FEATURE_CUSTOM_PROVISIONING
+    const unsigned int prov_pass_offset = 62u;
+    static_assert(prov_pass_offset == offsetof(ProvisioningStruct, pass), "");
+
+
+    #endif
   }
 
 
