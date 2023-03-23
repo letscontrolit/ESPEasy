@@ -80,7 +80,15 @@ public:
   // Compute the standard deviation  over last N stored values
   float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
-
+  // Compute min over last N stored values
+  float getSampleMin(PluginStatsBuffer_t::index_t lastNrSamples) const;
+  
+  // Compute max over last N stored values
+  float getSampleMax(PluginStatsBuffer_t::index_t lastNrSamples) const;
+  
+  // Compute sample stored values
+  float getSample(PluginStatsBuffer_t::index_t lastNrSamples) const;
+  
   float operator[](PluginStatsBuffer_t::index_t index) const;
 
 

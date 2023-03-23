@@ -83,6 +83,64 @@ float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) c
   return sqrtf(variance);
 }
 
+float PluginStats::getSampleMin(PluginStatsBuffer_t::index_t lastNrSamples) const
+{
+  if (_samples.size() == 0) { return _errorValue; }
+
+  PluginStatsBuffer_t::index_t i = 0;
+
+  if (lastNrSamples < _samples.size()) {
+    i = _samples.size() - lastNrSamples;
+  }
+
+  float min = INT_MAX;
+  for (; i < _samples.size(); ++i) {
+    if (usableValue(_samples[i])) {
+      if (_samples[i]<min) {
+        min = _samples[i];
+      }
+    }
+  }
+  if (min == INT_MAX) { return _errorValue; }
+  
+  return min;
+}
+
+float PluginStats::getSampleMax(PluginStatsBuffer_t::index_t lastNrSamples) const
+{
+  if (_samples.size() == 0) { return _errorValue; }
+
+  PluginStatsBuffer_t::index_t i = 0;
+
+  if (lastNrSamples < _samples.size()) {
+    i = _samples.size() - lastNrSamples;
+  }
+
+  float max = INT_MIN;
+  for (; i < _samples.size(); ++i) {
+    if (usableValue(_samples[i])) {
+      if (_samples[i]>max) {
+        max = _samples[i];
+      }
+    }
+  }
+  if (max == INT_MIN) { return _errorValue; }
+  
+  return max;
+}
+
+float PluginStats::getSample(PluginStatsBuffer_t::index_t lastNrSamples) const
+{
+  if (_samples.size() == 0 || _samples.size()<lastNrSamples) { return _errorValue; }
+
+  PluginStatsBuffer_t::index_t i = 0;
+
+  if (lastNrSamples < _samples.size()) {
+    i = _samples.size() - lastNrSamples;
+  }
+
+  return _samples[i];
+}
 float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
 {
   if (index < _samples.size()) { return _samples[index]; }
@@ -99,12 +157,32 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
 
   float value;
 
-  if (equals(command, F("min"))) {        // [taskname#valuename.min] Lowest value seen since value reset
-    value   = getPeakLow();
-    success = true;
-  } else if (equals(command, F("max"))) { // [taskname#valuename.max] Highest value seen since value reset
+  if (command.startsWith(F("min"))) {
+    if (equals(command, F("min"))) {        // [taskname#valuename.min] Lowest value seen since value reset
+      value   = getPeakLow();
+      success = true;
+    } else {                                // Check for "minN", where N is the number of most recent samples to use.
+      int nrSamples = 0;
+      if (validIntFromString(command.substring(3), nrSamples)) {
+        if (nrSamples > 0) {
+          value   = getSampleMin(nrSamples);
+          success = true;
+        }
+      }      
+    }  
+  } else if (command.startsWith(F("max"))) {
+    if (equals(command, F("max"))) {        // [taskname#valuename.max] Highest value seen since value reset
     value   = getPeakHigh();
     success = true;
+    } else {                                // Check for "maxN", where N is the number of most recent samples to use.
+      int nrSamples = 0;
+      if (validIntFromString(command.substring(3), nrSamples)) {
+        if (nrSamples > 0) {
+          value   = getSampleMax(nrSamples);
+          success = true;
+        }
+      }      
+    }
   } else if (command.startsWith(F("avg"))) {
     if (equals(command, F("avg"))) { // [taskname#valuename.avg] Average value of the last N kept samples
       value   = getSampleAvg();
@@ -129,10 +207,27 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
       // Check for "stddevN", where N is the number of most recent samples to use.
       int nrSamples = 0;
 
-      if (validIntFromString(command.substring(3), nrSamples)) {
+      if (validIntFromString(command.substring(6), nrSamples)) {
         if (nrSamples > 0) {
           // [taskname#valuename.stddevN] Std. deviation over N most recent samples
           value   = getSampleStdDev(nrSamples);
+          success = true;
+        }
+      }
+    }
+  } else if (equals(command, F("size"))) { // [taskname#valuename.size] Number of saved samples
+    value   = _samples.size();
+    success = true;
+  } else if (command.startsWith(F("sample"))) {
+    if (equals(command, F("sample"))) { // [taskname#valuename.sample] The first (oldest) sample saved.
+      value   = _samples[0];
+      success = true;
+    } else {
+      int nrSamples = 0;
+
+      if (validIntFromString(command.substring(6), nrSamples)) {
+        if (nrSamples > 0) {            // [taskname#valuename.sampleN] Sample N (1 - last (current), N>[number of examples] - return error value)
+          value   = getSample(nrSamples);
           success = true;
         }
       }
