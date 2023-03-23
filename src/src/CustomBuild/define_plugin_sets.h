@@ -1506,6 +1506,7 @@ To create/register a plugin, you have to :
     #define USES_P129   // 74HC165 Input shiftregisters
     #define USES_P133   // LTR390 UV
     #define USES_P135   // SCD4x
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
@@ -1762,10 +1763,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
+  #ifndef USES_P144
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
-
 #endif
 
 // Collection of all NeoPixel plugins
@@ -2101,11 +2104,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
   #endif
+  #ifndef USES_P144
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
-
-
 
   // Controllers
   #ifndef USES_C015
@@ -2154,7 +2158,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_P144) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
