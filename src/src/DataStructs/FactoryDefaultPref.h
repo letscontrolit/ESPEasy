@@ -46,11 +46,12 @@ struct ResetFactoryDefaultPreference_struct {
   bool deleteFirst() const;
   void deleteFirst(bool checked);
 
+  bool delete_Bak_Files() const;
+  void delete_Bak_Files(bool checked);
+
   bool saveURL() const;
   void saveURL(bool checked);
 
-  bool allowFetchByCommand() const;
-  void allowFetchByCommand(bool checked);
 
   bool storeCredentials() const;
   void storeCredentials(bool checked);
