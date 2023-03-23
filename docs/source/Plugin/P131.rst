@@ -262,6 +262,11 @@ Commands
 
 .. include:: AdaGFX_commands.repl
 
+Values
+------
+
+.. include:: AdaGFX_values.repl
+
 
 
 Change log

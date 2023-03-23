@@ -256,7 +256,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
 
   if (equals(varName, F("name")))
   {
-    addHtml(Settings.getName());
+    addHtml(Settings.getHostname());
   }
 
   else if (equals(varName, F("unit")))

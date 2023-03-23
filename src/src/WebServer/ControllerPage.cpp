@@ -301,6 +301,10 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
   const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
 
+  # ifndef LIMIT_BUILD_SIZE
+  addRTDControllerButton(Protocol[ProtocolIndex].Number);
+  # endif // ifndef LIMIT_BUILD_SIZE
+
   if (Settings.Protocol[controllerindex])
   {
     {
