@@ -8,7 +8,7 @@
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P144
-#define PLUGIN_144_DEBUG  true   // set to true for extra log info
+#define PLUGIN_144_DEBUG  false   // set to true for extra log info
 
 // States for statemachine used to decode received message
 typedef enum {
