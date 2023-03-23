@@ -2,28 +2,28 @@
 
 #if FEATURE_SETTINGS_ARCHIVE
 
-#include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
+# include "../WebServer/ESPEasy_WebServer.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/Markup.h"
+# include "../WebServer/Markup_Buttons.h"
+# include "../WebServer/Markup_Forms.h"
 
-#include "../Globals/ResetFactoryDefaultPref.h"
+# include "../Globals/ResetFactoryDefaultPref.h"
 
-#include "../Helpers/ESPEasy_FactoryDefault.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Misc.h"
-#include "../Helpers/Networking.h"
-#include "../Helpers/StringParser.h"
+# include "../Helpers/ESPEasy_FactoryDefault.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Misc.h"
+# include "../Helpers/Networking.h"
+# include "../Helpers/StringParser.h"
 
 
 // ********************************************************************************
 // Web Interface to manage archived settings
 // ********************************************************************************
 void handle_settingsarchive() {
-  #ifndef BUILD_NO_RAM_TRACKER
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_settingsarchive"));
-  #endif
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -38,6 +38,7 @@ void handle_settingsarchive() {
     // User choose a pre-defined config and wants to save it as the new default.
     for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
       const FileType::Enum ft = static_cast<FileType::Enum>(i);
+
       if (ft == FileType::RULES_TXT) {
         for (int i = 0; i < RULESETS_MAX; ++i) {
           storeDownloadFiletypeCheckbox(FileType::RULES_TXT, i);
@@ -48,22 +49,39 @@ void handle_settingsarchive() {
     }
 
     ResetFactoryDefaultPreference.deleteFirst(isFormItemChecked(F("del")));
-#if FEATURE_CUSTOM_PROVISIONING
+    ResetFactoryDefaultPreference.delete_Bak_Files(isFormItemChecked(F("del_bak")));
+# if FEATURE_CUSTOM_PROVISIONING
     ResetFactoryDefaultPreference.saveURL(isFormItemChecked(F("saveurl")));
-    ResetFactoryDefaultPreference.allowFetchByCommand(isFormItemChecked(F("allowcommand")));
     ResetFactoryDefaultPreference.storeCredentials(isFormItemChecked(F("savecred")));
-#endif
+# endif // if FEATURE_CUSTOM_PROVISIONING
     applyFactoryDefaultPref();
 
     String error;
-    #if FEATURE_CUSTOM_PROVISIONING
+# if FEATURE_CUSTOM_PROVISIONING
     {
       MakeProvisioningSettings(ProvisioningSettings);
+
       if (AllocatedProvisioningSettings()) {
         ProvisioningSettings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+
+        ProvisioningSettings.allowedFlags.allowFetchFirmware = isFormItemChecked(F("firmware"));
+        for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
+          const FileType::Enum ft = static_cast<FileType::Enum>(i);
+
+          if (ft == FileType::RULES_TXT) {
+            for (int i = 0; i < RULESETS_MAX; ++i) {
+              storeAllowFiletypeCheckbox(ProvisioningSettings, FileType::RULES_TXT, i);
+            }
+          } else {
+            storeAllowFiletypeCheckbox(ProvisioningSettings, ft);
+          }
+        }
+
+
         if (ResetFactoryDefaultPreference.saveURL()) {
           ProvisioningSettings.setUrl(webArg(F("url")));
         }
+
         if (ResetFactoryDefaultPreference.storeCredentials()) {
           ProvisioningSettings.setUser(webArg(F("user")));
           ProvisioningSettings.setPass(webArg(F("pass")));
@@ -71,7 +89,7 @@ void handle_settingsarchive() {
       }
       error = saveProvisioningSettings(ProvisioningSettings);
     }
-    #endif
+# endif // if FEATURE_CUSTOM_PROVISIONING
 
     error += SaveSettings();
     addHtmlError(error);
@@ -91,10 +109,11 @@ void handle_settingsarchive() {
 
     for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
       const FileType::Enum ft = static_cast<FileType::Enum>(i);
+
       if (ft != FileType::RULES_TXT) {
         if (getDownloadFiletypeChecked(ft, 0)) {
           if (tryDownloadFileType(url, user, pass, ft)) {
-            somethingDownloaded = true; 
+            somethingDownloaded = true;
           }
         }
       }
@@ -102,8 +121,8 @@ void handle_settingsarchive() {
 
     for (int i = 0; i < RULESETS_MAX; ++i) {
       if (getDownloadFiletypeChecked(FileType::RULES_TXT, i)) {
-        if (tryDownloadFileType(url, user, pass, FileType::RULES_TXT, i)) { 
-          somethingDownloaded = true; 
+        if (tryDownloadFileType(url, user, pass, FileType::RULES_TXT, i)) {
+          somethingDownloaded = true;
         }
       }
     }
@@ -126,26 +145,25 @@ void handle_settingsarchive() {
 
     {
       String url, user, pass;
+# if FEATURE_CUSTOM_PROVISIONING
+      MakeProvisioningSettings(ProvisioningSettings);
 
+      if (AllocatedProvisioningSettings()) {
+        loadProvisioningSettings(ProvisioningSettings);
+        url  = ProvisioningSettings.url;
+        user = ProvisioningSettings.user;
+        pass = ProvisioningSettings.pass;
+      }
+# endif // if FEATURE_CUSTOM_PROVISIONING
       {
-        #if FEATURE_CUSTOM_PROVISIONING
-        {
-          MakeProvisioningSettings(ProvisioningSettings);
-          if (AllocatedProvisioningSettings()) {
-            loadProvisioningSettings(ProvisioningSettings);
-            url = ProvisioningSettings.url;
-            user = ProvisioningSettings.user;
-            pass = ProvisioningSettings.pass;
-          }
-        }
-        #endif
-
         if (webArg(F("url")).length() != 0) {
           url = webArg(F("url"));
         }
+
         if (webArg(F("user")).length() != 0) {
           user = webArg(F("user"));
         }
+
         if (webArg(F("pass")).length() != 0) {
           pass = webArg(F("pass"));
         }
@@ -153,14 +171,31 @@ void handle_settingsarchive() {
 
       addFormTextBox(F("URL with settings"), F("url"), url, 256);
       addFormNote(F("Only HTTP supported. Do not include filename. URL is allowed to contain system variables."));
-      #if FEATURE_CUSTOM_PROVISIONING
+# if FEATURE_CUSTOM_PROVISIONING
       addFormCheckBox(F("Store URL"), F("saveurl"), ResetFactoryDefaultPreference.saveURL());
-      #endif
+# endif // if FEATURE_CUSTOM_PROVISIONING
       addFormTextBox(F("User"), F("user"), user, 64);
       addFormPasswordBox(F("Pass"), F("pass"), pass, 64);
-      #if FEATURE_CUSTOM_PROVISIONING
+# if FEATURE_CUSTOM_PROVISIONING
       addFormCheckBox(F("Store Credentials"), F("savecred"), ResetFactoryDefaultPreference.storeCredentials());
-      #endif
+
+      addTableSeparator(F("Allow Fetch by Command"), 2, 3);
+      addFormCheckBox(F("Allow Firmware"), F("firmware"), ProvisioningSettings.allowedFlags.allowFetchFirmware);
+
+      for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
+        const FileType::Enum ft = static_cast<FileType::Enum>(i);
+
+        if (ft != FileType::RULES_TXT) {
+          addAllowFiletypeCheckbox(ProvisioningSettings, ft);
+        }
+      }
+
+      for (int i = 0; i < RULESETS_MAX; ++i) {
+        addAllowFiletypeCheckbox(ProvisioningSettings, FileType::RULES_TXT, i);
+      }
+
+      addFormNote(F("Fetch files via a command does need stored URL (+ credentials)"));
+# endif // if FEATURE_CUSTOM_PROVISIONING
     }
 
     addTableSeparator(F("Download Settings"), 2, 3);
@@ -168,14 +203,15 @@ void handle_settingsarchive() {
     addRowLabel(F("Delete First"));
     addCheckBox(F("del"), ResetFactoryDefaultPreference.deleteFirst());
     addFormNote(F("Needed on filesystem with not enough free space. Use with care!"));
-    #if FEATURE_CUSTOM_PROVISIONING
-    addFormCheckBox(F("Allow Fetch by Command"), F("allowcommand"), ResetFactoryDefaultPreference.allowFetchByCommand());
-    addFormNote(F("Fetch files via a command does need stored URL (+ credentials)"));
-    #endif
+
+    addRowLabel(F("Delete _bak Files"));
+    addCheckBox(F("del_bak"), ResetFactoryDefaultPreference.delete_Bak_Files());
 
     addTableSeparator(F("Files to Download"), 2, 3);
+
     for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
       const FileType::Enum ft = static_cast<FileType::Enum>(i);
+
       if (ft != FileType::RULES_TXT) {
         addDownloadFiletypeCheckbox(ft);
       }
@@ -205,12 +241,9 @@ void handle_settingsarchive() {
 // download filetype selectors
 // ********************************************************************************
 void addDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
-  const String filetype_str = getFileName(filetype, filenr);
-  String label        = F("Fetch ");
-
-  label += filetype_str;
-  addRowLabel(label);
-  addCheckBox(filetype_str, getDownloadFiletypeChecked(filetype, filenr));
+  const String fileName = getFileName(filetype, filenr);
+  addRowLabel(fileName);
+  addCheckBox(fileName, getDownloadFiletypeChecked(filetype, filenr));
 }
 
 void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
@@ -222,17 +255,35 @@ void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr)
     case FileType::NOTIFICATION_DAT: ResetFactoryDefaultPreference.fetchNotificationDat(isChecked); break;
     case FileType::RULES_TXT: { ResetFactoryDefaultPreference.fetchRulesTXT(filenr, isChecked); break; }
     case FileType::PROVISIONING_DAT: { ResetFactoryDefaultPreference.fetchProvisioningDat(isChecked); break; }
-    case FileType::FIRMWARE:  // FIXME TD-er: Still have to decide what to do with protecting firmware downloads
-    case FileType::MAX_FILETYPE: 
+    case FileType::MAX_FILETYPE:
       break;
-    
   }
 }
 
+# if FEATURE_CUSTOM_PROVISIONING
+void addAllowFiletypeCheckbox(const ProvisioningStruct& ProvisioningSettings, FileType::Enum filetype, unsigned int filenr)
+{
+  const String fileName = getFileName(filetype, filenr);
+  addRowLabel(fileName);
+  addCheckBox(concat(F("allow_"), fileName), ProvisioningSettings.fetchFileTypeAllowed(filetype, filenr));
+}
+
+void storeAllowFiletypeCheckbox(ProvisioningStruct& ProvisioningSettings, FileType::Enum filetype, unsigned int filenr)
+{
+  const bool isChecked = isFormItemChecked(concat(F("allow_"), getFileName(filetype, filenr)));
+
+  ProvisioningSettings.setFetchFileTypeAllowed(filetype, filenr, isChecked);
+}
+
+# endif // if FEATURE_CUSTOM_PROVISIONING
+
+
 bool tryDownloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr) {
   const String filename = getFileName(filetype, filenr);
+
   addRowLabel(filename);
   const String error = downloadFileType(url, user, pass, filetype, filenr);
+
   if (error.length() == 0) {
     addHtml(F("Success"));
     return true;
