@@ -3,6 +3,7 @@
 #if FEATURE_ETHERNET
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Helpers/Networking.h"
 
 // Bit numbers for Eth status
 #define ESPEASY_ETH_CONNECTED               0
@@ -96,8 +97,12 @@ void EthernetEventData_t::setEthConnected() {
 bool EthernetEventData_t::setEthServicesInitialized() {
   if (!unprocessedEthEvents() && !EthServicesInitialized()) {
     if (EthGotIP() && EthConnected()) {
-      dns0_cache = WiFi.dnsIP(0);
-      dns1_cache = WiFi.dnsIP(1);
+      if (valid_DNS_address(WiFi.dnsIP(0))) {
+        dns0_cache = WiFi.dnsIP(0);
+      }
+      if (valid_DNS_address(WiFi.dnsIP(1))) {
+        dns1_cache = WiFi.dnsIP(1);
+      }
 
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("Eth : Eth services initialized"));
