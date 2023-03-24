@@ -175,6 +175,15 @@ class SettingsStruct_tmpl
   void    setCssMode(uint8_t value);
   #endif // FEATURE_AUTO_DARK_MODE
 
+  bool isTaskEnableReadonly(taskIndex_t taskIndex) const;
+  void setTaskEnableReadonly(taskIndex_t taskIndex, bool value);
+
+  #if FEATURE_PLUGIN_PRIORITY
+  bool isPowerManagerTask(taskIndex_t taskIndex) const;
+  void setPowerManagerTask(taskIndex_t taskIndex, bool value);
+
+  bool isPriorityTask(taskIndex_t taskIndex) const;
+  #endif // if FEATURE_PLUGIN_PRIORITY
 
   void validate();
 
@@ -302,7 +311,7 @@ class SettingsStruct_tmpl
     uint32_t TaskDevicePluginConfigULong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
   };
   uint8_t       TaskDeviceSendDataFlags[N_TASKS] = {0};
-  uint8_t       OLD_TaskDeviceGlobalSync[N_TASKS] = {0};
+  uint8_t       VariousTaskBits[N_TASKS] = {0};
   uint8_t       TaskDeviceDataFeed[N_TASKS] = {0};    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS] = {0};
   boolean       TaskDeviceEnabled[N_TASKS] = {0};

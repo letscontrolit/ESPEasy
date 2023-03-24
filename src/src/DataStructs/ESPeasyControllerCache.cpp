@@ -67,6 +67,13 @@ bool ControllerCache_struct::deleteAllCacheBlocks() {
   return false;
 }
 
+bool ControllerCache_struct::deleteCacheBlock(int fileNr) {
+  if (_RTC_cache_handler != nullptr) {
+    return _RTC_cache_handler->deleteCacheBlock(fileNr);
+  }
+  return false;
+}
+
 void ControllerCache_struct::resetpeek() {
   if (_RTC_cache_handler != nullptr) {
     _RTC_cache_handler->resetpeek();
