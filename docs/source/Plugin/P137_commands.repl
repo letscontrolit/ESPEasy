@@ -1,0 +1,155 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | Commands to control the AXP192 output voltages and GPIO pins.
+    ","
+    | **Attention**: Commands will fail if the selected output is 'N/C - Unused' according to the selected Predefined device configuration.
+    "
+    "
+    | ``axp,ldo2,<voltage>``
+
+    | ``voltage`` range: 0..3300 mV.
+    ","
+    | Set output ``LDO2`` to the specified voltage. When set below 1800 mV the output will be turned off.
+    "
+    "
+    | ``axp,ldo3,<voltage>``
+
+    | ``voltage`` range: 0..3300 mV.
+    ","
+    | Set output ``LDO3`` to the specified voltage. When set below 1800 mV the output will be turned off.
+    "
+    "
+    | ``axp,ldoio,<voltage>``
+
+    | ``voltage`` range: 1800..3300 mV.
+    ","
+    | Set AXP192 output for ``LDOIO``, setting the level for all ``GPIO`` pins of AXP192, to the specified voltage. When set below 1800 mV the command will fail.
+    "
+    "
+    | ``axp,ldo2perc,<percentage>``
+
+    | ``percentage`` range: 1..100 %.
+    ","
+    | Set output ``LDO2`` to the specified percentage within the mapping specified. The default mapping is the range from 1800..3300 mV, so 1% maps to 1800 mV and 100% to 3300mV. When set to 0 % the output will be turned off.
+
+    | See: ``ldo2map`` sub-command below.
+    "
+    "
+    | ``axp,ldo3perc,<percentage>``
+
+    | ``percentage`` range: 1..100 %.
+    ","
+    | Set output ``LDO3`` to the specified percentage within the mapping specified. The default mapping is the range from 1800..3300 mV, so 1% maps to 1800 mV and 100% to 3300mV. When set to 0 % the output will be turned off.
+
+    | See: ``ldo3map`` sub-command below.
+    "
+    "
+    | ``axp,ldoioperc,<percentage>``
+
+    | ``percentage`` range: 1..100 %.
+    ","
+    | Set AXP192 ``LDOIO`` outputs to the specified percentage within the mapping specified. The default mapping is the range from 1800..3300 mV, so 1% maps to 1800 mV and 100% to 3300mV. When set to 0 % the command will fail.
+
+    | See: ``ldoiomap`` sub-command below.
+    "
+    "
+    | ``axp,dcdc2perc,<percentage>``
+
+    | ``percentage`` range: 1..100 %.
+    ","
+    | Set output ``DCDC2`` to the specified percentage within the mapping specified. The default mapping is the range from 700..2750 mV, so 1% maps to 700 mV and 100% to 2750mV. When set to 0 % the output will be turned off.
+
+    | See: ``dcdc2map`` sub-command below.
+    "
+    "
+    | ``axp,dcdc3perc,<percentage>``
+
+    | ``percentage`` range: 1..100 %.
+    ","
+    | Set output ``DCDC3`` to the specified percentage within the mapping specified. The default mapping is the range from 700..3500 mV, so 1% maps to 700 mV and 100% to 3500mV. When set to 0 % the output will be turned off.
+
+    | See: ``dcdc3map`` sub-command below.
+    "
+    "
+    | ``axp,ldo2map,<lowvoltage>,<highvoltage>``
+
+    | ``lowvoltage``, ``highvoltage`` range: 0..3300 mV.
+
+    | ``lowvoltage`` must be lower than ``highvoltage``.
+    ","
+    | Set the mapping range for ``ldo2perc`` sub-command to the specified voltage range.
+    "
+    "
+    | ``axp,ldo3map,<lowvoltage>,<highvoltage>``
+
+    | ``lowvoltage``, ``highvoltage`` range: 0..3300 mV.
+
+    | ``lowvoltage`` must be lower than ``highvoltage``.
+    ","
+    | Set the mapping range for ``ldo3perc`` sub-command to the specified voltage range.
+    "
+    "
+    | ``axp,ldoiomap,<lowvoltage>,<highvoltage>``
+
+    | ``lowvoltage``, ``highvoltage`` range: 1800..3300 mV.
+
+    | ``lowvoltage`` must be lower than ``highvoltage``.
+    ","
+    | Set the mapping range for ``ldoioperc`` sub-command to the specified voltage range.
+    "
+    "
+    | ``axp,dcdc2map,<lowvoltage>,<highvoltage>``
+
+    | ``lowvoltage``, ``highvoltage`` range: 0..2750 mV.
+
+    | ``lowvoltage`` must be lower than ``highvoltage``.
+    ","
+    | Set the mapping range for ``dcdc2perc`` sub-command to the specified voltage range.
+    "
+    "
+    | ``axp,dcdc3map,<lowvoltage>,<highvoltage>``
+
+    | ``lowvoltage``, ``highvoltage`` range: 0..3500 mV.
+
+    | ``lowvoltage`` must be lower than ``highvoltage``.
+    ","
+    | Set the mapping range for ``dcdc3perc`` sub-command to the specified voltage range.
+    "
+    "
+    | ``axp,gpio0,<state>``
+
+    | ``state``: 0 (off/low) or 1 (on/high)
+    ","
+    | Set the AXP192 ``GPIO0`` pin state.
+    "
+    "
+    | ``axp,gpio1,<state>``
+
+    | ``state``: 0 (off/low) or 1 (on/high)
+    ","
+    | Set the AXP192 ``GPIO1`` pin state.
+    "
+    "
+    | ``axp,gpio2,<state>``
+
+    | ``state``: 0 (off/low) or 1 (on/high)
+    ","
+    | Set the AXP192 ``GPIO2`` pin state.
+    "
+    "
+    | ``axp,gpio3,<state>``
+
+    | ``state``: 0 (off/low) or 1 (on/high)
+    ","
+    | Set the AXP192 ``GPIO3`` pin state.
+    "
+    "
+    | ``axp,gpio4,<state>``
+
+    | ``state``: 0 (off/low) or 1 (on/high)
+    ","
+    | Set the AXP192 ``GPIO4`` pin state.
+    "
