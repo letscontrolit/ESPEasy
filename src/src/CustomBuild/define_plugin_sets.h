@@ -1769,6 +1769,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
+  // Controllers
+  #ifndef USES_C011
+    #define USES_C011   // HTTP Advanced
+  #endif
 #endif
 
 // Collection of all NeoPixel plugins
