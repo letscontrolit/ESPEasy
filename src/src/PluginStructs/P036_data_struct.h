@@ -23,8 +23,12 @@
 // # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)
 // # define P036_CHECK_HEAP        // Enable to add extra logging during Plugin_036()
 // # define P036_CHECK_INDIVIDUAL_FONT // /Enable to add extra logging for individual font calculation
-# define P036_FEATURE_DISPLAY_PREVIEW   1
-# define P036_FEATURE_ALIGN_PREVIEW     1
+# ifndef P036_FEATURE_DISPLAY_PREVIEW
+#  define P036_FEATURE_DISPLAY_PREVIEW   1
+# endif // ifndef P036_FEATURE_DISPLAY_PREVIEW
+# ifdef P036_FEATURE_ALIGN_PREVIEW
+#  define P036_FEATURE_ALIGN_PREVIEW     1
+# endif // ifdef P036_FEATURE_ALIGN_PREVIEW
 
 # if defined(ESP8266_1M) && defined(P036_FEATURE_ALIGN_PREVIEW) && P036_FEATURE_ALIGN_PREVIEW
 #  undef P036_FEATURE_ALIGN_PREVIEW
