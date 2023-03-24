@@ -2713,6 +2713,10 @@ To create/register a plugin, you have to :
 #ifndef FEATURE_RTTTL                         
 #define FEATURE_RTTTL                         0
 #endif
+#if defined(FEATURE_RTTTL) && !FEATURE_RTTTL && defined(KEEP_RTTTL)
+  #undef FEATURE_RTTTL
+  #define FEATURE_RTTTL 1
+#endif
 
 #ifndef FEATURE_SD                         
 #define FEATURE_SD                            0
