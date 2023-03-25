@@ -67,7 +67,7 @@
 .. |P085_type| replace:: :cyan:`Energy (DC)`
 .. |P085_typename| replace:: :cyan:`Energy (DC) - AcuDC243`
 .. |P085_porttype| replace:: `Serial`
-.. |P085_status| replace:: :yellow:`ENERGY, COLLECTION C`
+.. |P085_status| replace:: :yellow:`ENERGY` :yellow:`COLLECTION C`
 .. |P085_github| replace:: P085_AcuDC243.ino
 .. _P085_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P085_AcuDC243.ino
 .. |P085_usedby| replace:: `.`
