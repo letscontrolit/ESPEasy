@@ -200,7 +200,6 @@ The global steps described here are:
 Advanced procedures:
 
 - Get a pull request by someone else on your system to create a local custom build
-- Contribute to a pull request created by someone else
 
 Let's get started!
 
@@ -550,7 +549,3 @@ For those that want to test the code from a pull request, created by someone els
     This method does not enable or allow to contribute to that PR, that requires a different, somewhat more complicated, procedure, documented in a next paragraph.
 
 
-Contribute to a pull request created by someone else
-----------------------------------------------------
-
-TODO
