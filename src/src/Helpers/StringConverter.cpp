@@ -841,6 +841,49 @@ String parseHexTextString(const String& argument, int index) {
   return result;
 }
 
+/*****************************************************************************
+ * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
+ ****************************************************************************/
+std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
+  std::vector<uint8_t> result;
+
+  // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
+  const String skipChars = F(" -:,.;");
+
+  result.reserve(argument.length()); // longer than needed, most likely
+  int i      = index;
+  String arg = parseStringKeepCase(argument, i, ',', false);
+
+  while (!arg.isEmpty()) {
+    if ((arg.startsWith(F("0x")) || arg.startsWith(F("0X")))) {
+      size_t j = 2;
+
+      while (j < arg.length()) {
+        int hex = -1;
+
+        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > -1) && (hex < 256)) {
+          result.push_back(char(hex));
+        }
+        j += 2;
+        int c = skipChars.indexOf(arg.substring(j, j + 1));
+
+        while (j < arg.length() && c > -1) {
+          j++;
+          c = skipChars.indexOf(arg.substring(j, j + 1));
+        }
+      }
+    } else {
+      for (size_t s = 0; s < arg.length(); s++) {
+        result.push_back(arg[s]);
+      }
+    }
+    i++;
+    arg = parseStringKeepCase(argument, i, ',', false);
+  }
+
+  return result;
+}
+
 /*********************************************************************************************\
    GetTextIndexed: Get text from large PROGMEM stored string
    Items are separated by a '|'
