@@ -56,6 +56,8 @@ install Pyton in Windows for PlatformIO.
 .. See `Microsoft - About Execution Policies <https:/go.microsoft.com/fwlink/?LinkID=135170>`_ for more details.
 
 
+These steps have been explained in this Youtube video: https://youtu.be/ArqwMcYSMsU though you might want to use the latest version of both the Git tools and Python.
+
 PlatformIO with VSCode
 ======================
 
