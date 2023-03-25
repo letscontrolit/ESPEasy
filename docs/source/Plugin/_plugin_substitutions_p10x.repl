@@ -41,7 +41,7 @@
 .. |P103_type| replace:: :cyan:`Environment`
 .. |P103_typename| replace:: :cyan:`Environment - Atlas Scientific EZO pH`
 .. |P103_porttype| replace:: `.`
-.. |P103_status| replace:: :yellow:`MAX` :yellow:`CLIMATE`
+.. |P103_status| replace:: :yellow:`CLIMATE`
 .. |P103_github| replace:: P103_Atlas_EZO_pH.ino 
 .. _P103_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P103_Atlas_EZO_pH.ino 
 .. |P103_usedby| replace:: `.`
@@ -122,7 +122,7 @@
 .. |P108_type| replace:: :cyan:`Energy (AC)`
 .. |P108_typename| replace:: :cyan:`Energy (AC) - DDS238-x`
 .. |P108_porttype| replace:: `.`
-.. |P108_status| replace:: :yellow:`ENERGY, COLLECTION B`
+.. |P108_status| replace:: :yellow:`ENERGY` :yellow:`COLLECTION B`
 .. |P108_github| replace:: P108_DDS238.ino
 .. _P108_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P108_DDS238.ino
 .. |P108_usedby| replace:: `.`

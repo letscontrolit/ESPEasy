@@ -8,6 +8,9 @@ const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const 
 const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_Disable(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_Enable(struct EventStruct *event, const char* Line);
+#if FEATURE_PLUGIN_PRIORITY
+const __FlashStringHelper * Command_PriorityTask_Disable(struct EventStruct *event, const char *Line);
+#endif
 const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *event, const char* Line);
