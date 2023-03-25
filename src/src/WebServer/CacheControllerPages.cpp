@@ -8,6 +8,7 @@
 # include "../WebServer/JSON.h"
 # include "../CustomBuild/ESPEasyLimits.h"
 # include "../DataStructs/DeviceStruct.h"
+# include "../DataStructs/ESPEasyControllerCache_CSV_dumper.h"
 # include "../DataTypes/TaskIndex.h"
 # include "../Globals/C016_ControllerCache.h"
 # include "../Globals/Cache.h"
@@ -52,41 +53,10 @@ void handle_dumpcache() {
     onlySetTasks = true;
   }
 
-
-  // Allocate a String per taskvalue instead of per task
-  // This way the small strings will hardly ever need heap allocation.
-  constexpr size_t nrTaskValues = VARS_PER_TASK * TASKS_MAX;
-  String  csv_values[nrTaskValues];
-  uint8_t nrDecimals[nrTaskValues] = { 0 };
-  bool    includeTask[TASKS_MAX]   = { 0 };
-  {
-    // Initialize arrays
-    const String sep_zero = String(separator) + '0';
-
-    for (size_t i = 0; i < nrTaskValues; ++i) {
-      csv_values[i] = sep_zero;
-      nrDecimals[i] = Cache.getTaskDeviceValueDecimals(i / VARS_PER_TASK, i % VARS_PER_TASK);
-    }
-
-    for (size_t task = 0; validTaskIndex(task); ++task) {
-      includeTask[task] = onlySetTasks ? validPluginID(Settings.TaskDeviceNumber[task]) : true;
-    }
-  }
-
-
-  // First backup the peek file positions.
-  int peekFileNr;
-  const int peekFilePos = ControllerCache.getPeekFilePos(peekFileNr);
-
-  // Set peek file position to first entry:
-  ControllerCache.setPeekFilePos(0, 0);
-
-  C016_flush();
-
   {
     // Send HTTP headers to directly save the dump as a CSV file
     String str =  F("attachment; filename=cachedump_");
-    str += Settings.Name;
+    str += Settings.getName();
     str += F("_U");
     str += Settings.Unit;
 
@@ -101,114 +71,20 @@ void handle_dumpcache() {
     TXBuffer.startStream(F("application/octet-stream"), F("*"), 200);
   }
 
-  {
-    // CSV header
-    String header(F("UNIX timestamp;UTC timestamp"));
 
-    if (joinTimestamp) {
-      // Add column with nr of joined samples
-      header += F(";nrJoinedSamples");
-    } else {
-      // Does not make sense to have taskindex and plugin ID
-      // in a table where separate samples may have been combined.
-      header += F(";taskindex;plugin ID");
-    }
+  ESPEasyControllerCache_CSV_dumper dumper(
+    joinTimestamp, 
+    onlySetTasks, 
+    separator, 
+    ESPEasyControllerCache_CSV_dumper::Target::CSV_file);
 
-    if (separator != ';') { header.replace(';', separator); }
-    addHtml(header);
+  dumper.generateCSVHeader(true);
 
-    for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-      if (includeTask[i]) {
-        for (int j = 0; j < VARS_PER_TASK; ++j) {
-          addHtml(separator);
-          addHtml(getTaskDeviceName(i));
-          addHtml('#');
-          addHtml(getTaskValueName(i, j));
-        }
-      }
-    }
-    addHtml('\r', '\n');
-  }
-
-
-  // Fetch samples from Cache Controller bin files.
-  C016_binary_element element;
-
-  uint32_t lastTimestamp = 0;
-  int csv_values_left    = 0;
-
-  while (C016_getTaskSample(element)) {
-    if (!joinTimestamp || (lastTimestamp != static_cast<uint32_t>(element._timestamp))) {
-      // Flush the collected CSV values
-      if (csv_values_left > 0) {
-        if (joinTimestamp) {
-          // Add column with nr of joined samples
-          addHtml(';');
-          addHtmlInt(csv_values_left);
-        }
-
-        for (size_t i = 0; i < nrTaskValues; ++i) {
-          if (includeTask[i / VARS_PER_TASK]) {
-            addHtml(csv_values[i]);
-          }
-        }
-        addHtml('\r', '\n');
-        csv_values_left = 0;
-      }
-
-      // Start writing a new line in the CSV file
-      // Begin with the non taskvalues
-      addHtmlInt(static_cast<uint32_t>(element._timestamp));
-      addHtml(separator);
-      struct tm ts;
-      breakTime(element._timestamp, ts);
-      addHtml(formatDateTimeString(ts));
-
-      if (!joinTimestamp) {
-        addHtml(separator);
-        addHtmlInt(element.TaskIndex);
-        addHtml(separator);
-        addHtmlInt(element.pluginID);
-      }
-
-      lastTimestamp = static_cast<uint32_t>(element._timestamp);
-    }
-    ++csv_values_left;
-
-    // Collect the task values for this row in the CSV
-    size_t valindex = element.TaskIndex * VARS_PER_TASK;
-
-    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-      csv_values[valindex] = separator;
-
-      if (essentiallyZero(element.values[i])) {
-        csv_values[valindex] += '0';
-      } else {
-        csv_values[valindex] += toString(element.values[i], static_cast<unsigned int>(nrDecimals[valindex]));
-      }
-      ++valindex;
-    }
-  }
-
-  if (csv_values_left > 0) {
-    if (joinTimestamp) {
-      // Add column with nr of joined samples
-      addHtml(';');
-      addHtmlInt(csv_values_left);
-    }
-
-    for (size_t i = 0; i < nrTaskValues; ++i) {
-      if (includeTask[i / VARS_PER_TASK]) {
-        addHtml(csv_values[i]);
-      }
-    }
-    addHtml('\r', '\n');
+  while (dumper.createCSVLine()) {
+    dumper.writeCSVLine(true);
   }
 
   TXBuffer.endStream();
-
-  // Restore peek file positions.
-  ControllerCache.setPeekFilePos(peekFileNr, peekFilePos);
 }
 
 void handle_cache_json() {

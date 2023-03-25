@@ -121,6 +121,15 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P028_I2C_ADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       P028_data_struct *P028_data =
@@ -266,36 +275,36 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
           }
 
-        # ifndef LIMIT_BUILD_SIZE
+          # ifndef LIMIT_BUILD_SIZE
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log;
 
             if (log.reserve(40)) { // Prevent re-allocation
               log  = P028_data->getDeviceName();
-              log += F(" : Address: ");
+              log += F(": Address: ");
               log += formatToHex(P028_I2C_ADDRESS, 2);
               addLogMove(LOG_LEVEL_INFO, log);
 
               // addLogMove does also clear the string.
               log  = P028_data->getDeviceName();
-              log += F(" : Temperature: ");
+              log += F(": Temperature: ");
               log += formatUserVarNoCheck(event->TaskIndex, 0);
               addLogMove(LOG_LEVEL_INFO, log);
 
               if (P028_data->hasHumidity()) {
                 log  = P028_data->getDeviceName();
-                log += F(" : Humidity: ");
+                log += F(": Humidity: ");
                 log += formatUserVarNoCheck(event->TaskIndex, 1);
                 addLogMove(LOG_LEVEL_INFO, log);
               }
               log  = P028_data->getDeviceName();
-              log += F(" : Barometric Pressure: ");
+              log += F(": Barometric Pressure: ");
               log += formatUserVarNoCheck(event->TaskIndex, 2);
               addLogMove(LOG_LEVEL_INFO, log);
             }
           }
-        # endif // ifndef LIMIT_BUILD_SIZE
+          # endif // ifndef LIMIT_BUILD_SIZE
           success = true;
         }
       }

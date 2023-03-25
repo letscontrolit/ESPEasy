@@ -80,6 +80,15 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x61;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       P117_MEASURE_INTERVAL                        = 2; // Default Measurement Interval
@@ -196,40 +205,40 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       String   log;
       float    temp;
 
-      if (command.equals(F("scdgetabc"))) {
+      if (equals(command, F("scdgetabc"))) {
         P117_data->getCalibrationType(&value);
         log    += F("ABC: ");
         log    += value;
         success = true;
-      } else if (command.equals(F("scdgetalt"))) {
+      } else if (equals(command, F("scdgetalt"))) {
         P117_data->getAltitudeCompensation(&value);
         log    += F("Altitude: ");
         log    += value;
         success = true;
-      } else if (command.equals(F("scdgettmp"))) {
+      } else if (equals(command, F("scdgettmp"))) {
         P117_data->getTemperatureOffset(&temp);
         log    += F("Temp offset: ");
         log    += toString(temp, 2);
         success = true;
-      } else if (command.equals(F("scdsetcalibration")) && (event->Par1 >= 0) && (event->Par1 <= 1)) {
+      } else if (equals(command, F("scdsetcalibration")) && (event->Par1 >= 0) && (event->Par1 <= 1)) {
         P117_data->setCalibrationMode(event->Par1 == 1);
         P117_AUTO_CALIBRATION = event->Par1; // Update device configuration
         log                  += F("Calibration: ");
         log                  += event->Par1 == 1 ? F("auto") : F("manual");
         success               = true;
-      } else if (command.equals(F("scdsetfrc")) && (event->Par1 >= 400) && (event->Par1 <= 2000)) {
+      } else if (equals(command, F("scdsetfrc")) && (event->Par1 >= 400) && (event->Par1 <= 2000)) {
         int res = P117_data->setForcedRecalibrationFactor(event->Par1);
         log    += F("SCD30 Forced calibration: ");
         log    += event->Par1;
         log    += F(", result: ");
         log    += res;
         success = true;
-      } else if (command.equals(F("scdgetinterval"))) {
+      } else if (equals(command, F("scdgetinterval"))) {
         P117_data->getMeasurementInterval(&value);
         log    += F("Interval: ");
         log    += value;
         success = true;
-      } else if (command.equals(F("scdsetinterval")) && (event->Par1 >= 2) && (event->Par1 <= 1800)) {
+      } else if (equals(command, F("scdsetinterval")) && (event->Par1 >= 2) && (event->Par1 <= 1800)) {
         int res = P117_data->setMeasurementInterval(event->Par1);
         P117_MEASURE_INTERVAL = event->Par1; // Update device configuration
         log                  += F("SCD30 Measurement Interval: ");

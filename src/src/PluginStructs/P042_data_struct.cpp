@@ -147,7 +147,7 @@ bool P042_data_struct::plugin_write(struct EventStruct *event,
   char   cmdSep  = ','; // Try comma first
   String cmd     = parseString(string, 1, cmdSep);
 
-  if (!cmd.equals(F("candle"))) {
+  if (!equals(cmd, F("candle"))) {
     cmdSep = ':'; // Fallback to colon
     cmd    = parseString(string, 1, cmdSep);
   }
@@ -170,7 +170,7 @@ bool P042_data_struct::plugin_write(struct EventStruct *event,
   //            CANDLE:1::255           Candle ON - White and full brigthness
   // 2023-01-21: command can also be in lowercase, and separator can either be comma or colon, but all have to be the same
 
-  if (cmd.equals(F("candle"))) {
+  if (equals(cmd, F("candle"))) {
     const String val_Type   = parseString(string, 2, cmdSep);
     const String val_Color  = parseString(string, 3, cmdSep);
     const String val_Bright = parseString(string, 4, cmdSep);

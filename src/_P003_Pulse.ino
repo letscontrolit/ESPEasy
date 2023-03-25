@@ -74,7 +74,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].PluginLogsPeaks    = true;
+      Device[deviceCount].TaskLogsOwnPeaks   = true;
       break;
     }
 
@@ -249,8 +249,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         const String command      = parseString(string, 1);
         bool   mustCallPluginRead = false;
 
-        const bool cmd_resetpulsecounter    = command.equals(F("resetpulsecounter"));
-        const bool cmd_setpulsecountertotal = command.equals(F("setpulsecountertotal"));
+        const bool cmd_resetpulsecounter    = equals(command, F("resetpulsecounter"));
+        const bool cmd_setpulsecountertotal = equals(command, F("setpulsecountertotal"));
 
         if (cmd_resetpulsecounter || cmd_setpulsecountertotal)
         {
@@ -291,7 +291,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
           success = true;
         }
-        else if (command.equals(F("logpulsestatistic")))
+        else if (equals(command, F("logpulsestatistic")))
         {
           # ifdef PULSE_STATISTIC
 
@@ -304,8 +304,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           //       i = increase the log level for regular statstic logs to "info"
 
           const String subcommand = parseString(string, 2);
-          const bool sub_i = subcommand.equals(F("i"));
-          const bool sub_r = subcommand.equals(F("r"));
+          const bool sub_i = equals(subcommand, F("i"));
+          const bool sub_r = equals(subcommand, F("r"));
 
           if ((sub_i) || (sub_r) || (subcommand.isEmpty())) {
             P003_data->pulseHelper.doStatisticLogging(P003_PULSE_STATS_ADHOC_LOG_LEVEL);

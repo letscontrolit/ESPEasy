@@ -667,36 +667,6 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WRITE:
-    {
-      const String command(parseString(string, 1));
-
-      // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
-
-
-      if (command.equals(F("inputswitchstate"))) {
-        success = true;
-
-        // @giig1967g deprecated since 2019-11-26
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          addLogMove(LOG_LEVEL_ERROR, concat(F("inputswitchstate is deprecated"), string));
-        }
-
-        /*        portStatusStruct tempStatus;
-                const uint32_t key = createKey(PLUGIN_ID_001, Settings.TaskDevicePin1[event->Par1]);
-
-                // WARNING: operator [] creates an entry in the map if key does not exist
-                // So the next command should be part of each command:
-                tempStatus = globalMapPortStatus[key];
-
-                UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
-                tempStatus.output                    = event->Par2;
-                tempStatus.command                   = 1;
-                savePortStatus(key, tempStatus); */
-      }
-      break;
-    }
-
     case PLUGIN_TASKTIMER_IN:
     {
       digitalWrite(event->Par1, event->Par2);

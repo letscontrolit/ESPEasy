@@ -75,6 +75,15 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = AS7265X_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG_LONG(0) = AS7265X_GAIN_37X;               // Set Gain (AS7265X_GAIN_37X) => This is 3.7x
@@ -424,15 +433,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 }
 
 void queueEvent(taskIndex_t TaskIndex, int wavelength, float value) {
-  String RuleEvent;
-
-  RuleEvent.reserve(45);
-  RuleEvent  = getTaskDeviceName(TaskIndex);
-  RuleEvent += '#';
-  RuleEvent += wavelength;
-  RuleEvent += '=';
-  RuleEvent += toString(value, 2);
-  eventQueue.addMove(std::move(RuleEvent));
+  eventQueue.add(TaskIndex, String(wavelength), toString(value, 2));
 }
 
 #endif // USES_P112

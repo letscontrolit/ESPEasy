@@ -63,6 +63,19 @@
 .. |P135_compileinfo| replace:: `.`
 .. |P135_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library`
 
+.. |P137_name| replace:: :cyan:`AXP192 Power management ESP32`
+.. |P137_type| replace:: :cyan:`Power mgt`
+.. |P137_typename| replace:: :cyan:`Power mgt - AXP192 Power management ESP32`
+.. |P137_porttype| replace:: `.`
+.. |P137_status| replace:: :yellow:`COLLECTION` :yellow:`DISPLAY` :yellow:`ENERGY` :yellow:`NEOPIXEL`
+.. |P137_github| replace:: P137_AXP192.ino
+.. _P137_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P137_AXP192.ino
+.. |P137_usedby| replace:: `.`
+.. |P137_shortinfo| replace:: `Power management controller`
+.. |P137_maintainer| replace:: `tonhuisman`
+.. |P137_compileinfo| replace:: `.`
+.. |P137_usedlibraries| replace:: `https://github.com/tanakamasayuki/I2C_AXP192`
+
 .. |P138_name| replace:: :cyan:`IP5306 Power management`
 .. |P138_type| replace:: :cyan:`Power mgt`
 .. |P138_typename| replace:: :cyan:`Power mgt - IP5306 Power management`
