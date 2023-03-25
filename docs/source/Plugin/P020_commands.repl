@@ -12,11 +12,11 @@
         "
         ``ser2netclientsend,<content to send>``
 
-        ``<content to send>``: Text that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the serial port.
+        ``<content to send>``: Text that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the network client.
         ","
-        This command will only send data to the serial port if the network client *is* connected.
+        This command will only send data to the network client, when there is an active connection.
 
-        Using this command, either from rules, via http or mqtt, the text that is provided as content is completely sent to the serial port. No extra data is added, other than any (system) variables that are included, being replaced.
+        Using this command, either from rules, via http or mqtt, the text that is provided as content is completely sent to the network client. No extra data is added, other than any (system) variables that are included, being replaced.
         "
         "
         ``serialsendmix,'<content to send>'[,...]``
@@ -26,9 +26,9 @@
 
         This command requires quotes to be used if spaces or commas are part of the content.
 
-        Any ascii character can be sent, even it can not be typed in a text conent, by specifying that as a separate argument: ``serialsendmix,'text, optionally including spaces or commas',0xXX,'0xXXxx XX,xx-XX:xx'``
+        Any data can be sent, even if it can not be typed in a text content, by specifying that as a separate argument: ``serialsendmix,'text, optionally including spaces or commas',0xXX,'0xXXxx XX,xx-XX:xx'``
 
-        ``'text, optionally including spaces or commas'``: Any text content to be sent to the serial port. Can contain variables. Quotes are only required if space or comma separators are used.
+        ``'text, optionally including spaces or commas'``: Any text content to be sent to the serial port. Can contain variables. Quotes are only required if spaces or commas (separators) are used.
 
         ``0xXX``: A single character in hexadecimal notation (range: 0x01..0xFF), that is appended to the data to send.
 
