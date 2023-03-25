@@ -11,6 +11,7 @@
 
 /**
  * Changelog:
+ * 2023-03-25 tonhuisman: Change serialproxy_writemix to handle 0x00 also, by implementing parseHexTextData()
  * 2023-03-22 tonhuisman: Add command serialproxy_writemix to handle mixed hex characters and text to send
  *                        using parseHexTextString()
  *                        Format source using Uncrustify
@@ -244,19 +245,17 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P087_data)) {
         String cmd      = parseString(string, 1);
-        bool   writeMix = cmd.equals(F("serialproxy_writemix"));
 
-        if (cmd.equals(F("serialproxy_write")) || writeMix) {
-          String param1;
-
-          if (writeMix) {
-            param1 = parseHexTextString(string);
-          } else {
-            param1 = parseStringKeepCase(string, 2, ',', false); // Don't trim off white-space
-          }
-          parseSystemVariables(param1, false);                   // FIXME tonhuisman: Doesn't seem to be needed?
+        if (cmd.equals(F("serialproxy_write"))) {
+          String param1 = parseStringKeepCase(string, 2, ',', false); // Don't trim off white-space
+          parseSystemVariables(param1, false);                        // FIXME tonhuisman: Doesn't seem to be needed?
           P087_data->sendString(param1);
-          addLogMove(LOG_LEVEL_INFO, param1);                    // FIXME tonhuisman: Should we always want to write to the log?
+          addLogMove(LOG_LEVEL_INFO, param1);                         // FIXME tonhuisman: Should we always want to write to the log?
+          success = true;
+        } else
+        if (cmd.equals(F("serialproxy_writemix"))) {
+          std::vector<uint8_t> param1 = parseHexTextData(string);
+          P087_data->sendData(&param1[0], param1.size());
           success = true;
         }
       }
