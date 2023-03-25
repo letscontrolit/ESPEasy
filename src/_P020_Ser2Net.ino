@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2023-03-25 tonhuisman: Change serialsendmix to handle 0x00 also, by implementing parseHexTextData()
  * 2022-12-12 tonhuisman: Add character conversion for the received serial data, act on Space and/or Newline
  * 2022-10-11 tonhuisman: Add option for including the message in P1 #data event
  * 2022-10-09 tonhuisman: Check P044 migration on PLUGIN_INIT too, still needs a manual save (from UI or by save command)
