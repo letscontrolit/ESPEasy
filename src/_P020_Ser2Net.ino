@@ -459,8 +459,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         } else
 
         if (equals(command, F("serialsendmix"))) {
-          String argument = parseHexTextString(string);
-          task->ser2netSerial->write(argument.c_str());
+          std::vector<uint8_t> argument = parseHexTextData(string);
+          task->ser2netSerial->write(&argument[0], argument.size());
           task->ser2netSerial->flush();
           success = true;
         } else
