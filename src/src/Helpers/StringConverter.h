@@ -293,6 +293,8 @@ String tolerantParseStringKeepCase(const String& string,
 
 String parseHexTextString(const String& argument,
                           int           index = 2);
+std::vector<uint8_t> parseHexTextData(const String& argument,
+                                      int           index = 2);
 
 
 /*********************************************************************************************\
