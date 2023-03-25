@@ -1424,6 +1424,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+    #if !defined(USES_P137) && defined(ESP32)
+      #define USES_P137   // AXP192
+    #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
@@ -1503,6 +1506,7 @@ To create/register a plugin, you have to :
     #define USES_P129   // 74HC165 Input shiftregisters
     #define USES_P133   // LTR390 UV
     #define USES_P135   // SCD4x
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
@@ -1563,6 +1567,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
@@ -1637,6 +1644,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
@@ -1753,10 +1763,16 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
+  #ifndef USES_P144
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
-
+  // Controllers
+  #ifndef USES_C011
+    #define USES_C011   // HTTP Advanced
+  #endif
 #endif
 
 // Collection of all NeoPixel plugins
@@ -1784,6 +1800,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P131
     #define USES_P131   // NeoMatrix
+  #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
   #endif
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
@@ -2069,7 +2088,7 @@ To create/register a plugin, you have to :
 //    #define USES_P136   //
   #endif
   #ifndef USES_P137
-//    #define USES_P137   //
+    #define USES_P137   // AXP192
   #endif
   #ifndef USES_P138
 //    #define USES_P138   //
@@ -2089,11 +2108,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
   #endif
+  #ifndef USES_P144
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
-
-
 
   // Controllers
   #ifndef USES_C015
@@ -2145,7 +2165,7 @@ To create/register a plugin, you have to :
 #if defined(USES_P044) && !defined(USES_P020) // P020 is used to replace/emulate P044
   #define USES_P020
 #endif
-#if defined(USES_P020) || defined(USES_P044) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P044) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_P144) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -2700,6 +2720,10 @@ To create/register a plugin, you have to :
 #ifndef FEATURE_RTTTL                         
 #define FEATURE_RTTTL                         0
 #endif
+#if defined(FEATURE_RTTTL) && !FEATURE_RTTTL && defined(KEEP_RTTTL)
+  #undef FEATURE_RTTTL
+  #define FEATURE_RTTTL 1
+#endif
 
 #ifndef FEATURE_SD                         
 #define FEATURE_SD                            0
@@ -2745,6 +2769,10 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
+#endif
+
+#ifndef FEATURE_PLUGIN_PRIORITY
+  #define FEATURE_PLUGIN_PRIORITY   0 // Disable by default
 #endif
 
 #ifndef FEATURE_I2C_DEVICE_CHECK
@@ -2802,6 +2830,10 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)
+  #undef FEATURE_PLUGIN_PRIORITY
+  #define FEATURE_PLUGIN_PRIORITY   1
+#endif
 
 // Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
 // Please note that the TOUT pin has to be disconnected in this mode
