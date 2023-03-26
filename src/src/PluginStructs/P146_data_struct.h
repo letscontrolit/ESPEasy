@@ -17,23 +17,27 @@
 # define P146_TASKVALUE_FILENR  UserVar[event->BaseVarIndex + 0]
 # define P146_TASKVALUE_FILEPOS UserVar[event->BaseVarIndex + 1]
 
-# define P146_GET_SEND_BINARY    bitRead(PCONFIG(0), 0)
-# define P146_SET_SEND_BINARY(X) bitWrite(PCONFIG(0), 0, X)
+# define P146_GET_SEND_BINARY       bitRead(PCONFIG(0), 0)
+# define P146_SET_SEND_BINARY(X)    bitWrite(PCONFIG(0), 0, X)
 
-# define P146_GET_SEND_BULK      bitRead(PCONFIG(0), 1)
-# define P146_SET_SEND_BULK(X)   bitWrite(PCONFIG(0), 1, X)
+# define P146_GET_SEND_BULK         bitRead(PCONFIG(0), 1)
+# define P146_SET_SEND_BULK(X)      bitWrite(PCONFIG(0), 1, X)
 
 # define P146_GET_SEND_TIMESTAMP    bitRead(PCONFIG(0), 2)
 # define P146_SET_SEND_TIMESTAMP(X) bitWrite(PCONFIG(0), 2, X)
 
-# define P146_GET_SEND_READ_POS    bitRead(PCONFIG(0), 3)
-# define P146_SET_SEND_READ_POS(X) bitWrite(PCONFIG(0), 3, X)
+# define P146_GET_SEND_READ_POS     bitRead(PCONFIG(0), 3)
+# define P146_SET_SEND_READ_POS(X)  bitWrite(PCONFIG(0), 3, X)
 
 # define P146_GET_JOIN_TIMESTAMP    bitRead(PCONFIG(0), 4)
 # define P146_SET_JOIN_TIMESTAMP(X) bitWrite(PCONFIG(0), 4, X)
 
 # define P146_GET_ONLY_SET_TASKS    bitRead(PCONFIG(0), 5)
 # define P146_SET_ONLY_SET_TASKS(X) bitWrite(PCONFIG(0), 5, X)
+
+# define P146_GET_ERASE_BINFILES    bitRead(PCONFIG(0), 6)
+# define P146_SET_ERASE_BINFILES(X) bitWrite(PCONFIG(0), 6, X)
+
 
 # define P146_SEPARATOR_CHARACTER   PCONFIG(1)
 

@@ -1,0 +1,79 @@
+.. csv-table::
+    :escape: ^
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#batvoltage]``
+    ","
+    The voltage measured at the Battery connection.
+    "
+    "
+    ``[<taskname>#batdischarge]``
+    ","
+    The current that the battery is being discharged with.
+    "
+    "
+    ``[<taskname>#batcharge]``
+    ","
+    The current that the battery is being charged with.
+    "
+    "
+    ``[<taskname>#batpower]``
+    ","
+    The power available from the battery.
+    "
+    "
+    ``[<taskname>#inpvoltage]``
+    ","
+    The input voltage for the controller.
+    "
+    "
+    ``[<taskname>#inpcurrent]``
+    ","
+    The input current used by the controller.
+    "
+    "
+    ``[<taskname>#vbusvolt]``
+    ","
+    The voltage at the VBus output.
+    "
+    "
+    ``[<taskname>#vbuscurr]``
+    ","
+    The current delivered via the VBus output.
+    "
+    "
+    ``[<taskname>#inttemp]``
+    ","
+    The internal chip temperature.
+    "
+    "
+    ``[<taskname>#apsvolt]``
+    ","
+    The voltage at the ``APS`` output.
+    "
+    "
+    ``[<taskname>#ldo2volt]``
+    ","
+    The voltage at the ``LDO2`` output.
+    "
+    "
+    ``[<taskname>#ldo3volt]``
+    ","
+    The voltage at the ``LDO3`` output.
+    "
+    "
+    ``[<taskname>#ldoiovolt]``
+    ","
+    The voltage at the (AXP192) ``GPIO`` outputs via LDOIO.
+    "
+    "
+    ``[<taskname>#dcdc2volt]``
+    ","
+    The voltage at the ``DCDC2`` output.
+    "
+    "
+    ``[<taskname>#dcdc3volt]``
+    ","
+    The voltage at the ``DCDC3`` output.
+    "

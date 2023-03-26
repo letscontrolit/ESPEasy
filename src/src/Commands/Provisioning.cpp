@@ -41,6 +41,7 @@ String Command_Provisioning_Rules(struct EventStruct *event, const char *Line)
 
 String Command_Provisioning_Firmware(struct EventStruct *event, const char *Line)
 {
+  // FIXME TD-er: Must only allow to use set prefix in the provisioning settings
   const String url = parseStringToEndKeepCase(Line, 2);
   String error;
   if (downloadFirmware(url, error)) {
