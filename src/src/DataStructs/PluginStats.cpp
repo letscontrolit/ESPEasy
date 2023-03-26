@@ -120,14 +120,16 @@ float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, 
   return res;
 }
 
-float PluginStats::getSample(PluginStatsBuffer_t::index_t lastNrSamples) const
+float PluginStats::getSample(int& lastNrSamples) const
 {
-  if ((_samples.size() == 0) || (_samples.size() < lastNrSamples)) { return _errorValue; }
+  if ((_samples.size() == 0) || (_samples.size() < abs(lastNrSamples))) { return _errorValue; }
 
   PluginStatsBuffer_t::index_t i = 0;
 
-  if (lastNrSamples < _samples.size()) {
+  if (lastNrSamples >= 0) {
     i = _samples.size() - lastNrSamples;
+  } else {
+    i = abs(lastNrSamples) - 1;
   }
 
   return _samples[i];
@@ -144,7 +146,7 @@ bool PluginStats::matchedCommand(const String& command, const __FlashStringHelpe
   const String cmd_match_str(cmd_match);
 
   if (command.equals(cmd_match_str)) {
-    nrSamples = -1;
+    nrSamples = INT_MIN;
     return true;
   }
 
@@ -152,7 +154,7 @@ bool PluginStats::matchedCommand(const String& command, const __FlashStringHelpe
     nrSamples = 0;
 
     if (validIntFromString(command.substring(cmd_match_str.length()), nrSamples)) {
-      return nrSamples > 0;
+      return nrSamples;
     }
   }
   return false;
@@ -220,10 +222,11 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
   } else if (matchedCommand(command, F("sample"), nrSamples)) {
     success = nrSamples != 0;
 
-    if (nrSamples < 0) {   // [taskname#valuename.sample] The last sample saved.
-      value = getSample(0);
+    if (nrSamples == INT_MIN) {   // [taskname#valuename.sample] Number of saved samples.
+      value   = _samples.size();
+      success = true;
     } else {
-      if (nrSamples > 0) { // [taskname#valuename.sampleN] Sample N (1 - last (current), N>[number of examples] - return error value)
+      if (nrSamples != 0) { // [taskname#valuename.sampleN] Sample N (1 - last (current), -1 - first of saved sample, abs(N)>[number of examples] - return error value)
         value = getSample(nrSamples);
       }
     }
