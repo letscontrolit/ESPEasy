@@ -126,7 +126,7 @@ float PluginStats::getSample(int& lastNrSamples) const
 
   PluginStatsBuffer_t::index_t i = 0;
 
-  if (lastNrSamples >= 0) {
+  if (lastNrSamples > 0) {
     i = _samples.size() - lastNrSamples;
   } else {
     i = abs(lastNrSamples) - 1;
