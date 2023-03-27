@@ -106,7 +106,7 @@ The ``^`` character is again used to display the degree symbol, and the degree s
 Options
 ^^^^^^^^
 
-**Text show periods as dots** Enables the use of the display dots when periods are included in ``7dtext,<text>`` command.
+**Text show periods as dot** Enables the use of the display dots when periods are included in ``7dtext,<text>`` command.
 
 **Hide ° for Temperatures** Will leave out the degree symbol from the display for temperature commands ``7dt,<temp>`` (and ``7ddt,<temp1>,<temp2>`` when available), allowing 1 more digit for actual temperature display.
 
