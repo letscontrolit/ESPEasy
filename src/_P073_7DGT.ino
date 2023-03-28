@@ -354,8 +354,10 @@ bool p073_plugin_write(struct EventStruct *event,
 
   if ((cmd.length() < 3) || (cmd[0] != '7')) { return false; }
 
+  # ifdef P073_SCROLL_TEXT
   const bool currentScroll = P073_data->isScrollEnabled(); // Save current state
   bool newScroll           = false;                        // disable scroll if command changes
+  # endif // ifdef P073_SCROLL_TEXT
 
   const String text = parseStringToEndKeepCase(string, 2);
 
@@ -372,16 +374,22 @@ bool p073_plugin_write(struct EventStruct *event,
   } else if (equals(cmd, F("7dsd"))) {
     return p073_plugin_write_7dsd(event);
   } else if (equals(cmd, F("7dtext"))) {
+    # ifdef P073_SCROLL_TEXT
     P073_data->setScrollEnabled(true); // Scrolling allowed for 7dtext command
+    # endif // ifdef P073_SCROLL_TEXT
     return p073_plugin_write_7dtext(event, text);
   # ifdef P073_EXTRA_FONTS
   } else if (equals(cmd, F("7dfont"))) {
+    #  ifdef P073_SCROLL_TEXT
     P073_data->setScrollEnabled(currentScroll); // Restore state
+    #  endif // ifdef P073_SCROLL_TEXT
     return p073_plugin_write_7dfont(event, text);
   # endif // P073_EXTRA_FONTS
   # ifdef P073_7DBIN_COMMAND
   } else if (equals(cmd, F("7dbin"))) {
+    #  ifdef P073_SCROLL_TEXT
     P073_data->setScrollEnabled(true); // Scrolling allowed for 7dbin command
+    #  endif // ifdef P073_SCROLL_TEXT
     return p073_plugin_write_7dbin(event, text);
   # endif // P073_7DBIN_COMMAND
   } else {
@@ -389,17 +397,23 @@ bool p073_plugin_write(struct EventStruct *event,
     bool p073_displayon = false;
 
     if (equals(cmd, F("7don"))) {
+      # ifdef P073_SCROLL_TEXT
       newScroll = currentScroll; // Restore state
+      # endif // ifdef P073_SCROLL_TEXT
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
       p073_displayon = true;
       p073_validcmd  = true;
     } else if (equals(cmd, F("7doff"))) {
+      # ifdef P073_SCROLL_TEXT
       newScroll = currentScroll; // Restore state
+      # endif // ifdef P073_SCROLL_TEXT
       addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
       p073_displayon = false;
       p073_validcmd  = true;
     } else if (equals(cmd, F("7db"))) {
+      # ifdef P073_SCROLL_TEXT
       newScroll = currentScroll; // Restore state
+      # endif // ifdef P073_SCROLL_TEXT
 
       if ((event->Par1 >= 0) && (event->Par1 < 16)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -428,7 +442,9 @@ bool p073_plugin_write(struct EventStruct *event,
     }
 
     if (p073_validcmd) {
+      # ifdef P073_SCROLL_TEXT
       P073_data->setScrollEnabled(newScroll);
+      # endif // ifdef P073_SCROLL_TEXT
 
       switch (P073_data->displayModel) {
         case P073_TM1637_4DGTCOLON:
