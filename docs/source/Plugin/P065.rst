@@ -39,7 +39,9 @@ Configuration
 
 **Enabled** When unchecked the plugin is not enabled.
 
-**GPIO - RX** The GPIO pin that is wired to the player' RX pin. No information can be retrieved from the unit, so no connection to TX is needed.
+See: :ref:`SerialHelper_page`
+
+**GPIO - RX** The GPIO pin that is wired to the player' RX pin. No information can be retrieved from the unit, so no connection to TX is needed. NB: The TX pin will be reset to ``- None -`` on save!
 
 **Volume** The default volume setting at startup. When using the ``vol`` command, this value will be updated, but not saved. When opening the configuration, and saving the settings, it *will* be saved though. Also, using the ``save`` command will save the setting once changed by the ``vol`` command.
 
@@ -131,6 +133,8 @@ Change log
 
 .. versionadded:: 1.0
   ...
+
+  |changed| 2023-03-11: Add support for ESP32 by enabling/adding ESPEasySerial configuration.
 
   |added|
   Initial release version.
