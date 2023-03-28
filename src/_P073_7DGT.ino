@@ -40,6 +40,8 @@
 //                      12h - No Blink",5:"Date"
 //
 // History
+// 2023-03-28, tonhuisman: Guard scrolling feature to only be used for 7dtext and 7dbin commands, and fix scrolling on 6-digit display
+//                         Fix 7dbin command to also work correctly for TM1637 displays
 // 2022-02-03, tonhuisman: Move P073_data_struct to PluginStruct directory, code optimizations, de-duplication
 // 2021-10-06, tonhuisman: Store via commands changed output, font and brightness setting in settings variables, but not save them yet.
 // 2021-10-05, tonhuisman: Add 7output command for changing the Display Output setting. Not saved, unless the save command is also sent.
@@ -71,6 +73,10 @@
 
 void tm1637_ShowDate6(struct EventStruct *event,
                       bool                showTime = false); // Forward declaration for default argument
+void tm1637_ShowBuffer(struct EventStruct *event,
+                       uint8_t             firstPos,
+                       uint8_t             lastPos,
+                       bool                useBinaryData = false);
 
 
 boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) {
@@ -296,28 +302,36 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         break;
       }
 
-      if ((P073_data->output != P073_DISP_MANUAL) || !P073_data->txtScrolling) {
+      if ((P073_data->output != P073_DISP_MANUAL) || !P073_data->isScrollEnabled()) {
         break;
       }
 
-      P073_data->NextScroll();
-
-      switch (P073_data->displayModel) {
-        case P073_TM1637_4DGTCOLON:
-        case P073_TM1637_4DGTDOTS: {
-          tm1637_ShowBuffer(event, 0, 4);
-          break;
-        }
-        case P073_TM1637_6DGT: {
-          tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
-          tm1637_ShowBuffer(event, 0, 6);
-          break;
-        }
-        case P073_MAX7219_8DGT: {
-          P073_data->dotpos = -1; // avoid to display the dot
-          max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
-                             P073_data->pin3);
-          break;
+      if (P073_data->NextScroll()) {
+        switch (P073_data->displayModel) {
+          case P073_TM1637_4DGTCOLON:
+          case P073_TM1637_4DGTDOTS: {
+            tm1637_ShowBuffer(event, 0, 4
+                              #  ifdef P073_7DBIN_COMMAND
+                              , P073_data->binaryData
+                              #  endif // ifdef P073_7DBIN_COMMAND
+                              );
+            break;
+          }
+          case P073_TM1637_6DGT: {
+            tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
+            tm1637_ShowBuffer(event, 0, 6
+                              #  ifdef P073_7DBIN_COMMAND
+                              , P073_data->binaryData
+                              #  endif // ifdef P073_7DBIN_COMMAND
+                              );
+            break;
+          }
+          case P073_MAX7219_8DGT: {
+            P073_data->dotpos = -1; // avoid to display the dot
+            max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
+                               P073_data->pin3);
+            break;
+          }
         }
       }
       break;
@@ -340,6 +354,9 @@ bool p073_plugin_write(struct EventStruct *event,
 
   if ((cmd.length() < 3) || (cmd[0] != '7')) { return false; }
 
+  const bool currentScroll = P073_data->isScrollEnabled(); // Save current state
+  bool newScroll           = false;                        // disable scroll if command changes
+
   const String text = parseStringToEndKeepCase(string, 2);
 
   if (equals(cmd, F("7dn"))) {
@@ -355,13 +372,16 @@ bool p073_plugin_write(struct EventStruct *event,
   } else if (equals(cmd, F("7dsd"))) {
     return p073_plugin_write_7dsd(event);
   } else if (equals(cmd, F("7dtext"))) {
+    P073_data->setScrollEnabled(true); // Scrolling allowed for 7dtext command
     return p073_plugin_write_7dtext(event, text);
   # ifdef P073_EXTRA_FONTS
   } else if (equals(cmd, F("7dfont"))) {
+    P073_data->setScrollEnabled(currentScroll); // Restore state
     return p073_plugin_write_7dfont(event, text);
   # endif // P073_EXTRA_FONTS
   # ifdef P073_7DBIN_COMMAND
   } else if (equals(cmd, F("7dbin"))) {
+    P073_data->setScrollEnabled(true); // Scrolling allowed for 7dbin command
     return p073_plugin_write_7dbin(event, text);
   # endif // P073_7DBIN_COMMAND
   } else {
@@ -369,14 +389,18 @@ bool p073_plugin_write(struct EventStruct *event,
     bool p073_displayon = false;
 
     if (equals(cmd, F("7don"))) {
+      newScroll = currentScroll; // Restore state
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
       p073_displayon = true;
       p073_validcmd  = true;
     } else if (equals(cmd, F("7doff"))) {
+      newScroll = currentScroll; // Restore state
       addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
       p073_displayon = false;
       p073_validcmd  = true;
     } else if (equals(cmd, F("7db"))) {
+      newScroll = currentScroll; // Restore state
+
       if ((event->Par1 >= 0) && (event->Par1 < 16)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("7DGT : Brightness=");
@@ -404,6 +428,8 @@ bool p073_plugin_write(struct EventStruct *event,
     }
 
     if (p073_validcmd) {
+      P073_data->setScrollEnabled(newScroll);
+
       switch (P073_data->displayModel) {
         case P073_TM1637_4DGTCOLON:
         case P073_TM1637_4DGTDOTS:
@@ -756,7 +782,7 @@ bool p073_plugin_write_7dtext(struct EventStruct *event,
   P073_data->setTextToScroll("");
   uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel);
 
-  if (P073_data->txtScrolling && (P073_data->getEffectiveTextLength(text) > bufLen)) {
+  if (P073_data->isScrollEnabled() && (P073_data->getEffectiveTextLength(text) > bufLen)) {
     P073_data->setTextToScroll(text);
   } else
   # endif // P073_SCROLL_TEXT
@@ -868,7 +894,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
       #  ifdef P073_SCROLL_TEXT
       P073_data->setTextToScroll(EMPTY_STRING); // Clear any scrolling text
 
-      if (P073_data->txtScrolling && (data.length() > bufLen)) {
+      if (P073_data->isScrollEnabled() && (data.length() > bufLen)) {
         P073_data->setBinaryData(data);
       } else
       #  endif // P073_SCROLL_TEXT
@@ -885,7 +911,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
           case P073_TM1637_6DGT:
           {
             tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
-            tm1637_ShowBuffer(event, 0, 6);
+            tm1637_ShowBuffer(event, 0, 6, true);
             break;
           }
           case P073_MAX7219_8DGT:
@@ -1179,7 +1205,8 @@ void tm1637_SwapDigitInBuffer(struct EventStruct *event,
 
 void tm1637_ShowBuffer(struct EventStruct *event,
                        uint8_t             firstPos,
-                       uint8_t             lastPos) {
+                       uint8_t             lastPos,
+                       bool                useBinaryData) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -1198,10 +1225,14 @@ void tm1637_ShowBuffer(struct EventStruct *event,
   uint8_t p073_datashowpos1;
 
   for (int i = firstPos; i < lastPos; i++) {
-    p073_datashowpos1 = tm1637_separator(
-      P073_data->tm1637_getFontChar(P073_data->showbuffer[i], P073_data->fontset),
-      P073_data->showperiods[i]);
-    bytesToPrint[length] = p073_datashowpos1;
+    if (useBinaryData) {
+      bytesToPrint[length] = P073_data->showbuffer[i];
+    } else {
+      p073_datashowpos1 = tm1637_separator(
+        P073_data->tm1637_getFontChar(P073_data->showbuffer[i], P073_data->fontset),
+        P073_data->showperiods[i]);
+      bytesToPrint[length] = p073_datashowpos1;
+    }
     ++length;
   }
   tm1637_i2cWrite_ack(P073_data->pin1, P073_data->pin2, bytesToPrint, length);

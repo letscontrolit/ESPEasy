@@ -167,9 +167,11 @@ public:
   # ifdef P073_SCROLL_TEXT
   uint8_t getBufferLength(uint8_t displayModel);
   int     getEffectiveTextLength(const String& text);
-  void    NextScroll();
+  bool    NextScroll();
   void    setTextToScroll(const String& text);
   void    setScrollSpeed(uint8_t speed);
+  bool    isScrollEnabled();
+  void    setScrollEnabled(bool scroll);
   # endif // ifdef P073_SCROLL_TEXT
   # ifdef P073_7DBIN_COMMAND
   void    setBinaryData(const String& data);
@@ -203,13 +205,14 @@ public:
   bool    rightAlignTempMAX7219 = false;
   uint8_t fontset               = 0;
   # ifdef P073_7DBIN_COMMAND
-  bool binaryData               = false;
+  bool binaryData = false;
   # endif // P073_7DBIN_COMMAND
   # ifdef P073_SCROLL_TEXT
-  bool     txtScrolling         = false;
-  uint16_t scrollCount          = 0;
-  uint16_t scrollPos            = 0;
-  bool     scrollFull           = false;
+  bool     txtScrolling  = false;
+  bool     scrollAllowed = false;
+  uint16_t scrollCount   = 0;
+  uint16_t scrollPos     = 0;
+  bool     scrollFull    = false;
 
 private:
 
