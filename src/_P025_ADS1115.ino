@@ -98,8 +98,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Input"));
 
       {
-        # define ADS1115_PGA_OPTION 6
-        const __FlashStringHelper *pgaOptions[ADS1115_PGA_OPTION] = {
+        const __FlashStringHelper *pgaOptions[] = {
           F("2/3x gain (FS=6.144V)"),
           F("1x gain (FS=4.096V)"),
           F("2x gain (FS=2.048V)"),
@@ -107,12 +106,13 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           F("8x gain (FS=0.512V)"),
           F("16x gain (FS=0.256V)")
         };
+
+        constexpr size_t ADS1115_PGA_OPTION = sizeof(pgaOptions) / sizeof(pgaOptions[0]);
         addFormSelector(F("Gain"), F("gain"), ADS1115_PGA_OPTION, pgaOptions, nullptr, P025_GAIN);
       }
 
       {
-        # define ADS1115_MUX_OPTION 8
-        const __FlashStringHelper *muxOptions[ADS1115_MUX_OPTION] = {
+        const __FlashStringHelper *muxOptions[] = {
           F("AIN0 - AIN1 (Differential)"),
           F("AIN0 - AIN3 (Differential)"),
           F("AIN1 - AIN3 (Differential)"),
@@ -122,6 +122,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           F("AIN2 - GND (Single-Ended)"),
           F("AIN3 - GND (Single-Ended)"),
         };
+        constexpr size_t ADS1115_MUX_OPTION = sizeof(muxOptions) / sizeof(muxOptions[0]);
         addFormSelector(F("Input Multiplexer"), F("mux"), ADS1115_MUX_OPTION, muxOptions, nullptr, P025_MUX);
       }
 
@@ -180,50 +181,52 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       const P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P025_data) {
-        const int16_t value = P025_data->read();
-        UserVar[event->BaseVarIndex] = value;
+        int16_t value{};
+
+        if (P025_data->read(value)) {
+          success = true;
 
         # ifndef BUILD_NO_DEBUG
-        String log;
+          String log;
 
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          log  = F("ADS1115 : Analog value: ");
-          log += value;
-          log += F(" / Channel: ");
-          log += P025_MUX;
-        }
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            log  = F("ADS1115 : Analog value: ");
+            log += value;
+            log += F(" / Channel: ");
+            log += P025_MUX;
+          }
         # endif // ifndef BUILD_NO_DEBUG
 
-        if (P025_CAL) // Calibration?
-        {
-          const int adc1   = P025_CAL_ADC1;
-          const int adc2   = P025_CAL_ADC2;
-          const float out1 = P025_CAL_OUT1;
-          const float out2 = P025_CAL_OUT2;
+          if (!P025_CAL) { // Calibration?
+            UserVar[event->BaseVarIndex] = value;
+          }
+          else {
+            const int   adc1 = P025_CAL_ADC1;
+            const int   adc2 = P025_CAL_ADC2;
+            const float out1 = P025_CAL_OUT1;
+            const float out2 = P025_CAL_OUT2;
 
-          if (adc1 != adc2)
-          {
-            const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
-            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+            if (adc1 != adc2)
+            {
+              const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
+              UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
             # ifndef BUILD_NO_DEBUG
 
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              log += ' ';
-              log += formatUserVarNoCheck(event->TaskIndex, 0);
-            }
+              if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                log += ' ';
+                log += formatUserVarNoCheck(event->TaskIndex, 0);
+              }
             # endif // ifndef BUILD_NO_DEBUG
+            }
           }
-        }
 
-        // TEST log += F(" @0x");
-        // TEST log += String(config, 16);
         # ifndef BUILD_NO_DEBUG
 
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          addLogMove(LOG_LEVEL_DEBUG, log);
-        }
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            addLogMove(LOG_LEVEL_DEBUG, log);
+          }
         # endif // ifndef BUILD_NO_DEBUG
-        success = true;
+        }
       }
       break;
     }

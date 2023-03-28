@@ -8,21 +8,21 @@ struct P025_data_struct : public PluginTaskData_base {
 public:
 
   P025_data_struct(uint8_t i2c_addr,
-                   uint8_t _pga,
-                   uint8_t _mux);
+                   uint8_t pga,
+                   uint8_t mux);
   P025_data_struct()          = delete;
   virtual ~P025_data_struct() = default;
 
-  int16_t read() const;
+  bool read(int16_t& value) const;
 
 private:
 
-  uint16_t readConversionRegister025() const;
-  bool     isReady025() const;
+  bool readConversionRegister025(int16_t& value) const;
+  bool waitReady025(unsigned long timeout_ms) const;
 
-  uint8_t pga; // Gain
-  uint8_t mux; // Input multiplexer
-  uint8_t i2cAddress;
+  uint16_t _configRegisterValue{};
+
+  const uint8_t _i2cAddress;
 };
 
 #endif // ifdef USES_P025
