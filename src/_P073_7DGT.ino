@@ -40,6 +40,8 @@
 //                      12h - No Blink",5:"Date"
 //
 // History
+// 2023-03-29, tonhuisman: Add option to suppress the leading zero on day and hour when < 10
+//                         Disable scrolling for content/commands that don't support that
 // 2023-03-28, tonhuisman: Guard scrolling feature to only be used for 7dtext and 7dbin commands, and fix scrolling on 6-digit display
 //                         Fix 7dbin command to also work correctly for TM1637 displays
 // 2022-02-03, tonhuisman: Move P073_data_struct to PluginStruct directory, code optimizations, de-duplication
@@ -156,6 +158,9 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       # else // ifdef P073_7DDT_COMMAND
       addFormNote(F("Command 7dt,&lt;temp&gt;"));
       # endif // P073_7DDT_COMMAND
+      # ifdef P073_SUPPRESS_ZERO
+      addFormCheckBox(F("Suppress leading 0 on day/hour"), F("supp0"), bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0));
+      # endif // ifdef P073_SUPPRESS_ZERO
 
       # ifdef P073_SCROLL_TEXT
       addFormCheckBox(F("Scroll text &gt; display width"), F("scroll_text"), bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT));
@@ -188,6 +193,9 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       bitWrite(lSettings, P073_OPTION_SCROLLFULL, isFormItemChecked(F("scroll_full")));
       PCONFIG(3) = getFormItemInt(F("scrollspeed"));
       # endif // P073_SCROLL_TEXT
+      # ifdef P073_SUPPRESS_ZERO
+      bitWrite(lSettings, P073_OPTION_SUPPRESS0, isFormItemChecked(F("supp0")));
+      # endif // ifdef P073_SUPPRESS_ZERO
       # ifdef P073_EXTRA_FONTS
       PCONFIG(4) = getFormItemInt(F("fontset"));
       # endif // P073_EXTRA_FONTS
@@ -259,10 +267,22 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       }
 
       if (P073_data->output == P073_DISP_DATE) {
-        P073_data->FillBufferWithDate(true, 0, 0, 0);
+        P073_data->FillBufferWithDate(true, 0, 0, 0,
+                                      # ifdef P073_SUPPRESS_ZERO
+                                      bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0)
+                                      # else // ifdef P073_SUPPRESS_ZERO
+                                      false
+                                      # endif // ifdef P073_SUPPRESS_ZERO
+                                      );
       } else {
         P073_data->FillBufferWithTime(true, 0, 0, 0, !((P073_data->output == P073_DISP_CLOCK24BLNK) ||
-                                                       (P073_data->output == P073_DISP_CLOCK24)));
+                                                       (P073_data->output == P073_DISP_CLOCK24)),
+                                      # ifdef P073_SUPPRESS_ZERO
+                                      bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0)
+                                      # else // ifdef P073_SUPPRESS_ZERO
+                                      false
+                                      # endif // ifdef P073_SUPPRESS_ZERO
+                                      );
       }
 
       switch (P073_data->displayModel) {
@@ -357,6 +377,7 @@ bool p073_plugin_write(struct EventStruct *event,
   # ifdef P073_SCROLL_TEXT
   const bool currentScroll = P073_data->isScrollEnabled(); // Save current state
   bool newScroll           = false;                        // disable scroll if command changes
+  P073_data->setScrollEnabled(false);
   # endif // ifdef P073_SCROLL_TEXT
 
   const String text = parseStringToEndKeepCase(string, 2);
@@ -438,6 +459,10 @@ bool p073_plugin_write(struct EventStruct *event,
         PCONFIG(1)        = event->Par1;
         p073_displayon    = true;
         p073_validcmd     = true;
+        # ifdef P073_SCROLL_TEXT
+
+        if (event->Par1 == 0) { newScroll = currentScroll; } // Restore state
+        # endif // ifdef P073_SCROLL_TEXT
       }
     }
 
@@ -717,7 +742,13 @@ bool p073_plugin_write_7dst(struct EventStruct *event) {
     addLogMove(LOG_LEVEL_INFO, log);
   }
   P073_data->timesep = true;
-  P073_data->FillBufferWithTime(false, event->Par1, event->Par2, event->Par3, false);
+  P073_data->FillBufferWithTime(false, event->Par1, event->Par2, event->Par3, false,
+                                # ifdef P073_SUPPRESS_ZERO
+                                bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0)
+                                # else // ifdef P073_SUPPRESS_ZERO
+                                false
+                                # endif // ifdef P073_SUPPRESS_ZERO
+                                );
 
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON:
@@ -757,7 +788,13 @@ bool p073_plugin_write_7dsd(struct EventStruct *event) {
     log += event->Par3;
     addLogMove(LOG_LEVEL_INFO, log);
   }
-  P073_data->FillBufferWithDate(false, event->Par1, event->Par2, event->Par3);
+  P073_data->FillBufferWithDate(false, event->Par1, event->Par2, event->Par3,
+                                # ifdef P073_SUPPRESS_ZERO
+                                bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0)
+                                # else // ifdef P073_SUPPRESS_ZERO
+                                false
+                                # endif // ifdef P073_SUPPRESS_ZERO
+                                );
 
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON:

@@ -29,7 +29,8 @@ void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
                                           uint8_t sevendgt_hours,
                                           uint8_t sevendgt_minutes,
                                           uint8_t sevendgt_seconds,
-                                          bool    flag12h) {
+                                          bool    flag12h,
+                                          bool    suppressLeading0) {
   ClearBuffer();
 
   if (sevendgt_now) {
@@ -51,12 +52,17 @@ void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
   showbuffer[3] = sevendgt_minutes % 10;
   showbuffer[4] = static_cast<uint8_t>(sevendgt_seconds / 10);
   showbuffer[5] = sevendgt_seconds % 10;
+  # ifdef P073_SUPPRESS_ZERO
+
+  if (suppressLeading0 && (showbuffer[0] == 0)) { showbuffer[0] = 10; } // set to space
+  # endif // ifdef P073_SUPPRESS_ZERO
 }
 
 void P073_data_struct::FillBufferWithDate(bool    sevendgt_now,
                                           uint8_t sevendgt_day,
                                           uint8_t sevendgt_month,
-                                          int     sevendgt_year) {
+                                          int     sevendgt_year,
+                                          bool    suppressLeading0) {
   ClearBuffer();
   int sevendgt_year0 = sevendgt_year;
 
@@ -78,6 +84,10 @@ void P073_data_struct::FillBufferWithDate(bool    sevendgt_now,
   showbuffer[5] = sevendgt_year1 % 10;
   showbuffer[6] = static_cast<uint8_t>(sevendgt_year2 / 10);
   showbuffer[7] = sevendgt_year2 % 10;
+  # ifdef P073_SUPPRESS_ZERO
+
+  if (suppressLeading0 && (showbuffer[0] == 0)) { showbuffer[0] = 10; } // set to space
+  # endif // ifdef P073_SUPPRESS_ZERO
 }
 
 void P073_data_struct::FillBufferWithNumber(const String& number) {

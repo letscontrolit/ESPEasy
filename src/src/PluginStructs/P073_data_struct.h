@@ -21,11 +21,13 @@
 # define P073_OPTION_RIGHTALIGN  2 // Align 7dt output right on MAX7219 display
 # define P073_OPTION_SCROLLTEXT  3 // Scroll text > 8 characters
 # define P073_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
+# define P073_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
 
 # define P073_7DDT_COMMAND         // Enable 7ddt by default
 # define P073_EXTRA_FONTS          // Enable extra fonts
 # define P073_SCROLL_TEXT          // Enable scrolling of 7dtext by default
 # define P073_7DBIN_COMMAND        // Enable input of binary data via 7dbin,uint8_t,... command
+# define P073_SUPPRESS_ZERO        // Enable Suppress leading zero on day/hour
 
 # ifndef PLUGIN_SET_COLLECTION
 
@@ -35,6 +37,7 @@
 #  undef P073_EXTRA_FONTS   // Optionally activate if .bin file space is really problematic, to remove the font selection and 7dfont command
 #  undef P073_SCROLL_TEXT   // Optionally activate if .bin file space is really problematic, to remove the scrolling text feature
 #  undef P073_7DBIN_COMMAND // Optionally activate if .bin file space is really problematic, to remove the 7dbin command
+#  undef P073_SUPPRESS_ZERO // Optionally activate if .bin file space is really problematic, to remove the Suppress leading zero feature
 # endif // ifndef PLUGIN_SET_COLLECTION
 
 # define TM1637_POWER_ON    B10001000
@@ -149,11 +152,13 @@ public:
                           uint8_t sevendgt_hours,
                           uint8_t sevendgt_minutes,
                           uint8_t sevendgt_seconds,
-                          bool    flag12h);
+                          bool    flag12h,
+                          bool    suppressLeading0);
   void FillBufferWithDate(bool    sevendgt_now,
                           uint8_t sevendgt_day,
                           uint8_t sevendgt_month,
-                          int     sevendgt_year);
+                          int     sevendgt_year,
+                          bool    suppressLeading0);
   void FillBufferWithNumber(const String& number);
   void FillBufferWithTemp(long temperature);
   # ifdef P073_7DDT_COMMAND
