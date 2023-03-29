@@ -480,7 +480,7 @@ function Converter(decoded, port) {
                     break;
 
                 case 72:
-                    converted.name = "HDC1080";
+                    converted.name = "HDC10xx";
                     converted.temp  = converted.val_1;
                     converted.hum  = converted.val_2;
                     break;
