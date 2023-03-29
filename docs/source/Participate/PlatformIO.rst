@@ -546,6 +546,6 @@ For those that want to test the code from a pull request, created by someone els
 6. To update your local code after the PR has been updated on github, repeat step **3.** and **4.** within the branch created in step **2.** active (``git checkout pulls/<prnumber>``).
 
 .. warning:: 
-    This method does not enable or allow to contribute to that PR, that requires a different, somewhat more complicated, procedure, documented in a next paragraph.
+    This method does not enable or allow to contribute to that PR, that requires a different, somewhat more complicated, procedure, not documented here though available in the Github documentation.
 
 
