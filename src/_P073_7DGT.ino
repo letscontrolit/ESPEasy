@@ -40,6 +40,7 @@
 //                      12h - No Blink",5:"Date"
 //
 // History
+// 2023-03-30, tonhuisman: Correct 7dtext on 6-digit TM1637 to also swap the dots when swapping the digits
 // 2023-03-29, tonhuisman: Add option to suppress the leading zero on day and hour when < 10
 //                         Disable scrolling for content/commands that don't support that
 // 2023-03-28, tonhuisman: Guard scrolling feature to only be used for 7dtext and 7dbin commands, and fix scrolling on 6-digit display
@@ -1227,7 +1228,7 @@ void tm1637_SwapDigitInBuffer(struct EventStruct *event,
   if (nullptr == P073_data) {
     return;
   }
-  uint8_t p073_tmp;
+  uint8_t p073_tmp; // Swap digits
 
   p073_tmp                            = P073_data->showbuffer[2 + startPos];
   P073_data->showbuffer[2 + startPos] = P073_data->showbuffer[0 + startPos];
@@ -1235,6 +1236,15 @@ void tm1637_SwapDigitInBuffer(struct EventStruct *event,
   p073_tmp                            = P073_data->showbuffer[3 + startPos];
   P073_data->showbuffer[3 + startPos] = P073_data->showbuffer[5 + startPos];
   P073_data->showbuffer[5 + startPos] = p073_tmp;
+
+  bool p073_per; // Swap periods
+
+  p073_per                             = P073_data->showperiods[2 + startPos];
+  P073_data->showperiods[2 + startPos] = P073_data->showperiods[0 + startPos];
+  P073_data->showperiods[0 + startPos] = p073_per;
+  p073_per                             = P073_data->showperiods[3 + startPos];
+  P073_data->showperiods[3 + startPos] = P073_data->showperiods[5 + startPos];
+  P073_data->showperiods[5 + startPos] = p073_per;
 
   switch (P073_data->dotpos) {
     case 2: {
