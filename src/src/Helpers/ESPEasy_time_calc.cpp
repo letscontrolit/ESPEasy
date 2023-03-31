@@ -334,7 +334,7 @@ bool matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
   }
 
   if (((clockSet >> (16)) & 0xf) == 0x8) {         // if weekday nibble has the wildcard value 0x8 (workdays)
-    if (node_time.weekday() >= 2 and node_time.weekday() <= 6)         // and we have a working day today...
+    if (node_time.weekday() >= 2 && node_time.weekday() <= 6)         // and we have a working day today...
     {
       Mask        = 0xffffffff  ^ (0xFUL << (16)); // Mask to wipe nibble position.
       clockEvent &= Mask;                          // clear nibble
@@ -343,7 +343,7 @@ bool matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
   }
 
   if (((clockSet >> (16)) & 0xf) == 0x9) {         // if weekday nibble has the wildcard value 0x9 (weekends)
-    if (node_time.weekday() == 1 or node_time.weekday() == 7)          // and we have a weekend day today...
+    if (node_time.weekday() == 1 || node_time.weekday() == 7)          // and we have a weekend day today...
     {
       Mask        = 0xffffffff  ^ (0xFUL << (16)); // Mask to wipe nibble position.
       clockEvent &= Mask;                          // clear nibble
@@ -351,8 +351,5 @@ bool matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
     }
   }
 
-  if (clockEvent == clockSet) {
-    return true;
-  }
-  return false;
+  return (clockEvent == clockSet);
 }

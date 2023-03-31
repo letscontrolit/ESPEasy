@@ -650,6 +650,7 @@ float P145_data_struct::getCalibrationValue() const
 @note   This is the internally corrected Rzero and will be unaltered when
         Autocalibration is switched off.
 */
+/**************************************************************************/
 float P145_data_struct::getAutoCalibrationValue() const
 {
   return rzero;
