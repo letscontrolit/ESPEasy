@@ -13,15 +13,6 @@
 # define PLUGIN_NAME_025 "Analog input - ADS1115"
 # define PLUGIN_VALUENAME1_025 "Analog"
 
-# define P025_I2C_ADDR    PCONFIG(0)
-# define P025_GAIN        PCONFIG(1)
-# define P025_MUX         PCONFIG(2)
-# define P025_CAL         PCONFIG(3)
-
-# define P025_CAL_ADC1    PCONFIG_LONG(0)
-# define P025_CAL_OUT1    PCONFIG_FLOAT(0)
-# define P025_CAL_ADC2    PCONFIG_LONG(1)
-# define P025_CAL_OUT2    PCONFIG_FLOAT(1)
 
 
 boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
@@ -85,80 +76,20 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      uint8_t port = CONFIG_PORT;
 
-      if (port > 0) // map old port logic to new gain and mode settings
-      {
-        P025_GAIN     = PCONFIG(0) / 2;
-        P025_I2C_ADDR = 0x48 + ((port - 1) / 4);
-        P025_MUX      = ((port - 1) & 3) | 4;
-        CONFIG_PORT   = 0;
-      }
-
-      addFormSubHeader(F("Input"));
-
-      {
-        const __FlashStringHelper *pgaOptions[] = {
-          F("2/3x gain (FS=6.144V)"),
-          F("1x gain (FS=4.096V)"),
-          F("2x gain (FS=2.048V)"),
-          F("4x gain (FS=1.024V)"),
-          F("8x gain (FS=0.512V)"),
-          F("16x gain (FS=0.256V)")
-        };
-
-        constexpr size_t ADS1115_PGA_OPTION = sizeof(pgaOptions) / sizeof(pgaOptions[0]);
-        addFormSelector(F("Gain"), F("gain"), ADS1115_PGA_OPTION, pgaOptions, nullptr, P025_GAIN);
-      }
-
-      {
-        const __FlashStringHelper *muxOptions[] = {
-          F("AIN0 - AIN1 (Differential)"),
-          F("AIN0 - AIN3 (Differential)"),
-          F("AIN1 - AIN3 (Differential)"),
-          F("AIN2 - AIN3 (Differential)"),
-          F("AIN0 - GND (Single-Ended)"),
-          F("AIN1 - GND (Single-Ended)"),
-          F("AIN2 - GND (Single-Ended)"),
-          F("AIN3 - GND (Single-Ended)"),
-        };
-        constexpr size_t ADS1115_MUX_OPTION = sizeof(muxOptions) / sizeof(muxOptions[0]);
-        addFormSelector(F("Input Multiplexer"), F("mux"), ADS1115_MUX_OPTION, muxOptions, nullptr, P025_MUX);
-      }
-
-      addFormSubHeader(F("Two Point Calibration"));
-
-      addFormCheckBox(F("Calibration Enabled"), F("cal"), P025_CAL);
-
-      addFormNumericBox(F("Point 1"), F("adc1"), P025_CAL_ADC1, -32768, 32767);
-      html_add_estimate_symbol();
-      addTextBox(F("out1"), toString(P025_CAL_OUT1, 3), 10);
-
-      addFormNumericBox(F("Point 2"), F("adc2"), P025_CAL_ADC2, -32768, 32767);
-      html_add_estimate_symbol();
-      addTextBox(F("out2"), toString(P025_CAL_OUT2, 3), 10);
-
-      success = true;
+      success = P025_data_struct::webformLoad(event);
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P025_I2C_ADDR = getFormItemInt(F("i2c_addr"));
+      success = P025_data_struct::webformSave(event);
+      break;
+    }
 
-      P025_GAIN = getFormItemInt(F("gain"));
-
-      P025_MUX = getFormItemInt(F("mux"));
-
-      P025_CAL = isFormItemChecked(F("cal"));
-
-      P025_CAL_ADC1 = getFormItemInt(F("adc1"));
-      P025_CAL_OUT1 = getFormItemFloat(F("out1"));
-
-      P025_CAL_ADC2 = getFormItemInt(F("adc2"));
-      P025_CAL_OUT2 = getFormItemFloat(F("out2"));
-
-      success = true;
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+    {
+      success = P025_data_struct::webform_showConfig(event);
       break;
     }
 
