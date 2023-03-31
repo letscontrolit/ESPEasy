@@ -11,11 +11,11 @@ Using ESP8266
 .. image:: SerialHelper_PortOptions_ESP8266.png
   :alt: Serial port options, specific to ESP8266
 
-* **I2C Serial**: SC16IS752 based I2C Serial boards are supported (see above), select the I2C Address and Channel below.
 * **HW Serial0: GPIO-3 (D9) <- TX / GPIO-1 (D10) -> RX**: The regular serial port of the ESP. NB: **Enable Serial port** has to be **disabled** (unchecked) in Tools/Advanced settings for any plugin to be able to use this port!
 * **HW Serial0 swap: GPIO-13 (D7) <- TX / GPIO-15 (D8) -> RX**: Alternative hardware serial port, using different pins. The same restrictions apply!
 * **HW Serial1: - <- TX / GPIO-2 (D4) -> RX**: The secondary serial port. Can only be used for out-going data.
 * **SoftwareSerial**: Uses a software serial receiver, not useable for high data speeds or devices that send high data volumes, as that will overload the ESP.
+* **I2C Serial**: SC16IS752 based I2C Serial boards are supported (see above), select the I2C Address and Channel below.
 
 **I2C Serial**
 
@@ -44,10 +44,10 @@ Using ESP32
 .. image:: SerialHelper_PortOptions_ESP32.png
   :alt: Serial port options, specific to ESP32
 
-* **I2C Serial**: The SC16IS752 based I2C Serial boards are supported (see above), select the I2C Address and Channel below.
 * **HW Serial0**: ESP32 supports up to 3 serial ports, with freely configurable GPIO pins. NB: **Enable Serial port** has to be **disabled** (unchecked) in Tools/Advanced settings for any plugin to be able to use this port!
 * **HW Serial1**: ESP32 supports up to 3 serial ports, with freely configurable GPIO pins.
 * **HW Serial2**: ESP32 supports up to 3 serial ports, with freely configurable GPIO pins.
+* **I2C Serial**: The SC16IS752 based I2C Serial boards are supported (see above), select the I2C Address and Channel below.
 
 **I2C Serial**
 

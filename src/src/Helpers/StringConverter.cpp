@@ -743,6 +743,10 @@ String parseString(const String& string, uint8_t indexFind, char separator, bool
   return result;
 }
 
+String parseStringKeepCaseNoTrim(const String& string, uint8_t indexFind, char separator) {
+  return parseStringKeepCase(string, indexFind, separator, false);
+}
+
 String parseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result;
 
@@ -760,6 +764,10 @@ String parseStringToEnd(const String& string, uint8_t indexFind, char separator,
 
   result.toLowerCase();
   return result;
+}
+
+String parseStringToEndKeepCaseNoTrim(const String& string, uint8_t indexFind, char separator) {
+  return parseStringToEndKeepCase(string, indexFind, separator, false);
 }
 
 String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
