@@ -36,6 +36,15 @@ Supported hardware
 
 .. .. include:: P072_events.repl
 
+Datasheets
+----------
+
+- `HDC1000 <https://www.ti.com/lit/ds/symlink/hdc1000.pdf>`_
+- `HDC1008 <https://www.ti.com/lit/ds/symlink/hdc1008.pdf>`_
+- `HDC1010 <https://www.ti.com/lit/ds/symlink/hdc1010.pdf>`_
+- `HDC1050 <https://www.ti.com/lit/ds/symlink/hdc1050.pdf>`_
+- `HDC1080 <https://www.ti.com/lit/ds/symlink/hdc1080.pdf>`_
+
 Change log
 ----------
 

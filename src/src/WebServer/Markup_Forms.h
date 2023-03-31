@@ -72,6 +72,8 @@ void addFormNumericBox(LabelType::Enum label,
                        ,
                        const String  & tooltip = EMPTY_STRING
                        #endif // if FEATURE_TOOLTIPS
+                       ,
+                       bool disabled = false
                        );
 
 void addFormNumericBox(const __FlashStringHelper * label, 
@@ -83,6 +85,8 @@ void addFormNumericBox(const __FlashStringHelper * label,
                        ,
                        const String& tooltip = EMPTY_STRING
                        #endif // if FEATURE_TOOLTIPS
+                       ,
+                       bool disabled = false
                        );
 
 void addFormNumericBox(const String& label,
@@ -94,6 +98,8 @@ void addFormNumericBox(const String& label,
                        ,
                        const String& tooltip = EMPTY_STRING
                        #endif // if FEATURE_TOOLTIPS
+                       ,
+                       bool disabled = false
                        );
 
 
