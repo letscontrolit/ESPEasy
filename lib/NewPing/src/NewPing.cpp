@@ -18,7 +18,7 @@
 // NewPing constructor
 // ---------------------------------------------------------------------------
 
-NewPing::NewPing(uint8_t trigger_pin, uint8_t echo_pin, unsigned int max_cm_distance) {
+NewPing::NewPing(uint8_t trigger_pin, uint8_t echo_pin, unsigned int max_cm_distance, uint8_t trigger_width) {
 	_errorState = STATUS_SENSOR_READY;
 
 #if DO_BITWISE == true
@@ -33,6 +33,9 @@ NewPing::NewPing(uint8_t trigger_pin, uint8_t echo_pin, unsigned int max_cm_dist
 	_triggerPin = trigger_pin;
 	_echoPin = echo_pin;
 #endif
+	if ((trigger_width >= DEFAULT_TRIGGER_WIDTH) && (trigger_width <= MAX_TRIGGER_WIDTH)) {
+		_triggerWidth = trigger_width;
+	}
 
 	set_max_distance(max_cm_distance); // Call function to set the max sensor distance.
 
@@ -147,7 +150,7 @@ boolean NewPing::ping_trigger() {
 	*_triggerOutput &= ~_triggerBit;   // Set the trigger pin low, should already be low, but this will make sure it is.
 	delayMicroseconds(4);              // Wait for pin to go low.
 	*_triggerOutput |= _triggerBit;    // Set trigger pin high, this tells the sensor to send out a ping.
-	delayMicroseconds(10);             // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait 10uS.
+	delayMicroseconds(_triggerWidth);  // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait at least 10uS.
 	*_triggerOutput &= ~_triggerBit;   // Set trigger pin back to low.
 
 	#if ONE_PIN_ENABLED == true
@@ -186,7 +189,7 @@ boolean NewPing::ping_trigger() {
 	DIRECT_pinWrite(_triggerPin, 0);  // Set the trigger pin low, should already be low, but this will make sure it is.
 	delayMicroseconds(4);                         // Wait for pin to go low.
 	DIRECT_pinWrite(_triggerPin, 1); // Set trigger pin high, this tells the sensor to send out a ping.
-	delayMicroseconds(10);                        // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait 10uS.
+	delayMicroseconds(_triggerWidth);  // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait at least 10uS.
 	DIRECT_pinWrite(_triggerPin, 0);  // Set trigger pin back to low.
 
 	#if ONE_PIN_ENABLED == true
