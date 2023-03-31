@@ -869,7 +869,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   while (loop) { // Process all provided arguments
     // 0-offset + 1st and 2nd argument used by trigger/subcommand, don't trim off spaces
-    sParams.push_back(parseStringKeepCase(string, argCount + 3, ',', false));
+    sParams.push_back(parseStringKeepCaseNoTrim(string, argCount + 3));
     nParams.push_back(0);
     validIntFromString(sParams[argCount], nParams[argCount]);
 
@@ -917,7 +917,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if (adagfx_commands_e::txt == subcmd)                           // txt: Print text at last cursor position, ends at next line!
   {
-    _display->println(parseStringToEndKeepCase(string, 3));       // Print entire rest of provided line
+    _display->println(parseStringToEndKeepCaseNoTrim(string, 3)); // Print entire rest of provided line
   }
   else if ((adagfx_commands_e::txp == subcmd) && (argCount == 2)) // txp: Text position
   {
@@ -949,10 +949,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       } else {
         _display->setCursor(nParams[0] + _xo, nParams[1] + _yo);
       }
-      _display->println(parseStringToEndKeepCase(string, 5));     // Print entire rest of provided line
+      _display->println(parseStringToEndKeepCaseNoTrim(string, 5)); // Print entire rest of provided line
     }
   }
-  else if ((adagfx_commands_e::txl == subcmd) && (argCount >= 2)) // txl: Text at line(s)
+  else if ((adagfx_commands_e::txl == subcmd) && (argCount >= 2))   // txl: Text at line(s)
   {
     uint8_t _line              = 0;
     uint8_t _column            = 0;
@@ -1851,7 +1851,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -1984,7 +1984,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     {
       int16_t  x1, y1;
       uint16_t w1, h1;
-      String   newString = AdaGFXparseTemplate(parseStringToEndKeepCase(string, 2), 0);
+      String   newString = AdaGFXparseTemplate(parseStringToEndKeepCaseNoTrim(string, 2), 0);
       _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
 
       if (adagfx_getcommands_e::length == cmd) {

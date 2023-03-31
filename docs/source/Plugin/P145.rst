@@ -215,6 +215,7 @@ Device
 On ESP32 the analog input can be selected.
 
 * **Analog Pin** Select one of the available analog input pins on the ESP32
+
 Commands
 ----------
 

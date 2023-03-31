@@ -41,35 +41,35 @@ Configuration
 
 .. image:: P073_DeviceConfiguration.png
 
-**Name** In the Name field a unique name should be entered.
+* **Name**: In the Name field a unique name should be entered.
 
-**Enabled** When unchecked the plugin is not enabled.
+* **Enabled**: When unchecked the plugin is not enabled.
 
-**1st/2nd/3rd GPIO** How the display is connected can be configured here. Description per module type is in the Notes below the GPIO fields.
+* **1st/2nd/3rd GPIO**: How the display is connected can be configured here. Description per module type is in the Notes below the GPIO fields.
 
 For the MAX7219 displays, the DIN-Pin and CLK-Pin can be shared when multiple displays are connected, but each display's CS-Pin must be connected to a unique GPIO of the unit.
 
 For TM1637 display possibly the DIN-Pin GPIO's can be shared, but that's untested, so it is more safe to use separate GPIOs for each display.
 
-**Display Type** Select the type of display that's connected. 4 models are supported:
+**Display Type**: Select the type of display that's connected. 4 models are supported:
 
 .. image:: P073_DisplayTypes.png
 
-**Display Output** Here the type of output can be selected:
+* **Display Output**: Here the type of output can be selected:
 
 .. image:: P073_DisplayOutput.png
 
-*Manual* The content can be set from rules by using the commands available (see below)
+*Manual*: The content can be set from rules by using the commands available (see below)
 
-*Clock 24h - Blink* Displays the current time in 24h format, with a blinking colon or dot.
+*Clock 24h - Blink*: Displays the current time in 24h format, with a blinking colon or dot.
 
-*Clock 24h - No Blink* Displays the current time in 24h format.
+*Clock 24h - No Blink*: Displays the current time in 24h format.
 
-*Clock 12h - Blink* Displays the current time in 12h format, with a blinking colon or dot.
+*Clock 12h - Blink*: Displays the current time in 12h format, with a blinking colon or dot.
 
-*Clock 12h - No Blink* Displays the current time in 12h format.
+*Clock 12h - No Blink*: Displays the current time in 12h format.
 
-*Date* Displays the current date.
+*Date*: Displays the current date.
 
 *NB: Clock and Date outputs assume the NTP option is enabled in Tools/Advanced.*
 
@@ -77,19 +77,19 @@ The Clock and Date outputs are updated every second, and the blinking selections
 
 Clock and Date formats are optimized for each Display Type to fill the display efficiently.
 
-**Brightness** The brightness level of the display can be set here. 0 is 'Default' brightness, 1..15 from low to high brightness.
+* **Brightness**: The brightness level of the display can be set here. 0 is 'Default' brightness, 1..15 from low to high brightness.
 
-**Font set** Select the font set from this list:
+* **Font set**: Select the font set from this list:
 
 .. image:: P073_FontSet.png
 
-*Default* The original font as initially included in the plugin. Includes digits 0..9, special characters: space, dash, degree (when using a ``^``), equal sign, slash, underscore and letters A..Z. Uppercase and lowercase characters are shown exactly the same, but as the possible shapes are quite limited, some can be somewhat hard to recognize at first.
+*Default*: The original font as initially included in the plugin. Includes digits 0..9, special characters: space, dash, degree (when using a ``^``), equal sign, slash, underscore and letters A..Z. Uppercase and lowercase characters are shown exactly the same, but as the possible shapes are quite limited, some can be somewhat hard to recognize at first.
 
-*Siekoo* The character set as documented here `Fakoo.de: Siekoo alphabet <https://fakoo.de/siekoo.html>`_ (See below for the extra special characters supported)
+*Siekoo*: The character set as documented here `Fakoo.de: Siekoo alphabet <https://fakoo.de/siekoo.html>`_ (See below for the extra special characters supported)
 
-*Siekoo with uppercase 'CHNORUX'* This font is the same as the normal Siekoo character set, but supports uppercase versions for characters 'CHNORUX', even though they duplicate other characters in the set.
+*Siekoo with uppercase 'CHNORUX'*: This font is the same as the normal Siekoo character set, but supports uppercase versions for characters 'CHNORUX', even though they duplicate other characters in the set.
 
-*dSEG7* the character set as documented here `Keshikan.net: dSEG7 <https://www.keshikan.net/fonts-e.html>`_ special characters: space, dash, degree (when using a ``^``), equal sign, slash, underscore and letters A..Z. (Again single-case, like the default font)
+*dSEG7*: the character set as documented here `Keshikan.net: dSEG7 <https://www.keshikan.net/fonts-e.html>`_ special characters: space, dash, degree (when using a ``^``), equal sign, slash, underscore and letters A..Z. (Again single-case, like the default font)
 
 **Siekoo**:
 
@@ -104,22 +104,26 @@ The four marked characters, Ä, Ö, Ü and ß, are *not* included, as they can n
 The ``^`` character is again used to display the degree symbol, and the degree symbol is not recognized!
 
 Options
-^^^^^^^^
+^^^^^^^
 
-**Text show periods as dots** Enables the use of the display dots when periods are included in ``7dtext,<text>`` command.
+* **Text show periods as dot**: Enables the use of the display dots when periods are included in ``7dtext,<text>`` command.
 
-**Hide ° for Temperatures** Will leave out the degree symbol from the display for temperature commands ``7dt,<temp>`` (and ``7ddt,<temp1>,<temp2>`` when available), allowing 1 more digit for actual temperature display.
+* **Hide ° for Temperatures**: Will leave out the degree symbol from the display for temperature commands ``7dt,<temp>`` (and ``7ddt,<temp1>,<temp2>`` when available), allowing 1 more digit for actual temperature display.
 
-**Scroll text > display width** Normally the ``7dtext,<text>`` command only show the left n characters the display can hold. This option enables the Scroll Text feature, that will scroll text sent using the ``7dtext`` command (or ``7dbin`` command when available) from right to left when the content is longer than the display can show at once.
+* **Suppress leading 0 on day/hour**: When enabled, will show the hours of the time and days of the date without a leading 0 when < 10. (Not available in all builds for size reasons)
 
-**Scroll text in from right** Normally the Scroll Text feature starts with the display filled with the left part of the text to scroll, with this option enabled, the display starts empty and the text is scrolled in from the right side of the display to the left, until all text is scrolled off. Then the scrolling restarts.
+* **Scroll text > display width**: Normally the ``7dtext,<text>`` command only show the left n characters the display can hold. This option enables the Scroll Text feature, that will scroll text sent using the ``7dtext`` command (or ``7dbin`` command when available) from right to left when the content is longer than the display can show at once.
 
-**Scroll speed (0.1 sec/step)** Determines the speed of scrolling the text. Default value is 10, so 1 character per second.
+* **Scroll text in from right**: Normally the Scroll Text feature starts with the display filled with the left part of the text to scroll, with this option enabled, the display starts empty and the text is scrolled in from the right side of the display to the left, until all text is scrolled off. Then the scrolling restarts.
+
+* **Scroll speed (0.1 sec/step)**: Determines the speed of scrolling the text. Default value is 10, so 1 character per second.
+
+(The Scroll options and feature are not included in the Collection builds for size reasons)
 
 Options for MAX7219 - 8 digit
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Right align Temperature (7dt)** By default the temperature display on the MAX7219 - 8 digit display, is shown 1 position from the right side. This option enabled right-aligns the temperature.
+* **Right align Temperature (7dt)**: By default the temperature display on the MAX7219 - 8 digit display, is shown 1 position from the right side. This option enabled right-aligns the temperature.
 
 Commands available
 ^^^^^^^^^^^^^^^^^^
@@ -178,6 +182,9 @@ Change log
 
   |added| 2021-10-05:
   ``7output`` command.
+
+  |added| 2023-03-29:
+  Optional suppressing of leading 0 for Hour and Day in Time and Date.
 
 .. versionadded:: 1.0
   ...
