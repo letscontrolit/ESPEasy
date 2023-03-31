@@ -600,7 +600,6 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   }
   TaskDeviceSendDataFlags[task]  = 0u;
   VariousTaskBits[task]         = 0;
-  OLD_TaskDeviceGlobalSync[task]= 0u;
   TaskDeviceDataFeed[task]      = 0u;
   TaskDeviceTimer[task]         = 0u;
   TaskDeviceEnabled[task]       = false;
