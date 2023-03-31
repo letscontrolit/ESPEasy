@@ -1439,7 +1439,7 @@ To create/register a plugin, you have to :
 
     #define USES_P070   // NeoPixel_Clock
     #define USES_P071   // Kamstrup401
-    #define USES_P072   // HDC1080
+    #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
     #define USES_P074   // TSL2561
 
     #define USES_P080   // iButton Sensor  DS1990A

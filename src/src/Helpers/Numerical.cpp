@@ -208,7 +208,9 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
   }
 
   // Strip leading zeroes
-  while (c == '0' && isdigit(tBuf.charAt(firstDec + 1))) {
+  while (c == '0' && 
+         (firstDec + 1) < bufLength && 
+         isdigit(tBuf.charAt(firstDec + 1))) {
     ++firstDec;
     c = tBuf.charAt(firstDec);
   }
