@@ -221,7 +221,7 @@ void P104_data_struct::loadSettings() {
           zones[zoneIndex].size = tmp_int;
         }
 
-        zones[zoneIndex].text = parseStringKeepCase(tmp, 1 + P104_OFFSET_TEXT, P104_FIELD_SEP);
+        zones[zoneIndex].text = parseStringKeepCaseNoTrim(tmp, 1 + P104_OFFSET_TEXT, P104_FIELD_SEP);
 
         if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_ALIGNMENT, P104_FIELD_SEP), tmp_int)) {
           zones[zoneIndex].alignment = tmp_int;
@@ -938,7 +938,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
     String sub = parseString(string, 2);
 
     int zoneIndex;
-    String string4 = parseStringKeepCase(string, 4);
+    String string4 = parseStringKeepCaseNoTrim(string, 4);
     # ifdef P104_USE_COMMANDS
     int value4;
     validIntFromString(string4, value4);

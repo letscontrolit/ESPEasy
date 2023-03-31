@@ -480,9 +480,9 @@ void parse_string_commands(String& line) {
     // Command without opening and closing brackets.
     const String fullCommand = line.substring(startIndex + 1, closingIndex);
     const String cmd_s_lower = parseString(fullCommand, 1, ':');
-    const String arg1        = parseStringKeepCase(fullCommand, 2, ':');
-    const String arg2        = parseStringKeepCase(fullCommand, 3, ':');
-    const String arg3        = parseStringKeepCase(fullCommand, 4, ':');
+    const String arg1        = parseStringKeepCaseNoTrim(fullCommand, 2, ':');
+    const String arg2        = parseStringKeepCaseNoTrim(fullCommand, 3, ':');
+    const String arg3        = parseStringKeepCaseNoTrim(fullCommand, 4, ':');
 
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
