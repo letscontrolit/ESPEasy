@@ -9,9 +9,9 @@
 # define P025_CONFIG_REGISTER      0x01
 
 
-P025_data_struct::P025_data_struct(uint8_t i2c_addr, uint8_t pga, uint8_t mux) :
-  _i2cAddress(i2c_addr)
-{
+P025_data_struct::P025_data_struct(struct EventStruct *event) {
+  _i2cAddress = P025_I2C_ADDR;
+
   constexpr uint16_t defaultValue =
     (0x0003)    | // Disable the comparator (default val)
     (0x0000)    | // Non-latching (default val)
@@ -22,11 +22,21 @@ P025_data_struct::P025_data_struct(uint8_t i2c_addr, uint8_t pga, uint8_t mux) :
     (0x8000);     // Start a single conversion
 
   _configRegisterValue = defaultValue |
-                         (static_cast<uint16_t>(pga) << 9) |
-                         (static_cast<uint16_t>(mux) << 12);
+                         (static_cast<uint16_t>(P025_GAIN) << 9) |
+                         (static_cast<uint16_t>(P025_MUX) << 12);
+  _fullScaleFactor = 1.0f;
+
+  if (P025_VOLT_OUT_GET) {
+    if (P025_GAIN == 0) { 
+      _fullScaleFactor = 6.144 / 32768.0f; 
+    } else {
+      const uint8_t shift = 13 - P025_GAIN;
+      _fullScaleFactor = (1 << shift) / 32768000.0f;
+    }
+  }
 }
 
-bool P025_data_struct::read(int16_t& value) const {
+bool P025_data_struct::read(float& value) const {
   if (!waitReady025(5)) { return false; }
 
   if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, _configRegisterValue)) {
@@ -36,7 +46,11 @@ bool P025_data_struct::read(int16_t& value) const {
   // See https://github.com/letscontrolit/ESPEasy/issues/3159#issuecomment-660546091
   if (!waitReady025(10)) { return false; }
 
-  return readConversionRegister025(value);
+  int16_t raw = 0;
+  if (!readConversionRegister025(raw)) return false;
+
+  value = _fullScaleFactor * raw;
+  return true;
 }
 
 bool P025_data_struct::readConversionRegister025(int16_t& value) const {
@@ -76,8 +90,6 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
     CONFIG_PORT   = 0;
   }
 
-  addFormSubHeader(F("Input"));
-
   {
     const __FlashStringHelper *pgaOptions[] = {
       F("2/3x gain (FS=6.144V)"),
@@ -107,9 +119,12 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
     addFormSelector(F("Input Multiplexer"), F("mux"), ADS1115_MUX_OPTIONS, P025_muxOptions, nullptr, P025_MUX);
   }
 
+  addFormCheckBox(F("Convert to Volt"), F("volt"), P025_VOLT_OUT_GET);
+
+
   addFormSubHeader(F("Two Point Calibration"));
 
-  addFormCheckBox(F("Calibration Enabled"), F("cal"), P025_CAL);
+  addFormCheckBox(F("Calibration Enabled"), F("cal"), P025_CAL_GET);
 
   addFormNumericBox(F("Point 1"), F("adc1"), P025_CAL_ADC1, -32768, 32767);
   html_add_estimate_symbol();
@@ -129,7 +144,9 @@ bool P025_data_struct::webformSave(struct EventStruct *event)
 
   P025_MUX = getFormItemInt(F("mux"));
 
-  P025_CAL = isFormItemChecked(F("cal"));
+  P025_VOLT_OUT_SET(isFormItemChecked(F("volt")));
+
+  P025_CAL_SET(isFormItemChecked(F("cal")));
 
   P025_CAL_ADC1 = getFormItemInt(F("adc1"));
   P025_CAL_OUT1 = getFormItemFloat(F("out1"));

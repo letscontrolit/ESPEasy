@@ -100,7 +100,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       // uint8_t port = CONFIG_PORT - (unit * 4);
       // uint8_t address = 0x48 + unit;
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(P025_I2C_ADDR, P025_GAIN, P025_MUX));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(event));
       P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = (nullptr != P025_data);
@@ -112,7 +112,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       const P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P025_data) {
-        int16_t value{};
+        float value{};
 
         if (P025_data->read(value)) {
           success = true;
@@ -128,7 +128,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           }
         # endif // ifndef BUILD_NO_DEBUG
 
-          if (!P025_CAL) { // Calibration?
+          if (!P025_CAL_GET) { // Calibration?
             UserVar[event->BaseVarIndex] = value;
           }
           else {
