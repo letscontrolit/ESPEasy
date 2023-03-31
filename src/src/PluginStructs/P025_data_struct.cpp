@@ -9,19 +9,6 @@
 # define P025_CONFIG_REGISTER      0x01
 
 
-const __FlashStringHelper *P025_muxOptions[] = {
-  F("AIN0 - AIN1 (Differential)"),
-  F("AIN0 - AIN3 (Differential)"),
-  F("AIN1 - AIN3 (Differential)"),
-  F("AIN2 - AIN3 (Differential)"),
-  F("AIN0 - GND (Single-Ended)"),
-  F("AIN1 - GND (Single-Ended)"),
-  F("AIN2 - GND (Single-Ended)"),
-  F("AIN3 - GND (Single-Ended)"),
-};
-constexpr size_t ADS1115_MUX_OPTIONS = sizeof(P025_muxOptions) / sizeof(P025_muxOptions[0]);
-
-
 P025_data_struct::P025_data_struct(uint8_t i2c_addr, uint8_t pga, uint8_t mux) :
   _i2cAddress(i2c_addr)
 {
@@ -104,8 +91,21 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
     constexpr size_t ADS1115_PGA_OPTIONS = sizeof(pgaOptions) / sizeof(pgaOptions[0]);
     addFormSelector(F("Gain"), F("gain"), ADS1115_PGA_OPTIONS, pgaOptions, nullptr, P025_GAIN);
   }
+  {
+    const __FlashStringHelper *P025_muxOptions[] = {
+      F("AIN0 - AIN1 (Differential)"),
+      F("AIN0 - AIN3 (Differential)"),
+      F("AIN1 - AIN3 (Differential)"),
+      F("AIN2 - AIN3 (Differential)"),
+      F("AIN0 - GND (Single-Ended)"),
+      F("AIN1 - GND (Single-Ended)"),
+      F("AIN2 - GND (Single-Ended)"),
+      F("AIN3 - GND (Single-Ended)"),
+    };
+    constexpr size_t ADS1115_MUX_OPTIONS = sizeof(P025_muxOptions) / sizeof(P025_muxOptions[0]);
 
-  addFormSelector(F("Input Multiplexer"), F("mux"), ADS1115_MUX_OPTIONS, P025_muxOptions, nullptr, P025_MUX);
+    addFormSelector(F("Input Multiplexer"), F("mux"), ADS1115_MUX_OPTIONS, P025_muxOptions, nullptr, P025_MUX);
+  }
 
   addFormSubHeader(F("Two Point Calibration"));
 
@@ -144,7 +144,19 @@ bool P025_data_struct::webform_showConfig(struct EventStruct *event)
 {
   format_I2C_port_description(event->TaskIndex);
 
-  if ((P025_MUX >= 0) && (P025_MUX < ADS1115_MUX_OPTIONS)) {
+  const __FlashStringHelper *P025_muxOptions[] = {
+    F("AIN0/1 (Diff)"),
+    F("AIN0/3 (Diff)"),
+    F("AIN1/3 (Diff)"),
+    F("AIN2/3 (Diff)"),
+    F("AIN0"),
+    F("AIN1"),
+    F("AIN2"),
+    F("AIN3"),
+  };
+  constexpr size_t ADS1115_MUX_OPTIONS = sizeof(P025_muxOptions) / sizeof(P025_muxOptions[0]);
+
+  if ((P025_MUX >= 0) && (P025_MUX < static_cast<int>(ADS1115_MUX_OPTIONS))) {
     addHtml(F("<br>"));
     addHtml(P025_muxOptions[P025_MUX]);
   }
