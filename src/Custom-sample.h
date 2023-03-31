@@ -243,6 +243,7 @@
 //  #define DEFAULT_PROVISIONING_FETCH_SECURITY     false
 //  #define DEFAULT_PROVISIONING_FETCH_CONFIG       false
 //  #define DEFAULT_PROVISIONING_FETCH_PROVISIONING false
+//  #define DEFAULT_PROVISIONING_FETCH_FIRMWARE     false
 //  #define DEFAULT_PROVISIONING_SAVE_URL           false
 //  #define DEFAULT_PROVISIONING_SAVE_CREDENTIALS   false
 //  #define DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND false
@@ -413,7 +414,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P070   // NeoPixel_Clock
 // #define USES_P071   // Kamstrup401
-// #define USES_P072   // HDC1080
+// #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
 // #define USES_P073   // 7DG
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
@@ -476,6 +477,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
 // #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+// #define USES_P137   // AXP192
 // #define USES_P138   // IP5306
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
 // #define USES_P143   // I2C Rotary encoders
