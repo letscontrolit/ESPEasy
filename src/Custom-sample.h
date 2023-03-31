@@ -414,7 +414,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P070   // NeoPixel_Clock
 // #define USES_P071   // Kamstrup401
-// #define USES_P072   // HDC1080
+// #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
 // #define USES_P073   // 7DG
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion

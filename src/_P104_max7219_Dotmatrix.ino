@@ -68,6 +68,7 @@
 //                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
 // 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
 // 2021-10-03 tonhuisman: Add Inverted option per zone
 // 2021-09    tonhuisman: Minor improvements, attempts to fix stack failures

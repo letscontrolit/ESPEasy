@@ -25,9 +25,9 @@
 .. |P071_compileinfo| replace:: `.`
 .. |P071_usedlibraries| replace:: `.`
 
-.. |P072_name| replace:: :cyan:`HDC1080 (I2C)`
+.. |P072_name| replace:: :cyan:`HDC1000/HDC1008/HDC1010/HDC1050/HDC1080 (I2C)`
 .. |P072_type| replace:: :cyan:`Environment`
-.. |P072_typename| replace:: :cyan:`Environment - HDC1080 (I2C)`
+.. |P072_typename| replace:: :cyan:`Environment - HDC1000/HDC1008/HDC1010/HDC1050/HDC1080 (I2C)`
 .. |P072_porttype| replace:: `.`
 .. |P072_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P072_github| replace:: P072_HDC1080.ino
