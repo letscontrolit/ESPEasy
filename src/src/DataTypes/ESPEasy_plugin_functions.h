@@ -58,7 +58,9 @@
 #define PLUGIN_READ_ERROR_OCCURED          46 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
 #define PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR 47 // Show the configuration for output type and what value to set to which taskvalue
 #define PLUGIN_PROCESS_CONTROLLER_DATA     48 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
-#define PLUGIN_FILTEROUT_CONTROLLER_DATA   49 // Can be called from the controller to query a task whether the data should be processed further.    
+#define PLUGIN_PRIORITY_INIT_ALL           49 // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
+#define PLUGIN_PRIORITY_INIT               50 // Pre-initialize a singe plugins that is set to PowerManager priority
+#define PLUGIN_FILTEROUT_CONTROLLER_DATA   51 // Can be called from the controller to query a task whether the data should be processed further.    
 
 
 

@@ -1548,10 +1548,9 @@ void setConnectionSpeed() {
 
   // Does not (yet) work, so commented out.
   #ifdef ESP32
-  /*
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
 
-  if (!Settings.ForceWiFi_bg_mode() || (wifi_connect_attempt > 10)) {
+  if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.connectionFailures > 10)) {
     // Set to use BGN
     protocol |= WIFI_PROTOCOL_11N;
   }
@@ -1563,7 +1562,6 @@ void setConnectionSpeed() {
   if (WifiIsAP(WiFi.getMode())) {
     esp_wifi_set_protocol(WIFI_IF_AP, protocol);
   }
-  */
   #endif // ifdef ESP32
   #ifdef ESP8266
   SetWiFiTXpower();
