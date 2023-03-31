@@ -752,6 +752,7 @@ To create/register a plugin, you have to :
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
     #define USES_P076   // HWL8012   in POW r1
+    #define USES_P077	  // CSE7766   in POW R2
     #define USES_P081   // Cron
 #endif
 
