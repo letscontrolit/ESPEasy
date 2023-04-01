@@ -89,6 +89,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+/*
     case PLUGIN_WRITE:
     {
       String command = parseString(string, 1);
@@ -135,6 +136,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+*/
   }
   return success;
 }

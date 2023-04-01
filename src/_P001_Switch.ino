@@ -61,20 +61,13 @@
 
 // TD-er: Needed to fix a mistake in earlier fixes.
 uint8_t P001_getSwitchType(struct EventStruct *event) {
-  uint8_t choice = PCONFIG(0);
-
-  switch (choice) {
-    case 2: // Old implementation for Dimmer
-    case PLUGIN_001_TYPE_DIMMER:
-      choice = PLUGIN_001_TYPE_DIMMER;
-      break;
-    case 1: // Old implementation for switch
-    case PLUGIN_001_TYPE_SWITCH:
-    default:
-      choice = PLUGIN_001_TYPE_SWITCH;
-      break;
+  const uint8_t choice = PCONFIG(0);
+  if (choice == 2 || // Old implementation for Dimmer
+      choice == PLUGIN_001_TYPE_DIMMER)
+  {
+    return PLUGIN_001_TYPE_DIMMER;
   }
-  return choice;
+  return PLUGIN_001_TYPE_SWITCH;
 }
 
 boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)

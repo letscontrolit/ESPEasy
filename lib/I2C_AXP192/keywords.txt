@@ -1,0 +1,45 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+I2C_AXP192	KEYWORD1
+I2C_AXP192_InitDef	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+setDCDC1	KEYWORD2
+setDCDC2	KEYWORD2
+setDCDC3	KEYWORD2
+setLDO2	KEYWORD2
+setLDO3	KEYWORD2
+setGPIO0	KEYWORD2
+setGPIO1	KEYWORD2
+setGPIO2	KEYWORD2
+setGPIO3	KEYWORD2
+setGPIO4	KEYWORD2
+setEXTEN	KEYWORD2
+setBACKUP	KEYWORD2
+
+getBatteryVoltage	KEYWORD2
+getBatteryDischargeCurrent	KEYWORD2
+getBatteryChargeCurrent	KEYWORD2
+getAcinVolatge	KEYWORD2
+getAcinCurrent	KEYWORD2
+getVbusVoltage	KEYWORD2
+getVbusCurrent	KEYWORD2
+getInternalTemperature	KEYWORD2
+getApsVoltage	KEYWORD2
+powerOff	KEYWORD2
+getPekPress	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

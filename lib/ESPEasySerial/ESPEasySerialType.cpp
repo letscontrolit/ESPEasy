@@ -41,7 +41,9 @@ bool ESPeasySerialType::getSerialTypePins(ESPEasySerialPort serType, int& rxPin,
     case ESPEasySerialPort::software:      rxPin = 14; txPin = 12; return true;
     # endif // DISABLE_SOFTWARE_SERIAL
 #endif      // ifdef ESP8266
-    case ESPEasySerialPort::sc16is752:     rxPin = -1; txPin = -1; return true;
+#ifndef DISABLE_SC16IS752_Serial
+    case ESPEasySerialPort::sc16is752:     return true;
+#endif // ifndef DISABLE_SC16IS752_Serial
 
     default:
       break;

@@ -340,9 +340,28 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   update_whenset_FormItemInt(concat(F("taskdevicepin"), 1), pin1);
   update_whenset_FormItemInt(concat(F("taskdevicepin"), 2), pin2);
   update_whenset_FormItemInt(concat(F("taskdevicepin"), 3), pin3);
+  bool taskEnabled = isFormItemChecked(F("TDE"));
   setBasicTaskValues(taskIndex, taskdevicetimer,
-                     isFormItemChecked(F("TDE")), webArg(F("TDN")),
+                     taskEnabled, webArg(F("TDN")),
                      pin1, pin2, pin3);
+  #if FEATURE_PLUGIN_PRIORITY
+  if (Device[DeviceIndex].PowerManager // Check extra priority device flags when available
+      ) {
+    bool disablePrio = false;
+    for (taskIndex_t t = 0; t < TASKS_MAX && !disablePrio; t++) {
+      if (t != taskIndex) {
+        disablePrio = Settings.isPriorityTask(t);
+      }
+    }
+    bool statePriority = isFormItemChecked(F("TPRE"));
+    if (Device[DeviceIndex].PowerManager) {
+      Settings.setPowerManagerTask(taskIndex, statePriority);
+    }
+    // Set alternative Priority flags
+    // Set to readonly if set as Priority task
+    Settings.setTaskEnableReadonly(taskIndex, statePriority);
+  }
+  #endif // if FEATURE_PLUGIN_PRIORITY
   Settings.TaskDevicePort[taskIndex] = getFormItemInt(F("TDP"), 0);
   update_whenset_FormItemInt(F("remoteFeed"), Settings.TaskDeviceDataFeed[taskIndex]);
   Settings.CombineTaskValues_SingleEvent(taskIndex, isFormItemChecked(F("TVSE")));
@@ -430,6 +449,14 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 }
 
 
+void html_add_setPage(uint8_t page, bool isLinkToPrev) {
+  addHtml(F("devices?setpage="));
+  addHtmlInt(page);
+  addHtml(F("'>&"));
+  addHtml(isLinkToPrev ? 'l' : 'g');
+  addHtml(F("t;</a>"));
+}
+
 // ********************************************************************************
 // Show table with all selected Tasks/Devices
 // ********************************************************************************
@@ -444,37 +471,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
   {
     html_add_button_prefix();
 
-    {
-      String html;
-      html.reserve(30);
-
-      html += F("devices?setpage=");
-
-      if (page > 1) {
-        html += page - 1;
-      }
-      else {
-        html += page;
-      }
-      html += F("'>&lt;</a>");
-      addHtml(html);
-    }
+    html_add_setPage((page > 1) ? page - 1 : page, true);
     html_add_button_prefix();
-    {
-      String html;
-      html.reserve(30);
-
-      html += F("devices?setpage=");
-
-      if (page < (TASKS_MAX / TASKS_PER_PAGE)) {
-        html += page + 1;
-      }
-      else {
-        html += page;
-      }
-      html += F("'>&gt;</a>");
-      addHtml(html);
-    }
+    html_add_setPage((page < (TASKS_MAX / TASKS_PER_PAGE)) ? page + 1 : page, false);
   }
 
   html_table_header(F("Task"),    50);
@@ -895,7 +894,26 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 
-    addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);                 // ="taskdeviceenabled"
+    addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex], Settings.isTaskEnableReadonly(taskIndex)); // ="taskdeviceenabled"
+
+    #if FEATURE_PLUGIN_PRIORITY
+    if (Device[DeviceIndex].PowerManager) { // Check extra priority device flags when available
+      bool disablePrio = !Settings.TaskDeviceEnabled[taskIndex];
+      for (taskIndex_t t = 0; t < TASKS_MAX && !disablePrio; t++) {
+        if (t != taskIndex) { // Ignore current device
+          if (Device[DeviceIndex].PowerManager && Settings.isPowerManagerTask(t)) {
+            disablePrio = true; // Allow only a single PowerManager plugin
+          }
+          // Add other Priority options checks
+        }
+      }
+      addFormSubHeader(F("Priority task"));
+      addFormCheckBox(F("Priority task"), F("TPRE"), Settings.isPriorityTask(taskIndex), disablePrio); // ="taskpriorityenabled"
+      if (!disablePrio) {
+        addFormNote(F("After enabling a Priority task, a reboot is required to activate. See documentation."));
+      }
+    }
+    #endif // if FEATURE_PLUGIN_PRIORITY
 
     bool addPinConfig = false;
 
@@ -1011,16 +1029,30 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
   addHtml(F("devices?setpage="));
   addHtmlInt(page);
   addHtml(F("'>Close</a>"));
-  addSubmitButton();
+  #if FEATURE_PLUGIN_PRIORITY
+  if (!Settings.isPriorityTask(taskIndex))
+  #endif // if FEATURE_PLUGIN_PRIORITY
+  {
+    addSubmitButton();
+  }
   addHtml(F("<input type='hidden' name='edit' value='1'>"));
   addHtml(F("<input type='hidden' name='page' value='1'>"));
 
-  // if user selected a device, add the delete button
-  if (validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex])) {
+  // if user selected a device, add the delete button, except for Priority tasks
+  if (validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex])
+      #if FEATURE_PLUGIN_PRIORITY
+      && !Settings.isPriorityTask(taskIndex)
+      #endif // if FEATURE_PLUGIN_PRIORITY
+     ) {
     addSubmitButton(F("Delete"), F("del"));
   }
 
   html_end_table();
+  #if FEATURE_PLUGIN_PRIORITY
+  if (Settings.isPriorityTask(taskIndex)) {
+    addFormNote(F("A Priority task can't be updated or deleted. See documentation."));
+  }
+  #endif // if FEATURE_PLUGIN_PRIORITY
   html_end_form();
   serve_JS(JSfiles_e::SplitPasteInput);
 }
