@@ -154,6 +154,12 @@ bool connectClient(WiFiClient& client, const char *hostname, uint16_t port, uint
 bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t timeout_ms = 100);
 #endif // FEATURE_HTTP_CLIENT
 
+void scrubDNS();
+
+bool valid_DNS_address(const IPAddress& dns);
+
+bool setDNS(int index, const IPAddress& dns);
+
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms = 1000);
 
 bool hostReachable(const String& hostname);
@@ -221,11 +227,15 @@ String send_via_http(const String& logIdentifier,
 // If the URL ends with a /, the file part will be assumed the same as file_save.
 // If file_save is empty, the file part from the URL will be used as local file name.
 // Return true when successful.
-bool downloadFile(const String& url, String file_save);
+bool downloadFile(String file_save, String error);
 
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error);
 
-bool downloadFirmware(const String& url, String& error);
+bool downloadFirmware(String filename, String& error);
+bool downloadFirmware(const String& url, String& file_save, String& user, String& pass, String& error);
+
+// Return the full url including filename
+String joinUrlFilename(const String& url, String& filename);
 
 #endif // if FEATURE_DOWNLOAD
 

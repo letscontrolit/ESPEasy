@@ -27,6 +27,23 @@
 
 // -V::569
 
+String concat(const __FlashStringHelper * str, const String &val) {
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
+String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
+  return concat(str, String(val));
+}
+
+bool equals(const String& str, const __FlashStringHelper * f_str) {
+  return str.equals(String(f_str));
+}
+
+bool equals(const String& str, const char& c) {
+  return str.equals(String(c));
+}
 
 /********************************************************************************************\
    Convert a char string to integer
@@ -167,6 +184,23 @@ unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHex
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
+void appendHexChar(uint8_t data, String& string)
+{
+  const char *hex_chars = "0123456789abcdef";
+  string += hex_chars[(data >> 4) & 0xF];
+  string += hex_chars[(data) & 0xF];
+}
+
+String formatToHex_array(const uint8_t* data, size_t size)
+{
+  String res;
+  res.reserve(2 * size);
+  for (size_t i = 0; i < size; ++i) {
+    appendHexChar(data[i], res);
+  }
+  return res;
+}
+
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
@@ -260,6 +294,10 @@ void removeExtraNewLine(String& line) {
   while (line.endsWith(F("\r\n\r\n"))) {
     line.remove(line.length() - 2);
   }
+}
+
+void removeChar(String& line, char character) {
+  line.replace(String(character), EMPTY_STRING);
 }
 
 void addNewLine(String& line) {
@@ -535,16 +573,41 @@ String to_json_value(const String& value, bool wrapInQuotes) {
   }
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
-    if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
-      // Must replace characters, so make a deepcopy
-      String tmpValue(value);
-      tmpValue.replace('\n', '^');
-      tmpValue.replace('\r', '^');
-      tmpValue.replace('"',  '\'');
-      return wrap_String(tmpValue, '"');
-    } else {
-      return wrap_String(value, '"');
+
+    // First we check for not allowed special characters.
+    const size_t val_length = value.length();
+    for (size_t i = 0; i < val_length; ++i) {
+      switch (value[i]) {
+        case '\n':
+        case '\r':
+        case '\t':
+        case '\\':
+        case '\b':
+        case '\f':
+        case '"':
+        {
+          // Special characters not allowed in JSON:
+          //  \b  Backspace (ascii code 08)
+          //  \f  Form feed (ascii code 0C)
+          //  \n  New line
+          //  \r  Carriage return
+          //  \t  Tab
+          //  \"  Double quote
+          //  \\  Backslash character
+          // Must replace characters, so make a deepcopy
+          String tmpValue(value);
+          tmpValue.replace('\n', '^');
+          tmpValue.replace('\r', '^');
+          tmpValue.replace('\t', ' ');
+          tmpValue.replace('\\', '^');
+          tmpValue.replace('\b', '^');
+          tmpValue.replace('\f', '^');
+          tmpValue.replace('"',  '\'');
+          return wrap_String(tmpValue, '"');
+        }
+      }
     }
+    return wrap_String(value, '"');
   } 
   // It is a numerical
   return value;
@@ -668,6 +731,10 @@ String parseString(const String& string, uint8_t indexFind, char separator, bool
   return result;
 }
 
+String parseStringKeepCaseNoTrim(const String& string, uint8_t indexFind, char separator) {
+  return parseStringKeepCase(string, indexFind, separator, false);
+}
+
 String parseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result;
 
@@ -685,6 +752,10 @@ String parseStringToEnd(const String& string, uint8_t indexFind, char separator,
 
   result.toLowerCase();
   return result;
+}
+
+String parseStringToEndKeepCaseNoTrim(const String& string, uint8_t indexFind, char separator) {
+  return parseStringToEndKeepCase(string, indexFind, separator, false);
 }
 
 String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
@@ -736,6 +807,166 @@ String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char
   }
   return parseStringKeepCase(string, indexFind, separator, trimResult);
 }
+
+/*****************************************************************************
+ * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
+ ****************************************************************************/
+String parseHexTextString(const String& argument, int index) {
+  String result;
+
+  // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
+  const String skipChars = F(" -:,.;");
+
+  result.reserve(argument.length()); // longer than needed, most likely
+  int i      = index;
+  String arg = parseStringKeepCase(argument, i, ',', false);
+
+  while (!arg.isEmpty()) {
+    if ((arg.startsWith(F("0x")) || arg.startsWith(F("0X")))) {
+      size_t j = 2;
+
+      while (j < arg.length()) {
+        int hex = -1;
+
+        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > 0) && (hex < 256)) {
+          result += char(hex);
+        }
+        j += 2;
+        int c = skipChars.indexOf(arg.substring(j, j + 1));
+
+        while (j < arg.length() && c > -1) {
+          j++;
+          c = skipChars.indexOf(arg.substring(j, j + 1));
+        }
+      }
+    } else {
+      result += arg;
+    }
+    i++;
+    arg = parseStringKeepCase(argument, i, ',', false);
+  }
+
+  return result;
+}
+
+/*****************************************************************************
+ * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
+ ****************************************************************************/
+std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
+  std::vector<uint8_t> result;
+
+  // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
+  const String skipChars = F(" -:,.;");
+
+  result.reserve(argument.length()); // longer than needed, most likely
+  int i      = index;
+  String arg = parseStringKeepCase(argument, i, ',', false);
+
+  while (!arg.isEmpty()) {
+    if ((arg.startsWith(F("0x")) || arg.startsWith(F("0X")))) {
+      size_t j = 2;
+
+      while (j < arg.length()) {
+        int hex = -1;
+
+        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > -1) && (hex < 256)) {
+          result.push_back(char(hex));
+        }
+        j += 2;
+        int c = skipChars.indexOf(arg.substring(j, j + 1));
+
+        while (j < arg.length() && c > -1) {
+          j++;
+          c = skipChars.indexOf(arg.substring(j, j + 1));
+        }
+      }
+    } else {
+      for (size_t s = 0; s < arg.length(); s++) {
+        result.push_back(arg[s]);
+      }
+    }
+    i++;
+    arg = parseStringKeepCase(argument, i, ',', false);
+  }
+
+  return result;
+}
+
+/*********************************************************************************************\
+   GetTextIndexed: Get text from large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L937
+\*********************************************************************************************/
+char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index, const char* haystack)
+{
+  // Returns empty string if not found
+  // Returns text of found
+  char* write = destination;
+  const char* read = haystack;
+
+  index++;
+  while (index--) {
+    size_t size = destination_size -1;
+    write = destination;
+    char ch = '.';
+    while ((ch != '\0') && (ch != '|')) {
+      ch = pgm_read_byte(read++);
+      if (size && (ch != '|'))  {
+        *write++ = ch;
+        size--;
+      }
+    }
+    if (0 == ch) {
+      if (index) {
+        write = destination;
+      }
+      break;
+    }
+  }
+  *write = '\0';
+  return destination;
+}
+
+/*********************************************************************************************\
+   GetCommandCode: Find string in large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L967
+\*********************************************************************************************/
+int GetCommandCode(char* destination, size_t destination_size, const char* needle, const char* haystack)
+{
+  // Returns -1 of not found
+  // Returns index and command if found
+  int result = -1;
+  const char* read = haystack;
+  char* write = destination;
+
+  while (true) {
+    result++;
+    size_t size = destination_size -1;
+    write = destination;
+    char ch = '.';
+    while ((ch != '\0') && (ch != '|')) {
+      ch = pgm_read_byte(read++);
+      if (size && (ch != '|'))  {
+        *write++ = ch;
+        size--;
+      }
+    }
+    *write = '\0';
+    if (!strcasecmp(needle, destination)) {
+      break;
+    }
+    if (0 == ch) {
+      result = -1;
+      break;
+    }
+  }
+  return result;
+}
+
+
 
 // escapes special characters in strings for use in html-forms
 bool htmlEscapeChar(char c, String& esc)
@@ -806,7 +1037,6 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 String URLEncode(const String& msg)
 {
-  const char *hex = "0123456789abcdef";
   String encodedMsg;
 
   const size_t msg_length = msg.length();
@@ -821,8 +1051,7 @@ String URLEncode(const String& msg)
       encodedMsg += ch;
     } else {
       encodedMsg += '%';
-      encodedMsg += hex[ch >> 4];
-      encodedMsg += hex[ch & 15];
+      appendHexChar(ch, encodedMsg);
     }
   }
   return encodedMsg;
@@ -965,6 +1194,9 @@ void parseSystemVariables(String& s, bool useURLencode)
 
 void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)
 {
+  if (s.indexOf('%') == -1) {
+    return;
+  }
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
   if (validTaskIndex(event->TaskIndex)) {
@@ -982,10 +1214,12 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
     }
   }
 
-  if (validTaskIndex(event->TaskIndex)) {
-    repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
-  } else {
-    repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
+  if (s.indexOf(F("%tskname%")) != -1) {
+    if (validTaskIndex(event->TaskIndex)) {
+      repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
+    } else {
+      repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
+    }
   }
 
   const bool vname_found = s.indexOf(F("%vname")) != -1;

@@ -18,6 +18,12 @@
    and to test other devices for reachability (this is why SendDataOption is enabled)
    Maintainer: Denys Fedoryshchenko, denys AT nuclearcat.com
  */
+/** Changelog:
+ * 2023-03-19 tonhuisman: Show hostname in GPIO column of Devices page
+ * 2023-03-14 tonhuisman: Change command handling to not require the taskname as the second argument if no 3rd argument is given.
+ *                        Set decimals to 0 whan adding the task.
+ * 2023-03 Started changelog, not registered before.
+ */
 
 
 # define PLUGIN_089
@@ -34,7 +40,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number           = PLUGIN_ID_089;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
+      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM0;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].ValueCount         = 1;
@@ -59,22 +65,37 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // Count doesn't include decimals
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
+      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+      string  = hostname;
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      char hostname[PLUGIN_089_HOSTNAME_SIZE];
+      char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
       LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
-      addFormTextBox(F("Hostname"), F("p089_ping_host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
+      addFormTextBox(F("Hostname"), F("host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      char hostname[PLUGIN_089_HOSTNAME_SIZE];
+      char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
 
       // Reset "Fails" if settings updated
       UserVar[event->BaseVarIndex] = 0;
-      strncpy(hostname, webArg(F("p089_ping_host")).c_str(), sizeof(hostname));
+      strncpy(hostname, webArg(F("host")).c_str(), sizeof(hostname));
       SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
       success = true;
       break;
@@ -109,20 +130,25 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command.equals(F("pingset")))
+      if (equals(command, F("pingset")))
       {
         String taskName       = parseString(string, 2);
+        String param1         = parseString(string, 3);
         taskIndex_t taskIndex = findTaskIndexByName(taskName);
 
-        if ((taskIndex != TASKS_MAX) && (taskIndex == event->TaskIndex)) {
-          success = true;
-          String param1 = parseString(string, 3);
-          int    val_new;
+        if (param1.isEmpty() ||
+            (!param1.isEmpty() && (taskIndex != TASKS_MAX) && (taskIndex == event->TaskIndex))) {
+          int val_new;
+
+          if (param1.isEmpty()) {
+            param1 = taskName;
+          }
 
           if (validIntFromString(param1, val_new)) {
             // Avoid overflow and weird values
             if ((val_new > -1024) && (val_new < 1024)) {
               UserVar[event->BaseVarIndex] = val_new;
+              success                      = true;
             }
           }
         }
@@ -132,6 +158,5 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
 
 #endif // if defined(USES_P089) && defined(ESP8266)

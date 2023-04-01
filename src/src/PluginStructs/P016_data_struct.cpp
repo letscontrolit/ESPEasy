@@ -186,7 +186,7 @@ void P016_data_struct::AddCode(uint64_t Code, decode_type_t DecodeType, uint16_t
     String log;
 
     if (log.reserve(80)) { // estimated
-      log  = F("[P36] AddCode: ");
+      log  = F("[P016] AddCode: ");
       log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
       log += F(" code: 0x");
       log += uint64ToString(Code, 16);
@@ -230,7 +230,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
           String log;
 
           if (log.reserve(128)) { // estimated
-            log  = F("[P36] Execute: ");
+            log  = F("[P016] Execute: ");
             log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
             log += F(" Code: 0x");
             log += uint64ToString(Code, 16);
@@ -256,7 +256,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
       String log;
 
       if (log.reserve(128)) { // estimated
-        log  = F("[P36] ValidateCode failed: ");
+        log  = F("[P016] ValidateCode failed: ");
         log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
         log += F(" Code: 0x");
         log += uint64ToString(Code, 16);

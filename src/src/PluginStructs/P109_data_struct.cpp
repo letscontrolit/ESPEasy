@@ -8,7 +8,7 @@
  * Constructor
  *************************************************************************/
 P109_data_struct::P109_data_struct():
-  _display(nullptr), _taskIndex(0), _varIndex(0) 
+  _display(nullptr), _taskIndex(0), _varIndex(0)
 {
   for (int i = 0; i < P109_Nlines; ++i) {
     ZERO_FILL(_deviceTemplate[i]);
@@ -81,9 +81,11 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
     delete _display;
     _display = nullptr;
   }
-  _taskIndex = event->TaskIndex;
-  _varIndex  = event->BaseVarIndex;
-  _relaypin  = P109_CONFIG_RELAYPIN;
+  _taskIndex       = event->TaskIndex;
+  _varIndex        = event->BaseVarIndex;
+  _relaypin        = P109_CONFIG_RELAYPIN;
+  _relayInverted   = P109_GET_RELAY_INVERT;
+  _setpointTimeout = P109_CONFIG_SETPOINT_DELAY - P109_SETPOINT_OFFSET;
 
   if (P109_CONFIG_DISPLAYTYPE == 1) {
     _display = new (std::nothrow) SSD1306Wire(P109_CONFIG_I2CADDRESS, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
@@ -368,46 +370,46 @@ bool P109_data_struct::plugin_write(struct EventStruct *event,
   if (_initialized) {
     String subcommand = parseString(string, 2);
 
-    if (command.equals(F("oledframedcmd"))) {
+    if (equals(command, F("oledframedcmd"))) {
       success = true;
 
-      if (subcommand.equals(F("off"))) {
+      if (equals(subcommand, F("off"))) {
         OLedSetContrast(_display, OLED_CONTRAST_OFF);
       }
-      else if (subcommand.equals(F("on"))) {
+      else if (equals(subcommand, F("on"))) {
         _display->displayOn();
       }
-      else if (subcommand.equals(F("low"))) {
+      else if (equals(subcommand, F("low"))) {
         OLedSetContrast(_display, OLED_CONTRAST_LOW);
       }
-      else if (subcommand.equals(F("med"))) {
+      else if (equals(subcommand, F("med"))) {
         OLedSetContrast(_display, OLED_CONTRAST_MED);
       }
-      else if (subcommand.equals(F("high"))) {
+      else if (equals(subcommand, F("high"))) {
         OLedSetContrast(_display, OLED_CONTRAST_HIGH);
       } else {
         success = false;
       }
     }
 
-    if (!success && command.equals(F("thermo"))) {
+    if (!success && equals(command, F("thermo"))) {
       success = true;
       String par3 = parseString(string, 3);
 
-      if (subcommand.equals(F("setpoint"))) {
+      if (equals(subcommand, F("setpoint"))) {
         setSetpoint(par3);
         check_auto_mode(event);
       }
-      else if (subcommand.equals(F("down"))) {    // Emulate Left button action
+      else if (equals(subcommand, F("down"))) {    // Emulate Left button action
         actionLeft(event);
       }
-      else if (subcommand.equals(F("up"))) {      // Emulate Right button action
+      else if (equals(subcommand, F("up"))) {      // Emulate Right button action
         actionRight(event);
       }
-      else if (subcommand.equals(F("modebtn"))) { // Emulate Mode button action
+      else if (equals(subcommand, F("modebtn"))) { // Emulate Mode button action
         actionMode(event);
       }
-      else if (subcommand.equals(F("heating"))) {
+      else if (equals(subcommand, F("heating"))) {
         int prev = UserVar[event->BaseVarIndex + 1];
         setHeater(par3);
 
@@ -415,7 +417,7 @@ bool P109_data_struct::plugin_write(struct EventStruct *event,
           _changed = 1; // Only if actually changed
         }
       }
-      else if (subcommand.equals(F("mode"))) {
+      else if (equals(subcommand, F("mode"))) {
         setMode(par3, parseString(string, 4));
       } else {
         success = false;
@@ -623,7 +625,7 @@ void P109_data_struct::display_setpoint_temp(const uint8_t& force) {
 
       if (isDif) {
         _changed       = 1;
-        _setpointDelay = P109_DEFAULT_SETPOINT_DELAY; // Start delay
+        _setpointDelay = _setpointTimeout; // Start delay
       }
     }
   }
@@ -743,13 +745,13 @@ void P109_data_struct::setHeatRelay(const uint8_t& state) {
 
       log += concat(F("Thermo : Set Relay"), static_cast<int>(_relaypin));
       log += '=';
-      log += state;
+      log += _relayInverted ? !state : state;
       addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
 
     pinMode(_relaypin, OUTPUT);
-    digitalWrite(_relaypin, state);
+    digitalWrite(_relaypin, _relayInverted ? !state : state);
   }
 }
 
@@ -758,7 +760,7 @@ void P109_data_struct::setHeatRelay(const uint8_t& state) {
  */
 void P109_data_struct::setHeater(const String& heater) {
   if (_setpointDelay == 0) {
-    if ((heater.charAt(0) == '1') || (heater.equals(F("on"))) ||
+    if ((heater.charAt(0) == '1') || (equals(heater, F("on"))) ||
         ((heater.length() == 0) && (UserVar[_varIndex + 1] == 0))) {
       UserVar[_varIndex + 1] = 1;
       setHeatRelay(HIGH);

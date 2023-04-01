@@ -173,7 +173,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               if (mustSendEvent) {
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
-                  struct EventStruct TempEvent(x);
+                  EventStruct TempEvent(x);
                   parseCommandString(&TempEvent, action);
                   createRuleEvents(&TempEvent);
                 }
@@ -187,15 +187,17 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
+      if (MQTT_queueFull(event->ControllerIndex)) {
+        break;
+      }
+
       if (event->idx != 0)
       {
         String json = serializeDomoticzJson(event);
 # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("MQTT : ");
-          log += json;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, concat(F("MQTT : "), json));
         }
 # endif // ifndef BUILD_NO_DEBUG
 

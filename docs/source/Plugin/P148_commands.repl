@@ -1,0 +1,79 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``tm1621,write,<str1>,[<str2>]``
+
+    | ``<str1>``: Upto 4 characters
+    | ``<str2>``: Upto 4 characters
+    ","
+    | Writes ``str1`` value on first row and ``str2`` value on second row (if given). Any symbol on the right will be cleared.
+
+    | The implemented font is limited since not all characters can be displayed on a 7-segment display.
+    
+    | Only numericals can have a decimal dot and only between the 3rd and 4th position.
+    
+    | If a numerical string does not have a dot, the value will not be shown with a dot.
+    
+    | When a numerical > 999.9 or < 99.9 is displayed, no decimal dot will be shown.
+    "
+    "
+    | ``tm1621,writerow,<rownr>,<str>``
+
+    | ``<rownr>``: Use <= 1 for first row, otherwise second row.
+    | ``<str>``: Upto 4 characters.
+    ","
+    | Writes ``str1`` value on the given row. Any symbol on the right will be cleared.
+
+    | See remarks with ``tm1621,write`` command.
+    "
+    "
+    | ``tm1621,voltamp,<volt>,<amps>``
+
+    | ``<volt>``: Range -999 ... 9999.
+    | ``<amps>``: Range -999 ... 9999.
+    ","
+    | Writes ``volt`` value on first row and ``amps`` value on second row. The ``V`` and ``A`` symbols on the LCD are also enabled.
+
+    | NB: The ``V`` and ``A`` symbols are connected to each other and thus they cannot be independently switched.
+    "
+    "
+    | ``tm1621,energy,<kWh>,<Watt>``
+
+    | ``<kWh>``: Range -999 ... 9999.
+    | ``<Watt>``: Range -999 ... 9999.
+    ","
+    | Writes ``kWh`` value on first row and ``Watt`` value on second row. The ``kWh`` and ``W`` symbols on the LCD are also enabled.
+
+    | NB: The ``kWh`` and ``W`` symbols are connected to each other and thus they cannot be independently switched.
+    "
+    "
+    | ``tm1621,celcius,<temperature>``
+    | ``tm1621,fahrenheit,<temperature>``
+
+    | ``<temperature>``: Range -999 ... 9999.
+    ","
+    | Writes ``temperature`` value on first row. The degree ``C`` or ``F`` symbol on the LCD is also enabled.
+
+    | NB: The temperature symbols are only present on the first row on the display.
+    | N.B.2: The value is not checked, thus it is possible to display below -273.15C.
+    "
+    "
+    | ``tm1621,humidity,<rel humidity>``
+
+    | ``<rel humidity>``: Range -999 ... 9999.
+    ","
+    | Writes ``rel humidity`` value on second row. The ``%RH`` symbol on the LCD is also enabled.
+
+    | NB: The ``%RH`` symbol is only present on the second row on the display.
+    | N.B.2: The value is not checked, thus it is possible to display negative or above 100% relative humidity.
+    "
+    "
+    | ``tm1621,raw,<64 bit HEX value>``
+    ","
+    | Writes HEX values directly to the frame buffer of the display.
+
+    | For example: ``tm1621,raw,0x2f6b3700f2e7d357`` will create the characters showing ``ESP`` on the first row and ``EASY`` on the second row.
+    | ``tm1621,raw,0xffffffffffffffff`` will turn all 'pixels' on the LCD on.
+    "

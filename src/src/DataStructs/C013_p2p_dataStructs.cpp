@@ -17,14 +17,9 @@ bool C013_SensorInfoStruct::isValid() const
 {
   if ((header != 255) || (ID != 3)) { return false; }
 
-  if (!validTaskIndex(sourceTaskIndex) ||
-      !validTaskIndex(destTaskIndex) ||
-      !validPluginID(deviceNumber)) {
-    return false;
-  }
-
-
-  return true;
+  return validTaskIndex(sourceTaskIndex) &&
+         validTaskIndex(destTaskIndex) &&
+         validPluginID(deviceNumber);
 }
 
 C013_SensorDataStruct::C013_SensorDataStruct()
@@ -38,11 +33,8 @@ bool C013_SensorDataStruct::isValid() const
 {
   if ((header != 255) || (ID != 5)) { return false; }
 
-  if (!validTaskIndex(sourceTaskIndex) ||
-      !validTaskIndex(destTaskIndex)) {
-    return false;
-  }
-  return true;
+  return validTaskIndex(sourceTaskIndex) &&
+         validTaskIndex(destTaskIndex);
 }
 
-#endif
+#endif // ifdef USES_C013

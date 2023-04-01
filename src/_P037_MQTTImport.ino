@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2023-03-06, tonhuisman: Fix PLUGIN_INIT behavior to now always return success = true
  * 2022-11-14, tonhuisman: Add support for selecting JSON sub-attributes, using the . notation, like main.sub (1 level only)
  * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
  *                         features were added
@@ -145,8 +146,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSubHeader(F("Options"));
-
       # if P037_JSON_SUPPORT
       addFormSelector_YesNo(F("Parse JSON messages"), F("pjson"),     P037_PARSE_JSON,     true);
       # endif // if P037_JSON_SUPPORT
@@ -161,6 +160,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Changing a Yes/No option will reload the page. Changing to No will clear corresponding settings!"));
       #  endif // if !defined(P037_LIMIT_BUILD_SIZE)
       # endif  // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
+
+      addFormSubHeader(F("Options"));
+
       addFormCheckBox(F("Generate events for accepted topics"),
                       F("p037_send_events"), P037_SEND_EVENTS);
       # if !defined(P037_LIMIT_BUILD_SIZE)
@@ -234,7 +236,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P037_data) {
         return success;
       }
-      P037_data->loadSettings();  // FIXME TD-er: Is this loadSettings still needed or even desired?
+      P037_data->loadSettings(); // FIXME TD-er: Is this loadSettings still needed or even desired?
 
       # if P037_JSON_SUPPORT
       P037_PARSE_JSON = getFormItemInt(F("pjson"));
@@ -279,14 +281,14 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P037_data && P037_data->loadSettings()) {
+      if ((nullptr != P037_data) && P037_data->loadSettings()) {
         // When we edit the subscription data from the webserver, the plugin is called again with init.
         // In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
         if (MQTTclient_connected) {
           // Subscribe to ALL the topics from ALL instance of this import module
           MQTTSubscribe_037(event);
-          success = true;
         }
+        success = true;
       }
       break;
     }
@@ -346,7 +348,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      String unparsedPayload;             // To keep an unprocessed copy
+      String unparsedPayload; // To keep an unprocessed copy
 
       bool checkJson = false;
 
@@ -843,7 +845,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   // Test for multi-level wildcard (#) see: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718107 (for MQTT 3 and
   // MQTT 5)
 
-  if (tmpSub.equals(F("#"))) { return true; } // If the subscription is for '#' then all topics are accepted
+  if (equals(tmpSub, '#')) { return true; } // If the subscription is for '#' then all topics are accepted
 
   if (tmpSub.endsWith(F("/#"))) {           // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
     bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));
@@ -903,7 +905,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
     //  If the subtopics match then OK - otherwise fail
     if (pSub == "#") { return true; }
 
-    if ((pTopic != pSub) && (!pSub.equals(F("+")))) { return false; }
+    if ((pTopic != pSub) && (!equals(pSub, '+'))) { return false; }
 
     count = count + 1;
   }

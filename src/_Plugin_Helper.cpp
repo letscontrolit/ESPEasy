@@ -76,10 +76,21 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {
   if (pluginTaskData_initialized(taskIndex)) {
+    
+    if (!Plugin_task_data[taskIndex]->baseClassOnly()) {
+      return Plugin_task_data[taskIndex];
+    }
+  }
+  return nullptr;
+}
+
+PluginTaskData_base* getPluginTaskDataBaseClassOnly(taskIndex_t taskIndex) {
+  if (pluginTaskData_initialized(taskIndex)) {
     return Plugin_task_data[taskIndex];
   }
   return nullptr;
 }
+
 
 bool pluginTaskData_initialized(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) {
@@ -118,10 +129,13 @@ void pluginWebformShowValue(taskIndex_t   taskIndex,
   if (varNr > 0) {
     addHtmlDiv(F("div_br"));
   }
+  String postfix(taskIndex);
+  postfix += '_';
+  postfix += varNr;
 
   pluginWebformShowValue(
-    label, concat(F("valuename_"), static_cast<int>(taskIndex)) + '_' + varNr,
-    value, concat(F("value_"), static_cast<int>(taskIndex)) + '_' + varNr,
+    label, concat(F("valuename_"), postfix),
+    value, concat(F("value_"), postfix),
     addTrailingBreak);
 }
 

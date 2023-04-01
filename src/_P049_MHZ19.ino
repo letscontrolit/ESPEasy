@@ -88,22 +88,20 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        uint8_t choice                        = PCONFIG(0);
         const __FlashStringHelper *options[2] = { F("Normal"), F("ABC disabled") };
-        int optionValues[2]                   = { P049_ABC_enabled, P049_ABC_disabled };
-        addFormSelector(F("Auto Base Calibration"), F("p049_abcdisable"), 2, options, optionValues, choice);
+        const int optionValues[2]             = { P049_ABC_enabled, P049_ABC_disabled };
+        addFormSelector(F("Auto Base Calibration"), F("abcdisable"), 2, options, optionValues, PCONFIG(0));
       }
       {
-        uint8_t choiceFilter                        = PCONFIG(1);
         const __FlashStringHelper *filteroptions[5] =
         { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
-        int filteroptionValues[5] = {
+        const int filteroptionValues[5] = {
           PLUGIN_049_FILTER_OFF,
           PLUGIN_049_FILTER_OFF_ALLSAMPLES,
           PLUGIN_049_FILTER_FAST,
           PLUGIN_049_FILTER_MEDIUM,
           PLUGIN_049_FILTER_SLOW };
-        addFormSelector(F("Filter"), F("p049_filter"), 5, filteroptions, filteroptionValues, choiceFilter);
+        addFormSelector(F("Filter"), F("filter"), 5, filteroptions, filteroptionValues, PCONFIG(1));
       }
       P049_html_show_stats(event);
 
@@ -113,16 +111,14 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      const int formValue = getFormItemInt(F("p049_abcdisable"));
+      PCONFIG(0) = getFormItemInt(F("abcdisable"));
 
-      P049_data_struct *P049_data =
-        static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P049_data_struct *P049_data = static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P049_data) {
-        P049_data->setABCmode(formValue);
+        P049_data->setABCmode(PCONFIG(0));
       }
-      PCONFIG(0) = formValue;
-      PCONFIG(1) = getFormItemInt(F("p049_filter"));
+      PCONFIG(1) = getFormItemInt(F("filter"));
       success    = true;
       break;
     }
@@ -142,8 +138,7 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      P049_data_struct *P049_data =
-        static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P049_data_struct *P049_data = static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P049_data) {
         success = P049_data->plugin_write(event, string);
@@ -154,8 +149,7 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      P049_data_struct *P049_data =
-        static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P049_data_struct *P049_data = static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P049_data) {
         return success;
@@ -210,13 +204,16 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
           // Reading is stable.
           if (P049_data->ABC_MustApply) {
             // Send ABC enable/disable command based on the desired state.
+            String log = F("MHZ19: Sent sensor ABC ");
+
             if (P049_data->ABC_Disable) {
               P049_data->send_mhzCmd(mhzCmdABCDisable);
-              addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
+              log += F("Disable!");
             } else {
               P049_data->send_mhzCmd(mhzCmdABCEnable);
-              addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
+              log += F("Enable!");
             }
+            addLog(LOG_LEVEL_INFO, log);
             P049_data->ABC_MustApply = false;
           }
         }

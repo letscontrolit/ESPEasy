@@ -98,6 +98,8 @@ struct WiFiEventData_t {
   MAC_address             lastMacConnectedAPmode;
   MAC_address             lastMacDisconnectedAPmode;
 
+  IPAddress dns0_cache{0u};
+  IPAddress dns1_cache{0u};
 
   // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
   // This can cause recursion, so a semaphore is needed here.
@@ -120,7 +122,7 @@ struct WiFiEventData_t {
 
   unsigned long connectionFailures = 0;
 
-  std::map<int, uint32_t> connectDurations;
+  std::map<uint8_t, long> connectDurations;
 
 #ifdef ESP32
   WiFiEventId_t wm_event_id = 0;

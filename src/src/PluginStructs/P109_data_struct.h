@@ -43,20 +43,25 @@ const char flameimg[] PROGMEM = {
 # define P109_MODE_STATE_INITIAL        1
 # define P109_BUTTON_DEBOUNCE_TIME_MS   300
 # define P109_DEFAULT_SETPOINT_DELAY    (5 + 1) // Seconds + 1 before the relay state is changed after the setpoint is changed
-# define P109_DELAY_BETWEEN_SAVE        30000 // 30 seconds
+# define P109_DELAY_BETWEEN_SAVE        30000   // 30 seconds
 
 # define P109_CONFIG_I2CADDRESS         PCONFIG(0)
 # define P109_CONFIG_ROTATION           PCONFIG(1)
 # define P109_CONFIG_DISPLAYTYPE        PCONFIG(2)
 # define P109_CONFIG_CONTRAST           PCONFIG(3)
 # define P109_CONFIG_RELAYPIN           PCONFIG(4)
+# define P109_CONFIG_SETPOINT_DELAY     PCONFIG(5)
 # define P109_CONFIG_HYSTERESIS         PCONFIG_FLOAT(0)
+
+# define P109_SETPOINT_OFFSET           1 // 1 second offset, to allow changing unset (0) to default
 
 # define P109_FLAGS                     PCONFIG_ULONG(0)
 # define P109_FLAG_TASKNAME_IN_TITLE    0
 # define P109_FLAG_ALTERNATE_HEADER     1
+# define P109_FLAG_RELAY_INVERT         2
 # define P109_GET_TASKNAME_IN_TITLE     bitRead(P109_FLAGS, P109_FLAG_TASKNAME_IN_TITLE)
 # define P109_GET_ALTERNATE_HEADER      bitRead(P109_FLAGS, P109_FLAG_ALTERNATE_HEADER)
+# define P109_GET_RELAY_INVERT          bitRead(P109_FLAGS, P109_FLAG_RELAY_INVERT)
 
 struct P109_data_struct : public PluginTaskData_base {
   P109_data_struct();
@@ -77,28 +82,30 @@ private:
   OLEDDisplay *_display = nullptr;
 
   uint32_t _lastchangetime = 0;
-  uint32_t _buttons[3] = { 0 };
+  uint32_t _buttons[3]     = { 0 };
 
   float _prev_temp     = P109_TEMP_STATE_UNSET;
   float _prev_setpoint = P109_SETPOINT_STATE_UNSET;
   float _prev_timeout  = P109_TIMEOUT_STATE_UNSET;
   float _save_setpoint = P109_SETPOINT_STATE_UNSET;
 
-  int8_t  _lastWiFiState = P109_WIFI_STATE_UNSET;
-  uint8_t _prev_heating  = P109_HEATING_STATE_UNSET;
-  uint8_t _prev_mode     = P109_MODE_STATE_UNSET;
-  uint8_t _taskIndex     = 0;
-  uint8_t _varIndex      = 0;
-  uint8_t _changed       = 0;
-  uint8_t _saveneeded    = 0;
-  uint8_t _setpointDelay = 0;
-  int8_t  _relaypin      = -1;
+  int8_t  _lastWiFiState   = P109_WIFI_STATE_UNSET;
+  uint8_t _prev_heating    = P109_HEATING_STATE_UNSET;
+  uint8_t _prev_mode       = P109_MODE_STATE_UNSET;
+  uint8_t _taskIndex       = 0;
+  uint8_t _varIndex        = 0;
+  uint8_t _changed         = 0;
+  uint8_t _saveneeded      = 0;
+  uint8_t _setpointDelay   = 0;
+  uint8_t _setpointTimeout = 0;
+  int8_t  _relaypin        = -1;
+  bool    _relayInverted   = false;
   String  _last_heater;
 
   String _title;
   bool   _alternateTitle = true;
 
-  char _deviceTemplate[P109_Nlines][P109_Nchars];
+  char _deviceTemplate[P109_Nlines][P109_Nchars] = {};
 
   bool _initialized  = false;
   bool _showWiFiName = true;

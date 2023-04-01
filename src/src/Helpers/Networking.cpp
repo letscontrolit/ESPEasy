@@ -10,6 +10,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 
@@ -20,8 +21,8 @@
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
+#include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
@@ -34,8 +35,9 @@
 
 #include <IPAddress.h>
 #include <base64.h>
-#include <MD5Builder.h>
+#include <MD5Builder.h> // for getDigestAuth
 
+#include <lwip/dns.h>
 
 // Generic Networking routines
 
@@ -402,25 +404,19 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
    Get IP address for unit
 \*********************************************************************************************/
 IPAddress getIPAddressForUnit(uint8_t unit) {
-  IPAddress remoteNodeIP;
-
   if (unit == 255) {
-    remoteNodeIP = { 255, 255, 255, 255 };
+    const IPAddress ip(255, 255, 255, 255);
+    return ip;
   }
-  else {
-    auto it = Nodes.find(unit);
+  auto it = Nodes.find(unit);
 
-    if (it == Nodes.end()) {
-      return remoteNodeIP;
-    }
-
-    if (it->second.ip[0] == 0) {
-      return remoteNodeIP;
-    }
-    return it->second.IP();
+  if (it == Nodes.end() || it->second.ip[0] == 0) {
+    IPAddress ip;
+    return ip;
   }
-  return remoteNodeIP;
+  return it->second.IP();
 }
+
 
 /*********************************************************************************************\
    Refresh aging for remote units, drop if too old...
@@ -548,7 +544,7 @@ void SSDP_schema(WiFiClient& client) {
                  "<device>"
                  "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
                  "<friendlyName>"));
-  client.print(Settings.Name);
+  client.print(Settings.getName());
   client.print(F("</friendlyName>"
                  "<presentationURL>/</presentationURL>"
                  "<serialNumber>"));
@@ -1038,6 +1034,63 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 }
 #endif // FEATURE_HTTP_CLIENT
 
+void scrubDNS() {
+  #if FEATURE_ETHERNET
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    if (EthEventData.EthServicesInitialized()) {
+      setDNS(0, EthEventData.dns0_cache);
+      setDNS(1, EthEventData.dns1_cache);
+    }
+    return;
+  }
+  #endif
+  if (WiFiEventData.WiFiServicesInitialized()) {
+    setDNS(0, WiFiEventData.dns0_cache);
+    setDNS(1, WiFiEventData.dns1_cache);
+  }
+}
+
+bool valid_DNS_address(const IPAddress& dns) {
+  return (dns.v4() != (uint32_t)0x00000000 && 
+          dns.v4() != (uint32_t)0xFD000000 && 
+          dns != INADDR_NONE);
+}
+
+bool setDNS(int index, const IPAddress& dns) {
+  if (index >= 2) return false;
+  #ifdef ESP8266
+  if(dns.isSet() && dns != WiFi.dnsIP(index)) {
+    dns_setserver(index, dns);
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
+    }
+    #endif
+    return true;
+  }
+  #endif
+  #ifdef ESP32
+  ip_addr_t d;
+  d.type = IPADDR_TYPE_V4;
+
+  if (valid_DNS_address(dns)) {
+    // Set DNS0-Server
+    d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
+    const ip_addr_t* cur_dns = dns_getserver(index);
+    if (cur_dns != nullptr && cur_dns->u_addr.ip4.addr == d.u_addr.ip4.addr) {
+      // Still the same as before
+      return false;
+    }
+    dns_setserver(index, &d);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
+    }
+    return true;
+  }
+  #endif
+  return false;
+}
+
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms) {
   START_TIMER;
 
@@ -1046,6 +1099,9 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeo
   }
 
   FeedSW_watchdog();
+
+  // FIXME TD-er: Must try to restore DNS server entries.
+  scrubDNS();
 
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
@@ -1171,9 +1227,13 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
   } else {
     starthost += 3;
   }
-  int endhost = fullURL.indexOf('/', starthost);
-
+  const int endhost = fullURL.indexOf('/', starthost);
   splitUserPass_HostPortString(fullURL.substring(starthost, endhost), user, pass, host, port);
+
+  if (endhost == -1) {
+    return EMPTY_STRING;
+  }
+
   int startfile = fullURL.lastIndexOf('/');
 
   if (startfile >= 0) {
@@ -1407,6 +1467,7 @@ int http_authenticate(const String& logIdentifier,
   http.addHeader(F("X-Forwarded-For"), NetworkLocalIP().toString());
 
   delay(0);
+  scrubDNS();
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
 #else // if defined(CORE_POST_2_6_0) || defined(ESP32)
@@ -1436,7 +1497,7 @@ int http_authenticate(const String& logIdentifier,
   }
 
   // start connection and send HTTP header (and body)
-  if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+  if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
     httpCode = http.sendRequest(HttpMethod.c_str());
   } else {
     httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
@@ -1468,7 +1529,7 @@ int http_authenticate(const String& logIdentifier,
       http.addHeader(F("Authorization"), authorization);
 
       // start connection and send HTTP header (and body)
-      if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+      if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
         httpCode = http.sendRequest(HttpMethod.c_str());
       } else {
         httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
@@ -1494,7 +1555,7 @@ int http_authenticate(const String& logIdentifier,
     eventQueue.addMove(std::move(event));
   }
 #ifndef BUILD_NO_DEBUG
-  log_http_result(http, logIdentifier, host, HttpMethod, httpCode, EMPTY_STRING);
+  log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
 #endif
   return httpCode;
 }
@@ -1725,11 +1786,30 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   return false;
 }
 
-bool downloadFirmware(const String& url, String& error)
+bool downloadFirmware(String filename, String& error)
 {
-  String file_save;
-  String user;
-  String pass;
+  String baseurl, user, pass;
+# if FEATURE_CUSTOM_PROVISIONING
+  MakeProvisioningSettings(ProvisioningSettings);
+
+  if (AllocatedProvisioningSettings()) {
+    loadProvisioningSettings(ProvisioningSettings);
+    if (!ProvisioningSettings.allowedFlags.allowFetchFirmware) {
+      return false;
+    }
+    baseurl = ProvisioningSettings.url;
+    user = ProvisioningSettings.user;
+    pass = ProvisioningSettings.pass;
+  }
+# endif // if FEATURE_CUSTOM_PROVISIONING
+
+  const String fullUrl = joinUrlFilename(baseurl, filename);
+
+  return downloadFirmware(fullUrl, filename, user, pass, error);
+}
+
+bool downloadFirmware(const String& url, String& file_save, String& user, String& pass, String& error)
+{
   WiFiClient client;
   HTTPClient http;
 
@@ -1826,6 +1906,29 @@ bool downloadFirmware(const String& url, String& error)
     eventQueue.addMove(std::move(event));
   }
   return false;
+}
+
+String joinUrlFilename(const String& url, String& filename)
+{
+  String fullUrl;
+
+  fullUrl.reserve(url.length() + filename.length() + 1); // May need to add an extra slash
+  fullUrl = url;
+  fullUrl = parseTemplate(fullUrl, true);                // URL encode
+
+  // URLEncode may also encode the '/' into "%2f"
+  // FIXME TD-er: Can this really occur?
+  fullUrl.replace(F("%2f"), F("/"));
+
+  while (filename.startsWith(F("/"))) {
+    filename = filename.substring(1);
+  }
+
+  if (!fullUrl.endsWith(F("/"))) {
+    fullUrl += F("/");
+  }
+  fullUrl += filename;
+  return fullUrl;
 }
 
 #endif // if FEATURE_DOWNLOAD

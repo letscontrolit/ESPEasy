@@ -52,6 +52,10 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
       if (C007_DelayHandler == nullptr) {
         break;
       }
+      if (C007_DelayHandler->queueFull(event->ControllerIndex)) {
+        break;
+      }
+
 
       if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
         addLog(LOG_LEVEL_ERROR, F("emoncms : No support for Sensor_VType::SENSOR_TYPE_STRING"));
@@ -63,7 +67,10 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
         addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));
         break;
       }
-      success = C007_DelayHandler->addToQueue(C007_queue_element(event));
+
+      std::unique_ptr<C007_queue_element> element(new C007_queue_element(event));
+      success = C007_DelayHandler->addToQueue(std::move(element));
+
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler->getNextScheduleTime());
       break;
     }
@@ -83,7 +90,8 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c007_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+  const C007_queue_element& element = static_cast<const C007_queue_element&>(element_base);
 // *INDENT-ON*
   String url = F("/emoncms/input/post.json?node=");
 
@@ -99,7 +107,7 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   }
   url += '}';
   url += F("&apikey=");
-  url += getControllerPass(element.controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
+  url += getControllerPass(element._controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
 
 #ifndef BUILD_NO_DEBUG
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
@@ -111,7 +119,7 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   send_via_http(
     controller_number,
     ControllerSettings,
-    element.controller_idx,
+    element._controller_idx,
     url,
     F("GET"),
     EMPTY_STRING,

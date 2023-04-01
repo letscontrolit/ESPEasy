@@ -91,8 +91,8 @@ void ESPEasy_time::restoreFromRTC()
 }
 
 void ESPEasy_time::setExternalTimeSource(double time, timeSource_t new_timeSource, uint8_t unitnr) {
-  if (new_timeSource == timeSource) {
-    // Update from the same type of time source
+  if ((new_timeSource == timeSource) && (new_timeSource != timeSource_t::Manual_set)) {
+    // Update from the same type of time source, except when manually adjusting the time
     if (timePassedSince(lastSyncTime_ms) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) {
       return;
     }
@@ -556,6 +556,26 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   return false;
 }
 
+/**************************************************
+* get the timezone-offset string in +/-0000 format
+**************************************************/
+String ESPEasy_time::getTimeZoneOffsetString() {
+  int dif = static_cast<int>((static_cast<int64_t>(now()) - static_cast<int64_t>(getUnixTime())) / 60); // Minutes
+  char valueString[6] = { 0 };
+  String tzoffset;
+
+  // Formatting the timezone-offset string as [+|-]HHMM
+  if (dif < 0) {
+    tzoffset += '-';
+  } else {
+    tzoffset += '+';
+  }
+
+  dif = abs(dif);
+  sprintf_P(valueString, PSTR("%02d%02d"), dif / 60, dif % 60);
+  tzoffset += String(valueString);
+  return tzoffset;
+}
 /********************************************************************************************\
    Date/Time string formatters
  \*********************************************************************************************/
@@ -611,6 +631,18 @@ String ESPEasy_time::weekday_str(int wday)
 String ESPEasy_time::weekday_str() const
 {
   return weekday_str(weekday() - 1);
+}
+
+String ESPEasy_time::month_str(int month)
+{
+  const String months = F("JanFebMarAprMayJunJulAugSepOctNovDec");
+
+  return months.substring(month * 3, month * 3 + 3);
+}
+
+String ESPEasy_time::month_str() const
+{
+  return month_str(month() - 1);
 }
 
 /********************************************************************************************\

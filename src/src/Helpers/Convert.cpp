@@ -1,6 +1,6 @@
 #include "../Helpers/Convert.h"
 
-
+#include "../Helpers/StringConverter.h"
 
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
@@ -14,23 +14,27 @@ const __FlashStringHelper * getBearing(int degrees)
   int bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nr_directions;
 
   if (bearing_idx >= 0) {
-    switch (bearing_idx) {
-      case 0: return F("N");
-      case 1: return F("NNE");
-      case 2: return F("NE");
-      case 3: return F("ENE");
-      case 4: return F("E");
-      case 5: return F("ESE");
-      case 6: return F("SE");
-      case 7: return F("SSE");
-      case 8: return F("S");
-      case 9: return F("SSW");
-      case 10: return F("SW");
-      case 11: return F("WSW");
-      case 12: return F("W");
-      case 13: return F("WNW");
-      case 14: return F("NW");
-      case 15: return F("NNW");
+    const __FlashStringHelper* strings[] {
+      F("N"),
+      F("NNE"),
+      F("NE"),
+      F("ENE"),
+      F("E"),
+      F("ESE"),
+      F("SE"),
+      F("SSE"),
+      F("S"),
+      F("SSW"),
+      F("SW"),
+      F("WSW"),
+      F("W"),
+      F("WNW"),
+      F("NW"),
+      F("NNW")
+    };
+    constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+    if (bearing_idx < nrStrings) {
+      return strings[bearing_idx];
     }
   }
   return F("");
@@ -145,7 +149,7 @@ String format_msec_duration(int64_t duration) {
   String result;
 
   if (duration < 0) {
-    result   = "-";
+    result   = '-';
     duration = -1ll * duration;
   }
 
@@ -247,6 +251,16 @@ float ul2float(unsigned long ul)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces)
 {
+  #ifndef LIMIT_BUILD_SIZE
+  if (decimalPlaces == 0) {
+    if (value > -1e18f && value < 1e18f) {
+      // Work-around to perform a faster conversion
+      const int64_t ll_value = static_cast<int64_t>(roundf(value));
+      return ll2String(ll_value);
+    }
+  }
+  #endif
+
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
 //  #ifdef ESP8266

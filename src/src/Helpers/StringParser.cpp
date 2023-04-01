@@ -12,6 +12,7 @@
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
+#include "../Globals/Protocol.h"
 #include "../Globals/RuntimeData.h"
 
 #include "../Helpers/ESPEasy_math.h"
@@ -73,8 +74,8 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       newString += tmpString.substring(lastStartpos, startpos);
 
       // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
-      const bool devNameEqInt = deviceName.equals(F("int"));
-      if (devNameEqInt || deviceName.equals(F("var")))
+      const bool devNameEqInt = equals(deviceName, F("int"));
+      if (devNameEqInt || equals(deviceName, F("var")))
       {
         // Address an internal variable either as float or as int
         // For example: Let,10,[VAR#9]
@@ -100,7 +101,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             tmpString);
         }
       }
-      else if (deviceName.equals(F("plugin")))
+      else if (equals(deviceName, F("plugin")))
       {
         // Handle a plugin request.
         // For example: "[Plugin#GPIO#Pinstate#N]"
@@ -130,28 +131,63 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         // For example: "[bme#temp]"
         // If value name is unknown, run a PLUGIN_GET_CONFIG_VALUE command.
         // For example: "[<taskname>#getLevel]"
-        taskIndex_t taskIndex = findTaskIndexByName(deviceName);
+        taskIndex_t taskIndex = findTaskIndexByName(deviceName, true); // Check for enabled/disabled is done separately
 
-        if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
-          uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+        if (validTaskIndex(taskIndex)) {
+          bool isHandled = false;
+          if (Settings.TaskDeviceEnabled[taskIndex]) {
+            uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
-          if (valueNr != VARS_PER_TASK) {
-            // here we know the task and value, so find the uservar
-            // Try to format and transform the values
-            bool   isvalid;
-            String value = formatUserVar(taskIndex, valueNr, isvalid);
+            if (valueNr != VARS_PER_TASK) {
+              // here we know the task and value, so find the uservar
+              // Try to format and transform the values
+              bool   isvalid;
+              String value = formatUserVar(taskIndex, valueNr, isvalid);
 
-            if (isvalid) {
-              transformValue(newString, minimal_lineSize, std::move(value), format, tmpString);
+              if (isvalid) {
+                transformValue(newString, minimal_lineSize, std::move(value), format, tmpString);
+                isHandled = true;
+              }
+            } else {
+              // try if this is a get config request
+              struct EventStruct TempEvent(taskIndex);
+              String tmpName = valueName;
+
+              if (PluginCall(PLUGIN_GET_CONFIG_VALUE, &TempEvent, tmpName))
+              {
+                transformValue(newString, minimal_lineSize, std::move(tmpName), format, tmpString);
+                isHandled = true;
+              }
             }
-          } else {
-            // try if this is a get config request
-            struct EventStruct TempEvent(taskIndex);
-            String tmpName = valueName;
+          }
+          if (!isHandled && valueName.startsWith(F("settings."))) {  // Task settings values
+            String value;
+            if (valueName.endsWith(F(".enabled"))) {           // Task state
+              value = Settings.TaskDeviceEnabled[taskIndex];
+            } else if (valueName.endsWith(F(".interval"))) {   // Task interval
+              value = Settings.TaskDeviceTimer[taskIndex];
+            } else if (valueName.endsWith(F(".valuecount"))) { // Task value count
+              value = getValueCountForTask(taskIndex);
+            } else if ((valueName.indexOf(F(".controller")) == 8) && valueName.length() >= 20) { // Task controller values
+              String ctrl = valueName.substring(19, 20);
+              int ctrlNr = 0;
+              if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
+                  Settings.ControllerEnabled[ctrlNr - 1]) { // Controller nr. valid and enabled
+                if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
+                  value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex];
+                } else if (valueName.endsWith(F(".idx"))) { // Task-controller idx value
+                  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
 
-            if (PluginCall(PLUGIN_GET_CONFIG_VALUE, &TempEvent, tmpName))
-            {
-              transformValue(newString, minimal_lineSize, std::move(tmpName), format, tmpString);
+                  if (validProtocolIndex(ProtocolIndex) && 
+                      Protocol[ProtocolIndex].usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
+                    value = Settings.TaskDeviceID[ctrlNr - 1][taskIndex];
+                  }
+                }
+              }
+            }
+            if (!value.isEmpty()) {
+              transformValue(newString, minimal_lineSize, std::move(value), format, tmpString);
+              // isHandled = true;
             }
           }
         }
@@ -348,7 +384,7 @@ void transformValue(
                 maskChar = tempValueFormat[1];
               }
 
-              if (value.equals(F("0"))) {
+              if (equals(value, '0')) {
                 value = String();
               } else {
                 const int valueLength = value.length();
@@ -561,8 +597,9 @@ void transformValue(
 
 // Find the first (enabled) task with given name
 // Return INVALID_TASK_INDEX when not found, else return taskIndex
-taskIndex_t findTaskIndexByName(const String& deviceName, bool allowDisabled)
+taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
 {
+  deviceName.toLowerCase();
   // cache this, since LoadTaskSettings does take some time.
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;

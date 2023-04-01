@@ -28,6 +28,7 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
+#include "../Helpers/StringProvider.h"
 
 // #include "../ESPEasyCore/ESPEasyEth.h"
 // #include "../ESPEasyCore/ESPEasyWiFiEvent.h"
@@ -326,7 +327,6 @@ void processConnect() {
     }
   }
 
-
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
     String log = F("WIFI : Connected! AP: ");
@@ -384,19 +384,20 @@ void processGotIP() {
       return;
     }
   }
-  const IPAddress gw       = NetworkGatewayIP();
-  const IPAddress subnet   = NetworkSubnetMask();
+  const IPAddress gw       = WiFi.gatewayIP();
+  const IPAddress subnet   = WiFi.subnetMask();
   const LongTermTimer::Duration dhcp_duration = WiFiEventData.lastConnectMoment.timeDiff(WiFiEventData.lastGetIPmoment);
+  WiFiEventData.dns0_cache = WiFi.dnsIP(0);
+  WiFiEventData.dns1_cache = WiFi.dnsIP(1);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = concat(F("WIFI : "), useStaticIP() ? F("Static IP: ") : F("DHCP IP: "));
     log += formatIP(ip);
     log += ' ';
     log += wrap_braces(NetworkGetHostname());
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
+    log += concat(F(" GW: "), formatIP(gw));
+    log += concat(F(" SN: "), formatIP(subnet));
+    log += concat(F(" DNS: "), getValue(LabelType::DNS));
 
     if ((dhcp_duration > 0ll) && (dhcp_duration < 30000000ll)) {
       // Just log times when they make sense.
@@ -416,7 +417,7 @@ void processGotIP() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Fixed IP octet:"), formatIP(ip)));
     }
-    WiFi.config(ip, gw, subnet, NetworkDnsIP(0), NetworkDnsIP(1));
+    WiFi.config(ip, gw, subnet, WiFiEventData.dns0_cache, WiFiEventData.dns1_cache);
   }
 
 #if FEATURE_MQTT
@@ -456,6 +457,7 @@ void processDisconnectAPmode() {
   if (WiFiEventData.processedDisconnectAPmode) { return; }
   WiFiEventData.processedDisconnectAPmode = true;
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");
@@ -464,6 +466,7 @@ void processDisconnectAPmode() {
     log += nrStationsConnected;
     addLogMove(LOG_LEVEL_INFO, log);
   }
+#endif  
 }
 
 // Client connects to AP on this node
@@ -472,7 +475,7 @@ void processConnectAPmode() {
   WiFiEventData.processedConnectAPmode = true;
   // Extend timer to switch off AP.
   WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
     log += WiFiEventData.lastMacConnectedAPmode.toString();
@@ -480,6 +483,7 @@ void processConnectAPmode() {
     log += WiFi.softAPgetStationNum();
     addLogMove(LOG_LEVEL_INFO, log);
   }
+#endif
 
   #if FEATURE_DNS_SERVER
   // Start DNS, only used if the ESP has no valid WiFi config
@@ -531,8 +535,8 @@ void processScanDone() {
       // FIXME TD-er: Set timeout...
       if (WiFiEventData.lastGetScanMoment.timeoutReached(5000)) {
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_ERROR, F("WiFi : Scan Running Timeout"));
-        #endif
+      addLog(LOG_LEVEL_ERROR, F("WiFi : Scan Running Timeout"));
+      #endif
         WiFiEventData.processedScanDone = true;
       }
       return;
@@ -546,9 +550,7 @@ void processScanDone() {
   WiFiEventData.processedScanDone = true;
 # ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WiFi : Scan finished, found: ");
-    log += scanCompleteStatus;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("WiFi : Scan finished, found: "), scanCompleteStatus));
   }
 #endif
 

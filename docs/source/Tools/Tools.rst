@@ -144,7 +144,7 @@ All these values are described in great detail in the Advanced section, where th
 
 * **Force WiFi B/G**:	Shows whether the ESPEasy node is forced into 802.11b/g mode.
 * **Restart WiFi Lost Conn**:	Shows whether the ESPEasy node is configured to restart the WiFi radio when connection is lost. When reporting false (the default), the WiFi radio is not restarted, but it just retries to connect to WiFi.
-* **Force WiFi No Sleep**:	``true`` indicates the WiFi radio is not allowed to enter low power mode to conserve energy.
+* **Force WiFi No Sleep**:	``true`` indicates the WiFi radio is not allowed to enter low power mode to conserve energy. The ESP may need to reconnect or sometimes even reboot to activate a change of this setting. It may sometimes not be able to reconnect on its own when changed, so be careful when changing this.
 * **Periodical send Gratuitous ARP**:	``true`` indicates the ESPEasy node will send Gratuitous ARP packets to improve reachability from the network to the node.
 * **Connection Failure Threshold**:	Counter indicating the number of failed connection attempts needed to perform a reboot.
 * **Max WiFi TX Power**:	The set maximum TX power in dBm.
@@ -153,6 +153,8 @@ All these values are described in great detail in the Advanced section, where th
 * **Send With Max TX Power**:	``true`` indicates the WiFi TX power will not be changed and thus is sending at maximum TX power for the active WiFi mode (802.11 b/g/n)
 * **Extra WiFi scan loops**:	The set number of extra scans of all channels when a WiFi scan is needed.
 * **Use Last Connected AP from RTC**:	``false`` means the ESPEasy node needs to scan at reboot and cannot reuse the last used connection before the reboot.
+
+.. note:: On ESP32, WiFi TX power settings are disabled as these may cause undesired behavior and also use more power compared to using the ECO mode.
 
 Firmware
 --------
@@ -394,6 +396,17 @@ This will swap the SDA/SCL pins and tries to perform a scan and then restores th
 If this is the fix, where ESPEasy is not able to resolve the lockec I2C bus on itself, please open an issue for this on GitHub.
 
 Default: unchecked
+
+Check I2C devices when enabled
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-02-07
+
+To ensure that I2C connected devices work as intended, a device-available-check can be performed when the task is initialized, and when the taskdata is read every Interval seconds. If the device doesn't respond during task init, or after 10 consecutive failed reads, the task will be disabled.
+
+Default: checked
+
+NB: This option is excluded from the build if this setting is not available.
 
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

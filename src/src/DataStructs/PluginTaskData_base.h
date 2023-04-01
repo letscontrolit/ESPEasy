@@ -20,6 +20,7 @@ struct PluginTaskData_base {
   PluginTaskData_base();
   virtual ~PluginTaskData_base();
 
+  bool    baseClassOnly() const { return _baseClassOnly; }
 
   bool    hasPluginStats() const;
   bool    hasPeaks() const;
@@ -64,6 +65,10 @@ private:
   // Array of pointers to PluginStats. One per task value.
   PluginStats_array *_plugin_stats_array = nullptr;
 #endif // if FEATURE_PLUGIN_STATS
+
+protected:
+  bool _baseClassOnly = false;
+
 };
 
 #endif // ifndef DATASTRUCTS_PLUGINTASKDATA_BASE_H

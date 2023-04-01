@@ -85,3 +85,28 @@ const __FlashStringHelper * Command_Rules_Let(struct EventStruct *event, const c
   }
   return return_command_failed();
 }
+
+const __FlashStringHelper * Command_Rules_IncDec(struct EventStruct *event, const char *Line, const double factor)
+{
+  String TmpStr1;
+  double result = 1.0;
+
+  if (GetArgv(Line, TmpStr1, 3) && isError(Calculate(TmpStr1, result))) {
+    return return_command_failed();
+  }
+  if (event->Par1 >= 0) {
+    setCustomFloatVar(event->Par1, getCustomFloatVar(event->Par1) + (result * factor));
+    return return_command_success();
+  }
+  return return_command_failed();
+}
+
+const __FlashStringHelper * Command_Rules_Inc(struct EventStruct *event, const char *Line)
+{
+  return Command_Rules_IncDec(event, Line, 1.0);
+}
+
+const __FlashStringHelper * Command_Rules_Dec(struct EventStruct *event, const char *Line)
+{
+  return Command_Rules_IncDec(event, Line, -1.0);
+}

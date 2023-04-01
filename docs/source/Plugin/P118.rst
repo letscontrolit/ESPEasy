@@ -143,6 +143,9 @@ Change log
 .. versionchanged:: 2.0
 	.
 
+  |changed|
+  2023-03-05: Deprecate ``state`` command, introduce ``itho`` command.
+
   |added|
 	2022-08-18: Add support for Orcon devices.
 

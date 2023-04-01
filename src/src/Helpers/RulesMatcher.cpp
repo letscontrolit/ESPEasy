@@ -18,8 +18,8 @@ bool ruleMatch(String event, String rule) {
   }
 
   rule.trim();
-  parseTemplate(rule);
   parseStandardConversions(rule, false);
+  rule = parseTemplate(rule);
 
   event.trim();
 
@@ -36,6 +36,7 @@ bool ruleMatch(String event, String rule) {
     if ((pos1 > 0) && (pos2 > 0)) {
       if (event.substring(0, pos1).equalsIgnoreCase(rule.substring(0, pos2))) // if this is a clock rule
       {
+//        addLog(LOG_LEVEL_INFO, concat(F("Clock#Time="), rule.substring(pos2 + 1)));
         unsigned long clockEvent = string2TimeLong(event.substring(pos1 + 1));
         unsigned long clockSet   = string2TimeLong(rule.substring(pos2 + 1));
 
@@ -238,8 +239,8 @@ bool getEventFromRulesLine(const String& line, String& event, String& action)
   event.trim();
 
   // Ignore escape char
-  event.replace(F("["), EMPTY_STRING);
-  event.replace(F("]"), EMPTY_STRING);
+//  removeChar(event, '[');
+//  removeChar(event, ']');
 
   // action: The optional part after the " do"
   action = line.substring(pos_do + 3);

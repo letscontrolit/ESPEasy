@@ -1,7 +1,10 @@
 #include "../Helpers/I2C_access.h"
 
+#include "../DataStructs/TimingStats.h"
 #include "../Globals/I2Cdev.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 enum class I2C_clear_bus_state {
   Start,
@@ -24,14 +27,14 @@ I2C_bus_state I2C_check_bus(int8_t scl, int8_t sda) {
     case I2C_clear_bus_state::Start:
     {
       // FIXME TD-er: Check for proper I2C pins
-      if ((sda < 0) || (scl < 0)) { 
+      if ((sda < 0) || (scl < 0)) {
         last_state_change = 0;
-        return I2C_bus_state::NotConfigured; 
+        return I2C_bus_state::NotConfigured;
       }
 
-      if ((digitalRead(scl) == HIGH) && (digitalRead(sda) == HIGH)) { 
+      if ((digitalRead(scl) == HIGH) && (digitalRead(sda) == HIGH)) {
         last_state_change = 0;
-        return I2C_bus_state::OK; 
+        return I2C_bus_state::OK;
       }
 
       pinMode(sda, INPUT_PULLUP); // Make SDA (data) and SCL (clock) pins Inputs with pullup.
@@ -205,19 +208,59 @@ bool I2C_write16_LE_reg(uint8_t i2caddr, uint8_t reg, uint16_t value) {
 }
 
 // **************************************************************************/
+// Writes length bytes over I2C to a register
+// **************************************************************************/
+bool I2C_writeBytes_reg(uint8_t i2caddr, uint8_t reg, uint8_t *buffer, uint8_t length) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write(reg);
+
+  for (int i = 0; i < length; i++) {
+    Wire.write(*(buffer + i));
+  }
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Helper functions for read functions
+// **************************************************************************/
+bool I2C_setRegister(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)reg);
+
+  const bool res = Wire.endTransmission(END_TRANSMISSION_FLAG) == 0;
+
+  /*
+     0:success
+     1:data too long to fit in transmit buffer
+     2:received NACK on transmit of address
+     3:received NACK on transmit of data
+     4:other error
+     See https://www.arduino.cc/en/Reference/WireEndTransmission
+   */
+  if (is_ok != nullptr) {
+    *is_ok = res;
+  }
+  return res;
+}
+
+bool I2C_requestFrom(uint8_t i2caddr, uint8_t nrBytes, bool *is_ok) {
+  const bool res = Wire.requestFrom(i2caddr, nrBytes) == nrBytes;
+
+  if (is_ok != nullptr) {
+    *is_ok = res;
+  }
+  return res;
+}
+
+// **************************************************************************/
 // Reads an 8 bit value over I2C
 // **************************************************************************/
 uint8_t I2C_read8(uint8_t i2caddr, bool *is_ok) {
-  uint8_t value;
+  uint8_t value{};
 
-  uint8_t count = Wire.requestFrom(i2caddr, (uint8_t)1);
-
-  if (is_ok != nullptr) {
-    *is_ok = (count == 1);
+  if (I2C_requestFrom(i2caddr, 1, is_ok)) {
+    value = Wire.read();
   }
-
-  value = Wire.read();
-
 
   return value;
 }
@@ -226,30 +269,11 @@ uint8_t I2C_read8(uint8_t i2caddr, bool *is_ok) {
 // Reads an 8 bit value from a register over I2C
 // **************************************************************************/
 uint8_t I2C_read8_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
-  uint8_t value;
+  uint8_t value{};
 
-  Wire.beginTransmission(i2caddr);
-  Wire.write((uint8_t)reg);
-
-  if (Wire.endTransmission(END_TRANSMISSION_FLAG) != 0) {
-    /*
-       0:success
-       1:data too long to fit in transmit buffer
-       2:received NACK on transmit of address
-       3:received NACK on transmit of data
-       4:other error
-       See https://www.arduino.cc/en/Reference/WireEndTransmission
-     */
-    if (is_ok != nullptr) {
-      *is_ok = false;
-    }
+  if (I2C_setRegister(i2caddr, reg, is_ok) && I2C_requestFrom(i2caddr, 1, is_ok)) {
+    value = Wire.read();
   }
-  uint8_t count = Wire.requestFrom(i2caddr, (uint8_t)1);
-
-  if (is_ok != nullptr) {
-    *is_ok = (count == 1);
-  }
-  value = Wire.read();
 
   return value;
 }
@@ -257,14 +281,12 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
 // **************************************************************************/
 // Reads a 16 bit value starting at a given register over I2C
 // **************************************************************************/
-uint16_t I2C_read16_reg(uint8_t i2caddr, uint8_t reg) {
+uint16_t I2C_read16_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
   uint16_t value(0);
 
-  Wire.beginTransmission(i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission(END_TRANSMISSION_FLAG);
-  Wire.requestFrom(i2caddr, (uint8_t)2);
-  value = (Wire.read() << 8) | Wire.read();
+  if (I2C_setRegister(i2caddr, reg, is_ok) && I2C_requestFrom(i2caddr, 2, is_ok)) {
+    value = (Wire.read() << 8) | Wire.read();
+  }
 
   return value;
 }
@@ -272,14 +294,12 @@ uint16_t I2C_read16_reg(uint8_t i2caddr, uint8_t reg) {
 // **************************************************************************/
 // Reads a 24 bit value starting at a given register over I2C
 // **************************************************************************/
-int32_t I2C_read24_reg(uint8_t i2caddr, uint8_t reg) {
-  int32_t value;
+int32_t I2C_read24_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
+  int32_t value{};
 
-  Wire.beginTransmission(i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission(END_TRANSMISSION_FLAG);
-  Wire.requestFrom(i2caddr, (uint8_t)3);
-  value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
+  if (I2C_setRegister(i2caddr, reg, is_ok) && I2C_requestFrom(i2caddr, 3, is_ok)) {
+    value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
+  }
 
   return value;
 }
@@ -287,14 +307,12 @@ int32_t I2C_read24_reg(uint8_t i2caddr, uint8_t reg) {
 // **************************************************************************/
 // Reads a 32 bit value starting at a given register over I2C
 // **************************************************************************/
-int32_t I2C_read32_reg(uint8_t i2caddr, uint8_t reg) {
-  int32_t value;
+int32_t I2C_read32_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
+  int32_t value{};
 
-  Wire.beginTransmission(i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission(END_TRANSMISSION_FLAG);
-  Wire.requestFrom(i2caddr, (uint8_t)4);
-  value = (((int32_t)Wire.read()) << 24) | (((uint32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
+  if (I2C_setRegister(i2caddr, reg, is_ok) && I2C_requestFrom(i2caddr, 4, is_ok)) {
+    value = (((int32_t)Wire.read()) << 24) | (((uint32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
+  }
 
   return value;
 }
@@ -302,8 +320,8 @@ int32_t I2C_read32_reg(uint8_t i2caddr, uint8_t reg) {
 // **************************************************************************/
 // Reads a 16 bit value starting at a given register over I2C
 // **************************************************************************/
-uint16_t I2C_read16_LE_reg(uint8_t i2caddr, uint8_t reg) {
-  uint16_t temp = I2C_read16_reg(i2caddr, reg);
+uint16_t I2C_read16_LE_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
+  const uint16_t temp = I2C_read16_reg(i2caddr, reg, is_ok);
 
   return (temp >> 8) | (temp << 8);
 }
@@ -311,12 +329,64 @@ uint16_t I2C_read16_LE_reg(uint8_t i2caddr, uint8_t reg) {
 // **************************************************************************/
 // Reads a signed 16 bit value starting at a given register over I2C
 // **************************************************************************/
-int16_t I2C_readS16_reg(uint8_t i2caddr, uint8_t reg) {
-  return (int16_t)I2C_read16_reg(i2caddr, reg);
+int16_t I2C_readS16_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
+  return (int16_t)I2C_read16_reg(i2caddr, reg, is_ok);
 }
 
-int16_t I2C_readS16_LE_reg(uint8_t i2caddr, uint8_t reg) {
-  return (int16_t)I2C_read16_LE_reg(i2caddr, reg);
+int16_t I2C_readS16_LE_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
+  return (int16_t)I2C_read16_LE_reg(i2caddr, reg, is_ok);
 }
+
+// *************************************************************************/
+// Checks if a device is responding on the address
+// Should be used in any I2C plugin case PLUGIN_INIT: before any initialization
+// Can be used in any I2C plugin case PLUGIN_READ: to check if the device is still connected/responding
+// if (!I2C_deviceCheck(configured_I2C_address)) {
+//   break; // Will return the default false for success
+// }
+// *************************************************************************/
+
+#if FEATURE_I2C_DEVICE_CHECK
+static uint8_t deviceCheckI2C[TASKS_MAX]{};
+
+bool I2C_deviceCheck(uint8_t     i2caddr,
+                     taskIndex_t taskIndex,
+                     uint8_t     maxRetries,
+                     uint8_t     function) {
+  if (!Settings.CheckI2Cdevice()) { return true; } // Check disabled, continue
+
+  bool retval = true;
+
+  if (validTaskIndex(taskIndex)) {
+    if (Settings.TaskDeviceDataFeed[taskIndex] != 0) { return true; } // Remote device can't be checked
+
+    START_TIMER;
+    Wire.beginTransmission(i2caddr);
+
+    retval = 0 == Wire.endTransmission(); // Only 0 indicates Success
+
+    if (retval) {
+      deviceCheckI2C[taskIndex] = 0;
+    } else {
+      if (maxRetries > 0) {
+        deviceCheckI2C[taskIndex]++;
+
+        if (deviceCheckI2C[taskIndex] >= maxRetries) {
+          Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reached, disable the device
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_ERROR, concat(F("I2C  : Device doesn't respond for task: "), static_cast<int>(taskIndex + 1)));
+          # endif // ifndef BUILD_NO_DEBUG
+        }
+      }
+    }
+
+    if (function != 0) {
+      STOP_TIMER_TASK(getDeviceIndex_from_TaskIndex(taskIndex), function);
+    }
+  }
+  return retval;
+}
+
+#endif // if FEATURE_I2C_DEVICE_CHECK
 
 #undef END_TRANSMISSION_FLAG

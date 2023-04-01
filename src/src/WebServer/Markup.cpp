@@ -642,15 +642,16 @@ void addCheckBox(const String& id, bool    checked, bool disabled
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
-void addNumericBox(const __FlashStringHelper *id, int value, int min, int max)
+void addNumericBox(const __FlashStringHelper *id, int value, int min, int max, bool disabled)
 {
-  addNumericBox(String(id), value, min, max);
+  addNumericBox(String(id), value, min, max, disabled);
 }
 
 void addNumericBox(const String& id, int value, int min, int max
                    #if FEATURE_TOOLTIPS
                    , const __FlashStringHelper * classname, const String& tooltip
                    #endif // if FEATURE_TOOLTIPS
+                   , bool disabled
                    )
 {
   addHtml(F("<input "));
@@ -661,6 +662,7 @@ void addNumericBox(const String& id, int value, int min, int max
   #endif  // if FEATURE_TOOLTIPS
   addHtmlAttribute(F("type"),  F("number"));
   addHtmlAttribute(F("name"),  id);
+  addHtmlAttribute(F("id"),    id);
 
   #if FEATURE_TOOLTIPS
 
@@ -668,6 +670,10 @@ void addNumericBox(const String& id, int value, int min, int max
     addHtmlAttribute(F("title"), tooltip);
   }
   #endif // if FEATURE_TOOLTIPS
+
+  if (disabled) {
+    addDisabled();
+  }
 
   if (value < min) {
     value = min;
@@ -691,9 +697,9 @@ void addNumericBox(const String& id, int value, int min, int max
 }
 
 #if FEATURE_TOOLTIPS
-void addNumericBox(const String& id, int value, int min, int max)
+void addNumericBox(const String& id, int value, int min, int max, bool disabled)
 {
-  addNumericBox(id, value, min, max, F("widenumber"));
+  addNumericBox(id, value, min, max, F("widenumber"), EMPTY_STRING, disabled);
 }
 
 #endif // if FEATURE_TOOLTIPS
@@ -771,6 +777,7 @@ void addTextBox(const String  & id,
   addHtmlAttribute(F("class"),     classname);
   addHtmlAttribute(F("type"),      F("search"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
   }
@@ -818,6 +825,7 @@ void addTextArea(const String  & id,
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("text"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
   }
@@ -892,16 +900,29 @@ void addRTDPluginButton(pluginID_t taskDeviceNumber) {
   url += F(".html");
   addRTDHelpButton(url);
 
-  switch (taskDeviceNumber) {
-    case 76:
-    case 77:
-      addHtmlLink(
-        F("button help"),
-        makeDocLink(F("Reference/Safety.html"), true),
-        F("&#9889;")); // High voltage sign
-      break;
+  if ((taskDeviceNumber == 76) || (taskDeviceNumber == 77)) {
+    addHtmlLink(
+      F("button help"),
+      makeDocLink(F("Reference/Safety.html"), true),
+      F("&#9889;")); // High voltage sign
   }
 }
+
+# ifndef LIMIT_BUILD_SIZE
+void addRTDControllerButton(protocolIndex_t protocolIndex) {
+  String url;
+
+  url.reserve(20);
+  url = F("Controller/C");
+
+  if (protocolIndex < 100) { url += '0'; }
+
+  if (protocolIndex < 10) { url += '0'; }
+  url += String(protocolIndex);
+  url += F(".html");
+  addRTDHelpButton(url);
+}
+# endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url, bool isRTD) {
   String result;

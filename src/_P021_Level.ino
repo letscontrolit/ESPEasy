@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2023-03-13, tonhuisman: Add setting to invert the Output state
 // 2022-08-22, tonhuisman: Add setting to auto-save a changed setting after x minutes, size optimizations, add PCONFIG defines
 // 2021-12-29, tonhuisman: Add setting to enable/disable saving the settings when the Set Level value is changed using the config
 //                         command
@@ -25,6 +26,7 @@
 # define P021_CHECK_TASK          PCONFIG(0)
 # define P021_CHECK_VALUE         PCONFIG(1)
 # define P021_DONT_ALWAYS_SAVE    PCONFIG(2)
+# define P021_INVERT_OUTPUT       PCONFIG(3)
 # define P021_TRIGGER_LEVEL       PCONFIG_FLOAT(0)
 # define P021_TRIGGER_HYSTERESIS  PCONFIG_FLOAT(1)
 # define P021_TRIGGER_LAST_STORED PCONFIG_FLOAT(2)
@@ -81,13 +83,16 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       addRowLabel(F("Check Task"));
       addTaskSelect(F("ptask"), P021_CHECK_TASK);
 
-      LoadTaskSettings(P021_CHECK_TASK); // we need to load the values from another task for selection!
-      addRowLabel(F("Check Value"));
-      addTaskValueSelect(F("pvalue"), P021_CHECK_VALUE, P021_CHECK_TASK);
+      if (validTaskIndex(P021_CHECK_TASK)) {
+        addRowLabel(F("Check Value"));
+        addTaskValueSelect(F("pvalue"), P021_CHECK_VALUE, P021_CHECK_TASK);
+      }
 
       addFormTextBox(F("Set Level"),  F("psetvalue"), toString(P021_TRIGGER_LEVEL),      8);
 
       addFormTextBox(F("Hysteresis"), F("physt"),     toString(P021_TRIGGER_HYSTERESIS), 8);
+
+      addFormCheckBox(F("Invert Output"),                                               F("inv"),          P021_INVERT_OUTPUT == 1);
 
       // inverted flag!
       addFormCheckBox(F("Save 'Set Level' after change via <pre>config</pre> command"), F("psave_always"), P021_DONT_ALWAYS_SAVE == 0);
@@ -101,8 +106,6 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Interval to check if 'Set Level' is changed via <pre>config</pre> command and saves it. Max. 24h, 0 = Off"));
       # endif // ifndef BUILD_NO_DEBUG
 
-      // we need to restore our original taskvalues!
-      LoadTaskSettings(event->TaskIndex);
       success = true;
       break;
     }
@@ -116,6 +119,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       P021_TRIGGER_LAST_STORED = P021_TRIGGER_LEVEL;
       P021_TRIGGER_HYSTERESIS  = getFormItemFloat(F("physt"));
       P021_AUTOSAVE_TIMER      = getFormItemInt(F("pautosave")) * 60; // Store in seconds
+      P021_INVERT_OUTPUT       = isFormItemChecked(F("inv")) ? 1 : 0;
 
       success = true;
       break;
@@ -125,7 +129,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command.equals(F("setlevel"))) {
+      if (equals(command, F("setlevel"))) {
         String value  = parseString(string, 2);
         double result = 0.0;
 
@@ -160,7 +164,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command.equals(F("getlevel"))) {
+      if (equals(command, F("getlevel"))) {
         string  = toString(P021_TRIGGER_LEVEL);
         success = true;
       }
@@ -169,7 +173,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      pinMode(CONFIG_PIN1, OUTPUT);
+      if (validGpio(CONFIG_PIN1)) {
+        pinMode(CONFIG_PIN1, OUTPUT);
+      }
       success = true;
       break;
     }
@@ -177,23 +183,27 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
     {
       // we're checking a var from another task, so calculate that basevar
-      taskIndex_t TaskIndex    = P021_CHECK_TASK;
-      uint8_t     BaseVarIndex = TaskIndex * VARS_PER_TASK + P021_CHECK_VALUE;
-      float   value            = UserVar[BaseVarIndex];
-      uint8_t state            = switchstate[event->TaskIndex];
+      taskIndex_t TaskIndex = P021_CHECK_TASK;
+
+      if (!validTaskIndex(TaskIndex)) {
+        break;
+      }
+      uint8_t BaseVarIndex = TaskIndex * VARS_PER_TASK + P021_CHECK_VALUE;
+      float   value        = UserVar[BaseVarIndex];
+      uint8_t state        = switchstate[event->TaskIndex];
 
       // compare with threshold value
-      bool  isZero             = essentiallyEqual(P021_TRIGGER_HYSTERESIS, 0.0f);
+      bool  isZero             = essentiallyZero(P021_TRIGGER_HYSTERESIS);
       float valueLowThreshold  = P021_TRIGGER_LEVEL - (isZero ? 0.0f : (P021_TRIGGER_HYSTERESIS / 2.0f));
       float valueHighThreshold = P021_TRIGGER_LEVEL + (isZero ? 1.0f : (P021_TRIGGER_HYSTERESIS / 2.0f)); // Include setvalue on
                                                                                                           // 0-hysteresis
 
       if (!definitelyGreaterThan(value, valueLowThreshold)) {
-        state = 1;
+        state = P021_INVERT_OUTPUT == 0 ? 1 : 0;
       }
 
       if (!definitelyLessThan(value, valueHighThreshold)) {
-        state = 0;
+        state = P021_INVERT_OUTPUT == 0 ? 0 : 1;
       }
 
       if (state != switchstate[event->TaskIndex])
@@ -204,7 +214,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO, log);
         }
         switchstate[event->TaskIndex] = state;
-        digitalWrite(CONFIG_PIN1, state);
+
+        if (validGpio(CONFIG_PIN1)) {
+          digitalWrite(CONFIG_PIN1, state);
+        }
         UserVar[event->BaseVarIndex] = state;
         sendData(event);
       }

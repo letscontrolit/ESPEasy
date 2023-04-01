@@ -11,6 +11,8 @@ The name of this node.
 This is mainly used when connecting to a MQTT broker or in p2p communications.
 It is also used to generate a hostname in the local network, for example when using mDNS.
 
+2023-01-27: Variables like ``%unit_0%``, ``%ip4%`` etc. can be used as (part of) the Name, and will be expanded anywhere the name is used. If the ``Append Unit Number to hostname`` setting is enabled, the name will **not** get the unit number appended, but the Hostname **will** have the unit number appended.
+
 
 Unit Number
 -----------

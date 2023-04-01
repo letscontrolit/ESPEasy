@@ -36,6 +36,7 @@
 //                               Support for orcon must be enabled in settings, to avoid possible interference with Itho.
 //                               Re-enabled timer support for Orcon, as it is only a status update, NOT a ventilator update
 //      tonhuisman, 18-09-2022 - Hide Debug log option in device configuration when Debug log is not available.
+//      tonhuisman, 05-03-2023 - Deprecate 'state' command, and add support for 'itho' as the main command
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
@@ -196,9 +197,7 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
                                                                                  P118_CONFIG_RF_LOG == 1));
         P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr != P118_data) {
-          success = P118_data->plugin_init(event);
-        }
+        success = (nullptr != P118_data) && P118_data->plugin_init(event);
       } else {
         addLog(LOG_LEVEL_ERROR, F("ITHO: CS pin not correctly configured, plugin can not start!"));
       }

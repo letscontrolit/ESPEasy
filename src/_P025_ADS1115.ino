@@ -6,12 +6,13 @@
 // #######################################################################################################
 
 
-#include "src/PluginStructs/P025_data_struct.h"
+# include "src/PluginStructs/P025_data_struct.h"
 
-#define PLUGIN_025
-#define PLUGIN_ID_025 25
-#define PLUGIN_NAME_025 "Analog input - ADS1115"
-#define PLUGIN_VALUENAME1_025 "Analog"
+# define PLUGIN_025
+# define PLUGIN_ID_025 25
+# define PLUGIN_NAME_025 "Analog input - ADS1115"
+# define PLUGIN_VALUENAME1_025 "Analog"
+
 
 
 boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
@@ -53,93 +54,42 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      #define ADS1115_I2C_OPTION 4
+      # define ADS1115_I2C_OPTION 4
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), ADS1115_I2C_OPTION, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("i2c_addr"), ADS1115_I2C_OPTION, i2cAddressValues, P025_I2C_ADDR);
       } else {
         success = intArrayContains(ADS1115_I2C_OPTION, i2cAddressValues, event->Par1);
       }
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P025_I2C_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      uint8_t port = CONFIG_PORT;
 
-      if (port > 0) // map old port logic to new gain and mode settings
-      {
-        PCONFIG(1)  = PCONFIG(0) / 2;
-        PCONFIG(0)  = 0x48 + ((port - 1) / 4);
-        PCONFIG(2)  = ((port - 1) & 3) | 4;
-        CONFIG_PORT = 0;
-      }
-
-      addFormSubHeader(F("Input"));
-
-      {
-          #define ADS1115_PGA_OPTION 6
-        uint8_t pga                              = PCONFIG(1);
-        const __FlashStringHelper * pgaOptions[ADS1115_PGA_OPTION] = {
-          F("2/3x gain (FS=6.144V)"),
-          F("1x gain (FS=4.096V)"),
-          F("2x gain (FS=2.048V)"),
-          F("4x gain (FS=1.024V)"),
-          F("8x gain (FS=0.512V)"),
-          F("16x gain (FS=0.256V)")
-        };
-        addFormSelector(F("Gain"), F("p025_gain"), ADS1115_PGA_OPTION, pgaOptions, nullptr, pga);
-      }
-
-      {
-          #define ADS1115_MUX_OPTION 8
-        uint8_t mux                              = PCONFIG(2);
-        const __FlashStringHelper * muxOptions[ADS1115_MUX_OPTION] = {
-          F("AIN0 - AIN1 (Differential)"),
-          F("AIN0 - AIN3 (Differential)"),
-          F("AIN1 - AIN3 (Differential)"),
-          F("AIN2 - AIN3 (Differential)"),
-          F("AIN0 - GND (Single-Ended)"),
-          F("AIN1 - GND (Single-Ended)"),
-          F("AIN2 - GND (Single-Ended)"),
-          F("AIN3 - GND (Single-Ended)"),
-        };
-        addFormSelector(F("Input Multiplexer"), F("p025_mode"), ADS1115_MUX_OPTION, muxOptions, nullptr, mux);
-      }
-
-      addFormSubHeader(F("Two Point Calibration"));
-
-      addFormCheckBox(F("Calibration Enabled"), F("p025_cal"), PCONFIG(3));
-
-      addFormNumericBox(F("Point 1"), F("p025_adc1"), PCONFIG_LONG(0), -32768, 32767);
-      html_add_estimate_symbol();
-      addTextBox(F("p025_out1"), toString(PCONFIG_FLOAT(0), 3), 10);
-
-      addFormNumericBox(F("Point 2"), F("p025_adc2"), PCONFIG_LONG(1), -32768, 32767);
-      html_add_estimate_symbol();
-      addTextBox(F("p025_out2"), toString(PCONFIG_FLOAT(1), 3), 10);
-
-      success = true;
+      success = P025_data_struct::webformLoad(event);
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
+      success = P025_data_struct::webformSave(event);
+      break;
+    }
 
-      PCONFIG(1) = getFormItemInt(F("p025_gain"));
-
-      PCONFIG(2) = getFormItemInt(F("p025_mode"));
-
-      PCONFIG(3) = isFormItemChecked(F("p025_cal"));
-
-      PCONFIG_LONG(0)  = getFormItemInt(F("p025_adc1"));
-      PCONFIG_FLOAT(0) = getFormItemFloat(F("p025_out1"));
-
-      PCONFIG_LONG(1)  = getFormItemInt(F("p025_adc2"));
-      PCONFIG_FLOAT(1) = getFormItemFloat(F("p025_out2"));
-
-      success = true;
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+    {
+      success = P025_data_struct::webform_showConfig(event);
       break;
     }
 
@@ -149,65 +99,65 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       // uint8_t unit = (CONFIG_PORT - 1) / 4;
       // uint8_t port = CONFIG_PORT - (unit * 4);
       // uint8_t address = 0x48 + unit;
-      const uint8_t address = PCONFIG(0);
-      const uint8_t pga     = PCONFIG(1);
-      const uint8_t mux     = PCONFIG(2);
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(address, pga, mux));
-      P025_data_struct *P025_data =
-        static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(event));
+      P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P025_data) {
-        success = true;
-      }
+      success = (nullptr != P025_data);
       break;
     }
 
     case PLUGIN_READ:
     {
-      P025_data_struct *P025_data =
-        static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
+      const P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P025_data) {
-        const int16_t value = P025_data->read();
-        UserVar[event->BaseVarIndex] = value;
+        float value{};
 
-        #ifndef BUILD_NO_DEBUG
-        String log;
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          log  = F("ADS1115 : Analog value: ");
-          log += value;
-        }
-        #endif
+        if (P025_data->read(value)) {
+          success = true;
 
-        if (PCONFIG(3)) // Calibration?
-        {
-          int adc1   = PCONFIG_LONG(0);
-          int adc2   = PCONFIG_LONG(1);
-          float out1 = PCONFIG_FLOAT(0);
-          float out2 = PCONFIG_FLOAT(1);
+        # ifndef BUILD_NO_DEBUG
+          String log;
 
-          if (adc1 != adc2)
-          {
-            const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
-            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
-            #ifndef BUILD_NO_DEBUG
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              log += ' ';
-              log += formatUserVarNoCheck(event->TaskIndex, 0);
-            }
-            #endif
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            log  = F("ADS1115 : Analog value: ");
+            log += value;
+            log += F(" / Channel: ");
+            log += P025_MUX;
           }
-        }
+        # endif // ifndef BUILD_NO_DEBUG
 
-        // TEST log += F(" @0x");
-        // TEST log += String(config, 16);
-        #ifndef BUILD_NO_DEBUG
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          if (!P025_CAL_GET) { // Calibration?
+            UserVar[event->BaseVarIndex] = value;
+          }
+          else {
+            const int   adc1 = P025_CAL_ADC1;
+            const int   adc2 = P025_CAL_ADC2;
+            const float out1 = P025_CAL_OUT1;
+            const float out2 = P025_CAL_OUT2;
+
+            if (adc1 != adc2)
+            {
+              const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
+              UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+            # ifndef BUILD_NO_DEBUG
+
+              if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                log += ' ';
+                log += formatUserVarNoCheck(event->TaskIndex, 0);
+              }
+            # endif // ifndef BUILD_NO_DEBUG
+            }
+          }
+
+        # ifndef BUILD_NO_DEBUG
+
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            addLogMove(LOG_LEVEL_DEBUG, log);
+          }
+        # endif // ifndef BUILD_NO_DEBUG
         }
-        #endif
-        success = true;
       }
       break;
     }

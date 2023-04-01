@@ -19,6 +19,27 @@ SecurityStruct::SecurityStruct() {
   ZERO_FILL(Password);
 }
 
+ChecksumType SecurityStruct::computeChecksum() const {
+  constexpr size_t len_upto_md5 = offsetof(SecurityStruct, md5);
+  return ChecksumType(
+    reinterpret_cast<const uint8_t *>(this), 
+    sizeof(SecurityStruct),
+    len_upto_md5);
+}
+
+bool SecurityStruct::checksumMatch() const {
+  return computeChecksum().matchChecksum(md5);
+}
+
+bool SecurityStruct::updateChecksum() {
+  const ChecksumType checksum = computeChecksum();
+  if (checksum.matchChecksum(md5)) {
+    return false;
+  }
+  checksum.getChecksum(md5);
+  return true;
+}
+
 void SecurityStruct::validate() {
   ZERO_TERMINATE(WifiSSID);
   ZERO_TERMINATE(WifiKey);
@@ -42,15 +63,12 @@ void SecurityStruct::clearWiFiCredentials() {
 }
 
 void SecurityStruct::clearWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot) {
-  switch (slot) {
-    case SecurityStruct::WiFiCredentialsSlot::first:
-      ZERO_FILL(WifiSSID);
-      ZERO_FILL(WifiKey);
-      break;
-    case SecurityStruct::WiFiCredentialsSlot::second:
-      ZERO_FILL(WifiSSID2);
-      ZERO_FILL(WifiKey2);
-      break;
+  if (slot == SecurityStruct::WiFiCredentialsSlot::first) {
+    ZERO_FILL(WifiSSID);
+    ZERO_FILL(WifiKey);
+  } else if (slot == SecurityStruct::WiFiCredentialsSlot::second) {
+    ZERO_FILL(WifiSSID2);
+    ZERO_FILL(WifiKey2);
   }
 }
 
@@ -60,12 +78,11 @@ bool SecurityStruct::hasWiFiCredentials() const {
 }
 
 bool SecurityStruct::hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot) const {
-  switch (slot) {
-    case SecurityStruct::WiFiCredentialsSlot::first:
+  if (slot == SecurityStruct::WiFiCredentialsSlot::first)
       return (WifiSSID[0] != 0 && !String(WifiSSID).equalsIgnoreCase(F("ssid")));
-    case SecurityStruct::WiFiCredentialsSlot::second:
+  if (slot == SecurityStruct::WiFiCredentialsSlot::second)
       return (WifiSSID2[0] != 0 && !String(WifiSSID2).equalsIgnoreCase(F("ssid")));
-  }
+
   return false;
 }
 

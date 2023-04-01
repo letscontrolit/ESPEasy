@@ -86,7 +86,7 @@ String getControllerParameterName(protocolIndex_t                   ProtocolInde
   if (!displayName) {
     // Change name to lower case and remove spaces to make it an internal name.
     name.toLowerCase();
-    name.replace(F(" "), EMPTY_STRING);
+    removeChar(name, ' ');
   }
   return name;
 }
@@ -161,7 +161,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
         ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.ControllerUser[0]) - 1;
       addFormTextBox(displayName,
                      internalName,
-                     getControllerUser(controllerindex, ControllerSettings),
+                     getControllerUser(controllerindex, ControllerSettings, false),
                      fieldMaxLength);
       break;
     }

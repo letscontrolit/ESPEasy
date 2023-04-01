@@ -12,6 +12,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/Networking.h"
 
 #include <ETH.h>
 #include <lwip/dns.h>
@@ -54,35 +55,8 @@ void ethSetupStaticIPconfig() {
     addLogMove(LOG_LEVEL_INFO, log);
   }
   ETH.config(ip, gw, subnet, dns);
-  ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
-}
-
-void ethSetDNS(const IPAddress& dns0, const IPAddress& dns1) 
-{
-  ip_addr_t d;
-  d.type = IPADDR_TYPE_V4;
-  bool set_dns = false;
-
-  if(dns0 != (uint32_t)0x00000000 && dns0 != INADDR_NONE) {
-    // Set DNS0-Server
-    d.u_addr.ip4.addr = static_cast<uint32_t>(dns0);
-    dns_setserver(0, &d);
-    set_dns = true;
-  }
-
-  if(dns1 != (uint32_t)0x00000000 && dns1 != INADDR_NONE) {
-    // Set DNS1-Server
-    d.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
-    dns_setserver(1, &d);
-    set_dns = true;
-  }
-  if (set_dns && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ETH IP   : Set DNS: ");
-    log += formatIP(dns0);
-    log += '/';
-    log += formatIP(dns1);
-    addLogMove(LOG_LEVEL_INFO, log);
-  }
+  setDNS(0, EthEventData.dns0_cache);
+  setDNS(1, EthEventData.dns1_cache);
 }
 
 bool ethCheckSettings() {
@@ -95,11 +69,9 @@ bool ethCheckSettings() {
 }
 
 bool ethPrepare() {
-  {
-    char hostname[40];
-    safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
-    ETH.setHostname(hostname);
-  }
+  char hostname[40];
+  safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
+  ETH.setHostname(hostname);
   ethSetupStaticIPconfig();
   return true;
 }
@@ -204,9 +176,10 @@ void ethPower(bool enable) {
       // Already the desired state
       return;
     }
-    EthEventData.ethInitSuccess = false;
-    EthEventData.clearAll();
+    addLog(LOG_LEVEL_INFO, enable ? F("ETH power ON") : F("ETH power OFF"));
     if (!enable) {
+      EthEventData.ethInitSuccess = false;
+      EthEventData.clearAll();
       #ifdef ESP_IDF_VERSION_MAJOR
       // FIXME TD-er: See: https://github.com/espressif/arduino-esp32/issues/6105
       // Need to store the last link state, as it will be cleared after destructing the object.
@@ -215,12 +188,12 @@ void ethPower(bool enable) {
         EthEventData.setEthConnected();
       }
       #endif
-      ETH = ETHClass();
+//      ETH = ETHClass();
     }
     if (enable) {
-      ethResetGPIOpins();
+//      ethResetGPIOpins();
     }
-    gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_power);
+//    gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_power);
 
     GPIO_Write(1, Settings.ETH_Pin_power, enable ? 1 : 0);
     if (!enable) {
@@ -238,6 +211,7 @@ void ethResetGPIOpins() {
   // fix an disconnection issue after rebooting Olimex POE - this forces a clean state for all GPIO involved in RMII
   // Thanks to @s-hadinger and @Jason2866
   // Resetting state of power pin is done in ethPower()
+  addLog(LOG_LEVEL_INFO, F("ethResetGPIOpins()"));
   gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_mdc);
   gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_mdio);
   gpio_reset_pin(GPIO_NUM_19);    // EMAC_TXD0 - hardcoded
@@ -246,6 +220,7 @@ void ethResetGPIOpins() {
   gpio_reset_pin(GPIO_NUM_25);    // EMAC_RXD0 - hardcoded
   gpio_reset_pin(GPIO_NUM_26);    // EMAC_RXD1 - hardcoded
   gpio_reset_pin(GPIO_NUM_27);    // EMAC_RX_CRS_DV - hardcoded
+  /*
   switch (Settings.ETH_Clock_Mode) {
     case EthClockMode_t::Ext_crystal_osc:       // ETH_CLOCK_GPIO0_IN
     case EthClockMode_t::Int_50MHz_GPIO_0:      // ETH_CLOCK_GPIO0_OUT
@@ -258,6 +233,7 @@ void ethResetGPIOpins() {
       gpio_reset_pin(GPIO_NUM_17);
       break;
   }
+  */
   delay(1);
 }
 

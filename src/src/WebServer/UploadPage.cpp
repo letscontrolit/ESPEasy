@@ -48,7 +48,6 @@ void handle_upload_post() {
   switch (uploadResult) {
     case uploadResult_e::Success:
       addHtml(F("Upload OK!<BR>You may need to reboot to apply all settings..."));
-      clearAllCaches();
       LoadSettings();
       break;
     case uploadResult_e::InvalidFile:

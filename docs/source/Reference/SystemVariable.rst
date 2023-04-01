@@ -147,6 +147,10 @@ More uses of these system variables can be seen in the rules section and formula
      - 3 (03)
      - Current month (MM).
      - Yes
+   * - ``%sysmonth_s%``
+     - Mar
+     - Current month as 3 characters, abbreviated, US-English notation. (MMM)
+     -
    * - ``%sysyear%`` (``%sysyear_0%``)
      - 2020 (2020)
      - 4 digits (YYYY).
@@ -162,6 +166,10 @@ More uses of these system variables can be seen in the rules section and formula
    * - ``%sysweekday_s%``
      - Fri
      - Weekday (verbose) - Sun, Mon, Tue...
+     - 
+   * - ``%systzoffset%``
+     - +0100
+     - System time-zone offset from UTC, using ``[+|-]HHMM`` format, + or -, hours and minutes both in 2 digits, zero-prefixed. Does take DST into account.
      - 
    * - ``%unixtime%``
      - 1521731277
@@ -188,6 +196,10 @@ More uses of these system variables can be seen in the rules section and formula
    * - ``%unit%``
      - 32
      - Unit number.
+     - Yes
+   * - ``%unit_0%``
+     - 001, 032, 110
+     - Unit number, prefixed with zeros to a total size of 3 digits.
      - Yes
    * - ``%ssid%``
      - H4XX0R njietwork!

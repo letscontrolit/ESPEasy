@@ -48,7 +48,7 @@ enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_WIND            =   21,
   SENSOR_TYPE_STRING          =   22,
 
-  SENSOR_TYPE_NOT_SET         = 255
+  SENSOR_TYPE_NOT_SET = 255
 };
 
 enum class Output_Data_type_t : uint8_t {
@@ -56,6 +56,8 @@ enum class Output_Data_type_t : uint8_t {
   Simple, // SENSOR_TYPE_SINGLE, _DUAL, _TRIPLE, _QUAD
   All
 };
+
+
 
 /*********************************************************************************************\
 * DeviceStruct
@@ -98,6 +100,10 @@ struct __attribute__((__packed__)) DeviceStruct
   bool ErrorStateValues   : 1;       // Support Error State Values, can be called to retrieve surrogate values when PLUGIN_READ returns false
   bool PluginStats        : 1;       // Support for PluginStats to record last N task values, show charts etc.
   bool PluginLogsPeaks    : 1;       // When PluginStats is enabled, a call to PLUGIN_READ will also check for peaks. With this enabled, the plugin must call to check for peaks itself.
+  bool PowerManager       : 1;       // Is a Power management controller (Power manager), that can be selected to be intialized *before* the SPI interface is started.
+                                     // (F.e.: M5Stack Core/Core2 needs to power the TFT before SPI can be started)
+  bool TaskLogsOwnPeaks   : 1;       // When PluginStats is enabled, a call to PLUGIN_READ will also check for peaks. With this enabled, the plugin must call to check for peaks itself.
+  bool I2CNoDeviceCheck   : 1;       // When enabled, NO I2C check will be done on the I2C address returned from PLUGIN_I2C_GET_ADDRESS function call
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 

@@ -5,7 +5,9 @@
 
 void clearAllCaches();
 
-void clearTaskCaches();
+void clearAllButTaskCaches();
+
+void clearTaskCache(taskIndex_t TaskIndex);
 
 void clearFileCaches();
 

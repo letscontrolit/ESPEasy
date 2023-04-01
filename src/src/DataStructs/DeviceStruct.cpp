@@ -1,5 +1,7 @@
 #include "../DataStructs/DeviceStruct.h"
 
+
+
 DeviceStruct::DeviceStruct() :
   Number(0), Type(0), VType(Sensor_VType::SENSOR_TYPE_NONE), Ports(0), ValueCount(0),
   OutputDataType(Output_Data_type_t::Default),
@@ -7,7 +9,8 @@ DeviceStruct::DeviceStruct() :
   Custom(false), SendDataOption(false), GlobalSyncOption(false),
   TimerOption(false), TimerOptional(false), DecimalsOnly(false),
   DuplicateDetection(false), ExitTaskBeforeSave(true), ErrorStateValues(false), 
-  PluginStats(false), PluginLogsPeaks(false) {}
+  PluginStats(false), PluginLogsPeaks(false), PowerManager(false),
+  TaskLogsOwnPeaks(false), I2CNoDeviceCheck(false) {}
 
 bool DeviceStruct::connectedToGPIOpins() const {
   switch(Type) {
@@ -31,20 +34,18 @@ bool DeviceStruct::connectedToGPIOpins() const {
 }
 
 bool DeviceStruct::usesTaskDevicePin(int pin) const {
-  switch (pin) {
-    case 1:
+  if (pin == 1)
       return connectedToGPIOpins();
-    case 2:
+  if (pin == 2)
       return connectedToGPIOpins() && 
             !(Type == DEVICE_TYPE_SINGLE  ||
               Type == DEVICE_TYPE_SPI ||
               Type == DEVICE_TYPE_CUSTOM1);
-    case 3:
+  if (pin == 3)
       return Type == DEVICE_TYPE_TRIPLE || 
              Type == DEVICE_TYPE_SERIAL_PLUS1 || 
              Type == DEVICE_TYPE_SPI3 ||
              Type == DEVICE_TYPE_CUSTOM3;
-  }
   return false;
 }
 
