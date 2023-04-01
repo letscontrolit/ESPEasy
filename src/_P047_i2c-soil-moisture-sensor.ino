@@ -13,6 +13,7 @@
 
 /** Changelog:
  * 2023-04-01 tonhuisman: Implement staged reading instead of a fixed delay during PLUGIN_READ
+ *                        Add range-check on save for I2C address inputs (0x01..0x7F)
  * 2023-03-31 tonhuisman: Add support for BelFlE I2C Moisture sensor,
  *                        from a forum request: https://www.letscontrolit.com/forum/viewtopic.php?t=9581
  *                        Move some code to PluginStruct files
@@ -91,6 +92,7 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"),
                      formatToHex_decimal(P047_I2C_ADDR), 4);
+      addUnit(F("0x01..0x7F"));
 
       // FIXME TD-er: Why not using addFormSelectorI2C here?
       break;
@@ -140,6 +142,7 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Change Sensor address"), F("changeAddr"), false);
       addFormTextBox(F("Change I2C Addr. to (Hex)"), F("newAddr"),
                      formatToHex_decimal(P047_I2C_ADDR), 4);
+      addUnit(F("0x01..0x7F"));
 
       success = true;
       break;
@@ -147,8 +150,16 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      success = true;
       String webarg = webArg(F("i2c_addr"));
-      P047_I2C_ADDR = static_cast<int>(strtol(webarg.c_str(), 0, 16));
+      int    addr   = static_cast<int>(strtol(webarg.c_str(), 0, 16));
+
+      if ((addr > 0x00) && (addr < 0x80)) {
+        P047_I2C_ADDR = addr;
+      } else {
+        addHtmlError(F("I2C Address (Hex) error, range: 0x01..0x7F"));
+        success = false;
+      }
 
       uint8_t model = getFormItemInt(F("model"));
 
@@ -167,11 +178,17 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
 
       P047_CHECK_VERSION = isFormItemChecked(F("version"));
 
-      webarg           = webArg(F("newAddr"));
-      P047_NEW_ADDR    = static_cast<int>(strtol(webarg.c_str(), 0, 16));
+      webarg = webArg(F("newAddr"));
+      addr   = static_cast<int>(strtol(webarg.c_str(), 0, 16));
+
+      if ((addr > 0x00) && (addr < 0x80)) {
+        P047_NEW_ADDR = addr;
+      } else {
+        addHtmlError(F("Change I2C Addr. to (Hex) error, range: 0x01..0x7F"));
+        success = false;
+      }
       P047_CHANGE_ADDR = isFormItemChecked(F("changeAddr"));
 
-      success = true;
       break;
     }
 
