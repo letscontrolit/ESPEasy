@@ -3,13 +3,13 @@
 #ifdef USES_P087
 
 
-// Needed also here for PlatformIO's library finder as the .h file 
+// Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
-#include <ESPeasySerial.h>
-#include <Regexp.h>
+# include <ESPeasySerial.h>
+# include <Regexp.h>
 
 
-#include <vector>
+# include <vector>
 
 
 P087_data_struct::~P087_data_struct() {
@@ -26,7 +26,8 @@ void P087_data_struct::reset() {
   }
 }
 
-bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate, uint8_t config) {
+bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate,
+                            uint8_t config) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
@@ -51,7 +52,7 @@ void P087_data_struct::post_init() {
   regex_empty = _lines[P087_REGEX_POS].isEmpty();
   # ifndef BUILD_NO_DEBUG
   String log = F("P087_post_init:");
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
 
   for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
     // Create some quick lookup table to see if we have a filter for the specific index
@@ -61,18 +62,18 @@ void P087_data_struct::post_init() {
     // Index is negative when not used.
     if ((index >= 0) && (index < P87_MAX_CAPTURE_INDEX) && (_lines[i * 3 + P087_FIRST_FILTER_POS + 2].length() > 0)) {
       # ifndef BUILD_NO_DEBUG
-      log                      += ' ';
-      log                      += String(i);
-      log                      += ':';
-      log                      += String(index);
-      #endif
+      log += ' ';
+      log += String(i);
+      log += ':';
+      log += String(index);
+      # endif // ifndef BUILD_NO_DEBUG
       capture_index[i]          = index;
       capture_index_used[index] = true;
     }
   }
   # ifndef BUILD_NO_DEBUG
   addLogMove(LOG_LEVEL_DEBUG, log);
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
 }
 
 bool P087_data_struct::isInitialized() const {
@@ -80,16 +81,28 @@ bool P087_data_struct::isInitialized() const {
 }
 
 void P087_data_struct::sendString(const String& data) {
-  if (isInitialized()) {
-    if (data.length() > 0) {
-      setDisableFilterWindowTimer();
-      easySerial->write(data.c_str());
+  if (isInitialized() && (!data.isEmpty())) {
+    setDisableFilterWindowTimer();
+    easySerial->write(data.c_str());
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("Proxy: Sending: ");
-        log += data;
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Proxy: Sending: ");
+      log += data;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
+  }
+}
+
+void P087_data_struct::sendData(uint8_t *data, size_t size) {
+  if (isInitialized() && size) {
+    setDisableFilterWindowTimer();
+    easySerial->write(data, size);
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Proxy: Sending ");
+      log += size;
+      log += F(" bytes.");
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 }
@@ -129,8 +142,8 @@ bool P087_data_struct::loop() {
 
           if (valid) {
             fullSentenceReceived = true;
-            last_sentence = sentence_part;
-            sentence_part = String();
+            last_sentence        = sentence_part;
+            sentence_part        = String();
           }
           break;
         }
@@ -155,7 +168,8 @@ bool P087_data_struct::loop() {
 }
 
 bool P087_data_struct::getSentence(String& string) {
-  string        = last_sentence;
+  string = last_sentence;
+
   if (string.isEmpty()) {
     return false;
   }
@@ -275,7 +289,8 @@ bool P087_data_struct::matchRegexp(String& received) const {
   if (strlength == 0) {
     return false;
   }
-  if (regex_empty || getMatchType() == Filter_Disabled) {
+
+  if (regex_empty || (getMatchType() == Filter_Disabled)) {
     return true;
   }
 
@@ -291,6 +306,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
   MatchState ms(const_cast<char *>(received.c_str()), strlength);
 
   bool match_result = false;
+
   if (globalMatch()) {
     capture_vector.clear();
     ms.GlobalMatch(_lines[P087_REGEX_POS].c_str(), match_callback);
@@ -342,7 +358,8 @@ bool P087_data_struct::matchRegexp(String& received) const {
     char result = ms.Match(_lines[P087_REGEX_POS].c_str());
 
     if (result == REGEXP_MATCHED) {
-      #ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("Match at: ");
         log += ms.MatchStart;
@@ -350,7 +367,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
         log += ms.MatchLength;
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
-      #endif
+      # endif // ifndef BUILD_NO_DEBUG
       match_result = true;
     }
   }

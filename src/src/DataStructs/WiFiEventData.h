@@ -131,7 +131,7 @@ struct WiFiEventData_t {
 
   unsigned long connectionFailures = 0;
 
-  std::map<int, uint32_t> connectDurations;
+  std::map<uint8_t, long> connectDurations;
 
 #ifdef ESP32
   WiFiEventId_t wm_event_id = 0;
