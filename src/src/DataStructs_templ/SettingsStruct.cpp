@@ -12,18 +12,6 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
 
-template<unsigned int N_TASKS>
-SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) { //-V730
-  clearMisc();
-  clearTimeSettings();
-  clearNotifications();
-  clearControllers();
-  clearTasks();
-  clearLogSettings();
-  clearUnitNameSettings();
-  clearNetworkSettings();
-}
-
 
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -587,15 +575,15 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   if (task >= N_TASKS) { return; }
 
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-    TaskDeviceID[i][task]       = 0;
+    TaskDeviceID[i][task]       = 0u;
     TaskDeviceSendData[i][task] = false;
   }
-  TaskDeviceNumber[task]     = 0;
-  OLD_TaskDeviceID[task]     = 0; // UNUSED: this can be removed
+  TaskDeviceNumber[task]     = 0u;
+  OLD_TaskDeviceID[task]     = 0u; // UNUSED: this can be removed
   TaskDevicePin1[task]       = -1;
   TaskDevicePin2[task]       = -1;
   TaskDevicePin3[task]       = -1;
-  TaskDevicePort[task]       = 0;
+  TaskDevicePort[task]       = 0u;
   TaskDevicePin1PullUp[task] = false;
 
   for (uint8_t cv = 0; cv < PLUGIN_CONFIGVAR_MAX; ++cv) {
@@ -610,10 +598,10 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   for (uint8_t cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
-  TaskDeviceSendDataFlags[task]  = 0;
+  TaskDeviceSendDataFlags[task]  = 0u;
   VariousTaskBits[task]         = 0;
-  TaskDeviceDataFeed[task]      = 0;
-  TaskDeviceTimer[task]         = 0;
+  TaskDeviceDataFeed[task]      = 0u;
+  TaskDeviceTimer[task]         = 0u;
   TaskDeviceEnabled[task]       = false;
   I2C_Multiplexer_Channel[task] = -1;
 }
@@ -726,14 +714,15 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid() const {
-  return !((InitSPI == static_cast<int>(SPI_Options_e::None)) ||
-           ((InitSPI == static_cast<int>(SPI_Options_e::UserDefined)) &&
-            ((SPI_SCLK_pin == -1) ||
+  if (InitSPI == static_cast<uint8_t>(SPI_Options_e::None)) return false;
+  if (InitSPI == static_cast<uint8_t>(SPI_Options_e::UserDefined))
+    return !((SPI_SCLK_pin == -1) ||
              (SPI_MISO_pin == -1) ||
              (SPI_MOSI_pin == -1) ||
              (SPI_SCLK_pin == SPI_MISO_pin) ||
              (SPI_MISO_pin == SPI_MOSI_pin) ||
-             (SPI_MOSI_pin == SPI_SCLK_pin)))); // Checks
+             (SPI_MOSI_pin == SPI_SCLK_pin));
+  return true;
 }
 
 template<unsigned int N_TASKS>
