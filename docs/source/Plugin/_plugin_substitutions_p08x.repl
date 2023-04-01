@@ -100,7 +100,7 @@
 .. |P087_shortinfo| replace:: `.`
 .. |P087_maintainer| replace:: `TD-er`
 .. |P087_compileinfo| replace:: `.`
-.. |P087_usedlibraries| replace:: `.`
+.. |P087_usedlibraries| replace:: `ESPEasySerial`
 
 .. |P088_name| replace:: :cyan:`HeatpumpIR`
 .. |P088_type| replace:: :cyan:`Energy (Heat)`

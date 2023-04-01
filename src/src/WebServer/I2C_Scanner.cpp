@@ -246,7 +246,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("LCD,PCF8574A");
       break;
     case 0x40:
-      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080,M5Stack Rotary enc");
+      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC10xx,M5Stack Rotary enc");
       break;
     case 0x41:
     case 0x42:

@@ -21,6 +21,8 @@ Maintainer: |P025_maintainer|
 
 Used libraries: |P025_usedlibraries|
 
+.. include:: P025_page.rst
+
 Supported hardware
 ------------------
 

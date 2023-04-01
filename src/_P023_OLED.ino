@@ -12,6 +12,7 @@
  *                        Make Interval optional
  *                        Move PLUGIN_READ and PLUGIN_WRITE code into P023_data_struct source
  *                        Several optimizations, like reading the template into memory only once
+ * 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
  * 2022-10-09 tonhuisman: Deduplicate code by moving the OLed I2C Address check to OLed_helper
  * 2022-10: Start changelog, latest on top.
  */

@@ -288,14 +288,7 @@ void handle_advanced() {
   #endif // if FEATURE_SSDP
 
   addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, Settings.ConnectionFailuresThreshold, 0, 100);
-#ifdef ESP8266
   addFormCheckBox(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
-#endif // ifdef ESP8266
-#ifdef ESP32
-
-  // Disabled for now, since it is not working properly.
-  addFormCheckBox_disabled(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
-#endif // ifdef ESP32
 
   addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
   addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());

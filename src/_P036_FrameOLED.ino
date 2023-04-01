@@ -23,6 +23,8 @@
 // CHG: Make Interval optional
 // @tonhuisman: 2023-03-16
 // ADD: Show current content of the display on the Devices overview page (1..4 lines)
+// @tonhuisman: 2023-03-07
+// CHG: Parse text to display without trimming off leading and trailing spaces
 // @tonhuisman: 2023-01-02
 // CHG: Reduce string sizes for input fields, uncrustify source (causing some changelog comments to be wrapped...)
 // @uwekaditz: 2022-10-17
@@ -1178,7 +1180,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           // content functions
           success = true;
           String *currentLine = &P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content;
-          *currentLine = parseStringKeepCase(string, 3);
+          *currentLine = parseStringKeepCaseNoTrim(string, 3);
           *currentLine = P036_data->P36_parseTemplate(*currentLine, LineNo - 1);
 
           // calculate Pix length of new Content
