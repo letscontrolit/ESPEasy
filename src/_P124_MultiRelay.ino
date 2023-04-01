@@ -96,6 +96,15 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P124_CONFIG_I2C_ADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper *optionsMode2[] = {
@@ -267,6 +276,12 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
+      if (!I2C_deviceCheck(P124_CONFIG_I2C_ADDRESS, event->TaskIndex, 10, PLUGIN_I2C_GET_ADDRESS)) {
+        break; // Will return the default false for success
+      }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       P124_data_struct *P124_data = static_cast<P124_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P124_data) {
@@ -290,22 +305,22 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       String command = parseString(string, 1);
 
       if (P124_data->isInitialized() &&
-          command.equals(F("multirelay"))) {
+          equals(command, F("multirelay"))) {
         String subcommand = parseString(string, 2);
 
-        if (subcommand.equals(F("on"))) {
+        if (equals(subcommand, F("on"))) {
           success = P124_data->turn_on_channel(event->Par2);
-        } else if (subcommand.equals(F("off"))) {
+        } else if (equals(subcommand, F("off"))) {
           success = P124_data->turn_off_channel(event->Par2);
-        } else if (subcommand.equals(F("set"))) {
+        } else if (equals(subcommand, F("set"))) {
           success = P124_data->channelCtrl(event->Par2);
-        } else if (subcommand.equals(F("get")) && (event->Par2 > 0) && (event->Par2 <= P124_CONFIG_RELAY_COUNT)) {
+        } else if (equals(subcommand, F("get")) && (event->Par2 > 0) && (event->Par2 <= P124_CONFIG_RELAY_COUNT)) {
           uint8_t data = P124_data->getChannelState() & (1 << (event->Par2 - 1));
           UserVar[event->BaseVarIndex + 1] = event->Par2;
           UserVar[event->BaseVarIndex + 2] = (data ? 1 : 0);
 
           success = true;
-        } else if (subcommand.equals(F("loop")) && (event->Par2 >= 0) && (event->Par2 <= 1)) {
+        } else if (equals(subcommand, F("loop")) && (event->Par2 >= 0) && (event->Par2 <= 1)) {
           P124_data->setLoopState(event->Par2 == 1);
 
           success = true;

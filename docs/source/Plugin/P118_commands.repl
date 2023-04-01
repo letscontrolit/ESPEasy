@@ -4,19 +4,21 @@
 
     "
 
-    | ``state``
+    | ``itho,<state>``
+
+    | (Command was ``state``, but that has been deprecated)
 
     ","
 
-    | Use the states in the table below to control the state of the fan. To pair the remote with the Itho fan use 1111 or 9999 are for join or leave, respectively.
+    | Use the states in the table below to control the state of the fan. To pair the remote with the Itho fan use 1111 to join, or 9999 to leave/unjoin, respectively.
 
     "
 	
 Examples:
 
-* HTTP control: http://ip/control?cmd=STATE,1
+* HTTP control: http://ip/control?cmd=ITHO,1
 
-* MQTT conrol: mosquitto_pub -t /Fan/cmd -m 'state 1' Here 'Fan' is the name of the plugin
+* MQTT conrol: mosquitto_pub -t /Fan/cmd -m 'itho 1' Here 'Fan' is the name of the plugin
 
 Fan states
 ^^^^^^^^^^
@@ -46,6 +48,6 @@ Fan states
   "113", "Orcon Timer 3", "Orcon ventilation unit to high speed for 60 minutes"
   "114", "Orcon Auto CO2", "Itho ventilation to auto speed for 60 minutes (based on Humidity and/or CO2)"
   
-Two special states exist: 1111 for a join command and 9999 for a leave command, check the Itho manual on how to put your fain into pairing mode.
+Two special states exist: 1111 for a join command and 9999 for a leave/unjoin command, check the Itho manual on how to put your fain into pairing mode.
 
 For Orcon the Unit ID remote 1 will be used as the spoofed sender ID

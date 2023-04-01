@@ -429,7 +429,7 @@ void GPIO_Monitor10xSec()
       const uint16_t gpioPort = getPortFromKey(it->first);
       const uint16_t pluginID = getPluginFromKey(it->first);
       int8_t currentState = -1;
-      const __FlashStringHelper * eventString;
+      const __FlashStringHelper * eventString = F("");
       bool caseFound = true;
 
       switch (pluginID)

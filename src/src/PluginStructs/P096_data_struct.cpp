@@ -334,7 +334,13 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
   if ((nullptr != eInkScreen) && cmd.equals(_commandTriggerCmd)) {
     String arg1 = parseString(string, 2);
 
-    if (arg1.equals(F("clear"))) {
+    if (equals(arg1, F("off"))) { // Not supported 'on' and 'off' as commands
+      success = false;
+    }
+    else if (equals(arg1, F("on"))) {
+      success = false;
+    }
+    else if (equals(arg1, F("clear"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
@@ -348,11 +354,14 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       eInkScreen->clearBuffer();
       success = true;
     }
-    else if (arg1.equals(F("deepsleep"))) {
+    else if (equals(arg1, F("backlight"))) { // not supported
+      success = false;
+    }
+    else if (equals(arg1, F("deepsleep"))) {
       eInkScreen->deepSleep();
       success = true;
     }
-    else if (arg1.equals(F("seq_start"))) {
+    else if (equals(arg1, F("seq_start"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
@@ -363,7 +372,11 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       _sequence_in_progress = true;
       success               = true;
     }
-    else if (arg1.equals(F("seq_end"))) {
+    else if (equals(arg1, F("seq_end"))) {
+      // # ifndef BUILD_NO_DEBUG
+      //             TimingStats s;
+      //             const unsigned statisticsTimerStart(micros());
+      // # endif // ifndef BUILD_NO_DEBUG
       eInkScreen->display();
       eInkScreen->clearBuffer();
       _sequence_in_progress = false;
@@ -377,7 +390,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
         success = true;
       }
     }
-    else if (arg1.equals(F("rot"))) {
+    else if (equals(arg1, F("rot"))) {
       ///control?cmd=epdcmd,rot,0
       // not working to verify
       if ((event->Par2 >= 0)) {

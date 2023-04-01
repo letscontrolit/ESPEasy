@@ -15,6 +15,7 @@
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
@@ -33,8 +34,9 @@ String Command_Settings_Build(struct EventStruct *event, const char* Line)
 String Command_Settings_Unit(struct EventStruct *event, const char* Line)
 {
 	if (HasArgv(Line, 2)) {
-		Settings.Unit = event->Par1;
-	}else  {
+	  Settings.Unit = event->Par1;
+	  update_mDNS();
+	} else {
       return return_result(event, concat(F("Unit:"), static_cast<int>(Settings.Unit)));
 	}
 	return return_command_success_str();
@@ -43,10 +45,10 @@ String Command_Settings_Unit(struct EventStruct *event, const char* Line)
 String Command_Settings_Name(struct EventStruct *event, const char* Line)
 {
 	return Command_GetORSetString(event, F("Name:"),
-				      Line,
-				      Settings.Name,
-				      sizeof(Settings.Name),
-				      1);
+							Line,
+							Settings.Name,
+							sizeof(Settings.Name),
+							1);
 }
 
 String Command_Settings_Password(struct EventStruct *event, const char* Line)
@@ -92,7 +94,7 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 	serialPrintln(F("System Info"));
 	serialPrint(F("  IP Address    : ")); serialPrintln(NetworkLocalIP().toString());
 	serialPrint(F("  Build         : ")); serialPrintln(String(get_build_nr()) + '/' + getSystemBuildString());
-	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
+	serialPrint(F("  Name          : ")); serialPrintln(Settings.getName());
 	serialPrint(F("  Unit          : ")); serialPrintln(String(static_cast<int>(Settings.Unit)));
 	serialPrint(F("  WifiSSID      : ")); serialPrintln(SecuritySettings.WifiSSID);
 	serialPrint(F("  WifiKey       : ")); serialPrintln(SecuritySettings.WifiKey);

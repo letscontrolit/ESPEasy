@@ -1,0 +1,26 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``csecalibrate,[<Voltage>],[<Current>][,<Power>]``
+
+        Examples:
+
+        ``csecalibrate,229`` to set the current reported voltage to 229V AC
+
+        ``csecalibrate,,0.1`` To set the calibration to report 100 mA as actual current.
+        ","
+        Will set the used calibration reference factors to some known current value.
+        For example, if the device using this sensor is plugged into mains power, it may report 200 Volt AC, while it actually is 229V.
+        So the value given to this command should then be ``229``, since that's what is supposed to be read.
+
+        The last two parameters are optional, but their position determines what unit it represents.
+        If the setting for current has to be updated, at least 2 parameters must be given of which the first must then be set to ``0``.
+        "
+        "
+        ``csereset``
+
+        ","
+        Will reset the calibration values to the default values, causing auto-calibration.
+        "

@@ -126,6 +126,15 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P109_CONFIG_I2CADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     # ifndef LIMIT_BUILD_SIZE
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {

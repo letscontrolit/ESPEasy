@@ -142,6 +142,11 @@ class SettingsStruct_tmpl
   bool SendToHTTP_follow_redirects() const;
   void SendToHTTP_follow_redirects(bool value);
 
+  #if FEATURE_I2C_DEVICE_CHECK
+  // Check if an I2C device is found at configured address at plugin_INIT and plugin_READ
+  bool CheckI2Cdevice() const;
+  void CheckI2Cdevice(bool value);
+  #endif // if FEATURE_I2C_DEVICE_CHECK
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
@@ -170,6 +175,15 @@ class SettingsStruct_tmpl
   void    setCssMode(uint8_t value);
   #endif // FEATURE_AUTO_DARK_MODE
 
+  bool isTaskEnableReadonly(taskIndex_t taskIndex) const;
+  void setTaskEnableReadonly(taskIndex_t taskIndex, bool value);
+
+  #if FEATURE_PLUGIN_PRIORITY
+  bool isPowerManagerTask(taskIndex_t taskIndex) const;
+  void setPowerManagerTask(taskIndex_t taskIndex, bool value);
+
+  bool isPriorityTask(taskIndex_t taskIndex) const;
+  #endif // if FEATURE_PLUGIN_PRIORITY
 
   void validate();
 
@@ -198,6 +212,9 @@ class SettingsStruct_tmpl
 
   // Return hostname with explicit set append unit.
   String getHostname(bool appendUnit) const;
+
+  // Return the name of the unit, without unitnr appended, with template parsing applied, replacement for Settings.Name in most places
+  String getName() const;
 
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);
@@ -294,7 +311,7 @@ class SettingsStruct_tmpl
     uint32_t TaskDevicePluginConfigULong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
   };
   uint8_t       TaskDeviceSendDataFlags[N_TASKS] = {0};
-  uint8_t       OLD_TaskDeviceGlobalSync[N_TASKS] = {0};
+  uint8_t       VariousTaskBits[N_TASKS] = {0};
   uint8_t       TaskDeviceDataFeed[N_TASKS] = {0};    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS] = {0};
   boolean       TaskDeviceEnabled[N_TASKS] = {0};

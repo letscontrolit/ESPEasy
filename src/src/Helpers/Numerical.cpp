@@ -1,6 +1,7 @@
 #include "../Helpers/Numerical.h"
 
 #include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\
    Check if string is valid float
@@ -207,7 +208,9 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
   }
 
   // Strip leading zeroes
-  while (c == '0' && isdigit(tBuf.charAt(firstDec + 1))) {
+  while (c == '0' && 
+         (firstDec + 1) < bufLength && 
+         isdigit(tBuf.charAt(firstDec + 1))) {
     ++firstDec;
     c = tBuf.charAt(firstDec);
   }
@@ -242,7 +245,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
       } else {
-        if (result.equals(F("-"))) {
+        if (equals(result, '-')) {
           detectedType = NumericalType::Not_a_number;
           return emptyString;
         }
@@ -306,7 +309,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
     }
   }
 
-  if (result.equals(F("-"))) {
+  if (equals(result, '-')) {
     detectedType = NumericalType::Not_a_number;
     return emptyString;
   }

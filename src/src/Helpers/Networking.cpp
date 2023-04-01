@@ -21,8 +21,8 @@
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
+#include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
@@ -544,7 +544,7 @@ void SSDP_schema(WiFiClient& client) {
                  "<device>"
                  "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
                  "<friendlyName>"));
-  client.print(Settings.Name);
+  client.print(Settings.getName());
   client.print(F("</friendlyName>"
                  "<presentationURL>/</presentationURL>"
                  "<serialNumber>"));
@@ -1050,6 +1050,12 @@ void scrubDNS() {
   }
 }
 
+bool valid_DNS_address(const IPAddress& dns) {
+  return (dns.v4() != (uint32_t)0x00000000 && 
+          dns.v4() != (uint32_t)0xFD000000 && 
+          dns != INADDR_NONE);
+}
+
 bool setDNS(int index, const IPAddress& dns) {
   if (index >= 2) return false;
   #ifdef ESP8266
@@ -1067,7 +1073,7 @@ bool setDNS(int index, const IPAddress& dns) {
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
-  if (dns != (uint32_t)0x00000000 && dns  != INADDR_NONE) {
+  if (valid_DNS_address(dns)) {
     // Set DNS0-Server
     d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
     const ip_addr_t* cur_dns = dns_getserver(index);
@@ -1221,9 +1227,13 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
   } else {
     starthost += 3;
   }
-  int endhost = fullURL.indexOf('/', starthost);
-
+  const int endhost = fullURL.indexOf('/', starthost);
   splitUserPass_HostPortString(fullURL.substring(starthost, endhost), user, pass, host, port);
+
+  if (endhost == -1) {
+    return EMPTY_STRING;
+  }
+
   int startfile = fullURL.lastIndexOf('/');
 
   if (startfile >= 0) {
@@ -1487,7 +1497,7 @@ int http_authenticate(const String& logIdentifier,
   }
 
   // start connection and send HTTP header (and body)
-  if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+  if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
     httpCode = http.sendRequest(HttpMethod.c_str());
   } else {
     httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
@@ -1519,7 +1529,7 @@ int http_authenticate(const String& logIdentifier,
       http.addHeader(F("Authorization"), authorization);
 
       // start connection and send HTTP header (and body)
-      if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+      if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
         httpCode = http.sendRequest(HttpMethod.c_str());
       } else {
         httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
@@ -1776,11 +1786,30 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   return false;
 }
 
-bool downloadFirmware(const String& url, String& error)
+bool downloadFirmware(String filename, String& error)
 {
-  String file_save;
-  String user;
-  String pass;
+  String baseurl, user, pass;
+# if FEATURE_CUSTOM_PROVISIONING
+  MakeProvisioningSettings(ProvisioningSettings);
+
+  if (AllocatedProvisioningSettings()) {
+    loadProvisioningSettings(ProvisioningSettings);
+    if (!ProvisioningSettings.allowedFlags.allowFetchFirmware) {
+      return false;
+    }
+    baseurl = ProvisioningSettings.url;
+    user = ProvisioningSettings.user;
+    pass = ProvisioningSettings.pass;
+  }
+# endif // if FEATURE_CUSTOM_PROVISIONING
+
+  const String fullUrl = joinUrlFilename(baseurl, filename);
+
+  return downloadFirmware(fullUrl, filename, user, pass, error);
+}
+
+bool downloadFirmware(const String& url, String& file_save, String& user, String& pass, String& error)
+{
   WiFiClient client;
   HTTPClient http;
 
@@ -1877,6 +1906,29 @@ bool downloadFirmware(const String& url, String& error)
     eventQueue.addMove(std::move(event));
   }
   return false;
+}
+
+String joinUrlFilename(const String& url, String& filename)
+{
+  String fullUrl;
+
+  fullUrl.reserve(url.length() + filename.length() + 1); // May need to add an extra slash
+  fullUrl = url;
+  fullUrl = parseTemplate(fullUrl, true);                // URL encode
+
+  // URLEncode may also encode the '/' into "%2f"
+  // FIXME TD-er: Can this really occur?
+  fullUrl.replace(F("%2f"), F("/"));
+
+  while (filename.startsWith(F("/"))) {
+    filename = filename.substring(1);
+  }
+
+  if (!fullUrl.endsWith(F("/"))) {
+    fullUrl += F("/");
+  }
+  fullUrl += filename;
+  return fullUrl;
 }
 
 #endif // if FEATURE_DOWNLOAD

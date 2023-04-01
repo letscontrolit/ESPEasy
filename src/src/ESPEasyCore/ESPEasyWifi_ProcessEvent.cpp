@@ -327,7 +327,6 @@ void processConnect() {
     }
   }
 
-
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
     String log = F("WIFI : Connected! AP: ");

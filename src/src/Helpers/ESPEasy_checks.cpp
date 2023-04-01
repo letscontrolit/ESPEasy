@@ -92,9 +92,9 @@ void run_compiletime_checks() {
   check_size<ExtraTaskSettingsStruct,               536u>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
-  check_size<EventStruct,                           116u>(); // Is not stored
+  check_size<EventStruct,                           120u>(); // Is not stored
   #else
-  check_size<EventStruct,                           96u>(); // Is not stored
+  check_size<EventStruct,                           100u>(); // Is not stored
   #endif
 
 
@@ -107,13 +107,16 @@ void run_compiletime_checks() {
   const unsigned int LogStructSize = ((13u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
-  check_size<DeviceStruct,                          8u>(); // Is not stored
+  check_size<DeviceStruct,                          9u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();
   #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif // if FEATURE_NOTIFIER
   #if FEATURE_ESPEASY_P2P
   check_size<NodeStruct,                            66u>();
+  #endif
+  #if FEATURE_CUSTOM_PROVISIONING
+  check_size<ProvisioningStruct,                    256u>();
   #endif
   check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
@@ -155,6 +158,13 @@ void run_compiletime_checks() {
 
     const unsigned int md5_offset = ProgmemMd5_offset + 16;
     static_assert(md5_offset == offsetof(SecurityStruct, md5), "");
+
+    #if FEATURE_CUSTOM_PROVISIONING
+    const unsigned int prov_pass_offset = 62u;
+    static_assert(prov_pass_offset == offsetof(ProvisioningStruct, pass), "");
+
+
+    #endif
   }
 
 

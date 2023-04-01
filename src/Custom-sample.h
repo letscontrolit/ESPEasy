@@ -223,6 +223,8 @@
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 // #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
 // #define FEATURE_POST_TO_HTTP 1 // Enable availability of the PostToHTTP command
+// #define FEATURE_I2C_DEVICE_CHECK 0 // Disable the I2C Device check feature
+// #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching the I2C address from I2C plugins. Will be enabled when FEATURE_I2C_DEVICE_CHECK is enabled
 
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -241,6 +243,7 @@
 //  #define DEFAULT_PROVISIONING_FETCH_SECURITY     false
 //  #define DEFAULT_PROVISIONING_FETCH_CONFIG       false
 //  #define DEFAULT_PROVISIONING_FETCH_PROVISIONING false
+//  #define DEFAULT_PROVISIONING_FETCH_FIRMWARE     false
 //  #define DEFAULT_PROVISIONING_SAVE_URL           false
 //  #define DEFAULT_PROVISIONING_SAVE_CREDENTIALS   false
 //  #define DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND false
@@ -411,7 +414,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P070   // NeoPixel_Clock
 // #define USES_P071   // Kamstrup401
-// #define USES_P072   // HDC1080
+// #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
 // #define USES_P073   // 7DG
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
@@ -474,6 +477,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
 // #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+// #define USES_P137   // AXP192
 // #define USES_P138   // IP5306
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
 // #define USES_P143   // I2C Rotary encoders

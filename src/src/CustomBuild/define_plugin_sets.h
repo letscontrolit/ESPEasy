@@ -457,6 +457,21 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_TIMING_STATS  0
 
+    #ifdef FEATURE_ZEROFILLED_UNITNUMBER
+        #undef FEATURE_ZEROFILLED_UNITNUMBER
+    #endif
+    #define FEATURE_ZEROFILLED_UNITNUMBER  0
+
+    #if defined(FEATURE_I2C_DEVICE_CHECK)
+      #undef FEATURE_I2C_DEVICE_CHECK
+    #endif
+    #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
+
+    #if defined(FEATURE_I2C_GET_ADDRESS)
+      #undef FEATURE_I2C_GET_ADDRESS
+    #endif
+    #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching I2C device address
+
     #ifndef USES_P001
         #define USES_P001   // switch
     #endif
@@ -737,6 +752,7 @@ To create/register a plugin, you have to :
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
     #define USES_P076   // HWL8012   in POW r1
+    #define USES_P077	  // CSE7766   in POW R2
     #define USES_P081   // Cron
 #endif
 
@@ -1035,6 +1051,11 @@ To create/register a plugin, you have to :
         #define FEATURE_RULES_EASY_COLOR_CODE 1
     #endif
 
+    #ifdef FEATURE_CUSTOM_PROVISIONING
+        #undef FEATURE_CUSTOM_PROVISIONING
+    #endif
+    #define FEATURE_CUSTOM_PROVISIONING 1
+
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -1299,7 +1320,6 @@ To create/register a plugin, you have to :
     #define USES_P028   // BME280
     #define USES_P029   // Output
 
-//    #define USES_P030   // BMP280   (Made obsolete, now BME280 can handle both)
     #define USES_P031   // SHT1X
     #define USES_P032   // MS5611
     #define USES_P033   // Dummy
@@ -1405,6 +1425,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+    #if !defined(USES_P137) && defined(ESP32)
+      #define USES_P137   // AXP192
+    #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
@@ -1417,7 +1440,7 @@ To create/register a plugin, you have to :
 
     #define USES_P070   // NeoPixel_Clock
     #define USES_P071   // Kamstrup401
-    #define USES_P072   // HDC1080
+    #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
     #define USES_P074   // TSL2561
 
     #define USES_P080   // iButton Sensor  DS1990A
@@ -1484,12 +1507,16 @@ To create/register a plugin, you have to :
     #define USES_P129   // 74HC165 Input shiftregisters
     #define USES_P133   // LTR390 UV
     #define USES_P135   // SCD4x
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
   // Disable Itho when using second heap as it no longer fits.
   #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
     #define USES_P118 // Itho ventilation control
+  #endif
+  #ifndef USES_P145
+    #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
   #endif
 #endif
 
@@ -1541,6 +1568,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
@@ -1560,6 +1590,12 @@ To create/register a plugin, you have to :
        #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
        #define KEEP_I2C_MULTIPLEXER
      #endif
+   #endif
+   #if defined(ESP8266)
+     #if defined(FEATURE_I2C_DEVICE_CHECK)
+       #undef FEATURE_I2C_DEVICE_CHECK
+     #endif
+     #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
    #endif
    #if !defined(FEATURE_SD) && !defined(ESP8266)
      #define FEATURE_SD 1
@@ -1609,6 +1645,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
@@ -1725,10 +1764,16 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
+  #ifndef USES_P144
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
-
+  // Controllers
+  #ifndef USES_C011
+    #define USES_C011   // HTTP Advanced
+  #endif
 #endif
 
 // Collection of all NeoPixel plugins
@@ -1756,6 +1801,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P131
     #define USES_P131   // NeoMatrix
+  #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
   #endif
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
@@ -2041,7 +2089,7 @@ To create/register a plugin, you have to :
 //    #define USES_P136   //
   #endif
   #ifndef USES_P137
-//    #define USES_P137   //
+    #define USES_P137   // AXP192
   #endif
   #ifndef USES_P138
 //    #define USES_P138   //
@@ -2061,11 +2109,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
   #endif
+  #ifndef USES_P144
+    #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
-
-
 
   // Controllers
   #ifndef USES_C015
@@ -2114,7 +2163,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_P144) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -2206,6 +2255,9 @@ To create/register a plugin, you have to :
 
   #endif
   #ifdef ESP8266_1M
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
+    #endif
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
     #endif
@@ -2548,6 +2600,13 @@ To create/register a plugin, you have to :
   #undef USES_P148   // Sonoff POWR3xxD and THR3xxD display
 #endif
 
+#ifndef FEATURE_ZEROFILLED_UNITNUMBER
+  #ifdef ESP8266_1M
+    #define FEATURE_ZEROFILLED_UNITNUMBER    0
+  #else
+    #define FEATURE_ZEROFILLED_UNITNUMBER    1
+  #endif
+#endif
 
 
 
@@ -2659,6 +2718,10 @@ To create/register a plugin, you have to :
 #ifndef FEATURE_RTTTL                         
 #define FEATURE_RTTTL                         0
 #endif
+#if defined(FEATURE_RTTTL) && !FEATURE_RTTTL && defined(KEEP_RTTTL)
+  #undef FEATURE_RTTTL
+  #define FEATURE_RTTTL 1
+#endif
 
 #ifndef FEATURE_SD                         
 #define FEATURE_SD                            0
@@ -2706,6 +2769,31 @@ To create/register a plugin, you have to :
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
 #endif
 
+#ifndef FEATURE_PLUGIN_PRIORITY
+  #define FEATURE_PLUGIN_PRIORITY   0 // Disable by default
+#endif
+
+#ifndef FEATURE_I2C_DEVICE_CHECK
+  #ifdef ESP8266_1M
+    #define FEATURE_I2C_DEVICE_CHECK  0 // Disabled by default for 1M units
+  #else
+    #define FEATURE_I2C_DEVICE_CHECK  1 // Enabled by default
+  #endif
+#endif
+
+#ifndef FEATURE_I2C_GET_ADDRESS
+  #ifdef ESP8266_1M
+    #define FEATURE_I2C_GET_ADDRESS   0 // Disabled by default for 1M units
+  #else
+    #define FEATURE_I2C_GET_ADDRESS   1 // Enabled by default
+  #endif
+#endif
+
+#if FEATURE_I2C_DEVICE_CHECK && !FEATURE_I2C_GET_ADDRESS
+  #undef FEATURE_I2C_GET_ADDRESS
+  #define FEATURE_I2C_GET_ADDRESS     1 // Needed by FEATURE_I2C_DEVICE_CHECK
+#endif
+
 #if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
   #undef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
@@ -2738,6 +2826,18 @@ To create/register a plugin, you have to :
   #else
     #define FEATURE_PINSTATE_EXTENDED           1 // Enable by default for all other builds
   #endif
+#endif
+
+#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)
+  #undef FEATURE_PLUGIN_PRIORITY
+  #define FEATURE_PLUGIN_PRIORITY   1
+#endif
+
+// Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
+// Please note that the TOUT pin has to be disconnected in this mode
+// Use the "System Info" device to read the VCC value
+#ifndef FEATURE_ADC_VCC
+  #define FEATURE_ADC_VCC                  0
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
