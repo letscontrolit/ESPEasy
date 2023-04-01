@@ -303,6 +303,10 @@ String tolerantParseStringKeepCase(const String& string,
                                    char          separator = ',',
                                    bool          trimResult = true);
 
+String parseHexTextString(const String& argument,
+                          int           index = 2);
+std::vector<uint8_t> parseHexTextData(const String& argument,
+                                      int           index = 2);
 
 
 /*********************************************************************************************\
