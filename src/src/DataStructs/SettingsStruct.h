@@ -55,7 +55,7 @@ class SettingsStruct_tmpl
 {
   public:
 
-  SettingsStruct_tmpl(); //-V730
+//  SettingsStruct_tmpl() = default;
 
   // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
   bool appendUnitToHostname() const;
@@ -260,9 +260,9 @@ class SettingsStruct_tmpl
   char          NTPHost[64] = {0};
   // FIXME TD-er: Issue #2690
   unsigned long Delay = 0;              // Sleep time in seconds
-  int8_t        Pin_i2c_sda = -1;
-  int8_t        Pin_i2c_scl = -1;
-  int8_t        Pin_status_led = -1;
+  int8_t        Pin_i2c_sda = DEFAULT_PIN_I2C_SDA;
+  int8_t        Pin_i2c_scl = DEFAULT_PIN_I2C_SCL;
+  int8_t        Pin_status_led = DEFAULT_PIN_STATUS_LED;
   int8_t        Pin_sd_cs = -1;
   int8_t        PinBootStates[17] = {0};  // Only use getPinBootState and setPinBootState as multiple pins are packed for ESP32
   uint8_t       Syslog_IP[4] = {0};
@@ -300,15 +300,15 @@ class SettingsStruct_tmpl
       int8_t        TaskDevicePin3[N_TASKS];
       uint8_t       TaskDevicePort[N_TASKS];
     };
-    int8_t        TaskDevicePin[4][N_TASKS];
+    int8_t        TaskDevicePin[4][N_TASKS]{};
   };
   boolean       TaskDevicePin1PullUp[N_TASKS] = {0};
-  int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX];
+  int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX]{};
   boolean       TaskDevicePin1Inversed[N_TASKS] = {0};
-  float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
+  float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX]{};
   union {
     int32_t  TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
-    uint32_t TaskDevicePluginConfigULong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
+    uint32_t TaskDevicePluginConfigULong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX]{};
   };
   uint8_t       TaskDeviceSendDataFlags[N_TASKS] = {0};
   uint8_t       VariousTaskBits[N_TASKS] = {0};
@@ -373,7 +373,7 @@ class SettingsStruct_tmpl
 
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
-  uint8_t       md5[16]; // Store checksum of the settings.
+  uint8_t       md5[16]{}; // Store checksum of the settings.
   
 //  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
 

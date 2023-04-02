@@ -535,8 +535,8 @@ void processScanDone() {
       // FIXME TD-er: Set timeout...
       if (WiFiEventData.lastGetScanMoment.timeoutReached(5000)) {
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_ERROR, F("WiFi : Scan Running Timeout"));
-        #endif
+      addLog(LOG_LEVEL_ERROR, F("WiFi : Scan Running Timeout"));
+      #endif
         WiFiEventData.processedScanDone = true;
       }
       return;
@@ -550,9 +550,7 @@ void processScanDone() {
   WiFiEventData.processedScanDone = true;
 # ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WiFi : Scan finished, found: ");
-    log += scanCompleteStatus;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("WiFi : Scan finished, found: "), scanCompleteStatus));
   }
 #endif
 
