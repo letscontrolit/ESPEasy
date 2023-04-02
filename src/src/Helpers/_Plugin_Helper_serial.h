@@ -68,5 +68,6 @@ uint8_t serialHelper_serialconfig_webformSave();
 // Used by some plugins, which used several TaskDevicePluginConfigLong
 uint8_t serialHelper_convertOldSerialConfig(uint8_t newLocationConfig);
 
+#endif // ifdef PLUGIN_USES_SERIAL
 
 #endif // ifndef HELPERS__PLUGIN_HELPER_SERIAL_H
