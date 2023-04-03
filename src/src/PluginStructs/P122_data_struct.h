@@ -8,7 +8,12 @@
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P122
+
+#ifdef LIMIT_BUILD_SIZE
+#define PLUGIN_122_DEBUG  false
+#else
 #define PLUGIN_122_DEBUG  true              // set to true for extra log info in the debug
+#endif
 
 // SHT2x device properties
 #define P122_I2C_ADDRESS_AD0_0    0x40 // I2C address for the sensor (SHT2x address when AD0 is pulled low)
@@ -75,7 +80,7 @@ public:
   //  Electronic Identification Code
   //  Sensirion_Humidity_SHT2x_Electronic_Identification_Code_V1.1.pdf
   //  Electronic ID bytes
-  bool getEID(uint32_t *eida, uint32_t *eidb, uint8_t *firmware);
+  bool getEID(uint32_t &eida, uint32_t &eidb, uint8_t &firmware);
 
   /////////////////////////////////////////////////////////
   // Temperature and humidity retrieval
@@ -115,8 +120,7 @@ protected:
   unsigned long getHumDuration();
   bool          requestTemperature();
   bool          requestHumidity();
-  bool          readTemperature();
-  bool          readHumidity();
+  bool          readValue(uint16_t &value);
 
   uint32_t  getEIDA();
   uint32_t  getEIDB();

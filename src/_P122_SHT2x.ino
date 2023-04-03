@@ -85,14 +85,6 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_SHOW_CONFIG:
-    {
-      // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
-      //string += serialHelper_getSerialTypeLabel(event);
-      //success = true;
-      break;
-    }
-
     case PLUGIN_SET_DEFAULTS:
     {
       // Set a default config here, which will be called when a plugin is assigned to a task.
@@ -150,22 +142,23 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       };
       addFormSelector(F("Resolution"), P122_RESOLUTION_LABEL, P122_RESOLUTION_OPTIONS, options, optionValues, P122_RESOLUTION);
 
+#ifndef LIMIT_BUILD_SIZE
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P122_data != nullptr) 
       {
         uint32_t eida;
         uint32_t eidb;
         uint8_t firmware;
-        P122_data->getEID(&eida, &eidb, &firmware);
+        P122_data->getEID(eida, eidb, firmware);
         String txt = F("CHIP ID:");
-        txt += String(eida, HEX);
-        txt += F(",");
-        txt += String(eidb, HEX);
+        txt += formatToHex(eida);
+        txt += ',';
+        txt += formatToHex(eidb);
         txt += F(" firmware=");
         txt += String (firmware);
         addFormNote(txt);
       }
-
+#endif
       success = true;
       break;
     }
@@ -178,23 +171,14 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
 
       // after the form has been saved successfuly, set success and break
       P122_I2C_ADDRESS  = getFormItemInt(F("i2c_addr"));
-      P122_RESOLUTION   = getFormItemInt(P122_RESOLUTION_LABEL);
-        
-      P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (P122_data != nullptr) 
-      {
-        P122_data->setupDevice(P122_I2C_ADDRESS, P122_RESOLUTION);
-      }
+      P122_RESOLUTION   = getFormItemInt(P122_RESOLUTION_LABEL);        
       success = true;
       break;
     }
+
     case PLUGIN_INIT:
     {
       // this case defines code to be executed when the plugin is initialised
-      if (P122_I2C_ADDRESS == 0) 
-      {
-        P122_I2C_ADDRESS = P122_I2C_ADDRESS_AD0_0; // Use default address if not (yet) set
-      }
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P122_data_struct());
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -202,11 +186,11 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       {
         P122_data->setupDevice(P122_I2C_ADDRESS, P122_RESOLUTION);
         P122_data->reset();
+        success = true;
       }
       UserVar[event->BaseVarIndex]     = NAN;
       UserVar[event->BaseVarIndex + 1] = NAN;
       UserVar[event->BaseVarIndex + 2] = NAN;
-      success = true;
       break;
     }
 
@@ -254,7 +238,10 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       // code to be executed 10 times per second. Tasks which require fast response can be added here
       // be careful on what is added here. Heavy processing will result in slowing the module down!
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
-      P122_data->update();    // SHT2x FSM evaluation
+      if (nullptr != P122_data) 
+      {
+        P122_data->update();    // SHT2x FSM evaluation
+      }
       success = true;
     }
   } // switch
