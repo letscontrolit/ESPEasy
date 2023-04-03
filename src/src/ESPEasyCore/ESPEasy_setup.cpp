@@ -353,6 +353,10 @@ void ESPEasy_setup()
   // This only works after LoadSettings();
   // Do not call setNetworkMedium here as that may try to clean up settings.
   active_network_medium = Settings.NetworkMedium;
+  #else
+  if (Settings.NetworkMedium == NetworkMedium_t::Ethernet) {
+    Settings.NetworkMedium = NetworkMedium_t::WIFI;
+  }
   #endif // if FEATURE_ETHERNET
 
   setNetworkMedium(Settings.NetworkMedium);

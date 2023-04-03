@@ -296,9 +296,12 @@ bool WiFiConnected() {
     if (WiFiEventData.timerAPoff.isSet() && !WiFiEventData.timerAPoff.timeReached()) {
       // Timer reached, so enable AP mode.
       if (!WifiIsAP(WiFi.getMode())) {
-        if (!Settings.DoNotStartAP()) {
-          WifiScan(false);
-          setAP(true);
+        if (!WiFiEventData.wifiConnectAttemptNeeded) {
+          addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
+          if (!Settings.DoNotStartAP()) {
+            WifiScan(false);
+            setAP(true);
+          }
         }
       }
     } else {
