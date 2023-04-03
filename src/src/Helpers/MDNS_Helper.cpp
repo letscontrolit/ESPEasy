@@ -16,21 +16,31 @@ void set_mDNS() {
 
   if (!WiFiEventData.WiFiServicesInitialized()) { return; }
 
+  update_mDNS();
+  #endif // if FEATURE_MDNS
+}
+
+void update_mDNS() {
+  #if FEATURE_MDNS
+  if (mDNS_init) {
+    MDNS.end();
+    mDNS_init = false;
+  }
   if (webserverRunning) {
     if (!mDNS_init) {
-      addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
+      addLog(LOG_LEVEL_INFO, F("mDNS : Starting mDNS..."));
       mDNS_init = MDNS.begin(NetworkGetHostname().c_str());
       MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("WIFI : ");
+        String log = F("mDNS : ");
 
         if (mDNS_init) {
-          log += F("mDNS started, with name: ");
+          log += F("Started, with name: ");
           log += getValue(LabelType::M_DNS);
         }
         else {
-          log += F("mDNS failed");
+          log += F("Failed");
         }
         addLogMove(LOG_LEVEL_INFO, log);
       }
@@ -46,5 +56,5 @@ void set_mDNS() {
     mDNS_init = false;
     #endif
   }
-  #endif // if FEATURE_MDNS
+  #endif
 }

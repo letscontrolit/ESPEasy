@@ -36,6 +36,7 @@
 //                               Support for orcon must be enabled in settings, to avoid possible interference with Itho.
 //                               Re-enabled timer support for Orcon, as it is only a status update, NOT a ventilator update
 //      tonhuisman, 18-09-2022 - Hide Debug log option in device configuration when Debug log is not available.
+//      tonhuisman, 05-03-2023 - Deprecate 'state' command, and add support for 'itho' as the main command
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
