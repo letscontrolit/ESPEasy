@@ -184,13 +184,13 @@ void handle_unprocessedNetworkEvents()
           WiFiEventData.wifi_considered_stable = true;
           WiFi_AP_Candidates.markCurrentConnectionStable();
 
-          if (!WiFi.getAutoConnect()) {
-            WiFi.setAutoConnect(true);
+          if (WiFi.getAutoReconnect() != Settings.SDK_WiFi_autoreconnect()) {
+            WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
             delay(1);
           }
         } else {
-          if (WiFi.getAutoConnect()) {
-            WiFi.setAutoConnect(false);
+          if (WiFi.getAutoReconnect()) {
+            WiFi.setAutoReconnect(false);
             delay(1);
           }
         }

@@ -424,11 +424,6 @@ void ESPEasy_setup()
   logMemUsageAfter(F("initSerial()"));
   #endif
 
-
-  if (Settings.Build != get_build_nr()) {
-    BuildFixes();
-  }
-
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log  = F("INIT : Free RAM:");
     log += FreeMem();
