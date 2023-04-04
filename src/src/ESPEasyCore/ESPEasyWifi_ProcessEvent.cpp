@@ -246,8 +246,8 @@ void processDisconnect() {
   }
 
 
-  // FIXME TD-er: Ignoring the actual setting for now as it seems to be more reliable to always restart WiFi.
-  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
+  // FIXME TD-er: With AutoReconnect enabled, WiFi must be reset or else we completely loose track of the actual WiFi state
+  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost() || WiFi.getAutoReconnect();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     if (!WiFi_AP_Candidates.getBestCandidate().usable())
 //      addLog(LOG_LEVEL_INFO, F("WIFI : !getBestCandidate().usable()  => mustRestartWiFi = true"));
