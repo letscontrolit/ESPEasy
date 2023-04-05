@@ -44,8 +44,9 @@ bool tryDeleteFile(const String& fname);
 
 /********************************************************************************************\
    Fix stuff to clear out differences between releases
+   Return true when settings were changed/patched
  \*********************************************************************************************/
-String BuildFixes();
+bool BuildFixes();
 
 /********************************************************************************************\
    Mount FS and check config.dat

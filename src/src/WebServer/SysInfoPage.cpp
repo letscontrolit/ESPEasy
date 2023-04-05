@@ -492,6 +492,8 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::FORCE_ESPEASY_NOW_CHANNEL);
 #endif
   addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
+  addRowLabelValue(LabelType::WAIT_WIFI_CONNECT);
+  addRowLabelValue(LabelType::SDK_WIFI_AUTORECONNECT);
 }
 #endif
 
