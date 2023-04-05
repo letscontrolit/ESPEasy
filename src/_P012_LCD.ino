@@ -9,6 +9,10 @@
 // #################################### Plugin 012: LCD ##################################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
+ * 2023-03: First changelog added, older changes not logged
+ */
 
 // Sample templates
 //  Temp: [DHT11#Temperature]   Hum:[DHT11#humidity]
@@ -77,6 +81,15 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P012_I2C_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -246,7 +259,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           success = true;
           int colPos  = event->Par2 - 1;
           int rowPos  = event->Par1 - 1;
-          String text = parseStringKeepCase(string, 4);
+          String text = parseStringKeepCaseNoTrim(string, 4);
           text = P012_data->P012_parseTemplate(text, P012_data->Plugin_012_cols);
 
           P012_data->lcdWrite(text, colPos, rowPos);

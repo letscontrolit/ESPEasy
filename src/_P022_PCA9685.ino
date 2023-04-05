@@ -91,6 +91,15 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = address;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(0) = 0x10; // Default
@@ -183,6 +192,12 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
+      # if FEATURE_I2C_DEVICE_CHECK
+
+      if (!I2C_deviceCheck(address, event->TaskIndex, 10, PLUGIN_I2C_GET_ADDRESS)) {
+        break; // Will return the default false for success
+      }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       P022_data_struct *P022_data =
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -208,7 +223,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((command.equals(F("pcapwm"))) || (instanceCommand && (command.equals(F("pwm")))))
+      if ((equals(command, F("pcapwm"))) || (instanceCommand && (equals(command, F("pwm")))))
       {
         success = true;
 
@@ -294,7 +309,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((command.equals(F("pcafrq"))) || (instanceCommand && (command.equals(F("frq")))))
+      if ((equals(command, F("pcafrq"))) || (instanceCommand && (equals(command, F("frq")))))
       {
         success = true;
 
@@ -333,7 +348,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (instanceCommand && (command.equals(F("mode2"))))
+      if (instanceCommand && (equals(command, F("mode2"))))
       {
         success = true;
 
@@ -357,9 +372,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (command.equals(F("status")))
+      if (equals(command, F("status")))
       {
-        if (parseString(string, 2).equals(F("pca")))
+        if (equals(parseString(string, 2), F("pca")))
         {
           if (!P022_data->p022_is_init(address))
           {
@@ -375,12 +390,12 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (instanceCommand && (command.equals(F("gpio"))))
+      if (instanceCommand && (equals(command, F("gpio"))))
       {
         success = true;
         log     = formatToHex(address, F("PCA 0x"), 2);
         log    += F(": GPIO ");
-        const bool allPins = parseString(string, 2).equals(F("all"));
+        const bool allPins = equals(parseString(string, 2), F("all"));
 
         if (((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS)) ||
             allPins)
@@ -434,7 +449,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (instanceCommand && (command.equals(F("pulse"))))
+      if (instanceCommand && (equals(command, F("pulse"))))
       {
         success = true;
         log     = formatToHex(address, F("PCA 0x"), 2);
@@ -467,7 +482,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           if (event->Par3 > 0)
           {
-            if (parseString(string, 5).equals(F("auto")))
+            if (equals(parseString(string, 5), F("auto")))
             {
               autoreset = -1;
               log      += F(" with autoreset infinity");

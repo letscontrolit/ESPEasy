@@ -225,7 +225,7 @@ bool WiFiConnected() {
   static uint32_t lastCheckedTime = 0;
   static bool lastState = false;
 
-  if (timePassedSince(lastCheckedTime) < 10) {
+  if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 10) {
     // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
     return lastState;
   }
@@ -296,9 +296,12 @@ bool WiFiConnected() {
     if (WiFiEventData.timerAPoff.isSet() && !WiFiEventData.timerAPoff.timeReached()) {
       // Timer reached, so enable AP mode.
       if (!WifiIsAP(WiFi.getMode())) {
-        if (!Settings.DoNotStartAP()) {
-          WifiScan(false);
-          setAP(true);
+        if (!WiFiEventData.wifiConnectAttemptNeeded) {
+          addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
+          if (!Settings.DoNotStartAP()) {
+            WifiScan(false);
+            setAP(true);
+          }
         }
       }
     } else {
@@ -405,6 +408,13 @@ void AttemptWiFiConnect() {
     return;
   }
 
+  setNetworkMedium(NetworkMedium_t::WIFI);
+  if (active_network_medium != NetworkMedium_t::WIFI) 
+  {
+    return;
+  }
+
+
   if (WiFiEventData.wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
     RTC.clearLastWiFi(); // Force slow connect
@@ -441,6 +451,8 @@ void AttemptWiFiConnect() {
     if (prepareWiFi()) {
       setNetworkMedium(NetworkMedium_t::WIFI);
       RTC.clearLastWiFi();
+      RTC.lastWiFiSettingsIndex = candidate.index;
+      
       float tx_pwr = 0; // Will be set higher based on RSSI when needed.
       // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
       #ifdef ESP8266
@@ -452,10 +464,15 @@ void AttemptWiFiConnect() {
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
       WiFiEventData.wifiConnectInProgress = true;
+      const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
+
       if (candidate.allowQuickConnect() && !candidate.isHidden) {
-        WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
+        WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
-        WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
+        WiFi.begin(candidate.ssid.c_str(), key.c_str());
+      }
+      if (Settings.WaitWiFiConnect()) {
+        WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
       }
       delay(1);
     } else {
@@ -624,8 +641,10 @@ void initWiFi()
   // those WiFi connections will take a long time to make or sometimes will not work at all.
   WiFi.disconnect(false);
   delay(1);
-  setSTA(true);
-  WifiScan(false);
+  if (active_network_medium != NetworkMedium_t::NotSet) {
+    setSTA(true);
+    WifiScan(false);
+  }
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)
@@ -870,9 +889,11 @@ void WifiDisconnect()
   #endif
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_UNSPECIFIED);
+  /*
   if (!Settings.UseLastWiFiFromRTC()) {
     RTC.clearLastWiFi();
   }
+  */
   delay(100);
   WiFiEventData.processingDisconnect.clear();
   WiFiEventData.processedDisconnect = false;
@@ -1328,12 +1349,8 @@ void setWifiMode(WiFiMode_t new_mode) {
     SetWiFiTXpower();
 #endif
     if (WifiIsSTA(new_mode)) {
-      if (WiFi.getAutoConnect()) {
-        WiFi.setAutoConnect(false); 
-      }
-      if (WiFi.getAutoReconnect()) {
-        WiFi.setAutoReconnect(false);
-      }
+      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
+      WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
     }
     delay(100); // Must allow for some time to init.
   }
@@ -1426,10 +1443,9 @@ void setConnectionSpeed() {
 
   // Does not (yet) work, so commented out.
   #ifdef ESP32
-  /*
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
 
-  if (!Settings.ForceWiFi_bg_mode() || (wifi_connect_attempt > 10)) {
+  if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.connectionFailures > 10)) {
     // Set to use BGN
     protocol |= WIFI_PROTOCOL_11N;
   }
@@ -1441,7 +1457,6 @@ void setConnectionSpeed() {
   if (WifiIsAP(WiFi.getMode())) {
     esp_wifi_set_protocol(WIFI_IF_AP, protocol);
   }
-  */
   #endif // ifdef ESP32
 }
 
@@ -1449,12 +1464,12 @@ void setupStaticIPconfig() {
   setUseStaticIP(WiFiUseStaticIP());
 
   if (!WiFiUseStaticIP()) { return; }
-  const IPAddress ip     = Settings.IP;
-  const IPAddress gw     = Settings.Gateway;
-  const IPAddress subnet = Settings.Subnet;
-  const IPAddress dns    = Settings.DNS;
+  const IPAddress ip     (Settings.IP);
+  const IPAddress gw     (Settings.Gateway);
+  const IPAddress subnet (Settings.Subnet);
+  const IPAddress dns    (Settings.DNS);
 
-  WiFiEventData.dns0_cache = Settings.DNS;
+  WiFiEventData.dns0_cache = dns;
 
   WiFi.config(ip, gw, subnet, dns);
 

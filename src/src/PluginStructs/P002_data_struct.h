@@ -223,7 +223,17 @@ private:
                              float out1,
                              float out2);
 
+
+  // Map the input "point" values to the nearest int.
+  static void setTwoPointCalibration(struct EventStruct *event,
+                                     float adc1,
+                                     float adc2,
+                                     float out1,
+                                     float out2);
+
 public:
+
+  bool plugin_set_config(struct EventStruct *event, String& string);
 
   uint16_t OversamplingCount = 0;
 

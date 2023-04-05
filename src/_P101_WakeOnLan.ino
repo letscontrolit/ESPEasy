@@ -426,10 +426,10 @@ uint8_t safeName(taskIndex_t index) {
     safeCode = NAME_MISSING;
   }
 
-  if (devName.equals(F("reboot"))) {
+  if (equals(devName, F("reboot"))) {
     safeCode = NAME_UNSAFE;
   }
-  else if (devName.equals(F("reset"))) {
+  else if (equals(devName, F("reset"))) {
     safeCode = NAME_UNSAFE;
   }
 

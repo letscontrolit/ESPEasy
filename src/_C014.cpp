@@ -13,6 +13,11 @@
 // ################################# Controller Plugin 0014: Homie 3/4 ###################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-03-15 tonhuisman: Replace use of deprecated DummyValueSet with TaskValueSet
+ * 2023-03 Changelog started
+ */
+
 # define CPLUGIN_014
 # define CPLUGIN_ID_014              14
 
@@ -211,7 +216,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         errorCounter = 0;
 
         pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
-        pubname.replace(F("%sysname%"), Settings.Name);
+        pubname.replace(F("%sysname%"), Settings.getName());
 
 # ifdef CPLUGIN_014_V3
 
@@ -262,7 +267,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
       // send autodiscover header
       pubname = CPLUGIN_014_BASE_TOPIC;           // Scheme to form device messages
-      pubname.replace(F("%sysname%"), Settings.Name);
+      pubname.replace(F("%sysname%"), Settings.getName());
       int deviceCount = 1;                        // minimum the SYSTEM device exists
       int nodeCount   = 1;                        // minimum the cmd node exists
       errorCounter = 0;
@@ -270,7 +275,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       if (lastBootCause != BOOT_CAUSE_DEEP_SLEEP) // skip sending autodiscover data when returning from deep sleep
       {
         String nodename = CPLUGIN_014_BASE_VALUE; // Scheme to form node messages
-        nodename.replace(F("%sysname%"), Settings.Name);
+        nodename.replace(F("%sysname%"), Settings.getName());
         String nodesList;                         // build comma separated List for nodes
         String valuesList;                        // build comma separated List for values
         String deviceName;                        // current Device Name nr:name
@@ -285,7 +290,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$homie"), F(CPLUGIN_014_HOMIE_VERSION), errorCounter);
 
         // $name	Device → Controller	Friendly name of the device	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$name"),  Settings.Name,             errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$name"),  Settings.getName(),       errorCounter);
 
         // $localip	Device → Controller	IP of the device on the local network	Yes	Yes
 # ifdef CPLUGIN_014_V3
@@ -663,7 +668,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_GOT_INVALID:
     {
       pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
-      pubname.replace(F("%sysname%"), Settings.Name);
+      pubname.replace(F("%sysname%"), Settings.getName());
 
       // disconnected: this is the state the device is in when it is cleanly disconnected from the MQTT broker. You must send this message
       // before cleanly disconnecting
@@ -671,10 +676,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("C014 : Device: ");
-        log += Settings.Name;
+        log += Settings.getName();
+        log += F(" got invalid (disconnect");
 
-        if (success) { log += F(" got invalid (disconnected)."); }
-        else { log += F(" got invaild (disconnect) failed!"); }
+        if (success) { log += F("ed)."); }
+        else { log += F(") failed!"); }
         addLogMove(LOG_LEVEL_INFO, log);
       }
       break;
@@ -683,7 +689,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_FLUSH:
     {
       pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
-      pubname.replace(F("%sysname%"), Settings.Name);
+      pubname.replace(F("%sysname%"), Settings.getName());
 
       // sleeping: this is the state the device is in when the device is sleeping. You have to send this message before sleeping.
       success = CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("sleeping"), errorCounter);
@@ -707,7 +713,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         int lastindex = event->String1.lastIndexOf('/');
         errorCounter = 0;
 
-        if (event->String1.substring(lastindex + 1).equals(F("set")))
+        if (equals(event->String1.substring(lastindex + 1), F("set")))
         {
           pubname   = event->String1.substring(0, lastindex);
           lastindex = pubname.lastIndexOf('/');
@@ -734,7 +740,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               cmd  = F("GPIO,");
               cmd += valueName.substring(gpio_value_tag_length).toInt();                    // get the GPIO
 
-              if ((event->String2.equals(F("true"))) || (event->String2.equals(F("1")))) { cmd += F(",1"); }
+              if ((equals(event->String2, F("true"))) || (equals(event->String2, '1'))) { cmd += F(",1"); }
               else { cmd += F(",0"); }
               validTopic = true;
             } else if (valueName.equals(F(CPLUGIN_014_CMD_VALUE))) // msg to send a command
@@ -757,13 +763,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               int pluginID = Device[deviceIndex].Number;
 
               if (pluginID == 33)                   // Plugin 33 Dummy Device
-              {                                     // DummyValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with
+              {                                     // TaskValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with
                                                     // new version of P033!
                 valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
                 if (valueNr != VARS_PER_TASK)       // value Name identified
                 {
-                  cmd        = F("DummyValueSet,"); // Set a Dummy Device Value
+                  cmd        = F("TaskValueSet,");  // Set a Dummy Device Value
                   cmd       += (taskIndex + 1);     // set the device Number
                   cmd       += ',';
                   cmd       += (valueNr + 1);       // set the value Number
@@ -772,7 +778,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   validTopic = true;
                 }
               } else if (pluginID == 86) {          // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the
-                                                    // value. Use HomieValueSet to save the value. This will acknolage back to the
+                                                    // value. Use HomieValueSet to save the value. This will acknowledge back to the
                                                     // controller too.
                 valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
@@ -782,17 +788,15 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   cmd += '=';
 
                   if (Settings.TaskDevicePluginConfig[taskIndex][valueNr] == 3) { // Quote Sting parameters. PLUGIN_086_VALUE_STRING
-                    cmd += '"';
-                    cmd += event->String2;
-                    cmd += '"';
+                    cmd += wrapWithQuotes(event->String2);
                   } else {
                     if (Settings.TaskDevicePluginConfig[taskIndex][valueNr] == 4) { // Enumeration parameter, find Number of item.
                                                                                     // PLUGIN_086_VALUE_ENUM
                       String enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
                       int    i        = 1;
 
-                      while (!parseString(enumList, i).isEmpty()) { // lookup result in enum List
-                        if (parseString(enumList, i) == event->String2) { break; }
+                      while (!parseString(enumList, i).isEmpty()) { // lookup result in enum List is changed to lowercase
+                        if (parseString(enumList, i).equalsIgnoreCase(event->String2)) { break; }
                         i++;
                       }
                       cmd += i;
@@ -827,7 +831,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           // in case of event, store to buffer and return...
           String command = parseString(cmd, 1);
 
-          if ((command.equals(F("event"))) || (command.equals(F("asyncevent"))))
+          if ((equals(command, F("event"))) || (equals(command, F("asyncevent"))))
           {
             if (Settings.UseRules) {
               String newEvent = parseStringToEnd(cmd, 2);
@@ -973,7 +977,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       if (!string.isEmpty()) {
         String commandName = parseString(string, 1); // could not find a way to get the command out of the event structure.
 
-        if (commandName.equals(F("gpio")))                // !ToDo : As gpio is like any other plugin commands should be integrated below!
+        if (equals(commandName, F("gpio")))                // !ToDo : As gpio is like any other plugin commands should be integrated below!
         {
           int port         = event->Par1;            // parseString(string, 2).toInt();
           int valueInt     = event->Par2;            // parseString(string, 3).toInt();
@@ -982,7 +986,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           if (valueInt == 1) { valueBool = F("true"); }
 
           String topic = CPLUGIN_014_PUBLISH; // ControllerSettings.Publish not used because it can be modified by the user!
-          topic.replace(F("%sysname%"), Settings.Name);
+          topic.replace(F("%sysname%"), Settings.getName());
           topic.replace(F("%tskname%"), F(CPLUGIN_014_SYSTEM_DEVICE));
           topic.replace(F("%valname%"), String(F(CPLUGIN_014_GPIO_VALUE)) + toString(port, 0));
 
@@ -1018,7 +1022,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           if (validTaskVarIndex(taskVarIndex)) {
             userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;
             String topic                = CPLUGIN_014_PUBLISH;
-            topic.replace(F("%sysname%"), Settings.Name);
+            topic.replace(F("%sysname%"), Settings.getName());
             int deviceIndex = event->Par1; // parseString(string, 2).toInt();
             LoadTaskSettings(deviceIndex - 1);
             const String deviceName = getTaskDeviceName(event->TaskIndex);
@@ -1028,7 +1032,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             String valueStr;
             int    valueInt = 0;
 
-            if ((commandName.equals(F("taskvalueset"))) || (commandName.equals(F("dummyvalueset")))) // should work for both
+            if ((equals(commandName, F("taskvalueset"))) || (equals(commandName, F("dummyvalueset")))) // should work for both
             {
               valueStr = formatUserVarNoCheck(event, taskVarIndex);                        // parseString(string, 4);
               success  = MQTTpublish(CPLUGIN_ID_014, INVALID_TASK_INDEX, topic.c_str(), valueStr.c_str(), false);
@@ -1058,7 +1062,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log += F(" ERROR!");
                 addLogMove(LOG_LEVEL_ERROR, log);
               }
-            } else if (parseString(commandName, 1).equals(F("homievalueset"))) { // acknolages value form P086 Homie Receiver
+            } else if (equals(parseString(commandName, 1), F("homievalueset"))) { // acknolages value form P086 Homie Receiver
               switch (Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex]) {
                 case 0:                                                     // PLUGIN_085_VALUE_INTEGER
                   valueInt = static_cast<int>(UserVar[userVarIndex]);

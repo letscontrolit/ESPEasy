@@ -117,12 +117,14 @@ void addFormNumericBox(LabelType::Enum label, int value, int min, int max
                        #if FEATURE_TOOLTIPS
                        , const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
+                       , bool disabled
                        )
 {
   addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max
                     #if FEATURE_TOOLTIPS
                     , tooltip
                     #endif // if FEATURE_TOOLTIPS
+                    , disabled
                     );
 }
 
@@ -135,12 +137,15 @@ void addFormNumericBox(const __FlashStringHelper * label,
                        ,
                        const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
+                       ,
+                       bool disabled
                        )
 {
   addFormNumericBox(String(label), String(id), value, min, max
                     #if FEATURE_TOOLTIPS
                     , tooltip
                     #endif // if FEATURE_TOOLTIPS
+                    , disabled
                     );
 
 }
@@ -149,6 +154,7 @@ void addFormNumericBox(const String& label, const String& id, int value, int min
                        #if FEATURE_TOOLTIPS
                        , const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
+                       , bool disabled
                        )
 {
   addRowLabel_tr_id(label, id);
@@ -156,6 +162,7 @@ void addFormNumericBox(const String& label, const String& id, int value, int min
                 #if FEATURE_TOOLTIPS
                 , F("widenumber"), tooltip
                 #endif // if FEATURE_TOOLTIPS
+                , disabled
                 );
 }
 
@@ -320,6 +327,7 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("password"));
   addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("id"),        id);
   addHtmlAttribute(F("maxlength"), maxlength);
 
   #if FEATURE_TOOLTIPS
@@ -335,7 +343,7 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
 bool getFormPassword(const String& id, String& password)
 {
   password = webArg(id);
-  return !password.equals(F("*****"));
+  return !equals(password, F("*****"));
 }
 
 // ********************************************************************************
@@ -359,6 +367,7 @@ void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
   addHtmlAttribute(F("class"), F("wide"));
   addHtmlAttribute(F("type"),  F("text"));
   addHtmlAttribute(F("name"),  id);
+  addHtmlAttribute(F("id"),    id);
   addHtmlAttribute(F("value"), (empty_IP) ? EMPTY_STRING : formatIP(ip));
   addHtml('>');
 }
@@ -766,7 +775,7 @@ bool isFormItemChecked(const __FlashStringHelper * id)
 
 bool isFormItemChecked(const String& id)
 {
-  return webArg(id).equals(F("on"));
+  return equals(webArg(id), F("on"));
 }
 
 bool isFormItemChecked(const LabelType::Enum& id)

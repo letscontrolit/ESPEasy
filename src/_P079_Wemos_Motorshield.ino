@@ -109,7 +109,8 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      I2C_ADDR_PCFG_P079 = DEF_I2C_ADDRESS_079;
+      I2C_ADDR_PCFG_P079   = DEF_I2C_ADDRESS_079;
+      SHIELD_VER_PCFG_P079 = static_cast<int>(P079_BoardType::WemosMotorshield);
       break;
     }
 
@@ -120,35 +121,34 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
       }
       addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"), formatToHex(I2C_ADDR_PCFG_P079), 4);
 
-      // Validate Shield Type.
-      bool valid = false;
-
-      switch (Plugin_079_MotorShield_type) {
-        case P079_BoardType::WemosMotorshield:
-        case P079_BoardType::LolinMotorshield:
-          valid = true;
-          break;
-
-          // TD-er: Do not use defaul: here, as the compiler can now warn if we're missing a newly added option
-      }
-
-      if (!valid) {
-        SHIELD_VER_PCFG_P079 = static_cast<int>(P079_BoardType::WemosMotorshield);
-      }
-
-
       {
-        const __FlashStringHelper * options[] = { F("WEMOS V1.0"), F("LOLIN V2.0") };
-        int indices[]          = { static_cast<int>(P079_BoardType::WemosMotorshield), static_cast<int>(P079_BoardType::LolinMotorshield) };
+        const __FlashStringHelper *options[] = {
+          F("WEMOS V1.0"),
+          F("LOLIN V2.0")
+        };
+        const int indices[] = {
+          static_cast<int>(P079_BoardType::WemosMotorshield),
+          static_cast<int>(P079_BoardType::LolinMotorshield)
+        };
         addFormSelector(F("Motor Shield Type"), F("shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
       }
 
       if (Plugin_079_MotorShield_type == P079_BoardType::WemosMotorshield) {
-        addFormNote(F("WEMOS V1.0 Motor Shield requires updated firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
+        addFormNote(F("WEMOS V1.0 Motor Shield requires updated firmware, "
+                      "see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
       }
 
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = I2C_ADDR_PCFG_P079;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD: {
       success = true;
@@ -160,30 +160,16 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
       I2C_ADDR_PCFG_P079   = (int)strtol(i2c_address.c_str(), 0, 16);
       SHIELD_VER_PCFG_P079 = getFormItemInt(F("shield_type"));
 
-      // Validate Shield Type.
-      bool valid = false;
-
-      switch (Plugin_079_MotorShield_type) {
-        case P079_BoardType::WemosMotorshield:
-        case P079_BoardType::LolinMotorshield:
-          valid = true;
-          break;
-
-          // TD-er: Do not use defaul: here, as the compiler can now warn if we're missing a newly added option
-      }
-
-      if (!valid) {
-        SHIELD_VER_PCFG_P079 = static_cast<int>(P079_BoardType::WemosMotorshield);
-      }
-
-
-      if (getTaskDeviceName(event->TaskIndex).isEmpty()) {                    // Check to see if user entered device name.
+      // Check to see if user entered device name.
+      if (getTaskDeviceName(event->TaskIndex).isEmpty()) {
         switch (Plugin_079_MotorShield_type) {
           case P079_BoardType::WemosMotorshield:
-            safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME1_079), sizeof(ExtraTaskSettings.TaskDeviceName)); // Name missing, populate default name.
+            // Name missing, populate default name.
+            safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME1_079), sizeof(ExtraTaskSettings.TaskDeviceName));
             break;
           case P079_BoardType::LolinMotorshield:
-            safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME2_079), sizeof(ExtraTaskSettings.TaskDeviceName)); // Name missing, populate default name.
+            // Name missing, populate default name.
+            safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME2_079), sizeof(ExtraTaskSettings.TaskDeviceName));
             break;
         }
       }
@@ -193,6 +179,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_INIT: {
+      // FIXME: This validation seems to be redundant...
       // Validate Shield Type.
       bool valid = false;
 
@@ -202,7 +189,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           valid = true;
           break;
 
-          // TD-er: Do not use defaul: here, as the compiler can now warn if we're missing a newly added option
+          // TD-er: Do not use default here, as the compiler can now warn if we're missing a newly added option
       }
 
       if (!valid) {
@@ -219,7 +206,12 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WRITE: {
+      # if FEATURE_I2C_DEVICE_CHECK
 
+      if (!I2C_deviceCheck(I2C_ADDR_PCFG_P079, event->TaskIndex, 10, PLUGIN_I2C_GET_ADDRESS)) {
+        break; // Will return the default false for success
+      }
+      # endif // if FEATURE_I2C_DEVICE_CHECK
       uint8_t parse_error = false;
       String  ModeStr;
 
@@ -268,10 +260,10 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           }
           addLog(LOG_LEVEL_INFO, ModeStr);
           SendStatus(event, ModeStr + F(" <br>")); // Reply (echo) to sender. This will print message on browser.
-          return true;                                             // Exit now. Info Log shows Lolin Info.
+          return true;                             // Exit now. Info Log shows Lolin Info.
         }
         else {
-          if ((paramMotor.equals(F("0"))) || (paramMotor.equals(F("1")))) {
+          if ((equals(paramMotor, '0')) || (equals(paramMotor, '1'))) {
             motor_number = paramMotor.toInt();
           }
           else {
@@ -399,6 +391,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
             }
           }
         }
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           ModeStr += F(": Addr=");
           ModeStr += formatToHex(I2C_ADDR_PCFG_P079);
@@ -408,7 +401,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           ModeStr += paramDirection;
           ModeStr += F(", Spd=");
           ModeStr += paramSpeed;
-          addLogMove(LOG_LEVEL_INFO, ModeStr);          
+          addLogMove(LOG_LEVEL_INFO, ModeStr);
         }
 
         success = true;

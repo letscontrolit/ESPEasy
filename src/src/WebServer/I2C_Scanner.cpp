@@ -218,6 +218,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x30:
       result +=  F("VL53L0X,VL53L1X");
       break;
+    case 0x34:
+      result +=  F("AXP192");
+      break;
     case 0x36:
       result +=  F("MAX1704x,Adafruit Rotary enc");
       break;
@@ -243,7 +246,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("LCD,PCF8574A");
       break;
     case 0x40:
-      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080,M5Stack Rotary enc");
+      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC10xx,M5Stack Rotary enc");
       break;
     case 0x41:
     case 0x42:
@@ -327,8 +330,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("HT16K33,TCA9543a/6a/8a I2C multiplexer");
       break;
     case 0x74:
-    case 0x75:
       result +=  F("HT16K33,TCA9546a/8a I2C multiplexer");
+      break;
+    case 0x75:
+      result +=  F("HT16K33,TCA9546a/8a I2C multiplexer,IP5306");
       break;
     case 0x76:
       result +=  F("BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");

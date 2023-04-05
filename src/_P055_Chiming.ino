@@ -219,7 +219,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
 
         String command = parseString(string, 1);
 
-        if (command.equals(F("chime")))
+        if (equals(command, F("chime")))
         {
           String param = parseStringToEndKeepCase(string, 2);
           if (param.length() > 0) {
@@ -227,7 +227,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
           }
           success = true;
         }
-        if (command.equals(F("chimeplay")))
+        if (equals(command, F("chimeplay")))
         {
           String name = parseString(string, 2);
           if (name.length() > 0) {
@@ -237,7 +237,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
           }
           success = true;
         }
-        if (command.equals(F("chimesave")))
+        if (equals(command, F("chimesave")))
         {
           String name = parseString(string, 2);
           String param = parseStringToEndKeepCase(string, 3);

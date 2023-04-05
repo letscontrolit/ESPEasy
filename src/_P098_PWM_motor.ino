@@ -393,28 +393,28 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         const String command = parseString(string, 1);
 
         if (command.startsWith(F("pwmmotor"))) {
-          if (command.equals(F("pwmmotorhome"))) {
+          if (equals(command, F("pwmmotorhome"))) {
             // Run the motor in reverse till limit A switch is reached
             P098_data->findHome();
             success = true;
-          } else if (command.equals(F("pwmmotorend"))) {
+          } else if (equals(command, F("pwmmotorend"))) {
             // Run the motor forward till limit B switch is reached
             P098_data->moveForward(-1);
             success = true;
-          } else if (command.equals(F("pwmmotorforward"))) {
+          } else if (equals(command, F("pwmmotorforward"))) {
             // Run the motor N steps forward
             // N <= 0: Move till limit B switch is reached
             P098_data->moveForward(event->Par1);
             success = true;
-          } else if (command.equals(F("pwmmotorreverse"))) {
+          } else if (equals(command, F("pwmmotorreverse"))) {
             // Run the motor N steps in reverse
             P098_data->moveReverse(event->Par1);
             success = true;
-          } else if (command.equals(F("pwmmotorstop"))) {
+          } else if (equals(command, F("pwmmotorstop"))) {
             // Run the motor N steps in reverse
             P098_data->stop();
             success = true;
-          } else if (command.equals(F("pwmmotormovetopos"))) {
+          } else if (equals(command, F("pwmmotormovetopos"))) {
             // Run the motor in the required direction to position N
             // What to do when position is unknown?
             if (!P098_data->moveToPos(event->Par1)) {

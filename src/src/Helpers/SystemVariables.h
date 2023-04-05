@@ -88,6 +88,9 @@ public:
     S_CR,
     S_LF,
     UNIT_sysvar,   // We already use UNIT as define.
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    UNIT_0_sysvar,
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     UNIXDAY,
     UNIXDAY_SEC,
     UNIXTIME,

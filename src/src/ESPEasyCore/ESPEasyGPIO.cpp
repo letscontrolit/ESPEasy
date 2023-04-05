@@ -21,14 +21,11 @@ void GPIO_Internal_Write(int pin, uint8_t value)
     const uint32_t key = createKey(PLUGIN_GPIO, pin);
     auto it = globalMapPortStatus.find(key);
     if (it != globalMapPortStatus.end()) {
-      switch (it->second.mode) {
-        case PIN_MODE_PWM:
-          set_Gpio_PWM(pin, value);
-          break;
-        default:
-          pinMode(pin, OUTPUT);
-          digitalWrite(pin, value);
-          break;
+      if (it->second.mode == PIN_MODE_PWM) {
+        set_Gpio_PWM(pin, value);
+      } else {
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, value);
       }
     }
   }
@@ -68,12 +65,14 @@ bool GPIO_Read_Switch_State(int pin, uint8_t pinMode) {
       case PIN_MODE_OUTPUT:
         canRead = true;
         break;
+/*
       case PIN_MODE_PWM:
         break;
       case PIN_MODE_SERVO:
         break;
       case PIN_MODE_OFFLINE:
         break;
+*/
       default:
         break;
     }
@@ -429,7 +428,7 @@ void GPIO_Monitor10xSec()
       const uint16_t gpioPort = getPortFromKey(it->first);
       const uint16_t pluginID = getPluginFromKey(it->first);
       int8_t currentState = -1;
-      const __FlashStringHelper * eventString;
+      const __FlashStringHelper * eventString = F("");
       bool caseFound = true;
 
       switch (pluginID)

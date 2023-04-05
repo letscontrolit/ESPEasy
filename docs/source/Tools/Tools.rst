@@ -153,6 +153,11 @@ All these values are described in great detail in the Advanced section, where th
 * **Send With Max TX Power**:	``true`` indicates the WiFi TX power will not be changed and thus is sending at maximum TX power for the active WiFi mode (802.11 b/g/n)
 * **Extra WiFi scan loops**:	The set number of extra scans of all channels when a WiFi scan is needed.
 * **Use Last Connected AP from RTC**:	``false`` means the ESPEasy node needs to scan at reboot and cannot reuse the last used connection before the reboot.
+* **Extra Wait WiFi Connect**: ``true`` means there is an extra wait upto 1000 msec after initiating a connection to an access point. This can be useful when connecting to some FritzBox access points or routers. (Added: 2023/04/05)
+* **Enable SDK WiFi Auto Reconnect**: ``true`` means the Espressif SDK will automatically attempt a reconnect when a connection is briefly lost. Access points (like TP-Link Omada) with "Band Steering" enabled may trigger a quick disconnect to force nodes to connect on the 5 GHz band. (Added: 2023/04/05)
+
+
+
 
 .. note:: On ESP32, WiFi TX power settings are disabled as these may cause undesired behavior and also use more power compared to using the ECO mode.
 
@@ -396,6 +401,17 @@ This will swap the SDA/SCL pins and tries to perform a scan and then restores th
 If this is the fix, where ESPEasy is not able to resolve the lockec I2C bus on itself, please open an issue for this on GitHub.
 
 Default: unchecked
+
+Check I2C devices when enabled
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-02-07
+
+To ensure that I2C connected devices work as intended, a device-available-check can be performed when the task is initialized, and when the taskdata is read every Interval seconds. If the device doesn't respond during task init, or after 10 consecutive failed reads, the task will be disabled.
+
+Default: checked
+
+NB: This option is excluded from the build if this setting is not available.
 
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -678,6 +694,35 @@ This is no new functionality, as it was present before and also enabled by defau
 
 New default value since 2021-06-20: unchecked
 
+
+Extra Wait WiFi Connect
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-04-05
+
+Some FritzBox routers may be difficult to connect with using Espressif modules.
+It is unclear what exactly causes these issues.
+However experiments have shown that an added delay of upto 1000 msec right after calling ``WiFi.begin()`` does improve the success rate of connecting to such access points.
+
+
+Enable SDK WiFi Auto Reconnect
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-04-05
+
+Some dual band access points (2.4 GHz and 5 GHz) try to balance connected nodes over these bands, based on their signal strength.
+This is called "Band Steering".
+
+WiFi clients supporting 802.11k and/or 802.11v can be redirected to another band and/or other meshed access point.
+Older WiFi clients, not supporting these protocols, will briefly be disconnected to force them to reconnect. Hopefully to another access point or frequency band.
+
+The problem is that such disconnects cause issues with Espressif modules, messing up the internal state of the WiFi.
+
+ESPEasy does act on WiFi events. But these events are not always dealt with in due time, messing up the connected state even more.
+In such cases, where "Band Steering" cannot be disabled, one can enable the Espressif SDK WiFi Auto Reconnect option.
+This will act much faster on these disconnect events. However it also seems to suppress some WiFi events.
+
+Whenever ESPEasy calls for a disconnect, or the disconnect takes longer than such a very brief disconnect initiated by the Band Steering algorithm of the access point, ESPEasy will turn off the WiFi and turn it on again as if "Restart WiFi Lost Conn" was enabled.
 
 
 Show JSON

@@ -48,7 +48,7 @@ struct ExtraTaskSettings_cache_t {
 
 typedef std::map<String, taskIndex_t>                    TaskIndexNameMap;
 typedef std::map<String, uint8_t>                        TaskIndexValueNameMap;
-typedef std::map<String, bool>                           FilePresenceMap;
+typedef std::map<String, uint8_t>                        FilePresenceMap;
 typedef std::map<taskIndex_t, ExtraTaskSettings_cache_t> ExtraTaskSettingsMap;
 
 #ifdef ESP32

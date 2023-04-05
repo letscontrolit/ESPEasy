@@ -19,6 +19,11 @@
 #endif
 
 void setNetworkMedium(NetworkMedium_t new_medium) {
+#if !(FEATURE_ETHERNET)
+  if (new_medium == NetworkMedium_t::Ethernet) {
+    new_medium = NetworkMedium_t::WIFI;
+  }
+#endif
   if (active_network_medium == new_medium) {
     return;
   }
@@ -38,6 +43,8 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       if (new_medium == NetworkMedium_t::Ethernet) {
         WifiDisconnect();
       }
+      break;
+    case NetworkMedium_t::NotSet:
       break;
   }
   statusLED(true);

@@ -2,6 +2,7 @@
 #define WEBSERVER_WEBSERVER_MARKUP_H
 
 #include "../WebServer/common.h"
+#include "../DataTypes/ProtocolIndex.h"
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -232,7 +233,8 @@ void addNumericBox(const String& id,
                    int           min,
                    int           max,
                    const __FlashStringHelper * classname,
-                   const String& tooltip = EMPTY_STRING);
+                   const String& tooltip = EMPTY_STRING,
+                   bool disabled = false);
 #endif // if FEATURE_TOOLTIPS
 
 void addFloatNumberBox(const String& id,
@@ -249,11 +251,13 @@ void addFloatNumberBox(const String& id,
 void addNumericBox(const __FlashStringHelper *id,
                    int                        value,
                    int                        min,
-                   int                        max);
+                   int                        max,
+                   bool                       disabled = false);
 void addNumericBox(const String& id,
                    int           value,
                    int           min,
-                   int           max);
+                   int           max,
+                   bool          disabled = false);
 
 // ********************************************************************************
 // Add Textbox
@@ -315,6 +319,9 @@ void   addHelpButton(const String& url,
                      bool          isRTD);
 
 void   addRTDPluginButton(pluginID_t taskDeviceNumber);
+# ifndef LIMIT_BUILD_SIZE
+void   addRTDControllerButton(protocolIndex_t protocolIndex);
+# endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url,
                    bool          isRTD);

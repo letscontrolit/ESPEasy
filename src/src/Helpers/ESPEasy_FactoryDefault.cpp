@@ -27,7 +27,7 @@
 /********************************************************************************************\
    Reset all settings to factory defaults
  \*********************************************************************************************/
-void ResetFactory()
+void ResetFactory(bool formatFS)
 {
   #if FEATURE_CUSTOM_PROVISIONING
   if (ResetFactoryDefaultPreference.getPreference() == 0)
@@ -43,7 +43,6 @@ void ResetFactory()
     ResetFactoryDefaultPreference.fetchProvisioningDat(DEFAULT_PROVISIONING_FETCH_PROVISIONING);
     ResetFactoryDefaultPreference.saveURL(DEFAULT_PROVISIONING_SAVE_URL);
     ResetFactoryDefaultPreference.storeCredentials(DEFAULT_PROVISIONING_SAVE_CREDENTIALS);
-    ResetFactoryDefaultPreference.allowFetchByCommand(DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND);
   }
   #endif
 
@@ -83,16 +82,18 @@ void ResetFactory()
   RTC.factoryResetCounter++;
   saveToRTC();
 
-  // always format on factory reset, in case of corrupt FS
-//  ESPEASY_FS.end();
-  serialPrintln(F("RESET: formatting..."));
-  FS_format();
-  serialPrintln(F("RESET: formatting done..."));
+  if (formatFS) {
+    // always format on factory reset, in case of corrupt FS
+    ESPEASY_FS.end();
+    serialPrintln(F("RESET: formatting..."));
+    FS_format();
+    serialPrintln(F("RESET: formatting done..."));
 
-  if (!ESPEASY_FS.begin())
-  {
-    serialPrintln(F("RESET: FORMAT FS FAILED!"));
-    return;
+    if (!ESPEASY_FS.begin())
+    {
+      serialPrintln(F("RESET: FORMAT FS FAILED!"));
+      return;
+    }
   }
 
 #if FEATURE_CUSTOM_PROVISIONING

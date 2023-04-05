@@ -110,12 +110,6 @@
 extern const String EMPTY_STRING;
 
 
-// Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
-// Please note that the TOUT pin has to be disconnected in this mode
-// Use the "System Info" device to read the VCC value
-#ifndef FEATURE_ADC_VCC
-  #define FEATURE_ADC_VCC                  0
-#endif
 
 #ifndef ARDUINO_OTA_PORT
   #if defined(ESP32)
