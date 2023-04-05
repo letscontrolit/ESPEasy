@@ -10,28 +10,31 @@
 #ifdef USES_P122
 
 //  SUPPORTED SHT2x COMMANDS
-#define SHT2x_GET_TEMPERATURE_NO_HOLD   0xF3    // Read temperature without holding I2C
-#define SHT2x_GET_HUMIDITY_NO_HOLD      0xF5    // Read humidity without holding I2C
-#define SHT2x_GET_TEMPERATURE_HOLD      0xE3    // Read temperature holding I2C during measurement
-#define SHT2x_GET_HUMIDITY_HOLD         0xE5    // Read humidity holding I2C during measurement
-#define SHT2x_SOFT_RESET                0xFE    // Software reset
-#define SHT2x_WRITE_USER_REGISTER       0xE6    // Write the user register
-#define SHT2x_READ_USER_REGISTER        0xE7    // Read the user register
-#define SHT2x_GET_EIDA                  0xFA    // Reverse engineering
-#define SHT2x_EIDA_ADDRESS              0x0F    // 2nd command byte to read EIDA
-#define SHT2x_GET_EIDB                  0xFC    // Reverse engineering
-#define  SHT2x_EIDB_ADDRESS             0xC9    // 2nd commnad byte to read EIDB
-#define SHT2x_GET_FIRMWARE              0x84    // Reverse engineering
-#define SHT2x_FIRMWARE_ADDRESS          0xB8    // 2nd command byte to read firmware version
+#define SHT2x_GET_TEMPERATURE_NO_HOLD   0xF3  // Read temperature without holding I2C
+#define SHT2x_GET_HUMIDITY_NO_HOLD      0xF5  // Read humidity without holding I2C
+#define SHT2x_GET_TEMPERATURE_HOLD      0xE3  // Read temperature holding I2C during measurement
+#define SHT2x_GET_HUMIDITY_HOLD         0xE5  // Read humidity holding I2C during measurement
+#define SHT2x_SOFT_RESET                0xFE  // Software reset
+#define SHT2x_WRITE_USER_REGISTER       0xE6  // Write the user register
+#define SHT2x_READ_USER_REGISTER        0xE7  // Read the user register
+#define SHT2x_GET_EIDA                  0xFA  // Reverse engineering
+#define SHT2x_EIDA_ADDRESS              0x0F  // 2nd command byte to read EIDA
+#define SHT2x_GET_EIDB                  0xFC  // Reverse engineering
+#define  SHT2x_EIDB_ADDRESS             0xC9  // 2nd commnad byte to read EIDB
+#define SHT2x_GET_FIRMWARE              0x84  // Reverse engineering
+#define SHT2x_FIRMWARE_ADDRESS          0xB8  // 2nd command byte to read firmware version
 
 // Bitflags for SHT2x User Register
-#define SHT2x_USRREG_RESOLUTION         0x81    // Resolution split into bits 7 and 0
-#define SHT2x_USRREG_BATTERY            0x20    // Battery status flag
-#define SHT2x_USRREG_HEATER             0x04    // Heater enable
-#define SHT2x_USRREG_OTP                0x02    // Disable OTP reload
+#define SHT2x_USRREG_RESOLUTION         0x81  // Resolution split into bits 7 and 0
+#define SHT2x_USRREG_BATTERY            0x20  // Battery status flag
+#define SHT2x_USRREG_HEATER             0x04  // Heater enable
+#define SHT2x_USRREG_OTP                0x02  // Disable OTP reload
 
-#define P122_RESET_DELAY                15  // delay in miliseconds for the reset to settle down
-#define P122_MAX_RETRY                  250 // Give up after amount of retries befoe going to error 
+#define SHT2x_READ_VAL_TIME                5  // Timeout value for reading the termperature/humidity values
+#define SHT2x_READ_REG_TIME               10  // Timeout value for reading a register sequence
+#define SHT2x_READ_USR_TIME                5  // Timeout value for reading user register
+#define P122_RESET_DELAY                  15  // delay in miliseconds for the reset to settle down
+#define P122_MAX_RETRY                   250  // Give up after amount of retries befoe going to error 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -345,7 +348,7 @@ bool P122_data_struct::batteryOK()
 {
   uint8_t userReg = 0x00;
   writeCmd(SHT2x_READ_USER_REGISTER);
-  if (readBytes(1, (uint8_t *) &userReg, 5) == false)
+  if (!readBytes(1, (uint8_t *) &userReg, SHT2x_READ_USR_TIME))
   {
     return false;
   }
@@ -427,12 +430,12 @@ bool P122_data_struct::requestHumidity()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-// Read temperature measurement results from device
+// Read temperature/humidity measurement results from device
 bool P122_data_struct::readValue(uint16_t &value)
 {
   uint8_t buffer[3];
 
-  if (!readBytes(3, (uint8_t*) &buffer[0], 90))
+  if (!readBytes(3, (uint8_t*) &buffer[0], SHT2x_READ_VAL_TIME))
   {
     return false;
   }
@@ -454,7 +457,7 @@ uint32_t P122_data_struct::getEIDA()
   uint32_t id = 0;
   uint8_t buffer[8];
   writeCmd(SHT2x_GET_EIDA, SHT2x_EIDA_ADDRESS);
-  if (readBytes(8, (uint8_t *) buffer, 10))
+  if (readBytes(8, (uint8_t *) buffer, SHT2x_READ_REG_TIME))
   {
     for (uint8_t i = 0; i < 4; i++)
     {
@@ -473,7 +476,7 @@ uint32_t P122_data_struct::getEIDB()
   uint32_t id = 0;
   uint8_t buffer[8];
   writeCmd(SHT2x_GET_EIDB, SHT2x_EIDB_ADDRESS);
-  if (readBytes(8, (uint8_t *) buffer, 10))
+  if (readBytes(8, (uint8_t *) buffer, SHT2x_READ_REG_TIME))
   {
     id  = buffer[0];  //  SNC_1
     id <<= 8;
@@ -492,7 +495,7 @@ uint8_t P122_data_struct::getFirmwareVersion()
 {
   uint8_t version = 0;
   writeCmd(SHT2x_GET_FIRMWARE, SHT2x_FIRMWARE_ADDRESS);
-  if (!readBytes(1, (uint8_t *) &version, 10))
+  if (!readBytes(1, (uint8_t *) &version, SHT2x_READ_REG_TIME))
   {
     version = 0;
   }
@@ -508,7 +511,7 @@ bool P122_data_struct::writeUserReg()
 
   // First fetch the current userReg value
   writeCmd(SHT2x_READ_USER_REGISTER);
-  if (!readBytes(1, (uint8_t *) &userReg, 5))
+  if (!readBytes(1, (uint8_t *) &userReg, SHT2x_READ_USR_TIME))
   {
     return false;
   }
