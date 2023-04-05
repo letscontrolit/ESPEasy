@@ -41,9 +41,20 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
       return 1;
     case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
   }
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_ERROR, F("getValueCountFromSensorType: Unknown sensortype"));
+  #endif
   return 0;
 }
+
+bool isSimpleOutputDataType(Sensor_VType sensorType)
+{
+  return sensorType == Sensor_VType::SENSOR_TYPE_SINGLE ||
+         sensorType == Sensor_VType::SENSOR_TYPE_DUAL   ||
+         sensorType == Sensor_VType::SENSOR_TYPE_TRIPLE ||
+         sensorType == Sensor_VType::SENSOR_TYPE_QUAD;
+}
+
 
 const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
   switch (sensorType) {
@@ -68,31 +79,34 @@ const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pconfigIndex)
 {
-  uint8_t optionValues[12];
-
-  optionValues[0]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
-  optionValues[1]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
-  optionValues[2]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_BARO);
-  optionValues[3]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO);
-  optionValues[4]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DUAL);
-  optionValues[5]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TRIPLE);
-  optionValues[6]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
-  optionValues[7]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SWITCH);
-  optionValues[8]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DIMMER);
-  optionValues[9]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_LONG);
-  optionValues[10] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_WIND);
-  optionValues[11] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_STRING);
-  sensorTypeHelper_webformLoad(event, pconfigIndex, 11, optionValues);
+  const uint8_t optionValues[] {
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_HUM),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_BARO),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DUAL),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TRIPLE),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SWITCH),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DIMMER),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_LONG),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_WIND),
+   static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_STRING)
+  };
+  constexpr int optionCount = sizeof(optionValues) / sizeof(optionValues[0]);
+  sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, optionValues);
 }
 
 void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, uint8_t pconfigIndex)
 {
-  uint8_t optionValues[4];
-  optionValues[0] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
-  optionValues[1] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DUAL);
-  optionValues[2] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TRIPLE);
-  optionValues[3] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
-  sensorTypeHelper_webformLoad(event, pconfigIndex, 4, optionValues);
+  const uint8_t optionValues[] {
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DUAL),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TRIPLE),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD)
+  };
+  constexpr int optionCount = sizeof(optionValues) / sizeof(optionValues[0]);
+  sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, optionValues);
 }
 
 void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigIndex, int optionCount, const uint8_t options[])
@@ -112,21 +126,12 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigInde
     choice                = event->sensorType;
     PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
   }
-  String outputTypeLabel = F("Output Data Type");
+  const __FlashStringHelper * outputTypeLabel = F("Output Data Type");
   if (Device[DeviceIndex].OutputDataType ==  Output_Data_type_t::Simple) {
-    switch(event->sensorType) {
-      case Sensor_VType::SENSOR_TYPE_SINGLE:
-      case Sensor_VType::SENSOR_TYPE_DUAL:
-      case Sensor_VType::SENSOR_TYPE_TRIPLE:
-      case Sensor_VType::SENSOR_TYPE_QUAD:
-        // These are valid
-        break;
-      default:
-      {
-        choice = Device[DeviceIndex].VType;
-        PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
-        break;
-      }
+    if (!isSimpleOutputDataType(event->sensorType))
+    {
+      choice = Device[DeviceIndex].VType;
+      PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
     }
     outputTypeLabel = F("Number Output Values");
   }
@@ -169,11 +174,13 @@ void sensorTypeHelper_loadOutputSelector(
   struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr,
   int optionCount, const __FlashStringHelper * options[], const int indices[])
 {
-  uint8_t   choice = PCONFIG(pconfigIndex);
-  String label  = F("Value ");
-
-  label += (valuenr + 1);
-  addFormSelector(label, PCONFIG_LABEL(pconfigIndex), optionCount, options, indices, choice);
+  addFormSelector(
+    concat(F("Value "), valuenr + 1), 
+    PCONFIG_LABEL(pconfigIndex), 
+    optionCount, 
+    options, 
+    indices, 
+    PCONFIG(pconfigIndex));
 }
 
 
@@ -181,9 +188,11 @@ void sensorTypeHelper_loadOutputSelector(
   struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr,
   int optionCount, const String options[], const int indices[])
 {
-  uint8_t   choice = PCONFIG(pconfigIndex);
-  String label  = F("Value ");
-
-  label += (valuenr + 1);
-  addFormSelector(label, PCONFIG_LABEL(pconfigIndex), optionCount, options, indices, choice);
+  addFormSelector(
+    concat(F("Value "), valuenr + 1), 
+    PCONFIG_LABEL(pconfigIndex), 
+    optionCount, 
+    options, 
+    indices, 
+    PCONFIG(pconfigIndex));
 }

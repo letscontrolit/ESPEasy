@@ -252,8 +252,12 @@ bool tryDeleteFile(const String& fname) {
 /********************************************************************************************\
    Fix stuff to clear out differences between releases
  \*********************************************************************************************/
-String BuildFixes()
+bool BuildFixes()
 {
+  if (Settings.Build == get_build_nr()) {
+    // Not changed
+    return false;
+  }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("BuildFixes"));
   #endif
@@ -278,7 +282,6 @@ String BuildFixes()
     Settings.Pin_Reset                 = -1;
     Settings.SyslogFacility            = DEFAULT_SYSLOG_FACILITY;
     Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
-    Settings.StructSize                = sizeof(Settings);
   }
 
   if (Settings.Build < 20103) {
@@ -392,9 +395,14 @@ String BuildFixes()
   // Starting 2022/08/18
   // Use get_build_nr() value for settings transitions.
   // This value will also be shown when building using PlatformIO, when showing the  Compile time defines 
+  Settings.Build      = get_build_nr();
+  Settings.StructSize = sizeof(Settings);
 
-  Settings.Build = get_build_nr();
-  return SaveSettings();
+  // We may have changed the settings, so update checksum.
+  // This way we save settings less often as these changes are always reproducible via this
+  // settings transitions function.
+
+  return !COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings);
 }
 
 /********************************************************************************************\
@@ -651,25 +659,20 @@ String LoadSettings()
   if (err.length()) {
     return err;
   }
-  if (Settings.StructSize != 0 && Settings.StructSize < sizeof(SettingsStruct)) {
-    // Struct has increased, set all new data to 0 just to be sure.
-    uint8_t * tmp = reinterpret_cast<uint8_t *>(&Settings);
-    const int wipe_length = sizeof(SettingsStruct) - Settings.StructSize;
-    memset(tmp + Settings.StructSize, 0, wipe_length);
+
+  if (!BuildFixes()) {
+
     #ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, concat(F("Settings : Wipe last "), wipe_length) + F(" bytes"));
+    if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
+      addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
+    } else{
+      addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+    }
     #endif
   }
+
   Settings.validate();
   initSerial();
-
-#ifndef BUILD_NO_DEBUG
-  if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
-    addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
-  } else{
-    addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
-  }
-#endif
 
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
 
@@ -1559,10 +1562,23 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadFromFile"));
   #endif
+  
   fs::File f = tryOpenFile(fname, "r");
   SPIFFS_CHECK(f,                            fname);
-  SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
-  SPIFFS_CHECK(f.read(memAddress, datasize), fname);
+  const int fileSize = f.size();
+  if (fileSize > offset) {
+    SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
+    
+    if (fileSize < (offset + datasize)) {
+      const int newdatasize = datasize + offset - fileSize;
+
+      // File is smaller, make sure to set excess memory to 0.
+      memset(memAddress + newdatasize, 0u, (datasize - newdatasize));
+
+      datasize = newdatasize;
+    }
+    SPIFFS_CHECK(f.read(memAddress, datasize), fname);
+  }
   f.close();
 
   STOP_TIMER(LOADFILE_STATS);

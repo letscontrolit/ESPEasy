@@ -657,15 +657,16 @@ void addCheckBox(const String& id, bool    checked, bool disabled
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
-void addNumericBox(const __FlashStringHelper *id, int value, int min, int max)
+void addNumericBox(const __FlashStringHelper *id, int value, int min, int max, bool disabled)
 {
-  addNumericBox(String(id), value, min, max);
+  addNumericBox(String(id), value, min, max, disabled);
 }
 
 void addNumericBox(const String& id, int value, int min, int max
                    #if FEATURE_TOOLTIPS
                    , const __FlashStringHelper * classname, const String& tooltip
                    #endif // if FEATURE_TOOLTIPS
+                   , bool disabled
                    )
 {
   addHtml(F("<input "));
@@ -684,6 +685,10 @@ void addNumericBox(const String& id, int value, int min, int max
     addHtmlAttribute(F("title"), tooltip);
   }
   #endif // if FEATURE_TOOLTIPS
+
+  if (disabled) {
+    addDisabled();
+  }
 
   if (value < min) {
     value = min;
@@ -707,9 +712,9 @@ void addNumericBox(const String& id, int value, int min, int max
 }
 
 #if FEATURE_TOOLTIPS
-void addNumericBox(const String& id, int value, int min, int max)
+void addNumericBox(const String& id, int value, int min, int max, bool disabled)
 {
-  addNumericBox(id, value, min, max, F("widenumber"));
+  addNumericBox(id, value, min, max, F("widenumber"), EMPTY_STRING, disabled);
 }
 
 #endif // if FEATURE_TOOLTIPS

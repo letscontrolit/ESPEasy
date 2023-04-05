@@ -64,24 +64,21 @@ void Caches::updateActiveTaskUseSerial0() {
 
   // Check to see if a task is enabled and using the pins we also use for receiving commands.
   // We're now receiving only from Serial0, so check if an enabled task is also using it.
-  for (taskIndex_t task = 0; validTaskIndex(task); ++task)
+  for (taskIndex_t task = 0; task < TASKS_MAX; ++task)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task);
 
     if (Settings.TaskDeviceEnabled[task] && validDeviceIndex(DeviceIndex)) {
       if ((Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL) ||
           (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1)) {
-        switch (ESPeasySerialType::getSerialType(
+        const ESPEasySerialPort port = ESPeasySerialType::getSerialType(
                   static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[task]),
                   Settings.TaskDevicePin1[task],
-                  Settings.TaskDevicePin2[task]))
+                  Settings.TaskDevicePin2[task]);
+        if (port == ESPEasySerialPort::serial0_swap ||
+            port == ESPEasySerialPort::serial0) 
         {
-          case ESPEasySerialPort::serial0_swap:
-          case ESPEasySerialPort::serial0:
-            activeTaskUseSerial0 = true;
-            break;
-          default:
-            break;
+          activeTaskUseSerial0 = true;
         }
       }
     }
