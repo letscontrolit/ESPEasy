@@ -347,6 +347,30 @@ void SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice(bool value) { // Inverted
 }
 #endif // if FEATURE_I2C_DEVICE_CHECK
 
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::WaitWiFiConnect() const { 
+  return bitRead(VariousBits2, 0);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::WaitWiFiConnect(bool value) { 
+  bitWrite(VariousBits2, 0, value);
+}
+
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::SDK_WiFi_autoreconnect() const { 
+  return bitRead(VariousBits2, 1);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::SDK_WiFi_autoreconnect(bool value) { 
+  bitWrite(VariousBits2, 1, value);
+}
+
+
+
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isTaskEnableReadonly(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex)) {

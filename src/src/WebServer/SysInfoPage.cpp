@@ -504,6 +504,8 @@ void handle_sysinfo_WiFiSettings() {
 #endif
   addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
   addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
+  addRowLabelValue(LabelType::WAIT_WIFI_CONNECT);
+  addRowLabelValue(LabelType::SDK_WIFI_AUTORECONNECT);
 }
 #endif
 
