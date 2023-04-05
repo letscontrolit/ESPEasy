@@ -19,7 +19,7 @@ bool P052_data_struct::isInitialized() const {
 }
 
 const __FlashStringHelper * P052_data_struct::Plugin_052_valuename(uint8_t value_nr, bool displayString) {
-  const __FlashStringHelper *strings[] {
+  const __FlashStringHelper* strings[] {
     F("Empty"),                  F(""),
     F("Carbon Dioxide"),         F("co2"),
     F("Temperature"),            F("T"),

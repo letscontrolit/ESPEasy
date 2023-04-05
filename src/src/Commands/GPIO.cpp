@@ -1181,12 +1181,14 @@ bool getGPIOPinStateValues(String& str) {
   // parseString(string, 2) = command (pinstate,pinrange)
   // parseString(string, 3) = gpio 1st number or a range separated by '-'
   bool   success = false;
-  String logPrefix = F("");
   const String device     = parseString(str, 1);
   const String command    = parseString(str, 2);
   const String gpio_descr = parseString(str, 3);
 
   if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinstate")) && (device.length() > 0)) {
+    #ifndef BUILD_NO_DEBUG
+    String logPrefix;
+    #endif
     // returns pin value using syntax: [plugin#xxxxxxx#pinstate#x]
     int par1;
     const bool validArgument = validIntFromString(gpio_descr, par1);
@@ -1202,7 +1204,9 @@ bool getGPIOPinStateValues(String& str) {
           pluginID  = PLUGIN_GPIO;
           #endif // if FEATURE_PINSTATE_EXTENDED
           str       = digitalRead(par1);
+          #ifndef BUILD_NO_DEBUG
           logPrefix = F("GPIO");
+          #endif
           success   = true;
           break;
         }
@@ -1213,7 +1217,9 @@ bool getGPIOPinStateValues(String& str) {
           pluginID  = PLUGIN_MCP;
           #endif // if FEATURE_PINSTATE_EXTENDED
           str       = GPIO_MCP_Read(par1);
+          #ifndef BUILD_NO_DEBUG
           logPrefix = F("MCP");
+          #endif
           success   = true;
           break;
 #endif
@@ -1224,7 +1230,9 @@ bool getGPIOPinStateValues(String& str) {
           pluginID  = PLUGIN_PCF;
           #endif // if FEATURE_PINSTATE_EXTENDED
           str       = GPIO_PCF_Read(par1);
+          #ifndef BUILD_NO_DEBUG
           logPrefix = F("PCF");
+          #endif
           success   = true;
           break;
 #endif
@@ -1234,10 +1242,12 @@ bool getGPIOPinStateValues(String& str) {
           unsigned int plugin = INVALID_PLUGIN_ID;
           if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID)) { // Valid plugin ID?
             pluginID  = plugin;
+            #ifndef BUILD_NO_DEBUG
             logPrefix = F("P");
             if (pluginID < 100) { logPrefix += '0'; }
             if (pluginID < 10)  { logPrefix += '0'; }
             logPrefix += pluginID;
+            #endif
           } else 
           #endif // if FEATURE_PINSTATE_EXTENDED
           {
@@ -1281,6 +1291,7 @@ bool getGPIOPinStateValues(String& str) {
     }
 
     if (successPar) {
+      const __FlashStringHelper * logPrefix = F("");
 
       switch (device[0]) {
 #ifdef USES_P009
