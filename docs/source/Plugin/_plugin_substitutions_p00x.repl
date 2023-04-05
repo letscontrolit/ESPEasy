@@ -69,15 +69,15 @@
 .. |P004_compileinfo| replace:: `.`
 .. |P004_usedlibraries| replace:: `.`
 
-.. |P005_name| replace:: :cyan:`DHT11/12/22/SONOFF2301/7021`
+.. |P005_name| replace:: :cyan:`DHT11/12/22/SONOFF2301/7021/MS01`
 .. |P005_type| replace:: :cyan:`Environment`
-.. |P005_typename| replace:: :cyan:`Environment - DHT11/12/22  SONOFF2301/7021`
+.. |P005_typename| replace:: :cyan:`Environment - DHT11/12/22  SONOFF2301/7021/MS01`
 .. |P005_porttype| replace:: `.`
 .. |P005_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P005_github| replace:: P005_DHT.ino
 .. _P005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P005_DHT.ino
 .. |P005_usedby| replace:: :ref:`P005_DHT11_DHT22_page`
-.. |P005_shortinfo| replace:: Plugin used to communicate with DHT11/12/22/SONOFF2301/7021
+.. |P005_shortinfo| replace:: Plugin used to communicate with DHT11/12/22/SONOFF2301/7021/MS01
 .. |P005_maintainer| replace:: `.`
 .. |P005_compileinfo| replace:: `.`
 .. |P005_usedlibraries| replace:: `.`

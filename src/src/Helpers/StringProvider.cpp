@@ -166,6 +166,8 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::FORCE_WIFI_NOSLEEP:     return F("Force WiFi No Sleep");
     case LabelType::PERIODICAL_GRAT_ARP:    return F("Periodical send Gratuitous ARP");
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
+    case LabelType::WAIT_WIFI_CONNECT:      return F("Extra Wait WiFi Connect");
+    case LabelType::SDK_WIFI_AUTORECONNECT: return F("Enable SDK WiFi Auto Reconnect");
 
     case LabelType::BUILD_DESC:             return F("Build");
     case LabelType::GIT_BUILD:              return F("Git Build");
@@ -431,6 +433,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::FORCE_WIFI_NOSLEEP:     return jsonBool(Settings.WifiNoneSleep());
     case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
     case LabelType::CONNECTION_FAIL_THRESH: retval = Settings.ConnectionFailuresThreshold; break;
+    case LabelType::WAIT_WIFI_CONNECT:      return jsonBool(Settings.WaitWiFiConnect());
+    case LabelType::SDK_WIFI_AUTORECONNECT: return jsonBool(Settings.WifiNoneSleep());
 
     case LabelType::BUILD_DESC:             return getSystemBuildString();
     case LabelType::GIT_BUILD:
