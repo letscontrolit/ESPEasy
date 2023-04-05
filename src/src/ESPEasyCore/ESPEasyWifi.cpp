@@ -296,9 +296,12 @@ bool WiFiConnected() {
     if (WiFiEventData.timerAPoff.isSet() && !WiFiEventData.timerAPoff.timeReached()) {
       // Timer reached, so enable AP mode.
       if (!WifiIsAP(WiFi.getMode())) {
-        if (!Settings.DoNotStartAP()) {
-          WifiScan(false);
-          setAP(true);
+        if (!WiFiEventData.wifiConnectAttemptNeeded) {
+          addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
+          if (!Settings.DoNotStartAP()) {
+            WifiScan(false);
+            setAP(true);
+          }
         }
       }
     } else {
@@ -467,6 +470,9 @@ void AttemptWiFiConnect() {
         WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), key.c_str());
+      }
+      if (Settings.WaitWiFiConnect()) {
+        WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
       }
       delay(1);
     } else {
@@ -1343,12 +1349,8 @@ void setWifiMode(WiFiMode_t new_mode) {
     SetWiFiTXpower();
 #endif
     if (WifiIsSTA(new_mode)) {
-      if (WiFi.getAutoConnect()) {
-        WiFi.setAutoConnect(false); 
-      }
-      if (WiFi.getAutoReconnect()) {
-        WiFi.setAutoReconnect(false);
-      }
+      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
+      WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
     }
     delay(100); // Must allow for some time to init.
   }
@@ -1441,10 +1443,9 @@ void setConnectionSpeed() {
 
   // Does not (yet) work, so commented out.
   #ifdef ESP32
-  /*
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
 
-  if (!Settings.ForceWiFi_bg_mode() || (wifi_connect_attempt > 10)) {
+  if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.connectionFailures > 10)) {
     // Set to use BGN
     protocol |= WIFI_PROTOCOL_11N;
   }
@@ -1456,7 +1457,6 @@ void setConnectionSpeed() {
   if (WifiIsAP(WiFi.getMode())) {
     esp_wifi_set_protocol(WIFI_IF_AP, protocol);
   }
-  */
   #endif // ifdef ESP32
 }
 

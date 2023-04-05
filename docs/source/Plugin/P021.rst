@@ -58,6 +58,8 @@ Sensor
 
 There is 1 exception to the **Hysteresis**: If the Hysteresis is set to 0, the output state will turn on (1) if the measured value goes *below* Set Value, and the output state will turn off (0) if the measured value reaches ``Set Value + 1.0``.
 
+* **Invert Output**: When checked, the output state will be 0 instead of 1 when the level is activated.
+
 * **Save 'Set Level' after change via config command** Via the config command, the **Set Level** value can be changed. To avoid wearing out the flash memory of the device by too often saving these settings, the default is now off, for existing tasks (after upgrade of ESPEasy), the old behavior of saving after each change is still active. The user should decide if saving the setting is actually required, or if that can be attained by carefully planning a save command or via a manual save.
 
 * **Auto-save interval**: Here a time in minutes can be set after which any changed 'Set Level' via the ``config,task,<taskname>,SetLevel,<value>`` command will be saved. This *requires* that the above setting **Save 'Set Level' after change via config command** is **disabled**! When used, a setting of ca. 30 minutes, or even longer when the Set Level is changed often, seems apropriate, unless the unit often reboots, but then that cause should be investigated and solved. The timer, when activated, should survive a warm reboot.

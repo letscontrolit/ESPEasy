@@ -54,9 +54,11 @@ boolean Plugin_029(uint8_t function, struct EventStruct *event, String& string)
         }
 
         addRowLabel(F("IDX"));
-        String id = F("TDID");   //="taskdeviceid"
-        id += controllerNr + 1;
-        addNumericBox(id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, DOMOTICZ_MAX_IDX);
+        addNumericBox(
+          concat(F("TDID"), controllerNr + 1),   //="taskdeviceid"
+          Settings.TaskDeviceID[controllerNr][event->TaskIndex], 
+          0, 
+          DOMOTICZ_MAX_IDX);
         success = true;
         break;
       }

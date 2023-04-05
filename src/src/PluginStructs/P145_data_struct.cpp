@@ -447,7 +447,7 @@ float P145_data_struct::getAnalogValue()
 @param[in] ref     Reference level for calibration
 @note   These parameters must be set before the plugin can calculate the level
         They are determined by the plugin configuration
-/*****************************************************************************/
+ *****************************************************************************/
 void P145_data_struct::setSensorData(int stype, bool comp, bool cal, bool vcclow, float load, float zero, float ref)
 {
   /* Each MQ-xxx sensor comes with its own set of constants */
@@ -475,7 +475,7 @@ void P145_data_struct::setSensorData(int stype, bool comp, bool cal, bool vcclow
 @param[in] hPin   Ootput pin for heater control
 @note   These values must be set before the plugin can measure the level
         They are determined by the plugin configuration
-/*****************************************************************************/
+ *****************************************************************************/
 void P145_data_struct::setSensorPins(int aPin, int hPin)
 {
   analogPin = aPin;
@@ -650,6 +650,7 @@ float P145_data_struct::getCalibrationValue() const
 @note   This is the internally corrected Rzero and will be unaltered when
         Autocalibration is switched off.
 */
+/**************************************************************************/
 float P145_data_struct::getAutoCalibrationValue() const
 {
   return rzero;

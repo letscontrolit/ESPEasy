@@ -39,16 +39,17 @@
 
 .. |P013_name| replace:: :cyan:`HC-SR04/RCW-0001`
 .. |P013_type| replace:: :cyan:`Position`
-.. |P013_typename| replace:: :cyan:`Position - HC-SR04/RCW-0001`
+.. |P013_typename| replace:: :cyan:`Position - HC-SR04/RCW-0001/etc.`
 .. |P013_porttype| replace:: `.`
 .. |P013_status| replace:: :green:`NORMAL`
 .. |P013_github| replace:: P013_HCSR04.ino
 .. _P013_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P013_HCSR04.ino
-.. |P013_usedby| replace:: :ref:`P013_HC-SR04_page`, :ref:`P013_RCW-0001_page`, :ref:`P013_US-100_page`
+.. |P013_usedby| replace:: `.`
 .. |P013_shortinfo| replace:: `.`
 .. |P013_maintainer| replace:: `.`
 .. |P013_compileinfo| replace:: `.`
-.. |P013_usedlibraries| replace:: `.`
+.. |P013_usedlibraries| replace:: `NewPing`
+.. _P013_usedlibraries: https://bitbucket.org/teckel12/arduino-new-ping/wiki/Home
 
 .. |P014_name| replace:: :cyan:`SI7021/HTU21D`
 .. |P014_type| replace:: :cyan:`Environment`

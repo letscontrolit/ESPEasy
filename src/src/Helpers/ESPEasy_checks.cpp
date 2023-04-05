@@ -76,10 +76,10 @@ void run_compiletime_checks() {
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   #ifdef ESP32
-  const unsigned int SettingsStructSize = (332 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (336 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  const unsigned int SettingsStructSize = (308 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (312 + 84 * TASKS_MAX);
   #endif
   #if FEATURE_CUSTOM_PROVISIONING
   check_size<ProvisioningStruct,                    256u>();  
@@ -107,7 +107,7 @@ void run_compiletime_checks() {
   const unsigned int LogStructSize = ((13u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
-  check_size<DeviceStruct,                          8u>(); // Is not stored
+  check_size<DeviceStruct,                          9u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();
   #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
