@@ -123,6 +123,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     case P005_DHT12:  delay(200); break; // minimum 200ms
     case P005_AM2301: delayMicroseconds(900); break;
     case P005_SI7021: delayMicroseconds(500); break;
+    case P005_MS01:   delayMicroseconds(450); break;
   }
 
   {
@@ -308,11 +309,47 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
       }
       humidity = 0.1f * word(dht_dat[0], dht_dat[1]); // Humidity
       break;
+
+    case P005_MS01:
+      {
+        // Conversion from Tasmota:
+        // https://github.com/arendst/Tasmota/blob/0ea36d996c2b8b519ae5aa127f1a5fea354706af/tasmota/tasmota_xsns_sensor/xsns_06_dht_v7.ino#L297
+
+
+        const int16_t voltage = ((dht_dat[0] << 8) | dht_dat[1]);
+
+        // Rough approximate of soil moisture % (based on values observed in the eWeLink app)
+        // Observed values are available here: https://gist.github.com/minovap/654cdcd8bc37bb0d2ff338f8d144a509
+
+
+        // Info on capacitive soil moisture sensors:
+        // https://makersportal.com/blog/2020/5/26/capacitive-soil-moisture-calibration-with-arduino
+
+        if (voltage < 15037) {
+          const float x = voltage - 15200;
+          humidity = - powf(0.0024f * x, 3) - 0.0004f * x + 20.1f;
+        }
+        else if (voltage < 22300) {
+          humidity = - 0.00069f * voltage + 30.6f;
+        }
+        else {
+          const float x = voltage - 22800;
+          humidity = - powf(0.00046f * x, 3) - 0.0004f * x + 15;
+        }
+
+        if (definitelyLessThan(humidity, 0.0f)) {
+          humidity = 0.0f;
+        }
+
+        temperature = voltage;
+        break;
+      }
   }
 
-  if (isnan(temperature) || isnan(humidity))
-  {     P005_log(event, P005_logNr::P005_error_invalid_NAN_reading);
-        return false; }
+  if (isnan(temperature) || isnan(humidity)) {
+    P005_log(event, P005_logNr::P005_error_invalid_NAN_reading);
+    return false; 
+  }
 
   UserVar[event->BaseVarIndex]     = temperature;
   UserVar[event->BaseVarIndex + 1] = humidity;
