@@ -296,9 +296,12 @@ bool WiFiConnected() {
     if (WiFiEventData.timerAPoff.isSet() && !WiFiEventData.timerAPoff.timeReached()) {
       // Timer reached, so enable AP mode.
       if (!WifiIsAP(WiFi.getMode())) {
-        if (!Settings.DoNotStartAP()) {
-          WifiScan(false);
-          setAP(true);
+        if (!WiFiEventData.wifiConnectAttemptNeeded) {
+          addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
+          if (!Settings.DoNotStartAP()) {
+            WifiScan(false);
+            setAP(true);
+          }
         }
       }
     } else {
@@ -467,6 +470,9 @@ void AttemptWiFiConnect() {
         WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), key.c_str());
+      }
+      if (Settings.WaitWiFiConnect()) {
+        WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
       }
       delay(1);
     } else {
@@ -1343,12 +1349,8 @@ void setWifiMode(WiFiMode_t new_mode) {
     SetWiFiTXpower();
 #endif
     if (WifiIsSTA(new_mode)) {
-      if (WiFi.getAutoConnect()) {
-        WiFi.setAutoConnect(false); 
-      }
-      if (WiFi.getAutoReconnect()) {
-        WiFi.setAutoReconnect(false);
-      }
+      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
+      WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
     }
     delay(100); // Must allow for some time to init.
   }
