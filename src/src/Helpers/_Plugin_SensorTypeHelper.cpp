@@ -49,14 +49,6 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
   return 0;
 }
 
-bool isSimpleOutputDataType(Sensor_VType sensorType)
-{
-  return sensorType == Sensor_VType::SENSOR_TYPE_SINGLE ||
-         sensorType == Sensor_VType::SENSOR_TYPE_DUAL   ||
-         sensorType == Sensor_VType::SENSOR_TYPE_TRIPLE ||
-         sensorType == Sensor_VType::SENSOR_TYPE_QUAD;
-}
-
 
 const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
   switch (sensorType) {

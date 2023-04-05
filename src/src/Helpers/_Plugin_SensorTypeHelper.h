@@ -13,8 +13,6 @@
 \*********************************************************************************************/
 uint8_t getValueCountFromSensorType(Sensor_VType sensorType);
 
-bool isSimpleOutputDataType(Sensor_VType sensorType);
-
 const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType);
 
 bool isSimpleOutputDataType(Sensor_VType sensorType);
