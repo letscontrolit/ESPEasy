@@ -184,13 +184,13 @@ void handle_unprocessedNetworkEvents()
           WiFiEventData.wifi_considered_stable = true;
           WiFi_AP_Candidates.markCurrentConnectionStable();
 
-          if (!WiFi.getAutoConnect()) {
-            WiFi.setAutoConnect(true);
+          if (WiFi.getAutoReconnect() != Settings.SDK_WiFi_autoreconnect()) {
+            WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
             delay(1);
           }
         } else {
-          if (WiFi.getAutoConnect()) {
-            WiFi.setAutoConnect(false);
+          if (WiFi.getAutoReconnect()) {
+            WiFi.setAutoReconnect(false);
             delay(1);
           }
         }
@@ -246,8 +246,8 @@ void processDisconnect() {
   }
 
 
-  // FIXME TD-er: Ignoring the actual setting for now as it seems to be more reliable to always restart WiFi.
-  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
+  // FIXME TD-er: With AutoReconnect enabled, WiFi must be reset or else we completely loose track of the actual WiFi state
+  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost() || WiFi.getAutoReconnect();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     if (!WiFi_AP_Candidates.getBestCandidate().usable())
 //      addLog(LOG_LEVEL_INFO, F("WIFI : !getBestCandidate().usable()  => mustRestartWiFi = true"));
@@ -574,7 +574,7 @@ void processScanDone() {
       temp_disable_EspEasy_now_timer = millis() + 20000;
 #endif
     }
-  } else if (!NetworkConnected()) {
+  } else if (!WiFiEventData.wifiConnectInProgress && !NetworkConnected()) {
     WiFiEventData.timerAPstart.setNow();
   }
 

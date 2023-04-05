@@ -148,6 +148,16 @@ class SettingsStruct_tmpl
   void CheckI2Cdevice(bool value);
   #endif // if FEATURE_I2C_DEVICE_CHECK
 
+  // Wait for a second after calling WiFi.begin()
+  // Especially useful for some FritzBox routers.
+  bool WaitWiFiConnect() const;
+  void WaitWiFiConnect(bool value);
+
+  // Use Espressif's auto reconnect.
+  bool SDK_WiFi_autoreconnect() const;
+  void SDK_WiFi_autoreconnect(bool value);
+
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
@@ -377,6 +387,7 @@ class SettingsStruct_tmpl
   
 //  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
 
+  uint32_t      VariousBits2 = 0;
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };
