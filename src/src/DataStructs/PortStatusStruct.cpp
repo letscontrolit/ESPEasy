@@ -15,12 +15,7 @@ uint16_t portStatusStruct::getDutyCycle() const
 
 int16_t portStatusStruct::getValue() const
 {
-  switch (mode) {
-    case PIN_MODE_PWM:
-    case PIN_MODE_SERVO:
-      return dutyCycle;
-    default:
-      break;
-  }
+  if (mode == PIN_MODE_PWM || mode == PIN_MODE_SERVO)
+    return dutyCycle;
   return state;
 }

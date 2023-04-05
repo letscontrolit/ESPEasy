@@ -449,6 +449,14 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 }
 
 
+void html_add_setPage(uint8_t page, bool isLinkToPrev) {
+  addHtml(F("devices?setpage="));
+  addHtmlInt(page);
+  addHtml(F("'>&"));
+  addHtml(isLinkToPrev ? 'l' : 'g');
+  addHtml(F("t;</a>"));
+}
+
 // ********************************************************************************
 // Show table with all selected Tasks/Devices
 // ********************************************************************************
@@ -463,37 +471,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
   {
     html_add_button_prefix();
 
-    {
-      String html;
-      html.reserve(30);
-
-      html += F("devices?setpage=");
-
-      if (page > 1) {
-        html += page - 1;
-      }
-      else {
-        html += page;
-      }
-      html += F("'>&lt;</a>");
-      addHtml(html);
-    }
+    html_add_setPage((page > 1) ? page - 1 : page, true);
     html_add_button_prefix();
-    {
-      String html;
-      html.reserve(30);
-
-      html += F("devices?setpage=");
-
-      if (page < (TASKS_MAX / TASKS_PER_PAGE)) {
-        html += page + 1;
-      }
-      else {
-        html += page;
-      }
-      html += F("'>&gt;</a>");
-      addHtml(html);
-    }
+    html_add_setPage((page < (TASKS_MAX / TASKS_PER_PAGE)) ? page + 1 : page, false);
   }
 
   html_table_header(F("Task"),    50);

@@ -48,7 +48,7 @@ enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_WIND            =   21,
   SENSOR_TYPE_STRING          =   22,
 
-  SENSOR_TYPE_NOT_SET         = 255
+  SENSOR_TYPE_NOT_SET = 255
 };
 
 enum class Output_Data_type_t : uint8_t {
@@ -56,6 +56,8 @@ enum class Output_Data_type_t : uint8_t {
   Simple, // SENSOR_TYPE_SINGLE, _DUAL, _TRIPLE, _QUAD
   All
 };
+
+
 
 /*********************************************************************************************\
 * DeviceStruct
