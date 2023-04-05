@@ -53,7 +53,7 @@ else:
 #    "-DUSES_P106",  # BME680
 #    "-DUSES_P107",  # SI1145 UV index
 
-    "-DUSES_P146",  # Cache Reader
+#    "-DUSES_P146",  # Cache Reader
 
 #   "-DUSES_C015",  # Blynk
 #   "-DUSES_C016",  # Cache Controller
