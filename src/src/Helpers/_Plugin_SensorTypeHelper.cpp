@@ -43,11 +43,22 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
       return 4;
     case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
   }
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_ERROR, F("getValueCountFromSensorType: Unknown sensortype"));
+  #endif
   return 0;
 }
 
-const __FlashStringHelper* getSensorTypeLabel(Sensor_VType sensorType) {
+bool isSimpleOutputDataType(Sensor_VType sensorType)
+{
+  return sensorType == Sensor_VType::SENSOR_TYPE_SINGLE ||
+         sensorType == Sensor_VType::SENSOR_TYPE_DUAL   ||
+         sensorType == Sensor_VType::SENSOR_TYPE_TRIPLE ||
+         sensorType == Sensor_VType::SENSOR_TYPE_QUAD;
+}
+
+
+const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
   switch (sensorType) {
     case Sensor_VType::SENSOR_TYPE_SINGLE:           return F("Single");
     case Sensor_VType::SENSOR_TYPE_TEMP_HUM:         return F("Temp / Hum");
@@ -145,6 +156,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigInde
     choice                = event->sensorType;
     PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
   }
+
   const __FlashStringHelper *outputTypeLabel = F("Output Data Type");
 
   if (Device[DeviceIndex].OutputDataType ==  Output_Data_type_t::Simple) {

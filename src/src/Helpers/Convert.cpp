@@ -134,7 +134,7 @@ String format_msec_duration(int64_t duration) {
   String result;
 
   if (duration < 0) {
-    result   = "-";
+    result   = '-';
     duration = -1ll * duration;
   }
 

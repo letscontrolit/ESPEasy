@@ -41,7 +41,7 @@ const __FlashStringHelper* Plugin_026_valuename(uint8_t value_nr, bool displaySt
     F("WiFi TX pwr")  , F("txpwr"),
     F("Free 2nd Heap"), F("free2ndheap")
   };
-  const size_t index = 2* value_nr + (displayString ? 0 : 1);
+  const size_t index = (2* value_nr) + (displayString ? 0 : 1);
   constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
   if (index < nrStrings) {
     return strings[index];
@@ -79,10 +79,9 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P026_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_026_valuename(choice, false),
+            Plugin_026_valuename(PCONFIG(pconfigIndex), false),
             sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
         } else {
           ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
@@ -201,7 +200,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       // return decode(bytes,
       //  [header, uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
       //  ['header', 'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
-      int index = 0;
+      uint8_t index = 0;
       string     += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // uptime
       string     += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // freeheap
       string     += LoRa_addFloat(P026_get_value(index++), PackedData_int8);  // rssi
@@ -222,7 +221,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-float P026_get_value(int type)
+float P026_get_value(uint8_t type)
 {
   switch (type)
   {
