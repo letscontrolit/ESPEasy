@@ -404,6 +404,10 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
                 temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
                   P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2, errorcode);
               }
+              if (temperatureX100 > 32768) {
+                // 2-complement value.
+                temperatureX100 -= 65535;
+              }
               value     = static_cast<float>(temperatureX100) / 100.0f;
               logPrefix = F("temperature = ");
               break;
@@ -459,7 +463,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             }
           }
 
-          if (P052_data->modbus.getLastError() == 0) {
+          if (errorcode == 0 && P052_data->modbus.getLastError() == 0) {
             success                              = true;
             UserVar[event->BaseVarIndex + varnr] = value;
             log                                 += logPrefix;
