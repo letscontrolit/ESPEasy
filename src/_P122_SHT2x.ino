@@ -156,6 +156,10 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         txt += formatToHex(eidb);
         txt += F(" firmware=");
         txt += String (firmware);
+#ifdef PLUGIN_122_DEBUG
+        txt += F(" userReg= ");
+        txt += formatToHex(P122_data->getUserReg());
+#endif
         addFormNote(txt);
       }
 #endif

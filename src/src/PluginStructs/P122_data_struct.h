@@ -12,7 +12,7 @@
 #ifdef LIMIT_BUILD_SIZE
 #define PLUGIN_122_DEBUG  false
 #else
-#define PLUGIN_122_DEBUG  true              // set to true for extra log info in the debug
+#define PLUGIN_122_DEBUG  false        // set to true for extra log info in the debug
 #endif
 
 // SHT2x device properties
@@ -81,6 +81,7 @@ public:
   //  Sensirion_Humidity_SHT2x_Electronic_Identification_Code_V1.1.pdf
   //  Electronic ID bytes
   bool getEID(uint32_t &eida, uint32_t &eidb, uint8_t &firmware);
+  uint8_t getUserReg();
 
   /////////////////////////////////////////////////////////
   // Temperature and humidity retrieval
@@ -136,5 +137,6 @@ protected:
   uint32_t  _eida;              // Electronic Device ID part EIDA, read at initialization
   uint32_t  _eidb;              // Electronic Device ID part EIDB, read at initialization
   uint8_t   _firmware;          // Firmware version numer, read at initialization
+  uint8_t   _userreg;           // TODO debugging only
 };
 #endif // USES_P122

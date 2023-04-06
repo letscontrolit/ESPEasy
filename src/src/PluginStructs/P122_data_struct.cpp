@@ -26,14 +26,15 @@
 
 // Bitflags for SHT2x User Register
 #define SHT2x_USRREG_RESOLUTION         0x81  // Resolution split into bits 7 and 0
-#define SHT2x_USRREG_BATTERY            0x20  // Battery status flag
-#define SHT2x_USRREG_HEATER             0x04  // Heater enable
-#define SHT2x_USRREG_OTP                0x02  // Disable OTP reload
+#define SHT2x_USRREG_BATTERY            0x40  // Battery status flag, bit 6
+#define SHT2x_USRREG_RESERVED           0x38  // Reserved bits, do not modify, bit 3,4,5
+#define SHT2x_USRREG_HEATER             0x04  // Heater enable, bit 2
+#define SHT2x_USRREG_OTP                0x02  // Disable OTP reload, bit 1
 
-#define SHT2x_READ_VAL_TIME                5  // Timeout value for reading the termperature/humidity values
-#define SHT2x_READ_REG_TIME               10  // Timeout value for reading a register sequence
-#define SHT2x_READ_USR_TIME                5  // Timeout value for reading user register
-#define P122_RESET_DELAY                  15  // delay in miliseconds for the reset to settle down
+#define SHT2x_READ_VAL_TIME                5  // Timeout value for reading the termperature/humidity values [ms]
+#define SHT2x_READ_REG_TIME               10  // Timeout value for reading a register sequence [ms]
+#define SHT2x_READ_USR_TIME                5  // Timeout value for reading user register [ms]
+#define P122_RESET_DELAY                  15  // delay in miliseconds for the reset to settle down [ms]
 #define P122_MAX_RETRY                   250  // Give up after amount of retries befoe going to error 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,6 +52,7 @@ P122_data_struct::P122_data_struct()
   _eidb           = 0;
   _firmware       = 0;
   _last_action_started = 0;
+  _userreg        = 0;
 }
 
 // Initialize/setup device properties
@@ -295,6 +297,11 @@ bool P122_data_struct::getEID(uint32_t &eida, uint32_t &eidb, uint8_t &firmware)
   return true;
 }
 
+uint8_t P122_data_struct::getUserReg()
+{
+  return _userreg;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the previously measured temperature in [C]
 float P122_data_struct::getTemperature()
@@ -339,7 +346,6 @@ uint8_t P122_data_struct::getResolution()
 {
   return _resolution;
 };
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Retrieve the battery status (power supply level)
@@ -518,16 +524,24 @@ bool P122_data_struct::writeUserReg()
 
   // Set selected resolution which is split into bit 7 and bit 0
   userReg &= ~SHT2x_USRREG_RESOLUTION;  //  clear old resolution and set new
+  userReg &= ~SHT2x_USRREG_HEATER;  // Reset heater control bit
   userReg |= ((_resolution & 0x02) << 6);
   userReg |= (_resolution & 0x01);
-
-  // Switch heater off
-  userReg &= ~SHT2x_USRREG_HEATER;  // Reset heater control bit
 
   if (!writeCmd(SHT2x_WRITE_USER_REGISTER, userReg))
   {
     return false;
   }
+
+#ifdef PLUGIN_122_DEBUG
+  // Read back the register for debugging purpose only
+  writeCmd(SHT2x_READ_USER_REGISTER);
+  if (!readBytes(1, (uint8_t *) &userReg, SHT2x_READ_USR_TIME))
+  {
+    return false;
+  }
+  _userreg = userReg;
+#endif
   return true;
 }
 
