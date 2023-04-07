@@ -32,13 +32,13 @@ Supported hardware
 
   .. image:: P047_CatnipMiceuzSensor.png
 
-* BelFlE:
+* BeFlE:
 
-  Where to buy: `BelFlE on Amazon.de <https://www.amazon.de/BeFlE-kapazitiver-Bodenfeuchtesensor-SoMoSe-v1-1/dp/B091D6HNM6/ref=sr_1_3?keywords=somose+v2.2&qid=1679243526&sprefix=SoMoSe%2Caps%2C82&sr=8-3>`_
+  Where to buy: `BeFlE on Amazon.de <https://www.amazon.de/BeFlE-kapazitiver-Bodenfeuchtesensor-SoMoSe-v1-1/dp/B091D6HNM6/ref=sr_1_3?keywords=somose+v2.2&qid=1679243526&sprefix=SoMoSe%2Caps%2C82&sr=8-3>`_
   
-  Arduino library: `BelFlE on Github.com <https://github.com/BeFlE/SoMoSe>`_ (only used for inspiration)
+  Arduino library: `BeFlE on Github.com <https://github.com/BeFlE/SoMoSe>`_ (only used for inspiration)
 
-  .. image:: P047_BelFlESensor.png
+  .. image:: P047_BeFlESensor.png
 
 Configuration
 -------------
@@ -65,11 +65,11 @@ Device Settings
 
 * *Catnip electronics/miceuz (default)*: The originally supported soil moisture sensor, that supports temperature, moisture and light measurement, has a sleep-mode, and can report a version number, to optionally validate if the sensor is supported.
 
-* *BelFlE*: An I2C soil moisture sensor that supports temperature and moisture measurement. There is no sleep mode or version check available.
+* *BeFlE*: An I2C soil moisture sensor that supports temperature and moisture measurement. There is no sleep mode or version check available.
 
-When selecting the BelFlE sensor, only these **Device Settings** will be available:
+When selecting the BeFlE sensor, only these **Device Settings** will be available:
 
-.. image:: P047_SensorModelBelFlE.png
+.. image:: P047_SensorModelBeFlE.png
 
 * **Send sensor to sleep**: When not actively reading the sensor, the device can be set to sleep-mode, to conserve some power. (Catnip sensor only).
 
@@ -91,7 +91,7 @@ Values
 
 The measured values are available in ``Temperature``, ``Moisture`` and ``Light``. A formula can be set to recalculate. The number of decimals is by default set to 2, and can be set to 0 for ``Moisture``, as no decimals are provided from the measurement.
 
-NB: The BelFlE sensor doesn't support a Light value, so that won't be available if that **Sensor model** is selected.
+NB: The BeFlE sensor doesn't support a Light value, so that won't be available if that **Sensor model** is selected.
 
 
 .. Commands available

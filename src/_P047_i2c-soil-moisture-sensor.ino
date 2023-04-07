@@ -12,6 +12,7 @@
 //
 
 /** Changelog:
+ * 2023-04-07 tonhuisman: Correct typo BelFlE to BeFlE
  * 2023-04-01 tonhuisman: Implement staged reading instead of a fixed delay during PLUGIN_READ
  *                        Add range-check on save for I2C address inputs (0x01..0x7F)
  * 2023-03-31 tonhuisman: Add support for BelFlE I2C Moisture sensor,
@@ -118,11 +119,11 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper *SensorModels[] = {
           F("Catnip electronics/miceuz (default)"),
-          F("BelFlE"),
+          F("BeFlE"),
         };
         const int SensorModelIds[] = {
           static_cast<int>(P047_MODEL_CATNIP),
-          static_cast<int>(P047_MODEL_BELFLE),
+          static_cast<int>(P047_MODEL_BEFLE),
         };
         constexpr size_t P047_MODEL_OPTIONS = sizeof(SensorModelIds) / sizeof(SensorModelIds[0]);
         addFormSelector(F("Sensor model"), F("model"), P047_MODEL_OPTIONS, SensorModels, SensorModelIds, P047_MODEL, true);
@@ -170,7 +171,7 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
           P047_I2C_ADDR = P047_CATNIP_DEFAULT_ADDR;
           strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_047)); // Gets wiped when switching nr. of values
         } else {
-          P047_I2C_ADDR = P047_BELFLE_DEFAULT_ADDR;
+          P047_I2C_ADDR = P047_BEFLE_DEFAULT_ADDR;
         }
       }
 

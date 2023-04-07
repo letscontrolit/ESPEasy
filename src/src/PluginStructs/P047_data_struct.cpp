@@ -122,7 +122,7 @@ float P047_data_struct::readTemperature() {
   if (P047_MODEL_CATNIP == _model) {
     return I2C_readS16_reg(_address, P047_CATNIP_GET_TEMPERATURE) / 10.0f;
   } else {
-    return static_cast<float>(I2C_read8_reg(_address, P047_BELFLE_GET_TEMPERATURE));
+    return static_cast<float>(I2C_read8_reg(_address, P047_BEFLE_GET_TEMPERATURE));
   }
 }
 
@@ -134,7 +134,7 @@ float P047_data_struct::readLight() {
     return I2C_read16_reg(_address, P047_CATNIP_GET_LIGHT);
   }
 
-  // Not supported by BelFlE sensor
+  // Not supported by BeFlE sensor
   return 0.0f;
 }
 
@@ -145,7 +145,7 @@ unsigned int P047_data_struct::readMoisture() {
   if (P047_MODEL_CATNIP == _model) {
     return I2C_read16_reg(_address, P047_CATNIP_GET_CAPACITANCE);
   } else {
-    return I2C_read16_reg(_address, P047_BELFLE_GET_CAPACITANCE) >> 8; // Get averaged value
+    return I2C_read16_reg(_address, P047_BEFLE_GET_CAPACITANCE) >> 8; // Get averaged value
   }
 }
 
@@ -155,7 +155,7 @@ uint8_t P047_data_struct::getVersion() {
     return I2C_read8_reg(_address, P047_CATNIP_GET_VERSION);
   }
 
-  // Not supported by BelFlE sensor
+  // Not supported by BeFlE sensor
   return 0;
 }
 
@@ -171,7 +171,7 @@ bool P047_data_struct::changeAddress(uint8_t new_i2cAddr) {
   if (P047_MODEL_CATNIP == _model) {
     command = P047_CATNIP_SET_ADDRESS;
   } else {
-    command = P047_BELFLE_SET_ADDRESS;
+    command = P047_BEFLE_SET_ADDRESS;
   }
   I2C_write8_reg(_address, command, new_i2cAddr);
   I2C_write8_reg(_address, command, new_i2cAddr);
@@ -188,7 +188,7 @@ bool P047_data_struct::checkAddress(uint8_t new_i2cAddr) {
     return I2C_read8_reg(_address, P047_CATNIP_GET_ADDRESS) == new_i2cAddr;
   }
 
-  // Not supported by BelFlE sensor
+  // Not supported by BeFlE sensor
   return true;
 }
 
@@ -201,7 +201,7 @@ bool P047_data_struct::resetSensor() {
     return true;
   }
 
-  // Not supported by BelFlE sensor
+  // Not supported by BeFlE sensor
   return false;
 }
 
@@ -210,7 +210,7 @@ void P047_data_struct::setToSleep() {
     I2C_write8(_address, P047_CATNIP_SLEEP);
   }
 
-  // Not supported by BelFlE sensor
+  // Not supported by BeFlE sensor
 }
 
 void P047_data_struct::startMeasure() {
@@ -218,7 +218,7 @@ void P047_data_struct::startMeasure() {
     I2C_write8(_address, P047_CATNIP_MEASURE_LIGHT);
   }
 
-  // Not supported by BelFlE sensor
+  // Not supported by BeFlE sensor
 }
 
 #endif // ifdef USES_P047

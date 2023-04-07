@@ -280,7 +280,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("ADXL345,LTR390");
       break;
     case 0x55:
-      result +=  F("DFRobot Rotary enc,BelFlE Moisture");
+      result +=  F("DFRobot Rotary enc,BeFlE Moisture");
       break;
     case 0x54:
     case 0x56:

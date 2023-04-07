@@ -6,7 +6,7 @@
 
 // Default I2C Address of the sensor
 # define P047_CATNIP_DEFAULT_ADDR 0x20
-# define P047_BELFLE_DEFAULT_ADDR 0x55
+# define P047_BEFLE_DEFAULT_ADDR  0x55
 
 // Soil Moisture Sensor Register Addresses
 // Catnip electronics / miceuz:
@@ -21,17 +21,17 @@
 # define P047_CATNIP_SLEEP                0x08 // (w)     n/a
 # define P047_CATNIP_GET_BUSY             0x09 // (r)	    1 bytes
 
-// BelFlE: (unsupported features set to 0xFF)
-# define P047_BELFLE_GET_CAPACITANCE      0x76 // (r)     2 bytes
-# define P047_BELFLE_SET_ADDRESS          0x41 //	(w)     1 uint8_t
-# define P047_BELFLE_GET_ADDRESS          0xFF // (r)     n/a
-# define P047_BELFLE_MEASURE_LIGHT        0xFF //	(w)     2 byte, avg = 1st byte, current = 2nd byte
-# define P047_BELFLE_GET_LIGHT            0xFF //	(r)     2 byte, avg = 1st byte, current = 2nd byte
-# define P047_BELFLE_GET_TEMPERATURE      0x74 //	(r)     2 bytes
-# define P047_BELFLE_RESET                0xFF //	(w)     n/a
-# define P047_BELFLE_GET_VERSION          0xFF //	(r)     n/a
-# define P047_BELFLE_SLEEP                0xFF // (w)     n/a
-# define P047_BELFLE_GET_BUSY             0xFF // (r)	    n/a
+// BeFlE: (unsupported features set to 0xFF)
+# define P047_BEFLE_GET_CAPACITANCE       0x76 // (r)     2 bytes
+# define P047_BEFLE_SET_ADDRESS           0x41 //	(w)     1 uint8_t
+# define P047_BEFLE_GET_ADDRESS           0xFF // (r)     n/a
+# define P047_BEFLE_MEASURE_LIGHT         0xFF //	(w)     2 byte, avg = 1st byte, current = 2nd byte
+# define P047_BEFLE_GET_LIGHT             0xFF //	(r)     2 byte, avg = 1st byte, current = 2nd byte
+# define P047_BEFLE_GET_TEMPERATURE       0x74 //	(r)     2 bytes
+# define P047_BEFLE_RESET                 0xFF //	(w)     n/a
+# define P047_BEFLE_GET_VERSION           0xFF //	(r)     n/a
+# define P047_BEFLE_SLEEP                 0xFF // (w)     n/a
+# define P047_BEFLE_GET_BUSY              0xFF // (r)	    n/a
 
 # define P047_I2C_ADDR       PCONFIG(0)
 # define P047_SENSOR_SLEEP   PCONFIG(1)
@@ -49,12 +49,12 @@ enum class P047_ReadMode : uint8_t {
 // Supported sensor models
 enum class P047_SensorModels : uint8_t {
   CatnipMiceuz = 0,
-  BelFlE,
+  BeFlE,
 };
 
 // Shortcuts
 # define P047_MODEL_CATNIP  P047_SensorModels::CatnipMiceuz
-# define P047_MODEL_BELFLE  P047_SensorModels::BelFlE
+# define P047_MODEL_BEFLE   P047_SensorModels::BeFlE
 
 struct P047_data_struct : public PluginTaskData_base {
 public:
