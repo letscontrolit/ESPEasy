@@ -25,23 +25,26 @@
 # define P026_NR_OUTPUT_OPTIONS  14
 
 const __FlashStringHelper* Plugin_026_valuename(uint8_t value_nr, bool displayString) {
-  switch (value_nr) {
-    case 0:  return displayString ? F("Uptime") : F("uptime");
-    case 1:  return displayString ? F("Free RAM") : F("freeheap");
-    case 2:  return displayString ? F("Wifi RSSI") : F("rssi");
-    case 3:  return displayString ? F("Input VCC") : F("vcc");
-    case 4:  return displayString ? F("System load") : F("load");
-    case 5:  return displayString ? F("IP 1.Octet") : F("ip1");
-    case 6:  return displayString ? F("IP 2.Octet") : F("ip2");
-    case 7:  return displayString ? F("IP 3.Octet") : F("ip3");
-    case 8:  return displayString ? F("IP 4.Octet") : F("ip4");
-    case 9:  return displayString ? F("Web activity") : F("web");
-    case 10: return displayString ? F("Free Stack") : F("freestack");
-    case 11: return displayString ? F("None") : F("");
-    case 12: return displayString ? F("WiFi TX pwr") : F("txpwr");
-    case 13: return displayString ? F("Free 2nd Heap") : F("free2ndheap");
-    default:
-      break;
+  const __FlashStringHelper* strings[] {
+    F("Uptime")       , F("uptime"),
+    F("Free RAM")     , F("freeheap"),
+    F("Wifi RSSI")    , F("rssi"),
+    F("Input VCC")    , F("vcc"),
+    F("System load")  , F("load"),
+    F("IP 1.Octet")   , F("ip1"),
+    F("IP 2.Octet")   , F("ip2"),
+    F("IP 3.Octet")   , F("ip3"),
+    F("IP 4.Octet")   , F("ip4"),
+    F("Web activity") , F("web"),
+    F("Free Stack")   , F("freestack"),
+    F("None")         , F(""),
+    F("WiFi TX pwr")  , F("txpwr"),
+    F("Free 2nd Heap"), F("free2ndheap")
+  };
+  const size_t index = (2* value_nr) + (displayString ? 0 : 1);
+  constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+  if (index < nrStrings) {
+    return strings[index];
   }
   return F("");
 }
@@ -76,10 +79,9 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P026_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_026_valuename(choice, false),
+            Plugin_026_valuename(PCONFIG(pconfigIndex), false),
             sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
         } else {
           ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
@@ -198,7 +200,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       // return decode(bytes,
       //  [header, uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
       //  ['header', 'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
-      int index = 0;
+      uint8_t index = 0;
       string     += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // uptime
       string     += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // freeheap
       string     += LoRa_addFloat(P026_get_value(index++), PackedData_int8);  // rssi
@@ -219,7 +221,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-float P026_get_value(int type)
+float P026_get_value(uint8_t type)
 {
   switch (type)
   {

@@ -4,9 +4,9 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P087
 
-#include <ESPeasySerial.h>
+# include <ESPeasySerial.h>
 
-#include <Regexp.h>
+# include <Regexp.h>
 
 
 # define P087_REGEX_POS          0
@@ -46,11 +46,11 @@ public:
 
   void reset();
 
-  bool init(ESPEasySerialPort port, 
-            const int16_t serial_rx,
-            const int16_t serial_tx,
-            unsigned long baudrate,
-            uint8_t       config);
+  bool init(ESPEasySerialPort port,
+            const int16_t     serial_rx,
+            const int16_t     serial_tx,
+            unsigned long     baudrate,
+            uint8_t           config);
 
   // Called after loading the config from the settings.
   // Will interpret some data and load caches.
@@ -59,6 +59,8 @@ public:
   bool isInitialized() const;
 
   void sendString(const String& data);
+  void sendData(uint8_t *data,
+                size_t   size);
 
   bool loop();
 
@@ -72,7 +74,7 @@ public:
 
   void            setMaxLength(uint16_t maxlenght);
 
-  void            setLine(uint8_t          varNr,
+  void            setLine(uint8_t       varNr,
                           const String& line);
 
   String          getRegEx() const;
@@ -100,9 +102,9 @@ public:
                              const unsigned int length,
                              const MatchState & ms);
 
-  bool          matchRegexp(String& received) const;
+  bool                              matchRegexp(String& received) const;
 
-  static const __FlashStringHelper * MatchType_toString(P087_Match_Type matchType);
+  static const __FlashStringHelper* MatchType_toString(P087_Match_Type matchType);
 
 
   // Made public so we don't have to copy the values when loading/saving.
@@ -123,9 +125,9 @@ private:
 
   uint8_t capture_index[P87_MAX_CAPTURE_INDEX] = { 0 };
 
-  bool capture_index_used[P87_MAX_CAPTURE_INDEX] = { 0 };
+  bool capture_index_used[P87_MAX_CAPTURE_INDEX]           = { 0 };
   bool capture_index_must_not_match[P87_MAX_CAPTURE_INDEX] = { 0 };
-  bool regex_empty = false;
+  bool regex_empty                                         = false;
 };
 
 

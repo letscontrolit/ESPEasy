@@ -13,7 +13,8 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
 
 {
   _errorValueIsNaN = isnan(_errorValue);
-  resetPeaks();
+  _minValue = std::numeric_limits<float>::max();
+  _maxValue = std::numeric_limits<float>::lowest();
 }
 
 bool PluginStats::push(float value)
@@ -31,7 +32,7 @@ void PluginStats::trackPeak(float value)
 void PluginStats::resetPeaks()
 {
   _minValue = std::numeric_limits<float>::max();
-  _maxValue = std::numeric_limits<float>::min();
+  _maxValue = std::numeric_limits<float>::lowest();
 }
 
 float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const
