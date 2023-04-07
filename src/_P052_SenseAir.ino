@@ -399,14 +399,15 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             case 2: {
               int temperatureX100 = P052_data->modbus.readInputRegister(P052_IR5_TEMPERATURE, errorcode);
 
-              if (errorcode != 0) {
+              if (errorcode == 2) {
+                // Exception code: Illegal Data Address
                 // SenseAir S8, not for other modules.
                 temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
                   P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2, errorcode);
               }
-              if (temperatureX100 > 32768) {
+              if (temperatureX100 >= 32768) {
                 // 2-complement value.
-                temperatureX100 -= 65535;
+                temperatureX100 -= 65536;
               }
               value     = static_cast<float>(temperatureX100) / 100.0f;
               logPrefix = F("temperature = ");
