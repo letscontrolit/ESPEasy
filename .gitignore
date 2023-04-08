@@ -6,6 +6,8 @@
 # Fuse FileSystem ***
 .fuse_hidden*
 
+## gitpod ##################
+core.*
 
 ## PlatformIO ##################
 .pioenvs
