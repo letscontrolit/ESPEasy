@@ -33,7 +33,7 @@ const __FlashStringHelper * getBearing(int degrees)
       F("NNW")
     };
     constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
-    if (bearing_idx < nrStrings) {
+    if (static_cast<size_t>(bearing_idx) < nrStrings) {
       return strings[bearing_idx];
     }
   }
