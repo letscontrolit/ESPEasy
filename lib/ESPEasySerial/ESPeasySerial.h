@@ -305,7 +305,6 @@ public:
 
 private:
 
-  void register_instance();
   void deregister_instance();
 
   ESPeasySerial* find_conflicting_ESPeasySerial(ESPEasySerialPort port, int rx, int tx);

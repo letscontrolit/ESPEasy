@@ -1,8 +1,10 @@
 #include <ESPeasySerial.h>
 
+/*
 #include <deque>
 
 std::deque<ESPeasySerial *> _ESPeasySerial_instances;
+*/
 #ifdef ESP8266
 
 ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
@@ -24,7 +26,12 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
   _inverse_logic(inverse_logic),
   _buffSize(buffSize)
 {
-  register_instance();
+  /*
+  ESPeasySerial *ptr = dynamic_cast<ESPeasySerial *>(this);
+
+  _ESPeasySerial_instances.push_back(ptr);
+  */
+
   resetConfig(port, receivePin, transmitPin, inverse_logic, buffSize, forceSWserial);
 }
 
@@ -47,7 +54,11 @@ ESPeasySerial::ESPeasySerial(
   _inverse_logic(inverse_logic),
   _buffSize(buffSize)
 {
-  register_instance();
+  /*
+  ESPeasySerial *ptr = dynamic_cast<ESPeasySerial *>(this);
+
+  _ESPeasySerial_instances.push_back(ptr);
+  */
   resetConfig(port, receivePin, transmitPin, inverse_logic, buffSize);
 }
 
@@ -110,15 +121,9 @@ void ESPeasySerial::update_instance()
   }
 }
 
-void ESPeasySerial::register_instance()
-{
-  ESPeasySerial *ptr = dynamic_cast<ESPeasySerial *>(this);
-
-  _ESPeasySerial_instances.push_back(ptr);
-}
-
 void ESPeasySerial::deregister_instance()
 {
+  /*
   // Check to see if there was a conflicting instance
   ESPeasySerial *conflict = find_conflicting_ESPeasySerial(_serialtype, _receivePin, _transmitPin);
 
@@ -142,6 +147,7 @@ void ESPeasySerial::deregister_instance()
       return;
     }
   }
+  */
 }
 
 void ESPeasySerial::resolveConflict()
@@ -157,6 +163,7 @@ void ESPeasySerial::resolveConflict()
 
 ESPeasySerial * ESPeasySerial::find_conflicting_ESPeasySerial(ESPEasySerialPort port, int rx, int tx)
 {
+  /*
   for (auto it = _ESPeasySerial_instances.begin(); it != _ESPeasySerial_instances.end(); ++it) {
     if (*it != nullptr) {
       ESPeasySerial *instance = dynamic_cast<ESPeasySerial *>(*it);
@@ -202,5 +209,6 @@ ESPeasySerial * ESPeasySerial::find_conflicting_ESPeasySerial(ESPEasySerialPort 
       }
     }
   }
+  */
   return nullptr;
 }
