@@ -6,10 +6,14 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-04-09 tonhuisman: Rename configuration options (compile-time), add optional output logging (default on),
+ *                        use more I2C_access functions, make Raw value optional (default on),
+ *                        add optional output temperature in Fahrenheit
  * 2023-04-08 tonhuisman: Basic workings for setting configuration and temperature offset, then reading the temperature
  *                        only when data is available.
  * 2023-04-08 tonhuisman: Initial work on new plugin for TMP117, available in Collection F, Climate and MAX builds
  */
+
 # include "src/PluginStructs/P150_data_struct.h"
 
 # define PLUGIN_150
@@ -28,7 +32,7 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_150;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE; // Only send first value to controllers
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -38,12 +42,14 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+
       break;
     }
 
     case PLUGIN_GET_DEVICENAME:
     {
       string = F(PLUGIN_NAME_150);
+
       break;
     }
 
@@ -51,6 +57,24 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_150));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_150));
+
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P150_GET_OPT_ENABLE_RAW ? 2 : 1;
+      success     = true;
+
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = P150_GET_OPT_ENABLE_RAW ? Sensor_VType::SENSOR_TYPE_DUAL : Sensor_VType::SENSOR_TYPE_SINGLE;
+      event->idx        = P150_GET_OPT_ENABLE_RAW ? 2 : 1;
+      success           = true;
+
       break;
     }
 
@@ -59,11 +83,12 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
     {
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B };
 
-      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+      if (PLUGIN_WEBFORM_SHOW_I2C_PARAMS == function) {
         addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, P150_I2C_ADDRESS);
       } else {
         success = intArrayContains(4, i2cAddressValues, event->Par1);
       }
+
       break;
     }
 
@@ -72,16 +97,21 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
     {
       event->Par1 = P150_I2C_ADDRESS;
       success     = true;
+
       break;
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P150_SET_FLAG_AVERAGING(P150_AVERAGING_8_SAMPLES);
-      P150_SET_FLAG_CONVERSION_MODE(P150_CONVERSION_CONTINUOUS);
-      P150_SET_FLAG_CYCLE_BITS(P150_CYCLE_1_SEC);
+      P150_SET_CONF_AVERAGING(P150_AVERAGING_8_SAMPLES);
+      P150_SET_CONF_CONVERSION_MODE(P150_CONVERSION_CONTINUOUS);
+      P150_SET_CONF_CYCLE_BITS(P150_CYCLE_1_SEC);
+      P150_SET_OPT_ENABLE_RAW(1);                       // Enable Raw by default
+      P150_SET_OPT_ENABLE_LOG(1);                       // Enable logging by default
+      P150_SET_OPT_FAHRENHEIT(0);                       // Show output in degrees Celcius
       ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0; // No decimals for the Raw value
+
       break;
     }
 
@@ -89,7 +119,7 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormNumericBox(F("Temperature offset"), F("offset"), P150_TEMPERATURE_OFFSET);
       addUnit(F("x 0.1C"));
-      addFormNote(F("Offset in units of 0.1 degree Celsius"));
+      addFormNote(F("Offset in units of 0.1 degree Celsius!"));
 
       {
         const __FlashStringHelper *averagingCaptions[] = {
@@ -104,7 +134,7 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_AVERAGING_32_SAMPLES,
           P150_AVERAGING_64_SAMPLES,
         };
-        addFormSelector(F("Averaging"), F("avg"), 4, averagingCaptions, averagingOptions, P150_GET_FLAG_AVERAGING);
+        addFormSelector(F("Averaging"), F("avg"), 4, averagingCaptions, averagingOptions, P150_GET_CONF_AVERAGING);
       }
 
       {
@@ -116,7 +146,7 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CONVERSION_CONTINUOUS,
           P150_CONVERSION_ONE_SHOT,
         };
-        addFormSelector(F("Conversion mode"), F("conv"), 2, conversionCaptions, conversionOptions, P150_GET_FLAG_CONVERSION_MODE);
+        addFormSelector(F("Conversion mode"), F("conv"), 2, conversionCaptions, conversionOptions, P150_GET_CONF_CONVERSION_MODE);
       }
       {
         const __FlashStringHelper *cycleCaptions[] = {
@@ -139,11 +169,21 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CYCLE_8_SEC,
           P150_CYCLE_16_SEC,
         };
-        addFormSelector(F("Conversion cycle time"), F("cycle"), 8, cycleCaptions, cycleOptions, P150_GET_FLAG_CYCLE_BITS);
+        addFormSelector(F("Conversion cycle time"), F("cycle"), 8, cycleCaptions, cycleOptions, P150_GET_CONF_CYCLE_BITS);
         addFormNote(F("Not all Cycle time options are available for One-shot mode!"));
       }
 
+      addFormSubHeader(F("Output"));
+
+      addFormCheckBox(F("Temperature in Fahrenheit"), F("fahr"), P150_GET_OPT_FAHRENHEIT);
+
+      addFormSelector_YesNo(F("Enable 'Raw' value"), F("raw"), P150_GET_OPT_ENABLE_RAW ? 1 : 0, true);
+      addFormNote(F("Changing this setting will save and reload this page."));
+
+      addFormCheckBox(F("Log measured values (INFO)"), F("log"), P150_GET_OPT_ENABLE_LOG);
+
       success = true;
+
       break;
     }
 
@@ -151,12 +191,25 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
     {
       P150_I2C_ADDRESS        = getFormItemInt(F("i2c_addr"));
       P150_TEMPERATURE_OFFSET = getFormItemInt(F("offset"));
-      P150_SET_FLAG_AVERAGING(getFormItemInt(F("avg")));
-      P150_SET_FLAG_CONVERSION_MODE(getFormItemInt(F("conv")));
-      P150_SET_FLAG_CYCLE_BITS(getFormItemInt(F("cycle")));
+      P150_SET_CONF_AVERAGING(getFormItemInt(F("avg")));
+      P150_SET_CONF_CONVERSION_MODE(getFormItemInt(F("conv")));
+      P150_SET_CONF_CYCLE_BITS(getFormItemInt(F("cycle")));
+
+      P150_SET_OPT_FAHRENHEIT(isFormItemChecked(F("fahr")));
+      uint8_t raw = getFormItemInt(F("raw"));
+
+      if (P150_GET_OPT_ENABLE_RAW != raw) {
+        if (raw) {
+          strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_150));
+          ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0; // No decimals for the Raw value
+        }
+        P150_SET_OPT_ENABLE_RAW(raw);
+      }
+      P150_SET_OPT_ENABLE_LOG(isFormItemChecked(F("log")));
 
       // P150_ERROR_STATE_OUTPUT = getFormItemInt(F("err"));
       success = true;
+
       break;
     }
 
@@ -166,7 +219,8 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       P150_data_struct *P150_data =
         static_cast<P150_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P150_data && P150_data->init(event));
+      success = (nullptr != P150_data && P150_data->init());
+
       break;
     }
 

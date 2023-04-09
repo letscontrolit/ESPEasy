@@ -4,8 +4,11 @@
 
 P150_data_struct::P150_data_struct(struct EventStruct *event) {
   _deviceAddress     = P150_I2C_ADDRESS;
-  _config            = P150_FLAGS;
+  _config            = P150_CONFIG;
   _temperatureOffset = P150_TEMPERATURE_OFFSET / 10.0f; // Per 0.1 degree
+  _outputFahrenheit  = P150_GET_OPT_FAHRENHEIT;
+  _rawEnabled        = P150_GET_OPT_ENABLE_RAW;
+  _logEnabled        = P150_GET_OPT_ENABLE_LOG;
 }
 
 /**
@@ -14,11 +17,9 @@ P150_data_struct::P150_data_struct(struct EventStruct *event) {
  * - Set temperature offset if <> 0
  * Will fail if no sensor is found, or the device id doesn't match (0x0117)
  */
-bool P150_data_struct::init(struct EventStruct *event) {
+bool P150_data_struct::init() {
   // make sure the TMP will acknowledge over I2C
-  Wire.beginTransmission(_deviceAddress);
-
-  if (Wire.endTransmission() != 0) {
+  if ((_deviceAddress < 0) || (I2C_wakeup(_deviceAddress) != 0)) {
     return false;
   }
 
@@ -54,6 +55,16 @@ bool P150_data_struct::plugin_read(struct EventStruct *event) {
     if (definitelyGreaterThan(_finalTempC, -256)) {
       UserVar[event->BaseVarIndex]     = _finalTempC;
       UserVar[event->BaseVarIndex + 1] = _digitalTempC;
+
+      if (_logEnabled && loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = concat(F("TMP117: Temperature: "), formatUserVarNoCheck(event, 0));
+        log += _outputFahrenheit ? 'F' : 'C';
+
+        if (_rawEnabled) {
+          log += concat(F(", Raw: "), formatUserVarNoCheck(event, 1));
+        }
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
       return true;
     }
   }
@@ -69,16 +80,17 @@ float P150_data_struct::readTemp() {
 
   _finalTempC = _digitalTempC * TMP117_RESOLUTION; // Multiplied by the resolution for digital to final temp
 
+  if (_outputFahrenheit) {
+    _finalTempC = CelsiusToFahrenheit(_finalTempC);
+  }
+
   return _finalTempC;
 }
 
 void P150_data_struct::setTemperatureOffset(float offset) {
-  int16_t resolutionOffset = offset / TMP117_RESOLUTION; // Divides by the resolution to send the correct value to the
+  int16_t resolutionOffset = offset / TMP117_RESOLUTION;                 // Divide by resolution to send to the sensor
 
-  // sensor
-
-  I2C_write16_reg(_deviceAddress, TMP117_TEMP_OFFSET, resolutionOffset); // Writes to the offset temperature register with the new offset
-                                                                         // value
+  I2C_write16_reg(_deviceAddress, TMP117_TEMP_OFFSET, resolutionOffset); // Write to the offset temperature register
 }
 
 /**
@@ -89,7 +101,7 @@ bool P150_data_struct::dataReady() {
   uint16_t response = I2C_read16_reg(_deviceAddress, TMP117_CONFIGURATION);
 
   // If statement to see if the 13th bit of the register is 1 or not
-  return response & 1 << 13;
+  return bitRead(response, 13);
 }
 
 #endif // ifdef USES_P150
