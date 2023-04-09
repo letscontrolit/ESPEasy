@@ -8,7 +8,6 @@
 /** Changelog:
  * 2023-04-09 tonhuisman: Rename configuration options (compile-time), add optional output logging (default on),
  *                        use more I2C_access functions, make Raw value optional (default on),
- *                        add optional output temperature in Fahrenheit
  * 2023-04-08 tonhuisman: Basic workings for setting configuration and temperature offset, then reading the temperature
  *                        only when data is available.
  * 2023-04-08 tonhuisman: Initial work on new plugin for TMP117, available in Collection F, Climate and MAX builds
@@ -109,7 +108,6 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       P150_SET_CONF_CYCLE_BITS(P150_CYCLE_1_SEC);
       P150_SET_OPT_ENABLE_RAW(1);                       // Enable Raw by default
       P150_SET_OPT_ENABLE_LOG(1);                       // Enable logging by default
-      P150_SET_OPT_FAHRENHEIT(0);                       // Show output in degrees Celcius
       ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0; // No decimals for the Raw value
 
       break;
@@ -175,8 +173,6 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Output"));
 
-      addFormCheckBox(F("Temperature in Fahrenheit"), F("fahr"), P150_GET_OPT_FAHRENHEIT);
-
       addFormSelector_YesNo(F("Enable 'Raw' value"), F("raw"), P150_GET_OPT_ENABLE_RAW ? 1 : 0, true);
       addFormNote(F("Changing this setting will save and reload this page."));
 
@@ -195,7 +191,6 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       P150_SET_CONF_CONVERSION_MODE(getFormItemInt(F("conv")));
       P150_SET_CONF_CYCLE_BITS(getFormItemInt(F("cycle")));
 
-      P150_SET_OPT_FAHRENHEIT(isFormItemChecked(F("fahr")));
       uint8_t raw = getFormItemInt(F("raw"));
 
       if (P150_GET_OPT_ENABLE_RAW != raw) {

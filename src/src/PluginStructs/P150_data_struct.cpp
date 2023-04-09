@@ -6,7 +6,6 @@ P150_data_struct::P150_data_struct(struct EventStruct *event) {
   _deviceAddress     = P150_I2C_ADDRESS;
   _config            = P150_CONFIG;
   _temperatureOffset = P150_TEMPERATURE_OFFSET / 10.0f; // Per 0.1 degree
-  _outputFahrenheit  = P150_GET_OPT_FAHRENHEIT;
   _rawEnabled        = P150_GET_OPT_ENABLE_RAW;
   _logEnabled        = P150_GET_OPT_ENABLE_LOG;
 }
@@ -58,7 +57,7 @@ bool P150_data_struct::plugin_read(struct EventStruct *event) {
 
       if (_logEnabled && loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = concat(F("TMP117: Temperature: "), formatUserVarNoCheck(event, 0));
-        log += _outputFahrenheit ? 'F' : 'C';
+        log += 'C';
 
         if (_rawEnabled) {
           log += concat(F(", Raw: "), formatUserVarNoCheck(event, 1));
@@ -79,10 +78,6 @@ float P150_data_struct::readTemp() {
   _digitalTempC = I2C_read16_reg(_deviceAddress, TMP117_TEMP_RESULT);
 
   _finalTempC = _digitalTempC * TMP117_RESOLUTION; // Multiplied by the resolution for digital to final temp
-
-  if (_outputFahrenheit) {
-    _finalTempC = CelsiusToFahrenheit(_finalTempC);
-  }
 
   return _finalTempC;
 }

@@ -44,14 +44,11 @@
 // Plugin options:
 # define P150_OPT_ENABLE_RAW              0 // Use Raw value, default on
 # define P150_OPT_ENABLE_LOG              1 // Log measured values, default on
-# define P150_OPT_OUTPUT_FAHRENHEIT       2 // Output converted to Fahrenheit
 
 # define P150_GET_OPT_ENABLE_RAW    bitRead(P150_OPTIONS, P150_OPT_ENABLE_RAW)
 # define P150_SET_OPT_ENABLE_RAW(x) bitWrite(P150_OPTIONS, P150_OPT_ENABLE_RAW, x)
 # define P150_GET_OPT_ENABLE_LOG    bitRead(P150_OPTIONS, P150_OPT_ENABLE_LOG)
 # define P150_SET_OPT_ENABLE_LOG(x) bitWrite(P150_OPTIONS, P150_OPT_ENABLE_LOG, x)
-# define P150_GET_OPT_FAHRENHEIT    bitRead(P150_OPTIONS, P150_OPT_OUTPUT_FAHRENHEIT)
-# define P150_SET_OPT_FAHRENHEIT(x) bitWrite(P150_OPTIONS, P150_OPT_OUTPUT_FAHRENHEIT, x)
 
 # define TMP117_RESOLUTION          0.0078125f // Resolution of the device, see specifications
 # define TMP117_DEVICE_ID_VALUE     0x0117     // Value found in the device ID register on reset
@@ -91,7 +88,6 @@ private:
   int8_t   _deviceAddress     = -1;
   bool     _rawEnabled        = false;
   bool     _logEnabled        = false;
-  bool     _outputFahrenheit  = false;
 
   int16_t _digitalTempC = 0;
   float   _finalTempC   = 0.0f;
