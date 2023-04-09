@@ -1,4 +1,179 @@
 -------------------------------------------------
+Changes in release mega-20230409 (since mega-20230306)
+-------------------------------------------------
+
+Release date: zo  9 apr 2023 17:42:52 CEST
+
+TD-er (28):
+      [Cleanup] Reduce bin size on minimal builds.
+      [ETH] Fix connect to LAN with internal clock
+      [Build] Fix missing network medium options
+      [WiFi] Fix slow WiFi (re)connect
+      [WiFi] Fix connect from RTC
+      [Eth] Fix restoring cached  DNS IPs
+      [Provisioning] Fix setting allowed file types to download via rules
+      [Provisioning] Fix cache and mDNS updates after provisioning
+      [Provisioning] Only allow downloading firmware update from set host
+      [Cache Reader] Add option to delete files after upload
+      [Rules] Fix parsing "Clock#Time=All,**:00"  (#4568)
+      Sonoff Soil moistrure sensor MS-01 #4503
+      Disable I2C dev check HDC1080  #4571
+      [ADS1115] Fix channel results mixed #4570
+      Rename HDC1080 to HDC10xx #4578
+      [Rules] Use variables in clock events
+      [ESP32 WiFi] Enable selecting 802.11g mode on ESP32 #4572
+      [ADS1115] Show analog port on Devices page
+      [ADS1115] Fix build issue on ESP8266
+      [ADS1115] Add option to output in Volt using set gain.
+      [ADS1115] Update docs
+      [Build] Fix merge issue
+      Fix using wrong index from string array in sysinfo and SenseAir plugin
+      [PluginStats] Fix "highest peak" for negative values
+      [WiFi] Fix really slow reconnect on ESP32 (#4572)
+      [WiFi] Add auto WiFi (re)Connect and delay options
+      [WiFi] Force restart WiFi if auto reconnect is enabled
+      [WiFi] Document new Advanced options auto reconnect and extra wait
+
+Ton Huisman (113):
+      [P137] Add AXP192 Powermanagement controller
+      [P137] Include used library
+      [P137] Enable code only for ESP32
+      [P137] Add some missing Get Config values, small improvements
+      [Build] Define ESP_LOGD(...) macro, not available on ESP8266 platform
+      [P137] Available for ESP8266 too
+      [P137] Remove [TESTING] tag, enable for ESP8266, minor code improvements
+      [Build] Define ESP_LOGD(...) macro, not available on ESP8266 platform
+      [Build] Change ESP_LOGD(...) macro, remove accidentally committed file
+      [P137] Restored ESP32 limitation as the Linux build can't handle the workaround
+      [P137] Activate in all Collection builds too
+      [P137] Add controller to ENERGY builds and Custom-sample.h
+      [P137] Add documentation
+      [P137] Fix flash-string ==
+      [UI] Add `disabled` feature for numeric input fields
+      [Tasks] Add Priority task feature for initializing plugins early, with documentation
+      [Lib] Pull AXP192 library local, and implement missing features, exclude from ESP8266 builds
+      [P137] Implement Priority task feature, add more hardware options, add predefined configurations
+      [P137] Update documentation
+      [Boards] Add PSRAM option for 16M8M to improve stability
+      [Build] Add AXP192 to lib_ignore for IR ESP8266 builds
+      [Lib] AXP192 remove some unused variables
+      [Build] Add AXP192 to lib_ignore for normal_beta 16M ESP8266 build
+      [P137] Adjusted default device settings (turn off led and tft backlight for M5Core2)
+      [P137] Revert previously added PSRAM option for 16M8M builds
+      [Build] Remove suggestion that P138 will be a Priority task plugin
+      [P137] Add commands to codeMirror for Rules syntax highlighting, some typos fixed
+      [DOCS] Extend development guide
+      [DOCS] Add Using external libraries chapter, small corrections
+      [DOCS] Use %eventvalue1% in Rules examples where possible, other improvements and additions
+      [P008] Add get config values, update documentation
+      [P008] Handle initialization issue for unconfigured GPIO pins
+      [I2C] Disable I2C GPIO pin configuration if an I2C Priority task is enabled, updated docs
+      [P137] Reorder Device Configuration for output configuration change, enable PluginStats, update documentation
+      [Hardware] Add warning to disconnect ETH PoE during USB Serial use
+      [UI] Darker background color for disabled input fields
+      [UI] Darker background color for disabled input fields, update embedded css
+      [P137] Exclude some more unneeded code if FEATURE_PLUGIN_PRIORITY not set
+      [P137] Add config for LilyGO T-Beam, improved disabled-port UI, update documentation
+      [P013] Add setting for trigger-width
+      [Libs] Update `NewPing` library, add sanity check for `triggerWidth` argument
+      [P013] Reduce variable use, make State mode interval event optional
+      [P013] Update documentation with added setting
+      [P013] Update documentation with 'hidden' setting for Mode=State
+      [Lib] NewPing limit max trigger-width to 20 usec (wide enough)
+      [P013] Reduce plugin size (disable added features and log for 1M builds)
+      [P013] Update documentation with adjusted 20 usec setting
+      [P008] Reduce plugin size, minor optimizations
+      [P137] Add I2C config blocked note to documentation
+      [Docs] Correct some plugin status labels
+      [P013] Add Combined mode, as started in #3157
+      [PriorityTask] Fix argument validation
+      [P137] Add support for PLUGIN_I2C_GET_ADDRESS
+      [P137] Fix merge issue
+      [P137] Fix merge issue
+      [P013] Update changelog explaining why not using latest NewPing library version
+      [P013] Allow Interval = 0, inhibit setting for  suppressing State-events on Interval
+      [P013] Update and cleanup documentation
+      [P118] Change command to `itho` from `state` (deprecated, not removed)
+      [P118] Update documentation for 'itho' command
+      [P145] Fix documentation processor warning
+      [Docs] Add some missing includes on Commands overview page
+      [Displays] Don't trim spaces from text to display
+      [Docs] Correct some plugin labels to display separately
+      [Parameters] add `parseStringKeepCaseNoTrim` and `parseStringToEndKeepCaseNoTrim` and implement where useful
+      [P145] Fix compiler warning (nested comments)
+      [Build] Add KEEP_RTTTL build-flag and apply to some builds
+      [P065] Add Serial configuration to enable use on ESP32
+      [P065] Update documentation
+      [Serial] Show I2CSerial as last option, format sources
+      [ESPEasySerial] Remote I2CSerial completely when disabled, format source
+      [Serial] Hide I2CSerial completely when disabled
+      [Serial] Update documentation
+      [P065] Set initial config also for ESP8266, increase initial volume to 50%
+      [P137] Implement GetCommandCode() for commands and getvalues to reduce bin-size
+      [P021] Add Invert Output option
+      [P021] Update documentation
+      [P089] Change command-handling making taskname optional
+      [P089] Add documentation
+      [C014] [Homie MQTT] replace DummyValueSet by TaskValueSet (bugfix)
+      [C014] Minor corrections
+      [Build] Update Arduino framework 2.0.7 (testing)
+      [P089] Show Hostname value on Devices overview page (GPIO column)
+      [P014] Disable I2C check to correct HTU21D read
+      [StringConverter] Add parseHexTextString()
+      [P020] Add command `serialsendmix`
+      [StringConverter] Improvements to parseHexTextString()
+      [P087] Add command `serialproxy_writemix` using `parseHexTextString()`
+      [P087] Format source suing Uncrustify
+      [P144] Disable additional debug logging
+      [Build] Add [C011] to `Climate` build
+      [P109] Add documentation for ThermoOLED plugin
+      [StringConverter] Add parseHexTextData() to handle 0x00
+      [P020] Use parseHextTextData() to handle 0x00 in data
+      [P087] Use parseHexTextData() instead of parseHexTextString()
+      [P087] Code improvements
+      [Docs] Add reference to Youtube video for Git tools and Python installation
+      [Docs] Cancel/remove hardly used Github feature
+      [P087] Add documentation
+      [P073] Fix documenation typo
+      [P073] Correct `7dbin` command for TM1637 and fix scroll feature (bugfix)
+      [P073] Wrap some methods for conditional compilation
+      [P073] Option to suppress leading zeros on day/hour, fix scroll enable/disable
+      [P073] Fix documenation typo
+      [P073] Update documentation
+      [Docs] Minor correction, remove reference to non-existing paragraph.
+      [P073] Fix displaying periods for `7dtext` on 6-digit TM1736
+      [Build] Add [P077] to Shelly_PLUG_S build environment
+      [P047] Add support for BelFlE Soil moisture sensor I2C
+      [P047] Add validation on I2C address inputs
+      [P047] Add documentation
+      [WiFi] APmodeEnabled event not generated when logging is disabled #4593
+      [P047] Correct typo BelFlE to BeFlE
+
+chromoxdor (1):
+      [P027] Change the default averaging to 128samples
+
+flashmark (13):
+      Introduce P240 Vindriktning
+      Add P240_Vindriktning experimental
+      P240 Vindrikning, conditional debug messages
+      P240_Vindriktning small bugfixes
+      renamed:    src/_P240_Vindriktning.ino -> src/_P144_Vindriktning.ino Renamed global variables to keep them unique
+      P144 rework
+      P144 Vindrikning rework
+      P144 Vindriktning minor rework
+      P144 Vindriktning Review rework
+      P144 Vindriktning Optimize time critical code
+      Reworked with separate P144_data_struct
+      Rework after review
+      Merge define_plugin_sets.h
+
+stefan (3):
+      [HTTP] Increase timeout on send
+      [HTTP] Increase timeouts and smaller fixes
+      Excluded debug output
+
+
+-------------------------------------------------
 Changes in release mega-20230306 (since mega-20230304)
 -------------------------------------------------
 
