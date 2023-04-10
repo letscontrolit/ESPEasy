@@ -109,6 +109,16 @@ String formatGpioName_ADC(int gpio_pin) {
   return "";
 }
 
+String formatGpioName_DAC(int gpio_pin) {
+  int dac;
+
+  if (getDAC_gpio_info(gpio_pin, dac)) {
+    return String(F("DAC")) + dac;
+  }
+  return "";
+}
+
+
 #endif // ifdef ESP32
 
 // ********************************************************************************
@@ -171,6 +181,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     case PinSelectPurpose::Generic_input:
     case PinSelectPurpose::Generic_output:
     case PinSelectPurpose::Generic_bidir:
+    case PinSelectPurpose::DAC:
       break;
   }
 

@@ -231,6 +231,8 @@ bool getADC_gpio_info(int  gpio_pin,
                       int& ch,
                       int& t);
 int touchPinToGpio(int touch_pin);
+bool getDAC_gpio_info(int gpio_pin, 
+                      int& dac);
 
 #endif // ifdef ESP32
 
