@@ -2,6 +2,7 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_common.h"
 
 /*********************************************************************************************\
@@ -106,16 +107,16 @@ String formatGpioName_ADC(int gpio_pin) {
     }
     return res;
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 String formatGpioName_DAC(int gpio_pin) {
   int dac;
 
   if (getDAC_gpio_info(gpio_pin, dac)) {
-    return String(F("DAC")) + dac;
+    return concat(F("DAC"), dac);
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 
