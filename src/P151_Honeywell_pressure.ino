@@ -31,9 +31,10 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].FormulaOption      = true;
       Device[deviceCount].ValueCount         = 2;
       Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].TimerOption        = true;
       Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;      
       break;
     }
 
@@ -54,7 +55,6 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       // 8 bit I2C address notation in datasheet,
-      // thus have to shift all options 1 bit to the right.
       // default: 40 (28 hex).
       // Other available standard addresses are:
       // 56 (38 hex)
@@ -65,14 +65,14 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
       // 136 (88 hex)
       // 152 (98 hex)
       const uint8_t i2cAddressValues[] = {
-        0x28 >> 1,
-        0x38 >> 1,
-        0x48 >> 1,
-        0x58 >> 1,
-        0x68 >> 1,
-        0x78 >> 1,
-        0x88 >> 1,
-        0x98 >> 1
+        0x28 ,
+        0x38 ,
+        0x48 ,
+        0x58 ,
+        0x68 ,
+        0x78 ,
+        0x88 ,
+        0x98 
       };
       constexpr size_t addrCount = sizeof(i2cAddressValues) / sizeof(uint8_t);
 
@@ -86,7 +86,7 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P151_I2C_ADDR = 0x28 >> 1;
+      P151_I2C_ADDR = 0x28;
 
       P151_OUTPUT_MAX   = 14745; // counts (90% of 214 counts or 0x3999)
       P151_OUTPUT_MIN   = 1638;  // counts (10% of 214 counts or 0x0666)

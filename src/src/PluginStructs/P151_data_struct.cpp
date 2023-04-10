@@ -8,10 +8,10 @@ P151_data_struct::~P151_data_struct() {}
 bool P151_data_struct::plugin_read(struct EventStruct *event) const {
   union Honeywell_struct {
     struct {
-      uint32_t status      : 2;
-      uint32_t bridgeData  : 14;
-      uint32_t temperature : 11;
       uint32_t dummy       : 5;
+      uint32_t temperature : 11;
+      uint32_t bridgeData  : 14;
+      uint32_t status      : 2;
     };
     struct {
       uint8_t bytes[4];
@@ -22,14 +22,28 @@ bool P151_data_struct::plugin_read(struct EventStruct *event) const {
   I2Cdata_bytes data(4);
 
   if (!I2C_read_bytes(P151_I2C_ADDR, data)) {
+    addLog(LOG_LEVEL_ERROR, concat(F("P151 : cannot read I2C, address "), formatToHex(P151_I2C_ADDR)));
     return false;
   }
 
+//  String log = F("P151 : RAW data: ");
   for (size_t i = 0; i < 4; ++i) {
-    conv.bytes[i] = data[i];
+    conv.bytes[3-i] = data[i];
+//    log += formatToHex(data[i]);
+//    log += ' ';
   }
+/*
+  log += formatToHex(conv.raw);
+  log += concat(F(" st:"), conv.status);
+  log += concat(F(" br:"), conv.bridgeData);
+  log += concat(F(" temp:"), conv.temperature);
+  log += concat(F(" dummy:"), conv.dummy);
+
+  addLog(LOG_LEVEL_INFO, log);
+*/
 
   if (conv.status != 0) {
+//    addLog(LOG_LEVEL_ERROR, F("P151 : conv.status != 0"));
     return false;
   }
   float pressure =
