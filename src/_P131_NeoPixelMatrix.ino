@@ -218,7 +218,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
           html_TD(); // Text
           addTextBox(getPluginCustomArgName(varNr),
-                     parseStringKeepCase(strings[varNr], 1),
+                     parseStringKeepCaseNoTrim(strings[varNr], 1),
                      P131_Nchars,
                      false,
                      false,

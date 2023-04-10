@@ -271,6 +271,10 @@ String parseStringKeepCase(const String& string,
                            char          separator = ',',
                            bool          trimResult = true);
 
+String parseStringKeepCaseNoTrim(const String& string,
+                                 uint8_t       indexFind,
+                                 char          separator = ',');
+
 String parseStringToEnd(const String& string,
                         uint8_t       indexFind,
                         char          separator = ',',
@@ -280,6 +284,10 @@ String parseStringToEndKeepCase(const String& string,
                                 uint8_t       indexFind,
                                 char          separator = ',',
                                 bool          trimResult = true);
+
+String parseStringToEndKeepCaseNoTrim(const String& string,
+                                      uint8_t       indexFind,
+                                      char          separator = ',');
 
 String tolerantParseStringKeepCase(const char * string,
                                    uint8_t      indexFind,
@@ -291,6 +299,10 @@ String tolerantParseStringKeepCase(const String& string,
                                    char          separator = ',',
                                    bool          trimResult = true);
 
+String parseHexTextString(const String& argument,
+                          int           index = 2);
+std::vector<uint8_t> parseHexTextData(const String& argument,
+                                      int           index = 2);
 
 
 /*********************************************************************************************\

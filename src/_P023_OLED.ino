@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
  * 2022-10-09 tonhuisman: Deduplicate code by moving the OLed I2C Address check to OLed_helper
  * 2022-10: Start changelog, latest on top.
  */
@@ -263,7 +264,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         }
         else if (equals(cmd, F("oled"))) {
           success = true;
-          String text = parseStringToEndKeepCase(string, 4);
+          String text = parseStringToEndKeepCaseNoTrim(string, 4);
           text = P023_data->parseTemplate(text, 16);
           P023_data->sendStrXY(text.c_str(), event->Par1 - 1, event->Par2 - 1);
         }

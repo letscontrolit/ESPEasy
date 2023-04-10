@@ -8,12 +8,7 @@ ADS1115
 |P025_status|
 
 
-Introduction
-------------
-
-
-Specifications:
- * Analog signal (0-5V)
+.. include:: P025_page.rst
 
 
 Wiring
