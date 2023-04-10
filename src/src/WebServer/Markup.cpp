@@ -1050,19 +1050,20 @@ void addDAC_PinSelect(const String& id,  int choice)
     const bool UsableGPIO = getDAC_gpio_info(gpio, dac); // getGpioInfo(gpio, pinnr, input, output, warning);
 
     if (UsableGPIO || (i == 0)) {
-      String gpio_label = formatGpioName_DAC(gpio);
+      if (getGpioInfo(gpio, pinnr, input, output, warning) || (i == 0)) {
+        String gpio_label = formatGpioName_DAC(gpio);
 
-      if (dac != 0) {
-        gpio_label += F(" / ");
-        gpio_label += createGPIO_label(gpio, pinnr, input, output, warning);
-        gpio_label += getConflictingUse_wrapped(gpio, PinSelectPurpose::DAC);
+        if (dac != 0) {
+          gpio_label += F(" / ");
+          gpio_label += createGPIO_label(gpio, pinnr, input, output, warning);
+          gpio_label += getConflictingUse_wrapped(gpio, PinSelectPurpose::DAC);
+        }
+        addPinSelector_Item(
+          PinSelectPurpose::DAC,
+          gpio_label,
+          gpio,
+          choice == gpio);
       }
-      addPinSelector_Item(
-        PinSelectPurpose::DAC,
-        gpio_label,
-        gpio,
-        choice == gpio);
-
       ++i;
     }
     ++gpio;
