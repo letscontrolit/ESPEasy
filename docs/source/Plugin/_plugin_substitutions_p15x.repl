@@ -1,0 +1,13 @@
+.. |P152_name| replace:: :cyan:`ESP32 DAC`
+.. |P152_type| replace:: :cyan:`Output`
+.. |P152_typename| replace:: :cyan:`Output - ESP32 DAC`
+.. |P152_porttype| replace:: `.`
+.. |P152_status| replace:: :green:`NORMAL`
+.. |P152_github| replace:: P152_DAC.ino
+.. _P152_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P152_DAC.ino
+.. |P152_usedby| replace:: `.`
+.. |P152_shortinfo| replace:: `ESP32 and ESP32-S2 Digital Analog Converter (DAC)`
+.. |P152_maintainer| replace:: `tonhuisman`
+.. |P152_compileinfo| replace:: `.`
+.. |P152_usedlibraries| replace:: `.`
+
