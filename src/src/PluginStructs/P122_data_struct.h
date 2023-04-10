@@ -59,13 +59,13 @@ public:
 
   /////////////////////////////////////////////////////////
   //  check sensor is reachable over I2C
-  bool isConnected();
+  bool isConnected() const;
 
   /////////////////////////////////////////////////////////
-  bool newValues();
+  bool newValues() const;
 
   /////////////////////////////////////////////////////////
-  bool inError();
+  bool inError() const;
 
   /////////////////////////////////////////////////////////
   // Reset the FSM to initial state
@@ -80,16 +80,16 @@ public:
   //  Electronic Identification Code
   //  Sensirion_Humidity_SHT2x_Electronic_Identification_Code_V1.1.pdf
   //  Electronic ID bytes
-  bool getEID(uint32_t &eida, uint32_t &eidb, uint8_t &firmware);
-  uint8_t getUserReg();
+  bool getEID(uint32_t &eida, uint32_t &eidb, uint8_t &firmware) const;
+  uint8_t getUserReg() const;
 
   /////////////////////////////////////////////////////////
   // Temperature and humidity retrieval
   // Note: values are fetched from memory and reflect latest succesful read cycle
-  float    getTemperature();
-  float    getHumidity();
-  uint16_t getRawTemperature();
-  uint16_t getRawHumidity();
+  float    getTemperature() const;
+  float    getHumidity() const;
+  uint16_t getRawTemperature() const;
+  uint16_t getRawHumidity() const;
 
   /////////////////////////////////////////////////////////
   //  RESOLUTION
@@ -103,7 +103,7 @@ public:
   //   3      11 bit    11 bit
   //
   bool     setResolution(uint8_t res = 0);
-  uint8_t  getResolution();
+  uint8_t  getResolution() const;
 
   /////////////////////////////////////////////////////////
   // Get the battery status from teh device

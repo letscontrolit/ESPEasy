@@ -228,7 +228,7 @@ bool P122_data_struct::update()
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Returns the I2C connection state
 // Note: based upon the FSM state without actual accessing the device
-bool P122_data_struct::isConnected()
+bool P122_data_struct::isConnected() const
 {
   switch (_state)
   {
@@ -255,14 +255,14 @@ bool P122_data_struct::isConnected()
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Returns if the device communication is in error
 // Note: based upon the FSM state without actual accessing the device
-bool P122_data_struct::inError()
+bool P122_data_struct::inError() const
 {
   return _state == P122_state::Error;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Returns if new acquired values are available
-bool P122_data_struct::newValues()
+bool P122_data_struct::newValues() const
 {
   return _state == P122_state::New_Values_Available;
 }
@@ -289,7 +289,7 @@ bool P122_data_struct::startMeasurements()
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Get the electronic idenfification data store in the device
 // Note: The data is read from the device during initialization 
-bool P122_data_struct::getEID(uint32_t &eida, uint32_t &eidb, uint8_t &firmware)
+bool P122_data_struct::getEID(uint32_t &eida, uint32_t &eidb, uint8_t &firmware) const
 {
   eida = _eida;
   eidb = _eidb;
@@ -297,35 +297,35 @@ bool P122_data_struct::getEID(uint32_t &eida, uint32_t &eidb, uint8_t &firmware)
   return true;
 }
 
-uint8_t P122_data_struct::getUserReg()
+uint8_t P122_data_struct::getUserReg() const
 {
   return _userreg;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the previously measured temperature in [C]
-float P122_data_struct::getTemperature()
+float P122_data_struct::getTemperature() const
 {
   return -46.85f + (175.72f / 65536.0f) * _rawTemperature;  // Datasheet par 6.2
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the previously measured humidity in [%RH]
-float P122_data_struct::getHumidity()
+float P122_data_struct::getHumidity() const
 { 
   return -6.0f + (125.0f / 65536.0f) * _rawHumidity;  // Datasheet par  6.1
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the previously measured raw temperature data [bits]
-uint16_t P122_data_struct::getRawTemperature()
+uint16_t P122_data_struct::getRawTemperature() const
 {
   return _rawTemperature;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the previously measured raw humidity data [bits]
-uint16_t P122_data_struct::getRawHumidity()
+uint16_t P122_data_struct::getRawHumidity() const
 {
   return _rawHumidity;
 }
@@ -342,7 +342,7 @@ bool P122_data_struct::setResolution(uint8_t res)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the last set resolution
-uint8_t P122_data_struct::getResolution()
+uint8_t P122_data_struct::getResolution() const
 {
   return _resolution;
 };
