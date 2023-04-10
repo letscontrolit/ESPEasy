@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-04-10 tonhuisman: Minor corrections
  * 2023-04-09 tonhuisman: Adopt to latest mega branch changes as the plugin is last changes some years ago
  * 2023-04-09 tonhuisman: Migrate plugin from ESPEasyPluginPlayground to mega branch
  */
@@ -20,7 +21,7 @@
 #define P152_DAC_VALUE        UserVar[event->BaseVarIndex]
 
 
-boolean Plugin_152(byte function, struct EventStruct *event, String& string)
+boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -82,10 +83,10 @@ boolean Plugin_152(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command = parseString(string, 1);
+      const String command = parseString(string, 1);
 
       // Command: dac,<dac>,<value> : <dac>: 1 or 2, <value>: 0..255
-      if (command.equals(F("dac"))) {
+      if (equals(command, F("dac"))) {
         int dac;
 
         if (getDAC_gpio_info(CONFIG_PIN1, dac) && (dac == event->Par1)) {
