@@ -1348,6 +1348,10 @@ To create/register a plugin, you have to :
     #define USES_P063   // TTP229_KeyPad
     #define USES_P073   // 7DGT
     #define USES_P079   // Wemos Motoshield
+
+    #if !defined(USES_P152) && defined(ESP32) && !(defined(ESP32C3) || defined(ESP32S3)) // Only supported on ESP32 and ESP32-S2
+      #define USES_P152 // ESP32 DAC
+    #endif
 #endif
 
 
@@ -2114,6 +2118,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
+  #endif
+  #if !defined(USES_P152) && defined(ESP32) && !(defined(ESP32C3) || defined(ESP32S3)) // Only supported on ESP32 and ESP32-S2
+    #define USES_P152   // ESP32 DAC
   #endif
 
   // Controllers
