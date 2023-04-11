@@ -173,9 +173,7 @@ void runOncePerSecond()
   // I2C Watchdog feed
   if (Settings.WDI2CAddress != 0)
   {
-    Wire.beginTransmission(Settings.WDI2CAddress);
-    Wire.write(0xA5);
-    Wire.endTransmission();
+    I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
 
   checkResetFactoryPin();

@@ -645,26 +645,20 @@ int8_t Plugin_019_Read(uint8_t Par1)
   if (unit > 7) { address += 0x10; }
 
   // get the current pin status
-  Wire.requestFrom(address, (uint8_t)0x1);
-
-  if (Wire.available())
+  bool is_ok = false;
+  const uint8_t rawState = I2C_read8(address, &is_ok);
+  if (is_ok)
   {
-    state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
+    state = ((rawState & _BV(port - 1)) >> (port - 1));
   }
   return state;
 }
 
 uint8_t Plugin_019_ReadAllPins(uint8_t address)
 {
-  uint8_t rawState = 0;
-
-  Wire.requestFrom(address, (uint8_t)0x1);
-
-  if (Wire.available())
-  {
-    rawState = Wire.read();
-  }
-  return rawState;
+  bool is_ok = false;
+  const uint8_t rawState = I2C_read8(address, &is_ok);
+  return is_ok ? rawState : 0u;
 }
 
 // ********************************************************************************
@@ -707,9 +701,7 @@ boolean Plugin_019_Write(uint8_t Par1, uint8_t Par2)
     portmask &= ~(1 << (port - 1));
   }
 
-  Wire.beginTransmission(address);
-  Wire.write(portmask);
-  Wire.endTransmission();
+  I2C_write8(address, portmask);
 
   return true;
 }
