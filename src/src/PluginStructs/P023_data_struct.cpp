@@ -4,6 +4,9 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringParser.h"
 
+#define P023_DATA_MODE_REG      0x40
+#define P023_COMMAND_MODE_REG   0x80
+
 
 const char Plugin_023_myFont_Size[] PROGMEM = {
   0x05, // SPACE
@@ -275,10 +278,7 @@ void P023_data_struct::clearDisplay() {
 
 // Actually this sends a byte, not a char to draw in the display.
 void P023_data_struct::sendChar(unsigned char data) {
-  Wire.beginTransmission(address); // begin transmitting
-  Wire.write(0x40);                // data mode
-  Wire.write(data);
-  Wire.endTransmission();          // stop transmitting
+  I2C_write8_reg(address, P023_DATA_MODE_REG, data);
 }
 
 // Prints a display char (not just a byte) in coordinates X Y,
@@ -298,10 +298,7 @@ void P023_data_struct::sendChar(unsigned char data) {
 
 
 void P023_data_struct::sendCommand(unsigned char com) {
-  Wire.beginTransmission(address); // begin transmitting
-  Wire.write(0x80);                // command mode
-  Wire.write(com);
-  Wire.endTransmission();          // stop transmitting
+  I2C_write8_reg(address, P023_COMMAND_MODE_REG, com);
 }
 
 // Set the cursor position in a 16 COL * 8 ROW map (128x64 pixels)
