@@ -28,10 +28,7 @@ P032_data_struct::P032_data_struct(uint8_t i2c_addr) : i2cAddress(i2c_addr) {}
 // Initialize MS5611
 // **************************************************************************/
 bool P032_data_struct::begin() {
-  Wire.beginTransmission(i2cAddress);
-  uint8_t ret = Wire.endTransmission(true);
-
-  return ret == 0;
+  return 0 == I2C_wakeup(i2cAddress);
 }
 
 // **************************************************************************/

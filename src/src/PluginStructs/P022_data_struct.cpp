@@ -42,21 +42,7 @@ bool P022_data_struct::p022_clear_init(uint8_t address) {
 // PCA9685 config
 // ********************************************************************************
 void P022_data_struct::Plugin_022_writeRegister(int i2cAddress, int regAddress, uint8_t data) {
-  Wire.beginTransmission(i2cAddress);
-  Wire.write(regAddress);
-  Wire.write(data);
-  Wire.endTransmission();
-}
-
-uint8_t P022_data_struct::Plugin_022_readRegister(int i2cAddress, int regAddress) {
-  uint8_t res = 0;
-
-  Wire.requestFrom(i2cAddress, 1, 1);
-
-  while (Wire.available()) {
-    res = Wire.read();
-  }
-  return res;
+  I2C_write8_reg(i2cAddress, regAddress, data);
 }
 
 // ********************************************************************************
@@ -104,8 +90,8 @@ void P022_data_struct::Plugin_022_Frequency(int address, uint16_t freq)
 
   prescale /=  freq;
   prescale -= 1;
-  uint8_t oldmode = Plugin_022_readRegister(i2cAddress, 0);
-  uint8_t newmode = (oldmode & 0x7f) | 0x10;
+  const uint8_t oldmode = I2C_read8_reg(i2cAddress, PLUGIN_022_PCA9685_MODE1);
+  const uint8_t newmode = (oldmode & 0x7f) | 0x10;
 
   Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)newmode);
   Plugin_022_writeRegister(i2cAddress, 0xfe,                     (uint8_t)prescale); // prescale register

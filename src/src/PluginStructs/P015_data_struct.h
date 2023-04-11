@@ -134,7 +134,6 @@ struct P015_data_struct : public PluginTaskData_base {
   unsigned int _gain; // Gain setting, 0 = X1, 1 = X16, 2 = auto, 3 = extended auto;
   uint8_t      _i2cAddr       = 0;
   uint8_t      _integration   = 0;
-  uint8_t      _error         = 0;
   bool         _gain16xActive = false;
 };
 

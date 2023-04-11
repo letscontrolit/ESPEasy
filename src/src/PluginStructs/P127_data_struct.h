@@ -53,10 +53,6 @@ struct P127_data_struct : public PluginTaskData_base {
 
 private:
 
-  uint8_t  I2C_read8_ST_reg(uint8_t i2caddr,
-                            byte    reg);
-  uint16_t I2C_read16_LE_ST_reg(uint8_t i2caddr,
-                                byte    reg);
   uint16_t getCO2();
   bool     setPowerDown(void);
   bool     setContinuous(void);
