@@ -27,10 +27,8 @@ P069_data_struct::P069_data_struct(bool A0_value, bool A1_value, bool A2_value)
   }
 }
 
-P069_data_struct::P069_data_struct(uint8_t addr)
-{
-  _i2c_device_address = addr;
-}
+P069_data_struct::P069_data_struct(uint8_t addr) :
+  _i2c_device_address(addr) {}
 
 void P069_data_struct::setAddress(uint8_t addr)
 {
@@ -39,30 +37,13 @@ void P069_data_struct::setAddress(uint8_t addr)
 
 float P069_data_struct::getTemperatureInDegrees() const
 {
-  float   real_result = NAN;
-  int16_t value       = 0;
-
   // Go to temperature data register
-  Wire.beginTransmission(_i2c_device_address);
-  Wire.write(LM75A_REG_ADDR_TEMP);
-
-  if (Wire.endTransmission())
+  bool success = false;
+  int16_t value = I2C_readS16_reg(_i2c_device_address, LM75A_REG_ADDR_TEMP, &success);
+  if (!success)
   {
     // Transmission error
-    return real_result;
-  }
-
-  // Get content
-  Wire.requestFrom(_i2c_device_address, (uint8_t)2);
-
-  if (Wire.available() == 2)
-  {
-    value = (Wire.read() << 8) | Wire.read();
-  }
-  else
-  {
-    // Can't read temperature
-    return real_result;
+    return NAN;
   }
 
   // Shift data (left-aligned)
@@ -75,7 +56,7 @@ float P069_data_struct::getTemperatureInDegrees() const
   }
 
   // Real value can be calculated with sensor resolution
-  real_result = static_cast<float>(value) * LM75A_DEGREES_RESOLUTION;
+  const float real_result = static_cast<float>(value) * LM75A_DEGREES_RESOLUTION;
 
   return real_result;
 }
