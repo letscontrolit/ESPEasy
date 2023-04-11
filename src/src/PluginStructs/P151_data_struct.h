@@ -25,9 +25,15 @@ public:
   P151_data_struct() = default;
   ~P151_data_struct();
 
-  bool plugin_read(struct EventStruct *event) const;
+  bool plugin_read(struct EventStruct *event);
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_fifty_per_second(struct EventStruct *event);
+
+  bool fetch_last_sample(struct EventStruct *event);
+
+  uint16_t _rawTemperature{};
+  uint16_t _rawPressure{};
+  bool     _updated = false;
 };
 
 #endif // ifdef USES_P151

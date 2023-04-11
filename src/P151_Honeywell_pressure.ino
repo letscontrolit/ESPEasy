@@ -133,6 +133,17 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
       P151_data_struct *P151_data = static_cast<P151_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P151_data) {
+        success = P151_data->fetch_last_sample(event);
+      }
+
+      break;
+    }
+
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      P151_data_struct *P151_data = static_cast<P151_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P151_data) {
         success = P151_data->plugin_read(event);
       }
 

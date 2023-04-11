@@ -5,7 +5,7 @@
 
 P151_data_struct::~P151_data_struct() {}
 
-bool P151_data_struct::plugin_read(struct EventStruct *event) const {
+bool P151_data_struct::plugin_read(struct EventStruct *event) {
   union Honeywell_struct {
     struct {
       uint32_t dummy       : 5;
@@ -26,39 +26,37 @@ bool P151_data_struct::plugin_read(struct EventStruct *event) const {
     return false;
   }
 
-//  String log = F("P151 : RAW data: ");
+  //  String log = F("P151 : RAW data: ");
   for (size_t i = 0; i < 4; ++i) {
-    conv.bytes[3-i] = data[i];
-//    log += formatToHex(data[i]);
-//    log += ' ';
-  }
-/*
-  log += formatToHex(conv.raw);
-  log += concat(F(" st:"), conv.status);
-  log += concat(F(" br:"), conv.bridgeData);
-  log += concat(F(" temp:"), conv.temperature);
-  log += concat(F(" dummy:"), conv.dummy);
+    conv.bytes[3 - i] = data[i];
 
-  addLog(LOG_LEVEL_INFO, log);
-*/
+    //    log += formatToHex(data[i]);
+    //    log += ' ';
+  }
+
+  /*
+     log += formatToHex(conv.raw);
+     log += concat(F(" st:"), conv.status);
+     log += concat(F(" br:"), conv.bridgeData);
+     log += concat(F(" temp:"), conv.temperature);
+     log += concat(F(" dummy:"), conv.dummy);
+     log += concat(F(" expected status:"), (data[0] >> 6));
+     log += concat(F(" expected dummy:"), (data[3] & 0x1F));
+
+     addLog(LOG_LEVEL_INFO, log);
+   */
+
 
   if (conv.status != 0) {
-//    addLog(LOG_LEVEL_ERROR, F("P151 : conv.status != 0"));
-    return false;
+    // status == 2: stale data, indicating the sensordata was already read, or the sensor is performing a measurement
+    if ((conv.status != 2) || // Not stale data, or value not changed
+        ((conv.bridgeData == _rawPressure) && (conv.temperature == _rawTemperature))) {
+      return false;
+    }
   }
-  float pressure =
-    (conv.bridgeData - P151_OUTPUT_MIN) * (P151_PRESSURE_MAX - P151_PRESSURE_MIN);
-
-  if (P151_OUTPUT_MAX != P151_OUTPUT_MIN) {
-    pressure /= (P151_OUTPUT_MAX - P151_OUTPUT_MIN);
-  }
-  pressure += P151_PRESSURE_MIN;
-
-  const float temperature = ((conv.temperature * 200.0f) / 2047.0f) - 50.0f;
-
-  UserVar[event->BaseVarIndex]     = pressure;
-  UserVar[event->BaseVarIndex + 1] = temperature;
-
+  _rawPressure    = conv.bridgeData;
+  _rawTemperature = conv.temperature;
+  _updated        = true;
   return true;
 }
 
@@ -68,6 +66,28 @@ bool P151_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 
 bool P151_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   return true;
+}
+
+bool P151_data_struct::fetch_last_sample(struct EventStruct *event) {
+  if (!_updated) { 
+    // Needed to get the 1st value, or can get the latest value when sampled too frequently.
+    plugin_read(event); 
+  }
+  if (_updated) {
+    float _pressure =
+      (_rawPressure - P151_OUTPUT_MIN) * (P151_PRESSURE_MAX - P151_PRESSURE_MIN);
+
+    if (P151_OUTPUT_MAX != P151_OUTPUT_MIN) {
+      _pressure /= (P151_OUTPUT_MAX - P151_OUTPUT_MIN);
+    }
+    _pressure += P151_PRESSURE_MIN;
+
+    UserVar[event->BaseVarIndex]     = _pressure;
+    UserVar[event->BaseVarIndex + 1] = ((_rawTemperature * 200.0f) / 2047.0f) - 50.0f;
+    _updated                         = false;
+    return true;
+  }
+  return false;
 }
 
 #endif // ifdef USES_P151
