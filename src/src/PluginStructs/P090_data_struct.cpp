@@ -218,10 +218,7 @@ CCS811Core::status CCS811::begin(void)
   }
 
   // Write 0 bytes to this register to start app
-  Wire.beginTransmission(I2CAddress);
-  Wire.write(CSS811_APP_START);
-
-  if (Wire.endTransmission() != 0)
+  if (I2C_write8(I2CAddress, CSS811_APP_START) != 0)
   {
     return SENSOR_I2C_ERROR;
   }
