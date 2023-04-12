@@ -1522,6 +1522,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
   #endif
+  #ifndef USES_P151
+    #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+
 #endif
 
 // Collection of all energy related plugins.
@@ -1774,6 +1778,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
+  #ifndef USES_P151
+    #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+
   // Controllers
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
@@ -1897,7 +1905,6 @@ To create/register a plugin, you have to :
 	#define USES_P145	// Itho - P118 in the main repo.
 	#define USES_P149	// MHZ19
 	#define USES_P150	// SDM120C
-	#define USES_P151	// CISA
 	#define USES_P153	// MAX44009
 	#define USES_P162	// MPL3115A2
 	#define USES_P163	// DS1631
@@ -2118,6 +2125,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
+  #endif
+  #ifndef USES_P151
+    #define USES_P151   // Environment - I2C Honeywell Pressure
   #endif
   #if !defined(USES_P152) && defined(ESP32) && !(defined(ESP32C3) || defined(ESP32S3)) // Only supported on ESP32 and ESP32-S2
     #define USES_P152   // ESP32 DAC
