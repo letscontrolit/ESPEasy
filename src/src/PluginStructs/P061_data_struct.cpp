@@ -52,22 +52,13 @@ bool P061_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 }
 
 void P061_data_struct::MCP23017_setReg(uint8_t addr, uint8_t reg, uint8_t data) {
-  Wire.beginTransmission(addr);
-  Wire.write(reg);
-  Wire.write(data);
-  Wire.endTransmission();
+  I2C_write8_reg(addr, reg, data);
 }
 
 uint8_t P061_data_struct::MCP23017_getReg(uint8_t addr, uint8_t reg) {
-  Wire.beginTransmission(addr);
-  Wire.write(reg);
-  Wire.endTransmission();
-  Wire.requestFrom(addr, (uint8_t)0x1);
-
-  if (Wire.available()) {
-    return Wire.read();
-  }
-  return 0xFF;
+  bool success = false;
+  const uint8_t res = I2C_read8_reg(addr, reg, &success);
+  return success ? res : 0xff;
 }
 
 void P061_data_struct::MCP23017_KeyPadMatrixInit(uint8_t addr) {
@@ -162,18 +153,13 @@ uint8_t P061_data_struct::MCP23017_KeyPadDirectScan(uint8_t addr) {
 // PCF8574 Matrix //////////////////////////////////////////////////////////////
 
 void P061_data_struct::PCF8574_setReg(uint8_t addr, uint8_t data) {
-  Wire.beginTransmission(addr);
-  Wire.write(data);
-  Wire.endTransmission();
+  I2C_write8(addr, data);
 }
 
 uint8_t P061_data_struct::PCF8574_getReg(uint8_t addr) {
-  Wire.requestFrom(addr, (uint8_t)0x1);
-
-  if (Wire.available()) {
-    return Wire.read();
-  }
-  return 0xFF;
+  bool success = false;
+  const uint8_t res = I2C_read8(addr, &success);
+  return success ? res : 0xff;
 }
 
 void P061_data_struct::PCF8574_KeyPadMatrixInit(uint8_t addr) {
@@ -264,6 +250,7 @@ uint8_t P061_data_struct::PCF8574_KeyPadDirectScan(uint8_t addr) {
 // PCF8575 Matrix /////////////////////////////////////////////////////////////
 
 void P061_data_struct::PCF8575_setReg(uint8_t addr, uint16_t data) {
+  // FIXME TD-er: Add I2C_access function I2C_write16_LE
   Wire.beginTransmission(addr);
   Wire.write(lowByte(data));
   Wire.write(highByte(data));
@@ -271,6 +258,7 @@ void P061_data_struct::PCF8575_setReg(uint8_t addr, uint16_t data) {
 }
 
 uint16_t P061_data_struct::PCF8575_getReg(uint8_t addr) {
+  // FIXME TD-er: Add I2C_access function I2C_read16_LE
   uint16_t data;
 
   Wire.beginTransmission(addr);
