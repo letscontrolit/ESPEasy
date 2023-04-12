@@ -97,8 +97,8 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Output Min"), F("out_min"), P151_OUTPUT_MIN, 0, (1 << 14) - 1);
-      addFormNumericBox(F("Output Max"), F("out_max"), P151_OUTPUT_MAX, 0, (1 << 14) - 1);
+      addFormNumericBox(F("Sensor Output Min"), F("out_min"), P151_OUTPUT_MIN, 0, (1 << 14) - 1);
+      addFormNumericBox(F("Sensor Output Max"), F("out_max"), P151_OUTPUT_MAX, 0, (1 << 14) - 1);
       addFormFloatNumberBox(F("Pressure Min"), F("p_min"),
                             P151_PRESSURE_MIN, P151_MIN_PRESSURE_VALUE, 0.0f, 3);
       addFormFloatNumberBox(F("Pressure Max"), F("p_max"),
