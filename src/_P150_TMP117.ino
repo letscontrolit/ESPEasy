@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-04-13 tonhuisman: Switch to check the sensor once a second, and read when data is available, return last value every interval
+ *                        Make one-shot mode work as intended, one-shot is started from last read, so based on the interval
  * 2023-04-09 tonhuisman: Rename configuration options (compile-time), add optional output logging (default on),
  *                        use more I2C_access functions, make Raw value optional (default on),
  * 2023-04-08 tonhuisman: Basic workings for setting configuration and temperature offset, then reading the temperature
@@ -148,9 +150,9 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       }
       {
         const __FlashStringHelper *cycleCaptions[] = {
-          F("15.5 msec (continuous)"),
-          F("125 msec (continuous)"),
-          F("250 msec (continuous)"),
+          F("15.5 msec"),
+          F("125 msec"),
+          F("250 msec"),
           F("500 msec"),
           F("1 sec"),
           F("4 sec"),
@@ -167,8 +169,7 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CYCLE_8_SEC,
           P150_CYCLE_16_SEC,
         };
-        addFormSelector(F("Conversion cycle time"), F("cycle"), 8, cycleCaptions, cycleOptions, P150_GET_CONF_CYCLE_BITS);
-        addFormNote(F("Not all Cycle time options are available for One-shot mode!"));
+        addFormSelector(F("Continuous conversion cycle time"), F("cycle"), 8, cycleCaptions, cycleOptions, P150_GET_CONF_CYCLE_BITS);
       }
 
       addFormSubHeader(F("Output"));
@@ -202,7 +203,6 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       }
       P150_SET_OPT_ENABLE_LOG(isFormItemChecked(F("log")));
 
-      // P150_ERROR_STATE_OUTPUT = getFormItemInt(F("err"));
       success = true;
 
       break;
@@ -226,6 +226,18 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P150_data) {
         success = P150_data->plugin_read(event);
+      }
+
+      break;
+    }
+
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      P150_data_struct *P150_data =
+        static_cast<P150_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P150_data) {
+        success = P150_data->plugin_once_a_second(event);
       }
 
       break;

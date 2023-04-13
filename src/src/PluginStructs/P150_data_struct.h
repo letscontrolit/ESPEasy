@@ -75,7 +75,9 @@ struct P150_data_struct : public PluginTaskData_base {
   virtual ~P150_data_struct() = default;
 
   bool init();
+  void setConfig();
   bool plugin_read(struct EventStruct *event);
+  bool plugin_once_a_second(struct EventStruct *event);
 
 private:
 
@@ -91,6 +93,7 @@ private:
 
   int16_t _digitalTempC = 0;
   float   _finalTempC   = 0.0f;
+  bool    _readValid    = false;
 };
 
 #endif // ifdef USES_P150

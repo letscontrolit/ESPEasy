@@ -31,41 +31,69 @@ bool P150_data_struct::init() {
     return false;
   }
 
+  setConfig();
+
+  if (!essentiallyZero(_temperatureOffset)) {
+    setTemperatureOffset(_temperatureOffset); // set offset
+  }
+
+  return true;                                // returns true if all the checks pass
+}
+
+/**
+ * Set configuration, also used to start a one-shot conversion
+ */
+void P150_data_struct::setConfig() {
   uint16_t config = I2C_read16_reg(_deviceAddress, TMP117_CONFIGURATION); // Read current configuration
 
   config |= _config;                                                      // Apply config settings
   I2C_write16_reg(_deviceAddress, TMP117_CONFIGURATION, config);          // Update config
-
-  if (!essentiallyZero(_temperatureOffset)) {
-    setTemperatureOffset(_temperatureOffset);                             // set offset
-  }
-
-  return true;                                                            // returns true if all the checks pass
 }
 
 /**
- * plugin_read(): Read sensor if data is available
- * Will only return true if data is actually available and valid
+ * plugin_read(): Fetch last read values
  */
 bool P150_data_struct::plugin_read(struct EventStruct *event) {
+  if (_readValid && definitelyGreaterThan(_finalTempC, -256.0f)) {
+    UserVar[event->BaseVarIndex]     = _finalTempC;
+    UserVar[event->BaseVarIndex + 1] = _digitalTempC;
+
+    if (_logEnabled && loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = concat(F("TMP117: Temperature: "), formatUserVarNoCheck(event, 0));
+      log += 'C';
+
+      if (_rawEnabled) {
+        log += concat(F(", Raw: "), formatUserVarNoCheck(event, 1));
+      }
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
+
+    if (P150_GET_CONF_CONVERSION_MODE == P150_CONVERSION_ONE_SHOT) {
+      setConfig(); // Start the next one-shot measurement
+    }
+    return true;
+  }
+  return false;
+}
+
+/**
+ * plugin_once_a_second(): Read sensor if data is available
+ * Will return true if data is actually available and valid
+ */
+bool P150_data_struct::plugin_once_a_second(struct EventStruct *event) {
   if (dataReady()) {
     readTemp();
+    _readValid = true;
 
-    if (definitelyGreaterThan(_finalTempC, -256)) {
-      UserVar[event->BaseVarIndex]     = _finalTempC;
-      UserVar[event->BaseVarIndex + 1] = _digitalTempC;
+    # ifndef BUILD_NO_DEBUG
 
-      if (_logEnabled && loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = concat(F("TMP117: Temperature: "), formatUserVarNoCheck(event, 0));
-        log += 'C';
-
-        if (_rawEnabled) {
-          log += concat(F(", Raw: "), formatUserVarNoCheck(event, 1));
-        }
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
-      return true;
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = concat(F("TMP117: Read temp: "), toString(_finalTempC, 2));
+      log += 'C';
+      log += concat(F(", raw: "), static_cast<int>(_digitalTempC));
+      addLog(LOG_LEVEL_DEBUG, log);
     }
+    # endif // ifndef BUILD_NO_DEBUG
   }
   return false;
 }
