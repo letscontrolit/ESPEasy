@@ -123,22 +123,13 @@ bool P015_data_struct::readByte(unsigned char address, unsigned char& value)
 // Returns true (1) if successful, false (0) if there was an I2C error
 {
   // Set up command byte for read
-  Wire.beginTransmission(_i2cAddr);
-  Wire.write((address & 0x0F) | TSL2561_CMD);
-  _error = Wire.endTransmission();
+  bool is_ok = false;
+  const uint8_t val = I2C_read8_reg(_i2cAddr, (address & 0x0F) | TSL2561_CMD, &is_ok);
 
-  // Read requested byte
-  if (_error == 0)
-  {
-    Wire.requestFrom(_i2cAddr, (uint8_t)1);
-
-    if (Wire.available() == 1)
-    {
-      value = Wire.read();
-      return true;
-    }
+  if (is_ok) {
+    value = val;
   }
-  return false;
+  return is_ok;
 }
 
 bool P015_data_struct::writeByte(unsigned char address, unsigned char value)
@@ -149,19 +140,7 @@ bool P015_data_struct::writeByte(unsigned char address, unsigned char value)
 // Returns true (1) if successful, false (0) if there was an I2C error
 // (Also see getError() above)
 {
-  // Set up command byte for write
-  Wire.beginTransmission(_i2cAddr);
-  Wire.write((address & 0x0F) | TSL2561_CMD);
-
-  // Write byte
-  Wire.write(value);
-  _error = Wire.endTransmission();
-
-  if (_error == 0) {
-    return true;
-  }
-
-  return false;
+  return I2C_write8_reg(_i2cAddr, (address & 0x0F) | TSL2561_CMD, value);
 }
 
 bool P015_data_struct::readUInt(unsigned char address, unsigned int& value)
@@ -172,28 +151,12 @@ bool P015_data_struct::readUInt(unsigned char address, unsigned int& value)
 // Returns true (1) if successful, false (0) if there was an I2C error
 // (Also see getError() above)
 {
-  // Set up command byte for read
-  Wire.beginTransmission(_i2cAddr);
-  Wire.write((address & 0x0F) | TSL2561_CMD);
-  _error = Wire.endTransmission();
-
-  // Read two bytes (low and high)
-  if (_error == 0)
-  {
-    Wire.requestFrom(_i2cAddr, (uint8_t)2);
-
-    if (Wire.available() == 2)
-    {
-      char high, low;
-      low  = Wire.read();
-      high = Wire.read();
-
-      // Combine bytes into unsigned int
-      value = word(high, low);
-      return true;
-    }
+  bool success = false;
+  const uint16_t val = I2C_read16_LE_reg(_i2cAddr, (address & 0x0F) | TSL2561_CMD, &success);
+  if (success) {
+    value = val;
   }
-  return false;
+  return success;
 }
 
 bool P015_data_struct::writeUInt(unsigned char address, unsigned int value)
