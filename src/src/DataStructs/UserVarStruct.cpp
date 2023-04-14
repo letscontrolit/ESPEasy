@@ -184,7 +184,8 @@ void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const double& valu
 
 size_t UserVarStruct::getNrElements() const
 {
-  return _data.size() / VARS_PER_TASK;
+  constexpr size_t factor = sizeof(TaskValues_Data_t) / sizeof(float);
+  return _data.size() * factor;
 }
 
 uint8_t * UserVarStruct::get()
