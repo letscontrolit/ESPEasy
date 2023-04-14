@@ -7,12 +7,11 @@
    Check if string is valid float
  \*********************************************************************************************/
 bool isValidFloat(float f) {
-  if (isnan(f)) { return false; // ("isnan");
-  }
+  return !isnan(f) && !isinf(f);
+}
 
-  if (isinf(f)) { return false; // ("isinf");
-  }
-  return true;
+bool isValidDouble(double f) {
+  return !isnan(f) && !isinf(f);
 }
 
 bool validIntFromString(const String& tBuf, int& result) {

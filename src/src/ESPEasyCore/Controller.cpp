@@ -96,15 +96,22 @@ bool validUserVar(struct EventStruct *event) {
   const Sensor_VType vtype = event->getSensorType();
   if (isIntegerOutputDataType(vtype) ||
       vtype == Sensor_VType::SENSOR_TYPE_STRING  // FIXME TD-er: Must look at length of event->String2 ?
-  ) return true;
+  ) 
+  {
+    return true;
+  }
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-  // FIXME TD-er: Must implement check for doubles
-
   for (int i = 0; i < valueCount; ++i) {
-    const float f(UserVar[event->BaseVarIndex + i]);
-
-    if (!isValidFloat(f)) { return false; }
+    if (isDoubleOutputDataType(vtype)) {
+      if (!isValidDouble(UserVar.getDouble(event->TaskIndex, i))) { 
+        return false; 
+      }
+    } else {
+      if (!isValidFloat(UserVar.getFloat(event->TaskIndex, i))) { 
+        return false; 
+      }
+    }
   }
   return true;
 }
