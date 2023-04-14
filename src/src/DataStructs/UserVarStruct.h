@@ -86,6 +86,7 @@ struct UserVarStruct {
   uint8_t                * get();
 
   const TaskValues_Data_t* getTaskValues_Data(taskIndex_t taskIndex) const;
+  TaskValues_Data_t* getTaskValues_Data(taskIndex_t taskIndex);
 
 private:
 

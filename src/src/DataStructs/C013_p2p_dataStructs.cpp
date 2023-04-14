@@ -23,12 +23,6 @@ bool C013_SensorInfoStruct::isValid() const
          validPluginID(deviceNumber);
 }
 
-C013_SensorDataStruct::C013_SensorDataStruct()
-{
-  for (int i = 0; i < VARS_PER_TASK; ++i) {
-    Values[i] = 0.0f;
-  }
-}
 
 bool C013_SensorDataStruct::isValid() const
 {

@@ -185,6 +185,7 @@ void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const double& valu
 size_t UserVarStruct::getNrElements() const
 {
   constexpr size_t factor = sizeof(TaskValues_Data_t) / sizeof(float);
+
   return _data.size() * factor;
 }
 
@@ -193,10 +194,18 @@ uint8_t * UserVarStruct::get()
   return reinterpret_cast<uint8_t *>(&_data[0]);
 }
 
-const TaskValues_Data_t* UserVarStruct::getTaskValues_Data(taskIndex_t taskIndex) const
+const TaskValues_Data_t * UserVarStruct::getTaskValues_Data(taskIndex_t taskIndex) const
 {
-  if (taskIndex < _data.size()) 
+  if (taskIndex < _data.size()) {
     return &_data[taskIndex];
+  }
   return nullptr;
+}
 
+TaskValues_Data_t * UserVarStruct::getTaskValues_Data(taskIndex_t taskIndex)
+{
+  if (taskIndex < _data.size()) {
+    return &_data[taskIndex];
+  }
+  return nullptr;
 }

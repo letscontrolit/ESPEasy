@@ -10,6 +10,7 @@
 # include "../CustomBuild/ESPEasyLimits.h"
 # include "../DataStructs/DeviceStruct.h"
 # include "../DataTypes/TaskIndex.h"
+# include "../DataTypes/TaskValues_Data.h"
 # include "../DataTypes/PluginID.h"
 
 // These structs are sent to other nodes, so make sure not to change order or offset in struct.
@@ -32,9 +33,9 @@ struct C013_SensorInfoStruct
   Sensor_VType sensorType = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
-struct  __attribute__((__packed__)) C013_SensorDataStruct
+struct C013_SensorDataStruct
 {
-  C013_SensorDataStruct();
+  C013_SensorDataStruct() = default;
 
   bool isValid() const;
 
@@ -50,10 +51,7 @@ struct  __attribute__((__packed__)) C013_SensorDataStruct
   taskIndex_t  destTaskIndex   = INVALID_TASK_INDEX;
   pluginID_t   deviceNumber    = INVALID_PLUGIN_ID;
   Sensor_VType sensorType      = Sensor_VType::SENSOR_TYPE_NONE;
-  union {
-    float    Values[VARS_PER_TASK];
-    uint32_t Values_uint32_t[VARS_PER_TASK];
-  };
+  TaskValues_Data_t values{};
 };
 
 #endif // ifdef USES_C013

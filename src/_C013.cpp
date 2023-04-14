@@ -156,16 +156,9 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   // For example sending different sensor type data from one dummy to another is probably not going to work well
   const Sensor_VType sensorType = event->getSensorType();
 
-  for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x) {
-    if (isUInt32OutputDataType(sensorType)) {
-      dataReply.Values_uint32_t[x] = UserVar.getUint32(event->TaskIndex, x);
-    } else {
-      const userVarIndex_t userVarIndex = event->BaseVarIndex + x;
-
-      if (validUserVarIndex(userVarIndex)) {
-        dataReply.Values[x] = UserVar[userVarIndex];
-      }
-    }
+  const TaskValues_Data_t* taskValues = UserVar.getTaskValues_Data(event->TaskIndex);
+  if (taskValues != nullptr) {
+    dataReply.values = *taskValues;
   }
 
   if (destUnit != 0)
@@ -319,12 +312,11 @@ void C013_Receive(struct EventStruct *event) {
             const Sensor_VType sensorType = TempEvent.getSensorType();
 
             if (dataReply.matchesSensorType(sensorType)) {
-              for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
-              {
-                if (isUInt32OutputDataType(sensorType)) {
-                  UserVar.setUint32(dataReply.destTaskIndex, x, dataReply.Values_uint32_t[x]);
-                } else {
-                  UserVar[TempEvent.BaseVarIndex + x] = dataReply.Values[x];
+              TaskValues_Data_t * taskValues = UserVar.getTaskValues_Data(dataReply.destTaskIndex);
+              if (taskValues != nullptr) {
+                for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
+                {
+                  taskValues->copyValue(dataReply.values, x, sensorType);
                 }
               }
 
