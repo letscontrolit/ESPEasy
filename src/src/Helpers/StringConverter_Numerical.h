@@ -1,3 +1,6 @@
+#ifndef HELPERS_STRINGCONVERTER_NUMERICAL_H
+#define HELPERS_STRINGCONVERTER_NUMERICAL_H
+
 #include <Arduino.h>
 
 /********************************************************************************************\
@@ -28,3 +31,5 @@ String ll2String(int64_t value,
 String doubleToString(const double& value,
                       unsigned int  decimalPlaces     = 2,
                       bool          trimTrailingZeros = false);
+
+#endif // ifndef HELPERS_STRINGCONVERTER_NUMERICAL_H
