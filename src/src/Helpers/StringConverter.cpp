@@ -1138,7 +1138,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
 
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
-      const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) ? 1 : getValueCountForTask(event->TaskIndex);
+      const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_ULONG) ? 1 : getValueCountForTask(event->TaskIndex);
       for (uint8_t i = 0; i < valueCount; ++i) {
         String valstr = F("%val");
         valstr += (i + 1);

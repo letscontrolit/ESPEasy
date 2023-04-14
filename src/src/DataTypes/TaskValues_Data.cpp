@@ -145,11 +145,11 @@ void TaskValues_Data_t::setDouble(uint8_t varNr, double  value)
 
 double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) const
 {
-  if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+  if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     return getSensorTypeLong();
-  } else if (isULongOutputDataType(sensorType)) {
+  } else if (isUInt32OutputDataType(sensorType)) {
     return getUint32(varNr);
-  } else if (isLongOutputDataType(sensorType)) {
+  } else if (isInt32OutputDataType(sensorType)) {
     return getInt32(varNr);
   } else if (isUInt64OutputDataType(sensorType)) {
     return getUint64(varNr);
@@ -163,15 +163,13 @@ double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) co
 
 void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sensorType)
 {
-  if (isULongOutputDataType(sensorType)) {
+  if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
+    // Legacy formatting the old "SENSOR_TYPE_ULONG" type
+    setSensorTypeLong(value);
+  } else if (isUInt32OutputDataType(sensorType)) {
     setUint32(varNr, value);
-  } else if (isLongOutputDataType(sensorType)) {
-    if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
-      // Legacy formatting the old "SENSOR_TYPE_LONG" type
-      setSensorTypeLong(value);
-    } else {
-      setInt32(varNr, value);
-    }
+  } else if (isInt32OutputDataType(sensorType)) {
+    setInt32(varNr, value);
   } else if (isUInt64OutputDataType(sensorType)) {
     setUint64(varNr, value);
   } else if (isInt64OutputDataType(sensorType)) {
@@ -187,11 +185,11 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
 {
   String result;
 
-  if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+  if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     return String(getSensorTypeLong());
-  } else if (isULongOutputDataType(sensorType)) {
+  } else if (isUInt32OutputDataType(sensorType)) {
     return String(getUint32(varNr));
-  } else if (isLongOutputDataType(sensorType)) {
+  } else if (isInt32OutputDataType(sensorType)) {
     return String(getInt32(varNr));
   } else if (isUInt64OutputDataType(sensorType)) {
     return ull2String(getUint64(varNr));

@@ -24,10 +24,10 @@ struct UserVarStruct {
 
   // 32 bit signed int stored at the memory location of the float
   int32_t getInt32(taskIndex_t taskIndex,
-                     uint8_t   varNr) const;
-  void     setInt32(taskIndex_t taskIndex,
-                     uint8_t    varNr,
-                     int32_t    value);
+                   uint8_t     varNr) const;
+  void    setInt32(taskIndex_t taskIndex,
+                   uint8_t     varNr,
+                   int32_t     value);
 
   // 32 bit unsigned int stored at the memory location of the float
   uint32_t getUint32(taskIndex_t taskIndex,
@@ -39,10 +39,10 @@ struct UserVarStruct {
 
   // 64 bit signed int stored at the memory location of the float
   int64_t getInt64(taskIndex_t taskIndex,
-                     uint8_t   varNr) const;
-  void     setInt64(taskIndex_t taskIndex,
-                     uint8_t    varNr,
-                     int64_t    value);
+                   uint8_t     varNr) const;
+  void    setInt64(taskIndex_t taskIndex,
+                   uint8_t     varNr,
+                   int64_t     value);
 
   // 64 bit unsigned int stored at the memory location of the float
   uint64_t getUint64(taskIndex_t taskIndex,
@@ -52,32 +52,38 @@ struct UserVarStruct {
                      uint64_t    value);
 
   float getFloat(taskIndex_t taskIndex,
-                     uint8_t   varNr) const;
-  void     setFloat(taskIndex_t taskIndex,
-                     uint8_t    varNr,
-                     float    value);
+                 uint8_t     varNr) const;
+  void  setFloat(taskIndex_t taskIndex,
+                 uint8_t     varNr,
+                 float       value);
 
 
   // Double stored at the memory location of the float
   double getDouble(taskIndex_t taskIndex,
-                     uint8_t   varNr) const;
-  void     setDouble(taskIndex_t taskIndex,
-                     uint8_t    varNr,
-                     double    value);
+                   uint8_t     varNr) const;
+  void   setDouble(taskIndex_t taskIndex,
+                   uint8_t     varNr,
+                   double      value);
 
-  double getAsDouble(taskIndex_t taskIndex,
-                     uint8_t   varNr,
+  double getAsDouble(taskIndex_t  taskIndex,
+                     uint8_t      varNr,
                      Sensor_VType sensorType) const;
 
-  String getAsString(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals = 0) const;
+  String getAsString(taskIndex_t  taskIndex,
+                     uint8_t      varNr,
+                     Sensor_VType sensorType,
+                     uint8_t      nrDecimals = 0) const;
 
 
-  void set(taskIndex_t taskIndex, uint8_t varNr, const double& value, Sensor_VType sensorType);
+  void set(taskIndex_t   taskIndex,
+           uint8_t       varNr,
+           const double& value,
+           Sensor_VType  sensorType);
 
 
-  size_t getNrElements() const;
+  size_t                   getNrElements() const;
 
-  uint8_t * get();
+  uint8_t                * get();
 
   const TaskValues_Data_t* getTaskValues_Data(taskIndex_t taskIndex) const;
 

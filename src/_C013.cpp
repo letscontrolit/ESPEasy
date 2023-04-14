@@ -157,7 +157,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   const Sensor_VType sensorType = event->getSensorType();
 
   for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x) {
-    if (isULongOutputDataType(sensorType)) {
+    if (isUInt32OutputDataType(sensorType)) {
       dataReply.Values_uint32_t[x] = UserVar.getUint32(event->TaskIndex, x);
     } else {
       const userVarIndex_t userVarIndex = event->BaseVarIndex + x;
@@ -321,7 +321,7 @@ void C013_Receive(struct EventStruct *event) {
             if (dataReply.matchesSensorType(sensorType)) {
               for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
               {
-                if (isULongOutputDataType(sensorType)) {
+                if (isUInt32OutputDataType(sensorType)) {
                   UserVar.setUint32(dataReply.destTaskIndex, x, dataReply.Values_uint32_t[x]);
                 } else {
                   UserVar[TempEvent.BaseVarIndex + x] = dataReply.Values[x];

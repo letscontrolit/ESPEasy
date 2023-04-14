@@ -246,11 +246,11 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
 
   EventStruct tmpEvent(taskIndex);
   const Sensor_VType sensorType = tmpEvent.getSensorType();
-  if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+  if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     UserVar.setSensorTypeLong(taskIndex, !UserVar.getSensorTypeLong(taskIndex));
-  } else if (isLongOutputDataType(sensorType)) {
+  } else if (isInt32OutputDataType(sensorType)) {
     UserVar.setInt32(taskIndex, varNr, !UserVar.getInt32(taskIndex, varNr));
-  } else if (isULongOutputDataType(sensorType)) {
+  } else if (isUInt32OutputDataType(sensorType)) {
     UserVar.setUint32(taskIndex, varNr, !UserVar.getUint32(taskIndex, varNr));
   } else if (isInt64OutputDataType(sensorType)) {
     UserVar.setInt64(taskIndex, varNr, !UserVar.getInt64(taskIndex, varNr));
