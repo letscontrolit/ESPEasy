@@ -6,6 +6,36 @@ TaskValues_Data_t::TaskValues_Data_t() {
   ZERO_FILL(binary);
 }
 
+TaskValues_Data_t::TaskValues_Data_t(const TaskValues_Data_t& other)
+{
+  memcpy(binary, other.binary, sizeof(binary));  
+}
+
+TaskValues_Data_t& TaskValues_Data_t::operator=(const TaskValues_Data_t& other)
+{
+  memcpy(binary, other.binary, sizeof(binary));
+  return *this;
+}
+
+void TaskValues_Data_t::clear() {
+  ZERO_FILL(binary);
+}
+
+void TaskValues_Data_t::copyValue(const TaskValues_Data_t& other, uint8_t varNr, Sensor_VType sensorType)
+{
+  if (sensorType != Sensor_VType::SENSOR_TYPE_STRING) {
+    if (is32bitOutputDataType(sensorType)) {
+      if (varNr < VARS_PER_TASK) {
+        uint32s[varNr] = other.uint32s[varNr];
+      }
+    } else {
+      if ((varNr < (VARS_PER_TASK / 2))) {
+        uint64s[varNr] = other.uint64s[varNr];
+      }
+    }
+  }
+}
+
 unsigned long TaskValues_Data_t::getSensorTypeLong() const
 {
   const uint16_t low   = floats[0];
@@ -156,6 +186,7 @@ void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sen
 String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals) const
 {
   String result;
+
   if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
     return String(getSensorTypeLong());
   } else if (isULongOutputDataType(sensorType)) {

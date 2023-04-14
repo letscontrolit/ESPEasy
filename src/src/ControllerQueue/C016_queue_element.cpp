@@ -13,11 +13,7 @@ C016_queue_element::C016_queue_element() :  sensorType(
   _timestamp      = 0;
   _controller_idx = 0;
   _taskIndex      = INVALID_TASK_INDEX;
-
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    // IEEE 754 floating points have same bit representation as int for value 0.
-    values_uint32_t[i] = 0;
-  }
+  values.clear();
 }
 
 C016_queue_element::C016_queue_element(C016_queue_element&& other)
@@ -27,11 +23,7 @@ C016_queue_element::C016_queue_element(C016_queue_element&& other)
   _timestamp      = other._timestamp;
   _controller_idx = other._controller_idx;
   _taskIndex      = other._taskIndex;
-
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    // Make binary copy.
-    values_uint32_t[i] = other.values_uint32_t[i];
-  }
+  values          = other.values;
 }
 
 C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count) :
@@ -41,30 +33,12 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t 
 {
   _controller_idx = event->ControllerIndex;
   _taskIndex      = event->TaskIndex;
+  values.clear();
+    const TaskValues_Data_t* data = UserVar.getTaskValues_Data(event->TaskIndex);
 
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
-      values_uint32_t[i] = 0;
-    } else {
-      if ((i < value_count) && validTaskIndex(event->TaskIndex)) {
-        if (isFloatOutputDataType(sensorType)) {
-          values[i] = UserVar[event->BaseVarIndex + i];
-        } else if (is32bitOutputDataType(sensorType)) {
-          // Make binary copy.
-          values_uint32_t[i] = UserVar.getUint32(event->TaskIndex, i);
-        } else {
-          // 64 bit data type
-          const uint8_t index = 2 * i;
-          if ((index + 1) < VARS_PER_TASK) {
-            // Make binary copy of 64 bit data
-            values_uint32_t[index] = UserVar.getUint32(event->TaskIndex, index);
-            values_uint32_t[index + 1] = UserVar.getUint32(event->TaskIndex, index + 1);
-          }
-        }
-      } else {
-        // IEEE 754 floating points have same bit representation as int for value 0.
-        values_uint32_t[i] = 0;
-      }
+  if (data != nullptr) {
+    for (uint8_t i = 0; i < value_count; ++i) {
+      values.copyValue(*data, i, sensorType);
     }
   }
 }
@@ -76,11 +50,7 @@ C016_queue_element& C016_queue_element::operator=(C016_queue_element&& other) {
   sensorType      = other.sensorType;
   valueCount      = other.valueCount;
   unixTime        = other.unixTime;
-
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    // Make binary copy.
-    values_uint32_t[i] = other.values_uint32_t[i];
-  }
+  values          = other.values;
 
   return *this;
 }
@@ -101,11 +71,11 @@ bool C016_queue_element::isDuplicate(const Queue_element_base& other) const {
 
   for (uint8_t i = 0; i < valueCount; ++i) {
     if (isFloatOutputDataType(sensorType)) {
-      if (!essentiallyEqual(oth.values[i], values[i])) {
+      if (!essentiallyEqual(oth.values.getFloat(i), values.getFloat(i))) {
         return false;
       }
     } else {
-      if (oth.values_uint32_t[i] != values_uint32_t[i]) {
+      if (oth.values.getUint32(i) != values.getUint32(i)) {
         return false;
       }
     }
@@ -120,10 +90,7 @@ C016_binary_element C016_queue_element::getBinary() const {
   element.TaskIndex  = _taskIndex;
   element.sensorType = sensorType;
   element.valueCount = valueCount;
-
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    element.values_uint32_t[i] = values_uint32_t[i];
-  }
+  element.values     = values;
 
   // It makes no sense to keep the controller index when storing it.
   // re-purpose it to store the pluginID

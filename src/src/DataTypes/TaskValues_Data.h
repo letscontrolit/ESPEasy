@@ -8,6 +8,14 @@
 struct TaskValues_Data_t {
   TaskValues_Data_t();
 
+  TaskValues_Data_t(const TaskValues_Data_t& other);
+
+  TaskValues_Data_t& operator=(const TaskValues_Data_t& other);
+
+  void clear();
+
+  void copyValue(const TaskValues_Data_t& other, uint8_t varNr, Sensor_VType  sensorType);
+
   unsigned long getSensorTypeLong() const;
   void          setSensorTypeLong(unsigned long value);
 

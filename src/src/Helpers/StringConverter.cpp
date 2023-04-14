@@ -333,27 +333,6 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
-    // Legacy stored 'long' type
-    return String(UserVar.getSensorTypeLong(event->TaskIndex));
-  }
-
-  if (isULongOutputDataType(sensorType)) {
-    return String(UserVar.getUint32(event->TaskIndex, rel_index));
-  }
-
-  if (isLongOutputDataType(sensorType)) {
-    return String(UserVar.getInt32(event->TaskIndex, rel_index));
-  }
-
-  if (isUInt64OutputDataType(sensorType)) {
-    return ull2String(UserVar.getUint64(event->TaskIndex, rel_index));
-  }
-
-  if (isInt64OutputDataType(sensorType)) {
-    return ll2String(UserVar.getInt64(event->TaskIndex, rel_index));
-  }
-
   if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
     return event->String2;
   }
@@ -363,13 +342,9 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
-  if (isDoubleOutputDataType(sensorType)) {
-    double value(UserVar.getDouble(event->TaskIndex, rel_index));
-    String result = doubleToString(value, nrDecimals);
-    result.trim();
-    return result;
+  if (!mustCheck || !isFloatOutputDataType(sensorType)) {
+    return UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
   }
-
 
   float f(UserVar[event->BaseVarIndex + rel_index]);
 

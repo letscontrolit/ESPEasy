@@ -69,6 +69,8 @@ struct UserVarStruct {
                      uint8_t   varNr,
                      Sensor_VType sensorType) const;
 
+  String getAsString(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals = 0) const;
+
 
   void set(taskIndex_t taskIndex, uint8_t varNr, const double& value, Sensor_VType sensorType);
 
@@ -76,6 +78,8 @@ struct UserVarStruct {
   size_t getNrElements() const;
 
   uint8_t * get();
+
+  const TaskValues_Data_t* getTaskValues_Data(taskIndex_t taskIndex) const;
 
 private:
 

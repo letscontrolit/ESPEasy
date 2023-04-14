@@ -7,8 +7,9 @@
 
 # include "../ControllerQueue/Queue_element_base.h"
 # include "../CustomBuild/ESPEasyLimits.h"
-# include "../DataStructs/DeviceStruct.h"
 # include "../DataTypes/ControllerIndex.h"
+# include "../DataTypes/TaskValues_Data.h"
+# include "../DataStructs/DeviceStruct.h"
 # include "../DataStructs/UnitMessageCount.h"
 # include "../Globals/Plugins.h"
 
@@ -18,10 +19,7 @@ struct EventStruct;
 // The binary format to store the samples using the Cache Controller
 // Do NOT change order of members!
 struct C016_binary_element {
-  union {
-    float    values[VARS_PER_TASK]{};
-    uint32_t values_uint32_t[VARS_PER_TASK];
-  };
+  TaskValues_Data_t values{};
   unsigned long unixTime{};
   taskIndex_t   TaskIndex{ INVALID_TASK_INDEX };
   pluginID_t    pluginID{ INVALID_PLUGIN_ID };
@@ -65,10 +63,7 @@ public:
 
   C016_binary_element getBinary() const;
 
-  union {
-    float    values[VARS_PER_TASK]{};
-    uint32_t values_uint32_t[VARS_PER_TASK];
-  };
+  TaskValues_Data_t values{};
 
   unsigned long unixTime = 0;
   Sensor_VType sensorType{ Sensor_VType::SENSOR_TYPE_NONE };
