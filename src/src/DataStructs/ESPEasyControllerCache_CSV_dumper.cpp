@@ -181,6 +181,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
         } else if (isULongOutputDataType(_element.sensorType)) {
           _csv_values[valindex] += _element.values_uint32_t[i];
         } else {
+          // FIXME TD-er: Must also check for other types
           if (essentiallyZero(_element.values[i])) {
             _csv_values[valindex] += '0';
           } else {

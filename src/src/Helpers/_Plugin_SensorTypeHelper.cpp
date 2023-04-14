@@ -8,88 +8,7 @@
 
 #include "../WebServer/Markup.h"
 
-/*********************************************************************************************\
-   Get value count from sensor type
 
-   Only use this function to determine nr of output values when changing output type of a task
-   To get the actual output values for a task, use getValueCountForTask
-\*********************************************************************************************/
-uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
-{
-  switch (sensorType)
-  {
-    case Sensor_VType::SENSOR_TYPE_NONE:
-      return 0;
-    case Sensor_VType::SENSOR_TYPE_SINGLE:       // single value sensor, used for Dallas, BH1750, etc
-    case Sensor_VType::SENSOR_TYPE_ULONG_SINGLE: // 1x uint32_t
-    case Sensor_VType::SENSOR_TYPE_SWITCH:
-    case Sensor_VType::SENSOR_TYPE_DIMMER:
-    case Sensor_VType::SENSOR_TYPE_LONG: // single LONG value, stored in two floats (rfid tags)
-    case Sensor_VType::SENSOR_TYPE_STRING:     // String type data stored in the event->String2
-      return 1;
-    case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
-    case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
-    case Sensor_VType::SENSOR_TYPE_DUAL:
-    case Sensor_VType::SENSOR_TYPE_ULONG_DUAL: // 2x uint32_t
-      return 2;
-    case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
-    case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO: // Values 1 and 3 will contain data.
-    case Sensor_VType::SENSOR_TYPE_TRIPLE:
-    case Sensor_VType::SENSOR_TYPE_ULONG_TRIPLE: // 3x uint32_t
-    case Sensor_VType::SENSOR_TYPE_WIND:
-      return 3;
-    case Sensor_VType::SENSOR_TYPE_QUAD:
-    case Sensor_VType::SENSOR_TYPE_ULONG_QUAD: // 4x uint32_t
-      return 4;
-    case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
-  }
-  #ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_ERROR, F("getValueCountFromSensorType: Unknown sensortype"));
-  #endif
-  return 0;
-}
-
-
-const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
-  switch (sensorType) {
-    case Sensor_VType::SENSOR_TYPE_SINGLE:           return F("Single");
-    case Sensor_VType::SENSOR_TYPE_TEMP_HUM:         return F("Temp / Hum");
-    case Sensor_VType::SENSOR_TYPE_TEMP_BARO:        return F("Temp / Baro");
-    case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:  return F("Temp / - / Baro");
-    case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:    return F("Temp / Hum / Baro");
-    case Sensor_VType::SENSOR_TYPE_DUAL:             return F("Dual");
-    case Sensor_VType::SENSOR_TYPE_TRIPLE:           return F("Triple");
-    case Sensor_VType::SENSOR_TYPE_QUAD:             return F("Quad");
-    case Sensor_VType::SENSOR_TYPE_SWITCH:           return F("Switch");
-    case Sensor_VType::SENSOR_TYPE_DIMMER:           return F("Dimmer");
-    case Sensor_VType::SENSOR_TYPE_LONG:             return F("Long");
-    case Sensor_VType::SENSOR_TYPE_ULONG_SINGLE:     return F("ULong Single");
-    case Sensor_VType::SENSOR_TYPE_ULONG_DUAL:       return F("ULong Dual");
-    case Sensor_VType::SENSOR_TYPE_ULONG_TRIPLE:     return F("ULong Triple");
-    case Sensor_VType::SENSOR_TYPE_ULONG_QUAD:       return F("ULong Quad");
-    case Sensor_VType::SENSOR_TYPE_WIND:             return F("Wind");
-    case Sensor_VType::SENSOR_TYPE_STRING:           return F("String");
-    case Sensor_VType::SENSOR_TYPE_NONE:             return F("None");
-    case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
-  }
-  return F("");
-}
-
-bool isSimpleOutputDataType(Sensor_VType sensorType)
-{
-  return sensorType == Sensor_VType::SENSOR_TYPE_SINGLE ||
-         sensorType == Sensor_VType::SENSOR_TYPE_DUAL   ||
-         sensorType == Sensor_VType::SENSOR_TYPE_TRIPLE ||
-         sensorType == Sensor_VType::SENSOR_TYPE_QUAD;
-}
-
-bool isULongOutputDataType(Sensor_VType sensorType)
-{
-  return sensorType == Sensor_VType::SENSOR_TYPE_ULONG_SINGLE ||
-         sensorType == Sensor_VType::SENSOR_TYPE_ULONG_DUAL   ||
-         sensorType == Sensor_VType::SENSOR_TYPE_ULONG_TRIPLE ||
-         sensorType == Sensor_VType::SENSOR_TYPE_ULONG_QUAD;
-}
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pconfigIndex)
 {
@@ -103,12 +22,21 @@ void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pc
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SWITCH),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DIMMER),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_WIND),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_LONG),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_LONG_DUAL),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_LONG_TRIPLE),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_LONG_QUAD),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_ULONG_SINGLE),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_ULONG_DUAL),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_ULONG_TRIPLE),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_ULONG_QUAD),
-    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_WIND),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_INT64_SINGLE),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_INT64_DUAL),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_UINT64_SINGLE),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_UINT64_DUAL),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DOUBLE_SINGLE),
+    static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_STRING)
   };
   constexpr int optionCount = sizeof(optionValues) / sizeof(optionValues[0]);

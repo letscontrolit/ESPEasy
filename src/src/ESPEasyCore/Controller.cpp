@@ -94,11 +94,12 @@ void sendData(struct EventStruct *event)
 bool validUserVar(struct EventStruct *event) {
   if (!validTaskIndex(event->TaskIndex)) return false;
   const Sensor_VType vtype = event->getSensorType();
-  if (vtype == Sensor_VType::SENSOR_TYPE_LONG || 
-      isULongOutputDataType(vtype) ||
+  if (isIntegerOutputDataType(vtype) ||
       vtype == Sensor_VType::SENSOR_TYPE_STRING  // FIXME TD-er: Must look at length of event->String2 ?
   ) return true;
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+
+  // FIXME TD-er: Must implement check for doubles
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);

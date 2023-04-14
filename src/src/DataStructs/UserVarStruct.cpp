@@ -6,98 +6,177 @@
 
 UserVarStruct::UserVarStruct()
 {
-  _data.resize(VARS_PER_TASK * TASKS_MAX);
-  for (size_t i = 0; i < (VARS_PER_TASK * TASKS_MAX); ++i) {
-    _data[i] = 0.0f;
-  }
+  _data.resize(TASKS_MAX);
 }
 
 // Implementation of [] operator.  This function must return a
 // reference as array element can be put on left side
 float& UserVarStruct::operator[](unsigned int index)
 {
-  if (index >= _data.size()) {
+  const unsigned int taskIndex = index / VARS_PER_TASK;
+  const unsigned int varNr     = index % VARS_PER_TASK;
+
+  if (taskIndex >= _data.size()) {
     static float errorvalue = NAN;
     addLog(LOG_LEVEL_ERROR, F("UserVar index out of range"));
     return errorvalue;
   }
-  return _data.at(index);
+  return _data.at(taskIndex).floats[varNr];
 }
 
 const float& UserVarStruct::operator[](unsigned int index) const
 {
-  if (index >= _data.size()) {
+  const unsigned int taskIndex = index / VARS_PER_TASK;
+  const unsigned int varNr     = index % VARS_PER_TASK;
+
+  if (taskIndex >= _data.size()) {
     static float errorvalue = NAN;
     addLog(LOG_LEVEL_ERROR, F("UserVar index out of range"));
     return errorvalue;
   }
-  return _data.at(index);
+  return _data.at(taskIndex).floats[varNr];
 }
 
 unsigned long UserVarStruct::getSensorTypeLong(taskIndex_t taskIndex) const
 {
-  unsigned long value = 0;
-
-  if (validTaskIndex(taskIndex)) {
-    const unsigned int baseVarIndex = taskIndex * VARS_PER_TASK;
-    value = static_cast<unsigned long>(_data[baseVarIndex]) + (static_cast<unsigned long>(_data[baseVarIndex + 1]) << 16);
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].getSensorTypeLong();
   }
-  return value;
+  return 0u;
 }
 
 void UserVarStruct::setSensorTypeLong(taskIndex_t taskIndex, unsigned long value)
 {
-  if (!validTaskIndex(taskIndex)) {
-    return;
+  if (taskIndex < _data.size()) {
+    _data[taskIndex].setSensorTypeLong(value);
   }
-  const unsigned int baseVarIndex = taskIndex * VARS_PER_TASK;
+}
 
-  _data[baseVarIndex]     = value & 0xFFFF;
-  _data[baseVarIndex + 1] = (value >> 16) & 0xFFFF;
+int32_t UserVarStruct::getInt32(taskIndex_t taskIndex,
+                                uint8_t     varNr) const
+{
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].getInt32(varNr);
+  }
+  return 0;
+}
+
+void UserVarStruct::setInt32(taskIndex_t taskIndex,
+                             uint8_t     varNr,
+                             int32_t     value)
+{
+  if (taskIndex < _data.size()) {
+    _data[taskIndex].setInt32(varNr, value);
+  }
 }
 
 uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, uint8_t varNr) const
 {
-  if (!validTaskIndex(taskIndex) || (varNr >= VARS_PER_TASK)) {
-    addLog(LOG_LEVEL_ERROR, F("UserVar index out of range"));
-    return 0;
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].getUint32(varNr);
   }
-  const unsigned int baseVarIndex = taskIndex * VARS_PER_TASK;
-  uint32_t res;
-  memcpy(&res, &_data[baseVarIndex + varNr], sizeof(float));
-  return res;
+  return 0u;
 }
 
 void UserVarStruct::setUint32(taskIndex_t taskIndex, uint8_t varNr, uint32_t value)
 {
-  if (!validTaskIndex(taskIndex) || (varNr >= VARS_PER_TASK)) {
-    addLog(LOG_LEVEL_ERROR, F("UserVar index out of range"));
-    return;
+  if (taskIndex < _data.size()) {
+    _data[taskIndex].setUint32(varNr, value);
   }
-  const unsigned int baseVarIndex = taskIndex * VARS_PER_TASK;
+}
 
-  // Store in a new variable to prevent
-  // warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
-  float tmp;
-  memcpy(&tmp, &value, sizeof(float));
-  _data[baseVarIndex + varNr] = tmp;
+int64_t UserVarStruct::getInt64(taskIndex_t taskIndex,
+                                uint8_t     varNr) const
+{
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].getInt64(varNr);
+  }
+  return 0;
+}
+
+void UserVarStruct::setInt64(taskIndex_t taskIndex,
+                             uint8_t     varNr,
+                             int64_t     value)
+{
+  if (taskIndex < _data.size()) {
+    _data[taskIndex].setInt64(varNr, value);
+  }
+}
+
+uint64_t UserVarStruct::getUint64(taskIndex_t taskIndex,
+                                  uint8_t     varNr) const
+{
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].getUint64(varNr);
+  }
+  return 0u;
+}
+
+void UserVarStruct::setUint64(taskIndex_t taskIndex,
+                              uint8_t     varNr,
+                              uint64_t    value)
+{
+  if (taskIndex < _data.size()) {
+    _data[taskIndex].setUint64(varNr, value);
+  }
+}
+
+float UserVarStruct::getFloat(taskIndex_t taskIndex,
+                              uint8_t     varNr) const
+{
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].getFloat(varNr);
+  }
+  return 0.0f;
+}
+
+void UserVarStruct::setFloat(taskIndex_t taskIndex,
+                             uint8_t     varNr,
+                             float       value)
+{
+  if (taskIndex < _data.size()) {
+    _data[taskIndex].setFloat(varNr, value);
+  }
+}
+
+double UserVarStruct::getDouble(taskIndex_t taskIndex,
+                                uint8_t     varNr) const
+{
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].getDouble(varNr);
+  }
+  return 0.0;
+}
+
+void UserVarStruct::setDouble(taskIndex_t taskIndex,
+                              uint8_t     varNr,
+                              double      value)
+{
+  if (taskIndex < _data.size()) {
+    _data[taskIndex].setDouble(varNr, value);
+  }
+}
+
+double UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
+                                  uint8_t      varNr,
+                                  Sensor_VType sensorType) const
+{
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].getAsDouble(varNr, sensorType);
+  }
+  return 0.0;
 }
 
 void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const double& value, Sensor_VType sensorType)
 {
-  if (isULongOutputDataType(sensorType)) {
-    setUint32(taskIndex, varNr, value);
-  } else if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
-    setSensorTypeLong(taskIndex, value);
-  } else {
-    const unsigned int baseVarIndex = taskIndex * VARS_PER_TASK;
-    _data[baseVarIndex + varNr] = value;
+  if (taskIndex < _data.size()) {
+    _data[taskIndex].set(varNr, value, sensorType);
   }
 }
 
 size_t UserVarStruct::getNrElements() const
 {
-  return _data.size();
+  return _data.size() / VARS_PER_TASK;
 }
 
 uint8_t * UserVarStruct::get()

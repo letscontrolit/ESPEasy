@@ -126,6 +126,10 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
 
   EventStruct tmpEvent(taskIndex);
   if (GetArgv(Line, TmpStr1, 4)) {
+    const Sensor_VType sensorType = tmpEvent.getSensorType();
+
+    // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
+
     // Perform calculation with float result.
     double result = 0;
 
@@ -133,7 +137,6 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
       success = false;
       return F("CALCULATION_ERROR");
     }
-    const Sensor_VType sensorType = tmpEvent.getSensorType();
     UserVar.set(taskIndex, varNr, result, sensorType);
   } else  {
     // TODO: Get Task description and var name
@@ -243,10 +246,21 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
 
   EventStruct tmpEvent(taskIndex);
   const Sensor_VType sensorType = tmpEvent.getSensorType();
-  if (isULongOutputDataType(sensorType)) {
-    UserVar.setUint32(taskIndex, varNr, !UserVar.getUint32(taskIndex, varNr));
-  } else if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+  if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
     UserVar.setSensorTypeLong(taskIndex, !UserVar.getSensorTypeLong(taskIndex));
+  } else if (isLongOutputDataType(sensorType)) {
+    UserVar.setInt32(taskIndex, varNr, !UserVar.getInt32(taskIndex, varNr));
+  } else if (isULongOutputDataType(sensorType)) {
+    UserVar.setUint32(taskIndex, varNr, !UserVar.getUint32(taskIndex, varNr));
+  } else if (isInt64OutputDataType(sensorType)) {
+    UserVar.setInt64(taskIndex, varNr, !UserVar.getInt64(taskIndex, varNr));
+  } else if (isUInt64OutputDataType(sensorType)) {
+    UserVar.setUint64(taskIndex, varNr, !UserVar.getUint64(taskIndex, varNr));
+  } else if (isDoubleOutputDataType(sensorType)) {
+    const int    result       = lround(UserVar.getDouble(taskIndex, varNr));
+    if ((result == 0) || (result == 1)) {
+      UserVar.setDouble(taskIndex, varNr, (result == 0) ? 1.0 : 0.0);
+    }
   } else {
     const unsigned int uservarIndex = tmpEvent.BaseVarIndex + varNr;
     const int    result       = lround(UserVar[uservarIndex]);

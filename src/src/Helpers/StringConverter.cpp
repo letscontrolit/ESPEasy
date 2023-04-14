@@ -46,66 +46,6 @@ bool equals(const String& str, const char& c) {
 }
 
 /********************************************************************************************\
-   Convert a char string to integer
- \*********************************************************************************************/
-
-// FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string)
-{
-  unsigned int temp = 0;
-
-  validUIntFromString(string, temp);
-
-  return static_cast<unsigned long>(temp);
-}
-
-String ull2String(uint64_t value, uint8_t base) {
-  String res;
-
-  if (value == 0) {
-    res = '0';
-    return res;
-  }
-
-  while (value > 0) {
-    res   += String(static_cast<uint32_t>(value % base), base);
-    value /= base;
-  }
-
-  int endpos   = res.length() - 1;
-  int beginpos = 0;
-
-  while (endpos > beginpos) {
-    const char c = res[beginpos];
-    res[beginpos] = res[endpos];
-    res[endpos]   = c;
-    ++beginpos;
-    --endpos;
-  }
-
-  return res;
-}
-
-String ll2String(int64_t value, uint8_t  base) {
-  if (value < 0) {
-    String res;
-    res = '-';
-    res += ull2String(value * -1ll, base);
-    return res;
-  } else {
-    return ull2String(value, base);
-  }
-}
-
-
-/********************************************************************************************\
-   Check if valid float and convert string to float.
- \*********************************************************************************************/
-bool string2float(const String& string, float& floatvalue) {
-  return validFloatFromString(string, floatvalue);
-}
-
-/********************************************************************************************\
    Convert a char string to IP uint8_t array
  \*********************************************************************************************/
 bool isIP(const String& string) {
@@ -393,17 +333,43 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
+  if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+    // Legacy stored 'long' type
+    return String(UserVar.getSensorTypeLong(event->TaskIndex));
+  }
+
   if (isULongOutputDataType(sensorType)) {
     return String(UserVar.getUint32(event->TaskIndex, rel_index));
   }
 
-  if (sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
-    return String(UserVar.getSensorTypeLong(event->TaskIndex));
+  if (isLongOutputDataType(sensorType)) {
+    return String(UserVar.getInt32(event->TaskIndex, rel_index));
+  }
+
+  if (isUInt64OutputDataType(sensorType)) {
+    return ull2String(UserVar.getUint64(event->TaskIndex, rel_index));
+  }
+
+  if (isInt64OutputDataType(sensorType)) {
+    return ll2String(UserVar.getInt64(event->TaskIndex, rel_index));
   }
 
   if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
     return event->String2;
   }
+
+  uint8_t nrDecimals = 0;
+  if (Device[DeviceIndex].configurableDecimals()) {
+    nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
+  }
+
+  if (isDoubleOutputDataType(sensorType)) {
+    double value(UserVar.getDouble(event->TaskIndex, rel_index));
+    String result = doubleToString(value, nrDecimals);
+    result.trim();
+    return result;
+  }
+
 
   float f(UserVar[event->BaseVarIndex + rel_index]);
 
@@ -420,11 +386,6 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     }
 #endif // ifndef BUILD_NO_DEBUG
     f = 0;
-  }
-
-  uint8_t nrDecimals = 0;
-  if (Device[DeviceIndex].configurableDecimals()) {
-    nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
   String result = toString(f, nrDecimals);
