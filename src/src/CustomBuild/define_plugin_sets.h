@@ -1518,6 +1518,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
   #endif
+  #ifndef USES_P150
+    #define USES_P150   // TMP117 Temperature
+  #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
   #endif
@@ -1581,9 +1584,6 @@ To create/register a plugin, you have to :
    #ifndef USES_P148
      #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
    #endif
-  #ifndef USES_P150
-    #define USES_P150   // TMP117 Temperature
-  #endif
 
 #endif
 
