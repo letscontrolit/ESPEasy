@@ -320,6 +320,9 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_A("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
       break;
     }
+    case 'h': {
+      COMMAND_CASE_R("hiddenssid", Command_Wifi_HiddenSSID, 1); // wifi.h
+    }
     case 'i': {
       COMMAND_CASE_R("i2cscanner", Command_i2c_Scanner, -1); // i2c.h
       COMMAND_CASE_A(       "inc", Command_Rules_Inc,   -1); // Rules.h
