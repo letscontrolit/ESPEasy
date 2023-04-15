@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-04-15 tonhuisman: Correctly apply configuration bits (clear first), add optional low-level logging, improve configuration page
  * 2023-04-13 tonhuisman: Switch to check the sensor once a second, and read when data is available, return last value every interval
  *                        Make one-shot mode work as intended, one-shot is started from last read, so based on the interval
  * 2023-04-09 tonhuisman: Rename configuration options (compile-time), add optional output logging (default on),
@@ -146,9 +147,11 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CONVERSION_CONTINUOUS,
           P150_CONVERSION_ONE_SHOT,
         };
-        addFormSelector(F("Conversion mode"), F("conv"), 2, conversionCaptions, conversionOptions, P150_GET_CONF_CONVERSION_MODE);
+        addFormSelector(F("Conversion mode"), F("conv"), 2, conversionCaptions, conversionOptions, P150_GET_CONF_CONVERSION_MODE, true);
+        addFormNote(F("Changing this setting will save and reload this page."));
       }
-      {
+
+      if (P150_GET_CONF_CONVERSION_MODE == P150_CONVERSION_CONTINUOUS) {
         const __FlashStringHelper *cycleCaptions[] = {
           F("15.5 msec"),
           F("125 msec"),
@@ -177,7 +180,11 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       addFormSelector_YesNo(F("Enable 'Raw' value"), F("raw"), P150_GET_OPT_ENABLE_RAW ? 1 : 0, true);
       addFormNote(F("Changing this setting will save and reload this page."));
 
-      addFormCheckBox(F("Log measured values (INFO)"), F("log"), P150_GET_OPT_ENABLE_LOG);
+      addFormCheckBox(F("Log measured values (INFO)"),  F("log"),  P150_GET_OPT_ENABLE_LOG);
+
+      # if P150_USE_EXTRA_LOG
+      addFormCheckBox(F("Log low-level values (INFO)"), F("xlog"), P150_GET_OPT_EXTRA_LOG);
+      # endif // if P150_USE_EXTRA_LOG
 
       success = true;
 
@@ -189,8 +196,14 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       P150_I2C_ADDRESS        = getFormItemInt(F("i2c_addr"));
       P150_TEMPERATURE_OFFSET = getFormItemInt(F("offset"));
       P150_SET_CONF_AVERAGING(getFormItemInt(F("avg")));
+      uint8_t prvConv = P150_GET_CONF_CONVERSION_MODE;
       P150_SET_CONF_CONVERSION_MODE(getFormItemInt(F("conv")));
-      P150_SET_CONF_CYCLE_BITS(getFormItemInt(F("cycle")));
+
+      if ((P150_GET_CONF_CONVERSION_MODE == P150_CONVERSION_CONTINUOUS) && (prvConv == P150_CONVERSION_CONTINUOUS)) {
+        P150_SET_CONF_CYCLE_BITS(getFormItemInt(F("cycle")));
+      } else {
+        P150_SET_CONF_CYCLE_BITS(P150_CYCLE_1_SEC); // Default
+      }
 
       uint8_t raw = getFormItemInt(F("raw"));
 
@@ -202,6 +215,9 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
         P150_SET_OPT_ENABLE_RAW(raw);
       }
       P150_SET_OPT_ENABLE_LOG(isFormItemChecked(F("log")));
+      # if P150_USE_EXTRA_LOG
+      P150_SET_OPT_EXTRA_LOG(isFormItemChecked(F("xlog")));
+      # endif // if P150_USE_EXTRA_LOG
 
       success = true;
 

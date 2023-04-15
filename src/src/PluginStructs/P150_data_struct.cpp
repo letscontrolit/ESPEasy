@@ -8,6 +8,9 @@ P150_data_struct::P150_data_struct(struct EventStruct *event) {
   _temperatureOffset = P150_TEMPERATURE_OFFSET / 10.0f; // Per 0.1 degree
   _rawEnabled        = P150_GET_OPT_ENABLE_RAW;
   _logEnabled        = P150_GET_OPT_ENABLE_LOG;
+  # if P150_USE_EXTRA_LOG
+  _extraLog = P150_GET_OPT_EXTRA_LOG;
+  # endif // if P150_USE_EXTRA_LOG
 }
 
 /**
@@ -46,7 +49,8 @@ bool P150_data_struct::init() {
 void P150_data_struct::setConfig() {
   uint16_t config = I2C_read16_reg(_deviceAddress, TMP117_CONFIGURATION); // Read current configuration
 
-  config |= _config;                                                      // Apply config settings
+  config &= P150_CONFIG_RESET_MASK;                                       // Reset the bits we want to update
+  config |= _config;                                                      // Apply (new) config settings
   I2C_write16_reg(_deviceAddress, TMP117_CONFIGURATION, config);          // Update config
 }
 
@@ -85,15 +89,19 @@ bool P150_data_struct::plugin_once_a_second(struct EventStruct *event) {
     readTemp();
     _readValid = true;
 
-    # ifndef BUILD_NO_DEBUG
+    # if P150_USE_EXTRA_LOG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    if (_extraLog && loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = concat(F("TMP117: Read temp: "), toString(_finalTempC, 2));
       log += 'C';
       log += concat(F(", raw: "), static_cast<int>(_digitalTempC));
-      addLog(LOG_LEVEL_DEBUG, log);
+
+      if (P150_GET_CONF_CONVERSION_MODE == P150_CONVERSION_ONE_SHOT) {
+        log += F(" (one-shot)");
+      }
+      addLog(LOG_LEVEL_INFO, log);
     }
-    # endif // ifndef BUILD_NO_DEBUG
+    # endif // if P150_USE_EXTRA_LOG
   }
   return false;
 }

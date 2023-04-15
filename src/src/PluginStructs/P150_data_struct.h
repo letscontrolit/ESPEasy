@@ -9,6 +9,10 @@
 # define P150_CONFIG                PCONFIG_ULONG(0) // Sensor config
 # define P150_OPTIONS               PCONFIG_ULONG(1) // Plugin options
 
+# define P150_USE_EXTRA_LOG         1                // Enable(1)/disable(0) low-level logging
+
+# define P150_CONFIG_RESET_MASK   0b1111000000011111 // Reset the bits we need to overwrite
+
 // Sensor configuration:
 # define P150_CONF_CONVERSION_MODE        10         // Conversion mode 00/10 = Continuous, 01 = Shutdown, 11 = One Shot
 # define P150_CONVERSION_CONTINUOUS       0b00
@@ -44,11 +48,18 @@
 // Plugin options:
 # define P150_OPT_ENABLE_RAW              0 // Use Raw value, default on
 # define P150_OPT_ENABLE_LOG              1 // Log measured values, default on
+# if P150_USE_EXTRA_LOG
+#  define P150_OPT_EXTRA_LOG              2 // Log low-level measured values, default off
+# endif // if P150_USE_EXTRA_LOG
 
 # define P150_GET_OPT_ENABLE_RAW    bitRead(P150_OPTIONS, P150_OPT_ENABLE_RAW)
 # define P150_SET_OPT_ENABLE_RAW(x) bitWrite(P150_OPTIONS, P150_OPT_ENABLE_RAW, x)
 # define P150_GET_OPT_ENABLE_LOG    bitRead(P150_OPTIONS, P150_OPT_ENABLE_LOG)
 # define P150_SET_OPT_ENABLE_LOG(x) bitWrite(P150_OPTIONS, P150_OPT_ENABLE_LOG, x)
+# if P150_USE_EXTRA_LOG
+#  define P150_GET_OPT_EXTRA_LOG    bitRead(P150_OPTIONS, P150_OPT_EXTRA_LOG)
+#  define P150_SET_OPT_EXTRA_LOG(x) bitWrite(P150_OPTIONS, P150_OPT_EXTRA_LOG, x)
+# endif // if P150_USE_EXTRA_LOG
 
 # define TMP117_RESOLUTION          0.0078125f // Resolution of the device, see specifications
 # define TMP117_DEVICE_ID_VALUE     0x0117     // Value found in the device ID register on reset
@@ -90,6 +101,9 @@ private:
   int8_t   _deviceAddress     = -1;
   bool     _rawEnabled        = false;
   bool     _logEnabled        = false;
+  # if P150_USE_EXTRA_LOG
+  bool _extraLog = false;
+  # endif // if P150_USE_EXTRA_LOG
 
   int16_t _digitalTempC = 0;
   float   _finalTempC   = 0.0f;
