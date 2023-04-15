@@ -180,7 +180,7 @@
 
     ``Gateway,192.168.1.1``
     
-    Example output: ``Gateway:192.168.10.254(DHCP)``"
+    Example output: ``Gateway:192.168.10.254(DHCP)``
     "
     "
     HiddenSSID","
