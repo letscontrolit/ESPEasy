@@ -182,6 +182,17 @@
     
     Example output: ``Gateway:192.168.10.254(DHCP)``"
     "
+    "
+    HiddenSSID","
+    :red:`Internal`","
+    Get or set the Include Hidden SSID setting
+
+    ``HiddenSSID``
+
+    ``HiddenSSID,true`` (can use ``1``, ``true`` or ``on`` to enable, and ``0``, ``false`` or ``off`` to disable)
+    
+    Example output: ``Include Hidden SSID:true``"
+    "
     I2Cscanner","
     :red:`Internal`","
     Run I2C scanner to find connected I2C chips. Output will be sent to the serial port.
