@@ -29,10 +29,12 @@ void TaskValues_Data_t::copyValue(const TaskValues_Data_t& other, uint8_t varNr,
       if (varNr < VARS_PER_TASK) {
         uint32s[varNr] = other.uint32s[varNr];
       }
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
     } else {
       if ((varNr < (VARS_PER_TASK / 2))) {
         uint64s[varNr] = other.uint64s[varNr];
       }
+#endif
     }
   }
 }
@@ -54,6 +56,8 @@ void TaskValues_Data_t::setSensorTypeLong(unsigned long value)
   floats[1] = (value >> 16) & 0xFFFF;
 }
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+
 int32_t TaskValues_Data_t::getInt32(uint8_t varNr) const
 {
   if (varNr < VARS_PER_TASK) {
@@ -68,6 +72,7 @@ void TaskValues_Data_t::setInt32(uint8_t varNr, int32_t value)
     int32s[varNr] = value;
   }
 }
+#endif
 
 uint32_t TaskValues_Data_t::getUint32(uint8_t varNr) const
 {
@@ -83,6 +88,8 @@ void TaskValues_Data_t::setUint32(uint8_t varNr, uint32_t value)
     uint32s[varNr] = value;
   }
 }
+
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
 int64_t TaskValues_Data_t::getInt64(uint8_t varNr) const
 {
@@ -113,6 +120,7 @@ void TaskValues_Data_t::setUint64(uint8_t varNr, uint64_t value)
     uint64s[varNr] = value;
   }
 }
+#endif
 
 float TaskValues_Data_t::getFloat(uint8_t varNr) const
 {
@@ -129,6 +137,8 @@ void TaskValues_Data_t::setFloat(uint8_t varNr, float  value)
   }
 }
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+
 double TaskValues_Data_t::getDouble(uint8_t varNr) const
 {
   if ((varNr < (VARS_PER_TASK / 2))) {
@@ -143,6 +153,7 @@ void TaskValues_Data_t::setDouble(uint8_t varNr, double  value)
     doubles[varNr] = value;
   }
 }
+#endif
 
 double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) const
 {
@@ -150,6 +161,7 @@ double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) co
     return getSensorTypeLong();
   } else if (isFloatOutputDataType(sensorType)) {
     return getFloat(varNr);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
   } else if (isUInt32OutputDataType(sensorType)) {
     return getUint32(varNr);
   } else if (isInt32OutputDataType(sensorType)) {
@@ -160,6 +172,7 @@ double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) co
     return getInt64(varNr);
   } else if (isDoubleOutputDataType(sensorType)) {
     return getDouble(varNr);
+#endif
   }
   return 0.0;
 }
@@ -171,6 +184,7 @@ void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sen
     setSensorTypeLong(value);
   } else if (isFloatOutputDataType(sensorType)) {
     setFloat(varNr, value);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
   } else if (isUInt32OutputDataType(sensorType)) {
     setUint32(varNr, value);
   } else if (isInt32OutputDataType(sensorType)) {
@@ -181,6 +195,7 @@ void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sen
     setInt64(varNr, value);
   } else if (isDoubleOutputDataType(sensorType)) {
     setDouble(varNr, value);
+#endif
   }
 }
 
@@ -190,8 +205,10 @@ bool TaskValues_Data_t::isValid(uint8_t varNr, Sensor_VType  sensorType) const
     return false;
   } else if (isFloatOutputDataType(sensorType)) {
     return isValidFloat(getFloat(varNr));
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
   } else if (isDoubleOutputDataType(sensorType)) {
     return isValidDouble(getDouble(varNr));
+#endif
   }
   return true;
 }
@@ -202,10 +219,13 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
 
   if (isFloatOutputDataType(sensorType)) {
     result = toString(getFloat(varNr), nrDecimals);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
   } else if (isDoubleOutputDataType(sensorType)) {
     result = doubleToString(getDouble(varNr), nrDecimals);
+#endif
   } else if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     return String(getSensorTypeLong());
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
   } else if (isUInt32OutputDataType(sensorType)) {
     return String(getUint32(varNr));
   } else if (isInt32OutputDataType(sensorType)) {
@@ -214,6 +234,7 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
     return ull2String(getUint64(varNr));
   } else if (isInt64OutputDataType(sensorType)) {
     return ll2String(getInt64(varNr));
+#endif
   }
   result.trim();
   return result;

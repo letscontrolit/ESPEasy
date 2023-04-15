@@ -2850,4 +2850,14 @@ To create/register a plugin, you have to :
   #define FEATURE_ADC_VCC                  0
 #endif
 
+// Extra task value types, typically used in Dummy tasks.
+// For example 32-bit, 64-bit ints and doubles.
+#ifndef FEATURE_EXTENDED_TASK_VALUE_TYPES
+  #ifdef ESP8266_1M
+    #define FEATURE_EXTENDED_TASK_VALUE_TYPES  0
+  #else
+    #define FEATURE_EXTENDED_TASK_VALUE_TYPES  1
+  #endif
+#endif
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

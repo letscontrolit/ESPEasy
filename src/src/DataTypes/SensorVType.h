@@ -18,6 +18,7 @@ enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_WIND            =   21,
   SENSOR_TYPE_STRING          =   22,
   SENSOR_TYPE_ULONG           =   20,  // Was called SENSOR_TYPE_LONG, but actually it was an unsigned type
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
   SENSOR_TYPE_UINT32_DUAL     =   31,
   SENSOR_TYPE_UINT32_TRIPLE   =   32,
   SENSOR_TYPE_UINT32_QUAD     =   33,
@@ -31,6 +32,7 @@ enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_INT64_DUAL      =   61,
   SENSOR_TYPE_DOUBLE_SINGLE   =   70,
   SENSOR_TYPE_DOUBLE_DUAL     =   71,
+#endif
 
   SENSOR_TYPE_NOT_SET = 255
 };
@@ -54,14 +56,18 @@ const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType);
 bool isSimpleOutputDataType(Sensor_VType sensorType);
 
 bool isUInt32OutputDataType(Sensor_VType sensorType);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
 bool isInt32OutputDataType(Sensor_VType sensorType);
+
 
 bool isUInt64OutputDataType(Sensor_VType sensorType);
 bool isInt64OutputDataType(Sensor_VType sensorType);
+#endif
 
 bool isFloatOutputDataType(Sensor_VType sensorType);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
 bool isDoubleOutputDataType(Sensor_VType sensorType);
-
+#endif
 
 // To simplify checking whether formatting using decimals is desired.
 bool isIntegerOutputDataType(Sensor_VType sensorType);

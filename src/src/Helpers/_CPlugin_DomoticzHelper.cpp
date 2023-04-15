@@ -80,9 +80,12 @@ String formatDomoticzSensorType(struct EventStruct *event) {
 
   const Sensor_VType sensorType = event->getSensorType();
 
-  if (isSimpleOutputDataType(sensorType) ||
-      isIntegerOutputDataType(sensorType)||
-      isDoubleOutputDataType(sensorType)) {
+  if (isSimpleOutputDataType(sensorType) 
+      || isIntegerOutputDataType(sensorType)
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+      || isDoubleOutputDataType(sensorType)
+#endif
+      ) {
     const uint8_t valueCount = getValueCountFromSensorType(sensorType);
 
     for (uint8_t i = 0; i < valueCount; ++i) {

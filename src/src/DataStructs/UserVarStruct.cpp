@@ -52,6 +52,8 @@ void UserVarStruct::setSensorTypeLong(taskIndex_t taskIndex, unsigned long value
   }
 }
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+
 int32_t UserVarStruct::getInt32(taskIndex_t taskIndex,
                                 uint8_t     varNr) const
 {
@@ -69,6 +71,7 @@ void UserVarStruct::setInt32(taskIndex_t taskIndex,
     _data[taskIndex].setInt32(varNr, value);
   }
 }
+#endif
 
 uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, uint8_t varNr) const
 {
@@ -84,6 +87,8 @@ void UserVarStruct::setUint32(taskIndex_t taskIndex, uint8_t varNr, uint32_t val
     _data[taskIndex].setUint32(varNr, value);
   }
 }
+
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
 int64_t UserVarStruct::getInt64(taskIndex_t taskIndex,
                                 uint8_t     varNr) const
@@ -121,6 +126,8 @@ void UserVarStruct::setUint64(taskIndex_t taskIndex,
   }
 }
 
+#endif
+
 float UserVarStruct::getFloat(taskIndex_t taskIndex,
                               uint8_t     varNr) const
 {
@@ -139,6 +146,8 @@ void UserVarStruct::setFloat(taskIndex_t taskIndex,
   }
 }
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+
 double UserVarStruct::getDouble(taskIndex_t taskIndex,
                                 uint8_t     varNr) const
 {
@@ -156,6 +165,8 @@ void UserVarStruct::setDouble(taskIndex_t taskIndex,
     _data[taskIndex].setDouble(varNr, value);
   }
 }
+
+#endif
 
 double UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
                                   uint8_t      varNr,

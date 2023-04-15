@@ -22,12 +22,15 @@ struct UserVarStruct {
   void          setSensorTypeLong(taskIndex_t   taskIndex,
                                   unsigned long value);
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+
   // 32 bit signed int stored at the memory location of the float
   int32_t getInt32(taskIndex_t taskIndex,
                    uint8_t     varNr) const;
   void    setInt32(taskIndex_t taskIndex,
                    uint8_t     varNr,
                    int32_t     value);
+#endif
 
   // 32 bit unsigned int stored at the memory location of the float
   uint32_t getUint32(taskIndex_t taskIndex,
@@ -36,6 +39,7 @@ struct UserVarStruct {
                      uint8_t     varNr,
                      uint32_t    value);
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   // 64 bit signed int stored at the memory location of the float
   int64_t getInt64(taskIndex_t taskIndex,
@@ -50,6 +54,7 @@ struct UserVarStruct {
   void     setUint64(taskIndex_t taskIndex,
                      uint8_t     varNr,
                      uint64_t    value);
+#endif
 
   float getFloat(taskIndex_t taskIndex,
                  uint8_t     varNr) const;
@@ -57,6 +62,7 @@ struct UserVarStruct {
                  uint8_t     varNr,
                  float       value);
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   // Double stored at the memory location of the float
   double getDouble(taskIndex_t taskIndex,
@@ -64,6 +70,7 @@ struct UserVarStruct {
   void   setDouble(taskIndex_t taskIndex,
                    uint8_t     varNr,
                    double      value);
+#endif
 
   double getAsDouble(taskIndex_t  taskIndex,
                      uint8_t      varNr,

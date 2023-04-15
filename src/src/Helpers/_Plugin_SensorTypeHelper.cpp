@@ -23,11 +23,14 @@ void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pc
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SWITCH),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DIMMER),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_WIND),
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_INT32_SINGLE),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_INT32_DUAL),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_INT32_TRIPLE),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_INT32_QUAD),
+#endif
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_ULONG),
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_UINT32_DUAL),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_UINT32_TRIPLE),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_UINT32_QUAD),
@@ -37,6 +40,7 @@ void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pc
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_UINT64_DUAL),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DOUBLE_SINGLE),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL),
+#endif
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_STRING)
   };
   constexpr int optionCount = sizeof(optionValues) / sizeof(optionValues[0]);

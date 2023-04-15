@@ -19,14 +19,17 @@ struct TaskValues_Data_t {
   unsigned long getSensorTypeLong() const;
   void          setSensorTypeLong(unsigned long value);
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
   int32_t       getInt32(uint8_t varNr) const;
   void          setInt32(uint8_t varNr,
                          int32_t value);
+#endif
 
   uint32_t      getUint32(uint8_t varNr) const;
   void          setUint32(uint8_t  varNr,
                           uint32_t value);
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   int64_t  getInt64(uint8_t varNr) const;
   void     setInt64(uint8_t varNr,
@@ -35,15 +38,18 @@ struct TaskValues_Data_t {
   uint64_t getUint64(uint8_t varNr) const;
   void     setUint64(uint8_t  varNr,
                      uint64_t value);
+#endif
 
   float    getFloat(uint8_t varNr) const;
   void     setFloat(uint8_t varNr,
                     float   value);
 
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   double getDouble(uint8_t varNr) const;
   void   setDouble(uint8_t varNr,
                    double  value);
+#endif
 
   // Interpret the data according to the given sensorType
   double getAsDouble(uint8_t      varNr,
@@ -63,10 +69,12 @@ struct TaskValues_Data_t {
     uint8_t  binary[VARS_PER_TASK * sizeof(float)];
     float    floats[VARS_PER_TASK];
     uint32_t uint32s[VARS_PER_TASK];
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
     int32_t  int32s[VARS_PER_TASK];
     uint64_t uint64s[VARS_PER_TASK / 2];
     int64_t  int64s[VARS_PER_TASK / 2];
     double   doubles[VARS_PER_TASK / 2];
+#endif
   };
 };
 
