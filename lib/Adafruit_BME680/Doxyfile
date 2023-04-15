@@ -873,7 +873,7 @@ RECURSIVE              = NO
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = bme680.c bme680.h bme680_defs.h README.md
+EXCLUDE                = bme68x.c bme68x.h bme68x_defs.h README.md
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
