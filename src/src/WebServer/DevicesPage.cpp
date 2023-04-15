@@ -970,8 +970,9 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         devicePage_show_pin_config(taskIndex, DeviceIndex);
       }
     }
-
-    addFormSubHeader(F("Device Settings"));
+    if (DEVICE_TYPE_DUMMY != Device[DeviceIndex].Type) {
+      addFormSubHeader(F("Device Settings"));
+    }
 
     // add plugins content
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors

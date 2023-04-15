@@ -45,6 +45,12 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
     {
       // FIXME TD-er: Copy names as done in P026_Sysinfo.ino.
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_033));
+      const Sensor_VType sensorType = static_cast<Sensor_VType>(PCONFIG(0));
+      if (isIntegerOutputDataType(sensorType)) {
+        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+          ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
+        }
+      }
       break;
     }
 
@@ -87,52 +93,6 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-/*
-    case PLUGIN_WRITE:
-    {
-      String command = parseString(string, 1);
-
-      if (equals(command, F("dummyvalueset")))
-      {
-        // TODO tonhuisman: Remove this command, as TaskValueSet is more versatile
-        addLog(LOG_LEVEL_INFO, F("dummyvalueset: Command deprecated, use TaskValueSet instead!"));
-
-        if (event->Par1 == event->TaskIndex + 1) // make sure that this instance is the target
-        {
-          float floatValue = 0.0f;
-
-          if (string2float(parseString(string, 4), floatValue))
-          {
-            if (loglevelActiveFor(LOG_LEVEL_INFO))
-            {
-              String log = F("Dummy: Index ");
-              log += event->Par1;
-              log += F(" value ");
-              log += event->Par2;
-              log += F(" set to ");
-              log += floatValue;
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
-            UserVar[event->BaseVarIndex + event->Par2 - 1] = floatValue;
-            success                                        = true;
-          } else { // float conversion failed!
-            if (loglevelActiveFor(LOG_LEVEL_ERROR))
-            {
-              String log = F("Dummy: Index ");
-              log += event->Par1;
-              log += F(" value ");
-              log += event->Par2;
-              log += F(" parameter3: ");
-              log += parseStringKeepCase(string, 4);
-              log += F(" not a float value!");
-              addLogMove(LOG_LEVEL_ERROR, log);
-            }
-          }
-        }
-      }
-      break;
-    }
-*/
   }
   return success;
 }
