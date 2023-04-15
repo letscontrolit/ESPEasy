@@ -246,28 +246,9 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
 
   EventStruct tmpEvent(taskIndex);
   const Sensor_VType sensorType = tmpEvent.getSensorType();
-  if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
-    UserVar.setSensorTypeLong(taskIndex, !UserVar.getSensorTypeLong(taskIndex));
-  } else if (isInt32OutputDataType(sensorType)) {
-    UserVar.setInt32(taskIndex, varNr, !UserVar.getInt32(taskIndex, varNr));
-  } else if (isUInt32OutputDataType(sensorType)) {
-    UserVar.setUint32(taskIndex, varNr, !UserVar.getUint32(taskIndex, varNr));
-  } else if (isInt64OutputDataType(sensorType)) {
-    UserVar.setInt64(taskIndex, varNr, !UserVar.getInt64(taskIndex, varNr));
-  } else if (isUInt64OutputDataType(sensorType)) {
-    UserVar.setUint64(taskIndex, varNr, !UserVar.getUint64(taskIndex, varNr));
-  } else if (isDoubleOutputDataType(sensorType)) {
-    const int    result       = lround(UserVar.getDouble(taskIndex, varNr));
-    if ((result == 0) || (result == 1)) {
-      UserVar.setDouble(taskIndex, varNr, (result == 0) ? 1.0 : 0.0);
-    }
-  } else {
-    const unsigned int uservarIndex = tmpEvent.BaseVarIndex + varNr;
-    const int    result       = lround(UserVar[uservarIndex]);
-
-    if ((result == 0) || (result == 1)) {
-      UserVar[uservarIndex] = (result == 0) ? 1.0f : 0.0f;
-    }
+  const int    result       = lround(UserVar.getAsDouble(taskIndex, varNr, sensorType));
+  if ((result == 0) || (result == 1)) {
+    UserVar.set(taskIndex, varNr, (result == 0) ? 1.0 : 0.0, sensorType);
   }
   return return_command_success();
 }

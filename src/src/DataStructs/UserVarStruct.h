@@ -80,6 +80,11 @@ struct UserVarStruct {
            const double& value,
            Sensor_VType  sensorType);
 
+  bool isValid(taskIndex_t  taskIndex,
+               uint8_t      varNr,
+               Sensor_VType sensorType) const;
+
+
 
   size_t                   getNrElements() const;
 

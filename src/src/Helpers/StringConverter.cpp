@@ -342,30 +342,24 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
-  if (!mustCheck || !isFloatOutputDataType(sensorType)) {
-    return UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
-  }
-
-  float f(UserVar[event->BaseVarIndex + rel_index]);
-
-  if (mustCheck && !isValidFloat(f)) {
-    isvalid = false;
+  if (mustCheck) {
+    if (!UserVar.isValid(event->TaskIndex, rel_index, sensorType)) {
+      isvalid = false;
 #ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("Invalid float value for TaskIndex: ");
-      log += event->TaskIndex;
-      log += F(" varnumber: ");
-      log += rel_index;
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("Invalid float value for TaskIndex: ");
+        log += event->TaskIndex;
+        log += F(" varnumber: ");
+        log += rel_index;
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
 #endif // ifndef BUILD_NO_DEBUG
-    f = 0;
+      const float f = 0.0f;
+      return toString(f, nrDecimals);
+    }
   }
-
-  String result = toString(f, nrDecimals);
-  result.trim();
-  return result;
+  return UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {

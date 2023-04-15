@@ -123,8 +123,9 @@ bool isInt64OutputDataType(Sensor_VType sensorType)
 
 bool isFloatOutputDataType(Sensor_VType sensorType)
 {
-  return !isIntegerOutputDataType(sensorType) &&
-         !isDoubleOutputDataType(sensorType);
+  return sensorType != Sensor_VType::SENSOR_TYPE_NONE &&
+         sensorType != Sensor_VType::SENSOR_TYPE_ULONG &&
+         sensorType < Sensor_VType::SENSOR_TYPE_STRING;
 }
 
 bool isDoubleOutputDataType(Sensor_VType sensorType)

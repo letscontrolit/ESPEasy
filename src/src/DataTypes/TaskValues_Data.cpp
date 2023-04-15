@@ -1,5 +1,6 @@
 #include "../DataTypes/TaskValues_Data.h"
 
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter_Numerical.h"
 
 TaskValues_Data_t::TaskValues_Data_t() {
@@ -8,7 +9,7 @@ TaskValues_Data_t::TaskValues_Data_t() {
 
 TaskValues_Data_t::TaskValues_Data_t(const TaskValues_Data_t& other)
 {
-  memcpy(binary, other.binary, sizeof(binary));  
+  memcpy(binary, other.binary, sizeof(binary));
 }
 
 TaskValues_Data_t& TaskValues_Data_t::operator=(const TaskValues_Data_t& other)
@@ -147,6 +148,8 @@ double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) co
 {
   if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     return getSensorTypeLong();
+  } else if (isFloatOutputDataType(sensorType)) {
+    return getFloat(varNr);
   } else if (isUInt32OutputDataType(sensorType)) {
     return getUint32(varNr);
   } else if (isInt32OutputDataType(sensorType)) {
@@ -158,7 +161,7 @@ double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) co
   } else if (isDoubleOutputDataType(sensorType)) {
     return getDouble(varNr);
   }
-  return getFloat(varNr);
+  return 0.0;
 }
 
 void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sensorType)
@@ -166,6 +169,8 @@ void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sen
   if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     // Legacy formatting the old "SENSOR_TYPE_ULONG" type
     setSensorTypeLong(value);
+  } else if (isFloatOutputDataType(sensorType)) {
+    setFloat(varNr, value);
   } else if (isUInt32OutputDataType(sensorType)) {
     setUint32(varNr, value);
   } else if (isInt32OutputDataType(sensorType)) {
@@ -176,16 +181,30 @@ void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sen
     setInt64(varNr, value);
   } else if (isDoubleOutputDataType(sensorType)) {
     setDouble(varNr, value);
-  } else {
-    setFloat(varNr, value);
   }
+}
+
+bool TaskValues_Data_t::isValid(uint8_t varNr, Sensor_VType  sensorType) const
+{
+  if (sensorType == Sensor_VType::SENSOR_TYPE_NONE) {
+    return false;
+  } else if (isFloatOutputDataType(sensorType)) {
+    return isValidFloat(getFloat(varNr));
+  } else if (isDoubleOutputDataType(sensorType)) {
+    return isValidDouble(getDouble(varNr));
+  }
+  return true;
 }
 
 String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals) const
 {
   String result;
 
-  if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
+  if (isFloatOutputDataType(sensorType)) {
+    result = toString(getFloat(varNr), nrDecimals);
+  } else if (isDoubleOutputDataType(sensorType)) {
+    result = doubleToString(getDouble(varNr), nrDecimals);
+  } else if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     return String(getSensorTypeLong());
   } else if (isUInt32OutputDataType(sensorType)) {
     return String(getUint32(varNr));
@@ -195,10 +214,6 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
     return ull2String(getUint64(varNr));
   } else if (isInt64OutputDataType(sensorType)) {
     return ll2String(getInt64(varNr));
-  } else if (isDoubleOutputDataType(sensorType)) {
-    result = doubleToString(getDouble(varNr), nrDecimals);
-  } else {
-    result = toString(getFloat(varNr), nrDecimals);
   }
   result.trim();
   return result;

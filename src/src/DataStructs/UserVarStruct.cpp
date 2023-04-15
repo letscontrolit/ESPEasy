@@ -182,6 +182,17 @@ void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const double& valu
   }
 }
 
+bool UserVarStruct::isValid(taskIndex_t  taskIndex,
+               uint8_t      varNr,
+               Sensor_VType sensorType) const
+{
+  if (taskIndex < _data.size()) {
+    return _data[taskIndex].isValid(varNr, sensorType);
+  }
+  return false;
+}
+
+
 size_t UserVarStruct::getNrElements() const
 {
   constexpr size_t factor = sizeof(TaskValues_Data_t) / sizeof(float);

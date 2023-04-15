@@ -154,7 +154,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
 
   // FIXME TD-er: We should check for sensorType and pluginID on both sides.
   // For example sending different sensor type data from one dummy to another is probably not going to work well
-  const Sensor_VType sensorType = event->getSensorType();
+  dataReply.sensorType = event->getSensorType();
 
   const TaskValues_Data_t* taskValues = UserVar.getTaskValues_Data(event->TaskIndex);
   if (taskValues != nullptr) {

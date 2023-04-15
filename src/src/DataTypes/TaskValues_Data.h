@@ -53,6 +53,9 @@ struct TaskValues_Data_t {
              const double& value,
              Sensor_VType  sensorType);
 
+  bool isValid(uint8_t       varNr,
+               Sensor_VType  sensorType) const;
+
   String getAsString(uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals = 0) const;
 
 
