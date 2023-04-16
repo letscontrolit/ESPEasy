@@ -154,20 +154,12 @@ bool do_process_c019_delay_queue(int controller_number, const Queue_element_base
   data.sensorType      = element.event.sensorType;
   data.valueCount      = getValueCountForTask(taskIndex);
 
-  for (uint8_t i = 0; i < data.valueCount; ++i)
-  {
-    switch (data.sensorType) {
-      case Sensor_VType::SENSOR_TYPE_LONG:
-        data.addString(String((unsigned long)UserVar[element.event.BaseVarIndex] +
-                              ((unsigned long)UserVar[element.event.BaseVarIndex + 1] << 16)));
-        break;
-      case Sensor_VType::SENSOR_TYPE_STRING:
-        data.addString(element.event.String2);
-        break;
-
-      default:
-        data.addFloat(UserVar[element.event.BaseVarIndex + i]);
-        break;
+  if (Sensor_VType::SENSOR_TYPE_ULONG == data.sensorType) {
+    data.addString(element.event.String2);
+  } else {
+    const TaskValues_Data_t * taskValues = UserVar.getTaskValues_Data(taskIndex);
+    if (taskValues != nullptr) {
+      data.addBinaryData((uint8_t *)(taskValues), sizeof(TaskValues_Data_t));
     }
   }
 
