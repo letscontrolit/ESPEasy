@@ -8,6 +8,7 @@
   \*********************************************************************************************/
 
 bool isValidFloat(float f);
+bool isValidDouble(double f);
 
 bool validIntFromString(const String& tBuf, int& result);
 
