@@ -221,11 +221,11 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
           } else {
             // Read the data from the settings.
             uint8_t addr[8]{};
-            bool    isFixedResolution = false; // FIXME tonhuisman: Not sure if I _want_ to read the resolution here...
+            bool    hasFixedResolution = false; // FIXME tonhuisman: Not sure if I _want_ to read the resolution here...
             Dallas_plugin_get_addr(addr, event->TaskIndex, i);
-            Dallas_getResolution(addr, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, isFixedResolution);
+            Dallas_getResolution(addr, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, hasFixedResolution);
 
-            string += Dallas_format_address(addr, isFixedResolution);
+            string += Dallas_format_address(addr, hasFixedResolution);
           }
         }
       }
