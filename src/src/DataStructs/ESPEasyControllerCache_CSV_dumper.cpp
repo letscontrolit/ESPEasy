@@ -172,10 +172,23 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
       for (size_t i = 0; i < VARS_PER_TASK; ++i) {
         _csv_values[valindex] = _separator;
 
-        if (essentiallyZero(_element.values[i])) {
-          _csv_values[valindex] += '0';
+        if (isFloatOutputDataType(_element.sensorType)) {
+          const float value = _element.values.getFloat(i);
+
+          if (essentiallyZero(value)) {
+            _csv_values[valindex] += '0';
+          } else {
+            _csv_values[valindex] += toString(value, static_cast<unsigned int>(_nrDecimals[valindex]));
+          }
         } else {
-          _csv_values[valindex] += toString(_element.values[i], static_cast<unsigned int>(_nrDecimals[valindex]));
+          const String formatted = _element.values.getAsString(i, _element.sensorType, _nrDecimals[valindex]);
+
+          if (formatted.isEmpty()) {
+            _csv_values[valindex] += '0';
+          }
+          else {
+            _csv_values[valindex] += formatted;
+          }
         }
         ++valindex;
       }

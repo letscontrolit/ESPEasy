@@ -67,44 +67,29 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
         if (url.reserve(expectedSize)) {
           url = F("/json.htm?type=command&param=");
 
-          switch (sensorType)
+          if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH ||
+              sensorType == Sensor_VType::SENSOR_TYPE_DIMMER) 
           {
-            case Sensor_VType::SENSOR_TYPE_SWITCH:
-            case Sensor_VType::SENSOR_TYPE_DIMMER:
-              url += F("switchlight&idx=");
-              url += event->idx;
-              url += F("&switchcmd=");
+            url += F("switchlight&idx=");
+            url += event->idx;
+            url += F("&switchcmd=");
 
-              if (essentiallyZero(UserVar[event->BaseVarIndex])) {
-                url += F("Off");
+            if (essentiallyZero(UserVar[event->BaseVarIndex])) {
+              url += F("Off");
+            } else {
+              if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
+                url += F("On");
               } else {
-                if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
-                  url += F("On");
-                } else {
-                  url += F("Set%20Level&level=");
-                  url += UserVar[event->BaseVarIndex];
-                }
+                url += F("Set%20Level&level=");
+                url += UserVar[event->BaseVarIndex];
               }
-              break;
-
-            case Sensor_VType::SENSOR_TYPE_SINGLE:
-            case Sensor_VType::SENSOR_TYPE_LONG:
-            case Sensor_VType::SENSOR_TYPE_DUAL:
-            case Sensor_VType::SENSOR_TYPE_TRIPLE:
-            case Sensor_VType::SENSOR_TYPE_QUAD:
-            case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
-            case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
-            case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
-            case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
-            case Sensor_VType::SENSOR_TYPE_WIND:
-            case Sensor_VType::SENSOR_TYPE_STRING:
-            default:
-              url += F("udevice&idx=");
-              url += event->idx;
-              url += F("&nvalue=0");
-              url += F("&svalue=");
-              url += formatDomoticzSensorType(event);
-              break;
+            }
+          } else {
+            url += F("udevice&idx=");
+            url += event->idx;
+            url += F("&nvalue=0");
+            url += F("&svalue=");
+            url += formatDomoticzSensorType(event);
           }
 
           // Add WiFi reception quality

@@ -57,7 +57,7 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
 
-      if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+      if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
         addLog(LOG_LEVEL_ERROR, F("emoncms : No support for Sensor_VType::SENSOR_TYPE_STRING"));
         break;
       }
