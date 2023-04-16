@@ -165,15 +165,12 @@ float P027_data_struct::getCurrent_mA() {
 
 void P027_data_struct::wireWriteRegister(uint8_t reg, uint16_t value)
 {
-  Wire.beginTransmission(i2caddr);
-  Wire.write(reg);                 // Register
-  Wire.write((value >> 8) & 0xFF); // Upper 8-bits
-  Wire.write(value & 0xFF);        // Lower 8-bits
-  Wire.endTransmission();
+  I2C_write16_reg(i2caddr, reg, value);
 }
 
 void P027_data_struct::wireReadRegister(uint8_t reg, uint16_t *value)
 {
+  // FIXME TD-er: Must add a function in I2C_access to allow for some delay between calls
   Wire.beginTransmission(i2caddr);
   Wire.write(reg); // Register
   Wire.endTransmission();

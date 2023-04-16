@@ -50,7 +50,9 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
     case ESPEasySerialPort::serial0_swap:
     case ESPEasySerialPort::serial0:
     case ESPEasySerialPort::serial1:
+#ifndef ESP32S2
     case ESPEasySerialPort::serial2:
+#endif
     {
       result += F("RX: ");
       result += formatGpioLabel(config_pin1, false);
@@ -227,7 +229,9 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
         case ESPEasySerialPort::serial0:
         case ESPEasySerialPort::serial0_swap:
         case ESPEasySerialPort::serial1:
+#ifndef ESP32S2
         case ESPEasySerialPort::serial2:
+#endif
         {
           #ifdef ESP8266
 
@@ -294,7 +298,9 @@ void serialHelper_webformSave(uint8_t& port, int8_t& rxPin, int8_t& txPin) {
     case ESPEasySerialPort::serial0:
     case ESPEasySerialPort::serial0_swap:
     case ESPEasySerialPort::serial1:
+#ifndef ESP32S2
     case ESPEasySerialPort::serial2:
+#endif
     {
       #ifdef ESP8266
 

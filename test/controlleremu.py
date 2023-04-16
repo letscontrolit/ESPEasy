@@ -17,7 +17,7 @@ SENSOR_TYPE_QUAD                 =   7
 SENSOR_TYPE_TEMP_EMPTY_BARO      =   8
 SENSOR_TYPE_SWITCH               =  10
 SENSOR_TYPE_DIMMER               =  11
-SENSOR_TYPE_LONG                 =  20
+SENSOR_TYPE_ULONG                 =  20
 SENSOR_TYPE_WIND                 =  21
 
 class ControllerEmu:
@@ -166,7 +166,7 @@ class ControllerEmu:
                                 f=0
                             svalues.append(f)
 
-                        if ( sensor_type==SENSOR_TYPE_SINGLE or sensor_type==SENSOR_TYPE_LONG ) and len(svalues)==1:
+                        if ( sensor_type==SENSOR_TYPE_SINGLE or sensor_type==SENSOR_TYPE_ULONG ) and len(svalues)==1:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_DUAL and len(svalues)==2:
                             return svalues
@@ -223,7 +223,7 @@ class ControllerEmu:
                                 f=0
                             svalues.append(f)
 
-                        if ( sensor_type==SENSOR_TYPE_SINGLE or sensor_type==SENSOR_TYPE_LONG ) and len(svalues)==1:
+                        if ( sensor_type==SENSOR_TYPE_SINGLE or sensor_type==SENSOR_TYPE_ULONG ) and len(svalues)==1:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_DUAL and len(svalues)==2:
                             return svalues

@@ -188,6 +188,7 @@ int getValueCountForTask(taskIndex_t taskIndex) {
 }
 
 int checkDeviceVTypeForTask(struct EventStruct *event) {
+  // TD-er:  Do not use event->getSensorType() here
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
     if (validTaskIndex(event->TaskIndex)) {
       String dummy;
