@@ -559,12 +559,12 @@ uint8_t Dallas_getResolution(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gp
     ScratchPad[i] = Dallas_read(gpio_pin_rx, gpio_pin_tx);
   }
 
-  if (Dallas_check_hasFixedResolution(ROM, ScratchPad)) {
-    hasFixedResolution = true;
-    return 12;
-  }
-
   if (Dallas_crc8(ScratchPad)) {
+    if (Dallas_check_hasFixedResolution(ROM, ScratchPad)) {
+      hasFixedResolution = true;
+      return 12;
+    }
+
     switch (ScratchPad[4])
     {
       case 0x7F: // 12 bit
@@ -603,16 +603,16 @@ bool Dallas_setResolution(const uint8_t ROM[8], uint8_t res, int8_t gpio_pin_rx,
     ScratchPad[i] = Dallas_read(gpio_pin_rx, gpio_pin_tx);
   }
 
-  if (Dallas_check_hasFixedResolution(ROM, ScratchPad)) {
-    return true; // Can't change a fixed resolution
-  }
-
   if (!Dallas_crc8(ScratchPad)) {
     addLog(LOG_LEVEL_ERROR, F("DS   : Cannot set resolution"));
     return false;
   }
   else
   {
+    if (Dallas_check_hasFixedResolution(ROM, ScratchPad)) {
+      return true; // Can't change a fixed resolution
+    }
+
     uint8_t old_configuration = ScratchPad[4];
 
     switch (res)
