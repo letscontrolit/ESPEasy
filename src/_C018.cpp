@@ -32,7 +32,6 @@
 # endif // ifndef C018_FORCE_SW_SERIAL
 
 
-
 // FIXME TD-er: Must add a controller data struct vector, like with plugins.
 C018_data_struct *C018_data = nullptr;
 

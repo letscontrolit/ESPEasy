@@ -54,8 +54,9 @@ void C018_ConfigStruct::reset() {
   joinmethod    = C018_USE_OTAA;
 }
 
-void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) const {
-  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(serialPort);
+void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) {
+  validate();
+  ESPEasySerialPort port = static_cast<ESPEasySerialPort>(serialPort);
 
   {
     addFormTextBox(F("Device EUI"), F("deveui"), DeviceEUI, C018_DEVICE_EUI_LEN - 1);
@@ -178,6 +179,7 @@ void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) const {
 
 void C018_ConfigStruct::webform_save() {
   reset();
+
   const String deveui  = webArg(F("deveui"));
   const String devaddr = webArg(F("devaddr"));
   const String nskey   = webArg(F("nskey"));

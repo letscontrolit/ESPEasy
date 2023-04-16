@@ -123,7 +123,7 @@ void run_compiletime_checks() {
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
   #ifdef USES_C013
-  check_size<C013_SensorInfoStruct,                 137u>();
+  check_size<C013_SensorInfoStruct,                 138u>();
   check_size<C013_SensorDataStruct,                 24u>();
   #endif
   #ifdef USES_C016

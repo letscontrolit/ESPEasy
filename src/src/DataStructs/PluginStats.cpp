@@ -335,12 +335,15 @@ uint8_t PluginStats_array::nrSamplesPresent() const
 void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
 {
   if (validTaskIndex(event->TaskIndex)) {
-    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
+    const Sensor_VType sensorType = event->getSensorType();
+    for (size_t i = 0; i < valueCount; ++i) {
       if (_plugin_stats[i] != nullptr) {
-        _plugin_stats[i]->push(UserVar[event->BaseVarIndex + i]);
+        const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
+        _plugin_stats[i]->push(value);
 
         if (trackPeaks) {
-          _plugin_stats[i]->trackPeak(UserVar[event->BaseVarIndex + i]);
+          _plugin_stats[i]->trackPeak(value);
         }
       }
     }

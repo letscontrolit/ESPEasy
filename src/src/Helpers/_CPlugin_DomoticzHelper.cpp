@@ -63,10 +63,7 @@ int mapVccToDomoticz() {
 
 // Format including trailing semi colon
 String formatUserVarDomoticz(struct EventStruct *event, uint8_t rel_index) {
-  String text = formatUserVarNoCheck(event, rel_index);
-
-  text += ';';
-  return text;
+  return formatUserVarNoCheck(event, rel_index) + ';';
 }
 
 String formatUserVarDomoticz(int value) {
@@ -83,7 +80,12 @@ String formatDomoticzSensorType(struct EventStruct *event) {
 
   const Sensor_VType sensorType = event->getSensorType();
 
-  if (isSimpleOutputDataType(sensorType)) {
+  if (isSimpleOutputDataType(sensorType) 
+      || isIntegerOutputDataType(sensorType)
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+      || isDoubleOutputDataType(sensorType)
+#endif
+      ) {
     const uint8_t valueCount = getValueCountFromSensorType(sensorType);
 
     for (uint8_t i = 0; i < valueCount; ++i) {
@@ -92,9 +94,6 @@ String formatDomoticzSensorType(struct EventStruct *event) {
   } else {
     switch (sensorType)
     {
-      case Sensor_VType::SENSOR_TYPE_LONG: // single LONG value, stored in two floats (rfid tags)
-        values = UserVar.getSensorTypeLong(event->TaskIndex);
-        break;
       case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
 
         // temp + hum + hum_stat, used for DHT11
