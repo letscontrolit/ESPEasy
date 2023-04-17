@@ -11,8 +11,211 @@
 # include "../DataStructs/mBusPacket.h"
 
 # include "../Globals/ESPEasy_time.h"
+# include "../Globals/TimeZone.h"
 # include "../Helpers/StringConverter.h"
 
+const char P094_Filter_Window_names[] PROGMEM = "all|5m|15m|1h|day|month|once|none";
+
+P094_Filter_Window get_FilterWindow(const String& str)
+{
+  char tmp[10]{};
+  const int command_i = GetCommandCode(tmp, sizeof(tmp), str.c_str(), P094_Filter_Window_names);
+
+  if (command_i == -1) {
+    // No match found
+    return P094_Filter_Window::None;
+  }
+  return static_cast<P094_Filter_Window>(command_i);
+}
+
+String Filter_WindowToString(P094_Filter_Window filterWindow)
+{
+  char   tmp[10]{};
+  String res(GetTextIndexed(tmp, sizeof(tmp), static_cast<uint32_t>(filterWindow), P094_Filter_Window_names));
+
+  return res;
+}
+
+void P094_filter::fromString(const String& str)
+{
+  // Set everything to wildcards
+  _header._encodedValue = 0;
+  _filterWindow         = P094_Filter_Window::All;
+  _filterComp           = P094_Filter_Comp::P094_Equal_OR;
+
+  const int semicolonPos = str.indexOf(';');
+
+  if (semicolonPos != -1) {
+    _filterWindow = get_FilterWindow(str.substring(semicolonPos + 1));
+  }
+
+  for (size_t i = 0; i < 3; ++i) {
+    String tmp;
+
+    if (GetArgv(str.c_str(), tmp, (i + 1), '.')) {
+      if (!(tmp.isEmpty() || equals(tmp, '*'))) {
+        if (i != 0) {
+          // Make sure the numerical values are parsed as HEX
+          if (!tmp.startsWith(F("0x")) && !tmp.startsWith(F("0X"))) {
+            tmp = concat(F("0x"), tmp);
+          }
+        }
+
+        switch (i) {
+          case 0: // Manufacturer
+            _header._manufacturer = mBusPacket_header_t::encodeManufacturerID(tmp);
+            break;
+          case 1: // Meter type
+          {
+            int metertype = 0;
+
+            if (validIntFromString(tmp, metertype)) {
+              _header._meterType = metertype;
+            }
+            break;
+          }
+          case 2: // Serial
+          {
+            int serial = 0;
+
+            if (validIntFromString(tmp, serial)) {
+              _header._serialNr = serial;
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+String P094_filter::toString() const
+{
+  String res;
+
+  if (_header._manufacturer == 0) { res += '*'; }
+  else { res += mBusPacket_header_t::decodeManufacturerID(_header._manufacturer); }
+  res += '.';
+
+  if (_header._meterType == 0) { res += '*'; }
+  else { res += formatToHex_no_prefix(_header._meterType, 2); }
+  res += '.';
+
+  if (_header._serialNr == 0) { res += '*'; }
+  else { res += formatToHex_no_prefix(_header._serialNr, 8); }
+
+  res += ';';
+  res += Filter_WindowToString(_filterWindow);
+
+  return res;
+}
+
+bool P094_filter::matches(const mBusPacket_header_t& other) const
+{
+  if (_header._manufacturer != 0) {
+    if (_header._manufacturer != other._manufacturer) { return false; }
+  }
+
+  if (_header._meterType != 0) {
+    if (_header._meterType != other._meterType) { return false; }
+  }
+
+  if (_header._serialNr != 0) {
+    if (_header._serialNr != other._serialNr) { return false; }
+  }
+
+  return true;
+}
+
+bool P094_filter::shouldPass()
+{
+  // Match the interval window.
+
+  if (_filterWindow == P094_Filter_Window::None) { return false; }
+
+  if (_filterWindow == P094_Filter_Window::All) { return true; }
+
+  // Using UnixTime
+  const unsigned long currentTime = node_time.getUnixTime();
+  unsigned long window_min        = currentTime;
+
+  if ((_filterWindow == P094_Filter_Window::One_hour) ||
+      (_filterWindow == P094_Filter_Window::Day) ||
+      (_filterWindow == P094_Filter_Window::Month))
+  {
+    // Create time struct in local time.
+    struct tm tmp;
+    breakTime(time_zone.toLocal(currentTime), tmp);
+    tmp.tm_sec = 0;
+    tmp.tm_min = 0;
+
+    if (_filterWindow == P094_Filter_Window::Day) {
+      // Using local time, thus incl. timezone and DST.
+      if (tmp.tm_hour < 23) {
+        // Either:
+        // - between 00:00 and 12:00
+        // - between 12:00 and 23:00
+        tmp.tm_hour = (tmp.tm_hour < 12) ? 0 : 12;
+      } else {
+        // between 23:00 and 00:00
+        tmp.tm_hour = 23;
+      }
+    } else if (_filterWindow == P094_Filter_Window::Month) {
+      // First set min to midnight of today:
+      tmp.tm_hour = 0;
+
+      if (tmp.tm_mday < 15) {
+        // - between 1st of month 00:00:00 and 15th of month 00:00:00
+        tmp.tm_mday = 1;
+      } else {
+        // Check if this is the last day of the month.
+        // Add 24h to the time and see if it is still the same month.
+        struct tm tm_next_day;
+        breakTime(node_time.now() + (24 * 60 * 60), tm_next_day);
+
+        if (tm_next_day.tm_mon == tmp.tm_mon) {
+          // - between 15th of month 00:00:00 and last of month 00:00:00
+          tmp.tm_mday = 15;
+        } else {
+          // - between last of month 00:00:00 and 1st of next month 00:00:00
+          // Thus do not change the date.
+        }
+      }
+    }
+
+    // Convert from local time.
+    window_min = time_zone.fromLocal(makeTime(tmp));
+  } else {
+    switch (_filterWindow) {
+      case P094_Filter_Window::Once:
+
+        if (_lastSeenUnixTime != 0) {
+          return false;
+        }
+        break;
+      case P094_Filter_Window::Five_minutes:
+        window_min = currentTime - (currentTime % (5 * 60));
+        break;
+      case P094_Filter_Window::Fifteen_minutes:
+        window_min = currentTime - (currentTime % (15 * 60));
+        break;
+      case P094_Filter_Window::One_hour:
+        window_min = currentTime - (currentTime % (60 * 60));
+        break;
+
+      default:
+        return false;
+    }
+  }
+
+
+  if (_lastSeenUnixTime > window_min) {
+    return false;
+  }
+
+  _lastSeenUnixTime = currentTime;
+  return true;
+}
 
 P094_data_struct::P094_data_struct() :  easySerial(nullptr) {
   for (int i = 0; i < P094_NR_FILTERS; ++i) {
@@ -98,8 +301,10 @@ void P094_data_struct::sendString(const String& data) {
   }
 }
 
-#if P094_DEBUG_OPTIONS
-const __FlashStringHelper * getDebugSentences(int& count) {
+# if P094_DEBUG_OPTIONS
+
+const __FlashStringHelper* getDebugSentences(int& count) {
+  // *INDENT-OFF*
   switch (count) {
     case 1: return F("b3C449344369291352337D55472593107009344230A920000200C0538ECE32625004C0527262500426CBF2CCC0805BDF032262500C2086CDF21326CFFFF046D26BB1103DA22B4E093E2"); break; //QDS.0A.00073159"); break; //QDS.37.35919236
     case 2: return F("b9644A732260729700A0AB8487A4E10002002747D00046D030AC1270CB02E0600000000446D3B17BF2C4C0600000083410084016D3B17DE268C010600000000CC190B0106000000008C020600000000CC0206B190000000008C030600000000CC030600008B9400008C040600000000CC04060000000099348C050600000000CC0506000000008C0673DA0600000000CC0606000000008C070600E0F80000003C22030402000F841001245C84E7"); break; //LUG.0A.70290726
@@ -378,10 +583,12 @@ const __FlashStringHelper * getDebugSentences(int& count) {
     case 275 : return F("bY50449726141331160007728499181897A600307E0030A5500A4109842EF76DD4A2DEDF6722CCB4D0746C8505086D91ED34B41AFD24FED0111715A21E549191B1529EE2AE8229E50E7900000000000070208AD8"); break; //ITW.07.16311314"); break; //ITW.30.18189984
 
   }
+ // *INDENT-ON*
   count = 0;
   return F("");
 }
-#endif
+
+# endif // if P094_DEBUG_OPTIONS
 
 bool P094_data_struct::loop() {
   if (!isInitialized()) {
@@ -657,7 +864,7 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
                   break;
                 case P094_rssi:
                 {
-                  uint8_t LQI    = 0;
+                  uint8_t   LQI  = 0;
                   const int rssi = mBusPacket_t::decode_LQI_RSSI(packet._lqi_rssi, LQI);
 
                   receivedValue = rssi;
@@ -832,7 +1039,8 @@ void P094_data_struct::prepare_dump_stats() {
 
 bool P094_data_struct::dump_next_stats(String& str) {
   const uint8_t dumpStatsIndex = firstStatsIndexActive ? 1 : 0;
-  if (mBus_stats[dumpStatsIndex]._mBusStatsMap.empty()) return false;
+
+  if (mBus_stats[dumpStatsIndex]._mBusStatsMap.empty()) { return false; }
 
   str = concat(F("stats;"), mBus_stats[dumpStatsIndex].getFront());
 

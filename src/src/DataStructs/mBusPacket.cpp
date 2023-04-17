@@ -88,7 +88,7 @@ void mBusPacket_header_t::clear()
 
 bool mBusPacket_header_t::matchSerial(uint32_t serialNr) const
 {
-  return isValid() && _serialNr == serialNr;
+  return isValid() && (_serialNr == serialNr);
 }
 
 uint32_t mBusPacket_t::getDeviceSerial() const
@@ -113,13 +113,17 @@ uint64_t mBusPacket_t::deviceID_toUInt64() const
 
 bool mBusPacket_t::parse(const String& payload)
 {
+  if (payload[0] != 'b') { return false; }
+
+  _checksum = 0;
   mBusPacket_data payloadWithoutChecksums;
 
-  if (payload.startsWith(F("bY"))) {
+  if (payload[1] == 'Y') {
+    // Start with "bY"
     payloadWithoutChecksums = removeChecksumsFrameB(payload, _checksum);
-  } else if (payload.startsWith(F("b"))) {
+  } else {
     payloadWithoutChecksums = removeChecksumsFrameA(payload, _checksum);
-  } else { return false; }
+  }
 
   if (payloadWithoutChecksums.size() < 10) { return false; }
 

@@ -60,9 +60,55 @@ enum P094_Filter_Comp {
 
 # define P094_FILTER_COMP_NR_ELEMENTS 4
 
+enum class P094_Filter_Window {
+  All,             // Realtime, every message passes the filter
+  Five_minutes,    // a message passes the filter every 5 minutes, aligned to time (00:00:00, 00:05:00, ...)
+  Fifteen_minutes, // a message passes the filter every 15 minutes, aligned to time
+  One_hour,        // a message passes the filter every hour, aligned to time
+  Day,             // a message passes the filter once every day
+                   // - between 00:00 and 12:00,
+                   // - between 12:00 and 23:00 and
+                   // - between 23:00 and 00:00
+  Month,           // a message passes the filter
+                   // - between 1st of month 00:00:00 and 15th of month 00:00:00
+                   // - between 15th of month 00:00:00 and last of month 00:00:00
+                   // - between last of month 00:00:00 and 1st of next month 00:00:00
+  Once,            // only one message passes the filter until next reboot
+  None             // no messages pass the filter
+};
+
+
+
+
+// Examples for a filter definition list
+//   EBZ.02.12345678;all
+//   *.02.*;15m
+//   TCH.44.*;Once
+//   !TCH.*.*;None
+//   *.*.*;5m
+
+struct P094_filter {
+
+  void fromString(const String& str);
+  String toString() const;
+
+  // Check to see if the manufacturer, metertype and serial matches.
+  bool matches(const mBusPacket_header_t& other) const;
+
+  // Check against the filter window.
+  bool shouldPass();
+
+
+  unsigned long _lastSeenUnixTime{};
+
+  mBusPacket_header_t _header;
+  P094_Filter_Window _filterWindow = P094_Filter_Window::All;
+  P094_Filter_Comp   _filterComp = P094_Filter_Comp::P094_Equal_OR;
+};
 
 struct P094_data_struct : public PluginTaskData_base {
 public:
+
 
   P094_data_struct();
 
@@ -167,16 +213,16 @@ private:
   bool interval_filter_enabled = false;
   bool collect_stats           = false;
 
-  bool firstStatsIndexActive   = false;
+  bool firstStatsIndexActive = false;
 
   bool                   filterValueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = { 0 };
   P094_Filter_Value_Type filterLine_valueType[P094_NR_FILTERS];
   P094_Filter_Comp       filterLine_compare[P094_NR_FILTERS];
 
   CUL_interval_filter interval_filter;
-  
+
   // Alternating stats, one being flushed, the other used to collect new stats
-  CUL_Stats           mBus_stats[2]; 
+  CUL_Stats mBus_stats[2];
 };
 
 
