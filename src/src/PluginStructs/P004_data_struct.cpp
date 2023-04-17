@@ -97,7 +97,6 @@ bool P004_data_struct::initiate_read() {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) { // Determine the resolution to use
     use_res = max(use_res, _sensors[i].actual_res);
   }
-  addLog(LOG_LEVEL_INFO, concat(F("P004 : Using resolution: "), static_cast<int>(use_res)));
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_sensors[i].initiate_read(_gpio_rx, _gpio_tx, _res)) {
