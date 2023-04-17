@@ -27,7 +27,7 @@ P004_data_struct::P004_data_struct(
 bool P004_data_struct::sensorAddressSet() const
 {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_sensors[i].addr != 0) return true;
+    if (_sensors[i].addr != 0) { return true; }
   }
   return false;
 }
@@ -106,7 +106,7 @@ bool P004_data_struct::initiate_read() {
         *   11 bits resolution -> 375 ms
         *   12 bits resolution -> 750 ms
         \*********************************************************************************************/
-        _timer = millis() + (800 / (1 << (12 - _res)));
+        _timer = millis() + (800 / (1 << (12 - _sensors[i].actual_res))); // Use actual sensor resolution
       }
       _sensors[i].measurementActive = true;
     } else {

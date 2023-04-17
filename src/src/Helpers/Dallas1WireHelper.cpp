@@ -1257,6 +1257,7 @@ bool Dallas_SensorData::check_sensor(int8_t gpio_rx, int8_t gpio_tx, int8_t res)
     if (!Dallas_setResolution(tmpaddr, res, gpio_rx, gpio_tx)) {
       return false;
     }
+    actual_res = res; // Update for later use
   }
 
   parasitePowered = Dallas_is_parasite(tmpaddr, gpio_rx, gpio_tx);

@@ -8,6 +8,7 @@
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
 /** Changelog:
+ * 2023-04-17 tonhuisman: Use actual sensor resolution, even when using multiple sensors with different resolutions
  * 2023-04-16 tonhuisman: Rename from DS18b20 to 1-Wire Temperature, as it supports several 1-Wire temperature sensors
  *                        Add support for fixed-resolution sensors like MAX31826
  * 2023-04-16 tonhuisman: Start using changelog
