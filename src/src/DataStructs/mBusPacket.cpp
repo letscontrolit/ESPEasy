@@ -91,24 +91,30 @@ bool mBusPacket_header_t::matchSerial(uint32_t serialNr) const
   return isValid() && (_serialNr == serialNr);
 }
 
-uint32_t mBusPacket_t::getDeviceSerial() const
+const mBusPacket_header_t * mBusPacket_t::getDeviceHeader() const
 {
   // FIXME TD-er: Which deviceID is the device and which the wrapper?
+  if (_deviceId2.isValid()) { return &_deviceId2; }
 
-  if (_deviceId2.isValid()) { return _deviceId2._serialNr; }
+  if (_deviceId1.isValid()) { return &_deviceId1; }
 
-  if (_deviceId1.isValid()) { return _deviceId1._serialNr; }
-  return 0;
+  return nullptr;
+}
+
+uint32_t mBusPacket_t::getDeviceSerial() const
+{
+  const mBusPacket_header_t *header = getDeviceHeader();
+
+  if (header == nullptr) { return 0; }
+  return header->_serialNr;
 }
 
 uint64_t mBusPacket_t::deviceID_toUInt64() const
 {
-  // FIXME TD-er: Which deviceID is the device and which the wrapper?
+  const mBusPacket_header_t *header = getDeviceHeader();
 
-  if (_deviceId2.isValid()) { return _deviceId2.encode_toUInt64(); }
-
-  if (_deviceId1.isValid()) { return _deviceId1.encode_toUInt64(); }
-  return 0;
+  if (header == nullptr) { return 0; }
+  return header->encode_toUInt64();
 }
 
 bool mBusPacket_t::parse(const String& payload)

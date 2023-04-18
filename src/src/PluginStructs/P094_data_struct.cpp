@@ -10,219 +10,13 @@
 
 # include "../DataStructs/mBusPacket.h"
 
-# include "../Globals/ESPEasy_time.h"
-# include "../Globals/TimeZone.h"
-# include "../Helpers/StringConverter.h"
-
-const char P094_Filter_Window_names[] PROGMEM = "all|5m|15m|1h|day|month|once|none";
-
-P094_Filter_Window get_FilterWindow(const String& str)
-{
-  char tmp[10]{};
-  const int command_i = GetCommandCode(tmp, sizeof(tmp), str.c_str(), P094_Filter_Window_names);
-
-  if (command_i == -1) {
-    // No match found
-    return P094_Filter_Window::None;
-  }
-  return static_cast<P094_Filter_Window>(command_i);
-}
-
-String Filter_WindowToString(P094_Filter_Window filterWindow)
-{
-  char   tmp[10]{};
-  String res(GetTextIndexed(tmp, sizeof(tmp), static_cast<uint32_t>(filterWindow), P094_Filter_Window_names));
-
-  return res;
-}
-
-void P094_filter::fromString(const String& str)
-{
-  // Set everything to wildcards
-  _header._encodedValue = 0;
-  _filterWindow         = P094_Filter_Window::All;
-  _filterComp           = P094_Filter_Comp::P094_Equal_OR;
-
-  const int semicolonPos = str.indexOf(';');
-
-  if (semicolonPos != -1) {
-    _filterWindow = get_FilterWindow(str.substring(semicolonPos + 1));
-  }
-
-  for (size_t i = 0; i < 3; ++i) {
-    String tmp;
-
-    if (GetArgv(str.c_str(), tmp, (i + 1), '.')) {
-      if (!(tmp.isEmpty() || equals(tmp, '*'))) {
-        if (i != 0) {
-          // Make sure the numerical values are parsed as HEX
-          if (!tmp.startsWith(F("0x")) && !tmp.startsWith(F("0X"))) {
-            tmp = concat(F("0x"), tmp);
-          }
-        }
-
-        switch (i) {
-          case 0: // Manufacturer
-            _header._manufacturer = mBusPacket_header_t::encodeManufacturerID(tmp);
-            break;
-          case 1: // Meter type
-          {
-            int metertype = 0;
-
-            if (validIntFromString(tmp, metertype)) {
-              _header._meterType = metertype;
-            }
-            break;
-          }
-          case 2: // Serial
-          {
-            int serial = 0;
-
-            if (validIntFromString(tmp, serial)) {
-              _header._serialNr = serial;
-            }
-            break;
-          }
-        }
-      }
-    }
-  }
-}
-
-String P094_filter::toString() const
-{
-  String res;
-
-  if (_header._manufacturer == 0) { res += '*'; }
-  else { res += mBusPacket_header_t::decodeManufacturerID(_header._manufacturer); }
-  res += '.';
-
-  if (_header._meterType == 0) { res += '*'; }
-  else { res += formatToHex_no_prefix(_header._meterType, 2); }
-  res += '.';
-
-  if (_header._serialNr == 0) { res += '*'; }
-  else { res += formatToHex_no_prefix(_header._serialNr, 8); }
-
-  res += ';';
-  res += Filter_WindowToString(_filterWindow);
-
-  return res;
-}
-
-bool P094_filter::matches(const mBusPacket_header_t& other) const
-{
-  if (_header._manufacturer != 0) {
-    if (_header._manufacturer != other._manufacturer) { return false; }
-  }
-
-  if (_header._meterType != 0) {
-    if (_header._meterType != other._meterType) { return false; }
-  }
-
-  if (_header._serialNr != 0) {
-    if (_header._serialNr != other._serialNr) { return false; }
-  }
-
-  return true;
-}
-
-bool P094_filter::shouldPass()
-{
-  // Match the interval window.
-
-  if (_filterWindow == P094_Filter_Window::None) { return false; }
-
-  if (_filterWindow == P094_Filter_Window::All) { return true; }
-
-  // Using UnixTime
-  const unsigned long currentTime = node_time.getUnixTime();
-  unsigned long window_min        = currentTime;
-
-  if ((_filterWindow == P094_Filter_Window::One_hour) ||
-      (_filterWindow == P094_Filter_Window::Day) ||
-      (_filterWindow == P094_Filter_Window::Month))
-  {
-    // Create time struct in local time.
-    struct tm tmp;
-    breakTime(time_zone.toLocal(currentTime), tmp);
-    tmp.tm_sec = 0;
-    tmp.tm_min = 0;
-
-    if (_filterWindow == P094_Filter_Window::Day) {
-      // Using local time, thus incl. timezone and DST.
-      if (tmp.tm_hour < 23) {
-        // Either:
-        // - between 00:00 and 12:00
-        // - between 12:00 and 23:00
-        tmp.tm_hour = (tmp.tm_hour < 12) ? 0 : 12;
-      } else {
-        // between 23:00 and 00:00
-        tmp.tm_hour = 23;
-      }
-    } else if (_filterWindow == P094_Filter_Window::Month) {
-      // First set min to midnight of today:
-      tmp.tm_hour = 0;
-
-      if (tmp.tm_mday < 15) {
-        // - between 1st of month 00:00:00 and 15th of month 00:00:00
-        tmp.tm_mday = 1;
-      } else {
-        // Check if this is the last day of the month.
-        // Add 24h to the time and see if it is still the same month.
-        struct tm tm_next_day;
-        breakTime(node_time.now() + (24 * 60 * 60), tm_next_day);
-
-        if (tm_next_day.tm_mon == tmp.tm_mon) {
-          // - between 15th of month 00:00:00 and last of month 00:00:00
-          tmp.tm_mday = 15;
-        } else {
-          // - between last of month 00:00:00 and 1st of next month 00:00:00
-          // Thus do not change the date.
-        }
-      }
-    }
-
-    // Convert from local time.
-    window_min = time_zone.fromLocal(makeTime(tmp));
-  } else {
-    switch (_filterWindow) {
-      case P094_Filter_Window::Once:
-
-        if (_lastSeenUnixTime != 0) {
-          return false;
-        }
-        break;
-      case P094_Filter_Window::Five_minutes:
-        window_min = currentTime - (currentTime % (5 * 60));
-        break;
-      case P094_Filter_Window::Fifteen_minutes:
-        window_min = currentTime - (currentTime % (15 * 60));
-        break;
-      case P094_Filter_Window::One_hour:
-        window_min = currentTime - (currentTime % (60 * 60));
-        break;
-
-      default:
-        return false;
-    }
-  }
+//# include "../Globals/ESPEasy_time.h"
+//# include "../Globals/TimeZone.h"
+//# include "../Helpers/ESPEasy_Storage.h"
+//# include "../Helpers/StringConverter.h"
 
 
-  if (_lastSeenUnixTime > window_min) {
-    return false;
-  }
-
-  _lastSeenUnixTime = currentTime;
-  return true;
-}
-
-P094_data_struct::P094_data_struct() :  easySerial(nullptr) {
-  for (int i = 0; i < P094_NR_FILTERS; ++i) {
-    filterLine_valueType[i] = P094_Filter_Value_Type::P094_not_used;
-    filterLine_compare[i]   = P094_Filter_Comp::P094_Equal_OR;
-  }
-}
+P094_data_struct::P094_data_struct() :  easySerial(nullptr) {}
 
 P094_data_struct::~P094_data_struct() {
   if (easySerial != nullptr) {
@@ -242,6 +36,7 @@ bool P094_data_struct::init(ESPEasySerialPort port,
                             const int16_t     serial_rx,
                             const int16_t     serial_tx,
                             unsigned long     baudrate,
+                            unsigned long     filterOffWindowTime_ms,
                             bool              intervalFilterEnabled,
                             bool              collectStats) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
@@ -254,32 +49,122 @@ bool P094_data_struct::init(ESPEasySerialPort port,
     return false;
   }
   easySerial->begin(baudrate);
+  filterOffWindowTime     = filterOffWindowTime_ms;
   interval_filter_enabled = intervalFilterEnabled;
   collect_stats           = collectStats;
   return true;
 }
 
-void P094_data_struct::post_init() {
-  for (uint8_t f = 0; f < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++f) {
-    filterValueType_used[f] = false;
+void P094_data_struct::loadFilters(struct EventStruct *event, uint8_t nrFilters)
+{
+  int offset_in_block = 0;
+
+
+  const size_t chunkSize    = P094_filter::getBinarySize();
+  const size_t maxNrFilters = 1024u / chunkSize;
+
+  if (nrFilters > maxNrFilters) { nrFilters = maxNrFilters; }
+
+  _filters.clear();
+
+  size_t nrChunks = 8;
+
+  if (nrFilters < nrChunks) {
+    nrChunks = nrFilters;
   }
 
-  for (uint8_t filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine) {
-    const size_t lines_baseindex        = P094_Get_filter_base_index(filterLine);
-    const int    index                  = _lines[lines_baseindex].toInt();
-    const int    tmp_filter_comp        = _lines[lines_baseindex + 2].toInt();
-    const bool   filter_string_notempty = _lines[lines_baseindex + 3].length() > 0;
-    const bool   valid_index            = index > 0 && index < P094_FILTER_VALUE_Type_NR_ELEMENTS;
-    const bool   valid_filter_comp      = tmp_filter_comp >= 0 && tmp_filter_comp < P094_FILTER_COMP_NR_ELEMENTS;
+  const size_t bufferSize = nrChunks * chunkSize;
 
-    filterLine_valueType[filterLine] = P094_not_used;
+  uint8_t buffer[bufferSize] = { 0 };
 
-    if (valid_index && valid_filter_comp && filter_string_notempty) {
-      filterValueType_used[index]      = true;
-      filterLine_valueType[filterLine] = static_cast<P094_Filter_Value_Type>(index);
-      filterLine_compare[filterLine]   = static_cast<P094_Filter_Comp>(tmp_filter_comp);
+  while (nrFilters > 0) {
+    LoadCustomTaskSettings(event->TaskIndex, buffer, bufferSize, offset_in_block);
+    offset_in_block += bufferSize;
+
+    uint8_t *readPos = buffer;
+
+    for (size_t i = 0; i < nrChunks && nrFilters > 0; ++i) {
+      P094_filter filter;
+      filter.fromBinary(readPos);
+
+      _filters.push_back(filter);
+
+      --nrFilters;
+      readPos += chunkSize;
     }
   }
+}
+
+String P094_data_struct::saveFilters(struct EventStruct *event) const
+{
+  int offset_in_block = 0;
+
+
+  String res;
+  const size_t nrFilters = _filters.size();
+
+  if (nrFilters == 0) {
+    return res;
+  }
+
+  const size_t chunkSize = P094_filter::getBinarySize();
+  size_t nrChunks        = 8;
+
+  if (nrFilters < nrChunks) {
+    nrChunks = nrFilters;
+  }
+
+  const size_t bufferSize = nrChunks * chunkSize;
+
+  uint8_t buffer[bufferSize] = { 0 };
+
+  size_t currentFilter = 0;
+
+  while (currentFilter < nrFilters && res.isEmpty()) {
+    uint8_t *writePos  = buffer;
+    size_t   writeSize = 0;
+
+    for (size_t i = 0; i < nrChunks && currentFilter < nrFilters; ++i) {
+      size_t size{};
+      const uint8_t *binaryData = _filters[currentFilter].toBinary(size);
+      memcpy(writePos, binaryData, size);
+      writePos  += size;
+      writeSize += size;
+      ++currentFilter;
+    }
+    res              = SaveCustomTaskSettings(event->TaskIndex, buffer, writeSize, offset_in_block);
+    offset_in_block += writeSize;
+  }
+  return res;
+}
+
+void P094_data_struct::WebformLoadFilters(uint8_t nrFilters) const
+{
+  for (uint8_t filterLine = 0; filterLine < nrFilters; ++filterLine)
+  {
+    if (filterLine < _filters.size()) {
+      _filters[filterLine].WebformLoad(filterLine);
+    } else {
+      P094_filter dummy;
+      dummy.WebformLoad(filterLine);
+    }
+  }
+}
+
+void P094_data_struct::WebformSaveFilters(struct EventStruct *event, uint8_t nrFilters)
+{
+  _filters.clear();
+
+  for (uint8_t filterLine = 0; filterLine < nrFilters; ++filterLine)
+  {
+    P094_filter dummy;
+
+    if (dummy.WebformSave(filterLine)) {
+      // Filter with filled in values, worth storing
+      _filters.push_back(dummy);
+    }
+  }
+  addHtmlError(saveFilters(event));
 }
 
 bool P094_data_struct::isInitialized() const {
@@ -293,9 +178,7 @@ void P094_data_struct::sendString(const String& data) {
       easySerial->write(data.c_str());
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("Proxy: Sending: ");
-        log += data;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("Proxy: Sending: "), data));
       }
     }
   }
@@ -702,55 +585,8 @@ void P094_data_struct::setMaxLength(uint16_t maxlenght) {
   max_length = maxlenght;
 }
 
-void P094_data_struct::setLine(uint8_t varNr, const String& line) {
-  if (varNr < P94_Nlines) {
-    _lines[varNr] = line;
-  }
-}
-
 uint32_t P094_data_struct::getFilterOffWindowTime() const {
-  return _lines[P094_FILTER_OFF_WINDOW_POS].toInt();
-}
-
-P094_Match_Type P094_data_struct::getMatchType() const {
-  return static_cast<P094_Match_Type>(_lines[P094_MATCH_TYPE_POS].toInt());
-}
-
-bool P094_data_struct::invertMatch() const {
-  switch (getMatchType()) {
-    case P094_Regular_Match:
-      break;
-    case P094_Regular_Match_inverted:
-      return true;
-    case P094_Filter_Disabled:
-      break;
-  }
-  return false;
-}
-
-bool P094_data_struct::filterUsed(uint8_t lineNr) const
-{
-  if (filterLine_valueType[lineNr] == P094_Filter_Value_Type::P094_not_used) { return false; }
-  uint8_t varNr = P094_Get_filter_base_index(lineNr);
-
-  return _lines[varNr + 3].length() > 0;
-}
-
-String P094_data_struct::getFilter(uint8_t lineNr, P094_Filter_Value_Type& filterValueType, uint32_t& optional,
-                                   P094_Filter_Comp& comparator) const
-{
-  uint8_t varNr = P094_Get_filter_base_index(lineNr);
-
-  filterValueType = P094_Filter_Value_Type::P094_not_used;
-
-  if ((varNr + 3) >= P94_Nlines) { return ""; }
-  optional        = _lines[varNr + 1].toInt();
-  filterValueType = filterLine_valueType[lineNr];
-  comparator      = filterLine_compare[lineNr];
-
-  //  filterValueType = static_cast<P094_Filter_Value_Type>(_lines[varNr].toInt());
-  //  comparator      = static_cast<P094_Filter_Comp>(_lines[varNr + 2].toInt());
-  return _lines[varNr + 3];
+  return filterOffWindowTime;
 }
 
 void P094_data_struct::setDisableFilterWindowTimer() {
@@ -772,22 +608,16 @@ bool P094_data_struct::disableFilterWindowActive() const {
   return false;
 }
 
-bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet) const {
+bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet) {
   size_t strlength = received.length();
 
   if (strlength == 0) {
     return false;
   }
 
+  const char firstChar = received[0];
 
-  if (getMatchType() == P094_Filter_Disabled) {
-    return true;
-  }
-
-  bool match_result = false;
-
-  // FIXME TD-er: For now added '$' to test with GPS.
-  if ((received[0] == 'b') || (received[0] == '$')) {
+  if ((firstChar == 'b')) {
     // Received a data packet in CUL format.
     if (strlength < 21) {
       return false;
@@ -800,167 +630,25 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
       addLogMove(LOG_LEVEL_INFO, concat(F("CUL Reader: "), packet.toString()));
     }
 
-    bool filter_matches[P094_NR_FILTERS];
+    const mBusPacket_header_t *header = packet.getDeviceHeader();
 
-    for (unsigned int f = 0; f < P094_NR_FILTERS; ++f) {
-      filter_matches[f] = false;
+    if (header == nullptr) { return false; }
+
+    if (nrFilters == 0) {
+      return true; // No filtering
     }
 
-    // Do not check for "not used" (0)
-    for (unsigned int i = 1; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
-      if (filterValueType_used[i]) {
-        for (unsigned int filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine) {
-          if (filterLine_valueType[filterLine] == i) {
-            // Have a matching filter
-
-            uint32_t optional;
-            P094_Filter_Value_Type filterValueType;
-            P094_Filter_Comp comparator;
-            bool   match = false;
-            String inputString;
-            String valueString = getFilter(filterLine, filterValueType, optional, comparator);
-
-            if (i == P094_Filter_Value_Type::P094_position) {
-              if (received.length() >= (optional + valueString.length())) {
-                // received string is long enough to fit the expression.
-                inputString = received.substring(optional, optional + valueString.length());
-                match       = inputString.equalsIgnoreCase(valueString);
-              }
-            } else if (i == P094_Filter_Value_Type::P094_manufacturer) {
-              // Get vendor code
-              const int value = mBusPacket_header_t::encodeManufacturerID(valueString);
-              inputString = mBusPacket_header_t::decodeManufacturerID(packet._deviceId1._manufacturer);
-
-              addLog(LOG_LEVEL_INFO, concat(F("Manufacturer ID filter: "),
-                                            mBusPacket_header_t::decodeManufacturerID(value)) + concat(F(" input: "), inputString));
-
-              if (value == packet._deviceId1._manufacturer
-
-                  /*inputString.equalsIgnoreCase(valueString)*/) {
-                match = true;
-              } else if (hexToUL(valueString) == packet._deviceId1._manufacturer) {
-                // Old 'compatible' mode, where the HEX notation was used instead of the manufacturer ID
-                match = true;
-              }
-            } else {
-              const unsigned long value = hexToUL(valueString);
-              uint32_t receivedValue    = 0;
-
-              switch (static_cast<P094_Filter_Value_Type>(i)) {
-                case P094_packet_length:
-                  receivedValue = packet._deviceId1._length;
-                  match         = value == receivedValue;
-                  break;
-                case P094_manufacturer:
-                  // Already handled
-                  break;
-                case P094_meter_type:
-                  receivedValue = packet._deviceId1._meterType;
-                  match         = value == receivedValue;
-                  break;
-                case P094_serial_number:
-                  receivedValue = packet._deviceId1._serialNr;
-                  match         = value == receivedValue;
-                  break;
-                case P094_rssi:
-                {
-                  uint8_t   LQI  = 0;
-                  const int rssi = mBusPacket_t::decode_LQI_RSSI(packet._lqi_rssi, LQI);
-
-                  receivedValue = rssi;
-                  int int_value = 0;
-
-                  if (validIntFromString(valueString, int_value)) {
-                    match = int_value > rssi;
-                  }
-                  break;
-                }
-                default:
-                  match = false;
-                  break;
-              }
-              inputString = formatToHex_decimal(receivedValue);
-              valueString = formatToHex_decimal(value);
-            }
-
-
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log;
-
-              if (log.reserve(64)) {
-                log += F("CUL Reader: ");
-                log += P094_FilterValueType_toString(filterLine_valueType[filterLine]);
-                log += F(":  in:");
-                log += inputString;
-                log += ' ';
-                log += P094_FilterComp_toString(comparator);
-                log += ' ';
-                log += valueString;
-
-                switch (comparator) {
-                  case P094_Filter_Comp::P094_Equal_OR:
-                  case P094_Filter_Comp::P094_Equal_MUST:
-
-                    if (match) { log += F(" expected MATCH"); }
-                    break;
-                  case P094_Filter_Comp::P094_NotEqual_OR:
-                  case P094_Filter_Comp::P094_NotEqual_MUST:
-
-                    if (!match) { log += F(" expected NO MATCH"); }
-                    break;
-                }
-                addLogMove(LOG_LEVEL_INFO, log);
-              }
-            }
-
-            switch (comparator) {
-              case P094_Filter_Comp::P094_Equal_OR:
-
-                if (match) { filter_matches[filterLine] = true; }
-                break;
-              case P094_Filter_Comp::P094_NotEqual_OR:
-
-                if (!match) { filter_matches[filterLine] = true; }
-                break;
-
-              case P094_Filter_Comp::P094_Equal_MUST:
-
-                if (!match) { return false; }
-                break;
-
-              case P094_Filter_Comp::P094_NotEqual_MUST:
-
-                if (match) { return false; }
-                break;
-            }
-          }
-        }
+    for (unsigned int f = 0; f < nrFilters; ++f) {
+      if (_filters[f].matches(*header)) {
+        return _filters[f].shouldPass();
       }
     }
 
-    // Now we have to check if all rows per filter line in filter_matches[f] are true or not used.
-    int nrMatches = 0;
-    int nrNotUsed = 0;
-
-    for (unsigned int filterLine = 0; !match_result && filterLine < P094_NR_FILTERS; ++filterLine) {
-      if (filterLine % P094_AND_FILTER_BLOCK == 0) {
-        if ((nrMatches > 0) && ((nrMatches + nrNotUsed) == P094_AND_FILTER_BLOCK)) {
-          match_result = true;
-        }
-        nrMatches = 0;
-        nrNotUsed = 0;
-      }
-
-      if (filter_matches[filterLine]) {
-        ++nrMatches;
-      } else {
-        if (!filterUsed(filterLine)) {
-          ++nrNotUsed;
-        }
-      }
-    }
+    // No matching filter, so consider fall-through filter to be:
+    // *.*.*;none
+    return false;
   } else {
-    switch (received[0]) {
+    switch (firstChar) {
       case 'C': // CMODE
       case 'S': // SMODE
       case 'T': // TMODE
@@ -968,51 +656,11 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
       case 'V': // Version info
 
         // FIXME TD-er: Must test the result of the other possible answers.
-        match_result = true;
-        break;
+        return true;
     }
   }
 
-  return match_result;
-}
-
-const __FlashStringHelper * P094_data_struct::MatchType_toString(P094_Match_Type matchType) {
-  switch (matchType)
-  {
-    case P094_Match_Type::P094_Regular_Match:          return F("Regular Match");
-    case P094_Match_Type::P094_Regular_Match_inverted: return F("Regular Match inverted");
-    case P094_Match_Type::P094_Filter_Disabled:        return F("Filter Disabled");
-  }
-  return F("");
-}
-
-const __FlashStringHelper * P094_data_struct::P094_FilterValueType_toString(P094_Filter_Value_Type valueType)
-{
-  switch (valueType) {
-    case P094_Filter_Value_Type::P094_not_used:      return F("---");
-    case P094_Filter_Value_Type::P094_packet_length: return F("Packet Length");
-    case P094_Filter_Value_Type::P094_unknown1:      return F("unknown1");
-    case P094_Filter_Value_Type::P094_manufacturer:  return F("Manufacturer");
-    case P094_Filter_Value_Type::P094_serial_number: return F("Serial Number");
-    case P094_Filter_Value_Type::P094_unknown2:      return F("unknown2");
-    case P094_Filter_Value_Type::P094_meter_type:    return F("Meter Type");
-    case P094_Filter_Value_Type::P094_rssi:          return F("RSSI");
-    case P094_Filter_Value_Type::P094_position:      return F("Position");
-
-      //    default: break;
-  }
-  return F("unknown");
-}
-
-const __FlashStringHelper * P094_data_struct::P094_FilterComp_toString(P094_Filter_Comp comparator)
-{
-  switch (comparator) {
-    case P094_Filter_Comp::P094_Equal_OR:      return F("==");
-    case P094_Filter_Comp::P094_NotEqual_OR:   return F("!=");
-    case P094_Filter_Comp::P094_Equal_MUST:    return F("== (must)");
-    case P094_Filter_Comp::P094_NotEqual_MUST: return F("!= (must)");
-  }
-  return F("");
+  return false;
 }
 
 bool P094_data_struct::interval_filter_add(const mBusPacket_t& packet) {

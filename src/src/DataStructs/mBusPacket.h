@@ -42,18 +42,21 @@ struct mBusPacket_header_t {
 struct mBusPacket_t {
 public:
 
-  bool            parse(const String& payload);
+  bool                       parse(const String& payload);
 
-  static  int16_t decode_LQI_RSSI(uint16_t lqi_rssi,
-                                  uint8_t& LQI);
+  // Get the header of the actual device, not the forwarding device (if present)
+  const mBusPacket_header_t* getDeviceHeader() const;
 
-  bool            matchSerial(uint32_t serialNr) const;
+  static  int16_t            decode_LQI_RSSI(uint16_t lqi_rssi,
+                                             uint8_t& LQI);
 
-  uint32_t        getDeviceSerial() const;
+  bool                       matchSerial(uint32_t serialNr) const;
 
-  String          toString() const;
+  uint32_t                   getDeviceSerial() const;
 
-  uint64_t        deviceID_toUInt64() const;
+  String                     toString() const;
+
+  uint64_t                   deviceID_toUInt64() const;
 
 private:
 

@@ -27,6 +27,8 @@
 # define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
 # define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
 
+# define P094_DISABLE_WINDOW_TIME_MS  PCONFIG_LONG(2)
+
 # define P094_GET_APPEND_RECEIVE_SYSTIME    bitRead(PCONFIG(0), 0)
 # define P094_SET_APPEND_RECEIVE_SYSTIME(X) bitWrite(PCONFIG(0), 0, X)
 
@@ -50,6 +52,8 @@
 
 # define P094_DEFAULT_BAUDRATE   38400
 
+
+bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fromCUL);
 
 // Plugin settings:
 // Validate:
@@ -189,12 +193,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P094_data) {
-        for (uint8_t varNr = 0; varNr < P94_Nlines; varNr++)
-        {
-          P094_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
-        }
-
-        addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0));
+        P094_data->WebformSaveFilters(event, P094_NR_FILTERS);
         success = true;
       }
 
@@ -220,9 +219,15 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         return success;
       }
 
-      if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE, P094_GET_INTERVAL_FILTER, P094_GET_COLLECT_STATS)) {
-        LoadCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0);
-        P094_data->post_init();
+      if (P094_data->init(
+          port, 
+          serial_rx, 
+          serial_tx, 
+          P094_BAUDRATE, 
+          1000, 
+          P094_GET_INTERVAL_FILTER, 
+          P094_GET_COLLECT_STATS)) {
+        P094_data->loadFilters(event, P94_Nlines);
 # if P094_DEBUG_OPTIONS
         P094_data->setGenerate_DebugCulData(P094_GET_GENERATE_DEBUG_CUL_DATA);
 # endif // if P094_DEBUG_OPTIONS
@@ -417,12 +422,6 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fr
   mBusPacket_t packet;
   bool res = P094_data->parsePacket(received, packet);
 
-  if (P094_data->invertMatch()) {
-    addLog(LOG_LEVEL_INFO, F("CUL Reader: invert filter"));
-
-    res = !res;
-  }
-
   #ifdef ESP8266
   if (res) {
   #endif
@@ -465,99 +464,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     addUnit(F("msec"));
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
-    {
-      const __FlashStringHelper *options[P094_Match_Type_NR_ELEMENTS];
-      int optionValues[P094_Match_Type_NR_ELEMENTS];
-
-      for (int i = 0; i < P094_Match_Type_NR_ELEMENTS; ++i) {
-        P094_Match_Type matchType = static_cast<P094_Match_Type>(i);
-        options[i]      = P094_data_struct::MatchType_toString(matchType);
-        optionValues[i] = matchType;
-      }
-      P094_Match_Type choice = P094_data->getMatchType();
-      addFormSelector(F("Filter Mode"),
-                      getPluginCustomArgName(P094_MATCH_TYPE_POS),
-                      P094_Match_Type_NR_ELEMENTS,
-                      options,
-                      optionValues,
-                      choice,
-                      false);
-    }
-
-
-    uint8_t  filterSet             = 0;
-    uint32_t optional              = 0;
-    P094_Filter_Value_Type capture = P094_Filter_Value_Type::P094_packet_length;
-    P094_Filter_Comp comparator    = P094_Filter_Comp::P094_Equal_OR;
-    String filter;
-
-    for (uint8_t filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine)
-    {
-      // Filter parameter number on a filter line.
-      bool newLine = (filterLine % P094_AND_FILTER_BLOCK) == 0;
-
-      for (uint8_t filterLinePar = 0; filterLinePar < P094_ITEMS_PER_FILTER; ++filterLinePar)
-      {
-        String id = getPluginCustomArgName(P094_data_struct::P094_Get_filter_base_index(filterLine) + filterLinePar);
-
-        switch (filterLinePar) {
-          case 0:
-          {
-            filter = P094_data->getFilter(filterLine, capture, optional, comparator);
-
-            if (newLine) {
-              // Label + first parameter
-              ++filterSet;
-              addRowLabel_tr_id(concat(F("Filter "), static_cast<int>(filterSet)), id);
-            } else {
-              html_B(F("AND"));
-              html_BR();
-            }
-
-            // Combo box with filter types
-            {
-              const __FlashStringHelper *options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
-              int optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
-
-              for (int i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
-                P094_Filter_Value_Type filterValueType = static_cast<P094_Filter_Value_Type>(i);
-                options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
-                optionValues[i] = filterValueType;
-              }
-              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, nullptr, capture, false, true, F(""));
-            }
-
-            break;
-          }
-          case 1:
-          {
-            // Optional numerical value
-            addNumericBox(id, optional, 0, 1024);
-            break;
-          }
-          case 2:
-          {
-            // Comparator
-            const __FlashStringHelper *options[P094_FILTER_COMP_NR_ELEMENTS];
-            int optionValues[P094_FILTER_COMP_NR_ELEMENTS];
-
-            for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {
-              P094_Filter_Comp enumValue = static_cast<P094_Filter_Comp>(i);
-              options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
-              optionValues[i] = enumValue;
-            }
-            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, nullptr, comparator, false, true, F(""));
-            break;
-          }
-          case 3:
-          {
-            // Compare with
-            addTextBox(id, filter, 8, false, false, EMPTY_STRING, F(""));
-            break;
-          }
-        }
-      }
-    }
+    P094_data->WebformLoadFilters(P094_NR_FILTERS);
   }
 }
 

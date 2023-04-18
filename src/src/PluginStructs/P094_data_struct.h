@@ -7,6 +7,7 @@
 # include "../Helpers/CUL_interval_filter.h"
 # include "../Helpers/CUL_stats.h"
 
+# include "../PluginStructs/P094_Filter.h"
 
 # include <ESPeasySerial.h>
 # include <Regexp.h>
@@ -31,84 +32,10 @@
 # define P94_MAX_CAPTURE_INDEX   32
 
 
-enum P094_Match_Type {
-  P094_Regular_Match          = 0,
-  P094_Regular_Match_inverted = 1,
-  P094_Filter_Disabled        = 2
-};
-# define P094_Match_Type_NR_ELEMENTS 3
 
-enum P094_Filter_Value_Type {
-  P094_not_used      = 0,
-  P094_packet_length = 1,
-  P094_unknown1      = 2,
-  P094_manufacturer  = 3,
-  P094_serial_number = 4,
-  P094_unknown2      = 5,
-  P094_meter_type    = 6,
-  P094_rssi          = 7,
-  P094_position      = 8
-};
-# define P094_FILTER_VALUE_Type_NR_ELEMENTS 9
-
-enum P094_Filter_Comp {
-  P094_Equal_OR      = 0,
-  P094_NotEqual_OR   = 1,
-  P094_Equal_MUST    = 2,
-  P094_NotEqual_MUST = 3
-};
-
-# define P094_FILTER_COMP_NR_ELEMENTS 4
-
-enum class P094_Filter_Window {
-  All,             // Realtime, every message passes the filter
-  Five_minutes,    // a message passes the filter every 5 minutes, aligned to time (00:00:00, 00:05:00, ...)
-  Fifteen_minutes, // a message passes the filter every 15 minutes, aligned to time
-  One_hour,        // a message passes the filter every hour, aligned to time
-  Day,             // a message passes the filter once every day
-                   // - between 00:00 and 12:00,
-                   // - between 12:00 and 23:00 and
-                   // - between 23:00 and 00:00
-  Month,           // a message passes the filter
-                   // - between 1st of month 00:00:00 and 15th of month 00:00:00
-                   // - between 15th of month 00:00:00 and last of month 00:00:00
-                   // - between last of month 00:00:00 and 1st of next month 00:00:00
-  Once,            // only one message passes the filter until next reboot
-  None             // no messages pass the filter
-};
-
-
-
-
-// Examples for a filter definition list
-//   EBZ.02.12345678;all
-//   *.02.*;15m
-//   TCH.44.*;Once
-//   !TCH.*.*;None
-//   *.*.*;5m
-
-struct P094_filter {
-
-  void fromString(const String& str);
-  String toString() const;
-
-  // Check to see if the manufacturer, metertype and serial matches.
-  bool matches(const mBusPacket_header_t& other) const;
-
-  // Check against the filter window.
-  bool shouldPass();
-
-
-  unsigned long _lastSeenUnixTime{};
-
-  mBusPacket_header_t _header;
-  P094_Filter_Window _filterWindow = P094_Filter_Window::All;
-  P094_Filter_Comp   _filterComp = P094_Filter_Comp::P094_Equal_OR;
-};
 
 struct P094_data_struct : public PluginTaskData_base {
 public:
-
 
   P094_data_struct();
 
@@ -120,10 +47,19 @@ public:
             const int16_t     serial_rx,
             const int16_t     serial_tx,
             unsigned long     baudrate,
+            unsigned long     filterOffWindowTime_ms,
             bool              intervalFilterEnabled,
             bool              collectStats);
 
-  void          post_init();
+  void          loadFilters(struct EventStruct *event,
+                            uint8_t             nrFilters);
+
+  String        saveFilters(struct EventStruct *event) const;
+
+  void          WebformLoadFilters(uint8_t nrFilters) const;
+
+  void          WebformSaveFilters(struct EventStruct *event,
+                                   uint8_t             nrFilters);
 
   bool          isInitialized() const;
 
@@ -140,39 +76,25 @@ public:
                                      uint32_t& error,
                                      uint32_t& length_last) const;
 
-  void setMaxLength(uint16_t maxlenght);
+  void     setMaxLength(uint16_t maxlenght);
 
-  void setLine(uint8_t       varNr,
-               const String& line);
+  void     setLine(uint8_t       varNr,
+                   const String& line);
 
+  uint32_t getFilterOffWindowTime() const;
 
-  uint32_t        getFilterOffWindowTime() const;
+  bool     filterUsed(uint8_t lineNr) const;
 
-  P094_Match_Type getMatchType() const;
+  void     setDisableFilterWindowTimer();
 
-  bool            invertMatch() const;
+  bool     disableFilterWindowActive() const;
 
-  bool            filterUsed(uint8_t lineNr) const;
-
-  String          getFilter(uint8_t                 lineNr,
-                            P094_Filter_Value_Type& capture,
-                            uint32_t              & optional,
-                            P094_Filter_Comp      & comparator) const;
-
-  void                              setDisableFilterWindowTimer();
-
-  bool                              disableFilterWindowActive() const;
-
-  bool                              parsePacket(const String& received,
-                                                mBusPacket_t& packet) const;
-
-  static const __FlashStringHelper* MatchType_toString(P094_Match_Type matchType);
-  static const __FlashStringHelper* P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
-  static const __FlashStringHelper* P094_FilterComp_toString(P094_Filter_Comp comparator);
+  bool     parsePacket(const String& received,
+                       mBusPacket_t& packet);
 
 
   // Made public so we don't have to copy the values when loading/saving.
-  String _lines[P94_Nlines];
+  std::vector<P094_filter>_filters;
 
   static size_t P094_Get_filter_base_index(size_t filterLine);
 
@@ -200,12 +122,15 @@ private:
 
   ESPeasySerial *easySerial = nullptr;
   String         sentence_part;
-  uint16_t       max_length               = 550;
+  uint16_t       max_length = 550;
+  uint16_t       nrFilters{};
+  unsigned long  filterOffWindowTime      = 0;
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
   bool           current_sentence_errored = false;
   uint32_t       length_last_received     = 0;
   unsigned long  disable_filter_window    = 0;
+
   # if P094_DEBUG_OPTIONS
   uint32_t debug_counter           = 0;
   bool     debug_generate_CUL_data = false;
@@ -214,10 +139,6 @@ private:
   bool collect_stats           = false;
 
   bool firstStatsIndexActive = false;
-
-  bool                   filterValueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = { 0 };
-  P094_Filter_Value_Type filterLine_valueType[P094_NR_FILTERS];
-  P094_Filter_Comp       filterLine_compare[P094_NR_FILTERS];
 
   CUL_interval_filter interval_filter;
 
