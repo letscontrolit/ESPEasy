@@ -201,6 +201,11 @@ The Statistics can help determining why a setup of sensors may not perform as we
 
 |br|
 
+.. note:: Because of the issues that can arise from these sensors being used with parasitic power (via the data line), this configuration,
+          while it *may* work, is **unsupported**, and a matching warning message is shown if Parasite Powered is reported true by the sensor.
+
+.. image:: P004_ParasitePower.png
+
 
 .. note:: If you need a star infrastructure or stubs or if you need just longer cabling there is a way out.
           One line runs on one GPIO. But nobody said you can't use two GPIO's. If the cabling gets too long or

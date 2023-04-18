@@ -201,6 +201,12 @@ void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
   addRowLabel(F("Parasite Powered"));
   addHtml(jsonBool(sensor_data.parasitePowered));
 
+  if (sensor_data.parasitePowered) {
+    addHtml(F("&nbsp;"));
+    addEnabled(false);
+    addHtml(F("&nbsp;Unsupported!"));
+  }
+
   addRowLabel(F("Samples Read Success"));
   addHtmlInt(sensor_data.read_success);
 
