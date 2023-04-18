@@ -94,15 +94,17 @@ void sendData(struct EventStruct *event)
 bool validUserVar(struct EventStruct *event) {
   if (!validTaskIndex(event->TaskIndex)) return false;
   const Sensor_VType vtype = event->getSensorType();
-  if (vtype == Sensor_VType::SENSOR_TYPE_LONG || 
-      vtype == Sensor_VType::SENSOR_TYPE_STRING  // FIXME TD-er: Must look at length of event->String2 ?
-  ) return true;
+  if (isIntegerOutputDataType(vtype) ||
+      vtype == Sensor_VType::SENSOR_TYPE_STRING)  // FIXME TD-er: Must look at length of event->String2 ?
+  {
+    return true;
+  }
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
-    const float f(UserVar[event->BaseVarIndex + i]);
-
-    if (!isValidFloat(f)) { return false; }
+    if (!UserVar.isValid(event->TaskIndex, i, vtype)) { 
+      return false; 
+    }
   }
   return true;
 }
@@ -679,7 +681,7 @@ void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime, unsi
             double result = 0;
 
             if (!isError(Calculate(parseTemplate(formula), result))) {
-              UserVar[TempEvent.BaseVarIndex + varNr] = result;
+              UserVar.set(TaskIndex, varNr, result, TempEvent.sensorType);
             }
 
             STOP_TIMER(COMPUTE_FORMULA_STATS);

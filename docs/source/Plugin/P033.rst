@@ -28,7 +28,14 @@ You can use a special dummy device within ESP Easy to provide additional feature
 
 The dummy device can be used like any other sensor to send it's data to a Controller. But this is not mandatory if you only want to use it within your own rules section.
 
-The dummy device has it's own special command to set values from rules:
+Dummy tasks can be used like temporary variables to store data.
+One nice benefit is that these task values of Dummy tasks are also kept in RTC memory.
+So these may survive a reboot, as long as the ESP remains powered.
+
+Storing Values
+--------------
+
+Typically, one can only interact with a Dummy task via the ``TaskValueSet`` command:
 
 .. code-block:: none
 
@@ -54,6 +61,78 @@ So for a Dummy device named ``Dummy``, Output Data Type set to Temp / Hum, and V
 
 Note: You can use multiple Dummy devices if needed!
 
+Output Configuration
+--------------------
+
+A Dummy can be configured to output a specific data type.
+Especially Domoticz controllers require some specific data type to properly handle specific devices which output several units of measure.
+
+For example "Temp / Hum / Baro" are obviously intended to mimic the well known Bosch BME280 sensor.
+
+Basic data types like "Single", "Dual", "Triple", "Quad" are intended to set resp. 1 ... 4 ``float`` values.
+
+Extended Output Data Types
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023/04/15
+
+Storing data in ``float`` values may result in loss of decimals.
+A float can only store upto 22 bit if numerical information.
+
+For example the "UnixTime" (number of seconds since 1970/01/01) cannot accurately be stored in a float.
+
+To overcome these issues, a number of integer types are added:
+
+* Int32  - Integer value ranging from ``-2147483648`` ... ``2147483647`` (-1 * 2^31 ... (2^31 - 1))
+* UInt32 - Integer value ranging from ``0`` ... ``4294967295`` (2^32 - 1) 
+* Int64  - Integer value ranging from -1 * 2^63 ... (2^63 - 1)
+* UInt64 - Integer value ranging from 0 ... (2^64 - 1)
+* Double - "Double" Floating point value capable of storing 52 bit of numerical information.
+
+The offered selection also shows the number of task values being configured.
+For example ``Int32 (3x)`` implies 3 task values of type ``Int32``.
+
+Since 64 bit ints and double need 8 bytes, where the other types only require 4 bytes.
+Therefore the maximum number of those task values possible is half that of the other types.
+
+Storing data in 64 bit ints may not allow to store the full range as one may expect to store based on the integer types.
+The ``TaskValueSet`` command internally processes data as ``double``, thus limiting the maximum range of these integer values to -9007199254740992 ... 9007199254740991.
+
+One can store larger values in these 64 bit int types, but this will result in loss of bits.
+
+For example: 
+
+* ``9007199254740993`` cannot be stored in such a data type as it will be rounded back to ``9007199254740992`` when used.
+* ``1234567890123456789`` will be read back as ``1234567890123456768``, which may seem correct at first sight, but the last few digits are wrong.
+
+Storing large values in other integer types, like ``UInt32``, will be clipped to the maximum value that can be handled by that type.
+
+For example:
+
+* ``1234567890123456789`` stored in an ``UInt32`` will be read back as ``4294967295``
+* ``-1`` stored in an ``UInt32`` will be read back as ``4294967295``
+* ``1234567890123456789`` stored in an ``Int32`` will be read back as ``2147483647``
+* ``-1`` stored in an ``Int32`` will be read back as ``-2147483648``
+
+
+
+Data Acquisition
+----------------
+
+In ESPEasy, a task can be triggered to yield some new sample data.
+For other plugins, this means the sensor is read and when successful there is some new data to process.
+
+However, since the Dummy device doesn't interact with a device, it will always be "successful" on a task run.
+
+One may set the "Interval" to periodically trigger a new task run, or trigger a task run via the command ``TaskRun``.
+
+.. note:: The command ``TaskValueSetAndRun`` is a combination of ``TaskValueSet`` and ``TaskRun``.
+
+On a task run, there will be one or more events fired (depending on whether or not "Single event with all values" is checked).
+And all connected controllers of that task will be handed over the values present in the task values.
+
+Especially Domoticz controllers are very specific to the output data type.
+
 
 .. Supported hardware
 .. ------------------
@@ -75,6 +154,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |improved|
+  2023-04-15 Add more types of task values, like (u)int32, (u)int64 and double.
 
   |improved|
   2021-08-18 Make Interval optional, so no interval (0) can be used.

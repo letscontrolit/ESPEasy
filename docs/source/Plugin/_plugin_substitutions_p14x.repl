@@ -24,6 +24,19 @@
 .. |P143_compileinfo| replace:: `.`
 .. |P143_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_Seesaw`
 
+.. |P144_name| replace:: :cyan:`PM1006(K) Vindriktning`
+.. |P144_type| replace:: :cyan:`Dust`
+.. |P144_typename| replace:: :cyan:`Dust - PM1006(K) (Vindriktning)`
+.. |P144_porttype| replace:: `.`
+.. |P144_status| replace:: :yellow:`COLLECTION F`
+.. |P144_github| replace:: P144_Vindriktning.ino
+.. _P144_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P144_Vindrikning.ino
+.. |P144_usedby| replace:: `.`
+.. |P144_shortinfo| replace:: `Dust level sensors`
+.. |P144_maintainer| replace:: `flashmark`
+.. |P144_compileinfo| replace:: `.`
+.. |P144_usedlibraries| replace:: `ESPEasy Serial`
+
 .. |P145_name| replace:: :cyan:`MQxxx (MQ135 CO2, MQ3 Alcohol)`
 .. |P145_type| replace:: :cyan:`Gases`
 .. |P145_typename| replace:: :cyan:`Gases - MQxxx (MQ135 CO2, MQ3 Alcohol)`
@@ -35,7 +48,7 @@
 .. |P145_shortinfo| replace:: `Gas level sensors`
 .. |P145_maintainer| replace:: `flashmark`
 .. |P145_compileinfo| replace:: `.`
-.. |P145_usedlibraries| replace:: `ESPEasy Serial`
+.. |P145_usedlibraries| replace:: `.`
 
 .. |P148_name| replace:: :cyan:`POWR3xxD/THR3xxD`
 .. |P148_type| replace:: :cyan:`Display`
