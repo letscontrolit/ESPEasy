@@ -172,7 +172,7 @@ const __FlashStringHelper* Command_HTTP_PutToHTTP(struct EventStruct *event, con
 
   // FIXME tonhuisman: make PutToHttp_ack a setting, using SendToHttp_ack for now...
 
-  return httpEmitToHTTP(event, F("PostToHTTP"), F("PUT"), Line, timeout, Settings.SendToHttp_ack(), true, true);
+  return httpEmitToHTTP(event, F("PutToHTTP"), F("PUT"), Line, timeout, Settings.SendToHttp_ack(), true, true);
 }
 
 #endif // if FEATURE_PUT_TO_HTTP
