@@ -50,7 +50,7 @@ bool P094_data_struct::init(ESPEasySerialPort port,
   }
   easySerial->begin(baudrate);
   filterOffWindowTime     = filterOffWindowTime_ms;
-  interval_filter_enabled = intervalFilterEnabled;
+  interval_filter.enabled = intervalFilterEnabled;
   collect_stats           = collectStats;
   return true;
 }
@@ -633,22 +633,39 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
     // Decoded packet
     if (!packet.parse(received)) { return false; }
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, concat(F("CUL Reader: "), packet.toString()));
-    }
-
     const mBusPacket_header_t *header = packet.getDeviceHeader();
 
-    if (header == nullptr) { return false; }
+    if (header == nullptr) { 
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLogMove(LOG_LEVEL_INFO, concat(F("CUL Filter: NO Header "), packet.toString()));
+      }
 
-    if (_filters.size() == 0) {
+      return false; 
+    }
+
+    if (!interval_filter.enabled || _filters.size() == 0) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLogMove(LOG_LEVEL_INFO, concat(F("CUL Filter: NO Filter "), packet.toString()));
+      }
+
       return true; // No filtering
     }
 
     for (unsigned int f = 0; f < _filters.size(); ++f) {
       if (_filters[f].matches(*header)) {
-        return _filters[f].shouldPass();
+        const bool res = interval_filter.filter(packet, _filters[f]);
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLogMove(LOG_LEVEL_INFO, concat(F("CUL Filter: Match "), _filters[f].toString()));
+          addLogMove(LOG_LEVEL_INFO, concat(res ? F("CUL Filter: Pass ") : F("CUL Filter: Reject "), header->toString()));
+        }
+
+        return res;
       }
+    }
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("CUL Filter: NO Match "), header->toString()));
     }
 
     // No matching filter, so consider fall-through filter to be:
@@ -668,13 +685,6 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
   }
 
   return false;
-}
-
-bool P094_data_struct::interval_filter_add(const mBusPacket_t& packet) {
-  if (interval_filter_enabled) {
-    return interval_filter.add(packet);
-  }
-  return true;
 }
 
 void P094_data_struct::interval_filter_purgeExpired() {

@@ -19,7 +19,7 @@
 # define P094_FILTER_WEBARG_FILTER_WINDOW(x) getPluginCustomArgName((x * 10) + 14)
 // *INDENT-ON*
 
-const char P094_Filter_Window_names[] PROGMEM = "none|all|5m|15m|1h|day|month|once";
+const char P094_Filter_Window_names[] PROGMEM = "none|all|1m|5m|15m|1h|day|month|once";
 
 P094_Filter_Window get_FilterWindow(const String& str)
 {
@@ -107,7 +107,7 @@ String P094_filter::toString() const
   res += getSerial(includeHexPrefix);
   res += ';';
 
-  res += Filter_WindowToString(static_cast<P094_Filter_Window>(_filter._filterWindow));
+  res += Filter_WindowToString(getFilterWindow());
 
   return res;
 }
@@ -121,7 +121,6 @@ const uint8_t * P094_filter::toBinary(size_t& size) const
 size_t P094_filter::fromBinary(const uint8_t *data)
 {
   memcpy(this, data, getBinarySize());
-  _lastSeenUnixTime = 0;
   return getBinarySize();
 }
 
@@ -131,7 +130,7 @@ bool P094_filter::isValid() const
     !isWildcardManufacturer() ||
     !isWildcardMeterType() ||
     !isWildcardSerial() ||
-    static_cast<P094_Filter_Window>(_filter._filterWindow) != P094_Filter_Window::None;
+    getFilterWindow() != P094_Filter_Window::None;
 }
 
 size_t P094_filter::getBinarySize()
@@ -159,95 +158,90 @@ bool P094_filter::matches(const mBusPacket_header_t& other) const
   return true;
 }
 
-bool P094_filter::shouldPass()
+unsigned long P094_filter::computeUnixTimeExpiration() const
 {
   // Match the interval window.
-  const P094_Filter_Window filterWindow = static_cast<P094_Filter_Window>(_filter._filterWindow);
+  const P094_Filter_Window filterWindow = getFilterWindow();
 
-  if (filterWindow == P094_Filter_Window::None) { return false; }
+  if ((filterWindow == P094_Filter_Window::None) ||
+      (filterWindow == P094_Filter_Window::Once)) {
+    // Return date infinitely far in the future
+    return 0xFFFFFFFF;
+  }
 
-  if (filterWindow == P094_Filter_Window::All) { return true; }
+  if (filterWindow == P094_Filter_Window::All) {
+    // Return timestamp in the past
+    return 0;
+  }
 
   // Using UnixTime
   const unsigned long currentTime = node_time.getUnixTime();
-  unsigned long window_min        = currentTime;
+  unsigned long window_max        = currentTime;
 
   if ((filterWindow == P094_Filter_Window::One_hour) ||
       (filterWindow == P094_Filter_Window::Day) ||
       (filterWindow == P094_Filter_Window::Month))
   {
     // Create time struct in local time.
-    struct tm tmp;
-    breakTime(time_zone.toLocal(currentTime), tmp);
-    tmp.tm_sec = 0;
-    tmp.tm_min = 0;
+    struct tm tm_max;
+    breakTime(time_zone.toLocal(currentTime), tm_max);
+    tm_max.tm_sec = 59;
+    tm_max.tm_min = 59;
 
     if (filterWindow == P094_Filter_Window::Day) {
       // Using local time, thus incl. timezone and DST.
-      if (tmp.tm_hour < 23) {
+      if (tm_max.tm_hour < 23) {
         // Either:
-        // - between 00:00 and 12:00
-        // - between 12:00 and 23:00
-        tmp.tm_hour = (tmp.tm_hour < 12) ? 0 : 12;
+        // - between 00:00 and 12:00 => Max: 11:59:59
+        // - between 12:00 and 23:00 => Max: 22:59:59
+
+        tm_max.tm_hour = (tm_max.tm_hour < 12) ? 11 : 22;
       } else {
-        // between 23:00 and 00:00
-        tmp.tm_hour = 23;
+        // between 23:00 and 00:00 => Max: 23:59:59
+        tm_max.tm_hour = 23;
       }
     } else if (filterWindow == P094_Filter_Window::Month) {
-      // First set min to midnight of today:
-      tmp.tm_hour = 0;
+      // First set minute to midnight of today => Max: 23:59:59
+      tm_max.tm_hour = 23;
 
-      if (tmp.tm_mday < 15) {
+      if (tm_max.tm_mday < 15) {
         // - between 1st of month 00:00:00 and 15th of month 00:00:00
-        tmp.tm_mday = 1;
+        tm_max.tm_mday = 14;
       } else {
         // Check if this is the last day of the month.
         // Add 24h to the time and see if it is still the same month.
-        struct tm tm_next_day;
-        breakTime(time_zone.toLocal(currentTime) + (24 * 60 * 60), tm_next_day);
+        const uint8_t maxMonthDay = getMonthDays(tm_max);
 
-        if (tm_next_day.tm_mon == tmp.tm_mon) {
+        if (tm_max.tm_mday < maxMonthDay) {
           // - between 15th of month 00:00:00 and last of month 00:00:00
-          tmp.tm_mday = 15;
+          // So we must subtract one day.
+          tm_max.tm_mday = maxMonthDay - 1;
         } else {
           // - between last of month 00:00:00 and 1st of next month 00:00:00
-          // Thus do not change the date.
+          // Thus do not change the date as it is already at the last day of the month
         }
       }
     }
 
     // Convert from local time.
-    window_min = time_zone.fromLocal(makeTime(tmp));
+    window_max = time_zone.fromLocal(makeTime(tm_max));
   } else {
     switch (filterWindow) {
-      case P094_Filter_Window::Once:
-
-        if (_lastSeenUnixTime != 0) {
-          return false;
-        }
+      case P094_Filter_Window::One_minute:
+        window_max = currentTime - (currentTime % (1 * 60)) + (1 * 60 - 1);
         break;
       case P094_Filter_Window::Five_minutes:
-        window_min = currentTime - (currentTime % (5 * 60));
+        window_max = currentTime - (currentTime % (5 * 60)) + (5 * 60 - 1);
         break;
       case P094_Filter_Window::Fifteen_minutes:
-        window_min = currentTime - (currentTime % (15 * 60));
-        break;
-      case P094_Filter_Window::One_hour:
-        window_min = currentTime - (currentTime % (60 * 60));
+        window_max = currentTime - (currentTime % (15 * 60)) + (15 * 60 - 1);
         break;
 
       default:
-        return false;
+        break;
     }
   }
-
-
-  if (_lastSeenUnixTime > window_min) {
-    return false;
-  }
-
-  _lastSeenUnixTime = currentTime;
-  return true;
+  return window_max;
 }
 
 void P094_filter::WebformLoad(uint8_t filterIndex) const
@@ -291,14 +285,15 @@ void P094_filter::WebformLoad(uint8_t filterIndex) const
   {
     // Filter Window
     const int optionValues[] = {
-      static_cast<int>(P094_Filter_Window::None),
       static_cast<int>(P094_Filter_Window::All),
+      static_cast<int>(P094_Filter_Window::One_minute),
       static_cast<int>(P094_Filter_Window::Five_minutes),
       static_cast<int>(P094_Filter_Window::Fifteen_minutes),
       static_cast<int>(P094_Filter_Window::One_hour),
       static_cast<int>(P094_Filter_Window::Day),
       static_cast<int>(P094_Filter_Window::Month),
-      static_cast<int>(P094_Filter_Window::Once)
+      static_cast<int>(P094_Filter_Window::Once),
+      static_cast<int>(P094_Filter_Window::None)
     };
 
     constexpr size_t nrOptions = sizeof(optionValues) / sizeof(optionValues[0]);
@@ -353,7 +348,7 @@ bool P094_filter::WebformSave(uint8_t filterIndex)
 
   // Filter Window
   _filter._filterWindow = getFormItemInt(
-    P094_FILTER_WEBARG_METERTYPE(filterIndex),
+    P094_FILTER_WEBARG_FILTER_WINDOW(filterIndex),
     0);
 
   return isValid();
@@ -397,6 +392,11 @@ String P094_filter::getSerial(bool includeHexPrefix) const
       : formatToHex_no_prefix(_filter._serialNr, 8);
   }
   return serial;
+}
+
+P094_Filter_Window P094_filter::getFilterWindow() const
+{
+  return static_cast<P094_Filter_Window>(_filter._filterWindow);
 }
 
 #endif // ifdef USES_P094

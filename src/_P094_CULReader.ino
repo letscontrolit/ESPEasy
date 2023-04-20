@@ -418,23 +418,16 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fr
     P094_data->collect_stats_add(packet);
   }
   # ifdef ESP8266
-}
+  }
 
   # endif // ifdef ESP8266
 
-
-  if (res) {
-    if (!P094_data->interval_filter_add(packet)) {
-      // Already processed recently
-      return false;
-    }
-  }
   return res;
 }
 
 String Plugin_094_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
-    case P094_QUERY_VALUE: return displayString ? F("Value")          : F("v");
+    case P094_QUERY_VALUE: return displayString ? F("Value") : F("v");
   }
   return EMPTY_STRING;
 }

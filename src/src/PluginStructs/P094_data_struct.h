@@ -118,10 +118,6 @@ public:
                        mBusPacket_t& packet);
 
 
-  // Made public so we don't have to copy the values when loading/saving.
-  std::vector<P094_filter>_filters;
-
-
 # if P094_DEBUG_OPTIONS
 
   // Get (and increment) debug counter
@@ -133,7 +129,6 @@ public:
 
 # endif // if P094_DEBUG_OPTIONS
 
-  bool interval_filter_add(const mBusPacket_t& packet);
   void interval_filter_purgeExpired();
 
   bool collect_stats_add(const mBusPacket_t& packet);
@@ -143,6 +138,8 @@ public:
 private:
 
   bool max_length_reached() const;
+
+  std::vector<P094_filter>_filters;
 
   ESPeasySerial *easySerial = nullptr;
   String         sentence_part;
@@ -159,7 +156,6 @@ private:
   uint32_t debug_counter           = 0;
   bool     debug_generate_CUL_data = false;
   # endif // if P094_DEBUG_OPTIONS
-  bool interval_filter_enabled = false;
   bool collect_stats           = false;
 
   bool firstStatsIndexActive = false;
