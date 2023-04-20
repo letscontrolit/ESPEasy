@@ -693,6 +693,16 @@ void P094_data_struct::interval_filter_purgeExpired() {
   interval_filter.purgeExpired();
 }
 
+void P094_data_struct::html_show_interval_filter_stats() const
+{
+  if (interval_filter._mBusFilterMap.empty()) { return; }
+
+  addRowLabel(F("Interval Filter Entries"));
+  addHtmlInt(interval_filter._mBusFilterMap.size());
+
+  addFormNote(F("Non expired W-MBus device filters"));
+}
+
 bool P094_data_struct::collect_stats_add(const mBusPacket_t& packet) {
   if (collect_stats) {
     return mBus_stats[firstStatsIndexActive ? 0 : 1].add(packet);
@@ -712,6 +722,18 @@ bool P094_data_struct::dump_next_stats(String& str) {
   str = concat(F("stats;"), mBus_stats[dumpStatsIndex].getFront());
 
   return true;
+}
+
+void P094_data_struct::html_show_mBus_stats() const
+{
+  const uint8_t dumpStatsIndex = firstStatsIndexActive ? 0 : 1;
+
+  if (mBus_stats[dumpStatsIndex]._mBusStatsMap.empty()) { return; }
+
+  addRowLabel(F("W-MBus Devices"));
+  addHtmlInt(mBus_stats[dumpStatsIndex]._mBusStatsMap.size());
+
+  addFormNote(F("Devices received since last <tt>culreader_dumpstats</tt>"));
 }
 
 bool P094_data_struct::max_length_reached() const {

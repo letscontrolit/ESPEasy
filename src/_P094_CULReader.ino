@@ -135,22 +135,23 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormCheckBox(F("Append system time"),        F("systime"),         P094_GET_APPEND_RECEIVE_SYSTIME);
+      addFormCheckBox(F("Append system time"), F("systime"), P094_GET_APPEND_RECEIVE_SYSTIME);
 
 # if P094_DEBUG_OPTIONS
       addFormSubHeader(F("Debug Options"));
       addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
-      addFormCheckBox(F("(debug) Generate CUL data"), F("debug_data"),      P094_GET_GENERATE_DEBUG_CUL_DATA);
+      addFormCheckBox(F("(debug) Generate CUL data"), F("debug_data"), P094_GET_GENERATE_DEBUG_CUL_DATA);
 # endif // if P094_DEBUG_OPTIONS
 
       addFormSubHeader(F("Filtering"));
-      P094_html_show_matchForms(event);      
-      addFormCheckBox(F("Enable Interval Filter"),    F("interval_filter"), P094_GET_INTERVAL_FILTER);
+      P094_html_show_matchForms(event);
+      addFormCheckBox(F("Enable Interval Filter"), F("interval_filter"), P094_GET_INTERVAL_FILTER);
 
       addFormSubHeader(F("Statistics"));
-      addFormCheckBox(F("Collect W-MBus Stats"),      F("collect_stats"),   P094_GET_COLLECT_STATS);
+      addFormCheckBox(F("Collect W-MBus Stats"), F("collect_stats"), P094_GET_COLLECT_STATS);
       addFormNote(F("Collect reception statistics of W-MBus devices received by the CUL reader"));
-      
+
+
       P094_html_show_stats(event);
 
       success = true;
@@ -480,6 +481,11 @@ void P094_html_show_stats(struct EventStruct *event) {
   if ((nullptr == P094_data) || !P094_data->isInitialized()) {
     return;
   }
+
+  P094_data->html_show_interval_filter_stats();
+
+  P094_data->html_show_mBus_stats();
+
   {
     addRowLabel(F("Current Sentence"));
     addHtml(P094_data->peekSentence());

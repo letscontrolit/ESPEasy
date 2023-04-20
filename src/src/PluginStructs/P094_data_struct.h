@@ -131,9 +131,14 @@ public:
 
   void interval_filter_purgeExpired();
 
+  void html_show_interval_filter_stats() const;
+
+
   bool collect_stats_add(const mBusPacket_t& packet);
   void prepare_dump_stats();
   bool dump_next_stats(String& str);
+
+  void html_show_mBus_stats() const;
 
 private:
 
@@ -156,7 +161,7 @@ private:
   uint32_t debug_counter           = 0;
   bool     debug_generate_CUL_data = false;
   # endif // if P094_DEBUG_OPTIONS
-  bool collect_stats           = false;
+  bool collect_stats = false;
 
   bool firstStatsIndexActive = false;
 
