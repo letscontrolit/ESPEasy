@@ -228,6 +228,17 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
       pinMode(event->Par1, OUTPUT);
       usingWaveForm = startWaveform(
         pin, timeHighUS, timeLowUS, runTimeUS);
+
+      if (event->Par5 > 0 && event->Par2 == 0) {
+        // Schedule switching pin back to original state
+        Scheduler.setGPIOTimer(
+          (runTimeUS / 1000) + 1, // msecFromNow, rounded up
+          pluginID,    
+          event->Par1,            // Pin/port nr
+          !event->Par2,           // pin state
+          0,                      // repeatInterval
+          0);                     // repeatCount
+      }
     }
     #else
     // waveform function not available on ESP32
