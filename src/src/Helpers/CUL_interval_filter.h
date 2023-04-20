@@ -27,7 +27,7 @@ typedef std::map<mBusSerial, CUL_time_filter_struct> mBusFilterMap;
 struct CUL_interval_filter {
   // Return true when packet wasn't already present.
   bool filter(const mBusPacket_t& packet,
-           const P094_filter & filter);
+              const P094_filter & filter);
 
   // Remove packets that have expired.
   void purgeExpired();

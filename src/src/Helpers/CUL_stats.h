@@ -30,7 +30,7 @@ struct CUL_Stats {
 
 
   // Return true when packet wasn't already present.
-  bool add(const mBusPacket_t& packet);
+  bool   add(const mBusPacket_t& packet);
 
   // Create string from front element and remove from map
   String getFront();

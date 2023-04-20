@@ -300,7 +300,7 @@ void P094_filter::WebformLoad(uint8_t filterIndex) const
 
     String options[nrOptions];
 
-    for (int i = 0; i < nrOptions; ++i) {
+    for (size_t i = 0; i < nrOptions; ++i) {
       const P094_Filter_Window filterWindow = static_cast<P094_Filter_Window>(optionValues[i]);
       options[i] = Filter_WindowToString(filterWindow);
     }

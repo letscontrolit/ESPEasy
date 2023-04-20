@@ -67,9 +67,9 @@ struct P094_filter {
     return _filter._serialNr == 0;
   }
 
-  String getManufacturer() const;
-  String getMeterType(bool includeHexPrefix) const;
-  String getSerial(bool includeHexPrefix) const;
+  String             getManufacturer() const;
+  String             getMeterType(bool includeHexPrefix) const;
+  String             getSerial(bool includeHexPrefix) const;
   P094_Filter_Window getFilterWindow() const;
 
   // Keep this order of members as this is how it will be stored.

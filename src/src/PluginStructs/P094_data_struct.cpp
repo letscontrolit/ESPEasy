@@ -75,9 +75,10 @@ void P094_data_struct::loadFilters(struct EventStruct *event, uint8_t nrFilters)
 
   const size_t bufferSize = nrChunks * chunkSize;
 
-  uint8_t buffer[bufferSize] = { 0 };
-
   while (nrFilters > 0) {
+    uint8_t buffer[bufferSize];
+    ZERO_FILL(buffer);
+
     LoadCustomTaskSettings(event->TaskIndex, buffer, bufferSize, offset_in_block);
     offset_in_block += bufferSize;
 
@@ -87,8 +88,9 @@ void P094_data_struct::loadFilters(struct EventStruct *event, uint8_t nrFilters)
       P094_filter filter;
       filter.fromBinary(readPos);
 
-      if (filter.isValid())
+      if (filter.isValid()) {
         _filters.push_back(filter);
+      }
 
       --nrFilters;
       readPos += chunkSize;
@@ -99,7 +101,6 @@ void P094_data_struct::loadFilters(struct EventStruct *event, uint8_t nrFilters)
 String P094_data_struct::saveFilters(struct EventStruct *event) const
 {
   int offset_in_block = 0;
-
 
   String res;
   const size_t nrFilters = _filters.size();
@@ -117,17 +118,17 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
 
   const size_t bufferSize = nrChunks * chunkSize;
 
-  uint8_t buffer[bufferSize] = { 0 };
-
   size_t currentFilter = 0;
 
   while (currentFilter < nrFilters && res.isEmpty()) {
+    uint8_t buffer[bufferSize];
+    ZERO_FILL(buffer);
+
     uint8_t *writePos  = buffer;
     size_t   writeSize = 0;
 
     while (writeSize < bufferSize && currentFilter < nrFilters) {
       if (_filters[currentFilter].isValid()) {
-
         size_t size{};
         const uint8_t *binaryData = _filters[currentFilter].toBinary(size);
         memcpy(writePos, binaryData, size);
@@ -147,6 +148,7 @@ void P094_data_struct::WebformLoadFilters(uint8_t nrFilters) const
   if (nrFilters > 0) {
     addFormNote(F("Filter Fields: Manufacturer, Meter Type, Serial, Filter Window"));
   }
+
   for (uint8_t filterLine = 0; filterLine < nrFilters; ++filterLine)
   {
     if (filterLine < _filters.size()) {
@@ -635,15 +637,15 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
 
     const mBusPacket_header_t *header = packet.getDeviceHeader();
 
-    if (header == nullptr) { 
+    if (header == nullptr) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("CUL Filter: NO Header "), packet.toString()));
       }
 
-      return false; 
+      return false;
     }
 
-    if (!interval_filter.enabled || _filters.size() == 0) {
+    if (!interval_filter.enabled || (_filters.size() == 0)) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("CUL Filter: NO Filter "), packet.toString()));
       }

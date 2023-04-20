@@ -418,7 +418,7 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fr
     P094_data->collect_stats_add(packet);
   }
   # ifdef ESP8266
-  }
+}
 
   # endif // ifdef ESP8266
 
