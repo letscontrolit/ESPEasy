@@ -8,20 +8,20 @@
 
 // Is stored, so do not change the int values.
 enum class P094_Filter_Window : uint8_t {
-  All             = 0, // Realtime, every message passes the filter
-  Five_minutes    = 1, // a message passes the filter every 5 minutes, aligned to time (00:00:00, 00:05:00, ...)
-  Fifteen_minutes = 2, // a message passes the filter every 15 minutes, aligned to time
-  One_hour        = 3, // a message passes the filter every hour, aligned to time
-  Day             = 4, // a message passes the filter once every day
+  All             = 1, // Realtime, every message passes the filter
+  Five_minutes    = 2, // a message passes the filter every 5 minutes, aligned to time (00:00:00, 00:05:00, ...)
+  Fifteen_minutes = 3, // a message passes the filter every 15 minutes, aligned to time
+  One_hour        = 4, // a message passes the filter every hour, aligned to time
+  Day             = 5, // a message passes the filter once every day
                        // - between 00:00 and 12:00,
                        // - between 12:00 and 23:00 and
                        // - between 23:00 and 00:00
-  Month = 5,           // a message passes the filter
+  Month = 6,           // a message passes the filter
                        // - between 1st of month 00:00:00 and 15th of month 00:00:00
                        // - between 15th of month 00:00:00 and last of month 00:00:00
                        // - between last of month 00:00:00 and 1st of next month 00:00:00
-  Once = 6,            // only one message passes the filter until next reboot
-  None = 7             // no messages pass the filter
+  Once = 7,            // only one message passes the filter until next reboot
+  None = 0             // no messages pass the filter
 };
 
 
@@ -38,6 +38,9 @@ struct P094_filter {
 
   const uint8_t* toBinary(size_t& size) const;
   size_t         fromBinary(const uint8_t *data);
+
+  // Is valid when it doesn't match: *.*.*;none
+  bool           isValid() const;
 
   static size_t  getBinarySize();
 
@@ -69,6 +72,8 @@ struct P094_filter {
 
   // Keep this order of members as this is how it will be stored.
   union {
+    // Defaults to no matching filter:
+    //   *.*.*;none
     uint64_t _encodedValue{};
     struct {
       uint64_t _serialNr     : 32;

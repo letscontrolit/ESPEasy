@@ -12,14 +12,14 @@
 
 
 // *INDENT-OFF*
-# define P094_FILTER_WEBARG_LABEL(x)         getPluginCustomArgName((x * 10) + 0)
-# define P094_FILTER_WEBARG_MANUFACTURER(x)  getPluginCustomArgName((x * 10) + 1)
-# define P094_FILTER_WEBARG_METERTYPE(x)     getPluginCustomArgName((x * 10) + 2)
-# define P094_FILTER_WEBARG_SERIAL(x)        getPluginCustomArgName((x * 10) + 3)
-# define P094_FILTER_WEBARG_FILTER_WINDOW(x) getPluginCustomArgName((x * 10) + 4)
+# define P094_FILTER_WEBARG_LABEL(x)         getPluginCustomArgName((x * 10) + 10)
+# define P094_FILTER_WEBARG_MANUFACTURER(x)  getPluginCustomArgName((x * 10) + 11)
+# define P094_FILTER_WEBARG_METERTYPE(x)     getPluginCustomArgName((x * 10) + 12)
+# define P094_FILTER_WEBARG_SERIAL(x)        getPluginCustomArgName((x * 10) + 13)
+# define P094_FILTER_WEBARG_FILTER_WINDOW(x) getPluginCustomArgName((x * 10) + 14)
 // *INDENT-ON*
 
-const char P094_Filter_Window_names[] PROGMEM = "all|5m|15m|1h|day|month|once|none";
+const char P094_Filter_Window_names[] PROGMEM = "none|all|5m|15m|1h|day|month|once";
 
 P094_Filter_Window get_FilterWindow(const String& str)
 {
@@ -45,7 +45,7 @@ void P094_filter::fromString(const String& str)
 {
   // Set everything to wildcards
   _filter._encodedValue = 0;
-  _filter._filterWindow = static_cast<int>(P094_Filter_Window::All);
+  _filter._filterWindow = static_cast<int>(P094_Filter_Window::None);
 
   const int semicolonPos = str.indexOf(';');
 
@@ -125,6 +125,15 @@ size_t P094_filter::fromBinary(const uint8_t *data)
   return getBinarySize();
 }
 
+bool P094_filter::isValid() const
+{
+  return
+    !isWildcardManufacturer() ||
+    !isWildcardMeterType() ||
+    !isWildcardSerial() ||
+    static_cast<P094_Filter_Window>(_filter._filterWindow) != P094_Filter_Window::None;
+}
+
 size_t P094_filter::getBinarySize()
 {
   // Only store the filter
@@ -195,7 +204,7 @@ bool P094_filter::shouldPass()
         // Check if this is the last day of the month.
         // Add 24h to the time and see if it is still the same month.
         struct tm tm_next_day;
-        breakTime(node_time.now() + (24 * 60 * 60), tm_next_day);
+        breakTime(time_zone.toLocal(currentTime) + (24 * 60 * 60), tm_next_day);
 
         if (tm_next_day.tm_mon == tmp.tm_mon) {
           // - between 15th of month 00:00:00 and last of month 00:00:00
@@ -246,43 +255,50 @@ void P094_filter::WebformLoad(uint8_t filterIndex) const
   const bool includeHexPrefix = true;
 
   addRowLabel_tr_id(
-    concat(F("Filter "), static_cast<int>(filterIndex)),
+    concat(F("Filter "), static_cast<int>(filterIndex + 1)),
     P094_FILTER_WEBARG_LABEL(filterIndex));
-  {
-    // Manufacturer
-    addTextBox(
-      P094_FILTER_WEBARG_MANUFACTURER(filterIndex),
-      getManufacturer(),
-      3, false, false, EMPTY_STRING, F(""));
-  }
 
-  {
-    // Meter Type
-    addTextBox(
-      P094_FILTER_WEBARG_METERTYPE(filterIndex),
-      getMeterType(includeHexPrefix),
-      4, false, false, EMPTY_STRING, F(""));
-  }
+  // Manufacturer
+  addTextBox(
+    P094_FILTER_WEBARG_MANUFACTURER(filterIndex),
+    getManufacturer(),
+    3, false, false, EMPTY_STRING, F("widenumber")
+# if FEATURE_TOOLTIPS
+    , F("Manufacturer")
+# endif // if FEATURE_TOOLTIPS
+    );
 
-  {
-    // Serial nr
-    addTextBox(
-      P094_FILTER_WEBARG_SERIAL(filterIndex),
-      getSerial(includeHexPrefix),
-      10, false, false, EMPTY_STRING, F(""));
-  }
+  // Meter Type
+  addTextBox(
+    P094_FILTER_WEBARG_METERTYPE(filterIndex),
+    getMeterType(includeHexPrefix),
+    4, false, false, EMPTY_STRING, F("widenumber")
+# if FEATURE_TOOLTIPS
+    , F("Meter Type (HEX)")
+# endif // if FEATURE_TOOLTIPS
+    );
+
+  // Serial nr
+  addTextBox(
+    P094_FILTER_WEBARG_SERIAL(filterIndex),
+    getSerial(includeHexPrefix),
+    10, false, false, EMPTY_STRING, F("widenumber")
+# if FEATURE_TOOLTIPS
+    , F("Serial (HEX)")
+# endif // if FEATURE_TOOLTIPS
+    );
 
   {
     // Filter Window
     const int optionValues[] = {
+      static_cast<int>(P094_Filter_Window::None),
       static_cast<int>(P094_Filter_Window::All),
       static_cast<int>(P094_Filter_Window::Five_minutes),
       static_cast<int>(P094_Filter_Window::Fifteen_minutes),
       static_cast<int>(P094_Filter_Window::One_hour),
       static_cast<int>(P094_Filter_Window::Day),
       static_cast<int>(P094_Filter_Window::Month),
-      static_cast<int>(P094_Filter_Window::Once),
-      static_cast<int>(P094_Filter_Window::None)
+      static_cast<int>(P094_Filter_Window::Once)
     };
 
     constexpr size_t nrOptions = sizeof(optionValues) / sizeof(optionValues[0]);
@@ -293,62 +309,54 @@ void P094_filter::WebformLoad(uint8_t filterIndex) const
       const P094_Filter_Window filterWindow = static_cast<P094_Filter_Window>(optionValues[i]);
       options[i] = Filter_WindowToString(filterWindow);
     }
-    addFormSelector(F("Filter Window"),
-                    P094_FILTER_WEBARG_FILTER_WINDOW(filterIndex),
-                    nrOptions,
-                    options,
-                    optionValues,
-                    _filter._filterWindow,
-                    false);
+    addSelector(P094_FILTER_WEBARG_FILTER_WINDOW(filterIndex),
+                nrOptions,
+                options,
+                optionValues,
+                nullptr,
+                _filter._filterWindow,
+                false,
+                true,
+                F("widenumber")
+# if FEATURE_TOOLTIPS
+                , F("Filter Window")
+# endif // if FEATURE_TOOLTIPS
+                );
   }
+}
+
+String P094_WebformSave_GetWebArg(const String& id) {
+  String webarg_str = webArg(id);
+
+  if (webarg_str.isEmpty()) {
+    webarg_str = '*';
+  }
+  return webarg_str;
 }
 
 bool P094_filter::WebformSave(uint8_t filterIndex)
 {
-  {
-    // Manufacturer
-    const String manufacturer_str = webArg(P094_FILTER_WEBARG_MANUFACTURER(filterIndex));
+  String filterString;
 
-    if (equals(manufacturer_str, '*')) {
-      _filter._manufacturer = 0;
-    }
-    else {
-      _filter._manufacturer = mBusPacket_header_t::encodeManufacturerID(manufacturer_str);
-    }
-  }
+  // Manufacturer
+  filterString += P094_WebformSave_GetWebArg(P094_FILTER_WEBARG_MANUFACTURER(filterIndex));
+  filterString += '.';
 
-  {
-    // Meter Type
-    _filter._meterType = getFormItemInt(P094_FILTER_WEBARG_METERTYPE(filterIndex), 0);
-  }
+  // Meter Type
+  filterString += P094_WebformSave_GetWebArg(P094_FILTER_WEBARG_METERTYPE(filterIndex));
+  filterString += '.';
 
-  {
-    // Serial nr
-    const String serial_str = webArg(P094_FILTER_WEBARG_SERIAL(filterIndex));
+  // Serial nr
+  filterString += P094_WebformSave_GetWebArg(P094_FILTER_WEBARG_SERIAL(filterIndex));
 
-    if (equals(serial_str, '*')) {
-      _filter._serialNr = 0;
-    }
-    else {
-      _filter._serialNr = 0;
-      uint32_t serial{};
+  fromString(filterString);
 
-      if (validUIntFromString(serial_str, serial)) {
-        _filter._serialNr = serial;
-      }
-    }
-  }
+  // Filter Window
+  _filter._filterWindow = getFormItemInt(
+    P094_FILTER_WEBARG_METERTYPE(filterIndex),
+    0);
 
-  {
-    // Filter Window
-    _filter._filterWindow = getFormItemInt(
-      P094_FILTER_WEBARG_METERTYPE(filterIndex),
-      0);
-  }
-
-  return _filter._manufacturer != 0 ||
-         _filter._meterType != 0    ||
-         _filter._serialNr != 0;
+  return isValid();
 }
 
 String P094_filter::getManufacturer() const
@@ -391,4 +399,4 @@ String P094_filter::getSerial(bool includeHexPrefix) const
   return serial;
 }
 
-#endif
+#endif // ifdef USES_P094

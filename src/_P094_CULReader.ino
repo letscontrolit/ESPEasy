@@ -21,39 +21,9 @@
 # define PLUGIN_NAME_094         "Communication - CUL Reader"
 
 
-# define P094_BAUDRATE           PCONFIG_LONG(0)
-# define P094_BAUDRATE_LABEL     PCONFIG_LABEL(0)
-
-# define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
-# define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
-
-# define P094_DISABLE_WINDOW_TIME_MS  PCONFIG_LONG(2)
-
-# define P094_GET_APPEND_RECEIVE_SYSTIME    bitRead(PCONFIG(0), 0)
-# define P094_SET_APPEND_RECEIVE_SYSTIME(X) bitWrite(PCONFIG(0), 0, X)
-
-# if P094_DEBUG_OPTIONS
-#  define P094_GET_GENERATE_DEBUG_CUL_DATA    bitRead(PCONFIG(0), 1)
-#  define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0), 1, X)
-# endif // if P094_DEBUG_OPTIONS
-
-# define P094_GET_INTERVAL_FILTER    bitRead(PCONFIG(0), 2)
-# define P094_SET_INTERVAL_FILTER(X) bitWrite(PCONFIG(0), 2, X)
-
-# define P094_GET_COLLECT_STATS    bitRead(PCONFIG(0), 3)
-# define P094_SET_COLLECT_STATS(X) bitWrite(PCONFIG(0), 3, X)
-
-
-# define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
-# define P094_NR_OUTPUT_OPTIONS  1
-
-# define P094_NR_OUTPUT_VALUES   1
-# define P094_QUERY1_CONFIG_POS  3
-
-# define P094_DEFAULT_BAUDRATE   38400
-
-
-bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fromCUL);
+bool Plugin_094_match_all(taskIndex_t   taskIndex,
+                          const String& received,
+                          bool          fromCUL);
 
 // Plugin settings:
 // Validate:
@@ -189,13 +159,28 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       P094_BAUDRATE              = getFormItemInt(P094_BAUDRATE_LABEL);
       P094_DEBUG_SENTENCE_LENGTH = getFormItemInt(P094_DEBUG_SENTENCE_LABEL);
 
+      P094_DISABLE_WINDOW_TIME_MS = getFormItemInt(F("disableTime"));
+      P094_NR_FILTERS             = getFormItemInt(F("nrfilters"));
+
       P094_data_struct *P094_data =
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P094_data) {
+
+      const bool localAllocated = nullptr == P094_data;
+
+      if (localAllocated) {
+        P094_data = new (std::nothrow) P094_data_struct();
+      }
+
+      if ((nullptr != P094_data)) {
         P094_data->WebformSaveFilters(event, P094_NR_FILTERS);
         success = true;
+
+        if (localAllocated) {
+          delete P094_data;
+        }
       }
+
 
       P094_SET_APPEND_RECEIVE_SYSTIME(isFormItemChecked(F("systime")));
 # if P094_DEBUG_OPTIONS
@@ -220,14 +205,14 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       }
 
       if (P094_data->init(
-          port, 
-          serial_rx, 
-          serial_tx, 
-          P094_BAUDRATE, 
-          1000, 
-          P094_GET_INTERVAL_FILTER, 
-          P094_GET_COLLECT_STATS)) {
-        P094_data->loadFilters(event, P94_Nlines);
+            port,
+            serial_rx,
+            serial_tx,
+            P094_BAUDRATE,
+            P094_DISABLE_WINDOW_TIME_MS,
+            P094_GET_INTERVAL_FILTER,
+            P094_GET_COLLECT_STATS)) {
+        P094_data->loadFilters(event, P094_NR_FILTERS);
 # if P094_DEBUG_OPTIONS
         P094_data->setGenerate_DebugCulData(P094_GET_GENERATE_DEBUG_CUL_DATA);
 # endif // if P094_DEBUG_OPTIONS
@@ -422,17 +407,20 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fr
   mBusPacket_t packet;
   bool res = P094_data->parsePacket(received, packet);
 
-  #ifdef ESP8266
+  # ifdef ESP8266
+
   if (res) {
-  #endif
+  # endif // ifdef ESP8266
+
   if (fromCUL) {
     // Only collect stats from the actual CUL receiver, not when processing forwarded packets.
     // On ESP8266: only collect stats on the filtered nodes or else we will likely run out of memory
     P094_data->collect_stats_add(packet);
   }
-  #ifdef ESP8266
-  }
-  #endif
+  # ifdef ESP8266
+}
+
+  # endif // ifdef ESP8266
 
 
   if (res) {
@@ -452,19 +440,41 @@ String Plugin_094_valuename(uint8_t value_nr, bool displayString) {
 }
 
 void P094_html_show_matchForms(struct EventStruct *event) {
+  addFormNumericBox(F("Filter Off Window after send"),
+                    F("disableTime"),
+                    P094_DISABLE_WINDOW_TIME_MS,
+                    0,
+                    60000);
+  addUnit(F("msec"));
+  addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
+
+  addFormNumericBox(
+    F("Nr Filters"),
+    F("nrfilters"),
+    P094_NR_FILTERS,
+    0,
+    P094_MAX_NR_FILTERS);
+
+
   P094_data_struct *P094_data =
     static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-  if ((nullptr != P094_data)) {
-    addFormNumericBox(F("Filter Off Window after send"),
-                      getPluginCustomArgName(P094_FILTER_OFF_WINDOW_POS),
-                      P094_data->getFilterOffWindowTime(),
-                      0,
-                      60000);
-    addUnit(F("msec"));
-    addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
+  const bool localAllocated = nullptr == P094_data;
 
+  if (localAllocated) {
+    P094_data = new (std::nothrow) P094_data_struct();
+
+    if (nullptr != P094_data) {
+      P094_data->loadFilters(event, P094_NR_FILTERS);
+    }
+  }
+
+  if ((nullptr != P094_data)) {
     P094_data->WebformLoadFilters(P094_NR_FILTERS);
+
+    if (localAllocated) {
+      delete P094_data;
+    }
   }
 }
 

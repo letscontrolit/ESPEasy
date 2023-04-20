@@ -10,10 +10,10 @@
 
 # include "../DataStructs/mBusPacket.h"
 
-//# include "../Globals/ESPEasy_time.h"
-//# include "../Globals/TimeZone.h"
-//# include "../Helpers/ESPEasy_Storage.h"
-//# include "../Helpers/StringConverter.h"
+// # include "../Globals/ESPEasy_time.h"
+// # include "../Globals/TimeZone.h"
+// # include "../Helpers/ESPEasy_Storage.h"
+// # include "../Helpers/StringConverter.h"
 
 
 P094_data_struct::P094_data_struct() :  easySerial(nullptr) {}
@@ -87,7 +87,8 @@ void P094_data_struct::loadFilters(struct EventStruct *event, uint8_t nrFilters)
       P094_filter filter;
       filter.fromBinary(readPos);
 
-      _filters.push_back(filter);
+      if (filter.isValid())
+        _filters.push_back(filter);
 
       --nrFilters;
       readPos += chunkSize;
@@ -124,12 +125,15 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
     uint8_t *writePos  = buffer;
     size_t   writeSize = 0;
 
-    for (size_t i = 0; i < nrChunks && currentFilter < nrFilters; ++i) {
-      size_t size{};
-      const uint8_t *binaryData = _filters[currentFilter].toBinary(size);
-      memcpy(writePos, binaryData, size);
-      writePos  += size;
-      writeSize += size;
+    while (writeSize < bufferSize && currentFilter < nrFilters) {
+      if (_filters[currentFilter].isValid()) {
+
+        size_t size{};
+        const uint8_t *binaryData = _filters[currentFilter].toBinary(size);
+        memcpy(writePos, binaryData, size);
+        writePos  += size;
+        writeSize += size;
+      }
       ++currentFilter;
     }
     res              = SaveCustomTaskSettings(event->TaskIndex, buffer, writeSize, offset_in_block);
@@ -140,6 +144,9 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
 
 void P094_data_struct::WebformLoadFilters(uint8_t nrFilters) const
 {
+  if (nrFilters > 0) {
+    addFormNote(F("Filter Fields: Manufacturer, Meter Type, Serial, Filter Window"));
+  }
   for (uint8_t filterLine = 0; filterLine < nrFilters; ++filterLine)
   {
     if (filterLine < _filters.size()) {
@@ -609,7 +616,7 @@ bool P094_data_struct::disableFilterWindowActive() const {
 }
 
 bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet) {
-  size_t strlength = received.length();
+  const size_t strlength = received.length();
 
   if (strlength == 0) {
     return false;
@@ -634,11 +641,11 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
 
     if (header == nullptr) { return false; }
 
-    if (nrFilters == 0) {
+    if (_filters.size() == 0) {
       return true; // No filtering
     }
 
-    for (unsigned int f = 0; f < nrFilters; ++f) {
+    for (unsigned int f = 0; f < _filters.size(); ++f) {
       if (_filters[f].matches(*header)) {
         return _filters[f].shouldPass();
       }
@@ -698,10 +705,6 @@ bool P094_data_struct::dump_next_stats(String& str) {
 bool P094_data_struct::max_length_reached() const {
   if (max_length == 0) { return false; }
   return sentence_part.length() >= max_length;
-}
-
-size_t P094_data_struct::P094_Get_filter_base_index(size_t filterLine) {
-  return filterLine * P094_ITEMS_PER_FILTER + P094_FIRST_FILTER_POS;
 }
 
 # if P094_DEBUG_OPTIONS

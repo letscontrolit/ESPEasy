@@ -17,21 +17,46 @@
 # endif // ifndef P094_DEBUG_OPTIONS
 
 
-# define P094_REGEX_POS             0
-# define P094_NR_CHAR_USE_POS       1
-# define P094_FILTER_OFF_WINDOW_POS 2
-# define P094_MATCH_TYPE_POS        3
+# define P094_BAUDRATE           PCONFIG_LONG(0)
+# define P094_BAUDRATE_LABEL     PCONFIG_LABEL(0)
 
-# define P094_FIRST_FILTER_POS   10
+# define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
+# define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
 
-# define P094_ITEMS_PER_FILTER   4
-# define P094_AND_FILTER_BLOCK   3
-# define P094_NR_FILTERS         (7 * P094_AND_FILTER_BLOCK)
-# define P94_Nlines              (P094_FIRST_FILTER_POS + (P094_ITEMS_PER_FILTER * (P094_NR_FILTERS)))
-# define P94_Nchars              128
-# define P94_MAX_CAPTURE_INDEX   32
+# define P094_DISABLE_WINDOW_TIME_MS  PCONFIG_LONG(2)
+
+# define P094_GET_APPEND_RECEIVE_SYSTIME    bitRead(PCONFIG(0), 0)
+# define P094_SET_APPEND_RECEIVE_SYSTIME(X) bitWrite(PCONFIG(0), 0, X)
+
+# if P094_DEBUG_OPTIONS
+#  define P094_GET_GENERATE_DEBUG_CUL_DATA    bitRead(PCONFIG(0), 1)
+#  define P094_SET_GENERATE_DEBUG_CUL_DATA(X) bitWrite(PCONFIG(0), 1, X)
+# endif // if P094_DEBUG_OPTIONS
+
+# define P094_GET_INTERVAL_FILTER    bitRead(PCONFIG(0), 2)
+# define P094_SET_INTERVAL_FILTER(X) bitWrite(PCONFIG(0), 2, X)
+
+# define P094_GET_COLLECT_STATS    bitRead(PCONFIG(0), 3)
+# define P094_SET_COLLECT_STATS(X) bitWrite(PCONFIG(0), 3, X)
 
 
+# define P094_NR_FILTERS           PCONFIG(1)
+
+# ifdef ESP8266
+#  define P094_MAX_NR_FILTERS      25
+# endif // ifdef ESP8266
+# ifdef ESP32
+#  define P094_MAX_NR_FILTERS      100
+# endif // ifdef ESP32
+
+
+# define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
+# define P094_NR_OUTPUT_OPTIONS  1
+
+# define P094_NR_OUTPUT_VALUES   1
+# define P094_QUERY1_CONFIG_POS  3
+
+# define P094_DEFAULT_BAUDRATE   38400
 
 
 struct P094_data_struct : public PluginTaskData_base {
@@ -96,7 +121,6 @@ public:
   // Made public so we don't have to copy the values when loading/saving.
   std::vector<P094_filter>_filters;
 
-  static size_t P094_Get_filter_base_index(size_t filterLine);
 
 # if P094_DEBUG_OPTIONS
 
