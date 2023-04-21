@@ -42,8 +42,8 @@ bool CUL_interval_filter::filter(const mBusPacket_t& packet, const P094_filter& 
     return true;
   }
 
-  const mBusSerial serial = packet.getDeviceSerial();
-  auto it                 = _mBusFilterMap.find(serial);
+  const uint32_t key = packet.deviceID_to_map_key();
+  auto it            = _mBusFilterMap.find(key);
 
   if (it != _mBusFilterMap.end()) {
     // Already present
@@ -71,7 +71,7 @@ bool CUL_interval_filter::filter(const mBusPacket_t& packet, const P094_filter& 
 
   CUL_time_filter_struct item(packet._checksum, expiration);
 
-  _mBusFilterMap[serial] = item;
+  _mBusFilterMap[key] = item;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = concat(F("CUL   : Add to IntervalFilter: "), packet.toString());

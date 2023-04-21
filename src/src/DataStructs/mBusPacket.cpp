@@ -117,6 +117,18 @@ uint64_t mBusPacket_t::deviceID_toUInt64() const
   return header->encode_toUInt64();
 }
 
+uint32_t mBusPacket_t::deviceID_to_map_key() const
+{
+  const mBusPacket_header_t *header = getDeviceHeader();
+
+  if (header == nullptr) { return 0; }
+
+  uint32_t res = static_cast<uint32_t>(header->_encodedValue & 0xFFFFFFFF);
+
+  res ^= static_cast<uint32_t>((header->_encodedValue >> 32) & 0xFFFFFFFF);
+  return res;
+}
+
 bool mBusPacket_t::parse(const String& payload)
 {
   if (payload[0] != 'b') { return false; }

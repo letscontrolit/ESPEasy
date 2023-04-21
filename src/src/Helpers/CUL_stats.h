@@ -24,7 +24,7 @@ typedef std::map<mBus_EncodedDeviceID, CUL_Stats_struct> mBusStatsMap;
 struct CUL_Stats {
   // Create a string like this:
   // mBus device ID;UNIX time first;UNIX time last;count;LQI;RSSI
-  // THC.02.1234567;1674030412;1674031412;123;101,-36
+  // THC.02.12345678;1674030412;1674031412;123;101,-36
   static String toString(const CUL_Stats_struct& element,
                          mBus_EncodedDeviceID    enc_deviceID);
 

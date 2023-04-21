@@ -15,8 +15,13 @@ String CUL_Stats::toString(const CUL_Stats_struct& element, mBus_EncodedDeviceID
 
   deviceID.decode_fromUint64(enc_deviceID);
 
-  String res = deviceID.toString();
+  // e.g.: THC.02.12345678;1674030412;1674031412;123;101,-36
+  static size_t estimated_length = 52;
 
+  String res;
+
+  res.reserve(estimated_length);
+  res += deviceID.toString();
   res += ';';
   res += element._UnixTimeFirstSeen;
   res += ';';
@@ -27,6 +32,10 @@ String CUL_Stats::toString(const CUL_Stats_struct& element, mBus_EncodedDeviceID
   res += LQI;
   res += ';';
   res += rssi;
+
+  if (res.length() > estimated_length) {
+    estimated_length = res.length();
+  }
   return res;
 }
 

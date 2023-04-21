@@ -41,10 +41,19 @@ String Filter_WindowToString(P094_Filter_Window filterWindow)
   return res;
 }
 
+P094_filter::P094_filter() {
+  _filter._manufacturer = P094_filter_wildcard_manufacturer;
+  _filter._meterType    = P094_filter_wildcard_metertype;
+  _filter._serialNr     = P094_filter_wildcard_serial;
+  _filter._filterWindow = static_cast<int>(P094_Filter_Window::None);
+}
+
 void P094_filter::fromString(const String& str)
 {
   // Set everything to wildcards
-  _filter._encodedValue = 0;
+  _filter._manufacturer = P094_filter_wildcard_manufacturer;
+  _filter._meterType    = P094_filter_wildcard_metertype;
+  _filter._serialNr     = P094_filter_wildcard_serial;
   _filter._filterWindow = static_cast<int>(P094_Filter_Window::None);
 
   const int semicolonPos = str.indexOf(';');
@@ -71,7 +80,7 @@ void P094_filter::fromString(const String& str)
             break;
           case 1: // Meter type
           {
-            int metertype = 0;
+            int metertype = P094_filter_wildcard_metertype;
 
             if (validIntFromString(tmp, metertype)) {
               _filter._meterType = metertype;
@@ -80,7 +89,7 @@ void P094_filter::fromString(const String& str)
           }
           case 2: // Serial
           {
-            int serial = 0;
+            int serial = P094_filter_wildcard_serial;
 
             if (validIntFromString(tmp, serial)) {
               _filter._serialNr = serial;

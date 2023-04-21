@@ -25,6 +25,16 @@ enum class P094_Filter_Window : uint8_t {
   Once = 8             // only one message passes the filter until next reboot
 };
 
+// 0 is sometimes used ("@@@")
+// 0xFFFF does not seem to be used ("___")
+# define P094_filter_wildcard_manufacturer  0xFFFF
+
+// 0 is a valid meter type and 0xFF seems to be reserved
+# define P094_filter_wildcard_metertype  0xFE
+
+// 0 is a valid serial and 0xFFFFFFFF seems to be reserved
+# define P094_filter_wildcard_serial  0xFFFFFFFE
+
 
 // Examples for a filter definition list
 //   EBZ.02.12345678;all
@@ -34,6 +44,7 @@ enum class P094_Filter_Window : uint8_t {
 //   *.*.*;5m
 
 struct P094_filter {
+  P094_filter();
   void           fromString(const String& str);
   String         toString() const;
 
@@ -56,15 +67,15 @@ struct P094_filter {
   bool          WebformSave(uint8_t filterIndex);
 
   bool          isWildcardManufacturer() const {
-    return _filter._manufacturer == 0;
+    return _filter._manufacturer == P094_filter_wildcard_manufacturer;
   }
 
   bool isWildcardMeterType() const {
-    return _filter._meterType == 0;
+    return _filter._meterType == P094_filter_wildcard_metertype;
   }
 
   bool isWildcardSerial() const {
-    return _filter._serialNr == 0;
+    return _filter._serialNr == P094_filter_wildcard_serial;
   }
 
   String             getManufacturer() const;
