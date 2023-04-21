@@ -5,9 +5,23 @@
 
 #include <vector>
 
+
+// 0 is sometimes used ("@@@")
+// 0xFFFF does not seem to be used ("___")
+#define mBus_packet_wildcard_manufacturer  0xFFFF
+
+// 0 is a valid meter type and 0xFF seems to be reserved
+#define mBus_packet_wildcard_metertype  0xFE
+
+// 0 is a valid serial and 0xFFFFFFFF seems to be reserved
+#define mBus_packet_wildcard_serial  0xFFFFFFFE
+
+
 typedef std::vector<uint8_t> mBusPacket_data;
 
 struct mBusPacket_header_t {
+  mBusPacket_header_t();
+
   static String decodeManufacturerID(int id);
   static int    encodeManufacturerID(const String& id_str);
 
@@ -61,7 +75,7 @@ public:
   // 32 bit value used to generate a map key for filtering
   // Essentially the XOR of the first 32-bit with the second 32-bit of
   // serial, manufacturer, metertype and length.
-  uint32_t                   deviceID_to_map_key() const;
+  uint32_t deviceID_to_map_key() const;
 
 private:
 

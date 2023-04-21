@@ -25,16 +25,6 @@ enum class P094_Filter_Window : uint8_t {
   Once = 8             // only one message passes the filter until next reboot
 };
 
-// 0 is sometimes used ("@@@")
-// 0xFFFF does not seem to be used ("___")
-# define P094_filter_wildcard_manufacturer  0xFFFF
-
-// 0 is a valid meter type and 0xFF seems to be reserved
-# define P094_filter_wildcard_metertype  0xFE
-
-// 0 is a valid serial and 0xFFFFFFFF seems to be reserved
-# define P094_filter_wildcard_serial  0xFFFFFFFE
-
 
 // Examples for a filter definition list
 //   EBZ.02.12345678;all
@@ -67,15 +57,15 @@ struct P094_filter {
   bool          WebformSave(uint8_t filterIndex);
 
   bool          isWildcardManufacturer() const {
-    return _filter._manufacturer == P094_filter_wildcard_manufacturer;
+    return _filter._manufacturer == mBus_packet_wildcard_manufacturer;
   }
 
   bool isWildcardMeterType() const {
-    return _filter._meterType == P094_filter_wildcard_metertype;
+    return _filter._meterType == mBus_packet_wildcard_metertype;
   }
 
   bool isWildcardSerial() const {
-    return _filter._serialNr == P094_filter_wildcard_serial;
+    return _filter._serialNr == mBus_packet_wildcard_serial;
   }
 
   String             getManufacturer() const;
@@ -84,18 +74,13 @@ struct P094_filter {
   P094_Filter_Window getFilterWindow() const;
 
   // Keep this order of members as this is how it will be stored.
-  union {
-    // Defaults to no matching filter:
-    //   *.*.*;none
-    uint64_t _encodedValue{};
-    struct {
-      uint64_t _serialNr     : 32;
-      uint64_t _manufacturer : 16;
-      uint64_t _meterType    : 8;
+  struct {
+    uint64_t _serialNr     : 32;
+    uint64_t _manufacturer : 16;
+    uint64_t _meterType    : 8;
 
-      // Use for filtering
-      uint64_t _filterWindow : 8;
-    };
+    // Use for filtering
+    uint64_t _filterWindow : 8;
   } _filter;
 };
 

@@ -1,10 +1,19 @@
 #include "../DataStructs/mBusPacket.h"
 
-
+#include "../Helpers/CRC_functions.h"
 #include "../Helpers/StringConverter.h"
 
 #define FRAME_FORMAT_A_FIRST_BLOCK_LENGTH 10
 #define FRAME_FORMAT_A_OTHER_BLOCK_LENGTH 16
+
+
+mBusPacket_header_t::mBusPacket_header_t()
+{
+  _manufacturer = mBus_packet_wildcard_manufacturer;
+  _meterType    = mBus_packet_wildcard_metertype;
+  _serialNr     = mBus_packet_wildcard_serial;
+  _length       = 0u;
+}
 
 String mBusPacket_header_t::decodeManufacturerID(int id)
 {
@@ -57,9 +66,7 @@ String mBusPacket_header_t::toString() const
 
 uint64_t mBusPacket_header_t::encode_toUInt64() const
 {
-  mBusPacket_header_t tmp;
-
-  tmp._encodedValue = _encodedValue;
+  mBusPacket_header_t tmp(*this);
   tmp._length       = 0;
   return tmp._encodedValue;
 }
@@ -72,17 +79,18 @@ void mBusPacket_header_t::decode_fromUint64(uint64_t encodedValue)
 
 bool mBusPacket_header_t::isValid() const
 {
-  return _manufacturer != 0 &&
-         _meterType != 0 &&
-         _serialNr != 0 &&
-         _length > 0;
+  return
+    _manufacturer != mBus_packet_wildcard_manufacturer &&
+    _meterType != mBus_packet_wildcard_metertype &&
+    _serialNr != mBus_packet_wildcard_serial &&
+    _length > 0;
 }
 
 void mBusPacket_header_t::clear()
 {
-  _manufacturer = 0;
-  _meterType    = 0;
-  _serialNr     = 0;
+  _manufacturer = mBus_packet_wildcard_manufacturer;
+  _meterType    = mBus_packet_wildcard_metertype;
+  _serialNr     = mBus_packet_wildcard_serial;
   _length       = 0;
 }
 
@@ -94,9 +102,9 @@ bool mBusPacket_header_t::matchSerial(uint32_t serialNr) const
 const mBusPacket_header_t * mBusPacket_t::getDeviceHeader() const
 {
   // FIXME TD-er: Which deviceID is the device and which the wrapper?
-  if (_deviceId2.isValid()) { return &_deviceId2; }
-
   if (_deviceId1.isValid()) { return &_deviceId1; }
+
+  if (_deviceId2.isValid()) { return &_deviceId2; }
 
   return nullptr;
 }
@@ -105,27 +113,39 @@ uint32_t mBusPacket_t::getDeviceSerial() const
 {
   const mBusPacket_header_t *header = getDeviceHeader();
 
-  if (header == nullptr) { return 0; }
+  if (header == nullptr) { return 0u; }
   return header->_serialNr;
 }
 
 uint64_t mBusPacket_t::deviceID_toUInt64() const
 {
+  if (_deviceId2.isValid()) return _deviceId2.encode_toUInt64();
+  if (_deviceId1.isValid()) return _deviceId1.encode_toUInt64();
+  /*
   const mBusPacket_header_t *header = getDeviceHeader();
 
-  if (header == nullptr) { return 0; }
-  return header->encode_toUInt64();
+  if ((header != nullptr) && header->isValid()) {
+    return header->encode_toUInt64();
+  }
+  */
+  return 0ull;
 }
 
 uint32_t mBusPacket_t::deviceID_to_map_key() const
 {
-  const mBusPacket_header_t *header = getDeviceHeader();
+  uint32_t res = 0;
 
-  if (header == nullptr) { return 0; }
+  if (_deviceId1.isValid()) {
+    res ^= calc_CRC32((const uint8_t *)(&_deviceId1._encodedValue), sizeof(_deviceId1._encodedValue));
+  }
 
-  uint32_t res = static_cast<uint32_t>(header->_encodedValue & 0xFFFFFFFF);
+  if (_deviceId2.isValid()) {
+    // There is a forwarding device.
+    // To prevent issues when the forwarding device is the same as the forwarded device, alter the already existing checksum.
+    res ^= calc_CRC32((const uint8_t *)(&res), sizeof(res));
+    res ^= calc_CRC32((const uint8_t *)(&_deviceId2._encodedValue), sizeof(_deviceId2._encodedValue));
+  }
 
-  res ^= static_cast<uint32_t>((header->_encodedValue >> 32) & 0xFFFFFFFF);
   return res;
 }
 

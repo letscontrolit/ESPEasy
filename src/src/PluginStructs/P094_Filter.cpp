@@ -42,18 +42,18 @@ String Filter_WindowToString(P094_Filter_Window filterWindow)
 }
 
 P094_filter::P094_filter() {
-  _filter._manufacturer = P094_filter_wildcard_manufacturer;
-  _filter._meterType    = P094_filter_wildcard_metertype;
-  _filter._serialNr     = P094_filter_wildcard_serial;
+  _filter._manufacturer = mBus_packet_wildcard_manufacturer;
+  _filter._meterType    = mBus_packet_wildcard_metertype;
+  _filter._serialNr     = mBus_packet_wildcard_serial;
   _filter._filterWindow = static_cast<int>(P094_Filter_Window::None);
 }
 
 void P094_filter::fromString(const String& str)
 {
   // Set everything to wildcards
-  _filter._manufacturer = P094_filter_wildcard_manufacturer;
-  _filter._meterType    = P094_filter_wildcard_metertype;
-  _filter._serialNr     = P094_filter_wildcard_serial;
+  _filter._manufacturer = mBus_packet_wildcard_manufacturer;
+  _filter._meterType    = mBus_packet_wildcard_metertype;
+  _filter._serialNr     = mBus_packet_wildcard_serial;
   _filter._filterWindow = static_cast<int>(P094_Filter_Window::None);
 
   const int semicolonPos = str.indexOf(';');
@@ -80,7 +80,7 @@ void P094_filter::fromString(const String& str)
             break;
           case 1: // Meter type
           {
-            int metertype = P094_filter_wildcard_metertype;
+            int metertype = mBus_packet_wildcard_metertype;
 
             if (validIntFromString(tmp, metertype)) {
               _filter._meterType = metertype;
@@ -89,7 +89,7 @@ void P094_filter::fromString(const String& str)
           }
           case 2: // Serial
           {
-            int serial = P094_filter_wildcard_serial;
+            int serial = mBus_packet_wildcard_serial;
 
             if (validIntFromString(tmp, serial)) {
               _filter._serialNr = serial;
