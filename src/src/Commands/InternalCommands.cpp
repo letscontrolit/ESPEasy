@@ -416,6 +416,9 @@ bool executeInternalCommand(command_case_data & data)
 #if FEATURE_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,     -1); // MQTT.h
 #endif // if FEATURE_MQTT
+      #if FEATURE_PUT_TO_HTTP
+      COMMAND_CASE_A("puttohttp", Command_HTTP_PutToHTTP,  -1); // HTTP.h
+      #endif // if FEATURE_PUT_TO_HTTP
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }
