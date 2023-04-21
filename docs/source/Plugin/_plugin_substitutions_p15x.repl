@@ -1,3 +1,16 @@
+.. |P150_name| replace:: :cyan:`TMP117 Temperature`
+.. |P150_type| replace:: :cyan:`Environment`
+.. |P150_typename| replace:: :cyan:`Environment - TMP117 Temperature`
+.. |P150_porttype| replace:: `.`
+.. |P150_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P150_github| replace:: P150_TMP117.ino
+.. _P150_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P150_TMP117.ino
+.. |P150_usedby| replace:: `.`
+.. |P150_shortinfo| replace:: `TMP117 Precision temperature sensor`
+.. |P150_maintainer| replace:: `tonhuisman`
+.. |P150_compileinfo| replace:: `.`
+.. |P150_usedlibraries| replace:: `.`
+
 .. |P151_name| replace:: :cyan:`I2C Honeywell Pressure`
 .. |P151_type| replace:: :cyan:`Environment`
 .. |P151_typename| replace:: :cyan:`Environment - I2C Honeywell Pressure`
