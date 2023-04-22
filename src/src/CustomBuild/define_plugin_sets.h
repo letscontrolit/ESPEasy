@@ -334,7 +334,9 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_ESPEASY_P2P
     #define FEATURE_ESPEASY_P2P 1
   #endif
-
+  #if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
+    #define LIMIT_BUILD_SIZE
+  #endif
   #ifndef FEATURE_I2CMULTIPLEXER
     #define FEATURE_I2CMULTIPLEXER  1
   #endif
