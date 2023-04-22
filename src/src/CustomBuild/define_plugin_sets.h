@@ -443,6 +443,11 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_POST_TO_HTTP  0 // Disabled
 
+    #ifdef FEATURE_PUT_TO_HTTP
+      #undef FEATURE_PUT_TO_HTTP
+    #endif
+    #define FEATURE_PUT_TO_HTTP  0 // Disabled
+
     #ifndef PLUGIN_SET_NONE
       #define PLUGIN_SET_NONE
     #endif
@@ -1521,6 +1526,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
   #endif
+  #ifndef USES_P150
+    #define USES_P150   // TMP117 Temperature
+  #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
   #endif
@@ -1779,6 +1787,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+  #ifndef USES_P150
+    #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
@@ -2128,6 +2139,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
+  #ifndef USES_P150
+    #define USES_P150   // TMP117 Temperature
+  #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
   #endif
@@ -2251,6 +2265,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_POST_TO_HTTP
   #endif
   #define FEATURE_POST_TO_HTTP  0 // Disabled
+  #ifdef FEATURE_PUT_TO_HTTP
+    #undef FEATURE_PUT_TO_HTTP
+  #endif
+  #define FEATURE_PUT_TO_HTTP  0 // Disabled
 #endif
 
 
@@ -2781,6 +2799,10 @@ To create/register a plugin, you have to :
   #define FEATURE_POST_TO_HTTP  1 // Enabled by default
 #endif
 
+#ifndef FEATURE_PUT_TO_HTTP
+  #define FEATURE_PUT_TO_HTTP   1 // Enabled by default
+#endif
+
 #ifndef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
 #endif
@@ -2810,7 +2832,7 @@ To create/register a plugin, you have to :
   #define FEATURE_I2C_GET_ADDRESS     1 // Needed by FEATURE_I2C_DEVICE_CHECK
 #endif
 
-#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
+#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_PUT_TO_HTTP) && FEATURE_PUT_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
   #undef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
 #endif
@@ -2854,6 +2876,16 @@ To create/register a plugin, you have to :
 // Use the "System Info" device to read the VCC value
 #ifndef FEATURE_ADC_VCC
   #define FEATURE_ADC_VCC                  0
+#endif
+
+// Extra task value types, typically used in Dummy tasks.
+// For example 32-bit, 64-bit ints and doubles.
+#ifndef FEATURE_EXTENDED_TASK_VALUE_TYPES
+  #ifdef ESP8266_1M
+    #define FEATURE_EXTENDED_TASK_VALUE_TYPES  0
+  #else
+    #define FEATURE_EXTENDED_TASK_VALUE_TYPES  1
+  #endif
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

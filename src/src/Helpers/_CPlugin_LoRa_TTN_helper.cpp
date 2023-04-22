@@ -15,21 +15,24 @@
 
 String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
 {
-  uint8_t   value_count = getValueCountForTask(event->TaskIndex);
-  String raw_packed;
+  uint8_t value_count = getValueCountForTask(event->TaskIndex);
+  String  raw_packed;
 
   if (PluginCall(PLUGIN_GET_PACKED_RAW_DATA, event, raw_packed)) {
     value_count = event->Par1;
   }
   String packed;
+
   packed.reserve(32);
   packed += LoRa_addInt(Settings.TaskDeviceNumber[event->TaskIndex], PackedData_uint8);
   packed += LoRa_addInt(event->idx, PackedData_uint16);
   packed += LoRa_addInt(sampleSetCount, PackedData_uint8);
   packed += LoRa_addInt(value_count, PackedData_uint8);
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("packed header: ");
     log += packed;
+
     if (raw_packed.length() > 0) {
       log += F(" RAW: ");
       log += raw_packed;
@@ -40,22 +43,24 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
   if (raw_packed.length() > 0) {
     packed += raw_packed;
   } else {
-    switch (event->getSensorType())
+    const Sensor_VType sensorType = event->getSensorType();
+
+    if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG)
     {
-      case Sensor_VType::SENSOR_TYPE_LONG:
-      {
-        unsigned long longval = UserVar.getSensorTypeLong(event->TaskIndex);
-        packed += LoRa_addInt(longval, PackedData_uint32);
-        break;
-      }
-
-      default:
-
-        for (uint8_t i = 0; i < value_count && i < VARS_PER_TASK; ++i) {
+      packed += LoRa_addInt(UserVar.getSensorTypeLong(event->TaskIndex), PackedData_uint32);
+    } else {
+      for (uint8_t i = 0; i < value_count && i < VARS_PER_TASK; ++i) {
+        if (isUInt32OutputDataType(sensorType)) {
+          packed += LoRa_addInt(UserVar.getUint32(event->TaskIndex, i), PackedData_uint32);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+        } else if (isInt32OutputDataType(sensorType)) {
+          packed += LoRa_addInt(UserVar.getInt32(event->TaskIndex, i), PackedData_int32);
+#endif
+        } else {
           // For now, just store the floats as an int32 by multiplying the value with 10000.
           packed += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
         }
-        break;
+      }
     }
   }
   return packed;
@@ -101,6 +106,7 @@ float getLoRaAirTime(uint8_t pl, uint8_t sf, uint16_t bw, uint8_t cr, uint8_t n_
   // t_symbol and t_air in msec
   float t_symbol = static_cast<float>(1 << sf) / bw;
   float t_air    = ((n_preamble + 4.25f) + payload_length) * t_symbol;
+
   return t_air;
 }
 
