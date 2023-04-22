@@ -20,7 +20,7 @@
 #define SHT2x_GET_EIDA                  0xFA  // Reverse engineering
 #define SHT2x_EIDA_ADDRESS              0x0F  // 2nd command byte to read EIDA
 #define SHT2x_GET_EIDB                  0xFC  // Reverse engineering
-#define  SHT2x_EIDB_ADDRESS             0xC9  // 2nd commnad byte to read EIDB
+#define SHT2x_EIDB_ADDRESS              0xC9  // 2nd commnad byte to read EIDB
 #define SHT2x_GET_FIRMWARE              0x84  // Reverse engineering
 #define SHT2x_FIRMWARE_ADDRESS          0xB8  // 2nd command byte to read firmware version
 
@@ -71,9 +71,9 @@ bool P122_data_struct::setupDevice(uint8_t i2caddr, uint8_t resolution)
     log += String(resolution);
     addLog(LOG_LEVEL_INFO, log);
   }
+#endif
   return true;
 }
-#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Evaluate FSM for data acquisition
