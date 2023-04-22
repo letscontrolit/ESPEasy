@@ -32,7 +32,7 @@
 .. |P122_github| replace:: P122_SHT2x.ino
 .. _P122_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P122_SHT2x.ino
 .. |P122_usedby| replace:: `.`
-.. |P122_shortinfo| replace:: ` SHT2x series Temperature/Humidity `
+.. |P122_shortinfo| replace:: `SHT2x series Temperature/Humidity`
 .. |P122_maintainer| replace:: `flashmark`
 .. |P122_compileinfo| replace:: `.`
 .. |P122_usedlibraries| replace:: `I2C`
