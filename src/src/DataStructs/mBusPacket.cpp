@@ -66,8 +66,10 @@ String mBusPacket_header_t::toString() const
 
 uint64_t mBusPacket_header_t::encode_toUInt64() const
 {
+  if (!isValid()) { return 0ull; }
   mBusPacket_header_t tmp(*this);
-  tmp._length       = 0;
+
+  tmp._length = 0;
   return tmp._encodedValue;
 }
 
@@ -115,20 +117,6 @@ uint32_t mBusPacket_t::getDeviceSerial() const
 
   if (header == nullptr) { return 0u; }
   return header->_serialNr;
-}
-
-uint64_t mBusPacket_t::deviceID_toUInt64() const
-{
-  if (_deviceId2.isValid()) return _deviceId2.encode_toUInt64();
-  if (_deviceId1.isValid()) return _deviceId1.encode_toUInt64();
-  /*
-  const mBusPacket_header_t *header = getDeviceHeader();
-
-  if ((header != nullptr) && header->isValid()) {
-    return header->encode_toUInt64();
-  }
-  */
-  return 0ull;
 }
 
 uint32_t mBusPacket_t::deviceID_to_map_key() const

@@ -70,8 +70,6 @@ public:
 
   String                     toString() const;
 
-  uint64_t                   deviceID_toUInt64() const;
-
   // 32 bit value used to generate a map key for filtering
   // Essentially the XOR of the first 32-bit with the second 32-bit of
   // serial, manufacturer, metertype and length.

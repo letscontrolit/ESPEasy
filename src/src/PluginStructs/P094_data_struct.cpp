@@ -734,6 +734,8 @@ void P094_data_struct::html_show_mBus_stats() const
   addHtmlInt(mBus_stats[dumpStatsIndex]._mBusStatsMap.size());
 
   addFormNote(F("Devices received since last <tt>culreader_dumpstats</tt>"));
+
+  mBus_stats[dumpStatsIndex].toHtml();
 }
 
 bool P094_data_struct::max_length_reached() const {

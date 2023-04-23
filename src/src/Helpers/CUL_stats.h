@@ -32,8 +32,15 @@ struct CUL_Stats {
   // Return true when packet wasn't already present.
   bool   add(const mBusPacket_t& packet);
 
+private:
+  bool   add(const mBusPacket_t& packet, mBus_EncodedDeviceID key);
+
+public:
+
   // Create string from front element and remove from map
   String getFront();
+
+  void toHtml() const;
 
   mBusStatsMap _mBusStatsMap;
 };

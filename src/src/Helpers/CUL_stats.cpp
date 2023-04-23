@@ -7,6 +7,9 @@
 # include "../Helpers/ESPEasy_time_calc.h"
 # include "../Helpers/StringConverter.h"
 
+# include "../WebServer/Markup.h"
+# include "../WebServer/HTML_wrappers.h"
+
 String CUL_Stats::toString(const CUL_Stats_struct& element, mBus_EncodedDeviceID enc_deviceID)
 {
   uint8_t LQI        = 0;
@@ -41,11 +44,20 @@ String CUL_Stats::toString(const CUL_Stats_struct& element, mBus_EncodedDeviceID
 
 bool CUL_Stats::add(const mBusPacket_t& packet)
 {
-  const mBus_EncodedDeviceID deviceID = packet.deviceID_toUInt64();
+  bool res = false;
 
-  if (deviceID == 0) { return false; }
+  if (add(packet, packet._deviceId1.encode_toUInt64())) { res = true; }
 
-  auto it = _mBusStatsMap.find(deviceID);
+  if (add(packet, packet._deviceId2.encode_toUInt64())) { res = true; }
+
+  return res;
+}
+
+bool CUL_Stats::add(const mBusPacket_t& packet, mBus_EncodedDeviceID key)
+{
+  if (key == 0) { return false; }
+
+  auto it = _mBusStatsMap.find(key);
 
   if (it == _mBusStatsMap.end()) {
     CUL_Stats_struct tmp;
@@ -53,7 +65,7 @@ bool CUL_Stats::add(const mBusPacket_t& packet)
     tmp._lqi_rssi           = packet._lqi_rssi;
     tmp._UnixTimeFirstSeen  = node_time.now();
     tmp._UnixTimeLastSeen   = tmp._UnixTimeFirstSeen;
-    _mBusStatsMap[deviceID] = tmp;
+    _mBusStatsMap[key]      = tmp;
     return true;
   }
   it->second._count++;
@@ -71,6 +83,17 @@ String CUL_Stats::getFront()
 
   _mBusStatsMap.erase(it);
   return res;
+}
+
+void CUL_Stats::toHtml() const
+{
+  addRowLabel(F("CUL stats"));
+
+  for (auto it = _mBusStatsMap.begin(); it != _mBusStatsMap.end(); ++it) {
+    addHtml(toString(it->second, it->first));
+    addHtml('\r');
+    addHtml('\n');
+  }
 }
 
 #endif // ifdef USES_P094
