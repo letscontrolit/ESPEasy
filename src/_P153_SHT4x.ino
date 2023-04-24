@@ -6,11 +6,20 @@
 // #######################################################################################################
 
 /**
+ * 2023-04-24 tonhuisman: Rename Boot configuration to Startup configuration, add PLUGIN_WRITE support for commands
+ *                        Minor improvements
  * 2023-04-23 tonhuisman: Add Boot Configuration and Normal Configuration options, to allow evaporating condensation
  *                        after start of the plugin
  * 2023-04-22 tonhuisman: Start plugin for SHT4x (SHT40/SHT41/SHT43/SHT45) I2C Temperature and Humidity sensor
  *                        Using direct I2C communication
  **/
+
+/** Commands:
+ * sht4x,startup    : Re-start with the Startup Configuration, like a plugin re-start, using the same Interval runs,
+ *                    only accepted if Startup and Normal configuration are different, and Interval runs > 0.
+ *                    This allows to remove condensation from the sensor from Rules, f.e. once a day.
+ */
+
 # define PLUGIN_153
 # define PLUGIN_ID_153          153
 # define PLUGIN_NAME_153        "Environment - SHT4x"
@@ -21,7 +30,7 @@
 
 bool P153_CheckIntervalError(struct EventStruct *event, int interval) {
   bool result               = false;
-  P153_configuration_e conf = static_cast<P153_configuration_e>(P153_BOOT_CONFIGURATION);
+  P153_configuration_e conf = static_cast<P153_configuration_e>(P153_STARTUP_CONFIGURATION);
 
   if (((P153_configuration_e::HighResolution200mW1000msec == conf) ||
        (P153_configuration_e::HighResolution110mW1000msec == conf) ||
@@ -99,9 +108,9 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P153_BOOT_CONFIGURATION   = static_cast<int>(P153_configuration_e::HighResolution);
-      P153_NORMAL_CONFIGURATION = static_cast<int>(P153_configuration_e::HighResolution);
-      P153_INTERVAL_LOOPS       = 0;
+      P153_STARTUP_CONFIGURATION = static_cast<int>(P153_configuration_e::HighResolution);
+      P153_NORMAL_CONFIGURATION  = static_cast<int>(P153_configuration_e::HighResolution);
+      P153_INTERVAL_LOOPS        = 0;
 
       success = true;
       break;
@@ -135,12 +144,12 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P153_configuration_e::HighResolution20mW1000msec),
           static_cast<int>(P153_configuration_e::HighResolution20mW100msec),
         };
-        addFormSelector(F("Boot Configuration"),
-                        F("boot"),
+        addFormSelector(F("Startup Configuration"),
+                        F("startup"),
                         sizeof(configurationOptions) / sizeof(configurationOptions[0]),
                         configurations,
                         configurationOptions,
-                        P153_BOOT_CONFIGURATION);
+                        P153_STARTUP_CONFIGURATION);
         addFormNote(F("Heater should not exceed 10% dutycycle, so 1 sec. heater must have Interval > 10 sec.!"));
 
         addFormNumericBox(F("Use Normal Configuration after"), F("loops"), P153_INTERVAL_LOOPS, 0, 10);
@@ -160,11 +169,11 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P153_I2C_ADDRESS          = getFormItemInt(F("i2c_addr"));
-      P153_TEMPERATURE_OFFSET   = getFormItemFloat(F("tempoffset"));
-      P153_BOOT_CONFIGURATION   = getFormItemInt(F("boot"));
-      P153_INTERVAL_LOOPS       = getFormItemInt(F("loops"));
-      P153_NORMAL_CONFIGURATION = getFormItemInt(F("normal"));
+      P153_I2C_ADDRESS           = getFormItemInt(F("i2c_addr"));
+      P153_TEMPERATURE_OFFSET    = getFormItemFloat(F("tempoffset"));
+      P153_STARTUP_CONFIGURATION = getFormItemInt(F("startup"));
+      P153_INTERVAL_LOOPS        = getFormItemInt(F("loops"));
+      P153_NORMAL_CONFIGURATION  = getFormItemInt(F("normal"));
 
       int interval = getFormItemInt(F("TDT"));
 
@@ -183,8 +192,8 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
       if (!P153_CheckIntervalError(event, interval)) {
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P153_data_struct(P153_I2C_ADDRESS,
                                                                                  P153_TEMPERATURE_OFFSET,
-                                                                                 static_cast<P153_configuration_e>(P153_BOOT_CONFIGURATION),
-                                                                                 static_cast<P153_configuration_e>(P153_BOOT_CONFIGURATION),
+                                                                                 static_cast<P153_configuration_e>(P153_STARTUP_CONFIGURATION),
+                                                                                 static_cast<P153_configuration_e>(P153_NORMAL_CONFIGURATION),
                                                                                  P153_INTERVAL_LOOPS));
         P153_data_struct *P153_data = static_cast<P153_data_struct *>(getPluginTaskData(event->TaskIndex));
 

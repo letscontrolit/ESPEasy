@@ -7,7 +7,7 @@
 # include <SparkFun_SCD4x_Arduino_Library.h>
 
 # define P153_I2C_ADDRESS             PCONFIG(0)
-# define P153_BOOT_CONFIGURATION      PCONFIG(1)
+# define P153_STARTUP_CONFIGURATION   PCONFIG(1)
 # define P153_INTERVAL_LOOPS          PCONFIG(2)
 # define P153_NORMAL_CONFIGURATION    PCONFIG(3)
 
@@ -46,12 +46,12 @@ public:
 
   P153_data_struct(uint8_t              address,
                    float                tempOffset,
-                   P153_configuration_e bootConfiguration,
+                   P153_configuration_e startupConfiguration,
                    P153_configuration_e normalConfiguration,
                    uint16_t             intervalLoops);
 
   P153_data_struct() = delete;
-  virtual ~P153_data_struct();
+  virtual ~P153_data_struct() {}
 
   bool init();
 
@@ -73,7 +73,7 @@ private:
   uint8_t              _sensorType;
   uint8_t              _address;
   float                _tempOffset;
-  P153_configuration_e _bootConfiguration;
+  P153_configuration_e _startupConfiguration;
   P153_configuration_e _normalConfiguration;
   uint16_t             _intervalLoops;
 

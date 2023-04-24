@@ -7,15 +7,14 @@
 **************************************************************************/
 P153_data_struct::P153_data_struct(uint8_t              address,
                                    float                tempOffset,
-                                   P153_configuration_e bootConfiguration,
+                                   P153_configuration_e startupConfiguration,
                                    P153_configuration_e normalConfiguration,
                                    uint16_t             intervalLoops) :
-  _address(address), _tempOffset(tempOffset), _bootConfiguration(bootConfiguration),
+  _address(address), _tempOffset(tempOffset), _startupConfiguration(startupConfiguration),
   _normalConfiguration(normalConfiguration), _intervalLoops(intervalLoops), initialized(false)
 {}
 
 bool P153_data_struct::init() {
-  // TODO
   // - Read sensor serial number
   if (I2C_wakeup(_address) == 0) {
     if (I2C_write8(_address, P153_SHT4X_RESET)) {
@@ -40,8 +39,7 @@ bool P153_data_struct::init() {
           serialNumber  |= data[3];
           serialNumber <<= 8;
           serialNumber  |= data[4];
-          addLog(LOG_LEVEL_INFO, concat(F("SHT4x: Serial number: "), formatToHex(serialNumber))
-                 + concat(F(", dec: "), String(serialNumber)));
+          addLog(LOG_LEVEL_INFO, concat(F("SHT4x: Serial number: "), formatToHex_decimal(serialNumber)));
           initialized = true;
         } else {
           // crc error
@@ -51,15 +49,7 @@ bool P153_data_struct::init() {
     }
   }
 
-  // - Initialize?
   return isInitialized();
-}
-
-/*****************************************************
-* Destructor
-*****************************************************/
-P153_data_struct::~P153_data_struct() {
-  //
 }
 
 /*****************************************************
@@ -75,7 +65,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
     if (P153_read_mode_e::Idle == readMode) {
       // Determine delay per command
 
-      switch ((_intervalLoops > 0) ? _bootConfiguration : _normalConfiguration) {
+      switch ((_intervalLoops > 0) ? _startupConfiguration : _normalConfiguration) {
         case P153_configuration_e::LowResolution:
           timeDelay = P153_DELAY_LOW_RESOLUTION;
           break;
@@ -98,7 +88,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
       }
 
       // Start measurement
-      if (!I2C_write8(_address, static_cast<uint8_t>(_bootConfiguration))) {
+      if (!I2C_write8(_address, static_cast<uint8_t>(_startupConfiguration))) {
         timeDelay = -1; // Don't continue if writing command fails
       }
       # ifndef BUILD_NO_DEBUG
@@ -151,7 +141,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
         if (_intervalLoops > 0) {
           _intervalLoops--;
 
-          if (_intervalLoops == 0) {
+          if ((_intervalLoops == 0) && (_startupConfiguration != _normalConfiguration)) {
             addLog(LOG_LEVEL_INFO, F("SHT4x: Switching from Boot to Normal Configuration."));
           }
         }
@@ -209,7 +199,12 @@ bool P153_data_struct::plugin_write(struct EventStruct *event,
   const String command = parseString(string, 1);
 
   if (equals(command, F("sht4x"))) {
-    //
+    const String subCommand = parseString(string, 2);
+
+    if (equals(subCommand, F("startup")) && (_startupConfiguration != _normalConfiguration) && (P153_INTERVAL_LOOPS > 0)) {
+      _intervalLoops = P153_INTERVAL_LOOPS;
+      success        = true;
+    }
   }
   return success;
 }
