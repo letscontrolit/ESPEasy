@@ -53,7 +53,7 @@ Device Settings
 
 .. image:: P152_AnalogOutputOptionsESP32S2.png
 
-* **DAC1 / GPIO-17**: First available DAC output pin. If PSRAM is available on the ESP32S2 unit, then GPIO-17 is used to control the PSRAM chip, and the selector shows that as a warning and ``[PSRAM]``. It is *strongly* advised not to use the pin as a DAC output if PSRAM is installed, and certainly not if it is in active use.
+* **DAC1 / GPIO-17**: First available DAC output pin.
 
 * **DAC2 / GPIO-18**: Second available DAC output pin.
 
