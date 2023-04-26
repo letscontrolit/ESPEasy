@@ -2329,10 +2329,12 @@ To calculate the moving average of a value over many (several dozens up to 200) 
       let,202,%v202%+1  // Update index of "last element"
       let,203,%v203%+1  // Update nr Elements
     else
-      let,204,%v204%-[var#%v202%]  // Subtract oldest element from the sum
-      let,202,%v202%+1
-      if %v202% >= %v201%
-        let,202,0      // Index of "last element" should be modulo max elements
+      if %v202% = %v201% // “The last will be first, and the first last” (Matthew 20:16)
+        let,202,1      // Index of "last element" should be modulo max elements
+        let,204,%v204%-[var#1]  // Subtract oldest element from the sum
+      else // new sequential write cycle
+        let,202,%v202%+1
+        let,204,%v204%-[var#%v202%]  // Subtract oldest element from the sum
       endif
     endif
     let,%v202%,%eventvalue1%    // Store the new value in the array
