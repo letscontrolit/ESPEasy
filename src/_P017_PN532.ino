@@ -86,7 +86,7 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_017;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_LONG;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_ULONG;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -397,8 +397,7 @@ boolean Plugin_017_Init(int8_t resetPin)
     delay(10);
   }
 
-  Wire.beginTransmission(PN532_I2C_ADDRESS);
-  Wire.endTransmission();
+  I2C_wakeup(PN532_I2C_ADDRESS);
   delay(5);
 
   uint32_t versiondata = getFirmwareVersion();
@@ -442,8 +441,7 @@ boolean Plugin_017_Init(int8_t resetPin)
   }
 
   // to prevent nack on next read
-  Wire.beginTransmission(PN532_I2C_ADDRESS);
-  Wire.endTransmission();
+  I2C_wakeup(PN532_I2C_ADDRESS);
   delay(1);
 # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
@@ -539,8 +537,7 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t *uid, uint8_t *uidLength)
     // it seems that without this code, the next read fails, taking another read to work again...
 
     // to prevent nack on next read
-    Wire.beginTransmission(PN532_I2C_ADDRESS);
-    Wire.endTransmission();
+    I2C_wakeup(PN532_I2C_ADDRESS);
 
     return 0x2;
   }
