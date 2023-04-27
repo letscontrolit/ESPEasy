@@ -366,8 +366,11 @@ There are different released versions of ESP Easy:
    ":ref:`P138_page`","|P138_status|","P138"
    ":ref:`P141_page`","|P141_status|","P141"
    ":ref:`P143_page`","|P143_status|","P143"
+   ":ref:`P144_page`","|P144_status|","P144"
    ":ref:`P145_page`","|P145_status|","P145"
    ":ref:`P148_page`","|P148_status|","P148"
+   ":ref:`P150_page`","|P150_status|","P150"
+   ":ref:`P151_page`","|P151_status|","P151"
 
 
 Internal GPIO handling
@@ -427,7 +430,7 @@ Environment
 
 Plugins: |Plugin_Environment|
 
-Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|
+Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|, |P151_usedby|
 
 Extra IO
 --------

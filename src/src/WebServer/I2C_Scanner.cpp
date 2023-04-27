@@ -260,10 +260,10 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result +=  F("PCF8591,ADS1115,LM75A,INA219");
+      result +=  F("PCF8591,ADS1115,LM75A,INA219,TMP117");
       break;
     case 0x49:
-      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219");
+      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219,TMP117");
       break;
     case 0x4C:
     case 0x4E:
