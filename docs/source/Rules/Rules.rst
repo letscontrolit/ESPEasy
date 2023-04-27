@@ -2306,3 +2306,53 @@ It will read from file ``tags.txt`` and write to file ``loaddata.txt``:
     r.write('Endon\n')
 
 
+
+Moving average of many values
+-----------------------------
+
+To calculate the moving average of a value over many (several dozens up to 200) measurements, this script has been developed:
+
+.. code:: none
+
+  on MovingAverage do
+    // %v201% = max elements
+    // %v202% = last element
+    // %v203% = nr Elements
+    // %v204% = sum
+    // %v205% = average
+
+    if %v201%=0 // Not yet set?
+      let,201,200 // Set max number of elements, don't set > 200!!!
+    endif
+
+    if %v203% < %v201%
+      let,202,%v202%+1  // Update index of "last element"
+      let,203,%v203%+1  // Update nr Elements
+    else
+      if %v202% = %v201% // “The last will be first, and the first last” (Matthew 20:16)
+        let,202,1      // Index of "last element" should be modulo max elements
+        let,204,%v204%-[var#1]  // Subtract oldest element from the sum
+      else // new sequential write cycle
+        let,202,%v202%+1
+        let,204,%v204%-[var#%v202%]  // Subtract oldest element from the sum
+      endif
+    endif
+    let,%v202%,%eventvalue1%    // Store the new value in the array
+    let,204,%v204%+[var#%v202%] // Add new value to the sum
+    
+    let,205,%v204%/%v203% // Average
+    // Optionally, it can be stored in a Dummy Device plugin instead
+    TaskValueSet,Dummy,Average,%v204%/%v203% // Average
+  endon
+
+This rule can be used to calculate the moving average for, f.e., a temperature sensor like this:
+
+.. code:: none
+
+  on bme#temperature do
+    event,MovingAverage=%eventvalue1%   // Calculate the moving avg.
+    TaskRun,Dummy   // Send the value(s) to the configured Controller
+  endon
+
+This assumes that a Controller has been configured, and the Dummy task is configured to send out its values via the controller.
+
