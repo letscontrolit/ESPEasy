@@ -1300,7 +1300,7 @@ void createRuleEvents(struct EventStruct *event) {
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
-  if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+  if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
     size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
     expectedSize += getTaskValueName(event->TaskIndex, 0).length();
    

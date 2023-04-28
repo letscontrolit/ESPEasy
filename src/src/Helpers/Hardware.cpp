@@ -15,6 +15,7 @@
 
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/I2C_access.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
@@ -265,21 +266,20 @@ void initI2C() {
   if (Settings.WDI2CAddress != 0)
   {
     delay(500);
-    Wire.beginTransmission(Settings.WDI2CAddress);
-    Wire.write(0x83); // command to set pointer
-    Wire.write(17);   // pointer value to status uint8_t
-    Wire.endTransmission();
+    if (I2C_write8_reg(Settings.WDI2CAddress,
+                       0x83, // command to set pointer
+                       17))   // pointer value to status uint8_t
+    {                       
+      bool is_ok = false;
+      const uint8_t status = I2C_read8(Settings.WDI2CAddress, &is_ok);
 
-    Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
-
-    if (Wire.available())
-    {
-      uint8_t status = Wire.read();
-
-      if (status & 0x1)
+      if (is_ok)
       {
-        addLog(LOG_LEVEL_ERROR, F("INIT : Reset by WD!"));
-        lastBootCause = BOOT_CAUSE_EXT_WD;
+        if (status & 0x1)
+        {
+          addLog(LOG_LEVEL_ERROR, F("INIT : Reset by WD!"));
+          lastBootCause = BOOT_CAUSE_EXT_WD;
+        }
       }
     }
   }
@@ -312,8 +312,7 @@ void I2CForceResetBus_swap_pins(uint8_t address) {
 
   // As a final work-around, we temporary swap SDA and SCL, perform a scan and return pin order.
   I2CBegin(Settings.Pin_i2c_scl, Settings.Pin_i2c_sda, 100000);
-  Wire.beginTransmission(address);
-  Wire.endTransmission();
+  I2C_wakeup(address);
   delay(1);
 
   // Now we switch back to the correct pins
@@ -427,9 +426,8 @@ void I2CMultiplexerOff() {
 void SetI2CMultiplexer(uint8_t toWrite) {
   if (isI2CMultiplexerEnabled()) {
     // FIXME TD-er: Must check to see if we can cache the value so only change it when needed.
-    Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-    Wire.write(toWrite);
-    Wire.endTransmission();
+
+    I2C_write8(Settings.I2C_Multiplexer_Addr, toWrite);
 
     // FIXME TD-er: We must check if the chip needs some time to set the output. (delay?)
   }
@@ -1443,7 +1441,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     output = false;
   }
 
-  if (gpio == 26) {
+  if (FoundPSRAM() && (gpio == 26)) {
     // Pin shared with the flash memory and/or PSRAM.
     // Cannot be used as regular GPIO
     input   = false;
@@ -1478,31 +1476,6 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-  /*
-   # if FEATURE_ETHERNET
-
-     // Check pins used for RMII Ethernet PHY
-     if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
-      switch (gpio) {
-        case 0:
-        case 21:
-        case 19:
-        case 22:
-        case 25:
-        case 26:
-        case 27:
-          warning = true;
-          break;
-      }
-
-
-      // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
-     }
-
-
-   # endif // if FEATURE_ETHERNET
-
-   */
 # else // ifdef ESP32S2
 
   // ESP32 classic
@@ -1575,10 +1548,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   #  endif // if FEATURE_ETHERNET
 
-# endif    // ifdef ESP32S2
-
   if (FoundPSRAM()) {
-    // PSRAM can use GPIO 16 and 17
+    // ESP32 PSRAM can use GPIO 16 and 17
     // There will be a high frequency signal on those pins (flash frequency)
     // which makes them unusable for other purposes.
     // WROVER does not even have these pins made available on the outside.
@@ -1589,6 +1560,9 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
         break;
     }
   }
+
+# endif    // ifdef ESP32S2
+
   return true;
 }
 
