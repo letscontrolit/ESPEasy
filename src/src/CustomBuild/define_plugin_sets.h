@@ -1518,6 +1518,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
+  #ifndef USES_P112
+    #define USES_P112   // AS7265x 
+  #endif
   #ifndef USES_P122
     #define USES_P122   // SHT2x 
   #endif
