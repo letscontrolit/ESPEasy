@@ -338,7 +338,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  */
 
 // #define FEATURE_SERVO  1   // Uncomment and set to 0 to explicitly disable SERVO support
-#define USE_RTTTL
+//#define USE_RTTTL
+#define FEATURE_RTTTL 1
 //#define TESTING_USE_RTTTL
 //#define PLUGIN_SET_TESTING_A
 
