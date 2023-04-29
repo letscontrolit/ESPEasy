@@ -9,6 +9,7 @@
 // Allows to control the mode of the CUL receiver
 //
 
+# include "src/ESPEasyCore/ESPEasyNetwork.h"
 
 # include "src/Helpers/ESPEasy_Storage.h"
 # include "src/Helpers/StringConverter.h"
@@ -23,6 +24,7 @@
 
 bool Plugin_094_match_all(taskIndex_t   taskIndex,
                           const String& received,
+                          const String& source,
                           bool          fromCUL);
 
 // Plugin settings:
@@ -259,8 +261,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
           if (event->String2.length() > 0) {
             const bool fromCUL = true;
+            const String source = NetworkGetHostname();
 
-            if (Plugin_094_match_all(event->TaskIndex, event->String2, fromCUL)) {
+            if (Plugin_094_match_all(event->TaskIndex, event->String2, source, fromCUL)) {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log;
 
@@ -363,7 +366,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
         const bool fromCUL = false;
 
-        if (Plugin_094_match_all(event->TaskIndex, event->String2, fromCUL)) {
+        if (Plugin_094_match_all(event->TaskIndex, event->String2, event->String1, fromCUL)) {
           success = true;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -393,7 +396,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
   return success;
 }
 
-bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fromCUL)
+bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, const String& source, bool fromCUL)
 {
   P094_data_struct *P094_data =
     static_cast<P094_data_struct *>(getPluginTaskData(taskIndex));
@@ -418,7 +421,7 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, bool fr
   if (fromCUL) {
     // Only collect stats from the actual CUL receiver, not when processing forwarded packets.
     // On ESP8266: only collect stats on the filtered nodes or else we will likely run out of memory
-    P094_data->collect_stats_add(packet);
+    P094_data->collect_stats_add(packet, source);
   }
   # ifdef ESP8266
 }

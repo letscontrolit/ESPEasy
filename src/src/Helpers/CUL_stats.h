@@ -9,31 +9,40 @@
 # include <map>
 
 
+typedef uint64_t mBus_EncodedDeviceID;
+
+typedef uint32_t CUL_stats_hash;
+
+
 struct CUL_Stats_struct {
+  mBus_EncodedDeviceID _id1{};
+  mBus_EncodedDeviceID _id2{};
   uint32_t _UnixTimeFirstSeen{};
   uint32_t _UnixTimeLastSeen{};
   uint16_t _lqi_rssi{};
   uint16_t _count{};
+  CUL_stats_hash _sourceHash{};
 };
 
-typedef uint64_t mBus_EncodedDeviceID;
 
-typedef std::map<mBus_EncodedDeviceID, CUL_Stats_struct> mBusStatsMap;
+typedef std::map<CUL_stats_hash, CUL_Stats_struct> mBusStatsMap;
+typedef std::map<CUL_stats_hash, String> mBusStatsSourceMap;
 
 
 struct CUL_Stats {
   // Create a string like this:
   // mBus device ID;UNIX time first;UNIX time last;count;LQI;RSSI
   // THC.02.12345678;1674030412;1674031412;123;101,-36
-  static String toString(const CUL_Stats_struct& element,
-                         mBus_EncodedDeviceID    enc_deviceID);
+  String toString(const CUL_Stats_struct& element) const;
 
 
   // Return true when packet wasn't already present.
   bool   add(const mBusPacket_t& packet);
+  bool   add(const mBusPacket_t& packet, const String& source);
 
 private:
-  bool   add(const mBusPacket_t& packet, mBus_EncodedDeviceID key);
+
+  bool   add(const mBusPacket_t& packet, CUL_stats_hash key, CUL_stats_hash sourceHash);
 
 public:
 
@@ -43,6 +52,7 @@ public:
   void toHtml() const;
 
   mBusStatsMap _mBusStatsMap;
+  mBusStatsSourceMap _mBusStatsSourceMap;
 };
 
 #endif // ifdef USES_P094

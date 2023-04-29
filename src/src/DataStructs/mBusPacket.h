@@ -75,7 +75,11 @@ public:
   // serial, manufacturer, metertype and length.
   uint32_t deviceID_to_map_key() const;
 
+  uint32_t deviceID_to_map_key_no_length() const;
+
 private:
+
+  static uint32_t deviceID_to_map_key(uint64_t id1, uint64_t id2);
 
   static uint8_t         hexToByte(const String& str,
                                    size_t        index);

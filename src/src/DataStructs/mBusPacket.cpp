@@ -121,17 +121,26 @@ uint32_t mBusPacket_t::getDeviceSerial() const
 
 uint32_t mBusPacket_t::deviceID_to_map_key() const
 {
+  return deviceID_to_map_key(_deviceId1._encodedValue, _deviceId2._encodedValue);
+}
+
+uint32_t mBusPacket_t::deviceID_to_map_key_no_length() const {
+  return deviceID_to_map_key(_deviceId1.encode_toUInt64(), _deviceId2.encode_toUInt64());
+}
+
+uint32_t mBusPacket_t::deviceID_to_map_key(uint64_t id1, uint64_t id2)
+{
   uint32_t res = 0;
 
-  if (_deviceId1.isValid()) {
-    res ^= calc_CRC32((const uint8_t *)(&_deviceId1._encodedValue), sizeof(_deviceId1._encodedValue));
+  if (id1 != 0ull) {
+    res ^= calc_CRC32((const uint8_t *)(&id1), sizeof(uint64_t));
   }
 
-  if (_deviceId2.isValid()) {
+  if (id2 != 0ull) {
     // There is a forwarding device.
     // To prevent issues when the forwarding device is the same as the forwarded device, alter the already existing checksum.
     res ^= calc_CRC32((const uint8_t *)(&res), sizeof(res));
-    res ^= calc_CRC32((const uint8_t *)(&_deviceId2._encodedValue), sizeof(_deviceId2._encodedValue));
+    res ^= calc_CRC32((const uint8_t *)(&id2), sizeof(uint64_t));
   }
 
   return res;

@@ -703,9 +703,9 @@ void P094_data_struct::html_show_interval_filter_stats() const
   addFormNote(F("Non expired W-MBus device filters"));
 }
 
-bool P094_data_struct::collect_stats_add(const mBusPacket_t& packet) {
+bool P094_data_struct::collect_stats_add(const mBusPacket_t& packet, const String& source) {
   if (collect_stats) {
-    return mBus_stats[firstStatsIndexActive ? 0 : 1].add(packet);
+    return mBus_stats[firstStatsIndexActive ? 0 : 1].add(packet, source);
   }
   return false;
 }

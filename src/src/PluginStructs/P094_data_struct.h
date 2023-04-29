@@ -134,7 +134,7 @@ public:
   void html_show_interval_filter_stats() const;
 
 
-  bool collect_stats_add(const mBusPacket_t& packet);
+  bool collect_stats_add(const mBusPacket_t& packet, const String& source);
   void prepare_dump_stats();
   bool dump_next_stats(String& str);
 
