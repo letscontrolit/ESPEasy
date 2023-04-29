@@ -81,6 +81,11 @@ public:
 
   String        saveFilters(struct EventStruct *event) const;
 
+
+  void          clearFilters();
+
+  bool          addFilter(struct EventStruct *event, const String& filter);
+
   void          WebformLoadFilters(uint8_t nrFilters) const;
 
   void          WebformSaveFilters(struct EventStruct *event,

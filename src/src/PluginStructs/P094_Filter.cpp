@@ -48,7 +48,7 @@ P094_filter::P094_filter() {
   _filter._filterWindow = static_cast<int>(P094_Filter_Window::None);
 }
 
-void P094_filter::fromString(const String& str)
+void P094_filter::fromString(String str)
 {
   // Set everything to wildcards
   _filter._manufacturer = mBus_packet_wildcard_manufacturer;
@@ -60,13 +60,14 @@ void P094_filter::fromString(const String& str)
 
   if (semicolonPos != -1) {
     _filter._filterWindow = static_cast<int>(get_FilterWindow(str.substring(semicolonPos + 1)));
+    str                   = str.substring(0, semicolonPos);
   }
 
   for (size_t i = 0; i < 3; ++i) {
     String tmp;
 
     if (GetArgv(str.c_str(), tmp, (i + 1), '.')) {
-      if (!(tmp.isEmpty() || equals(tmp, '*'))) {
+      if (!(tmp.isEmpty() || tmp.startsWith(F("*")))) {
         if (i != 0) {
           // Make sure the numerical values are parsed as HEX
           if (!tmp.startsWith(F("0x")) && !tmp.startsWith(F("0X"))) {
@@ -104,16 +105,15 @@ void P094_filter::fromString(const String& str)
 
 String P094_filter::toString() const
 {
-  const bool includeHexPrefix = false;
-  String     res;
+  String res;
 
   res += getManufacturer();
   res += '.';
 
-  res += getMeterType(includeHexPrefix);
+  res += getMeterType();
   res += '.';
 
-  res += getSerial(includeHexPrefix);
+  res += getSerial();
   res += ';';
 
   res += Filter_WindowToString(getFilterWindow());
@@ -135,11 +135,59 @@ size_t P094_filter::fromBinary(const uint8_t *data)
 
 bool P094_filter::isValid() const
 {
+  if ((_filter._manufacturer == 0) &&
+      (_filter._meterType == 0) &&
+      (_filter._serialNr == 0) &&
+      (getFilterWindow() == P094_Filter_Window::None)) {
+    return false;
+  }
   return
     !isWildcardManufacturer() ||
     !isWildcardMeterType() ||
     !isWildcardSerial() ||
     getFilterWindow() != P094_Filter_Window::None;
+}
+
+bool P094_filter::operator<(const P094_filter& rhs) const
+{
+  if (isValid() != rhs.isValid()) {
+    return isValid();
+  }
+
+  if (isWildcardManufacturer() != rhs.isWildcardManufacturer()) {
+    return rhs.isWildcardManufacturer();
+  }
+
+  if (isWildcardMeterType() != rhs.isWildcardMeterType()) {
+    return rhs.isWildcardMeterType();
+  }
+
+  if (isWildcardSerial() != rhs.isWildcardSerial()) {
+    return rhs.isWildcardSerial();
+  }
+
+  if (!isWildcardManufacturer() && (_filter._manufacturer != rhs._filter._manufacturer)) {
+    return _filter._manufacturer < rhs._filter._manufacturer;
+  }
+
+  if (!isWildcardMeterType() && (_filter._meterType != rhs._filter._meterType)) {
+    return _filter._meterType < rhs._filter._meterType;
+  }
+
+  if (!isWildcardSerial() && (_filter._serialNr != rhs._filter._serialNr)) {
+    return _filter._serialNr < rhs._filter._serialNr;
+  }
+
+  return true;
+}
+
+bool P094_filter::operator==(const P094_filter& rhs) const
+{
+  return
+    _filter._filterWindow == rhs._filter._filterWindow &&
+    _filter._manufacturer == rhs._filter._manufacturer &&
+    _filter._meterType == rhs._filter._meterType &&
+    _filter._serialNr == rhs._filter._serialNr;
 }
 
 size_t P094_filter::getBinarySize()
@@ -255,8 +303,6 @@ unsigned long P094_filter::computeUnixTimeExpiration() const
 
 void P094_filter::WebformLoad(uint8_t filterIndex) const
 {
-  const bool includeHexPrefix = true;
-
   addRowLabel_tr_id(
     concat(F("Filter "), static_cast<int>(filterIndex + 1)),
     P094_FILTER_WEBARG_LABEL(filterIndex));
@@ -274,7 +320,7 @@ void P094_filter::WebformLoad(uint8_t filterIndex) const
   // Meter Type
   addTextBox(
     P094_FILTER_WEBARG_METERTYPE(filterIndex),
-    getMeterType(includeHexPrefix),
+    getMeterType(),
     4, false, false, EMPTY_STRING, F("widenumber")
 # if FEATURE_TOOLTIPS
     , F("Meter Type (HEX)")
@@ -284,7 +330,7 @@ void P094_filter::WebformLoad(uint8_t filterIndex) const
   // Serial nr
   addTextBox(
     P094_FILTER_WEBARG_SERIAL(filterIndex),
-    getSerial(includeHexPrefix),
+    getSerial(),
     10, false, false, EMPTY_STRING, F("widenumber")
 # if FEATURE_TOOLTIPS
     , F("Serial (HEX)")
@@ -375,30 +421,26 @@ String P094_filter::getManufacturer() const
   return manufacturer;
 }
 
-String P094_filter::getMeterType(bool includeHexPrefix) const
+String P094_filter::getMeterType() const
 {
   String metertype;
 
   if (isWildcardMeterType()) {
     metertype = '*';
   } else {
-    metertype = includeHexPrefix
-      ? formatToHex(_filter._meterType, 2)
-      : formatToHex_no_prefix(_filter._meterType, 2);
+    metertype = formatToHex_no_prefix(_filter._meterType, 2);
   }
   return metertype;
 }
 
-String P094_filter::getSerial(bool includeHexPrefix) const
+String P094_filter::getSerial() const
 {
   String serial;
 
   if (isWildcardSerial()) {
     serial = '*';
   } else {
-    serial = includeHexPrefix
-      ? formatToHex(_filter._serialNr, 8)
-      : formatToHex_no_prefix(_filter._serialNr, 8);
+    serial = formatToHex_no_prefix(_filter._serialNr, 8);
   }
   return serial;
 }

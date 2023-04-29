@@ -143,6 +143,35 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
   return res;
 }
 
+void P094_data_struct::clearFilters()
+{
+  _filters.clear();
+}
+
+bool P094_data_struct::addFilter(struct EventStruct *event, const String& filter)
+{
+  P094_filter f;
+
+  f.fromString(filter);
+
+  if (!f.isValid()) {
+    return false;
+  }
+  auto it = std::find(_filters.begin(), _filters.end(), f);
+
+  if (it == _filters.end()) {
+    return false;
+  }
+  _filters.push_back(f);
+
+  std::sort(_filters.begin(), _filters.end());
+
+  if (P094_NR_FILTERS < _filters.size()) {
+    P094_NR_FILTERS = _filters.size();
+  }
+  return true;
+}
+
 void P094_data_struct::WebformLoadFilters(uint8_t nrFilters) const
 {
   if (nrFilters > 0) {

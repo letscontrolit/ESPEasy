@@ -30,12 +30,12 @@ enum class P094_Filter_Window : uint8_t {
 //   EBZ.02.12345678;all
 //   *.02.*;15m
 //   TCH.44.*;Once
-//   !TCH.*.*;None
 //   *.*.*;5m
 
 struct P094_filter {
   P094_filter();
-  void           fromString(const String& str);
+
+  void           fromString(String str);
   String         toString() const;
 
   const uint8_t* toBinary(size_t& size) const;
@@ -43,6 +43,9 @@ struct P094_filter {
 
   // Is valid when it doesn't match: *.*.*;none
   bool           isValid() const;
+
+  bool operator<(const P094_filter& rhs) const;
+  bool operator==(const P094_filter& rhs) const;
 
   static size_t  getBinarySize();
 
@@ -69,8 +72,8 @@ struct P094_filter {
   }
 
   String             getManufacturer() const;
-  String             getMeterType(bool includeHexPrefix) const;
-  String             getSerial(bool includeHexPrefix) const;
+  String             getMeterType() const;
+  String             getSerial() const;
   P094_Filter_Window getFilterWindow() const;
 
   // Keep this order of members as this is how it will be stored.

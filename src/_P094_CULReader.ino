@@ -332,10 +332,13 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WRITE: {
-      String cmd = parseString(string, 1);
+      const String cmd = parseString(string, 1);
+      const String subcmd = parseString(string, 2);
 
       if (cmd.startsWith(F("culreader"))) {
-        if (equals(cmd, F("culreader_write"))) {
+        if (equals(cmd, F("culreader_write")) ||
+            equals(subcmd, F("write"))) {
+          // culreader,write,<text>
           P094_data_struct *P094_data =
             static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -346,13 +349,48 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             addLogMove(LOG_LEVEL_INFO, param1);
             success = true;
           }
-        } else if (equals(cmd, F("culreader_dumpstats"))) {
+        } else if (equals(subcmd, F("dumpstats"))) {
+          // culreader,dumpstats
           P094_data_struct *P094_data =
             static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if ((nullptr != P094_data)) {
             P094_data->prepare_dump_stats();
             success = true;
+          }
+        } else if (equals(subcmd, F("clearfilters"))) {
+          // culreader,clearfilters
+          P094_data_struct *P094_data =
+            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if ((nullptr != P094_data)) {
+            P094_data->clearFilters();
+            success = true;
+          }
+        } else if (equals(subcmd, F("savefilters"))) {
+          // culreader,savefilters
+          P094_data_struct *P094_data =
+            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if ((nullptr != P094_data)) {
+            P094_data->saveFilters(event);
+            SaveSettings();
+            success = true;
+          }
+        } else if (equals(subcmd, F("addfilter"))) {
+          // culreader,addfilter,<filter>
+          // Examples for a filter definition
+          //   EBZ.02.12345678;all
+          //   *.02.*;15m
+          //   TCH.44.*;once
+          //   *.*.*;5m
+          P094_data_struct *P094_data =
+            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if ((nullptr != P094_data)) {
+            const String filter = parseString(string, 3);
+
+            success = P094_data->addFilter(event, filter);
           }
         }
       }
