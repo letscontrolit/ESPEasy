@@ -41,7 +41,7 @@
 // ********************************************************************************
 // Interface for Sending to Controllers
 // ********************************************************************************
-void sendData(struct EventStruct *event)
+void sendData(struct EventStruct *event, bool sendEvents)
 {
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
@@ -49,7 +49,7 @@ void sendData(struct EventStruct *event)
   #endif // ifndef BUILD_NO_RAM_TRACKER
   //  LoadTaskSettings(event->TaskIndex);
 
-  if (Settings.UseRules) {
+  if (Settings.UseRules && sendEvents) {
     createRuleEvents(event);
   }
 
@@ -623,6 +623,7 @@ bool MQTTpublish(controllerIndex_t         controller_idx,
               // Move pos for the actual number of bytes we read.
               pos += routeinfo.getSerializedSize();
             }
+            if (loglevelActiveFor(LOG_LEVEL_INFO))
             {
               String log = F("MQTT  : MQTTpublish MessageRouteInfo: ");
               log += routeinfo.toString();

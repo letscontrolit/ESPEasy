@@ -11,7 +11,7 @@
 // ********************************************************************************
 // Interface for Sending to Controllers
 // ********************************************************************************
-void sendData(struct EventStruct *event);
+void sendData(struct EventStruct *event, bool sendEvents = true);
 
 bool validUserVar(struct EventStruct *event);
 

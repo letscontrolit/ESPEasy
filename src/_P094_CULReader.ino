@@ -242,7 +242,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, concat(F("CUL Reader: "), event->String2));
           }
-          sendData(event);
+          // Do not create events for dumping stats.
+          const bool sendEvents = false;
+          sendData(event, sendEvents);
         }
       }
       break;
@@ -366,27 +368,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
         const bool fromCUL = false;
 
-        if (Plugin_094_match_all(event->TaskIndex, event->String2, event->String1, fromCUL)) {
+        if (!Plugin_094_match_all(event->TaskIndex, event->String2, event->String1, fromCUL)) {
+          // Inverse as we check for filtering 'out' the messages.
           success = true;
-
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log;
-
-            if (log.reserve(128)) {
-              log = F("CUL Reader: Sending: ");
-              const size_t messageLength = event->String2.length();
-
-              if (messageLength < 100) {
-                log += event->String2;
-              } else {
-                // Split string so we get start and end
-                log += event->String2.substring(0, 40);
-                log += F("...");
-                log += event->String2.substring(messageLength - 40);
-              }
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
-          }
         }
       }
 
@@ -415,16 +399,14 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, const S
 
   # ifdef ESP8266
 
-  if (res) {
+  if (res && fromCUL) {
   # endif // ifdef ESP8266
 
-  if (fromCUL) {
     // Only collect stats from the actual CUL receiver, not when processing forwarded packets.
     // On ESP8266: only collect stats on the filtered nodes or else we will likely run out of memory
     P094_data->collect_stats_add(packet, source);
-  }
   # ifdef ESP8266
-}
+  }
 
   # endif // ifdef ESP8266
 
