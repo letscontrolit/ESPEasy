@@ -149,6 +149,8 @@ private:
 
   bool max_length_reached() const;
 
+  bool isDuplicate(const P094_filter& other) const;
+
   std::vector<P094_filter>_filters;
 
   ESPeasySerial *easySerial = nullptr;

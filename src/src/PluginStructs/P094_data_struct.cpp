@@ -157,11 +157,15 @@ bool P094_data_struct::addFilter(struct EventStruct *event, const String& filter
   if (!f.isValid()) {
     return false;
   }
-  auto it = std::find(_filters.begin(), _filters.end(), f);
 
-  if (it == _filters.end()) {
+  if (isDuplicate(f)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLogMove(LOG_LEVEL_ERROR, concat(F("CUL Reader : Duplicate filter found: "), f.toString()));
+    }
+
     return false;
   }
+
   _filters.push_back(f);
 
   std::sort(_filters.begin(), _filters.end());
@@ -199,7 +203,9 @@ void P094_data_struct::WebformSaveFilters(struct EventStruct *event, uint8_t nrF
 
     if (dummy.WebformSave(filterLine)) {
       // Filter with filled in values, worth storing
-      _filters.push_back(dummy);
+      if (!isDuplicate(dummy)) {
+        _filters.push_back(dummy);
+      }
     }
   }
   addHtmlError(saveFilters(event));
@@ -770,6 +776,18 @@ void P094_data_struct::html_show_mBus_stats() const
 bool P094_data_struct::max_length_reached() const {
   if (max_length == 0) { return false; }
   return sentence_part.length() >= max_length;
+}
+
+bool P094_data_struct::isDuplicate(const P094_filter& other) const
+{
+  const String f_str = other.toString();
+
+  for (auto it = _filters.begin(); it != _filters.end(); ++it) {
+    if (f_str.equals(it->toString())) {
+      return true;
+    }
+  }
+  return false;
 }
 
 # if P094_DEBUG_OPTIONS

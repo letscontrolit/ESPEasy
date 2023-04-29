@@ -183,11 +183,19 @@ bool P094_filter::operator<(const P094_filter& rhs) const
 
 bool P094_filter::operator==(const P094_filter& rhs) const
 {
-  return
-    _filter._filterWindow == rhs._filter._filterWindow &&
-    _filter._manufacturer == rhs._filter._manufacturer &&
-    _filter._meterType == rhs._filter._meterType &&
-    _filter._serialNr == rhs._filter._serialNr;
+  return equals(*this, rhs);
+}
+
+bool P094_filter::operator!=(const P094_filter& rhs) const
+{
+  return !equals(*this, rhs);
+}
+
+bool P094_filter::equals(const P094_filter& lhs, const P094_filter& rhs)
+{
+  if (!lhs.isValid() && !rhs.isValid()) { return true; }
+
+  return lhs.toString() == rhs.toString();
 }
 
 size_t P094_filter::getBinarySize()
@@ -449,5 +457,6 @@ P094_Filter_Window P094_filter::getFilterWindow() const
 {
   return static_cast<P094_Filter_Window>(_filter._filterWindow);
 }
+
 
 #endif // ifdef USES_P094

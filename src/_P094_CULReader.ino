@@ -388,9 +388,8 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if ((nullptr != P094_data)) {
-            const String filter = parseString(string, 3);
-
-            success = P094_data->addFilter(event, filter);
+            success = true;
+            P094_data->addFilter(event, parseString(string, 3));
           }
         }
       }

@@ -46,6 +46,9 @@ struct P094_filter {
 
   bool operator<(const P094_filter& rhs) const;
   bool operator==(const P094_filter& rhs) const;
+  bool operator!=(const P094_filter& rhs) const;
+
+  static bool equals(const P094_filter& lhs, const P094_filter& rhs);
 
   static size_t  getBinarySize();
 
