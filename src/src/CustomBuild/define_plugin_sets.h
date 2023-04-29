@@ -1519,6 +1519,12 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
+  #ifndef USES_P112
+    #define USES_P112   // AS7265x 
+  #endif
+  #ifndef USES_P122
+    #define USES_P122   // SHT2x 
+  #endif
   // Disable Itho when using second heap as it no longer fits.
   #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
     #define USES_P118 // Itho ventilation control
@@ -1776,6 +1782,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
     #define USES_P118 // Itho ventilation control
   #endif
+  #ifndef USES_P122
+    #define USES_P122
+  #endif
   #ifndef USES_P127
     #define USES_P127 // CDM7160
   #endif
@@ -1905,7 +1914,7 @@ To create/register a plugin, you have to :
 	#define USES_P119	// BME680
 	#define USES_P120	// Thermocouple
 	#define USES_P121	// Candle
-//	   #define USES_P122	// NeoPixel       (MERGED?)
+//        #define USES_P122	// SHT2x
 //	      #define USES_P123	// NeoPixel_Clock  (MERGED?)
 	#define USES_P124	// NeoPixelBusFX
 	//#define USES_P124	// Ventus_W266_RFM69
@@ -2071,7 +2080,7 @@ To create/register a plugin, you have to :
     #define USES_P121   // HMC5883L 
   #endif
   #ifndef USES_P122
-//    #define USES_P122   //
+    #define USES_P122   // SHT2x
   #endif
   #ifndef USES_P123
 //    #define USES_P123   //

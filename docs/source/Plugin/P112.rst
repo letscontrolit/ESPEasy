@@ -1,0 +1,52 @@
+.. include:: ../Plugin/_plugin_substitutions_p11x.repl
+.. _P112_page:
+
+|P112_typename|
+==================================================
+
+|P112_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P112_type|
+
+Name: |P112_name|
+
+Status: |P112_status|
+
+GitHub: |P112_github|_
+
+Maintainer: |P112_maintainer|
+
+Used libraries: |P112_usedlibraries|
+
+Supported hardware
+------------------
+
+|P112_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P112_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P112_events.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+
+  Initial release version.
+
+
+
+
+
