@@ -37,9 +37,9 @@
 .. |P082_compileinfo| replace:: `.`
 .. |P082_usedlibraries| replace:: https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2
 
-.. |P083_name| replace:: :cyan:`SGP30`
+.. |P083_name| replace:: :cyan:`SGP30 TVOC/eCO2`
 .. |P083_type| replace:: :cyan:`Gases`
-.. |P083_typename| replace:: :cyan:`Gases - SGP30`
+.. |P083_typename| replace:: :cyan:`Gases - SGP30 TVOC/eCO2`
 .. |P083_porttype| replace:: `.`
 .. |P083_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P083_github| replace:: P083_SGP30.ino
