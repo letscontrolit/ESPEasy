@@ -768,7 +768,7 @@ void P094_data_struct::html_show_mBus_stats() const
   addRowLabel(F("W-MBus Devices"));
   addHtmlInt(mBus_stats[dumpStatsIndex]._mBusStatsMap.size());
 
-  addFormNote(F("Devices received since last <tt>culreader_dumpstats</tt>"));
+  addFormNote(F("Devices received since last <tt>culreader,dumpstats</tt>"));
 
   mBus_stats[dumpStatsIndex].toHtml();
 }
