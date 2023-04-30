@@ -453,6 +453,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P105   // AHT10/20/21
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
+// #define USES_P108   // DDS238-x ZN Modbus energy meters
 // #define USES_P109   // ThermoOLED
 
 // #define USES_P110   // VL53L0X Time of Flight sensor
@@ -465,37 +466,39 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P117   // SCD30
 // #define USES_P118   // Itho
 // #define USES_P119   // ITG3205 Gyro
+
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
+// #define USES_P128   // NeoPixelBusFX
+//   #define P128_USES_GRB  // Default
+//   #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
+//   #define P128_USES_RGB
+//   #define P128_USES_RGBW
+//   #define P128_USES_BRG
+//   #define P128_USES_RBG
+//   #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 // #define USES_P129   // 74HC165 Input shiftregisters
+
 // #define USES_P131   // NeoMatrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
-// #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+//   #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
 // #define USES_P137   // AXP192
 // #define USES_P138   // IP5306
+
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
 // #define USES_P143   // I2C Rotary encoders
-// #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
-// #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
-// #define P143_FEATURE_COUNTER_COLORMAPPING 0 // Enabled by default, can be turned off here
+//   #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
+//   #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
+//   #define P143_FEATURE_COUNTER_COLORMAPPING 0 // Enabled by default, can be turned off here
+// #define USES_P147   // SGP4x
+//   #define P147_FEATURE_GASINDEXALGORITHM    0 // Enabled by default, can be turned off here
 
-// #define USES_P128   // NeoPixelBusFX
-// #define P128_USES_GRB  // Default
-// #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
-// #define P128_USES_RGB
-// #define P128_USES_RGBW
-// #define P128_USES_BRG
-// #define P128_USES_RBG
-// #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
-
-
-// #define USES_P108   // DDS238-x ZN Modbus energy meters
 
 
 /*
