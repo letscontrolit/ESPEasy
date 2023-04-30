@@ -334,7 +334,9 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_ESPEASY_P2P
     #define FEATURE_ESPEASY_P2P 1
   #endif
-
+  #if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
+    #define LIMIT_BUILD_SIZE
+  #endif
   #ifndef FEATURE_I2CMULTIPLEXER
     #define FEATURE_I2CMULTIPLEXER  1
   #endif
@@ -442,6 +444,11 @@ To create/register a plugin, you have to :
       #undef FEATURE_POST_TO_HTTP
     #endif
     #define FEATURE_POST_TO_HTTP  0 // Disabled
+
+    #ifdef FEATURE_PUT_TO_HTTP
+      #undef FEATURE_PUT_TO_HTTP
+    #endif
+    #define FEATURE_PUT_TO_HTTP  0 // Disabled
 
     #ifndef PLUGIN_SET_NONE
       #define PLUGIN_SET_NONE
@@ -1511,12 +1518,21 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
+  #ifndef USES_P112
+    #define USES_P112   // AS7265x 
+  #endif
+  #ifndef USES_P122
+    #define USES_P122   // SHT2x 
+  #endif
   // Disable Itho when using second heap as it no longer fits.
   #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
     #define USES_P118 // Itho ventilation control
   #endif
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
+  #endif
+  #ifndef USES_P150
+    #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
@@ -1762,6 +1778,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
     #define USES_P118 // Itho ventilation control
   #endif
+  #ifndef USES_P122
+    #define USES_P122
+  #endif
   #ifndef USES_P127
     #define USES_P127 // CDM7160
   #endif
@@ -1773,6 +1792,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+  #ifndef USES_P150
+    #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
@@ -1885,7 +1907,7 @@ To create/register a plugin, you have to :
 	#define USES_P119	// BME680
 	#define USES_P120	// Thermocouple
 	#define USES_P121	// Candle
-//	   #define USES_P122	// NeoPixel       (MERGED?)
+//        #define USES_P122	// SHT2x
 //	      #define USES_P123	// NeoPixel_Clock  (MERGED?)
 	#define USES_P124	// NeoPixelBusFX
 	//#define USES_P124	// Ventus_W266_RFM69
@@ -2051,7 +2073,7 @@ To create/register a plugin, you have to :
     #define USES_P121   // HMC5883L 
   #endif
   #ifndef USES_P122
-//    #define USES_P122   //
+    #define USES_P122   // SHT2x
   #endif
   #ifndef USES_P123
 //    #define USES_P123   //
@@ -2121,6 +2143,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
+  #endif
+  #ifndef USES_P150
+    #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
@@ -2248,6 +2273,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_POST_TO_HTTP
   #endif
   #define FEATURE_POST_TO_HTTP  0 // Disabled
+  #ifdef FEATURE_PUT_TO_HTTP
+    #undef FEATURE_PUT_TO_HTTP
+  #endif
+  #define FEATURE_PUT_TO_HTTP  0 // Disabled
 #endif
 
 
@@ -2778,6 +2807,10 @@ To create/register a plugin, you have to :
   #define FEATURE_POST_TO_HTTP  1 // Enabled by default
 #endif
 
+#ifndef FEATURE_PUT_TO_HTTP
+  #define FEATURE_PUT_TO_HTTP   1 // Enabled by default
+#endif
+
 #ifndef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   0 // Disable by default
 #endif
@@ -2807,7 +2840,7 @@ To create/register a plugin, you have to :
   #define FEATURE_I2C_GET_ADDRESS     1 // Needed by FEATURE_I2C_DEVICE_CHECK
 #endif
 
-#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
+#if !FEATURE_HTTP_CLIENT && (defined(USES_C001) || defined(USES_C008) || defined(USES_C009) || defined(USES_C011) || (defined(FEATURE_SEND_TO_HTTP) && FEATURE_SEND_TO_HTTP) || (defined(FEATURE_POST_TO_HTTP) && FEATURE_POST_TO_HTTP) || (defined(FEATURE_PUT_TO_HTTP) && FEATURE_PUT_TO_HTTP) || (defined(FEATURE_DOWNLOAD) && FEATURE_DOWNLOAD) || (defined(FEATURE_SETTINGS_ARCHIVE) && FEATURE_SETTINGS_ARCHIVE))
   #undef FEATURE_HTTP_CLIENT
   #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
 #endif

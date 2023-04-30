@@ -1445,7 +1445,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     output = false;
   }
 
-  if (gpio == 26) {
+  if (FoundPSRAM() && (gpio == 26)) {
     // Pin shared with the flash memory and/or PSRAM.
     // Cannot be used as regular GPIO
     input   = false;
@@ -1480,31 +1480,6 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-  /*
-   # if FEATURE_ETHERNET
-
-     // Check pins used for RMII Ethernet PHY
-     if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
-      switch (gpio) {
-        case 0:
-        case 21:
-        case 19:
-        case 22:
-        case 25:
-        case 26:
-        case 27:
-          warning = true;
-          break;
-      }
-
-
-      // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
-     }
-
-
-   # endif // if FEATURE_ETHERNET
-
-   */
 # else // ifdef ESP32S2
 
   // ESP32 classic
@@ -1577,10 +1552,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   #  endif // if FEATURE_ETHERNET
 
-# endif    // ifdef ESP32S2
-
   if (FoundPSRAM()) {
-    // PSRAM can use GPIO 16 and 17
+    // ESP32 PSRAM can use GPIO 16 and 17
     // There will be a high frequency signal on those pins (flash frequency)
     // which makes them unusable for other purposes.
     // WROVER does not even have these pins made available on the outside.
@@ -1591,6 +1564,9 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
         break;
     }
   }
+
+# endif    // ifdef ESP32S2
+
   return true;
 }
 

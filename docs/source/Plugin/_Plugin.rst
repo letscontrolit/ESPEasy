@@ -342,6 +342,7 @@ There are different released versions of ESP Easy:
    ":ref:`P109_page`","|P109_status|","P109"
    ":ref:`P110_page`","|P110_status|","P110"
    ":ref:`P111_page`","|P111_status|","P111"
+   ":ref:`P112_page`","|P112_status|","P112"
    ":ref:`P113_page`","|P113_status|","P113"
    ":ref:`P114_page`","|P114_status|","P114"
    ":ref:`P115_page`","|P115_status|","P115"
@@ -351,6 +352,7 @@ There are different released versions of ESP Easy:
    ":ref:`P119_page`","|P119_status|","P119"
    ":ref:`P120_page`","|P120_status|","P120"
    ":ref:`P121_page`","|P121_status|","P121"
+   ":ref:`P122_page`","|P122_status|","P122"
    ":ref:`P124_page`","|P124_status|","P124"
    ":ref:`P125_page`","|P125_status|","P125"
    ":ref:`P126_page`","|P126_status|","P126"
@@ -366,8 +368,10 @@ There are different released versions of ESP Easy:
    ":ref:`P138_page`","|P138_status|","P138"
    ":ref:`P141_page`","|P141_status|","P141"
    ":ref:`P143_page`","|P143_status|","P143"
+   ":ref:`P144_page`","|P144_status|","P144"
    ":ref:`P145_page`","|P145_status|","P145"
    ":ref:`P148_page`","|P148_status|","P148"
+   ":ref:`P150_page`","|P150_status|","P150"
    ":ref:`P151_page`","|P151_status|","P151"
 
 
@@ -387,6 +391,11 @@ Acceleration
 ------------
 
 Plugins: |Plugin_Acceleration|
+
+Color
+-----
+
+Plugins: |Plugin_Color|
 
 Communication
 -------------
