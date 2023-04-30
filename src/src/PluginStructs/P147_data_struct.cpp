@@ -7,11 +7,14 @@
 **************************************************************************/
 P147_data_struct::P147_data_struct(struct EventStruct *event)
 {
-  _sensorType     = static_cast<P147_sensor_e>(P147_SENSOR_TYPE);
-  _initialCounter = P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER;
-  _secondsCounter = _initialCounter;
-  _useCalibration = P147_GET_USE_CALIBRATION;
-  _rawOnly        = P147_GET_RAW_DATA_ONLY;
+  _sensorType      = static_cast<P147_sensor_e>(P147_SENSOR_TYPE);
+  _initialCounter  = P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER;
+  _secondsCounter  = _initialCounter;
+  _ignoreFirstRead = P147_LOW_POWER_MEASURE == 1;
+  _useCalibration  = P147_GET_USE_CALIBRATION;
+  # if P147_FEATURE_GASINDEXALGORITHM
+  _rawOnly = P147_GET_RAW_DATA_ONLY;
+  # endif // if P147_FEATURE_GASINDEXALGORITHM
 
   if (validTaskIndex(P147_TEMPERATURE_TASK) && validTaskVarIndex(P147_TEMPERATURE_VALUE)) {
     _temperatureValueIndex = P147_TEMPERATURE_TASK * VARS_PER_TASK + P147_TEMPERATURE_VALUE;
@@ -31,6 +34,21 @@ bool P147_data_struct::init(struct EventStruct *event) {
     _initialized = true;
 
     // TODO Add initialization of IndexAlgorithm objects
+    # if P147_FEATURE_GASINDEXALGORITHM
+    vocGasIndexAlgorithm = new VOCGasIndexAlgorithm((P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER) * 1.0f);
+
+    if (nullptr == vocGasIndexAlgorithm) {
+      _initialized = false;
+    }
+
+    if (_initialized && (_sensorType == P147_sensor_e::SGP41)) {
+      noxGasIndexAlgorithm = new NOxGasIndexAlgorithm((P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER) * 1.0f);
+
+      if (nullptr == noxGasIndexAlgorithm) {
+        _initialized = false;
+      }
+    }
+    # endif // if P147_FEATURE_GASINDEXALGORITHM
 
     // Read serial number
     if (_initialized && I2C_write8_reg(P147_I2C_ADDRESS, P147_CMD_READ_SERIALNR_A, P147_CMD_READ_SERIALNR_B)) {
@@ -52,6 +70,12 @@ bool P147_data_struct::init(struct EventStruct *event) {
         _initialized = false;
       }
       addLog(LOG_LEVEL_INFO, concat(F("SGP4x: Serial number: 0x"), ull2String(_serial, 16u)));
+      # if P147_FEATURE_GASINDEXALGORITHM
+
+      if (!_rawOnly) {
+        addLog(LOG_LEVEL_INFO, F("SGP4x: Attention: First values will be available after initial indexing!"));
+      }
+      # endif // if P147_FEATURE_GASINDEXALGORITHM
     }
 
     if (_initialized && I2C_write8_reg(P147_I2C_ADDRESS, P147_CMD_SELF_TEST_A, P147_CMD_SELF_TEST_B)) {
@@ -61,7 +85,6 @@ bool P147_data_struct::init(struct EventStruct *event) {
 
     // addLog(LOG_LEVEL_INFO,
     //        concat(F("P147 : INIT State: "), static_cast<int>(_state)) +
-    //        concat(F(", Last _raw: "),       _raw) +
     //        boolToString(_initialized));
   }
   return isInitialized();
@@ -71,8 +94,10 @@ bool P147_data_struct::init(struct EventStruct *event) {
 * Destructor
 *****************************************************/
 P147_data_struct::~P147_data_struct() {
-  // TODO delete IndexAlgorithm objects
-  // IndexAlgorithm = nullptr;
+  # if P147_FEATURE_GASINDEXALGORITHM
+  delete vocGasIndexAlgorithm;
+  delete noxGasIndexAlgorithm;
+  # endif // if P147_FEATURE_GASINDEXALGORITHM
 }
 
 /*****************************************************
@@ -90,9 +115,16 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
         uint16_t result = readCheckedWord(is_ok);
 
         // addLog(LOG_LEVEL_INFO, concat(F("P147 : Selftest result: "), formatToHex(result)) + (is_ok ? F(" ok") : F(" error")));
+        bool checkOk = false;
 
-        if (is_ok && (((result >> 8) & 0xFF) == 0xD4)) {
-          success = true;                       // 0xD4 = OK, 0x4B = Error
+        if (_sensorType == P147_sensor_e::SGP40) {
+          checkOk = ((result >> 8) & 0xFF) == 0xD4; // 0xD4xx = OK, 0x4Bxx = Error
+        } else {
+          checkOk = (result & 0xFF) == 0x00;        // 0xxx00 = OK 01..03 = Error
+        }
+
+        if (is_ok && checkOk) {
+          success = true;
           _state  = P147_state_e::MeasureStart; // Start sequence
         } else {
           _state = P147_state_e::Uninitialized;
@@ -143,15 +175,35 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
 
       case P147_state_e::MeasureReading: // Get raw data
       {
-        _raw = readCheckedWord(is_ok);
+        _rawVOC = readCheckedWord(is_ok);
 
-        addLog(LOG_LEVEL_INFO, concat(F("P147 : MeasureReading raw: "), _raw) + (is_ok ? F(" ok") : F(" error")));
+        if (is_ok && (_lastCommand == P147_CMD_SGP41_READ_B) && (_sensorType == P147_sensor_e::SGP41)) {
+          _rawNOx = readCheckedWord(is_ok);
+        }
+
+        // addLog(LOG_LEVEL_INFO,
+        //        concat(F("P147 : MeasureReading raw VOC: "), _rawVOC) +
+        //        concat(F(", raw NOx: "),                     _rawNOx) +
+        //        (is_ok ? F(" ok") : F(" error")));
 
         if (is_ok && (_readLoop == 0)) {
           success = true;
           _state  = P147_state_e::Ready;
 
-          // TODO Feed to normalizers
+          # if P147_FEATURE_GASINDEXALGORITHM
+
+          // Feed to normalizers
+          _vocIndex = vocGasIndexAlgorithm->process(_rawVOC);
+
+          if (_vocIndex == 0) {
+            _skipCount++;
+          }
+
+          if ((_lastCommand == P147_CMD_SGP41_READ_B) && (_sensorType == P147_sensor_e::SGP41)) {
+            _noxIndex = noxGasIndexAlgorithm->process(_rawNOx);
+          }
+          # endif // if P147_FEATURE_GASINDEXALGORITHM
+
           // Startup delay check for NOx measurement/normalizer
           if ((_startupNOxCounter == 0) || (_sensorType == P147_sensor_e::SGP40)) {
             _dataAvailable = true;                                               // Data can be read
@@ -186,10 +238,11 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
 bool P147_data_struct::plugin_once_a_second(struct EventStruct *event) {
   bool success = false;
 
-  addLog(LOG_LEVEL_INFO,
-         concat(F("P147 : State: "), static_cast<int>(_state)) +
-         concat(F(", Last _raw: "),  _raw) +
-         concat(F(", count: "),      _secondsCounter));
+  // addLog(LOG_LEVEL_INFO,
+  //        concat(F("P147 : State: "), static_cast<int>(_state)) +
+  //        concat(F(", Last _rawVOC: "),  _rawVOC) +
+  //        concat(F(", Last _rawNOx: "),  _rawNOx) +
+  //        concat(F(", count: "),      _secondsCounter));
 
   if (isInitialized()) {
     _secondsCounter--;
@@ -220,20 +273,47 @@ bool P147_data_struct::plugin_read(struct EventStruct *event) {
 
   if (isInitialized()) {
     if (_dataAvailable) {
-      if (_rawOnly) {
-        UserVar[event->BaseVarIndex] = _raw;
+      if (_ignoreFirstRead) {
+        _ignoreFirstRead = false;
       } else {
-        UserVar[event->BaseVarIndex] = _raw; // TODO Use normalized VOC value
-      }
+        # if P147_FEATURE_GASINDEXALGORITHM
 
-      if (_sensorType == P147_sensor_e::SGP41) {
-        if (_rawOnly) {
-          UserVar[event->BaseVarIndex + 1] = _raw;
-        } else {
-          UserVar[event->BaseVarIndex + 1] = _raw; // TODO Use normalized NOx value
+        if (_rawOnly)
+        # endif // if P147_FEATURE_GASINDEXALGORITHM
+        {
+          UserVar[event->BaseVarIndex] = _rawVOC;
         }
+        # if P147_FEATURE_GASINDEXALGORITHM
+        else {
+          UserVar[event->BaseVarIndex] = _vocIndex; // Use normalized VOC index
+        }
+        # endif // if P147_FEATURE_GASINDEXALGORITHM
+
+        if (_sensorType == P147_sensor_e::SGP41) {
+          # if P147_FEATURE_GASINDEXALGORITHM
+
+          if (_rawOnly)
+          # endif // if P147_FEATURE_GASINDEXALGORITHM
+          {
+            UserVar[event->BaseVarIndex + 1] = _rawNOx;
+          }
+          # if P147_FEATURE_GASINDEXALGORITHM
+          else {
+            UserVar[event->BaseVarIndex + 1] = _noxIndex; // Use normalized NOx index
+          }
+          # endif // if P147_FEATURE_GASINDEXALGORITHM
+        }
+        # if P147_FEATURE_GASINDEXALGORITHM
+        success = (_rawOnly || _vocIndex != 0); // Accepted if the VOC index is no longer 0 (NOx index ignored for now)
+
+        if (success && !_rawOnly && (_skipCount > 0)) {
+          addLog(LOG_LEVEL_INFO, concat(F("SGP4x: Valid values found, skipped samples: "), _skipCount));
+          _skipCount = 0;
+        }
+        # else // if P147_FEATURE_GASINDEXALGORITHM
+        success = true;
+        # endif // if P147_FEATURE_GASINDEXALGORITHM
       }
-      success = true;
     }
   }
   return success;
@@ -267,8 +347,12 @@ bool P147_data_struct::plugin_get_config_value(struct EventStruct *event,
     string  = ull2String(_serial);
     success = true;
   } else
-  if (equals(var, F("raw"))) { // [<taskname>#raw] = the last raw value retrieved from the sensor
-    string  = _raw;
+  if (equals(var, F("rawvoc"))) { // [<taskname>#rawVOC] = the last raw VOC value retrieved from the sensor
+    string  = _rawVOC;
+    success = true;
+  } else
+  if (equals(var, F("rawnox"))) { // [<taskname>#rawNOx] = the last raw NOx value retrieved from the sensor
+    string  = _rawNOx;
     success = true;
   }
   return success;
@@ -308,9 +392,23 @@ uint16_t P147_data_struct::readCheckedWord(bool& is_ok, long extraDelay) {
 bool P147_data_struct::startSensorRead(uint16_t compensationRh, uint16_t compensationT) {
   uint8_t data[2] = { 0 };
 
-  Wire.beginTransmission(P147_I2C_ADDRESS);   // Start
-  Wire.write((uint8_t)P147_CMD_START_READ_A); // Command
-  Wire.write((uint8_t)P147_CMD_START_READ_B);
+  Wire.beginTransmission(P147_I2C_ADDRESS);       // Start
+
+  if (_sensorType == P147_sensor_e::SGP40) {
+    Wire.write((uint8_t)P147_CMD_SGP40_READ_A);   // SGP40 Command
+    Wire.write((uint8_t)P147_CMD_SGP40_READ_B);
+    _lastCommand = P147_CMD_SGP40_READ_B;         // Read only VOC
+  } else {
+    if (_startupNOxCounter == 0) {
+      Wire.write((uint8_t)P147_CMD_SGP41_READ_A); // SGP41 regular read Command
+      Wire.write((uint8_t)P147_CMD_SGP41_READ_B);
+      _lastCommand = P147_CMD_SGP41_READ_B;       // Read VOC and NOx
+    } else {
+      Wire.write((uint8_t)P147_CMD_SGP41_COND_A); // SGP41 NOx Conditioning Command
+      Wire.write((uint8_t)P147_CMD_SGP41_COND_B); // Only raw VOC is returned
+      _lastCommand = P147_CMD_SGP41_COND_B;       // Conditioning, read only VOC
+    }
+  }
   data[0] = (compensationRh >> 8);
   data[1] = (compensationRh & 0xFF);
   Wire.write(data[0]);            // Rel. humidity compensation

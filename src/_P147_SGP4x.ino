@@ -5,12 +5,16 @@
 // ############################ Plugin 147: Gases - SGP4x CO2 (VOC), NOx (SGP41) #########################
 // #######################################################################################################
 
-/**
+/** Changelog:
+ * 2023-04-30 tonhuisman: Ignore first read data (invalid) in low-power mode
+ *                        Implement Sensirion GasIndexAlgorithm library for VOC and NOx index. (compile-time option)
+ *                        When disabled, only raw values are available, so no need to have a Raw setting
+ *                        Finish implementation (different commands) for SGP41
  * 2023-04-30 tonhuisman: Rename plugin to Gases - SGP4x VOC(/NOx)
  * 2023-04-29 tonhuisman: Implement sensor raw reading
  * 2023-04-27 tonhuisman: Start of plugin
  *
- * Using direct I2C functions and Sensirion VOC/NOx calculation library
+ * Using direct I2C functions and Sensirion VOC/NOx index calculation library
  **/
 # define PLUGIN_147
 # define PLUGIN_ID_147          147
@@ -100,19 +104,11 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P147_sensor_e::SGP41),
         };
         addFormSelector(F("Sensor model"), F("ptype"), 2, sensorTypes, sensorTypeOptions, P147_SENSOR_TYPE, true);
-
-        // # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Page will reload on change."));
-
-        // # endif // ifndef LIMIT_BUILD_SIZE
       }
 
       addFormSelector_YesNo(F("Use Calibration"), F("cal"), P147_GET_USE_CALIBRATION, true);
-
-      // # ifndef LIMIT_BUILD_SIZE
       addFormNote(F("Page will reload on change."));
-
-      // # endif // ifndef LIMIT_BUILD_SIZE
 
       if (P147_GET_USE_CALIBRATION) {
         addRowLabel(F("Temperature Task"));
@@ -135,9 +131,11 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Low-power measurement"), F("plow"), P147_LOW_POWER_MEASURE == 1);
       addFormNote(F("Unchecked= 1 sec., continuous heating, Checked= 10 sec. measurement interval."));
 
+      # if P147_FEATURE_GASINDEXALGORITHM
       addFormSeparator(2);
 
       addFormCheckBox(F("Show raw data only"), F("raw"), P147_GET_RAW_DATA_ONLY == 1);
+      # endif // if P147_FEATURE_GASINDEXALGORITHM
 
       success = true;
       break;
@@ -149,7 +147,9 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
       P147_SENSOR_TYPE       = getFormItemInt(F("ptype"));
       P147_LOW_POWER_MEASURE = isFormItemChecked(F("plow")) ? 1 : 0;
       P147_SET_USE_CALIBRATION(getFormItemInt(F("cal")));
+      # if P147_FEATURE_GASINDEXALGORITHM
       P147_SET_RAW_DATA_ONLY(isFormItemChecked(F("raw")) ? 1 : 0);
+      # endif // if P147_FEATURE_GASINDEXALGORITHM
 
       if (P147_GET_USE_CALIBRATION) {
         P147_TEMPERATURE_TASK  = getFormItemInt(F("ttask"));

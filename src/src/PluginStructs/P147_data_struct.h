@@ -5,6 +5,16 @@
 
 #ifdef USES_P147
 
+# ifndef P147_FEATURE_GASINDEXALGORITHM
+#  define P147_FEATURE_GASINDEXALGORITHM    1 // Enabled by default
+# endif // ifndef P147_FEATURE_GASINDEXALGORITHM
+
+# if P147_FEATURE_GASINDEXALGORITHM
+#  include <SensirionGasIndexAlgorithm.h>
+#  include <VOCGasIndexAlgorithm.h>
+#  include <NOxGasIndexAlgorithm.h>
+# endif // if P147_FEATURE_GASINDEXALGORITHM
+
 # include "../Helpers/CRC_functions.h"
 
 # define P147_SENSOR_TYPE         PCONFIG(0)
@@ -38,10 +48,14 @@
 
 // I2C command bytes for SGP4x, most are 16 bits, when split into 2 bytes they can be written using I2C_write_8_reg()
 
-# define P147_CMD_SELF_TEST_A     0x28 // Will return 3 bytes of data, fixed value 0xD4xxcc = OK, 0x4Bxxcc = Error
-# define P147_CMD_SELF_TEST_B     0x0E // cc = crc8 checksum of 2 preceeding bytes
-# define P147_CMD_START_READ_A    0x26 // Will take 6 bytes of data, and return 3 bytes of data 0xnnnncc = 16 bits raw
-# define P147_CMD_START_READ_B    0x0F
+# define P147_CMD_SELF_TEST_A     0x28 // Will return 3 bytes of data, SGP40: fixed value 0xD4xxcc = OK, 0x4Bxxcc = Error
+# define P147_CMD_SELF_TEST_B     0x0E // cc = crc8 checksum. SGP41: 0xxx00cc = OK 0xxx01cc..0xxx03cc = Error
+# define P147_CMD_SGP40_READ_A    0x26 // SGP40: Will take 6 bytes of data, and return 3 bytes of data 0xnnnncc = 16 bits raw
+# define P147_CMD_SGP40_READ_B    0x0F
+# define P147_CMD_SGP41_READ_A    0x26 // SGP41: Will take 6 bytes of data, and return 6 bytes of data 0xnnnncc = 16 bits rawVOC
+# define P147_CMD_SGP41_READ_B    0x19 // + 0xnnnncc = 16 bits rawNOx
+# define P147_CMD_SGP41_COND_A    0x26 // SGP41: Conditioning: Takes 6 bytes of data, return 3 bytes of data 0xnnnncc = 16 bits rawVOC
+# define P147_CMD_SGP41_COND_B    0x12
 # define P147_CMD_HEATER_OFF_A    0x36 // No returned data
 # define P147_CMD_HEATER_OFF_B    0x15
 # define P147_CMD_READ_SERIALNR_A 0x36
@@ -84,6 +98,13 @@ public:
 
 private:
 
+  # if P147_FEATURE_GASINDEXALGORITHM
+  VOCGasIndexAlgorithm *vocGasIndexAlgorithm = nullptr;
+  NOxGasIndexAlgorithm *noxGasIndexAlgorithm = nullptr;
+  uint32_t              _vocIndex            = 0;
+  uint32_t              _noxIndex            = 0;
+  # endif // if P147_FEATURE_GASINDEXALGORITHM
+
   uint16_t readCheckedWord(bool& is_ok,
                            long  extraDelay = 5);
   bool     startSensorRead(uint16_t compensationRh,
@@ -98,13 +119,19 @@ private:
   uint8_t       _secondsCounter        = _initialCounter;
   uint8_t       _startupNOxCounter     = 10; // Only after 10 seconds NOx value is usable
   bool          _useCalibration        = false;
-  bool          _rawOnly               = false;
   bool          _initialized           = false;
+  # if P147_FEATURE_GASINDEXALGORITHM
+  uint16_t _skipCount = 0;
+  bool     _rawOnly   = false;
+  # endif // if P147_FEATURE_GASINDEXALGORITHM
 
-  uint64_t _serial        = 0;
-  uint16_t _raw           = 0;
-  uint8_t  _readLoop      = 0;
-  bool     _dataAvailable = false;
+  uint64_t _serial          = 0;
+  uint16_t _rawVOC          = 0;
+  uint16_t _rawNOx          = 0;
+  uint8_t  _readLoop        = 0;
+  uint8_t  _lastCommand     = 0;
+  bool     _dataAvailable   = false;
+  bool     _ignoreFirstRead = false;
 };
 
 #endif // ifdef USES_P147
