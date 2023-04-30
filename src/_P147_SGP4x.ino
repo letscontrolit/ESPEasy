@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2023-04-30 tonhuisman: Rename plugin to Gases - SGP4x VOC(/NOx)
  * 2023-04-29 tonhuisman: Implement sensor raw reading
  * 2023-04-27 tonhuisman: Start of plugin
  *
@@ -13,7 +14,7 @@
  **/
 # define PLUGIN_147
 # define PLUGIN_ID_147          147
-# define PLUGIN_NAME_147        "Gases - CO2 SGP4x"
+# define PLUGIN_NAME_147        "Gases - SGP4x VOC(/NOx)"
 # define PLUGIN_VALUENAME1_147  "VOC"
 # define PLUGIN_VALUENAME2_147  "NOx"
 
