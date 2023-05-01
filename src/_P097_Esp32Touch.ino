@@ -6,7 +6,8 @@
 // #######################################################################################################
 
 
-#ifdef ESP32
+#if defined(ESP32) && !defined(ESP32C3)
+
 
 
 # define PLUGIN_097
@@ -331,7 +332,7 @@ void P097_got_T14() {
 
 #endif
 
-#endif // ifdef ESP32
+#endif 
 
 
 #endif // USES_P097
