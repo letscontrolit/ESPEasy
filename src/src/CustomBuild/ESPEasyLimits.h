@@ -35,10 +35,12 @@
 
   #ifndef MAX_GPIO
     #if ESP_IDF_VERSION_MAJOR > 3       // IDF 4+
-      #if CONFIG_IDF_TARGET_ESP32S2     // ESP32-S2
+      #if CONFIG_IDF_TARGET_ESP32S3     // ESP32-S3
+        #define MAX_GPIO  48
+      #elif CONFIG_IDF_TARGET_ESP32S2     // ESP32-S2
         #define MAX_GPIO  46
       #elif CONFIG_IDF_TARGET_ESP32C3   // ESP32-C3
-        // FIXME TD-er: Implement ESP32C3 support
+        #define MAX_GPIO  21
       #elif CONFIG_IDF_TARGET_ESP32     // ESP32/PICO-D4
         #define MAX_GPIO  39
       #else

@@ -37,12 +37,19 @@
   # include <soc/rtc.h>
 
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
-    #  if CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
+    #  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
+      #   include <esp32s2/rom/spi_flash.h>
+      #   include <esp32s3/spiram.h>
+    #  elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
       #   include <esp32s2/rom/spi_flash.h>
       #   include <esp32s2/spiram.h>
+      
+      # define HAS_HALL_EFFECT_SENSOR  0
     #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
       #   include <esp32c3/rom/spi_flash.h>
-      #   include <esp32c3/spiram.h>
+
+      # define HAS_HALL_EFFECT_SENSOR  0
+      # define HAS_TOUCH_GPIO  0
     #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
       #   include <esp32/rom/spi_flash.h>
       #   include <esp32/spiram.h>
@@ -52,6 +59,13 @@
   # else // ESP32 Before IDF 4.0
     #  include <rom/spi_flash.h>
   # endif    // if ESP_IDF_VERSION_MAJOR > 3
+
+#ifndef HAS_HALL_EFFECT_SENSOR
+  # define HAS_HALL_EFFECT_SENSOR  1
+#endif
+#ifndef HAS_TOUCH_GPIO
+# define HAS_TOUCH_GPIO 1
+#endif
 
 #endif       // ifdef ESP32
 
@@ -550,9 +564,9 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
     switch (adc) {
       case 0:
-      # ifndef ESP32S2
+      #if HAS_HALL_EFFECT_SENSOR
         value = hallRead();
-      # endif // ifndef ESP32S2
+      #endif 
         break;
       case 1:
         canread = true;
@@ -570,7 +584,9 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
     if (canread) {
       if (readAsTouch && (t >= 0)) {
+        #if HAS_TOUCH_GPIO
         value = touchRead(pin);
+        #endif
       } else {
         value = analogRead(pin);
       }
@@ -657,10 +673,21 @@ const __FlashStringHelper* getFlashChipMode() {
 
   // Source: https://github.com/letscontrolit/ESPEasy/pull/4200#issuecomment-1221607332
   // + discussion: https://github.com/espressif/arduino-esp32/issues/7140#issuecomment-1222274417
-  const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
 
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
-    #  if CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
+    # if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
+    // FIXME TD-er: implement for ESP32-S3
+      const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
+      if (spi_ctrl & SPI_FREAD_OCT) {  
+        return F("OCT");
+      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
+        return F("QIO");
+      } else if (spi_ctrl & SPI_FREAD_DUAL) {
+        return F("DIO");
+      }
+      return F("DOUT");
+    # elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
+      const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
       if (spi_ctrl & SPI_FREAD_OCT) {  
         return F("OCT");
       } else if (spi_ctrl & SPI_FREAD_QUAD) { 
@@ -670,13 +697,17 @@ const __FlashStringHelper* getFlashChipMode() {
       }
       return F("DOUT");
     #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
+    // FIXME TD-er: implement for ESP32-C3
+    /*
       if (spi_ctrl & SPI_FREAD_QUAD) { 
         return F("QIO");
       } else if (spi_ctrl & SPI_FREAD_DUAL) {
         return F("DIO");
       }
+      */
       return F("DOUT");
     #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
+      const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
       if (spi_ctrl & SPI_FREAD_QIO) {  
         return F("QIO");
       } else if (spi_ctrl & SPI_FREAD_QUAD) { 
@@ -691,6 +722,7 @@ const __FlashStringHelper* getFlashChipMode() {
       return F("Slow");
     #  endif // if CONFIG_IDF_TARGET_ESP32S2
   # else // ESP32 Before IDF 4.0
+    const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
     if (spi_ctrl & (BIT(24))) {  
       return F("QIO");
     } else if (spi_ctrl & (BIT(20))) { 
@@ -1476,7 +1508,13 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-# else // ifdef ESP32S2
+# elif defined(ESP32S3)
+
+
+# elif defined(ESP32C3)
+
+
+# else 
 
   // ESP32 classic
 
@@ -1734,7 +1772,24 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
     default:
       return false;
   }
-# else // ifdef ESP32S2
+//# elif defined(ESP32S3)
+
+
+# elif defined(ESP32C3)
+
+  switch (gpio_pin) {
+    case 0: adc  = 1; ch = 0;  break;
+    case 1: adc  = 1; ch = 1;  break;
+    case 2: adc  = 1; ch = 2;  break;
+    case 3: adc  = 1; ch = 3;  break;
+    case 4: adc  = 1; ch = 4;  break;
+    case 5: adc  = 2; ch = 0;  break;
+    default:
+      return false;
+  }
+
+
+# else 
 
   // Classic ESP32
   switch (gpio_pin) {
@@ -1766,7 +1821,7 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
 
 int touchPinToGpio(int touch_pin)
 {
-# ifdef ESP32S2
+# if defined(ESP32S2) || defined(ESP32S3)
 
   switch (touch_pin) {
     case 1: return T1;
@@ -1786,8 +1841,12 @@ int touchPinToGpio(int touch_pin)
     default:
       break;
   }
-# else // ifdef ESP32S2
 
+# elif defined(ESP32C3)
+// No touch pin support
+
+
+# else 
   // ESP32 classic
   switch (touch_pin) {
     case 0: return T0;

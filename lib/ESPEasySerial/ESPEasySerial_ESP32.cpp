@@ -8,6 +8,13 @@
 
 #ifdef ESP32
 
+#if defined(ESP32S2) || defined(ESP32C3)
+  #define HAS_SERIAL2 0
+#else
+  #define HAS_SERIAL2 1
+#endif
+
+
 // Temporary work-around for bug in ESP32 code, where the pin matrix is not cleaned up between calling end() and begin()
 // Work-around is to keep track of the last used pins for a serial port,
 // as it is likely that a node will always use the same pins most of the time.
@@ -179,9 +186,9 @@ HardwareSerial * ESPeasySerial::getHW() {
     case ESPEasySerialPort::serial0: return &Serial;
     case ESPEasySerialPort::serial1: return &Serial1;
     case ESPEasySerialPort::serial2:
-    # ifndef ESP32S2
+    #if HAS_SERIAL2
       return &Serial2;
-    # endif // ifndef ESP32S2
+    #endif
 
     default: break;
   }
@@ -193,9 +200,9 @@ const HardwareSerial * ESPeasySerial::getHW() const {
     case ESPEasySerialPort::serial0: return &Serial;
     case ESPEasySerialPort::serial1: return &Serial1;
     case ESPEasySerialPort::serial2:
-    # ifndef ESP32S2
+    #if HAS_SERIAL2
       return &Serial2;
-    # endif // ifndef ESP32S2
+    #endif
     default: break;
   }
   return nullptr;
@@ -207,11 +214,11 @@ bool ESPeasySerial::isValid() const {
     case ESPEasySerialPort::serial1:
       return true;
     case ESPEasySerialPort::serial2:
-      # ifdef ESP32S2
-      return false;
-      # else // ifdef ESP32S2
+      #if HAS_SERIAL2
       return true;
-      # endif // ifdef ESP32S2
+      #else 
+      return false;
+      #endif 
     case ESPEasySerialPort::sc16is752:
     # ifndef DISABLE_SC16IS752_Serial
       return _i2cserial != nullptr;
