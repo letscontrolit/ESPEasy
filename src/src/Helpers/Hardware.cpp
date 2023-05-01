@@ -1510,8 +1510,63 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
 # elif defined(ESP32S3)
 
+// FIXME TD-er: Implement for ESP32-S3
+// See:
+// - https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/gpio.html
+// Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
+
+  if ((gpio >= 26) && (gpio <= 37)) {
+    // Connected to the integrated SPI flash.
+    // SPI0/1: GPIO26-32 are usually used for SPI flash and PSRAM and not recommended for other uses. 
+    // When using Octal Flash or Octal PSRAM or both, 
+    //  GPIO33~37 are connected to SPIIO4 ~ SPIIO7 and SPIDQS. 
+    // Therefore, on boards embedded with ESP32-S3R8 / ESP32-S3R8V chip, 
+    //  GPIO33~37 are also not recommended for other uses.
+    input   = false;
+    output  = false;
+    warning = true;
+  }
+
+
+  if (gpio == 19 || gpio == 20) {
+    // USB OTG and USB Serial/JTAG function. USB signal is a differential 
+    // signal transmitted over a pair of D+ and D- wires.
+    warning = true;
+  }
+
+
+  if ((input == false) && (output == false)) {
+    return false;
+  }
+
+
 
 # elif defined(ESP32C3)
+
+// FIXME TD-er: Implement for ESP32-C3
+// See: 
+// - https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32c3/hw-reference/esp32c3/user-guide-devkitm-1.html
+// - https://docs.espressif.com/projects/esp-idf/en/latest/esp32c3/api-reference/peripherals/gpio.html
+// Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf
+
+
+  if ((gpio >= 12) && (gpio <= 17)) {
+    // Connected to the integrated SPI flash.
+    input   = false;
+    output  = false;
+    warning = true;
+  }
+
+
+  if ((input == false) && (output == false)) {
+    return false;
+  }
+  // GPIO 18: USB_D-
+  // GPIO 19: USB_D+
+
+  // GPIO 20: U0RXD
+  // GPIO 21: U0TXD
+  
 
 
 # else 
@@ -1772,7 +1827,34 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
     default:
       return false;
   }
-//# elif defined(ESP32S3)
+# elif defined(ESP32S3)
+// FIXME TD-er: Implement for ESP32-S3
+
+  switch (gpio_pin) {
+    case 1: adc  = 1; ch = 0; t = 1; break;
+    case 2: adc  = 1; ch = 1; t = 2; break;
+    case 3: adc  = 1; ch = 2; t = 3; break;
+    case 4: adc  = 1; ch = 3; t = 4; break;
+    case 5: adc  = 1; ch = 4; t = 5; break;
+    case 6: adc  = 1; ch = 5; t = 6; break;
+    case 7: adc  = 1; ch = 6; t = 7; break;
+    case 8: adc  = 1; ch = 7; t = 8; break;
+    case 9: adc  = 1; ch = 8; t = 9; break;
+    case 10: adc = 1; ch = 9; t = 10; break;
+    case 11: adc = 2; ch = 0; t = 11; break;
+    case 12: adc = 2; ch = 1; t = 12; break;
+    case 13: adc = 2; ch = 2; t = 13; break;
+    case 14: adc = 2; ch = 3; t = 14; break;
+    case 15: adc = 2; ch = 4;  break;
+    case 16: adc = 2; ch = 5;  break;
+    case 17: adc = 2; ch = 6;  break;
+    case 18: adc = 2; ch = 7;  break;
+    case 19: adc = 2; ch = 8;  break;
+    case 20: adc = 2; ch = 9;  break;
+    default:
+      return false;
+  }
+
 
 
 # elif defined(ESP32C3)
