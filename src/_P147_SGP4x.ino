@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-05-01 tonhuisman: Change Calibration to Compensation
  * 2023-04-30 tonhuisman: Ignore first read data (invalid) in low-power mode
  *                        Implement Sensirion GasIndexAlgorithm library for VOC and NOx index. (compile-time option)
  *                        When disabled, only raw values are available, so no need to have a Raw setting
@@ -34,7 +35,7 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_147;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -107,10 +108,10 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("Page will reload on change."));
       }
 
-      addFormSelector_YesNo(F("Use Calibration"), F("cal"), P147_GET_USE_CALIBRATION, true);
+      addFormSelector_YesNo(F("Use Compensation"), F("comp"), P147_GET_USE_COMPENSATION, true);
       addFormNote(F("Page will reload on change."));
 
-      if (P147_GET_USE_CALIBRATION) {
+      if (P147_GET_USE_COMPENSATION) {
         addRowLabel(F("Temperature Task"));
         addTaskSelect(F("ttask"), P147_TEMPERATURE_TASK);
 
@@ -146,12 +147,12 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
       int prevSensor = P147_SENSOR_TYPE;
       P147_SENSOR_TYPE       = getFormItemInt(F("ptype"));
       P147_LOW_POWER_MEASURE = isFormItemChecked(F("plow")) ? 1 : 0;
-      P147_SET_USE_CALIBRATION(getFormItemInt(F("cal")));
+      P147_SET_USE_COMPENSATION(getFormItemInt(F("comp")));
       # if P147_FEATURE_GASINDEXALGORITHM
       P147_SET_RAW_DATA_ONLY(isFormItemChecked(F("raw")) ? 1 : 0);
       # endif // if P147_FEATURE_GASINDEXALGORITHM
 
-      if (P147_GET_USE_CALIBRATION) {
+      if (P147_GET_USE_COMPENSATION) {
         P147_TEMPERATURE_TASK  = getFormItemInt(F("ttask"));
         P147_TEMPERATURE_VALUE = getFormItemInt(F("tvalue"));
         P147_HUMIDITY_TASK     = getFormItemInt(F("htask"));

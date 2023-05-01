@@ -11,7 +11,7 @@ P147_data_struct::P147_data_struct(struct EventStruct *event)
   _initialCounter  = P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER;
   _secondsCounter  = _initialCounter;
   _ignoreFirstRead = P147_LOW_POWER_MEASURE == 1;
-  _useCalibration  = P147_GET_USE_CALIBRATION;
+  _useCalibration  = P147_GET_USE_COMPENSATION;
   # if P147_FEATURE_GASINDEXALGORITHM
   _rawOnly = P147_GET_RAW_DATA_ONLY;
   # endif // if P147_FEATURE_GASINDEXALGORITHM
