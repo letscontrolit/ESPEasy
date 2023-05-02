@@ -79,24 +79,29 @@
 
   #ifdef ESP32S2
     #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32S2_STD
+    #include <esp32s2/rom/rtc.h>
+  #elif defined(ESP32S3)
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32S3_STD
+    #include <esp32s3/rom/rtc.h>
   #elif defined(ESP32C3)
     #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32C3_STD
-  #else
+    #include <esp32c3/rom/rtc.h>
+  # elif defined(ESP32_CLASSIC)
     #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
+    #if ESP_IDF_VERSION_MAJOR > 3
+      #include <esp32/rom/rtc.h>
+    #else
+      #include <rom/rtc.h>
+    #endif
+  # else
+
+    static_assert(false, "Implement processor architecture");
+
   #endif
 //  #include <WiFi.h>
 //  #include  "esp32_ping.h"
 
-  #ifdef ESP32S2
-    #include <esp32s2/rom/rtc.h>
-  #else
-   #if ESP_IDF_VERSION_MAJOR > 3
-    #include <esp32/rom/rtc.h>
-   #else
-    #include <rom/rtc.h>
-   #endif
-  #endif
-  
+ 
   #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
 #endif
 

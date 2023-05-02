@@ -81,7 +81,7 @@ void handle_hardware() {
     int gpio = 0;
 
     while (gpio <= MAX_GPIO) {
-      if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+      if (isSerialConsolePin(gpio)) {
         // do not add the pin state select for these pins.
       } else {
         if (validGpio(gpio)) {

@@ -90,7 +90,7 @@ void hardwareInit()
   bool hasPullUp, hasPullDown;
 
   for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
-    const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+    const bool serialPinConflict = isSerialConsolePin(gpio);
 
     if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
@@ -265,7 +265,7 @@ void initI2C() {
       #endif // if defined(ESP8266)
       #ifdef ESP32
     Wire.setTimeOut(Settings.WireClockStretchLimit);
-      #endif // ifdef ESP32S2
+      #endif
   }
 
   #if FEATURE_I2CMULTIPLEXER
@@ -1187,41 +1187,104 @@ void readBootCause() {
 void readBootCause() {
   lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
 
+  #ifdef ESP32S2
+
   switch (rtc_get_reset_reason(0)) {
-    case NO_MEAN:           break;
-    case POWERON_RESET:     lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
-    # ifndef ESP32S2
-    case SW_RESET:          lastBootCause = BOOT_CAUSE_SOFT_RESTART; break;
-    case OWDT_RESET:        lastBootCause = BOOT_CAUSE_SW_WATCHDOG; break;
-    # endif // ifndef ESP32S2
-    case DEEPSLEEP_RESET:   lastBootCause = BOOT_CAUSE_DEEP_SLEEP; break;
-    # ifndef ESP32S2
-    case SDIO_RESET:        lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
-    # endif // ifndef ESP32S2
-    case TG0WDT_SYS_RESET:
-    case TG1WDT_SYS_RESET:
-    case RTCWDT_SYS_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
-    # ifndef ESP32S2
-    case SW_CPU_RESET:
-    case TGWDT_CPU_RESET:
-    # endif // ifndef ESP32S2
-    case INTRUSION_RESET:   lastBootCause = BOOT_CAUSE_SOFT_RESTART; break;  // Both call to ESP.reset() and on exception crash
-    case RTCWDT_CPU_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
-    # ifndef ESP32S2
-    case EXT_CPU_RESET:     lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break; // reset button or cold boot, only for core 1
-    # endif // ifndef ESP32S2
-    case RTCWDT_BROWN_OUT_RESET: lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break;
-    case RTCWDT_RTC_RESET:  lastBootCause      = BOOT_CAUSE_COLD_BOOT; break;
-    # ifdef ESP32S2
-    case RTC_SW_SYS_RESET: lastBootCause  = BOOT_CAUSE_SOFT_RESTART; break;
-    case TG0WDT_CPU_RESET: lastBootCause  = BOOT_CAUSE_EXT_WD; break;
-    case RTC_SW_CPU_RESET: lastBootCause  = BOOT_CAUSE_SOFT_RESTART; break;
-    case TG1WDT_CPU_RESET: lastBootCause  = BOOT_CAUSE_EXT_WD; break;
-    case SUPER_WDT_RESET:   lastBootCause = BOOT_CAUSE_EXT_WD; break;
-    case GLITCH_RTC_RESET:  lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break; // FIXME TD-er: Does this need a different reason?
-    case EFUSE_RESET:       break;                                            // FIXME TD-er: No idea what may cause this reset reason.
-    # endif // ifdef ESP32S2
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case RTC_SW_SYS_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case DEEPSLEEP_RESET        : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<5, Deep Sleep reset digital core*/
+    case TG0WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<7, Timer Group0 Watch dog reset digital core*/
+    case TG1WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<8, Timer Group1 Watch dog reset digital core*/
+    case RTCWDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, RTC Watch dog Reset digital core*/
+    case INTRUSION_RESET        : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<10, Instrusion tested to reset CPU*/
+    case TG0WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, Time Group0 reset CPU*/
+    case RTC_SW_CPU_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<12, Software reset CPU*/
+    case RTCWDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, RTC Watch dog Reset CPU*/
+    case RTCWDT_BROWN_OUT_RESET : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case RTCWDT_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, RTC Watch dog reset digital core and rtc module*/
+    case TG1WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<17, Time Group1 reset CPU*/
+    case SUPER_WDT_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<18, super watchdog reset digital core and rtc module*/
+    case GLITCH_RTC_RESET       : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<19, glitch reset digital core and rtc module*/
+    case EFUSE_RESET            : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<20, efuse reset digital core*/
   }
+
+
+
+#elif defined(ESP32S3)
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case RTC_SW_SYS_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case DEEPSLEEP_RESET        : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<5, Deep Sleep reset digital core*/
+    case TG0WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<7, Timer Group0 Watch dog reset digital core*/
+    case TG1WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<8, Timer Group1 Watch dog reset digital core*/
+    case RTCWDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, RTC Watch dog Reset digital core*/
+    case INTRUSION_RESET        : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<10, Instrusion tested to reset CPU*/
+    case TG0WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, Time Group0 reset CPU*/
+    case RTC_SW_CPU_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<12, Software reset CPU*/
+    case RTCWDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, RTC Watch dog Reset CPU*/
+    case RTCWDT_BROWN_OUT_RESET : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case RTCWDT_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, RTC Watch dog reset digital core and rtc module*/
+    case TG1WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<17, Time Group1 reset CPU*/
+    case SUPER_WDT_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<18, super watchdog reset digital core and rtc module*/
+    case GLITCH_RTC_RESET       : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<19, glitch reset digital core and rtc module*/
+    case EFUSE_RESET            : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<20, efuse reset digital core*/
+    case USB_UART_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<21, usb uart reset digital core */
+    case USB_JTAG_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<22, usb jtag reset digital core */
+    case POWER_GLITCH_RESET     : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<23, power glitch reset digital core and rtc module*/
+  }
+
+
+#elif defined(ESP32C3)
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case RTC_SW_SYS_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case DEEPSLEEP_RESET        : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<5, Deep Sleep reset digital core*/
+    case TG0WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<7, Timer Group0 Watch dog reset digital core*/
+    case TG1WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<8, Timer Group1 Watch dog reset digital core*/
+    case RTCWDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, RTC Watch dog Reset digital core*/
+    case INTRUSION_RESET        : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<10, Instrusion tested to reset CPU*/
+    case TG0WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, Time Group0 reset CPU*/
+    case RTC_SW_CPU_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<12, Software reset CPU*/
+    case RTCWDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, RTC Watch dog Reset CPU*/
+    case RTCWDT_BROWN_OUT_RESET : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case RTCWDT_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, RTC Watch dog reset digital core and rtc module*/
+    case TG1WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<17, Time Group1 reset CPU*/
+    case SUPER_WDT_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<18, super watchdog reset digital core and rtc module*/
+    case GLITCH_RTC_RESET       : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<19, glitch reset digital core and rtc module*/
+    case EFUSE_RESET            : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<20, efuse reset digital core*/
+    case USB_UART_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<21, usb uart reset digital core */
+    case USB_JTAG_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<22, usb jtag reset digital core */
+    case POWER_GLITCH_RESET     : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<23, power glitch reset digital core and rtc module*/
+  }
+
+# elif defined(ESP32_CLASSIC)
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case SW_RESET               : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case OWDT_RESET             : lastBootCause = BOOT_CAUSE_SW_WATCHDOG;      break; /**<4, Legacy watch dog reset digital core*/
+    case DEEPSLEEP_RESET        : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<3, Deep Sleep reset digital core*/
+    case SDIO_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<6, Reset by SLC module, reset digital core*/
+    case TG0WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<7, Timer Group0 Watch dog reset digital core*/
+    case TG1WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<8, Timer Group1 Watch dog reset digital core*/
+    case RTCWDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, RTC Watch dog Reset digital core*/
+    case INTRUSION_RESET        : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<10, Instrusion tested to reset CPU*/
+    case TGWDT_CPU_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, Time Group reset CPU*/
+    case SW_CPU_RESET           : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<12, Software reset CPU*/
+    case RTCWDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, RTC Watch dog Reset CPU*/
+    case EXT_CPU_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<14, for APP CPU, reseted by PRO CPU*/
+    case RTCWDT_BROWN_OUT_RESET : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case RTCWDT_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, RTC Watch dog reset digital core and rtc module*/
+  }
+
+  # else
+
+    static_assert(false, "Implement processor architecture");
+
+  #endif
 }
 
 #endif // ifdef ESP32
@@ -1460,6 +1523,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   input = GPIO_IS_VALID_GPIO(gpio);
   output = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
+  warning = false;
 
 # ifdef ESP32S2
 
@@ -1522,8 +1586,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     //  GPIO33~37 are connected to SPIIO4 ~ SPIIO7 and SPIDQS. 
     // Therefore, on boards embedded with ESP32-S3R8 / ESP32-S3R8V chip, 
     //  GPIO33~37 are also not recommended for other uses.
-    input   = false;
-    output  = false;
+    input   = gpio > 32;
+    output  = gpio > 32;
     warning = true;
   }
 
@@ -1549,11 +1613,40 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 // - https://docs.espressif.com/projects/esp-idf/en/latest/esp32c3/api-reference/peripherals/gpio.html
 // Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf
 
+  if (gpio == 2) {
+    // Strapping pin which must be high during boot
+    warning = true;
+  }
+
+/*
+  if (gpio == 8) {
+    // Strapping pin which must be high during flashing
+    warning = true;
+  }
+*/
+  if (gpio == 9) {
+    // Strapping pin to force download mode (like GPIO-0 on ESP8266/ESP32-classic)
+    warning = true;
+  }
+
+  if (gpio == 11) {
+    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11
+    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
+    input   = false;
+    output  = false;
+    warning = true;
+  }
 
   if ((gpio >= 12) && (gpio <= 17)) {
     // Connected to the integrated SPI flash.
     input   = false;
     output  = false;
+    warning = true;
+  }
+
+  if (gpio == 18 || gpio == 19) {
+    // USB OTG and USB Serial/JTAG function. USB signal is a differential 
+    // signal transmitted over a pair of D+ and D- wires.
     warning = true;
   }
 
@@ -1569,7 +1662,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   
 
 
-# else 
+# elif defined(ESP32_CLASSIC)
 
   // ESP32 classic
 
@@ -1601,7 +1694,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   // GPIO 0 & 2 can't be used as an input. State during boot is dependent on boot mode.
-  warning = (gpio == 0 || gpio == 2);
+  if (gpio == 0 || gpio == 2)
+    warning = true;
 
   if (gpio == 12) {
     // If driven High, flash voltage (VDD_SDIO) is 1.8V not default 3.3V.
@@ -1654,7 +1748,9 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     }
   }
 
-# endif    // ifdef ESP32S2
+# else
+  static_assert(false, "Implement processor architecture");
+# endif 
 
   return true;
 }
@@ -1674,11 +1770,26 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
 
 # ifdef ESP32S2
 
+  // GPI: GPIO46 is fixed to pull-down and is input only.
   if (gpio <= 45) {
     hasPullUp   = true;
     hasPullDown = true;
   }
-# else // ifdef ESP32S2
+#elif defined(ESP32S3)
+
+  if (gpio <= MAX_GPIO) {
+    hasPullUp   = true;
+    hasPullDown = true;
+  }
+
+#elif defined(ESP32C3)
+
+  if (gpio <= MAX_GPIO) {
+    hasPullUp   = true;
+    hasPullDown = true;
+  }
+
+# elif defined(ESP32_CLASSIC)
 
   // ESP32 classic
   if (gpio >= 34) {
@@ -1692,7 +1803,9 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
     hasPullDown = true;
   }
 
-# endif // ifdef ESP32S2
+# else
+    static_assert(false, "Implement processor architecture");
+# endif
   return true;
 }
 
@@ -1788,6 +1901,34 @@ bool validGpio(int gpio) {
   return getGpioInfo(gpio, pinnr, input, output, warning);
 }
 
+bool isSerialConsolePin(int gpio) {
+  if (!Settings.UseSerial) return false;
+
+# ifdef ESP32S2
+  // FIXME TD-er: Must check whether USB serial is used
+  return gpio == 1 || gpio == 3;
+
+#elif defined(ESP32S3)
+  // FIXME TD-er: Must check whether USB serial is used
+  return gpio == 43 || gpio == 44;
+
+#elif defined(ESP32C3)
+  // FIXME TD-er: Must check whether USB serial is used
+  return gpio == 21 || gpio == 20;
+
+# elif defined(ESP32_CLASSIC)
+  return gpio == 1 || gpio == 3;
+
+# elif defined(ESP8266)
+  return gpio == 1 || gpio == 3;
+
+# else
+    static_assert(false, "Implement processor architecture");
+    return false;
+# endif
+
+}
+
 #ifdef ESP32
 
 // Get ADC related info for a given GPIO pin
@@ -1801,7 +1942,7 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   ch  = -1;
   t   = -1;
 
-# ifdef ESP32S2
+#if defined(ESP32S2) || defined(ESP32S3)
 
   switch (gpio_pin) {
     case 1: adc  = 1; ch = 0; t = 1; break;
@@ -1827,34 +1968,6 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
     default:
       return false;
   }
-# elif defined(ESP32S3)
-// FIXME TD-er: Implement for ESP32-S3
-
-  switch (gpio_pin) {
-    case 1: adc  = 1; ch = 0; t = 1; break;
-    case 2: adc  = 1; ch = 1; t = 2; break;
-    case 3: adc  = 1; ch = 2; t = 3; break;
-    case 4: adc  = 1; ch = 3; t = 4; break;
-    case 5: adc  = 1; ch = 4; t = 5; break;
-    case 6: adc  = 1; ch = 5; t = 6; break;
-    case 7: adc  = 1; ch = 6; t = 7; break;
-    case 8: adc  = 1; ch = 7; t = 8; break;
-    case 9: adc  = 1; ch = 8; t = 9; break;
-    case 10: adc = 1; ch = 9; t = 10; break;
-    case 11: adc = 2; ch = 0; t = 11; break;
-    case 12: adc = 2; ch = 1; t = 12; break;
-    case 13: adc = 2; ch = 2; t = 13; break;
-    case 14: adc = 2; ch = 3; t = 14; break;
-    case 15: adc = 2; ch = 4;  break;
-    case 16: adc = 2; ch = 5;  break;
-    case 17: adc = 2; ch = 6;  break;
-    case 18: adc = 2; ch = 7;  break;
-    case 19: adc = 2; ch = 8;  break;
-    case 20: adc = 2; ch = 9;  break;
-    default:
-      return false;
-  }
-
 
 
 # elif defined(ESP32C3)
@@ -1870,8 +1983,7 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
       return false;
   }
 
-
-# else 
+# elif defined(ESP32_CLASSIC)
 
   // Classic ESP32
   switch (gpio_pin) {
@@ -1897,7 +2009,13 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
     default:
       return false;
   }
-# endif // ifdef ESP32S2
+
+# else
+
+  static_assert(false, "Implement processor architecture");
+
+
+# endif
   return true;
 }
 
@@ -1928,7 +2046,7 @@ int touchPinToGpio(int touch_pin)
 // No touch pin support
 
 
-# else 
+# elif defined(ESP32_CLASSIC)
   // ESP32 classic
   switch (touch_pin) {
     case 0: return T0;
@@ -1944,7 +2062,10 @@ int touchPinToGpio(int touch_pin)
     default:
       break;
   }
-# endif // ifdef ESP32S2
+
+# else
+    static_assert(false, "Implement processor architecture");
+# endif
   return -1;
 }
 

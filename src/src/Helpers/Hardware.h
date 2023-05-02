@@ -218,6 +218,8 @@ bool getGpioPullResistor(int   gpio,
 
 bool validGpio(int gpio);
 
+bool isSerialConsolePin(int gpio);
+
 
 #ifdef ESP32
 

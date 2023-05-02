@@ -8,13 +8,6 @@
 
 #ifdef ESP32
 
-#if defined(ESP32S2) || defined(ESP32C3)
-  #define HAS_SERIAL2 0
-#else
-  #define HAS_SERIAL2 1
-#endif
-
-
 // Temporary work-around for bug in ESP32 code, where the pin matrix is not cleaned up between calling end() and begin()
 // Work-around is to keep track of the last used pins for a serial port,
 // as it is likely that a node will always use the same pins most of the time.
@@ -40,9 +33,9 @@ bool pinsChanged(ESPEasySerialPort port,
   switch (port) {
     case  ESPEasySerialPort::serial0: return receivePin != receivePin0 || transmitPin != transmitPin0;
     case  ESPEasySerialPort::serial1: return receivePin != receivePin1 || transmitPin != transmitPin1;
-    # ifndef ESP32S2
+    # if HAS_SERIAL2
     case  ESPEasySerialPort::serial2: return receivePin != receivePin2 || transmitPin != transmitPin2;
-    # endif // ifndef ESP32S2
+    # endif 
     default:
       // No other hardware serial ports
       break;
@@ -64,13 +57,13 @@ void setPinsCache(ESPEasySerialPort port,
       transmitPin1 = transmitPin;
       break;
 
-    # ifndef ESP32S2
+    # if HAS_SERIAL2
     case  ESPEasySerialPort::serial2:
       receivePin2  = receivePin;
       transmitPin2 = transmitPin;
       break;
 
-    # endif // ifndef ESP32S2
+    # endif 
     default:
       // No other hardware serial ports
       break;
@@ -90,9 +83,9 @@ ESPeasySerial::ESPeasySerial(
   switch (port) {
     case  ESPEasySerialPort::serial0:
     case  ESPEasySerialPort::serial1:
-    # ifndef ESP32S2
+    # if HAS_SERIAL2
     case  ESPEasySerialPort::serial2:
-    # endif // ifndef ESP32S2
+    # endif 
       _serialtype = port;
       break;
     default:
