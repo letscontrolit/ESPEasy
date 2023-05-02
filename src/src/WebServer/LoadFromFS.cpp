@@ -234,18 +234,18 @@ bool loadFromFS(String path) {
     addLog(LOG_LEVEL_INFO, concat(F("static_file: "), path));
   }
 #endif // ifndef BUILD_NO_DEBUG
-  const bool fileEmbedded = fileIsEmbedded(path);
-
-  if (!fileExists(path) && !fileEmbedded) {
-    return false;
-  }
-
 #ifdef WEBSERVER_CUSTOM
 
   if (path.endsWith(F(".esp"))) {
     return handle_custom(path);
   }
 #endif // ifdef WEBSERVER_CUSTOM
+
+  const bool fileEmbedded = fileIsEmbedded(path);
+
+  if (!fileExists(path) && !fileEmbedded) {
+    return false;
+  }
 
   bool mustCheckCredentials = false;
   const __FlashStringHelper* contentType  = get_ContentType(path, mustCheckCredentials);
