@@ -63,9 +63,9 @@ bool ethCheckSettings() {
   return isValid(Settings.ETH_Phy_Type) 
       && isValid(Settings.ETH_Clock_Mode)
       && isValid(Settings.NetworkMedium)
-      && (Settings.ETH_Pin_mdc   <= MAX_GPIO)
-      && (Settings.ETH_Pin_mdio  <= MAX_GPIO)
-      && (Settings.ETH_Pin_power <= MAX_GPIO);
+      && validGpio(Settings.ETH_Pin_mdc)
+      && validGpio(Settings.ETH_Pin_mdio)
+      && validGpio(Settings.ETH_Pin_power);
 }
 
 bool ethPrepare() {

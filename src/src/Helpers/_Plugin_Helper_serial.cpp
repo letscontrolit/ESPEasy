@@ -14,17 +14,6 @@
 
 #include <ESPEasySerialType.h>
 
-#ifndef HAS_SERIAL2
-#if defined(ESP32S2) || defined(ESP32C3) || defined(ESP8266)
-  #define HAS_SERIAL2 0
-# elif defined(ESP32S3)
-  #define HAS_SERIAL2 1
-# elif defined(ESP32_CLASSIC)
-  #define HAS_SERIAL2 1
-# else
-  static_assert(false, "Implement processor architecture");
-#endif
-#endif
 
 String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
   return ESPEasySerialPort_toString(serType);
@@ -52,7 +41,7 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
       result += formatToHex(config_pin1);
       result += newline;
       result += F(" ch: ");
-      result += config_pin2 == 0 ? F("A") : F("B");
+      result += config_pin2 == 0 ? 'A' : 'B';
       return result;
     }
     case ESPEasySerialPort::software:

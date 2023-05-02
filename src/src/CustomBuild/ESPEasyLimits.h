@@ -35,17 +35,8 @@
 
   #ifndef MAX_GPIO
     #if ESP_IDF_VERSION_MAJOR > 3       // IDF 4+
-      #if CONFIG_IDF_TARGET_ESP32S3     // ESP32-S3
-        #define MAX_GPIO  48
-      #elif CONFIG_IDF_TARGET_ESP32S2     // ESP32-S2
-        #define MAX_GPIO  46
-      #elif CONFIG_IDF_TARGET_ESP32C3   // ESP32-C3
-        #define MAX_GPIO  21
-      #elif CONFIG_IDF_TARGET_ESP32     // ESP32/PICO-D4
-        #define MAX_GPIO  39
-      #else
-        #error Target CONFIG_IDF_TARGET is not supported
-      #endif
+      #include <hal/gpio_types.h>
+      #define MAX_GPIO (GPIO_NUM_MAX - 1)
     #else // ESP32 Before IDF 4.0
       #define MAX_GPIO  39
     #endif

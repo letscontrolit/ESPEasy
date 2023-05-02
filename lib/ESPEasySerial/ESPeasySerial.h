@@ -42,15 +42,18 @@
 #endif // ifndef DISABLE_SOFTWARE_SERIAL
 
 #ifndef HAS_SERIAL2
-#if defined(ESP32S2) || defined(ESP32C3) || defined(ESP8266)
-  #define HAS_SERIAL2 0
-# elif defined(ESP32S3)
-  #define HAS_SERIAL2 1
-# elif defined(ESP32_CLASSIC)
-  #define HAS_SERIAL2 1
-# else
-  static_assert(false, "Implement processor architecture");
-#endif
+  #ifdef ESP8266
+    #define HAS_SERIAL2 0
+  #elif defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+    #include <soc/soc_caps.h>
+    #if SOC_UART_NUM > 2
+      #define HAS_SERIAL2 1
+    #else 
+      #define HAS_SERIAL2 0
+    #endif
+  # else
+    static_assert(false, "Implement processor architecture");
+  #endif
 #endif
 
 
