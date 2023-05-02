@@ -664,75 +664,69 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
     # endif // ifdef ESP32
   ) const {
   index_low = -1;
-  # ifdef ESP32
+# ifdef ESP32
   index_high = -1;
 
   if (!GPIO_IS_VALID_GPIO(gpio_pin)) { return false; }
-  # endif // ifdef ESP32
+# endif // ifdef ESP32
   constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
 
   if (gpio_pin < maxStates) {
     index_low = gpio_pin;
     return true;
   }
-  # ifdef ESP32
+# ifdef ESP32
   constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
-  #  if defined(ESP32_CLASSIC) || defined(ESP32C3)
+
+  index_high = gpio_pin - maxStates;
+
+#  if defined(ESP32_CLASSIC) || defined(ESP32C3)
 
   // These can all store in the PinBootStates_ESP32 array
-  const uint8_t addr = gpio_pin - maxStates;
+  return (index_high < maxStatesesp32);
 
-  if (addr < maxStatesesp32) {
-    index_high = addr;
-    return true;
-  }
-  #  elif defined(ESP32S2)
+#  elif defined(ESP32S2)
 
-  // Compatibility mode with older settings where not all boot states for ESP32-S2 could be stored due to a bug.
-  if ((gpio_pin > 21) && (gpio_pin < 33) && (gpio_pin != 26)) {
-    // flash/PSRAM connected pins
-    return false;
-  }
-  uint8_t addr = gpio_pin - maxStates;
-
-  if (addr < maxStatesesp32) {
+  // First make sure we're not dealing with flash/PSRAM connected pins
+  if (!((gpio_pin > 21) && (gpio_pin < 33) && (gpio_pin != 26))) {
     // Previously used index, to maintain compatibility with previous settings.
-    index_high = addr;
-    return true;
-  }
-  addr -= maxStatesesp32;
-  constexpr uint8_t offsetFlashPin = 22 - maxStates;
-  addr += offsetFlashPin;
 
-  if (addr >= (26 - maxStates)) {
-    // Skip index for GPIO 26
-    ++addr;
-  }
-  index_high = addr;
-  return true;
+    if (index_high >= maxStatesesp32) {
+      // Now try to fix the bug by inserting the missing ones into unused spots
+      // This way we don't need to convert existing settings
+      index_high -= maxStatesesp32;
+      constexpr int8_t offsetFlashPin = 22 - maxStates;
+      index_high += offsetFlashPin;
 
-  #  elif defined(ESP32S3)
+      if (gpio_pin >= 26) {
+        // Skip index for GPIO 26
+        ++index_high;
+      }
+    }
+    return (index_high < maxStatesesp32);
+  }
+
+#  elif defined(ESP32S3)
 
   // GPIO 22 ... 32 should never be used.
   // Thus:
   //  - map <maxStates> ... <21> to the beginning of PinBootStates_ESP32
   //  - map <33> ... <48> to the end of PinBootStates_ESP32
-  uint8_t addr = gpio_pin - maxStates;
-
   if (gpio_pin < 22) {
-    index_high = addr;
     return true;
   }
 
   if (gpio_pin >= 33) {
-    addr       = (addr + 22) - 33;
-    index_high = addr;
+    index_high = gpio_pin - maxStates + 22 - 33;
     return true;
   }
 #  else // if defined(ESP32_CLASSIC) || defined(ESP32C3)
+
   static_assert(false, "Implement processor architecture");
+  
 #  endif // if defined(ESP32_CLASSIC) || defined(ESP32C3)
 # endif // ifdef ESP32
+
   return false;
 }
 
