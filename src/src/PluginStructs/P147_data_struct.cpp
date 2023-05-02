@@ -11,7 +11,7 @@ P147_data_struct::P147_data_struct(struct EventStruct *event)
   _initialCounter  = P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER;
   _secondsCounter  = _initialCounter;
   _ignoreFirstRead = P147_LOW_POWER_MEASURE == 1;
-  _useCalibration  = P147_GET_USE_COMPENSATION;
+  _useCompensation = P147_GET_USE_COMPENSATION;
   # if P147_FEATURE_GASINDEXALGORITHM
   _rawOnly = P147_GET_RAW_DATA_ONLY;
   # endif // if P147_FEATURE_GASINDEXALGORITHM
@@ -42,7 +42,7 @@ bool P147_data_struct::init(struct EventStruct *event) {
     }
 
     if (_initialized && (_sensorType == P147_sensor_e::SGP41)) {
-      noxGasIndexAlgorithm = new NOxGasIndexAlgorithm((P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER) * 1.0f);
+      noxGasIndexAlgorithm = new NOxGasIndexAlgorithm(); // Algorithm doesn't support a sampling interval
 
       if (nullptr == noxGasIndexAlgorithm) {
         _initialized = false;
@@ -134,6 +134,7 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
       }
 
       case P147_state_e::MeasureStart:
+      case P147_state_e::MeasureTrigger:
       {
         uint16_t compensationT  = 0x6666; // Default values
         uint16_t compensationRh = 0x8000;
@@ -142,7 +143,7 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
 
         // addLog(LOG_LEVEL_INFO, F("P147 : MeasureStart"));
 
-        if (_useCalibration && (_temperatureValueIndex > -1) && (_humidityValueIndex > -1)) {
+        if (_useCompensation && (_temperatureValueIndex > -1) && (_humidityValueIndex > -1)) {
           temperature = UserVar[_temperatureValueIndex];
           humidity    = UserVar[_humidityValueIndex];
 
@@ -161,12 +162,14 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
         }
 
         if (startSensorRead(compensationRh, compensationT)) {
+          if ((_readLoop == 0) && (P147_LOW_POWER_MEASURE == 1) && (P147_state_e::MeasureTrigger != _state)) {
+            _readLoop = 1;                       // Skip first read after waking up
+          }
           _state = P147_state_e::MeasureReading; // Starting a measurement also turns the heater on, just needs extra time
 
-          if ((_readLoop == 0) && (P147_LOW_POWER_MEASURE == 1)) {
-            _readLoop = 1;
-          }
-          Scheduler.setPluginTaskTimer((P147_LOW_POWER_MEASURE == 0 || _readLoop == 0) ? P147_DELAY_REGULAR : P147_DELAY_LOW_POWER,
+          Scheduler.setPluginTaskTimer((P147_LOW_POWER_MEASURE == 0 || _readLoop == 0)
+                                       ? (_sensorType == P147_sensor_e::SGP40 ? P147_DELAY_REGULAR : P147_DELAY_REGULAR_SGP41)
+                                       : P147_DELAY_LOW_POWER,
                                        event->TaskIndex,
                                        0);
         }
@@ -184,6 +187,7 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
         // addLog(LOG_LEVEL_INFO,
         //        concat(F("P147 : MeasureReading raw VOC: "), _rawVOC) +
         //        concat(F(", raw NOx: "),                     _rawNOx) +
+        //        concat(F(", loop: "),                        _readLoop) +
         //        (is_ok ? F(" ok") : F(" error")));
 
         if (is_ok && (_readLoop == 0)) {
@@ -215,6 +219,12 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
           Scheduler.setPluginTaskTimer(P147_DELAY_MINIMAL, event->TaskIndex, 0); // Next step
         } else {
           _state = P147_state_e::MeasureStart;                                   // Restart from once_a_second
+
+          if (_readLoop > 0) {
+            _state = P147_state_e::MeasureTrigger;                               // Trigger only
+            Scheduler.setPluginTaskTimer(_sensorType == P147_sensor_e::SGP40 ? P147_DELAY_REGULAR : P147_DELAY_REGULAR_SGP41,
+                                         event->TaskIndex, 0);                   // Trigger actual read after heating up
+          }
         }
 
         if (_readLoop > 0) { _readLoop--; }
@@ -239,10 +249,10 @@ bool P147_data_struct::plugin_once_a_second(struct EventStruct *event) {
   bool success = false;
 
   // addLog(LOG_LEVEL_INFO,
-  //        concat(F("P147 : State: "), static_cast<int>(_state)) +
-  //        concat(F(", Last _rawVOC: "),  _rawVOC) +
-  //        concat(F(", Last _rawNOx: "),  _rawNOx) +
-  //        concat(F(", count: "),      _secondsCounter));
+  //        concat(F("P147 : State: "),   static_cast<int>(_state)) +
+  //        concat(F(", Last _rawVOC: "), _rawVOC) +
+  //        concat(F(", Last _rawNOx: "), _rawNOx) +
+  //        concat(F(", count: "),        _secondsCounter));
 
   if (isInitialized()) {
     _secondsCounter--;
@@ -351,7 +361,8 @@ bool P147_data_struct::plugin_get_config_value(struct EventStruct *event,
     string  = _rawVOC;
     success = true;
   } else
-  if (equals(var, F("rawnox"))) { // [<taskname>#rawNOx] = the last raw NOx value retrieved from the sensor
+  if (equals(var, F("rawnox")) &&
+      (_sensorType == P147_sensor_e::SGP41)) { // [<taskname>#rawNOx] = the last raw NOx value retrieved from the sensor
     string  = _rawNOx;
     success = true;
   }

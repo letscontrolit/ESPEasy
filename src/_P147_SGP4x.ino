@@ -6,6 +6,10 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-05-02 tonhuisman: Fix Low-power measurement, introducing a new State for reading the second measurement only
+ *                        Remove unsupported sampling interval from MOxGasIndexAlgorithm
+ *                        Fix settings-save issue
+ * 2023-05-01 tonhuisman: Adjust timing for reading SGP41 (needs a little more time than SGP40, according to the specs)
  * 2023-05-01 tonhuisman: Change Calibration to Compensation
  * 2023-04-30 tonhuisman: Ignore first read data (invalid) in low-power mode
  *                        Implement Sensirion GasIndexAlgorithm library for VOC and NOx index. (compile-time option)
@@ -135,7 +139,7 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
       # if P147_FEATURE_GASINDEXALGORITHM
       addFormSeparator(2);
 
-      addFormCheckBox(F("Show raw data only"), F("raw"), P147_GET_RAW_DATA_ONLY == 1);
+      addFormCheckBox(F("Show raw data only"), F("raw"), P147_GET_RAW_DATA_ONLY);
       # endif // if P147_FEATURE_GASINDEXALGORITHM
 
       success = true;
@@ -149,7 +153,7 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
       P147_LOW_POWER_MEASURE = isFormItemChecked(F("plow")) ? 1 : 0;
       P147_SET_USE_COMPENSATION(getFormItemInt(F("comp")));
       # if P147_FEATURE_GASINDEXALGORITHM
-      P147_SET_RAW_DATA_ONLY(isFormItemChecked(F("raw")) ? 1 : 0);
+      P147_SET_RAW_DATA_ONLY(isFormItemChecked(F("raw")));
       # endif // if P147_FEATURE_GASINDEXALGORITHM
 
       if (P147_GET_USE_COMPENSATION) {

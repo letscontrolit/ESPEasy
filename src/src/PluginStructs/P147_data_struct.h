@@ -27,18 +27,19 @@
 
 # define P147_FLAGS               PCONFIG_ULONG(0)
 
-# define P147_FLAG_USE_COMPENSATION  0
+# define P147_FLAG_USE_COMPENSATION 0
 # define P147_FLAG_RAW_DATA_ONLY    1
 
 # define P147_GET_USE_COMPENSATION    bitRead(P147_FLAGS, P147_FLAG_USE_COMPENSATION)
-# define P147_SET_USE_COMPENSATION(x) bitWrite(P147_FLAGS, P147_FLAG_USE_COMPENSATION, x)
+# define P147_SET_USE_COMPENSATION(x) bitWrite(P147_FLAGS, P147_FLAG_USE_COMPENSATION, (x))
 # define P147_GET_RAW_DATA_ONLY    bitRead(P147_FLAGS, P147_FLAG_RAW_DATA_ONLY)
-# define P147_SET_RAW_DATA_ONLY(x) bitWrite(P147_FLAGS, P147_FLAG_RAW_DATA_ONLY, x)
+# define P147_SET_RAW_DATA_ONLY(x) bitWrite(P147_FLAGS, P147_FLAG_RAW_DATA_ONLY, (x))
 
 # define P147_SHORT_COUNTER       1   // Regular measurement 1x second
 # define P147_LONG_COUNTER        10  // Low power measurement, 1x 10 seconds
 
 # define P147_DELAY_REGULAR       30  // Milliseconds, regular measurement
+# define P147_DELAY_REGULAR_SGP41 50  // Milliseconds, regular measurement for SGP41
 # define P147_DELAY_LOW_POWER     140 // Allow the heater to heat up, 170 - 30 msec
 # define P147_DELAY_MINIMAL       10  // Next step delay
 # define P147_DELAY_SELFTEST      320 // Selftest delay
@@ -71,8 +72,9 @@ enum class P147_state_e : uint8_t {
   Uninitialized  = 0,
   MeasureTest    = 1,
   MeasureStart   = 2,
-  MeasureReading = 3,
-  Ready          = 4,
+  MeasureTrigger = 3,
+  MeasureReading = 4,
+  Ready          = 5,
 };
 
 struct P147_data_struct : public PluginTaskData_base {
@@ -118,7 +120,7 @@ private:
   uint8_t       _initialCounter        = P147_SHORT_COUNTER;
   uint8_t       _secondsCounter        = _initialCounter;
   uint8_t       _startupNOxCounter     = 10; // Only after 10 seconds NOx value is usable
-  bool          _useCalibration        = false;
+  bool          _useCompensation       = false;
   bool          _initialized           = false;
   # if P147_FEATURE_GASINDEXALGORITHM
   uint16_t _skipCount = 0;
