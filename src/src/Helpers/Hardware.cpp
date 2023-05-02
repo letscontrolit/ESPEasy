@@ -38,8 +38,10 @@
 
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
     #  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
-      #   include <esp32s2/rom/spi_flash.h>
+      #   include <esp32s3/rom/spi_flash.h>
       #   include <esp32s3/spiram.h>
+
+      # define HAS_HALL_EFFECT_SENSOR  0
     #  elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
       #   include <esp32s2/rom/spi_flash.h>
       #   include <esp32s2/spiram.h>
@@ -677,7 +679,7 @@ const __FlashStringHelper* getFlashChipMode() {
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
     # if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
     // FIXME TD-er: implement for ESP32-S3
-      const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
+      const uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
       if (spi_ctrl & SPI_FREAD_OCT) {  
         return F("OCT");
       } else if (spi_ctrl & SPI_FREAD_QUAD) { 
