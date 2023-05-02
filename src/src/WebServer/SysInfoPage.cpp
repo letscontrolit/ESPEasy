@@ -616,6 +616,11 @@ void handle_sysinfo_Storage() {
     }
     addHtml(F(" Device: "));
     addHtml(getValue(LabelType::FLASH_CHIP_MODEL));
+    #ifdef ESP32
+    if (chipFeatureFlags_embeddedFlash()) {
+      addHtml(F(" (Embedded)"));
+    }
+    #endif
   }
   const uint32_t realSize = getFlashRealSizeInBytes();
   const uint32_t ideSize  = ESP.getFlashChipSize();

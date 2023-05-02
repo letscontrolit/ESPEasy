@@ -1229,7 +1229,7 @@ void P128_data_struct::fire(void) {
 
     for (int i = 0; i < pixelCount; i++) {
       pixel = leds[i];
-      pixel = RgbColor::LinearBlend(pixel, RgbColor(0, 0, 0), (255 - brightness) / 255.0);
+      pixel = RgbColor::LinearBlend(pixel, RgbColor(0, 0, 0), (255 - brightness) / 255.0f);
       Plugin_128_pixels->SetPixelColor(i, pixel);
     }
   }

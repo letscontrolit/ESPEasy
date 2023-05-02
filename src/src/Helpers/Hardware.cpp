@@ -643,6 +643,21 @@ uint32_t getFlashRealSizeInBytes() {
 uint32_t getXtalFrequencyMHz() {
   return rtc_clk_xtal_freq_get();
 }
+
+bool chipFeatureFlags_embeddedFlash() {
+  static bool res = false;
+  static bool loaded = false;
+  if (!loaded) {
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+
+    res = (chip_info.features & CHIP_FEATURE_EMB_FLASH) != 0;
+
+    loaded = true;
+  }
+  return res;
+}
+
 #endif // ifdef ESP32
 
 
@@ -815,27 +830,33 @@ const __FlashStringHelper* getChipModel() {
   // https://www.espressif.com/en/products/socs
   // https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L579
 
-  /*
-     Source: esp-idf esp_system.h and esptool
-     typedef enum {
-      CHIP_ESP32   = 1,  //!< ESP32
-      CHIP_ESP32S2 = 2,  //!< ESP32-S2
-      CHIP_ESP32S3 = 4,  //!< ESP32-S3
-      CHIP_ESP32C3 = 5,  //!< ESP32-C3
-     } esp_chip_model_t;
-     // Chip feature flags, used in esp_chip_info_t
-   #define CHIP_FEATURE_EMB_FLASH      BIT(0)      //!< Chip has embedded flash memory
-   #define CHIP_FEATURE_WIFI_BGN       BIT(1)      //!< Chip has 2.4GHz WiFi
-   #define CHIP_FEATURE_BLE            BIT(4)      //!< Chip has Bluetooth LE
-   #define CHIP_FEATURE_BT             BIT(5)      //!< Chip has Bluetooth Classic
-     // The structure represents information about the chip
-     typedef struct {
-      esp_chip_model_t model;  //!< chip model, one of esp_chip_model_t
-      uint32_t features;       //!< bit mask of CHIP_FEATURE_x feature flags
-      uint8_t cores;           //!< number of CPU cores
-      uint8_t revision;        //!< chip revision number
-     } esp_chip_info_t;
-   */
+/*
+  Source: esp_chip_info.h
+    typedef enum {
+        CHIP_ESP32  = 1, //!< ESP32
+        CHIP_ESP32S2 = 2, //!< ESP32-S2
+        CHIP_ESP32S3 = 9, //!< ESP32-S3
+        CHIP_ESP32C3 = 5, //!< ESP32-C3
+        CHIP_ESP32H2 = 6, //!< ESP32-H2
+    } esp_chip_model_t;
+
+    // Chip feature flags, used in esp_chip_info_t
+    #define CHIP_FEATURE_EMB_FLASH      BIT(0)      //!< Chip has embedded flash memory
+    #define CHIP_FEATURE_WIFI_BGN       BIT(1)      //!< Chip has 2.4GHz WiFi
+    #define CHIP_FEATURE_BLE            BIT(4)      //!< Chip has Bluetooth LE
+    #define CHIP_FEATURE_BT             BIT(5)      //!< Chip has Bluetooth Classic
+    #define CHIP_FEATURE_IEEE802154     BIT(6)      //!< Chip has IEEE 802.15.4
+    #define CHIP_FEATURE_EMB_PSRAM      BIT(7)      //!< Chip has embedded psram
+
+    // The structure represents information about the chip
+    typedef struct {
+        esp_chip_model_t model;  //!< chip model, one of esp_chip_model_t
+        uint32_t features;       //!< bit mask of CHIP_FEATURE_x feature flags
+        uint8_t cores;           //!< number of CPU cores
+        uint8_t revision;        //!< chip revision number
+    } esp_chip_info_t;
+*/
+
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
 
@@ -895,7 +916,7 @@ const __FlashStringHelper* getChipModel() {
 # endif // if CONFIG_IDF_TARGET_ESP32
     return F("ESP32");
   }
-  else if (2 == chip_model) { // ESP32-S2
+  else if (CHIP_ESP32S2 == chip_model) { // ESP32-S2
 # ifdef CONFIG_IDF_TARGET_ESP32S2
 
     /* esptool:
@@ -926,10 +947,10 @@ const __FlashStringHelper* getChipModel() {
 # endif // CONFIG_IDF_TARGET_ESP32S2
     return F("ESP32-S2");
   }
-  else if (4 == chip_model) { // ESP32-S3
+  else if (CHIP_ESP32S3 == chip_model) { // ESP32-S3
     return F("ESP32-S3");     // Max 240MHz, Dual core, QFN 7*7, ESP32-S3-WROOM-1, ESP32-S3-DevKitC-1
   }
-  else if (5 == chip_model) { // ESP32-C3
+  else if (CHIP_ESP32C3 == chip_model) { // ESP32-C3
 # ifdef CONFIG_IDF_TARGET_ESP32C3
 
     /* esptool:
@@ -984,7 +1005,7 @@ const __FlashStringHelper* getChipModel() {
 # endif // CONFIG_IDF_TARGET_ESP32C6
     return F("ESP32-C6");
   }
-  else if (10 == chip_model) {  // ESP32-H2
+  else if (CHIP_ESP32H2 == chip_model) {  // ESP32-H2
 # ifdef CONFIG_IDF_TARGET_ESP32H2
 
     /* esptool:
@@ -1035,10 +1056,15 @@ bool isESP8285() {
 }
 
 uint8_t getChipRevision() {
-  uint8_t rev = 0;
+  static uint8_t rev = 0;
 
   #ifdef ESP32
-  rev = ESP.getChipRevision();
+  if (rev == 0) {
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+
+    rev = chip_info.revision;
+  }
   #endif // ifdef ESP32
   return rev;
 }

@@ -106,6 +106,8 @@ uint32_t                   getFlashChipSpeed();
 
 #ifdef ESP32
 uint32_t                   getXtalFrequencyMHz();
+
+bool                       chipFeatureFlags_embeddedFlash();
 #endif // ifdef ESP32
 
 const __FlashStringHelper* getFlashChipMode();
