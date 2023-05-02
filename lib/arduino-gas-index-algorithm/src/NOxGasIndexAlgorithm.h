@@ -37,8 +37,6 @@
 class NOxGasIndexAlgorithm : public SensirionGasIndexAlgorithm {
   public:
     NOxGasIndexAlgorithm() : SensirionGasIndexAlgorithm(ALGORITHM_TYPE_NOX){};
-    NOxGasIndexAlgorithm(float sampling_interval) // 2023-04-30 tonhuisman: Add second constructor
-          : SensirionGasIndexAlgorithm(ALGORITHM_TYPE_NOX, sampling_interval){};
 };
 
 #endif /* NOXGASINDEXALGORITHM_H */
