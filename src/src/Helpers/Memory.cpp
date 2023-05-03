@@ -9,6 +9,7 @@ extern "C" {
 
 #include "../../ESPEasy_common.h"
 
+
 /*********************************************************************************************\
    Memory management
 \*********************************************************************************************/
@@ -20,11 +21,11 @@ extern "C" {
 //      https://github.com/letscontrolit/ESPEasy/issues/1824
 #ifdef ESP32
 
+#include <soc/cpu.h>
+
 // FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack() {
-  register uint8_t *sp asm ("a1");
-
-  return sp - pxTaskGetStackStart(nullptr);
+  return ((uint8_t*)esp_cpu_get_sp()) - pxTaskGetStackStart(nullptr);
 }
 
 uint32_t getFreeStackWatermark() {
