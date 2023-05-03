@@ -443,7 +443,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
 // #define USES_P087   // Serial Proxy
 // #define USES_P088   // HeatpumpIR
-// #define USES_P089   // Ping
+#define USES_P089   // Ping
 
 // #define USES_P090   // CCS811			czujnik jakości powietrza (pomiar stężenia dwutlenku węgla (eCO2) oraz lotnych związków organicznych (TVOC))
 // #define USES_P091   // SerSwitch
@@ -486,7 +486,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P127   // CDM7160
 // #define USES_P129   // 74HC165 Input shiftregisters
 // #define USES_P131   // NeoMatrix
-// #define USES_P132   // INA3221
+#define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
@@ -531,7 +531,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_C010   // Generic UDP
 // #define USES_C011   // Generic HTTP Advanced
 // #define USES_C012   // Blynk HTTP
-// #define USES_C013   // ESPEasy P2P network
+#define USES_C013   // ESPEasy P2P network
 // #define USES_C014   // homie 3 & 4dev MQTT
 // #define USES_C015   // Blynk
 // #define USES_C016   // Cache controller
