@@ -1594,11 +1594,10 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   // GPIO 0  State during boot determines boot mode.
-  warning = gpio == 0;
-
+  if (gpio == 0) warning = true;
 
   if (gpio == 46) {
-    // Part of the boot strapping pins.
+    // Strapping pin which must be low during flashing
     warning = true;
   }
 
@@ -1628,11 +1627,25 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
+  if (gpio == 45) {
+    // GPIO45 is used to select the VDD_SPI power supply voltage at reset:
+    // • GPIO45 = 0, VDD_SPI pin is powered directly from VDD3P3_RTC via resistor RSP I . Typically this voltage is
+    //   3.3 V. For more information, see Figure: ESP32-S3 Power Scheme in ESP32-S3 Datasheet.
+    // • GPIO45 = 1, VDD_SPI pin is powered from internal 1.8 V LDO.
+    warning = true;
+  }
+
+  if (gpio == 46) {
+    // Strapping pin which must be low during flashing
+    warning = true;
+  }
 
   if ((input == false) && (output == false)) {
     return false;
   }
 
+  // GPIO 0  State during boot determines boot mode.
+  if (gpio == 0) warning = true;
 
 
 # elif defined(ESP32C3)
@@ -1648,12 +1661,11 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-/*
   if (gpio == 8) {
     // Strapping pin which must be high during flashing
     warning = true;
   }
-*/
+
   if (gpio == 9) {
     // Strapping pin to force download mode (like GPIO-0 on ESP8266/ESP32-classic)
     warning = true;

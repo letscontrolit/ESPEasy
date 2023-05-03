@@ -10,6 +10,13 @@ extern "C" {
 #include "../../ESPEasy_common.h"
 
 
+#ifdef ESP32
+#include "../Helpers/Hardware.h"
+
+#include <soc/cpu.h>
+#endif
+
+
 /*********************************************************************************************\
    Memory management
 \*********************************************************************************************/
@@ -20,8 +27,6 @@ extern "C" {
 //      https://github.com/esp8266/Arduino/issues/5148#issuecomment-424329183
 //      https://github.com/letscontrolit/ESPEasy/issues/1824
 #ifdef ESP32
-
-#include <soc/cpu.h>
 
 // FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack() {
