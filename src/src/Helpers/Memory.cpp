@@ -96,3 +96,42 @@ unsigned long getMaxFreeBlock()
   }
   return freemem;
 }
+
+/********************************************************************************************\
+   Special alloc functions to allocate in PSRAM if available
+ \*********************************************************************************************/
+
+void *special_malloc(uint32_t size) {
+  #ifdef ESP32
+  if (UsePSRAM()) {
+    return heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  } else {
+    return malloc(size);
+  }
+  #else
+  return malloc(size);
+  #endif
+}
+
+void *special_realloc(void *ptr, size_t size) {
+  #ifdef ESP32
+  if (UsePSRAM()) {
+    return heap_caps_realloc(ptr, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  } else {
+    return realloc(ptr, size);
+  }
+  #else
+  return realloc(ptr, size);
+  #endif
+}
+void *special_calloc(size_t num, size_t size) {
+  #ifdef ESP32
+  if (UsePSRAM()) {
+    return heap_caps_calloc(num, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  } else {
+    return calloc(num, size);
+  }
+  #else
+  return calloc(num, size);
+  #endif
+}
