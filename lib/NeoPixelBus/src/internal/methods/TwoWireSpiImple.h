@@ -26,6 +26,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #include <SPI.h>
 
 class SpiSpeed40Mhz
@@ -34,7 +36,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed40Mhz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 40000000L;
 };
@@ -45,7 +47,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed30Mhz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 30000000L;
 };
@@ -56,7 +58,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed20Mhz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 20000000L;
 };
@@ -67,7 +69,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed15Mhz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 15000000L;
 };
@@ -78,7 +80,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed10Mhz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 10000000L;
 };
@@ -89,7 +91,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed5Mhz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 5000000L;
 };
@@ -100,7 +102,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed2Mhz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 2000000L;
 };
@@ -111,7 +113,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed1Mhz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 1000000L;
 };
@@ -122,7 +124,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     SpiSpeed500Khz() {};
 
-    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+    static void applySettings(MAYBE_UNUSED const SettingsObject& settings) {}
 
     static const uint32_t Clock = 500000L;
 };
@@ -146,7 +148,7 @@ public:
         Clock(10000000)
     {};
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
         Clock = settings.Clock;
     }
@@ -215,7 +217,7 @@ public:
 #endif
     }
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
         _speed.applySettings(settings);
     }

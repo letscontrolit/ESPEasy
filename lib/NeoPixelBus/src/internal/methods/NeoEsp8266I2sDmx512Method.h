@@ -26,6 +26,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #ifdef ARDUINO_ARCH_ESP8266
 #include "NeoEsp8266I2sMethodCore.h"
 
@@ -158,7 +160,7 @@ public:
         AllocateI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
     }
 
-    NeoEsp8266I2sDmx512MethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 
+    NeoEsp8266I2sDmx512MethodBase(MAYBE_UNUSED uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 
         NeoEsp8266I2sDmx512MethodBase(pixelCount, elementSize, settingsSize)
     {
     }
@@ -223,7 +225,7 @@ public:
         return _sizeData - T_SPEED::HeaderSize;
     }
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
     }
 

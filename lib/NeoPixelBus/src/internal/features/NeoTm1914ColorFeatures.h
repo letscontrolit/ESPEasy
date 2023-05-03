@@ -26,6 +26,8 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+#include "../NeoUtil.h"
+
 enum NeoTm1914_Mode
 {
     NeoTm1914_Mode_DinFdinAutoSwitch,  // Switches between DIN and FDIN on any signal pause > 300ms
@@ -50,7 +52,7 @@ public:
     typedef NeoTm1914Settings SettingsObject;
     static const size_t SettingsSize = 6;
 
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    static void applySettings(MAYBE_UNUSED uint8_t* pData, MAYBE_UNUSED size_t sizeData, MAYBE_UNUSED const SettingsObject& settings)
     {
         // settings are at the front of the data stream
         uint8_t* pSet = pData;
@@ -85,13 +87,13 @@ public:
         }
     }
 
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static uint8_t* pixels(MAYBE_UNUSED uint8_t* pData, MAYBE_UNUSED size_t sizeData)
     {
         // settings are at the front of the data stream
         return pData + SettingsSize;
     }
 
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static const uint8_t* pixels(MAYBE_UNUSED const uint8_t* pData, MAYBE_UNUSED size_t sizeData)
     {
         // settings are at the front of the data stream
         return pData + SettingsSize;

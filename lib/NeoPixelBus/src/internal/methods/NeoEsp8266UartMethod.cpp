@@ -24,6 +24,8 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+#include "../NeoUtil.h"
+
 #ifdef ARDUINO_ARCH_ESP8266
 
 #include <Arduino.h>
@@ -141,7 +143,7 @@ void NeoEsp8266UartInterruptContext::Detach(uint8_t uartNum)
 
 // The xtos_1int handler calls with param1 as the arg, param2 as a pointer
 // to an exception frame in memory.
-void IRAM_ATTR NeoEsp8266UartInterruptContext::Isr(void* param, [[maybe_unused]] void* exceptionFrame)
+void IRAM_ATTR NeoEsp8266UartInterruptContext::Isr(void* param, MAYBE_UNUSED void* exceptionFrame)
 {
     // make sure this is for us
     if (param == s_uartInteruptContext)

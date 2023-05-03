@@ -27,6 +27,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #include "driver/spi_master.h"
 
 // API and type use require newer IDF versions
@@ -198,7 +200,7 @@ public:
         return _sizePixelData;
     };
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
         _speed.applySettings(settings);
         if (_spiHandle)
