@@ -309,4 +309,4 @@ ESP32-C3
 
 Added: 2023/05/03
 
-.. note:: Support for the ESP32-S3 is very preliminary, as in it is hardly tested (as of May 2023)
+.. note:: Support for the ESP32-C3 is very preliminary, as in it is hardly tested (as of May 2023)
