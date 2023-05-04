@@ -225,6 +225,7 @@
 // #define FEATURE_POST_TO_HTTP 1 // Enable availability of the PostToHTTP command
 // #define FEATURE_I2C_DEVICE_CHECK 0 // Disable the I2C Device check feature
 // #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching the I2C address from I2C plugins. Will be enabled when FEATURE_I2C_DEVICE_CHECK is enabled
+// #define FEATURE_RTTTL 1   // Enable rtttl command
 
 
 #if FEATURE_CUSTOM_PROVISIONING
