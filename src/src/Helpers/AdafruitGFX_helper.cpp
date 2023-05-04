@@ -803,8 +803,8 @@ enum class adagfx_fonts_e : int8_t {
   sevenseg24,
   sevenseg18,
   freesans,
-  angelina8prop,
   # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  angelina8prop,
   novamono8pt, // 8pt
   unispace8pt,
   unispaceitalic8pt,
