@@ -27,6 +27,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+#include "../NeoUtil.h"
 
 class Neo6Byte4xxElements
 {
@@ -100,16 +101,16 @@ public:
     typedef NeoNoSettings SettingsObject;
     static const size_t SettingsSize = 0;
 
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    static void applySettings(MAYBE_UNUSED uint8_t* pData, MAYBE_UNUSED size_t sizeData, MAYBE_UNUSED const SettingsObject& settings)
     {
     }
 
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static uint8_t* pixels(MAYBE_UNUSED uint8_t* pData, MAYBE_UNUSED size_t sizeData)
     {
         return pData;
     }
 
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static const uint8_t* pixels(MAYBE_UNUSED const uint8_t* pData, MAYBE_UNUSED size_t sizeData)
     {
         return pData;
     }

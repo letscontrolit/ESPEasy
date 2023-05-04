@@ -30,6 +30,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #ifdef ARDUINO_ARCH_ESP8266
 #include "NeoEsp8266I2sMethodCore.h"
 
@@ -212,7 +214,7 @@ public:
     static void FillBuffers(uint8_t* i2sBuffer,
         const uint8_t* data,
         size_t sizeData,
-        [[maybe_unused]] size_t sizePixel)
+        MAYBE_UNUSED size_t sizePixel)
     {
         uint16_t* pDma = (uint16_t*)i2sBuffer;
         const uint8_t* pEnd = data + sizeData;
@@ -290,7 +292,7 @@ public:
         AllocateI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_ENCODER::IdleLevel);
     }
 
-    NeoEsp8266DmaMethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 
+    NeoEsp8266DmaMethodBase(MAYBE_UNUSED uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 
         NeoEsp8266DmaMethodBase(pixelCount, elementSize, settingsSize)
     {
     }
@@ -355,7 +357,7 @@ public:
         return _sizeData;
     }
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
     }
 

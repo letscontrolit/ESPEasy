@@ -27,6 +27,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #include <SPI.h>
 
 template<typename T_SPISPEED> class TwoWireHspiImple
@@ -81,7 +83,7 @@ public:
         _hspi->writeBytes(const_cast<uint8_t*>(data), dataSize);
     }
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
         _speed.applySettings(settings);
     }

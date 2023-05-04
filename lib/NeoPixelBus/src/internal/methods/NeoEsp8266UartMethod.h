@@ -26,6 +26,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #ifdef ARDUINO_ARCH_ESP8266
 
 // this template method class is used to track the data being sent on the uart
@@ -420,7 +422,7 @@ public:
         return this->_sizeData;
     };
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
     }
 

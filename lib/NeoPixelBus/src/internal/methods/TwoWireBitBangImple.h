@@ -26,6 +26,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
 
 class TwoWireBitBangImple
 {
@@ -100,7 +101,7 @@ public:
         }
     }
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
     }
 

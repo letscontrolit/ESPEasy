@@ -27,6 +27,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 // must also check for arm due to Teensy incorrectly having ARDUINO_ARCH_AVR set
 #if defined(ARDUINO_ARCH_AVR) && !defined(__arm__)
 #include "TwoWireBitBangImpleAvr.h"
@@ -119,7 +121,7 @@ public:
         return _sizeData;
     };
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
         _wire.applySettings(settings);
     }

@@ -36,6 +36,15 @@ License along with NeoPixel.  If not, see
 #define NEOPIXEBUS_NO_STL 1
 #endif
 
+#ifndef MAYBE_UNUSED 
+  #ifdef ESP32
+    #define MAYBE_UNUSED [[maybe_unused]]
+  #endif
+  #ifdef ESP8266
+    #define MAYBE_UNUSED
+  #endif
+#endif
+
 // some platforms do not define this standard progmem type for some reason
 //
 #ifndef PGM_VOID_P

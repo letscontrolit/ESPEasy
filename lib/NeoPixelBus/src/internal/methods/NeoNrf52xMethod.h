@@ -29,6 +29,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #if defined(ARDUINO_ARCH_NRF52840)
 
 const uint16_t c_dmaBytesPerDataByte = 8 * sizeof(nrf_pwm_values_common_t); // bits * bytes to represent pulse
@@ -416,7 +418,7 @@ public:
         return _sizeData;
     };
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
     }
 

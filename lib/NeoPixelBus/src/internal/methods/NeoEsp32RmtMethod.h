@@ -29,6 +29,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #ifdef ARDUINO_ARCH_ESP32
 
 /*  General Reference documentation for the APIs used in this implementation
@@ -601,7 +603,7 @@ public:
         return _sizeData;
     }
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
     }
 

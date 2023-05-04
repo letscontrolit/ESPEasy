@@ -30,6 +30,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#include "../NeoUtil.h"
+
 #if defined(__arm__) && !defined(ARDUINO_ARCH_NRF52840)
 
 template<typename T_SPEED> class NeoArmMethodBase
@@ -107,7 +109,7 @@ public:
         return _sizeData;
     };
 
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
+    void applySettings(MAYBE_UNUSED const SettingsObject& settings)
     {
     }
 
