@@ -1532,6 +1532,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
   #endif
