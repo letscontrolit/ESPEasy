@@ -144,7 +144,10 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_READ:
     {
-      success = true;
+      success = UserVar[event->BaseVarIndex] != UserVar[event->BaseVarIndex + 1]; // Changed?
+
+      // Keep previous state
+      UserVar[event->BaseVarIndex + 1] = UserVar[event->BaseVarIndex];
       break;
     }
   }
