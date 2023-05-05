@@ -423,7 +423,8 @@ Sources:
 * `Espressif docs <https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32c2/hw-reference/chip-series-comparison.html>`_
 * `Espressif Product Selector <https://products.espressif.com/#/product-comparison>`_
 
-Datasheets:
+Datasheets
+==========
 
 * `ESP8266 (ESP8285) <https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf>`_
 * `ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf>`_

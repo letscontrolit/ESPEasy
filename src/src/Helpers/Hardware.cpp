@@ -676,84 +676,18 @@ uint32_t getFlashChipSpeed() {
 }
 
 const __FlashStringHelper* getFlashChipMode() {
-#ifdef ESP8266
-
   switch (ESP.getFlashChipMode()) {
     case FM_QIO:     return F("QIO");
     case FM_QOUT:    return F("QOUT");
     case FM_DIO:     return F("DIO");
     case FM_DOUT:    return F("DOUT");
+#ifdef ESP32
+    case FM_FAST_READ: return F("Fast");
+    case FM_SLOW_READ: return F("Slow");
+#endif
     case FM_UNKNOWN: break;
   }
   return F("Unknown");
-#else // ifdef ESP8266
-
-  // Source: https://github.com/letscontrolit/ESPEasy/pull/4200#issuecomment-1221607332
-  // + discussion: https://github.com/espressif/arduino-esp32/issues/7140#issuecomment-1222274417
-
-  # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
-    # if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
-    // FIXME TD-er: implement for ESP32-S3
-      const uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
-      if (spi_ctrl & SPI_FREAD_OCT) {  
-        return F("OCT");
-      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
-        return F("QIO");
-      } else if (spi_ctrl & SPI_FREAD_DUAL) {
-        return F("DIO");
-      }
-      return F("DOUT");
-    # elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
-      const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
-      if (spi_ctrl & SPI_FREAD_OCT) {  
-        return F("OCT");
-      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
-        return F("QIO");
-      } else if (spi_ctrl & SPI_FREAD_DUAL) {
-        return F("DIO");
-      }
-      return F("DOUT");
-    #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
-    // FIXME TD-er: implement for ESP32-C3
-    /*
-      if (spi_ctrl & SPI_FREAD_QUAD) { 
-        return F("QIO");
-      } else if (spi_ctrl & SPI_FREAD_DUAL) {
-        return F("DIO");
-      }
-      */
-      return F("DOUT");
-    #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
-      const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
-      if (spi_ctrl & SPI_FREAD_QIO) {  
-        return F("QIO");
-      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
-        return F("QOUT");
-      } else if (spi_ctrl & SPI_FREAD_DIO) {
-        return F("DIO");
-      } else if (spi_ctrl & SPI_FREAD_DUAL) {
-        return F("DOUT");
-      } else if (spi_ctrl & SPI_FASTRD_MODE) {
-        return F("Fast");
-      }
-      return F("Slow");
-    #  endif // if CONFIG_IDF_TARGET_ESP32S2
-  # else // ESP32 Before IDF 4.0
-    const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
-    if (spi_ctrl & (BIT(24))) {  
-      return F("QIO");
-    } else if (spi_ctrl & (BIT(20))) { 
-      return F("QOUT");
-    } else if (spi_ctrl & (BIT(23))) {
-      return F("DIO");
-    } else if (spi_ctrl & (BIT(14))) {
-      return F("DOUT");
-    } else if (spi_ctrl & (BIT(13))) {
-      return F("Fast");
-    }
-    return F("Slow");
-  # endif    // if ESP_IDF_VERSION_MAJOR > 3
-#endif // ifdef ESP8266
 }
 
 bool puyaSupport() {
@@ -831,13 +765,20 @@ const __FlashStringHelper* getChipModel() {
   // https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L579
 
 /*
-  Source: esp_chip_info.h
+  Source: esp_chip_info.h & esptool.py  ('IMAGE_CHIP_ID') https://github.com/espressif/esptool/search?q=IMAGE_CHIP_ID
+  
     typedef enum {
-        CHIP_ESP32  = 1, //!< ESP32
-        CHIP_ESP32S2 = 2, //!< ESP32-S2
-        CHIP_ESP32S3 = 9, //!< ESP32-S3
-        CHIP_ESP32C3 = 5, //!< ESP32-C3
-        CHIP_ESP32H2 = 6, //!< ESP32-H2
+        CHIP_ESP32      = 1,  //!< ESP32
+        CHIP_ESP32S2    = 2,  //!< ESP32-S2
+        CHIP_ESP32S3_b  = 4,  //!< ESP32-S3(beta2)
+        CHIP_ESP32S3    = 9,  //!< ESP32-S3
+        CHIP_ESP32C3    = 5,  //!< ESP32-C3
+        CHIP_ESP32C2    = 12, //!< ESP32-C2
+        CHIP_ESP32C6_b  = 7,  //!< ESP32-C6(beta)
+        CHIP_ESP32C6    = 13, //!< ESP32-C6
+        CHIP_ESP32H2_b1 = 10, //!< ESP32-H2(beta1)
+        CHIP_ESP32H2_b2 = 14, //!< ESP32-H2(beta2)
+        CHIP_ESP32H2    = 6,  //!< ESP32-H2
     } esp_chip_model_t;
 
     // Chip feature flags, used in esp_chip_info_t
@@ -951,7 +892,8 @@ const __FlashStringHelper* getChipModel() {
 # endif // CONFIG_IDF_TARGET_ESP32S2
     return F("ESP32-S2");
   }
-  else if (CHIP_ESP32S3 == chip_model) { // ESP32-S3
+  else if (CHIP_ESP32S3 == chip_model || // ESP32-S3
+           4 == chip_model) {            // ESP32-S3(beta2)
     return F("ESP32-S3");     // Max 240MHz, Dual core, QFN 7*7, ESP32-S3-WROOM-1, ESP32-S3-DevKitC-1
   }
   else if (CHIP_ESP32C3 == chip_model) { // ESP32-C3
@@ -981,10 +923,8 @@ const __FlashStringHelper* getChipModel() {
 # endif // CONFIG_IDF_TARGET_ESP32C3
     return F("ESP32-C3");
   }
-  else if (6 == chip_model) { // ESP32-S3(beta3)
-    return F("ESP32-S3");
-  }
-  else if (7 == chip_model) { // ESP32-C6(beta)
+  else if (7 == chip_model ||  // ESP32-C6(beta)
+           13 == chip_model) { // ESP32-C6
 # ifdef CONFIG_IDF_TARGET_ESP32C6
 
     /* esptool:
@@ -1009,7 +949,9 @@ const __FlashStringHelper* getChipModel() {
 # endif // CONFIG_IDF_TARGET_ESP32C6
     return F("ESP32-C6");
   }
-  else if (CHIP_ESP32H2 == chip_model) {  // ESP32-H2
+  else if (10 == chip_model ||            // ESP32-H2(beta1)
+           14 == chip_model ||            // ESP32-H2(beta2)
+           CHIP_ESP32H2 == chip_model) {  // ESP32-H2
 # ifdef CONFIG_IDF_TARGET_ESP32H2
 
     /* esptool:
