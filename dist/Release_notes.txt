@@ -1,4 +1,109 @@
 -------------------------------------------------
+Changes in release mega-20230505 (since mega-20230409)
+-------------------------------------------------
+
+Release date: vr  5 mei 2023 22:31:21 CEST
+
+Fabio Ancona (4):
+      Rename sensor to SHT3x from SHT30/31/35
+      Rename sensor to SHT3x from SHT30/31/35
+      SHT3x Update docs with detailed chip list
+      SHT1x Update docs with detailed chip list
+
+TD-er (32):
+      [LoRaTTN] Split up C018 source files
+      [P151] Add Honeywell I2C Pressure sensor plugin
+      [P151] Fix I2C scanner result not showing address selection dialog
+      [I2C] Use standard functions in I2C_access.h/.cpp
+      [Dummy] Add 1...4 ULong as taskvalue output type
+      [Dummy] Correctly interpret task values based on sensor type
+      [Cleanup] Reduce build size using arrays instead of switch cases
+      [Dummy] Reduce code duplication accessing task values
+      [Cleanup] Fix index issue determine task value name strings
+      [SenseAir] Add ABC option
+      [SenseAir] Add some more debug sensor info on settings page
+      [Build] Fix merge issues
+      [ESP32-S2] Fix selection of only 2 HW serial ports ( #4595)
+      [Honeywell] Fix measuring temperature and pressure on real sensor
+      [Honeywell] Fix accepting "stale" data when value did change
+      [Honeywell] Add documentation for P151 I2C Honeywell Pressure
+      [SenseAir] Revert SenseAir changes as that is split to #4550
+      [TaskValueTypes] Add various data types for dummy plugin
+      [CacheReader] Support new task value data types
+      [TaskValueTypes] Fix build issue missing #ifdef
+      [TaskValueTypes] Fix storing taskvalues to RTC
+      [TaskValueTypes] Rename old "Long" type to "ULong", which it actually is
+      [TaskValueTypes] Simplify ESPEasy p2p task value exchange
+      [Cache Reader] Optimize JSON output
+      [TaskValueTypes] Check new types when checking for valid taskvalues
+      [TaskValueTypes] Simplify checks on TaskValues + speedup.
+      [TaskValueTypes] Add build flag FEATURE_EXTENDED_TASK_VALUE_TYPES
+      [Dummy] Update documentation for the new task value data types
+      Update to esptool.py 4.5.1
+      Update PlatformIO 6.1.6
+      Not define esptool.py in the requirements.txt
+      pygit2>=1.10.1
+
+Ton Huisman (41):
+      [P150] Add plugin Environment - TMP117 Temperature
+      [Build] Correct compiler warning
+      [P150] Add opt. Raw, add opt. logging, add opt. Fahrenheit, resolve feedback
+      [P150] Remove opt. Fahrenheit output
+      [P150] Make one-shot mode work, fix interval reading
+      [P150] Correctly apply config bits, improve configuration screen
+      [P150] Correctly put in `Collection F` set
+      [P150] Add documentation
+      [Commands] Add internal command HiddenSSID
+      [Commands] Add documentation for HiddenSSID
+      [Commands] Fix handling empty argument for on/off commands on ESP8266
+      [Commands] Fix documentation typo
+      [P106] Update BME680 library to latest
+      [P106] Rename to BME68x, add Gas in Ohm option
+      [P106] Add documentation
+      [Commands] Add PutToHTTP command
+      [Docs] Add PutToHTTP documentation
+      [Commands] Fix typo in PutToHTTP log message
+      [LongPulse_ms] Fix end-state for inverted repeated pulse
+      [LongPulse_ms] Fix end-state for inverted repeated pulse
+      [GPIO] Improve GPIO states for ESP32-S2
+      [GPIO] Fixe ESP8266 compilation issue
+      [GPIO] Update hardware-page documentation
+      [Docs] Add moving average Rules example
+      [Docs] Update moving average Rules example
+      [P102] Bring plugin-name in line with other plugins
+      [P031] Harmonize plugin name
+      [P105] Harmonize plugin name
+      [P094] Correct name in documentation
+      [P112] Add documentation template
+      [P112] Remove [Develoment] tag, add to Collection F
+      [P036] Bugfix for overlapping page variables
+      [UI] Bugfix: `/dashboard.esp` url was not working anymore
+      [UI] Setup page doesn't serve css
+      [I2C] `I2Cscanner` command check if I2C enabled
+      [Custom] Add `FEATURE_RTTTL` define to Custom-sample.h
+      [AdaGFXHelper] Fix optional fonts define error
+      [Custom] Add `FEATURE_PUT_TO_HTTP` define to Custom-sample.h
+      [P080] Add missing `PLUGIN_READ` function-handler, so the state is sent to controllers
+      [P080] Only send state-changes to controllers
+      [P080] Use UserVar setters/getters for changing and checking the value
+
+flashmark (13):
+      P145 Minor changes sensor definition struct
+      P122 SHT2x temperature and humidity sensors
+      P122 Reworked after review comment
+      P122 review changes
+      P122 fix wrong bitmask, cleanup
+      P122 Small rework, added documentation
+      P144 Start documentation
+      P144 Rework documentation
+      P122 documentation, fix ordering environment plugins
+      P144 small review fix
+      P122 Fixed typo in documentation
+      P122 Limit build size for esp8266
+      P122 fixed bug in conditional compilation when debugging switched off
+
+
+-------------------------------------------------
 Changes in release mega-20230409 (since mega-20230306)
 -------------------------------------------------
 

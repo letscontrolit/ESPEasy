@@ -117,16 +117,17 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 
         if (Dallas_readiButton(addr, Plugin_080_DallasPin, Plugin_080_DallasPin))
         {
-          UserVar[event->BaseVarIndex] = 1;
-          success                      = true;
+          UserVar.setUint32(event->TaskIndex, 0, 1);
+          success = true;
         }
         else
         {
-          UserVar[event->BaseVarIndex] = 0;
+          UserVar.setUint32(event->TaskIndex, 0, 0);
         }
         Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
-        #ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("DS   : iButton: ");
 
@@ -137,13 +138,20 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
           }
           addLogMove(LOG_LEVEL_DEBUG, log);
         }
-        #endif
+        # endif // ifndef BUILD_NO_DEBUG
       }
+      break;
+    }
+    case PLUGIN_READ:
+    {
+      success = UserVar.getUint32(event->TaskIndex, 0) != UserVar.getUint32(event->TaskIndex, 2); // Changed?
+
+      // Keep previous state
+      UserVar.setUint32(event->TaskIndex, 2, UserVar.getUint32(event->TaskIndex, 0));
       break;
     }
   }
   return success;
 }
-
 
 #endif // USES_P080
