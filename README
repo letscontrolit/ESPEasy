@@ -1,3 +1,30 @@
+2023-05-04
+Valid names are 'energy_ESP32s2_4M316k, custom_ESP32s2_4M316k, collection_B_ESP8266_4M1M_VCC, custom_ESP8266_1M, collection_F_ESP32s2_4M316k, normal_ESP8266_4M1M, custom_alt_wifi_ESP8266_4M1M, collection_A_ESP32_IRExt_4M316k, normal_302_ESP8266_4M1M, climate_ESP8266_4M1M, minimal_core_302_ESP8266_1M_OTA_FHEM_HA, custom_ESP8266_4M2M, custom_IR_ESP32_4M316k, display_ESP32_4M316k_ETH, custom_IR_ESP8266_4M1M, minimal_IRext_ESP8266_4M1M, collection_B_ESP32_4M316k, custom_ESP8266_4M2M_LittleFS, custom_IR_ESP32s2_4M316k, minimal_core_302_ESP8266_1M_OTA_Domoticz_MQTT, custom_alt_wifi_ESP8266_1M, custom_ESP8266_4M1M, custom_ESP32_4M2M_NO_OTA_LittleFS, collection_C_ESP32_IRExt_4M316k, collection_E_ESP32_IRExt_4M316k, normal_beta_ESP8266_4M1M, normal_ESP32_4M316k_ETH, display_ESP32s2_4M316k, custom_302_ESP8266_4M1M, display_ESP32_4M316k, custom_beta_ESP8266_4M1M, max_ESP32_16M8M_LittleFS, normal_alt_wifi_ESP8266_4M1M, custom_IR_ESP32_16M8M_LittleFS_ETH, normal_ESP8266_1M, collection_A_ESP32_4M316k, custom_beta_2ndheap_ESP8266_4M1M, display_ESP8266_4M1M, collection_B_ESP32_4M316k_ETH, collection_B_ESP32_IRExt_4M316k, spec_debug_custom_IR_ESP8266_4M1M, collection_F_ESP32_IRExt_4M316k, hard_SONOFF_POW_4M1M, normal_ESP32s2_4M316k, minimal_IRext_ESP8266_1M, normal_IRext_no_rx_ESP8266_4M2M, neopixel_ESP8266_1M_Domoticz, collection_D_ESP8266_4M1M, collection_F_ESP8266_4M1M_VCC, spec_debug_custom_ESP8266_4M1M, energy_ESP32_4M316k, collection_E_ESP8266_4M1M_VCC, collection_E_ESP32s2_4M316k, custom_ESP32_16M8M_LittleFS, minimal_IRext_ESP8266_4M2M, collection_F_ESP32_4M316k_ETH, spec_debug_max_ESP32_16M8M, max_ESP32_16M8M_LittleFS_ETH, neopixel_ESP8266_4M1M, custom_ESP32_4M316k_LittleFS, minimal_core_274_ESP8266_1M_OTA_Domoticz_MQTT, hard_Shelly_1_2M256, normal_ESP32_IRExt_4M316k_ETH, minimal_core_274_ESP8266_1M_OTA_Domoticz, climate_ESP32_4M316k, hard_LCtech_relay_x2_1M, normal_alt_wifi_ESP8266_1M_VCC, collection_A_ESP8266_4M1M_VCC, neopixel_ESP32_4M316k_ETH, normal_ESP32_4M316k_LittleFS, collection_E_ESP8266_4M1M, collection_A_ESP32_4M316k_ETH, spec_debug_custom_ESP32_16M8M, minimal_core_302_ESP8266_1M_OTA_Domoticz, minimal_core_274_ESP8266_1M_OTA_FHEM_HA, max_ESP32_16M1M, collection_A_ESP32s2_4M316k, neopixel_ESP32s2_4M316k, custom_ESP32_4M316k_ETH, collection_C_ESP32s2_4M316k, custom_beta_ESP8266_1M, spec_debug_beta_custom_ESP8266_4M1M, normal_ESP8266_1M_VCC, normal_ESP8266_4M1M_VCC, hard_Ventus_W266_1M, spec_memanalyze_ESP8266, collection_B_ESP8266_4M1M, collection_C_ESP8266_4M1M_VCC, collection_D_ESP32s2_4M316k, normal_ESP32_4M316k, custom_ESP32_4M316k, collection_B_ESP32s2_4M316k, normal_WROOM02_2M256, custom_IR_ESP32_4M316k_ETH, collection_C_ESP32_4M316k, collection_D_ESP32_IRExt_4M316k, collection_F_ESP32_4M316k, collection_E_ESP32_4M316k, energy_ESP32_4M316k_ETH, collection_D_ESP32_4M316k_ETH, custom_ESP8266_2M256, collection_C_ESP32_4M316k_ETH, climate_ESP32_4M316k_ETH, energy_ESP8266_4M1M, max_ESP32_16M1M_ETH, hard_other_POW_ESP8285_1M, collection_E_ESP32_4M316k_ETH, collection_A_ESP8266_4M1M, custom_beta_IR_ESP8266_4M1M, hard_Shelly_PLUG_S_2M256, collection_D_ESP8266_4M1M_VCC, collection_D_ESP32_4M316k, climate_ESP32s2_4M316k, normal_beta_ESP8266_16M_LittleFS, neopixel_ESP8266_1M_FHEM_HA, collection_F_ESP8266_4M1M, collection_C_ESP8266_4M1M, neopixel_ESP32_4M316k'
+
+platformio run --environment custom_ESP32_4M316k
+
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [==        ]  17.0% (used 55628 bytes from 327680 bytes)
+Flash: [======    ]  62.7% (used 1191729 bytes from 1900544 bytes)
+Building .pio/build/custom_ESP32_4M316k/ESP_Easy_mega_20230504_custom_ESP32_4M316k.bin
+esptool.py v4.6-dev
+Creating esp32 image...
+Merged 25 ELF sections
+Successfully created esp32 image.
+esp32_create_combined_bin([".pio/build/custom_ESP32_4M316k/ESP_Easy_mega_20230504_custom_ESP32_4M316k.bin"], [".pio/build/custom_ESP32_4M316k/ESP_Easy_mega_20230504_custom_ESP32_4M316k.elf"])
+Generating combined binary for serial flashing
+    Offset | File
+ -  0x1000 | /workspace/ESPEasy/.pio/build/custom_ESP32_4M316k/bootloader.bin
+ -  0x8000 | /workspace/ESPEasy/.pio/build/custom_ESP32_4M316k/partitions.bin
+ -  0xe000 | /home/gitpod/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin
+ - 0x10000 | /workspace/ESPEasy/.pio/build/custom_ESP32_4M316k/ESP_Easy_mega_20230504_custom_ESP32_4M316k.bin
+Using esptool.py arguments: --chip esp32 merge_bin -o /workspace/ESPEasy/.pio/build/custom_ESP32_4M316k/ESP_Easy_mega_20230504_custom_ESP32_4M316k.factory.bin --flash_mode dio --flash_freq 40m --flash_size 4MB 0x1000 /workspace/ESPEasy/.pio/build/custom_ESP32_4M316k/bootloader.bin 0x8000 /workspace/ESPEasy/.pio/build/custom_ESP32_4M316k/partitions.bin 0xe000 /home/gitpod/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 /workspace/ESPEasy/.pio/build/custom_ESP32_4M316k/ESP_Easy_mega_20230504_custom_ESP32_4M316k.bin
+------------------------
+platformio run --environment custom_ESP8266_4M1M
+RAM:   [======    ]  58.9% (used 48236 bytes from 81920 bytes)
+Flash: [========  ]  83.0% (used 867124 bytes from 1044464 bytes)
+
+
 The scripts in this directory are so called GIT hooks.
 Purpose is to do automatic changes after merge, commit and checkout.
 

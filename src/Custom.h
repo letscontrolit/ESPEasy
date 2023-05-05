@@ -370,9 +370,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P024   // MLX90614  Pirometr z pomiarem temp. otoczenia
 // #define USES_P025   // ADS1115	16bit 4-kanałowy ADC
 #define USES_P026   // SysInfo
-#ifdef ESP32
-#define USES_P027   // INA219	dwukierunkowy miernik prądu. Zakres pomiaru napięcia: 0-26 V; Maksymalny prąd mierzony: +/- 3,2 A; Dokładność: 1%;
-#endif
+//#define USES_P027   // INA219	dwukierunkowy miernik prądu. Zakres pomiaru napięcia: 0-26 V; Maksymalny prąd mierzony: +/- 3,2 A; Dokładność: 1%;
 #define USES_P028   // BME280 +  BMP280 I2C Temp/Barometric Pressure Sensor  
 #define USES_P029   // Output
 
@@ -427,9 +425,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P073   // 7DG				7-segment display plugin TM1637/MAX7219
 // #define USES_P074   // TSL2561			czujnik natężenia światła otoczenia I2C
 // #define USES_P075   // Nextion
-#ifdef ESP32
 #define USES_P076   // HWL8012   in POW r1	HLW8012 jednofazowy licznik energii; Pomiar prądu, napięcia, częstotliwości, współczynnika mocy, oraz mocy
-#endif
 // #define USES_P077   // CSE7766   in POW R2	Licznik energii
 // #define USES_P078   // Eastron Modbus Energy meters
 // #define USES_P079   // Wemos Motoshield
@@ -460,9 +456,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P100   // DS2423 counter
 // #define USES_P101   // WakeOnLan
-#ifdef ESP32
 #define USES_P102   // PZEM004Tv3
-#endif
 // #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
 // #define USES_P104   // MAX7219 dotmatrix
 // #define USES_P105   // AHT10/20/21		I2C Humidity Temperature Sensor
