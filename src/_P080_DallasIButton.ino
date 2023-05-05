@@ -117,12 +117,12 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 
         if (Dallas_readiButton(addr, Plugin_080_DallasPin, Plugin_080_DallasPin))
         {
-          UserVar[event->BaseVarIndex] = 1;
-          success                      = true;
+          UserVar.setUint32(event->TaskIndex, 0, 1);
+          success = true;
         }
         else
         {
-          UserVar[event->BaseVarIndex] = 0;
+          UserVar.setUint32(event->TaskIndex, 0, 0);
         }
         Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
@@ -144,10 +144,10 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_READ:
     {
-      success = UserVar[event->BaseVarIndex] != UserVar[event->BaseVarIndex + 1]; // Changed?
+      success = UserVar.getUint32(event->TaskIndex, 0) != UserVar.getUint32(event->TaskIndex, 2); // Changed?
 
       // Keep previous state
-      UserVar[event->BaseVarIndex + 1] = UserVar[event->BaseVarIndex];
+      UserVar.setUint32(event->TaskIndex, 2, UserVar.getUint32(event->TaskIndex, 0));
       break;
     }
   }
