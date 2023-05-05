@@ -75,9 +75,9 @@
 .. |P104-Font-Katakana_typename| replace:: `Katakana font characters`
 
 
-.. |P105_name| replace:: :cyan:`AHT10/20/21`
+.. |P105_name| replace:: :cyan:`AHT10/AHT2x`
 .. |P105_type| replace:: :cyan:`Environment`
-.. |P105_typename| replace:: :cyan:`Environment - AHT10/20/21`
+.. |P105_typename| replace:: :cyan:`Environment - AHT10/AHT2x`
 .. |P105_porttype| replace:: `.`
 .. |P105_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P105_github| replace:: P105_AHT.ino
