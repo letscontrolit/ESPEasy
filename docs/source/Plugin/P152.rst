@@ -24,7 +24,7 @@ Used libraries: |P152_usedlibraries|
 Description
 -----------
 
-Plugin for using the built-in DAC (Digital Analog Converter) as available on ESP32 and ESP32-S2 chips.
+Plugin for using the built-in DAC (Digital Analog Converter) as available on ESP32 and ESP32-S2 chips. This implies that the plugin is **only** available on ESP32 and ESP32-S2 builds!
 
 Configuration
 --------------

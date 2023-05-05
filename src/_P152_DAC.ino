@@ -7,7 +7,7 @@
 
 /** Changelog:
  * 2023-04-10 tonhuisman: Minor corrections
- * 2023-04-09 tonhuisman: Adopt to latest mega branch changes as the plugin is last changes some years ago
+ * 2023-04-09 tonhuisman: Adopt to latest mega branch changes as the plugin is last changed some years ago
  * 2023-04-09 tonhuisman: Migrate plugin from ESPEasyPluginPlayground to mega branch
  */
 
