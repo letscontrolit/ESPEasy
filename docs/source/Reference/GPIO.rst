@@ -489,8 +489,10 @@ The logic state of some pins during boot determines how the Espressif chips will
 
 These strapping pins differ per chip model. (e.g. ESP8266 / ESP32 / ESP32-S2, -S3, C3)
 
-All have a strapping pin to select the bootloader mode.
-For most, this is GPIO-0. (ESP32-C3: GPIO-9)
+All have a strapping pin to select the bootloader mode:
+
+* GPIO-0: ESP8266 / ESP32 / ESP32-S2 / ESP32-S3
+* GPIO-9: ESP32-C3 (ESP8685) / ESP32-C2 (ESP8684) / ESP32-C6 / ESP32-H2
 
 The "Select Bootloader Mode" pin has an internal pullup resistor, so if it is left unconnected then it will pull high.
 
@@ -502,8 +504,8 @@ Many boards use a button marked “Flash” (or “BOOT” on some Espressif dev
 
 
 
-ESP8266
-~~~~~~~
+ESP8266 (ESP8285)
+~~~~~~~~~~~~~~~~~
 
 * GPIO-0: "Select Bootloader Mode" pin
 * GPIO-2: Must be high in order to boot the sketch.
@@ -543,15 +545,6 @@ There is a number of pins that will be read at boot and their value is displayed
 See `boot_mode.h <https://github.com/espressif/esp-idf/blob/1cb31e50943bb757966ca91ed7f4852692a5b0ed/components/soc/esp32/include/soc/boot_mode.h>`_ for more information.
 
 See ``System#BootMode`` event to access the boot strap pin values.
-
-ESP32-C3
-~~~~~~~~
-
-* GPIO-9: "Select Bootloader Mode" pin
-* GPIO-8: Enable or disable ROM messages printing
-* GPIO-2: Must be high at boot. (both for normal mode as download/flash mode)
-
-The strapping combination of GPIO-8 = 0 and GPIO-9 = 0 is invalid and will trigger unexpected behavior.
 
 
 ESP32-S2
@@ -597,4 +590,42 @@ VDD_SPI can work as the power supply for the external device at either:
 
 
 
+ESP32-C3 (ESP8685)
+~~~~~~~~~~~~~~~~~~
 
+* GPIO-9: "Select Bootloader Mode" pin
+* GPIO-8: Enable or disable ROM messages printing
+* GPIO-2: Must be high at boot. (both for normal mode as download/flash mode)
+
+The strapping combination of GPIO-8 = 0 and GPIO-9 = 0 is invalid and will trigger unexpected behavior.
+
+
+ESP32-C2 (ESP8684)
+~~~~~~~~~~~~~~~~~~
+
+* GPIO-9: "Select Bootloader Mode" pin
+* GPIO-8: Enable or disable ROM messages printing
+
+The strapping combination of GPIO-8 = 0 and GPIO-9 = 0 is invalid and will trigger unexpected behavior.
+
+
+ESP32-C6
+~~~~~~~~
+
+* GPIO-9: "Select Bootloader Mode" pin
+* GPIO-8: Enable or disable ROM messages printing
+* GPIO-15: JTAG signal source
+* GPIO-4: MTMS: SDIO sampling and driving clock edge
+* GPIO-5: MTDI: SDIO sampling and driving clock edge
+
+The strapping combination of GPIO-8 = 0 and GPIO-9 = 0 is invalid and will trigger unexpected behavior.
+
+
+ESP32-H2
+~~~~~~~~
+
+* GPIO-9: "Select Bootloader Mode" pin
+* GPIO-8: Enable or disable ROM messages printing
+* GPIO-25: JTAG signal source
+
+The strapping combination of GPIO-8 = 0 and GPIO-9 = 0 is invalid and will trigger unexpected behavior.

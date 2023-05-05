@@ -20,11 +20,11 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
    :stub-columns: 1
 
    *  - 
-      - ESP8266
+      - ESP8266 (ESP8285)
       - ESP32
       - ESP32-S2
       - ESP32-S3
-      - ESP32-C3
+      - ESP32-C3 (ESP8685)
       - ESP32-C2 (ESP8684)
       - ESP32-C6
       - ESP32-H2
@@ -79,9 +79,9 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2019
       - 2021
       - 2020
-      - 
-      - 
-      - 
+      - 2022
+      - 2021
+      - 2021
    *  - Status (2023/05)
       - NRND
       - Mass Production
@@ -99,7 +99,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20; up to 150 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
-      - 
+      - No Wi-Fi
    *  - Wi-Fi 6
       - 
       - 
@@ -109,7 +109,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 
       - IEEE 802.11 ax; 2.4 GHz; HT20; up to 150 Mbps
       - 
-   *  - Thread
+   *  - Zigbee / Thread (802.15.4)
       - N/A
       - N/A
       - N/A
@@ -206,19 +206,19 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 0, 3, 45, 46
       - 2, 8, 9
       - 8, 9
-      - 
-      - 8,9
+      - 4, 5, 8, 9, 15
+      - 8, 9
    *  - GPIO for flash/PSRAM
       - 6, 7, 8, 9, 10, 11
-      - 6, 7, 8, 9, 10, 11
-      - 27, 28, 29, 30, 31, 32
-      - 27, 28, 29, 30, 31, 32
+      - 6, 7, 8, 9, 10, 11 (PSRAM or embedded flash: 16, 17)
+      - 27, 28, 29, 30, 31, 32 (OPI: 33, 34, 35, 36, 37)
+      - 27, 28, 29, 30, 31, 32 (OPI: 33, 34, 35, 36, 37)
       - 11, 12, 13, 14, 15, 16, 17
       - 11, 12, 13, 14, 15, 16, 17
-      - 
+      - 20, 21, 22, 24, 25, 26
       - 
    *  - UART
-      - 1.5
+      - 1.5 (Serial1 out only)
       - 3
       - 2
       - 3
@@ -263,7 +263,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2
       - 2
    *  - I2S
-      - 
+      - 1
       - 2
       - 1
       - 2
@@ -278,17 +278,17 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 1*4 channels
       - 1*4 channels
       - 0
-      - 
-      - 
+      - 1*4 channels
+      - 1*2 channels
    *  - LED PWM
-      - 
+      - 0
       - 2*8 channels
       - 1*8 channels
       - 1*8 channels
       - 1*6 channels
       - 1*6 channels
-      - 
-      - 6
+      - 1*6 channels
+      - 1*6 channels
    *  - MCPWM
       - 0
       - 2
@@ -296,8 +296,8 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2
       - 0
       - 0
-      - 
-      - 
+      - 1
+      - 1
    *  - USB OTG
       - 0
       - 0
@@ -307,6 +307,15 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 0
       - 0
       - 0
+   *  - USB Serial / JTAG
+      - N/A
+      - N/A
+      - YES
+      - YES
+      - YES
+      - N/A
+      - YES
+      - YES
    *  - Hall
       - 0
       - 1
@@ -325,8 +334,8 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 0
       - 0
       - 0
-   *  - TWAI
-      - 
+   *  - TWAI (CAN)
+      - 0
       - 1
       - 1
       - 1
@@ -342,7 +351,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - YES
       - YES
       - YES
-      - 
+      - YES
    *  - Camera
       - N/A
       - 1*DVP 8/16-bit
@@ -397,14 +406,14 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - SRRC
       - 
       - 
-   *  - Power consumption 
-      - 900 uA light sleep, 20 uA deep sleep
-      - 800 uA light sleep, 10 uA deep sleep
-      - 750 uA light sleep, 25 uA deep sleep
-      - 240 uA light sleep, 8 uA deep sleep
-      - 130 uA light sleep, 5 uA deep sleep
-      - 
-      - 
+   *  - Sleep Power Consumption 
+      - 900 µA light sleep, 20 µA deep sleep
+      - 800 µA light sleep, 10 µA deep sleep
+      - 750 µA light sleep, 25 µA deep sleep
+      - 240 µA light sleep, 8 µA deep sleep
+      - 130 µA light sleep, 5 µA deep sleep
+      - 140 µA light sleep, 5 µA deep sleep
+      - 180 µA / 35 µA light sleep, 7 µA deep sleep
       - 
 
 
@@ -413,6 +422,17 @@ Sources:
 * `Table content source <https://maker.pro/esp8266/tutorial/a-comparison-of-the-new-esp32-s2-to-the-esp32>`_
 * `Espressif docs <https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32c2/hw-reference/chip-series-comparison.html>`_
 * `Espressif Product Selector <https://products.espressif.com/#/product-comparison>`_
+
+Datasheets:
+
+* `ESP8266 (ESP8285) <https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf>`_
+* `ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf>`_
+* `ESP32-S2 <https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf>`_
+* `ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf>`_
+* `ESP32-C3 (ESP8685) <https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf>`_
+* `ESP32-C2 (ESP8684) <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_
+* `ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf>`_
+* `ESP32-H2 <https://cdn-shop.adafruit.com/product-files/5715/esp32-h2_datasheet_en.pdf>`_
 
 
 ESP8266/ESP8285
@@ -483,6 +503,12 @@ ESP32-S3
 
 Added: 2023/05/03
 
+The most powerful and versatile ESP32 variant currently available.
+
+It outperforms the classic ESP32 in almost any way.
+
+The only drawback is that it doesn't support a RMII ethernet interface.
+
 .. note:: Support for the ESP32-S3 is very preliminary, as in it is hardly tested (as of May 2023)
 
 
@@ -491,11 +517,21 @@ ESP32-C3
 
 Added: 2023/05/03
 
+The ESP32-C3 is available in various versions.
+
+For example there is an ESP32-C3-12F module made by Espressif clearly aimed to be a 1-to-1 replacement of the ESP12-F, which uses the ESP8266.
+
+Due to the used RISC-V core used in the ESP32-C3, this is a very 'snappy' device and the SDK support appears to be far more mature then what one might expect given its relative recent introduction.
+
 .. note:: Support for the ESP32-C3 is very preliminary, as in it is hardly tested (as of May 2023)
 
 
 ESP32-C2/ESP8684
 ================
+
+The ESP32-C2 is only available with embedded flash and can only be found labelled as "ESP8684".
+
+It looks like it is aimed to be used in single purpose devices, due to its low GPIO count and only requiring a bare minimum of external parts.
 
 
 .. note:: Not yet supported (as of May 2023)
@@ -503,11 +539,18 @@ ESP32-C2/ESP8684
 ESP32-C6
 ========
 
+The ESP32-C6 seems to be aimed at being used as a gateway for the new Thread protocol and Wi-Fi.
+
+It is the more powerful version of the ESP32-H2 and also includes not only the traditional 2.4 GHz Wi-Fi, but also the new Wi-Fi6 standard on 2.4 GHz.
 
 .. note:: Not yet supported (as of May 2023)
 
 ESP32-H2
 ========
 
+This is a rather strange product as it does not support any Wi-Fi.
+However it is the first device aimed at the new Thread standard.
+
+Since it does not support any Wi-Fi, it is unsure if there will be ESPEasy support for it in the near future.
 
 .. note:: Not yet supported (as of May 2023)
