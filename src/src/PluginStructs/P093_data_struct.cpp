@@ -47,7 +47,7 @@ bool P093_data_struct::sync() {
 }
 
 bool P093_data_struct::read(String& result) const {
-  if (_valuesInitialized == false) {
+  if (!_valuesInitialized) {
     return false;
   }
 
@@ -85,6 +85,9 @@ bool P093_data_struct::read(String& result) const {
 
 bool P093_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
+  if (!_valuesInitialized) {
+    return false;
+  }
   bool success         = true;
   const String command = parseString(string, 1);
 
