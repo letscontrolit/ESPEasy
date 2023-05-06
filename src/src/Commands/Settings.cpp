@@ -42,6 +42,20 @@ String Command_Settings_Unit(struct EventStruct *event, const char* Line)
 	return return_command_success_str();
 }
 
+String Command_AppendUnitToHostname(struct EventStruct *event, const char *Line)
+{
+  bool   appendUnitToHostname = Settings.appendUnitToHostname();
+  String result            		= Command_GetORSetBool(event, F("Append Unit to Hostname:"),
+                              	                     Line,
+                              	                     (bool *)&appendUnitToHostname,
+                              	                     1);
+
+  if (Settings.appendUnitToHostname() != appendUnitToHostname) { // Update if changed
+    Settings.appendUnitToHostname(appendUnitToHostname);
+  }
+  return result;
+}
+
 String Command_Settings_Name(struct EventStruct *event, const char* Line)
 {
 	return Command_GetORSetString(event, F("Name:"),

@@ -254,8 +254,9 @@ bool executeInternalCommand(command_case_data & data)
   // FIXME TD-er: must determine nr arguments where NARGS is set to -1
   switch (data.cmd_lc[0]) {
     case 'a': {
-      COMMAND_CASE_A("accessinfo", Command_AccessInfo_Ls,       0); // Network Command
-      COMMAND_CASE_A("asyncevent", Command_Rules_Async_Events, -1); // Rule.h
+      COMMAND_CASE_A(          "accessinfo", Command_AccessInfo_Ls,         0); // Network Command
+      COMMAND_CASE_R("appendunittohostname", Command_AppendUnitToHostname, -1); // Settings.h
+      COMMAND_CASE_A(          "asyncevent", Command_Rules_Async_Events,   -1); // Rule.h
       break;
     }
     case 'b': {
