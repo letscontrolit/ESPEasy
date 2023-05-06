@@ -161,7 +161,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   if (taskValues != nullptr) {
     for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
     {
-      dataReply.values.copyValue(dataReply.values, x, dataReply.sensorType);
+      dataReply.values.copyValue(*taskValues, x, dataReply.sensorType);
     }
   }
 
