@@ -757,9 +757,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           return false;
         }
         bool retval = false;
+        const bool performPluginCall = 
+          (Function != PLUGIN_READ) || 
+          (Settings.TaskDeviceDataFeed[event->TaskIndex] == 0);
         #if FEATURE_I2C_DEVICE_CHECK
         bool i2cStatusOk = true;
-        bool performPluginCall = true;
         if (Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
           // Only for locally connected sensors, not virtual ones via p2p.
           if (((Function == PLUGIN_INIT) || (Function == PLUGIN_READ))
@@ -771,10 +773,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               i2cStatusOk = I2C_deviceCheck(i2cAddr, event->TaskIndex, Function == PLUGIN_INIT ? 1 : 10);
               STOP_TIMER_TASK(DeviceIndex, PLUGIN_I2C_GET_ADDRESS);
             }
-          }
-        } else {
-          if (Function == PLUGIN_READ) {
-            performPluginCall = false;
           }
         }
         if (i2cStatusOk) {
