@@ -763,6 +763,11 @@ P148 :ref:`P148_page`
 
 .. include:: ../Plugin/P148_commands.repl
 
+P153 :ref:`P143_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P153_commands.repl
+
 .. .. *** Insert regular plugin commands above this remark! ***
 
 .. _AdafruitGFX Helper commands:

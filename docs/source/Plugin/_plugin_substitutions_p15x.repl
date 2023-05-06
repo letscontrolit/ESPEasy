@@ -23,3 +23,16 @@
 .. |P151_maintainer| replace:: `TD-er`
 .. |P151_compileinfo| replace:: `.`
 .. |P151_usedlibraries| replace:: `.`
+
+.. |P153_name| replace:: :cyan:`SHT4x`
+.. |P153_type| replace:: :cyan:`Environment`
+.. |P153_typename| replace:: :cyan:`Environment - SHT4x`
+.. |P153_porttype| replace:: `.`
+.. |P153_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P153_github| replace:: P153_SHT4x.ino
+.. _P153_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P153_SHT4x.ino
+.. |P153_usedby| replace:: `.`
+.. |P153_shortinfo| replace:: `SHT4x Temperature and Humidity sensors`
+.. |P153_maintainer| replace:: `tonhuisman`
+.. |P153_compileinfo| replace:: `.`
+.. |P153_usedlibraries| replace:: `.`
