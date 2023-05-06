@@ -118,7 +118,7 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormTextBox(F("Temp offset"), F("tempoffset"), toString(P153_TEMPERATURE_OFFSET, 2), 5);
+      addFormTextBox(F("Temperature offset"), F("tempoffset"), toString(P153_TEMPERATURE_OFFSET, 2), 5);
       addUnit(F("&deg;C"));
 
       {
@@ -126,12 +126,12 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
           F("Low resolution"),
           F("Medium resolution"),
           F("High resolution"),
-          F("High res. heater 200 mWatt for 1 sec."),
-          F("High res. heater 200 mWatt for 0.1 sec."),
-          F("High res. heater 110 mWatt for 1 sec."),
-          F("High res. heater 110 mWatt for 0.1 sec."),
-          F("High res. heater 20 mWatt for 1 sec."),
-          F("High res. heater 20 mWatt for 0.1 sec."),
+          F("High res., Heater 200 mWatt for 1 sec."),
+          F("High res., Heater 200 mWatt for 0.1 sec."),
+          F("High res., Heater 110 mWatt for 1 sec."),
+          F("High res., Heater 110 mWatt for 0.1 sec."),
+          F("High res., Heater 20 mWatt for 1 sec."),
+          F("High res., Heater 20 mWatt for 0.1 sec."),
         };
         const int configurationOptions[] = {
           static_cast<int>(P153_configuration_e::LowResolution),
