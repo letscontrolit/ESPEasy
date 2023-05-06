@@ -2,7 +2,7 @@
 
 #ifdef USES_C013
 
-#include "../Globals/Plugins.h"
+# include "../Globals/Plugins.h"
 
 
 C013_SensorInfoStruct::C013_SensorInfoStruct()
@@ -22,7 +22,6 @@ bool C013_SensorInfoStruct::isValid() const
          validTaskIndex(destTaskIndex) &&
          validPluginID(deviceNumber);
 }
-
 
 bool C013_SensorDataStruct::isValid() const
 {

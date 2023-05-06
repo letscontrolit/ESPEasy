@@ -158,7 +158,10 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
 
   const TaskValues_Data_t* taskValues = UserVar.getTaskValues_Data(event->TaskIndex);
   if (taskValues != nullptr) {
-    dataReply.values = *taskValues;
+    for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
+    {
+      dataReply.values.copyValue(dataReply.values, x, dataReply.sensorType);
+    }
   }
 
   if (destUnit != 0)
