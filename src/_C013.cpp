@@ -307,6 +307,8 @@ void C013_Receive(struct EventStruct *event) {
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
               log += concat(F(" from unit "), dataReply.sourceUnit);
+              log += concat(F(" remote: "), dataReply.deviceNumber);
+              log += concat(F(" local: "), Settings.TaskDeviceNumber[dataReply.destTaskIndex]);
               addLogMove(LOG_LEVEL_ERROR, log);
             }
           } else {
