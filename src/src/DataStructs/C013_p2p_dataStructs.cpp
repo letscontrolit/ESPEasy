@@ -33,7 +33,7 @@ bool C013_SensorDataStruct::isValid() const
 
 bool C013_SensorDataStruct::matchesPluginID(pluginID_t pluginID) const
 {
-  if (deviceNumber == 0 || !validPluginID(pluginID)) {
+  if (!validPluginID(deviceNumber) || !validPluginID(pluginID)) {
     // Was never set, so probably received data from older node.
     return true;
   }
