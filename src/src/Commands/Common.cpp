@@ -158,11 +158,10 @@ String Command_GetORSetBool(struct EventStruct *event,
       if (validIntFromString(TmpStr1, tmp_int)) {
         *value = tmp_int > 0;
       }
-      else if (TmpStr1.isEmpty()) {} // Empty string not always handled nicely by strcmp_P
-      else if (strcmp_P(PSTR("on"), TmpStr1.c_str()) == 0) { *value = true; }
-      else if (strcmp_P(PSTR("true"), TmpStr1.c_str()) == 0) { *value = true; }
-      else if (strcmp_P(PSTR("off"), TmpStr1.c_str()) == 0) { *value = false; }
-      else if (strcmp_P(PSTR("false"), TmpStr1.c_str()) == 0) { *value = false; }
+      else if (equals(TmpStr1, F("on"))) { *value = true; }
+      else if (equals(TmpStr1, F("true"))) { *value = true; }
+      else if (equals(TmpStr1, F("off"))) { *value = false; }
+      else if (equals(TmpStr1, F("false"))) { *value = false; }
     }
   }
 
