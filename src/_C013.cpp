@@ -151,6 +151,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   dataReply.sourceUnit      = Settings.Unit;
   dataReply.sourceTaskIndex = event->TaskIndex;
   dataReply.destTaskIndex   = destTaskIndex;
+  dataReply.deviceNumber    = Settings.TaskDeviceNumber[event->TaskIndex];
 
   // FIXME TD-er: We should check for sensorType and pluginID on both sides.
   // For example sending different sensor type data from one dummy to another is probably not going to work well
@@ -313,6 +314,7 @@ void C013_Receive(struct EventStruct *event) {
             }
           } else {
             struct EventStruct TempEvent(dataReply.destTaskIndex);
+            TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_UDP;
 
             const Sensor_VType sensorType = TempEvent.getSensorType();
 
@@ -325,9 +327,7 @@ void C013_Receive(struct EventStruct *event) {
                 }
               }
 
-              if (Settings.UseRules) {
-                createRuleEvents(&TempEvent);
-              }
+              SensorSendTask(&TempEvent);
             } else {
               // Mismatch in sensor types
               if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

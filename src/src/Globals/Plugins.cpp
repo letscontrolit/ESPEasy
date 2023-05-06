@@ -315,9 +315,9 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
   bool retval = false;
   if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
     {
-      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
       if (validDeviceIndex(DeviceIndex)) {
         if (Function == PLUGIN_INIT) {
           LoadTaskSettings(taskIndex);
@@ -409,6 +409,20 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
         post_I2C_by_taskIndex(taskIndex, DeviceIndex);
         delay(0); // SMY: call delay(0) unconditionally
       }
+    } else {
+      #if FEATURE_PLUGIN_STATS
+      if (Function == PLUGIN_INIT && Device[DeviceIndex].PluginStats) {
+        PluginTaskData_base *taskData = getPluginTaskData(taskIndex);
+        if (taskData == nullptr) {
+          // Plugin apparently does not have PluginTaskData.
+          // Create Plugin Task data if it has "Stats" checked.
+          LoadTaskSettings(taskIndex);
+          if (ExtraTaskSettings.anyEnabledPluginStats()) {
+            initPluginTaskData(taskIndex, new (std::nothrow) _StatsOnly_data_struct());
+          }
+        }
+      }
+      #endif // if FEATURE_PLUGIN_STATS
     }
   }
   return retval;
@@ -745,14 +759,22 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         bool retval = false;
         #if FEATURE_I2C_DEVICE_CHECK
         bool i2cStatusOk = true;
-        if (((Function == PLUGIN_INIT) || (Function == PLUGIN_READ))
-            && (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && !Device[DeviceIndex].I2CNoDeviceCheck) {
-          const uint8_t i2cAddr = getTaskI2CAddress(event->TaskIndex);
-          if (i2cAddr > 0) {
-            START_TIMER;
-            // Disable task when device is unreachable for 10 PLUGIN_READs or 1 PLUGIN_INIT
-            i2cStatusOk = I2C_deviceCheck(i2cAddr, event->TaskIndex, Function == PLUGIN_INIT ? 1 : 10);
-            STOP_TIMER_TASK(DeviceIndex, PLUGIN_I2C_GET_ADDRESS);
+        bool performPluginCall = true;
+        if (Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
+          // Only for locally connected sensors, not virtual ones via p2p.
+          if (((Function == PLUGIN_INIT) || (Function == PLUGIN_READ))
+              && (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && !Device[DeviceIndex].I2CNoDeviceCheck) {
+            const uint8_t i2cAddr = getTaskI2CAddress(event->TaskIndex);
+            if (i2cAddr > 0) {
+              START_TIMER;
+              // Disable task when device is unreachable for 10 PLUGIN_READs or 1 PLUGIN_INIT
+              i2cStatusOk = I2C_deviceCheck(i2cAddr, event->TaskIndex, Function == PLUGIN_INIT ? 1 : 10);
+              STOP_TIMER_TASK(DeviceIndex, PLUGIN_I2C_GET_ADDRESS);
+            }
+          }
+        } else {
+          if (Function == PLUGIN_READ) {
+            performPluginCall = false;
           }
         }
         if (i2cStatusOk) {
@@ -777,7 +799,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             clearPluginTaskData(event->TaskIndex);
           }
 
-          retval = Plugin_ptr[DeviceIndex](Function, event, str);
+          if (performPluginCall) {
+            retval = Plugin_ptr[DeviceIndex](Function, event, str);
+          } else {
+            retval = event->Source == EventValueSource::Enum::VALUE_SOURCE_UDP;
+          }
 
           if (Function == PLUGIN_READ) {
             if (!retval) {

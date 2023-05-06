@@ -1109,7 +1109,8 @@ void ESPEasy_Scheduler::reschedule_task_device_timer(unsigned long task_index, u
 void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
   if (!validTaskIndex(task_index)) { return; }
   START_TIMER;
-  SensorSendTask(task_index, 0, lasttimer);
+  struct EventStruct TempEvent(task_index);
+  SensorSendTask(&TempEvent, 0, lasttimer);
   STOP_TIMER(SENSOR_SEND_TASK);
 }
 
