@@ -282,13 +282,16 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'd': {
-      COMMAND_CASE_R( "datetime", Command_DateTime,         2); // Time.h
-      COMMAND_CASE_R(    "debug", Command_Debug,            1); // Diagnostic.h
-      COMMAND_CASE_A(      "dec", Command_Rules_Dec,       -1); // Rules.h
-      COMMAND_CASE_R("deepsleep", Command_System_deepSleep, 1); // System.h
-      COMMAND_CASE_R(    "delay", Command_Delay,            1); // Timers.h
-      COMMAND_CASE_R(      "dns", Command_DNS,              1); // Network Command
-      COMMAND_CASE_R(      "dst", Command_DST,              1); // Time.h
+      COMMAND_CASE_R(           "datetime", Command_DateTime,             2); // Time.h
+      COMMAND_CASE_R(              "debug", Command_Debug,                1); // Diagnostic.h
+      COMMAND_CASE_A(                "dec", Command_Rules_Dec,           -1); // Rules.h
+      COMMAND_CASE_R(          "deepsleep", Command_System_deepSleep,     1); // System.h
+      COMMAND_CASE_R(              "delay", Command_Delay,                1); // Timers.h
+    #if FEATURE_PLUGIN_PRIORITY
+      COMMAND_CASE_R("disableprioritytask", Command_PriorityTask_Disable, 1); // Tasks.h
+    #endif // if FEATURE_PLUGIN_PRIORITY
+      COMMAND_CASE_R(                "dns", Command_DNS,                  1); // Network Command
+      COMMAND_CASE_R(                "dst", Command_DST,                  1); // Time.h
       break;
     }
     case 'e': {
@@ -316,6 +319,9 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_A(      "gpio", Command_GPIO,        2); // Gpio.h
       COMMAND_CASE_A("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
       break;
+    }
+    case 'h': {
+      COMMAND_CASE_R("hiddenssid", Command_Wifi_HiddenSSID, 1); // wifi.h
     }
     case 'i': {
       COMMAND_CASE_R("i2cscanner", Command_i2c_Scanner, -1); // i2c.h
@@ -410,6 +416,9 @@ bool executeInternalCommand(command_case_data & data)
 #if FEATURE_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,     -1); // MQTT.h
 #endif // if FEATURE_MQTT
+      #if FEATURE_PUT_TO_HTTP
+      COMMAND_CASE_A("puttohttp", Command_HTTP_PutToHTTP,  -1); // HTTP.h
+      #endif // if FEATURE_PUT_TO_HTTP
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }

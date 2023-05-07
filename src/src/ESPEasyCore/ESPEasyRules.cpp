@@ -480,9 +480,9 @@ void parse_string_commands(String& line) {
     // Command without opening and closing brackets.
     const String fullCommand = line.substring(startIndex + 1, closingIndex);
     const String cmd_s_lower = parseString(fullCommand, 1, ':');
-    const String arg1        = parseStringKeepCase(fullCommand, 2, ':');
-    const String arg2        = parseStringKeepCase(fullCommand, 3, ':');
-    const String arg3        = parseStringKeepCase(fullCommand, 4, ':');
+    const String arg1        = parseStringKeepCaseNoTrim(fullCommand, 2, ':');
+    const String arg2        = parseStringKeepCaseNoTrim(fullCommand, 3, ':');
+    const String arg3        = parseStringKeepCaseNoTrim(fullCommand, 4, ':');
 
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
@@ -714,9 +714,7 @@ void substitute_eventvalue(String& line, const String& event) {
             } else {
               // Just remove the invalid eventvalue variable
               if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                String log = F("Rules : Syntax error, invalid variable: ");
-                log += eventvalue;
-                addLog(LOG_LEVEL_ERROR, log);
+                addLog(LOG_LEVEL_ERROR, concat(F("Rules : Syntax error, invalid variable: "), eventvalue));
               }
               line.replace(eventvalue, EMPTY_STRING);
             }
@@ -1178,13 +1176,10 @@ int balanceParentheses(String& string) {
   int left = 0;
   int right = 0;
   for (unsigned int i = 0; i < string.length(); i++) {
-    switch (string[i]) {
-      case '(':
-        left++;
-        break;
-      case ')':
-        right++;
-        break;
+    if (string[i] == '(') {
+      left++;
+    } else if (string[i] == ')') {
+      right++;
     }
   }
   if (left != right) {
@@ -1196,7 +1191,7 @@ int balanceParentheses(String& string) {
     }
   } else if (right > left) {
     for (int i = 0; i < right - left; i++) {
-      string = String(F("(")) + string; // This is quite 'expensive'
+      string = String('(') + string; // This is quite 'expensive'
     }
   }
   return left - right;
@@ -1305,7 +1300,7 @@ void createRuleEvents(struct EventStruct *event) {
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
-  if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+  if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
     size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
     expectedSize += getTaskValueName(event->TaskIndex, 0).length();
    

@@ -20,8 +20,7 @@ bool isProtectedFileType(const String& filename)
          matchFileType(filename, FileType::PROVISIONING_DAT);
 }
 
-const __FlashStringHelper * getFileName(FileType::Enum filetype) {
-
+const __FlashStringHelper* getFileName(FileType::Enum filetype) {
   switch (filetype)
   {
     case FileType::CONFIG_DAT:       return F("config.dat");
@@ -30,9 +29,6 @@ const __FlashStringHelper * getFileName(FileType::Enum filetype) {
     case FileType::PROVISIONING_DAT: return F("provisioning.dat");
     case FileType::RULES_TXT:
       // Use getRulesFileName
-      break;
-    case FileType::FIRMWARE:
-      // File name may differ each time.
       break;
 
     case FileType::MAX_FILETYPE:
@@ -61,19 +57,16 @@ String getRulesFileName(unsigned int filenr) {
 }
 
 bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
-  bool isChecked = false;
-
   switch (filetype) {
-    case FileType::CONFIG_DAT: isChecked       = ResetFactoryDefaultPreference.fetchConfigDat(); break;
-    case FileType::SECURITY_DAT: isChecked     = ResetFactoryDefaultPreference.fetchSecurityDat(); break;
-    case FileType::NOTIFICATION_DAT: isChecked = ResetFactoryDefaultPreference.fetchNotificationDat(); break;
-    case FileType::RULES_TXT: isChecked        = ResetFactoryDefaultPreference.fetchRulesTXT(filenr); break;
-    case FileType::PROVISIONING_DAT: isChecked = ResetFactoryDefaultPreference.fetchProvisioningDat(); break;
+    case FileType::CONFIG_DAT:       return ResetFactoryDefaultPreference.fetchConfigDat();
+    case FileType::SECURITY_DAT:     return ResetFactoryDefaultPreference.fetchSecurityDat();
+    case FileType::NOTIFICATION_DAT: return ResetFactoryDefaultPreference.fetchNotificationDat();
+    case FileType::RULES_TXT:        return ResetFactoryDefaultPreference.fetchRulesTXT(filenr);
+    case FileType::PROVISIONING_DAT: return ResetFactoryDefaultPreference.fetchProvisioningDat();
       break;
 
-    case FileType::FIRMWARE: // FIXME TD-er: Must decide what to do with firmware description/protection on provisioning settings
     case FileType::MAX_FILETYPE:
       break;
   }
-  return isChecked;
+  return false;
 }

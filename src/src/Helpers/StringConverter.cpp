@@ -46,66 +46,6 @@ bool equals(const String& str, const char& c) {
 }
 
 /********************************************************************************************\
-   Convert a char string to integer
- \*********************************************************************************************/
-
-// FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string)
-{
-  unsigned int temp = 0;
-
-  validUIntFromString(string, temp);
-
-  return static_cast<unsigned long>(temp);
-}
-
-String ull2String(uint64_t value, uint8_t base) {
-  String res;
-
-  if (value == 0) {
-    res = '0';
-    return res;
-  }
-
-  while (value > 0) {
-    res   += String(static_cast<uint32_t>(value % base), base);
-    value /= base;
-  }
-
-  int endpos   = res.length() - 1;
-  int beginpos = 0;
-
-  while (endpos > beginpos) {
-    const char c = res[beginpos];
-    res[beginpos] = res[endpos];
-    res[endpos]   = c;
-    ++beginpos;
-    --endpos;
-  }
-
-  return res;
-}
-
-String ll2String(int64_t value, uint8_t  base) {
-  if (value < 0) {
-    String res;
-    res = '-';
-    res += ull2String(value * -1ll, base);
-    return res;
-  } else {
-    return ull2String(value, base);
-  }
-}
-
-
-/********************************************************************************************\
-   Check if valid float and convert string to float.
- \*********************************************************************************************/
-bool string2float(const String& string, float& floatvalue) {
-  return validFloatFromString(string, floatvalue);
-}
-
-/********************************************************************************************\
    Convert a char string to IP uint8_t array
  \*********************************************************************************************/
 bool isIP(const String& string) {
@@ -372,9 +312,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     }
   }
 
-
-  const uint8_t   valueCount = getValueCountForTask(event->TaskIndex);
-  Sensor_VType sensorType = event->getSensorType();
+  const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
+  const Sensor_VType sensorType = event->getSensorType();
 
   if (valueCount <= rel_index) {
     isvalid = false;
@@ -394,31 +333,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  switch (sensorType) {
-    case Sensor_VType::SENSOR_TYPE_LONG:
-      return String(UserVar.getSensorTypeLong(event->TaskIndex));
-    case Sensor_VType::SENSOR_TYPE_STRING:
-      return event->String2;
-
-    default:
-      break;
-  }
-
-  float f(UserVar[event->BaseVarIndex + rel_index]);
-
-  if (mustCheck && !isValidFloat(f)) {
-    isvalid = false;
-#ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("Invalid float value for TaskIndex: ");
-      log += event->TaskIndex;
-      log += F(" varnumber: ");
-      log += rel_index;
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
-#endif // ifndef BUILD_NO_DEBUG
-    f = 0;
+  if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+    return event->String2;
   }
 
   uint8_t nrDecimals = 0;
@@ -426,9 +342,24 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
-  String result = toString(f, nrDecimals);
-  result.trim();
-  return result;
+  if (mustCheck) {
+    if (!UserVar.isValid(event->TaskIndex, rel_index, sensorType)) {
+      isvalid = false;
+#ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("Invalid float value for TaskIndex: ");
+        log += event->TaskIndex;
+        log += F(" varnumber: ");
+        log += rel_index;
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
+#endif // ifndef BUILD_NO_DEBUG
+      const float f = 0.0f;
+      return toString(f, nrDecimals);
+    }
+  }
+  return UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
@@ -731,6 +662,10 @@ String parseString(const String& string, uint8_t indexFind, char separator, bool
   return result;
 }
 
+String parseStringKeepCaseNoTrim(const String& string, uint8_t indexFind, char separator) {
+  return parseStringKeepCase(string, indexFind, separator, false);
+}
+
 String parseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result;
 
@@ -748,6 +683,10 @@ String parseStringToEnd(const String& string, uint8_t indexFind, char separator,
 
   result.toLowerCase();
   return result;
+}
+
+String parseStringToEndKeepCaseNoTrim(const String& string, uint8_t indexFind, char separator) {
+  return parseStringToEndKeepCase(string, indexFind, separator, false);
 }
 
 String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
@@ -798,6 +737,90 @@ String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char
     return parseStringToEndKeepCase(string, indexFind, separator, trimResult);
   }
   return parseStringKeepCase(string, indexFind, separator, trimResult);
+}
+
+/*****************************************************************************
+ * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
+ ****************************************************************************/
+String parseHexTextString(const String& argument, int index) {
+  String result;
+
+  // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
+  const String skipChars = F(" -:,.;");
+
+  result.reserve(argument.length()); // longer than needed, most likely
+  int i      = index;
+  String arg = parseStringKeepCase(argument, i, ',', false);
+
+  while (!arg.isEmpty()) {
+    if ((arg.startsWith(F("0x")) || arg.startsWith(F("0X")))) {
+      size_t j = 2;
+
+      while (j < arg.length()) {
+        int hex = -1;
+
+        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > 0) && (hex < 256)) {
+          result += char(hex);
+        }
+        j += 2;
+        int c = skipChars.indexOf(arg.substring(j, j + 1));
+
+        while (j < arg.length() && c > -1) {
+          j++;
+          c = skipChars.indexOf(arg.substring(j, j + 1));
+        }
+      }
+    } else {
+      result += arg;
+    }
+    i++;
+    arg = parseStringKeepCase(argument, i, ',', false);
+  }
+
+  return result;
+}
+
+/*****************************************************************************
+ * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
+ ****************************************************************************/
+std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
+  std::vector<uint8_t> result;
+
+  // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
+  const String skipChars = F(" -:,.;");
+
+  result.reserve(argument.length()); // longer than needed, most likely
+  int i      = index;
+  String arg = parseStringKeepCase(argument, i, ',', false);
+
+  while (!arg.isEmpty()) {
+    if ((arg.startsWith(F("0x")) || arg.startsWith(F("0X")))) {
+      size_t j = 2;
+
+      while (j < arg.length()) {
+        int hex = -1;
+
+        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > -1) && (hex < 256)) {
+          result.push_back(char(hex));
+        }
+        j += 2;
+        int c = skipChars.indexOf(arg.substring(j, j + 1));
+
+        while (j < arg.length() && c > -1) {
+          j++;
+          c = skipChars.indexOf(arg.substring(j, j + 1));
+        }
+      }
+    } else {
+      for (size_t s = 0; s < arg.length(); s++) {
+        result.push_back(arg[s]);
+      }
+    }
+    i++;
+    arg = parseStringKeepCase(argument, i, ',', false);
+  }
+
+  return result;
 }
 
 /*********************************************************************************************\
@@ -1109,15 +1132,12 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
 
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
-      if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
-        SMART_REPL(F("%val1%"), String(UserVar.getSensorTypeLong(event->TaskIndex)))
-      } else {
-        for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
-          String valstr = F("%val");
-          valstr += (i + 1);
-          valstr += '%';
-          SMART_REPL(valstr, formatUserVarNoCheck(event, i));
-        }
+      const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_ULONG) ? 1 : getValueCountForTask(event->TaskIndex);
+      for (uint8_t i = 0; i < valueCount; ++i) {
+        String valstr = F("%val");
+        valstr += (i + 1);
+        valstr += '%';
+        SMART_REPL(valstr, formatUserVarNoCheck(event, i));
       }
     }
   }

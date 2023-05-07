@@ -103,6 +103,8 @@ private:
 
   float _offsetChanA = 0.0f;
   float _offsetChanB = 0.0f;
+
+  bool firstRead = true;
 };
 
 #endif // ifdef USES_P067

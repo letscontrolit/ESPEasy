@@ -218,6 +218,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x30:
       result +=  F("VL53L0X,VL53L1X");
       break;
+    case 0x34:
+      result +=  F("AXP192");
+      break;
     case 0x36:
       result +=  F("MAX1704x,Adafruit Rotary enc");
       break;
@@ -243,7 +246,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("LCD,PCF8574A");
       break;
     case 0x40:
-      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080,M5Stack Rotary enc");
+      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC10xx,M5Stack Rotary enc");
       break;
     case 0x41:
     case 0x42:
@@ -257,10 +260,10 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result +=  F("PCF8591,ADS1115,LM75A,INA219");
+      result +=  F("PCF8591,ADS1115,LM75A,INA219,TMP117");
       break;
     case 0x49:
-      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219");
+      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219,TMP117");
       break;
     case 0x4C:
     case 0x4E:
@@ -276,8 +279,10 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x53:
       result +=  F("ADXL345,LTR390");
       break;
-    case 0x54:
     case 0x55:
+      result +=  F("DFRobot Rotary enc,BeFlE Moisture");
+      break;
+    case 0x54:
     case 0x56:
     case 0x57:
       result +=  F("DFRobot Rotary enc");

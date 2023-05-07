@@ -440,22 +440,22 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             }
 
             case 7: {
-              int errorWord = P052_data->modbus.readInputRegister(P052_IR_ERRORSTATUS, errorcode);
+              const int errorWord = P052_data->modbus.readInputRegister(P052_IR_ERRORSTATUS, errorcode);
 
               if (errorcode == 0) {
+                value = errorWord;
                 for (size_t i = 0; i < 9; i++) {
                   if (bitRead(errorWord, i)) {
-                    UserVar[event->BaseVarIndex + varnr] = i;
-                    log                                 += F("error code = ");
-                    log                                 += i;
+                    log += F("error code = ");
+                    log += i;
                     break;
                   }
                 }
+              } else {
+                value = -1;
+                log  += F("error code = ");
+                log  += -1;
               }
-
-              UserVar[event->BaseVarIndex + varnr] = -1;
-              log                                 += F("error code = ");
-              log                                 += -1;
               break;
             }
             case 0:
@@ -466,14 +466,13 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
           }
 
           if (P052_data->modbus.getLastError() == 0) {
+            success = true;
             UserVar[event->BaseVarIndex + varnr] = value;
             log                                 += logPrefix;
             log                                 += value;
           }
         }
         addLogMove(LOG_LEVEL_INFO, log);
-
-        success = true;
         break;
       }
       break;

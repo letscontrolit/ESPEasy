@@ -94,20 +94,20 @@ void ResetFactoryDefaultPreference_struct::deleteFirst(bool checked) {
   bitWrite(_preference, 21, checked);
 }
 
+bool ResetFactoryDefaultPreference_struct::delete_Bak_Files() const {
+  return bitRead(_preference, 23);
+}
+
+void ResetFactoryDefaultPreference_struct::delete_Bak_Files(bool checked) {
+  bitWrite(_preference, 23, checked);
+}
+
 bool ResetFactoryDefaultPreference_struct::saveURL() const {
   return bitRead(_preference, 22);
 }
 
 void ResetFactoryDefaultPreference_struct::saveURL(bool checked) {
   bitWrite(_preference, 22, checked);
-}
-
-bool ResetFactoryDefaultPreference_struct::allowFetchByCommand() const {
-  return bitRead(_preference, 23);
-}
-
-void ResetFactoryDefaultPreference_struct::allowFetchByCommand(bool checked) {
-  bitWrite(_preference, 23, checked);
 }
 
 bool ResetFactoryDefaultPreference_struct::storeCredentials() const {

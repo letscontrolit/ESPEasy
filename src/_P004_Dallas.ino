@@ -7,13 +7,20 @@
 
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
+/** Changelog:
+ * 2023-04-18 tonhuisman: Add warning on statistics section for Parasite Powered sensors, as these are unsupported.
+ * 2023-04-17 tonhuisman: Use actual sensor resolution, even when using multiple sensors with different resolutions
+ * 2023-04-16 tonhuisman: Rename from DS18b20 to 1-Wire Temperature, as it supports several 1-Wire temperature sensors
+ *                        Add support for fixed-resolution sensors like MAX31826
+ * 2023-04-16 tonhuisman: Start using changelog
+ */
 # include "src/PluginStructs/P004_data_struct.h"
 # include "src/Helpers/Dallas1WireHelper.h"
 
 
 # define PLUGIN_004
 # define PLUGIN_ID_004         4
-# define PLUGIN_NAME_004       "Environment - DS18b20"
+# define PLUGIN_NAME_004       "Environment - 1-Wire Temperature"
 # define PLUGIN_VALUENAME1_004 "Temperature"
 
 # define P004_ERROR_NAN        0
@@ -136,8 +143,9 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
         {
           // Value in case of Error
-          const __FlashStringHelper * resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
-          int    resultsOptionValues[5] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
+          const __FlashStringHelper *resultsOptions[5] = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
+          int resultsOptionValues[5]                   =
+          { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
           addFormSelector(F("Error State Value"), F("err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
         }
         addFormNote(F("External pull up resistor is needed, see docs!"));
@@ -194,6 +202,13 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
     {
       P004_data_struct *P004_data =
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
+      int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
+      int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
+
+      if (Plugin_004_DallasPin_TX == -1) {
+        Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
+      }
+
 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P004_NR_OUTPUT_VALUES) {
@@ -208,9 +223,11 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
           } else {
             // Read the data from the settings.
             uint8_t addr[8]{};
+            bool    hasFixedResolution = false; // FIXME tonhuisman: Not sure if I _want_ to read the resolution here...
             Dallas_plugin_get_addr(addr, event->TaskIndex, i);
+            Dallas_getResolution(addr, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, hasFixedResolution);
 
-            string += Dallas_format_address(addr);
+            string += Dallas_format_address(addr, hasFixedResolution);
           }
         }
       }
@@ -229,11 +246,11 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       }
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(
-        event->TaskIndex,
-        Plugin_004_DallasPin_RX, 
-        Plugin_004_DallasPin_TX, 
-        res, 
-        P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT));
+                           event->TaskIndex,
+                           Plugin_004_DallasPin_RX,
+                           Plugin_004_DallasPin_TX,
+                           res,
+                           P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT));
       P004_data_struct *P004_data =
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -256,11 +273,12 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P004_data) {
-        if (P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT) {
+        if ((P004_NR_OUTPUT_VALUES == 1) && P004_SCAN_ON_INIT) {
           if (!P004_data->sensorAddressSet()) {
             P004_data->init();
           }
         }
+
         if (!timeOutReached(P004_data->get_timer())) {
           Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->get_timer());
         } else {
@@ -275,7 +293,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
             P004_data->collect_values();
 
             for (uint8_t i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
-              float value = 0;
+              float value = 0.0f;
 
               if (P004_data->read_temp(value, i))
               {
@@ -288,9 +306,9 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                   float errorValue = NAN;
 
                   switch (P004_ERROR_STATE_OUTPUT) {
-                    case P004_ERROR_MIN_RANGE: errorValue = -127; break;
-                    case P004_ERROR_ZERO:      errorValue = 0; break;
-                    case P004_ERROR_MAX_RANGE: errorValue = 125; break;
+                    case P004_ERROR_MIN_RANGE: errorValue = -127.0f; break;
+                    case P004_ERROR_ZERO:      errorValue = 0.0f; break;
+                    case P004_ERROR_MAX_RANGE: errorValue = 125.0f; break;
                     default:
                       break;
                   }
