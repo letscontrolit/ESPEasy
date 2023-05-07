@@ -768,41 +768,41 @@ void MQTTStatus(struct EventStruct *event, const String& status)
 /*********************************************************************************************\
 * send specific sensor task data, effectively calling PluginCall(PLUGIN_READ...)
 \*********************************************************************************************/
-void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime)
+void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime)
 {
-  SensorSendTask(TaskIndex, timestampUnixTime, millis());
+  SensorSendTask(event, timestampUnixTime, millis());
 }
 
-void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime, unsigned long lasttimer)
+void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
-  if (!validTaskIndex(TaskIndex)) { return; }
-  Scheduler.reschedule_task_device_timer(TaskIndex, lasttimer);
+  if (!validTaskIndex(event->TaskIndex)) { return; }
+  Scheduler.reschedule_task_device_timer(event->TaskIndex, lasttimer);
 
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SensorSendTask"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (Settings.TaskDeviceEnabled[TaskIndex])
+  if (Settings.TaskDeviceEnabled[event->TaskIndex])
   {
     bool success                    = false;
-    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
 
-    struct EventStruct TempEvent(TaskIndex);
+    struct EventStruct TempEvent(event->TaskIndex);
+    TempEvent.Source = event->Source;
     TempEvent.timestamp = timestampUnixTime;
     checkDeviceVTypeForTask(&TempEvent);
 
-
-    const uint8_t valueCount = getValueCountForTask(TaskIndex);
-
+    const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+    
     // Store the previous value, in case %pvalue% is used in the formula
     String preValue[VARS_PER_TASK];
-
-    if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(TaskIndex)) {
+    
+    if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex)) {
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
-        const String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
+        const String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);
 
         if (!formula.isEmpty())
         {
@@ -813,21 +813,17 @@ void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime, unsi
       }
     }
 
-    if (Settings.TaskDeviceDataFeed[TaskIndex] == 0) // only read local connected sensorsfeeds
     {
       String dummy;
       success = PluginCall(PLUGIN_READ, &TempEvent, dummy);
     }
-    else {
-      success = true;
-    }
 
     if (success)
     {
-      if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(TaskIndex)) {
+      if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex)) {
         for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
-          String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
+          String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);
 
           if (!formula.isEmpty())
           {
@@ -840,7 +836,7 @@ void SensorSendTask(taskIndex_t TaskIndex, unsigned long timestampUnixTime, unsi
             double result = 0;
 
             if (!isError(Calculate(parseTemplate(formula), result))) {
-              UserVar.set(TaskIndex, varNr, result, TempEvent.sensorType);
+              UserVar.set(event->TaskIndex, varNr, result, TempEvent.sensorType);
             }
 
             STOP_TIMER(COMPUTE_FORMULA_STATS);
