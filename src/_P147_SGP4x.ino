@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-05-07 tonhuisman: Make Temperature and Humidity compensation selection independent, so if either setting is configured
+ *                        it will still be applied, with the other value using the default. Minor UI improvement.
  * 2023-05-02 tonhuisman: Fix Low-power measurement, introducing a new State for reading the second measurement only
  *                        Remove unsupported sampling interval from MOxGasIndexAlgorithm
  *                        Fix settings-save issue
@@ -21,6 +23,17 @@
  *
  * Using direct I2C functions and Sensirion VOC/NOx index calculation library
  **/
+
+/** Commands supported:
+ * (None yet)
+ */
+
+/** Get Config values:
+ * [<taskname>#Serialnumber]    : Returns the serial number of the connected sensor.
+ * [<taskname>#RawVOC]          : Returns the last measured raw VOC value
+ * [<taskname>#RawNOx]          : Returns the last measured raw NOx value
+ */
+
 # define PLUGIN_147
 # define PLUGIN_ID_147          147
 # define PLUGIN_NAME_147        "Gases - SGP4x VOC(/NOx)"
@@ -133,12 +146,12 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
+      addFormSeparator(2);
+
       addFormCheckBox(F("Low-power measurement"), F("plow"), P147_LOW_POWER_MEASURE == 1);
       addFormNote(F("Unchecked= 1 sec., continuous heating, Checked= 10 sec. measurement interval."));
 
       # if P147_FEATURE_GASINDEXALGORITHM
-      addFormSeparator(2);
-
       addFormCheckBox(F("Show raw data only"), F("raw"), P147_GET_RAW_DATA_ONLY);
       # endif // if P147_FEATURE_GASINDEXALGORITHM
 

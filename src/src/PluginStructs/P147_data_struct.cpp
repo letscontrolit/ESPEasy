@@ -143,9 +143,14 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
 
         // addLog(LOG_LEVEL_INFO, F("P147 : MeasureStart"));
 
-        if (_useCompensation && (_temperatureValueIndex > -1) && (_humidityValueIndex > -1)) {
-          temperature = UserVar[_temperatureValueIndex];
-          humidity    = UserVar[_humidityValueIndex];
+        if (_useCompensation && ((_temperatureValueIndex > -1) || (_humidityValueIndex > -1))) {
+          if (_temperatureValueIndex > -1) {
+            temperature = UserVar[_temperatureValueIndex];
+          }
+
+          if (_humidityValueIndex > -1) {
+            humidity = UserVar[_humidityValueIndex];
+          }
 
           // Sanity checks
           if (definitelyLessThan(temperature, -45.0f)) { temperature = -45.0f; }
