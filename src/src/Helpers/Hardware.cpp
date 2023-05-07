@@ -195,15 +195,13 @@ void hardwareInit()
     const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(Settings.InitSPI);
 
     switch (SPI_selection) {
+#ifdef ESP32_CLASSIC
       case SPI_Options_e::Hspi:
       {
-        # define HSPI_MISO   12
-        # define HSPI_MOSI   13
-        # define HSPI_SCLK   14
-        # define HSPI_SS     15
         SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); // HSPI
         break;
       }
+#endif
       case SPI_Options_e::UserDefined:
       {
         SPI.begin(Settings.SPI_SCLK_pin,
@@ -211,9 +209,9 @@ void hardwareInit()
                   Settings.SPI_MOSI_pin); // User-defined SPI
         break;
       }
-      case SPI_Options_e::Vspi:
+      case SPI_Options_e::Vspi_Fspi:
       {
-        SPI.begin(); // VSPI
+        SPI.begin(); // Default SPI bus
         break;
       }
       case SPI_Options_e::None:

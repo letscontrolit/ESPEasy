@@ -794,18 +794,22 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
     const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
 
     switch (SPI_selection) {
-      case SPI_Options_e::Vspi:
+      case SPI_Options_e::Vspi_Fspi:
       {
-        spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
+        spi_gpios[0] = VSPI_FSPI_SCK; 
+        spi_gpios[1] = VSPI_FSPI_MISO; 
+        spi_gpios[2] = VSPI_FSPI_MOSI;
         break;
       }
+#ifdef ESP32_CLASSIC
       case SPI_Options_e::Hspi:
       {
-        spi_gpios[0] = 14; // HSPI_SCLK
-        spi_gpios[1] = 12; // HSPI_MISO
-        spi_gpios[2] = 13; // HSPI_MOSI
+        spi_gpios[0] = HSPI_SCLK;
+        spi_gpios[1] = HSPI_MISO;
+        spi_gpios[2] = HSPI_MOSI;
         break;
       }
+#endif
       case SPI_Options_e::UserDefined:
       {
         spi_gpios[0] = SPI_SCLK_pin;

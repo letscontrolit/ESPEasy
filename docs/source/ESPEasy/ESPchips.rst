@@ -166,7 +166,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
    *  - DAC
       - 0
       - 2*8-bit DAC
-      - 0
+      - 2*8-bit DAC
       - 0
       - 0
       - 0
@@ -511,6 +511,15 @@ It outperforms the classic ESP32 in almost any way.
 The only drawback is that it doesn't support a RMII ethernet interface.
 
 .. note:: Support for the ESP32-S3 is very preliminary, as in it is hardly tested (as of May 2023)
+
+PSRAM support on ESP32-S3 is a bit of a mess.
+
+Some ESP32-S3 chips have embedded PSRAM.
+When they do, you need to have the SPI bus for memory/flash set to QIO/OPI mode.
+With QIO/QSPI mode, the PSRAM will not be detected.
+
+However, if the chip does not have PSRAM and the SPI bus is set to QIO/OPI mode, the flash will lockup and no longer respond when accessing it.
+So for now only the ``max_ESP32s3_16M8M_LittleFS_PSRAM`` build will be set to use QIO/OPI mode.
 
 
 ESP32-C3
