@@ -2339,6 +2339,17 @@ To create/register a plugin, you have to :
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
+  #ifndef PLUGIN_NEOPIXEL_COLLECTION
+    #ifdef USES_P041  // Disable NeoPixel specials
+      #undef USES_P041
+    #endif
+    #ifdef USES_P042
+      #undef USES_P042
+    #endif
+    #ifdef USES_P043
+      #undef USES_P043
+    #endif
+  #endif
 #endif
 
 #if defined(PLUGIN_BUILD_MAX_ESP32) || defined(NO_LIMIT_BUILD_SIZE)

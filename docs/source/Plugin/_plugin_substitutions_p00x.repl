@@ -56,10 +56,10 @@
 .. |P003_compileinfo| replace:: `.`
 .. |P003_usedlibraries| replace:: `.`
 
-.. |P004_name| replace:: :cyan:`DS18b20`
+.. |P004_name| replace:: :cyan:`1-Wire Temperature`
 .. |P004_type| replace:: :cyan:`Environment`
-.. |P004_typename| replace:: :cyan:`Environment - DS18b20`
-.. |P004_porttype| replace:: `.`
+.. |P004_typename| replace:: :cyan:`Environment - 1-Wire Temperature`
+.. |P004_porttype| replace:: `1-Wire`
 .. |P004_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P004_github| replace:: P004_Dallas.ino
 .. _P004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P004_Dallas.ino
