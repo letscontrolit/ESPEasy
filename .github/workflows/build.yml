@@ -144,7 +144,7 @@ jobs:
               rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
               cd ..
               cd artifacts/Binaries
-              find . -name '*${cpu}*' -exec mv {} ../../ESPEasy_dist_${cpu}/bin/ \;
+              find . -name "*${cpu}*" -exec mv {} ../../ESPEasy_dist_${cpu}/bin/ \;
               cd ../..
             fi
           done
