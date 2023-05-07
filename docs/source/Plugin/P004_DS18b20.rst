@@ -5,8 +5,8 @@
      <br clear="all">
 
 
-DS18b20 temperature sensor
-==========================
+DS18B20 and compatible Temperature sensors
+==========================================
 
 .. image:: P004_DS18b20_1.jpg
     :width: 2055px
@@ -20,6 +20,7 @@ DS18b20 temperature sensor
 Introduction
 ------------
 
+This plugin supports up to 4 1-Wire Temperature sensors, and closely related sensor types, like DS18B20, DS1820/DS18S20, DS1822, DS1825, DS28AE00 and MAX31826.
 
 .. note:: Beware of cheap remakes from the Chinese market. They might have wider tolerance and/or different pinouts.
     The DS18B20 manufactured by Dallas and Maxim is a very simple to use temperature sensor with a tolerance of ±0.5°C.
@@ -168,6 +169,8 @@ As temperatures do not change very fast usually a high accuracy can be chosen wi
   
 N.B. resolution applies to all sensors for this task.
 
+N.B. Some sensors, like the MAX31826, have a fixed resolution. The command to change te resolution is not sent to that sensor-type (Added 2023-04-16).
+
 Error State Value
 """""""""""""""""
 
@@ -197,6 +200,11 @@ The Statistics can help determining why a setup of sensors may not perform as we
     :align: left
 
 |br|
+
+.. note:: Because of the issues that can arise from these sensors being used with parasitic power (via the data line), this configuration,
+          while it *may* work, is **unsupported**, and a matching warning message is shown if Parasite Powered is reported true by the sensor.
+
+.. image:: P004_ParasitePower.png
 
 
 .. note:: If you need a star infrastructure or stubs or if you need just longer cabling there is a way out.

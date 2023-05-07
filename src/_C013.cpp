@@ -151,6 +151,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   dataReply.sourceUnit      = Settings.Unit;
   dataReply.sourceTaskIndex = event->TaskIndex;
   dataReply.destTaskIndex   = destTaskIndex;
+  dataReply.deviceNumber    = Settings.TaskDeviceNumber[event->TaskIndex];
 
   // FIXME TD-er: We should check for sensorType and pluginID on both sides.
   // For example sending different sensor type data from one dummy to another is probably not going to work well
@@ -158,7 +159,10 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
 
   const TaskValues_Data_t* taskValues = UserVar.getTaskValues_Data(event->TaskIndex);
   if (taskValues != nullptr) {
-    dataReply.values = *taskValues;
+    for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
+    {
+      dataReply.values.copyValue(*taskValues, x, dataReply.sensorType);
+    }
   }
 
   if (destUnit != 0)
@@ -304,10 +308,13 @@ void C013_Receive(struct EventStruct *event) {
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
               log += concat(F(" from unit "), dataReply.sourceUnit);
+              log += concat(F(" remote: "), dataReply.deviceNumber);
+              log += concat(F(" local: "), Settings.TaskDeviceNumber[dataReply.destTaskIndex]);
               addLogMove(LOG_LEVEL_ERROR, log);
             }
           } else {
             struct EventStruct TempEvent(dataReply.destTaskIndex);
+            TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_UDP;
 
             const Sensor_VType sensorType = TempEvent.getSensorType();
 
@@ -320,9 +327,7 @@ void C013_Receive(struct EventStruct *event) {
                 }
               }
 
-              if (Settings.UseRules) {
-                createRuleEvents(&TempEvent);
-              }
+              SensorSendTask(&TempEvent);
             } else {
               // Mismatch in sensor types
               if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
