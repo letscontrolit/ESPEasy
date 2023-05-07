@@ -1,4 +1,42 @@
 -------------------------------------------------
+Changes in release mega-20230507 (since mega-20230505)
+-------------------------------------------------
+
+Release date: zo  7 mei 2023 16:27:33 CEST
+
+SirWant (4):
+      Fix and Add command to PluginStats
+      Replacing sampleN and sample to sample+-N
+      minor fix
+      Final minor fix...
+
+TD-er (7):
+      [Cleanup] Remove duplicate code & document
+      [RTC TaskValues] Fix proper init of task values
+      [p2p] Fix task value data exchange between nodes via p2p (#4649)
+      [p2p] Fix check on received data for matching plugin IDs
+      [p2p] Fix collecting stats + send to controller on p2p received data
+      [p2p] Fix build on LIMIT_BUILD_SIZE builds
+      [p2p] Fix receiving p2p data on another node (stupid copy/paste bug)
+
+Ton Huisman (14):
+      [P004] Rename to 1-Wire Temperature, add support for MAX31826 sensor
+      [P004] Apply CRC check before testing for fixed resolution
+      [P004] Variable naming consistently
+      [P004] Update documentation
+      [P004] Use matching sensor-resolution when reading
+      [P004] Use highest required sensor-resolution when reading multiple sensors
+      [P004] Remove unneeded debug log message
+      [P004] Add 'unsupported' warning for Parasite Powered sensors
+      [Build] Fix `Climate` build size issue
+      [Build] Add `BUILD_NO_DEBUG` flag on `normal_302_ESP8266_4M1M` and `normal_beta_ESP8266_4M1M` for size
+      [P093] Add support for retrieving all device values
+      [P093] Updated documentation for config values
+      [P093] Add suggested initialization check
+      [Build] Make 1M builds fit by excluding some plugins
+
+
+-------------------------------------------------
 Changes in release mega-20230505 (since mega-20230409)
 -------------------------------------------------
 
