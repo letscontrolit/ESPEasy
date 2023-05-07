@@ -1,5 +1,8 @@
 #include "../DataTypes/SPI_options.h"
 
+
+#ifdef ESP32
+
 // ESP32 VSPI:
 //  SCK  = 18
 //  MISO = 19
@@ -44,9 +47,6 @@
 #  endif // if CONFIG_IDF_TARGET_ESP32S2
 
 
-
-
-#ifdef ESP32
 const __FlashStringHelper* getSPI_optionToString(SPI_Options_e option) {
   switch (option) {
     case SPI_Options_e::None:

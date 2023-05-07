@@ -34,7 +34,7 @@
 
 // HSPI option is disabled for now on other than ESP32_CLASSIC.
 // Should be added later as "Custom HSPI" when we support multiple SPI busses.
-
+#ifdef ESP32
 #  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
 #define VSPI_FSPI_SCK  36
 #define VSPI_FSPI_MISO 37
@@ -61,6 +61,7 @@
 #   error Target CONFIG_IDF_TARGET is not supported
 #  endif // if CONFIG_IDF_TARGET_ESP32S2
 
+#endif
 
 enum class SPI_Options_e { // Do not change values as this is stored in the settings!
   None        = 0,
