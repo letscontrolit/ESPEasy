@@ -2904,4 +2904,18 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_SET_WIFI_TX_PWR
+  #ifdef ESP32_CLASSIC
+    // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+    #define FEATURE_SET_WIFI_TX_PWR   0
+  #elif defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+    #define FEATURE_SET_WIFI_TX_PWR   1
+  #elif defined(ESP8266)
+    #define FEATURE_SET_WIFI_TX_PWR   1
+  # else
+    static_assert(false, "Implement processor architecture");
+  #endif
+#endif
+
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

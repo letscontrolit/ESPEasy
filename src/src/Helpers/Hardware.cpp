@@ -642,18 +642,34 @@ uint32_t getXtalFrequencyMHz() {
   return rtc_clk_xtal_freq_get();
 }
 
-bool chipFeatureFlags_embeddedFlash() {
-  static bool res = false;
+esp32_chip_features getChipFeatures() {
+  static esp32_chip_features res;
   static bool loaded = false;
   if (!loaded) {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
 
-    res = (chip_info.features & CHIP_FEATURE_EMB_FLASH) != 0;
+    res.embeddedFlash = chip_info.features & CHIP_FEATURE_EMB_FLASH;
+    res.wifi_bgn      = chip_info.features & CHIP_FEATURE_WIFI_BGN;
+    res.bluetooth_ble = chip_info.features & CHIP_FEATURE_BLE;
+    res.bluetooth_classic = chip_info.features & CHIP_FEATURE_BT;
+    res.ieee_802_15_4 = chip_info.features & CHIP_FEATURE_IEEE802154;
+    res.embeddedPSRAM = chip_info.features & CHIP_FEATURE_EMB_PSRAM;
 
     loaded = true;
   }
   return res;
+}
+
+bool getFlashChipOPI_wired() {
+  #ifdef ESP32_CLASSIC
+    return false;
+
+  #else
+  // Source: https://github.com/espressif/esptool/commit/b25606b95920bd06df87aff9202c7a15377d4a30
+  const uint32_t data = REG_GET_BIT(EFUSE_RD_REPEAT_DATA3_REG, BIT(9));
+  return data != 0;
+  #endif
 }
 
 #endif // ifdef ESP32
@@ -674,6 +690,22 @@ uint32_t getFlashChipSpeed() {
 }
 
 const __FlashStringHelper* getFlashChipMode() {
+  #ifdef ESP32
+  if (getFlashChipOPI_wired()) {
+    switch (ESP.getFlashChipMode()) {
+      case FM_QIO:     return F("QIO (OPI Wired)");
+      case FM_QOUT:    return F("QOUT (OPI Wired)");
+      case FM_DIO:     return F("DIO (OPI Wired)");
+      case FM_DOUT:    return F("DOUT (OPI Wired)");
+  #ifdef ESP32
+      case FM_FAST_READ: return F("Fast (OPI Wired)");
+      case FM_SLOW_READ: return F("Slow (OPI Wired)");
+  #endif
+      case FM_UNKNOWN: break;
+    }
+  }
+
+  #endif
   switch (ESP.getFlashChipMode()) {
     case FM_QIO:     return F("QIO");
     case FM_QOUT:    return F("QOUT");
@@ -999,15 +1031,16 @@ bool isESP8285() {
   #endif // ifdef ESP8266
 }
 
-uint8_t getChipRevision() {
-  static uint8_t rev = 0;
+uint16_t getChipRevision() {
+  static uint16_t rev = 0;
 
   #ifdef ESP32
+  // See: https://github.com/espressif/esp-idf/blob/master/examples/get-started/hello_world/main/hello_world_main.c
   if (rev == 0) {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
 
-    rev = chip_info.revision;
+    rev = chip_info.full_revision;
   }
   #endif // ifdef ESP32
   return rev;
@@ -1281,17 +1314,17 @@ const __FlashStringHelper* getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
-    #ifdef ESP32
+    #ifdef ESP32_CLASSIC
       return F("Olimex");
-    #endif // ifdef ESP32
+    #endif // ifdef ESP32_CLASSIC
     case DeviceModel::DeviceModel_wESP32:
-    #ifdef ESP32
+    #ifdef ESP32_CLASSIC
       return F("wESP32");
-    #endif // ifdef ESP32
+    #endif // ifdef ESP32_CLASSIC
     case DeviceModel::DeviceModel_WT32_ETH01:
-    #ifdef ESP32
+    #ifdef ESP32_CLASSIC
       return F("WT32-ETH01");
-    #endif // ifdef ESP32
+    #endif // ifdef ESP32_CLASSIC
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:      break;
 
@@ -1329,19 +1362,19 @@ const __FlashStringHelper* getDeviceModelTypeString(DeviceModel model)
     case DeviceModel::DeviceModel_ShellyPLUG_S:
       return F("default");
 #endif // if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
-#ifdef ESP32
+#ifdef ESP32_CLASSIC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:      return F(" ESP32-PoE");
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:      return F(" ESP32-EVB");
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:  return F(" ESP32-GATEWAY");
     case DeviceModel::DeviceModel_wESP32:                break;
     case DeviceModel::DeviceModel_WT32_ETH01:            return F(" add-on");
-#else // ifdef ESP32
+#else // ifdef ESP32_CLASSIC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
     case DeviceModel::DeviceModel_wESP32:
     case DeviceModel::DeviceModel_WT32_ETH01:
-#endif // ifdef ESP32
+#endif // ifdef ESP32_CLASSIC
 
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:             return F("default");
@@ -1358,11 +1391,11 @@ String getDeviceModelString(DeviceModel model) {
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
-#if defined(ESP8266) || (defined(ESP32) && FEATURE_ETHERNET)
+#if defined(ESP8266) || (defined(ESP32_CLASSIC) && FEATURE_ETHERNET)
   const uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
-#endif // if defined(ESP8266) || (defined(ESP32) && FEATURE_ETHERNET)
+#endif // if defined(ESP8266) || (defined(ESP32_CLASSIC) && FEATURE_ETHERNET)
 
-  // TD-er: This also checks for ESP8266/ESP8285/ESP32
+  // TD-er: This also checks for ESP8266/ESP8285/ESP32_CLASSIC
   switch (model) {
     case DeviceModel::DeviceModel_Sonoff_Basic:
     case DeviceModel::DeviceModel_Sonoff_TH1x:
@@ -1399,11 +1432,11 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
     case DeviceModel::DeviceModel_wESP32:
     case DeviceModel::DeviceModel_WT32_ETH01:
-#if  defined(ESP32) && FEATURE_ETHERNET
+#if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
       return size_MB == 4;
-#else // if  defined(ESP32) && FEATURE_ETHERNET
+#else // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
       return false;
-#endif // if  defined(ESP32) && FEATURE_ETHERNET
+#endif // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
 
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:

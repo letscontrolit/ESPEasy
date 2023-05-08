@@ -264,7 +264,7 @@ void handle_json()
         LabelType::FORCE_ESPEASY_NOW_CHANNEL,
 #endif
         LabelType::CONNECTION_FAIL_THRESH,
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
         LabelType::WIFI_TX_MAX_PWR,
         LabelType::WIFI_CUR_TX_PWR,
         LabelType::WIFI_SENS_MARGIN,

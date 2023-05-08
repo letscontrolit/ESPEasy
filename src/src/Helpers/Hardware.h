@@ -38,6 +38,46 @@
 #endif // ifdef ESP8266
 
 
+  #ifdef ESP32_CLASSIC
+    #define MAX_TX_PWR_DBM_11b  19.5f
+    #define MAX_TX_PWR_DBM_54g  16.0f
+    #define MAX_TX_PWR_DBM_n    14.0f
+    #define WIFI_SENSITIVITY_11b  -88
+    #define WIFI_SENSITIVITY_54g  -75
+    #define WIFI_SENSITIVITY_n    -70
+  #elif defined(ESP32S2) 
+    #define MAX_TX_PWR_DBM_11b  19.5f
+    #define MAX_TX_PWR_DBM_54g  15.0f
+    #define MAX_TX_PWR_DBM_n    13.0f
+    #define WIFI_SENSITIVITY_11b  -88
+    #define WIFI_SENSITIVITY_54g  -75
+    #define WIFI_SENSITIVITY_n    -72
+  #elif defined(ESP32S3)
+    #define MAX_TX_PWR_DBM_11b  21.0f
+    #define MAX_TX_PWR_DBM_54g  19.0f
+    #define MAX_TX_PWR_DBM_n    18.5f
+    #define WIFI_SENSITIVITY_11b  -88
+    #define WIFI_SENSITIVITY_54g  -76
+    #define WIFI_SENSITIVITY_n    -72
+  #elif defined(ESP32C3)
+    #define MAX_TX_PWR_DBM_11b  21.0f
+    #define MAX_TX_PWR_DBM_54g  19.0f
+    #define MAX_TX_PWR_DBM_n    18.5f
+    #define WIFI_SENSITIVITY_11b  -88
+    #define WIFI_SENSITIVITY_54g  -76
+    #define WIFI_SENSITIVITY_n    -73
+  #elif defined(ESP8266)
+    #define MAX_TX_PWR_DBM_11b  20.0f
+    #define MAX_TX_PWR_DBM_54g  17.0f
+    #define MAX_TX_PWR_DBM_n    14.0f
+    #define WIFI_SENSITIVITY_11b  -91
+    #define WIFI_SENSITIVITY_54g  -75
+    #define WIFI_SENSITIVITY_n    -72
+  # else
+    static_assert(false, "Implement processor architecture");
+  #endif
+
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -107,7 +147,20 @@ uint32_t                   getFlashChipSpeed();
 #ifdef ESP32
 uint32_t                   getXtalFrequencyMHz();
 
-bool                       chipFeatureFlags_embeddedFlash();
+struct esp32_chip_features {
+  bool embeddedFlash{};
+  bool wifi_bgn{};
+  bool bluetooth_ble{};
+  bool bluetooth_classic{};
+  bool ieee_802_15_4{};
+  bool embeddedPSRAM{};
+};
+
+esp32_chip_features        getChipFeatures();
+
+// @retval true:   octal (8 data lines)
+// @retval false:  quad (4 data lines)
+bool                       getFlashChipOPI_wired();
 #endif // ifdef ESP32
 
 const __FlashStringHelper* getFlashChipMode();
@@ -127,7 +180,7 @@ const __FlashStringHelper* getChipModel();
 
 bool                       isESP8285();
 
-uint8_t                    getChipRevision();
+uint16_t                   getChipRevision();
 
 uint32_t                   getSketchSize();
 
