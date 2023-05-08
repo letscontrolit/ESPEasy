@@ -502,7 +502,7 @@ The only advantages of the ESP32-S2 compared to its predecessor are:
 ESP32-S3
 ========
 
-Added: 2023/05/03
+Added: 2023/05/09
 
 The most powerful and versatile ESP32 variant currently available.
 
@@ -525,7 +525,7 @@ So for now only the ``max_ESP32s3_16M8M_LittleFS_PSRAM`` build will be set to us
 ESP32-C3
 ========
 
-Added: 2023/05/03
+Added: 2023/05/09
 
 The ESP32-C3 is available in various versions.
 
