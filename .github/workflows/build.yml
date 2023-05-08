@@ -135,7 +135,8 @@ jobs:
           for cpu in ESP32s2 ESP32c3 ESP32s3 ESP32c2 ESP32c6 ESP32h2 ESP32
           do
             mkdir ESPEasy_dist_${cpu}
-            _files=$(find ./dist -name \*${cpu}\*|wc -l)
+            spec="*${cpu}*"
+            _files=$(find ./dist -name "$spec"|wc -l)
             if [[ $_files > 0 ]]; then
               cd dist
               find . -exec cp -r --parents {} ../ESPEasy_dist_${cpu}/ \;
@@ -144,7 +145,6 @@ jobs:
               rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
               cd ..
               cd artifacts/Binaries
-              spec="*${cpu}*"
               find . -name "$spec" -exec mv {} ../../ESPEasy_dist_${cpu}/bin/ \;
               cd ../..
             fi
