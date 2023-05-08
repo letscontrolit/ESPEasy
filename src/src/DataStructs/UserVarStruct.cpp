@@ -13,7 +13,7 @@ UserVarStruct::UserVarStruct()
 void UserVarStruct::clear()
 {
   for (size_t i = 0; i < _data.size(); ++i) {
-    _data.clear();
+    _data[i].clear();
   }
 }
 
