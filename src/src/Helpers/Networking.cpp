@@ -813,7 +813,7 @@ void SSDP_update() {
                 }
                 break;
               case MX:
-                _delay = random(0, atoi(buffer)) * 1000L;
+                _delay = HwRandom(0, atoi(buffer)) * 1000L;
                 break;
             }
 
@@ -1144,7 +1144,7 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
 
   while (attempts > 0) {
     --attempts;
-    long port = random(1025, 65535);
+    long port = HwRandom(1025, 65535);
 
     if (udp.begin(port) != 0) {
       return true;

@@ -476,7 +476,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       _counter_mode_step = 0;
 
       randomSeed(analogRead(A0));
-      pixelNum = random(NUMPixels); // Begin at random point
+      pixelNum = HwRandom(NUMPixels); // Begin at random point
 
       startpixel = str3.isEmpty()
           ? 0
@@ -914,10 +914,10 @@ void P128_data_struct::faketv(void) {
       ftv_ng = (uint8_t)pgm_read_byte(&ftv_gamma8[ftv_g8]) * 257;
       ftv_nb = (uint8_t)pgm_read_byte(&ftv_gamma8[ftv_b8]) * 257;
 
-      ftv_totalTime = random(12, 125);                            // Semi-random pixel-to-pixel time
-      ftv_fadeTime  = random(0, ftv_totalTime);                   // Pixel-to-pixel transition time
+      ftv_totalTime = HwRandom(12, 125);                            // Semi-random pixel-to-pixel time
+      ftv_fadeTime  = HwRandom(0, ftv_totalTime);                   // Pixel-to-pixel transition time
 
-      if (random(10) < 3) { ftv_fadeTime = 0; }                   // Force scene cut 30% of time
+      if (HwRandom(10) < 3) { ftv_fadeTime = 0; }                   // Force scene cut 30% of time
       ftv_holdTime  = counter20ms + ftv_totalTime - ftv_fadeTime; // Non-transition time
       ftv_startTime = counter20ms;
     }
@@ -1164,10 +1164,10 @@ void P128_data_struct::twinkle(void) {
       }
       uint16_t min_leds = _max(1, pixelCount / 5); // make sure, at least one LED is on
       uint16_t max_leds = _max(1, pixelCount / 2); // make sure, at least one LED is on
-      _counter_mode_step = random(min_leds, max_leds);
+      _counter_mode_step = HwRandom(min_leds, max_leds);
     }
 
-    Plugin_128_pixels->SetPixelColor(random(pixelCount), rgb);
+    Plugin_128_pixels->SetPixelColor(HwRandom(pixelCount), rgb);
 
     _counter_mode_step--;
   }
@@ -1201,8 +1201,8 @@ void P128_data_struct::twinklefade(void) {
       Plugin_128_pixels->SetPixelColor(i, px_rgb);
     }
 
-    if (random(count) < 50) {
-      Plugin_128_pixels->SetPixelColor(random(pixelCount), rgb);
+    if (HwRandom(count) < 50) {
+      Plugin_128_pixels->SetPixelColor(HwRandom(pixelCount), rgb);
     }
   }
 }
@@ -1217,7 +1217,7 @@ void P128_data_struct::sparkle(void) {
     for (int i = 0; i < pixelCount; i++) {
       Plugin_128_pixels->SetPixelColor(i, rrggbb);
     }
-    Plugin_128_pixels->SetPixelColor(random(pixelCount), rgb);
+    Plugin_128_pixels->SetPixelColor(HwRandom(pixelCount), rgb);
   }
 }
 
