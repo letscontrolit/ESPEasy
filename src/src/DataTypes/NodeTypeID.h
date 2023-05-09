@@ -1,7 +1,7 @@
 #ifndef DATATYPES_NODETYPEID_H
 #define DATATYPES_NODETYPEID_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_RPI_EASY_STD           5 // https://github.com/enesbcs/rpieasy

@@ -1,8 +1,8 @@
 #ifndef CUSTOMBUILD_COMPILETIMEDEFINES_H
 #define CUSTOMBUILD_COMPILETIMEDEFINES_H
 
-#include <Arduino.h>
 
+#include <Arduino.h>
 
 // Build NR is used as a "revision" nr for settings
 // As of 2022-08-18, it is the nr of days since 2022-08-18 + 20200

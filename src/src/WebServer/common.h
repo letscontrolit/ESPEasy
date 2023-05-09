@@ -2,7 +2,7 @@
 #define WEBSERVER_WEBSERVER_COMMON_H
 
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 #include <FS.h>
 
 #ifdef ESP32
@@ -15,7 +15,6 @@
   #include <ESP8266WebServer.h>
 #endif
 
-#include "../../ESPEasy_common.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Services.h"
 #include "../Globals/TXBuffer.h"

@@ -1,7 +1,7 @@
 #ifndef GLOBALS_NETWORKSTATE_H
 #define GLOBALS_NETWORKSTATE_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include <IPAddress.h>
 #include <WiFiUdp.h>

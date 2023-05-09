@@ -1,7 +1,7 @@
 #ifndef COMMAND_GPIO_H
 #define COMMAND_GPIO_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 
 // FIXME TD-er: This fwd declaration should not be in .h file.

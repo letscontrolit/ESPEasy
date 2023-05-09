@@ -1,6 +1,8 @@
 #ifndef ESPEASY_COMMON_H
 #define ESPEASY_COMMON_H
 
+#ifdef __cplusplus
+
 // *****************************************************************************************
 // For Arduino IDE users:
 // When building using Custom.h, uncomment the next line:
@@ -133,5 +135,6 @@ extern const String EMPTY_STRING;
  //#define FEATURE_MDNS
 #endif
 
+#endif
 
 #endif // ESPEASY_COMMON_H

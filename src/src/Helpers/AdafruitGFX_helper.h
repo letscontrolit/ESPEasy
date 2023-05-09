@@ -38,7 +38,7 @@
  *                        Make 8 and 16 color support optional to squeeze a few bytes from size limited builds
  * 2022-05-23 tonhuisman: Add changelog, older changes have not been logged.
  ***************************************************************************/
-# include <Arduino.h>
+
 # include <Adafruit_GFX.h>
 # include <Adafruit_SPITFT.h>
 # include <FS.h>

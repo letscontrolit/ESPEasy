@@ -1,7 +1,5 @@
 #include "../Helpers/StringParser.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/GPIO.h"
@@ -23,7 +21,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include <Arduino.h>
+
 
 /********************************************************************************************\
    Parse string template

@@ -5,7 +5,6 @@
 
 #ifdef USES_C016
 
-# include <Arduino.h>
 # include "../DataStructs/ESPEasyControllerCache.h"
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../DataStructs/DeviceStruct.h"
