@@ -9,6 +9,26 @@
 
 #include "../CustomBuild/CompiletimeDefines.h"
 
+#if defined(ESP32)
+  #ifdef ESP32S2
+    #include <esp32s2/rom/rtc.h>
+  #elif defined(ESP32S3)
+    #include <esp32s3/rom/rtc.h>
+  #elif defined(ESP32C3)
+    #include <esp32c3/rom/rtc.h>
+  # elif defined(ESP32_CLASSIC)
+    #if ESP_IDF_VERSION_MAJOR > 3
+      #include <esp32/rom/rtc.h>
+    #else
+      #include <rom/rtc.h>
+    #endif
+  # else
+
+    static_assert(false, "Implement processor architecture");
+
+  #endif
+#endif
+
 #if FEATURE_MQTT
 
 //#include <PubSubClient.h>

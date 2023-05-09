@@ -38,6 +38,8 @@
 #include <base64.h>
 #include <MD5Builder.h> // for getDigestAuth
 
+#include <WiFiUdp.h>
+
 #include <lwip/dns.h>
 
 // Generic Networking routines
@@ -53,6 +55,12 @@
 
 #include <lwip/netif.h>
 
+#ifdef ESP8266
+#include <lwip/opt.h>
+#include <lwip/udp.h>
+#include <lwip/igmp.h>
+#include <include/UdpContext.h>
+#endif
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>

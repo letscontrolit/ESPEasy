@@ -12,6 +12,7 @@
 #include "../Helpers/StringConverter.h"
 
 
+#include <Wire.h>
 
 #ifdef WEBSERVER_NEW_UI
 

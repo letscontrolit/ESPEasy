@@ -11,6 +11,8 @@
 #include "../Helpers/StringConverter.h"
 
 
+#include <Wire.h>
+
 const __FlashStringHelper * Command_WD_Config(EventStruct *event, const char* Line)
 {
   Wire.beginTransmission(event->Par1);  // address
