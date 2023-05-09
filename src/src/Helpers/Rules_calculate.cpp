@@ -131,7 +131,7 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
 
   switch (un_op) {
     case UnaryOperator::Not:
-      return (approximatelyEqual(round(first), 0)) ? 1 : 0;
+      return essentiallyZero(round(first)) ? 1.0 : 0.0;
     case UnaryOperator::Log:
       return log10(first);
     case UnaryOperator::Ln:
