@@ -231,7 +231,7 @@ unsigned long ESPEasy_time::now() {
       #if FEATURE_EXT_RTC
       // External RTC only stores with second resolution.
       // Thus to limit the error to +/- 500 ms, round the sysTime instead of just casting it.
-      ExtRTC_set(round(sysTime));
+      ExtRTC_set(static_cast<uint32_t>(sysTime + 0.5)); 
       #endif
       {
         const unsigned long abs_time_offset_ms = std::abs(time_offset) * 1000;

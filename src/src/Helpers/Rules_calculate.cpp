@@ -116,7 +116,7 @@ double RulesCalculate_t::apply_operator(char op, double first, double second)
     case '/':
       return first / second;
     case '%':
-      return static_cast<int>(round(first)) % static_cast<int>(round(second));
+      return static_cast<int>(roundf(first)) % static_cast<int>(roundf(second));
     case '^':
       return pow(first, second);
     default:
@@ -145,7 +145,7 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
     case UnaryOperator::Sq:
       return first * first;
     case UnaryOperator::Round:
-      return round(first);
+      return roundf(first);
     default:
       break;
   }
@@ -637,12 +637,12 @@ int CalculateParam(const String& TmpStr) {
         String log = F("CALCULATE PARAM: ");
         log += TmpStr;
         log += F(" = ");
-        log += round(param);
+        log += roundf(param);
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
 #endif // ifndef BUILD_NO_DEBUG
     }
-    returnValue = round(param); // return integer only as it's valid only for device and task id
+    returnValue = roundf(param); // return integer only as it's valid only for device and task id
   }
   return returnValue;
 }
