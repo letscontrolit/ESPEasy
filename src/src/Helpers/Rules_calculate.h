@@ -1,6 +1,9 @@
 #ifndef HELPERS_RULES_CALCULATE_H
 #define HELPERS_RULES_CALCULATE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "../../ESPEasy_common.h"
 
@@ -120,5 +123,8 @@ int                 CalculateParam(const String& TmpStr);
 CalculateReturnCode Calculate(const String& input,
                               double      & result);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif // ifndef HELPERS_RULES_CALCULATE_H

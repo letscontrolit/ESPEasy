@@ -1157,6 +1157,21 @@ uint32_t HwRandom() {
 #undef _RAND_ADDR
 }
 
+long HwRandom(long howbig) {
+    if(howbig == 0) {
+        return 0;
+    }
+    return HwRandom() % howbig;
+}
+
+long HwRandom(long howsmall, long howbig) {
+    if(howsmall >= howbig) {
+        return howsmall;
+    }
+    long diff = howbig - howsmall;
+    return HwRandom(diff) + howsmall;
+}
+
 #ifdef ESP8266
 void readBootCause() {
   lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;

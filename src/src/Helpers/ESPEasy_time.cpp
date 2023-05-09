@@ -242,7 +242,7 @@ unsigned long ESPEasy_time::now() {
             // offset is less than 1 second, so we consider it a regular time sync.
             if (abs_time_offset_ms < 100) {
               // Good clock stability, use 5 - 6 hour interval
-              syncInterval = random(18000, 21600);
+              syncInterval = HwRandom(18000, 21600);
             } else {
               // Dynamic interval between 30 minutes ... 5 hours.
               syncInterval = 1800000 / abs_time_offset_ms;
@@ -252,7 +252,7 @@ unsigned long ESPEasy_time::now() {
           }
 
           if (syncInterval <= 3600) {
-            syncInterval = random(3600, 4000);
+            syncInterval = HwRandom(3600, 4000);
           }
         } else if (timeSource == timeSource_t::No_time_source) {
           syncInterval = 60;
@@ -380,16 +380,16 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     log += Settings.NTPHost;
 
     // When single set host fails, retry again in 20 seconds
-    nextSyncTime = sysTime + random(20, 60);
+    nextSyncTime = sysTime + HwRandom(20, 60);
   } else  {
     // Have to do a lookup each time, since the NTP pool always returns another IP
-    String ntpServerName = String(random(0, 3));
+    String ntpServerName = String(HwRandom(0, 3));
     ntpServerName += F(".pool.ntp.org");
     resolveHostByName(ntpServerName.c_str(), timeServerIP);
     log += ntpServerName;
 
     // When pool host fails, retry can be much sooner
-    nextSyncTime = sysTime + random(5, 20);
+    nextSyncTime = sysTime + HwRandom(5, 20);
     useNTPpool   = true;
   }
 

@@ -695,3 +695,4 @@ CalculateReturnCode Calculate(const String& input,
   STOP_TIMER(COMPUTE_STATS);
   return returnCode;
 }
+
