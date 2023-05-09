@@ -1,8 +1,6 @@
 #ifndef PLUGIN_HELPER_H
 #define PLUGIN_HELPER_H
 
-#include <Arduino.h>
-
 #include "include/ESPEasy_config.h"
 
 #include "src/CustomBuild/ESPEasyLimits.h"

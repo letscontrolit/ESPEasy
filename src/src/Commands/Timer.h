@@ -1,7 +1,7 @@
 #ifndef COMMAND_TIMER_H
 #define COMMAND_TIMER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 const __FlashStringHelper * Command_Timer_Set (struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Timer_Set_ms (struct EventStruct *event, const char* Line);

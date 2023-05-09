@@ -1,7 +1,5 @@
 #include "../Helpers/Rules_calculate.h"
 
-#include <Arduino.h>
-
 #include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RamTracker.h"

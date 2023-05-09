@@ -1,7 +1,6 @@
 #ifndef HELPERS_MEMORY_H
 #define HELPERS_MEMORY_H
 
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 

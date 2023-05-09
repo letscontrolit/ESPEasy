@@ -1,7 +1,7 @@
 #ifndef DATATYPES_SPI_OPTIONS_H
 #define DATATYPES_SPI_OPTIONS_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 
 // ESP32 classic has default pins for HSPI.

@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/PinMode.h"
 #include "../DataTypes/DeviceModel.h"
