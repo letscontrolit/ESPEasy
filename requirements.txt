@@ -1,3 +1,2 @@
 platformio>=6.1.6
 pygit2>=1.10.1
-scons==4.4.0
