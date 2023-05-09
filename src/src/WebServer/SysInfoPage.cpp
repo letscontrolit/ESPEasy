@@ -579,7 +579,7 @@ void handle_sysinfo_ESP_Board() {
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
 #   if defined(ESP32)
 
-  addRowLabel(F("Features"));
+  addRowLabel(F("ESP Chip Features"));
   {
     String features;
 

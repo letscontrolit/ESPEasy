@@ -180,7 +180,7 @@ const __FlashStringHelper* getChipModel();
 
 bool                       isESP8285();
 
-uint16_t                   getChipRevision();
+String                     getChipRevision();
 
 uint32_t                   getSketchSize();
 

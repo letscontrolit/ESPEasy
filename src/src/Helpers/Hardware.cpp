@@ -1031,7 +1031,7 @@ bool isESP8285() {
   #endif // ifdef ESP8266
 }
 
-uint16_t getChipRevision() {
+String getChipRevision() {
   static uint16_t rev = 0;
 
   #ifdef ESP32
@@ -1043,7 +1043,11 @@ uint16_t getChipRevision() {
     rev = chip_info.full_revision;
   }
   #endif // ifdef ESP32
-  return rev;
+  String res;
+  res += rev / 100;
+  res += '.';
+  res += rev % 100;
+  return res;
 }
 
 uint32_t getSketchSize() {
