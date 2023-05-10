@@ -1,7 +1,6 @@
 #ifndef HELPERS_STRINGGENERATOR_GPIO_H
 #define HELPERS_STRINGGENERATOR_GPIO_H
 
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 

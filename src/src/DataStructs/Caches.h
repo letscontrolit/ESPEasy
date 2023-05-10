@@ -1,7 +1,6 @@
 #ifndef DATASTRUCTS_CACHES_H
 #define DATASTRUCTS_CACHES_H
 
-#include <map>
 
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
@@ -12,6 +11,8 @@
 #endif // ifdef ESP32
 #include "../Globals/Plugins.h"
 #include "../Helpers/RulesHelper.h"
+
+#include <map>
 
 // Key is combination of array index + some offset reflecting the used array
 // Store those sparingly used TaskDevicePluginConfigLong and TaskDevicePluginConfig

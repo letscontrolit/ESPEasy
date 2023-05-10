@@ -1,7 +1,7 @@
 #ifndef HELPERS_PORTSTATUS_H
 #define HELPERS_PORTSTATUS_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../DataStructs/PortStatusStruct.h"
 #include "../Globals/Plugins.h"

@@ -1,6 +1,8 @@
 #ifndef GLOBALS_RUNTIMEDATA_H
 #define GLOBALS_RUNTIMEDATA_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../CustomBuild/ESPEasyLimits.h"
 
 #include "../DataStructs/UserVarStruct.h"

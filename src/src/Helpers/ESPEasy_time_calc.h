@@ -1,8 +1,7 @@
 #ifndef HELPERS_ESPEASY_TIME_CALC_H
 #define HELPERS_ESPEASY_TIME_CALC_H
 
-#include <Arduino.h>
-
+#include "../../ESPEasy_common.h"
 
 inline uint64_t getMicros64() {
   #ifdef ESP8266

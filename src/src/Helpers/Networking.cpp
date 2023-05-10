@@ -25,6 +25,7 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
@@ -36,6 +37,8 @@
 #include <IPAddress.h>
 #include <base64.h>
 #include <MD5Builder.h> // for getDigestAuth
+
+#include <WiFiUdp.h>
 
 #include <lwip/dns.h>
 
@@ -52,6 +55,12 @@
 
 #include <lwip/netif.h>
 
+#ifdef ESP8266
+#include <lwip/opt.h>
+#include <lwip/udp.h>
+#include <lwip/igmp.h>
+#include <include/UdpContext.h>
+#endif
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
@@ -813,7 +822,7 @@ void SSDP_update() {
                 }
                 break;
               case MX:
-                _delay = random(0, atoi(buffer)) * 1000L;
+                _delay = HwRandom(0, atoi(buffer)) * 1000L;
                 break;
             }
 
@@ -1144,7 +1153,7 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
 
   while (attempts > 0) {
     --attempts;
-    long port = random(1025, 65535);
+    long port = HwRandom(1025, 65535);
 
     if (udp.begin(port) != 0) {
       return true;

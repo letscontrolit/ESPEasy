@@ -1,7 +1,7 @@
 #ifndef DATATYPES_SPI_OPTIONS_H
 #define DATATYPES_SPI_OPTIONS_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 enum class SPI_Options_e { // Do not change values as this is stored in the settings!
   None        = 0,

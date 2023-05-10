@@ -23,6 +23,7 @@
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Protocol.h"
+#include "../Globals/RulesCalculate.h"
 
 #include "../Helpers/_CPlugin_Helper.h"
 //#include "../Helpers/Memory.h"
@@ -30,7 +31,6 @@
 #include "../Helpers/Network.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/PortStatus.h"
-#include "../Helpers/Rules_calculate.h"
 
 
 #define PLUGIN_ID_MQTT_IMPORT         37

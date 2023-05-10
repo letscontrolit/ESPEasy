@@ -5,7 +5,6 @@
 
 #if FEATURE_NOTIFIER
 
-#include <Arduino.h>
 #include <memory> // For std::shared_ptr
 
 /*********************************************************************************************\

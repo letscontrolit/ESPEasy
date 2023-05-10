@@ -1,6 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C009
 
+#include "src/DataTypes/NodeTypeID.h"
 #include "src/Helpers/StringProvider.h"
 #include "src/CustomBuild/ESPEasy_buildinfo.h"
 
