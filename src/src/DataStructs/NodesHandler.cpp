@@ -10,6 +10,8 @@
 #include "../Globals/ESPEasy_now_state.h"
 #endif
 
+#include "../DataTypes/NodeTypeID.h"
+
 #if FEATURE_MQTT
 #include "../ESPEasyCore/Controller.h"
 #endif

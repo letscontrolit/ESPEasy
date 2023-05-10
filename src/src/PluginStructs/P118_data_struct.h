@@ -6,7 +6,6 @@
 
 # include "../../ESPEasy-Globals.h"
 
-# include <SPI.h>
 # include "IthoCC1101.h"
 # include "IthoPacket.h"
 
