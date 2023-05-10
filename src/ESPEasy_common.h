@@ -16,12 +16,8 @@
 
 */
 
-#include <Arduino.h>
-
-#ifdef ESP8266
-#undef round //see https://github.com/esp8266/Arduino/issues/5787#issuecomment-465852231
-#endif
-
+#include <Arduino.h> // See: https://github.com/esp8266/Arduino/issues/8922#issuecomment-1542301697
+#include <cmath>
 
 
 // User configuration
