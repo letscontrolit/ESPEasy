@@ -41,14 +41,14 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
       result += formatToHex(config_pin1);
       result += newline;
       result += F(" ch: ");
-      result += config_pin2 == 0 ? F("A") : F("B");
+      result += config_pin2 == 0 ? 'A' : 'B';
       return result;
     }
     case ESPEasySerialPort::software:
     case ESPEasySerialPort::serial0_swap:
     case ESPEasySerialPort::serial0:
     case ESPEasySerialPort::serial1:
-#ifndef ESP32S2
+#if HAS_SERIAL2
     case ESPEasySerialPort::serial2:
 #endif
     {
@@ -229,7 +229,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
         case ESPEasySerialPort::serial0:
         case ESPEasySerialPort::serial0_swap:
         case ESPEasySerialPort::serial1:
-#ifndef ESP32S2
+#if HAS_SERIAL2
         case ESPEasySerialPort::serial2:
 #endif
         {
@@ -298,7 +298,7 @@ void serialHelper_webformSave(uint8_t& port, int8_t& rxPin, int8_t& txPin) {
     case ESPEasySerialPort::serial0:
     case ESPEasySerialPort::serial0_swap:
     case ESPEasySerialPort::serial1:
-#ifndef ESP32S2
+#if HAS_SERIAL2
     case ESPEasySerialPort::serial2:
 #endif
     {

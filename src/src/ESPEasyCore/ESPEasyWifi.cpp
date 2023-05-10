@@ -17,6 +17,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
@@ -285,9 +286,9 @@ bool WiFiConnected() {
     STOP_TIMER(WIFI_ISCONNECTED_STATS);
     recursiveCall = false;
     // Only return true after some time since it got connected.
-    #ifdef ESP8266
+#if FEATURE_SET_WIFI_TX_PWR
     SetWiFiTXpower();
-    #endif
+#endif
     lastState = WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
     lastCheckedTime = millis();
     return lastState;
@@ -456,12 +457,12 @@ void AttemptWiFiConnect() {
       
       float tx_pwr = 0; // Will be set higher based on RSSI when needed.
       // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
-      #ifdef ESP8266
+#if FEATURE_SET_WIFI_TX_PWR
       if (Settings.UseMaxTXpowerForSending()) {
         tx_pwr = Settings.getWiFi_TX_power();
       }
       SetWiFiTXpower(tx_pwr, candidate.rssi);
-      #endif
+#endif
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
       WiFiEventData.wifiConnectInProgress = true;
@@ -671,7 +672,7 @@ void initWiFi()
 // ********************************************************************************
 // Configure WiFi TX power
 // ********************************************************************************
-#ifdef ESP8266
+#if FEATURE_SET_WIFI_TX_PWR
 void SetWiFiTXpower() {
   SetWiFiTXpower(0.0f); // Just some minimal value, will be adjusted in SetWiFiTXpower
 }
@@ -799,20 +800,24 @@ void SetWiFiTXpower(float dBm, float rssi) {
 }
 #endif
 
+
+
+
 float GetRSSIthreshold(float& maxTXpwr) {
   maxTXpwr = Settings.getWiFi_TX_power();
-  float threshold = -72;
+  float threshold = WIFI_SENSITIVITY_n;
   switch (getConnectionProtocol()) {
     case WiFiConnectionProtocol::WiFi_Protocol_11b:
-      threshold = -91;
+      threshold = WIFI_SENSITIVITY_11b;
+      if (maxTXpwr > MAX_TX_PWR_DBM_11b) maxTXpwr = MAX_TX_PWR_DBM_11b;
       break;
     case WiFiConnectionProtocol::WiFi_Protocol_11g:
-      threshold = -75;
-      if (maxTXpwr > 17) maxTXpwr = 17;
+      threshold = WIFI_SENSITIVITY_54g;
+      if (maxTXpwr > MAX_TX_PWR_DBM_54g) maxTXpwr = MAX_TX_PWR_DBM_54g;
       break;
     case WiFiConnectionProtocol::WiFi_Protocol_11n:
-      threshold = -72;
-      if (maxTXpwr > 14) maxTXpwr = 14;
+      threshold = WIFI_SENSITIVITY_n;
+      if (maxTXpwr > MAX_TX_PWR_DBM_n) maxTXpwr = MAX_TX_PWR_DBM_n;
       break;
     case WiFiConnectionProtocol::Unknown:
       break;
@@ -1346,7 +1351,7 @@ void setWifiMode(WiFiMode_t new_mode) {
         #endif
       }
     }
-#ifdef ESP8266
+#if FEATURE_SET_WIFI_TX_PWR
     SetWiFiTXpower();
 #endif
     if (WifiIsSTA(new_mode)) {
