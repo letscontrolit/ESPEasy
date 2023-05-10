@@ -1405,6 +1405,7 @@ To create/register a plugin, you have to :
 
 // COLLECTIONS #####################################
 #ifdef PLUGIN_SET_COLLECTION
+/*
     #define USES_P045   // MPU6050
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
@@ -1438,6 +1439,7 @@ To create/register a plugin, you have to :
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
+  */
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_A
