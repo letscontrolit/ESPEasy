@@ -5,7 +5,6 @@
 
 #ifdef USES_C013
 
-# include <Arduino.h>
 
 # include "../CustomBuild/ESPEasyLimits.h"
 # include "../DataStructs/DeviceStruct.h"
@@ -43,14 +42,14 @@ struct C013_SensorDataStruct
 
   bool matchesSensorType(Sensor_VType sensor_type) const;
 
-  uint8_t      header          = 255;
-  uint8_t      ID              = 5;
-  uint8_t      sourceUnit      = 0;
-  uint8_t      destUnit        = 0;
-  taskIndex_t  sourceTaskIndex = INVALID_TASK_INDEX;
-  taskIndex_t  destTaskIndex   = INVALID_TASK_INDEX;
-  pluginID_t   deviceNumber    = INVALID_PLUGIN_ID;
-  Sensor_VType sensorType      = Sensor_VType::SENSOR_TYPE_NONE;
+  uint8_t           header          = 255;
+  uint8_t           ID              = 5;
+  uint8_t           sourceUnit      = 0;
+  uint8_t           destUnit        = 0;
+  taskIndex_t       sourceTaskIndex = INVALID_TASK_INDEX;
+  taskIndex_t       destTaskIndex   = INVALID_TASK_INDEX;
+  pluginID_t        deviceNumber    = INVALID_PLUGIN_ID;
+  Sensor_VType      sensorType      = Sensor_VType::SENSOR_TYPE_NONE;
   TaskValues_Data_t values{};
 };
 

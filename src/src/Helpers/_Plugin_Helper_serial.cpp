@@ -191,7 +191,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 
   String options[NR_ESPEASY_SERIAL_TYPES];
   int    ids[NR_ESPEASY_SERIAL_TYPES];
-  String attr[NR_ESPEASY_SERIAL_TYPES];
+//  String attr[NR_ESPEASY_SERIAL_TYPES];
 
   #ifndef DISABLE_SC16IS752_Serial
   int index = NR_ESPEASY_SERIAL_TYPES - 1; // Place I2C Serial at the end
@@ -212,9 +212,11 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
         #ifndef DISABLE_SOFTWARE_SERIAL
         case ESPEasySerialPort::software:
         {
+          /*
           if (!allowSoftwareSerial) {
             attr[index] = F("disabled");
           }
+          */
           break;
         }
         #endif // ifndef DISABLE_SOFTWARE_SERIAL

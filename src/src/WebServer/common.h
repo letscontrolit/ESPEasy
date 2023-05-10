@@ -2,7 +2,13 @@
 #define WEBSERVER_WEBSERVER_COMMON_H
 
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/Services.h"
+#include "../Globals/TXBuffer.h"
+#include "../Helpers/StringProvider.h"
+
+
 #include <FS.h>
 
 #ifdef ESP32
@@ -14,12 +20,6 @@
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
 #endif
-
-#include "../../ESPEasy_common.h"
-#include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../Globals/Services.h"
-#include "../Globals/TXBuffer.h"
-#include "../Helpers/StringProvider.h"
 
 void sendHeader(const String& name, const String& value, bool first = false);
 void sendHeader(const __FlashStringHelper * name, const String& value, bool first = false);

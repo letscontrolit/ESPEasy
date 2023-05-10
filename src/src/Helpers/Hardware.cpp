@@ -37,20 +37,35 @@
   # include <soc/rtc.h>
 
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
-    #  if CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
+    #  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
+      #   include <esp32s3/rom/spi_flash.h>
+      #   include <esp32s3/spiram.h>
+      #   include <esp32s3/rom/rtc.h>
+
+      # define HAS_HALL_EFFECT_SENSOR  0
+    #  elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
       #   include <esp32s2/rom/spi_flash.h>
       #   include <esp32s2/spiram.h>
+      #   include <esp32s2/rom/rtc.h>
+      
+      # define HAS_HALL_EFFECT_SENSOR  0
     #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
       #   include <esp32c3/rom/spi_flash.h>
-      #   include <esp32c3/spiram.h>
+      #   include <esp32c3/rom/rtc.h>
+
+      # define HAS_HALL_EFFECT_SENSOR  0
+      # define HAS_TOUCH_GPIO  0
     #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
       #   include <esp32/rom/spi_flash.h>
       #   include <esp32/spiram.h>
-    #  else // if CONFIG_IDF_TARGET_ESP32S2
+      #   include <esp32/rom/rtc.h>
+
+    #  else 
       #   error Target CONFIG_IDF_TARGET is not supported
-    #  endif // if CONFIG_IDF_TARGET_ESP32S2
+    #  endif
   # else // ESP32 Before IDF 4.0
     #  include <rom/spi_flash.h>
+    #  include <rom/rtc.h>
   # endif    // if ESP_IDF_VERSION_MAJOR > 3
 
 #endif       // ifdef ESP32
@@ -1116,6 +1131,21 @@ uint32_t HwRandom() {
 #undef _RAND_ADDR
 }
 
+long HwRandom(long howbig) {
+    if(howbig == 0) {
+        return 0;
+    }
+    return HwRandom() % howbig;
+}
+
+long HwRandom(long howsmall, long howbig) {
+    if(howsmall >= howbig) {
+        return howsmall;
+    }
+    long diff = howbig - howsmall;
+    return HwRandom(diff) + howsmall;
+}
+
 #ifdef ESP8266
 void readBootCause() {
   lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
@@ -1441,7 +1471,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     output = false;
   }
 
-  if (gpio == 26) {
+  if (FoundPSRAM() && (gpio == 26)) {
     // Pin shared with the flash memory and/or PSRAM.
     // Cannot be used as regular GPIO
     input   = false;
@@ -1476,31 +1506,6 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-  /*
-   # if FEATURE_ETHERNET
-
-     // Check pins used for RMII Ethernet PHY
-     if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
-      switch (gpio) {
-        case 0:
-        case 21:
-        case 19:
-        case 22:
-        case 25:
-        case 26:
-        case 27:
-          warning = true;
-          break;
-      }
-
-
-      // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
-     }
-
-
-   # endif // if FEATURE_ETHERNET
-
-   */
 # else // ifdef ESP32S2
 
   // ESP32 classic
@@ -1573,10 +1578,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   #  endif // if FEATURE_ETHERNET
 
-# endif    // ifdef ESP32S2
-
   if (FoundPSRAM()) {
-    // PSRAM can use GPIO 16 and 17
+    // ESP32 PSRAM can use GPIO 16 and 17
     // There will be a high frequency signal on those pins (flash frequency)
     // which makes them unusable for other purposes.
     // WROVER does not even have these pins made available on the outside.
@@ -1587,6 +1590,9 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
         break;
     }
   }
+
+# endif    // ifdef ESP32S2
+
   return true;
 }
 

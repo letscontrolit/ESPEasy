@@ -27,7 +27,7 @@ P004_data_struct::P004_data_struct(
 bool P004_data_struct::sensorAddressSet() const
 {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_sensors[i].addr != 0) return true;
+    if (_sensors[i].addr != 0) { return true; }
   }
   return false;
 }
@@ -91,7 +91,12 @@ void P004_data_struct::add_addr(const uint8_t addr[], uint8_t index) {
 bool P004_data_struct::initiate_read() {
   _measurementStart = millis();
 
-  bool mustInit = false;
+  bool mustInit   = false;
+  uint8_t use_res = 9;
+
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) { // Determine the resolution to use
+    use_res = max(use_res, _sensors[i].actual_res);
+  }
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_sensors[i].initiate_read(_gpio_rx, _gpio_tx, _res)) {
@@ -106,7 +111,7 @@ bool P004_data_struct::initiate_read() {
         *   11 bits resolution -> 375 ms
         *   12 bits resolution -> 750 ms
         \*********************************************************************************************/
-        _timer = millis() + (800 / (1 << (12 - _res)));
+        _timer = millis() + (800 / (1 << (12 - use_res))); // Use actual sensor resolution
       }
       _sensors[i].measurementActive = true;
     } else {
