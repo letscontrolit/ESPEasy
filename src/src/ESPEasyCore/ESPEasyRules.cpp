@@ -1,5 +1,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 
+#include "../../_Plugin_Helper.h"
+
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
@@ -21,9 +23,6 @@
 #include "../Helpers/RulesMatcher.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
-
-#include "../../_Plugin_Helper.h"
-
 
 
 #include <math.h>
