@@ -7,6 +7,7 @@ from datetime import date
 import datetime
 import time
 import json
+import collections
 
 
 def compute_version_date():
@@ -102,17 +103,19 @@ def gen_compiletime_defines(node):
     # pass SCons variables as extra keyword arguments to `env.Object()` function
     # p.s: run `pio run -t envdump` to see a list with SCons variables
 
+    defines = env["CPPDEFINES"]
+    defines.append(("SET_BUILD_BINARY_FILENAME", '\\"%s\\"' % create_binary_filename()))
+    defines.append(("SET_BOARD_NAME", '\\"%s\\"' % get_board_name()))
+    defines.append(("SET_BUILD_PLATFORM", '\\"%s\\"' % platform.platform()))
+    defines.append(("SET_BUILD_GIT_HEAD", '\\"%s\\"' % get_git_description()))
+    defines.append(("SET_BUILD_CDN_URL",  '\\"%s\\"' % get_cdn_url_prefix()))
+    defines.append(("SET_BUILD_VERSION", compute_version_date()))
+    defines.append(("SET_BUILD_UNIXTIME", create_build_unixtime()))
+    defines.append(("SET_BUILD_TIME_RFC1123", '\\"%s\\"' % create_RFC1123_build_date()))
+
     return env.Object(
         node,
-        CPPDEFINES=env["CPPDEFINES"]
-        + [("SET_BUILD_BINARY_FILENAME", '\\"%s\\"' % create_binary_filename())]
-        + [("SET_BOARD_NAME", '\\"%s\\"' % get_board_name())]
-        + [("SET_BUILD_PLATFORM", '\\"%s\\"' % platform.platform())]
-        + [("SET_BUILD_GIT_HEAD", '\\"%s\\"' % get_git_description())]
-        + [("SET_BUILD_CDN_URL",  '\\"%s\\"' % get_cdn_url_prefix())]
-        + [("SET_BUILD_VERSION", compute_version_date())]
-        + [("SET_BUILD_UNIXTIME", create_build_unixtime())]
-        + [("SET_BUILD_TIME_RFC1123", '\\"%s\\"' % create_RFC1123_build_date())],
+        CPPDEFINES=defines,
         CCFLAGS=env["CCFLAGS"]
     )
 
