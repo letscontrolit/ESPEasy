@@ -15,16 +15,6 @@ RulesCalculate_t::RulesCalculate_t() {
 }
 
 /********************************************************************************************\
-   Instance of the RulesCalculate to perform calculations
-   These functions are wrapped in a class to
-    - make it more clear what external functions to use
-    - Make sure generic function names will not cause conflicts
-    - Prevent external access to calculate only variables.
- \*********************************************************************************************/
-RulesCalculate_t RulesCalculate;
-
-
-/********************************************************************************************\
    Calculate function for simple expressions
  \*********************************************************************************************/
 bool isError(CalculateReturnCode returnCode) {
@@ -307,8 +297,7 @@ unsigned int RulesCalculate_t::op_arg_count(const char c)
 
 CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *result)
 {
-  #define TOKEN_LENGTH 25
-  #define OPERATOR_STACK_SIZE 32
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
@@ -610,87 +599,5 @@ String RulesCalculate_t::preProces(const String& input)
     }
   }
   return preprocessed;
-}
-
-/*******************************************************************************************
-* Helper functions to actually interact with the rules calculation functions.
-* *****************************************************************************************/
-int CalculateParam(const String& TmpStr) {
-  int returnValue = 0;
-
-  // Minimize calls to the Calulate function.
-  // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
-  if (TmpStr[0] != '=') {
-    validIntFromString(TmpStr, returnValue);
-  } else {
-    double param = 0;
-
-    // Starts with an '=', so Calculate starting at next position
-    CalculateReturnCode returnCode = Calculate(TmpStr.substring(1), param);
-
-    if (!isError(returnCode)) {
-#ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("CALCULATE PARAM: ");
-        log += TmpStr;
-        log += F(" = ");
-        log += roundf(param);
-        addLogMove(LOG_LEVEL_DEBUG, log);
-      }
-#endif // ifndef BUILD_NO_DEBUG
-    }
-    returnValue = roundf(param); // return integer only as it's valid only for device and task id
-  }
-  return returnValue;
-}
-
-CalculateReturnCode Calculate(const String& input,
-                              double      & result)
-{
-  START_TIMER;
-  CalculateReturnCode returnCode = RulesCalculate.doCalculate(
-    RulesCalculate_t::preProces(input).c_str(),
-    &result);
-
-  if (isError(returnCode)) {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("Calculate: ");
-
-      switch (returnCode) {
-        case CalculateReturnCode::ERROR_STACK_OVERFLOW:
-          log += F("Stack Overflow");
-          break;
-        case CalculateReturnCode::ERROR_BAD_OPERATOR:
-          log += F("Bad Operator");
-          break;
-        case CalculateReturnCode::ERROR_PARENTHESES_MISMATCHED:
-          log += F("Parenthesis mismatch");
-          break;
-        case CalculateReturnCode::ERROR_UNKNOWN_TOKEN:
-          log += F("Unknown token");
-          break;
-        case CalculateReturnCode::ERROR_TOKEN_LENGTH_EXCEEDED:
-          log += String(F("Exceeded token length (")) + TOKEN_LENGTH + ')';
-          break;
-        case CalculateReturnCode::OK:
-          // Already handled, but need to have all cases here so the compiler can warn if we're missing one.
-          break;
-      }
-
-      #ifndef BUILD_NO_DEBUG
-      log += F(" input: ");
-      log += input;
-      log += F(" = ");
-
-      const bool trimTrailingZeros = true;
-      log += doubleToString(result, 6, trimTrailingZeros);
-      #endif // ifndef BUILD_NO_DEBUG
-
-      addLogMove(LOG_LEVEL_ERROR, log);
-    }
-  }
-  STOP_TIMER(COMPUTE_STATS);
-  return returnCode;
 }
 

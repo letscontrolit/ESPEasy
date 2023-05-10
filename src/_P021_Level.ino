@@ -15,7 +15,7 @@
 //                         apply float/double math compare functions instead of regular comparisons
 
 # include "src/Helpers/ESPEasy_math.h"
-# include "src/Helpers/Rules_calculate.h"
+# include "src/Globals/RulesCalculate.h"
 # include "src/WebServer/ESPEasy_WebServer.h"
 
 # define PLUGIN_021
