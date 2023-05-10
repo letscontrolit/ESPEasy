@@ -28,11 +28,11 @@ const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignore
 
 NeoTopology<MyPanelLayout> topo(PanelWidth, PanelHeight);
 
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
-//NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
-//NeoPixelBus<NeoRgbwFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
+//NeoPixelBus<NeoRgbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
+//NeoPixelBus<NeoRgbwFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 // for esp8266 omit the pin
-//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
+//NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount);
 
 RgbColor red(128, 0, 0);
 RgbColor green(0, 128, 0);

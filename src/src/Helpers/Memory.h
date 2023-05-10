@@ -48,3 +48,11 @@ unsigned long getMaxFreeBlock();
 
 
 #endif
+
+/********************************************************************************************\
+   Special alloc functions to allocate in PSRAM if available
+ \*********************************************************************************************/
+
+void *special_malloc(uint32_t size);
+void *special_realloc(void *ptr, size_t size);
+void *special_calloc(size_t num, size_t size);

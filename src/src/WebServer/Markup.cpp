@@ -330,7 +330,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
         disabled = true;
       }
 
-      if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+      if (isSerialConsolePin(gpio)) {
         disabled = true;
       }
 
