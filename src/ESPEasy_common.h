@@ -18,6 +18,11 @@
 
 #include <Arduino.h>
 
+#ifdef ESP8266
+#undef round //see https://github.com/esp8266/Arduino/issues/5787#issuecomment-465852231
+#endif
+
+
 
 // User configuration
 #include "include/ESPEasy_config.h"

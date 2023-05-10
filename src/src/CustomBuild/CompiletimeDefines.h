@@ -3,6 +3,10 @@
 
 
 #include <Arduino.h>
+#ifdef ESP8266
+#undef round //see https://github.com/esp8266/Arduino/issues/5787#issuecomment-465852231
+#endif
+
 
 // Build NR is used as a "revision" nr for settings
 // As of 2022-08-18, it is the nr of days since 2022-08-18 + 20200
