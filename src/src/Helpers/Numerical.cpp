@@ -7,12 +7,11 @@
    Check if string is valid float
  \*********************************************************************************************/
 bool isValidFloat(float f) {
-  if (isnan(f)) { return false; // ("isnan");
-  }
+  return !isnan(f) && !isinf(f);
+}
 
-  if (isinf(f)) { return false; // ("isinf");
-  }
-  return true;
+bool isValidDouble(double f) {
+  return !isnan(f) && !isinf(f);
 }
 
 bool validIntFromString(const String& tBuf, int& result) {
@@ -208,7 +207,9 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
   }
 
   // Strip leading zeroes
-  while (c == '0' && isdigit(tBuf.charAt(firstDec + 1))) {
+  while (c == '0' && 
+         (firstDec + 1) < bufLength && 
+         isdigit(tBuf.charAt(firstDec + 1))) {
     ++firstDec;
     c = tBuf.charAt(firstDec);
   }

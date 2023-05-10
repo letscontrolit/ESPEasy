@@ -9,6 +9,7 @@
 
 #include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/StringConverter_Numerical.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../../ESPEasy_common.h"
@@ -642,15 +643,16 @@ void addCheckBox(const String& id, bool    checked, bool disabled
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
-void addNumericBox(const __FlashStringHelper *id, int value, int min, int max)
+void addNumericBox(const __FlashStringHelper *id, int value, int min, int max, bool disabled)
 {
-  addNumericBox(String(id), value, min, max);
+  addNumericBox(String(id), value, min, max, disabled);
 }
 
 void addNumericBox(const String& id, int value, int min, int max
                    #if FEATURE_TOOLTIPS
                    , const __FlashStringHelper * classname, const String& tooltip
                    #endif // if FEATURE_TOOLTIPS
+                   , bool disabled
                    )
 {
   addHtml(F("<input "));
@@ -669,6 +671,10 @@ void addNumericBox(const String& id, int value, int min, int max
     addHtmlAttribute(F("title"), tooltip);
   }
   #endif // if FEATURE_TOOLTIPS
+
+  if (disabled) {
+    addDisabled();
+  }
 
   if (value < min) {
     value = min;
@@ -692,9 +698,9 @@ void addNumericBox(const String& id, int value, int min, int max
 }
 
 #if FEATURE_TOOLTIPS
-void addNumericBox(const String& id, int value, int min, int max)
+void addNumericBox(const String& id, int value, int min, int max, bool disabled)
 {
-  addNumericBox(id, value, min, max, F("widenumber"));
+  addNumericBox(id, value, min, max, F("widenumber"), EMPTY_STRING, disabled);
 }
 
 #endif // if FEATURE_TOOLTIPS
@@ -895,16 +901,29 @@ void addRTDPluginButton(pluginID_t taskDeviceNumber) {
   url += F(".html");
   addRTDHelpButton(url);
 
-  switch (taskDeviceNumber) {
-    case 76:
-    case 77:
-      addHtmlLink(
-        F("button help"),
-        makeDocLink(F("Reference/Safety.html"), true),
-        F("&#9889;")); // High voltage sign
-      break;
+  if ((taskDeviceNumber == 76) || (taskDeviceNumber == 77)) {
+    addHtmlLink(
+      F("button help"),
+      makeDocLink(F("Reference/Safety.html"), true),
+      F("&#9889;")); // High voltage sign
   }
 }
+
+# ifndef LIMIT_BUILD_SIZE
+void addRTDControllerButton(protocolIndex_t protocolIndex) {
+  String url;
+
+  url.reserve(20);
+  url = F("Controller/C");
+
+  if (protocolIndex < 100) { url += '0'; }
+
+  if (protocolIndex < 10) { url += '0'; }
+  url += String(protocolIndex);
+  url += F(".html");
+  addRTDHelpButton(url);
+}
+# endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url, bool isRTD) {
   String result;

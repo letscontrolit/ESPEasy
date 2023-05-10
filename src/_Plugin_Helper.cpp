@@ -129,10 +129,13 @@ void pluginWebformShowValue(taskIndex_t   taskIndex,
   if (varNr > 0) {
     addHtmlDiv(F("div_br"));
   }
+  String postfix(taskIndex);
+  postfix += '_';
+  postfix += varNr;
 
   pluginWebformShowValue(
-    label, concat(F("valuename_"), static_cast<int>(taskIndex)) + '_' + varNr,
-    value, concat(F("value_"), static_cast<int>(taskIndex)) + '_' + varNr,
+    label, concat(F("valuename_"), postfix),
+    value, concat(F("value_"), postfix),
     addTrailingBreak);
 }
 
@@ -185,6 +188,7 @@ int getValueCountForTask(taskIndex_t taskIndex) {
 }
 
 int checkDeviceVTypeForTask(struct EventStruct *event) {
+  // TD-er:  Do not use event->getSensorType() here
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
     if (validTaskIndex(event->TaskIndex)) {
       String dummy;

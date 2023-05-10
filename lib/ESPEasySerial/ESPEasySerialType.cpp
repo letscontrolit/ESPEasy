@@ -22,7 +22,6 @@
 #endif // ifndef ESP32_SER2_RX
 
 
-
 bool ESPeasySerialType::getSerialTypePins(ESPEasySerialPort serType, int& rxPin, int& txPin) {
   rxPin = -1;
   txPin = -1;
@@ -31,7 +30,9 @@ bool ESPeasySerialType::getSerialTypePins(ESPEasySerialPort serType, int& rxPin,
 #ifdef ESP32
     case ESPEasySerialPort::serial0:  rxPin = ESP32_SER0_RX; txPin = ESP32_SER0_TX; return true;
     case ESPEasySerialPort::serial1:  rxPin = ESP32_SER1_RX; txPin = ESP32_SER1_TX; return true;
+# ifndef ESP32S2
     case ESPEasySerialPort::serial2:  rxPin = ESP32_SER2_RX; txPin = ESP32_SER2_TX; return true;
+# endif // ifndef ESP32S2
 #endif // ifdef ESP32
 #ifdef ESP8266
     case ESPEasySerialPort::serial0:       rxPin = 3; txPin = 1; return true;
@@ -41,7 +42,9 @@ bool ESPeasySerialType::getSerialTypePins(ESPEasySerialPort serType, int& rxPin,
     case ESPEasySerialPort::software:      rxPin = 14; txPin = 12; return true;
     # endif // DISABLE_SOFTWARE_SERIAL
 #endif      // ifdef ESP8266
-    case ESPEasySerialPort::sc16is752:     rxPin = -1; txPin = -1; return true;
+#ifndef DISABLE_SC16IS752_Serial
+    case ESPEasySerialPort::sc16is752:     return true;
+#endif // ifndef DISABLE_SC16IS752_Serial
 
     default:
       break;
@@ -64,10 +67,12 @@ ESPEasySerialPort ESPeasySerialType::getSerialType(ESPEasySerialPort typeHint, i
   if ((receivePin == ESP32_SER1_RX) && (transmitPin == ESP32_SER1_TX)) {
     return ESPEasySerialPort::serial1; // UART1
   }
+# ifndef ESP32S2
 
   if ((receivePin == ESP32_SER2_RX) && (transmitPin == ESP32_SER2_TX)) {
     return ESPEasySerialPort::serial2; // UART2
   }
+# endif // ifndef ESP32S2
 
   if ((receivePin >= 0x48) && (receivePin <= 0x57)) {
     return ESPEasySerialPort::sc16is752; // I2C address range of SC16IS752

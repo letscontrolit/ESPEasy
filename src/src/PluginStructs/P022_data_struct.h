@@ -36,9 +36,6 @@ struct P022_data_struct : public PluginTaskData_base {
                                 int  regAddress,
                                 uint8_t data);
 
-  uint8_t Plugin_022_readRegister(int i2cAddress,
-                                  int regAddress);
-
   void    Plugin_022_Off(int address,
                          int pin);
 

@@ -14,6 +14,10 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2023-04-30
+// FIX: Loading and saving line-settings for font and alignment used overlapping page-variables
+// @tonhuisman: 2023-03-07
+// CHG: Parse text to display without trimming off leading and trailing spaces
 // @tonhuisman: 2023-01-02
 // CHG: Reduce string sizes for input fields, uncrustify source (causing some changelog comments to be wrapped...)
 // @uwekaditz: 2022-10-17
@@ -480,7 +484,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                        );            // class name
             html_TD();               // font
             FontChoice[varNr] = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
-            addSelector(getPluginCustomArgName(varNr),
+            addSelector(getPluginCustomArgName(varNr + 100),
                         5,
                         optionsFont,
                         optionValuesFont,
@@ -492,7 +496,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                         );
             html_TD();                     // alignment
             AlignmentChoice[varNr] = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
-            addSelector(getPluginCustomArgName(varNr + 100),
+            addSelector(getPluginCustomArgName(varNr + 200),
                         4,
                         optionsAlignment,
                         optionValuesAlignment,
@@ -592,10 +596,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_lines.DisplayLinesV1[varNr].FontType = 0xff;
             lModifyLayout                             = 0xC0; // keep 2 upper bits untouched
             // ModifyFont
-            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Font,      uint8_t(getFormItemInt(getPluginCustomArgName(varNr)) & 0xff));
+            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Font,      uint8_t(getFormItemInt(getPluginCustomArgName(varNr + 100)) & 0xff));
 
             // Alignment
-            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Alignment, uint8_t(getFormItemInt(getPluginCustomArgName(varNr + 100)) & 0xff));
+            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Alignment, uint8_t(getFormItemInt(getPluginCustomArgName(varNr + 200)) & 0xff));
             P036_lines.DisplayLinesV1[varNr].ModifyLayout = uint8_t(lModifyLayout & 0xff);
             P036_lines.DisplayLinesV1[varNr].FontSpace    = 0xff;
             P036_lines.DisplayLinesV1[varNr].reserved     = 0xff;
@@ -1180,7 +1184,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           // content functions
           success = true;
           String *currentLine = &P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content;
-          *currentLine = parseStringKeepCase(string, 3);
+          *currentLine = parseStringKeepCaseNoTrim(string, 3);
           *currentLine = P036_data->P36_parseTemplate(*currentLine, LineNo - 1);
 
           // calculate Pix length of new Content

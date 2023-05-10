@@ -185,7 +185,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       if (P016_SEND_IR_TO_CONTROLLER) {
         Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
       } else {
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_LONG;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_ULONG;
       }
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = true;

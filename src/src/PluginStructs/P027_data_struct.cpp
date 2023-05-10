@@ -68,7 +68,7 @@ void P027_data_struct::setCalibration_32V_2A() {
   uint16_t config = INA219_CONFIG_BVOLTAGERANGE_32V |
                     INA219_CONFIG_GAIN_8_320MV |
                     INA219_CONFIG_BADCRES_12BIT |
-                    INA219_CONFIG_SADCRES_12BIT_1S_532US |
+                    INA219_CONFIG_SADCRES_12BIT_128S_69MS |
                     INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS;
 
   wireWriteRegister(INA219_REG_CONFIG, config);
@@ -87,7 +87,7 @@ void P027_data_struct::setCalibration_32V_1A() {
   uint16_t config = INA219_CONFIG_BVOLTAGERANGE_32V |
                     INA219_CONFIG_GAIN_8_320MV |
                     INA219_CONFIG_BADCRES_12BIT |
-                    INA219_CONFIG_SADCRES_12BIT_1S_532US |
+                    INA219_CONFIG_SADCRES_12BIT_128S_69MS |
                     INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS;
 
   wireWriteRegister(INA219_REG_CONFIG, config);
@@ -106,7 +106,7 @@ void P027_data_struct::setCalibration_16V_400mA() {
   uint16_t config = INA219_CONFIG_BVOLTAGERANGE_16V |
                     INA219_CONFIG_GAIN_1_40MV |
                     INA219_CONFIG_BADCRES_12BIT |
-                    INA219_CONFIG_SADCRES_12BIT_1S_532US |
+                    INA219_CONFIG_SADCRES_12BIT_128S_69MS |
                     INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS;
 
   wireWriteRegister(INA219_REG_CONFIG, config);
@@ -165,15 +165,12 @@ float P027_data_struct::getCurrent_mA() {
 
 void P027_data_struct::wireWriteRegister(uint8_t reg, uint16_t value)
 {
-  Wire.beginTransmission(i2caddr);
-  Wire.write(reg);                 // Register
-  Wire.write((value >> 8) & 0xFF); // Upper 8-bits
-  Wire.write(value & 0xFF);        // Lower 8-bits
-  Wire.endTransmission();
+  I2C_write16_reg(i2caddr, reg, value);
 }
 
 void P027_data_struct::wireReadRegister(uint8_t reg, uint16_t *value)
 {
+  // FIXME TD-er: Must add a function in I2C_access to allow for some delay between calls
   Wire.beginTransmission(i2caddr);
   Wire.write(reg); // Register
   Wire.endTransmission();

@@ -37,6 +37,8 @@ struct ControllerCache_struct {
 
   bool   deleteAllCacheBlocks();
 
+  bool   deleteCacheBlock(int fileNr);
+
   void   closeOpenFiles();
 
   void   resetpeek();
