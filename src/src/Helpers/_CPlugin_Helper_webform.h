@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../Globals/CPlugins.h"
 

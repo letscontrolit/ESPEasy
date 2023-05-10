@@ -5,7 +5,6 @@
 
 #ifdef USES_C013
 
-# include <Arduino.h>
 
 # include "../CustomBuild/ESPEasyLimits.h"
 # include "../DataStructs/DeviceStruct.h"

@@ -5,7 +5,7 @@
 #define TRACES 3        // number of memory traces
 #define TRACEENTRIES 15 // entries per trace
 
-#include <Arduino.h>
+
 #include "../../ESPEasy_common.h"
 
 /********************************************************************************************\

@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/PinMode.h"
 #include "../DataTypes/DeviceModel.h"
@@ -168,6 +166,10 @@ bool CanUsePSRAM();
 
 // Based on code from https://raw.githubusercontent.com/espressif/esp-idf/master/components/esp32/hw_random.c
 uint32_t HwRandom();
+
+long HwRandom(long howbig);
+
+long HwRandom(long howsmall, long howbig);
 
 
 /********************************************************************************************\

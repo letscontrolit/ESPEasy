@@ -1,7 +1,7 @@
 #ifndef HELPERS_CONVERT_H
 #define HELPERS_CONVERT_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 /*********************************************************************************************\
    Convert bearing in degree to bearing string

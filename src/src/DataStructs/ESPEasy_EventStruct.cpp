@@ -1,5 +1,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../Globals/Plugins.h"

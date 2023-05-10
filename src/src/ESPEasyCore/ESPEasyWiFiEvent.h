@@ -13,6 +13,7 @@
 #ifdef ESP32
 #include <IPv6Address.h>
 #include <WiFiSTA.h>
+#include <WiFi.h>
 class WiFi_Access_Static_IP : public WiFiSTAClass {
 public:
 
@@ -40,6 +41,7 @@ void setUseStaticIP(bool enabled);
 // ********************************************************************************
 #ifdef ESP32
  #if ESP_IDF_VERSION_MAJOR > 3
+  #include <WiFiType.h>
   void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info);
  #else
   void WiFiEvent(system_event_id_t event, system_event_info_t info);

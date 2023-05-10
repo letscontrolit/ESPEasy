@@ -1,7 +1,7 @@
 #ifndef HELPERS_ESPEASY_TIME_ZONE_H
 #define HELPERS_ESPEASY_TIME_ZONE_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../DataStructs/TimeChangeRule.h"
 

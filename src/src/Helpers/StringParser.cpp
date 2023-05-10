@@ -1,7 +1,5 @@
 #include "../Helpers/StringParser.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/GPIO.h"
@@ -13,17 +11,17 @@
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
 #include "../Globals/Protocol.h"
+#include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
-#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include <Arduino.h>
+
 
 /********************************************************************************************\
    Parse string template

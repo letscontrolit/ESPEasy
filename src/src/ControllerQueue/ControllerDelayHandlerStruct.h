@@ -20,7 +20,7 @@
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 
-#include <Arduino.h>
+
 #include <list>
 #include <memory> // For std::shared_ptr
 #include <new>    // std::nothrow

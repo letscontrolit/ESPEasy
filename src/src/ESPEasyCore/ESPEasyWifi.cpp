@@ -29,6 +29,7 @@
 
 #ifdef ESP32
 #include <WiFiGeneric.h>
+#include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
 #endif
 
 // FIXME TD-er: Cleanup of WiFi code

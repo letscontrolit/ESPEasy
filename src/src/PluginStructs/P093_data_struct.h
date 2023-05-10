@@ -5,9 +5,9 @@
 #ifdef USES_P093
 
 
-#ifndef BUILD_NO_DEBUG
-# define PLUGIN_093_DEBUG
-#endif
+# ifndef BUILD_NO_DEBUG
+#  define PLUGIN_093_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
 
 
 /*
@@ -36,7 +36,7 @@ struct P093_data_struct : public PluginTaskData_base {
                    const int16_t           serialTx,
                    bool                    includeStatus);
 
-  P093_data_struct() = delete;
+  P093_data_struct()          = delete;
   virtual ~P093_data_struct() = default;
 
   void init();
@@ -47,6 +47,8 @@ struct P093_data_struct : public PluginTaskData_base {
 
   void write(const String& command,
              const String& value);
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string);
 
 private:
 

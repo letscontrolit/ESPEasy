@@ -11,7 +11,6 @@
 # include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_time_calc.h"
 
-# include <Arduino.h>
 # include <map>
 #endif // if FEATURE_TIMING_STATS
 

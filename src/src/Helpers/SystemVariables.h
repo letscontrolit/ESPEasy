@@ -1,8 +1,6 @@
 #ifndef HELPERS_SYSTEMVARIABLES_H
 #define HELPERS_SYSTEMVARIABLES_H
 
-#include <Arduino.h>
-
 #include "../../ESPEasy_common.h"
 
 class SystemVariables {

@@ -444,7 +444,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1 << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
+  if (VariousBits1 > (1u << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 
