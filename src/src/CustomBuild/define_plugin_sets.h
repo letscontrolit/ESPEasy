@@ -1332,7 +1332,7 @@ To create/register a plugin, you have to :
     #define USES_P033   // Dummy
     #define USES_P034   // DHT12
 //    #define USES_P035   // IRTX
-    #define USES_P036   // FrameOLED
+//    #define USES_P036   // FrameOLED
     #define USES_P037   // MQTTImport
     #define USES_P038   // NeoPixel
     #define USES_P039   // Environment - Thermocouple
@@ -1626,10 +1626,10 @@ To create/register a plugin, you have to :
      #define USES_P012   // LCD
    #endif
    #ifndef USES_P023
-    #define USES_P023   // OLED
+//    #define USES_P023   // OLED
    #endif
    #ifndef USES_P036
-    #define USES_P036   // FrameOLED
+//    #define USES_P036   // FrameOLED
    #endif
    #ifdef USES_P038
     #undef USES_P038   // DISABLE NeoPixel
@@ -1720,7 +1720,7 @@ To create/register a plugin, you have to :
   #define USES_P032   // MS5611
   #define USES_P033   // Dummy
   #define USES_P034   // DHT12
-  #define USES_P036   // FrameOLED
+//  #define USES_P036   // FrameOLED
   #define USES_P037   // MQTTImport
   #define USES_P038   // NeoPixel
   #define USES_P039   // Environment - Thermocouple
