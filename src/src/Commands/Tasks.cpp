@@ -12,12 +12,12 @@
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
-#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
