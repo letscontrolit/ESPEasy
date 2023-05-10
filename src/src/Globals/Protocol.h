@@ -1,6 +1,8 @@
 #ifndef GLOBALS_PROTOCOL_H
 #define GLOBALS_PROTOCOL_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/ProtocolStruct.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"

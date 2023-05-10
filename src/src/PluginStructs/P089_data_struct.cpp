@@ -59,7 +59,7 @@ bool P089_data_struct::send_ping(struct EventStruct *event) {
   destIPAddress.addr = ip;
 
   /* Generate random ID & seq */
-  idseq = random(UINT32_MAX);
+  idseq = HwRandom();
   u16_t ping_len            = ICMP_PAYLOAD_LEN + sizeof(struct icmp_echo_hdr);
   struct pbuf *packetBuffer = pbuf_alloc(PBUF_IP, ping_len, PBUF_RAM);
 

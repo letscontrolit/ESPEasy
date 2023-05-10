@@ -1,7 +1,7 @@
 #ifndef HELPERS_CRC_FUNCTIONS_H
 #define HELPERS_CRC_FUNCTIONS_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 int      calc_CRC16(const String& text);
 

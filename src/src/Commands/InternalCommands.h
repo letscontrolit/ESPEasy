@@ -1,10 +1,10 @@
 #ifndef COMMANDS_INTERNALCOMMANDS_H
 #define COMMANDS_INTERNALCOMMANDS_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../Globals/Plugins.h"
-
-#include <Arduino.h>
 
 
 bool checkSourceFlags(EventValueSource::Enum source, EventValueSourceGroup::Enum group);

@@ -5,7 +5,6 @@
 
 #if FEATURE_RTC_CACHE_STORAGE
 
-#include <Arduino.h>
 
 #include "../DataStructs/RTC_cache_handler_struct.h"
 

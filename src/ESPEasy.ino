@@ -1,6 +1,4 @@
 
-#include <Arduino.h>
-
 #ifdef CONTINUOUS_INTEGRATION
 # pragma GCC diagnostic error "-Wall"
 #else // ifdef CONTINUOUS_INTEGRATION

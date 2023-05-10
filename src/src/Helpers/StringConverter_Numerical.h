@@ -1,7 +1,7 @@
 #ifndef HELPERS_STRINGCONVERTER_NUMERICAL_H
 #define HELPERS_STRINGCONVERTER_NUMERICAL_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    Convert a char string to integer

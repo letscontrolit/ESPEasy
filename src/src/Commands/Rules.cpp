@@ -12,11 +12,11 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/EventQueue.h"
+#include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
-#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 
 const __FlashStringHelper * Command_Rules_Execute(struct EventStruct *event, const char *Line)
