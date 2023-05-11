@@ -131,90 +131,21 @@ jobs:
           find . -not -name '*ESP32*' -exec mv {} ../../ESPEasy_dist_ESP82xx/bin/ \;
           cd ../..
           # ESP32 and derived cpus, ESP32 (classic) _MUST_ be last in this list!
-          # ESP32s2
-          mkdir ESPEasy_dist_ESP32s2
-          _files=$(find ./dist -name '*ESP32s2*'|wc -l)
-          if [[ $_files > 0 ]]; then
-            cd dist
-            find . -exec cp -r --parents {} ../ESPEasy_dist_ESP32s2/ \;
-            cd ../ESPEasy_dist_ESP32s2
-            rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
-            cd ../artifacts/Binaries
-            find . -name '*ESP32s2*' -exec mv {} ../../ESPEasy_dist_ESP32s2/bin/ \;
-            cd ../..
-          fi
-          # ESP32c3
-          mkdir ESPEasy_dist_ESP32c3
-          _files=$(find ./dist -name '*ESP32c3*'|wc -l)
-          if [[ $_files > 0 ]]; then
-            cd dist
-            find . -exec cp -r --parents {} ../ESPEasy_dist_ESP32c3/ \;
-            cd ../ESPEasy_dist_ESP32c3
-            rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
-            cd ../artifacts/Binaries
-            find . -name '*ESP32c3*' -exec mv {} ../../ESPEasy_dist_ESP32c3/bin/ \;
-            cd ../..
-          fi
-          # ESP32s3
-          mkdir ESPEasy_dist_ESP32s3
-          _files=$(find ./dist -name '*ESP32s3*'|wc -l)
-          if [[ $_files > 0 ]]; then
-            cd dist
-            find . -exec cp -r --parents {} ../ESPEasy_dist_ESP32s3/ \;
-            cd ../ESPEasy_dist_ESP32s3
-            rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
-            cd ../artifacts/Binaries
-            find . -name '*ESP32s3*' -exec mv {} ../../ESPEasy_dist_ESP32s3/bin/ \;
-            cd ../..
-          fi
-          # ESP32c2
-          mkdir ESPEasy_dist_ESP32c2
-          _files=$(find ./dist -name '*ESP32c2*'|wc -l)
-          if [[ $_files > 0 ]]; then
-            cd dist
-            find . -exec cp -r --parents {} ../ESPEasy_dist_ESP32c2/ \;
-            cd ../ESPEasy_dist_ESP32c2
-            rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
-            cd ../artifacts/Binaries
-            find . -name '*ESP32c2*' -exec mv {} ../../ESPEasy_dist_ESP32c2/bin/ \;
-            cd ../..
-          fi
-          # ESP32c6
-          mkdir ESPEasy_dist_ESP32c6
-          _files=$(find ./dist -name '*ESP32c6*'|wc -l)
-          if [[ $_files > 0 ]]; then
-            cd dist
-            find . -exec cp -r --parents {} ../ESPEasy_dist_ESP32c6/ \;
-            cd ../ESPEasy_dist_ESP32c6
-            rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
-            cd ../artifacts/Binaries
-            find . -name '*ESP32c6*' -exec mv {} ../../ESPEasy_dist_ESP32c6/bin/ \;
-            cd ../..
-          fi
-          # ESP32h2
-          mkdir ESPEasy_dist_ESP32h2
-          _files=$(find ./dist -name '*ESP32h2*'|wc -l)
-          if [[ $_files > 0 ]]; then
-            cd dist
-            find . -exec cp -r --parents {} ../ESPEasy_dist_ESP32h2/ \;
-            cd ../ESPEasy_dist_ESP32h2
-            rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
-            cd ../artifacts/Binaries
-            find . -name '*ESP32h2*' -exec mv {} ../../ESPEasy_dist_ESP32h2/bin/ \;
-            cd ../..
-          fi
-          # ESP32 !! Keep as last !!
-          mkdir ESPEasy_dist_ESP32
-          _files=$(find ./dist -name '*ESP32_*'|wc -l)
-          if [[ $_files > 0 ]]; then
-            cd dist
-            find . -exec cp -r --parents {} ../ESPEasy_dist_ESP32/ \;
-            cd ../ESPEasy_dist_ESP32
-            rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
-            cd ../artifacts/Binaries
-            find . -name '*ESP32_*' -exec mv {} ../../ESPEasy_dist_ESP32/bin/ \;
-            cd ../..
-          fi
+          for cpu in ESP32s2 ESP32c3 ESP32s3 ESP32c2 ESP32c6 ESP32h2 ESP32
+          do
+            mkdir ESPEasy_dist_${cpu}
+            spec="*${cpu}*"
+            _files=$(find ./artifacts/Binaries -name "$spec"|wc -l)
+            if [[ $_files > 0 ]]; then
+              cd dist
+              find . -exec cp -r --parents {} ../ESPEasy_dist_${cpu}/ \;
+              cd ../ESPEasy_dist_${cpu}
+              rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
+              cd ../artifacts/Binaries
+              find . -name "$spec" -exec mv {} ../../ESPEasy_dist_${cpu}/bin/ \;
+              cd ../..
+            fi
+          done
       # Each supported cpu has to be listed separately, but empty folders are ignored
       - uses: actions/upload-artifact@v3
         with:
