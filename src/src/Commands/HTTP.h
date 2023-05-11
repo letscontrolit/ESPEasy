@@ -1,7 +1,7 @@
 #ifndef COMMAND_HTTP_H
 #define COMMAND_HTTP_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,

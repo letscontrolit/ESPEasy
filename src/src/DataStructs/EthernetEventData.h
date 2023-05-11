@@ -12,6 +12,7 @@
 
 #ifdef ESP32
 # include <esp_event.h>
+# include <WiFi.h>
 
 #endif // ifdef ESP32
 

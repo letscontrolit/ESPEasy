@@ -3,9 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
-
 #define _HEAD false
 #define _TAIL true
 

@@ -10,6 +10,9 @@
 #define STACK_SIZE 10 // was 50
 #define TOKEN_MAX 20
 
+#define TOKEN_LENGTH 25
+#define OPERATOR_STACK_SIZE 32
+
 enum class CalculateReturnCode : uint8_t{
   OK                           = 0u,
   ERROR_STACK_OVERFLOW         = 1u,
@@ -57,7 +60,7 @@ const __FlashStringHelper* toString(UnaryOperator op);
 class RulesCalculate_t {
 private:
 
-  double globalstack[STACK_SIZE];
+  double globalstack[STACK_SIZE]{};
   double *sp     = globalstack - 1;
   const double *sp_max = &globalstack[STACK_SIZE - 1];
 
@@ -109,16 +112,6 @@ public:
   static String preProces(const String& input);
 };
 
-extern RulesCalculate_t RulesCalculate;
-
-/*******************************************************************************************
-* Helper functions to actually interact with the rules calculation functions.
-* *****************************************************************************************/
-
-int                 CalculateParam(const String& TmpStr);
-
-CalculateReturnCode Calculate(const String& input,
-                              double      & result);
 
 
 #endif // ifndef HELPERS_RULES_CALCULATE_H

@@ -33,9 +33,9 @@ bool pinsChanged(ESPEasySerialPort port,
   switch (port) {
     case  ESPEasySerialPort::serial0: return receivePin != receivePin0 || transmitPin != transmitPin0;
     case  ESPEasySerialPort::serial1: return receivePin != receivePin1 || transmitPin != transmitPin1;
-    # ifndef ESP32S2
+    # if HAS_SERIAL2
     case  ESPEasySerialPort::serial2: return receivePin != receivePin2 || transmitPin != transmitPin2;
-    # endif // ifndef ESP32S2
+    # endif 
     default:
       // No other hardware serial ports
       break;
@@ -57,13 +57,13 @@ void setPinsCache(ESPEasySerialPort port,
       transmitPin1 = transmitPin;
       break;
 
-    # ifndef ESP32S2
+    # if HAS_SERIAL2
     case  ESPEasySerialPort::serial2:
       receivePin2  = receivePin;
       transmitPin2 = transmitPin;
       break;
 
-    # endif // ifndef ESP32S2
+    # endif 
     default:
       // No other hardware serial ports
       break;
@@ -83,9 +83,9 @@ ESPeasySerial::ESPeasySerial(
   switch (port) {
     case  ESPEasySerialPort::serial0:
     case  ESPEasySerialPort::serial1:
-    # ifndef ESP32S2
+    # if HAS_SERIAL2
     case  ESPEasySerialPort::serial2:
-    # endif // ifndef ESP32S2
+    # endif 
       _serialtype = port;
       break;
     default:
@@ -179,9 +179,9 @@ HardwareSerial * ESPeasySerial::getHW() {
     case ESPEasySerialPort::serial0: return &Serial;
     case ESPEasySerialPort::serial1: return &Serial1;
     case ESPEasySerialPort::serial2:
-    # ifndef ESP32S2
+    #if HAS_SERIAL2
       return &Serial2;
-    # endif // ifndef ESP32S2
+    #endif
 
     default: break;
   }
@@ -193,9 +193,9 @@ const HardwareSerial * ESPeasySerial::getHW() const {
     case ESPEasySerialPort::serial0: return &Serial;
     case ESPEasySerialPort::serial1: return &Serial1;
     case ESPEasySerialPort::serial2:
-    # ifndef ESP32S2
+    #if HAS_SERIAL2
       return &Serial2;
-    # endif // ifndef ESP32S2
+    #endif
     default: break;
   }
   return nullptr;
@@ -207,11 +207,11 @@ bool ESPeasySerial::isValid() const {
     case ESPEasySerialPort::serial1:
       return true;
     case ESPEasySerialPort::serial2:
-      # ifdef ESP32S2
-      return false;
-      # else // ifdef ESP32S2
+      #if HAS_SERIAL2
       return true;
-      # endif // ifdef ESP32S2
+      #else 
+      return false;
+      #endif 
     case ESPEasySerialPort::sc16is752:
     # ifndef DISABLE_SC16IS752_Serial
       return _i2cserial != nullptr;

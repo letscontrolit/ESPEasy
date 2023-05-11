@@ -41,19 +41,35 @@
 # include <ESPEasySoftwareSerial.h>
 #endif // ifndef DISABLE_SOFTWARE_SERIAL
 
+#ifndef HAS_SERIAL2
+  #ifdef ESP8266
+    #define HAS_SERIAL2 0
+  #elif defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+    #include <soc/soc_caps.h>
+    #if SOC_UART_NUM > 2
+      #define HAS_SERIAL2 1
+    #else 
+      #define HAS_SERIAL2 0
+    #endif
+  # else
+    static_assert(false, "Implement processor architecture");
+  #endif
+#endif
+
+
 #ifdef ESP32
   # ifndef DISABLE_SC16IS752_Serial
-    #  ifndef ESP32S2
+    #  if HAS_SERIAL2
     #   define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 2, sc16is752
-    #  else // ifndef ESP32S2
+    #  else 
     #   define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, sc16is752
-    #  endif // ifndef ESP32S2
+    #  endif
   # else // ifndef DISABLE_SC16IS752_Serial
-    #  ifndef ESP32S2
+    #  if HAS_SERIAL2
     #   define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 2
-    #  else // ifndef ESP32S2
+    #  else 
     #   define NR_ESPEASY_SERIAL_TYPES 2 // Serial 0, 1
-    #  endif // ifndef ESP32S2
+    #  endif
   # endif // ifndef DISABLE_SC16IS752_Serial
 #endif // ifdef ESP32
 #ifdef ESP8266

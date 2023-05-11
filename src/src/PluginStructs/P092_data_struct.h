@@ -5,8 +5,6 @@
 
 #ifdef USES_P092
 
-#include <Arduino.h>
-
 # ifdef LIMIT_BUILD_SIZE
 #  define P092_LIMIT_BUILD_SIZE
 # endif // ifdef LIMIT_BUILD_SIZE

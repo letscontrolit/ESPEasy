@@ -65,7 +65,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
     case LabelType::CPU_ECO_MODE:           return F("CPU Eco Mode");
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:        return F("Max WiFi TX Power");
     case LabelType::WIFI_CUR_TX_PWR:        return F("Current WiFi TX Power");
     case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
@@ -305,7 +305,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return toString(getCPUload(), 2);
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:        return toString(Settings.getWiFi_TX_power(), 2);
     case LabelType::WIFI_CUR_TX_PWR:        return toString(WiFiEventData.wifi_TX_pwr, 2);
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
@@ -460,7 +460,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_APB_FREQ:      return String(getApbFrequency() / 1000000);
 #endif
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
-    case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
+    case LabelType::ESP_CHIP_REVISION:      return getChipRevision();
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return formatToHex(getFlashChipId(), 6);
