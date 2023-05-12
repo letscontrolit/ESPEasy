@@ -143,6 +143,8 @@ bool essentiallyZero(const float& a)
 /*  Functions that would otherwise duplicate code                         */
 /*  For example due to being implemented as macros                        */
 /*  Or duplications as it is being implemented both for double and float  */
+/*  Another factor is that converting from double to float on each call   */
+/*  also adds up                                                          */
 /*========================================================================*/
 
 
@@ -201,7 +203,3 @@ float sqrtf(const float x)
   return (float)(sqrt((double)x));
 }
 
-float roundf(const float x)
-{
-  return (float)(round((double)x));
-}

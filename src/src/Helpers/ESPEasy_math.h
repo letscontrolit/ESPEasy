@@ -59,25 +59,4 @@ bool essentiallyZero(const double& a);
 bool essentiallyZero(const float& a);
 
 
-/*========================================================================*/
-/*  Functions that would otherwise duplicate code                         */
-/*  For example due to being implemented as macros                        */
-/*  Or duplications as it is being implemented both for double and float  */
-/*  Another factor is that converting from double to float on each call   */
-/*  also adds up                                                          */
-/*========================================================================*/
-
-float powf(const float x, const float y);
-float ceilf(const float x);
-float floorf(const float x);
-float fabsf(const float x);
-float acosf(const float x);
-float cosf(const float x);
-float asinf(const float x);
-float sinf(const float x);
-float atanf(const float x);
-float tanf(const float x);
-float sqrtf(const float x);
-float roundf(const float x);
-
 #endif // HELPERS_ESPEASY_MATH_H
