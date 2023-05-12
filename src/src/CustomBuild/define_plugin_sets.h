@@ -337,6 +337,7 @@ To create/register a plugin, you have to :
   #if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
     #define LIMIT_BUILD_SIZE
   #endif
+
   #ifndef FEATURE_I2CMULTIPLEXER
     #define FEATURE_I2CMULTIPLEXER  1
   #endif
@@ -1531,6 +1532,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
   #endif
@@ -1793,6 +1797,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
   #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
@@ -2147,6 +2154,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
+  #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
   #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
