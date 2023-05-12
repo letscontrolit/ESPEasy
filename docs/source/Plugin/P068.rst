@@ -21,6 +21,20 @@ Maintainer: |P068_maintainer|
 
 Used libraries: |P068_usedlibraries|
 
+Description
+-----------
+
+Plugin to use the Sensirion Humidity and Temperature Sensor SHT30 / SHT31 / SHT35.
+
+SHT3x Specifications:
+ * Temperature (-40 °C to +125 °C)
+ * Relative humidity (0 - 100 %RH)
+
+Datasheet
+----------
+
+- `SHT3x <https://sensirion.com/media/documents/213E6A3B/63A5A569/Datasheet_SHT3x_DIS.pdf>`_
+
 Supported hardware
 ------------------
 

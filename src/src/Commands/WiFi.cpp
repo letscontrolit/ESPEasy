@@ -55,19 +55,33 @@ String Command_Wifi_Key2(struct EventStruct *event, const char *Line)
                                 1);
 }
 
-const __FlashStringHelper * Command_Wifi_Scan(struct EventStruct *event, const char *Line)
+String Command_Wifi_HiddenSSID(struct EventStruct *event, const char *Line)
+{
+  bool   includeHiddenSSID = Settings.IncludeHiddenSSID();
+  String result            = Command_GetORSetBool(event, F("Include Hidden SSID:"),
+                                                  Line,
+                                                  (bool *)&includeHiddenSSID,
+                                                  1);
+
+  if (Settings.IncludeHiddenSSID() != includeHiddenSSID) { // Update if changed
+    Settings.IncludeHiddenSSID(includeHiddenSSID);
+  }
+  return result;
+}
+
+const __FlashStringHelper* Command_Wifi_Scan(struct EventStruct *event, const char *Line)
 {
   WiFiScan_log_to_serial();
   return return_command_success();
 }
 
-const __FlashStringHelper * Command_Wifi_Connect(struct EventStruct *event, const char *Line)
+const __FlashStringHelper* Command_Wifi_Connect(struct EventStruct *event, const char *Line)
 {
   WiFiEventData.wifiConnectAttemptNeeded = true;
   return return_command_success();
 }
 
-const __FlashStringHelper * Command_Wifi_Disconnect(struct EventStruct *event, const char *Line)
+const __FlashStringHelper* Command_Wifi_Disconnect(struct EventStruct *event, const char *Line)
 {
   RTC.clearLastWiFi(); // Force a WiFi scan
   WifiDisconnect();
@@ -75,13 +89,13 @@ const __FlashStringHelper * Command_Wifi_Disconnect(struct EventStruct *event, c
   return return_command_success();
 }
 
-const __FlashStringHelper * Command_Wifi_APMode(struct EventStruct *event, const char *Line)
+const __FlashStringHelper* Command_Wifi_APMode(struct EventStruct *event, const char *Line)
 {
   setAP(true);
   return return_command_success();
 }
 
-const __FlashStringHelper * Command_Wifi_STAMode(struct EventStruct *event, const char *Line)
+const __FlashStringHelper* Command_Wifi_STAMode(struct EventStruct *event, const char *Line)
 {
   setSTA(true);
   return return_command_success();
@@ -94,7 +108,7 @@ String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
   if (GetArgv(Line, TmpStr1, 2)) {
     WiFiMode_t mode = WIFI_MODE_MAX;
 
-    if (event->Par1 > 0 && event->Par1 < WIFI_MODE_MAX) {
+    if ((event->Par1 > 0) && (event->Par1 < WIFI_MODE_MAX)) {
       mode = static_cast<WiFiMode_t>(event->Par1 - 1);
     } else {
       TmpStr1.toLowerCase();
@@ -116,7 +130,7 @@ String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
   return return_command_success_str();
 }
 
-const __FlashStringHelper * Command_Wifi_AllowAP(struct EventStruct *event, const char* Line)
+const __FlashStringHelper* Command_Wifi_AllowAP(struct EventStruct *event, const char *Line)
 {
   Settings.DoNotStartAP(false);
   return return_command_success();
@@ -124,7 +138,7 @@ const __FlashStringHelper * Command_Wifi_AllowAP(struct EventStruct *event, cons
 
 // FIXME: TD-er This is not an erase, but actually storing the current settings
 // in the wifi settings of the core library
-const __FlashStringHelper * Command_WiFi_Erase(struct EventStruct *event, const char *Line)
+const __FlashStringHelper* Command_WiFi_Erase(struct EventStruct *event, const char *Line)
 {
   WiFi.persistent(true);  // use SDK storage of SSID/WPA parameters
   WifiDisconnect();       // this will store empty ssid/wpa into sdk storage

@@ -1,7 +1,7 @@
 #ifndef HELPERS_LONGTERMTIMER_H
 #define HELPERS_LONGTERMTIMER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 

@@ -4,7 +4,8 @@
 /*********************************************************************************************\
 * ControllerSettingsStruct definition
 \*********************************************************************************************/
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
+
 #include <memory> // For std::shared_ptr
 #include <new> // for std::nothrow
 
@@ -12,7 +13,6 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
-#include "../../ESPEasy_common.h"
 #include "../DataStructs/ChecksumType.h"
 #include "../Globals/Plugins.h"
 

@@ -1,7 +1,7 @@
 #ifndef DATATYPES_PLUGINID_H
 #define DATATYPES_PLUGINID_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 typedef uint8_t pluginID_t;
 

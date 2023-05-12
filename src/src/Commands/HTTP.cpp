@@ -17,7 +17,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringParser.h"
 
-#if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP
+#if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const __FlashStringHelper *logIdentifier,
                                           const __FlashStringHelper *HttpMethod,
@@ -125,7 +125,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
   return return_command_failed();
 }
 
-#endif // if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP
+#endif // if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 
 #if FEATURE_SEND_TO_HTTP
 
@@ -160,3 +160,19 @@ const __FlashStringHelper* Command_HTTP_PostToHTTP(struct EventStruct *event, co
 }
 
 #endif // if FEATURE_POST_TO_HTTP
+
+#if FEATURE_PUT_TO_HTTP
+
+// syntax 1: PutToHttp,<[<user>:<password>@]<host>,<port>,<path>,<header>,<body>
+// syntax 2: PutToHttp,http://<[<user>:<password>@]<host>[:<port>]/<path>,<header>,<body>
+const __FlashStringHelper* Command_HTTP_PutToHTTP(struct EventStruct *event, const char *Line)
+{
+  // FIXME tonhuisman: Make putToHttp timeout a setting, now using a somewhat sensible default
+  const int timeout = CONTROLLER_CLIENTTIMEOUT_MAX;
+
+  // FIXME tonhuisman: make PutToHttp_ack a setting, using SendToHttp_ack for now...
+
+  return httpEmitToHTTP(event, F("PutToHTTP"), F("PUT"), Line, timeout, Settings.SendToHttp_ack(), true, true);
+}
+
+#endif // if FEATURE_PUT_TO_HTTP

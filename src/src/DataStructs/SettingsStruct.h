@@ -226,6 +226,22 @@ class SettingsStruct_tmpl
   // Return the name of the unit, without unitnr appended, with template parsing applied, replacement for Settings.Name in most places
   String getName() const;
 
+private:
+
+  // Compute the index in either 
+  // - PinBootStates array (index_low) or 
+  // - PinBootStates_ESP32 (index_high)
+  // Returns whether it is a valid index
+  bool getPinBootStateIndex(
+    uint8_t gpio_pin, 
+    int8_t& index_low
+    #ifdef ESP32
+    , int8_t& index_high
+    #endif
+    ) const;
+  
+public:
+
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);
 

@@ -1,5 +1,8 @@
 #include "../Helpers/ESPEasy_math.h"
 
+#include <Arduino.h> 
+// Need to include Arduino.h first, then cmath
+// See: https://github.com/esp8266/Arduino/issues/8922#issuecomment-1542301697
 #include <cmath>
 
 

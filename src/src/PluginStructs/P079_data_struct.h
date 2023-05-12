@@ -9,12 +9,6 @@
 # define PRODUCT_ID_I2C_LOLIN 0x02
 
 
-# if (ARDUINO >= 100)
- #  include "Arduino.h"
-# else // if (ARDUINO >= 100)
- #  include "WProgram.h"
-# endif  // if (ARDUINO >= 100)
-
 # include "Wire.h"
 
 # define P079_MOTOR_A     0

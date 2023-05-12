@@ -65,7 +65,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
     case LabelType::CPU_ECO_MODE:           return F("CPU Eco Mode");
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:        return F("Max WiFi TX Power");
     case LabelType::WIFI_CUR_TX_PWR:        return F("Current WiFi TX Power");
     case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
@@ -305,7 +305,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return toString(getCPUload(), 2);
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:        return toString(Settings.getWiFi_TX_power(), 2);
     case LabelType::WIFI_CUR_TX_PWR:        return toString(WiFiEventData.wifi_TX_pwr, 2);
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
@@ -378,18 +378,18 @@ String getValue(LabelType::Enum label) {
                                                             LabelType::IP_CONFIG_DYNAMIC));
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
-    case LabelType::IP_ADDRESS:             return NetworkLocalIP().toString();
-    case LabelType::IP_SUBNET:              return NetworkSubnetMask().toString();
+    case LabelType::IP_ADDRESS:             return formatIP(NetworkLocalIP());
+    case LabelType::IP_SUBNET:              return formatIP(NetworkSubnetMask());
     case LabelType::IP_ADDRESS_SUBNET:      return getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET);
-    case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
+    case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
 
     #if FEATURE_MDNS
     case LabelType::M_DNS:                  return NetworkGetHostname() + F(".local");
     #endif // if FEATURE_MDNS
     case LabelType::DNS:                    return getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2);
-    case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
-    case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
+    case LabelType::DNS_1:                  return formatIP(NetworkDnsIP(0));
+    case LabelType::DNS_2:                  return formatIP(NetworkDnsIP(1));
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
     case LabelType::STA_MAC:                return WifiSTAmacAddress().toString();
     case LabelType::AP_MAC:                 return WifiSoftAPmacAddress().toString();
@@ -460,7 +460,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_APB_FREQ:      return String(getApbFrequency() / 1000000);
 #endif
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
-    case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
+    case LabelType::ESP_CHIP_REVISION:      return getChipRevision();
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return formatToHex(getFlashChipId(), 6);
@@ -485,12 +485,12 @@ String getValue(LabelType::Enum label) {
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
 #if FEATURE_ETHERNET
-    case LabelType::ETH_IP_ADDRESS:         return NetworkLocalIP().toString();
-    case LabelType::ETH_IP_SUBNET:          return NetworkSubnetMask().toString();
+    case LabelType::ETH_IP_ADDRESS:         return formatIP(NetworkLocalIP());
+    case LabelType::ETH_IP_SUBNET:          return formatIP(NetworkSubnetMask());
     case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") +
                                                           getValue(LabelType::ETH_IP_SUBNET));
-    case LabelType::ETH_IP_GATEWAY:         return NetworkGatewayIP().toString();
-    case LabelType::ETH_IP_DNS:             return NetworkDnsIP(0).toString();
+    case LabelType::ETH_IP_GATEWAY:         return formatIP(NetworkGatewayIP());
+    case LabelType::ETH_IP_DNS:             return formatIP(NetworkDnsIP(0));
     case LabelType::ETH_MAC:                return NetworkMacAddress().toString();
     case LabelType::ETH_DUPLEX:             return EthLinkUp() ? (EthFullDuplex() ? F("Full Duplex") : F("Half Duplex")) : F("Link Down");
     case LabelType::ETH_SPEED:              return EthLinkUp() ? getEthSpeed() : F("Link Down");
