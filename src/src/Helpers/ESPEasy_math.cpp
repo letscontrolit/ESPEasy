@@ -147,7 +147,7 @@ bool essentiallyZero(const float& a)
 /*  also adds up                                                          */
 /*========================================================================*/
 
-
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 float powf(const float x, const float y)
 {
   return (float)(pow((double)x, (double)y));
@@ -203,3 +203,66 @@ float sqrtf(const float x)
   return (float)(sqrt((double)x));
 }
 
+
+
+#else
+
+
+double pow(const double x, const double y)
+{
+  return (double)(powf((float)x, (float)y));
+}
+
+double ceil(const double x)
+{
+  return (double)(ceilf((float)x));
+}
+
+double floor(const double x)
+{
+  return (double)(floorf((float)x));
+}
+
+double fabs(const double x)
+{
+  return (double)(fabsf((float)x));
+}
+
+double acos(const double x)
+{
+  return (double)(acosf((float)x));
+}
+
+double cos(const double x)
+{
+  return (double)(cosf((float)x));
+}
+
+double asin(const double x)
+{
+  return (double)(asinf((float)x));
+}
+
+double sin(const double x)
+{
+  return (double)(sinf((float)x));
+}
+
+double atan(const double x)
+{
+  return (double)(atanf((float)x));
+}
+
+double tan(const double x)
+{
+  return (double)(tanf((float)x));
+}
+
+double sqrt(const double x)
+{
+  return (double)(sqrtf((float)x));
+}
+
+
+
+#endif
