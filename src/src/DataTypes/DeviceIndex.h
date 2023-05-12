@@ -1,7 +1,7 @@
 #ifndef DATATYPES_DEVICEINDEX_H
 #define DATATYPES_DEVICEINDEX_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 typedef uint8_t deviceIndex_t;
 

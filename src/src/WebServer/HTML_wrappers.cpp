@@ -282,7 +282,7 @@ void html_add_form() {
 
 void html_add_JQuery_script() {
   #ifndef CDN_URL_JQUERY
-    #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+    #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.0.min.js"
   #endif // ifndef CDN_URL_JQUERY
   addHtml(F("<script src=\"" CDN_URL_JQUERY "\"></script>"));
 }

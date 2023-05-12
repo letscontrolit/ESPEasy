@@ -153,11 +153,98 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
 
 const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 {
+
+  # ifdef ESP32S2
+
   if (Settings.UseSerial) {
     if (gpio == 1) { return F("TX0"); }
 
     if (gpio == 3) { return F("RX0"); }
   }
+
+
+  if (FoundPSRAM() && (gpio == 26)) {
+    // ESP32-S2 PSRAM can use GPIO 26 (and 27..32 but those are always unavailable)
+    return F("PSRAM");
+  }
+
+  #elif defined(ESP32S3)
+
+  // SPI0/1: GPIO26-32 are usually used for SPI flash and PSRAM and not recommended for other uses. 
+  // When using Octal Flash or Octal PSRAM or both, GPIO33~37 are connected to SPIIO4 ~ SPIIO7 and SPIDQS. 
+  // Therefore, on boards embedded with ESP32-S3R8 / ESP32-S3R8V chip, GPIO33~37 are also not recommended for other uses.
+
+  if ((gpio >= 26) && (gpio <= 37)) {
+    if (FoundPSRAM()) {
+      return F("PSRAM");
+    } else {
+      return F("Flash");
+    }
+  }
+
+  // See Appendix A, page 71: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
+
+  if (gpio == 19) { return F("USB_D-"); }
+  if (gpio == 20) { return F("USB_D+"); }
+
+  if (Settings.UseSerial) {
+    if (gpio == 43) { return F("TX0"); }
+
+    if (gpio == 44) { return F("RX0"); }
+  }
+
+  #elif defined(ESP32C3)
+
+  if (Settings.UseSerial) {
+    if (gpio == 21) { return F("TX0"); }
+
+    if (gpio == 20) { return F("RX0"); }
+  }
+
+  if (gpio == 18) { return F("USB_D-"); }
+  if (gpio == 19) { return F("USB_D+"); }
+  
+  if (gpio == 11) {
+    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11
+    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
+    return F("Flash Vdd"); 
+  }
+  if ((gpio >= 12) && (gpio <= 17)) {
+    return F("Flash");
+  }
+
+
+  # elif defined(ESP32_CLASSIC)
+
+  if (Settings.UseSerial) {
+    if (gpio == 1) { return F("TX0"); }
+
+    if (gpio == 3) { return F("RX0"); }
+  }
+
+
+  if (FoundPSRAM()) {
+    // ESP32 PSRAM can use GPIO 16 and 17
+    switch (gpio) {
+      case 16:
+      case 17:
+        return F("PSRAM");
+    }
+  }
+
+  # elif defined(ESP8266)
+
+  if (Settings.UseSerial) {
+    if (gpio == 1) { return F("TX0"); }
+
+    if (gpio == 3) { return F("RX0"); }
+  }
+
+  # else
+    static_assert(false, "Implement processor architecture");
+
+  # endif 
+
   bool includeI2C = true;
   bool includeSPI = true;
 
@@ -212,25 +299,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   }
   #endif // if FEATURE_ETHERNET
 
-  #ifdef ESP32
-  # ifdef ESP32S2
 
-  if (FoundPSRAM() && (gpio == 26)) {
-    // ESP32-S2 PSRAM can use GPIO 26 (and 27..32 but those are always unavailable)
-    return F("PSRAM");
-  }
-  # else // ifdef ESP32S2
-
-  if (FoundPSRAM()) {
-    // ESP32 PSRAM can use GPIO 16 and 17
-    switch (gpio) {
-      case 16:
-      case 17:
-        return F("PSRAM");
-    }
-  }
-  # endif // ifdef ESP32S2
-  #endif // ifdef ESP32
 
   return F("");
 }

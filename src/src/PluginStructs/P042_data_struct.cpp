@@ -98,7 +98,7 @@ bool P042_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
         if (Candle_type == P042_SimType::TypeStaticLight) {
           type_Advanced_Candle();
         }
-        Candle_Update = millis() + random(25, 150);
+        Candle_Update = millis() + HwRandom(25, 150);
       }
       break;
     }
@@ -273,7 +273,7 @@ void P042_data_struct::type_Simple_Candle() {
 
   //  Flicker, based on our initial RGB values
   for (int i = 0; i < Candle_pxlcnt; i++) {
-    int flicker = random(0, P042_RANDOM_PIXEL);
+    int flicker = HwRandom(0, P042_RANDOM_PIXEL);
     int r1      = r - flicker;
     int g1      = g - flicker;
     int b1      = b - flicker;
@@ -288,9 +288,9 @@ void P042_data_struct::type_Simple_Candle() {
 }
 
 void P042_data_struct::type_Advanced_Candle() {
-  Candle_Temp[0] = random(1, 4);                  // 1..4  LEDs in RED
-  Candle_Temp[1] = random(1, 4) + Candle_Temp[0]; // 1..3  LEDs in Yellow / Orange
-  Candle_Temp[2] = random(0, 2);                  // 0..1  Choose Yellow = 0 / Orange = 1
+  Candle_Temp[0] = HwRandom(1, 4);                  // 1..4  LEDs in RED
+  Candle_Temp[1] = HwRandom(1, 4) + Candle_Temp[0]; // 1..3  LEDs in Yellow / Orange
+  Candle_Temp[2] = HwRandom(0, 2);                  // 0..1  Choose Yellow = 0 / Orange = 1
 
   int colorbase[3];
   int color1[3];

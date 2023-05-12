@@ -92,7 +92,7 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 	serialPrintln();
 
 	serialPrintln(F("System Info"));
-	serialPrint(F("  IP Address    : ")); serialPrintln(NetworkLocalIP().toString());
+	serialPrint(F("  IP Address    : ")); serialPrintln(formatIP(NetworkLocalIP()));
 	serialPrint(F("  Build         : ")); serialPrintln(String(get_build_nr()) + '/' + getSystemBuildString());
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.getName());
 	serialPrint(F("  Unit          : ")); serialPrintln(String(static_cast<int>(Settings.Unit)));

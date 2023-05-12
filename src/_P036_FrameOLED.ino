@@ -468,7 +468,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Modify font"));
           html_table_header(F("Alignment"));
 
-          for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
+          for (int varNr = 0; varNr < P36_Nlines; varNr++)
           {
             html_TR_TD();                     // All columns use max. width available
             addHtml(F("&nbsp;"));

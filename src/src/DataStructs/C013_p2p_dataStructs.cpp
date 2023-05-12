@@ -2,7 +2,7 @@
 
 #ifdef USES_C013
 
-#include "../Globals/Plugins.h"
+# include "../Globals/Plugins.h"
 
 
 C013_SensorInfoStruct::C013_SensorInfoStruct()
@@ -23,7 +23,6 @@ bool C013_SensorInfoStruct::isValid() const
          validPluginID(deviceNumber);
 }
 
-
 bool C013_SensorDataStruct::isValid() const
 {
   if ((header != 255) || (ID != 5)) { return false; }
@@ -34,7 +33,7 @@ bool C013_SensorDataStruct::isValid() const
 
 bool C013_SensorDataStruct::matchesPluginID(pluginID_t pluginID) const
 {
-  if (!validPluginID(pluginID)) {
+  if (!validPluginID(deviceNumber) || !validPluginID(pluginID)) {
     // Was never set, so probably received data from older node.
     return true;
   }

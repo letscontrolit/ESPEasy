@@ -1,7 +1,7 @@
 #ifndef HELPER_CPLUGIN_SENSORTYPEHELPER_H
 #define HELPER_CPLUGIN_SENSORTYPEHELPER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../DataStructs/DeviceStruct.h"
 

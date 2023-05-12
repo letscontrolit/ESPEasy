@@ -1,7 +1,7 @@
 #ifndef HELPERS_NUMERICAL_H
 #define HELPERS_NUMERICAL_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
   Check if string is valid float

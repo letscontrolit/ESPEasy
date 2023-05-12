@@ -643,7 +643,7 @@ void addFormPinStateSelect(int gpio, int choice)
 {
   bool enabled = true;
 
-  if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+  if (isSerialConsolePin(gpio)) {
     // do not add the pin state select for these pins.
     enabled = false;
   }

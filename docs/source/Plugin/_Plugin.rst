@@ -97,6 +97,9 @@ For example using just like normal task value data:
 * ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
 * ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
 * ``[bme#temp.min]`` See ``[bme#temp.max]`` 
+* ``[bme#temp.size]`` Return the number of samples in memory.
+* ``[bme#temp.sample]`` Access the last sample in memory.
+* ``[bme#temp.sampleN]`` Access the N-th last sample in memory.
 
 
 Commands on "Stats" data:
@@ -370,6 +373,7 @@ There are different released versions of ESP Easy:
    ":ref:`P143_page`","|P143_status|","P143"
    ":ref:`P144_page`","|P144_status|","P144"
    ":ref:`P145_page`","|P145_status|","P145"
+   ":ref:`P147_page`","|P147_status|","P147"
    ":ref:`P148_page`","|P148_status|","P148"
    ":ref:`P150_page`","|P150_status|","P150"
    ":ref:`P151_page`","|P151_status|","P151"

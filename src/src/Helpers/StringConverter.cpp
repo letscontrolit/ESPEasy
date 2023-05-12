@@ -72,12 +72,24 @@ bool str2ip(const char *string, uint8_t *IP)
 }
 
 String formatIP(const IPAddress& ip) {
+#ifdef ESP8266
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
   return tmp.toString();
 #else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   return ip.toString();
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+#endif
+#ifdef ESP32
+  #if LWIP_IPV6
+  if (ip.isAny()) {
+    IPAddress tmp;
+    tmp.setV4();
+    return tmp.toString();
+  }
+  #endif
+  return ip.toString();
+#endif
 }
 
 
