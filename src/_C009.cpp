@@ -157,7 +157,7 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
           // IPAddress ip = NetworkLocalIP();
           // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
           jsonString += ',';
-          jsonString += to_json_object_value(F("ip"), NetworkLocalIP().toString());
+          jsonString += to_json_object_value(F("ip"), formatIP(NetworkLocalIP()));
         }
         jsonString += '}'; // End "ESP"
 

@@ -394,7 +394,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   }
 
   log += F(" (");
-  log += timeServerIP.toString();
+  log += formatIP(timeServerIP);
   log += ')';
 
   if (!hostReachable(timeServerIP)) {
@@ -456,7 +456,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         // See: https://github.com/letscontrolit/ESPEasy/issues/2886#issuecomment-586656384
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("NTP  : NTP host (");
-          log += timeServerIP.toString();
+          log += formatIP(timeServerIP);
           log += F(") unsynchronized");
           addLogMove(LOG_LEVEL_ERROR, log);
         }
