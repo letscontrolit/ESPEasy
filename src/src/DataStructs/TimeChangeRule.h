@@ -1,7 +1,7 @@
 #ifndef DATASTRUCTS_TIMECHANGERULE_H
 #define DATASTRUCTS_TIMECHANGERULE_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 // structure to describe rules for when daylight/summer time begins,
 // or when standard time begins.

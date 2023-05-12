@@ -9,6 +9,7 @@
 
 #include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/StringConverter_Numerical.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../../ESPEasy_common.h"
@@ -329,7 +330,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
         disabled = true;
       }
 
-      if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+      if (isSerialConsolePin(gpio)) {
         disabled = true;
       }
 

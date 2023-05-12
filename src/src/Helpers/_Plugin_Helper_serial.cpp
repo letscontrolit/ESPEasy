@@ -41,14 +41,16 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
       result += formatToHex(config_pin1);
       result += newline;
       result += F(" ch: ");
-      result += config_pin2 == 0 ? F("A") : F("B");
+      result += config_pin2 == 0 ? 'A' : 'B';
       return result;
     }
     case ESPEasySerialPort::software:
     case ESPEasySerialPort::serial0_swap:
     case ESPEasySerialPort::serial0:
     case ESPEasySerialPort::serial1:
+#if HAS_SERIAL2
     case ESPEasySerialPort::serial2:
+#endif
     {
       result += F("RX: ");
       result += formatGpioLabel(config_pin1, false);
@@ -189,7 +191,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 
   String options[NR_ESPEASY_SERIAL_TYPES];
   int    ids[NR_ESPEASY_SERIAL_TYPES];
-  String attr[NR_ESPEASY_SERIAL_TYPES];
+//  String attr[NR_ESPEASY_SERIAL_TYPES];
 
   #ifndef DISABLE_SC16IS752_Serial
   int index = NR_ESPEASY_SERIAL_TYPES - 1; // Place I2C Serial at the end
@@ -210,9 +212,11 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
         #ifndef DISABLE_SOFTWARE_SERIAL
         case ESPEasySerialPort::software:
         {
+          /*
           if (!allowSoftwareSerial) {
             attr[index] = F("disabled");
           }
+          */
           break;
         }
         #endif // ifndef DISABLE_SOFTWARE_SERIAL
@@ -225,7 +229,9 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
         case ESPEasySerialPort::serial0:
         case ESPEasySerialPort::serial0_swap:
         case ESPEasySerialPort::serial1:
+#if HAS_SERIAL2
         case ESPEasySerialPort::serial2:
+#endif
         {
           #ifdef ESP8266
 
@@ -292,7 +298,9 @@ void serialHelper_webformSave(uint8_t& port, int8_t& rxPin, int8_t& txPin) {
     case ESPEasySerialPort::serial0:
     case ESPEasySerialPort::serial0_swap:
     case ESPEasySerialPort::serial1:
+#if HAS_SERIAL2
     case ESPEasySerialPort::serial2:
+#endif
     {
       #ifdef ESP8266
 

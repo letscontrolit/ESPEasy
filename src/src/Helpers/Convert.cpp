@@ -33,7 +33,7 @@ const __FlashStringHelper * getBearing(int degrees)
       F("NNW")
     };
     constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
-    if (bearing_idx < nrStrings) {
+    if (static_cast<size_t>(bearing_idx) < nrStrings) {
       return strings[bearing_idx];
     }
   }
@@ -45,30 +45,15 @@ float CelsiusToFahrenheit(float celsius) {
 }
 
 int m_secToBeaufort(float m_per_sec) {
-  if (m_per_sec < 0.3f) { return 0; }
-
-  if (m_per_sec < 1.6f) { return 1; }
-
-  if (m_per_sec < 3.4f) { return 2; }
-
-  if (m_per_sec < 5.5f) { return 3; }
-
-  if (m_per_sec < 8.0f) { return 4; }
-
-  if (m_per_sec < 10.8f) { return 5; }
-
-  if (m_per_sec < 13.9f) { return 6; }
-
-  if (m_per_sec < 17.2f) { return 7; }
-
-  if (m_per_sec < 20.8f) { return 8; }
-
-  if (m_per_sec < 24.5f) { return 9; }
-
-  if (m_per_sec < 28.5f) { return 10; }
-
-  if (m_per_sec < 32.6f) { return 11; }
-  return 12;
+  // Use ints wit 0.1 m/sec resolution to reduce size.
+  const uint16_t dm_per_sec = 10 * m_per_sec;
+  const uint16_t speeds[]{3, 16, 34, 55, 80, 108, 139, 172, 208, 245, 285, 326};  
+  constexpr int nrElements = sizeof(speeds) / sizeof(speeds[0]);
+  
+  for (int bft = 0; bft < nrElements; ++bft) {
+    if (dm_per_sec < speeds[bft]) return bft;
+  }
+  return nrElements;  
 }
 
 String centimeterToImperialLength(float cm) {
@@ -246,77 +231,4 @@ float ul2float(unsigned long ul)
   return f;
 }
 
-/*********************************************************************************************\
-   Workaround for removing trailing white space when String() converts a float with 0 decimals
-\*********************************************************************************************/
-String toString(const float& value, unsigned int decimalPlaces)
-{
-  #ifndef LIMIT_BUILD_SIZE
-  if (decimalPlaces == 0) {
-    if (value > -1e18f && value < 1e18f) {
-      // Work-around to perform a faster conversion
-      const int64_t ll_value = static_cast<int64_t>(roundf(value));
-      return ll2String(ll_value);
-    }
-  }
-  #endif
 
-  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
-  // https://github.com/espressif/arduino-esp32/pull/6138/files
-//  #ifdef ESP8266
-  char *buf = (char*)malloc(decimalPlaces + 42);
-  if (nullptr == buf) {
-    return F("nan");
-  }
-  String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
-  free(buf);
-//  #else
-//  String sValue = String(value, decimalPlaces);
-//  #endif
-
-  sValue.trim();
-  return sValue;
-}
-
-String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros) {
-  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
-  // https://github.com/espressif/arduino-esp32/pull/6138/files
-//  #ifdef ESP8266
-  unsigned int expectedChars = decimalPlaces + 4; // 1 dot, 2 minus signs and terminating zero
-  if (value > 1e32 || value < -1e32) {
-    expectedChars += 308; // Just assume the worst
-  } else {
-    expectedChars += 33;
-  }
-  char *buf = (char*)malloc(expectedChars);
-
-  if (nullptr == buf) {
-    return F("nan");
-  }
-  String res(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
-  free(buf);
-
-//  #else
-//  String res(value, decimalPlaces);
-//  #endif
-  res.trim();
-
-  if (trimTrailingZeros) {
-    int dot_pos = res.lastIndexOf('.');
-    if (dot_pos != -1) {
-      bool someTrimmed = false;
-      for (int i = res.length()-1; i > dot_pos && res[i] == '0'; --i) {
-        someTrimmed = true;
-        res[i] = ' ';
-      }
-      if (someTrimmed) {
-        res.trim();
-      }
-      if (res.endsWith(F("."))) {
-        res[dot_pos] = ' ';
-        res.trim();
-      }
-    }
-  }
-  return res;
-}

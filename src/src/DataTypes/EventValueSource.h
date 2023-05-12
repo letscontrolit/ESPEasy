@@ -1,7 +1,7 @@
 #ifndef DATATYPES_EVENT_VALUE_SOURCE_H
 #define DATATYPES_EVENT_VALUE_SOURCE_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 struct EventValueSourceGroup {
   enum class Enum : uint8_t {

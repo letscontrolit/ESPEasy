@@ -35,17 +35,41 @@
   # ifndef DISABLE_SOFTWARE_SERIAL
     #  define DISABLE_SOFTWARE_SERIAL
   # endif // ifndef DISABLE_SOFTWARE_SERIAL
-#endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
+#endif    // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
 
 #ifndef DISABLE_SOFTWARE_SERIAL
 # include <ESPEasySoftwareSerial.h>
 #endif // ifndef DISABLE_SOFTWARE_SERIAL
 
+#ifndef HAS_SERIAL2
+  #ifdef ESP8266
+    #define HAS_SERIAL2 0
+  #elif defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+    #include <soc/soc_caps.h>
+    #if SOC_UART_NUM > 2
+      #define HAS_SERIAL2 1
+    #else 
+      #define HAS_SERIAL2 0
+    #endif
+  # else
+    static_assert(false, "Implement processor architecture");
+  #endif
+#endif
+
+
 #ifdef ESP32
   # ifndef DISABLE_SC16IS752_Serial
-    #  define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 2, sc16is752
+    #  if HAS_SERIAL2
+    #   define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 2, sc16is752
+    #  else 
+    #   define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, sc16is752
+    #  endif
   # else // ifndef DISABLE_SC16IS752_Serial
-    #  define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 2
+    #  if HAS_SERIAL2
+    #   define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 2
+    #  else 
+    #   define NR_ESPEASY_SERIAL_TYPES 2 // Serial 0, 1
+    #  endif
   # endif // ifndef DISABLE_SC16IS752_Serial
 #endif // ifdef ESP32
 #ifdef ESP8266
@@ -69,13 +93,15 @@
     #  ifndef CORE_2_4_X
       #   define CORE_2_4_X
     #  endif // ifndef CORE_2_4_X
-  # endif // if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
+  # endif    // if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  ||
+             // defined(ARDUINO_ESP8266_RELEASE_2_4_2)
 
   # if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
     #  ifndef CORE_PRE_2_4_2
       #   define CORE_PRE_2_4_2
     #  endif // ifndef CORE_PRE_2_4_2
-  # endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+  # endif    // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) ||
+             // defined(ARDUINO_ESP8266_RELEASE_2_4_1)
 
   # if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
     #  ifndef CORE_PRE_2_5_0
@@ -85,8 +111,8 @@
     #  ifndef CORE_POST_2_5_0
       #   define CORE_POST_2_5_0
     #  endif // ifndef CORE_POST_2_5_0
-  # endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
-#endif // ESP32
+  # endif    // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
+#endif       // ESP32
 
 
 #include "ESPEasySerialPort.h"
@@ -238,7 +264,7 @@ public:
 private:
 
   const HardwareSerial* getHW() const;
-  HardwareSerial*       getHW();
+  HardwareSerial      * getHW();
 
   bool                  isValid() const;
 

@@ -1,5 +1,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 
+#include "../../_Plugin_Helper.h"
+
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
@@ -10,20 +12,17 @@
 #include "../Globals/EventQueue.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Plugins_other.h"
+#include "../Globals/RulesCalculate.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
-#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/RulesHelper.h"
 #include "../Helpers/RulesMatcher.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
-
-#include "../../_Plugin_Helper.h"
-
 
 
 #include <math.h>
@@ -1300,7 +1299,7 @@ void createRuleEvents(struct EventStruct *event) {
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
-  if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+  if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
     size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
     expectedSize += getTaskValueName(event->TaskIndex, 0).length();
    

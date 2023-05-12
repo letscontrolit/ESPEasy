@@ -127,14 +127,9 @@ int8_t GPIO_MCP_Read(int Par1)
 bool GPIO_MCP_ReadRegister(uint8_t mcpAddr, uint8_t regAddr, uint8_t *retValue) {
   bool success = false;
   // Read the register
-  Wire.beginTransmission(mcpAddr);
-  Wire.write(regAddr);
-  Wire.endTransmission();
-
-  Wire.requestFrom(mcpAddr, (uint8_t)0x1);
-  if (Wire.available()) {
-    success=true;
-    *retValue = Wire.read();
+  const uint8_t value = I2C_read8_reg(mcpAddr, regAddr, &success);
+  if (success) {
+    *retValue = value;
   }
   return success;
 }
@@ -145,10 +140,7 @@ bool GPIO_MCP_ReadRegister(uint8_t mcpAddr, uint8_t regAddr, uint8_t *retValue) 
 
 void GPIO_MCP_WriteRegister(uint8_t mcpAddr, uint8_t regAddr, uint8_t regValue) {
   // Write the register
-  Wire.beginTransmission(mcpAddr);
-  Wire.write(regAddr);
-  Wire.write(regValue);
-  Wire.endTransmission();
+  I2C_write8_reg(mcpAddr, regAddr, regValue);
 }
 
 
@@ -298,16 +290,17 @@ int8_t GPIO_PCF_Read(int Par1)
 {
   int8_t state = -1;
   if (checkValidPortRange(PLUGIN_PCF, Par1)) {
-    uint8_t unit = (Par1 - 1) / 8;
-    uint8_t port = Par1 - (unit * 8) - 1;
+    const uint8_t unit = (Par1 - 1) / 8;
+    const uint8_t port = Par1 - (unit * 8) - 1;
     uint8_t address = 0x20 + unit;
     if (unit > 7) address += 0x10;
 
     // get the current pin status
-    Wire.requestFrom(address, (uint8_t)0x1);
-    if (Wire.available())
+    bool is_ok = false;
+    const uint8_t value = I2C_read8(address, &is_ok);
+    if (is_ok) 
     {
-      state = ((Wire.read() & _BV(port)) >> (port));
+      state = ((value & _BV(port)) >> (port));
     }
   }
   return state;
@@ -317,11 +310,9 @@ bool GPIO_PCF_ReadAllPins(uint8_t address, uint8_t *retValue)
 {
   bool success = false;
 
-  Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available())
-  {
-    success=true;
-    *retValue = Wire.read();
+  const uint8_t value = I2C_read8(address, &success);
+  if (success) {
+    *retValue = value;
   }
   return success;
 }
@@ -332,9 +323,7 @@ bool GPIO_PCF_ReadAllPins(uint8_t address, uint8_t *retValue)
 //*******************************************************************************
 void GPIO_PCF_WriteAllPins(uint8_t address, uint8_t value)
 {
-  Wire.beginTransmission(address);
-  Wire.write(value);
-  Wire.endTransmission();
+  I2C_write8(address, value);
 }
 
 bool GPIO_PCF_Write(int Par1, uint8_t Par2)

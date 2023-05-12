@@ -67,7 +67,7 @@
 .. |P025_type| replace:: :cyan:`Analog input`
 .. |P025_typename| replace:: :cyan:`Analog input - ADS1115`
 .. |P025_porttype| replace:: `.`
-.. |P025_status| replace:: :green:`NORMAL` :yellow:`ENERGY`
+.. |P025_status| replace:: :green:`NORMAL` :yellow:`ENERGY` :yellow:`CLIMATE`
 .. |P025_github| replace:: P025_ADS1115.ino
 .. _P025_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P025_ADS1115.ino
 .. |P025_usedby| replace:: `.`
