@@ -71,7 +71,7 @@ bool RulesCalculate_t::is_unary_operator(char c)
   */
 }
 
-CalculateReturnCode RulesCalculate_t::push(double value)
+CalculateReturnCode RulesCalculate_t::push(ESPEASY_RULES_FLOAT_TYPE value)
 {
   if (sp != sp_max) // Full
   {
@@ -81,7 +81,7 @@ CalculateReturnCode RulesCalculate_t::push(double value)
   return CalculateReturnCode::ERROR_STACK_OVERFLOW;
 }
 
-double RulesCalculate_t::pop()
+ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::pop()
 {
   if (sp != (globalstack - 1)) { // empty
     return *(sp--);
@@ -91,7 +91,7 @@ double RulesCalculate_t::pop()
   }
 }
 
-double RulesCalculate_t::apply_operator(char op, double first, double second)
+ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_operator(char op, ESPEASY_RULES_FLOAT_TYPE first, ESPEASY_RULES_FLOAT_TYPE second)
 {
   switch (op)
   {
@@ -104,36 +104,72 @@ double RulesCalculate_t::apply_operator(char op, double first, double second)
     case '/':
       return first / second;
     case '%':
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      return static_cast<int>(round(first)) % static_cast<int>(round(second));
+    #else
       return static_cast<int>(roundf(first)) % static_cast<int>(roundf(second));
+    #endif
     case '^':
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return pow(first, second);
+    #else
+      return powf(first, second);
+    #endif
     default:
-      return 0.0;
+      return 0;
   }
 }
 
-double RulesCalculate_t::apply_unary_operator(char op, double first)
+ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY_RULES_FLOAT_TYPE first)
 {
-  double ret                = 0.0;
+  ESPEASY_RULES_FLOAT_TYPE ret{};
   const UnaryOperator un_op = static_cast<UnaryOperator>(op);
 
   switch (un_op) {
     case UnaryOperator::Not:
-      return essentiallyZero(roundf(first)) ? 1.0 : 0.0;
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      return essentiallyZero(round(first)) ? 1 : 0;
+    #else
+      return essentiallyZero(roundf(first)) ? 1 : 0;
+    #endif
     case UnaryOperator::Log:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return log10(first);
+    #else
+      return log10f(first);
+    #endif
     case UnaryOperator::Ln:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return log(first);
+    #else
+      return logf(first);
+    #endif
     case UnaryOperator::Abs:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return fabs(first);
+    #else
+      return fabs(first);
+    #endif
     case UnaryOperator::Exp:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return exp(first);
+    #else
+      return expf(first);
+    #endif
     case UnaryOperator::Sqrt:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return sqrt(first);
+    #else
+      return sqrtf(first);
+    #endif
     case UnaryOperator::Sq:
       return first * first;
     case UnaryOperator::Round:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      return round(first);
+    #else
       return roundf(first);
+    #endif
     default:
       break;
   }
@@ -145,15 +181,27 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
   switch (un_op) {
     case UnaryOperator::ArcSin:
     case UnaryOperator::ArcSin_d:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       ret = asin(first);
+    #else
+      ret = asinf(first);
+    #endif
       return useDegree ? degrees(ret) : ret;
     case UnaryOperator::ArcCos:
     case UnaryOperator::ArcCos_d:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       ret = acos(first);
+    #else
+      ret = acosf(first);
+    #endif
       return useDegree ? degrees(ret) : ret;
     case UnaryOperator::ArcTan:
     case UnaryOperator::ArcTan_d:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       ret = atan(first);
+    #else
+      ret = atanf(first);
+    #endif
       return useDegree ? degrees(ret) : ret;
     default:
       break;
@@ -167,13 +215,25 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
   switch (un_op) {
     case UnaryOperator::Sin:
     case UnaryOperator::Sin_d:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return sin(first);
+    #else
+      return sinf(first);
+    #endif
     case UnaryOperator::Cos:
     case UnaryOperator::Cos_d:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return cos(first);
+    #else
+      return cosf(first);
+    #endif
     case UnaryOperator::Tan:
     case UnaryOperator::Tan_d:
+    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return tan(first);
+    #else
+      return tanf(first);
+    #endif
     default:
       break;
   }
@@ -220,8 +280,8 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 
   if (is_operator(token[0]) && (token[1] == 0))
   {
-    double second = pop();
-    double first  = pop();
+    ESPEASY_RULES_FLOAT_TYPE second = pop();
+    ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_operator(token[0], first, second));
 
@@ -229,7 +289,7 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 //    if (isError(ret)) { return ret; }
   } else if (is_unary_operator(token[0]) && (token[1] == 0))
   {
-    double first = pop();
+    ESPEASY_RULES_FLOAT_TYPE first = pop();
 
     ret = push(apply_unary_operator(token[0], first));
 
@@ -237,7 +297,7 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 //    if (isError(ret)) { return ret; }
   } else {
     // Fetch next if there is any
-    double value = 0.0;
+    ESPEASY_RULES_FLOAT_TYPE value{};
     validDoubleFromString(token, value);
 
     ret = push(value); // If it is a value, push to the stack
@@ -295,7 +355,7 @@ unsigned int RulesCalculate_t::op_arg_count(const char c)
   return 0;
 }
 
-CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *result)
+CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RULES_FLOAT_TYPE *result)
 {
 
   #ifndef BUILD_NO_RAM_TRACKER

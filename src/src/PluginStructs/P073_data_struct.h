@@ -90,7 +90,7 @@ static const uint8_t DefaultCharTable[42] PROGMEM = {
 //   - pos 25    - exclamation mark "!"                 B01101011
 //   - pos 26    - question mark "?"                    B01101001
 //   - pos 27    - single quote "'"                     B00000010
-//   - pos 28    - double quote '"'                     B00100010
+//   - pos 28    - ESPEASY_RULES_FLOAT_TYPE quote '"'                     B00100010
 //   - pos 29    - left sharp bracket "<"               B01000010
 //   - pos 30    - right sharp bracket ">"              B01100000
 //   - pos 31    - backslash "\"                        B00010011

@@ -173,9 +173,9 @@ bool P008_data_struct::plugin_once_a_second(struct EventStruct *event) {
         // uint64_t outvalue = castHexAsDec(invalue);
         // info.reserve(40);
         // info += F("Test castHexAsDec(");
-        // info += (double)invalue;
+        // info += (ESPEASY_RULES_FLOAT_TYPE)invalue;
         // info += F(") => ");
-        // info += (double)outvalue;
+        // info += (ESPEASY_RULES_FLOAT_TYPE)outvalue;
         // addLog(LOG_LEVEL_INFO, info);
       }
     }

@@ -2911,7 +2911,7 @@ To create/register a plugin, you have to :
 // Extra task value types, typically used in Dummy tasks.
 // For example 32-bit, 64-bit ints and doubles.
 #ifndef FEATURE_EXTENDED_TASK_VALUE_TYPES
-  #ifdef ESP8266_1M
+  #ifdef LIMIT_BUILD_SIZE
     #define FEATURE_EXTENDED_TASK_VALUE_TYPES  0
   #else
     #define FEATURE_EXTENDED_TASK_VALUE_TYPES  1
@@ -2928,6 +2928,22 @@ To create/register a plugin, you have to :
     #endif
   #elif defined(ESP8266)
     #define FEATURE_SET_WIFI_TX_PWR   1
+  #endif
+#endif
+
+#ifndef ESPEASY_RULES_FLOAT_TYPE
+  #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
+    #ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      #undef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0
+    #endif
+    #define ESPEASY_RULES_FLOAT_TYPE float
+  #else
+    #ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      #undef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 1
+    #endif
+    #define ESPEASY_RULES_FLOAT_TYPE double
   #endif
 #endif
 

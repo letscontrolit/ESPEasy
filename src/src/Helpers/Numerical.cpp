@@ -10,7 +10,7 @@ bool isValidFloat(float f) {
   return !isnan(f) && !isinf(f);
 }
 
-bool isValidDouble(double f) {
+bool isValidDouble(ESPEASY_RULES_FLOAT_TYPE f) {
   return !isnan(f) && !isinf(f);
 }
 
@@ -97,8 +97,8 @@ bool validUInt64FromString(const String& tBuf, uint64_t& result) {
 
 bool validFloatFromString(const String& tBuf, float& result) {
   // DO not call validDoubleFromString and then cast to float.
-  // Working with double values is quite CPU intensive as it must be done in software
-  // since the ESP does not have large enough registers for handling double values in hardware.
+  // Working with ESPEASY_RULES_FLOAT_TYPE values is quite CPU intensive as it must be done in software
+  // since the ESP does not have large enough registers for handling ESPEASY_RULES_FLOAT_TYPE values in hardware.
   NumericalType detectedType;
   const String  numerical = getNumerical(tBuf, NumericalType::FloatingPoint, detectedType);
 
@@ -118,7 +118,7 @@ bool validFloatFromString(const String& tBuf, float& result) {
   return isvalid;
 }
 
-bool validDoubleFromString(const String& tBuf, double& result) {
+bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result) {
   #if defined(CORE_POST_2_5_0) || defined(ESP32)
 
   // String.toDouble() is introduced in core 2.5.0
@@ -129,7 +129,7 @@ bool validDoubleFromString(const String& tBuf, double& result) {
       (detectedType == NumericalType::HexadecimalUInt)) {
     uint64_t tmp;
     bool     isvalid = validUInt64FromString(tBuf, tmp);
-    result = static_cast<double>(tmp);
+    result = static_cast<ESPEASY_RULES_FLOAT_TYPE>(tmp);
     return isvalid;
   }
 
@@ -142,7 +142,7 @@ bool validDoubleFromString(const String& tBuf, double& result) {
   #else // if defined(CORE_POST_2_5_0) || defined(ESP32)
   float tmp = static_cast<float>(result);
   bool  res = validFloatFromString(tBuf, tmp);
-  result = static_cast<double>(tmp);
+  result = static_cast<ESPEASY_RULES_FLOAT_TYPE>(tmp);
   return res;
   #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 }

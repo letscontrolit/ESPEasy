@@ -131,7 +131,7 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
     // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
 
     // Perform calculation with float result.
-    double result = 0;
+    ESPEASY_RULES_FLOAT_TYPE result{};
 
     if (isError(Calculate(TmpStr1, result))) {
       success = false;
