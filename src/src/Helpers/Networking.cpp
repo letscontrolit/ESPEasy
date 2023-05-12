@@ -350,7 +350,7 @@ void checkUDP()
                     log  = F("UDP  : ");
                     log += received.STA_MAC().toString();
                     log += ',';
-                    log += received.IP().toString();
+                    log += formatIP(received.IP());
                     log += ',';
                     log += received.unit;
                     addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -406,7 +406,7 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
       }
     }
   }
-  return unitIPAddress.toString();
+  return formatIP(unitIPAddress);
 }
 
 /*********************************************************************************************\
@@ -1471,7 +1471,7 @@ int http_authenticate(const String& logIdentifier,
   http.addHeader(F("Accept"), F("*/*;q=0.1"));
 
   // Add client IP
-  http.addHeader(F("X-Forwarded-For"), NetworkLocalIP().toString());
+  http.addHeader(F("X-Forwarded-For"), formatIP(NetworkLocalIP()));
 
   delay(0);
   scrubDNS();

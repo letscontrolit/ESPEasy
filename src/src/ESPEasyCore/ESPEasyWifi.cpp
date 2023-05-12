@@ -1275,7 +1275,7 @@ void setAPinternal(bool enable)
         String log(F("WIFI : AP Mode ssid will be "));
         log += softAPSSID;
         log += F(" with address ");
-        log += WiFi.softAPIP().toString();
+        log += formatIP(WiFi.softAPIP());
         log += F(" ch: ");
         log += channel;
         addLogMove(LOG_LEVEL_INFO, log);
@@ -1285,7 +1285,7 @@ void setAPinternal(bool enable)
         String log(F("WIFI : Error while starting AP Mode with SSID: "));
         log += softAPSSID;
         log += F(" IP: ");
-        log += apIP.toString();
+        log += formatIP(apIP);
         addLogMove(LOG_LEVEL_ERROR, log);
       }
     }

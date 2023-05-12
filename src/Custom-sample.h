@@ -213,7 +213,7 @@
 // Chart.js: (only used when FEATURE_CHART_JS is enabled)
 // #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
 // JQuery:
-// #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+// #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.0.min.js"
 
 
 // #define FEATURE_SETTINGS_ARCHIVE 1

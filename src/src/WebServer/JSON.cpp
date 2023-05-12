@@ -340,7 +340,7 @@ void handle_json()
           if (rssi < 0) {
             stream_next_json_object_value(F("rssi"), rssi);
           }
-          stream_next_json_object_value(F("ip"), it->second.IP().toString());
+          stream_next_json_object_value(F("ip"), formatIP(it->second.IP()));
           stream_last_json_object_value(F("age"), it->second.getAge());
         } // if node info exists
       }   // for loop
@@ -548,7 +548,7 @@ void handle_nodes_list_json() {
 
       if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
       json_prop(F("type"), it->second.getNodeTypeDisplayString());
-      json_prop(F("ip"),   it->second.ip.toString());
+      json_prop(F("ip"),   formatIP(it->second.ip));
       json_number(F("age"), String(it->second.getAge() / 1000)); // time in seconds
       json_close();
     }
