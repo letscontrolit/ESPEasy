@@ -24,6 +24,19 @@
 .. |P111_compileinfo| replace:: `.`
 .. |P111_usedlibraries| replace:: `https://github.com/miguelbalboa/rfid (local copy)`
 
+.. |P112_name| replace:: :cyan:`AS7265X`
+.. |P112_type| replace:: :cyan:`Color`
+.. |P112_typename| replace:: :cyan:`Color - AS7265X`
+.. |P112_porttype| replace:: `.`
+.. |P112_status| replace:: :yellow:`COLLECTION F`
+.. |P112_github| replace:: P112_AS7265x.ino
+.. _P112_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P112_AS7265x.ino
+.. |P112_usedby| replace:: `.`
+.. |P112_shortinfo| replace:: `Color sensor`
+.. |P112_maintainer| replace:: `heinemannj`
+.. |P112_compileinfo| replace:: `.`
+.. |P112_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_AS7265X_Arduino_Library (local copy)`
+
 .. |P113_name| replace:: :cyan:`VL53L1X`
 .. |P113_type| replace:: :cyan:`Distance`
 .. |P113_typename| replace:: :cyan:`Distance - VL53L1X (400cm)`

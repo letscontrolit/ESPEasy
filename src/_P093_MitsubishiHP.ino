@@ -2,8 +2,29 @@
 #ifdef USES_P093
 
 // #######################################################################################################
-// ################################ Plugin 090: Mitsubishi Heat Pump #####################################
+// ################################ Plugin 093: Mitsubishi Heat Pump #####################################
 // #######################################################################################################
+
+/** Changelog:
+ * 2023-05-04 tonhuisman: Add support for PLUGIN_GET_CONFIG_VALUE to enable fetching all available values (as included in the json)
+ * 2023-05-04 tonhuisman: Start Changelog
+ */
+
+/** Get Config values:
+ * Usage: [<taskname>#<configName>]
+ * Supported configNames are: (not case-sensitive)
+ * - roomTemperature
+ * - wideVane
+ * - power
+ * - mode
+ * - fan
+ * - vane
+ * - iSee
+ * - temperature
+ * With 'Include AC status' checkbox enabled:
+ * - operating
+ * - compressorFrequency
+ */
 
 # include "src/PluginStructs/P093_data_struct.h"
 
@@ -108,6 +129,16 @@ boolean Plugin_093(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((heatPump != nullptr) && heatPump->sync()) {
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+      }
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P093_data_struct *heatPump = static_cast<P093_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (heatPump != nullptr) {
+        success = heatPump->plugin_get_config_value(event, string);
       }
       break;
     }

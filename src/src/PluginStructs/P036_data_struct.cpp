@@ -2,8 +2,6 @@
 
 #ifdef USES_P036
 
-# include <Arduino.h>
-
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../Globals/RTC.h"
 # include "../Helpers/ESPEasy_Storage.h"

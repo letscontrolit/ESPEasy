@@ -5,6 +5,7 @@
 // ESP32   - 8 TX channels
 // ESP32S2 - 4 TX channels
 // ESP32C3 - 2 TX channels
+// ESP32S3 - 4 TX channels
 // NRF52840 - 3 or 4 channels (some variants only have 3)
 
 enum NeoBusChannel
@@ -28,12 +29,12 @@ enum NeoBusChannel
 
     NeoBusChannel_3,
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32S3)
     NeoBusChannel_4,
     NeoBusChannel_5,
     NeoBusChannel_6,
     NeoBusChannel_7,
-#endif // !defined(CONFIG_IDF_TARGET_ESP32S2)
+#endif // !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32S3)
 
 #endif // !defined(CONFIG_IDF_TARGET_ESP32C3)
 

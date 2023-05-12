@@ -18,9 +18,9 @@ const float MaxLightness = 0.4f; // max lightness at the head of the tail (0.5f 
 
 NeoGamma<NeoGammaTableMethod> colorGamma; // for any fade animations, best to correct gamma
 
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 // for esp8266 omit the pin
-//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
+//NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount);
 
 NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 

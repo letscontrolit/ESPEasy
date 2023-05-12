@@ -1,7 +1,6 @@
 #ifndef HELPERS_AUDIO_H
 #define HELPERS_AUDIO_H
 
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 

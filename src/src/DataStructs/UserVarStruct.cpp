@@ -3,10 +3,18 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Plugins.h"
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
+#include "../Helpers/CRC_functions.h"
 
 UserVarStruct::UserVarStruct()
 {
   _data.resize(TASKS_MAX);
+}
+
+void UserVarStruct::clear()
+{
+  for (size_t i = 0; i < _data.size(); ++i) {
+    _data[i].clear();
+  }
 }
 
 // Implementation of [] operator.  This function must return a
@@ -71,7 +79,8 @@ void UserVarStruct::setInt32(taskIndex_t taskIndex,
     _data[taskIndex].setInt32(varNr, value);
   }
 }
-#endif
+
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
 uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, uint8_t varNr) const
 {
@@ -126,7 +135,7 @@ void UserVarStruct::setUint64(taskIndex_t taskIndex,
   }
 }
 
-#endif
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
 float UserVarStruct::getFloat(taskIndex_t taskIndex,
                               uint8_t     varNr) const
@@ -166,7 +175,7 @@ void UserVarStruct::setDouble(taskIndex_t taskIndex,
   }
 }
 
-#endif
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
 double UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
                                   uint8_t      varNr,
@@ -194,8 +203,8 @@ void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const double& valu
 }
 
 bool UserVarStruct::isValid(taskIndex_t  taskIndex,
-               uint8_t      varNr,
-               Sensor_VType sensorType) const
+                            uint8_t      varNr,
+                            Sensor_VType sensorType) const
 {
   if (taskIndex < _data.size()) {
     return _data[taskIndex].isValid(varNr, sensorType);
@@ -203,16 +212,9 @@ bool UserVarStruct::isValid(taskIndex_t  taskIndex,
   return false;
 }
 
-
-size_t UserVarStruct::getNrElements() const
+uint8_t * UserVarStruct::get(size_t& sizeInBytes)
 {
-  constexpr size_t factor = sizeof(TaskValues_Data_t) / sizeof(float);
-
-  return _data.size() * factor;
-}
-
-uint8_t * UserVarStruct::get()
-{
+  sizeInBytes = _data.size() * sizeof(TaskValues_Data_t);
   return reinterpret_cast<uint8_t *>(&_data[0]);
 }
 
@@ -230,4 +232,12 @@ TaskValues_Data_t * UserVarStruct::getTaskValues_Data(taskIndex_t taskIndex)
     return &_data[taskIndex];
   }
   return nullptr;
+}
+
+uint32_t UserVarStruct::compute_CRC32() const
+{
+  const uint8_t *buffer = reinterpret_cast<const uint8_t *>(&_data[0]);
+  const size_t   size   = _data.size() * sizeof(TaskValues_Data_t);
+
+  return calc_CRC32(buffer, size);
 }

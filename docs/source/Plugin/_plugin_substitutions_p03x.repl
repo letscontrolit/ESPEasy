@@ -4,9 +4,9 @@
 .. |P030_porttype| replace:: `.`
 .. |P030_status| replace:: :gray:`RETIRED`
 
-.. |P031_name| replace:: :cyan:`SHT1X`
+.. |P031_name| replace:: :cyan:`SHT1x`
 .. |P031_type| replace:: :cyan:`Environment`
-.. |P031_typename| replace:: :cyan:`Environment - SHT1X`
+.. |P031_typename| replace:: :cyan:`Environment - SHT1x`
 .. |P031_porttype| replace:: `.`
 .. |P031_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P031_github| replace:: P031_SHT1X.ino

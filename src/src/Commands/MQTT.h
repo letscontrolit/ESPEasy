@@ -5,8 +5,6 @@
 
 #if FEATURE_MQTT
 
-#include <Arduino.h>
-
 const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event,
                             const char         *Line);
 

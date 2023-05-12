@@ -25,7 +25,7 @@ const uint16_t NextPixelMoveDuration = 1000 / PixelCount; // how fast we move th
 
 NeoGamma<NeoGammaTableMethod> colorGamma; // for any fade animations, best to correct gamma
 
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 // For Esp8266, the Pin is omitted and it uses GPIO3 due to DMA hardware use.  
 // There are other Esp8266 alternative methods that provide more pin options, but also have
 // other side effects.

@@ -38,7 +38,12 @@
  *                        Make 8 and 16 color support optional to squeeze a few bytes from size limited builds
  * 2022-05-23 tonhuisman: Add changelog, older changes have not been logged.
  ***************************************************************************/
-# include <Arduino.h>
+
+# include "../Helpers/Numerical.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../ESPEasyCore/ESPEasy_Log.h"
+
+
 # include <Adafruit_GFX.h>
 # include <Adafruit_SPITFT.h>
 # include <FS.h>
@@ -46,10 +51,6 @@
 
 // Used for bmp support
 # define BUFPIXELS 200 ///< 200 * 5 = 1000 bytes
-
-# include "../Helpers/Numerical.h"
-# include "../Helpers/ESPEasy_Storage.h"
-# include "../ESPEasyCore/ESPEasy_Log.h"
 
 # define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
 # ifndef ADAGFX_ARGUMENT_VALIDATION

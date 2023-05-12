@@ -1519,6 +1519,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
+  #ifndef USES_P112
+    #define USES_P112   // AS7265x 
+  #endif
   #ifndef USES_P122
     #define USES_P122   // SHT2x 
   #endif
@@ -1528,6 +1531,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
+  #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
   #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
@@ -1699,15 +1705,19 @@ To create/register a plugin, you have to :
   #define USES_P005   // DHT
   #define USES_P006   // BMP085
 
+  #define USES_P010   // BH1750
   #define USES_P011   // PME
   #define USES_P012   // LCD
+  #define USES_P013   // HCSR04
   #define USES_P014   // SI7021
+  #define USES_P015   // TSL2561
   #define USES_P018   // Dust
   #define USES_P019   // PCF8574
 
   #define USES_P021   // Level
   #define USES_P023   // OLED
   #define USES_P024   // MLX90614
+  #define USES_P025   // ADS1115
   #define USES_P026   // SysInfo
   #define USES_P028   // BME280
   #define USES_P029   // Output
@@ -1787,6 +1797,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
   #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
@@ -2142,6 +2155,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
   #endif
@@ -2327,6 +2343,17 @@ To create/register a plugin, you have to :
   #define FEATURE_EXT_RTC 0
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
+  #endif
+  #ifndef PLUGIN_NEOPIXEL_COLLECTION
+    #ifdef USES_P041  // Disable NeoPixel specials
+      #undef USES_P041
+    #endif
+    #ifdef USES_P042
+      #undef USES_P042
+    #endif
+    #ifdef USES_P043
+      #undef USES_P043
+    #endif
   #endif
 #endif
 
@@ -2890,5 +2917,19 @@ To create/register a plugin, you have to :
     #define FEATURE_EXTENDED_TASK_VALUE_TYPES  1
   #endif
 #endif
+
+#ifndef FEATURE_SET_WIFI_TX_PWR
+  #ifdef ESP32
+    #if defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+      #define FEATURE_SET_WIFI_TX_PWR   1
+    #else
+      // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+      #define FEATURE_SET_WIFI_TX_PWR   1
+    #endif
+  #elif defined(ESP8266)
+    #define FEATURE_SET_WIFI_TX_PWR   1
+  #endif
+#endif
+
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
