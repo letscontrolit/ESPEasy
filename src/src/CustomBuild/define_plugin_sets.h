@@ -1701,15 +1701,19 @@ To create/register a plugin, you have to :
   #define USES_P005   // DHT
   #define USES_P006   // BMP085
 
+  #define USES_P010   // BH1750
   #define USES_P011   // PME
   #define USES_P012   // LCD
+  #define USES_P013   // HCSR04
   #define USES_P014   // SI7021
+  #define USES_P015   // TSL2561
   #define USES_P018   // Dust
   #define USES_P019   // PCF8574
 
   #define USES_P021   // Level
   #define USES_P023   // OLED
   #define USES_P024   // MLX90614
+  #define USES_P025   // ADS1115
   #define USES_P026   // SysInfo
   #define USES_P028   // BME280
   #define USES_P029   // Output
