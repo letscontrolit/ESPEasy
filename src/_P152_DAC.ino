@@ -20,6 +20,9 @@
 
 #define P152_DAC_VALUE        UserVar[event->BaseVarIndex]
 
+#if !(defined(ESP32_CLASSIC) || defined(ESP32S2))
+# error P152 ESP32 DAC not supported on this CPU type!
+#endif // if !(defined(ESP32_CLASSIC) || defined(ESP32S2))
 
 boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
 {

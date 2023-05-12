@@ -1357,7 +1357,7 @@ To create/register a plugin, you have to :
     #define USES_P073   // 7DGT
     #define USES_P079   // Wemos Motoshield
 
-    #if !defined(USES_P152) && defined(ESP32) && !(defined(ESP32C3) || defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C6) || defined(ESP32H2)) // Only supported on ESP32 and ESP32-S2
+    #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
       #define USES_P152 // ESP32 DAC
     #endif
 #endif
