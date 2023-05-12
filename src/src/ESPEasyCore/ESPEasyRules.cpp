@@ -1086,14 +1086,11 @@ void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seco
     log += wrap_String(tBuf, '"');
     log += F(" --> ");
     if (valid) {
-      if (hours < 10) log += '0';
-      log += hours;
+      log += formatIntLeadingZeroes(hours, 2);
       log += ':';
-      if (minutes < 10) log += '0';
-      log += minutes;
+      log += formatIntLeadingZeroes(minutes, 2);
       log += ':';
-      if (seconds < 10) log += '0';
-      log += seconds;
+      log += formatIntLeadingZeroes(seconds, 2);
     } else {
       log += F("invalid");
     }

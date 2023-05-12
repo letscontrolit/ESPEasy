@@ -148,6 +148,13 @@ bool essentiallyZero(const float& a)
 /*========================================================================*/
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+// Since we already are using the double implementation of those functions, 
+// no need to also add implementation of the float versions of those.
+// The functions are declared in math.h
+// We're simply overriding their toolchain implementation to reduce build size.
+
+
 float powf(const float x, const float y)
 {
   return (float)(pow((double)x, (double)y));
@@ -207,6 +214,15 @@ float sqrtf(const float x)
 
 #else
 
+
+// We only need the float precision when calling these functions.
+// Declaration is in math.h
+// But we're using a trick here to implement them like this, thus not using 
+// the double implementation of those functions.
+//
+// N.B. this is only working because we concatenate the .cpp files in this Helpers directory.
+// So if those functions are called from a .cpp file  outside this folder, it will use the double implementation.
+// All rules related code is in this Helpers folder.
 
 double pow(const double x, const double y)
 {

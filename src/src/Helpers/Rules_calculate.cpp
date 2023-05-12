@@ -148,7 +148,7 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return fabs(first);
     #else
-      return fabs(first);
+      return fabsf(first);
     #endif
     case UnaryOperator::Exp:
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
