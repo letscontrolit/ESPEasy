@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2023-05-12, tonhuisman Update for latest NeoPixelBusFx changes (NeoPixelBusLg class, (S/G)etLuminance method)
 // 2022-07-20, tonhuisman Make FakeTV compile-time optional, disabled by default on ESP8266, enabled by default on ESP32
 //                        P128_ENABLE_FAKETV can be set to 0/1 in Custom.h
 // 2022-07-02, tonhuisman Introduce Max Brightness setting for protecting the hardware and power supply (and the eyes :-))

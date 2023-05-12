@@ -2209,7 +2209,7 @@ const uint8_t PROGMEM ftv_colors[] = {
   0X20, 0XE4, 0X21, 0XA6, 0X29, 0XE7, 0X32, 0X28 };
 # endif // if P128_ENABLE_FAKETV
 
-# include <NeoPixelBrightnessBus.h>
+# include <NeoPixelBusLg.h>
 # include "../../ESPEasy-Globals.h"
 
 # define P128_CONFIG_LED_COUNT  PCONFIG(0)
@@ -2242,7 +2242,7 @@ const uint8_t PROGMEM ftv_colors[] = {
 // # define BRG   //A three element color in the order of Blue, Red, and then Green.
 // # define RBG   //A three element color in the order of Red, Blue, and then Green.
 
-# define NEOPIXEL_LIB NeoPixelBrightnessBus   // Neopixel library type
+# define NEOPIXEL_LIB NeoPixelBusLg           // Neopixel library type
 # if defined(ESP32)
 #  define METHOD NeoEsp32Rmt1800KbpsMethod    // RMT, user selected pin - use NeoEsp32RmtMethod
 # endif // if defined(ESP32)
@@ -2330,9 +2330,9 @@ private:
            rgb_s      = HtmlColor(0xFF0000);
 # endif // if defined(RGBW) || defined(GRBW)
 
-  const int8_t   gpioPin = -1;
+  const int8_t   gpioPin    = -1;
   const uint16_t pixelCount = 0;
-  const uint8_t  maxBright = 0;
+  const uint8_t  maxBright  = 0;
 
   int16_t fadedelay = 20;
 
