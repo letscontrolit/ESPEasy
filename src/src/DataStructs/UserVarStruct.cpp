@@ -156,7 +156,7 @@ void UserVarStruct::setFloat(taskIndex_t taskIndex,
 }
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
-
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 double UserVarStruct::getDouble(taskIndex_t taskIndex,
                                 uint8_t     varNr) const
 {
@@ -174,10 +174,10 @@ void UserVarStruct::setDouble(taskIndex_t taskIndex,
     _data[taskIndex].setDouble(varNr, value);
   }
 }
-
+#endif
 #endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
-double UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
+ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
                                   uint8_t      varNr,
                                   Sensor_VType sensorType) const
 {
@@ -195,7 +195,7 @@ String UserVarStruct::getAsString(taskIndex_t taskIndex, uint8_t varNr, Sensor_V
   return EMPTY_STRING;
 }
 
-void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const double& value, Sensor_VType sensorType)
+void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const ESPEASY_RULES_FLOAT_TYPE& value, Sensor_VType sensorType)
 {
   if (taskIndex < _data.size()) {
     _data[taskIndex].set(varNr, value, sensorType);

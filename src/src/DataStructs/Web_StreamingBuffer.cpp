@@ -48,9 +48,11 @@ Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const float& a)           {
   return addString(toString(a, 2));
 }
 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const double& a)          {
   return addString(doubleToString(a));
 }
+#endif
 
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const String& a)          {
   return addString(a);

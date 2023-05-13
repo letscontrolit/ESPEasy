@@ -116,7 +116,7 @@ String ControllerSettingsStruct::getHost() const {
   if (UseDNS) {
     return HostName;
   }
-  return getIP().toString();
+  return formatIP(getIP());
 }
 
 void ControllerSettingsStruct::setHostname(const String& controllerhostname) {

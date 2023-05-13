@@ -16,6 +16,7 @@
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
@@ -96,7 +97,7 @@ void handle_advanced() {
 #ifdef SUPPORT_ARP
     Settings.gratuitousARP(isFormItemChecked(LabelType::PERIODICAL_GRAT_ARP));
 #endif // ifdef SUPPORT_ARP
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     Settings.setWiFi_TX_power(getFormItemFloat(LabelType::WIFI_TX_MAX_PWR));
     Settings.WiFi_sensitivity_margin = getFormItemInt(LabelType::WIFI_SENS_MARGIN);
     Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
@@ -302,11 +303,12 @@ void handle_advanced() {
 #endif // ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
   {
     float maxTXpwr;
-    float threshold = GetRSSIthreshold(maxTXpwr);
-    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, 20.5f, 2, 0.25f);
+    float sensitivity = GetRSSIthreshold(maxTXpwr);
+    
+    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, MAX_TX_PWR_DBM_11b, 2, 0.25f);
     addUnit(F("dBm"));
     String note;
     note = F("Current max: ");
@@ -316,8 +318,8 @@ void handle_advanced() {
 
     addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
     addUnit(F("dB")); // Relative, thus the unit is dB, not dBm
-    note = F("Adjust TX power to target the AP with (threshold + margin) dBm signal strength. Current threshold: ");
-    note += toString(threshold, 2);
+    note = F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: ");
+    note += toString(sensitivity, 2);
     note += F(" dBm");
     addFormNote(note);
   }

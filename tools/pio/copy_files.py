@@ -24,7 +24,7 @@ def get_max_bin_size(env_name, file_suffix):
         if "factory" in file_suffix:
             # Factory bin files include a part which is not overwritten via OTA
             max_bin_size = max_bin_size + 65536
-    if "_ESP32_" in env_name or "_ESP32s2_" in env_name:
+    if "_ESP32_" in env_name or "_ESP32c3_" in env_name or "_ESP32s2_" in env_name or "_ESP32s3_" in env_name:
         if "_16M8M" in env_name or "_16M2M" in env_name or "_16M1M" in env_name:
             # ESP32 with 4096k of sketch space.
             max_bin_size = 4194304
@@ -69,21 +69,30 @@ def copy_to_build_output(sourcedir, variant, file_suffix):
 def generate_webflash_json_manifest(variant, file_suffix):
     chipFamily = 'NotSet'
     manifest_suff = ''
-    add_improve = True
+    add_improv = True
 
     if ".factory.bin" in file_suffix:
-        if 'ESP32s2' in variant:
-            chipFamily = 'ESP32-S2'
+        if 'ESP32' in variant:
             manifest_suff = '.factory.manifest.json'
-        else:
-            if 'ESP32' in variant:
+            if 'ESP32s2' in variant:
+                chipFamily = 'ESP32-S2'
+            elif 'ESP32s3' in variant:
+                chipFamily = 'ESP32-S3'
+            elif 'ESP32c2' in variant:
+                chipFamily = 'ESP32-C2'
+            elif 'ESP32c3' in variant:
+                chipFamily = 'ESP32-C3'
+            elif 'ESP32c6' in variant:
+                chipFamily = 'ESP32-C6'
+            elif 'ESP32h2' in variant:
+                chipFamily = 'ESP32-H2'
+            else:
                 chipFamily = 'ESP32'
-                manifest_suff = '.factory.manifest.json'
     else:
         if ".bin" in file_suffix and ".gz" not in file_suffix and 'ESP32' not in variant:
             chipFamily = 'ESP8266'
             manifest_suff = '.manifest.json'
-            add_improve = False
+            add_improv = False
     if 'NotSet' not in chipFamily:
         json_path = "{}json{}".format(OUTPUT_DIR, os.path.sep) 
 
@@ -91,11 +100,18 @@ def generate_webflash_json_manifest(variant, file_suffix):
         manifest_file = "{}{}".format(variant, manifest_suff)
         out_file = "{}{}".format(json_path, manifest_file)
 
+        variant_split = variant.split('_')
+        # E.g. ['ESP', 'Easy', 'mega', '20230508', 'max', 'ESP32s3', '16M8M', 'LittleFS', 'PSRAM']
+        version = variant_split.pop(3)
+        del variant_split[2] # Remove 'mega'
+        name = ' '.join(variant_split)
+
         manifest = {}
-        manifest['name'] = bin_file
+        manifest['name'] = name
+        manifest['version'] = version
         manifest['new_install_prompt_erase'] = True
         parts = dict([('path', bin_file), ('offset', 0)])
-        if add_improve:
+        if add_improv:
             builds = dict([('chipFamily', chipFamily), ('improv', False), ('parts', [parts])])
         else:
             builds = dict([('chipFamily', chipFamily), ('parts', [parts])])

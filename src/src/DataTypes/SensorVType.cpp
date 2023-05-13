@@ -18,7 +18,7 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
     case Sensor_VType::SENSOR_TYPE_INT32_SINGLE:  // 1x int32_t
     case Sensor_VType::SENSOR_TYPE_UINT64_SINGLE: // 1x uint64_t
     case Sensor_VType::SENSOR_TYPE_INT64_SINGLE:  // 1x int64_t
-    case Sensor_VType::SENSOR_TYPE_DOUBLE_SINGLE: // 1x double
+    case Sensor_VType::SENSOR_TYPE_DOUBLE_SINGLE: // 1x ESPEASY_RULES_FLOAT_TYPE
 #endif
     case Sensor_VType::SENSOR_TYPE_SWITCH:
     case Sensor_VType::SENSOR_TYPE_DIMMER:
@@ -33,7 +33,7 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
     case Sensor_VType::SENSOR_TYPE_INT32_DUAL:    // 2x int32_t
     case Sensor_VType::SENSOR_TYPE_UINT64_DUAL:   // 2x uint64_t
     case Sensor_VType::SENSOR_TYPE_INT64_DUAL:    // 2x int64_t
-    case Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL:   // 2x double
+    case Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL:   // 2x ESPEASY_RULES_FLOAT_TYPE
 #endif
       return 2;
     case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:

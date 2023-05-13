@@ -424,8 +424,8 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
   return true;
 }
 
-bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, double& result) {
-  double farg1;
+bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, ESPEASY_RULES_FLOAT_TYPE& result) {
+  ESPEASY_RULES_FLOAT_TYPE farg1;
   float  farg2, farg3 = 0.0f;
 
   if (!validDoubleFromString(arg1, farg1)) {
@@ -486,7 +486,7 @@ void parse_string_commands(String& line) {
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
       uint64_t iarg1, iarg2 = 0;
-      double   fresult = 0.0;
+      ESPEASY_RULES_FLOAT_TYPE fresult{};
       int64_t  iresult = 0;
       int startpos, endpos = -1;
       const bool arg1valid = validIntFromString(arg1, startpos);
@@ -494,7 +494,11 @@ void parse_string_commands(String& line) {
 
       if (parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         const bool trimTrailingZeros = true;
-        replacement = doubleToString(fresult, maxNrDecimals_double(fresult), trimTrailingZeros);
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        replacement = doubleToString(fresult, maxNrDecimals_fpType(fresult), trimTrailingZeros);
+        #else
+        replacement = floatToString(fresult, maxNrDecimals_fpType(fresult), trimTrailingZeros);
+        #endif
       } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
         replacement = ull2String(iresult);
       } else {
@@ -1081,14 +1085,11 @@ void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seco
     log += wrap_String(tBuf, '"');
     log += F(" --> ");
     if (valid) {
-      if (hours < 10) log += '0';
-      log += hours;
+      log += formatIntLeadingZeroes(hours, 2);
       log += ':';
-      if (minutes < 10) log += '0';
-      log += minutes;
+      log += formatIntLeadingZeroes(minutes, 2);
       log += ':';
-      if (seconds < 10) log += '0';
-      log += seconds;
+      log += formatIntLeadingZeroes(seconds, 2);
     } else {
       log += F("invalid");
     }
@@ -1208,8 +1209,8 @@ bool conditionMatch(const String& check) {
 
   tmpCheck1.trim();
   tmpCheck2.trim();
-  double Value1 = 0;
-  double Value2 = 0;
+  ESPEASY_RULES_FLOAT_TYPE Value1{};
+  ESPEASY_RULES_FLOAT_TYPE Value2{};
 
   int  timeInSec1 = 0;
   int  timeInSec2 = 0;
@@ -1266,9 +1267,19 @@ bool conditionMatch(const String& check) {
 
     log += '(';
     const bool trimTrailingZeros = true;
-    log += compareTimes ? String(timeInSec1) : doubleToString(Value1, 6, trimTrailingZeros);
+    log += compareTimes ? String(timeInSec1) : 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    doubleToString(Value1, 6, trimTrailingZeros);
+#else
+    floatToString(Value1, 6, trimTrailingZeros);
+#endif
     log += wrap_String(check.substring(posStart, posEnd), ' '); // Compare
-    log += compareTimes ? String(timeInSec2) : doubleToString(Value2, 6, trimTrailingZeros);
+    log += compareTimes ? String(timeInSec2) : 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    doubleToString(Value2, 6, trimTrailingZeros);
+#else
+    floatToString(Value2, 6, trimTrailingZeros);
+#endif    
     log += ')';
     addLogMove(LOG_LEVEL_DEBUG, log);
   }

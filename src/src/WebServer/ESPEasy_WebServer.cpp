@@ -167,7 +167,7 @@ bool captivePortal() {
   }
   if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
     String redirectURL = F("http://");
-    redirectURL += web_server.client().localIP().toString();
+    redirectURL += formatIP(web_server.client().localIP());
     #ifdef WEBSERVER_SETUP
     if (fromAP && !hasWiFiCredentials) {
       redirectURL += F("/setup");

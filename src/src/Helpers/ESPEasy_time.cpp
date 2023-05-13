@@ -263,14 +263,18 @@ unsigned long ESPEasy_time::now() {
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Time set to ");
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
         log += doubleToString(unixTime_d, 3);
+        #else
+        log += static_cast<uint32_t>(unixTime_d);
+        #endif
 
         if ((-86400 < time_offset) && (time_offset < 86400)) {
           // Only useful to show adjustment if it is less than a day.
           log += F(" Time adjusted by ");
-          log += doubleToString(time_offset * 1000.0);
+          log += static_cast<uint32_t>(time_offset * 1000.0);
           log += F(" msec. Wander: ");
-          log += doubleToString(timeWander, 1);
+          log += floatToString(timeWander, 1);
           log += F(" ppm");
           log += F(" Source: ");
           log += toString(timeSource);
@@ -394,7 +398,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   }
 
   log += F(" (");
-  log += timeServerIP.toString();
+  log += formatIP(timeServerIP);
   log += ')';
 
   if (!hostReachable(timeServerIP)) {
@@ -456,7 +460,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         // See: https://github.com/letscontrolit/ESPEasy/issues/2886#issuecomment-586656384
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("NTP  : NTP host (");
-          log += timeServerIP.toString();
+          log += formatIP(timeServerIP);
           log += F(") unsynchronized");
           addLogMove(LOG_LEVEL_ERROR, log);
         }
@@ -528,8 +532,8 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // We gained more than 1 second in accuracy
           fractpart += 1.0;
         }
-        log += doubleToString(fractpart, 3);
-        log += F(" seconds");
+        log += static_cast<int>(fractpart * 1000.0);
+        log += F(" msec");
         addLogMove(LOG_LEVEL_INFO, log);
       }
       udp.stop();

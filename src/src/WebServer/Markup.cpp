@@ -11,6 +11,7 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringConverter_Numerical.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../../ESPEasy_common.h"
@@ -308,6 +309,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           break;
 
         case PinSelectPurpose::Generic_output:
+        case PinSelectPurpose::DAC:
 
           if (!output) {
             return;
@@ -331,7 +333,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
         disabled = true;
       }
 
-      if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+      if (isSerialConsolePin(gpio)) {
         disabled = true;
       }
 
@@ -896,20 +898,16 @@ void addHelpButton(const String& url, bool isRTD)
   #endif // ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 }
 
-void addRTDPluginButton(pluginID_t taskDeviceNumber) {
+void addRTDPluginButton(pluginID_t pluginID) {
   String url;
 
   url.reserve(16);
-  url = F("Plugin/P");
-
-  if (taskDeviceNumber < 100) { url += '0'; }
-
-  if (taskDeviceNumber < 10) { url += '0'; }
-  url += String(taskDeviceNumber);
+  url = F("Plugin/");
+  url += get_formatted_Plugin_number(pluginID);
   url += F(".html");
   addRTDHelpButton(url);
 
-  if ((taskDeviceNumber == 76) || (taskDeviceNumber == 77)) {
+  if ((pluginID == 76) || (pluginID == 77)) {
     addHtmlLink(
       F("button help"),
       makeDocLink(F("Reference/Safety.html"), true),
@@ -918,16 +916,12 @@ void addRTDPluginButton(pluginID_t taskDeviceNumber) {
 }
 
 # ifndef LIMIT_BUILD_SIZE
-void addRTDControllerButton(protocolIndex_t protocolIndex) {
+void addRTDControllerButton(cpluginID_t cpluginID) {
   String url;
 
   url.reserve(20);
-  url = F("Controller/C");
-
-  if (protocolIndex < 100) { url += '0'; }
-
-  if (protocolIndex < 10) { url += '0'; }
-  url += String(protocolIndex);
+  url = F("Controller/");
+  url += get_formatted_Controller_number(cpluginID);
   url += F(".html");
   addRTDHelpButton(url);
 }
@@ -1035,6 +1029,46 @@ void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice
       }
     }
     ++i;
+  }
+  addSelector_Foot();
+}
+
+void addDAC_PinSelect(const String& id,  int choice)
+{
+  addSelector_Head(id);
+
+  // At i == 0 && gpio == -1, add the "- None -" option first
+  int i    = 0;
+  int gpio = -1;
+
+  while (gpio <= MAX_GPIO) {
+    int  pinnr   = -1;
+    bool input   = false;
+    bool output  = false;
+    bool warning = false;
+    int  dac     = 0;
+
+    // Make sure getGpioInfo is called (compiler may optimize it away if (i == 0))
+    const bool UsableGPIO = getDAC_gpio_info(gpio, dac); // getGpioInfo(gpio, pinnr, input, output, warning);
+
+    if (UsableGPIO || (i == 0)) {
+      if (getGpioInfo(gpio, pinnr, input, output, warning) || (i == 0)) {
+        String gpio_label = formatGpioName_DAC(gpio);
+
+        if (dac != 0) {
+          gpio_label += F(" / ");
+          gpio_label += createGPIO_label(gpio, pinnr, input, output, warning);
+          gpio_label += getConflictingUse_wrapped(gpio, PinSelectPurpose::DAC);
+        }
+        addPinSelector_Item(
+          PinSelectPurpose::DAC,
+          gpio_label,
+          gpio,
+          choice == gpio);
+      }
+      ++i;
+    }
+    ++gpio;
   }
   addSelector_Foot();
 }
