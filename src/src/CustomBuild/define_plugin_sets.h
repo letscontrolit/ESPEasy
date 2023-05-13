@@ -337,6 +337,7 @@ To create/register a plugin, you have to :
   #if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
     #define LIMIT_BUILD_SIZE
   #endif
+
   #ifndef FEATURE_I2CMULTIPLEXER
     #define FEATURE_I2CMULTIPLEXER  1
   #endif
@@ -1355,6 +1356,10 @@ To create/register a plugin, you have to :
     #define USES_P063   // TTP229_KeyPad
     #define USES_P073   // 7DGT
     #define USES_P079   // Wemos Motoshield
+
+    #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
+      #define USES_P152 // ESP32 DAC
+    #endif
 #endif
 
 
@@ -1530,6 +1535,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
+  #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
   #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
@@ -1793,6 +1801,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+  #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
   #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
@@ -2148,11 +2159,17 @@ To create/register a plugin, you have to :
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #if !defined(USES_P152) && defined(ESP32) && !(defined(ESP32C3) || defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C6) || defined(ESP32H2)) // Only supported on ESP32 and ESP32-S2
+    #define USES_P152   // ESP32 DAC
   #endif
 
   // Controllers
@@ -2922,6 +2939,26 @@ To create/register a plugin, you have to :
   #elif defined(ESP8266)
     #define FEATURE_SET_WIFI_TX_PWR   1
   #endif
+#endif
+
+
+#ifndef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
+    #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0
+  #else
+    #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 1
+  #endif
+#endif
+
+// ESPEASY_RULES_FLOAT_TYPE should be either double (default) or float.
+// It is solely based on FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+#ifdef ESPEASY_RULES_FLOAT_TYPE
+  #undef ESPEASY_RULES_FLOAT_TYPE
+#endif
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  #define ESPEASY_RULES_FLOAT_TYPE double
+#else
+  #define ESPEASY_RULES_FLOAT_TYPE float
 #endif
 
 

@@ -2122,6 +2122,28 @@ int touchPinToGpio(int touch_pin)
   return -1;
 }
 
+// Get DAC related info for a given GPIO pin
+// @param gpio_pin   GPIO pin number
+// @param dac        Number of DAC unit
+bool getDAC_gpio_info(int gpio_pin, int& dac)
+{
+  switch (gpio_pin) {
+    # if (defined(ESP32C3) || defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C6) || defined(ESP32H2))
+
+    // ESP32-C3, ESP32-S3, ESP32-C2, ESP32-C6 and ESP32-H2 don't have a DAC onboard
+    # elif defined(ESP32S2)
+    case 17: dac = 1; break;
+    case 18: dac = 2; break;
+    # else // regular ESP32
+    case 25: dac = 1; break;
+    case 26: dac = 2; break;
+    # endif // 
+    default:
+      return false;
+  }
+  return true;
+}
+
 #endif // ifdef ESP32
 
 // ********************************************************************************

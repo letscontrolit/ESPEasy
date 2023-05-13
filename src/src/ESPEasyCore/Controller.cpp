@@ -833,7 +833,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
             // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
             formula.replace(F("%pvalue%"), preValue[varNr]);
             formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
-            double result = 0;
+            ESPEASY_RULES_FLOAT_TYPE result{};
 
             if (!isError(Calculate(parseTemplate(formula), result))) {
               UserVar.set(event->TaskIndex, varNr, result, TempEvent.sensorType);

@@ -426,7 +426,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           }
           activeFix = curFixStatus;
         }
-        double distance = 0.0;
+        ESPEASY_RULES_FLOAT_TYPE distance{};
 
         if (curFixStatus) {
           if (P082_data->gps->location.isUpdated()) {
@@ -482,12 +482,12 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
           if (P082_DISTANCE > 0) {
             // Check travelled distance.
-            if ((distance > static_cast<double>(P082_DISTANCE)) || (distance < 0.0)) {
+            if ((distance > static_cast<ESPEASY_RULES_FLOAT_TYPE>(P082_DISTANCE)) || (distance < 0)) {
               if (P082_data->storeCurPos(P082_TIMEOUT)) {
                 distance_passed = true;
 
                 // Add sanity check for distance travelled
-                if (distance > static_cast<double>(P082_DISTANCE)) {
+                if (distance > static_cast<ESPEASY_RULES_FLOAT_TYPE>(P082_DISTANCE)) {
                   if (Settings.UseRules) {
                     String eventString = F("GPS#travelled=");
                     eventString += distance;
@@ -813,8 +813,8 @@ void P082_setSystemTime(struct EventStruct *event) {
     if (updated) {
       // Use floating point precision to use the time since last update from GPS
       // and the given offset in centisecond.
-      double time = makeTime(dateTime);
-      time += static_cast<double>(age) / 1000.0;
+      ESPEASY_RULES_FLOAT_TYPE time = makeTime(dateTime);
+      time += (static_cast<ESPEASY_RULES_FLOAT_TYPE>(age) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1000));
       node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
       P082_data->_last_setSystemTime = millis();
     }
