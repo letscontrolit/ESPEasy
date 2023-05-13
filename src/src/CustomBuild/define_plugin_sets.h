@@ -2938,20 +2938,24 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifndef ESPEASY_RULES_FLOAT_TYPE
+
+#ifndef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
-    #ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-      #undef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-    #endif
     #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0
-    #define ESPEASY_RULES_FLOAT_TYPE float
   #else
-    #ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-      #undef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-    #endif
     #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 1
-    #define ESPEASY_RULES_FLOAT_TYPE double
   #endif
+#endif
+
+// ESPEASY_RULES_FLOAT_TYPE should be either double (default) or float.
+// It is solely based on FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+#ifdef ESPEASY_RULES_FLOAT_TYPE
+  #undef ESPEASY_RULES_FLOAT_TYPE
+#endif
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  #define ESPEASY_RULES_FLOAT_TYPE double
+#else
+  #define ESPEASY_RULES_FLOAT_TYPE float
 #endif
 
 
