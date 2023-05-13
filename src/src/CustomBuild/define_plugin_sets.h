@@ -2918,7 +2918,7 @@ To create/register a plugin, you have to :
 // Extra task value types, typically used in Dummy tasks.
 // For example 32-bit, 64-bit ints and doubles.
 #ifndef FEATURE_EXTENDED_TASK_VALUE_TYPES
-  #ifdef LIMIT_BUILD_SIZE
+  #ifdef ESP8266_1M
     #define FEATURE_EXTENDED_TASK_VALUE_TYPES  0
   #else
     #define FEATURE_EXTENDED_TASK_VALUE_TYPES  1

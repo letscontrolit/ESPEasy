@@ -97,8 +97,8 @@ bool validUInt64FromString(const String& tBuf, uint64_t& result) {
 
 bool validFloatFromString(const String& tBuf, float& result) {
   // DO not call validDoubleFromString and then cast to float.
-  // Working with ESPEASY_RULES_FLOAT_TYPE values is quite CPU intensive as it must be done in software
-  // since the ESP does not have large enough registers for handling ESPEASY_RULES_FLOAT_TYPE values in hardware.
+  // Working with double values is quite CPU intensive as it must be done in software
+  // since the ESP does not have large enough registers for handling double values in hardware.
   NumericalType detectedType;
   const String  numerical = getNumerical(tBuf, NumericalType::FloatingPoint, detectedType);
 
