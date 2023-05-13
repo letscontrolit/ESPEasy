@@ -10,6 +10,7 @@
 #include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter_Numerical.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../../ESPEasy_common.h"
@@ -889,20 +890,16 @@ void addHelpButton(const String& url, bool isRTD)
   #endif // ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 }
 
-void addRTDPluginButton(pluginID_t taskDeviceNumber) {
+void addRTDPluginButton(pluginID_t pluginID) {
   String url;
 
   url.reserve(16);
-  url = F("Plugin/P");
-
-  if (taskDeviceNumber < 100) { url += '0'; }
-
-  if (taskDeviceNumber < 10) { url += '0'; }
-  url += String(taskDeviceNumber);
+  url = F("Plugin/");
+  url += get_formatted_Plugin_number(pluginID);
   url += F(".html");
   addRTDHelpButton(url);
 
-  if ((taskDeviceNumber == 76) || (taskDeviceNumber == 77)) {
+  if ((pluginID == 76) || (pluginID == 77)) {
     addHtmlLink(
       F("button help"),
       makeDocLink(F("Reference/Safety.html"), true),
@@ -911,16 +908,12 @@ void addRTDPluginButton(pluginID_t taskDeviceNumber) {
 }
 
 # ifndef LIMIT_BUILD_SIZE
-void addRTDControllerButton(protocolIndex_t protocolIndex) {
+void addRTDControllerButton(cpluginID_t cpluginID) {
   String url;
 
   url.reserve(20);
-  url = F("Controller/C");
-
-  if (protocolIndex < 100) { url += '0'; }
-
-  if (protocolIndex < 10) { url += '0'; }
-  url += String(protocolIndex);
+  url = F("Controller/");
+  url += get_formatted_Controller_number(cpluginID);
   url += F(".html");
   addRTDHelpButton(url);
 }

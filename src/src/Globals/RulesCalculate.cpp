@@ -17,7 +17,7 @@ int CalculateParam(const String& TmpStr) {
   if (TmpStr[0] != '=') {
     validIntFromString(TmpStr, returnValue);
   } else {
-    double param = 0;
+    ESPEASY_RULES_FLOAT_TYPE param{};
 
     // Starts with an '=', so Calculate starting at next position
     CalculateReturnCode returnCode = Calculate(TmpStr.substring(1), param);
@@ -40,7 +40,7 @@ int CalculateParam(const String& TmpStr) {
 }
 
 CalculateReturnCode Calculate(const String& input,
-                              double      & result)
+                              ESPEASY_RULES_FLOAT_TYPE      & result)
 {
   START_TIMER;
   CalculateReturnCode returnCode = RulesCalculate.doCalculate(
@@ -78,7 +78,11 @@ CalculateReturnCode Calculate(const String& input,
       log += F(" = ");
 
       const bool trimTrailingZeros = true;
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       log += doubleToString(result, 6, trimTrailingZeros);
+#else
+      log += floatToString(result, 6, trimTrailingZeros);
+#endif
       #endif // ifndef BUILD_NO_DEBUG
 
       addLogMove(LOG_LEVEL_ERROR, log);
