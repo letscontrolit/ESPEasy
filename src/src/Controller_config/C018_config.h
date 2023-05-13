@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_CONFIG_C018_CONFIG_H
 #define CONTROLLER_CONFIG_C018_CONFIG_H
 
-#include "src/Helpers/_CPlugin_Helper.h"
+#include "../../src/Helpers/_CPlugin_Helper.h"
 
 #ifdef USES_C018
 
