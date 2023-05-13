@@ -2,7 +2,7 @@
 #define HELPERS_MODBUS_RTU_H
 
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 #include <ESPeasySerial.h>
 
 

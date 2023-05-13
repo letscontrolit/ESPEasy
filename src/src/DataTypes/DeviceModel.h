@@ -5,7 +5,7 @@
   Pre defined settings for off-the-shelf hardware
   \*********************************************************************************************/
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 // This enum will be stored, so do not change order or at least the values.
 enum class DeviceModel : uint8_t {

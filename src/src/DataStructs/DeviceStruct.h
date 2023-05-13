@@ -2,7 +2,8 @@
 #define DATASTRUCTS_DEVICESTRUCTS_H
 
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
+
 #include <vector>
 
 #include "../DataTypes/SensorVType.h"

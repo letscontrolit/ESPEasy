@@ -6,10 +6,28 @@
 // There is serial output of the current state so you can confirm and follow along
 //
 
+//
+// ESP32 SPI Buses and up to how many bits they support:
+// ESP32:       Spi1 (4 bit) | Spi2 (4 bit) | Spi3 (4 bit)
+// ESP32-S2:                 | Spi2 (8 bit) | Spi3
+// ESP32-S3:                 | Spi2 (8 bit) | Spi3 (4 bit)
+// ESP32-C3:                 | Spi2 (4 bit) |
+// 
+// If a DotStarEsp32DmaSpi method is used without specifying the bus number
+// then Spi2 will be used by default
+// 
+// In this demo if an alternate SPI bus is chosen then Spi3 will be used
+
 #include <NeoPixelBus.h>
 
 #define USE_DEFAULT_SPI_PORT 1
+
+// C3 only has a single Spi bus
+#if CONFIG_IDF_TARGET_ESP32C3
+#define USE_ALTERNATE_SPI_PORT 0
+#else
 #define USE_ALTERNATE_SPI_PORT 1
+#endif 
 
 #if (USE_DEFAULT_SPI_PORT == 1)
     const uint16_t PixelCount = 4; // this example assumes 4 pixels, making it smaller will cause a failure
@@ -26,7 +44,7 @@
     //NeoPixelBus<DotStarBgrFeature, DotStarMethod> strip(PixelCount, DotClockPin, DotDataPin);
 
     // for hardware SPI (best performance) with default SPI peripheral 
-    NeoPixelBus<DotStarBgrFeature, DotStarEsp32DmaVspiMethod> strip(PixelCount);
+    NeoPixelBus<DotStarBgrFeature, DotStarEsp32DmaSpiMethod> strip(PixelCount);
 
     // DotStarEsp32DmaVspiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarSpi2MhzMethod" (see wiki for more details)
     // See DotStarTest_Esp32Advanced example for how to set clock speed at runtime
@@ -44,14 +62,14 @@
     const int8_t DotChipSelectPin2 = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins2=false
 
     // for hardware SPI (best performance) with alternate SPI peripheral
-    NeoPixelBus<DotStarBgrFeature, DotStarEsp32DmaHspiMethod> strip2(PixelCount2);
+    NeoPixelBus<DotStarBgrFeature, DotStarEsp32DmaSpi3Method> strip2(PixelCount2);
 
     // DotStarEsp32DmaHspiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarHspi2MhzMethod" (see wiki for more details)
 #endif
 
 #define colorSaturation 128
 
-// Note that both DotStarEsp32DmaVspiMethod and DotStarEsp32DmaHspiMethod can be used with DotStarLbgrFeature and DotStarWbgrFeature but to keep things simple those are excluded from this example, see DotStarTest for more details
+// Note that both DotStarEsp32DmaSpiMethod and DotStarEsp32DmaSpi1Method can be used with DotStarLbgrFeature and DotStarWbgrFeature but to keep things simple those are excluded from this example, see DotStarTest for more details
 
 RgbColor red(colorSaturation, 0, 0);
 RgbColor green(0, colorSaturation, 0);

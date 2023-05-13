@@ -5,7 +5,6 @@
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
-#include <Arduino.h>
 
 
 struct EventStruct;

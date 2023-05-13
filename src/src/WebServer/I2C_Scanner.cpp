@@ -12,6 +12,7 @@
 #include "../Helpers/StringConverter.h"
 
 
+#include <Wire.h>
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -292,6 +293,8 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x58:
       result +=  F("SGP30");
+    case 0x59:
+      result +=  F("SGP4x");
       break;
     case 0x5A:
       result +=  F("MLX90614,MPR121,CCS811");

@@ -6,7 +6,7 @@
 
 #include "../DataStructs/WiFiEventData.h"
 
-#include <Arduino.h>
+
 #include <IPAddress.h>
 #include <stdint.h>
 

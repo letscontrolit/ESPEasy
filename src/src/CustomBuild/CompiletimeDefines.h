@@ -1,7 +1,11 @@
 #ifndef CUSTOMBUILD_COMPILETIMEDEFINES_H
 #define CUSTOMBUILD_COMPILETIMEDEFINES_H
 
+
 #include <Arduino.h>
+#ifdef ESP8266
+#undef round //see https://github.com/esp8266/Arduino/issues/5787#issuecomment-465852231
+#endif
 
 
 // Build NR is used as a "revision" nr for settings
