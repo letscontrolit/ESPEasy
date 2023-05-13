@@ -345,6 +345,8 @@ enum class AdcPinSelectPurpose {
 void addADC_PinSelect(AdcPinSelectPurpose purpose,
                       const String      & id,
                       int                 choice);
+void addDAC_PinSelect(const String& id,  
+                      int           choice);
 #endif // ifdef ESP32
 
 
