@@ -29,20 +29,6 @@
 /*                          PRIVATE FUNCTIONS                             */
 /*========================================================================*/
 
-/**************************************************************************/
-/*!
- *  @brief  Implements missing powf function
- *  @param  x
- *          Base number
- *  @param  y
- *          Exponent
- *  @return x raised to the power of y
-*/
-/**************************************************************************/
-float powf(const float x, const float y)
-{
-  return (float)(pow((double)x, (double)y));
-}
 
 /**************************************************************************/
 /*!

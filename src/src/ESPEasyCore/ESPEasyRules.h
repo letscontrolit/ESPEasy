@@ -61,7 +61,7 @@ bool parse_math_functions(const String& cmd_s_lower,
                           const String& arg1,
                           const String& arg2,
                           const String& arg3,
-                          double      & result);
+                          ESPEASY_RULES_FLOAT_TYPE      & result);
 
 void parse_string_commands(String& line);
 

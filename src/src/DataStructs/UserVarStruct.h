@@ -65,16 +65,17 @@ struct UserVarStruct {
                  float       value);
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
-
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   // Double stored at the memory location of the float
   double getDouble(taskIndex_t taskIndex,
                    uint8_t     varNr) const;
   void   setDouble(taskIndex_t taskIndex,
                    uint8_t     varNr,
                    double      value);
+#endif
 #endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
-  double getAsDouble(taskIndex_t  taskIndex,
+  ESPEASY_RULES_FLOAT_TYPE getAsDouble(taskIndex_t  taskIndex,
                      uint8_t      varNr,
                      Sensor_VType sensorType) const;
 
@@ -86,7 +87,7 @@ struct UserVarStruct {
 
   void set(taskIndex_t   taskIndex,
            uint8_t       varNr,
-           const double& value,
+           const ESPEASY_RULES_FLOAT_TYPE& value,
            Sensor_VType  sensorType);
 
   bool isValid(taskIndex_t  taskIndex,

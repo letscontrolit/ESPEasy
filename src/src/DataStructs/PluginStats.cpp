@@ -304,7 +304,7 @@ bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include
 void PluginStats::webformLoad_show_val(
   struct EventStruct *event,
   const String      & label,
-  double              value,
+  ESPEASY_RULES_FLOAT_TYPE value,
   const String      & unit) const
 {
   addRowLabel(getLabel() + label);
