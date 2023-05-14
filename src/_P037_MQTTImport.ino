@@ -583,7 +583,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
               bool numericPayload = true; // Unless it's not
 
               if (!checkJson || (checkJson && (!key.isEmpty()))) {
-                double doublePayload;
+                ESPEASY_RULES_FLOAT_TYPE doublePayload{};
 
                 if (!validDoubleFromString(Payload, doublePayload)) {
                   if (!checkJson && (P037_SEND_EVENTS == 0)) { // If we want all values as events, then no error logged and don't stop here

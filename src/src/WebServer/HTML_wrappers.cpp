@@ -413,9 +413,11 @@ void addHtmlFloat(const float& value, unsigned int nrDecimals) {
   addHtml(toString(value, nrDecimals));
 }
 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 void addHtmlFloat(const double& value, unsigned int nrDecimals) {
   addHtml(doubleToString(value, nrDecimals));
 }
+#endif
 
 
 void addEncodedHtml(const __FlashStringHelper * html) {

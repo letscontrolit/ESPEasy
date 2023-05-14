@@ -250,7 +250,7 @@ bool P082_data_struct::storeCurPos(unsigned int maxAge_msec) {
 
 // Return the distance in meters compared to last stored position.
 // @retval  -1 when no fix.
-double P082_data_struct::distanceSinceLast(unsigned int maxAge_msec) {
+ESPEASY_RULES_FLOAT_TYPE P082_data_struct::distanceSinceLast(unsigned int maxAge_msec) {
   if (!hasFix(maxAge_msec)) {
     return -1.0;
   }
@@ -451,8 +451,8 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
     }
 
     bool   show_custom = false;
-    double dist_p2p    = 0.0;
-    double dist_stddev = 0.0;
+    ESPEASY_RULES_FLOAT_TYPE dist_p2p{};
+    ESPEASY_RULES_FLOAT_TYPE dist_stddev{};
 
     if (gps != nullptr) {
       switch (query_type) {

@@ -1260,10 +1260,7 @@ bool getGPIOPinStateValues(String& str) {
           if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID)) { // Valid plugin ID?
             pluginID  = plugin;
             #ifndef BUILD_NO_DEBUG
-            logPrefix = F("P");
-            if (pluginID < 100) { logPrefix += '0'; }
-            if (pluginID < 10)  { logPrefix += '0'; }
-            logPrefix += pluginID;
+            logPrefix = get_formatted_Plugin_number(pluginID);
             #endif
           } else 
           #endif // if FEATURE_PINSTATE_EXTENDED
