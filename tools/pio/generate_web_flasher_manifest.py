@@ -154,6 +154,9 @@ def parse_filename(file, version, variant, file_suffix):
                     specials.append('VCC')
                 if '_ETH' in variant:
                     specials.append('ETH')
+                if 'solo1' in variant:
+                    specials.append('Solo1')
+
 
                 for sp in specials:
                     sub_group_spit.append(sp)
@@ -174,6 +177,11 @@ def parse_filename(file, version, variant, file_suffix):
                 main_group = 'Custom'
         if 'hard_' in variant:
             main_group = 'Device Specific'
+
+        if 'solo1' in variant:
+            # Web flasher cannot detect whether it is an ESP32-classic or ESP32-solo1
+            # Thus make a separate group for the solo1
+            main_group = '4M Flash ESP32-solo1'
 
     if ".factory.bin" in file_suffix or 'ESP32' not in file:
         #print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
@@ -244,6 +252,7 @@ def generate_manifest_files(bin_folder, output_prefix):
     # the main grouping in the combo box on the web flasher page
     main_group_list = [
         '4M Flash',
+        '4M Flash ESP32-solo1',
         '16M Flash',
         '2M Flash',
         '1M Flash',

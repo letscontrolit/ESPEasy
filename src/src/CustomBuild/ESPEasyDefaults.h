@@ -92,7 +92,16 @@
 #define DEFAULT_WIFI_RESTART_WIFI_CONN_LOST  false // Perform wifi off and on when connection was lost.
 #endif
 #ifndef DEFAULT_ECO_MODE
+#ifdef CORE32SOLO1
+// ESP32-solo1 will be the "go to build" for unknown devices.
+// So best to use the CPU frequency reported by the ESP's e-fuses.
+// When enabling eco power mode, the max. CPU frequency is set to the frequency read from these efuses.
+// Also, if a vendor really needs to cut the last cent from the BOM by picking the solo1, what else might be done to cut costs?
+// Wouldn't be surprised if the power supply of those units isn't that good.
+#define DEFAULT_ECO_MODE                 true   // When set, make idle calls between executing tasks.
+#else
 #define DEFAULT_ECO_MODE                 false   // When set, make idle calls between executing tasks.
+#endif
 #endif
 #ifndef DEFAULT_WIFI_NONE_SLEEP
 #define DEFAULT_WIFI_NONE_SLEEP          false  // When set, the wifi will be set to no longer sleep (more power used and need reboot to reset mode)

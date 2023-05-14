@@ -131,7 +131,7 @@ jobs:
           find . -not -name '*ESP32*' -exec mv {} ../../ESPEasy_dist_ESP82xx/bin/ \;
           cd ../..
           # ESP32 and derived cpus, ESP32 (classic) _MUST_ be last in this list!
-          for cpu in ESP32s2 ESP32c3 ESP32s3 ESP32c2 ESP32c6 ESP32h2 ESP32
+          for cpu in ESP32s2 ESP32c3 ESP32s3 ESP32c2 ESP32c6 ESP32h2 ESP32solo1 ESP32
           do
             mkdir ESPEasy_dist_${cpu}
             spec="*${cpu}*"
@@ -152,6 +152,12 @@ jobs:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32solo1/*
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v3
         with:
