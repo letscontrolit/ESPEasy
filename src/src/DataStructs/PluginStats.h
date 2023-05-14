@@ -107,7 +107,7 @@ public:
   void webformLoad_show_val(
     struct EventStruct *event,
     const String      & label,
-    double              value,
+    ESPEASY_RULES_FLOAT_TYPE              value,
     const String      & unit) const;
 
 

@@ -24,7 +24,8 @@ enum class PinSelectPurpose : uint8_t {
   I2C,
   SPI,
   SPI_MISO,
-  Ethernet
+  Ethernet,
+  DAC
 
 };
 
@@ -61,6 +62,7 @@ String formatGpioName_RX_HW(bool optional);
 #ifdef ESP32
 
 String formatGpioName_ADC(int gpio_pin);
+String formatGpioName_DAC(int gpio_pin);
 
 #endif // ifdef ESP32
 

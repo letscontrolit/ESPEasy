@@ -274,8 +274,12 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       key += '%';
 
       if (s.indexOf(key) != -1) {
-        const bool   trimTrailingZeros = true;
-        const String value             = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        const bool trimTrailingZeros = true;
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        #else
+        const String value = floatToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        #endif
         repl(key, value, s, useURLencode);
       }
     }
