@@ -16,10 +16,10 @@ bool P106_data_struct::begin(uint8_t addr, bool initSettings)
 
     if (initialized) {
       // Set up oversampling and filter initialization
-      bme.setTemperatureOversampling(BME680_OS_8X);
-      bme.setHumidityOversampling(BME680_OS_2X);
-      bme.setPressureOversampling(BME680_OS_4X);
-      bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
+      bme.setTemperatureOversampling(BME68X_OS_8X);
+      bme.setHumidityOversampling(BME68X_OS_2X);
+      bme.setPressureOversampling(BME68X_OS_4X);
+      bme.setIIRFilterSize(BME68X_FILTER_SIZE_3);
       bme.setGasHeater(320, 150); // 320*C for 150 ms
     }
   }

@@ -48,9 +48,11 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
   PluginStatsBuffer_t::index_t samplesUsed = 0;
 
   for (; i < _samples.size(); ++i) {
-    if (usableValue(_samples[i])) {
+    const float sample(_samples[i]);
+
+    if (usableValue(sample)) {
       ++samplesUsed;
-      sum += _samples[i];
+      sum += sample;
     }
   }
 
@@ -60,8 +62,9 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
 
 float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const
 {
-  float variance = 0.0f;
+  float variance      = 0.0f;
   const float average = getSampleAvg(lastNrSamples);
+
   if (!usableValue(average)) { return 0.0f; }
 
   PluginStatsBuffer_t::index_t i = 0;
@@ -72,22 +75,90 @@ float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) c
   PluginStatsBuffer_t::index_t samplesUsed = 0;
 
   for (; i < _samples.size(); ++i) {
-    if (usableValue(_samples[i])) {
+    const float sample(_samples[i]);
+
+    if (usableValue(sample)) {
       ++samplesUsed;
-      const float diff = _samples[i] - average;
+      const float diff = sample - average;
       variance += diff * diff;
     }
   }
+
   if (samplesUsed < 2) { return 0.0f; }
 
   variance /= samplesUsed;
   return sqrtf(variance);
 }
 
+float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const
+{
+  if (_samples.size() == 0) { return _errorValue; }
+
+  PluginStatsBuffer_t::index_t i = 0;
+
+  if (lastNrSamples < _samples.size()) {
+    i = _samples.size() - lastNrSamples;
+  }
+
+  bool changed = false;
+
+  float res = getMax ? INT_MIN : INT_MAX;
+
+  for (; i < _samples.size(); ++i) {
+    const float sample(_samples[i]);
+
+    if (usableValue(sample)) {
+      if ((getMax && (sample > res)) ||
+          (!getMax && (sample < res))) {
+        changed = true;
+        res     = sample;
+      }
+    }
+  }
+
+  if (!changed) { return _errorValue; }
+
+  return res;
+}
+
+float PluginStats::getSample(int& lastNrSamples) const
+{
+  if ((_samples.size() == 0) || (_samples.size() < abs(lastNrSamples))) { return _errorValue; }
+
+  PluginStatsBuffer_t::index_t i = 0;
+
+  if (lastNrSamples > 0) {
+    i = _samples.size() - lastNrSamples;
+  } else if (lastNrSamples < 0) {
+    i = abs(lastNrSamples) - 1;
+  }
+
+  return _samples[i];
+}
+
 float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
 {
   if (index < _samples.size()) { return _samples[index]; }
   return _errorValue;
+}
+
+bool PluginStats::matchedCommand(const String& command, const __FlashStringHelper *cmd_match, int& nrSamples)
+{
+  const String cmd_match_str(cmd_match);
+
+  if (command.equals(cmd_match_str)) {
+    nrSamples = INT_MIN;
+    return true;
+  }
+
+  if (command.startsWith(cmd_match_str)) {
+    nrSamples = 0;
+
+    if (validIntFromString(command.substring(cmd_match_str.length()), nrSamples)) {
+      return nrSamples;
+    }
+  }
+  return false;
 }
 
 bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String& string) const
@@ -99,43 +170,65 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
   const String command       = parseString(fullValueName, 2, '.');
 
   float value;
+  int   nrSamples = 0;
 
-  if (equals(command, F("min"))) {        // [taskname#valuename.min] Lowest value seen since value reset
-    value   = getPeakLow();
-    success = true;
-  } else if (equals(command, F("max"))) { // [taskname#valuename.max] Highest value seen since value reset
-    value   = getPeakHigh();
-    success = true;
-  } else if (command.startsWith(F("avg"))) {
-    if (equals(command, F("avg"))) { // [taskname#valuename.avg] Average value of the last N kept samples
-      value   = getSampleAvg();
-      success = true;
-    } else {
-      // Check for "avgN", where N is the number of most recent samples to use.
-      int nrSamples = 0;
+  if (matchedCommand(command, F("min"), nrSamples)) {
+    success = nrSamples != 0;
 
-      if (validIntFromString(command.substring(3), nrSamples)) {
-        if (nrSamples > 0) {
-          // [taskname#valuename.avgN] Average over N most recent samples
-          value   = getSampleAvg(nrSamples);
-          success = true;
-        }
+    if (nrSamples < 0) { // [taskname#valuename.min] Lowest value seen since value reset
+      value = getPeakLow();
+    } else {             // Check for "minN", where N is the number of most recent samples to use.
+      if (nrSamples > 0) {
+        value = getSampleExtreme(nrSamples, false);
       }
     }
-  } else if (command.startsWith(F("stddev"))) {
-    if (equals(command, F("stddev"))) { // [taskname#valuename.stddev] Std deviation of the last N kept samples
-      value   = getSampleStdDev();
-      success = true;
+  } else if (matchedCommand(command, F("max"), nrSamples)) {
+    success = nrSamples != 0;
+
+    if (nrSamples < 0) { // [taskname#valuename.max] Highest value seen since value reset
+      value = getPeakHigh();
+    } else {             // Check for "maxN", where N is the number of most recent samples to use.
+      if (nrSamples > 0) {
+        value = getSampleExtreme(nrSamples, true);
+      }
+    }
+  } else if (matchedCommand(command, F("avg"), nrSamples)) {
+    success = nrSamples != 0;
+
+    if (nrSamples < 0) { // [taskname#valuename.avg] Average value of the last N kept samples
+      value = getSampleAvg();
+    } else {
+      // Check for "avgN", where N is the number of most recent samples to use.
+      if (nrSamples > 0) {
+        // [taskname#valuename.avgN] Average over N most recent samples
+        value = getSampleAvg(nrSamples);
+      }
+    }
+  } else if (matchedCommand(command, F("stddev"), nrSamples)) {
+    success = nrSamples != 0;
+
+    if (nrSamples < 0) { // [taskname#valuename.stddev] Std deviation of the last N kept samples
+      value = getSampleStdDev();
     } else {
       // Check for "stddevN", where N is the number of most recent samples to use.
-      int nrSamples = 0;
+      if (nrSamples > 0) {
+        // [taskname#valuename.stddevN] Std. deviation over N most recent samples
+        value = getSampleStdDev(nrSamples);
+      }
+    }
+  } else if (matchedCommand(command, F("size"), nrSamples)) {
+    // [taskname#valuename.size] Number of saved samples
+    value   = _samples.size();
+    success = true;
+  } else if (matchedCommand(command, F("sample"), nrSamples)) {
+    success = nrSamples != 0;
 
-      if (validIntFromString(command.substring(3), nrSamples)) {
-        if (nrSamples > 0) {
-          // [taskname#valuename.stddevN] Std. deviation over N most recent samples
-          value   = getSampleStdDev(nrSamples);
-          success = true;
-        }
+    if (nrSamples == INT_MIN) {   // [taskname#valuename.sample] Number of saved samples.
+      value   = _samples.size();
+      success = true;
+    } else {
+      if (nrSamples != 0) { // [taskname#valuename.sampleN] Sample N (1 - last (current), -1 - first of saved sample, abs(N)>[number of examples] - return error value)
+        value = getSample(nrSamples);
       }
     }
   }
@@ -179,7 +272,8 @@ bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
 bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
 {
   const float stdDev = getSampleStdDev();
-  if (usableValue(stdDev) && getNrSamples() > 1) {
+
+  if (usableValue(stdDev) && (getNrSamples() > 1)) {
     addRowLabel(getLabel() +  F(" std. dev"));
     addHtmlFloat(stdDev, _nrDecimals);
     addHtml(' ', '(');
@@ -192,7 +286,7 @@ bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
 
 bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include_peak_to_peak) const
 {
-  if (hasPeaks() && getNrSamples() > 1) {
+  if (hasPeaks() && (getNrSamples() > 1)) {
     addRowLabel(getLabel() +  F(" Peak Low/High"));
     addHtmlFloat(getPeakLow(), _nrDecimals);
     addHtml('/');
@@ -210,7 +304,7 @@ bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include
 void PluginStats::webformLoad_show_val(
   struct EventStruct *event,
   const String      & label,
-  double              value,
+  ESPEASY_RULES_FLOAT_TYPE value,
   const String      & unit) const
 {
   addRowLabel(getLabel() + label);
@@ -335,12 +429,15 @@ uint8_t PluginStats_array::nrSamplesPresent() const
 void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
 {
   if (validTaskIndex(event->TaskIndex)) {
-    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
+    const Sensor_VType sensorType = event->getSensorType();
+    for (size_t i = 0; i < valueCount; ++i) {
       if (_plugin_stats[i] != nullptr) {
-        _plugin_stats[i]->push(UserVar[event->BaseVarIndex + i]);
+        const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
+        _plugin_stats[i]->push(value);
 
         if (trackPeaks) {
-          _plugin_stats[i]->trackPeak(UserVar[event->BaseVarIndex + i]);
+          _plugin_stats[i]->trackPeak(value);
         }
       }
     }
@@ -370,7 +467,7 @@ bool PluginStats_array::plugin_get_config_value_base(struct EventStruct *event,
 bool PluginStats_array::plugin_write_base(struct EventStruct *event, const String& string)
 {
   bool success     = false;
-  const String cmd = parseString(string, 1);               // command
+  const String cmd = parseString(string, 1);                // command
 
   const bool resetPeaks   = equals(cmd, F("resetpeaks"));   // Command: "taskname.resetPeaks"
   const bool clearSamples = equals(cmd, F("clearsamples")); // Command: "taskname.clearSamples"

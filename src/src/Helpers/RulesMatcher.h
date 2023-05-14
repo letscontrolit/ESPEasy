@@ -16,8 +16,8 @@ bool compareIntValues(char       compare,
                       const int& Value2);
 
 bool compareDoubleValues(char          compare,
-                         const double& Value1,
-                         const double& Value2);
+                         const ESPEASY_RULES_FLOAT_TYPE& Value1,
+                         const ESPEASY_RULES_FLOAT_TYPE& Value2);
 
 bool findCompareCondition(const String& check,
                           char        & compare,

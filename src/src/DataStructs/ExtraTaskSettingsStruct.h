@@ -5,7 +5,7 @@
 * ExtraTaskSettingsStruct
 \*********************************************************************************************/
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ChecksumType.h"

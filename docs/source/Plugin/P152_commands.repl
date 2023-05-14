@@ -1,0 +1,16 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``dac,<id>,<value>``
+
+    | ``<id>``: Select DAC1 (``1``) or DAC2 (``2``).
+    | ``<value>``: Range: ``0`` .. ``255``.
+    ","
+    Set an analog level on the addressed DAC output. The actual voltage available on the pin is: ``(VCC / 255) * value``.
+
+    The used ``<id>`` has to match with the configured DAC/GPIO for this task.
+
+    If you have 2 ESP32 DAC tasks configured, for the 2 available DAC pins, then the command *doesn't* have to be prepended with the taskname, as only the *matching* task will accept the command.
+    "

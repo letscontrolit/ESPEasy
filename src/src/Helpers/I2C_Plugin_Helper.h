@@ -1,7 +1,6 @@
 #ifndef _SRC_HELPERS_I2C_PLUGIN_HELPER_H
 #define _SRC_HELPERS_I2C_PLUGIN_HELPER_H
 
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 

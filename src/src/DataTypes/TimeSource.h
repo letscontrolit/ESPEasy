@@ -1,7 +1,7 @@
 #ifndef DATATYPES_TIMESOURCE_H
 #define DATATYPES_TIMESOURCE_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 // Do not change order as values are stored in settings
 enum class ExtTimeSource_e {
