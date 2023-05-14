@@ -175,6 +175,6 @@ jobs:
         with:
           # Include all separately supported CPU models
           # TODO if/when available: ESP32c2 ESP32c6 ESP32h2
-          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip,artifacts/Distribution/*.zip"
+          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip,artifacts/Distribution/*.zip"
           body: ${{ needs.prepare-notes.outputs.notes }}
           token: ${{ secrets.GITHUB_TOKEN }}
