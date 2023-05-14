@@ -31,7 +31,7 @@ String toString(const float& value, unsigned int decimalPlaces)
     }
   }
   #endif // ifndef LIMIT_BUILD_SIZE
-
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
   //  #ifdef ESP8266
@@ -43,9 +43,9 @@ String toString(const float& value, unsigned int decimalPlaces)
   String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
   free(buf);
 
-  //  #else
-  //  String sValue = String(value, decimalPlaces);
-  //  #endif
+#else
+  String sValue = String(value, decimalPlaces);
+#endif
 
   sValue.trim();
   return sValue;
@@ -89,7 +89,33 @@ String ll2String(int64_t value, uint8_t  base) {
   }
 }
 
-String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros) {
+String trimTrailingZeros(const String& value) {
+  String res(value);
+  int dot_pos = res.lastIndexOf('.');
+
+  if (dot_pos != -1) {
+    bool someTrimmed = false;
+
+    for (int i = res.length() - 1; i > dot_pos && res[i] == '0'; --i) {
+      someTrimmed = true;
+      res[i]      = ' ';
+    }
+
+    if (someTrimmed) {
+      res.trim();
+    }
+
+    if (res.endsWith(F("."))) {
+      res[dot_pos] = ' ';
+      res.trim();
+    }
+  }
+  return res;
+
+}
+
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros_b) {
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
   //  #ifdef ESP8266
@@ -114,29 +140,25 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
   //  #endif
   res.trim();
 
-  if (trimTrailingZeros) {
-    int dot_pos = res.lastIndexOf('.');
-
-    if (dot_pos != -1) {
-      bool someTrimmed = false;
-
-      for (int i = res.length() - 1; i > dot_pos && res[i] == '0'; --i) {
-        someTrimmed = true;
-        res[i]      = ' ';
-      }
-
-      if (someTrimmed) {
-        res.trim();
-      }
-
-      if (res.endsWith(F("."))) {
-        res[dot_pos] = ' ';
-        res.trim();
-      }
-    }
+  if (trimTrailingZeros_b) {
+    return trimTrailingZeros(res);
   }
   return res;
 }
+#endif
+
+String floatToString(const float& value,
+                      unsigned int  decimalPlaces,
+                      bool          trimTrailingZeros_b)
+{
+  const String res = toString(value, decimalPlaces);
+
+  if (trimTrailingZeros_b) {
+    return trimTrailingZeros(res);
+  }
+  return res;
+}
+
 
 /********************************************************************************************\
    Check if valid float and convert string to float.

@@ -156,18 +156,10 @@ String formatToHex_array(const uint8_t* data, size_t size)
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
-  String result = prefix;
   String hex(value, HEX);
 
   hex.toUpperCase();
-  if (hex.length() < minimal_hex_digits) {
-    const size_t leading_zeros = minimal_hex_digits - hex.length();
-    for (size_t i = 0; i < leading_zeros; ++i) {
-      result += '0';
-    }
-  }
-  result += hex;
-  return result;
+  return concat(prefix, formatIntLeadingZeroes(hex, minimal_hex_digits));
 }
 
 String formatToHex(unsigned long value,
@@ -408,12 +400,37 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
   }
   String result;
   result += 'C';
-
-  if (cpluginID < 100) { result += '0'; }
-
-  if (cpluginID < 10) { result += '0'; }
-  result += cpluginID;
+  result += formatIntLeadingZeroes(cpluginID, 3);
   return result;
+}
+
+String get_formatted_Plugin_number(pluginID_t pluginID)
+{
+  if (!validPluginID(pluginID)) {
+    return F("P---");
+  }
+  String result;
+  result += 'P';
+  result += formatIntLeadingZeroes(pluginID, 3);
+  return result;
+}
+
+String formatIntLeadingZeroes(int value, int nrDigits)
+{
+  return formatIntLeadingZeroes(String(value), nrDigits);
+}
+
+String formatIntLeadingZeroes(const String& value, int nrDigits)
+{
+  String res;
+  res.reserve(nrDigits);
+  int nrZeroes = nrDigits - value.length();
+  while (nrZeroes > 0) {
+    --nrZeroes;
+    res += '0';
+  }
+  res += value;
+  return res;
 }
 
 /*********************************************************************************************\

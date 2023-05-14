@@ -45,18 +45,19 @@ struct TaskValues_Data_t {
                     float   value);
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
-
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   double getDouble(uint8_t varNr) const;
   void   setDouble(uint8_t varNr,
                    double  value);
 #endif
+#endif
 
   // Interpret the data according to the given sensorType
-  double getAsDouble(uint8_t      varNr,
+  ESPEASY_RULES_FLOAT_TYPE getAsDouble(uint8_t      varNr,
                      Sensor_VType sensorType) const;
 
   void   set(uint8_t       varNr,
-             const double& value,
+             const ESPEASY_RULES_FLOAT_TYPE& value,
              Sensor_VType  sensorType);
 
   bool isValid(uint8_t       varNr,
@@ -73,7 +74,9 @@ struct TaskValues_Data_t {
     int32_t  int32s[VARS_PER_TASK];
     uint64_t uint64s[VARS_PER_TASK / 2];
     int64_t  int64s[VARS_PER_TASK / 2];
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     double   doubles[VARS_PER_TASK / 2];
+#endif
 #endif
   };
 };

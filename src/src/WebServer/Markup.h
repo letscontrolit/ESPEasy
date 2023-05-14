@@ -3,6 +3,8 @@
 
 #include "../WebServer/common.h"
 #include "../DataTypes/ProtocolIndex.h"
+#include "../DataTypes/CPluginID.h"
+#include "../DataTypes/PluginID.h"
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -318,9 +320,9 @@ void   addRTDHelpButton(const String& url);
 void   addHelpButton(const String& url,
                      bool          isRTD);
 
-void   addRTDPluginButton(pluginID_t taskDeviceNumber);
+void   addRTDPluginButton(pluginID_t pluginID);
 # ifndef LIMIT_BUILD_SIZE
-void   addRTDControllerButton(protocolIndex_t protocolIndex);
+void   addRTDControllerButton(cpluginID_t cpluginID);
 # endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url,

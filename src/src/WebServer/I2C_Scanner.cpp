@@ -160,13 +160,7 @@ String getKnownI2Cdevice(uint8_t address) {
         result += F("(Device) ");
 
         # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
-        result += 'P';
-
-        if (pluginID < 10) { result += '0'; }
-
-        if (pluginID < 100) { result += '0'; }
-        result += pluginID;
-        result += F(" - ");
+        result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
         # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
         result += getPluginNameFromDeviceIndex(deviceIndex);
         result += ',';
