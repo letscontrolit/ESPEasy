@@ -423,6 +423,7 @@ Sources:
 * `Table content source <https://maker.pro/esp8266/tutorial/a-comparison-of-the-new-esp32-s2-to-the-esp32>`_
 * `Espressif docs <https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32c2/hw-reference/chip-series-comparison.html>`_
 * `Espressif Product Selector <https://products.espressif.com/#/product-comparison>`_
+* `Espressif ESP32-xx modules overview <https://www.espressif.com/en/products/modules>`_
 
 Datasheets
 ==========

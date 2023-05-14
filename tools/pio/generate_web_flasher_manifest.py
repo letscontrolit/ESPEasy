@@ -134,6 +134,11 @@ def parse_filename(file, version, variant, file_suffix):
             elif 'collection' in variant:
                 variant_split = variant.split('_')
                 group = 'Collection{}'.format(variant_split[1])
+                # Select based on "4M1M" here to keep any occasional "4M2M" build
+                # separated in another group
+                if '_4M1M' in variant:
+                    main_group = '4M Flash Collection Builds'
+
 
             if 'NotSet' not in group:
                 sub_group_spit = group.split('_')
@@ -169,6 +174,10 @@ def parse_filename(file, version, variant, file_suffix):
         else:
             state = "No Group"
             main_group = 'Misc'
+
+        if 'collection' in variant:
+            if '4M Flash' in main_group:
+                main_group = '4M Flash Collection Builds'
 
         if 'custom_' in variant:
             if 'Misc' in main_group:
@@ -253,6 +262,7 @@ def generate_manifest_files(bin_folder, output_prefix):
     main_group_list = [
         '4M Flash',
         '4M Flash ESP32-solo1',
+        '4M Flash Collection Builds',
         '16M Flash',
         '2M Flash',
         '1M Flash',
