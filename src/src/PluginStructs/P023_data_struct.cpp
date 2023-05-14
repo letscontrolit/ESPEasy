@@ -250,10 +250,12 @@ void P023_data_struct::resetDisplay() {
 void P023_data_struct::StartUp_OLED(struct EventStruct *event) {
   init_OLED();
   resetDisplay();
-  displayOff();
+
+  // displayOff();
   setXY(0, 0);
-  clearDisplay();
-  displayOn();
+
+  // clearDisplay(); // Why clear twice?
+  // displayOn();
 
   LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 }
