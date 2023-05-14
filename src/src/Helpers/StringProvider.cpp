@@ -258,13 +258,10 @@ String getValue(LabelType::Enum label) {
   {
     case LabelType::UNIT_NR:                return String(Settings.Unit);
     #if FEATURE_ZEROFILLED_UNITNUMBER
-    case LabelType::UNIT_NR_0: // Fixed 3-digit unitnumber
+    case LabelType::UNIT_NR_0: 
     {
-      String _unit;
-      if (Settings.Unit < 10) { _unit += '0'; }
-      if (Settings.Unit < 100) { _unit += '0'; }
-      _unit += Settings.Unit;
-      return _unit;
+      // Fixed 3-digit unitnumber
+      return formatIntLeadingZeroes(Settings.Unit, 3);
     }
     #endif // FEATURE_ZEROFILLED_UNITNUMBER
     case LabelType::UNIT_NAME:              return Settings.getName(); // Only return the set name, no appended unit.

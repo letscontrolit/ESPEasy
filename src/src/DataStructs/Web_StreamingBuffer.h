@@ -41,7 +41,9 @@ public:
   Web_StreamingBuffer& operator+=(int64_t a);
 
   Web_StreamingBuffer& operator+=(const float& a);
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   Web_StreamingBuffer& operator+=(const double& a);
+#endif
 
 template <typename T>
   Web_StreamingBuffer& operator+=(T a) {

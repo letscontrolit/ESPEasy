@@ -224,15 +224,7 @@ void addDeviceSelect(const __FlashStringHelper *name,  int choice)
 
 
         # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        String plugin;
-        plugin += 'P';
-
-        if (pluginID < 10) { plugin += '0'; }
-
-        if (pluginID < 100) { plugin += '0'; }
-        plugin    += pluginID;
-        plugin    += F(" - ");
-        deviceName = plugin + deviceName;
+        deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
         # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,

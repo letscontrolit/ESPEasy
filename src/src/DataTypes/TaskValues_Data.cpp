@@ -138,7 +138,7 @@ void TaskValues_Data_t::setFloat(uint8_t varNr, float  value)
 }
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
-
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 double TaskValues_Data_t::getDouble(uint8_t varNr) const
 {
   if ((varNr < (VARS_PER_TASK / 2))) {
@@ -154,8 +154,9 @@ void TaskValues_Data_t::setDouble(uint8_t varNr, double  value)
   }
 }
 #endif
+#endif
 
-double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) const
+ESPEASY_RULES_FLOAT_TYPE TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) const
 {
   if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     return getSensorTypeLong();
@@ -170,14 +171,16 @@ double TaskValues_Data_t::getAsDouble(uint8_t varNr, Sensor_VType sensorType) co
     return getUint64(varNr);
   } else if (isInt64OutputDataType(sensorType)) {
     return getInt64(varNr);
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   } else if (isDoubleOutputDataType(sensorType)) {
     return getDouble(varNr);
+#endif    
 #endif
   }
   return 0.0;
 }
 
-void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sensorType)
+void TaskValues_Data_t::set(uint8_t varNr, const ESPEASY_RULES_FLOAT_TYPE& value, Sensor_VType sensorType)
 {
   if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     // Legacy formatting the old "SENSOR_TYPE_ULONG" type
@@ -193,8 +196,10 @@ void TaskValues_Data_t::set(uint8_t varNr, const double& value, Sensor_VType sen
     setUint64(varNr, value);
   } else if (isInt64OutputDataType(sensorType)) {
     setInt64(varNr, value);
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   } else if (isDoubleOutputDataType(sensorType)) {
     setDouble(varNr, value);
+#endif
 #endif
   }
 }
@@ -206,8 +211,10 @@ bool TaskValues_Data_t::isValid(uint8_t varNr, Sensor_VType  sensorType) const
   } else if (isFloatOutputDataType(sensorType)) {
     return isValidFloat(getFloat(varNr));
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   } else if (isDoubleOutputDataType(sensorType)) {
     return isValidDouble(getDouble(varNr));
+#endif
 #endif
   }
   return true;
@@ -220,8 +227,10 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
   if (isFloatOutputDataType(sensorType)) {
     result = toString(getFloat(varNr), nrDecimals);
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   } else if (isDoubleOutputDataType(sensorType)) {
     result = doubleToString(getDouble(varNr), nrDecimals);
+#endif
 #endif
   } else if (sensorType == Sensor_VType::SENSOR_TYPE_ULONG) {
     return String(getSensorTypeLong());
