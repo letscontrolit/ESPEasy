@@ -152,7 +152,7 @@ const __FlashStringHelper * tFontSettings::FontName() const {
 const tFontSizes FontSizes[P36_MaxFontCount] = {
   { getArialMT_Plain_24(), 24,  28                     }, // 9643
 # ifndef P036_LIMIT_BUILD_SIZE
-  { getDialog_plain_18(),  19,  22                     },
+  { getDialog_plain_18(),  19,  22                     }, // 7399
 # endif // ifndef P036_LIMIT_BUILD_SIZE
   { getArialMT_Plain_16(), 16,  19                     }, // 5049
 # ifndef P036_LIMIT_BUILD_SIZE
@@ -233,7 +233,7 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
 
   LineContent = new (std::nothrow) P036_LineContent();
 
-  if ((display != nullptr) && (LineContent != nullptr)) {
+  if (isInitialized()) {
     display->init(); // call to local override of init function
 
     // disp_resolution = Disp_resolution;
@@ -297,7 +297,7 @@ void P036_data_struct::setOrientationRotated(bool rotated) {
 
 # ifdef P036_ENABLE_LINECOUNT
 void P036_data_struct::setNrLines(uint8_t NrLines) {
-  if ((NrLines >= 1) && (NrLines <= 4)) {
+  if ((NrLines >= 1) && (NrLines <= P36_MAX_LinesPerPage)) {
     ScrollingPages.linesPerFrameDef = NrLines;
     prepare_pagescrolling();   // Recalculate font
     MaxFramesToDisplay = 0xFF; // Recalculate page indicator
@@ -448,12 +448,12 @@ void P036_data_struct::display_logo() {
 
   int left = 24;
   int top;
-  tFontSettings iFontsettings = CalculateFontSettings(2); // get font with max. height for displaying "ESP Easy"
+  const tFontSettings iFontsettings = CalculateFontSettings(2); // get font with max. height for displaying "ESP Easy"
 
-  bDisplayingLogo = true;                                 // next time the display must be cleared completely
+  bDisplayingLogo = true;                                       // next time the display must be cleared completely
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(FontSizes[iFontsettings.fontIdx].fontData);
-  display->clear();                                       // resets all pixels to black
+  display->clear();                                             // resets all pixels to black
   display->setColor(WHITE);
   display->drawString(65, iFontsettings.Top + TopLineOffset,                                              F("ESP"));
   display->drawString(65, iFontsettings.Top + iFontsettings.Height + iFontsettings.Space + TopLineOffset, F("Easy"));
@@ -526,7 +526,7 @@ void P036_data_struct::display_indicator() {
   }
 }
 
-int16_t P036_data_struct::GetHeaderHeight() {
+int16_t P036_data_struct::GetHeaderHeight() const {
   if (bHideHeader) {
     // no header
     return 0;
@@ -534,7 +534,7 @@ int16_t P036_data_struct::GetHeaderHeight() {
   return P36_HeaderHeight;
 }
 
-int16_t P036_data_struct::GetIndicatorTop() {
+int16_t P036_data_struct::GetIndicatorTop() const {
   if (bHideFooter) {
     // no footer (indicator) -> returm max. display height
     return getDisplaySizeSettings(disp_resolution).Height;
@@ -566,10 +566,11 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
   for (uint8_t i = LineNo; i < P36_Nlines; i++) {
     // calculate individual font settings
-    int8_t   lFontIndex  = FontIndex;
-    uint32_t iModifyFont = get3BitFromUL(LineContent->DisplayLinesV1[i].ModifyLayout, P036_FLAG_ModifyLayout_Font);
+    int8_t lFontIndex             = FontIndex;
+    const eModifyFont iModifyFont =
+      static_cast<eModifyFont>(get3BitFromUL(LineContent->DisplayLinesV1[i].ModifyLayout, P036_FLAG_ModifyLayout_Font));
 
-    switch (static_cast<eModifyFont>(iModifyFont)) {
+    switch (iModifyFont) {
       case eModifyFont::eEnlarge:
         lFontIndex--;
 
@@ -606,7 +607,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
   }
   result.NextLineNo = NextLineNo; // default, settings do fit
 
-  int8_t deltaHeight = (MaxHeight - lHeight);
+  const int8_t deltaHeight = (MaxHeight - lHeight);
 
   if (lLinesPerFrame <= 1) {
     // just one lines per frame -> no space inbetween
@@ -999,7 +1000,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     if (PixLengthLineIn > MaxPixWidthForPageScrolling) {
       const int strlen = ScrollingPages.In[j].SPLcontent.length();
 # ifdef P036_SCROLL_CALC_LOG
-      String LineInStr = ScrollingPages.In[j].SPLcontent;
+      const String LineInStr = ScrollingPages.In[j].SPLcontent;
 # endif // P036_SCROLL_CALC_LOG
       float fAvgPixPerChar = static_cast<float>(PixLengthLineIn) / strlen;
 
@@ -1062,7 +1063,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     if (PixLengthLineOut > MaxPixWidthForPageScrolling) {
       const int strlen = ScrollingPages.Out[j].SPLcontent.length();
       # ifdef P036_SCROLL_CALC_LOG
-      String LineOutStr = ScrollingPages.Out[j].SPLcontent;
+      const String LineOutStr = ScrollingPages.Out[j].SPLcontent;
       # endif // P036_SCROLL_CALC_LOG
       float fAvgPixPerChar = static_cast<float>(PixLengthLineOut) / strlen;
 
@@ -1232,10 +1233,10 @@ void P036_data_struct::display_scrolling_lines() {
 
   // line scrolling (using PLUGIN_TEN_PER_SECOND)
 
-  int  i;
-  bool bscroll       = false;
-  bool updateDisplay = false;
-  int  iCurrentLeft;
+  uint8_t i;
+  bool    bscroll       = false;
+  bool    updateDisplay = false;
+  int     iCurrentLeft;
 
   for (i = 0; i < ScrollingPages.linesPerFrameIn; i++) {
     if (ScrollingLines.SLine[i].Width != 0) {
@@ -1329,9 +1330,9 @@ bool P036_data_struct::display_wifibars() {
 
   if (NetworkConnected()) {
     for (uint8_t ibar = 0; ibar < nbars; ibar++) {
-      int16_t height = size_y * (ibar + 1) / nbars;
-      int16_t xpos   = x + ibar * width;
-      int16_t ypos   = y + size_y - height;
+      const int16_t height = size_y * (ibar + 1) / nbars;
+      const int16_t xpos   = x + ibar * width;
+      const int16_t ypos   = y + size_y - height;
 
       if (ibar <= nbars_filled) {
         // Fill complete bar
@@ -1361,18 +1362,15 @@ void P036_data_struct::P036_JumpToPage(struct EventStruct *event, uint8_t nextFr
   if (!isInitialized()) {
     return;
   }
+
+  // reschedule page change
   Scheduler.schedule_task_device_timer(event->TaskIndex,
-                                       millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000)); // reschedule page change
-  nextFrameToDisplay  = nextFrame;
-  bPageScrollDisabled = true;                                                                           //  show next page without
-                                                                                                        // scrolling
-  disableFrameChangeCnt = 2;                                                                            //  disable next page change in
-                                                                                                        // PLUGIN_READ if
-  // PLUGIN_READ was already scheduled
-  P036_DisplayPage(event);                                                                              //  Display the selected page,
-                                                                                                        // function needs
-                                                                                                        // 65ms!
-  displayTimer = PCONFIG(4);                                                                            //  Restart timer
+                                       millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
+  nextFrameToDisplay    = nextFrame;
+  bPageScrollDisabled   = true; //  show next page without scrolling
+  disableFrameChangeCnt = 2;    //  disable next page change in PLUGIN_READ if PLUGIN_READ was already scheduled
+  P036_DisplayPage(event);      //  Display the selected page, function needs 65ms!
+  displayTimer = PCONFIG(4);    //  Restart timer
 }
 
 void P036_data_struct::P036_JumpToPageOfLine(struct EventStruct *event, uint8_t LineNo)
@@ -1396,15 +1394,12 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
   if (P036_DisplayIsOn) {
     // Display is on.
-    ScrollingPages.Scrolling = 1;                                                              // page scrolling running -> no
-    // line scrolling allowed
-    NFrames = LineSettings[P36_Nlines - 1].frame;                                              // last prepared page in
-                                                                                               // prepare_pagescrolling()
-    HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8)); // Bit15-8 HeaderContent
-    HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit 7-0
-    // HeaderContentAlternative
+    ScrollingPages.Scrolling = 1;                                  // page scrolling running -> no line scrolling allowed
+    NFrames                  = LineSettings[P36_Nlines - 1].frame; // last prepared page in prepare_pagescrolling()
+    HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), P036_FLAG_HEADER));
+    HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), P036_FLAG_HEADER_ALTERNATIVE));
 
-    //      Construct the outgoing string
+    // Construct the outgoing string
     for (uint8_t i = 0; i < P36_Nlines; i++) {
       if (LineSettings[i].frame == frameCounter) {
         lineCounter = i;
@@ -1527,7 +1522,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     CalcMaxPageCount(); // Update max page count
 
-    //      Update display
+    // Update display
     if (bDisplayingLogo) {
       bDisplayingLogo = false;
       display->clear();        // resets all pixels to black
@@ -1560,10 +1555,10 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       // scroll lines only if WifiIsConnected, otherwise too slow
       bPageScrollDisabled = false; // next PLUGIN_READ will do page scrolling
     }
+  # ifdef PLUGIN_036_DEBUG
   } else {
-    # ifdef PLUGIN_036_DEBUG
     addLog(LOG_LEVEL_INFO, F("P036_DisplayPage Display off"));
-    # endif // PLUGIN_036_DEBUG
+  # endif // PLUGIN_036_DEBUG
   }
 }
 
@@ -1585,10 +1580,10 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
      const char euro_oled[3] = {0xc2, 0x80, 0}; // Euro symbol OLED display font
      result.replace(euro, euro_oled);
    */
-  const uint32_t iAlignment =
-    get3BitFromUL(LineContent->DisplayLinesV1[lineIdx].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+  const eAlignment iAlignment =
+    static_cast<eAlignment>(get3BitFromUL(LineContent->DisplayLinesV1[lineIdx].ModifyLayout, P036_FLAG_ModifyLayout_Alignment));
 
-  switch (getTextAlignment(static_cast<eAlignment>(iAlignment))) {
+  switch (getTextAlignment(iAlignment)) {
     case TEXT_ALIGN_LEFT:
 
       // add leading spaces from tmpString to the result
@@ -1627,7 +1622,7 @@ void P036_data_struct::setTextAlignment(eAlignment aAlignment) {
   nextFrameToDisplay = 0;    // Reset to first page
 }
 
-OLEDDISPLAY_TEXT_ALIGNMENT P036_data_struct::getTextAlignment(eAlignment aAlignment) {
+OLEDDISPLAY_TEXT_ALIGNMENT P036_data_struct::getTextAlignment(eAlignment aAlignment) const {
   switch (aAlignment) {
     case eAlignment::eGlobal: return textAlignment; break;
     case eAlignment::eLeft:   return TEXT_ALIGN_LEFT; break;
@@ -1636,7 +1631,7 @@ OLEDDISPLAY_TEXT_ALIGNMENT P036_data_struct::getTextAlignment(eAlignment aAlignm
   }
 }
 
-uint8_t P036_data_struct::GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) {
+uint8_t P036_data_struct::GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) const {
   // left margin must be offset with PixLeft (the first shown left pixel on 64x48 displays is 32!)
   if (_textAlignment == TEXT_ALIGN_LEFT) {
     return getDisplaySizeSettings(disp_resolution).PixLeft;
@@ -1828,10 +1823,10 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
       ScrollingPageLine->SPLcontent.replace(F("<|>"), tmpString); // replace in final line the split token with space chars
     }
   }
-  const uint8_t iAlignment =
-    get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+  const eAlignment iAlignment =
+    static_cast<eAlignment>(get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment));
 
-  ScrollingPageLine->Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
+  ScrollingPageLine->Alignment = getTextAlignment(iAlignment);
   ScrollingPageLine->SPLidx    = Counter; // index to LineSettings[]
 }
 
