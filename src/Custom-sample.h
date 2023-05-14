@@ -284,7 +284,9 @@
 
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
-// #define FEATURE_AUTO_DARK_MODE           0 // Disable auto-dark mode
+// #define FEATURE_AUTO_DARK_MODE           0                // 0 = Disable auto-dark mode
+// #define FEATURE_EXTENDED_TASK_VALUE_TYPES 0               // 0 = Disable extra task value types like 64 bit ints, double, etc. in Dummy tasks
+// #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0  // 0 = switch to float as floating point type for rules/formula processing.
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 

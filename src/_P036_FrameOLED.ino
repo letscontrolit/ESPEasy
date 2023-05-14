@@ -1198,7 +1198,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
             if (strlen > 0) {
               const float fAvgPixPerChar = static_cast<float>(PixLength) / strlen;
-              const int   iCharToRemove  = ceil((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
+              const int   iCharToRemove  = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
               // shorten string because OLED controller can not handle such long strings
               *currentLine = currentLine->substring(0, strlen - iCharToRemove);

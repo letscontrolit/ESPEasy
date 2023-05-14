@@ -40,8 +40,8 @@ public:
 
   uint8_t      i2cAddress;
   unsigned int ms5611_prom[8]     = { 0 };
-  double       ms5611_pressure    = 0;
-  double       ms5611_temperature = 0;
+  ESPEASY_RULES_FLOAT_TYPE       ms5611_pressure    = 0;
+  ESPEASY_RULES_FLOAT_TYPE       ms5611_temperature = 0;
 };
 #endif // ifdef USES_P032
 #endif // ifndef PLUGINSTRUCTS_P032_DATA_STRUCT_H
