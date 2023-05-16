@@ -10,7 +10,6 @@
 
 #define INPUT_BUFFER_SIZE          128
 
-extern uint8_t SerialInByte;
 extern int     SerialInByteCounter;
 extern char    InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 
@@ -76,7 +75,8 @@ void addToSerialBuffer(const String& line);
 
 void addNewlineToSerialBuffer();
 
-void process_serialWriteBuffer();
+// Return true when something got written, or when the buffer was already empty
+bool process_serialWriteBuffer();
 
 // For now, only send it to the serial buffer and try to process it.
 // Later we may want to wrap it into a log.

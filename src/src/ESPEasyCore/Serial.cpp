@@ -18,9 +18,8 @@
  * Get data from Serial Interface
  \*********************************************************************************************/
 
-uint8_t SerialInByte;
-int     SerialInByteCounter = 0;
-char    InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
+int     SerialInByteCounter{};
+char    InputBuffer_Serial[INPUT_BUFFER_SIZE + 2]{};
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 uint8_t console_serial_port  = 2; // ESPEasySerialPort::serial0
@@ -192,8 +191,17 @@ void initSerial()
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   // make sure previous serial buffers are flushed before resetting baudrate
+  #   ifdef USE_USB_CDC_CONSOLE
+  delay(10); // When using USB CDC and not opening the USB serial port, the ESP may hang at boot.
+  #ifdef CONFIG_IDF_TARGET_ESP32S3
+  ESPEASY_SERIAL_CONSOLE_PORT.end();
+  #endif
+  delay(10); 
+#endif 
   ESPEASY_SERIAL_CONSOLE_PORT.flush();
+#if CONFIG_IDF_TARGET_ESP32S2
   ESPEASY_SERIAL_CONSOLE_PORT.setRxBufferSize(64);
+#endif
   ESPEASY_SERIAL_CONSOLE_PORT.begin(Settings.BaudRate);
 
   // ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(true);
@@ -262,7 +270,7 @@ void serial()
   while (ESPEASY_SERIAL_CONSOLE_PORT.available())
   {
     delay(0);
-    SerialInByte = ESPEASY_SERIAL_CONSOLE_PORT.read();
+    const uint8_t SerialInByte = ESPEASY_SERIAL_CONSOLE_PORT.read();
 
     if (SerialInByte == 255) // binary data...
     {
@@ -317,7 +325,8 @@ void addToSerialBuffer(const __FlashStringHelper *line)
 }
 
 void addToSerialBuffer(const String& line) {
-  process_serialWriteBuffer(); // Try to make some room first.
+  // When the buffer is too full, try to dump at least the size of what we try to add.
+  const bool mustPop = !process_serialWriteBuffer() && serialWriteBuffer.size() > 10000;
   {
     #ifdef USE_SECOND_HEAP
 
@@ -329,6 +338,9 @@ void addToSerialBuffer(const String& line) {
     auto it = line.begin();
 
     while (roomLeft > 0 && it != line.end()) {
+      if (mustPop) {
+        serialWriteBuffer.pop_front();
+      }
       serialWriteBuffer.push_back(*it);
       --roomLeft;
       ++it;
@@ -338,41 +350,32 @@ void addToSerialBuffer(const String& line) {
 }
 
 void addNewlineToSerialBuffer() {
-  process_serialWriteBuffer(); // Try to make some room first.
-  {
-    #ifdef USE_SECOND_HEAP
-
-    // Allow to store the logs in 2nd heap if present.
-    HeapSelectIram ephemeral;
-    #endif // ifdef USE_SECOND_HEAP
-
-    serialWriteBuffer.push_back('\r');
-    serialWriteBuffer.push_back('\n');
-  }
+  addToSerialBuffer(F("\r\n"));
 }
 
-void process_serialWriteBuffer() {
-  size_t bytes_to_write  = serialWriteBuffer.size();
-  const uint32_t timeout = millis() + 5; // Allow for max 5 msec loop
-
-  while (bytes_to_write != 0 && !timeOutReached(timeout)) {
-    size_t snip = ESPEASY_SERIAL_CONSOLE_PORT.availableForWrite();
-
-    if (snip > 0) {
-      if (snip < bytes_to_write) { bytes_to_write = snip; }
-
-      while (bytes_to_write > 0 && !serialWriteBuffer.empty()) {
-        const char c = serialWriteBuffer.front();
-
-        if (Settings.UseSerial) {
-          ESPEASY_SERIAL_CONSOLE_PORT.write(c);
-        }
-        serialWriteBuffer.pop_front();
-        --bytes_to_write;
-      }
-    }
-    bytes_to_write = serialWriteBuffer.size();
+bool process_serialWriteBuffer() {
+  const size_t bufferSize = serialWriteBuffer.size(); 
+  if (bufferSize == 0) {
+    return true;
   }
+  const size_t snip = ESPEASY_SERIAL_CONSOLE_PORT.availableForWrite();
+
+  if (snip > 0) {
+    size_t bytes_to_write  = bufferSize;
+    if (snip < bytes_to_write) { bytes_to_write = snip; }
+
+    while (bytes_to_write > 0 && !serialWriteBuffer.empty()) {
+      const char c = serialWriteBuffer.front();
+
+      if (Settings.UseSerial) {
+        ESPEASY_SERIAL_CONSOLE_PORT.write(c);
+      }
+      serialWriteBuffer.pop_front();
+      --bytes_to_write;
+    }
+  }
+
+  return bufferSize != serialWriteBuffer.size(); 
 }
 
 // For now, only send it to the serial buffer and try to process it.
