@@ -2962,5 +2962,9 @@ To create/register a plugin, you have to :
   #define ESPEASY_RULES_FLOAT_TYPE float
 #endif
 
+#ifndef ESPEASY_SERIAL_0
+  #define ESPEASY_SERIAL_0 Serial
+#endif
+
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

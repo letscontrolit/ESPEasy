@@ -122,17 +122,6 @@ void ESPeasySerial::resetConfig(
 # endif // ifndef DISABLE_SC16IS752_Serial
 }
 
-ESPeasySerial::~ESPeasySerial() {
-  end();
-
-# ifndef DISABLE_SC16IS752_Serial
-
-  if (_i2cserial != nullptr) {
-    delete _i2cserial;
-  }
-# endif // ifndef DISABLE_SC16IS752_Serial
-}
-
 void ESPeasySerial::begin(unsigned long baud, uint32_t config
                           , int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms) {
   _baud = baud;
