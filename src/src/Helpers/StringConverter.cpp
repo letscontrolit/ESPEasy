@@ -46,66 +46,6 @@ bool equals(const String& str, const char& c) {
 }
 
 /********************************************************************************************\
-   Convert a char string to integer
- \*********************************************************************************************/
-
-// FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string)
-{
-  unsigned int temp = 0;
-
-  validUIntFromString(string, temp);
-
-  return static_cast<unsigned long>(temp);
-}
-
-String ull2String(uint64_t value, uint8_t base) {
-  String res;
-
-  if (value == 0) {
-    res = '0';
-    return res;
-  }
-
-  while (value > 0) {
-    res   += String(static_cast<uint32_t>(value % base), base);
-    value /= base;
-  }
-
-  int endpos   = res.length() - 1;
-  int beginpos = 0;
-
-  while (endpos > beginpos) {
-    const char c = res[beginpos];
-    res[beginpos] = res[endpos];
-    res[endpos]   = c;
-    ++beginpos;
-    --endpos;
-  }
-
-  return res;
-}
-
-String ll2String(int64_t value, uint8_t  base) {
-  if (value < 0) {
-    String res;
-    res = '-';
-    res += ull2String(value * -1ll, base);
-    return res;
-  } else {
-    return ull2String(value, base);
-  }
-}
-
-
-/********************************************************************************************\
-   Check if valid float and convert string to float.
- \*********************************************************************************************/
-bool string2float(const String& string, float& floatvalue) {
-  return validFloatFromString(string, floatvalue);
-}
-
-/********************************************************************************************\
    Convert a char string to IP uint8_t array
  \*********************************************************************************************/
 bool isIP(const String& string) {
@@ -132,12 +72,24 @@ bool str2ip(const char *string, uint8_t *IP)
 }
 
 String formatIP(const IPAddress& ip) {
+#ifdef ESP8266
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
   return tmp.toString();
 #else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   return ip.toString();
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+#endif
+#ifdef ESP32
+  #if LWIP_IPV6
+  if (ip.isAny()) {
+    IPAddress tmp;
+    tmp.setV4();
+    return tmp.toString();
+  }
+  #endif
+  return ip.toString();
+#endif
 }
 
 
@@ -204,18 +156,10 @@ String formatToHex_array(const uint8_t* data, size_t size)
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
-  String result = prefix;
   String hex(value, HEX);
 
   hex.toUpperCase();
-  if (hex.length() < minimal_hex_digits) {
-    const size_t leading_zeros = minimal_hex_digits - hex.length();
-    for (size_t i = 0; i < leading_zeros; ++i) {
-      result += '0';
-    }
-  }
-  result += hex;
-  return result;
+  return concat(prefix, formatIntLeadingZeroes(hex, minimal_hex_digits));
 }
 
 String formatToHex(unsigned long value,
@@ -372,9 +316,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     }
   }
 
-
-  const uint8_t   valueCount = getValueCountForTask(event->TaskIndex);
-  Sensor_VType sensorType = event->getSensorType();
+  const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
+  const Sensor_VType sensorType = event->getSensorType();
 
   if (valueCount <= rel_index) {
     isvalid = false;
@@ -394,31 +337,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  switch (sensorType) {
-    case Sensor_VType::SENSOR_TYPE_LONG:
-      return String(UserVar.getSensorTypeLong(event->TaskIndex));
-    case Sensor_VType::SENSOR_TYPE_STRING:
-      return event->String2;
-
-    default:
-      break;
-  }
-
-  float f(UserVar[event->BaseVarIndex + rel_index]);
-
-  if (mustCheck && !isValidFloat(f)) {
-    isvalid = false;
-#ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("Invalid float value for TaskIndex: ");
-      log += event->TaskIndex;
-      log += F(" varnumber: ");
-      log += rel_index;
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
-#endif // ifndef BUILD_NO_DEBUG
-    f = 0;
+  if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+    return event->String2;
   }
 
   uint8_t nrDecimals = 0;
@@ -426,9 +346,24 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
-  String result = toString(f, nrDecimals);
-  result.trim();
-  return result;
+  if (mustCheck) {
+    if (!UserVar.isValid(event->TaskIndex, rel_index, sensorType)) {
+      isvalid = false;
+#ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("Invalid float value for TaskIndex: ");
+        log += event->TaskIndex;
+        log += F(" varnumber: ");
+        log += rel_index;
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
+#endif // ifndef BUILD_NO_DEBUG
+      const float f = 0.0f;
+      return toString(f, nrDecimals);
+    }
+  }
+  return UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
@@ -465,12 +400,37 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
   }
   String result;
   result += 'C';
-
-  if (cpluginID < 100) { result += '0'; }
-
-  if (cpluginID < 10) { result += '0'; }
-  result += cpluginID;
+  result += formatIntLeadingZeroes(cpluginID, 3);
   return result;
+}
+
+String get_formatted_Plugin_number(pluginID_t pluginID)
+{
+  if (!validPluginID(pluginID)) {
+    return F("P---");
+  }
+  String result;
+  result += 'P';
+  result += formatIntLeadingZeroes(pluginID, 3);
+  return result;
+}
+
+String formatIntLeadingZeroes(int value, int nrDigits)
+{
+  return formatIntLeadingZeroes(String(value), nrDigits);
+}
+
+String formatIntLeadingZeroes(const String& value, int nrDigits)
+{
+  String res;
+  res.reserve(nrDigits);
+  int nrZeroes = nrDigits - value.length();
+  while (nrZeroes > 0) {
+    --nrZeroes;
+    res += '0';
+  }
+  res += value;
+  return res;
 }
 
 /*********************************************************************************************\
@@ -1201,15 +1161,12 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
 
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
-      if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
-        SMART_REPL(F("%val1%"), String(UserVar.getSensorTypeLong(event->TaskIndex)))
-      } else {
-        for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
-          String valstr = F("%val");
-          valstr += (i + 1);
-          valstr += '%';
-          SMART_REPL(valstr, formatUserVarNoCheck(event, i));
-        }
+      const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_ULONG) ? 1 : getValueCountForTask(event->TaskIndex);
+      for (uint8_t i = 0; i < valueCount; ++i) {
+        String valstr = F("%val");
+        valstr += (i + 1);
+        valstr += '%';
+        SMART_REPL(valstr, formatUserVarNoCheck(event, i));
       }
     }
   }

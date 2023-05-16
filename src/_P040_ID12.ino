@@ -23,7 +23,7 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_040;
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_LONG;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_ULONG;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;

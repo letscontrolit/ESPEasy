@@ -1,7 +1,7 @@
 #ifndef COMMAND_RULES_H
 #define COMMAND_RULES_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 const __FlashStringHelper * Command_Rules_Execute(struct EventStruct *event, const char *Line);
 String Command_Rules_UseRules(struct EventStruct *event, const char *Line);

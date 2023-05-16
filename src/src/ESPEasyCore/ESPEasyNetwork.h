@@ -5,6 +5,8 @@
 
 #include "../DataStructs/MAC_address.h"
 
+#include <IPAddress.h>
+
 void setNetworkMedium(NetworkMedium_t medium);
 
 void NetworkConnectRelaxed();

@@ -12,6 +12,7 @@
 #include "../Helpers/StringConverter.h"
 
 
+#include <Wire.h>
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -159,13 +160,7 @@ String getKnownI2Cdevice(uint8_t address) {
         result += F("(Device) ");
 
         # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
-        result += 'P';
-
-        if (pluginID < 10) { result += '0'; }
-
-        if (pluginID < 100) { result += '0'; }
-        result += pluginID;
-        result += F(" - ");
+        result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
         # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
         result += getPluginNameFromDeviceIndex(deviceIndex);
         result += ',';
@@ -260,10 +255,10 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result +=  F("PCF8591,ADS1115,LM75A,INA219");
+      result +=  F("PCF8591,ADS1115,LM75A,INA219,TMP117");
       break;
     case 0x49:
-      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219");
+      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219,TMP117");
       break;
     case 0x4C:
     case 0x4E:
@@ -279,14 +274,18 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x53:
       result +=  F("ADXL345,LTR390");
       break;
-    case 0x54:
     case 0x55:
+      result +=  F("DFRobot Rotary enc,BeFlE Moisture");
+      break;
+    case 0x54:
     case 0x56:
     case 0x57:
       result +=  F("DFRobot Rotary enc");
       break;
     case 0x58:
       result +=  F("SGP30");
+    case 0x59:
+      result +=  F("SGP4x");
       break;
     case 0x5A:
       result +=  F("MLX90614,MPR121,CCS811");

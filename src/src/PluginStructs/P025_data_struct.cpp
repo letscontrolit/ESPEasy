@@ -2,7 +2,7 @@
 
 #ifdef USES_P025
 
-# include "src/WebServer/DevicesPage.h" // Needed for format_I2C_port_description
+# include "../WebServer/DevicesPage.h" // Needed for format_I2C_port_description
 
 
 # define P025_CONVERSION_REGISTER  0x00

@@ -6,7 +6,7 @@
 
 #ifdef USES_P103
 
-# include "src/Helpers/Rules_calculate.h"
+# include "../Globals/RulesCalculate.h"
 
 enum class AtlasEZO_Sensors_e : uint8_t {
   UNKNOWN = 0u,

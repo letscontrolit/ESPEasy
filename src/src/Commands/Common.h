@@ -2,7 +2,6 @@
 #define COMMAND_COMMON_H
 
 #include <ctype.h>
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 

@@ -5,9 +5,6 @@
 
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/Markup_Forms.h"
-# if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
-#  include <SD.h>
-# endif // if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 
 # if ADAGFX_FONTS_INCLUDED
 #  include "../Static/Fonts/Seven_Segment24pt7b.h"
@@ -66,6 +63,11 @@
 #   include "../Static/Fonts/whitrabt20pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
+
+# if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+#  include <SD.h>
+# endif // if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+
 
 /******************************************************************************************
  * get the display text for a 'text print mode' enum value
@@ -803,8 +805,8 @@ enum class adagfx_fonts_e : int8_t {
   sevenseg24,
   sevenseg18,
   freesans,
-  angelina8prop,
   # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  angelina8prop,
   novamono8pt, // 8pt
   unispace8pt,
   unispaceitalic8pt,

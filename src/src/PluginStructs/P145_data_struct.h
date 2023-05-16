@@ -51,8 +51,8 @@ struct P145_SENSORDEF
   float corf;          // CORF
   float corg;          // CORG
   P145_algorithm alg;  // Preferred/tuned algorithm
-  int   name;      // Sensor type name
-  int   gas;       // Measured gas 
+  int   name;          // Sensor type name
+  int   gas;           // Measured gas 
 };
 
 // State for heater control algorithm

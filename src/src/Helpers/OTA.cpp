@@ -16,8 +16,22 @@
 #endif
 
 
+#ifndef ARDUINO_OTA_PORT
+  #if defined(ESP32)
+    #define ARDUINO_OTA_PORT  3232
+  #else
+    // Do not use port 8266 for OTA, since that's used for ESPeasy p2p
+    #define ARDUINO_OTA_PORT  18266
+  #endif
+#endif
+
+
 bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
 #if defined(ESP8266)
+
+  #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
+  #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
+
 
   // Compute the current free space and sketch size, rounded to 4k blocks.
   // These block bounaries are needed for erasing a full block on flash.

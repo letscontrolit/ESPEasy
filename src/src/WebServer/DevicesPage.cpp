@@ -224,15 +224,7 @@ void addDeviceSelect(const __FlashStringHelper *name,  int choice)
 
 
         # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        String plugin;
-        plugin += 'P';
-
-        if (pluginID < 10) { plugin += '0'; }
-
-        if (pluginID < 100) { plugin += '0'; }
-        plugin    += pluginID;
-        plugin    += F(" - ");
-        deviceName = plugin + deviceName;
+        deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
         # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,
@@ -970,8 +962,9 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         devicePage_show_pin_config(taskIndex, DeviceIndex);
       }
     }
-
-    addFormSubHeader(F("Device Settings"));
+    if (DEVICE_TYPE_DUMMY != Device[DeviceIndex].Type) {
+      addFormSubHeader(F("Device Settings"));
+    }
 
     // add plugins content
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors

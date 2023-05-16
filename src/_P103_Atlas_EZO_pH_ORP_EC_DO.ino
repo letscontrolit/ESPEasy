@@ -304,8 +304,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
           (board_type == AtlasEZO_Sensors_e::EC) ||
           (board_type == AtlasEZO_Sensors_e::DO))
       {
-        double value;
-        char   strValue[6] = { 0 };
+        ESPEASY_RULES_FLOAT_TYPE value{};
 
         addFormSubHeader(F("Temperature compensation"));
         char deviceTemperatureTemplate[40] = { 0 };
@@ -324,9 +323,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
           value = P103_FIXED_TEMP_VALUE;
         }
 
-        dtostrf(value, 5, 2, strValue);
-        ZERO_TERMINATE(strValue);
-        addFormNote(concat(F("Actual value: "), String(strValue)));
+        addFormNote(concat(F("Actual value: "), toString(value, 2)));
       }
 
       success = true;
@@ -461,7 +458,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         String temperatureString(parseTemplate(deviceTemperatureTemplateString, 40));
 
         readCommand = F("RT,");
-        double temperatureReading;
+        ESPEASY_RULES_FLOAT_TYPE temperatureReading{};
 
         if (Calculate(temperatureString, temperatureReading) != CalculateReturnCode::OK)
         {

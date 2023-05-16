@@ -47,7 +47,7 @@ bool P093_data_struct::sync() {
 }
 
 bool P093_data_struct::read(String& result) const {
-  if (_valuesInitialized == false) {
+  if (!_valuesInitialized) {
     return false;
   }
 
@@ -80,9 +80,53 @@ bool P093_data_struct::read(String& result) const {
   result += F(",\"temperature\":");
   result += toString(_currentValues.temperature, 1) + '}';
 
+  return true;
+}
+
+bool P093_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  if (!_valuesInitialized) {
+    return false;
+  }
+  bool success         = true;
+  const String command = parseString(string, 1);
+
+  if (equals(command, F("roomtemperature"))) {
+    string = toString(_currentValues.roomTemperature, 1);
+  } else
+  if (equals(command, F("widevane"))) {
+    string = map_list(_currentValues.wideVane, _mappings.wideVane);
+  } else
+  if (equals(command, F("power"))) {
+    string = map_list(_currentValues.power, _mappings.power);
+  } else
+  if (equals(command, F("mode"))) {
+    string = map_list(_currentValues.mode, _mappings.mode);
+  } else
+  if (equals(command, F("fan"))) {
+    string = map_list(_currentValues.fan, _mappings.fan);
+  } else
+  if (equals(command, F("vane"))) {
+    string = map_list(_currentValues.vane, _mappings.vane);
+  } else
+  if (equals(command, F("isee"))) {
+    string = _currentValues.iSee ? '1' : '0';
+  } else
+  if (equals(command, F("temperature"))) {
+    string = toString(_currentValues.temperature, 1);
+  } else
+  if (_includeStatus && equals(command, F("operating"))) {
+    string = _currentValues.operating ? '1' : '0';
+  } else
+  if (_includeStatus && equals(command, F("compressorfrequency"))) {
+    string = _currentValues.compressorFrequency;
+  } else {
+    success = false;
+  }
+
     # undef map_list
 
-  return true;
+  return success;
 }
 
 void P093_data_struct::write(const String& command, const String& value) {
@@ -264,7 +308,7 @@ void P093_data_struct::responseReceived() {
 void P093_data_struct::updateStatus() {
   # ifdef PLUGIN_093_DEBUG
   addLog(LOG_LEVEL_DEBUG, String(F("M-AC: US: ")) + _infoModeIndex);
-  #endif
+  # endif // ifdef PLUGIN_093_DEBUG
 
   uint8_t packet[PACKET_LEN] = { 0xfc, 0x42, 0x01, 0x30, 0x10 };
 
@@ -323,7 +367,7 @@ void P093_data_struct::applySettings() {
 void P093_data_struct::connect() {
   # ifdef PLUGIN_093_DEBUG
   addLog(LOG_LEVEL_DEBUG, String(F("M-AC: Connect ")) + getBaudRate());
-  #endif
+  # endif // ifdef PLUGIN_093_DEBUG
 
   _serial.begin(getBaudRate(), SERIAL_8E1);
   const uint8_t buffer[] = { 0xfc, 0x5a, 0x01, 0x30, 0x02, 0xca, 0x01, 0xa8 };
@@ -351,7 +395,7 @@ void P093_data_struct::addByteToReadBuffer(uint8_t value) {
   } else {
     # ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("M-AC: ABTRB(0)"));
-    #endif
+    # endif // ifdef PLUGIN_093_DEBUG
     _readPos = 0;
   }
 }
@@ -376,7 +420,7 @@ bool P093_data_struct::readIncommingBytes() {
       } else {
         # ifdef PLUGIN_093_DEBUG
         addLog(LOG_LEVEL_DEBUG, String(F("M-AC: RIB(0) ")) + formatToHex(value));
-        #endif
+        # endif // ifdef PLUGIN_093_DEBUG
       }
     } else if ((_readPos <= DATA_LEN_INDEX) || (_readPos <= DATA_LEN_INDEX + _readBuffer[DATA_LEN_INDEX])) {
       // Read header + data part - data length is at index 4.
@@ -419,7 +463,7 @@ bool P093_data_struct::parseValues(const uint8_t *data, size_t length) {
   if (length == 0) {
     # ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("M-AC: PV(0)"));
-    #endif
+    # endif // ifdef PLUGIN_093_DEBUG
     return false;
   }
 
@@ -470,7 +514,7 @@ bool P093_data_struct::parseValues(const uint8_t *data, size_t length) {
   }
   # ifdef PLUGIN_093_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("M-AC: PV(1)"));
-  #endif
+  # endif // ifdef PLUGIN_093_DEBUG
   return false;
 }
 
@@ -482,7 +526,7 @@ P093_data_struct::State P093_data_struct::checkIncomingPacket(const uint8_t *pac
   if ((packet[2] != 0x01) || (packet[3] != 0x30)) {
     # ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("M-AC: CIP(0)"));
-    #endif
+    # endif // ifdef PLUGIN_093_DEBUG
     return Invalid;
   }
 
@@ -491,7 +535,7 @@ P093_data_struct::State P093_data_struct::checkIncomingPacket(const uint8_t *pac
   if (calculatedChecksum != checksum) {
     # ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, String(F("M-AC: CIP(1) ")) + calculatedChecksum);
-    #endif
+    # endif // ifdef PLUGIN_093_DEBUG
     return Invalid;
   }
 

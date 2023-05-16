@@ -71,6 +71,7 @@
 #endif
 
 #if defined(ESP32)
+  #include "esp32x_fixes.h"
   #include <esp8266-compat.h>
   #if ESP_IDF_VERSION_MAJOR < 3
     #ifndef ICACHE_RAM_ATTR
