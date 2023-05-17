@@ -2,28 +2,22 @@
 
 #include "../Commands/InternalCommands.h"
 
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+
+#include "../Globals/Cache.h"
 #include "../Globals/Logging.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/Memory.h"
 
-#include "../../_Plugin_Helper.h"
+/*
+ #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+ # include "../Helpers/_Plugin_Helper_serial.h"
+ #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+ */
 
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-# include "../Helpers/_Plugin_Helper_serial.h"
-#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
-
-EspEasy_Console_t::EspEasy_Console_t() {
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  _serial = new ESPeasySerial(
-    static_cast<ESPEasySerialPort>(_console_serial_port),
-    _console_serial_rxpin,
-    _console_serial_txpin,
-    false,
-    64);
-
-#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
 #ifdef ESP32
 
@@ -39,26 +33,65 @@ EspEasy_Console_t::EspEasy_Console_t() {
 #   if ARDUINO_USB_MODE
 
   // ESP32C3/S3 embedded USB using JTAG interface
-#    warning **** ESPEasy_Console uses HWCDC ****
+HWCDC _hwcdc_serial;
 #   else // No ARDUINO_USB_MODE
-  // ESP32Sx embedded USB interface
-#    warning **** ESPEasy_Console uses USBCDC ****
-#   endif  // ARDUINO_USB_MODE
+USBCDC _usbcdc_serial;
+#   endif // ARDUINO_USB_MODE
+#  endif  // ifdef USE_USB_CDC_CONSOLE
+# endif   // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#endif    // ifdef ESP32
 
-#  else // No USE_USB_CDC_CONSOLE
-  // Fallback serial interface for ESP32C3, S2 and S3 if no USB_SERIAL defined
-#   warning **** ESPEasy_Console uses Serial ****
-#  endif  // USE_USB_CDC_CONSOLE
 
-# else // No ESP32C3, S2 or S3
-  // Fallback serial interface for non ESP32C3, S2 and S3
-#  warning **** ESPEasy_Console uses Serial ****
-# endif  // ESP32C3, S2 or S3
 
-#else // No ESP32
-  // Using the standard Serial0 HW serial port.
-  # warning **** ESPEasy_Console uses Serial ****
-#endif  // ifdef ESP32
+EspEasy_Console_t::EspEasy_Console_t() {
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  _serial = new ESPeasySerial(
+    static_cast<ESPEasySerialPort>(_console_serial_port),
+    _console_serial_rxpin,
+    _console_serial_txpin,
+    false,
+    64);
+
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+
+#ifdef ESP32
+
+  /*
+   #if CONFIG_IDF_TARGET_ESP32C3 ||  // support USB via HWCDC using JTAG interface
+       CONFIG_IDF_TARGET_ESP32S2 ||  // support USB via USBCDC
+       CONFIG_IDF_TARGET_ESP32S3     // support USB via HWCDC using JTAG interface or USBCDC
+   */
+
+  /*
+   # if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+
+     // #if CONFIG_TINYUSB_CDC_ENABLED              // This define is not recognized here so use USE_USB_CDC_CONSOLE
+   #  ifdef USE_USB_CDC_CONSOLE
+   #   if ARDUINO_USB_MODE
+
+     // ESP32C3/S3 embedded USB using JTAG interface
+   #    warning **** ESPEasy_Console uses HWCDC ****
+   #   else // No ARDUINO_USB_MODE
+     // ESP32Sx embedded USB interface
+   #    warning **** ESPEasy_Console uses USBCDC ****
+   #   endif  // ARDUINO_USB_MODE
+
+   #  else // No USE_USB_CDC_CONSOLE
+     // Fallback serial interface for ESP32C3, S2 and S3 if no USB_SERIAL defined
+   #   warning **** ESPEasy_Console uses Serial ****
+   #  endif  // USE_USB_CDC_CONSOLE
+
+   # else // No ESP32C3, S2 or S3
+     // Fallback serial interface for non ESP32C3, S2 and S3
+   #  warning **** ESPEasy_Console uses Serial ****
+   # endif  // ESP32C3, S2 or S3
+
+   #else // No ESP32
+     // Using the standard Serial0 HW serial port.
+   # warning **** ESPEasy_Console uses Serial ****
+   */
+#endif // ifdef ESP32
 }
 
 EspEasy_Console_t::~EspEasy_Console_t() {
@@ -92,12 +125,12 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
     _serial->begin(baudrate);
     _serial->flush();
 # endif // ifdef ESP32
-#endif  // if !FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   } else {
 #if CONSOLE_USES_USBCDC
-    _usbcdc_serial.setRxBufferSize(64);
-    _usbcdc_serial.begin(baudrate);
-    USB.begin();
+//    _usbcdc_serial.setRxBufferSize(64);
+//    _usbcdc_serial.begin(baudrate);
+//    USB.begin();
     addLog(LOG_LEVEL_INFO, F("ESPEasy console using USB CDC"));
 #endif // if CONSOLE_USES_USBCDC
 #if CONSOLE_USES_HWCDC
@@ -232,7 +265,7 @@ void EspEasy_Console_t::loop()
 
     if (isprint(SerialInByte))
     {
-      if (SerialInByteCounter < INPUT_BUFFER_SIZE) { // add char to string if it still fits
+      if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
         InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
       }
     }
@@ -358,7 +391,8 @@ Stream * EspEasy_Console_t::getPort()
     #if CONSOLE_USES_HWCDC
   return &_hwcdc_serial;
     #elif CONSOLE_USES_USBCDC
-  return &_usbcdc_serial;
+  //return &_usbcdc_serial;
+  return nullptr;
     #else // if CONSOLE_USES_HWCDC
   return nullptr;
     #endif // if CONSOLE_USES_HWCDC
@@ -372,7 +406,8 @@ const Stream * EspEasy_Console_t::getPort() const
     #if CONSOLE_USES_HWCDC
   return &_hwcdc_serial;
     #elif CONSOLE_USES_USBCDC
-  return &_usbcdc_serial;
+  //return &_usbcdc_serial;
+  return nullptr;
     #else // if CONSOLE_USES_HWCDC
   return nullptr;
     #endif // if CONSOLE_USES_HWCDC
@@ -389,8 +424,11 @@ size_t EspEasy_Console_t::availableForWrite()
     #if CONSOLE_USES_HWCDC
   return _hwcdc_serial.availableForWrite();
     #elif CONSOLE_USES_USBCDC
-  return _usbcdc_serial.availableForWrite();
+  //return _usbcdc_serial.availableForWrite();
+  return 0;
     #else // if CONSOLE_USES_HWCDC
   return 0;
     #endif // if CONSOLE_USES_HWCDC
 }
+
+

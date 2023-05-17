@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/NetworkState.h"

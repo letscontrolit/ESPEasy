@@ -3,9 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../ESPEasyCore/ESPEasy_Console.h"
-
-extern EspEasy_Console_t ESPEasy_Console;
 
 void initSerial();
 
