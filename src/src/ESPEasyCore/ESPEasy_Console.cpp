@@ -378,7 +378,7 @@ const Stream * EspEasy_Console_t::getPort() const
     #endif // if CONSOLE_USES_HWCDC
 }
 
-size_t EspEasy_Console_t::availableForWrite() const
+size_t EspEasy_Console_t::availableForWrite()
 {
   if (_defaultPortActive) {
     if (_serial != nullptr) {

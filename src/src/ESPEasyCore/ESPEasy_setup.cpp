@@ -419,16 +419,6 @@ void ESPEasy_setup()
   }
 
   initSerial();
-# ifdef ESP32
-#  if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-#   ifdef USE_USB_CDC_CONSOLE
-#    if ARDUINO_USB_MODE
-#    else // No ARDUINO_USB_MODE
-  USB.begin();
-#    endif
-#   endif
-#  endif
-# endif
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("initSerial()"));
   #endif

@@ -45,7 +45,7 @@ private:
   Stream      * getPort();
   const Stream* getPort() const;
 
-  size_t  availableForWrite() const;
+  size_t  availableForWrite();
 
   bool _defaultPortActive = true;
 
