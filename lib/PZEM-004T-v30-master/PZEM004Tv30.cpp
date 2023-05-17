@@ -31,7 +31,7 @@
 
 #define PZEM_BAUD_RATE 9600
 
-extern HardwareSerial Serial;
+//extern HardwareSerial Serial;
 ESPeasySerial *swSerial = nullptr;
 
 #define DEBUG

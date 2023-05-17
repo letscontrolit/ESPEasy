@@ -10,6 +10,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/Serial.h"
 #include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -913,7 +914,7 @@ bool hasIPaddr() {
   for (auto addr : addrList) {
     if ((configured = (!addr.isLocal() && (addr.ifnumber() == STATION_IF)))) {
       /*
-         Serial.printf("STA: IF='%s' hostname='%s' addr= %s\n",
+         ESPEASY_SERIAL_CONSOLE_PORT.printf("STA: IF='%s' hostname='%s' addr= %s\n",
                     addr.ifname().c_str(),
                     addr.ifhostname(),
                     addr.toString().c_str());
@@ -1354,7 +1355,7 @@ String getDigestAuth(const String& authReq,
     F("\", response=\"") + response +
     '"';
 
-  //  Serial.println(authorization);
+  //  ESPEASY_SERIAL_CONSOLE_PORT.println(authorization);
 
   return authorization;
 }

@@ -35,7 +35,7 @@
     "espidf",
     "arduino"
   ],
-  "name": "Espressif Generic ESP32-S3 >= 4M Flash QSPI PSRAM, ESPEasy 1810k Code/OTA 316k FS",
+  "name": "Espressif Generic ESP32-S3 USB CDC >= 4M Flash QSPI PSRAM, ESPEasy 1810k Code/OTA 316k FS",
   "upload": {
     "flash_size": "4MB",
     "maximum_ram_size": 327680,

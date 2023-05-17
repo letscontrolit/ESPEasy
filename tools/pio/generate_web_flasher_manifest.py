@@ -134,6 +134,11 @@ def parse_filename(file, version, variant, file_suffix):
             elif 'collection' in variant:
                 variant_split = variant.split('_')
                 group = 'Collection{}'.format(variant_split[1])
+                # Select based on "4M1M" here to keep any occasional "4M2M" build
+                # separated in another group
+                if '_4M1M' in variant:
+                    main_group = '4M Flash Collection Builds'
+
 
             if 'NotSet' not in group:
                 sub_group_spit = group.split('_')
@@ -154,6 +159,9 @@ def parse_filename(file, version, variant, file_suffix):
                     specials.append('VCC')
                 if '_ETH' in variant:
                     specials.append('ETH')
+                if 'solo1' in variant:
+                    specials.append('Solo1')
+
 
                 for sp in specials:
                     sub_group_spit.append(sp)
@@ -167,6 +175,10 @@ def parse_filename(file, version, variant, file_suffix):
             state = "No Group"
             main_group = 'Misc'
 
+        if 'collection' in variant:
+            if '4M Flash' in main_group:
+                main_group = '4M Flash Collection Builds'
+
         if 'custom_' in variant:
             if 'Misc' in main_group:
                 main_group = 'Custom Misc'
@@ -174,6 +186,14 @@ def parse_filename(file, version, variant, file_suffix):
                 main_group = 'Custom'
         if 'hard_' in variant:
             main_group = 'Device Specific'
+
+        if 'solo1' in variant:
+            # Web flasher cannot detect whether it is an ESP32-classic or ESP32-solo1
+            # Thus make a separate group for the solo1
+            main_group = '4M Flash ESP32-solo1'
+
+        if 'CDC' in variant:
+            main_group = '{} USB CDC'.format(main_group)
 
     if ".factory.bin" in file_suffix or 'ESP32' not in file:
         #print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
@@ -244,12 +264,20 @@ def generate_manifest_files(bin_folder, output_prefix):
     # the main grouping in the combo box on the web flasher page
     main_group_list = [
         '4M Flash',
+        '4M Flash USB CDC',
+        '4M Flash ESP32-solo1',
+        '4M Flash Collection Builds',
+        '4M Flash Collection Builds USB CDC',
         '16M Flash',
+        '16M Flash USB CDC',
         '2M Flash',
         '1M Flash',
         'Device Specific',
         'Custom',
+        'Custom USB CDC',
         'Custom Misc',
+        'Custom Misc USB CDC',
+        'Misc USB CDC',
         'Misc']
 
     for main_group in main_group_list:

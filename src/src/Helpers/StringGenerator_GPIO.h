@@ -25,6 +25,8 @@ enum class PinSelectPurpose : uint8_t {
   SPI,
   SPI_MISO,
   Ethernet,
+  Serial_input,
+  Serial_output,
   DAC
 
 };

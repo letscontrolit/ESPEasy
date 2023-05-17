@@ -247,6 +247,12 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
   bool includeI2C = true;
   bool includeSPI = true;
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  // FIXME TD-er: Must check whether this can be a conflict.
+  bool includeSerial = false;
+  #else
+  bool includeSerial = true;
+  #endif
 
   #if FEATURE_ETHERNET
   bool includeEthernet = true;
@@ -259,6 +265,10 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     case PinSelectPurpose::SPI:
     case PinSelectPurpose::SPI_MISO:
       includeSPI = false;
+      break;
+    case PinSelectPurpose::Serial_input:
+    case PinSelectPurpose::Serial_output:
+      includeSerial = false;
       break;
     case PinSelectPurpose::Ethernet:
       #if FEATURE_ETHERNET
@@ -280,6 +290,13 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   if (includeSPI && Settings.isSPI_pin(gpio)) {
     return F("SPI");
   }
+
+  if (includeSerial && Settings.UseSerial) {
+    if (gpio == 1) { return F("TX0"); }
+
+    if (gpio == 3) { return F("RX0"); }
+  }
+
   #if FEATURE_ETHERNET
 
   if (Settings.isEthernetPin(gpio)) {

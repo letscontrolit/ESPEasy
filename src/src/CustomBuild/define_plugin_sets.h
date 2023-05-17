@@ -2903,6 +2903,10 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 0
+#endif
+
 #if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)
   #undef FEATURE_PLUGIN_PRIORITY
   #define FEATURE_PLUGIN_PRIORITY   1
@@ -2956,6 +2960,10 @@ To create/register a plugin, you have to :
   #define ESPEASY_RULES_FLOAT_TYPE double
 #else
   #define ESPEASY_RULES_FLOAT_TYPE float
+#endif
+
+#ifndef ESPEASY_SERIAL_0
+  #define ESPEASY_SERIAL_0 Serial
 #endif
 
 

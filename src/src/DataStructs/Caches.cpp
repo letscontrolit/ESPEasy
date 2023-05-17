@@ -72,7 +72,7 @@ void Caches::updateActiveTaskUseSerial0() {
       if ((Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL) ||
           (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1)) {
         const ESPEasySerialPort port = ESPeasySerialType::getSerialType(
-                  ESPEasySerialPort::not_set,
+                  static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[task]),
                   Settings.TaskDevicePin1[task],
                   Settings.TaskDevicePin2[task]);
         if (port == ESPEasySerialPort::serial0_swap ||

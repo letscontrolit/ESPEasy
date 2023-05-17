@@ -87,16 +87,17 @@ void setLogLevelFor(uint8_t destination, uint8_t logLevel) {
 
 void updateLogLevelCache() {
   uint8_t max_lvl = 0;
+  // FIXME TD-er: Must add check whether SW serial may be using the same pins as Serial0
   const bool useSerial = Settings.UseSerial && !activeTaskUseSerial0();
   if (log_to_serial_disabled) {
     if (useSerial) {
-      Serial.setDebugOutput(false);
+      ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(false);
     }
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
 #ifndef BUILD_NO_DEBUG
     if (useSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
-      Serial.setDebugOutput(true);
+      ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(true);
     }
 #endif
   }
@@ -115,7 +116,12 @@ bool loglevelActiveFor(uint8_t logLevel) {
 }
 
 uint8_t getSerialLogLevel() {
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  // FIXME TD-er: Must add check whether SW serial may be using the same pins as Serial0
+  if (log_to_serial_disabled || !Settings.UseSerial) return 0;
+#else
   if (log_to_serial_disabled || !Settings.UseSerial || activeTaskUseSerial0()) return 0;
+#endif
   if (!(WiFiEventData.WiFiServicesInitialized())){
     if (Settings.SerialLogLevel < LOG_LEVEL_INFO) {
       return LOG_LEVEL_INFO;

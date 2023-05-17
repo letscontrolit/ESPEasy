@@ -399,11 +399,13 @@ public:
 
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
-  uint8_t       md5[16]{}; // Store checksum of the settings.
-  
-//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-
+  uint8_t       md5[16]; // Store checksum of the settings.
   uint32_t      VariousBits2 = 0;
+
+  uint8_t       console_serial_port = 2; // ESPEasySerialPort::serial0
+  int8_t        console_serial_rxpin = 3;
+  int8_t        console_serial_txpin = 1;  
+  int8_t        alignment_filler1 = 0; // can be reused
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };

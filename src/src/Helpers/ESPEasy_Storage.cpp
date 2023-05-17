@@ -398,7 +398,6 @@ bool BuildFixes()
   Settings.Build      = get_build_nr();
   Settings.StructSize = sizeof(Settings);
 
-
   // We may have changed the settings, so update checksum.
   // This way we save settings less often as these changes are always reproducible via this
   // settings transitions function.
@@ -530,6 +529,7 @@ String SaveSettings()
     // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 
     Settings.validate();
+    initSerial();
 
     if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings)
     /*
@@ -672,6 +672,7 @@ String LoadSettings()
   }
 
   Settings.validate();
+  initSerial();
 
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
 
