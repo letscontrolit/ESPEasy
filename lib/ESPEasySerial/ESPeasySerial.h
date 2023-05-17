@@ -37,9 +37,10 @@
   # endif // ifndef DISABLE_SOFTWARE_SERIAL
 #endif    // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
 
-#ifndef DISABLE_SOFTWARE_SERIAL
+#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
 # include <ESPEasySoftwareSerial.h>
-#endif // ifndef DISABLE_SOFTWARE_SERIAL
+# include "ESPEasySerialConfig.h"
+#endif 
 
 #ifndef HAS_SERIAL2
   #ifdef ESP8266
@@ -137,6 +138,14 @@ public:
                 bool              forceSWserial = false);
   virtual ~ESPeasySerial();
 
+  // Same parameters as the constructor, to allow to reconfigure the ESPEasySerial object to be another type of port.
+  void resetConfig(ESPEasySerialPort         port, 
+                int          receivePin,
+                int          transmitPin,
+                bool         inverse_logic = false,
+                unsigned int buffSize      = 64,
+                bool         forceSWserial = false);
+
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud,
              SerialConfig  config = SERIAL_8N1,
@@ -161,6 +170,14 @@ public:
                 unsigned int      buffSize      = 64);
   virtual ~ESPeasySerial();
 
+  // Same parameters as the constructor, to allow to reconfigure the ESPEasySerial object to be another type of port.
+  void resetConfig(ESPEasySerialPort port, 
+                int  receivePin,
+                int  transmitPin,
+                bool inverse_logic = false,
+                unsigned int buffSize      = 64);
+
+
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud,
              uint32_t      config     = SERIAL_8N1,
@@ -175,6 +192,7 @@ public:
   size_t write(uint8_t val) override;
   int    read(void) override;
   int    available(void) override;
+  int    availableForWrite(void);
   void   flush(void) override;
 
 #if defined(ESP8266)
@@ -212,9 +230,9 @@ public:
                           size_t size) override;
   size_t        readBytes(uint8_t *buffer,
                           size_t   size) override;
+#endif
 
   void          setDebugOutput(bool);
-#endif // if defined(ESP8266)
 
   bool          isTxEnabled(void);
   bool          isRxEnabled(void);
@@ -261,6 +279,9 @@ public:
     return _serialtype != ESPEasySerialPort::sc16is752;
   }
 
+  ESPEasySerialPort getSerialPortType() const {
+    return _serialtype;
+  }
 private:
 
   const HardwareSerial* getHW() const;
@@ -298,11 +319,21 @@ private:
   static bool _serial0_swap_active;
 #endif // ESP8266
 
+private:
+  // Actual serial type
   ESPEasySerialPort _serialtype = ESPEasySerialPort::MAX_SERIAL_TYPE;
   int _receivePin;
   int _transmitPin;
   unsigned long _baud = 0;
   bool _inverse_logic = false;
+  unsigned int _buffSize = 64;
+  #ifdef ESP8266
+  bool _forceSWserial = false;
+  #endif
+#ifdef ESP8266
+  SerialConfig _config;
+  SerialMode _mode;
+#endif
 };
 
 #endif // ifndef ESPeasySerial_h

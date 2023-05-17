@@ -16,3 +16,17 @@ const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort serType)
   }
   return F("");
 }
+
+bool isHWserial(ESPEasySerialPort serType)
+{
+  switch (serType) {
+    case ESPEasySerialPort::serial0_swap:
+    case ESPEasySerialPort::serial0:
+    case ESPEasySerialPort::serial1:
+    case ESPEasySerialPort::serial2:
+      return true;
+    default:
+      break;
+  }
+  return false;
+}

@@ -7,24 +7,21 @@
 // No SoftwareSerial
 // Only support HW serial on Serial 0 .. 1
 // ****************************************
-ESPeasySerial::ESPeasySerial(
-  ESPEasySerialPort port, 
-  int receivePin, 
-  int transmitPin, 
-  bool inverse_logic, 
-  unsigned int buffSize,
-  bool         forceSWserial)
-  : _receivePin(receivePin), _transmitPin(transmitPin)
+
+void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
 {
+  _preferredSerialtype = port;
+  _receivePin = receivePin;
+  _transmitPin = transmitPin;
+  _inverse_logic = inverse_logic;
+  _buffSize = buffSize;
+  _forceSWserial = false;
+
   _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
 
   if (isValid()) {
     getHW()->pins(transmitPin, receivePin);
   }
-}
-
-ESPeasySerial::~ESPeasySerial() {
-  end();
 }
 
 void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
@@ -145,6 +142,13 @@ int ESPeasySerial::available(void) {
     return 0;
   }
   return getHW()->available();
+}
+
+int ESPeasySerial::availableForWrite() {
+  if (!isValid()) {
+    return 0;
+  }
+  return getHW()->availableForWrite();
 }
 
 void ESPeasySerial::flush(void) {

@@ -1,5 +1,4 @@
 #include <ESPeasySerial.h>
-#include <ESPEasySoftwareSerial.h>
 
 #define DETECT_BAUDATE_TIMEOUT     250
 
@@ -14,16 +13,30 @@ bool ESPeasySerial::_serial0_swap_active = false;
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
 
-ESPeasySerial::ESPeasySerial(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
-  : 
-#ifndef DISABLE_SC16IS752_Serial
-  _i2cserial(nullptr),
-#endif
-  _swserial(nullptr),
-  _receivePin(receivePin),
-  _transmitPin(transmitPin)
+void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
 {
-  _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
+  const bool wasValid = isValid();
+  if (_swserial != nullptr) {
+    _swserial->end();
+    delete _swserial;
+  }
+#ifndef DISABLE_SC16IS752_Serial
+  if (_i2cserial != nullptr) {
+    _i2cserial->end();
+    delete _i2cserial;
+  }
+#endif
+#ifndef DISABLE_SC16IS752_Serial
+  _i2cserial = nullptr;
+#endif
+  _serialtype =  ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
+  _swserial = nullptr;
+  _receivePin = receivePin;
+  _transmitPin = transmitPin;
+  _inverse_logic = inverse_logic;
+  _buffSize = buffSize;
+  _forceSWserial = forceSWserial;
+
   if (forceSWserial) {
     switch (_serialtype) {
       case ESPEasySerialPort::sc16is752:
@@ -37,7 +50,7 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port, int receivePin, int transmi
   switch (_serialtype) {
     case ESPEasySerialPort::software:
     {
-      _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic, buffSize);
+      _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic);
       break;
     }
     case ESPEasySerialPort::sc16is752:
@@ -57,23 +70,16 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port, int receivePin, int transmi
       }
       break;
   }
+  if (wasValid && isValid()) {
+    begin(_baud, _config, _mode);
+  }
 }
 
-ESPeasySerial::~ESPeasySerial() {
-  end();
-
-  if (_swserial != nullptr) {
-    delete _swserial;
-  }
-#ifndef DISABLE_SC16IS752_Serial
-  if (_i2cserial != nullptr) {
-    delete _i2cserial;
-  }
-#endif
-}
 
 void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
   _baud = baud;
+  _config = config;
+  _mode = mode;
 
   if (isSWserial()) {
     if (_swserial != nullptr) {
@@ -106,7 +112,7 @@ void ESPeasySerial::end() {
     _i2cserial->end();
 #endif
   } else {
-    //  getHW()->end();
+    getHW()->end();
   }
 }
 
@@ -284,6 +290,26 @@ int ESPeasySerial::available(void) {
 #endif
   } else {
     return getHW()->available();
+  }
+}
+
+int ESPeasySerial::availableForWrite() {
+  if (!isValid()) {
+    return 0;
+  }
+
+  if (isSWserial()) {
+    // FIXME TD-er: Implement availableForWrite
+    return 1;
+  } else if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
+    // FIXME TD-er: Implement availableForWrite
+    return 4; //_i2cserial->availableForWrite();
+#else
+    return 0;
+#endif
+  } else {
+    return getHW()->availableForWrite();
   }
 }
 
