@@ -2967,4 +2967,11 @@ To create/register a plugin, you have to :
 #endif
 
 
+#if FEATURE_MDNS
+  #ifdef ESP32S2
+    #undef FEATURE_MDNS
+    #define FEATURE_MDNS 0
+  #endif
+#endif
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
