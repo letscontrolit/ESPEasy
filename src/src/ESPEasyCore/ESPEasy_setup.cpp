@@ -104,11 +104,6 @@ void sw_watchdog_callback(void *arg)
 \*********************************************************************************************/
 void ESPEasy_setup()
 {
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  // Init serial as first call to make sure the object exists.
-  //ESPEASY_SERIAL_CONSOLE_PORT.setLowPriority();
-  initSerial();
-#endif
 #if defined(ESP8266_DISABLE_EXTRA4K) || defined(USE_SECOND_HEAP)
   disable_extra4k_at_link_time();
 #endif
@@ -174,19 +169,7 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  #ifdef ESP8266
-  ESPEASY_SERIAL_CONSOLE_PORT.begin(115200);
-  #endif
-#ifdef ESP32
-# if defined(USE_USB_CDC_CONSOLE) &&  ARDUINO_USB_MODE
-  addLog(LOG_LEVEL_INFO, F("ESPEasy console using HWCDC"));
-# else
-  delay(10); // When using USB CDC and not opening the USB serial port, the ESP may hang at boot.
-  ESPEASY_SERIAL_CONSOLE_PORT.end();
-  delay(10); 
-  ESPEASY_SERIAL_CONSOLE_PORT.begin(115200);
-# endif 
-#endif
+  ESPEasy_Console.begin(115200);
 
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
@@ -458,7 +441,7 @@ void ESPEasy_setup()
 
 # ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
-    ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(true);
+    ESPEasy_Console.setDebugOutput(true);
   }
 #endif
 

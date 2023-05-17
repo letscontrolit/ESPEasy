@@ -10,7 +10,6 @@
 
 void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
 {
-  _preferredSerialtype = port;
   _receivePin = receivePin;
   _transmitPin = transmitPin;
   _inverse_logic = inverse_logic;

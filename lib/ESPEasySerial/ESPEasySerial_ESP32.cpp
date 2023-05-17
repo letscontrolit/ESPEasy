@@ -153,6 +153,12 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
       // getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
       if (pinsChanged(_serialtype, _receivePin, _transmitPin)) {
         setPinsCache(_serialtype, _receivePin, _transmitPin);
+        // Allow to flush data from the serial buffers
+        // When not opening the USB serial port, the ESP may hang at boot.
+        delay(10); 
+        getHW()->end();
+        delay(10); 
+
         getHW()->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
       }
     }

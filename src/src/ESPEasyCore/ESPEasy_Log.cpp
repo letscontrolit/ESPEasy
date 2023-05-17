@@ -91,13 +91,13 @@ void updateLogLevelCache() {
   const bool useSerial = Settings.UseSerial && !activeTaskUseSerial0();
   if (log_to_serial_disabled) {
     if (useSerial) {
-      ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(false);
+      ESPEasy_Console.setDebugOutput(false);
     }
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
 #ifndef BUILD_NO_DEBUG
     if (useSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
-      ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(true);
+      ESPEasy_Console.setDebugOutput(true);
     }
 #endif
   }
@@ -249,18 +249,18 @@ void addLog(uint8_t logLevel, String&& string)
 void addToSerialLog(uint8_t logLevel, const String& string)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    addToSerialBuffer(String(millis()));
-    addToSerialBuffer(F(" : "));
+    ESPEasy_Console.addToSerialBuffer(String(millis()));
+    ESPEasy_Console.addToSerialBuffer(F(" : "));
     {
       String loglevelDisplayString = getLogLevelDisplayString(logLevel);
       while (loglevelDisplayString.length() < 6) {
         loglevelDisplayString += ' ';
       }
-      addToSerialBuffer(loglevelDisplayString);
+      ESPEasy_Console.addToSerialBuffer(loglevelDisplayString);
     }
-    addToSerialBuffer(F(" : "));
-    addToSerialBuffer(string);
-    addNewlineToSerialBuffer();
+    ESPEasy_Console.addToSerialBuffer(F(" : "));
+    ESPEasy_Console.addToSerialBuffer(string);
+    ESPEasy_Console.addNewlineToSerialBuffer();
   }
 }
 
