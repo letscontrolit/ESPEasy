@@ -208,7 +208,9 @@ void initSerial()
   ESPEASY_SERIAL_CONSOLE_PORT.flush();
 # endif 
 # if CONFIG_IDF_TARGET_ESP32S2
+#  if defined(USE_USB_CDC_CONSOLE)
   ESPEASY_SERIAL_CONSOLE_PORT.setRxBufferSize(64);
+#  endif
 # endif
 # if defined(USE_USB_CDC_CONSOLE) &&  ARDUINO_USB_MODE
 
