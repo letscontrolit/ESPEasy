@@ -128,9 +128,9 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
 #endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   } else {
 #if CONSOLE_USES_USBCDC
-//    _usbcdc_serial.setRxBufferSize(64);
-//    _usbcdc_serial.begin(baudrate);
-//    USB.begin();
+    _usbcdc_serial.setRxBufferSize(64);
+    _usbcdc_serial.begin(baudrate);
+    USB.begin();
     addLog(LOG_LEVEL_INFO, F("ESPEasy console using USB CDC"));
 #endif // if CONSOLE_USES_USBCDC
 #if CONSOLE_USES_HWCDC
@@ -391,8 +391,7 @@ Stream * EspEasy_Console_t::getPort()
     #if CONSOLE_USES_HWCDC
   return &_hwcdc_serial;
     #elif CONSOLE_USES_USBCDC
-  //return &_usbcdc_serial;
-  return nullptr;
+  return &_usbcdc_serial;
     #else // if CONSOLE_USES_HWCDC
   return nullptr;
     #endif // if CONSOLE_USES_HWCDC
@@ -406,8 +405,7 @@ const Stream * EspEasy_Console_t::getPort() const
     #if CONSOLE_USES_HWCDC
   return &_hwcdc_serial;
     #elif CONSOLE_USES_USBCDC
-  //return &_usbcdc_serial;
-  return nullptr;
+  return &_usbcdc_serial;
     #else // if CONSOLE_USES_HWCDC
   return nullptr;
     #endif // if CONSOLE_USES_HWCDC
@@ -424,8 +422,7 @@ size_t EspEasy_Console_t::availableForWrite()
     #if CONSOLE_USES_HWCDC
   return _hwcdc_serial.availableForWrite();
     #elif CONSOLE_USES_USBCDC
-  //return _usbcdc_serial.availableForWrite();
-  return 0;
+  return _usbcdc_serial.availableForWrite();
     #else // if CONSOLE_USES_HWCDC
   return 0;
     #endif // if CONSOLE_USES_HWCDC
