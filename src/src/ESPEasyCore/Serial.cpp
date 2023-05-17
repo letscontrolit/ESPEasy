@@ -191,18 +191,31 @@ void initSerial()
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   // make sure previous serial buffers are flushed before resetting baudrate
-  #   ifdef USE_USB_CDC_CONSOLE
-  delay(10); // When using USB CDC and not opening the USB serial port, the ESP may hang at boot.
-  #ifdef CONFIG_IDF_TARGET_ESP32S3
-  ESPEASY_SERIAL_CONSOLE_PORT.end();
-  #endif
-  delay(10); 
-#endif 
-  ESPEASY_SERIAL_CONSOLE_PORT.flush();
-#if CONFIG_IDF_TARGET_ESP32S2
-  ESPEASY_SERIAL_CONSOLE_PORT.setRxBufferSize(64);
-#endif
+#ifdef ESP8266
   ESPEASY_SERIAL_CONSOLE_PORT.begin(Settings.BaudRate);
+#endif
+#ifdef ESP32
+# if defined(USE_USB_CDC_CONSOLE) &&  ARDUINO_USB_MODE
+//  addLog(LOG_LEVEL_INFO, F("ESPEasy console using HWCDC"));
+  ESPEASY_SERIAL_CONSOLE_PORT.begin();
+# else
+  // Allow to flush data from the serial buffers
+  // When not opening the USB serial port, the ESP may hang at boot.
+  delay(10); 
+  ESPEASY_SERIAL_CONSOLE_PORT.end();
+  delay(10); 
+  ESPEASY_SERIAL_CONSOLE_PORT.begin(Settings.BaudRate);
+  ESPEASY_SERIAL_CONSOLE_PORT.flush();
+# endif 
+# if CONFIG_IDF_TARGET_ESP32S2
+  ESPEASY_SERIAL_CONSOLE_PORT.setRxBufferSize(64);
+# endif
+# if defined(USE_USB_CDC_CONSOLE) &&  ARDUINO_USB_MODE
+
+# else
+  ESPEASY_SERIAL_CONSOLE_PORT.begin(Settings.BaudRate);
+# endif
+#endif
 
   // ESPEASY_SERIAL_CONSOLE_PORT.setDebugOutput(true);
 

@@ -174,17 +174,19 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+  #ifdef ESP8266
+  ESPEASY_SERIAL_CONSOLE_PORT.begin(115200);
+  #endif
 #ifdef ESP32
-# ifdef USE_USB_CDC_CONSOLE
+# if defined(USE_USB_CDC_CONSOLE) &&  ARDUINO_USB_MODE
+  addLog(LOG_LEVEL_INFO, F("ESPEasy console using HWCDC"));
+# else
   delay(10); // When using USB CDC and not opening the USB serial port, the ESP may hang at boot.
-#ifdef CONFIG_IDF_TARGET_ESP32S3
   ESPEASY_SERIAL_CONSOLE_PORT.end();
   delay(10); 
-  #endif
+  ESPEASY_SERIAL_CONSOLE_PORT.begin(115200);
 # endif 
 #endif
-  ESPEASY_SERIAL_CONSOLE_PORT.begin(115200);
-
 
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
