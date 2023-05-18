@@ -1,17 +1,49 @@
 #include "ESPEasySerialType.h"
 
 #ifndef ESP32_SER0_TX
+#if CONFIG_IDF_TARGET_ESP32C3
+  # define ESP32_SER0_TX 21
+#elif CONFIG_IDF_TARGET_ESP32S2
+  # define ESP32_SER0_TX 43
+#elif CONFIG_IDF_TARGET_ESP32S3
+  # define ESP32_SER0_TX 43
+#else
   # define ESP32_SER0_TX 1
+#endif
 #endif // ifndef ESP32_SER0_TX
 #ifndef ESP32_SER0_RX
+#if CONFIG_IDF_TARGET_ESP32C3
+  # define ESP32_SER0_RX 20
+#elif CONFIG_IDF_TARGET_ESP32S2
+  # define ESP32_SER0_RX 44
+#elif CONFIG_IDF_TARGET_ESP32S3
+  # define ESP32_SER0_RX 44
+#else
   # define ESP32_SER0_RX 3
+#endif
 #endif // ifndef ESP32_SER0_RX
 
 #ifndef ESP32_SER1_TX
+#if CONFIG_IDF_TARGET_ESP32C3
+  # define ESP32_SER1_TX 21
+#elif CONFIG_IDF_TARGET_ESP32S2
+  # define ESP32_SER1_TX 18
+#elif CONFIG_IDF_TARGET_ESP32S3
+  # define ESP32_SER1_TX 17
+#else
   # define ESP32_SER1_TX 15
+#endif
 #endif // ifndef ESP32_SER1_TX
 #ifndef ESP32_SER1_RX
+#if CONFIG_IDF_TARGET_ESP32C3
+  # define ESP32_SER1_RX 20
+#elif CONFIG_IDF_TARGET_ESP32S2
+  # define ESP32_SER1_RX 18
+#elif CONFIG_IDF_TARGET_ESP32S3
+  # define ESP32_SER1_RX 18
+#else
   # define ESP32_SER1_RX 13
+#endif
 #endif // ifndef ESP32_SER1_RX
 
 #ifndef ESP32_SER2_TX
