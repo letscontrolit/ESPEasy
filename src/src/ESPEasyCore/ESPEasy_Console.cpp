@@ -48,8 +48,12 @@ USBCDC _usbcdc_serial;
 #if CONSOLE_USES_HWCDC
 volatile bool usbActive = false;
 
+volatile int32_t eventidTriggered = 0;
+
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   arduino_hw_cdc_event_data_t *data = (arduino_hw_cdc_event_data_t *)event_data;
+
+  eventidTriggered = event_id;
 
   switch (event_id) {
     case ARDUINO_HW_CDC_CONNECTED_EVENT:
@@ -69,8 +73,10 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
          }
          Serial.println();
        */
+      usbActive = true;
       break;
     case ARDUINO_HW_CDC_TX_EVENT:
+      usbActive = true;
       // No example provided
       break;
     case ARDUINO_HW_CDC_MAX_EVENT:
@@ -176,7 +182,9 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
     _serial->flush();
 # endif // ifdef ESP32
 #endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  } else {
+  }
+  // else 
+  {
 #if CONSOLE_USES_USBCDC
     _usbcdc_serial.setRxBufferSize(64);
     _usbcdc_serial.begin(baudrate);
@@ -185,6 +193,10 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
 #endif // if CONSOLE_USES_USBCDC
 #if CONSOLE_USES_HWCDC
     _hwcdc_serial->begin();
+    delay(10);
+    _hwcdc_serial->onEvent(usbEventCallback);
+    delay(1);
+
     addLog(LOG_LEVEL_INFO, F("ESPEasy console using HWCDC"));
 
 #endif // if CONSOLE_USES_HWCDC
@@ -278,7 +290,7 @@ void EspEasy_Console_t::init() {
 
   if (_defaultPortActive == usbActive) {
     endPort();
-    _defaultPortActive = !_defaultPortActive;
+    _defaultPortActive = false;
   }
   #endif // if CONSOLE_USES_HWCDC
 
@@ -289,6 +301,14 @@ void EspEasy_Console_t::init() {
 void EspEasy_Console_t::loop()
 {
 #if CONSOLE_USES_HWCDC
+  if (eventidTriggered != 0) {
+    if (eventidTriggered != 3) {
+        String log = F("HWCDC : EventID: "); 
+        log += eventidTriggered;
+        eventidTriggered = 0;
+        addLogMove(LOG_LEVEL_INFO, log);
+    }
+  }
   check_HWCDC_Port();
 #endif // if CONSOLE_USES_HWCDC
 
@@ -358,7 +378,7 @@ void EspEasy_Console_t::check_HWCDC_Port()
   addLog(LOG_LEVEL_INFO, F("HWCDC : Enable output to USB HWCDC"));
 
   endPort();
-  _defaultPortActive = !_defaultPortActive;
+  _defaultPortActive = false;
 
   begin(_baudrate);
 }
@@ -436,7 +456,7 @@ bool EspEasy_Console_t::process_serialWriteBuffer() {
     return false;
   }
 
-  const size_t snip = availableForWrite();
+  const int snip = availableForWrite();
 
   if (snip > 0) {
     size_t bytes_to_write = bufferSize;
@@ -500,13 +520,14 @@ void EspEasy_Console_t::endPort()
     }
   }
 #if CONSOLE_USES_HWCDC
-  _hwcdc_serial->end();
+//  _hwcdc_serial->end();
 #elif CONSOLE_USES_USBCDC
   _usbcdc_serial.end();
 #endif // if CONSOLE_USES_HWCDC
+  delay(10);
 }
 
-size_t EspEasy_Console_t::availableForWrite()
+int EspEasy_Console_t::availableForWrite()
 {
   if (_defaultPortActive) {
     if (_serial != nullptr) {

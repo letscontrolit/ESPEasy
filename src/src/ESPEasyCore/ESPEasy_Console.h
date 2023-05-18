@@ -94,7 +94,7 @@ private:
 
   void endPort();
 
-  size_t  availableForWrite();
+  int  availableForWrite();
 
   bool _defaultPortActive = true;
 
