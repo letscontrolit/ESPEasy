@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/PinMode.h"
 #include "../DataTypes/DeviceModel.h"
@@ -36,6 +34,46 @@
   # define MAX_ADC_VALUE 1023
   #endif
 #endif // ifdef ESP8266
+
+
+  #ifdef ESP32_CLASSIC
+    #define MAX_TX_PWR_DBM_11b  19.5f
+    #define MAX_TX_PWR_DBM_54g  16.0f
+    #define MAX_TX_PWR_DBM_n    14.0f
+    #define WIFI_SENSITIVITY_11b  -88
+    #define WIFI_SENSITIVITY_54g  -75
+    #define WIFI_SENSITIVITY_n    -70
+  #elif defined(ESP32S2) 
+    #define MAX_TX_PWR_DBM_11b  19.5f
+    #define MAX_TX_PWR_DBM_54g  15.0f
+    #define MAX_TX_PWR_DBM_n    13.0f
+    #define WIFI_SENSITIVITY_11b  -88
+    #define WIFI_SENSITIVITY_54g  -75
+    #define WIFI_SENSITIVITY_n    -72
+  #elif defined(ESP32S3)
+    #define MAX_TX_PWR_DBM_11b  21.0f
+    #define MAX_TX_PWR_DBM_54g  19.0f
+    #define MAX_TX_PWR_DBM_n    18.5f
+    #define WIFI_SENSITIVITY_11b  -88
+    #define WIFI_SENSITIVITY_54g  -76
+    #define WIFI_SENSITIVITY_n    -72
+  #elif defined(ESP32C3)
+    #define MAX_TX_PWR_DBM_11b  21.0f
+    #define MAX_TX_PWR_DBM_54g  19.0f
+    #define MAX_TX_PWR_DBM_n    18.5f
+    #define WIFI_SENSITIVITY_11b  -88
+    #define WIFI_SENSITIVITY_54g  -76
+    #define WIFI_SENSITIVITY_n    -73
+  #elif defined(ESP8266)
+    #define MAX_TX_PWR_DBM_11b  20.0f
+    #define MAX_TX_PWR_DBM_54g  17.0f
+    #define MAX_TX_PWR_DBM_n    14.0f
+    #define WIFI_SENSITIVITY_11b  -91
+    #define WIFI_SENSITIVITY_54g  -75
+    #define WIFI_SENSITIVITY_n    -72
+  # else
+    static_assert(false, "Implement processor architecture");
+  #endif
 
 
 /********************************************************************************************\
@@ -106,6 +144,21 @@ uint32_t                   getFlashChipSpeed();
 
 #ifdef ESP32
 uint32_t                   getXtalFrequencyMHz();
+
+struct esp32_chip_features {
+  bool embeddedFlash{};
+  bool wifi_bgn{};
+  bool bluetooth_ble{};
+  bool bluetooth_classic{};
+  bool ieee_802_15_4{};
+  bool embeddedPSRAM{};
+};
+
+esp32_chip_features        getChipFeatures();
+
+// @retval true:   octal (8 data lines)
+// @retval false:  quad (4 data lines)
+bool                       getFlashChipOPI_wired();
 #endif // ifdef ESP32
 
 const __FlashStringHelper* getFlashChipMode();
@@ -125,7 +178,7 @@ const __FlashStringHelper* getChipModel();
 
 bool                       isESP8285();
 
-uint8_t                    getChipRevision();
+String                     getChipRevision();
 
 uint32_t                   getSketchSize();
 
@@ -168,6 +221,10 @@ bool CanUsePSRAM();
 
 // Based on code from https://raw.githubusercontent.com/espressif/esp-idf/master/components/esp32/hw_random.c
 uint32_t HwRandom();
+
+long HwRandom(long howbig);
+
+long HwRandom(long howsmall, long howbig);
 
 
 /********************************************************************************************\
@@ -218,6 +275,8 @@ bool getGpioPullResistor(int   gpio,
 
 bool validGpio(int gpio);
 
+bool isSerialConsolePin(int gpio);
+
 
 #ifdef ESP32
 
@@ -231,6 +290,8 @@ bool getADC_gpio_info(int  gpio_pin,
                       int& ch,
                       int& t);
 int touchPinToGpio(int touch_pin);
+bool getDAC_gpio_info(int gpio_pin, 
+                      int& dac);
 
 #endif // ifdef ESP32
 

@@ -1,7 +1,7 @@
 #ifndef HELPERS_STRINGCONVERTER_NUMERICAL_H
 #define HELPERS_STRINGCONVERTER_NUMERICAL_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    Convert a char string to integer
@@ -28,7 +28,15 @@ String ull2String(uint64_t value,
 String ll2String(int64_t value,
                  uint8_t base = 10);
 
+String trimTrailingZeros(const String& value);
+
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 String doubleToString(const double& value,
+                      unsigned int  decimalPlaces     = 2,
+                      bool          trimTrailingZeros = false);
+#endif
+
+String floatToString(const float& value,
                       unsigned int  decimalPlaces     = 2,
                       bool          trimTrailingZeros = false);
 

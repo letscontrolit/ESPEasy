@@ -3,14 +3,14 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <map>
-#include <vector>
 #include "../CustomBuild/ESPEasyLimits.h"
 
 #include "../DataTypes/PluginID.h"
 #include "../DataTypes/DeviceIndex.h"
 #include "../DataTypes/TaskIndex.h"
 
+#include <map>
+#include <vector>
 
 
 /********************************************************************************************\

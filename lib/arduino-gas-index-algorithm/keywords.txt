@@ -1,0 +1,36 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SensirionGasIndexAlgorithm	KEYWORD1
+VOCGasIndexAlgorithm	KEYWORD1
+NOxGasIndexAlgorithm	KEYWORD1
+SensirionI2CSht4x	KEYWORD1
+SensirionI2CSgp41	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+process	KEYWORD2
+reset	KEYWORD2
+set_tuning_parameters	KEYWORD2
+get_tuning_parameters	KEYWORD2
+measureHighPrecision	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+sgp41	KEYWORD2
+sht4x 	KEYWORD2
+voc_algorithm	KEYWORD2
+nox_algorithm	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

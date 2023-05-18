@@ -23,13 +23,13 @@
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Protocol.h"
+#include "../Globals/RulesCalculate.h"
 
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/PortStatus.h"
-#include "../Helpers/Rules_calculate.h"
 
 
 #define PLUGIN_ID_MQTT_IMPORT         37
@@ -675,7 +675,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
             // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
             formula.replace(F("%pvalue%"), preValue[varNr]);
             formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
-            double result = 0;
+            ESPEASY_RULES_FLOAT_TYPE result{};
 
             if (!isError(Calculate(parseTemplate(formula), result))) {
               UserVar.set(event->TaskIndex, varNr, result, TempEvent.sensorType);

@@ -50,6 +50,19 @@
 .. |P145_compileinfo| replace:: `.`
 .. |P145_usedlibraries| replace:: `.`
 
+.. |P147_name| replace:: :cyan:`SGP4x VOC/NOx sensor`
+.. |P147_type| replace:: :cyan:`Gases`
+.. |P147_typename| replace:: :cyan:`Gases - SGP4x VOC(/NOx)`
+.. |P147_porttype| replace:: `.`
+.. |P147_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P147_github| replace:: P147_SGP4x.ino
+.. _P147_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P147_SGP4x.ino
+.. |P147_usedby| replace:: `.`
+.. |P147_shortinfo| replace:: `SGP4x VOC(/NOx)`
+.. |P147_maintainer| replace:: `tonhuisman`
+.. |P147_compileinfo| replace:: `.`
+.. |P147_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_Seesaw`
+
 .. |P148_name| replace:: :cyan:`POWR3xxD/THR3xxD`
 .. |P148_type| replace:: :cyan:`Display`
 .. |P148_typename| replace:: :cyan:`Display - POWR3xxD/THR3xxD`

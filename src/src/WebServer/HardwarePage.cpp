@@ -81,7 +81,7 @@ void handle_hardware() {
     int gpio = 0;
 
     while (gpio <= MAX_GPIO) {
-      if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+      if (isSerialConsolePin(gpio)) {
         // do not add the pin state select for these pins.
       } else {
         if (validGpio(gpio)) {
@@ -197,16 +197,21 @@ void handle_hardware() {
                     false);
     const __FlashStringHelper * spi_options[] = {
       getSPI_optionToString(SPI_Options_e::None), 
-      getSPI_optionToString(SPI_Options_e::Vspi), 
+      getSPI_optionToString(SPI_Options_e::Vspi_Fspi), 
+      #ifdef ESP32_CLASSIC
       getSPI_optionToString(SPI_Options_e::Hspi), 
+      #endif
       getSPI_optionToString(SPI_Options_e::UserDefined)};
     const int spi_index[] = {
       static_cast<int>(SPI_Options_e::None),
-      static_cast<int>(SPI_Options_e::Vspi),
+      static_cast<int>(SPI_Options_e::Vspi_Fspi),
+      #ifdef ESP32_CLASSIC
       static_cast<int>(SPI_Options_e::Hspi),
+      #endif
       static_cast<int>(SPI_Options_e::UserDefined)
     };
-    addFormSelector_script(F("Init SPI"), F("initspi"), 4, spi_options, spi_index, nullptr, Settings.InitSPI, F("spiOptionChanged(this)"));
+    constexpr size_t nrOptions = sizeof(spi_index) / sizeof(spi_index[0]);
+    addFormSelector_script(F("Init SPI"), F("initspi"), nrOptions, spi_options, spi_index, nullptr, Settings.InitSPI, F("spiOptionChanged(this)"));
     // User-defined pins
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("CLK")),  F("spipinsclk"), Settings.SPI_SCLK_pin);
     addFormPinSelect(PinSelectPurpose::SPI_MISO, formatGpioName_input(F("MISO")),  F("spipinmiso"), Settings.SPI_MISO_pin);
