@@ -35,7 +35,7 @@
   // ESP32C3/S3 embedded USB using JTAG interface
 #    include "HWCDC.h"
 #    define CONSOLE_USES_HWCDC 1
-extern  HWCDC _hwcdc_serial;
+extern  HWCDC* _hwcdc_serial;
 #   else // No ARDUINO_USB_MODE
 #    include "USB.h"
 #    include "USBCDC.h"
@@ -83,10 +83,16 @@ public:
 
 private:
 
+  #if CONSOLE_USES_HWCDC
+  void check_HWCDC_Port();
+  #endif
+
   int           getRoomLeft() const;
 
   Stream      * getPort();
   const Stream* getPort() const;
+
+  void endPort();
 
   size_t  availableForWrite();
 
