@@ -12,6 +12,11 @@ enum class ESPEasySerialPort : uint8_t {
   serial1      = 4,
   serial2      = 5,
   software     = 6,
+#ifdef ESP32
+  usb_cdc_0    = 7,
+  usb_cdc_1    = 8,
+  usb_hw_cdc   = 9,
+#endif
 
   MAX_SERIAL_TYPE
 };

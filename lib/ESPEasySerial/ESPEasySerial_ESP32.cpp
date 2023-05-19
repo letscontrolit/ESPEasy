@@ -184,7 +184,11 @@ void ESPeasySerial::end() {
 
 HardwareSerial * ESPeasySerial::getHW() {
   switch (_serialtype) {
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+    case ESPEasySerialPort::serial0: return &Serial0;
+#else
     case ESPEasySerialPort::serial0: return &Serial;
+#endif
     case ESPEasySerialPort::serial1: return &Serial1;
     case ESPEasySerialPort::serial2:
     #if HAS_SERIAL2
@@ -198,7 +202,11 @@ HardwareSerial * ESPeasySerial::getHW() {
 
 const HardwareSerial * ESPeasySerial::getHW() const {
   switch (_serialtype) {
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+    case ESPEasySerialPort::serial0: return &Serial0;
+#else
     case ESPEasySerialPort::serial0: return &Serial;
+#endif
     case ESPEasySerialPort::serial1: return &Serial1;
     case ESPEasySerialPort::serial2:
     #if HAS_SERIAL2
