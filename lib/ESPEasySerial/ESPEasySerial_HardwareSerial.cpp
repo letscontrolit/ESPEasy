@@ -1,0 +1,341 @@
+#include "ESPEasySerial_HardwareSerial.h"
+
+
+#include "ESPEasySerialType.h"
+
+#ifndef HAS_SERIAL2
+  # ifdef ESP8266
+    #  define HAS_SERIAL2 0
+  # elif defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+    #  include <soc/soc_caps.h>
+    #  if SOC_UART_NUM > 2
+      #   define HAS_SERIAL2 1
+    #  else // if SOC_UART_NUM > 2
+      #   define HAS_SERIAL2 0
+    #  endif // if SOC_UART_NUM > 2
+  # else // ifdef ESP8266
+static_assert(false, "Implement processor architecture");
+  # endif // ifdef ESP8266
+#endif // ifndef HAS_SERIAL2
+
+
+#ifdef ESP32
+
+// Temporary work-around for bug in ESP32 code, where the pin matrix is not cleaned up between calling end() and begin()
+// Work-around is to keep track of the last used pins for a serial port,
+// as it is likely that a node will always use the same pins most of the time.
+// If not, a reboot may be OK to fix it.
+// Another idea is to swap pins among UART ports.
+// e.g. use the same pins on Serial1 if it was used on Serial2 before.
+
+// PR to fix it: https://github.com/espressif/arduino-esp32/pull/5385
+// See: https://github.com/espressif/arduino-esp32/issues/3878
+
+
+static int receivePin0  = -1;
+static int transmitPin0 = -1;
+static int receivePin1  = -1;
+static int transmitPin1 = -1;
+static int receivePin2  = -1;
+static int transmitPin2 = -1;
+
+bool pinsChanged(ESPEasySerialPort port,
+                 int               receivePin,
+                 int               transmitPin)
+{
+  switch (port) {
+    case  ESPEasySerialPort::serial0: return receivePin != receivePin0 || transmitPin != transmitPin0;
+    case  ESPEasySerialPort::serial1: return receivePin != receivePin1 || transmitPin != transmitPin1;
+    # if HAS_SERIAL2
+    case  ESPEasySerialPort::serial2: return receivePin != receivePin2 || transmitPin != transmitPin2;
+    # endif // if HAS_SERIAL2
+    default:
+      // No other hardware serial ports
+      break;
+  }
+  return false;
+}
+
+void setPinsCache(ESPEasySerialPort port,
+                  int               receivePin,
+                  int               transmitPin)
+{
+  switch (port) {
+    case  ESPEasySerialPort::serial0:
+      receivePin0  = receivePin;
+      transmitPin0 = transmitPin;
+      break;
+    case  ESPEasySerialPort::serial1:
+      receivePin1  = receivePin;
+      transmitPin1 = transmitPin;
+      break;
+
+    # if HAS_SERIAL2
+    case  ESPEasySerialPort::serial2:
+      receivePin2  = receivePin;
+      transmitPin2 = transmitPin;
+      break;
+
+    # endif // if HAS_SERIAL2
+    default:
+      // No other hardware serial ports
+      break;
+  }
+}
+
+#endif // ifdef ESP32
+
+
+ESPEasySerial_HardwareSerial_t::ESPEasySerial_HardwareSerial_t(ESPEasySerialPort port)
+  : _serial(nullptr)
+{
+  _port = ESPEasySerialPort::not_set;
+}
+
+void ESPEasySerial_HardwareSerial_t::resetConfig(
+  ESPEasySerialPort port,
+  int               receivePin,
+  int               transmitPin,
+  bool              inverse_logic,
+  unsigned int      buffSize)
+{
+  _rxPin    = receivePin;
+  _txPin    = transmitPin;
+  _invert   = inverse_logic;
+  _buffSize = buffSize;
+
+  switch (port) {
+    case  ESPEasySerialPort::serial0:
+    case  ESPEasySerialPort::serial1:
+    #if HAS_SERIAL2
+    case  ESPEasySerialPort::serial2:
+    #endif // if HAS_SERIAL2
+      _port = port;
+      break;
+    default:
+      _port = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
+  }
+
+  if (_port == ESPEasySerialPort::serial0) {
+#if defined(ESP32) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
+    _serial = &Serial0;
+#else // if defined(ESP32) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT
+    _serial = &Serial;
+#endif // if defined(ESP32) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT
+#ifdef ESP8266
+  } else if (_port == ESPEasySerialPort::serial0_swap) {
+    _serial = &Serial;
+#endif // ifdef ESP8266
+  } else if (_port == ESPEasySerialPort::serial1) {
+    _serial = &Serial1;
+#if HAS_SERIAL2
+  } else if (_port == ESPEasySerialPort::serial2) {
+    _serial = &Serial2;
+#endif // if HAS_SERIAL2
+  } else {
+    _port = ESPEasySerialPort::not_set;
+  }
+}
+
+#ifdef ESP8266
+void ESPEasySerial_HardwareSerial_t::setSerialConfig(SerialConfig config,
+                                                     SerialMode   mode)
+{
+  _config = config;
+  _mode   = mode;
+}
+
+#endif // ifdef ESP8266
+
+#ifdef ESP32
+void ESPEasySerial_HardwareSerial_t::setSerialConfig(uint32_t config)
+{
+  // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
+  _config = config | 0x8000000;
+}
+
+#endif // ifdef ESP32
+
+#ifdef ESP8266
+void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
+{
+  if (_serial == nullptr) {
+    _baud = 0;
+    return;
+  }
+
+  /* Order: TX/RX
+   * UART 0 possible options are (1, 3), (2, 3) or (15, 13)
+   * UART 1 allows only TX on 2 if UART 0 is not (2, 3)
+   */
+
+  if (_port == ESPEasySerialPort::serial0_swap) {
+    _txPin = 15;
+    _rxPin = 13;
+  } else if (_port == ESPEasySerialPort::serial0) {
+    _txPin = 1;
+    _rxPin = 3;
+  } else if (_port == ESPEasySerialPort::serial1) {
+    _txPin = 2;
+    _rxPin = -1;
+  } else {
+    _txPin = -1;
+    _rxPin = -1;
+    return;
+  }
+
+  _serial->begin(_baud, _config, _mode, _txPin, _invert);
+  _serial->pins(_txPin, _rxPin);
+}
+
+#endif // ifdef ESP8266
+
+#ifdef ESP32
+void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
+{
+  if (_serial == nullptr) {
+    _baud = 0;
+    return;
+  }
+
+  // Timeout added for 1.0.1
+  // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
+  // getHW()->begin(baud, config, _rxPin, _txPin, invert, timeout_ms);
+  if (pinsChanged(_port, _rxPin, _txPin) || (_baud != baud)) {
+    setPinsCache(_port, _rxPin, _txPin);
+    _baud = baud;
+
+    // Allow to flush data from the serial buffers
+    // Otherwise the ESP may hang at boot.
+    delay(10);
+    _serial->end();
+    delay(10);
+
+    _serial->begin(baud, _config, _rxPin, _txPin, _invert);
+    _serial->flush();
+  }
+}
+
+#endif // ifdef ESP32
+
+void ESPEasySerial_HardwareSerial_t::end() {
+  if (_serial != nullptr) {
+    _serial->end();
+
+    // FIXME TD-er: Should we restore the pins for ESP8266?
+  }
+}
+
+int ESPEasySerial_HardwareSerial_t::available(void)
+{
+  if (_serial != nullptr) {
+    return _serial->available();
+  }
+  return 0;
+}
+
+int ESPEasySerial_HardwareSerial_t::availableForWrite(void)
+{
+  if (_serial != nullptr) {
+    return _serial->availableForWrite();
+  }
+  return 0;
+}
+
+int ESPEasySerial_HardwareSerial_t::peek(void)
+{
+  if (_serial != nullptr) {
+    return _serial->peek();
+  }
+  return 0;
+}
+
+int ESPEasySerial_HardwareSerial_t::read(void)
+{
+  if (_serial != nullptr) {
+    return _serial->read();
+  }
+  return 0;
+}
+
+size_t ESPEasySerial_HardwareSerial_t::read(uint8_t *buffer,
+                                            size_t   size)
+{
+  if (_serial != nullptr) {
+    #ifdef ESP32
+    return _serial->read(buffer, size);
+    #endif
+    #ifdef ESP8266
+    return _serial->read((char*)buffer, size);
+    #endif
+  }
+  return 0;
+}
+
+void ESPEasySerial_HardwareSerial_t::flush(void)
+{
+  if (_serial != nullptr) {
+    _serial->flush();
+  }
+}
+
+void ESPEasySerial_HardwareSerial_t::flush(bool txOnly)
+{
+  if (_serial != nullptr) {
+    #ifdef ESP32
+    _serial->flush(txOnly);
+    #endif
+    #ifdef ESP8266
+    _serial->flush();
+    #endif
+  }
+}
+
+size_t ESPEasySerial_HardwareSerial_t::write(uint8_t value)
+{
+  if (_serial != nullptr) {
+    return _serial->write(value);
+  }
+  return 0;
+}
+
+size_t ESPEasySerial_HardwareSerial_t::write(const uint8_t *buffer,
+                                             size_t         size)
+{
+  if (_serial != nullptr) {
+    return _serial->write(buffer, size);
+  }
+  return 0;
+}
+
+ESPEasySerial_HardwareSerial_t::operator bool() const
+{
+  return _serial != nullptr;
+}
+
+void ESPEasySerial_HardwareSerial_t::setDebugOutput(bool enabled) {
+  if (_serial != nullptr) {
+    return _serial->setDebugOutput(enabled);
+  }
+}
+
+size_t ESPEasySerial_HardwareSerial_t::setRxBufferSize(size_t new_size)
+{
+  if (_serial != nullptr) {
+    return _serial->setRxBufferSize(new_size);
+  }
+  return 0;
+}
+
+size_t ESPEasySerial_HardwareSerial_t::setTxBufferSize(size_t new_size)
+{
+  if (_serial != nullptr) {
+    #ifdef ESP32
+    return _serial->setTxBufferSize(new_size);
+    #endif
+    #ifdef ESP8266
+    return new_size;
+    #endif
+  }
+  return 0;
+}
