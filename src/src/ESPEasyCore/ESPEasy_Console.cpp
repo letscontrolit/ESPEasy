@@ -1,8 +1,11 @@
 #include "../ESPEasyCore/ESPEasy_Console.h"
 
+
 #include "../Commands/InternalCommands.h"
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
+
+#include "../ESPEasyCore/ESPEasy_USB.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/Logging.h"
@@ -18,37 +21,10 @@
  */
 
 
-#ifdef ESP32
-
-/*
- #if CONFIG_IDF_TARGET_ESP32C3 ||  // support USB via HWCDC using JTAG interface
-     CONFIG_IDF_TARGET_ESP32S2 ||  // support USB via USBCDC
-     CONFIG_IDF_TARGET_ESP32S3     // support USB via HWCDC using JTAG interface or USBCDC
- */
-# if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-
-// #if CONFIG_TINYUSB_CDC_ENABLED              // This define is not recognized here so use USE_USB_CDC_CONSOLE
-#  ifdef USE_USB_CDC_CONSOLE
-#   if ARDUINO_USB_MODE
-
-// ESP32C3/S3 embedded USB using JTAG interface
-#if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
-HWCDC *_hwcdc_serial = &Serial;
-#else
-HWCDC *_hwcdc_serial = &USBSerial;
-#endif
-#   else // No ARDUINO_USB_MODE
-USBCDC _usbcdc_serial;
-#   endif // ARDUINO_USB_MODE
-#  endif  // ifdef USE_USB_CDC_CONSOLE
-# endif // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-#endif  // ifdef ESP32
-
-
-#if CONSOLE_USES_HWCDC
+#if USES_HWCDC
 volatile bool usbActive = false;
 
-volatile int32_t eventidTriggered = 0;
+volatile int32_t eventidTriggered = ESP_EVENT_ANY_ID;
 
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   arduino_hw_cdc_event_data_t *data = (arduino_hw_cdc_event_data_t *)event_data;
@@ -77,6 +53,7 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
       break;
     case ARDUINO_HW_CDC_TX_EVENT:
       usbActive = true;
+
       // No example provided
       break;
     case ARDUINO_HW_CDC_MAX_EVENT:
@@ -87,15 +64,103 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
   }
 }
 
-#endif // if CONSOLE_USES_HWCDC
+#endif // if USES_HWCDC
+
+
+#if USES_USBCDC
+volatile bool usbActive = false;
+
+volatile int32_t eventidTriggered = ESP_EVENT_ANY_ID;
+
+// See: 
+// - https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/api/usb_cdc.html
+// - https://docs.espressif.com/projects/esp-idf/en/v4.3/esp32s2/api-guides/usb-console.html
+static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+  if (event_base == ARDUINO_USB_EVENTS) {
+    arduino_usb_event_data_t *data = (arduino_usb_event_data_t *)event_data;
+
+    switch (event_id) {
+      case ARDUINO_USB_STARTED_EVENT:
+//        HWSerial.println("USB PLUGGED");
+        break;
+      case ARDUINO_USB_STOPPED_EVENT:
+//        HWSerial.println("USB UNPLUGGED");
+        break;
+      case ARDUINO_USB_SUSPEND_EVENT:
+//        HWSerial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
+        break;
+      case ARDUINO_USB_RESUME_EVENT:
+//        HWSerial.println("USB RESUMED");
+        break;
+
+      default:
+        break;
+    }
+  } else if (event_base == ARDUINO_USB_CDC_EVENTS) {
+    arduino_usb_cdc_event_t *data = (arduino_usb_cdc_event_t *)event_data;
+
+    eventidTriggered = event_id;
+
+    switch (event_id) {
+      case ARDUINO_USB_CDC_CONNECTED_EVENT:
+
+        usbActive = true;
+        break;
+      case ARDUINO_USB_CDC_DISCONNECTED_EVENT:
+        // Sent when serial port disconnects
+        usbActive = true;
+        break;
+      case ARDUINO_USB_CDC_LINE_STATE_EVENT:
+        usbActive = true;
+        break;
+      case ARDUINO_USB_CDC_LINE_CODING_EVENT:
+        // Sent when USB is initialized by USB host (e.g. PC)
+        usbActive = true;
+        break;
+      case ARDUINO_USB_CDC_RX_EVENT:
+        /*
+           Serial.printf("CDC RX EVENT [%u]: ", data->rx.len);
+           {
+            uint8_t buf[data->rx.len];
+            size_t len = Serial.read(buf, data->rx.len);
+            Serial.write(buf, len);
+           }
+           Serial.println();
+         */
+        usbActive = true;
+        break;
+      case ARDUINO_USB_CDC_TX_EVENT:
+        usbActive = true;
+
+        // No example provided
+        break;
+      case ARDUINO_USB_CDC_RX_OVERFLOW_EVENT:
+        // No example provided
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+#endif // if USES_USBCDC
 
 
 EspEasy_Console_t::EspEasy_Console_t() :
-_defaultPortActive(true)
+#if USES_HWCDC
+  _defaultPortActive(true)
+#elif USES_USBCDC
+  _defaultPortActive(false)
+#else // if USES_HWCDC
+  _defaultPortActive(true)
+#endif // if USES_HWCDC
 {
-#if CONSOLE_USES_HWCDC
-usbActive = false;
-#endif
+#if USES_HWCDC
+  usbActive = false;
+#endif // if USES_HWCDC
+#if USES_USBCDC
+  usbActive = true;
+#endif // if USES_USBCDC
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   _serial = new ESPeasySerial(
     static_cast<ESPEasySerialPort>(_console_serial_port),
@@ -143,9 +208,12 @@ usbActive = false;
    # warning **** ESPEasy_Console uses Serial ****
 #endif // ifdef ESP32
 
-#if CONSOLE_USES_HWCDC
+#if USES_HWCDC
   _hwcdc_serial->onEvent(usbEventCallback);
-#endif // if CONSOLE_USES_HWCDC
+#endif // if USES_HWCDC
+#if USES_USBCDC
+  _usbcdc_serial->onEvent(usbEventCallback);
+#endif // if USES_USBCDC
 }
 
 EspEasy_Console_t::~EspEasy_Console_t() {
@@ -183,15 +251,17 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
 # endif // ifdef ESP32
 #endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   }
-  // else 
+
+  // else
   {
-#if CONSOLE_USES_USBCDC
-    _usbcdc_serial.setRxBufferSize(64);
-    _usbcdc_serial.begin(baudrate);
+#if USES_USBCDC
+    _usbcdc_serial->setRxBufferSize(64);
+    _usbcdc_serial->begin(baudrate);
+    _usbcdc_serial->onEvent(usbEventCallback);
     USB.begin();
     addLog(LOG_LEVEL_INFO, F("ESPEasy console using USB CDC"));
-#endif // if CONSOLE_USES_USBCDC
-#if CONSOLE_USES_HWCDC
+#endif // if USES_USBCDC
+#if USES_HWCDC
     _hwcdc_serial->begin();
     delay(10);
     _hwcdc_serial->onEvent(usbEventCallback);
@@ -199,7 +269,7 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
 
     addLog(LOG_LEVEL_INFO, F("ESPEasy console using HWCDC"));
 
-#endif // if CONSOLE_USES_HWCDC
+#endif // if USES_HWCDC
   }
 }
 
@@ -286,13 +356,13 @@ void EspEasy_Console_t::init() {
    */
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
-  #if CONSOLE_USES_HWCDC
+  #if USES_HWCDC || USES_USBCDC
 
   if (_defaultPortActive == usbActive) {
     endPort();
     _defaultPortActive = false;
   }
-  #endif // if CONSOLE_USES_HWCDC
+  #endif // if USES_HWCDC
 
 
   begin(Settings.BaudRate);
@@ -300,17 +370,26 @@ void EspEasy_Console_t::init() {
 
 void EspEasy_Console_t::loop()
 {
-#if CONSOLE_USES_HWCDC
-  if (eventidTriggered != 0) {
-    if (eventidTriggered != 3) {
-        String log = F("HWCDC : EventID: "); 
-        log += eventidTriggered;
-        eventidTriggered = 0;
-        addLogMove(LOG_LEVEL_INFO, log);
+#if USES_HWCDC || USES_USBCDC
+
+  if (eventidTriggered != ESP_EVENT_ANY_ID) {
+    # if USES_USBCDC
+
+    if (eventidTriggered != ARDUINO_USB_CDC_TX_EVENT) {
+      String log = F("USBCDC : EventID: ");
+    # else // if USES_USBCDC
+
+    if (eventidTriggered != ARDUINO_HW_CDC_TX_EVENT) {
+      String log = F("HWCDC : EventID: ");
+    # endif // if USES_USBCDC
+
+      log             += eventidTriggered;
+      eventidTriggered = ESP_EVENT_ANY_ID;
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   check_HWCDC_Port();
-#endif // if CONSOLE_USES_HWCDC
+#endif // if USES_HWCDC || USES_USBCDC
 
   Stream *port = getPort();
 
@@ -368,23 +447,26 @@ void EspEasy_Console_t::loop()
   }
 }
 
-  #if CONSOLE_USES_HWCDC
 void EspEasy_Console_t::check_HWCDC_Port()
 {
+#if USES_HWCDC || USES_USBCDC
+
   if (_defaultPortActive == !usbActive) {
     return;
   }
 
-  addLog(LOG_LEVEL_INFO, F("HWCDC : Enable output to USB HWCDC"));
+  # if USES_HWCDC
+  addLog(LOG_LEVEL_INFO, F("HWCDC  : Enable output to USB HWCDC"));
+  # else // if USES_HWCDC
+  addLog(LOG_LEVEL_INFO, F("USBCDC : Enable output to USB CDC"));
+  # endif // if USES_HWCDC
 
   endPort();
   _defaultPortActive = false;
 
   begin(_baudrate);
+#endif // if USES_HWCDC || USES_USBCDC
 }
-
-  #endif // if CONSOLE_USES_HWCDC
-
 
 int EspEasy_Console_t::getRoomLeft() const {
   #ifdef USE_SECOND_HEAP
@@ -489,13 +571,13 @@ Stream * EspEasy_Console_t::getPort()
   if (_defaultPortActive) {
     return _serial;
   }
-    #if CONSOLE_USES_HWCDC
+    #if USES_HWCDC
   return _hwcdc_serial;
-    #elif CONSOLE_USES_USBCDC
-  return &_usbcdc_serial;
-    #else // if CONSOLE_USES_HWCDC
+    #elif USES_USBCDC
+  return _usbcdc_serial;
+    #else // if USES_HWCDC
   return nullptr;
-    #endif // if CONSOLE_USES_HWCDC
+    #endif // if USES_HWCDC
 }
 
 const Stream * EspEasy_Console_t::getPort() const
@@ -503,13 +585,13 @@ const Stream * EspEasy_Console_t::getPort() const
   if (_defaultPortActive) {
     return _serial;
   }
-    #if CONSOLE_USES_HWCDC
+    #if USES_HWCDC
   return _hwcdc_serial;
-    #elif CONSOLE_USES_USBCDC
-  return &_usbcdc_serial;
-    #else // if CONSOLE_USES_HWCDC
+    #elif USES_USBCDC
+  return _usbcdc_serial;
+    #else // if USES_HWCDC
   return nullptr;
-    #endif // if CONSOLE_USES_HWCDC
+    #endif // if USES_HWCDC
 }
 
 void EspEasy_Console_t::endPort()
@@ -519,11 +601,12 @@ void EspEasy_Console_t::endPort()
       _serial->end();
     }
   }
-#if CONSOLE_USES_HWCDC
-//  _hwcdc_serial->end();
-#elif CONSOLE_USES_USBCDC
-  _usbcdc_serial.end();
-#endif // if CONSOLE_USES_HWCDC
+#if USES_HWCDC
+
+  //  _hwcdc_serial->end();
+#elif USES_USBCDC
+  _usbcdc_serial->end();
+#endif // if USES_HWCDC
   delay(10);
 }
 
@@ -535,11 +618,11 @@ int EspEasy_Console_t::availableForWrite()
     }
     return 0;
   }
-    #if CONSOLE_USES_HWCDC
+    #if USES_HWCDC
   return _hwcdc_serial->availableForWrite();
-    #elif CONSOLE_USES_USBCDC
-  return _usbcdc_serial.availableForWrite();
-    #else // if CONSOLE_USES_HWCDC
+    #elif USES_USBCDC
+  return _usbcdc_serial->availableForWrite();
+    #else // if USES_HWCDC
   return 0;
-    #endif // if CONSOLE_USES_HWCDC
+    #endif // if USES_HWCDC
 }

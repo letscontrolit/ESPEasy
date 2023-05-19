@@ -55,7 +55,7 @@ void handle_advanced() {
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.SyslogPort     = getFormItemInt(F("syslogport"));
-    Settings.UseSerial      = isFormItemChecked(F("useserial"));
+    Settings.UseSerial      = isFormItemChecked(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     Settings.console_serial_rxpin = getFormItemInt(F("taskdevicepin1"), Settings.console_serial_rxpin);
@@ -226,8 +226,7 @@ void handle_advanced() {
 
 
   addFormSubHeader(F("Serial Console Settings"));
-
-  addFormCheckBox(F("Enable Serial Port Console"), F("useserial"), Settings.UseSerial);
+  addFormCheckBox(LabelType::ENABLE_SERIAL_PORT_CONSOLE, Settings.UseSerial);
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   serialHelper_webformLoad(

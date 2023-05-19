@@ -528,6 +528,8 @@ void handle_sysinfo_SystemStatus() {
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
   # endif // if FEATURE_SD
 
+  addRowLabelValue(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
+
   if (Settings.EnableClearHangingI2Cbus()) {
     addRowLabelValue(LabelType::I2C_BUS_STATE);
     addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
