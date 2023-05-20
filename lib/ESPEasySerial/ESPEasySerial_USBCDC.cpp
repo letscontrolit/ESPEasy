@@ -86,10 +86,10 @@ ESPEasySerial_USBCDC_t::ESPEasySerial_USBCDC_t(const ESPEasySerialConfig & confi
   _mustDelete = false;
   int uart_nr = -1;
 
-  if (port == ESPEasySerialPort::usb_cdc_0) {
+  if (config.port == ESPEasySerialPort::usb_cdc_0) {
     uart_nr = 0;
   }
-  else if (port == ESPEasySerialPort::usb_cdc_1) {
+  else if (config.port == ESPEasySerialPort::usb_cdc_1) {
     uart_nr = 1;
   }
 
