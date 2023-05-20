@@ -102,7 +102,7 @@ void begin(unsigned long baud, uint32_t config);
   size_t write(const uint8_t *buffer,
                size_t         size);
   size_t write(const char *buffer);
-  int    baudRate(void);
+  int getBaudRate() const;
 
 #if defined(ESP8266)
   size_t        readBytes(char  *buffer,

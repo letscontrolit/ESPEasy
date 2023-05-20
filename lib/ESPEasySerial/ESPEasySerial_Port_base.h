@@ -75,11 +75,6 @@ public:
   virtual size_t setRxBufferSize(size_t new_size) = 0;
   virtual size_t setTxBufferSize(size_t new_size) = 0;
 
-
-  unsigned long  getBaudRate() const {
-    return _config.baud;
-  }
-
   const ESPEasySerialConfig& getSerialConfig() const {
     return _config;
   }

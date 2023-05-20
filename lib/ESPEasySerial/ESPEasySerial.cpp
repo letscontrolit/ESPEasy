@@ -190,7 +190,7 @@ void ESPeasySerial::flush(void)
   }
 }
 
-int ESPeasySerial::baudRate(void) 
+int ESPeasySerial::getBaudRate() const
 {
   if (!isValid()) {
     return 0;
