@@ -1,9 +1,8 @@
 #include "ESPEasySerial_USB_HWCDC.h"
 
-#include "ESPEasySerial_USB.h"
-
 #if USES_HWCDC
 
+# include "../drivers/ESPEasySerial_USB.h"
 
 volatile bool usbActive = false;
 
@@ -49,7 +48,7 @@ static void hwcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t e
 
 ESPEasySerial_USB_WHCDC_t::ESPEasySerial_USB_WHCDC_t()
 {
-  _port = ESPEasySerialPort::usb_hw_cdc;
+  _config.port = ESPEasySerialPort::usb_hw_cdc;
 }
 
 void ESPEasySerial_USB_WHCDC_t::begin(unsigned long baud)

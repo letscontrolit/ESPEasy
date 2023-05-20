@@ -1,6 +1,6 @@
 #include <ESPeasySerial.h>
 
-#if defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
+#if !USES_SW_SERIAL && defined(ESP8266)
 
 // ****************************************
 // ESP8266 implementation wrapper
@@ -271,4 +271,4 @@ bool ESPeasySerial::listen() {
   return false;
 }
 
-#endif // DISABLE_SOFTWARE_SERIAL
+#endif 

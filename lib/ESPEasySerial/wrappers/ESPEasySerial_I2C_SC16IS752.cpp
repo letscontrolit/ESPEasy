@@ -1,14 +1,14 @@
 #include "ESPEasySerial_I2C_SC16IS752.h"
 
 
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
 
 
 ESPEasySerial_I2C_SC16IS752::ESPEasySerial_I2C_SC16IS752(ESPEasySC16IS752_Serial::I2C_address       addr,
                                                          ESPEasySC16IS752_Serial::SC16IS752_channel ch)
 {
-  _port      = ESPEasySerialPort::sc16is752;
-  _i2cserial = new ESPEasySC16IS752_Serial(addr, ch);
+  _config.port = ESPEasySerialPort::sc16is752;
+  _i2cserial   = new ESPEasySC16IS752_Serial(addr, ch);
 }
 
 ESPEasySerial_I2C_SC16IS752::~ESPEasySerial_I2C_SC16IS752()
@@ -44,7 +44,7 @@ int ESPEasySerial_I2C_SC16IS752::availableForWrite(void)
 {
   if (_i2cserial != nullptr) {
     // FIXME TD-er: Implement availableForWrite
-    return 4; //_i2cserial->availableForWrite();
+    return 4; // _i2cserial->availableForWrite();
   }
   return 0;
 }

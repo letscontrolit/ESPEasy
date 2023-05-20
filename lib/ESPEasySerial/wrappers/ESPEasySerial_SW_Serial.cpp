@@ -1,13 +1,13 @@
 #include "ESPEasySerial_SW_Serial.h"
 
 
-#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
+#if USES_SW_SERIAL
 
 
 ESPEasySerial_SW_Serial::ESPEasySerial_SW_Serial(int receivePin, int transmitPin, bool inverse_logic)
 {
-  _port     = ESPEasySerialPort::software;
-  _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic);
+  _config.port = ESPEasySerialPort::software;
+  _swserial    = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic);
 }
 
 ESPEasySerial_SW_Serial::~ESPEasySerial_SW_Serial()
@@ -125,4 +125,4 @@ size_t ESPEasySerial_SW_Serial::setTxBufferSize(size_t new_size)
   return 0;
 }
 
-#endif // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
+#endif // if USES_SW_SERIAL

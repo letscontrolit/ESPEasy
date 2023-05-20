@@ -1,13 +1,48 @@
 #ifndef ESPEASYSERIAL_ESPEASYSERIALCONFIG_H
 #define ESPEASYSERIAL_ESPEASYSERIALCONFIG_H
-/*
-#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-#include <Arduino.h>
+
+#include "ESPEasySerial_common_defines.h"
+
+#include "ESPEasySerialPort.h"
+
+#if USES_I2C_SC16IS752
+# include "drivers/ESPEasySC16IS752_Serial.h"
+#endif // if USES_I2C_SC16IS752
+
 #include <HardwareSerial.h>
-#include <SoftwareSerial.h>
 
-SoftwareSerialConfig SerialConfig_to_SoftwareSerialConfig(SerialConfig config);
+struct ESPEasySerialConfig {
 
-#endif
-*/
-#endif
+  ESPEasySerialConfig() = default;
+
+#if USES_I2C_SC16IS752
+
+  bool getI2C_SC16IS752_Parameters(ESPEasySC16IS752_Serial::I2C_address      & addr,
+                                   ESPEasySC16IS752_Serial::SC16IS752_channel& ch) const;
+
+
+#endif // if USES_I2C_SC16IS752
+
+
+  ESPEasySerialPort port          = ESPEasySerialPort::not_set;
+  unsigned long     baud          = 115200;
+  int               receivePin    = -1;
+  int               transmitPin   = -1;
+  bool              inverse_logic = false;
+  unsigned int      buffSize      = 64;
+  bool              forceSWserial = false;
+  unsigned long     timeout_ms    = 20000UL;
+
+  #ifdef ESP32
+  uint32_t config = SERIAL_8N1;
+#endif // ifdef ESP32
+
+#ifdef ESP8266
+  SerialConfig config = SERIAL_8N1;
+  SerialMode mode     = SERIAL_FULL;
+#endif // ifdef ESP8266
+
+};
+
+
+#endif // ifndef ESPEASYSERIAL_ESPEASYSERIALCONFIG_H

@@ -1,11 +1,11 @@
 #include <ESPeasySerial.h>
 
-/*
-#include <deque>
 
-std::deque<ESPeasySerial *> _ESPeasySerial_instances;
-*/
-#ifdef ESP8266
+#include "wrappers/ESPEasySerial_HardwareSerial.h"
+#include "wrappers/ESPEasySerial_I2C_SC16IS752.h"
+#include "wrappers/ESPEasySerial_SW_Serial.h"
+#include "wrappers/ESPEasySerial_USB_HWCDC.h"
+#include "wrappers/ESPEasySerial_USBCDC.h"
 
 ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
                              int               receivePin,
@@ -14,26 +14,20 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
                              unsigned int      buffSize,
                              bool              forceSWserial)
   :
-# ifndef DISABLE_SC16IS752_Serial
-  _i2cserial(nullptr),
-# endif // ifndef DISABLE_SC16IS752_Serial
-# if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-  _swserial(nullptr),
-# endif // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
   _receivePin(receivePin),
   _transmitPin(transmitPin),
   _inverse_logic(inverse_logic),
   _buffSize(buffSize),
-#if defined(DISABLE_SOFTWARE_SERIAL)
+#if USES_SW_SERIAL
   _forceSWserial(false)
 #else
   _forceSWserial(forceSWserial)
 #endif
 {
   _serialtype =  ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
-#ifndef DISABLE_SOFTWARE_SERIAL
+#if USES_SW_SERIAL
   if (forceSWserial) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     if (_serialtype != ESPEasySerialPort::sc16is752) {
       _serialtype = ESPEasySerialPort::software;
     }
@@ -44,99 +38,62 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
 #endif
 
   switch (_serialtype) {
+#if USES_SW_SERIAL
     case ESPEasySerialPort::software:
     {
-#ifndef DISABLE_SOFTWARE_SERIAL
-      _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic);
-#endif
+      _serialPort = new ESPEasySerial_SW_Serial(receivePin, transmitPin, inverse_logic);
       break;
     }
+#endif
+#if USES_I2C_SC16IS752
     case ESPEasySerialPort::sc16is752:
     {
-#ifndef DISABLE_SC16IS752_Serial
       ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
       ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
 
-      _i2cserial = new ESPEasySC16IS752_Serial(addr, ch);
-#endif
+      _serialPort = new ESPEasySerial_I2C_SC16IS752(addr, ch);
       break;
     }
+#endif
+#if USES_HWCDC
+    case ESPEasySerialPort::usb_hw_cdc:
+    {
+      _serialPort = new ESPEasySerial_USB_WHCDC_t();
+      break;
+    }
+#endif
+#if USES_USBCDC
+    case ESPEasySerialPort::usb_cdc_0:
+    case ESPEasySerialPort::usb_cdc_1:
+    {
+      _serialPort = new ESPEasySerial_USBCDC_t(_serialtype);
+      break;
+    }
+#endif
     default:
 
-      if (isValid()) {
-        getHW()->pins(transmitPin, receivePin);
+      if (isHWserial(_serialtype)) {
+        _serialPort = new ESPEasySerial_HardwareSerial_t(_serialtype);
+        if (_serialPort != nullptr) {
+          _serialPort->resetConfig(_serialtype, receivePin, transmitPin, inverse_logic, buffSize);
+        }
       }
       break;
   }
-  if (isValid()) {
-    begin(_baud, _config, _mode);
+  if (_serialPort != nullptr) {
+    _serialPort->begin(_baud);
   }
 }
 
-#endif // ifdef ESP8266
 
-#ifdef ESP32
-ESPeasySerial::ESPeasySerial(
-  ESPEasySerialPort port,
-  int               receivePin,
-  int               transmitPin,
-  bool              inverse_logic,
-  unsigned int      buffSize)
-  :
-# ifndef DISABLE_SC16IS752_Serial
-  _i2cserial(nullptr),
-# endif // ifndef DISABLE_SC16IS752_Serial
-  _receivePin(receivePin),
-  _transmitPin(transmitPin),
-  _inverse_logic(inverse_logic),
-  _buffSize(buffSize)
-{
-  switch (port) {
-    case  ESPEasySerialPort::serial0:
-    case  ESPEasySerialPort::serial1:
-    # if HAS_SERIAL2
-    case  ESPEasySerialPort::serial2:
-    # endif 
-      _serialtype = port;
-      break;
-    default:
-      _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
-  }
-
-# ifndef DISABLE_SC16IS752_Serial
-
-  switch (_serialtype) {
-    case ESPEasySerialPort::sc16is752:
-    {
-      ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
-      ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
-      _i2cserial = new ESPEasySC16IS752_Serial(addr, ch);
-      break;
-    }
-    default:
-      break;
-  }
-# endif // ifndef DISABLE_SC16IS752_Serial
-
-}
-
-#endif // ifdef ESP32
 
 ESPeasySerial::~ESPeasySerial() {
   flush();
   end();
-#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
 
-  if (_swserial != nullptr) {
-    delete _swserial;
+  if (_serialPort != nullptr) {
+    delete _serialPort;
   }
-#endif // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-#ifndef DISABLE_SC16IS752_Serial
-
-  if (_i2cserial != nullptr) {
-    delete _i2cserial;
-  }
-#endif // ifndef DISABLE_SC16IS752_Serial
 }
 
 String ESPeasySerial::getLogString() const {

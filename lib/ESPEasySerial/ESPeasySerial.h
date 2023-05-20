@@ -23,101 +23,14 @@
 #ifndef ESPeasySerial_h
 #define ESPeasySerial_h
 
-#include <Arduino.h>
-#include <HardwareSerial.h>
-#include <inttypes.h>
-#include <Stream.h>
-#ifndef DISABLE_SC16IS752_Serial
-# include <ESPEasySC16IS752_Serial.h>
-#endif // ifndef DISABLE_SC16IS752_Serial
 
-#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  # ifndef DISABLE_SOFTWARE_SERIAL
-    #  define DISABLE_SOFTWARE_SERIAL
-  # endif // ifndef DISABLE_SOFTWARE_SERIAL
-#endif    // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-
-#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-# include <ESPEasySoftwareSerial.h>
-# include "ESPEasySerialConfig.h"
-#endif 
-
-#ifndef HAS_SERIAL2
-  #ifdef ESP8266
-    #define HAS_SERIAL2 0
-  #elif defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
-    #include <soc/soc_caps.h>
-    #if SOC_UART_NUM > 2
-      #define HAS_SERIAL2 1
-    #else 
-      #define HAS_SERIAL2 0
-    #endif
-  # else
-    static_assert(false, "Implement processor architecture");
-  #endif
-#endif
-
-
-#ifdef ESP32
-  # ifndef DISABLE_SC16IS752_Serial
-    #  if HAS_SERIAL2
-    #   define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 2, sc16is752
-    #  else 
-    #   define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, sc16is752
-    #  endif
-  # else // ifndef DISABLE_SC16IS752_Serial
-    #  if HAS_SERIAL2
-    #   define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 2
-    #  else 
-    #   define NR_ESPEASY_SERIAL_TYPES 2 // Serial 0, 1
-    #  endif
-  # endif // ifndef DISABLE_SC16IS752_Serial
-#endif // ifdef ESP32
-#ifdef ESP8266
-  # if !defined(DISABLE_SOFTWARE_SERIAL)
-    #  ifndef DISABLE_SC16IS752_Serial
-      #   define NR_ESPEASY_SERIAL_TYPES 5 // Serial 0, 1, 0_swap, software, sc16is752
-    #  else // ifndef DISABLE_SC16IS752_Serial
-      #   define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 0_swap, software
-    #  endif // ifndef DISABLE_SC16IS752_Serial
-  # else // if !defined(DISABLE_SOFTWARE_SERIAL)
-    #  ifndef DISABLE_SC16IS752_Serial
-      #   define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 0_swap, sc16is752
-    #  else // ifndef DISABLE_SC16IS752_Serial
-      #   define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 0_swap
-    #  endif // ifndef DISABLE_SC16IS752_Serial
-  # endif // if !defined(DISABLE_SOFTWARE_SERIAL)
-#endif // ifdef ESP8266
-
-#ifndef ESP32
-  # if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
-    #  ifndef CORE_2_4_X
-      #   define CORE_2_4_X
-    #  endif // ifndef CORE_2_4_X
-  # endif    // if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  ||
-             // defined(ARDUINO_ESP8266_RELEASE_2_4_2)
-
-  # if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
-    #  ifndef CORE_PRE_2_4_2
-      #   define CORE_PRE_2_4_2
-    #  endif // ifndef CORE_PRE_2_4_2
-  # endif    // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) ||
-             // defined(ARDUINO_ESP8266_RELEASE_2_4_1)
-
-  # if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
-    #  ifndef CORE_PRE_2_5_0
-      #   define CORE_PRE_2_5_0
-    #  endif // ifndef CORE_PRE_2_5_0
-  # else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
-    #  ifndef CORE_POST_2_5_0
-      #   define CORE_POST_2_5_0
-    #  endif // ifndef CORE_POST_2_5_0
-  # endif    // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
-#endif       // ESP32
-
+#include "ESPEasySerial_common_defines.h"
 
 #include "ESPEasySerialPort.h"
 #include "ESPEasySerialType.h"
+
+#include "wrappers/ESPEasySerial_Port_base.h"
+
 
 
 class ESPeasySerial : public Stream {
@@ -284,40 +197,13 @@ public:
   }
 private:
 
-  const HardwareSerial* getHW() const;
-  HardwareSerial      * getHW();
+  const ESPEasySerial_Port_base* getHW() const;
+  ESPEasySerial_Port_base      * getHW();
 
   bool                  isValid() const;
 
-#ifdef ESP8266
-  bool                  doHWbegin(unsigned long baud,
-                                  SerialConfig  config,
-                                  SerialMode    mode);
-#endif // ifdef ESP8266
+  ESPEasySerial_Port_base* _serialPort = nullptr;
 
-  bool isI2Cserial() const {
-    return _serialtype == ESPEasySerialPort::sc16is752;
-  }
-
-#ifndef DISABLE_SC16IS752_Serial
-  ESPEasySC16IS752_Serial *_i2cserial = nullptr;
-#endif // ifndef DISABLE_SC16IS752_Serial
-
-#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-  bool isSWserial() const {
-    return _serialtype == ESPEasySerialPort::software;
-  }
-
-  ESPeasySoftwareSerial *_swserial = nullptr;
-#else // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-  bool isSWserial() const {
-    return false;
-  }
-
-#endif // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-#ifdef ESP8266
-  static bool _serial0_swap_active;
-#endif // ESP8266
 
 private:
   // Actual serial type

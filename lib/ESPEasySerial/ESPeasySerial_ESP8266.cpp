@@ -9,9 +9,8 @@
 // ****************************************
 #ifdef ESP8266
 bool ESPeasySerial::_serial0_swap_active = false;
-#endif // ifdef ESP8266
 
-#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
+#if USES_SW_SERIAL
 
 void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
 {
@@ -20,13 +19,13 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
     _swserial->end();
     delete _swserial;
   }
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
   if (_i2cserial != nullptr) {
     _i2cserial->end();
     delete _i2cserial;
   }
 #endif
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
   _i2cserial = nullptr;
 #endif
   _serialtype =  ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
@@ -55,7 +54,7 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
     }
     case ESPEasySerialPort::sc16is752:
     {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
       ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
       ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
 
@@ -86,7 +85,7 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
       _swserial->begin(baud);
     }
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     if (_i2cserial != nullptr) {
       _i2cserial->begin(baud);
     }
@@ -108,7 +107,7 @@ void ESPeasySerial::end() {
 # endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
     return;
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     _i2cserial->end();
 #endif
   } else {
@@ -147,7 +146,7 @@ bool ESPeasySerial::isValid() const {
     case ESPEasySerialPort::serial1:      return true; // Must also check RX pin?
     case ESPEasySerialPort::software:     return _swserial != nullptr;
     case ESPEasySerialPort::sc16is752:
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
       return _i2cserial != nullptr;
 #else
       return false;
@@ -165,7 +164,7 @@ int ESPeasySerial::peek(void) {
   if (isSWserial()) {
     return _swserial->peek();
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     return _i2cserial->peek();
 #else
     return -1;
@@ -183,7 +182,7 @@ size_t ESPeasySerial::write(uint8_t val) {
   if (isSWserial()) {
     return _swserial->write(val);
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     return _i2cserial->write(val);
 #else
     return 0;
@@ -210,7 +209,7 @@ size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
     }
     return count;
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     return _i2cserial->write(buffer, size);
 #else
     return 0;
@@ -233,7 +232,7 @@ int ESPeasySerial::read(void) {
   if (isSWserial()) {
     return _swserial->read();
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     return _i2cserial->read();
 #else
     return -1;
@@ -261,7 +260,7 @@ size_t ESPeasySerial::readBytes(char *buffer, size_t size)  {
     }
     return count;
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     return _i2cserial->readBytes(buffer, size);
 #else
     return 0;
@@ -283,7 +282,7 @@ int ESPeasySerial::available(void) {
   if (isSWserial()) {
     return _swserial->available();
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     return _i2cserial->available();
 #else
     return 0;
@@ -302,7 +301,7 @@ int ESPeasySerial::availableForWrite() {
     // FIXME TD-er: Implement availableForWrite
     return 1;
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     // FIXME TD-er: Implement availableForWrite
     return 4; //_i2cserial->availableForWrite();
 #else
@@ -321,7 +320,7 @@ void ESPeasySerial::flush(void) {
   if (isSWserial()) {
     _swserial->flush();
   } else if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     _i2cserial->flush();
 #endif
   } else {

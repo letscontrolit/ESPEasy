@@ -1,17 +1,18 @@
-#ifndef ESPEASY_SERIAL_PORT_H
-#define ESPEASY_SERIAL_PORT_H
+#ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_PORT_BASE_H
+#define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_PORT_BASE_H
 
-#include "ESPEasySerialPort.h"
+#include "../ESPEasySerialPort.h"
 
-#include <Arduino.h>
-#include <inttypes.h>
+#include "../ESPEasySerial_common_defines.h"
+#include "../ESPEasySerialConfig.h"
+
 #include <Stream.h>
 
-class ESPEasySerial_Port : public Stream {
+class ESPEasySerial_Port_base : public Stream {
 public:
 
-  ESPEasySerial_Port();
-  virtual ~ESPEasySerial_Port() {}
+  ESPEasySerial_Port_base();
+  virtual ~ESPEasySerial_Port_base() {}
 
   virtual void   begin(unsigned long baud) = 0;
 
@@ -74,12 +75,23 @@ public:
   virtual size_t setRxBufferSize(size_t new_size) = 0;
   virtual size_t setTxBufferSize(size_t new_size) = 0;
 
+
+  unsigned long  getBaudRate() const {
+    return _config.baud;
+  }
+
+  bool useGPIOpins() const {
+    return _config.port != ESPEasySerialPort::sc16is752;
+  }
+
+  ESPEasySerialPort getSerialPortType() const {
+    return _config.port;
+  }
+
 protected:
 
-  ESPEasySerialPort _port = ESPEasySerialPort::not_set;
-
-  unsigned long _baud = 115200;
+  ESPEasySerialConfig _config;
 };
 
 
-#endif // ifndef ESPEASY_SERIAL_PORT_H
+#endif // ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_PORT_BASE_H

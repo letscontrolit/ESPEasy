@@ -1,18 +1,17 @@
 #ifndef ESPEASYSERIAL_ESPEASYSERIAL_HARDWARESERIAL_H
 #define ESPEASYSERIAL_ESPEASYSERIAL_HARDWARESERIAL_H
 
-#include "ESPEasySerial_Port.h"
+#include "../ESPEasySerial_common_defines.h"
 
-#include <Arduino.h>
-#include <inttypes.h>
-#include <Stream.h>
+#include "ESPEasySerial_Port_base.h"
+
 #include <HardwareSerial.h>
 
 #ifdef ESP32
 # include <esp32-hal-uart.h>
 #endif // ifdef ESP32
 
-class ESPEasySerial_HardwareSerial_t : public ESPEasySerial_Port {
+class ESPEasySerial_HardwareSerial_t : public ESPEasySerial_Port_base {
 public:
 
   ESPEasySerial_HardwareSerial_t(ESPEasySerialPort port);
@@ -65,20 +64,6 @@ public:
 private:
 
   HardwareSerial *_serial = nullptr;
-
-#ifdef ESP32
-  uint32_t _config = SERIAL_8N1;
-#endif // ifdef ESP32
-
-#ifdef ESP8266
-  SerialConfig _config = SERIAL_8N1;
-  SerialMode _mode     = SERIAL_FULL;
-#endif // ifdef ESP8266
-
-  uint32_t _buffSize = 128;
-  int8_t _rxPin      = -1;
-  int8_t _txPin      = -1;
-  bool _invert       = false;
 };
 
 

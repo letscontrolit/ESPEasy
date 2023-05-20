@@ -1,8 +1,9 @@
 #include "ESPEasySerial_USBCDC.h"
 
-#include "ESPEasySerial_USB.h"
 
 #if USES_USBCDC
+
+# include "../drivers/ESPEasySerial_USB.h"
 
 volatile bool usbActive = false;
 
@@ -93,7 +94,7 @@ ESPEasySerial_USBCDC_t::ESPEasySerial_USBCDC_t(ESPEasySerialPort port)
   }
 
   if (uart_nr > 0) {
-    _port = port;
+    _config.port = port;
 
     if ((uart_nr == 0) && (_usbcdc_serial != nullptr)) {
       _serial = _usbcdc_serial;

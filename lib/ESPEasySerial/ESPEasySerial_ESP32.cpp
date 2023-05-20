@@ -79,13 +79,13 @@ void ESPeasySerial::resetConfig(
   bool inverse_logic,
   unsigned int buffSize)
 {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
   if (_i2cserial != nullptr) {
     _i2cserial->end();
     delete _i2cserial;
   }
 #endif
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
   _i2cserial = nullptr;
 #endif
   _receivePin = receivePin;
@@ -327,7 +327,7 @@ int ESPeasySerial::availableForWrite(void) {
   }
 
   if (isI2Cserial()) {
-#ifndef DISABLE_SC16IS752_Serial
+#if USES_I2C_SC16IS752
     // FIXME TD-er: Implement availableForWrite
     return 64; // _i2cserial->availableForWrite();
 #else

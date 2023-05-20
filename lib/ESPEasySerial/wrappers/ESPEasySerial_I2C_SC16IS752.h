@@ -1,18 +1,17 @@
-#ifndef ESPEASYSERIAL_ESPEASYSERIAL_USBCDC_H
-#define ESPEASYSERIAL_ESPEASYSERIAL_USBCDC_H
-
-#ifndef DISABLE_SC16IS752_Serial
-# include <ESPEasySC16IS752_Serial.h>
+#ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_I2C_SC16IS752_H
+#define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_I2C_SC16IS752_H
 
 
-# include "ESPEasySerial_Port.h"
+#include "../ESPEasySerial_common_defines.h"
 
-# include <Arduino.h>
-# include <inttypes.h>
-# include <Stream.h>
+#if USES_I2C_SC16IS752
+# include "../drivers/ESPEasySC16IS752_Serial.h"
 
 
-class ESPEasySerial_I2C_SC16IS752 : public ESPEasySerial_Port {
+# include "ESPEasySerial_Port_base.h"
+
+
+class ESPEasySerial_I2C_SC16IS752 : public ESPEasySerial_Port_base {
 public:
 
   //       ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
@@ -53,7 +52,7 @@ private:
 };
 
 
-#endif // if USES_HWCDC
+#endif // if USES_I2C_SC16IS752
 
 
-#endif // ifndef ESPEASYSERIAL_ESPEASYSERIAL_USBCDC_H
+#endif // ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_I2C_SC16IS752_H

@@ -1,24 +1,18 @@
-#ifndef ESPEASYSERIAL_ESPEASYSERIAL_USBCDC_H
-#define ESPEASYSERIAL_ESPEASYSERIAL_USBCDC_H
-
-#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  # ifndef DISABLE_SOFTWARE_SERIAL
-    #  define DISABLE_SOFTWARE_SERIAL
-  # endif // ifndef DISABLE_SOFTWARE_SERIAL
-#endif    // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-
-#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-# include <ESPEasySoftwareSerial.h>
+#ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_SW_SERIAL_H
+#define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_SW_SERIAL_H
 
 
-# include "ESPEasySerial_Port.h"
-
-# include <Arduino.h>
-# include <inttypes.h>
-# include <Stream.h>
+#include "../ESPEasySerial_common_defines.h"
 
 
-class ESPEasySerial_SW_Serial : public ESPEasySerial_Port {
+#if USES_SW_SERIAL
+
+# include "../drivers/ESPEasySoftwareSerial.h"
+
+# include "ESPEasySerial_Port_base.h"
+
+
+class ESPEasySerial_SW_Serial : public ESPEasySerial_Port_base {
 public:
 
   ESPEasySerial_SW_Serial(int  receivePin,
@@ -56,7 +50,7 @@ private:
 };
 
 
-#endif // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
+#endif // if USES_SW_SERIAL
 
 
-#endif // ifndef ESPEASYSERIAL_ESPEASYSERIAL_USBCDC_H
+#endif // ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_SW_SERIAL_H
