@@ -79,10 +79,6 @@ void begin(unsigned long baud, uint32_t config);
   int    availableForWrite(void);
   void   flush(void) override;
 
-#if defined(ESP8266)
-  bool   overflow();       // SoftwareSerial ESP8266
-  bool   hasOverrun(void); // HardwareSerial ESP8266
-#endif // if defined(ESP8266)
 
   /*
      // FIXME TD-er: See https://www.artima.com/cppsource/safebool.html
@@ -104,33 +100,12 @@ void begin(unsigned long baud, uint32_t config);
   size_t write(const char *buffer);
   int getBaudRate() const;
 
-#if defined(ESP8266)
-  size_t        readBytes(char  *buffer,
-                          size_t size) override;
-  size_t        readBytes(uint8_t *buffer,
-                          size_t   size) override;
-#endif
 
   void          setDebugOutput(bool);
 
   bool          isTxEnabled(void);
   bool          isRxEnabled(void);
 
-#if defined(ESP8266)
-  bool          hasRxError(void);
-
-  void          startDetectBaudrate();
-  unsigned long testBaudrate();
-  unsigned long detectBaudrate(time_t timeoutMillis);
-
-  // SoftwareSerial specific
-  void          setTransmitEnablePin(uint8_t transmitEnablePin);
-
-  // AVR compatibility methods
-  bool          isListening();
-  bool          stopListening();
-
-#endif // if defined(ESP8266)
   bool   listen();
 
   String getLogString() const;

@@ -153,7 +153,7 @@ void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
     return;
   }
 
-  _serial->begin(_config.baud, _config, _mode, _config.transmitPin, _config.inverse_logic);
+  _serial->begin(_config.baud, _config.config, _config.mode, _config.transmitPin, _config.inverse_logic);
   _serial->pins(_config.transmitPin, _config.receivePin);
 }
 

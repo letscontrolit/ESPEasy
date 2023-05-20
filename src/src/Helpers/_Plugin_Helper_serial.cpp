@@ -211,7 +211,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 #endif // if USES_I2C_SC16IS752
   };
 
-  constexpr size_t NR_ESPEASY_SERIAL_TYPES = sizeof(ids) / sizeof(ids[1]);
+  constexpr int NR_ESPEASY_SERIAL_TYPES = sizeof(ids) / sizeof(ids[1]);
   String options[NR_ESPEASY_SERIAL_TYPES];
 
 //  String attr[NR_ESPEASY_SERIAL_TYPES];
