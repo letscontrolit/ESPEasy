@@ -285,7 +285,11 @@ void EspEasy_Console_t::init() {
   // FIXME TD-er: Must detect whether we should swap software serial on pin 3&1 for HW serial if Serial0 is not being used anymore.
   const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(Settings.console_serial_port);
 
-  if ((port == ESPEasySerialPort::serial0) || (port == ESPEasySerialPort::serial0_swap)) {
+  if ((port == ESPEasySerialPort::serial0)
+  #ifdef ESP8266
+   || (port == ESPEasySerialPort::serial0_swap)
+  #endif
+   ) {
     if (activeTaskUseSerial0()) {
       return;
     }

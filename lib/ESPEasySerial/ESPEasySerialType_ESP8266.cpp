@@ -58,7 +58,11 @@ ESPEasySerialPort ESPeasySerialType::getSerialType(ESPEasySerialPort typeHint, i
     // No pins set, so no serial type
     return ESPEasySerialPort::MAX_SERIAL_TYPE;
   }
+  #if USES_SW_SERIAL
   return ESPEasySerialPort::software;
+  #else
+  return ESPEasySerialPort::MAX_SERIAL_TYPE;
+  #endif
 }
 
 #endif // ESP8266

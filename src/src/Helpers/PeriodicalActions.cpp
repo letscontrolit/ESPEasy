@@ -218,7 +218,7 @@ void runEach30Seconds()
 //    log += WiFi.getListenInterval();
     addLogMove(LOG_LEVEL_INFO, log);
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-    addLogMove(LOG_LEVEL_INFO,  ESPEASY_SERIAL_CONSOLE_PORT.getLogString());
+//    addLogMove(LOG_LEVEL_INFO,  ESPEASY_SERIAL_CONSOLE_PORT.getLogString());
 #endif
   }
   WiFi_AP_Candidates.purge_expired();
