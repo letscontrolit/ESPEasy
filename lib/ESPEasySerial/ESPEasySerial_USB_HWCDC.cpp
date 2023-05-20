@@ -2,7 +2,7 @@
 
 #if USES_HWCDC
 
-# include "../drivers/ESPEasySerial_USB.h"
+# include "ESPEasySerial_USB.h"
 
 volatile bool usbActive = false;
 
@@ -50,6 +50,8 @@ ESPEasySerial_USB_WHCDC_t::ESPEasySerial_USB_WHCDC_t(const ESPEasySerialConfig &
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
 }
+
+ESPEasySerial_USB_WHCDC_t::~ESPEasySerial_USB_WHCDC_t() {}
 
 void ESPEasySerial_USB_WHCDC_t::begin(unsigned long baud)
 {

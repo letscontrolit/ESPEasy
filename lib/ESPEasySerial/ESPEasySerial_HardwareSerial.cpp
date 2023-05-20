@@ -70,19 +70,14 @@ void setPinsCache(ESPEasySerialPort port,
 
 #endif // ifdef ESP32
 
-
-ESPEasySerial_HardwareSerial_t::ESPEasySerial_HardwareSerial_t(const ESPEasySerialConfig & config)
-  : _serial(nullptr)
-{
-  if (isHWserial(config.port)) {
-    _config = config;
-  }
-}
+ESPEasySerial_HardwareSerial_t::ESPEasySerial_HardwareSerial_t() {}
+ESPEasySerial_HardwareSerial_t::~ESPEasySerial_HardwareSerial_t() {}
 
 void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & config)
 {
-  if (_config == config) return;
   if (!isHWserial(config.port)) return;
+  /*
+  if (_config == config) return;
 
   // First call end()
   // Then create new instance.
@@ -91,17 +86,21 @@ void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & con
   _config.transmitPin   = transmitPin;
   _config.inverse_logic = inverse_logic;
   _config.buffSize      = buffSize;
+  */
 
-  switch (port) {
+  _config = config;
+
+
+  switch (config.port) {
     case  ESPEasySerialPort::serial0:
     case  ESPEasySerialPort::serial1:
     #if HAS_SERIAL2
     case  ESPEasySerialPort::serial2:
     #endif // if HAS_SERIAL2
-      _config.port = port;
+      _config.port = config.port;
       break;
     default:
-      _config.port = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
+      _config.port = ESPeasySerialType::getSerialType(config.port, config.receivePin, config.transmitPin);
   }
 
   if (_config.port == ESPEasySerialPort::serial0) {
@@ -125,24 +124,6 @@ void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & con
   }
 }
 
-#ifdef ESP8266
-void ESPEasySerial_HardwareSerial_t::setSerialConfig(SerialConfig config,
-                                                     SerialMode   mode)
-{
-  _config.config = config;
-  _config.mode   = mode;
-}
-
-#endif // ifdef ESP8266
-
-#ifdef ESP32
-void ESPEasySerial_HardwareSerial_t::setSerialConfig(uint32_t config)
-{
-  // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
-  _config.config = config | 0x8000000;
-}
-
-#endif // ifdef ESP32
 
 #ifdef ESP8266
 void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)

@@ -1,11 +1,58 @@
 #include <ESPeasySerial.h>
 
+#include "ESPEasySerial_HardwareSerial.h"
+#include "ESPEasySerial_I2C_SC16IS752.h"
+#include "ESPEasySerial_SW_Serial.h"
+#include "ESPEasySerial_USB_HWCDC.h"
+#include "ESPEasySerial_USBCDC.h"
 
-#include "wrappers/ESPEasySerial_HardwareSerial.h"
-#include "wrappers/ESPEasySerial_I2C_SC16IS752.h"
-#include "wrappers/ESPEasySerial_SW_Serial.h"
-#include "wrappers/ESPEasySerial_USB_HWCDC.h"
-#include "wrappers/ESPEasySerial_USBCDC.h"
+
+ESPEasySerial_Port_base* ESPeasySerial::ESPEasySerial_Port_factory(const ESPEasySerialConfig &config)
+{
+  switch (config.port) {
+#if USES_SW_SERIAL
+    case ESPEasySerialPort::software:
+    {
+      return new (std::nothrow) ESPEasySerial_SW_Serial(config);
+    }
+#endif
+#if USES_I2C_SC16IS752
+    case ESPEasySerialPort::sc16is752:
+    {
+      return new (std::nothrow) ESPEasySerial_I2C_SC16IS752(config);
+    }
+#endif
+#if USES_HWCDC
+    case ESPEasySerialPort::usb_hw_cdc:
+    {
+      return new (std::nothrow) ESPEasySerial_USB_WHCDC_t(config);
+    }
+#endif
+#if USES_USBCDC
+    case ESPEasySerialPort::usb_cdc_0:
+    case ESPEasySerialPort::usb_cdc_1:
+    {
+      return new (std::nothrow) ESPEasySerial_USBCDC_t(config);
+    }
+#endif
+
+    default:
+      if (isHWserial(config.port)) {
+        ESPEasySerial_HardwareSerial_t* hw = new (std::nothrow) ESPEasySerial_HardwareSerial_t();
+        if (hw != nullptr) {
+          hw->resetConfig(config);
+          return hw;
+        }
+      }
+      break;
+  }
+
+  return nullptr;
+
+}
+
+
+
 
 ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
                              int               receivePin,
@@ -13,6 +60,7 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
                              bool              inverse_logic,
                              unsigned int      buffSize,
                              bool              forceSWserial)
+: Stream()
 {
   ESPEasySerialConfig config;
   config.port =  port;
@@ -23,46 +71,9 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
   config.forceSWserial = forceSWserial;
   config.validate();
 
-  switch (config.port) {
-#if USES_SW_SERIAL
-    case ESPEasySerialPort::software:
-    {
-      _serialPort = new ESPEasySerial_SW_Serial(config);
-      break;
-    }
-#endif
-#if USES_I2C_SC16IS752
-    case ESPEasySerialPort::sc16is752:
-    {
-      _serialPort = new ESPEasySerial_I2C_SC16IS752(config);
-      break;
-    }
-#endif
-#if USES_HWCDC
-    case ESPEasySerialPort::usb_hw_cdc:
-    {
-      _serialPort = new ESPEasySerial_USB_WHCDC_t(config);
-      break;
-    }
-#endif
-#if USES_USBCDC
-    case ESPEasySerialPort::usb_cdc_0:
-    case ESPEasySerialPort::usb_cdc_1:
-    {
-      _serialPort = new ESPEasySerial_USBCDC_t(config);
-      break;
-    }
-#endif
-    default:
 
-      if (isHWserial(config.port)) {
-        _serialPort = new ESPEasySerial_HardwareSerial_t(config);
-        if (_serialPort != nullptr) {
-          reinterpret_cast<ESPEasySerial_HardwareSerial_t*>(_serialPort)->resetConfig(config);
-        }
-      }
-      break;
-  }
+  _serialPort = ESPEasySerial_Port_factory(config);
+
 
   // FIXME TD-er: Should it call begin() ???
   if (_serialPort != nullptr) {

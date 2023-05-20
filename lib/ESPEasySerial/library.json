@@ -27,6 +27,6 @@
     ],
     "frameworks": "arduino",
     "platforms": [
-      "espressif8266","espressif32","espressif32s2"
+      "espressif8266","espressif32","espressif32s2","espressif32s3","espressif32c3"
     ]
 }

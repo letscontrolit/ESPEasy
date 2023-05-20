@@ -1,7 +1,7 @@
 #ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_USB_HWCDC_H
 #define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_USB_HWCDC_H
 
-#include "../ESPEasySerial_common_defines.h"
+#include "ESPEasySerial_common_defines.h"
 
 #if USES_HWCDC
 
@@ -15,7 +15,7 @@ public:
 
   ESPEasySerial_USB_WHCDC_t(const ESPEasySerialConfig & config);
 
-  virtual ~ESPEasySerial_USB_WHCDC_t() {}
+  virtual ~ESPEasySerial_USB_WHCDC_t();
 
   void   begin(unsigned long baud);
 

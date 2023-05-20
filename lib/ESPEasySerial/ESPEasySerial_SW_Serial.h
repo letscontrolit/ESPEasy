@@ -2,12 +2,12 @@
 #define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_SW_SERIAL_H
 
 
-#include "../ESPEasySerial_common_defines.h"
+#include "ESPEasySerial_common_defines.h"
 
 
 #if USES_SW_SERIAL
 
-# include "../drivers/ESPEasySoftwareSerial.h"
+# include "ESPEasySoftwareSerial.h"
 
 # include "ESPEasySerial_Port_base.h"
 

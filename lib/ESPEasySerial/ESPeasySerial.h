@@ -29,12 +29,15 @@
 #include "ESPEasySerialPort.h"
 #include "ESPEasySerialType.h"
 
-#include "wrappers/ESPEasySerial_Port_base.h"
+#include "ESPEasySerial_Port_base.h"
 
+#include <Stream.h>
 
 
 class ESPeasySerial : public Stream {
 public:
+
+  static ESPEasySerial_Port_base* ESPEasySerial_Port_factory(const ESPEasySerialConfig &config);
 
   // ESP82xx has 2 HW serial ports and option for several software serial ports.
   // Serial0:         RX: 3  TX: 1

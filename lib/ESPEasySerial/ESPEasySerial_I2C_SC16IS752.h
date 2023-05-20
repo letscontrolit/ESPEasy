@@ -2,10 +2,10 @@
 #define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_I2C_SC16IS752_H
 
 
-#include "../ESPEasySerial_common_defines.h"
+#include "ESPEasySerial_common_defines.h"
 
 #if USES_I2C_SC16IS752
-# include "../drivers/ESPEasySC16IS752_Serial.h"
+# include "ESPEasySC16IS752_Serial.h"
 
 
 # include "ESPEasySerial_Port_base.h"

@@ -4,7 +4,7 @@
 // Do not include this file, but rather include "../Globals/ESPEasy_USB.h"
 // from a .cpp file.
 
-#include "../ESPEasySerial_common_defines.h"
+#include "ESPEasySerial_common_defines.h"
 
 #if USES_HWCDC
 // ESP32C3/S3 embedded USB using JTAG interface

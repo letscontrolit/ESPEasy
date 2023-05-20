@@ -1,7 +1,7 @@
 #ifndef ESPEASYSERIAL_ESPEASYSERIAL_HARDWARESERIAL_H
 #define ESPEASYSERIAL_ESPEASYSERIAL_HARDWARESERIAL_H
 
-#include "../ESPEasySerial_common_defines.h"
+#include "ESPEasySerial_common_defines.h"
 
 #include "ESPEasySerial_Port_base.h"
 
@@ -14,24 +14,14 @@
 class ESPEasySerial_HardwareSerial_t : public ESPEasySerial_Port_base {
 public:
 
-  ESPEasySerial_HardwareSerial_t(const ESPEasySerialConfig & config);
+  ESPEasySerial_HardwareSerial_t();
 
-  virtual ~ESPEasySerial_HardwareSerial_t() {}
+  ~ESPEasySerial_HardwareSerial_t();
 
 
   // Allow for resetConfig, instead of end() and begin().
   // This can otherwise cause issues with some sensors when starting/stopping an ESPEasy task
   void resetConfig(const ESPEasySerialConfig & config);
-
-#ifdef ESP8266
-  void setSerialConfig(SerialConfig config = SERIAL_8N1,
-                       SerialMode   mode   = SERIAL_FULL);
-#endif // ifdef ESP8266
-
-#ifdef ESP32
-  void setSerialConfig(uint32_t config = SERIAL_8N1);
-
-#endif // ifdef ESP32
 
   void   begin(unsigned long baud);
 

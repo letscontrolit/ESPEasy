@@ -6,7 +6,7 @@
 #include "ESPEasySerialPort.h"
 
 #if USES_I2C_SC16IS752
-# include "drivers/ESPEasySC16IS752_Serial.h"
+# include "ESPEasySC16IS752_Serial.h"
 #endif // if USES_I2C_SC16IS752
 
 #include <HardwareSerial.h>

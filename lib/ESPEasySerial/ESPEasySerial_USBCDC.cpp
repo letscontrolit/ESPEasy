@@ -3,7 +3,7 @@
 
 #if USES_USBCDC
 
-# include "../drivers/ESPEasySerial_USB.h"
+# include "ESPEasySerial_USB.h"
 
 volatile bool usbActive = false;
 
@@ -81,9 +81,9 @@ static void usbcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t 
 }
 
 ESPEasySerial_USBCDC_t::ESPEasySerial_USBCDC_t(const ESPEasySerialConfig & config)
-  : _serial(nullptr),
-  _mustDelete(false)
 {
+  _serial = nullptr;
+  _mustDelete = false;
   int uart_nr = -1;
 
   if (port == ESPEasySerialPort::usb_cdc_0) {

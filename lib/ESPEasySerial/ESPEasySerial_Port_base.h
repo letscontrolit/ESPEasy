@@ -1,18 +1,18 @@
 #ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_PORT_BASE_H
 #define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_PORT_BASE_H
 
-#include "../ESPEasySerialPort.h"
+#include "ESPEasySerialPort.h"
 
-#include "../ESPEasySerial_common_defines.h"
-#include "../ESPEasySerialConfig.h"
+#include "ESPEasySerial_common_defines.h"
+#include "ESPEasySerialConfig.h"
 
 #include <Stream.h>
 
-class ESPEasySerial_Port_base : public Stream {
+class ESPEasySerial_Port_base {
 public:
 
   ESPEasySerial_Port_base();
-  virtual ~ESPEasySerial_Port_base() {}
+  virtual ~ESPEasySerial_Port_base();
 
   virtual void   begin(unsigned long baud) = 0;
 
@@ -87,11 +87,18 @@ public:
 #ifdef ESP8266
   void setPortConfig(unsigned long baud,
              SerialConfig  config,
-             SerialMode    mode);
+             SerialMode    mode)
+  {
+    _config.setPortConfig(baud, config, mode);
+  }
 #endif
 
 #ifdef ESP32
-  void setPortConfig(unsigned long baud, uint32_t config);
+  void setPortConfig(unsigned long baud, uint32_t config)
+  {
+    _config.setPortConfig(baud, config);
+  }
+
 #endif
 
 
