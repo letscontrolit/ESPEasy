@@ -14,19 +14,14 @@
 class ESPEasySerial_HardwareSerial_t : public ESPEasySerial_Port_base {
 public:
 
-  ESPEasySerial_HardwareSerial_t(ESPEasySerialPort port);
+  ESPEasySerial_HardwareSerial_t(const ESPEasySerialConfig & config);
 
   virtual ~ESPEasySerial_HardwareSerial_t() {}
 
 
   // Allow for resetConfig, instead of end() and begin().
   // This can otherwise cause issues with some sensors when starting/stopping an ESPEasy task
-  void resetConfig(
-    ESPEasySerialPort port,
-    int               receivePin,
-    int               transmitPin,
-    bool              inverse_logic = false,
-    unsigned int      buffSize      = 64);
+  void resetConfig(const ESPEasySerialConfig & config);
 
 #ifdef ESP8266
   void setSerialConfig(SerialConfig config = SERIAL_8N1,

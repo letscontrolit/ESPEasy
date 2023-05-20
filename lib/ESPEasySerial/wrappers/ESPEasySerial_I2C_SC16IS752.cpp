@@ -4,11 +4,16 @@
 #if USES_I2C_SC16IS752
 
 
-ESPEasySerial_I2C_SC16IS752::ESPEasySerial_I2C_SC16IS752(ESPEasySC16IS752_Serial::I2C_address       addr,
-                                                         ESPEasySC16IS752_Serial::SC16IS752_channel ch)
+ESPEasySerial_I2C_SC16IS752::ESPEasySerial_I2C_SC16IS752(const ESPEasySerialConfig & config)
 {
-  _config.port = ESPEasySerialPort::sc16is752;
-  _i2cserial   = new ESPEasySC16IS752_Serial(addr, ch);
+  if (config.port ==  ESPEasySerialPort::sc16is752) {
+    ESPEasySC16IS752_Serial::I2C_address       addr;
+    ESPEasySC16IS752_Serial::SC16IS752_channel ch;
+    if (config.getI2C_SC16IS752_Parameters(addr, ch)) {
+      _config    = config;
+      _i2cserial = new ESPEasySC16IS752_Serial(addr, ch);
+    }  
+  }
 }
 
 ESPEasySerial_I2C_SC16IS752::~ESPEasySerial_I2C_SC16IS752()

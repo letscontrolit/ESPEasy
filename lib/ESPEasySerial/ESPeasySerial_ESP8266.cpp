@@ -3,37 +3,44 @@
 #define DETECT_BAUDATE_TIMEOUT     250
 
 
-
 // ****************************************
 // ESP8266 implementation wrapper
 // ****************************************
-#ifdef ESP8266
+#if false
+# ifdef ESP8266
 bool ESPeasySerial::_serial0_swap_active = false;
 
-#if USES_SW_SERIAL
+#  if USES_SW_SERIAL
 
-void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
+void ESPeasySerial::resetConfig(ESPEasySerialPort port,
+                                int               receivePin,
+                                int               transmitPin,
+                                bool              inverse_logic,
+                                unsigned int      buffSize,
+                                bool              forceSWserial)
 {
   const bool wasValid = isValid();
+
   if (_swserial != nullptr) {
     _swserial->end();
     delete _swserial;
   }
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
+
   if (_i2cserial != nullptr) {
     _i2cserial->end();
     delete _i2cserial;
   }
-#endif
-#if USES_I2C_SC16IS752
+#   endif // if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
   _i2cserial = nullptr;
-#endif
-  _serialtype =  ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
-  _swserial = nullptr;
-  _receivePin = receivePin;
-  _transmitPin = transmitPin;
+#   endif // if USES_I2C_SC16IS752
+  _serialtype    =  ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
+  _swserial      = nullptr;
+  _receivePin    = receivePin;
+  _transmitPin   = transmitPin;
   _inverse_logic = inverse_logic;
-  _buffSize = buffSize;
+  _buffSize      = buffSize;
   _forceSWserial = forceSWserial;
 
   if (forceSWserial) {
@@ -43,7 +50,7 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
       default:
         _serialtype = ESPEasySerialPort::software;
         break;
-    }    
+    }
   }
 
   switch (_serialtype) {
@@ -54,12 +61,12 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
     }
     case ESPEasySerialPort::sc16is752:
     {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
       ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
       ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
 
       _i2cserial = new ESPEasySC16IS752_Serial(addr, ch);
-#endif
+#   endif // if USES_I2C_SC16IS752
       break;
     }
     default:
@@ -69,27 +76,28 @@ void ESPeasySerial::resetConfig(ESPEasySerialPort port, int receivePin, int tran
       }
       break;
   }
+
   if (wasValid && isValid()) {
     begin(_baud, _config, _mode);
   }
 }
 
-
 void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
-  _baud = baud;
+  _baud   = baud;
   _config = config;
-  _mode = mode;
+  _mode   = mode;
 
   if (isSWserial()) {
     if (_swserial != nullptr) {
       _swserial->begin(baud);
     }
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
+
     if (_i2cserial != nullptr) {
       _i2cserial->begin(baud);
     }
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     doHWbegin(baud, config, mode);
   }
@@ -102,14 +110,14 @@ void ESPeasySerial::end() {
   flush();
 
   if (isSWserial()) {
-# ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#   ifndef ARDUINO_ESP8266_RELEASE_2_3_0
     _swserial->end();
-# endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#   endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
     return;
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
     _i2cserial->end();
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     getHW()->end();
   }
@@ -146,11 +154,11 @@ bool ESPeasySerial::isValid() const {
     case ESPEasySerialPort::serial1:      return true; // Must also check RX pin?
     case ESPEasySerialPort::software:     return _swserial != nullptr;
     case ESPEasySerialPort::sc16is752:
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
       return _i2cserial != nullptr;
-#else
+#   else // if USES_I2C_SC16IS752
       return false;
-#endif
+#   endif // if USES_I2C_SC16IS752
     default: break;
   }
   return false;
@@ -164,11 +172,11 @@ int ESPeasySerial::peek(void) {
   if (isSWserial()) {
     return _swserial->peek();
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
     return _i2cserial->peek();
-#else
+#   else // if USES_I2C_SC16IS752
     return -1;
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     return getHW()->peek();
   }
@@ -182,11 +190,11 @@ size_t ESPeasySerial::write(uint8_t val) {
   if (isSWserial()) {
     return _swserial->write(val);
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
     return _i2cserial->write(val);
-#else
+#   else // if USES_I2C_SC16IS752
     return 0;
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     return getHW()->write(val);
   }
@@ -209,11 +217,11 @@ size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
     }
     return count;
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
     return _i2cserial->write(buffer, size);
-#else
+#   else // if USES_I2C_SC16IS752
     return 0;
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     return getHW()->write(buffer, size);
   }
@@ -232,11 +240,11 @@ int ESPeasySerial::read(void) {
   if (isSWserial()) {
     return _swserial->read();
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
     return _i2cserial->read();
-#else
+#   else // if USES_I2C_SC16IS752
     return -1;
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     return getHW()->read();
   }
@@ -260,11 +268,11 @@ size_t ESPeasySerial::readBytes(char *buffer, size_t size)  {
     }
     return count;
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
     return _i2cserial->readBytes(buffer, size);
-#else
+#   else // if USES_I2C_SC16IS752
     return 0;
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     return getHW()->readBytes(buffer, size);
   }
@@ -282,11 +290,11 @@ int ESPeasySerial::available(void) {
   if (isSWserial()) {
     return _swserial->available();
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
     return _i2cserial->available();
-#else
+#   else // if USES_I2C_SC16IS752
     return 0;
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     return getHW()->available();
   }
@@ -301,12 +309,13 @@ int ESPeasySerial::availableForWrite() {
     // FIXME TD-er: Implement availableForWrite
     return 1;
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
+
     // FIXME TD-er: Implement availableForWrite
-    return 4; //_i2cserial->availableForWrite();
-#else
+    return 4; // _i2cserial->availableForWrite();
+#   else // if USES_I2C_SC16IS752
     return 0;
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     return getHW()->availableForWrite();
   }
@@ -320,9 +329,9 @@ void ESPeasySerial::flush(void) {
   if (isSWserial()) {
     _swserial->flush();
   } else if (isI2Cserial()) {
-#if USES_I2C_SC16IS752
+#   if USES_I2C_SC16IS752
     _i2cserial->flush();
-#endif
+#   endif // if USES_I2C_SC16IS752
   } else {
     getHW()->flush();
   }
@@ -336,9 +345,9 @@ bool ESPeasySerial::hasOverrun(void) {
   if (!isValid()) {
     return false;
   }
-# ifdef CORE_PRE_2_4_2
+#   ifdef CORE_PRE_2_4_2
   return false;
-# else // ifdef CORE_PRE_2_4_2
+#   else // ifdef CORE_PRE_2_4_2
 
   if (isSWserial() || isI2Cserial()) {
     return false;
@@ -347,7 +356,7 @@ bool ESPeasySerial::hasOverrun(void) {
   } else {
     return getHW()->hasOverrun();
   }
-# endif // ifdef CORE_PRE_2_4_2
+#   endif // ifdef CORE_PRE_2_4_2
 }
 
 // *****************************
@@ -377,9 +386,11 @@ bool ESPeasySerial::isTxEnabled(void) {
   if (!isValid()) {
     return false;
   }
+
   if (isI2Cserial()) {
     return true;
   }
+
   if (isSWserial()) {
     return _transmitPin != -1;
   }
@@ -390,9 +401,11 @@ bool ESPeasySerial::isRxEnabled(void) {
   if (!isValid()) {
     return false;
   }
+
   if (isI2Cserial()) {
     return true;
   }
+
   if (isSWserial()) {
     return _receivePin != -1;
   }
@@ -400,48 +413,48 @@ bool ESPeasySerial::isRxEnabled(void) {
 }
 
 bool ESPeasySerial::hasRxError(void) {
-# ifdef CORE_POST_2_5_0
+#   ifdef CORE_POST_2_5_0
 
   if (!isValid() || isSWserial() || isI2Cserial()) {
     return false;
   }
   return getHW()->hasRxError();
-# else // ifdef CORE_POST_2_5_0
+#   else // ifdef CORE_POST_2_5_0
   return false;
-# endif // ifdef CORE_POST_2_5_0
+#   endif // ifdef CORE_POST_2_5_0
 }
 
 void ESPeasySerial::startDetectBaudrate() {
   if (!isValid() || isSWserial() || isI2Cserial()) {
     return;
   }
-# ifdef CORE_PRE_2_4_2
+#   ifdef CORE_PRE_2_4_2
   return;
-# else // ifdef CORE_PRE_2_4_2
+#   else // ifdef CORE_PRE_2_4_2
   getHW()->startDetectBaudrate();
-# endif // ifdef CORE_PRE_2_4_2
+#   endif // ifdef CORE_PRE_2_4_2
 }
 
 unsigned long ESPeasySerial::testBaudrate() {
   if (!isValid() || isSWserial() || isI2Cserial()) {
     return 0;
   }
-# ifdef CORE_PRE_2_4_2
+#   ifdef CORE_PRE_2_4_2
   return 0;
-# else // ifdef CORE_PRE_2_4_2
+#   else // ifdef CORE_PRE_2_4_2
   return getHW()->testBaudrate();
-# endif // ifdef CORE_PRE_2_4_2
+#   endif // ifdef CORE_PRE_2_4_2
 }
 
 unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
   if (!isValid() || isSWserial() || isI2Cserial()) {
     return 0;
   }
-# ifdef CORE_PRE_2_4_2
+#   ifdef CORE_PRE_2_4_2
   return 0;
-# else // ifdef CORE_PRE_2_4_2
+#   else // ifdef CORE_PRE_2_4_2
   return getHW()->detectBaudrate(timeoutMillis);
-# endif // ifdef CORE_PRE_2_4_2
+#   endif // ifdef CORE_PRE_2_4_2
 }
 
 // *****************************
@@ -451,35 +464,35 @@ unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
 
 bool ESPeasySerial::listen() {
   if (isValid() && isSWserial()) {
-# ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#   ifndef ARDUINO_ESP8266_RELEASE_2_3_0
     return _swserial->listen();
-# endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#   endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
   }
   return false;
 }
 
 bool ESPeasySerial::isListening() {
   if (isValid() && isSWserial()) {
-# ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#   ifndef ARDUINO_ESP8266_RELEASE_2_3_0
     return _swserial->isListening();
-# endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#   endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
   }
   return false;
 }
 
 bool ESPeasySerial::stopListening() {
   if (isValid() && isSWserial()) {
-# ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#   ifndef ARDUINO_ESP8266_RELEASE_2_3_0
     return _swserial->stopListening();
-# endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#   endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
   }
   return false;
 }
 
-#endif // ESP8266
+#  endif // ESP8266
 
 
-#ifdef ESP8266
+#  ifdef ESP8266
 
 // ****************************************
 // ESP8266 implementation wrapper
@@ -505,4 +518,6 @@ bool ESPeasySerial::doHWbegin(unsigned long baud, SerialConfig config, SerialMod
    */
 }
 
-#endif // ifdef ESP8266
+#  endif // ifdef ESP8266
+# endif  // ifdef ESP8266
+#endif // if false

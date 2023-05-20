@@ -4,10 +4,15 @@
 #if USES_SW_SERIAL
 
 
-ESPEasySerial_SW_Serial::ESPEasySerial_SW_Serial(int receivePin, int transmitPin, bool inverse_logic)
+ESPEasySerial_SW_Serial::ESPEasySerial_SW_Serial(const ESPEasySerialConfig & config)
 {
-  _config.port = ESPEasySerialPort::software;
-  _swserial    = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic);
+  if (config.port == ESPEasySerialPort::software) {
+  _config = config;
+  _swserial    = new ESPeasySoftwareSerial(
+    config.receivePin, 
+    config.transmitPin, 
+    config.inverse_logic);
+  }
 }
 
 ESPEasySerial_SW_Serial::~ESPEasySerial_SW_Serial()

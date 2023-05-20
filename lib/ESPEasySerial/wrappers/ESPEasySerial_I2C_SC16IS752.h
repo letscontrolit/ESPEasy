@@ -18,8 +18,7 @@ public:
   //       ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
 
 
-  ESPEasySerial_I2C_SC16IS752(ESPEasySC16IS752_Serial::I2C_address       addr,
-                              ESPEasySC16IS752_Serial::SC16IS752_channel ch);
+  ESPEasySerial_I2C_SC16IS752(const ESPEasySerialConfig & config);
 
   virtual ~ESPEasySerial_I2C_SC16IS752();
 

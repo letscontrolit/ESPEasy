@@ -13,7 +13,7 @@
 class ESPEasySerial_USB_WHCDC_t : public ESPEasySerial_Port_base {
 public:
 
-  ESPEasySerial_USB_WHCDC_t();
+  ESPEasySerial_USB_WHCDC_t(const ESPEasySerialConfig & config);
 
   virtual ~ESPEasySerial_USB_WHCDC_t() {}
 

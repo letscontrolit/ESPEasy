@@ -1,30 +1,30 @@
 #include "ESPEasySerialPort.h"
 
-const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort serType)
+const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort port)
 {
-  switch (serType) {
+  switch (port) {
     case ESPEasySerialPort::not_set:         break;
 #if USES_I2C_SC16IS752
     case ESPEasySerialPort::sc16is752:       return F("I2C Serial");
-#endif
+#endif // if USES_I2C_SC16IS752
 #ifdef ESP8266
     case ESPEasySerialPort::serial0_swap:    return F("HW Serial0 swap");
-#endif
+#endif // ifdef ESP8266
     case ESPEasySerialPort::serial0:         return F("HW Serial0");
     case ESPEasySerialPort::serial1:         return F("HW Serial1");
 #if HAS_SERIAL2
     case ESPEasySerialPort::serial2:         return F("HW Serial2");
-#endif
+#endif // if HAS_SERIAL2
 #if USES_SW_SERIAL
     case ESPEasySerialPort::software:        return F("SoftwareSerial");
-#endif
+#endif // if USES_SW_SERIAL
 #if USES_HWCDC
     case ESPEasySerialPort::usb_hw_cdc:      return F("USB HWCDC");
-#endif 
+#endif // if USES_HWCDC
 #if USES_USBCDC
     case ESPEasySerialPort::usb_cdc_0:       return F("USB CDC0");
     case ESPEasySerialPort::usb_cdc_1:       return F("USB CDC1");
-#endif 
+#endif // if USES_USBCDC
     case ESPEasySerialPort::MAX_SERIAL_TYPE: break;
 
       // Do not include "default:" to let the compiler check if we miss some case
@@ -32,18 +32,73 @@ const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort serType)
   return F("");
 }
 
-bool isHWserial(ESPEasySerialPort serType)
+bool isHWserial(ESPEasySerialPort port)
 {
-  switch (serType) {
+  // FIXME TD-er: Still needed?
+  switch (port) {
 #ifdef ESP8266
     case ESPEasySerialPort::serial0_swap:
-#endif
+#endif // ifdef ESP8266
     case ESPEasySerialPort::serial0:
     case ESPEasySerialPort::serial1:
 #if HAS_SERIAL2
     case ESPEasySerialPort::serial2:
-#endif
+#endif // if HAS_SERIAL2
       return true;
+    default:
+      break;
+  }
+  return false;
+}
+
+bool useGPIOpins(ESPEasySerialPort port)
+{
+  switch (port) {
+    case ESPEasySerialPort::serial0:
+#ifdef ESP8266
+    case ESPEasySerialPort::serial0_swap:
+#endif // ifdef ESP8266
+    case ESPEasySerialPort::serial1:
+#if HAS_SERIAL2
+    case ESPEasySerialPort::serial2:
+#endif // if HAS_SERIAL2
+#if USES_SW_SERIAL
+    case ESPEasySerialPort::software:
+#endif // if USES_SW_SERIAL
+      return true;
+
+    default:
+      break;
+  }
+  return false;
+}
+
+bool validSerialPort(ESPEasySerialPort port)
+{
+  switch (port) {
+#if USES_I2C_SC16IS752
+    case ESPEasySerialPort::sc16is752:
+#endif // if USES_I2C_SC16IS752
+    case ESPEasySerialPort::serial0:
+#ifdef ESP8266
+    case ESPEasySerialPort::serial0_swap:
+#endif // ifdef ESP8266
+    case ESPEasySerialPort::serial1:
+#if HAS_SERIAL2
+    case ESPEasySerialPort::serial2:
+#endif // if HAS_SERIAL2
+#if USES_SW_SERIAL
+    case ESPEasySerialPort::software:
+#endif // if USES_SW_SERIAL
+#if USES_HWCDC
+    case ESPEasySerialPort::usb_hw_cdc:
+#endif // if USES_HWCDC
+#if USES_USBCDC
+    case ESPEasySerialPort::usb_cdc_0:
+    case ESPEasySerialPort::usb_cdc_1:
+#endif // if USES_USBCDC
+      return true;
+
     default:
       break;
   }

@@ -71,19 +71,22 @@ void setPinsCache(ESPEasySerialPort port,
 #endif // ifdef ESP32
 
 
-ESPEasySerial_HardwareSerial_t::ESPEasySerial_HardwareSerial_t(ESPEasySerialPort port)
+ESPEasySerial_HardwareSerial_t::ESPEasySerial_HardwareSerial_t(const ESPEasySerialConfig & config)
   : _serial(nullptr)
 {
-  _config.port = ESPEasySerialPort::not_set;
+  if (isHWserial(config.port)) {
+    _config = config;
+  }
 }
 
-void ESPEasySerial_HardwareSerial_t::resetConfig(
-  ESPEasySerialPort port,
-  int               receivePin,
-  int               transmitPin,
-  bool              inverse_logic,
-  unsigned int      buffSize)
+void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & config)
 {
+  if (_config == config) return;
+  if (!isHWserial(config.port)) return;
+
+  // First call end()
+  // Then create new instance.
+
   _config.receivePin    = receivePin;
   _config.transmitPin   = transmitPin;
   _config.inverse_logic = inverse_logic;

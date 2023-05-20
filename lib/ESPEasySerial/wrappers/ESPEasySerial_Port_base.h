@@ -80,13 +80,20 @@ public:
     return _config.baud;
   }
 
-  bool useGPIOpins() const {
-    return _config.port != ESPEasySerialPort::sc16is752;
+  const ESPEasySerialConfig& getSerialConfig() const {
+    return _config;
   }
 
-  ESPEasySerialPort getSerialPortType() const {
-    return _config.port;
-  }
+#ifdef ESP8266
+  void setPortConfig(unsigned long baud,
+             SerialConfig  config,
+             SerialMode    mode);
+#endif
+
+#ifdef ESP32
+  void setPortConfig(unsigned long baud, uint32_t config);
+#endif
+
 
 protected:
 

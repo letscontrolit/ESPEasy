@@ -14,7 +14,7 @@
 class ESPEasySerial_USBCDC_t : public ESPEasySerial_Port_base {
 public:
 
-  ESPEasySerial_USBCDC_t(ESPEasySerialPort port);
+  ESPEasySerial_USBCDC_t(const ESPEasySerialConfig & config);
 
   virtual ~ESPEasySerial_USBCDC_t();
 

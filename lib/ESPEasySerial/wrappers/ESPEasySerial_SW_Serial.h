@@ -15,9 +15,7 @@
 class ESPEasySerial_SW_Serial : public ESPEasySerial_Port_base {
 public:
 
-  ESPEasySerial_SW_Serial(int  receivePin,
-                          int  transmitPin,
-                          bool inverse_logic);
+  ESPEasySerial_SW_Serial(const ESPEasySerialConfig & config);
 
   virtual ~ESPEasySerial_SW_Serial();
 

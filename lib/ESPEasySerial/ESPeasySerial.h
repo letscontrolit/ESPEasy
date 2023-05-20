@@ -36,8 +36,6 @@
 class ESPeasySerial : public Stream {
 public:
 
-#ifdef ESP8266
-
   // ESP82xx has 2 HW serial ports and option for several software serial ports.
   // Serial0:         RX: 3  TX: 1
   // Serial0 swapped  RX: 13 TX: 15
@@ -60,45 +58,15 @@ public:
                 bool         forceSWserial = false);
 
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
+  void begin(unsigned long baud);
+#ifdef ESP8266
   void begin(unsigned long baud,
-             SerialConfig  config = SERIAL_8N1,
+             SerialConfig  config,
              SerialMode    mode   = SERIAL_FULL);
-#endif // ifdef ESP8266
-
-
+#endif
 #ifdef ESP32
-
-  // ESP32 has 3 HW serial ports.
-  // Serial0: RX: 3  TX: 1
-  // Serial1: RX: 9  TX: 10  Defaults will never work, share pins with flash
-  // Serial2: RX: 16 TX: 17
-  // Pins set in the constructor will be used as override when not given when calling begin()
-  // @param  inverse_logic can be used to set the logic in the constructor which will then be used in the call to begin.
-  //         This makes the call to the constructor more in line with the constructor of SoftwareSerial.
-  // buffsize is for compatibility reasons. ESP32 cannot set the buffer size.
-  ESPeasySerial(ESPEasySerialPort port,
-                int               receivePin,
-                int               transmitPin,
-                bool              inverse_logic = false,
-                unsigned int      buffSize      = 64);
-  virtual ~ESPeasySerial();
-
-  // Same parameters as the constructor, to allow to reconfigure the ESPEasySerial object to be another type of port.
-  void resetConfig(ESPEasySerialPort port, 
-                int  receivePin,
-                int  transmitPin,
-                bool inverse_logic = false,
-                unsigned int buffSize      = 64);
-
-
-  // If baud rate is set to 0, it will perform an auto-detect on the baudrate
-  void begin(unsigned long baud,
-             uint32_t      config     = SERIAL_8N1,
-             int8_t        rxPin      = -1,
-             int8_t        txPin      = -1,
-             bool          invert     = false,
-             unsigned long timeout_ms = 20000UL);
-#endif // ifdef ESP32
+void begin(unsigned long baud, uint32_t config);
+#endif
 
   void   end();
   int    peek(void);
@@ -134,11 +102,6 @@ public:
   int    baudRate(void);
 
 #if defined(ESP8266)
-  void   swap() {
-    swap(_transmitPin);
-  }
-
-  void          swap(uint8_t tx_pin);
   size_t        readBytes(char  *buffer,
                           size_t size) override;
   size_t        readBytes(uint8_t *buffer,
@@ -164,10 +127,6 @@ public:
   bool          isListening();
   bool          stopListening();
 
-  bool          serial0_swap_active() const {
-    return _serial0_swap_active;
-  }
-
 #endif // if defined(ESP8266)
   bool   listen();
 
@@ -177,49 +136,34 @@ public:
   using Print::write;
 
   int getRxPin() const {
-    return _receivePin;
+    return getSerialConfig().receivePin;
   }
 
   int getTxPin() const {
-    return _transmitPin;
+    return getSerialConfig().transmitPin;
   }
 
-  unsigned long getBaudRate() const {
-    return _baud;
-  }
-
-  bool useGPIOpins() const {
-    return _serialtype != ESPEasySerialPort::sc16is752;
+  bool usesGPIOpins() const {
+    return useGPIOpins(getSerialConfig().port);
   }
 
   ESPEasySerialPort getSerialPortType() const {
-    return _serialtype;
+    return getSerialConfig().port;
   }
-private:
 
-  const ESPEasySerial_Port_base* getHW() const;
-  ESPEasySerial_Port_base      * getHW();
+  ESPEasySerialConfig getSerialConfig() const {
+    if (_serialPort != nullptr) 
+      return _serialPort->getSerialConfig();
+    ESPEasySerialConfig res;
+    return res;
+  }
+
+private:
 
   bool                  isValid() const;
 
   ESPEasySerial_Port_base* _serialPort = nullptr;
 
-
-private:
-  // Actual serial type
-  ESPEasySerialPort _serialtype = ESPEasySerialPort::MAX_SERIAL_TYPE;
-  int _receivePin;
-  int _transmitPin;
-  unsigned long _baud = 0;
-  bool _inverse_logic = false;
-  unsigned int _buffSize = 64;
-  #ifdef ESP8266
-  bool _forceSWserial = false;
-  #endif
-#ifdef ESP8266
-  SerialConfig _config;
-  SerialMode _mode;
-#endif
 };
 
 #endif // ifndef ESPeasySerial_h

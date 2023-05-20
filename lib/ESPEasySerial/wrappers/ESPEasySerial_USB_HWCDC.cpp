@@ -46,7 +46,7 @@ static void hwcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t e
   }
 }
 
-ESPEasySerial_USB_WHCDC_t::ESPEasySerial_USB_WHCDC_t()
+ESPEasySerial_USB_WHCDC_t::ESPEasySerial_USB_WHCDC_t(const ESPEasySerialConfig & config)
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
 }

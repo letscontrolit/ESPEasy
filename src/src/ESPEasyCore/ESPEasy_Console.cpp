@@ -5,7 +5,7 @@
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
-#include "../ESPEasyCore/ESPEasy_USB.h"
+//#include "../ESPEasyCore/ESPEasy_USB.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/Logging.h"

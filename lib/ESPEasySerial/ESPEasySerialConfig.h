@@ -15,6 +15,21 @@ struct ESPEasySerialConfig {
 
   ESPEasySerialConfig() = default;
 
+  void validate();
+
+  #ifdef ESP8266
+  void setPortConfig(unsigned long baud,
+             SerialConfig  config,
+             SerialMode    mode);
+#endif
+
+#ifdef ESP32
+  void setPortConfig(unsigned long baud, uint32_t config);
+#endif
+
+
+  String getLogString() const;
+
 #if USES_I2C_SC16IS752
 
   bool getI2C_SC16IS752_Parameters(ESPEasySC16IS752_Serial::I2C_address      & addr,
@@ -23,6 +38,8 @@ struct ESPEasySerialConfig {
 
 #endif // if USES_I2C_SC16IS752
 
+  int getReceivePin() const;
+  int getTransmitPin() const;
 
   ESPEasySerialPort port          = ESPEasySerialPort::not_set;
   unsigned long     baud          = 115200;
@@ -33,7 +50,7 @@ struct ESPEasySerialConfig {
   bool              forceSWserial = false;
   unsigned long     timeout_ms    = 20000UL;
 
-  #ifdef ESP32
+#ifdef ESP32
   uint32_t config = SERIAL_8N1;
 #endif // ifdef ESP32
 

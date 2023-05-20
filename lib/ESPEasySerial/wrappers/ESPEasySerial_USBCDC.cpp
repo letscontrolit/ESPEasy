@@ -80,7 +80,7 @@ static void usbcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t 
   }
 }
 
-ESPEasySerial_USBCDC_t::ESPEasySerial_USBCDC_t(ESPEasySerialPort port)
+ESPEasySerial_USBCDC_t::ESPEasySerial_USBCDC_t(const ESPEasySerialConfig & config)
   : _serial(nullptr),
   _mustDelete(false)
 {
@@ -94,7 +94,7 @@ ESPEasySerial_USBCDC_t::ESPEasySerial_USBCDC_t(ESPEasySerialPort port)
   }
 
   if (uart_nr > 0) {
-    _config.port = port;
+    _config.port = config.port;
 
     if ((uart_nr == 0) && (_usbcdc_serial != nullptr)) {
       _serial = _usbcdc_serial;
