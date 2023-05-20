@@ -181,7 +181,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
                   false);
   #endif // ifdef ESP32
 
-  #if defined(DISABLE_SOFTWARE_SERIAL) || !defined(ESP8266)
+  #if !USES_SW_SERIAL
   allowSoftwareSerial = false;
   #endif
 

@@ -2904,7 +2904,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 0
+  #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 1
 #endif
 
 #if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)

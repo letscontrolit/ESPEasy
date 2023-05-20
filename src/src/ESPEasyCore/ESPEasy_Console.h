@@ -43,8 +43,6 @@ public:
 
 private:
 
-  void check_HWCDC_Port();
-
   int           getRoomLeft() const;
 
   Stream      * getPort();

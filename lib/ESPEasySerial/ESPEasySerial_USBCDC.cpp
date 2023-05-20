@@ -102,6 +102,7 @@ ESPEasySerial_USBCDC_t::ESPEasySerial_USBCDC_t(const ESPEasySerialConfig & confi
       _serial     = new USBCDC(uart_nr);
       _mustDelete = true;
     }
+
   }
 }
 
@@ -120,9 +121,11 @@ ESPEasySerial_USBCDC_t::~ESPEasySerial_USBCDC_t()
 void ESPEasySerial_USBCDC_t::begin(unsigned long baud)
 {
   if (_serial != nullptr) {
-    _serial->begin();
-    delay(10);
+    USB.onEvent(usbcdcEventCallback);
     _serial->onEvent(usbcdcEventCallback);
+    delay(10);
+    _serial->begin();
+    USB.begin();
     delay(1);
   }
 }
