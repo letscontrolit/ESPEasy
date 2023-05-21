@@ -49,6 +49,7 @@ EspEasy_Console_t::~EspEasy_Console_t() {
 
 void EspEasy_Console_t::begin(uint32_t baudrate)
 {
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   if ((_console_serial_port != Settings.console_serial_port) ||
       (_console_serial_rxpin != Settings.console_serial_rxpin) ||
       (_console_serial_txpin != Settings.console_serial_txpin)) {
@@ -67,6 +68,7 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
       false,
       64);
   }
+  #endif
 
   _baudrate = baudrate;
 
