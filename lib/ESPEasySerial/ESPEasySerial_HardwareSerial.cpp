@@ -30,10 +30,12 @@ bool pinsChanged(ESPEasySerialPort port,
 {
   switch (port) {
     case  ESPEasySerialPort::serial0: return receivePin != receivePin0 || transmitPin != transmitPin0;
+    # if SOC_UART_NUM > 1
     case  ESPEasySerialPort::serial1: return receivePin != receivePin1 || transmitPin != transmitPin1;
-    # if HAS_SERIAL2
+    # endif
+    # if SOC_UART_NUM > 2
     case  ESPEasySerialPort::serial2: return receivePin != receivePin2 || transmitPin != transmitPin2;
-    # endif // if HAS_SERIAL2
+    # endif // if SOC_UART_NUM > 2
     default:
       // No other hardware serial ports
       break;
@@ -50,18 +52,20 @@ void setPinsCache(ESPEasySerialPort port,
       receivePin0  = receivePin;
       transmitPin0 = transmitPin;
       break;
+    # if SOC_UART_NUM > 1
     case  ESPEasySerialPort::serial1:
       receivePin1  = receivePin;
       transmitPin1 = transmitPin;
       break;
+    #endif
 
-    # if HAS_SERIAL2
+    # if SOC_UART_NUM > 2
     case  ESPEasySerialPort::serial2:
       receivePin2  = receivePin;
       transmitPin2 = transmitPin;
       break;
 
-    # endif // if HAS_SERIAL2
+    # endif // if SOC_UART_NUM > 2
     default:
       // No other hardware serial ports
       break;
@@ -93,10 +97,12 @@ void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & con
 
   switch (config.port) {
     case  ESPEasySerialPort::serial0:
+    #if SOC_UART_NUM > 1
     case  ESPEasySerialPort::serial1:
-    #if HAS_SERIAL2
+    #endif
+    #if SOC_UART_NUM > 2
     case  ESPEasySerialPort::serial2:
-    #endif // if HAS_SERIAL2
+    #endif // if SOC_UART_NUM > 2
       _config.port = config.port;
       break;
     default:
@@ -113,12 +119,14 @@ void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & con
   } else if (_config.port == ESPEasySerialPort::serial0_swap) {
     _serial = &Serial;
 #endif // ifdef ESP8266
+#if SOC_UART_NUM > 1
   } else if (_config.port == ESPEasySerialPort::serial1) {
     _serial = &Serial1;
-#if HAS_SERIAL2
+#endif
+#if SOC_UART_NUM > 2
   } else if (_config.port == ESPEasySerialPort::serial2) {
     _serial = &Serial2;
-#endif // if HAS_SERIAL2
+#endif // if SOC_UART_NUM > 2
   } else {
     _config.port = ESPEasySerialPort::not_set;
   }

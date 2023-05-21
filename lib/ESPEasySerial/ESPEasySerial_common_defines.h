@@ -5,20 +5,15 @@
 #include <inttypes.h>
 
 
-#ifndef HAS_SERIAL2
+#ifndef SOC_UART_NUM
 # ifdef ESP8266
-#  define HAS_SERIAL2 0
+#  define SOC_UART_NUM 2
 # elif defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
 #  include <soc/soc_caps.h>
-#  if SOC_UART_NUM > 2
-#   define HAS_SERIAL2 1
-#  else // if SOC_UART_NUM > 2
-#   define HAS_SERIAL2 0
-#  endif // if SOC_UART_NUM > 2
 # else // ifdef ESP8266
 static_assert(false, "Implement processor architecture");
 # endif // ifdef ESP8266
-#endif // ifndef HAS_SERIAL2
+#endif 
 
 
 #ifdef ESP32

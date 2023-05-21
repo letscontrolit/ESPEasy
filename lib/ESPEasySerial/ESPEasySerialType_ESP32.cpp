@@ -27,6 +27,7 @@
 #endif
 #endif // ifndef ESP32_SER0_RX
 
+#if SOC_UART_NUM > 1
 #ifndef ESP32_SER1_TX
 #if CONFIG_IDF_TARGET_ESP32C3
   # define ESP32_SER1_TX 21
@@ -36,6 +37,7 @@
   # define ESP32_SER1_TX 17
 #else
   # define ESP32_SER1_TX 15
+#endif
 #endif
 #endif // ifndef ESP32_SER1_TX
 #ifndef ESP32_SER1_RX
@@ -50,7 +52,7 @@
 #endif
 #endif // ifndef ESP32_SER1_RX
 
-#if HAS_SERIAL2
+#if SOC_UART_NUM > 2
 #ifndef ESP32_SER2_TX
   # define ESP32_SER2_TX 17
 #endif // ifndef ESP32_SER2_TX
@@ -65,8 +67,10 @@ bool ESPeasySerialType::getSerialTypePins(ESPEasySerialPort serType, int& rxPin,
 
   switch (serType) {
     case ESPEasySerialPort::serial0:  rxPin = ESP32_SER0_RX; txPin = ESP32_SER0_TX; return true;
+# if SOC_UART_NUM > 1
     case ESPEasySerialPort::serial1:  rxPin = ESP32_SER1_RX; txPin = ESP32_SER1_TX; return true;
-# if HAS_SERIAL2
+# endif
+# if SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:  rxPin = ESP32_SER2_RX; txPin = ESP32_SER2_TX; return true;
 # endif
 #if USES_I2C_SC16IS752
@@ -91,10 +95,12 @@ ESPEasySerialPort ESPeasySerialType::getSerialType(ESPEasySerialPort typeHint, i
 
   // Serial1 on ESP32 uses default pins connected to flash
   // So must make sure to set them to other pins.
+# if SOC_UART_NUM > 1
   if ((receivePin == ESP32_SER1_RX) && (transmitPin == ESP32_SER1_TX)) {
     return ESPEasySerialPort::serial1; // UART1
   }
-# if HAS_SERIAL2
+# endif
+# if SOC_UART_NUM > 2
 
   if ((receivePin == ESP32_SER2_RX) && (transmitPin == ESP32_SER2_TX)) {
     return ESPEasySerialPort::serial2; // UART2

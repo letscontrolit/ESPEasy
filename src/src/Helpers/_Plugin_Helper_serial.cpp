@@ -191,10 +191,12 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 #ifdef ESP8266
     ,static_cast<int>(ESPEasySerialPort::serial0_swap)
 #endif // ifdef ESP8266
+#if SOC_UART_NUM > 1
     ,static_cast<int>(ESPEasySerialPort::serial1)
-#if HAS_SERIAL2
+#endif
+#if SOC_UART_NUM > 2
     ,static_cast<int>(ESPEasySerialPort::serial2)
-#endif // if HAS_SERIAL2
+#endif // if SOC_UART_NUM > 2
 #if USES_SW_SERIAL
     ,static_cast<int>(ESPEasySerialPort::software)
 #endif // if USES_SW_SERIAL
