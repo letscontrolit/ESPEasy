@@ -128,7 +128,7 @@ boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
         i = 0;
         parityerrors = 0;
         char *tmpstr;
-        double m_energy, m_volume;
+        ESPEASY_RULES_FLOAT_TYPE m_energy, m_volume;
         float m_tempin, m_tempout, m_tempdiff, m_power;
         long m_hours, m_flow;
 

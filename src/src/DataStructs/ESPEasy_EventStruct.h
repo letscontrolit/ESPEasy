@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../DataTypes/ControllerIndex.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../DataTypes/TaskIndex.h"

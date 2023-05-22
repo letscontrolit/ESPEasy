@@ -215,13 +215,30 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
       }
       uint32_t runTimeUS = 0;
       if (event->Par5 > 0) {
-        // Must set slightly lower than expected duration as it will be rounded up.
-        runTimeUS = event->Par5 * (timeHighUS + timeLowUS) - ((timeHighUS + timeLowUS) / 2);
+        runTimeUS = event->Par5 * (timeHighUS + timeLowUS);
+        if (event->Par2 == 0) {
+          // When having an inverted state repeat-cycle, add some overshoot to return to the original state
+          runTimeUS += timeHighUS / 2;
+        } else {
+          // Must set slightly lower than expected duration as it will be rounded up.
+          runTimeUS -= ((timeHighUS + timeLowUS) / 2);
+        }
       }
 
       pinMode(event->Par1, OUTPUT);
       usingWaveForm = startWaveform(
         pin, timeHighUS, timeLowUS, runTimeUS);
+
+      if (event->Par5 > 0 && event->Par2 == 0) {
+        // Schedule switching pin back to original state
+        Scheduler.setGPIOTimer(
+          (runTimeUS / 1000) + 1, // msecFromNow, rounded up
+          pluginID,    
+          event->Par1,            // Pin/port nr
+          !event->Par2,           // pin state
+          0,                      // repeatInterval
+          0);                     // repeatCount
+      }
     }
     #else
     // waveform function not available on ESP32
@@ -1243,10 +1260,7 @@ bool getGPIOPinStateValues(String& str) {
           if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID)) { // Valid plugin ID?
             pluginID  = plugin;
             #ifndef BUILD_NO_DEBUG
-            logPrefix = F("P");
-            if (pluginID < 100) { logPrefix += '0'; }
-            if (pluginID < 10)  { logPrefix += '0'; }
-            logPrefix += pluginID;
+            logPrefix = get_formatted_Plugin_number(pluginID);
             #endif
           } else 
           #endif // if FEATURE_PINSTATE_EXTENDED

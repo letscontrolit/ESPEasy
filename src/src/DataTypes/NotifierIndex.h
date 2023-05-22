@@ -1,7 +1,7 @@
 #ifndef DATATYPES_NOTIFIERINDEX_H
 #define DATATYPES_NOTIFIERINDEX_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 typedef uint8_t notifierIndex_t;
 

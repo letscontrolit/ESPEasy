@@ -18,13 +18,14 @@
 // #######################################################################################################
 
 // Changelog:
+// 2023-04-28 @iz8mbw: Rename sensor to SHT3x from SHT30/31/35
 // 2021-06-12 @tonhuisman: Add temperature offset setting, with humidity compensation method 'borrowed' from BME280 sensor
 // 2020-??    @TD-er: Maitenance updates
 // 2017-07-18 @JK-de: Plugin adaption for ESPEasy 2.0
 
 # define PLUGIN_068
 # define PLUGIN_ID_068         68
-# define PLUGIN_NAME_068       "Environment - SHT30/31/35"
+# define PLUGIN_NAME_068       "Environment - SHT3x"
 # define PLUGIN_VALUENAME1_068 "Temperature"
 # define PLUGIN_VALUENAME2_068 "Humidity"
 

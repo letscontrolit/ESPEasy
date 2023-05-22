@@ -325,12 +325,12 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
   else if (equals(varName, F("css")))
   {
     serve_favicon();
-    if (MENU_INDEX_SETUP == navMenuIndex) {
-      // Serve embedded CSS
-      serve_CSS_inline();
-    } else {
+    // if (MENU_INDEX_SETUP == navMenuIndex) {
+    //  // Serve embedded CSS
+    //  serve_CSS_inline();
+    // } else {
       serve_CSS(CSSfiles_e::ESPEasy_default);
-    }
+    // }
     #if FEATURE_RULES_EASY_COLOR_CODE
     if (MENU_INDEX_RULES == navMenuIndex ||
         MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {

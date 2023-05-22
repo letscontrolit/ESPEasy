@@ -45,22 +45,22 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number       = CPLUGIN_ID_016;
-      Protocol[protocolCount].usesMQTT       = false;
-      Protocol[protocolCount].usesTemplate   = false;
-      Protocol[protocolCount].usesAccount    = false;
-      Protocol[protocolCount].usesPassword   = false;
-      Protocol[protocolCount].usesExtCreds   = false;
-      Protocol[protocolCount].defaultPort    = 80;
-      Protocol[protocolCount].usesID         = false;
-      Protocol[protocolCount].usesHost       = false;
-      Protocol[protocolCount].usesPort       = false;
-      Protocol[protocolCount].usesQueue      = false;
-      Protocol[protocolCount].usesCheckReply = false;
-      Protocol[protocolCount].usesTimeout    = false;
-      Protocol[protocolCount].usesSampleSets = false;
-      Protocol[protocolCount].needsNetwork   = false;
-      Protocol[protocolCount].allowsExpire   = false;
+      Protocol[++protocolCount].Number             = CPLUGIN_ID_016;
+      Protocol[protocolCount].usesMQTT             = false;
+      Protocol[protocolCount].usesTemplate         = false;
+      Protocol[protocolCount].usesAccount          = false;
+      Protocol[protocolCount].usesPassword         = false;
+      Protocol[protocolCount].usesExtCreds         = false;
+      Protocol[protocolCount].defaultPort          = 80;
+      Protocol[protocolCount].usesID               = false;
+      Protocol[protocolCount].usesHost             = false;
+      Protocol[protocolCount].usesPort             = false;
+      Protocol[protocolCount].usesQueue            = false;
+      Protocol[protocolCount].usesCheckReply       = false;
+      Protocol[protocolCount].usesTimeout          = false;
+      Protocol[protocolCount].usesSampleSets       = false;
+      Protocol[protocolCount].needsNetwork         = false;
+      Protocol[protocolCount].allowsExpire         = false;
       Protocol[protocolCount].allowLocalSystemTime = true;
       break;
     }
@@ -74,7 +74,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_INIT:
     {
       {
-        MakeControllerSettings(ControllerSettings); //-V522
+        MakeControllerSettings(ControllerSettings); // -V522
 
         if (AllocatedControllerSettings()) {
           LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -113,11 +113,12 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     {
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+
       if (event->timestamp == 0) {
         event->timestamp = C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime();
       }
       const C016_queue_element element(
-        event, 
+        event,
         valueCount);
 
       const C016_binary_element binary_element = element.getBinary();
@@ -128,9 +129,11 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_WRITE:
     {
       if (C016_CacheInitialized()) {
-        const String command    = parseString(string, 1);
+        const String command = parseString(string, 1);
+
         if (equals(command, F("cachecontroller"))) {
           const String subcommand = parseString(string, 2);
+
           if (equals(subcommand, F("flush"))) {
             C016_flush();
             success = true;
@@ -160,15 +163,15 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c016_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  return true;
+return true;
 
-  // FIXME TD-er: Hand over data to wherever it needs to be.
-  // Ideas:
-  // - Upload bin files to some server (HTTP post?)
-  // - Provide a sample to any connected controller
-  // - Do nothing and let some extern host pull the data from the node.
-  // - JavaScript to process the data inside the browser.
-  // - Feed it to some plugin (e.g. a display to show a chart)
+// FIXME TD-er: Hand over data to wherever it needs to be.
+// Ideas:
+// - Upload bin files to some server (HTTP post?)
+// - Provide a sample to any connected controller
+// - Do nothing and let some extern host pull the data from the node.
+// - JavaScript to process the data inside the browser.
+// - Feed it to some plugin (e.g. a display to show a chart)
 }
 
 #endif // ifdef USES_C016

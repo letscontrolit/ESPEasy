@@ -1,7 +1,6 @@
 #ifndef DATASTRUCTS_LOGSTRUCT_H
 #define DATASTRUCTS_LOGSTRUCT_H
 
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 
