@@ -162,6 +162,9 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     if (gpio == 3) { return F("RX0"); }
   }
 
+  if (gpio == 19) { return F("USB_D-"); }
+  if (gpio == 20) { return F("USB_D+"); }
+
 
   if (FoundPSRAM() && (gpio == 26)) {
     // ESP32-S2 PSRAM can use GPIO 26 (and 27..32 but those are always unavailable)

@@ -208,7 +208,9 @@ size_t ESPEasySerial_USBCDC_t::write(const uint8_t *buffer,
 
 ESPEasySerial_USBCDC_t::operator bool() const
 {
-  return _serial != nullptr;
+  if (_serial != nullptr)
+    return _serial->operator bool();
+  return false;
 }
 
 void ESPEasySerial_USBCDC_t::setDebugOutput(bool enabled) {

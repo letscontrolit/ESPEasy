@@ -126,7 +126,7 @@ void ESPEasySerial_USB_WHCDC_t::flush(bool txOnly)
 
 size_t ESPEasySerial_USB_WHCDC_t::write(uint8_t value)
 {
-  if (_hwcdc_serial != nullptr) {
+  if (operator bool()) {
     return _hwcdc_serial->write(value);
   }
   return 0;
@@ -135,7 +135,7 @@ size_t ESPEasySerial_USB_WHCDC_t::write(uint8_t value)
 size_t ESPEasySerial_USB_WHCDC_t::write(const uint8_t *buffer,
                                         size_t         size)
 {
-  if (_hwcdc_serial != nullptr) {
+  if (operator bool()) {
     return _hwcdc_serial->write(buffer, size);
   }
   return 0;
@@ -143,7 +143,9 @@ size_t ESPEasySerial_USB_WHCDC_t::write(const uint8_t *buffer,
 
 ESPEasySerial_USB_WHCDC_t::operator bool() const
 {
-  return _hwcdc_serial != nullptr;
+  if (_hwcdc_serial != nullptr)
+    return _hwcdc_serial->operator bool();
+  return false;
 }
 
 void ESPEasySerial_USB_WHCDC_t::setDebugOutput(bool enabled) {

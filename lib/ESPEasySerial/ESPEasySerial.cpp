@@ -198,6 +198,13 @@ int ESPeasySerial::getBaudRate() const
   return getSerialConfig().baud;
 }
 
+ESPeasySerial::operator bool() const
+{
+  if (isValid())
+    return _serialPort->operator bool();
+  return false;
+}
+
 void ESPeasySerial::setDebugOutput(bool enable) 
 {
   if (isValid()) {

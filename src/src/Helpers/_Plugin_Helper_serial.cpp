@@ -46,6 +46,30 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
     return result;
   }
 #endif
+#if USES_HWCDC || USES_USBCDC
+#if USES_HWCDC
+  if (porttype == ESPEasySerialPort::usb_hw_cdc)
+#else
+  if (porttype == ESPEasySerialPort::usb_cdc_0 ||
+      porttype == ESPEasySerialPort::usb_cdc_1)
+#endif
+  {
+    #if defined(ESP32S2) ||  defined(ESP32S3)
+    #define PIN_USB_D_MIN  19
+    #define PIN_USB_D_PLUS 20
+    #endif
+    #ifdef ESP32C3
+    #define PIN_USB_D_MIN  18
+    #define PIN_USB_D_PLUS 19
+    #endif
+    result += getConflictingUse(PIN_USB_D_MIN);
+    result += formatGpioLabel(PIN_USB_D_MIN, false);
+    result += newline;
+    result += getConflictingUse(PIN_USB_D_PLUS);
+    result += formatGpioLabel(PIN_USB_D_PLUS, false);
+    return result;
+  }
+#endif
   if (useGPIOpins(porttype)) 
   {
     result += F("RX: ");
@@ -58,8 +82,8 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
 }
 
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional, bool txOptional) {
-  event->String1 = formatGpioName_RX(rxOptional);
-  event->String2 = formatGpioName_TX(txOptional);
+  event->String1 = concat(F("ESP RX "), formatGpioName_RX(rxOptional));
+  event->String2 = concat(F("ESP TX "), formatGpioName_TX(txOptional));
 }
 
 int8_t serialHelper_getRxPin(struct EventStruct *event) {
@@ -168,16 +192,43 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
   #endif // ifdef ESP8266
   #ifdef ESP32
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
   // Script to show GPIO pins for HW serial ports or I2C addresses for the I2C to UART bridge
   // "function serialPortChanged(elem) {var style = (elem.value == 2 || elem.value == 4 || elem.value == 5) ? '' : 'none';var i2cstyle =
   // elem.value == 1 ? '' : 'none';document.getElementById('tr_taskdevicepin1').style.display =
   // style;document.getElementById('tr_taskdevicepin2').style.display = style;document.getElementById('tr_i2cuart_addr').style.display =
   // i2cstyle;document.getElementById('tr_i2cuart_ch').style.display = i2cstyle;}"),
-  html_add_script(F("function serialPortChanged(e){var t=2==e.value||4==e.value||5==e.value?'':'none',l=1==e.value?'':'none';"
-                    "document.getElementById('tr_taskdevicepin1').style.display=t,"
-                    "document.getElementById('tr_taskdevicepin2').style.display=t,"
-                    "document.getElementById('tr_i2cuart_addr').style.display=l,"
-                    "document.getElementById('tr_i2cuart_ch').style.display=l}"),
+  html_add_script(F("function serialPortChanged(elem) {"
+" var style = 'none';"
+" var i2cstyle = elem.value == 1 ? '' : 'none';"
+"	if (elem.value == 2) {"
+"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX0) ";"
+"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX0) ";"
+"   style = '';"
+# if SOC_UART_NUM > 1
+"	} else if (elem.value == 4) {"
+"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX1) ";"
+"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX1) ";"
+"   style = '';"
+#endif
+# if SOC_UART_NUM > 2
+"	} else if (elem.value == 5) {"
+"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX2) ";"
+"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX2) ";"
+"   style = '';"
+#endif
+#if USES_SW_SERIAL
+"	} else if (elem.value == 6) {"
+"   style = '';"
+#endif
+"	}"
+" document.getElementById('tr_taskdevicepin1').style.display = style;"
+" document.getElementById('tr_taskdevicepin2').style.display = style;"
+" document.getElementById('tr_i2cuart_addr').style.display   = i2cstyle;"
+" document.getElementById('tr_i2cuart_ch').style.display     = i2cstyle;"
+"}"),
                   false);
   #endif // ifdef ESP32
 
@@ -263,8 +314,10 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 
 void serialHelper_webformSave(uint8_t& port, int8_t& rxPin, int8_t& txPin) {
   int serialPortSelected = getFormItemInt(F("serPort"), -1);
-
   if (serialPortSelected < 0) { return; }
+
+  rxPin = getFormItemInt(F("taskdevicepin1"), -1);
+  txPin = getFormItemInt(F("taskdevicepin2"), -1);
 
   ESPEasySerialPort serType = static_cast<ESPEasySerialPort>(serialPortSelected);
 

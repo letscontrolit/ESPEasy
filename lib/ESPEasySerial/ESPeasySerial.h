@@ -100,6 +100,8 @@ void begin(unsigned long baud, uint32_t config);
   size_t write(const char *buffer);
   int getBaudRate() const;
 
+  operator bool() const;
+
 
   void          setDebugOutput(bool);
 
