@@ -44,15 +44,16 @@ public:
 private:
 
   int           getRoomLeft() const;
-
-  Stream      * getPort();
-  const Stream* getPort() const;
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  ESPeasySerial  * getPort();
+#else
+  HardwareSerial * getPort();
+#endif
 
   void endPort();
 
   int  availableForWrite();
 
-  bool _defaultPortActive = true;
 
 #define CONSOLE_INPUT_BUFFER_SIZE          128
 
@@ -67,10 +68,13 @@ private:
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   // Cache the used settings, so we can check whether to change the console serial
-  uint8_t _console_serial_port = 2; // ESPEasySerialPort::serial0
-  int8_t _console_serial_rxpin = 3;
-  int8_t _console_serial_txpin = 1;
-  ESPeasySerial *_serial      = nullptr;
+  uint8_t _console_serial_port = DEFAULT_CONSOLE_PORT;
+  int8_t _console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+  int8_t _console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+  ESPeasySerial *_serial       = nullptr;
+#if USES_HWCDC || USES_USBCDC
+  ESPeasySerial *_serial_fallback      = nullptr;
+#endif
 
 #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 

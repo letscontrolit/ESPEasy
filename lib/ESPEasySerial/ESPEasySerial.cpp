@@ -205,6 +205,13 @@ ESPeasySerial::operator bool() const
   return false;
 }
 
+bool ESPeasySerial::connected() const
+{
+  if (isValid())
+    return _serialPort->operator bool();
+  return false;
+}
+
 void ESPeasySerial::setDebugOutput(bool enable) 
 {
   if (isValid()) {

@@ -46,7 +46,7 @@ struct ESPEasySerialConfig {
   int               receivePin    = -1;
   int               transmitPin   = -1;
   bool              inverse_logic = false;
-  unsigned int      buffSize      = 64;
+  unsigned int      buffSize      = SOC_UART_FIFO_LEN;
   bool              forceSWserial = false;
   unsigned long     timeout_ms    = 20000UL;
 

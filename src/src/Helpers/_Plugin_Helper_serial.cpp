@@ -54,14 +54,6 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
       porttype == ESPEasySerialPort::usb_cdc_1)
 #endif
   {
-    #if defined(ESP32S2) ||  defined(ESP32S3)
-    #define PIN_USB_D_MIN  19
-    #define PIN_USB_D_PLUS 20
-    #endif
-    #ifdef ESP32C3
-    #define PIN_USB_D_MIN  18
-    #define PIN_USB_D_PLUS 19
-    #endif
     result += getConflictingUse(PIN_USB_D_MIN);
     result += formatGpioLabel(PIN_USB_D_MIN, false);
     result += newline;

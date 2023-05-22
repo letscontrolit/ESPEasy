@@ -12,6 +12,7 @@
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 
+
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
  #define DEFAULT_SPI 0
@@ -402,11 +403,11 @@ public:
   uint8_t       md5[16]; // Store checksum of the settings.
   uint32_t      VariousBits2 = 0;
 
-  uint8_t       console_serial_port = 2; // ESPEasySerialPort::serial0
-  int8_t        console_serial_rxpin = 3;
-  int8_t        console_serial_txpin = 1;  
-  int8_t        alignment_filler1 = 0; // can be reused
-
+  uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 
+  int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+  int8_t        console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+  uint8_t       console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
+  
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };
 

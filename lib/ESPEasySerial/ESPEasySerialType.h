@@ -5,10 +5,15 @@
 
 #ifdef ESP32
 
+#ifndef SOC_UART_FIFO_LEN
+#define SOC_UART_FIFO_LEN (128)
+#endif
+
 
 // Default pins taken from here:
 // https://github.com/espressif/arduino-esp32/blob/3ec5f4efa1de4342aaab742008dc630091e5e035/cores/esp32/HardwareSerial.cpp#L24-L92
 // Changed RX1 and TX1 for ESP32-classic, as the defaults chosen by Espressif are flash pins.
+// Changed RX1 and TX1 for ESP32-C3 to lower pin nrs to have proper options for small boards.
 
 # ifndef SOC_RX0
 #  if CONFIG_IDF_TARGET_ESP32

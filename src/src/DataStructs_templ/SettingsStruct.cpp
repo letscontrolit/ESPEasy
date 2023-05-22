@@ -435,19 +435,22 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   if (console_serial_port == 0 && UseSerial) {
-    console_serial_port = 2; // ESPEasySerialPort::serial0
+    console_serial_port = DEFAULT_CONSOLE_PORT;
+    // Set default RX/TX pins for Serial0
+    console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+    console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
   }
+#ifdef ESP8266
   if (console_serial_port == 2) {
     // Set default RX/TX pins for Serial0
-    console_serial_rxpin = 3;
-    console_serial_txpin = 1;
-#ifdef ESP8266
+    console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+    console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
   } else if (console_serial_port == 3) {
     // Set default RX/TX pins for Serial0_swapped
     console_serial_rxpin = 13;
     console_serial_txpin = 15;
-#endif
   }
+#endif
   #endif
 }
 
@@ -525,8 +528,8 @@ void SettingsStruct_tmpl<N_TASKS>::clearUnitNameSettings() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
-  PID                      = 0;
-  Version                  = 0;
+  PID                      = ESP_PROJECT_PID;
+  Version                  = VERSION;
   Build                    = 0;
   IP_Octet                 = 0;
   Delay                    = 0;
@@ -595,6 +598,13 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   StructSize                       = sizeof(SettingsStruct_tmpl<N_TASKS>);
   MQTTUseUnitNameAsClientId_unused = 0;
   VariousBits1                     = 0;
+
+  console_serial_port              = DEFAULT_CONSOLE_PORT; 
+  console_serial_rxpin             = DEFAULT_CONSOLE_PORT_RXPIN;
+  console_serial_txpin             = DEFAULT_CONSOLE_PORT_TXPIN;
+  console_serial0_fallback         = DEFAULT_CONSOLE_SER0_FALLBACK;
+
+
   OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
   WiFiRestart_connection_lost(DEFAULT_WIFI_RESTART_WIFI_CONN_LOST);

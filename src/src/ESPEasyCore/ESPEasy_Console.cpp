@@ -19,20 +19,25 @@
  */
 
 
-EspEasy_Console_t::EspEasy_Console_t() :
-  _defaultPortActive(true)
+EspEasy_Console_t::EspEasy_Console_t()
 {
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  _console_serial_port  = Settings.console_serial_port;
-  _console_serial_rxpin = Settings.console_serial_rxpin;
-  _console_serial_txpin = Settings.console_serial_txpin;
+  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(_console_serial_port);
 
-  _serial = new ESPeasySerial(
-    static_cast<ESPEasySerialPort>(_console_serial_port),
+  _serial = new (std::nothrow) ESPeasySerial(
+    port,
     _console_serial_rxpin,
-    _console_serial_txpin,
-    false,
-    64);
+    _console_serial_txpin);
+
+#if USES_HWCDC || USES_USBCDC
+  if (Settings.console_serial0_fallback && port != ESPEasySerialPort::serial0) {
+    _serial_fallback = new (std::nothrow) ESPeasySerial(
+      ESPEasySerialPort::serial0,
+      SOC_RX0,
+      SOC_TX0);
+    }
+#endif
+
 
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 }
@@ -44,12 +49,19 @@ EspEasy_Console_t::~EspEasy_Console_t() {
     delete _serial;
     _serial = nullptr;
   }
+#if USES_HWCDC || USES_USBCDC
+    if (_serial_fallback != nullptr) {
+      delete _serial_fallback;
+      _serial_fallback = nullptr;
+    }
+#endif
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 }
 
 void EspEasy_Console_t::begin(uint32_t baudrate)
 {
-  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  updateActiveTaskUseSerial0();
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   if ((_console_serial_port != Settings.console_serial_port) ||
       (_console_serial_rxpin != Settings.console_serial_rxpin) ||
       (_console_serial_txpin != Settings.console_serial_txpin)) {
@@ -57,22 +69,46 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
       delete _serial;
       _serial = nullptr;
     }
+#if USES_HWCDC || USES_USBCDC
+    if (_serial_fallback != nullptr) {
+      delete _serial_fallback;
+      _serial_fallback = nullptr;
+    }
+#endif
+    
     _console_serial_port  = Settings.console_serial_port;
     _console_serial_rxpin = Settings.console_serial_rxpin;
     _console_serial_txpin = Settings.console_serial_txpin;
 
-    _serial = new ESPeasySerial(
+    const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(_console_serial_port);
+
+    if (!(activeTaskUseSerial0() || log_to_serial_disabled) ||
+    !(
+# ifdef ESP8266
+      (port == ESPEasySerialPort::serial0_swap) ||
+# endif // ifdef ESP8266
+      port == ESPEasySerialPort::serial0)
+    )
+
+    _serial = new (std::nothrow) ESPeasySerial(
       static_cast<ESPEasySerialPort>(_console_serial_port),
       _console_serial_rxpin,
-      _console_serial_txpin,
-      false,
-      64);
+      _console_serial_txpin);
+#if USES_HWCDC || USES_USBCDC
+    if (Settings.console_serial0_fallback && port != ESPEasySerialPort::serial0) {
+      if (!(activeTaskUseSerial0() || log_to_serial_disabled))
+    _serial_fallback = new (std::nothrow) ESPeasySerial(
+      ESPEasySerialPort::serial0,
+      SOC_RX0,
+      SOC_TX0);
+    }
+#endif
   }
-  #endif
+#endif
 
   _baudrate = baudrate;
 
-  if (_defaultPortActive) {
+  if (_serial != nullptr && _serial->connected()) {
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     _serial->begin(baudrate);
     addLog(LOG_LEVEL_INFO, F("ESPEasy console using ESPEasySerial"));
@@ -93,6 +129,14 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
 # endif // ifdef ESP32
 #endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   }
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#if USES_HWCDC || USES_USBCDC
+if (_serial_fallback != nullptr && _serial_fallback->connected()) {
+  _serial_fallback->begin(baudrate);
+  addLog(LOG_LEVEL_INFO, F("ESPEasy console fallback enabled"));
+}
+#endif
+#endif
 }
 
 void EspEasy_Console_t::init() {
@@ -102,105 +146,50 @@ void EspEasy_Console_t::init() {
     return;
   }
 
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-  // FIXME TD-er: Must detect whether we should swap software serial on pin 3&1 for HW serial if Serial0 is not being used anymore.
-  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(Settings.console_serial_port);
-
-  if ((port == ESPEasySerialPort::serial0)
-  # ifdef ESP8266
-      || (port == ESPEasySerialPort::serial0_swap)
-  # endif // ifdef ESP8266
-      ) {
-    if (activeTaskUseSerial0()) {
-      return;
-    }
-  }
-#else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-  if (activeTaskUseSerial0()) {
+#if !FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  if (activeTaskUseSerial0() || log_to_serial_disabled) {
     return;
   }
-#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-  if (log_to_serial_disabled) {
-    return;
-  }
-
-
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-  //  if (ESPEASY_SERIAL_CONSOLE_PORT.getSerialPortType() == ESPEasySerialPort::not_set)
-
-  /*
-     if (Settings.console_serial_port != console_serial_port ||
-        Settings.console_serial_rxpin != console_serial_rxpin ||
-        Settings.console_serial_txpin != console_serial_txpin) {
-
-      const uint8_t current_console_serial_port = console_serial_port;
-      // Update cached values
-      console_serial_port  = Settings.console_serial_port;
-      console_serial_rxpin = Settings.console_serial_rxpin;
-      console_serial_txpin = Settings.console_serial_txpin;
-
-   #ifdef ESP8266
-      bool forceSWSerial = static_cast<ESPEasySerialPort>(Settings.console_serial_port) == ESPEasySerialPort::software;
-      if (activeTaskUseSerial0()) {
-        if (ESPEasySerialPort::sc16is752 != static_cast<ESPEasySerialPort>(console_serial_port)) {
-          forceSWSerial = true;
-          console_serial_port = static_cast<uint8_t>(ESPEasySerialPort::software);
-        }
-      }
-   #endif
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("Serial : Change serial console port from: ");
-        log += ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(current_console_serial_port));
-        log += F(" to: ");
-        log += ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(console_serial_port));
-   #ifdef ESP8266
-        if (forceSWSerial) {
-          log += F(" (force SW serial)");
-        }
-   #endif
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
-      process_serialWriteBuffer();
-
-
-      ESPEASY_SERIAL_CONSOLE_PORT.resetConfig(
-        static_cast<ESPEasySerialPort>(console_serial_port),
-        console_serial_rxpin,
-        console_serial_txpin,
-        false,
-        64
-   #ifdef ESP8266
-        , forceSWSerial
-   #endif
-        );
-     }
-   */
-#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#endif
 
   begin(Settings.BaudRate);
 }
 
 void EspEasy_Console_t::loop()
 {
-  Stream *port = getPort();
+  auto port = getPort();
 
   if (port == nullptr) {
     return;
   }
 
-  if (_defaultPortActive && port->available())
+  if (port->connected() && port->available())
   {
-    String dummy;
+    if (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
+#ifdef ESP8266
+    || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
+#endif
+    ) {
+      String dummy;
 
-    if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
-      return;
+      if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
+        return;
+      }
     }
   }
+#if USES_HWCDC || USES_USBCDC
+if (_serial_fallback != nullptr && 
+    _serial_fallback->connected() &&
+    _serial_fallback->available()) 
+{
+  String dummy;
+
+  if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
+    return;
+  }
+}
+#endif
+
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   // FIXME TD-er: Must add check whether SW serial may be using the same pins as Serial0
@@ -307,7 +296,7 @@ bool EspEasy_Console_t::process_serialWriteBuffer() {
   if (bufferSize == 0) {
     return true;
   }
-  Stream *port = getPort();
+  auto port = getPort();
 
   if (port == nullptr) {
     return false;
@@ -336,44 +325,60 @@ bool EspEasy_Console_t::process_serialWriteBuffer() {
 
 void EspEasy_Console_t::setDebugOutput(bool enable)
 {
-  if (_defaultPortActive) {
+  if (_serial != nullptr && _serial->connected()) {
     _serial->setDebugOutput(enable);
   }
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#if USES_HWCDC || USES_USBCDC
+    if (_serial_fallback != nullptr && _serial_fallback->connected())
+      _serial_fallback->setDebugOutput(enable);
+#endif
+#endif
 }
 
-Stream * EspEasy_Console_t::getPort()
-{
-  if (_defaultPortActive) {
-    return _serial;
-  }
-  return nullptr;
-}
 
-const Stream * EspEasy_Console_t::getPort() const
-{
-  if (_defaultPortActive) {
-    return _serial;
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  ESPeasySerial  * EspEasy_Console_t::getPort()
+  {
+    if (_serial != nullptr && _serial->connected())
+        return _serial;
+#if USES_HWCDC || USES_USBCDC
+    if (_serial_fallback != nullptr && _serial_fallback->connected())
+      return _serial_fallback;
+#endif      
+    return nullptr;
   }
-  return nullptr;
-}
+#else
+  HardwareSerial * EspEasy_Console_t::getPort()
+  {
+    if (_serial != nullptr && _serial->connected())
+        return _serial;
+    return nullptr;
+  }
+#endif
+
 
 void EspEasy_Console_t::endPort()
 {
-  if (_defaultPortActive) {
-    if (_serial != nullptr) {
+  if (_serial != nullptr) {
+    if (_serial->connected()) {
       _serial->end();
     }
   }
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#if USES_HWCDC || USES_USBCDC
+    if (_serial_fallback != nullptr && _serial_fallback->connected())
+      _serial_fallback->end();
+#endif
+#endif
   delay(10);
 }
 
 int EspEasy_Console_t::availableForWrite()
 {
-  if (_defaultPortActive) {
-    if (_serial != nullptr) {
-      return _serial->availableForWrite();
-    }
-    return 0;
+  auto serial = getPort();
+  if (serial != nullptr && serial->connected()) {
+      return serial->availableForWrite();
   }
   return 0;
 }

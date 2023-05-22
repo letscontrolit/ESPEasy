@@ -33,7 +33,6 @@
 
 #include <Stream.h>
 
-
 class ESPeasySerial : public Stream {
 public:
 
@@ -48,7 +47,7 @@ public:
                 int               receivePin,
                 int               transmitPin,
                 bool              inverse_logic = false,
-                unsigned int      buffSize      = 64,
+                unsigned int      buffSize      = SOC_UART_FIFO_LEN,
                 bool              forceSWserial = false);
   virtual ~ESPeasySerial();
 
@@ -57,7 +56,7 @@ public:
                 int          receivePin,
                 int          transmitPin,
                 bool         inverse_logic = false,
-                unsigned int buffSize      = 64,
+                unsigned int buffSize      = SOC_UART_FIFO_LEN,
                 bool         forceSWserial = false);
 
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
@@ -101,6 +100,8 @@ void begin(unsigned long baud, uint32_t config);
   int getBaudRate() const;
 
   operator bool() const;
+
+  bool connected() const;
 
 
   void          setDebugOutput(bool);

@@ -18,6 +18,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
 
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
