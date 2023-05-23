@@ -39,6 +39,14 @@ public:
 
   size_t setRxBufferSize(size_t new_size);
   size_t setTxBufferSize(size_t new_size);
+
+private:
+
+# if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
+  HWCDC *_hwcdc_serial = &Serial;
+# else // if ARDUINO_USB_CDC_ON_BOOT
+  HWCDC *_hwcdc_serial = &USBSerial;
+# endif // if ARDUINO_USB_CDC_ON_BOOT
 };
 
 

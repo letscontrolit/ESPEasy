@@ -6,10 +6,17 @@
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 # include <ESPeasySerial.h>
+#if USES_HWCDC || USES_USBCDC
+#define USES_ESPEASY_CONSOLE_FALLBACK_PORT 1
+#endif
 #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 # include <HardwareSerial.h>
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
+
+#ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
+#define USES_ESPEASY_CONSOLE_FALLBACK_PORT 0
+#endif
 
 #include <deque>
 
@@ -72,7 +79,7 @@ private:
   int8_t _console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
   int8_t _console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
   ESPeasySerial *_serial       = nullptr;
-#if USES_HWCDC || USES_USBCDC
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   ESPeasySerial *_serial_fallback      = nullptr;
 #endif
 

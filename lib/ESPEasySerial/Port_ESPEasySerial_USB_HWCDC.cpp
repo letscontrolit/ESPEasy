@@ -2,7 +2,6 @@
 
 #if USES_HWCDC
 
-# include "Driver_ESPEasySerial_USB.h"
 
 volatile bool usbActive = false;
 
@@ -47,6 +46,12 @@ static void hwcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t e
 }
 
 Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config)
+:
+# if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
+  _hwcdc_serial(&Serial)
+# else // if ARDUINO_USB_CDC_ON_BOOT
+  _hwcdc_serial(&USBSerial)
+# endif // if ARDUINO_USB_CDC_ON_BOOT
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
 }

@@ -3,8 +3,6 @@
 
 #if USES_USBCDC
 
-# include "Driver_ESPEasySerial_USB.h"
-
 volatile bool usbActive = false;
 
 volatile int32_t eventidTriggered = ESP_EVENT_ANY_ID;

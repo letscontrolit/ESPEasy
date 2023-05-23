@@ -31,7 +31,7 @@ EspEasy_Console_t::EspEasy_Console_t()
     _console_serial_rxpin,
     _console_serial_txpin);
 
-#if USES_HWCDC || USES_USBCDC
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   if (Settings.console_serial0_fallback && port != ESPEasySerialPort::serial0) {
     _serial_fallback = new (std::nothrow) ESPeasySerial(
       ESPEasySerialPort::serial0,
@@ -51,7 +51,7 @@ EspEasy_Console_t::~EspEasy_Console_t() {
     delete _serial;
     _serial = nullptr;
   }
-#if USES_HWCDC || USES_USBCDC
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
     if (_serial_fallback != nullptr) {
       delete _serial_fallback;
       _serial_fallback = nullptr;
@@ -71,7 +71,7 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
       delete _serial;
       _serial = nullptr;
     }
-#if USES_HWCDC || USES_USBCDC
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
     if (_serial_fallback != nullptr) {
       delete _serial_fallback;
       _serial_fallback = nullptr;
@@ -96,7 +96,7 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
       static_cast<ESPEasySerialPort>(_console_serial_port),
       _console_serial_rxpin,
       _console_serial_txpin);
-#if USES_HWCDC || USES_USBCDC
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
     if (Settings.console_serial0_fallback && port != ESPEasySerialPort::serial0) {
       if (!(activeTaskUseSerial0() || log_to_serial_disabled))
     _serial_fallback = new (std::nothrow) ESPeasySerial(
@@ -131,13 +131,11 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
 # endif // ifdef ESP32
 #endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   }
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-#if USES_HWCDC || USES_USBCDC
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 if (_serial_fallback != nullptr && _serial_fallback->connected()) {
   _serial_fallback->begin(baudrate);
   addLog(LOG_LEVEL_INFO, F("ESPEasy console fallback enabled"));
 }
-#endif
 #endif
 }
 
@@ -182,7 +180,7 @@ void EspEasy_Console_t::loop()
       }
     }
   }
-#if USES_HWCDC || USES_USBCDC
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 if (_serial_fallback != nullptr && 
     _serial_fallback->connected() &&
     _serial_fallback->available()) 
@@ -333,11 +331,9 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
   if (_serial != nullptr && _serial->operator bool()) {
     _serial->setDebugOutput(enable);
   }
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-#if USES_HWCDC || USES_USBCDC
-    if (_serial_fallback != nullptr && _serial_fallback->connected())
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  if (_serial_fallback != nullptr && _serial_fallback->connected())
       _serial_fallback->setDebugOutput(enable);
-#endif
 #endif
 }
 
@@ -347,7 +343,7 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
   {
     if (_serial != nullptr && _serial->connected())
         return _serial;
-#if USES_HWCDC || USES_USBCDC
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
     if (_serial_fallback != nullptr && _serial_fallback->connected())
       return _serial_fallback;
 #endif      
@@ -370,11 +366,9 @@ void EspEasy_Console_t::endPort()
       _serial->end();
     }
   }
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-#if USES_HWCDC || USES_USBCDC
-    if (_serial_fallback != nullptr && _serial_fallback->connected())
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  if (_serial_fallback != nullptr && _serial_fallback->connected())
       _serial_fallback->end();
-#endif
 #endif
   delay(10);
 }
