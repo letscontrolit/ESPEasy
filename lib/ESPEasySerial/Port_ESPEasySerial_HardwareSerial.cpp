@@ -1,4 +1,4 @@
-#include "ESPEasySerial_HardwareSerial.h"
+#include "Port_ESPEasySerial_HardwareSerial.h"
 
 
 #include "ESPEasySerialType.h"
@@ -32,7 +32,7 @@ bool pinsChanged(ESPEasySerialPort port,
     case  ESPEasySerialPort::serial0: return receivePin != receivePin0 || transmitPin != transmitPin0;
     # if SOC_UART_NUM > 1
     case  ESPEasySerialPort::serial1: return receivePin != receivePin1 || transmitPin != transmitPin1;
-    # endif
+    # endif // if SOC_UART_NUM > 1
     # if SOC_UART_NUM > 2
     case  ESPEasySerialPort::serial2: return receivePin != receivePin2 || transmitPin != transmitPin2;
     # endif // if SOC_UART_NUM > 2
@@ -57,7 +57,7 @@ void setPinsCache(ESPEasySerialPort port,
       receivePin1  = receivePin;
       transmitPin1 = transmitPin;
       break;
-    #endif
+    # endif // if SOC_UART_NUM > 1
 
     # if SOC_UART_NUM > 2
     case  ESPEasySerialPort::serial2:
@@ -74,23 +74,25 @@ void setPinsCache(ESPEasySerialPort port,
 
 #endif // ifdef ESP32
 
-ESPEasySerial_HardwareSerial_t::ESPEasySerial_HardwareSerial_t() {}
-ESPEasySerial_HardwareSerial_t::~ESPEasySerial_HardwareSerial_t() {}
+Port_ESPEasySerial_HardwareSerial_t::Port_ESPEasySerial_HardwareSerial_t() {}
 
-void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & config)
+Port_ESPEasySerial_HardwareSerial_t::~Port_ESPEasySerial_HardwareSerial_t() {}
+
+void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig& config)
 {
-  if (!isHWserial(config.port)) return;
+  if (!isHWserial(config.port)) { return; }
+
   /*
-  if (_config == config) return;
+     if (_config == config) return;
 
-  // First call end()
-  // Then create new instance.
+     // First call end()
+     // Then create new instance.
 
-  _config.receivePin    = receivePin;
-  _config.transmitPin   = transmitPin;
-  _config.inverse_logic = inverse_logic;
-  _config.buffSize      = buffSize;
-  */
+     _config.receivePin    = receivePin;
+     _config.transmitPin   = transmitPin;
+     _config.inverse_logic = inverse_logic;
+     _config.buffSize      = buffSize;
+   */
 
   _config = config;
 
@@ -99,7 +101,7 @@ void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & con
     case  ESPEasySerialPort::serial0:
     #if SOC_UART_NUM > 1
     case  ESPEasySerialPort::serial1:
-    #endif
+    #endif // if SOC_UART_NUM > 1
     #if SOC_UART_NUM > 2
     case  ESPEasySerialPort::serial2:
     #endif // if SOC_UART_NUM > 2
@@ -122,7 +124,7 @@ void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & con
 #if SOC_UART_NUM > 1
   } else if (_config.port == ESPEasySerialPort::serial1) {
     _serial = &Serial1;
-#endif
+#endif // if SOC_UART_NUM > 1
 #if SOC_UART_NUM > 2
   } else if (_config.port == ESPEasySerialPort::serial2) {
     _serial = &Serial2;
@@ -132,9 +134,8 @@ void ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig & con
   }
 }
 
-
 #ifdef ESP8266
-void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
+void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
 {
   if (_serial == nullptr) {
     _config.baud = 0;
@@ -168,7 +169,7 @@ void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
 #endif // ifdef ESP8266
 
 #ifdef ESP32
-void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
+void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
 {
   if (_serial == nullptr) {
     _config.baud = 0;
@@ -188,6 +189,10 @@ void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
     _serial->end();
     delay(10);
 
+    if (_config.buffSize > 256) {
+      _config.buffSize = _serial->setRxBufferSize(_config.buffSize);
+    }
+
     _serial->begin(baud, _config.config, _config.receivePin, _config.transmitPin, _config.inverse_logic);
     _serial->flush();
   }
@@ -195,7 +200,7 @@ void ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
 
 #endif // ifdef ESP32
 
-void ESPEasySerial_HardwareSerial_t::end() {
+void Port_ESPEasySerial_HardwareSerial_t::end() {
   if (_serial != nullptr) {
     _serial->end();
 
@@ -203,7 +208,7 @@ void ESPEasySerial_HardwareSerial_t::end() {
   }
 }
 
-int ESPEasySerial_HardwareSerial_t::available(void)
+int Port_ESPEasySerial_HardwareSerial_t::available(void)
 {
   if (_serial != nullptr) {
     return _serial->available();
@@ -211,7 +216,7 @@ int ESPEasySerial_HardwareSerial_t::available(void)
   return 0;
 }
 
-int ESPEasySerial_HardwareSerial_t::availableForWrite(void)
+int Port_ESPEasySerial_HardwareSerial_t::availableForWrite(void)
 {
   if (_serial != nullptr) {
     return _serial->availableForWrite();
@@ -219,7 +224,7 @@ int ESPEasySerial_HardwareSerial_t::availableForWrite(void)
   return 0;
 }
 
-int ESPEasySerial_HardwareSerial_t::peek(void)
+int Port_ESPEasySerial_HardwareSerial_t::peek(void)
 {
   if (_serial != nullptr) {
     return _serial->peek();
@@ -227,7 +232,7 @@ int ESPEasySerial_HardwareSerial_t::peek(void)
   return 0;
 }
 
-int ESPEasySerial_HardwareSerial_t::read(void)
+int Port_ESPEasySerial_HardwareSerial_t::read(void)
 {
   if (_serial != nullptr) {
     return _serial->read();
@@ -235,8 +240,8 @@ int ESPEasySerial_HardwareSerial_t::read(void)
   return 0;
 }
 
-size_t ESPEasySerial_HardwareSerial_t::read(uint8_t *buffer,
-                                            size_t   size)
+size_t Port_ESPEasySerial_HardwareSerial_t::read(uint8_t *buffer,
+                                                 size_t   size)
 {
   if (_serial != nullptr) {
     #ifdef ESP32
@@ -249,14 +254,14 @@ size_t ESPEasySerial_HardwareSerial_t::read(uint8_t *buffer,
   return 0;
 }
 
-void ESPEasySerial_HardwareSerial_t::flush(void)
+void Port_ESPEasySerial_HardwareSerial_t::flush(void)
 {
   if (_serial != nullptr) {
     _serial->flush();
   }
 }
 
-void ESPEasySerial_HardwareSerial_t::flush(bool txOnly)
+void Port_ESPEasySerial_HardwareSerial_t::flush(bool txOnly)
 {
   if (_serial != nullptr) {
     #ifdef ESP32
@@ -268,7 +273,7 @@ void ESPEasySerial_HardwareSerial_t::flush(bool txOnly)
   }
 }
 
-size_t ESPEasySerial_HardwareSerial_t::write(uint8_t value)
+size_t Port_ESPEasySerial_HardwareSerial_t::write(uint8_t value)
 {
   if (_serial != nullptr) {
     return _serial->write(value);
@@ -276,8 +281,8 @@ size_t ESPEasySerial_HardwareSerial_t::write(uint8_t value)
   return 0;
 }
 
-size_t ESPEasySerial_HardwareSerial_t::write(const uint8_t *buffer,
-                                             size_t         size)
+size_t Port_ESPEasySerial_HardwareSerial_t::write(const uint8_t *buffer,
+                                                  size_t         size)
 {
   if (_serial != nullptr) {
     return _serial->write(buffer, size);
@@ -285,20 +290,29 @@ size_t ESPEasySerial_HardwareSerial_t::write(const uint8_t *buffer,
   return 0;
 }
 
-ESPEasySerial_HardwareSerial_t::operator bool() const
+int Port_ESPEasySerial_HardwareSerial_t::getBaudRate() const
 {
-  if (_serial != nullptr)
+  if (_serial != nullptr) {
+    return _serial->baudRate();
+  }
+  return 0;
+}
+
+Port_ESPEasySerial_HardwareSerial_t::operator bool() const
+{
+  if (_serial != nullptr) {
     return _serial->operator bool();
+  }
   return false;
 }
 
-void ESPEasySerial_HardwareSerial_t::setDebugOutput(bool enabled) {
+void Port_ESPEasySerial_HardwareSerial_t::setDebugOutput(bool enabled) {
   if (_serial != nullptr) {
     return _serial->setDebugOutput(enabled);
   }
 }
 
-size_t ESPEasySerial_HardwareSerial_t::setRxBufferSize(size_t new_size)
+size_t Port_ESPEasySerial_HardwareSerial_t::setRxBufferSize(size_t new_size)
 {
   if (_serial != nullptr) {
     return _serial->setRxBufferSize(new_size);
@@ -306,7 +320,7 @@ size_t ESPEasySerial_HardwareSerial_t::setRxBufferSize(size_t new_size)
   return 0;
 }
 
-size_t ESPEasySerial_HardwareSerial_t::setTxBufferSize(size_t new_size)
+size_t Port_ESPEasySerial_HardwareSerial_t::setTxBufferSize(size_t new_size)
 {
   if (_serial != nullptr) {
     #ifdef ESP32

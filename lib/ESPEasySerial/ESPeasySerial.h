@@ -29,14 +29,14 @@
 #include "ESPEasySerialPort.h"
 #include "ESPEasySerialType.h"
 
-#include "ESPEasySerial_Port_base.h"
+#include "Port_ESPEasySerial_base.h"
 
 #include <Stream.h>
 
 class ESPeasySerial : public Stream {
 public:
 
-  static ESPEasySerial_Port_base* ESPEasySerial_Port_factory(const ESPEasySerialConfig &config);
+  static Port_ESPEasySerial_base* ESPEasySerial_Port_factory(const ESPEasySerialConfig& config);
 
   // ESP82xx has 2 HW serial ports and option for several software serial ports.
   // Serial0:         RX: 3  TX: 1
@@ -52,23 +52,24 @@ public:
   virtual ~ESPeasySerial();
 
   // Same parameters as the constructor, to allow to reconfigure the ESPEasySerial object to be another type of port.
-  void resetConfig(ESPEasySerialPort         port, 
-                int          receivePin,
-                int          transmitPin,
-                bool         inverse_logic = false,
-                unsigned int buffSize      = SOC_UART_FIFO_LEN,
-                bool         forceSWserial = false);
+  void resetConfig(ESPEasySerialPort port,
+                   int               receivePin,
+                   int               transmitPin,
+                   bool              inverse_logic = false,
+                   unsigned int      buffSize      = SOC_UART_FIFO_LEN,
+                   bool              forceSWserial = false);
 
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud);
 #ifdef ESP8266
   void begin(unsigned long baud,
              SerialConfig  config,
-             SerialMode    mode   = SERIAL_FULL);
-#endif
+             SerialMode    mode = SERIAL_FULL);
+#endif // ifdef ESP8266
 #ifdef ESP32
-void begin(unsigned long baud, uint32_t config);
-#endif
+  void begin(unsigned long baud,
+             uint32_t      config);
+#endif // ifdef ESP32
 
   void   end();
   int    peek(void);
@@ -97,17 +98,17 @@ void begin(unsigned long baud, uint32_t config);
   size_t write(const uint8_t *buffer,
                size_t         size);
   size_t write(const char *buffer);
-  int getBaudRate() const;
+  int    getBaudRate() const;
 
   operator bool() const;
 
-  bool connected() const;
+  bool   connected() const;
 
 
-  void          setDebugOutput(bool);
+  void   setDebugOutput(bool);
 
-  bool          isTxEnabled(void);
-  bool          isRxEnabled(void);
+  bool   isTxEnabled(void);
+  bool   isRxEnabled(void);
 
   bool   listen();
 
@@ -133,18 +134,19 @@ void begin(unsigned long baud, uint32_t config);
   }
 
   ESPEasySerialConfig getSerialConfig() const {
-    if (_serialPort != nullptr) 
+    if (_serialPort != nullptr) {
       return _serialPort->getSerialConfig();
+    }
     ESPEasySerialConfig res;
+
     return res;
   }
 
 private:
 
-  bool                  isValid() const;
+  bool isValid() const;
 
-  ESPEasySerial_Port_base* _serialPort = nullptr;
-
+  Port_ESPEasySerial_base *_serialPort = nullptr;
 };
 
 #endif // ifndef ESPeasySerial_h

@@ -5,9 +5,9 @@
 
 #ifdef ESP32
 
-#ifndef SOC_UART_FIFO_LEN
-#define SOC_UART_FIFO_LEN (128)
-#endif
+# ifndef SOC_UART_FIFO_LEN
+#  define SOC_UART_FIFO_LEN (128)
+# endif // ifndef SOC_UART_FIFO_LEN
 
 
 // Default pins taken from here:
@@ -61,7 +61,7 @@
 #   endif // if CONFIG_IDF_TARGET_ESP32
 #  endif  // ifndef SOC_TX1
 
-# endif // if SOC_UART_NUM > 1
+# endif   // if SOC_UART_NUM > 1
 
 # if SOC_UART_NUM > 2
 
@@ -70,7 +70,7 @@
 #    define SOC_RX2 16
 #   elif CONFIG_IDF_TARGET_ESP32S3
 #    define SOC_RX2 19
-#   else
+#   else // if CONFIG_IDF_TARGET_ESP32
 #    define SOC_RX2 -1
 #   endif // if CONFIG_IDF_TARGET_ESP32
 #  endif  // ifndef SOC_RX2
@@ -80,14 +80,14 @@
 #    define SOC_TX2 17
 #   elif CONFIG_IDF_TARGET_ESP32S3
 #    define SOC_TX2 20
-#   else
+#   else // if CONFIG_IDF_TARGET_ESP32
 #    define SOC_TX2 -1
 #   endif // if CONFIG_IDF_TARGET_ESP32
 #  endif  // ifndef SOC_TX2
 
-# endif // if SOC_UART_NUM > 2
+# endif   // if SOC_UART_NUM > 2
 
-#endif
+#endif // ifdef ESP32
 
 struct ESPeasySerialType {
   static bool getSerialTypePins(ESPEasySerialPort serType,

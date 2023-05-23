@@ -12,6 +12,8 @@
 
 #include "../Helpers/Memory.h"
 
+#include <ESPEasySerialPort.h>
+
 /*
  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
  # include "../Helpers/_Plugin_Helper_serial.h"
@@ -108,7 +110,7 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
 
   _baudrate = baudrate;
 
-  if (_serial != nullptr && _serial->connected()) {
+  if (_serial != nullptr && _serial->operator bool()) {
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     _serial->begin(baudrate);
     addLog(LOG_LEVEL_INFO, F("ESPEasy console using ESPEasySerial"));
@@ -163,13 +165,16 @@ void EspEasy_Console_t::loop()
     return;
   }
 
-  if (port->connected() && port->available())
+  if (port->operator bool() && port->available())
   {
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     if (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
 #ifdef ESP8266
     || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
 #endif
-    ) {
+    ) 
+#endif
+    {
       String dummy;
 
       if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
@@ -305,7 +310,7 @@ bool EspEasy_Console_t::process_serialWriteBuffer() {
   const int snip = availableForWrite();
 
   if (snip > 0) {
-    size_t bytes_to_write = bufferSize;
+    int bytes_to_write = bufferSize;
 
     if (snip < bytes_to_write) { bytes_to_write = snip; }
 
@@ -325,7 +330,7 @@ bool EspEasy_Console_t::process_serialWriteBuffer() {
 
 void EspEasy_Console_t::setDebugOutput(bool enable)
 {
-  if (_serial != nullptr && _serial->connected()) {
+  if (_serial != nullptr && _serial->operator bool()) {
     _serial->setDebugOutput(enable);
   }
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
@@ -351,7 +356,7 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
 #else
   HardwareSerial * EspEasy_Console_t::getPort()
   {
-    if (_serial != nullptr && _serial->connected())
+    if (_serial != nullptr && _serial->operator bool())
         return _serial;
     return nullptr;
   }
@@ -361,7 +366,7 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
 void EspEasy_Console_t::endPort()
 {
   if (_serial != nullptr) {
-    if (_serial->connected()) {
+    if (_serial->operator bool()) {
       _serial->end();
     }
   }
@@ -377,7 +382,7 @@ void EspEasy_Console_t::endPort()
 int EspEasy_Console_t::availableForWrite()
 {
   auto serial = getPort();
-  if (serial != nullptr && serial->connected()) {
+  if (serial != nullptr && serial->operator bool()) {
       return serial->availableForWrite();
   }
   return 0;

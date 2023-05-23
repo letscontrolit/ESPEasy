@@ -1,5 +1,5 @@
-#ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_USB_HWCDC_H
-#define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_USB_HWCDC_H
+#ifndef ESPEASYSERIAL_PORT_ESPEASYSERIAL_USB_HWCDC_H
+#define ESPEASYSERIAL_PORT_ESPEASYSERIAL_USB_HWCDC_H
 
 #include "ESPEasySerial_common_defines.h"
 
@@ -7,15 +7,15 @@
 
 // ESP32C3/S3 embedded USB using JTAG interface
 # include <HWCDC.h>
-# include "ESPEasySerial_Port_base.h"
+# include "Port_ESPEasySerial_base.h"
 
 
-class ESPEasySerial_USB_WHCDC_t : public ESPEasySerial_Port_base {
+class Port_ESPEasySerial_USB_HWCDC_t : public Port_ESPEasySerial_base {
 public:
 
-  ESPEasySerial_USB_WHCDC_t(const ESPEasySerialConfig & config);
+  Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config);
 
-  virtual ~ESPEasySerial_USB_WHCDC_t();
+  virtual ~Port_ESPEasySerial_USB_HWCDC_t();
 
   void   begin(unsigned long baud);
 
@@ -45,4 +45,4 @@ public:
 #endif // if USES_HWCDC
 
 
-#endif // ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_USB_HWCDC_H
+#endif // ifndef ESPEASYSERIAL_PORT_ESPEASYSERIAL_USB_HWCDC_H

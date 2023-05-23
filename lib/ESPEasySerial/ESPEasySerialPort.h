@@ -16,7 +16,7 @@ enum class ESPEasySerialPort : uint8_t {
 #endif // ifdef ESP8266
 #if SOC_UART_NUM > 1
   serial1 = 4,
-#endif
+#endif // if SOC_UART_NUM > 1
 #if SOC_UART_NUM > 2
   serial2 = 5,
 #endif // if SOC_UART_NUM > 2

@@ -1,26 +1,26 @@
-#ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_I2C_SC16IS752_H
-#define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_I2C_SC16IS752_H
+#ifndef ESPEASYSERIAL_PORT_ESPEASYSERIAL_I2C_SC16IS752_H
+#define ESPEASYSERIAL_PORT_ESPEASYSERIAL_I2C_SC16IS752_H
 
 
 #include "ESPEasySerial_common_defines.h"
 
 #if USES_I2C_SC16IS752
-# include "ESPEasySC16IS752_Serial.h"
+# include "Driver_ESPEasySC16IS752_Serial.h"
 
 
-# include "ESPEasySerial_Port_base.h"
+# include "Port_ESPEasySerial_base.h"
 
 
-class ESPEasySerial_I2C_SC16IS752 : public ESPEasySerial_Port_base {
+class Port_ESPEasySerial_I2C_SC16IS752_t : public Port_ESPEasySerial_base {
 public:
 
   //       ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
   //       ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
 
 
-  ESPEasySerial_I2C_SC16IS752(const ESPEasySerialConfig & config);
+  Port_ESPEasySerial_I2C_SC16IS752_t(const ESPEasySerialConfig& config);
 
-  virtual ~ESPEasySerial_I2C_SC16IS752();
+  virtual ~Port_ESPEasySerial_I2C_SC16IS752_t();
 
   void   begin(unsigned long baud);
 
@@ -54,4 +54,4 @@ private:
 #endif // if USES_I2C_SC16IS752
 
 
-#endif // ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_I2C_SC16IS752_H
+#endif // ifndef ESPEASYSERIAL_PORT_ESPEASYSERIAL_I2C_SC16IS752_H

@@ -11,11 +11,11 @@
 #include <HWCDC.h>
 extern HWCDC *_hwcdc_serial;
 #endif
-
+/*
 #if USES_USBCDC
 #include <USB.h>
 #include <USBCDC.h>
 extern USBCDC *_usbcdc_serial;
 #endif
-
+*/
 #endif // ifndef ESPEASYCORE_ESPEASY_USB_H

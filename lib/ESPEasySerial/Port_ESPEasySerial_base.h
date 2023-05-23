@@ -1,5 +1,5 @@
-#ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_PORT_BASE_H
-#define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_PORT_BASE_H
+#ifndef ESPEASYSERIAL_PORT_ESPEASYSERIAL_BASE_H
+#define ESPEASYSERIAL_PORT_ESPEASYSERIAL_BASE_H
 
 #include "ESPEasySerialPort.h"
 
@@ -8,11 +8,11 @@
 
 #include <Stream.h>
 
-class ESPEasySerial_Port_base {
+class Port_ESPEasySerial_base {
 public:
 
-  ESPEasySerial_Port_base();
-  virtual ~ESPEasySerial_Port_base();
+  Port_ESPEasySerial_base();
+  virtual ~Port_ESPEasySerial_base();
 
   virtual void   begin(unsigned long baud) = 0;
 
@@ -68,12 +68,14 @@ public:
     return write((uint8_t)n);
   }
 
+  virtual int getBaudRate() const;
+
   virtual operator bool() const = 0;
 
-  virtual void   setDebugOutput(bool) = 0;
+  virtual void               setDebugOutput(bool) = 0;
 
-  virtual size_t setRxBufferSize(size_t new_size) = 0;
-  virtual size_t setTxBufferSize(size_t new_size) = 0;
+  virtual size_t             setRxBufferSize(size_t new_size) = 0;
+  virtual size_t             setTxBufferSize(size_t new_size) = 0;
 
   const ESPEasySerialConfig& getSerialConfig() const {
     return _config;
@@ -81,12 +83,13 @@ public:
 
 #ifdef ESP8266
   void setPortConfig(unsigned long baud,
-             SerialConfig  config,
-             SerialMode    mode)
+                     SerialConfig  config,
+                     SerialMode    mode)
   {
     _config.setPortConfig(baud, config, mode);
   }
-#endif
+
+#endif // ifdef ESP8266
 
 #ifdef ESP32
   void setPortConfig(unsigned long baud, uint32_t config)
@@ -94,8 +97,7 @@ public:
     _config.setPortConfig(baud, config);
   }
 
-#endif
-
+#endif // ifdef ESP32
 
 protected:
 
@@ -103,4 +105,4 @@ protected:
 };
 
 
-#endif // ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_PORT_BASE_H
+#endif // ifndef ESPEASYSERIAL_PORT_ESPEASYSERIAL_BASE_H

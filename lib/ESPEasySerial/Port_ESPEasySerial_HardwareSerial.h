@@ -3,7 +3,7 @@
 
 #include "ESPEasySerial_common_defines.h"
 
-#include "ESPEasySerial_Port_base.h"
+#include "Port_ESPEasySerial_base.h"
 
 #include <HardwareSerial.h>
 
@@ -11,17 +11,17 @@
 # include <esp32-hal-uart.h>
 #endif // ifdef ESP32
 
-class ESPEasySerial_HardwareSerial_t : public ESPEasySerial_Port_base {
+class Port_ESPEasySerial_HardwareSerial_t : public Port_ESPEasySerial_base {
 public:
 
-  ESPEasySerial_HardwareSerial_t();
+  Port_ESPEasySerial_HardwareSerial_t();
 
-  ~ESPEasySerial_HardwareSerial_t();
+  ~Port_ESPEasySerial_HardwareSerial_t();
 
 
   // Allow for resetConfig, instead of end() and begin().
   // This can otherwise cause issues with some sensors when starting/stopping an ESPEasy task
-  void resetConfig(const ESPEasySerialConfig & config);
+  void   resetConfig(const ESPEasySerialConfig& config);
 
   void   begin(unsigned long baud);
 
@@ -39,6 +39,7 @@ public:
   size_t write(const uint8_t *buffer,
                size_t         size);
 
+  int    getBaudRate() const override;
   operator bool() const;
 
   void   setDebugOutput(bool);

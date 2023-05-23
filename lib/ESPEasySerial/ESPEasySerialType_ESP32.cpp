@@ -18,7 +18,7 @@ bool ESPeasySerialType::getSerialTypePins(ESPEasySerialPort serType, int& rxPin,
 # endif // if SOC_UART_NUM > 2
 # if USES_I2C_SC16IS752
     case ESPEasySerialPort::sc16is752:     return true;
-# endif
+# endif // if USES_I2C_SC16IS752
 
     default:
       break;

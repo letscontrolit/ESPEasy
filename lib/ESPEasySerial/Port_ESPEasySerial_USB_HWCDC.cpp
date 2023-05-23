@@ -1,8 +1,8 @@
-#include "ESPEasySerial_USB_HWCDC.h"
+#include "Port_ESPEasySerial_USB_HWCDC.h"
 
 #if USES_HWCDC
 
-# include "ESPEasySerial_USB.h"
+# include "Driver_ESPEasySerial_USB.h"
 
 volatile bool usbActive = false;
 
@@ -46,16 +46,17 @@ static void hwcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t e
   }
 }
 
-ESPEasySerial_USB_WHCDC_t::ESPEasySerial_USB_WHCDC_t(const ESPEasySerialConfig & config)
+Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config)
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
 }
 
-ESPEasySerial_USB_WHCDC_t::~ESPEasySerial_USB_WHCDC_t() {}
+Port_ESPEasySerial_USB_HWCDC_t::~Port_ESPEasySerial_USB_HWCDC_t() {}
 
-void ESPEasySerial_USB_WHCDC_t::begin(unsigned long baud)
+void Port_ESPEasySerial_USB_HWCDC_t::begin(unsigned long baud)
 {
   if (_hwcdc_serial != nullptr) {
+    _config.buffSize = _hwcdc_serial->setRxBufferSize(_config.buffSize);
     _hwcdc_serial->begin();
     delay(10);
     _hwcdc_serial->onEvent(hwcdcEventCallback);
@@ -63,7 +64,7 @@ void ESPEasySerial_USB_WHCDC_t::begin(unsigned long baud)
   }
 }
 
-void ESPEasySerial_USB_WHCDC_t::end() {
+void Port_ESPEasySerial_USB_HWCDC_t::end() {
   // Disabled for now
   // See: https://github.com/espressif/arduino-esp32/issues/8224
   if (_hwcdc_serial != nullptr) {
@@ -71,7 +72,7 @@ void ESPEasySerial_USB_WHCDC_t::end() {
   }
 }
 
-int ESPEasySerial_USB_WHCDC_t::available(void)
+int Port_ESPEasySerial_USB_HWCDC_t::available(void)
 {
   if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->available();
@@ -79,7 +80,7 @@ int ESPEasySerial_USB_WHCDC_t::available(void)
   return 0;
 }
 
-int ESPEasySerial_USB_WHCDC_t::availableForWrite(void)
+int Port_ESPEasySerial_USB_HWCDC_t::availableForWrite(void)
 {
   if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->availableForWrite();
@@ -87,7 +88,7 @@ int ESPEasySerial_USB_WHCDC_t::availableForWrite(void)
   return 0;
 }
 
-int ESPEasySerial_USB_WHCDC_t::peek(void)
+int Port_ESPEasySerial_USB_HWCDC_t::peek(void)
 {
   if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->peek();
@@ -95,7 +96,7 @@ int ESPEasySerial_USB_WHCDC_t::peek(void)
   return 0;
 }
 
-int ESPEasySerial_USB_WHCDC_t::read(void)
+int Port_ESPEasySerial_USB_HWCDC_t::read(void)
 {
   if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->read();
@@ -103,8 +104,8 @@ int ESPEasySerial_USB_WHCDC_t::read(void)
   return 0;
 }
 
-size_t ESPEasySerial_USB_WHCDC_t::read(uint8_t *buffer,
-                                       size_t   size)
+size_t Port_ESPEasySerial_USB_HWCDC_t::read(uint8_t *buffer,
+                                            size_t   size)
 {
   if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->read(buffer, size);
@@ -112,19 +113,19 @@ size_t ESPEasySerial_USB_WHCDC_t::read(uint8_t *buffer,
   return 0;
 }
 
-void ESPEasySerial_USB_WHCDC_t::flush(void)
+void Port_ESPEasySerial_USB_HWCDC_t::flush(void)
 {
   if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->flush();
   }
 }
 
-void ESPEasySerial_USB_WHCDC_t::flush(bool txOnly)
+void Port_ESPEasySerial_USB_HWCDC_t::flush(bool txOnly)
 {
   flush();
 }
 
-size_t ESPEasySerial_USB_WHCDC_t::write(uint8_t value)
+size_t Port_ESPEasySerial_USB_HWCDC_t::write(uint8_t value)
 {
   if (operator bool()) {
     return _hwcdc_serial->write(value);
@@ -132,8 +133,8 @@ size_t ESPEasySerial_USB_WHCDC_t::write(uint8_t value)
   return 0;
 }
 
-size_t ESPEasySerial_USB_WHCDC_t::write(const uint8_t *buffer,
-                                        size_t         size)
+size_t Port_ESPEasySerial_USB_HWCDC_t::write(const uint8_t *buffer,
+                                             size_t         size)
 {
   if (operator bool()) {
     return _hwcdc_serial->write(buffer, size);
@@ -141,28 +142,30 @@ size_t ESPEasySerial_USB_WHCDC_t::write(const uint8_t *buffer,
   return 0;
 }
 
-ESPEasySerial_USB_WHCDC_t::operator bool() const
+Port_ESPEasySerial_USB_HWCDC_t::operator bool() const
 {
-  if (_hwcdc_serial != nullptr)
+  if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->operator bool();
+  }
   return false;
 }
 
-void ESPEasySerial_USB_WHCDC_t::setDebugOutput(bool enabled) {
+void Port_ESPEasySerial_USB_HWCDC_t::setDebugOutput(bool enabled) {
   if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->setDebugOutput(enabled);
   }
 }
 
-size_t ESPEasySerial_USB_WHCDC_t::setRxBufferSize(size_t new_size)
+size_t Port_ESPEasySerial_USB_HWCDC_t::setRxBufferSize(size_t new_size)
 {
   if (_hwcdc_serial != nullptr) {
-    return _hwcdc_serial->setRxBufferSize(new_size);
+    _config.buffSize = _hwcdc_serial->setRxBufferSize(new_size);
+    return _config.buffSize;
   }
   return 0;
 }
 
-size_t ESPEasySerial_USB_WHCDC_t::setTxBufferSize(size_t new_size)
+size_t Port_ESPEasySerial_USB_HWCDC_t::setTxBufferSize(size_t new_size)
 {
   if (_hwcdc_serial != nullptr) {
     return _hwcdc_serial->setTxBufferSize(new_size);

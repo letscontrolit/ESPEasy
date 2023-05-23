@@ -35,8 +35,8 @@ void ESPEasySerialConfig::setPortConfig(
 
 #ifdef ESP32
 void ESPEasySerialConfig::setPortConfig(
-  unsigned long baudrate, 
-  uint32_t portconfig)
+  unsigned long baudrate,
+  uint32_t      portconfig)
 {
   // FIXME TD-er: Must also set baudrate?
 

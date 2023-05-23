@@ -6,26 +6,36 @@
 #include "ESPEasySerialPort.h"
 
 #if USES_I2C_SC16IS752
-# include "ESPEasySC16IS752_Serial.h"
+# include "Driver_ESPEasySC16IS752_Serial.h"
 #endif // if USES_I2C_SC16IS752
 
 #include <HardwareSerial.h>
 
-struct ESPEasySerialConfig {
+#ifdef ESP32
+# include <soc/soc_caps.h>
+#endif // ifdef ESP32
 
+#ifdef ESP8266
+# ifndef SOC_UART_FIFO_LEN
+#  define SOC_UART_FIFO_LEN 128
+# endif // ifndef SOC_UART_FIFO_LEN
+#endif // ifdef ESP8266
+
+struct ESPEasySerialConfig {
   ESPEasySerialConfig() = default;
 
   void validate();
 
   #ifdef ESP8266
   void setPortConfig(unsigned long baud,
-             SerialConfig  config,
-             SerialMode    mode);
-#endif
+                     SerialConfig  config,
+                     SerialMode    mode);
+#endif // ifdef ESP8266
 
 #ifdef ESP32
-  void setPortConfig(unsigned long baud, uint32_t config);
-#endif
+  void setPortConfig(unsigned long baud,
+                     uint32_t      config);
+#endif // ifdef ESP32
 
 
   String getLogString() const;
@@ -56,9 +66,8 @@ struct ESPEasySerialConfig {
 
 #ifdef ESP8266
   SerialConfig config = SERIAL_8N1;
-  SerialMode mode     = SERIAL_FULL;
+  SerialMode   mode   = SERIAL_FULL;
 #endif // ifdef ESP8266
-
 };
 
 

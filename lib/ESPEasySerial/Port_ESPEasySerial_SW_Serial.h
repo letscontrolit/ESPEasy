@@ -1,5 +1,5 @@
-#ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_SW_SERIAL_H
-#define ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_SW_SERIAL_H
+#ifndef ESPEASYSERIAL_PORT_ESPEASYSERIAL_SW_SERIAL_H
+#define ESPEASYSERIAL_PORT_ESPEASYSERIAL_SW_SERIAL_H
 
 
 #include "ESPEasySerial_common_defines.h"
@@ -7,17 +7,17 @@
 
 #if USES_SW_SERIAL
 
-# include "ESPEasySoftwareSerial.h"
+# include "Driver_ESPEasySoftwareSerial.h"
 
-# include "ESPEasySerial_Port_base.h"
+# include "Port_ESPEasySerial_base.h"
 
 
-class ESPEasySerial_SW_Serial : public ESPEasySerial_Port_base {
+class Port_ESPEasySerial_SW_Serial_t : public Port_ESPEasySerial_base {
 public:
 
-  ESPEasySerial_SW_Serial(const ESPEasySerialConfig & config);
+  Port_ESPEasySerial_SW_Serial_t(const ESPEasySerialConfig& config);
 
-  virtual ~ESPEasySerial_SW_Serial();
+  virtual ~Port_ESPEasySerial_SW_Serial_t();
 
   void   begin(unsigned long baud);
 
@@ -44,11 +44,11 @@ public:
 
 private:
 
-  ESPeasySoftwareSerial *_swserial = nullptr;
+  Driver_ESPEasySoftwareSerial_t *_swserial = nullptr;
 };
 
 
 #endif // if USES_SW_SERIAL
 
 
-#endif // ifndef ESPEASYSERIAL_WRAPPERS_ESPEASYSERIAL_SW_SERIAL_H
+#endif // ifndef ESPEASYSERIAL_PORT_ESPEASYSERIAL_SW_SERIAL_H

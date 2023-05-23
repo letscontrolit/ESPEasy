@@ -1,4 +1,4 @@
-#include <ESPEasySC16IS752_Serial.h>
+#include <Driver_ESPEasySC16IS752_Serial.h>
 
 #ifndef DISABLE_SC16IS752_Serial
 
