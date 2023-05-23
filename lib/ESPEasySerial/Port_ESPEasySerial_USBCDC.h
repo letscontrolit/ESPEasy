@@ -43,9 +43,17 @@ public:
 
 private:
 
-  USBCDC *_serial  = nullptr;
-  bool _mustDelete = false;
+  USBCDC* _serial = nullptr;
 };
+
+
+// Need to define these objects as extern as they need to be defined before setup() is being called.
+#if ARDUINO_USB_CDC_ON_BOOT
+#define ESPEasySerial_USBCDC_port0 Serial
+#else
+extern USBCDC ESPEasySerial_USBCDC_port0;
+#endif
+extern USBCDC ESPEasySerial_USBCDC_port1;
 
 
 #endif // if USES_USBCDC

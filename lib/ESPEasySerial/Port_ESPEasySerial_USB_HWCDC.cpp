@@ -2,6 +2,7 @@
 
 #if USES_HWCDC
 
+//#include <USB.h>
 
 volatile bool usbActive = false;
 
@@ -54,12 +55,7 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
 # endif // if ARDUINO_USB_CDC_ON_BOOT
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
-}
-
-Port_ESPEasySerial_USB_HWCDC_t::~Port_ESPEasySerial_USB_HWCDC_t() {}
-
-void Port_ESPEasySerial_USB_HWCDC_t::begin(unsigned long baud)
-{
+//  USB.begin();
   if (_hwcdc_serial != nullptr) {
     _config.buffSize = _hwcdc_serial->setRxBufferSize(_config.buffSize);
     _hwcdc_serial->begin();
@@ -67,6 +63,22 @@ void Port_ESPEasySerial_USB_HWCDC_t::begin(unsigned long baud)
     _hwcdc_serial->onEvent(hwcdcEventCallback);
     delay(1);
   }
+
+}
+
+Port_ESPEasySerial_USB_HWCDC_t::~Port_ESPEasySerial_USB_HWCDC_t() {}
+
+void Port_ESPEasySerial_USB_HWCDC_t::begin(unsigned long baud)
+{
+  /*
+  if (_hwcdc_serial != nullptr) {
+    _config.buffSize = _hwcdc_serial->setRxBufferSize(_config.buffSize);
+    _hwcdc_serial->begin();
+    delay(10);
+    _hwcdc_serial->onEvent(hwcdcEventCallback);
+    delay(1);
+  }
+  */
 }
 
 void Port_ESPEasySerial_USB_HWCDC_t::end() {
@@ -150,7 +162,7 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::write(const uint8_t *buffer,
 Port_ESPEasySerial_USB_HWCDC_t::operator bool() const
 {
   if (_hwcdc_serial != nullptr) {
-    return _hwcdc_serial->operator bool();
+    return usbActive; // _hwcdc_serial->operator bool();
   }
   return false;
 }

@@ -181,7 +181,7 @@
 #if USES_HWCDC
 #define DEFAULT_CONSOLE_PORT 7    // 7 = ESPEasySerialPort::usb_hw_cdc
 #elif USES_USBCDC
-#define DEFAULT_CONSOLE_PORT 8    // 8 = ESPEasySerialPort::usb_cdc_0
+#define DEFAULT_CONSOLE_PORT 9    // 8 = ESPEasySerialPort::usb_cdc_1
 #else
 #define DEFAULT_CONSOLE_PORT 2    // 2 = ESPEasySerialPort::serial0
 #endif

@@ -3,6 +3,11 @@
 
 #if USES_USBCDC
 
+#if !ARDUINO_USB_CDC_ON_BOOT
+USBCDC ESPEasySerial_USBCDC_port0(0);
+#endif
+USBCDC ESPEasySerial_USBCDC_port1(1);
+
 volatile bool usbActive = false;
 
 volatile int32_t eventidTriggered = ESP_EVENT_ANY_ID;
@@ -80,29 +85,25 @@ static void usbcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t 
 
 Port_ESPEasySerial_USBCDC_t::Port_ESPEasySerial_USBCDC_t(const ESPEasySerialConfig& config)
 {
-  _serial     = nullptr;
-  _mustDelete = false;
-  int uart_nr = -1;
+  _serial = nullptr;
 
   if (config.port == ESPEasySerialPort::usb_cdc_0) {
-    uart_nr = 0;
+    _serial = &ESPEasySerial_USBCDC_port0;
   }
   else if (config.port == ESPEasySerialPort::usb_cdc_1) {
-    uart_nr = 1;
+    _serial = &ESPEasySerial_USBCDC_port1;
   }
 
-  if (uart_nr > 0) {
+  if (_serial != nullptr) {
     _config.port = config.port;
-# if ARDUINO_USB_CDC_ON_BOOT
-
-    if (uart_nr == 0) {
-      _serial = &Serial;
-    } else
-# endif // if ARDUINO_USB_CDC_ON_BOOT
-    {
-      _serial     = new (std::nothrow) USBCDC(uart_nr);
-      _mustDelete = true;
-    }
+//    USB.onEvent(usbcdcEventCallback);
+//    _serial->onEvent(usbcdcEventCallback);
+    delay(10);
+    _config.buffSize = _serial->setRxBufferSize(_config.buffSize);
+    _serial->begin();
+    _serial->onEvent(usbcdcEventCallback);
+    USB.begin();
+    delay(1);
   }
 }
 
@@ -110,23 +111,19 @@ Port_ESPEasySerial_USBCDC_t::~Port_ESPEasySerial_USBCDC_t()
 {
   if (_serial != nullptr) {
     _serial->end();
-
-    if (_mustDelete) {
-      delete  _serial;
-      _serial = nullptr;
-    }
   }
 }
 
 void Port_ESPEasySerial_USBCDC_t::begin(unsigned long baud)
 {
   if (_serial != nullptr) {
-    USB.onEvent(usbcdcEventCallback);
-    _serial->onEvent(usbcdcEventCallback);
+//    USB.onEvent(usbcdcEventCallback);
+//    _serial->onEvent(usbcdcEventCallback);
     delay(10);
     _config.buffSize = _serial->setRxBufferSize(_config.buffSize);
     _serial->begin();
-    USB.begin();
+    _serial->onEvent(usbcdcEventCallback);
+//    USB.begin();
     delay(1);
   }
 }
@@ -210,7 +207,9 @@ size_t Port_ESPEasySerial_USBCDC_t::write(const uint8_t *buffer,
 Port_ESPEasySerial_USBCDC_t::operator bool() const
 {
   if (_serial != nullptr) {
-    return _serial->operator bool();
+//    const bool res = (*_serial);
+//    return res;
+    return  usbActive;
   }
   return false;
 }
