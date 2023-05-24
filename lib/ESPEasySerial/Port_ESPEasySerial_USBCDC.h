@@ -42,18 +42,21 @@ public:
   size_t setTxBufferSize(size_t new_size);
 
 private:
-
+#if ARDUINO_USB_CDC_ON_BOOT
+  USBCDC* _serial = &Serial;
+#else
   USBCDC* _serial = nullptr;
+#endif
+
 };
 
 
 // Need to define these objects as extern as they need to be defined before setup() is being called.
 #if ARDUINO_USB_CDC_ON_BOOT
-#define ESPEasySerial_USBCDC_port0 Serial
 #else
 extern USBCDC ESPEasySerial_USBCDC_port0;
-#endif
 extern USBCDC ESPEasySerial_USBCDC_port1;
+#endif
 
 
 #endif // if USES_USBCDC

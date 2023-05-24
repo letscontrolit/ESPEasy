@@ -57,7 +57,8 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
   _config.port = ESPEasySerialPort::usb_hw_cdc;
 //  USB.begin();
   if (_hwcdc_serial != nullptr) {
-    _config.buffSize = _hwcdc_serial->setRxBufferSize(_config.buffSize);
+    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
+    _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
     _hwcdc_serial->begin();
     delay(10);
     _hwcdc_serial->onEvent(hwcdcEventCallback);
@@ -72,7 +73,8 @@ void Port_ESPEasySerial_USB_HWCDC_t::begin(unsigned long baud)
 {
   /*
   if (_hwcdc_serial != nullptr) {
-    _config.buffSize = _hwcdc_serial->setRxBufferSize(_config.buffSize);
+    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
+    _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
     _hwcdc_serial->begin();
     delay(10);
     _hwcdc_serial->onEvent(hwcdcEventCallback);
@@ -176,8 +178,8 @@ void Port_ESPEasySerial_USB_HWCDC_t::setDebugOutput(bool enabled) {
 size_t Port_ESPEasySerial_USB_HWCDC_t::setRxBufferSize(size_t new_size)
 {
   if (_hwcdc_serial != nullptr) {
-    _config.buffSize = _hwcdc_serial->setRxBufferSize(new_size);
-    return _config.buffSize;
+    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(new_size);
+    return _config.rxBuffSize;
   }
   return 0;
 }
@@ -185,7 +187,8 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::setRxBufferSize(size_t new_size)
 size_t Port_ESPEasySerial_USB_HWCDC_t::setTxBufferSize(size_t new_size)
 {
   if (_hwcdc_serial != nullptr) {
-    return _hwcdc_serial->setTxBufferSize(new_size);
+    _config.txBuffSize = _hwcdc_serial->setTxBufferSize(new_size);
+    return _config.txBuffSize;
   }
   return 0;
 }

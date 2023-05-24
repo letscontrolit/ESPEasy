@@ -12,7 +12,7 @@ Port_ESPEasySerial_SW_Serial_t::Port_ESPEasySerial_SW_Serial_t(const ESPEasySeri
       config.receivePin,
       config.transmitPin,
       config.inverse_logic,
-      config.buffSize);
+      config.rxBuffSize);
   }
 }
 
@@ -118,7 +118,7 @@ void   Port_ESPEasySerial_SW_Serial_t::setDebugOutput(bool) {}
 size_t Port_ESPEasySerial_SW_Serial_t::setRxBufferSize(size_t new_size)
 {
   if (_swserial != nullptr) {
-    _config.buffSize = new_size;
+    _config.rxBuffSize = new_size;
     return new_size;
   }
   return 0;
@@ -127,7 +127,8 @@ size_t Port_ESPEasySerial_SW_Serial_t::setRxBufferSize(size_t new_size)
 size_t Port_ESPEasySerial_SW_Serial_t::setTxBufferSize(size_t new_size)
 {
   if (_swserial != nullptr) {
-    return 64;
+    _config.txBuffSize = new_size;
+    return new_size;
   }
   return 0;
 }

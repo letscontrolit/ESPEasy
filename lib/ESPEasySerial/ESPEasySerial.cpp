@@ -1,4 +1,4 @@
-#include <ESPeasySerial.h>
+#include "ESPeasySerial.h"
 
 #include "Port_ESPEasySerial_HardwareSerial.h"
 #if USES_I2C_SC16IS752
@@ -74,7 +74,8 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
   config.receivePin    = receivePin;
   config.transmitPin   = transmitPin;
   config.inverse_logic = inverse_logic;
-  config.buffSize      = buffSize;
+  config.rxBuffSize    = buffSize;
+  config.txBuffSize    = buffSize;
   config.forceSWserial = forceSWserial;
   config.validate();
 
@@ -86,6 +87,13 @@ ESPeasySerial::ESPeasySerial(ESPEasySerialPort port,
   if (_serialPort != nullptr) {
     //    _serialPort->begin(_baud);
   }
+}
+
+ESPeasySerial::ESPeasySerial(ESPEasySerialConfig config)
+: Stream()
+{
+  config.validate();
+  _serialPort = ESPEasySerial_Port_factory(config);
 }
 
 ESPeasySerial::~ESPeasySerial() {
@@ -208,7 +216,8 @@ int ESPeasySerial::getBaudRate() const
 ESPeasySerial::operator bool() const
 {
   if (isValid()) {
-    return _serialPort->operator bool();
+    const bool res = (*_serialPort);
+    return res;
   }
   return false;
 }
@@ -216,7 +225,8 @@ ESPeasySerial::operator bool() const
 bool ESPeasySerial::connected() const
 {
   if (isValid()) {
-    return _serialPort->operator bool();
+    const bool res = (*_serialPort);
+    return res;
   }
   return false;
 }

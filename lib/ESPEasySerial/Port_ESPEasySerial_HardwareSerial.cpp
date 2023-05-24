@@ -91,7 +91,8 @@ void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig&
      _config.receivePin    = receivePin;
      _config.transmitPin   = transmitPin;
      _config.inverse_logic = inverse_logic;
-     _config.buffSize      = buffSize;
+     _config.rxBuffSize    = buffSize;
+     _config.txBuffSize    = buffSize;
    */
 
   _config = config;
@@ -189,8 +190,11 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
     _serial->end();
     delay(10);
 
-    if (_config.buffSize > 256) {
-      _config.buffSize = _serial->setRxBufferSize(_config.buffSize);
+    if (_config.rxBuffSize > 256) {
+      _config.rxBuffSize = _serial->setRxBufferSize(_config.rxBuffSize);
+    }
+    if (_config.txBuffSize > 256) {
+      _config.txBuffSize = _serial->setRxBufferSize(_config.txBuffSize);
     }
 
     _serial->begin(baud, _config.config, _config.receivePin, _config.transmitPin, _config.inverse_logic);

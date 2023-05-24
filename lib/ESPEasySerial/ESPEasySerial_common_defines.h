@@ -30,9 +30,13 @@ static_assert(false, "Implement processor architecture");
 #   if ARDUINO_USB_MODE
 
 // ESP32C3/S3 embedded USB using JTAG interface
-#    define USES_HWCDC 1
+#    ifndef USES_HWCDC
+#     define USES_HWCDC 1
+#    endif
 #   else // No ARDUINO_USB_MODE
-#    define USES_USBCDC 1
+#    ifndef USES_USBCDC
+#     define USES_USBCDC 1
+#    endif
 #   endif // if ARDUINO_USB_MODE
 #  endif // ifdef USE_USB_CDC_CONSOLE
 # endif // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3

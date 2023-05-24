@@ -26,6 +26,7 @@
 
 #include "ESPEasySerial_common_defines.h"
 
+#include "ESPEasySerialConfig.h"
 #include "ESPEasySerialPort.h"
 #include "ESPEasySerialType.h"
 
@@ -33,22 +34,29 @@
 
 #include <Stream.h>
 
+
+// ESP82xx has 2 HW serial ports and option for several software serial ports.
+// Serial0:         RX: 3  TX: 1
+// Serial0 swapped  RX: 13 TX: 15
+// Serial1:         RX: -- TX: 2   (TX only)
+// SC16IS752:       Rx: I2C addr  TX: channel (A = 0, B = 1)
+
 class ESPeasySerial : public Stream {
 public:
 
   static Port_ESPEasySerial_base* ESPEasySerial_Port_factory(const ESPEasySerialConfig& config);
 
-  // ESP82xx has 2 HW serial ports and option for several software serial ports.
-  // Serial0:         RX: 3  TX: 1
-  // Serial0 swapped  RX: 13 TX: 15
-  // Serial1:         RX: -- TX: 2   (TX only)
-  // SC16IS752:       Rx: I2C addr  TX: channel (A = 0, B = 1)
   ESPeasySerial(ESPEasySerialPort port,
                 int               receivePin,
                 int               transmitPin,
                 bool              inverse_logic = false,
                 unsigned int      buffSize      = SOC_UART_FIFO_LEN,
                 bool              forceSWserial = false);
+
+  // Config may be altered by running validate()
+  // Thus make a deepcopy and not const reference
+  ESPeasySerial(ESPEasySerialConfig config);
+
   virtual ~ESPeasySerial();
 
   // Same parameters as the constructor, to allow to reconfigure the ESPEasySerial object to be another type of port.

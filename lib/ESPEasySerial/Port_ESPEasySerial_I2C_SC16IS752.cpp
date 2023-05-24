@@ -12,7 +12,8 @@ Port_ESPEasySerial_I2C_SC16IS752_t::Port_ESPEasySerial_I2C_SC16IS752_t(const ESP
 
     if (config.getI2C_SC16IS752_Parameters(addr, ch)) {
       _config          = config;
-      _config.buffSize = 64; // Fixed size
+      _config.rxBuffSize = 64; // Fixed size
+      _config.txBuffSize = 64; // Fixed size
       _i2cserial       = new (std::nothrow) ESPEasySC16IS752_Serial(addr, ch);
     }
   }
