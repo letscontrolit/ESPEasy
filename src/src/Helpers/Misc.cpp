@@ -324,8 +324,8 @@ void SendValueLogger(taskIndex_t TaskIndex)
 #endif // if !defined(BUILD_NO_DEBUG) || FEATURE_SD
 
 #if FEATURE_SD
-  String filename = F("VALUES.CSV");
-  fs::File   logFile  = SD.open(filename, FILE_WRITE);
+  String   filename = patch_fname(F("VALUES.CSV"));
+  fs::File logFile  = SD.open(filename, "a+");
 
   if (logFile) {
     logFile.print(logger);
