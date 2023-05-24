@@ -447,7 +447,7 @@ void handle_SDfilelist() {
     else
     {
 
-      if (isProtectedFileType(String(entry.name())))
+      if (!isProtectedFileType(String(entry.name())))
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete="));
         addHtml(current_dir);
@@ -464,7 +464,7 @@ void handle_SDfilelist() {
         addHtml('"', '>');
         addHtml(entry.name());
         addHtml(F("</a><TD>"));
-        addHtml(entry.size());
+        addHtmlInt(entry.size());
       }
     }
     entry.close();

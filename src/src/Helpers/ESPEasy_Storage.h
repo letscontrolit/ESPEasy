@@ -56,7 +56,11 @@ bool FS_format();
 #ifdef ESP32
 
 int  getPartionCount(uint8_t pType, uint8_t pSubType = 0xFF);
+String patch_fname(const String& fname);
 
+#endif
+#ifdef ESP8266
+#define patch_fname(F) (F)
 #endif
 
 /********************************************************************************************\

@@ -65,9 +65,6 @@ String patch_fname(const String& fname) {
   return String('/') + fname;
 }
 #endif
-#ifdef ESP8266
-#define patch_fname(F) (F)
-#endif
 
 /********************************************************************************************\
    file system error handling

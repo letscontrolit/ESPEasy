@@ -12,6 +12,7 @@
 
 #if FEATURE_SD
 #include <SD.h>
+#include "../Helpers/ESPEasy_Storage.h"
 #endif
 
 /********************************************************************************************\
@@ -269,7 +270,8 @@ void addToSDLog(uint8_t logLevel, const String& string)
 {
 #if FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
-    fs::File logFile = SD.open("log.dat", FILE_WRITE);
+    String   logName = patch_fname(F("log.txt"));
+    fs::File logFile = SD.open(logName, "a+");
     if (logFile) {
       const size_t stringLength = string.length();
       for (size_t i = 0; i < stringLength; ++i) {
