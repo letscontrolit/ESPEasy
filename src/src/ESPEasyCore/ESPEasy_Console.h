@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../Helpers/SerialWriteBuffer.h"
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 # include <ESPeasySerial.h>
@@ -48,7 +49,6 @@ public:
 
 private:
 
-  int             getRoomLeft() const;
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPeasySerial * getPort();
 #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
@@ -66,7 +66,7 @@ private:
   char InputBuffer_Serial[CONSOLE_INPUT_BUFFER_SIZE + 2]{};
 
 
-  std::deque<char>_serialWriteBuffer;
+  SerialWriteBuffer_t _serialWriteBuffer;
 
   uint32_t _baudrate = 115200u;
 
@@ -79,6 +79,7 @@ private:
   ESPeasySerial *_serial       = nullptr;
 # if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   ESPeasySerial *_serial_fallback = nullptr;
+  SerialWriteBuffer_t _serial_fallback_WriteBuffer;
 # endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
 #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT

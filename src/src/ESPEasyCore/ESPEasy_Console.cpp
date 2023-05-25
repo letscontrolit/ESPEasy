@@ -275,25 +275,6 @@ void EspEasy_Console_t::loop()
   STOP_TIMER(CONSOLE_LOOP);
 }
 
-int EspEasy_Console_t::getRoomLeft() const {
-  #ifdef USE_SECOND_HEAP
-
-  // If stored in 2nd heap, we must check this for space
-  HeapSelectIram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
-
-  int roomLeft = getMaxFreeBlock();
-
-  if (roomLeft < 1000) {
-    roomLeft = 0;                               // Do not append to buffer.
-  } else if (roomLeft < 4000) {
-    roomLeft = 128 - _serialWriteBuffer.size(); // 1 buffer.
-  } else {
-    roomLeft -= 4000;                           // leave some free for normal use.
-  }
-  return roomLeft;
-}
-
 void EspEasy_Console_t::addToSerialBuffer(const __FlashStringHelper *line)
 {
   addToSerialBuffer(String(line));
@@ -301,84 +282,76 @@ void EspEasy_Console_t::addToSerialBuffer(const __FlashStringHelper *line)
 
 void EspEasy_Console_t::addToSerialBuffer(char c)
 {
-  addToSerialBuffer(String(c));
+  _serialWriteBuffer.add(c);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+  if (_serial_fallback != nullptr) {
+    _serial_fallback_WriteBuffer.add(c);
+  }
+#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  process_serialWriteBuffer();
 }
 
 void EspEasy_Console_t::addToSerialBuffer(const String& line) {
-  // When the buffer is too full, try to dump at least the size of what we try to add.
-  const bool mustPop = !process_serialWriteBuffer() && _serialWriteBuffer.size() > 10000;
-  {
-    #ifdef USE_SECOND_HEAP
+  process_serialWriteBuffer();
+  _serialWriteBuffer.add(line);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
-    // Allow to store the logs in 2nd heap if present.
-    HeapSelectIram ephemeral;
-    #endif // ifdef USE_SECOND_HEAP
-    int roomLeft = getRoomLeft();
-
-    auto it = line.begin();
-
-    while (roomLeft > 0 && it != line.end()) {
-      if (mustPop) {
-        _serialWriteBuffer.pop_front();
-      }
-      _serialWriteBuffer.push_back(*it);
-      --roomLeft;
-      ++it;
-    }
+  if (_serial_fallback != nullptr) {
+    _serial_fallback_WriteBuffer.add(line);
   }
+#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   process_serialWriteBuffer();
 }
 
 void EspEasy_Console_t::addNewlineToSerialBuffer() {
-  addToSerialBuffer(F("\r\n"));
+  _serialWriteBuffer.addNewline();
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+  if (_serial_fallback != nullptr) {
+    _serial_fallback_WriteBuffer.addNewline();
+  }
+#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  process_serialWriteBuffer();
 }
 
 bool EspEasy_Console_t::process_serialWriteBuffer() {
-  const size_t bufferSize = _serialWriteBuffer.size();
-
-  if (bufferSize == 0) {
-    return true;
-  }
   START_TIMER;
-  auto port = getPort();
+  bool res = false;
 
-  if (port == nullptr) {
-    return false;
-  }
+  if ((_serial != nullptr)) {
+    const int snip = _serial->availableForWrite();
 
-  const int snip = availableForWrite();
-
-  if (snip > 0) {
-    int bytes_to_write = bufferSize;
-
-    if (snip < bytes_to_write) { bytes_to_write = snip; }
-
-    while (bytes_to_write > 0 && !_serialWriteBuffer.empty()) {
-      const char c = _serialWriteBuffer.front();
-
-      if (Settings.UseSerial) {
-        port->write(c);
-      }
-      _serialWriteBuffer.pop_front();
-      --bytes_to_write;
+    if  (snip > 0) {
+      res = _serialWriteBuffer.write(*_serial, snip) != 0;
     }
   }
-  STOP_TIMER(CONSOLE_WRITE_SERIAL);
 
-  return bufferSize != _serialWriteBuffer.size();
+
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+  if ((_serial_fallback != nullptr) && (_serial_fallback != _serial)) {
+    const int snip = _serial_fallback->availableForWrite();
+
+    if  (snip > 0) {
+      if (_serial_fallback_WriteBuffer.write(*_serial_fallback, snip)) {
+        res = true;
+      }
+    }
+  }
+#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+  STOP_TIMER(CONSOLE_WRITE_SERIAL);
+  return res;
 }
 
 void EspEasy_Console_t::setDebugOutput(bool enable)
 {
-  if ((_serial != nullptr) && _serial->operator bool()) {
-    _serial->setDebugOutput(enable);
-  }
-#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  auto port = getPort();
 
-  if ((_serial_fallback != nullptr) && _serial_fallback->connected()) {
-    _serial_fallback->setDebugOutput(enable);
+  if (port == nullptr) {
+    port->setDebugOutput(enable);
   }
-#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 }
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
