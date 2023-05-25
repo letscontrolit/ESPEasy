@@ -60,9 +60,9 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
     _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
     _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
     _hwcdc_serial->begin();
-    delay(10);
+//    delay(10);
     _hwcdc_serial->onEvent(hwcdcEventCallback);
-    delay(1);
+//    delay(1);
   }
 
 }
