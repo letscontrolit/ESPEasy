@@ -239,83 +239,37 @@ void EspEasy_Console_t::init() {
 void EspEasy_Console_t::loop()
 {
   START_TIMER;
-  auto port = getPort();
 
-  if (port == nullptr) {
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  const bool consoleUsesSerial0 =     
+    (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
+# ifdef ESP8266
+    || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
+# endif // ifdef ESP8266
+    );
+
+  if (handledByPluginSerialIn()) 
+  {
+    // Any serial0 data is already dealt with
+    if (!consoleUsesSerial0 && _serial != nullptr) {
+      readInput(*_serial);
+    }
     return;
   }
+#else
+  if (handledByPluginSerialIn()) 
+    return;
+#endif
 
-  if (port->available())
-  {
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-    if (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
-# ifdef ESP8266
-        || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
-# endif // ifdef ESP8266
-        )
-#endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-    {
-      String dummy;
-
-      if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
-        return;
-      }
-    }
+  if (_serial != nullptr) {
+    readInput(*_serial);
   }
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
-
-  if ((_serial_fallback != nullptr) &&
-      _serial_fallback->available())
-  {
-    String dummy;
-
-    if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
-      return;
-    }
+  if (_serial_fallback != nullptr) {
+    readInput(*_serial_fallback);
   }
-#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+#endif
 
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-  // FIXME TD-er: Must add check whether SW serial may be using the same pins as Serial0
-  if (!Settings.UseSerial) { return; }
-#else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-  if (!Settings.UseSerial || activeTaskUseSerial0()) { return; }
-#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-  while (port->available())
-  {
-    delay(0);
-    const uint8_t SerialInByte = port->read();
-
-    if (SerialInByte == 255) // binary data...
-    {
-      port->flush();
-      return;
-    }
-
-    if (isprint(SerialInByte))
-    {
-      if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
-        InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
-      }
-    }
-
-    if ((SerialInByte == '\r') || (SerialInByte == '\n'))
-    {
-      if (SerialInByteCounter == 0) {              // empty command?
-        break;
-      }
-      InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
-      addToSerialBuffer('>');
-      addToSerialBuffer(String(InputBuffer_Serial));
-      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
-      SerialInByteCounter   = 0;
-      InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
-    }
-  }
   STOP_TIMER(CONSOLE_LOOP);
 }
 
@@ -401,6 +355,70 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
 
   if (port == nullptr) {
     port->setDebugOutput(enable);
+  }
+}
+
+bool EspEasy_Console_t::handledByPluginSerialIn()
+{
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+  if ((_serial_fallback != nullptr) &&
+      _serial_fallback->available())
+  {
+    String dummy;
+
+    return PluginCall(PLUGIN_SERIAL_IN, 0, dummy);
+  }
+#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+  if (_serial != nullptr && _serial->available() &&
+     (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
+# ifdef ESP8266
+        || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
+# endif // ifdef ESP8266
+     ))
+#endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  {
+    String dummy;
+
+    return PluginCall(PLUGIN_SERIAL_IN, 0, dummy);
+  }
+  return false;
+}
+
+void EspEasy_Console_t::readInput(Stream& stream)
+{
+   while (stream.available())
+  {
+    delay(0);
+    const uint8_t SerialInByte = stream.read();
+
+    if (SerialInByte == 255) // binary data...
+    {
+      stream.flush();
+      return;
+    }
+
+    if (isprint(SerialInByte))
+    {
+      if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
+        InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
+      }
+    }
+
+    if ((SerialInByte == '\r') || (SerialInByte == '\n'))
+    {
+      if (SerialInByteCounter == 0) {              // empty command?
+        break;
+      }
+      InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
+      addToSerialBuffer('>');
+      addToSerialBuffer(String(InputBuffer_Serial));
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
+      SerialInByteCounter   = 0;
+      InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
+    }
   }
 }
 

@@ -44,6 +44,10 @@ public:
 
 private:
 
+  bool handledByPluginSerialIn();
+
+  void readInput(Stream& stream);
+
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPeasySerial * getPort();
 #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
