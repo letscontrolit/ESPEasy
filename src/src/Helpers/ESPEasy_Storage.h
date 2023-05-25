@@ -34,11 +34,17 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 bool fileExists(const __FlashStringHelper * fname);
 bool fileExists(const String& fname);
 
-fs::File tryOpenFile(const String& fname, const String& mode);
+enum class FileDestination_e : uint8_t {
+  ANY   = 0,
+  FLASH = 1,
+  SD    = 2,
+};
 
-bool tryRenameFile(const String& fname_old, const String& fname_new);
+fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e destination = FileDestination_e::ANY);
 
-bool tryDeleteFile(const String& fname);
+bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestination_e destination = FileDestination_e::ANY);
+
+bool tryDeleteFile(const String& fname, FileDestination_e destination = FileDestination_e::ANY);
 
 /********************************************************************************************\
    Fix stuff to clear out differences between releases
