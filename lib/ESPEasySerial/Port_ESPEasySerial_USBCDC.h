@@ -36,27 +36,30 @@ public:
 
   operator bool() const;
 
-  void   setDebugOutput(bool);
+  void        setDebugOutput(bool);
 
-  size_t setRxBufferSize(size_t new_size);
-  size_t setTxBufferSize(size_t new_size);
+  size_t      setRxBufferSize(size_t new_size);
+  size_t      setTxBufferSize(size_t new_size);
+
+  virtual int getBaudRate() const override;
 
 private:
-#if ARDUINO_USB_CDC_ON_BOOT
-  USBCDC* _serial = &Serial;
-#else
-  USBCDC* _serial = nullptr;
-#endif
 
+# if ARDUINO_USB_CDC_ON_BOOT
+  USBCDC *_serial = &Serial;
+# else // if ARDUINO_USB_CDC_ON_BOOT
+  USBCDC *_serial = nullptr;
+# endif // if ARDUINO_USB_CDC_ON_BOOT
 };
 
 
 // Need to define these objects as extern as they need to be defined before setup() is being called.
-#if ARDUINO_USB_CDC_ON_BOOT
-#else
+# if ARDUINO_USB_CDC_ON_BOOT
+# else
 extern USBCDC ESPEasySerial_USBCDC_port0;
-//extern USBCDC ESPEasySerial_USBCDC_port1;
-#endif
+
+// extern USBCDC ESPEasySerial_USBCDC_port1;
+# endif // if ARDUINO_USB_CDC_ON_BOOT
 
 
 #endif // if USES_USBCDC

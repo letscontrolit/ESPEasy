@@ -2,7 +2,7 @@
 
 #if USES_HWCDC
 
-//#include <USB.h>
+// #include <USB.h>
 
 volatile bool usbActive = false;
 
@@ -47,7 +47,7 @@ static void hwcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t e
 }
 
 Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config)
-:
+  :
 # if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
   _hwcdc_serial(&Serial)
 # else // if ARDUINO_USB_CDC_ON_BOOT
@@ -55,14 +55,15 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
 # endif // if ARDUINO_USB_CDC_ON_BOOT
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
-//  USB.begin();
+
+  //  USB.begin();
   if (_hwcdc_serial != nullptr) {
     _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
     _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
     _hwcdc_serial->begin();
-//    _hwcdc_serial->onEvent(hwcdcEventCallback);
-  }
 
+    //    _hwcdc_serial->onEvent(hwcdcEventCallback);
+  }
 }
 
 Port_ESPEasySerial_USB_HWCDC_t::~Port_ESPEasySerial_USB_HWCDC_t() {}
@@ -70,15 +71,15 @@ Port_ESPEasySerial_USB_HWCDC_t::~Port_ESPEasySerial_USB_HWCDC_t() {}
 void Port_ESPEasySerial_USB_HWCDC_t::begin(unsigned long baud)
 {
   /*
-  if (_hwcdc_serial != nullptr) {
-    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
-    _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
-    _hwcdc_serial->begin();
-    delay(10);
-    _hwcdc_serial->onEvent(hwcdcEventCallback);
-    delay(1);
-  }
-  */
+     if (_hwcdc_serial != nullptr) {
+     _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
+     _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
+     _hwcdc_serial->begin();
+     delay(10);
+     _hwcdc_serial->onEvent(hwcdcEventCallback);
+     delay(1);
+     }
+   */
 }
 
 void Port_ESPEasySerial_USB_HWCDC_t::end() {
@@ -162,7 +163,7 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::write(const uint8_t *buffer,
 Port_ESPEasySerial_USB_HWCDC_t::operator bool() const
 {
   if (_hwcdc_serial != nullptr) {
-    //return usbActive; 
+    // return usbActive;
     const bool connected = (*_hwcdc_serial);
     return connected;
   }

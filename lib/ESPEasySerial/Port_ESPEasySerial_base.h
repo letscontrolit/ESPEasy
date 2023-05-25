@@ -99,6 +99,8 @@ public:
 
 #endif // ifdef ESP32
 
+  virtual String getPortDescription() const;
+
 protected:
 
   ESPEasySerialConfig _config;

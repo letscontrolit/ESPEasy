@@ -150,6 +150,13 @@ public:
     return res;
   }
 
+  String getPortDescription() const {
+    if (_serialPort != nullptr) {
+      return _serialPort->getPortDescription();
+    }
+    return String();
+  }
+
 private:
 
   bool isValid() const;

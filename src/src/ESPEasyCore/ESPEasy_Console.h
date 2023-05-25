@@ -42,6 +42,13 @@ public:
 
   void setDebugOutput(bool enable);
 
+  String getPortDescription() const;
+
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  String getFallbackPortDescription() const;
+#endif
+
+
 private:
 
   bool handledByPluginSerialIn();

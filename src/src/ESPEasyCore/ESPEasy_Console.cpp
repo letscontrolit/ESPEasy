@@ -241,34 +241,37 @@ void EspEasy_Console_t::loop()
   START_TIMER;
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  const bool consoleUsesSerial0 =     
+  const bool consoleUsesSerial0 =
     (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
 # ifdef ESP8266
-    || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
+     || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
 # endif // ifdef ESP8266
     );
 
-  if (handledByPluginSerialIn()) 
+  if (handledByPluginSerialIn())
   {
     // Any serial0 data is already dealt with
-    if (!consoleUsesSerial0 && _serial != nullptr) {
+    if (!consoleUsesSerial0 && (_serial != nullptr)) {
       readInput(*_serial);
     }
     return;
   }
-#else
-  if (handledByPluginSerialIn()) 
+#else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+  if (handledByPluginSerialIn()) {
     return;
-#endif
+  }
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   if (_serial != nullptr) {
     readInput(*_serial);
   }
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
   if (_serial_fallback != nullptr) {
     readInput(*_serial_fallback);
   }
-#endif
+#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
   STOP_TIMER(CONSOLE_LOOP);
 }
@@ -358,6 +361,32 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
   }
 }
 
+String EspEasy_Console_t::getPortDescription() const
+{
+  #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+  if (_serial != nullptr) {
+    return _serial->getPortDescription();
+  }
+
+  return F("-");
+  #else // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  return F("HW Serial0");
+  #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+}
+
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+String EspEasy_Console_t::getFallbackPortDescription() const
+{
+  if (_serial_fallback != nullptr) {
+    return _serial_fallback->getPortDescription();
+  }
+
+  return F("-");
+}
+
+#endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
 bool EspEasy_Console_t::handledByPluginSerialIn()
 {
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
@@ -372,12 +401,12 @@ bool EspEasy_Console_t::handledByPluginSerialIn()
 #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
-  if (_serial != nullptr && _serial->available() &&
-     (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
+  if ((_serial != nullptr) && _serial->available() &&
+      (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
 # ifdef ESP8266
-        || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
+       || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
 # endif // ifdef ESP8266
-     ))
+      ))
 #endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   {
     String dummy;
@@ -389,7 +418,7 @@ bool EspEasy_Console_t::handledByPluginSerialIn()
 
 void EspEasy_Console_t::readInput(Stream& stream)
 {
-   while (stream.available())
+  while (stream.available())
   {
     delay(0);
     const uint8_t SerialInByte = stream.read();

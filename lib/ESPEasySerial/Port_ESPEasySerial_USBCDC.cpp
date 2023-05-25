@@ -3,10 +3,11 @@
 
 #if USES_USBCDC
 
-#if !ARDUINO_USB_CDC_ON_BOOT
+# if !ARDUINO_USB_CDC_ON_BOOT
 USBCDC ESPEasySerial_USBCDC_port0(0);
-//USBCDC ESPEasySerial_USBCDC_port1(1);
-#endif
+
+// USBCDC ESPEasySerial_USBCDC_port1(1);
+# endif // if !ARDUINO_USB_CDC_ON_BOOT
 
 volatile bool usbActive = false;
 
@@ -85,32 +86,36 @@ static void usbcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t 
 
 Port_ESPEasySerial_USBCDC_t::Port_ESPEasySerial_USBCDC_t(const ESPEasySerialConfig& config)
 {
-  #if ARDUINO_USB_CDC_ON_BOOT
+  # if ARDUINO_USB_CDC_ON_BOOT
 
-  #else
+  # else // if ARDUINO_USB_CDC_ON_BOOT
   _serial = nullptr;
 
   if (config.port == ESPEasySerialPort::usb_cdc_0) {
     _serial = &ESPEasySerial_USBCDC_port0;
   }
+
   /*
-  else if (config.port == ESPEasySerialPort::usb_cdc_1) {
-    _serial = &ESPEasySerial_USBCDC_port1;
-  }
-  */
-  #endif
+     else if (config.port == ESPEasySerialPort::usb_cdc_1) {
+     _serial = &ESPEasySerial_USBCDC_port1;
+     }
+   */
+  # endif // if ARDUINO_USB_CDC_ON_BOOT
 
   if (_serial != nullptr) {
     _config.port = config.port;
-//    USB.onEvent(usbcdcEventCallback);
-//    _serial->onEvent(usbcdcEventCallback);
+
+    //    USB.onEvent(usbcdcEventCallback);
+    //    _serial->onEvent(usbcdcEventCallback);
     delay(10);
     _config.rxBuffSize = _serial->setRxBufferSize(_config.rxBuffSize);
+
     // TD-er: No setTxBufferSize()
-//    _config.txBuffSize = _serial->setTxBufferSize(_config.txBuffSize);
+    //    _config.txBuffSize = _serial->setTxBufferSize(_config.txBuffSize);
     _serial->begin();
-//    _serial->onEvent(usbcdcEventCallback);
-//    USB.begin();
+
+    //    _serial->onEvent(usbcdcEventCallback);
+    //    USB.begin();
     delay(1);
   }
 }
@@ -125,15 +130,17 @@ Port_ESPEasySerial_USBCDC_t::~Port_ESPEasySerial_USBCDC_t()
 void Port_ESPEasySerial_USBCDC_t::begin(unsigned long baud)
 {
   if (_serial != nullptr) {
-//    USB.onEvent(usbcdcEventCallback);
-//    _serial->onEvent(usbcdcEventCallback);
+    //    USB.onEvent(usbcdcEventCallback);
+    //    _serial->onEvent(usbcdcEventCallback);
     delay(10);
     _config.rxBuffSize = _serial->setRxBufferSize(_config.rxBuffSize);
+
     // TD-er: No setTxBufferSize()
-//    _config.txBuffSize = _serial->setTxBufferSize(_config.txBuffSize);
+    //    _config.txBuffSize = _serial->setTxBufferSize(_config.txBuffSize);
     _serial->begin();
-//    _serial->onEvent(usbcdcEventCallback);
-//    USB.begin();
+
+    //    _serial->onEvent(usbcdcEventCallback);
+    //    USB.begin();
     delay(1);
   }
 }
@@ -219,7 +226,8 @@ Port_ESPEasySerial_USBCDC_t::operator bool() const
   if (_serial != nullptr) {
     const bool res = (*_serial);
     return res;
-//    return  usbActive;
+
+    //    return  usbActive;
   }
   return false;
 }
@@ -241,13 +249,22 @@ size_t Port_ESPEasySerial_USBCDC_t::setRxBufferSize(size_t new_size)
 
 size_t Port_ESPEasySerial_USBCDC_t::setTxBufferSize(size_t new_size)
 {
-      // TD-er: No setTxBufferSize()
-/*
+  // TD-er: No setTxBufferSize()
+
+  /*
+     if (_serial != nullptr) {
+      _config.txBuffSize = _serial->setTxBufferSize(new_size);
+      return _config.txBuffSize;
+     }
+   */
+  return 0;
+}
+
+int Port_ESPEasySerial_USBCDC_t::getBaudRate() const
+{
   if (_serial != nullptr) {
-    _config.txBuffSize = _serial->setTxBufferSize(new_size);
-    return _config.txBuffSize;
+    return _serial->baudRate();
   }
-*/
   return 0;
 }
 

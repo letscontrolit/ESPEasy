@@ -8,3 +8,15 @@ int Port_ESPEasySerial_base::getBaudRate() const
 {
   return _config.baud;
 }
+
+String Port_ESPEasySerial_base::getPortDescription() const
+{
+  String res;
+
+  res += ESPEasySerialPort_toString(_config.port);
+  res += F(" @ ");
+  res += getBaudRate();
+  res += F(" baud");
+
+  return res;
+}

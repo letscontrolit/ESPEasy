@@ -193,6 +193,7 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
     if (_config.rxBuffSize > 256) {
       _config.rxBuffSize = _serial->setRxBufferSize(_config.rxBuffSize);
     }
+
     if (_config.txBuffSize > 256) {
       _config.txBuffSize = _serial->setRxBufferSize(_config.txBuffSize);
     }
@@ -302,7 +303,7 @@ int Port_ESPEasySerial_HardwareSerial_t::getBaudRate() const
   return 0;
 }
 
-Port_ESPEasySerial_HardwareSerial_t::operator bool() const
+                    Port_ESPEasySerial_HardwareSerial_t::operator bool() const
 {
   if (_serial != nullptr) {
     return _serial->operator bool();
