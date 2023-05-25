@@ -167,7 +167,7 @@ bool fileExists(const String& fname) {
   return res;
 }
 
-fs::File tryOpenFile(const String& fname, const String& mode) {
+fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e destination) {
   START_TIMER;
   fs::File f;
   if (fname.isEmpty() || equals(fname, '/')) {
@@ -182,10 +182,12 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
     }
     clearFileCaches();
   }
-  f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
+  if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+    f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
+  }
   #  if FEATURE_SD
 
-  if (!f) {
+  if (!f && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
     // FIXME TD-er: Should this fallback to SD only be done on "r" mode?
     f = SD.open(fname.c_str(), mode.c_str());
   }
@@ -201,7 +203,7 @@ bool fileMatchesTaskSettingsType(const String& fname) {
   return config_dat_file.equalsIgnoreCase(patch_fname(fname));
 }
 
-bool tryRenameFile(const String& fname_old, const String& fname_new) {
+bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestination_e destination) {
   clearFileCaches();
   if (fileExists(fname_old) && !fileExists(fname_new)) {
     if (fileMatchesTaskSettingsType(fname_old)) {
@@ -209,12 +211,21 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
     } else {
       clearAllButTaskCaches();
     }
-    return ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
+    bool res = false;
+    if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+      res = ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
+    }
+    #if FEATURE_SD && defined(ESP32) // FIXME ESP8266 SDClass doesn't support rename
+    if (!res && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
+      res = SD.rename(patch_fname(fname_old), patch_fname(fname_new));
+    }
+    #endif // if FEATURE_SD && defined(ESP32)
+    return res;
   }
   return false;
 }
 
-bool tryDeleteFile(const String& fname) {
+bool tryDeleteFile(const String& fname, FileDestination_e destination) {
   if (fname.length() > 0)
   {
     #if FEATURE_RTC_CACHE_STORAGE
@@ -227,9 +238,12 @@ bool tryDeleteFile(const String& fname) {
     } else {
       clearAllButTaskCaches();
     }
-    bool res = ESPEASY_FS.remove(patch_fname(fname));
+    bool res = false;
+    if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+      res = ESPEASY_FS.remove(patch_fname(fname));
+    }
     #if FEATURE_SD
-    if (!res) {
+    if (!res && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
       res = SD.remove(patch_fname(fname));
     }
     #endif

@@ -395,12 +395,11 @@ void handle_SDfilelist() {
   }
 
 
-  addFormSubHeader(String(F("SD Card: ")) + current_dir);
   html_BR();
   html_table_class_multirow();
   html_table_header(F(""), 50);
-  html_table_header(F("Name"));
-  html_table_header(F("Size"));
+  html_table_header(concat(F("SD Card: "), current_dir));
+  html_table_header(F("Size"), 80);
   html_TR_TD();
   {
     addHtml(F("<TD><a href=\"SDfilelist?chgto="));
@@ -474,7 +473,8 @@ void handle_SDfilelist() {
   html_end_table();
   html_end_form();
 
-  // addHtml(F("<BR><a class='button link' href=\"/upload\">Upload</a>"));
+  html_BR();
+  addButton(F("/uploadsd"), F("Upload"));
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
