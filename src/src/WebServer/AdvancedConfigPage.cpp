@@ -66,6 +66,10 @@ void handle_advanced() {
       Settings.console_serial_port, 
       Settings.console_serial_rxpin,
       Settings.console_serial_txpin);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    Settings.console_serial0_fallback = isFormItemChecked(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
+#endif
+
 #endif
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
@@ -249,6 +253,10 @@ void handle_advanced() {
     Settings.console_serial_txpin);
 
   html_add_script(F("document.getElementById('serPort').onchange();"), false);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0, Settings.console_serial0_fallback);
+#endif
+
 #endif
 
   addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);

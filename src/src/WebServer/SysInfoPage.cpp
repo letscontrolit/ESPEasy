@@ -529,6 +529,9 @@ void handle_sysinfo_SystemStatus() {
   # endif // if FEATURE_SD
 
   addRowLabelValue(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  addRowLabelValue(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
+#endif
 
   if (Settings.EnableClearHangingI2Cbus()) {
     addRowLabelValue(LabelType::I2C_BUS_STATE);

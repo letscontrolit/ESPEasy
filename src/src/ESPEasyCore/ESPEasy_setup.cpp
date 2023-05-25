@@ -270,7 +270,7 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
-  ESPEasy_Console.begin(115200);
+  ESPEasy_Console.reInit();
 
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));

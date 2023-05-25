@@ -7,17 +7,9 @@
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 # include <ESPeasySerial.h>
-# if USES_HWCDC || USES_USBCDC
-#  define USES_ESPEASY_CONSOLE_FALLBACK_PORT 1
-# endif // if USES_HWCDC || USES_USBCDC
 #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 # include <HardwareSerial.h>
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-
-#ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
-# define USES_ESPEASY_CONSOLE_FALLBACK_PORT 0
-#endif // ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
 #include <deque>
 
@@ -28,6 +20,9 @@ public:
   EspEasy_Console_t();
 
   ~EspEasy_Console_t();
+
+  // Typically called after settings have been loaded.
+  void reInit();
 
   void begin(uint32_t baudrate);
 

@@ -90,61 +90,106 @@ EspEasy_Console_t::~EspEasy_Console_t() {
 #endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 }
 
-void EspEasy_Console_t::begin(uint32_t baudrate)
+void EspEasy_Console_t::reInit()
 {
   updateActiveTaskUseSerial0();
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT_bla
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(Settings.console_serial_port);
 
-  if ((_console_serial_port != Settings.console_serial_port) ||
-      (_console_serial_rxpin != Settings.console_serial_rxpin) ||
-      (_console_serial_txpin != Settings.console_serial_txpin)) {
-    if (_serial != nullptr) {
-      delete _serial;
-      _serial = nullptr;
-    }
+  const bool consoleUseSerial0 = (
+# ifdef ESP8266
+    (port == ESPEasySerialPort::serial0_swap) ||
+# endif // ifdef ESP8266
+    port == ESPEasySerialPort::serial0);
+
+  const bool canUseSerial0 = !activeTaskUseSerial0() && !log_to_serial_disabled;
+
+
+  bool mustHaveSerial = Settings.UseSerial && (!consoleUseSerial0 || canUseSerial0);
+
+
 # if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
+  bool mustHaveFallback = false;
+
+  if (Settings.UseSerial) {
+    if (consoleUseSerial0 && canUseSerial0 && (_serial_fallback != nullptr)) {
+      // Should not destruct an already running fallback serial port
+      mustHaveFallback = true;
+      mustHaveSerial   = false;
+    } else {
+      if (Settings.console_serial0_fallback && !consoleUseSerial0 && canUseSerial0)
+      {
+        mustHaveFallback = true;
+      }
+    }
+  }
+
+  if (!mustHaveFallback) {
     if (_serial_fallback != nullptr) {
+      _serial_fallback->flush();
+      _serial_fallback->end();
       delete _serial_fallback;
       _serial_fallback = nullptr;
     }
+  }
 # endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+
+  if ((_console_serial_port != Settings.console_serial_port) ||
+      (_console_serial_rxpin != Settings.console_serial_rxpin) ||
+      (_console_serial_txpin != Settings.console_serial_txpin) ||
+      !mustHaveSerial) {
+    if (_serial != nullptr) {
+      _serial->flush();
+      _serial->end();
+      delete _serial;
+      _serial = nullptr;
+    }
 
     _console_serial_port  = Settings.console_serial_port;
     _console_serial_rxpin = Settings.console_serial_rxpin;
     _console_serial_txpin = Settings.console_serial_txpin;
+  }
 
-    const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(_console_serial_port);
-
-    if (!(activeTaskUseSerial0() || log_to_serial_disabled) ||
-        !(
-# ifdef ESP8266
-          (port == ESPEasySerialPort::serial0_swap) ||
-# endif // ifdef ESP8266
-          port == ESPEasySerialPort::serial0)
-        ) {
-      _serial = new (std::nothrow) ESPeasySerial(
-        static_cast<ESPEasySerialPort>(_console_serial_port),
-        _console_serial_rxpin,
-        _console_serial_txpin);
-    }
+  if ((_serial == nullptr) && mustHaveSerial) {
+    _serial = new (std::nothrow) ESPeasySerial(
+      static_cast<ESPEasySerialPort>(_console_serial_port),
+      _console_serial_rxpin,
+      _console_serial_txpin);
+  }
 # if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
-    if (Settings.console_serial0_fallback && (port != ESPEasySerialPort::serial0)) {
-      if (!(activeTaskUseSerial0() || log_to_serial_disabled)) {
-        _serial_fallback = new (std::nothrow) ESPeasySerial(
-          ESPEasySerialPort::serial0,
-          SOC_RX0,
-          SOC_TX0);
-      }
-    }
-# endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  if ((_serial_fallback == nullptr) && mustHaveFallback) {
+    _serial_fallback = new (std::nothrow) ESPeasySerial(
+      ESPEasySerialPort::serial0,
+      SOC_RX0,
+      SOC_TX0);
   }
-#endif  // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+# endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
+
+# if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+  if (_serial_fallback == nullptr) {
+    _serial_fallback_WriteBuffer.clear();
+  }
+
+# endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+  if (_serial == nullptr) {
+    _serialWriteBuffer.clear();
+  }
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  begin(Settings.BaudRate);
+}
+
+void EspEasy_Console_t::begin(uint32_t baudrate)
+{
+  updateActiveTaskUseSerial0();
   _baudrate = baudrate;
 
-  if ((_serial != nullptr) /*&& _serial->operator bool()*/) {
+  if (_serial != nullptr) {
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     _serial->begin(baudrate);
     addLog(LOG_LEVEL_INFO, F("ESPEasy console using ESPEasySerial"));
@@ -167,7 +212,7 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
   }
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
-  if ((_serial_fallback != nullptr) /* && _serial_fallback->connected()*/) {
+  if (_serial_fallback != nullptr) {
     _serial_fallback->begin(baudrate);
     addLog(LOG_LEVEL_INFO, F("ESPEasy console fallback enabled"));
   }
@@ -221,7 +266,6 @@ void EspEasy_Console_t::loop()
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
   if ((_serial_fallback != nullptr) &&
-      _serial_fallback->connected() &&
       _serial_fallback->available())
   {
     String dummy;
@@ -282,7 +326,9 @@ void EspEasy_Console_t::addToSerialBuffer(const __FlashStringHelper *line)
 
 void EspEasy_Console_t::addToSerialBuffer(char c)
 {
-  _serialWriteBuffer.add(c);
+  if (_serial != nullptr) {
+    _serialWriteBuffer.add(c);
+  }
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
   if (_serial_fallback != nullptr) {
@@ -294,7 +340,10 @@ void EspEasy_Console_t::addToSerialBuffer(char c)
 
 void EspEasy_Console_t::addToSerialBuffer(const String& line) {
   process_serialWriteBuffer();
-  _serialWriteBuffer.add(line);
+
+  if (_serial != nullptr) {
+    _serialWriteBuffer.add(line);
+  }
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
   if (_serial_fallback != nullptr) {
@@ -305,7 +354,9 @@ void EspEasy_Console_t::addToSerialBuffer(const String& line) {
 }
 
 void EspEasy_Console_t::addNewlineToSerialBuffer() {
-  _serialWriteBuffer.addNewline();
+  if (_serial != nullptr) {
+    _serialWriteBuffer.addNewline();
+  }
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
   if (_serial_fallback != nullptr) {
@@ -319,14 +370,13 @@ bool EspEasy_Console_t::process_serialWriteBuffer() {
   START_TIMER;
   bool res = false;
 
-  if ((_serial != nullptr)) {
+  if (_serial != nullptr) {
     const int snip = _serial->availableForWrite();
 
     if  (snip > 0) {
       res = _serialWriteBuffer.write(*_serial, snip) != 0;
     }
   }
-
 
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
@@ -357,12 +407,12 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 ESPeasySerial * EspEasy_Console_t::getPort()
 {
-  if ((_serial != nullptr) && _serial->connected()) {
+  if (_serial != nullptr) {
     return _serial;
   }
 # if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
-  if ((_serial_fallback != nullptr) && _serial_fallback->connected()) {
+  if (_serial_fallback != nullptr) {
     return _serial_fallback;
   }
 # endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
@@ -384,10 +434,7 @@ HardwareSerial * EspEasy_Console_t::getPort()
 void EspEasy_Console_t::endPort()
 {
   if (_serial != nullptr) {
-    //    if (_serial->operator bool()) {
     _serial->end();
-
-    //    }
   }
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
@@ -402,7 +449,7 @@ int EspEasy_Console_t::availableForWrite()
 {
   auto serial = getPort();
 
-  if ((serial != nullptr) && serial->operator bool()) {
+  if (serial != nullptr) {
     return serial->availableForWrite();
   }
   return 0;
