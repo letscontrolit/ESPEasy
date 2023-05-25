@@ -2975,7 +2975,11 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef ESPEASY_SERIAL_0
+#if defined(ESP32) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
+  #define ESPEASY_SERIAL_0 Serial0
+#else
   #define ESPEASY_SERIAL_0 Serial
+#endif
 #endif
 
 

@@ -38,7 +38,7 @@ Port_ESPEasySerial_base * ESPeasySerial::ESPEasySerial_Port_factory(const ESPEas
 #endif // if USES_HWCDC
 #if USES_USBCDC
     case ESPEasySerialPort::usb_cdc_0:
-    case ESPEasySerialPort::usb_cdc_1:
+//    case ESPEasySerialPort::usb_cdc_1:
     {
       return new (std::nothrow) Port_ESPEasySerial_USBCDC_t(config);
     }

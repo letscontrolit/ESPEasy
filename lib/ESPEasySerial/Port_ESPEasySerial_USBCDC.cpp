@@ -5,7 +5,7 @@
 
 #if !ARDUINO_USB_CDC_ON_BOOT
 USBCDC ESPEasySerial_USBCDC_port0(0);
-USBCDC ESPEasySerial_USBCDC_port1(1);
+//USBCDC ESPEasySerial_USBCDC_port1(1);
 #endif
 
 volatile bool usbActive = false;
@@ -93,9 +93,11 @@ Port_ESPEasySerial_USBCDC_t::Port_ESPEasySerial_USBCDC_t(const ESPEasySerialConf
   if (config.port == ESPEasySerialPort::usb_cdc_0) {
     _serial = &ESPEasySerial_USBCDC_port0;
   }
+  /*
   else if (config.port == ESPEasySerialPort::usb_cdc_1) {
     _serial = &ESPEasySerial_USBCDC_port1;
   }
+  */
   #endif
 
   if (_serial != nullptr) {

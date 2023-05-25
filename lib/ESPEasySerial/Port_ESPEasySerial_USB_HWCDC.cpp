@@ -60,9 +60,7 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
     _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
     _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
     _hwcdc_serial->begin();
-//    delay(10);
-    _hwcdc_serial->onEvent(hwcdcEventCallback);
-//    delay(1);
+//    _hwcdc_serial->onEvent(hwcdcEventCallback);
   }
 
 }
@@ -164,7 +162,9 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::write(const uint8_t *buffer,
 Port_ESPEasySerial_USB_HWCDC_t::operator bool() const
 {
   if (_hwcdc_serial != nullptr) {
-    return usbActive; // _hwcdc_serial->operator bool();
+    //return usbActive; 
+    const bool connected = (*_hwcdc_serial);
+    return connected;
   }
   return false;
 }

@@ -24,8 +24,8 @@ const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort port)
     case ESPEasySerialPort::usb_hw_cdc:      return F("USB HWCDC");
 #endif // if USES_HWCDC
 #if USES_USBCDC
-    case ESPEasySerialPort::usb_cdc_0:       return F("USB CDC0");
-    case ESPEasySerialPort::usb_cdc_1:       return F("USB CDC1");
+    case ESPEasySerialPort::usb_cdc_0:       return F("USB CDC");
+//    case ESPEasySerialPort::usb_cdc_1:       return F("USB CDC1");
 #endif // if USES_USBCDC
     case ESPEasySerialPort::MAX_SERIAL_TYPE: break;
 
@@ -103,7 +103,7 @@ bool validSerialPort(ESPEasySerialPort port)
 #endif // if USES_HWCDC
 #if USES_USBCDC
     case ESPEasySerialPort::usb_cdc_0:
-    case ESPEasySerialPort::usb_cdc_1:
+//    case ESPEasySerialPort::usb_cdc_1:
 #endif // if USES_USBCDC
       return true;
 

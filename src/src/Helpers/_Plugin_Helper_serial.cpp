@@ -50,8 +50,8 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
 #if USES_HWCDC
   if (porttype == ESPEasySerialPort::usb_hw_cdc)
 #else
-  if (porttype == ESPEasySerialPort::usb_cdc_0 ||
-      porttype == ESPEasySerialPort::usb_cdc_1)
+  if (porttype == ESPEasySerialPort::usb_cdc_0 /*||
+      porttype == ESPEasySerialPort::usb_cdc_1*/)
 #endif
   {
     result += getConflictingUse(PIN_USB_D_MIN);
@@ -249,7 +249,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 #endif // if USES_HWCDC
 #if USES_USBCDC
     ,static_cast<int>(ESPEasySerialPort::usb_cdc_0)
-    ,static_cast<int>(ESPEasySerialPort::usb_cdc_1)
+//    ,static_cast<int>(ESPEasySerialPort::usb_cdc_1)
 #endif // if USES_USBCDC
 #if USES_I2C_SC16IS752
     ,static_cast<int>(ESPEasySerialPort::sc16is752)

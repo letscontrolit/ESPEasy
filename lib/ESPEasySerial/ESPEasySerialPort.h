@@ -29,7 +29,7 @@ enum class ESPEasySerialPort : uint8_t {
 #endif // if USES_HWCDC
 #if USES_USBCDC
   usb_cdc_0 = 8,
-  usb_cdc_1 = 9,
+//  usb_cdc_1 = 9,  // TD-er: Disable 2nd USB CDC port as it doesn't seem to work well
 #endif // if USES_USBCDC
 
   MAX_SERIAL_TYPE
