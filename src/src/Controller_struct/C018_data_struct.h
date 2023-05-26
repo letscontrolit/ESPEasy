@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_STRUCT_C018_DATA_STRUCT_H
 #define CONTROLLER_STRUCT_C018_DATA_STRUCT_H
 
-#include "src/Helpers/_CPlugin_Helper.h"
+#include "../Helpers/_CPlugin_Helper.h"
 
 #ifdef USES_C018
 

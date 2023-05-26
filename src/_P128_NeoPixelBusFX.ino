@@ -66,9 +66,9 @@
 
    nfx theatre color [backgroundcolor] [count] [speed]
 
-   nfx scan color [backgroundcolor] [speed]
+   nfx scan color [backgroundcolor] [speed] [startpixel] [endpixel]
 
-   nfx dualscan color [backgroundcolor] [speed]
+   nfx dualscan color [backgroundcolor] [speed] [startpixel] [endpixel]
 
    nfx twinkle color [backgroundcolor] [speed]
 
