@@ -46,6 +46,12 @@ public:
 
   static Port_ESPEasySerial_base* ESPEasySerial_Port_factory(const ESPEasySerialConfig& config);
 
+  
+  // Ideal buffer size is a trade-off between bootspeed 
+  // and not missing data when the ESP is busy processing stuff.
+  // Mainly HWCDC and USBCDC may appear blocking if the USB device is detected 
+  // by your OS but no serial port has been opened.
+  // Flushing the buffers may then take buffSize * timeout to flush, which is blocking.
   ESPeasySerial(ESPEasySerialPort port,
                 int               receivePin,
                 int               transmitPin,

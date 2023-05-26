@@ -39,6 +39,8 @@
 #include "../Commands/wd.h"
 #include "../Commands/WiFi.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Helpers/Misc.h"
@@ -213,7 +215,9 @@ bool do_command_case(command_case_data         & data,
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
+    START_TIMER;
     data.status = pFunc(data.event, data.line.c_str());
+    STOP_TIMER(COMMAND_EXEC_INTERNAL);
     return true;
   }
   return false;
@@ -229,7 +233,9 @@ bool do_command_case(command_case_data         & data,
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
+    START_TIMER;
     data.status = pFunc(data.event, data.line.c_str());
+    STOP_TIMER(COMMAND_EXEC_INTERNAL);
     return true;
   }
   return false;

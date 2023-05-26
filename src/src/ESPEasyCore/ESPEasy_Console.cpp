@@ -44,7 +44,12 @@ EspEasy_Console_t::EspEasy_Console_t()
   constexpr size_t buffSize = 256;
 # endif // ifdef ESP8266
 # ifdef ESP32
-  constexpr size_t buffSize = 4096;
+  // Ideal buffer size is a trade-off between bootspeed 
+  // and not missing data when the ESP is busy processing stuff.
+  // Since we do have a separate buffer in the console, 
+  // it may just take less time in the background tasks to dump 
+  // any logs as larger chunks can be transferred at once.
+  constexpr size_t buffSize = 512;
 # endif // ifdef ESP32
 
   ESPEasySerialConfig config;
@@ -363,16 +368,17 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
 
 String EspEasy_Console_t::getPortDescription() const
 {
-  #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
-
   if (_serial != nullptr) {
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     return _serial->getPortDescription();
+  #else 
+    String res = F("HW Serial0 @ ");
+    res += _serial->baudRate();
+    return res;
+  #endif
   }
 
   return F("-");
-  #else // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
-  return F("HW Serial0");
-  #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 }
 
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
