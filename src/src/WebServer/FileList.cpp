@@ -426,8 +426,10 @@ void handle_SDfilelist() {
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir="));
         addHtml(current_dir);
+        if (!current_dir.endsWith(F("/"))) {
+          addHtml('/');
+        }
         addHtml(entry.name());
-        addHtml('/');
         addHtml(F("&chgto="));
         addHtml(current_dir);
         addHtml(F("\">Del</a>"));
@@ -435,8 +437,10 @@ void handle_SDfilelist() {
       {
         addHtml(F("<TD><a href=\"SDfilelist?chgto="));
         addHtml(current_dir);
+        if (!current_dir.endsWith(F("/"))) {
+          addHtml('/');
+        }
         addHtml(entry.name());
-        addHtml('/');
         addHtml('"', '>');
         addHtml(entry.name());
         addHtml(F("</a><TD>dir"));
