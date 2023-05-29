@@ -271,7 +271,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
     int rxPin, txPin;
     if (ESPeasySerialType::getSerialTypePins(serType, rxPin, txPin)) {
 
-      if (useGPIOpins(serType))
+      if (isHWserial(serType))
       {
         // Show pins for ports with fixed pins
         option += F(": ");

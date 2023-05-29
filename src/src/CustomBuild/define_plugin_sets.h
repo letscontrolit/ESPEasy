@@ -2913,7 +2913,11 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 1
+  #ifdef ESP8266_1M
+    #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 0
+  #else
+    #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 1
+  #endif
 #endif
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
