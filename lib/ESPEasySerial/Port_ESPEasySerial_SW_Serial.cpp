@@ -7,12 +7,18 @@
 Port_ESPEasySerial_SW_Serial_t::Port_ESPEasySerial_SW_Serial_t(const ESPEasySerialConfig& config)
 {
   if (config.port == ESPEasySerialPort::software) {
-    _config   = config;
+    _config = config;
+# if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
+    _swserial = new (std::nothrow) SoftwareSerial(
+      config.receivePin,
+      config.transmitPin,
+      config.inverse_logic);
+# else // if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
     _swserial = new (std::nothrow) Driver_ESPEasySoftwareSerial_t(
       config.receivePin,
       config.transmitPin,
-      config.inverse_logic,
-      config.rxBuffSize);
+      config.inverse_logic);
+# endif // if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
   }
 }
 
@@ -28,7 +34,22 @@ void Port_ESPEasySerial_SW_Serial_t::begin(unsigned long baud)
 {
   if (_swserial != nullptr) {
     _config.baud = baud;
-    _swserial->begin(baud);
+# if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
+
+    // Except at high bitrates, depending on other ongoing activity, interrupts in particular, this software serial adapter supports full
+    // duplex receive and send. At high bitrates (115200bps) send bit timing can be improved at the expense of blocking concurrent full
+    // duplex receives, with the EspSoftwareSerial::UART::enableIntTx(false) function call.
+
+    _swserial->enableIntTx(baud < 57600);
+# endif // if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
+    _swserial->begin(
+      _config.baud); /*,
+                        3, // SoftwareSerialConfig::SWSERIAL_8N1 // static_cast<SoftwareSerialConfig>(_config.config),
+                        _config.receivePin,
+                        _config.transmitPin,
+                        _config.inverse_logic,
+                        _config.rxBuffSize);
+                      */
   }
 }
 
@@ -50,7 +71,13 @@ int Port_ESPEasySerial_SW_Serial_t::availableForWrite(void)
 {
   if (_swserial != nullptr) {
     // FIXME TD-er: Implement availableForWrite
-    return 1; //  return _swserial->availableForWrite();
+    //  return _swserial->availableForWrite();
+    if (_config.baud >= 9600) {
+      // Sending data is blocking
+      // Allow to send as many bytes as can be sent in roughly 1 msec.
+      return _config.baud / 9600;
+    }
+    return 1;
   }
   return 0;
 }

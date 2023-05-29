@@ -32,15 +32,15 @@ static_assert(false, "Implement processor architecture");
 // ESP32C3/S3 embedded USB using JTAG interface
 #    ifndef USES_HWCDC
 #     define USES_HWCDC 1
-#    endif
+#    endif // ifndef USES_HWCDC
 #   else // No ARDUINO_USB_MODE
 #    ifndef USES_USBCDC
 #     define USES_USBCDC 1
-#    endif
-#   endif // if ARDUINO_USB_MODE
-#  endif // ifdef USE_USB_CDC_CONSOLE
-# endif // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-#endif // ifdef ESP32
+#    endif // ifndef USES_USBCDC
+#   endif  // if ARDUINO_USB_MODE
+#  endif   // ifdef USE_USB_CDC_CONSOLE
+# endif   // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#endif    // ifdef ESP32
 
 
 #ifndef ESP32
@@ -48,13 +48,13 @@ static_assert(false, "Implement processor architecture");
 #  ifndef CORE_2_4_X
 #   define CORE_2_4_X
 #  endif // ifndef CORE_2_4_X
-# endif // if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
+# endif  // if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
 
 # if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
 #  ifndef CORE_PRE_2_4_2
 #   define CORE_PRE_2_4_2
 #  endif // ifndef CORE_PRE_2_4_2
-# endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+# endif  // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
 
 # if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
 #  ifndef CORE_PRE_2_5_0
@@ -64,15 +64,15 @@ static_assert(false, "Implement processor architecture");
 #  ifndef CORE_POST_2_5_0
 #   define CORE_POST_2_5_0
 #  endif // ifndef CORE_POST_2_5_0
-# endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
-#endif // ifndef ESP32
+# endif  // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
+#endif   // ifndef ESP32
 
 
-#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 # ifndef DISABLE_SOFTWARE_SERIAL
 #  define DISABLE_SOFTWARE_SERIAL
 # endif // ifndef DISABLE_SOFTWARE_SERIAL
-#endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
+#endif  // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 
 #ifndef USES_HWCDC
 # define USES_HWCDC 0
@@ -86,6 +86,15 @@ static_assert(false, "Implement processor architecture");
 #ifndef USES_SW_SERIAL
 # ifndef DISABLE_SOFTWARE_SERIAL
 #  define USES_SW_SERIAL 1
+#  ifndef USES_LATEST_SOFTWARE_SERIAL_LIBRARY
+#   ifdef ESP32
+#    define USES_LATEST_SOFTWARE_SERIAL_LIBRARY 1
+#   elif defined(ESP8266)
+#    define USES_LATEST_SOFTWARE_SERIAL_LIBRARY 0
+#   else // ifdef ESP32
+#    define USES_LATEST_SOFTWARE_SERIAL_LIBRARY 1
+#   endif // ifdef ESP32
+#  endif // ifndef USES_LATEST_SOFTWARE_SERIAL_LIBRARY
 # else // ifndef DISABLE_SOFTWARE_SERIAL
 #  define USES_SW_SERIAL 0
 # endif // ifndef DISABLE_SOFTWARE_SERIAL

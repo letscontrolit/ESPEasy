@@ -7,10 +7,13 @@
 
 #if USES_SW_SERIAL
 
-# include "Driver_ESPEasySoftwareSerial.h"
-
 # include "Port_ESPEasySerial_base.h"
 
+#if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
+# include <SoftwareSerial.h>
+#else 
+# include "Driver_ESPEasySoftwareSerial.h"
+#endif
 
 class Port_ESPEasySerial_SW_Serial_t : public Port_ESPEasySerial_base {
 public:
@@ -45,7 +48,12 @@ public:
 
 private:
 
+#if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
+  SoftwareSerial *_swserial = nullptr;
+#else
   Driver_ESPEasySoftwareSerial_t *_swserial = nullptr;
+#endif
+
 };
 
 
