@@ -18,7 +18,7 @@ const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort port)
     case ESPEasySerialPort::serial2:         return F("HW Serial2");
 #endif // if SOC_UART_NUM > 2
 #if USES_SW_SERIAL
-    case ESPEasySerialPort::software:        return F("SoftwareSerial");
+    case ESPEasySerialPort::software:        return F("SW Serial");
 #endif // if USES_SW_SERIAL
 #if USES_HWCDC
     case ESPEasySerialPort::usb_hw_cdc:      return F("USB HWCDC");

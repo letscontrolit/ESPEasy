@@ -322,7 +322,7 @@ void serialHelper_webformSave(uint8_t& port, int8_t& rxPin, int8_t& txPin) {
   }
   #endif // ifndef DISABLE_SC16IS752_Serial
   #ifdef ESP8266
-  if (useGPIOpins(serType)) {
+  if (isHWserial(serType)) {
 
     // Ports with a fixed pin layout, so load the defaults.
     int tmprxPin, tmptxPin;
