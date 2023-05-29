@@ -109,6 +109,14 @@ size_t Port_ESPEasySerial_SW_Serial_t::write(const uint8_t *buffer,
   return 0;
 }
 
+int Port_ESPEasySerial_SW_Serial_t::getBaudRate() const
+{
+  if (_swserial != nullptr) {
+    return _swserial->baudRate();
+  }
+  return 0;
+}
+
 Port_ESPEasySerial_SW_Serial_t::operator bool() const
 {
   return _swserial != nullptr;

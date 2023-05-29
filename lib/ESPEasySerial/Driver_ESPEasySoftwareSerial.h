@@ -78,6 +78,8 @@ public:
 
   using Print::write;
 
+  int baudRate() const;
+
 private:
 
   bool    isValidGPIOpin(uint8_t pin);

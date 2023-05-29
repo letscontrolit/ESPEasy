@@ -279,4 +279,11 @@ void IRAM_ATTR Driver_ESPEasySoftwareSerial_t::rxRead() {
   GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, 1 << m_rxPin);
 }
 
+
+int Driver_ESPEasySoftwareSerial_t::baudRate() const
+{
+  //   m_bitTime = ESP.getCpuFreqMHz() * 1000000 / speed;
+  return ESP.getCpuFreqMHz() * 1000000 / m_bitTime;
+}
+
 #endif // ifdef ESP8266

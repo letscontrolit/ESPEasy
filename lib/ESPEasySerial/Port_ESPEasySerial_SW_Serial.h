@@ -35,6 +35,7 @@ public:
   size_t write(const uint8_t *buffer,
                size_t         size);
 
+  int    getBaudRate() const override;
   operator bool() const;
 
   void   setDebugOutput(bool);
