@@ -128,8 +128,9 @@ Port_ESPEasySerial_USBCDC_t::~Port_ESPEasySerial_USBCDC_t()
 }
 
 void Port_ESPEasySerial_USBCDC_t::begin(unsigned long baud)
-{
+{  
   if (_serial != nullptr) {
+    _config.baud = baud;
     //    USB.onEvent(usbcdcEventCallback);
     //    _serial->onEvent(usbcdcEventCallback);
     delay(10);

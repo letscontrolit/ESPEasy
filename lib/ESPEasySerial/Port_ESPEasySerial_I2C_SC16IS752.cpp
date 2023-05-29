@@ -30,6 +30,7 @@ Port_ESPEasySerial_I2C_SC16IS752_t::~Port_ESPEasySerial_I2C_SC16IS752_t()
 void Port_ESPEasySerial_I2C_SC16IS752_t::begin(unsigned long baud)
 {
   if (_i2cserial != nullptr) {
+    _config.baud = baud;
     _i2cserial->begin(baud);
   }
 }

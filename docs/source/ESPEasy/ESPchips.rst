@@ -436,6 +436,19 @@ Datasheets
 * `ESP32-H2 <https://cdn-shop.adafruit.com/product-files/5715/esp32-h2_datasheet_en.pdf>`_
 
 
+Technical Reference Manuals
+===========================
+
+* `ESP8266 <https://www.espressif.com/sites/default/files/documentation/esp8266-technical_reference_en.pdf>`_
+* `ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf>`_
+* `ESP32-S2 <https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf>`_
+* `ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf>`_
+* `ESP32-C3 <https://www.espressif.com/sites/default/files/documentation/esp32-c3_technical_reference_manual_en.pdf>`_
+* `ESP32-C2 <https://www.espressif.com/sites/default/files/documentation/esp8684_technical_reference_manual_en.pdf>`_
+* `ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_technical_reference_manual_en.pdf>`_
+* `ESP32-H2 <https://www.espressif.com/sites/default/files/documentation/esp32-h2_technical_reference_manual_en.pdf>`_
+
+
 ESP8266/ESP8285
 ===============
 

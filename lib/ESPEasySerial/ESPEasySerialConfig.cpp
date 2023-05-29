@@ -22,11 +22,13 @@ void ESPEasySerialConfig::validate()
 
 #ifdef ESP8266
 void ESPEasySerialConfig::setPortConfig(
-  unsigned long baud,
+  unsigned long baudrate,
   SerialConfig  portconfig,
   SerialMode    portmode)
 {
   // FIXME TD-er: Must also set baudrate?
+  baud = baudrate;
+
   config = portconfig;
   mode   = portmode;
 }
@@ -39,6 +41,7 @@ void ESPEasySerialConfig::setPortConfig(
   uint32_t      portconfig)
 {
   // FIXME TD-er: Must also set baudrate?
+  baud = baudrate;
 
   // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
   config = portconfig | 0x8000000;

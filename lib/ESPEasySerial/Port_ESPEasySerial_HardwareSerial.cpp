@@ -138,8 +138,8 @@ void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig&
 #ifdef ESP8266
 void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
 {
+  _config.baud = 0;
   if (_serial == nullptr) {
-    _config.baud = 0;
     return;
   }
 
@@ -162,6 +162,10 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
     _config.receivePin  = -1;
     return;
   }
+
+  _config.baud = baud;
+
+  _serial->setRxBufferSize(_config.rxBuffSize);
 
   _serial->begin(_config.baud, _config.config, _config.mode, _config.transmitPin, _config.inverse_logic);
   _serial->pins(_config.transmitPin, _config.receivePin);
@@ -303,7 +307,7 @@ int Port_ESPEasySerial_HardwareSerial_t::getBaudRate() const
   return 0;
 }
 
-                    Port_ESPEasySerial_HardwareSerial_t::operator bool() const
+Port_ESPEasySerial_HardwareSerial_t::operator bool() const
 {
   if (_serial != nullptr) {
     return _serial->operator bool();

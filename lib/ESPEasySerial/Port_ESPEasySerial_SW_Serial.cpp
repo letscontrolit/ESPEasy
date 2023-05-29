@@ -27,6 +27,7 @@ Port_ESPEasySerial_SW_Serial_t::~Port_ESPEasySerial_SW_Serial_t()
 void Port_ESPEasySerial_SW_Serial_t::begin(unsigned long baud)
 {
   if (_swserial != nullptr) {
+    _config.baud = baud;
     _swserial->begin(baud);
   }
 }

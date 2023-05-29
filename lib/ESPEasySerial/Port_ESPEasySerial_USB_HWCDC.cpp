@@ -70,6 +70,7 @@ Port_ESPEasySerial_USB_HWCDC_t::~Port_ESPEasySerial_USB_HWCDC_t() {}
 
 void Port_ESPEasySerial_USB_HWCDC_t::begin(unsigned long baud)
 {
+  _config.baud = baud;
   /*
      if (_hwcdc_serial != nullptr) {
      _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
