@@ -1545,6 +1545,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
   #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
+  #endif
 
 #endif
 
@@ -1813,6 +1816,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
   // Controllers
@@ -2168,8 +2174,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
   #endif
-  #if !defined(USES_P152) && defined(ESP32) && !(defined(ESP32C3) || defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C6) || defined(ESP32H2)) // Only supported on ESP32 and ESP32-S2
+  #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
     #define USES_P152   // ESP32 DAC
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
   // Controllers
