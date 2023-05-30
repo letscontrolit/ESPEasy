@@ -102,16 +102,7 @@
 //  #include <WiFi.h>
 //  #include  "esp32_ping.h"
 
-  #ifdef ESP32S2
-    #include <esp32s2/rom/rtc.h>
-  #else
-   #if ESP_IDF_VERSION_MAJOR > 3
-    #include <esp32/rom/rtc.h>
-   #else
-    #include <rom/rtc.h>
-   #endif
-  #endif
-  
+ 
   #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
 #endif
 */

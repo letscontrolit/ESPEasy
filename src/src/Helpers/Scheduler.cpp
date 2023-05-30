@@ -47,13 +47,11 @@ String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
   if (timer >= IntervalTimer_e::TIMER_C001_DELAY_QUEUE && 
       timer <= IntervalTimer_e::TIMER_C025_DELAY_QUEUE) 
   {
+    const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
     String res;
     res.reserve(24);
-    res = F("TIMER_C0");
-    const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
-
-    if (id < 10) { res += '0'; }
-    res += id;
+    res = F("TIMER_");
+    res += get_formatted_Controller_number(id);
     res += F("_DELAY_QUEUE");
     return res;
   }

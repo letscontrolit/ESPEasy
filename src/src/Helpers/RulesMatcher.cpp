@@ -72,7 +72,7 @@ bool ruleMatch(String event, String rule) {
 
 
   // parse event into verb and value
-  double value = 0;
+  ESPEASY_RULES_FLOAT_TYPE value{};
   int    equal_pos   = event.indexOf('=');
 
   if (equal_pos >= 0) {
@@ -94,7 +94,7 @@ bool ruleMatch(String event, String rule) {
   }
 
   const bool stringMatch = event.equalsIgnoreCase(rule.substring(0, posStart));
-  double     ruleValue   = 0;
+  ESPEASY_RULES_FLOAT_TYPE     ruleValue{};
 
   if (!validDoubleFromString(rule.substring(posEnd), ruleValue)) {
     return false;
@@ -126,7 +126,7 @@ bool compareIntValues(char compare, const int& Value1, const int& Value2)
   return false;
 }
 
-bool compareDoubleValues(char compare, const double& Value1, const double& Value2)
+bool compareDoubleValues(char compare, const ESPEASY_RULES_FLOAT_TYPE& Value1, const ESPEASY_RULES_FLOAT_TYPE& Value2)
 {
   switch (compare) {
     case '>' + '=': return !definitelyLessThan(Value1, Value2);

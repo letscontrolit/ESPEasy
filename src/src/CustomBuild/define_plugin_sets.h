@@ -337,6 +337,7 @@ To create/register a plugin, you have to :
   #if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
     #define LIMIT_BUILD_SIZE
   #endif
+
   #ifndef FEATURE_I2CMULTIPLEXER
     #define FEATURE_I2CMULTIPLEXER  1
   #endif
@@ -1355,6 +1356,10 @@ To create/register a plugin, you have to :
     #define USES_P063   // TTP229_KeyPad
     #define USES_P073   // 7DGT
     #define USES_P079   // Wemos Motoshield
+
+    #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
+      #define USES_P152 // ESP32 DAC
+    #endif
 #endif
 
 
@@ -1531,11 +1536,17 @@ To create/register a plugin, you have to :
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
 #endif
@@ -1701,15 +1712,19 @@ To create/register a plugin, you have to :
   #define USES_P005   // DHT
   #define USES_P006   // BMP085
 
+  #define USES_P010   // BH1750
   #define USES_P011   // PME
   #define USES_P012   // LCD
+  #define USES_P013   // HCSR04
   #define USES_P014   // SI7021
+  #define USES_P015   // TSL2561
   #define USES_P018   // Dust
   #define USES_P019   // PCF8574
 
   #define USES_P021   // Level
   #define USES_P023   // OLED
   #define USES_P024   // MLX90614
+  #define USES_P025   // ADS1115
   #define USES_P026   // SysInfo
   #define USES_P028   // BME280
   #define USES_P029   // Output
@@ -1790,6 +1805,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
@@ -1798,6 +1816,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
   // Controllers
@@ -2144,11 +2165,20 @@ To create/register a plugin, you have to :
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
+    #define USES_P152   // ESP32 DAC
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
   // Controllers
@@ -2903,5 +2933,39 @@ To create/register a plugin, you have to :
     #define FEATURE_EXTENDED_TASK_VALUE_TYPES  1
   #endif
 #endif
+
+#ifndef FEATURE_SET_WIFI_TX_PWR
+  #ifdef ESP32
+    #if defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+      #define FEATURE_SET_WIFI_TX_PWR   1
+    #else
+      // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+      #define FEATURE_SET_WIFI_TX_PWR   1
+    #endif
+  #elif defined(ESP8266)
+    #define FEATURE_SET_WIFI_TX_PWR   1
+  #endif
+#endif
+
+
+#ifndef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
+    #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0
+  #else
+    #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 1
+  #endif
+#endif
+
+// ESPEASY_RULES_FLOAT_TYPE should be either double (default) or float.
+// It is solely based on FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+#ifdef ESPEASY_RULES_FLOAT_TYPE
+  #undef ESPEASY_RULES_FLOAT_TYPE
+#endif
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  #define ESPEASY_RULES_FLOAT_TYPE double
+#else
+  #define ESPEASY_RULES_FLOAT_TYPE float
+#endif
+
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

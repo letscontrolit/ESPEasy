@@ -424,7 +424,7 @@ void PluginInit(bool priorityOnly)
 #endif
 
 #ifdef USES_P097
-  #ifdef ESP32
+  #if defined(ESP32) && !defined(ESP32C3)
   ADDPLUGIN(097, 97) // Touch (ESP32)
   #endif
 #endif

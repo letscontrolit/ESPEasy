@@ -32,10 +32,14 @@
 #if defined(ESP32)
   #if defined(ESP32S2)
     # define BUILD_NOTES                 " - Mega32-s2"
-  #elif defined(ESP32C2)
+  #elif defined(ESP32S3)
+    # define BUILD_NOTES                 " - Mega32-s3"
+  #elif defined(ESP32C3)
     # define BUILD_NOTES                 " - Mega32-c3"
-  #else
+  # elif defined(ESP32_CLASSIC)
     # define BUILD_NOTES                 " - Mega32"
+  # else
+    static_assert(false, "Implement processor architecture");
   #endif
 #endif // if defined(ESP32)
 #endif

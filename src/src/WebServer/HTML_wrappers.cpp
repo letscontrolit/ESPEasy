@@ -282,7 +282,7 @@ void html_add_form() {
 
 void html_add_JQuery_script() {
   #ifndef CDN_URL_JQUERY
-    #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+    #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.0.min.js"
   #endif // ifndef CDN_URL_JQUERY
   addHtml(F("<script src=\"" CDN_URL_JQUERY "\"></script>"));
 }
@@ -413,9 +413,11 @@ void addHtmlFloat(const float& value, unsigned int nrDecimals) {
   addHtml(toString(value, nrDecimals));
 }
 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 void addHtmlFloat(const double& value, unsigned int nrDecimals) {
   addHtml(doubleToString(value, nrDecimals));
 }
+#endif
 
 
 void addEncodedHtml(const __FlashStringHelper * html) {

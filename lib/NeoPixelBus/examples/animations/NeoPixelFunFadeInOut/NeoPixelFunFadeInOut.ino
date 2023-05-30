@@ -12,7 +12,7 @@ const uint16_t PixelCount = 16; // make sure to set this to the number of pixels
 const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 const uint8_t AnimationChannels = 1; // we only need one as all the pixels are animated at once
 
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 // For Esp8266, the Pin is omitted and it uses GPIO3 due to DMA hardware use.  
 // There are other Esp8266 alternative methods that provide more pin options, but also have
 // other side effects.

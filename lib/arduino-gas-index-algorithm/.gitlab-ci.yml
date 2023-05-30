@@ -1,0 +1,48 @@
+stages:
+  - validate
+  - test
+
+compile_test:
+    stage: test
+    image:
+        name: registry.gitlab.sensirion.lokal/sensirion/docker/docker-arduino:0.5.0
+    tags: [docker, linux]
+    before_script:
+        - rm -rf ../sensirion-i2c-sht4x-library
+        - rm -rf ../sensirion-i2c-sgp41-library
+        - rm -rf ../sensirion-i2c-sgp40-library
+        - rm -rf ../sensirion-core-arduino-library
+    script:
+        - git clone --depth 1 --branch 0.5.1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.sensirion.lokal/MSO-SW/drivers/arduino/arduino-core.git ../sensirion-core-arduino-library
+        - git clone --depth 1 --branch 0.1.0 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.sensirion.lokal/MSO-SW/drivers/arduino/arduino-i2c-sht4x.git ../sensirion-i2c-sht4x-library
+        - git clone --depth 1 --branch master https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.sensirion.lokal/MSO-SW/drivers/arduino/arduino-i2c-sgp40.git ../sensirion-i2c-sgp40-library
+        - git clone --depth 1 --branch master https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.sensirion.lokal/MSO-SW/drivers/arduino/arduino-i2c-sgp41.git ../sensirion-i2c-sgp41-library
+        - arduino-cli compile --libraries=".." --warnings all --fqbn arduino:samd:mkrzero examples/exampleUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn arduino:avr:mega examples/exampleUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn arduino:avr:nano examples/exampleUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn arduino:avr:uno examples/exampleUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn esp32:esp32:esp32 examples/exampleUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn esp8266:esp8266:generic examples/exampleUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn arduino:samd:mkrzero examples/exampleLowPowerUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn arduino:avr:mega examples/exampleLowPowerUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn arduino:avr:nano examples/exampleLowPowerUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn arduino:avr:uno examples/exampleLowPowerUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn esp32:esp32:esp32 examples/exampleLowPowerUsage
+        - arduino-cli compile --libraries=".." --warnings all --fqbn esp8266:esp8266:generic examples/exampleLowPowerUsage
+
+syntax_check:
+  stage: validate
+  image:
+      name: registry.gitlab.sensirion.lokal/mso-sw/drivers/docker-driver-generator:0.2.0
+  tags: [linux, docker]
+  script:
+    - find . -type f -iregex ".*\.\(c\|h\|cpp\|ino\)" -exec clang-format-6.0 -i -style=file {} \; && git diff --exit-code
+
+
+cppcheck:
+  stage: validate
+  image:
+      name: registry.gitlab.sensirion.lokal/mso-sw/drivers/docker-driver-generator:0.2.0
+  tags: [linux, docker]
+  script:
+    - cppcheck --std=c++11 --language=c++ --error-exitcode=1 --suppress=*:src/algorithm/* -isrc/algorithm/sensirion_gas_index_algorithm.c --enable=warning,style,performance,portability src/*

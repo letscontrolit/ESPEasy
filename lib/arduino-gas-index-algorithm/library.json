@@ -1,0 +1,35 @@
+{
+  "name": "Sensirion Gas Index Algorithm",
+  "version": "3.2.2",
+  "description": "Library for gas index algorithm to use with Sensirion sensors. Enables you to calculate gas index from raw signal.",
+  "keywords": "SensirionGasIndexAlgorithm, VOCGasIndexAlgorithm, NOxGasIndexAlgorithm, SensirionI2CSht4x, SensirionI2CSgp41, sgp41, sgp40, voc_algorithm, nox_algorithm",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sensirion/arduino-gas-index-algorithm.git"
+  },
+  "authors": [
+    {
+      "name": "Sensirion",
+      "email": "info@sensirion.com",
+      "url": "https://github.com/Sensirion/arduino-gas-index-algorithm",
+      "maintainer": true
+    }
+  ],
+  "license": "BSD 3-Clause License",
+  "homepage": "https://sensirion.com",
+  "headers": [
+    "NOxGasIndexAlgorithm.h",
+    "VOCGasIndexAlgorithm.h"
+  ],
+  "examples": [
+    {
+      "name": "ExampleUsage",
+      "base": "examples/exampleUsage",
+      "files": [
+        "exampleUsage.ino"
+      ]
+    }
+  ],
+  "frameworks": "*",
+  "platforms": "*"
+}

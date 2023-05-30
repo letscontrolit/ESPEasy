@@ -9,7 +9,7 @@ const uint16_t PixelCount = 64; // set this to the size of your strip
 const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 
 // three element GRB pixels, change to your needs
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 
 // the DIB object, using RgbColor and initialized with the same number of pixels as our strip
 NeoDib<RgbColor> image(PixelCount);
