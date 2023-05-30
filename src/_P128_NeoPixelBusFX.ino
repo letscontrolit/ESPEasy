@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 // Changelog:
+// 2023-05-13, tonhuisman Add P128_USES_BGR / BGR definitions and support (compile-time)
+//                        Use more global NeoWs2812xMethod, as the library uses best matching hardware features per CPU type
+// 2023-05-12, tonhuisman Update for latest NeoPixelBusFx changes (NeoPixelBusLg class, (S/G)etLuminance method)
 // 2022-07-20, tonhuisman Make FakeTV compile-time optional, disabled by default on ESP8266, enabled by default on ESP32
 //                        P128_ENABLE_FAKETV can be set to 0/1 in Custom.h
 // 2022-07-02, tonhuisman Introduce Max Brightness setting for protecting the hardware and power supply (and the eyes :-))
@@ -63,9 +66,9 @@
 
    nfx theatre color [backgroundcolor] [count] [speed]
 
-   nfx scan color [backgroundcolor] [speed]
+   nfx scan color [backgroundcolor] [speed] [startpixel] [endpixel]
 
-   nfx dualscan color [backgroundcolor] [speed]
+   nfx dualscan color [backgroundcolor] [speed] [startpixel] [endpixel]
 
    nfx twinkle color [backgroundcolor] [speed]
 

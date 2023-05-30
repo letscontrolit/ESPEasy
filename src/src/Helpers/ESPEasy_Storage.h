@@ -36,11 +36,17 @@ bool fileExists(const String& fname);
 
 int fileSize(const String& fname);
 
-fs::File tryOpenFile(const String& fname, const String& mode);
+enum class FileDestination_e : uint8_t {
+  ANY   = 0,
+  FLASH = 1,
+  SD    = 2,
+};
 
-bool tryRenameFile(const String& fname_old, const String& fname_new);
+fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e destination = FileDestination_e::ANY);
 
-bool tryDeleteFile(const String& fname);
+bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestination_e destination = FileDestination_e::ANY);
+
+bool tryDeleteFile(const String& fname, FileDestination_e destination = FileDestination_e::ANY);
 
 /********************************************************************************************\
    Fix stuff to clear out differences between releases
@@ -58,7 +64,11 @@ bool FS_format();
 #ifdef ESP32
 
 int  getPartionCount(uint8_t pType, uint8_t pSubType = 0xFF);
+String patch_fname(const String& fname);
 
+#endif
+#ifdef ESP8266
+#define patch_fname(F) (F)
 #endif
 
 /********************************************************************************************\
