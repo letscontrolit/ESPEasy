@@ -79,6 +79,16 @@ String formatGpioName_RX(bool optional) {
   return formatGpioName(F("TX"), gpio_direction::gpio_input, optional);
 }
 
+String formatGpioName_serialTX(bool optional)
+{
+  return concat(F("ESP TX "), formatGpioName_TX(optional));
+}
+
+String formatGpioName_serialRX(bool optional)
+{
+  return concat(F("ESP RX "), formatGpioName_RX(optional));
+}
+
 String formatGpioName_TX_HW(bool optional) {
   return formatGpioName(F("RX (HW)"), gpio_direction::gpio_output, optional);
 }

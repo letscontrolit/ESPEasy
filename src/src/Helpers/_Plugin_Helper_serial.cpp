@@ -74,8 +74,8 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
 }
 
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional, bool txOptional) {
-  event->String1 = concat(F("ESP RX "), formatGpioName_RX(rxOptional));
-  event->String2 = concat(F("ESP TX "), formatGpioName_TX(txOptional));
+  event->String1 = formatGpioName_serialRX(rxOptional);
+  event->String2 = formatGpioName_serialTX(txOptional);
 }
 
 int8_t serialHelper_getRxPin(struct EventStruct *event) {

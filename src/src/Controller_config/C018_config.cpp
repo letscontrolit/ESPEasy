@@ -116,8 +116,8 @@ void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) {
   serialHelper_webformLoad(port, rxpin, txpin, true);
 
   // Show serial port selection
-  addFormPinSelect(PinSelectPurpose::Generic_input,  formatGpioName_RX(false), F("taskdevicepin1"), rxpin);
-  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_TX(false), F("taskdevicepin2"), txpin);
+  addFormPinSelect(PinSelectPurpose::Generic_input,  formatGpioName_serialRX(false), F("taskdevicepin1"), rxpin);
+  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_serialTX(false), F("taskdevicepin2"), txpin);
 
   html_add_script(F("document.getElementById('serPort').onchange();"), false);
 

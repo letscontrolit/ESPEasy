@@ -232,6 +232,7 @@ void handle_advanced() {
 
   addFormSubHeader(F("Serial Console Settings"));
   addFormCheckBox(LabelType::ENABLE_SERIAL_PORT_CONSOLE, Settings.UseSerial);
+  addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   serialHelper_webformLoad(
@@ -243,12 +244,12 @@ void handle_advanced() {
   // Show serial port selection
   addFormPinSelect(
     PinSelectPurpose::Serial_input, 
-    formatGpioName_RX(false),                   
+    formatGpioName_serialRX(false),
     F("taskdevicepin1"), 
     Settings.console_serial_rxpin);
   addFormPinSelect(
     PinSelectPurpose::Serial_output, 
-    formatGpioName_TX(false),                   
+    formatGpioName_serialTX(false),
     F("taskdevicepin2"), 
     Settings.console_serial_txpin);
 
@@ -258,8 +259,6 @@ void handle_advanced() {
 #endif
 
 #endif
-
-  addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 
   addFormSubHeader(F("Inter-ESPEasy Network"));

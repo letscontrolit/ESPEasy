@@ -57,6 +57,10 @@ String formatGpioName_TX(bool optional);
 
 String formatGpioName_RX(bool optional);
 
+String formatGpioName_serialTX(bool optional);
+
+String formatGpioName_serialRX(bool optional);
+
 String formatGpioName_TX_HW(bool optional);
 
 String formatGpioName_RX_HW(bool optional);
