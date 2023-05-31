@@ -87,7 +87,7 @@ void Port_ESPEasySerial_USB_HWCDC_t::end() {
   // Disabled for now
   // See: https://github.com/espressif/arduino-esp32/issues/8224
   if (_hwcdc_serial != nullptr) {
-    //    _hwcdc_serial->end();
+    _hwcdc_serial->end();
   }
 }
 
