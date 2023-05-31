@@ -660,7 +660,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               addHtml(F("PLUGIN_USES_SERIAL not defined"));
               # endif // ifdef PLUGIN_USES_SERIAL
 
-              if (serialDescription.length() || showpin3) {
+              if (
+#ifdef PLUGIN_USES_SERIAL
+                serialDescription.length() || 
+#endif
+                showpin3) {
                 html_BR();
               }
               break;
