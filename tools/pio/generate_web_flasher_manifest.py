@@ -192,8 +192,6 @@ def parse_filename(file, version, variant, file_suffix):
             # Thus make a separate group for the solo1
             main_group = '4M Flash ESP32-solo1'
 
-        if 'CDC' in variant:
-            main_group = '{} USB CDC'.format(main_group)
 
     if ".factory.bin" in file_suffix or 'ESP32' not in file:
         #print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
@@ -264,20 +262,14 @@ def generate_manifest_files(bin_folder, output_prefix):
     # the main grouping in the combo box on the web flasher page
     main_group_list = [
         '4M Flash',
-        '4M Flash USB CDC',
         '4M Flash ESP32-solo1',
         '4M Flash Collection Builds',
-        '4M Flash Collection Builds USB CDC',
         '16M Flash',
-        '16M Flash USB CDC',
         '2M Flash',
         '1M Flash',
         'Device Specific',
         'Custom',
-        'Custom USB CDC',
         'Custom Misc',
-        'Custom Misc USB CDC',
-        'Misc USB CDC',
         'Misc']
 
     for main_group in main_group_list:
@@ -362,6 +354,10 @@ def generate_manifest_files(bin_folder, output_prefix):
             '      </select>\n',
             '    </div>\n',
             '    <esp-web-install-button></esp-web-install-button>\n',
+
+            '    <br>\n',
+            '    <br>\n',
+            '    See <a href="latest/" >latest/</a> for a pre-release test build.\n',
             '    <script>\n',
             '      const selectEl = document.querySelector(".pick-variant select");\n',
             '      const installEl = document.querySelector("esp-web-install-button");\n',
