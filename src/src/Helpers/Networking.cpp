@@ -1063,6 +1063,9 @@ void scrubDNS() {
 bool valid_DNS_address(const IPAddress& dns) {
   return (dns.v4() != (uint32_t)0x00000000 && 
           dns.v4() != (uint32_t)0xFD000000 && 
+          // Bug where IPv6 global prefix is set as DNS
+          // Global IPv6 prefixes currently start with 2xxx::
+          (dns.v4() & (uint32_t)0xF0000000) != (uint32_t)0x20000000 && 
           dns != INADDR_NONE);
 }
 
