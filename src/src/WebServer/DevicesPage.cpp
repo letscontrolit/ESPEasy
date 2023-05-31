@@ -653,13 +653,14 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             case DEVICE_TYPE_SERIAL:
             {
               # ifdef PLUGIN_USES_SERIAL
-              addHtml(serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x],
-                                                      Settings.TaskDevicePin2[x], F("<BR>")));
+              const String serialDescription = serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x],
+                                                      Settings.TaskDevicePin2[x], F("<BR>"));
+              addHtml(serialDescription);
               # else // ifdef PLUGIN_USES_SERIAL
               addHtml(F("PLUGIN_USES_SERIAL not defined"));
               # endif // ifdef PLUGIN_USES_SERIAL
 
-              if (showpin3) {
+              if (serialDescription.length() || showpin3) {
                 html_BR();
               }
               break;
