@@ -1,0 +1,15 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``sht4x,startup``
+
+    ","
+
+    | Re-start with the Startup Configuration, like a plugin re-start, using the same Interval runs, only accepted if Startup and Normal configuration are different, and Interval runs > 0.
+
+    | This helps to remove condensation from the sensor from Rules, f.e. once a day.
+
+    "
