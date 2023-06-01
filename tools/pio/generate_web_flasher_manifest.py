@@ -346,6 +346,9 @@ def generate_manifest_files(bin_folder, output_prefix):
             '      <p>\n',
             '        To install ESPEasy, connect your ESP device to your computer, pick your\n',
             '        selected variant and click the install button.\n',
+            '        <br>\n',
+            '        <br>\n',
+            '        See <a href="https://espeasy.readthedocs.io/en/latest/Plugin/_Plugin.html#list-of-official-plugins" >Documentation</a> for a list of which plugin is included in what build variant.\n',
             '      </p>\n',
             '      <select>\n'
         ]
