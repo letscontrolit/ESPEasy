@@ -336,7 +336,7 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    </style>\n',
             '    <script\n',
             '      type="module"\n',
-            '      src="https://unpkg.com/esp-web-tools@8.0.6/dist/web/install-button.js?module"\n',
+            '      src="https://unpkg.com/tasmota-esp-web-tools@8.1.2/dist/web/install-button.js?module"\n',
             '    ></script>\n',
             '  </head>\n',
             '  <body>\n',
