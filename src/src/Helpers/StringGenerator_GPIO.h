@@ -25,6 +25,8 @@ enum class PinSelectPurpose : uint8_t {
   SPI,
   SPI_MISO,
   Ethernet,
+  Serial_input,
+  Serial_output,
   DAC
 
 };
@@ -54,6 +56,10 @@ String formatGpioName_output_optional(const __FlashStringHelper * label);
 String formatGpioName_TX(bool optional);
 
 String formatGpioName_RX(bool optional);
+
+String formatGpioName_serialTX(bool optional);
+
+String formatGpioName_serialRX(bool optional);
 
 String formatGpioName_TX_HW(bool optional);
 

@@ -134,6 +134,11 @@ def parse_filename(file, version, variant, file_suffix):
             elif 'collection' in variant:
                 variant_split = variant.split('_')
                 group = 'Collection{}'.format(variant_split[1])
+                # Select based on "4M1M" here to keep any occasional "4M2M" build
+                # separated in another group
+                if '_4M1M' in variant:
+                    main_group = '4M Flash Collection Builds'
+
 
             if 'NotSet' not in group:
                 sub_group_spit = group.split('_')
@@ -154,6 +159,9 @@ def parse_filename(file, version, variant, file_suffix):
                     specials.append('VCC')
                 if '_ETH' in variant:
                     specials.append('ETH')
+                if 'solo1' in variant:
+                    specials.append('Solo1')
+
 
                 for sp in specials:
                     sub_group_spit.append(sp)
@@ -167,6 +175,10 @@ def parse_filename(file, version, variant, file_suffix):
             state = "No Group"
             main_group = 'Misc'
 
+        if 'collection' in variant:
+            if '4M Flash' in main_group:
+                main_group = '4M Flash Collection Builds'
+
         if 'custom_' in variant:
             if 'Misc' in main_group:
                 main_group = 'Custom Misc'
@@ -174,6 +186,12 @@ def parse_filename(file, version, variant, file_suffix):
                 main_group = 'Custom'
         if 'hard_' in variant:
             main_group = 'Device Specific'
+
+        if 'solo1' in variant:
+            # Web flasher cannot detect whether it is an ESP32-classic or ESP32-solo1
+            # Thus make a separate group for the solo1
+            main_group = '4M Flash ESP32-solo1'
+
 
     if ".factory.bin" in file_suffix or 'ESP32' not in file:
         #print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
@@ -244,6 +262,8 @@ def generate_manifest_files(bin_folder, output_prefix):
     # the main grouping in the combo box on the web flasher page
     main_group_list = [
         '4M Flash',
+        '4M Flash ESP32-solo1',
+        '4M Flash Collection Builds',
         '16M Flash',
         '2M Flash',
         '1M Flash',
@@ -316,7 +336,7 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    </style>\n',
             '    <script\n',
             '      type="module"\n',
-            '      src="https://unpkg.com/esp-web-tools@8.0.6/dist/web/install-button.js?module"\n',
+            '      src="https://unpkg.com/tasmota-esp-web-tools@8.1.2/dist/web/install-button.js?module"\n',
             '    ></script>\n',
             '  </head>\n',
             '  <body>\n',
@@ -326,6 +346,9 @@ def generate_manifest_files(bin_folder, output_prefix):
             '      <p>\n',
             '        To install ESPEasy, connect your ESP device to your computer, pick your\n',
             '        selected variant and click the install button.\n',
+            '        <br>\n',
+            '        <br>\n',
+            '        See <a href="https://espeasy.readthedocs.io/en/latest/Plugin/_Plugin.html#list-of-official-plugins" >Documentation</a> for a list of which plugin is included in what build variant.\n',
             '      </p>\n',
             '      <select>\n'
         ]
@@ -334,6 +357,10 @@ def generate_manifest_files(bin_folder, output_prefix):
             '      </select>\n',
             '    </div>\n',
             '    <esp-web-install-button></esp-web-install-button>\n',
+
+            '    <br>\n',
+            '    <br>\n',
+            '    See <a href="latest/" >latest/</a> for a pre-release test build.\n',
             '    <script>\n',
             '      const selectEl = document.querySelector(".pick-variant select");\n',
             '      const installEl = document.querySelector("esp-web-install-button");\n',
