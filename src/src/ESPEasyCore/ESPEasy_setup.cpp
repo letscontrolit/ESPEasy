@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/NetworkState.h"
@@ -174,8 +175,7 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-
-  Serial.begin(115200);
+  ESPEasy_Console.begin(115200);
 
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
@@ -275,6 +275,8 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
+  ESPEasy_Console.reInit();
+
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif
@@ -450,7 +452,7 @@ void ESPEasy_setup()
 
 # ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
-    Serial.setDebugOutput(true);
+    ESPEasy_Console.setDebugOutput(true);
   }
 #endif
 
@@ -468,6 +470,9 @@ void ESPEasy_setup()
   #endif // if FEATURE_NOTIFIER
 
   PluginInit();
+
+  initSerial(); // Plugins may have altered serial, so re-init serial
+  
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("PluginInit()"));
   #endif

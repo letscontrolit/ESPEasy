@@ -192,6 +192,7 @@ def parse_filename(file, version, variant, file_suffix):
             # Thus make a separate group for the solo1
             main_group = '4M Flash ESP32-solo1'
 
+
     if ".factory.bin" in file_suffix or 'ESP32' not in file:
         #print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
 
@@ -335,7 +336,7 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    </style>\n',
             '    <script\n',
             '      type="module"\n',
-            '      src="https://unpkg.com/esp-web-tools@8.0.6/dist/web/install-button.js?module"\n',
+            '      src="https://unpkg.com/tasmota-esp-web-tools@8.1.2/dist/web/install-button.js?module"\n',
             '    ></script>\n',
             '  </head>\n',
             '  <body>\n',
@@ -345,6 +346,9 @@ def generate_manifest_files(bin_folder, output_prefix):
             '      <p>\n',
             '        To install ESPEasy, connect your ESP device to your computer, pick your\n',
             '        selected variant and click the install button.\n',
+            '        <br>\n',
+            '        <br>\n',
+            '        See <a href="https://espeasy.readthedocs.io/en/latest/Plugin/_Plugin.html#list-of-official-plugins" >Documentation</a> for a list of which plugin is included in what build variant.\n',
             '      </p>\n',
             '      <select>\n'
         ]
@@ -353,6 +357,10 @@ def generate_manifest_files(bin_folder, output_prefix):
             '      </select>\n',
             '    </div>\n',
             '    <esp-web-install-button></esp-web-install-button>\n',
+
+            '    <br>\n',
+            '    <br>\n',
+            '    See <a href="latest/" >latest/</a> for a pre-release test build.\n',
             '    <script>\n',
             '      const selectEl = document.querySelector(".pick-variant select");\n',
             '      const installEl = document.querySelector("esp-web-install-button");\n',

@@ -10411,7 +10411,7 @@ Gijs Noorlander (7):
       [MQTT] LWT "Connected" message doesn't have the retained flag (#925)
       [v2.0] Added Vcc-binaries to deploy process #933 (#935)
       [v2.0 merge] 2kwebserver_merge_to_mega #929 (#934)
-      [v2.0] Use ESPeasySoftwareSerial (#936)
+      [v2.0] Use Driver_ESPEasySoftwareSerial_t (#936)
       [Mega] rename SoftwareSerial lib #930 (#937)
       [timeouts] Improve response when hosts are not reachable (#939)
       [2k Webserver] Proper initialisation of StreamingBuffer members. (#941)

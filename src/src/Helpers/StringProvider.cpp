@@ -14,6 +14,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #endif
 
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -105,6 +106,13 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:           return F("JSON bool output without quotes");
     case LabelType::ENABLE_TIMING_STATISTICS:   return F("Collect Timing Statistics");
     case LabelType::ENABLE_RULES_CACHING:       return F("Enable Rules Cache");
+    case LabelType::ENABLE_SERIAL_PORT_CONSOLE: return F("Enable Serial Port Console");
+    case LabelType::CONSOLE_SERIAL_PORT:        return F("Console Serial Port");
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    case LabelType::CONSOLE_FALLBACK_TO_SERIAL0: return F("Fallback to Serial 0");
+    case LabelType::CONSOLE_FALLBACK_PORT:       return F("Console Fallback Port");
+#endif
+
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return F("Optimize Rules Cache Event Order"); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return F("Allow TaskValueSet on all plugins");
     case LabelType::ALLOW_OTA_UNLIMITED:        return F("Allow OTA without size-check");
@@ -348,6 +356,14 @@ String getValue(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:           return jsonBool(Settings.JSONBoolWithoutQuotes());
     case LabelType::ENABLE_TIMING_STATISTICS:   return jsonBool(Settings.EnableTimingStats());
     case LabelType::ENABLE_RULES_CACHING:       return jsonBool(Settings.EnableRulesCaching());
+    case LabelType::ENABLE_SERIAL_PORT_CONSOLE: return jsonBool(Settings.UseSerial);
+    case LabelType::CONSOLE_SERIAL_PORT:        return ESPEasy_Console.getPortDescription();
+
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    case LabelType::CONSOLE_FALLBACK_TO_SERIAL0: return jsonBool(Settings.console_serial0_fallback);
+    case LabelType::CONSOLE_FALLBACK_PORT:       return ESPEasy_Console.getFallbackPortDescription();
+#endif
+
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return jsonBool(Settings.EnableRulesEventReorder()); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return jsonBool(Settings.AllowTaskValueSetAllPlugins());
     case LabelType::ALLOW_OTA_UNLIMITED:        return jsonBool(Settings.AllowOTAUnlimited());

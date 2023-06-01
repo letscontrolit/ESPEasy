@@ -21,6 +21,10 @@
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#include "../Helpers/_Plugin_Helper_serial.h"
+#endif
+
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -795,6 +799,16 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
              ) {
             // Make sure any task data is actually cleared.
             clearPluginTaskData(event->TaskIndex);
+          /*
+            #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+            if (Device[DeviceIndex].isSerial()) {
+              checkSerialConflict(
+                serialHelper_getSerialType(event),
+                serialHelper_getRxPin(event),
+                serialHelper_getTxPin(event));
+            }
+            #endif
+          */
           }
 
           if (performPluginCall) {
@@ -846,7 +860,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
           if (Function == PLUGIN_EXIT) {
             clearPluginTaskData(event->TaskIndex);
-            initSerial();
+//            initSerial();
             queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
             updateActiveTaskUseSerial0();
           }

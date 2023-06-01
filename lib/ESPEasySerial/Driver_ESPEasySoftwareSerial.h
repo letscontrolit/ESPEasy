@@ -1,7 +1,7 @@
 /*
-   ESPeasySoftwareSerial.h
+   Driver_ESPEasySoftwareSerial_t.h
 
-   ESPeasySoftwareSerial.cpp - Implementation of the Arduino software serial for ESP8266.
+   Driver_ESPEasySoftwareSerial_t.cpp - Implementation of the Arduino software serial for ESP8266.
    Copyright (c) 2015-2016 Peter Lerup. All rights reserved.
 
    This library is free software; you can redistribute it and/or
@@ -20,8 +20,8 @@
 
  */
 #ifdef ESP8266 // Needed for precompile issues.
-#ifndef ESPeasySoftwareSerial_h
-# define ESPeasySoftwareSerial_h
+#ifndef ESPEASYSERIAL_DRIVER_ESPEASYSOFTWARESERIAL_H
+# define ESPEASYSERIAL_DRIVER_ESPEASYSOFTWARESERIAL_H
 
 # include <inttypes.h>
 # include <Stream.h>
@@ -32,14 +32,14 @@
 // Speed up to 115200 can be used.
 
 
-class ESPeasySoftwareSerial : public Stream {
+class Driver_ESPEasySoftwareSerial_t : public Stream {
 public:
 
-  ESPeasySoftwareSerial(uint8_t  receivePin,
+  Driver_ESPEasySoftwareSerial_t(uint8_t  receivePin,
                         uint8_t  transmitPin,
                         bool     inverse_logic = false,
                         uint16_t buffSize      = 64);
-  virtual ~ESPeasySoftwareSerial();
+  virtual ~Driver_ESPEasySoftwareSerial_t();
 
   void           begin(long speed);
   void           setTransmitEnablePin(uint8_t transmitEnablePin);
@@ -78,6 +78,8 @@ public:
 
   using Print::write;
 
+  int baudRate() const;
+
 private:
 
   bool    isValidGPIOpin(uint8_t pin);
@@ -98,5 +100,5 @@ private:
 # define SW_SERIAL_UNUSED_PIN -1
 
 
-#endif // ifndef ESPeasySoftwareSerial_h
+#endif // ifndef ESPEASYSERIAL_DRIVER_ESPEASYSOFTWARESERIAL_H
 #endif // ifdef ESP8266
