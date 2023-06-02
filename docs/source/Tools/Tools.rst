@@ -311,17 +311,44 @@ See `Log section <Tools.html#log>`_ for more detailed information.
 * SD Log Level - Log Level for sending logs to a SD card (only when included in the build)
 
 
-Serial Settings
----------------
+Serial Console Settings
+-----------------------
 
-These settings only apply to using the serial port in core ESPEasy functionality,
-like sending out logs or receiving commands via the serial port.
+ESPEasy has a command line style console.
+This console will show the logs (when Serial Log Level is not set to "None") and accept commands.
 
-* Enable Serial Port - When unchecked, logs will not be sent to the serial port and commands will not be read from it.
+This console can be accessed via a serial port.
+
+* Enable Serial Port Console - When unchecked, logs will not be sent to the serial port and commands will not be read from it.
 * Baud Rate - Baud rate of the serial port. (default: 115200)
 
-Make sure to disable the serial port here when a sensor is connected to Serial0 
-or the GPIO pins are used for something other then a serial port.
+(Serial port selection added: 2023-06-01)
+
+* Serial Port - The selected serial port to use for the console.
+* ESP RX GPIO ← TX - GPIO pin used as RX, to connect with the TX of the other device.
+* ESP TX GPIO → RX - GPIO pin used as TX, to connect with the RX of the other device.
+* Fallback to Serial 0 - (Only on ESP32-C3/S2/S3) Configure HW Serial0 port as secondary port for the ESPEasy console.
+
+GPIO pin selection will only be shown for Serial Port types which require action GPIO pins.
+For example USB CDC and HW CDC ports do not need specific GPIO pins for their configuration.
+
+See also: `Serial Helper <../Plugin/SerialHelper.html>`__
+
+.. note:: Make sure to either uncheck "Enable Serial Port Console" or configure another serial port for the console, when either HW Serial0 or its pins are used in a task.
+
+Special notes on Software Serial
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When configuring "Software Serial" as a serial port for the console, please be aware that there might be some bit errors during transmission.
+Higher baudrate will only make this problem worse and may even causes issues where entered commands are not received by ESPEasy.
+The default baud rate of 115200 is for sure too high for software serial, regardless the platform (ESP8266/ESP32-xx).
+
+The best baud rate for the ESPEasy Console when using Software Serial may differ per module.
+
+For example on an ESP32-S3, software serial is remarkably usable at 28800 baud.
+But the ESP32-C3 does seem to perform horrible, regardless the baud rate.
+
+Do not use multiple instances of a Software Serial port as both will greatly affect each other in a bad way when used at the same time.
 
 
 Inter-ESPEasy Network

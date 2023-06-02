@@ -1,0 +1,43 @@
+#######################################
+# Syntax Coloring Map for EspSoftwareSerial
+# (esp8266)
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+EspSoftwareSerial	KEYWORD1
+SoftwareSerial	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+baudRate	KEYWORD2
+setTransmitEnablePin	KEYWORD2
+enableIntTx	KEYWORD2
+overflow	KEYWORD2
+available	KEYWORD2
+peek	KEYWORD2
+read	KEYWORD2
+flush	KEYWORD2
+write	KEYWORD2
+enableRx	KEYWORD2
+enableTx	KEYWORD2
+listen	KEYWORD2
+end	KEYWORD2
+isListening	KEYWORD2
+stopListening	KEYWORD2
+onReceive	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+SW_SERIAL_UNUSED_PIN	LITERAL1
+SWSERIAL_5N1	LITERAL1
+SWSERIAL_6N1	LITERAL1
+SWSERIAL_7N1	LITERAL1
+SWSERIAL_8N1	LITERAL1
