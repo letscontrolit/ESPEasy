@@ -1,0 +1,20 @@
+{
+  "name": "Improv",
+  "version": "1.2.3",
+  "description": "Improv is a free and open standard with ready-made SDKs that offer a great user experience to configure Wi-Fi on devices",
+  "keywords": "improv, wi-fi, provision",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/improv-wifi/sdk-cpp.git"
+  },
+  "authors": [
+    {
+      "name": "jesserockz"
+    }
+  ],
+  "license": "Apache-2.0",
+  "homepage": "https://www.improv-wifi.com/",
+  "dependencies": {},
+  "frameworks": "*",
+  "platforms": "*"
+}
