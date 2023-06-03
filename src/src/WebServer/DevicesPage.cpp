@@ -224,15 +224,7 @@ void addDeviceSelect(const __FlashStringHelper *name,  int choice)
 
 
         # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        String plugin;
-        plugin += 'P';
-
-        if (pluginID < 10) { plugin += '0'; }
-
-        if (pluginID < 100) { plugin += '0'; }
-        plugin    += pluginID;
-        plugin    += F(" - ");
-        deviceName = plugin + deviceName;
+        deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
         # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,
@@ -661,13 +653,18 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             case DEVICE_TYPE_SERIAL:
             {
               # ifdef PLUGIN_USES_SERIAL
-              addHtml(serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x],
-                                                      Settings.TaskDevicePin2[x], F("<BR>")));
+              const String serialDescription = serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x],
+                                                      Settings.TaskDevicePin2[x], F("<BR>"));
+              addHtml(serialDescription);
               # else // ifdef PLUGIN_USES_SERIAL
               addHtml(F("PLUGIN_USES_SERIAL not defined"));
               # endif // ifdef PLUGIN_USES_SERIAL
 
-              if (showpin3) {
+              if (
+#ifdef PLUGIN_USES_SERIAL
+                serialDescription.length() || 
+#endif
+                showpin3) {
                 html_BR();
               }
               break;
@@ -1101,7 +1098,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       if (Device[DeviceIndex].isSerial())
       {
         // Pin1 = GPIO <--- TX
-        purpose = PinSelectPurpose::Generic_input;
+        purpose = PinSelectPurpose::Serial_input;
       } else if (Device[DeviceIndex].isSPI())
       {
         // All selectable SPI pins are output only
@@ -1114,9 +1111,13 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     if (Device[DeviceIndex].usesTaskDevicePin(2)) {
       PinSelectPurpose purpose = PinSelectPurpose::Generic;
 
-      if (Device[DeviceIndex].isSerial() || Device[DeviceIndex].isSPI())
+      if (Device[DeviceIndex].isSerial())
       {
         // Serial Pin2 = GPIO ---> RX
+        purpose = PinSelectPurpose::Serial_output;
+      }
+      if (Device[DeviceIndex].isSPI())
+      {
         // SPI only needs output pins
         purpose = PinSelectPurpose::Generic_output;
       }

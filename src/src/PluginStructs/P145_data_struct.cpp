@@ -800,7 +800,9 @@ void P145_data_struct::heaterControl(void)
 {
   unsigned long now = millis();
   long time = timePassedSince(heaterChangeTime);  // Time a state is active
+  # ifdef P145_DEBUG
   P145_heaterState lastState = heaterState;       // To detect a state change
+  # endif // ifdef P145_DEBUG
 
   // Check if the heaterPin has been changed => change in controller
   if (heaterPin != lastHeaterPin)

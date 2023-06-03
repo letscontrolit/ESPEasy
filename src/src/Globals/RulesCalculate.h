@@ -20,7 +20,7 @@ extern RulesCalculate_t RulesCalculate;
 int                 CalculateParam(const String& TmpStr);
 
 CalculateReturnCode Calculate(const String& input,
-                              double      & result);
+                              ESPEASY_RULES_FLOAT_TYPE      & result);
 
 
 

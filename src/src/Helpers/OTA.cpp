@@ -8,6 +8,7 @@
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 #if FEATURE_ARDUINO_OTA
   //enable Arduino OTA updating.
@@ -99,7 +100,7 @@ void ArduinoOTAInit()
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       if (Settings.UseSerial) {
-        Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
+        serialPrintln(concat(F("OTA  : Progress "), (progress / (total / 100))));
       }
     });
 

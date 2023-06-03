@@ -228,16 +228,31 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
       }
 
 
-      double current, voltage, power;
+      ESPEASY_RULES_FLOAT_TYPE current, voltage, power;
 
       if (Plugin076_LoadMultipliers(event->TaskIndex, current, voltage, power)) {
         addFormSubHeader(F("Calibration Values"));
         addFormTextBox(F("Current Multiplier"), F("currmult"),
-                       doubleToString(current, 2), 25);
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                       doubleToString(current, 2)
+        #else
+                       floatToString(current, 2)
+        #endif
+                       , 25);
         addFormTextBox(F("Voltage Multiplier"), F("voltmult"),
-                       doubleToString(voltage, 2), 25);
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                       doubleToString(voltage, 2)
+        #else
+                       floatToString(voltage, 2)
+        #endif
+                       , 25);
         addFormTextBox(F("Power Multiplier"), F("powmult"),
-                       doubleToString(power, 2), 25);
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                       doubleToString(power, 2)
+        #else
+                       floatToString(power, 2)
+        #endif
+                       , 25);
       }
 
       success = true;
@@ -268,7 +283,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
       }
 
       // Set Multipliers
-      double hlwMultipliers[3];
+      ESPEASY_RULES_FLOAT_TYPE hlwMultipliers[3];
       hlwMultipliers[0] = getFormItemFloat(F("currmult"));
       hlwMultipliers[1] = getFormItemFloat(F("voltmult"));
       hlwMultipliers[2] = getFormItemFloat(F("powmult"));
@@ -438,7 +453,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           }
           # endif // ifndef BUILD_NO_DEBUG
 
-          double current, voltage, power;
+          ESPEASY_RULES_FLOAT_TYPE current, voltage, power;
 
           if (Plugin076_LoadMultipliers(event->TaskIndex, current, voltage, power)) {
             # ifndef BUILD_NO_DEBUG
@@ -554,15 +569,25 @@ void Plugin076_SaveMultipliers() {
   if (StoredTaskIndex < 0) {
     return; // Not yet initialized.
   }
-  double hlwMultipliers[3]{};
+  ESPEASY_RULES_FLOAT_TYPE hlwMultipliers[3]{};
 
   if (Plugin076_ReadMultipliers(hlwMultipliers[0], hlwMultipliers[1], hlwMultipliers[2])) {
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     SaveCustomTaskSettings(StoredTaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                            sizeof(hlwMultipliers));
+#else
+    double hlwMultipliers_d[3]{};
+    hlwMultipliers_d[0] = hlwMultipliers[0];
+    hlwMultipliers_d[1] = hlwMultipliers[1];
+    hlwMultipliers_d[2] = hlwMultipliers[2];
+
+    SaveCustomTaskSettings(StoredTaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers_d),
+                           sizeof(hlwMultipliers_d));
+#endif
   }
 }
 
-bool Plugin076_ReadMultipliers(double& current, double& voltage, double& power) {
+bool Plugin076_ReadMultipliers(ESPEASY_RULES_FLOAT_TYPE& current, ESPEASY_RULES_FLOAT_TYPE& voltage, ESPEASY_RULES_FLOAT_TYPE& power) {
   current = 0.0f;
   voltage = 0.0f;
   power   = 0.0f;
@@ -576,7 +601,7 @@ bool Plugin076_ReadMultipliers(double& current, double& voltage, double& power) 
   return false;
 }
 
-bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, double& current, double& voltage, double& power) {
+bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, ESPEASY_RULES_FLOAT_TYPE& current, ESPEASY_RULES_FLOAT_TYPE& voltage, ESPEASY_RULES_FLOAT_TYPE& power) {
   // If multipliers are empty load default ones and save all of them as
   // "CustomTaskSettings"
   if (!Plugin076_ReadMultipliers(current, voltage, power)) {

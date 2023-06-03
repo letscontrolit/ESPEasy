@@ -284,7 +284,9 @@
 
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
-// #define FEATURE_AUTO_DARK_MODE           0 // Disable auto-dark mode
+// #define FEATURE_AUTO_DARK_MODE           0                // 0 = Disable auto-dark mode
+// #define FEATURE_EXTENDED_TASK_VALUE_TYPES 0               // 0 = Disable extra task value types like 64 bit ints, double, etc. in Dummy tasks
+// #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0  // 0 = switch to float as floating point type for rules/formula processing.
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
@@ -481,6 +483,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P128_USES_RGB
 //   #define P128_USES_RGBW
 //   #define P128_USES_BRG
+//   #define P128_USES_BGR
 //   #define P128_USES_RBG
 //   #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 // #define USES_P129   // 74HC165 Input shiftregisters

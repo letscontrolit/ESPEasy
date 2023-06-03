@@ -11,69 +11,7 @@
 
 #include "../Globals/ResetFactoryDefaultPref.h"
 
-#ifdef ESP32
-# include <driver/adc.h>
-
-// Needed to get ADC Vref
-# include <esp_adc_cal.h>
-# include <driver/adc.h>
-#endif // ifdef ESP32
-
-#ifdef ESP32
-# if CONFIG_IDF_TARGET_ESP32
-  #  define MAX_ADC_VALUE 4095
-# else // if CONFIG_IDF_TARGET_ESP32
-  #  define MAX_ADC_VALUE ((1 << SOC_ADC_MAX_BITWIDTH) - 1)
-# endif  // if CONFIG_IDF_TARGET_ESP32
-#endif  // ifdef ESP32
-#ifdef ESP8266
-  #if FEATURE_ADC_VCC
-  // Vcc in units of 1/1024 V
-  # define MAX_ADC_VALUE 4095
-  #else
-  # define MAX_ADC_VALUE 1023
-  #endif
-#endif // ifdef ESP8266
-
-
-  #ifdef ESP32_CLASSIC
-    #define MAX_TX_PWR_DBM_11b  19.5f
-    #define MAX_TX_PWR_DBM_54g  16.0f
-    #define MAX_TX_PWR_DBM_n    14.0f
-    #define WIFI_SENSITIVITY_11b  -88
-    #define WIFI_SENSITIVITY_54g  -75
-    #define WIFI_SENSITIVITY_n    -70
-  #elif defined(ESP32S2) 
-    #define MAX_TX_PWR_DBM_11b  19.5f
-    #define MAX_TX_PWR_DBM_54g  15.0f
-    #define MAX_TX_PWR_DBM_n    13.0f
-    #define WIFI_SENSITIVITY_11b  -88
-    #define WIFI_SENSITIVITY_54g  -75
-    #define WIFI_SENSITIVITY_n    -72
-  #elif defined(ESP32S3)
-    #define MAX_TX_PWR_DBM_11b  21.0f
-    #define MAX_TX_PWR_DBM_54g  19.0f
-    #define MAX_TX_PWR_DBM_n    18.5f
-    #define WIFI_SENSITIVITY_11b  -88
-    #define WIFI_SENSITIVITY_54g  -76
-    #define WIFI_SENSITIVITY_n    -72
-  #elif defined(ESP32C3)
-    #define MAX_TX_PWR_DBM_11b  21.0f
-    #define MAX_TX_PWR_DBM_54g  19.0f
-    #define MAX_TX_PWR_DBM_n    18.5f
-    #define WIFI_SENSITIVITY_11b  -88
-    #define WIFI_SENSITIVITY_54g  -76
-    #define WIFI_SENSITIVITY_n    -73
-  #elif defined(ESP8266)
-    #define MAX_TX_PWR_DBM_11b  20.0f
-    #define MAX_TX_PWR_DBM_54g  17.0f
-    #define MAX_TX_PWR_DBM_n    14.0f
-    #define WIFI_SENSITIVITY_11b  -91
-    #define WIFI_SENSITIVITY_54g  -75
-    #define WIFI_SENSITIVITY_n    -72
-  # else
-    static_assert(false, "Implement processor architecture");
-  #endif
+#include "../Helpers/Hardware_defines.h"
 
 
 /********************************************************************************************\
@@ -290,6 +228,8 @@ bool getADC_gpio_info(int  gpio_pin,
                       int& ch,
                       int& t);
 int touchPinToGpio(int touch_pin);
+bool getDAC_gpio_info(int gpio_pin, 
+                      int& dac);
 
 #endif // ifdef ESP32
 

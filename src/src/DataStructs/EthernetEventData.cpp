@@ -5,6 +5,8 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/Networking.h"
 
+#include <WiFi.h>
+
 // Bit numbers for Eth status
 #define ESPEASY_ETH_CONNECTED               0
 #define ESPEASY_ETH_GOT_IP                  1
