@@ -1,0 +1,9 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#Serialnumber]``
+    ","
+    | Returns the serial number of the sensor.
+    "

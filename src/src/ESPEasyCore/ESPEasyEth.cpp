@@ -23,6 +23,8 @@
  #include <eth_phy/phy.h>
 #endif
 
+#include <WiFi.h>
+
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;
 }
