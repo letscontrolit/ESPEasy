@@ -1519,6 +1519,7 @@ To create/register a plugin, you have to :
     #define USES_P129   // 74HC165 Input shiftregisters
     #define USES_P135   // SCD4x
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+    #define USES_P133     // LTR390 UV
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
