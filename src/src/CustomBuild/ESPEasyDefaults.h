@@ -6,6 +6,8 @@
 
 #include "../DataTypes/NetworkMedium.h"
 
+#include "../Helpers/Hardware_defines.h"
+
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************
@@ -186,6 +188,32 @@
                                                 //   8 = Generic HTTP
                                                 //   9 = FHEM HTTP
 #endif
+
+#ifndef DEFAULT_CONSOLE_PORT
+#if USES_HWCDC
+#define DEFAULT_CONSOLE_PORT 7    // 7 = ESPEasySerialPort::usb_hw_cdc
+#elif USES_USBCDC
+#define DEFAULT_CONSOLE_PORT 8    // 8 = ESPEasySerialPort::usb_cdc_0
+#else
+#define DEFAULT_CONSOLE_PORT 2    // 2 = ESPEasySerialPort::serial0
+#endif
+#endif
+#ifndef DEFAULT_CONSOLE_PORT_RXPIN
+#define DEFAULT_CONSOLE_PORT_RXPIN  SOC_RX0
+#endif
+#ifndef DEFAULT_CONSOLE_PORT_TXPIN
+#define DEFAULT_CONSOLE_PORT_TXPIN  SOC_TX0
+#endif
+#ifndef DEFAULT_CONSOLE_SER0_FALLBACK
+#if USES_HWCDC
+#define DEFAULT_CONSOLE_SER0_FALLBACK  1
+#elif USES_USBCDC
+#define DEFAULT_CONSOLE_SER0_FALLBACK  1
+#else
+#define DEFAULT_CONSOLE_SER0_FALLBACK  0
+#endif
+#endif
+
 
 #ifndef DEFAULT_PIN_I2C_SDA
 #ifdef ESP8266

@@ -14,9 +14,11 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/_Plugin_Helper_serial.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
 
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
@@ -54,7 +56,21 @@ void handle_advanced() {
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.SyslogPort     = getFormItemInt(F("syslogport"));
-    Settings.UseSerial      = isFormItemChecked(F("useserial"));
+    Settings.UseSerial      = isFormItemChecked(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+    Settings.console_serial_rxpin = getFormItemInt(F("taskdevicepin1"), Settings.console_serial_rxpin);
+    Settings.console_serial_txpin = getFormItemInt(F("taskdevicepin2"), Settings.console_serial_txpin);
+
+    serialHelper_webformSave(
+      Settings.console_serial_port, 
+      Settings.console_serial_rxpin,
+      Settings.console_serial_txpin);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    Settings.console_serial0_fallback = isFormItemChecked(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
+#endif
+
+#endif
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
@@ -219,15 +235,40 @@ void handle_advanced() {
 #endif // if FEATURE_SD
 
 
-  addFormSubHeader(F("Serial Settings"));
-
-  addFormCheckBox(F("Enable Serial port"), F("useserial"), Settings.UseSerial);
+  addFormSubHeader(F("Serial Console Settings"));
+  addFormCheckBox(LabelType::ENABLE_SERIAL_PORT_CONSOLE, Settings.UseSerial);
   addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  serialHelper_webformLoad(
+    static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
+    Settings.console_serial_rxpin, 
+    Settings.console_serial_txpin, 
+    true);
+
+  // Show serial port selection
+  addFormPinSelect(
+    PinSelectPurpose::Serial_input, 
+    formatGpioName_serialRX(false),
+    F("taskdevicepin1"), 
+    Settings.console_serial_rxpin);
+  addFormPinSelect(
+    PinSelectPurpose::Serial_output, 
+    formatGpioName_serialTX(false),
+    F("taskdevicepin2"), 
+    Settings.console_serial_txpin);
+
+  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0, Settings.console_serial0_fallback);
+#endif
+
+#endif
 
 
   addFormSubHeader(F("Inter-ESPEasy Network"));
   if (Settings.UDPPort != 8266 ) addFormNote(F("Preferred P2P port is 8266"));
-  addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
+  addFormNumericBox(F("ESPEasy p2p UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
   // TODO sort settings in groups or move to other pages/groups
   addFormSubHeader(F("Special and Experimental Settings"));
