@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2023-06-10 tonhuisman: BUGFIX: The switch to Normal configuration wasn't working, resulting in checksum errors
  * 2023-04-24 tonhuisman: Rename Boot configuration to Startup configuration, add PLUGIN_WRITE support for commands
  *                        Minor improvements
  * 2023-04-23 tonhuisman: Add Boot Configuration and Normal Configuration options, to allow evaporating condensation

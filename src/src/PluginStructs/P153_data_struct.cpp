@@ -88,7 +88,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
       }
 
       // Start measurement
-      if (!I2C_write8(_address, static_cast<uint8_t>(_startupConfiguration))) {
+      if (!I2C_write8(_address, static_cast<uint8_t>((_intervalLoops > 0) ? _startupConfiguration : _normalConfiguration))) {
         timeDelay = -1; // Don't continue if writing command fails
       }
       # ifndef BUILD_NO_DEBUG
@@ -142,7 +142,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
           _intervalLoops--;
 
           if ((_intervalLoops == 0) && (_startupConfiguration != _normalConfiguration)) {
-            addLog(LOG_LEVEL_INFO, F("SHT4x: Switching from Boot to Normal Configuration."));
+            addLog(LOG_LEVEL_INFO, F("SHT4x: Switching from Startup to Normal Configuration."));
           }
         }
 
