@@ -90,6 +90,19 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
       // Start measurement
       if (!I2C_write8(_address, static_cast<uint8_t>((_intervalLoops > 0) ? _startupConfiguration : _normalConfiguration))) {
         timeDelay = -1; // Don't continue if writing command fails
+
+        UserVar[event->BaseVarIndex]     = NAN;
+        UserVar[event->BaseVarIndex + 1] = NAN;
+
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log;
+
+          if (log.reserve(40)) {
+            log  = getTaskDeviceName(event->TaskIndex);
+            log += F(": Error writing command to sensor");
+            addLogMove(LOG_LEVEL_ERROR, log);
+          }
+        }
       }
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, concat(F("P153 : READ delay: "), timeDelay));
@@ -117,8 +130,23 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
 
       Wire.requestFrom(_address, (uint8_t)6);
 
-      for (uint8_t d = 0; d < 6; d++) {
-        data[d] = Wire.read();
+      if (Wire.available() == 6) {
+        for (uint8_t d = 0; d < 6; d++) {
+          data[d] = Wire.read();
+        }
+      } else {
+        UserVar[event->BaseVarIndex]     = NAN; // Read error or I/O error
+        UserVar[event->BaseVarIndex + 1] = NAN;
+
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log;
+
+          if (log.reserve(40)) {
+            log  = getTaskDeviceName(event->TaskIndex);
+            log += F(": Error reading sensor");
+            addLogMove(LOG_LEVEL_ERROR, log);
+          }
+        }
       }
 
       // Data valid?
@@ -162,6 +190,8 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
           }
         }
       } else {
+        UserVar[event->BaseVarIndex]     = NAN;
+        UserVar[event->BaseVarIndex + 1] = NAN;
         addLog(LOG_LEVEL_ERROR, concat(F("SHT4x: READ CRC Error, data: 0x"), formatToHex_array(data, 6)));
         errorCount++;
 
