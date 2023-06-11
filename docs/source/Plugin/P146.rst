@@ -81,9 +81,9 @@ Available options:
 
 * **Join Samples with same Timestamp**: When enabled will join/combine data with the same timestamp into a single CSV file.
 
-* **Export only enabled tasks**: Export only the tasks that are enabled, limiting the amount of data stored and sent.
+* **Export only enabled tasks**: Export only the tasks that are enabled, reducing the amount of data being sent. For binary data this will only change the 'taskinfo' string being sent. For CSV formatted data the data reduction may be significant as not enabled task columns will not have to be sent.
 
-Included in the Github repository is an example Python script to decode the binary format. This can be found in the ``misc``
+Included in the Github repository is an example Python script to decode the binary format. This can be found in the ``misc/CacheController`` folder.
 
 Data Acquisition
 ^^^^^^^^^^^^^^^^
@@ -95,9 +95,9 @@ Values
 
 The plugin provides the ``FileNr`` and ``FilePos`` values, reporting the last used file and filepos values.
 
-The values will be restored from RTC memory on reboot or deep sleep, so the unit can continue to upload data when re-connected.
+The last read position will be restored from RTC memory on reboot or deep sleep, so the unit can continue to upload data when re-connected.
 
-However the values are lost on a power cycle, so some data may be sent multiple times if the ESP is power cycled before a file was finished. (or no bin file will be deleted after upload).
+However the read position is lost on a power cycle, so some data may be sent multiple times if the ESP is power cycled before a file was finished. (or no bin file will be deleted after upload).
 
 Commands available
 ^^^^^^^^^^^^^^^^^^
@@ -112,7 +112,7 @@ Commands available
 Example
 -------
 
-Planned use for below Rules is a set of sensors and a GPS connected to an ESP(32), mounted in a RV (Camper). During the ride, the GPS generates an event at configured distance intervals, causing the data to be stored in the Cache Controller, including time-stamp by using the Dummy Device that will include that when sending data.
+Planned use for below Rules is a set of sensors and a GPS connected to an ESP(32), mounted in a RV (Camper). During the ride, the GPS generates an event at configured distance intervals, causing the data to be stored in the Cache Controller, including a time-stamp. Using a Dummy Device task allows to combine some values from separate sensors and thus allow to store it slightly more compact. Also the command ``TaskRunAt`` allows for dummy tasks to flush their data to the Cache Controller to have the same timestamp. Thus these values can later be combined by the CacheReader task on a single CSV line making it easier to process the data recorded during the trip.
 
 Once the home-location is reached, WiFi is connected and the MQTT Controller accepts the connection request, the data is bulk-sent to the MQTT server. In the code are instructions included on how to trigger another update by sending an MQTT message to the unit.
 
