@@ -13,7 +13,7 @@
     "
     | ``cachereader,sendtaskinfo``
     ","
-    | Sends out the taskinfo data to the configured Controller.
+    | Sends out the cached taskinfo data to the configured (MQTT) Controller.
     "
     "
     | ``cachereader,flush``
