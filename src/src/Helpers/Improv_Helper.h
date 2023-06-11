@@ -5,7 +5,7 @@
 
 #if FEATURE_IMPROV
 
-#include <improv.h>
+#include <ImprovWiFiLibrary.h>
 
 
 class Improv_Helper_t {
