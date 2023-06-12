@@ -295,11 +295,11 @@ bool ImprovWiFi::parseImprovSerial(size_t position, uint8_t byte, const uint8_t 
   const uint8_t type     = buffer[7];
   const uint8_t data_len = buffer[8];
 
-  if (position <= 8 + data_len) {
+  if (position <= (8u + data_len)) {
     return true;
   }
 
-  if (position == 8 + data_len + 1)
+  if (position == (8u + data_len + 1u))
   {
     if (computeChecksum(buffer, position - 1) != byte)
     {
