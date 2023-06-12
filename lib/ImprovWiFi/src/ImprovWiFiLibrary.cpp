@@ -1,5 +1,14 @@
 #include "ImprovWiFiLibrary.h"
 
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif 
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif 
+
+
+
 bool ImprovWiFi::handleSerial()
 {
   if ((_serial != nullptr) && (_serial->available() > 0))

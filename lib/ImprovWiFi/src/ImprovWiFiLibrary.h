@@ -1,6 +1,5 @@
 #pragma once
 
-#include <WiFi.h>
 #include <Stream.h>
 #include "ImprovTypes.h"
 
