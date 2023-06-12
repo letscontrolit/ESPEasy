@@ -34,8 +34,10 @@ void Improv_Helper_t::init()
 
   // Remove chip variant from the name
   const int pos = firmwareName.indexOf(F("ESP"));
+
   if (pos != -1) {
     const int endpos = firmwareName.indexOf(' ', pos);
+
     if (endpos != -1) {
       firmwareName.replace(firmwareName.substring(pos, endpos), F(""));
     }
@@ -50,14 +52,15 @@ void Improv_Helper_t::init()
 
   String chipModel = getChipModel();
 
-//  chipModel += F(" rev ");
-//  chipModel += getChipRevision();
+  //  chipModel += F(" rev ");
+  //  chipModel += getChipRevision();
   chipModel += '/';
   chipModel += (getFlashRealSizeInBytes() >> 20);
   chipModel += 'M';
+# ifdef ESP32
   chipModel += ' ';
   chipModel += getChipFeaturesString();
-
+# endif // ifdef ESP32
   _improv.setDeviceChipInfo(chipModel.c_str());
 }
 

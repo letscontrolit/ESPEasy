@@ -1,5 +1,14 @@
 #include "ImprovWiFiLibrary.h"
 
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif 
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif 
+
+
+
 bool ImprovWiFi::handleSerial()
 {
   if ((_serial != nullptr) && (_serial->available() > 0))
@@ -232,10 +241,16 @@ void ImprovWiFi::getAvailableWifiNetworks()
 
   for (int id = 0; id < networkNum; ++id)
   {
+    #ifdef ESP32
+    const bool openWiFi = WiFi.encryptionType(id) == WIFI_AUTH_OPEN;
+    #endif
+    #ifdef ESP8266
+    const bool openWiFi = WiFi.encryptionType(id) == ENC_TYPE_NONE;
+    #endif
     std::vector<std::string> wifinetworks = {
       WiFi.SSID(id).c_str(),
       std::string{ static_cast<char>(WiFi.RSSI(id)) },
-      (WiFi.encryptionType(id) == WIFI_AUTH_OPEN ? "NO" : "YES")
+      (openWiFi ? "NO" : "YES")
     };
 
     sendResponse(
