@@ -44,10 +44,11 @@ EspEasy_Console_t::EspEasy_Console_t()
   constexpr size_t buffSize = 256;
 # endif // ifdef ESP8266
 # ifdef ESP32
-  // Ideal buffer size is a trade-off between bootspeed 
+
+  // Ideal buffer size is a trade-off between bootspeed
   // and not missing data when the ESP is busy processing stuff.
-  // Since we do have a separate buffer in the console, 
-  // it may just take less time in the background tasks to dump 
+  // Since we do have a separate buffer in the console,
+  // it may just take less time in the background tasks to dump
   // any logs as larger chunks can be transferred at once.
   constexpr size_t buffSize = 512;
 # endif // ifdef ESP32
@@ -225,6 +226,9 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
 }
 
 void EspEasy_Console_t::init() {
+#if FEATURE_IMPROV
+  _improv.init();
+#endif
   updateActiveTaskUseSerial0();
 
   if (!Settings.UseSerial) {
@@ -371,11 +375,11 @@ String EspEasy_Console_t::getPortDescription() const
   if (_serial != nullptr) {
   #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     return _serial->getPortDescription();
-  #else 
+  #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     String res = F("HW Serial0 @ ");
     res += _serial->baudRate();
     return res;
-  #endif
+  #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   }
 
   return F("-");
@@ -429,30 +433,38 @@ void EspEasy_Console_t::readInput(Stream& stream)
     delay(0);
     const uint8_t SerialInByte = stream.read();
 
-    if (SerialInByte == 255) // binary data...
-    {
-      stream.flush();
-      return;
-    }
+    #if FEATURE_IMPROV
+    const bool processingImprov = _improv.handle(SerialInByte, &stream);
+    #else // if FEATURE_IMPROV
+    const bool processingImprov = false;
+    #endif // if FEATURE_IMPROV
 
-    if (isprint(SerialInByte))
-    {
-      if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
-        InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
+    if (!processingImprov) {
+      if (SerialInByte == 255) // binary data...
+      {
+        stream.flush();
+        return;
       }
-    }
 
-    if ((SerialInByte == '\r') || (SerialInByte == '\n'))
-    {
-      if (SerialInByteCounter == 0) {              // empty command?
-        break;
+      if (isprint(SerialInByte))
+      {
+        if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
+          InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
+        }
       }
-      InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
-      addToSerialBuffer('>');
-      addToSerialBuffer(String(InputBuffer_Serial));
-      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
-      SerialInByteCounter   = 0;
-      InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
+
+      if ((SerialInByte == '\r') || (SerialInByte == '\n'))
+      {
+        if (SerialInByteCounter == 0) {              // empty command?
+          break;
+        }
+        InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
+        addToSerialBuffer('>');
+        addToSerialBuffer(String(InputBuffer_Serial));
+        ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
+        SerialInByteCounter   = 0;
+        InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
+      }
     }
   }
 }

@@ -9,10 +9,16 @@
 
 
 class Improv_Helper_t {
+public:
 
+  Improv_Helper_t();
 
+  void init();
 
+  bool handle(uint8_t b, Stream *serialForWrite);
 
+private:
+  ImprovWiFi _improv;
 };
 
 #endif

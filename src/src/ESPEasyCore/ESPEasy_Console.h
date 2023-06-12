@@ -13,6 +13,11 @@
 
 #include <deque>
 
+#if FEATURE_IMPROV
+#include "../Helpers/Improv_Helper.h"
+#endif
+
+
 
 class EspEasy_Console_t {
 public:
@@ -97,6 +102,11 @@ private:
 # endif // if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
+#if FEATURE_IMPROV
+
+  Improv_Helper_t _improv;
+
+#endif
 
   /*
    #if ARDUINO_USB_MODE
