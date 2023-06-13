@@ -236,7 +236,7 @@ bool ImprovWiFi::tryConnectToWifi(const char *ssid, const char *password)
 
 void ImprovWiFi::getAvailableWifiNetworks()
 {
-  int networkNum = WiFi.scanNetworks();
+  const int networkNum = WiFi.scanNetworks();
 
   for (int id = 0; id < networkNum; ++id)
   {
@@ -259,6 +259,7 @@ void ImprovWiFi::getAvailableWifiNetworks()
         false));
     delay(1);
   }
+  WiFi.scanDelete();
 
   // final response
   sendResponse(

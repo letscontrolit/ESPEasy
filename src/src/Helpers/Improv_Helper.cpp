@@ -89,10 +89,14 @@ void Improv_Helper_t::init()
   chipModel += '/';
   chipModel += (getFlashRealSizeInBytes() >> 20);
   chipModel += 'M';
+
+  // TD-er: Removed chip features description as it is just too much info.
+/*
 # ifdef ESP32
   chipModel += ' ';
   chipModel += getChipFeaturesString();
 # endif // ifdef ESP32
+*/
   _improv.setDeviceChipInfo(chipModel.c_str());
 }
 
