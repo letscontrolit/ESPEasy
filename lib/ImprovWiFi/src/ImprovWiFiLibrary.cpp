@@ -2,11 +2,10 @@
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
-#endif 
+#endif
 #if defined(ESP32)
   # include <WiFi.h>
-#endif 
-
+#endif
 
 
 bool ImprovWiFi::handleSerial()
@@ -39,9 +38,9 @@ bool ImprovWiFi::handleSerial(uint8_t b, Stream *serialForWrite)
 
 void ImprovWiFi::onErrorCallback(ImprovTypes::Error err)
 {
-  if (onImproErrorCallback)
+  if (onImprovErrorCallback)
   {
-    onImproErrorCallback(err);
+    onImprovErrorCallback(err);
   }
 }
 
@@ -76,9 +75,9 @@ bool ImprovWiFi::onCommandCallback(ImprovTypes::ImprovCommand cmd)
 
       bool success = false;
 
-      if (customConnectWiFiCallback)
+      if (customTryConnectToWiFiCallback)
       {
-        success = customConnectWiFiCallback(cmd.ssid.c_str(), cmd.password.c_str());
+        success = customTryConnectToWiFiCallback(cmd.ssid.c_str(), cmd.password.c_str());
       }
       else
       {
@@ -195,7 +194,7 @@ void ImprovWiFi::sendDeviceUrl(ImprovTypes::Command cmd)
 
 void ImprovWiFi::onImprovError(OnImprovError *errorCallback)
 {
-  onImproErrorCallback = errorCallback;
+  onImprovErrorCallback = errorCallback;
 }
 
 void ImprovWiFi::onImprovConnected(OnImprovConnected *connectedCallback)
@@ -203,9 +202,9 @@ void ImprovWiFi::onImprovConnected(OnImprovConnected *connectedCallback)
   onImprovConnectedCallback = connectedCallback;
 }
 
-void ImprovWiFi::setCustomConnectWiFi(CustomConnectWiFi *connectWiFiCallBack)
+void ImprovWiFi::setCustomTryConnectToWiFi(CustomConnectWiFi *connectWiFiCallBack)
 {
-  customConnectWiFiCallback = connectWiFiCallBack;
+  customTryConnectToWiFiCallback = connectWiFiCallBack;
 }
 
 bool ImprovWiFi::tryConnectToWifi(const char *ssid, const char *password)
@@ -243,11 +242,11 @@ void ImprovWiFi::getAvailableWifiNetworks()
   {
     #ifdef ESP32
     const bool openWiFi = WiFi.encryptionType(id) == WIFI_AUTH_OPEN;
-    #endif
+    #endif 
     #ifdef ESP8266
     const bool openWiFi = WiFi.encryptionType(id) == ENC_TYPE_NONE;
-    #endif
-    std::vector<std::string> wifinetworks = {
+    #endif 
+    const std::vector<std::string> wifinetworks = {
       WiFi.SSID(id).c_str(),
       std::string{ static_cast<char>(WiFi.RSSI(id)) },
       (openWiFi ? "NO" : "YES")
@@ -327,6 +326,7 @@ ImprovTypes::ImprovCommand ImprovWiFi::parseImprovData(const std::vector<uint8_t
 ImprovTypes::ImprovCommand ImprovWiFi::parseImprovData(const uint8_t *data, size_t length, bool check_checksum)
 {
   ImprovTypes::ImprovCommand improv_command;
+
   improv_command.command = ImprovTypes::Command::UNKNOWN;
 
   if (length < 2) {
@@ -372,8 +372,8 @@ ImprovTypes::ImprovCommand ImprovWiFi::parseImprovData(const uint8_t *data, size
     std::string ssid(data + ssid_start, data + ssid_end);
     std::string password(data + pass_start, data + pass_end);
 
-    improv_command.command = command;
-    improv_command.ssid = ssid;
+    improv_command.command  = command;
+    improv_command.ssid     = ssid;
     improv_command.password = password;
     return improv_command;
   }

@@ -127,10 +127,10 @@ void onImprovConnected(OnImprovConnected *connectedCallback) /* line 133 */
 Method to set the typedef OnImprovConnected callback.
 
 <a name="line-135"></a>
-### Ⓜ️ void setCustomConnectWiFi(CustomConnectWiFi *connectWiFiCallBack)
+### Ⓜ️ void setCustomTryConnectToWiFi(CustomConnectWiFi *connectWiFiCallBack)
 
 ```cpp
-void setCustomConnectWiFi(CustomConnectWiFi *connectWiFiCallBack) /* line 138 */
+void setCustomTryConnectToWiFi(CustomConnectWiFi *connectWiFiCallBack) /* line 138 */
 ```
 
 Method to set the typedef CustomConnectWiFi callback.
