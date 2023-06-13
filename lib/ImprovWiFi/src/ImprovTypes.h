@@ -19,6 +19,13 @@
 #include <vector>
 
 namespace ImprovTypes {
+
+enum ParseState : uint8_t {
+  VALID_INCOMPLETE = 0,
+  VALID_COMPLETE = 1,
+  INVALID = 2
+};
+
 enum Error : uint8_t {
   ERROR_NONE              = 0x00,
   ERROR_INVALID_RPC       = 0x01,

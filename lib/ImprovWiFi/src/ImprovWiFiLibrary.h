@@ -61,7 +61,7 @@ private:
                             const std::string& to);
 
   // improv SDK
-  bool                       parseImprovSerial(size_t         position,
+  ImprovTypes::ParseState    parseImprovSerial(size_t         position,
                                                uint8_t        byte,
                                                const uint8_t *buffer);
   ImprovTypes::ImprovCommand parseImprovData(const std::vector<uint8_t>& data,
@@ -128,7 +128,7 @@ public:
    * This way you can use peek bytes, or plug in IMPROV handling in your console code.
    *
    */
-  bool handleSerial(uint8_t b,
+  ImprovTypes::Error handleSerial(uint8_t b,
                     Stream *serialForWrite);
 
   /**

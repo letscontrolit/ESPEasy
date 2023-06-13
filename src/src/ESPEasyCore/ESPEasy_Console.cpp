@@ -16,107 +16,6 @@
 
 #include <ESPEasySerialPort.h>
 
-/*
- #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
- # include "../Helpers/_Plugin_Helper_serial.h"
- #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
- */
-
-EspEasy_Console_Port::~EspEasy_Console_Port()
-{
-  if (_serial != nullptr) {
-    delete _serial;
-    _serial = nullptr;
-  }
-}
-
-void EspEasy_Console_Port::endPort()
-{
-  if (_serial != nullptr) {
-    _serial->end();
-  }
-}
-
-
-void EspEasy_Console_Port::addToSerialBuffer(char c)
-{
-  if (_serial != nullptr) {
-    _serialWriteBuffer.add(c);
-  }
-}
-
-void EspEasy_Console_Port::addToSerialBuffer(const String& line)
-{
-  if (_serial != nullptr) {
-    _serialWriteBuffer.add(line);
-  }
-}
-
-void EspEasy_Console_Port::addNewlineToSerialBuffer()
-{
-  if (_serial != nullptr) {
-    _serialWriteBuffer.addNewline();
-  }
-}
-
-bool EspEasy_Console_Port::process_serialWriteBuffer()
-{
-  bool res = false;
-
-  if (_serial != nullptr) {
-    const int snip = _serial->availableForWrite();
-
-    if  (snip > 0) {
-      res = _serialWriteBuffer.write(*_serial, snip) != 0;
-    }
-  }
-  return res;
-}
-
-bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
-{
-  if (SerialInByte == 255) // binary data...
-  {
-    _serial->flush();
-    return false;
-  }
-
-  if (isprint(SerialInByte))
-  {
-    if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
-      InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
-    }
-  }
-
-  if ((SerialInByte == '\r') || (SerialInByte == '\n'))
-  {
-    if (SerialInByteCounter == 0) {              // empty command?
-      return false;
-    }
-    InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
-    addToSerialBuffer('>');
-    addToSerialBuffer(String(InputBuffer_Serial));
-    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
-    SerialInByteCounter   = 0;
-    InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
-  }
-  return true;
-}
-
-String EspEasy_Console_Port::getPortDescription() const
-{
-  if (_serial != nullptr) {
-  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-    return _serial->getPortDescription();
-  #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-    String res = F("HW Serial0 @ ");
-    res += _serial->baudRate();
-    return res;
-  #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  }
-
-  return F("-");
-}
 
 EspEasy_Console_t::EspEasy_Console_t()
 {
@@ -309,9 +208,9 @@ void EspEasy_Console_t::init() {
 # if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 #  if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   _fallbackSerial._improv.init();
-#  endif
-# endif
-#endif
+#  endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+# endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#endif // if FEATURE_IMPROV
   updateActiveTaskUseSerial0();
 
   if (!Settings.UseSerial) {
@@ -407,6 +306,7 @@ bool EspEasy_Console_t::process_serialWriteBuffer() {
   }
 
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
   if (_fallbackSerial.process_serialWriteBuffer()) {
     res = true;
   }
@@ -469,22 +369,19 @@ bool EspEasy_Console_t::handledByPluginSerialIn()
 
 void EspEasy_Console_t::readInput(EspEasy_Console_Port& port)
 {
-  if (port._serial == nullptr) return;
-  while (port._serial->available())
+  size_t bytesToRead = port.available();
+
+  while (bytesToRead > 0)
   {
+    --bytesToRead;
     delay(0);
-    const uint8_t SerialInByte = port._serial->read();
+    const int SerialInByte = port.read();
 
-    #if FEATURE_IMPROV
-    const bool processingImprov = port._improv.handle(SerialInByte, port._serial);
-    #else // if FEATURE_IMPROV
-    const bool processingImprov = false;
-    #endif // if FEATURE_IMPROV
-
-    // FIXME TD-er: Must check if IMPROV 'ate' some chars and then feed them to the console input if last char was not an IMPROV char.
-    if (!processingImprov) {
-      if (port.process_consoleInput(SerialInByte))
+    if (SerialInByte >= 0) {
+      if (port.process_consoleInput(SerialInByte)) {
+        // Processed a full line
         return;
+      }
     }
   }
 }

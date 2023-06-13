@@ -7,6 +7,8 @@
 
 #include <ImprovWiFiLibrary.h>
 
+#include <deque>
+
 
 class Improv_Helper_t {
 public:
@@ -17,8 +19,15 @@ public:
 
   bool handle(uint8_t b, Stream *serialForWrite);
 
+  bool getFromBuffer(uint8_t& b);
+
+  size_t available() const;
+
 private:
   ImprovWiFi _improv;
+
+  std::deque<uint8_t> _tmpbuffer;
+  bool _mustDumpBuffer = false;
 };
 
 #endif

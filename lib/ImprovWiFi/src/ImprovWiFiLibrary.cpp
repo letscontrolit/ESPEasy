@@ -280,23 +280,23 @@ inline void ImprovWiFi::replaceAll(std::string& str, const std::string& from, co
   }
 }
 
-bool ImprovWiFi::parseImprovSerial(size_t position, uint8_t byte, const uint8_t *buffer)
+ImprovTypes::ParseState ImprovWiFi::parseImprovSerial(size_t position, uint8_t byte, const uint8_t *buffer)
 {
   constexpr uint8_t header[] = { 'I', 'M', 'P', 'R', 'O', 'V', ImprovTypes::IMPROV_SERIAL_VERSION };
 
   if (position < sizeof(header)) {
-    return byte == header[position];
+    return (byte == header[position]) ? ImprovTypes::ParseState::VALID_INCOMPLETE : ImprovTypes::ParseState::INVALID;
   }
 
   if (position <= 8) {
-    return true;
+    return ImprovTypes::ParseState::VALID_INCOMPLETE;
   }
 
   const uint8_t type     = buffer[7];
   const uint8_t data_len = buffer[8];
 
   if (position <= (8u + data_len)) {
-    return true;
+    return ImprovTypes::ParseState::VALID_INCOMPLETE;
   }
 
   if (position == (8u + data_len + 1u))
@@ -305,18 +305,18 @@ bool ImprovWiFi::parseImprovSerial(size_t position, uint8_t byte, const uint8_t 
     {
       _position = 0;
       onErrorCallback(ImprovTypes::Error::ERROR_INVALID_RPC);
-      return false;
+      return ImprovTypes::ParseState::INVALID;
     }
 
     if (type == ImprovTypes::ImprovSerialType::TYPE_RPC)
     {
       _position = 0;
       auto command = parseImprovData(&buffer[9], data_len, false);
-      return onCommandCallback(command);
+      return onCommandCallback(command) ? ImprovTypes::ParseState::VALID_COMPLETE : ImprovTypes::ParseState::INVALID;
     }
   }
 
-  return false;
+  return ImprovTypes::ParseState::INVALID;
 }
 
 ImprovTypes::ImprovCommand ImprovWiFi::parseImprovData(const std::vector<uint8_t>& data, bool check_checksum)

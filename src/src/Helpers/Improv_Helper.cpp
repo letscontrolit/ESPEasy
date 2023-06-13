@@ -91,18 +91,52 @@ void Improv_Helper_t::init()
   chipModel += 'M';
 
   // TD-er: Removed chip features description as it is just too much info.
-/*
-# ifdef ESP32
-  chipModel += ' ';
-  chipModel += getChipFeaturesString();
-# endif // ifdef ESP32
-*/
+
+  /*
+   # ifdef ESP32
+     chipModel += ' ';
+     chipModel += getChipFeaturesString();
+   # endif // ifdef ESP32
+   */
   _improv.setDeviceChipInfo(chipModel.c_str());
 }
 
 bool Improv_Helper_t::handle(uint8_t b, Stream *serialForWrite)
 {
-  return _improv.handleSerial(b, serialForWrite);
+  _tmpbuffer.push_back(b);
+
+  switch (_improv.handleSerial(b, serialForWrite)) {
+    case ImprovTypes::ParseState::VALID_INCOMPLETE:
+      _mustDumpBuffer = false;
+      return true;
+    case ImprovTypes::ParseState::VALID_COMPLETE:
+      _tmpbuffer.clear();
+      _mustDumpBuffer = false;
+      return true;
+    case ImprovTypes::ParseState::INVALID:
+      //   _mustDumpBuffer = true;
+      break;
+  }
+  _mustDumpBuffer = true;
+  return false;
+}
+
+bool Improv_Helper_t::getFromBuffer(uint8_t& b)
+{
+  if (available() == 0) { return false; }
+  b = _tmpbuffer.front();
+  _tmpbuffer.pop_front();
+
+  if (_tmpbuffer.size() == 0) {
+    _mustDumpBuffer = false;
+  }
+  return true;
+}
+
+size_t Improv_Helper_t::available() const
+{
+  if (_mustDumpBuffer) { return _tmpbuffer.size(); }
+  return 0u;
 }
 
 #endif // if FEATURE_IMPROV
