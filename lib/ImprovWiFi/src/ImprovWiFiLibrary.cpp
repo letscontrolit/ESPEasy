@@ -17,7 +17,7 @@ bool ImprovWiFi::handleSerial()
   return false;
 }
 
-bool ImprovWiFi::handleSerial(uint8_t b, Stream *serialForWrite)
+ImprovTypes::ParseState ImprovWiFi::handleSerial(uint8_t b, Stream *serialForWrite)
 {
   _serial = serialForWrite;
 
@@ -25,15 +25,19 @@ bool ImprovWiFi::handleSerial(uint8_t b, Stream *serialForWrite)
     _position = 0;
   }
 
-  if (parseImprovSerial(_position, b, _buffer))
+  auto res = parseImprovSerial(_position, b, _buffer);
+
+  switch (res)
   {
-    _buffer[_position++] = b;
+    case ImprovTypes::ParseState::VALID_INCOMPLETE:
+      _buffer[_position++] = b;
+      break;
+    case ImprovTypes::ParseState::VALID_COMPLETE:
+    case ImprovTypes::ParseState::INVALID:
+      _position = 0;
+      break;
   }
-  else
-  {
-    _position = 0;
-  }
-  return _position > 0;
+  return res;
 }
 
 void ImprovWiFi::onErrorCallback(ImprovTypes::Error err)

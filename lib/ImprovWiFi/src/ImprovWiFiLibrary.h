@@ -128,7 +128,7 @@ public:
    * This way you can use peek bytes, or plug in IMPROV handling in your console code.
    *
    */
-  ImprovTypes::Error handleSerial(uint8_t b,
+  ImprovTypes::ParseState handleSerial(uint8_t b,
                     Stream *serialForWrite);
 
   /**
