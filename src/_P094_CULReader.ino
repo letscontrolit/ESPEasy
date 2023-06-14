@@ -391,6 +391,33 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             success = true;
             P094_data->addFilter(event, parseString(string, 3));
           }
+        } else if (equals(subcmd, F("setfilters"))) {
+          // culreader,setfilters,<filter1>,...,<filterN>
+          // Examples for a filter definition
+          //   EBZ.02.12345678;all
+          //   *.02.*;15m
+          //   TCH.44.*;once
+          //   *.*.*;5m
+          P094_data_struct *P094_data =
+            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if ((nullptr != P094_data)) {
+            success = true;
+            P094_data->clearFilters();
+            int argNr = 3;
+            while (argNr > 0) {
+              const String filter = parseString(string, argNr);
+              if (!filter.isEmpty() && 
+                  P094_data->addFilter(event, filter)) 
+              {
+                ++argNr;
+              } else {
+                argNr = 0;
+              }
+            }
+            P094_data->saveFilters(event);
+            SaveSettings();
+          }
         }
       }
 

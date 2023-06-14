@@ -153,7 +153,8 @@ bool P094_filter::operator<(const P094_filter& rhs) const
   if (isValid() != rhs.isValid()) {
     return isValid();
   }
-
+/*
+  // Disable sorting, only sort by having valid filters at top.
   if (isWildcardManufacturer() != rhs.isWildcardManufacturer()) {
     return rhs.isWildcardManufacturer();
   }
@@ -177,7 +178,7 @@ bool P094_filter::operator<(const P094_filter& rhs) const
   if (!isWildcardSerial() && (_filter._serialNr != rhs._filter._serialNr)) {
     return _filter._serialNr < rhs._filter._serialNr;
   }
-
+*/
   return true;
 }
 
