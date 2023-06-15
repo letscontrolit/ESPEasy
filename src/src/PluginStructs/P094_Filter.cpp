@@ -179,7 +179,7 @@ bool P094_filter::operator<(const P094_filter& rhs) const
     return _filter._serialNr < rhs._filter._serialNr;
   }
 */
-  return true;
+  return false;
 }
 
 bool P094_filter::operator==(const P094_filter& rhs) const

@@ -8,7 +8,10 @@
 
 # include <Regexp.h>
 
+#include <MD5Builder.h>
+
 # include "../DataStructs/mBusPacket.h"
+# include "../Globals/MQTT.h"
 
 // # include "../Globals/ESPEasy_time.h"
 // # include "../Globals/TimeZone.h"
@@ -104,23 +107,13 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
 
   String res;
   const size_t nrFilters = _filters.size();
-
-  if (nrFilters == 0) {
-    return res;
-  }
-
+  size_t currentFilter = 0;
   const size_t chunkSize = P094_filter::getBinarySize();
-  size_t nrChunks        = 8;
-
-  if (nrFilters < nrChunks) {
-    nrChunks = nrFilters;
-  }
-
+  const size_t nrChunks  = 8;
   const size_t bufferSize = nrChunks * chunkSize;
 
-  size_t currentFilter = 0;
+  while (offset_in_block < 800 && res.isEmpty()) {
 
-  while (currentFilter < nrFilters && res.isEmpty()) {
     uint8_t buffer[bufferSize];
     ZERO_FILL(buffer);
 
@@ -137,8 +130,8 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
       }
       ++currentFilter;
     }
-    res              = SaveCustomTaskSettings(event->TaskIndex, buffer, writeSize, offset_in_block);
-    offset_in_block += writeSize;
+    res              = SaveCustomTaskSettings(event->TaskIndex, buffer, bufferSize, offset_in_block);
+    offset_in_block += bufferSize;
   }
   return res;
 }
@@ -174,6 +167,30 @@ bool P094_data_struct::addFilter(struct EventStruct *event, const String& filter
     P094_NR_FILTERS = _filters.size();
   }
   return true;
+}
+
+String P094_data_struct::getFiltersMD5() const
+{
+  MD5Builder md5;
+  uint8_t  checksum[16]{};
+  md5.begin();
+
+  bool firstByte = false;
+  const char separator[] = {'|', 0};
+  for (auto it = _filters.begin(); it != _filters.end(); ++it) {
+    if (it->isValid()) {
+      if (!firstByte) {
+        md5.add(separator);
+        firstByte = true;
+      }
+      md5.add(it->toString().c_str());
+    }
+  }
+
+  md5.calculate();
+  md5.getBytes(checksum);
+
+  return formatToHex_array(checksum, sizeof(checksum));
 }
 
 void P094_data_struct::WebformLoadFilters(uint8_t nrFilters) const

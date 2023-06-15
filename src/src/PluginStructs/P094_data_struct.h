@@ -86,6 +86,8 @@ public:
 
   bool          addFilter(struct EventStruct *event, const String& filter);
 
+  String        getFiltersMD5() const;
+
   void          WebformLoadFilters(uint8_t nrFilters) const;
 
   void          WebformSaveFilters(struct EventStruct *event,

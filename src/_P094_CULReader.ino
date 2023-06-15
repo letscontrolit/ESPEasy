@@ -242,6 +242,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, concat(F("CUL Reader: "), event->String2));
           }
+
           // Do not create events for dumping stats.
           const bool sendEvents = false;
           sendData(event, sendEvents);
@@ -262,8 +263,8 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           P094_data->getSentence(event->String2, P094_GET_APPEND_RECEIVE_SYSTIME);
 
           if (event->String2.length() > 0) {
-            const bool fromCUL = true;
-            const String source = NetworkGetHostname();
+            const bool   fromCUL = true;
+            const String source  = NetworkGetHostname();
 
             if (Plugin_094_match_all(event->TaskIndex, event->String2, source, fromCUL)) {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -331,85 +332,89 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      const String command = parseString(string, 1);
+
+      P094_data_struct *P094_data =
+        static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P094_data) {
+        if (equals(command, F("getfiltermd5"))) {
+          // to output a MD5 of the currently active filters.
+          string  = P094_data->getFiltersMD5();
+          success = true;
+        } else if (equals(command, F("getfilterenabled"))) {
+          string  = P094_GET_INTERVAL_FILTER;
+          success = true;
+        }
+      }
+      break;
+    }
+
+
     case PLUGIN_WRITE: {
-      const String cmd = parseString(string, 1);
+      const String cmd    = parseString(string, 1);
       const String subcmd = parseString(string, 2);
 
       if (cmd.startsWith(F("culreader"))) {
-        if (equals(cmd, F("culreader_write")) ||
-            equals(subcmd, F("write"))) {
-          // culreader,write,<text>
-          P094_data_struct *P094_data =
-            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P094_data_struct *P094_data =
+          static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-          if ((nullptr != P094_data)) {
+        if (equals(subcmd, F("enablefilter"))) {
+          // culreader,enablefilter
+          P094_SET_INTERVAL_FILTER(1);
+          success = true;
+        } else if (equals(subcmd, F("disablefilter"))) {
+          // culreader,disablefilter
+          P094_SET_INTERVAL_FILTER(0);
+          success = true;
+        } else if ((nullptr != P094_data)) {
+          if (equals(cmd, F("culreader_write")) ||
+              equals(subcmd, F("write"))) {
+            // culreader,write,<text>
             String param1 = parseStringKeepCase(string, 2);
             parseSystemVariables(param1, false);
             P094_data->sendString(param1);
             addLogMove(LOG_LEVEL_INFO, param1);
             success = true;
-          }
-        } else if (equals(subcmd, F("dumpstats"))) {
-          // culreader,dumpstats
-          P094_data_struct *P094_data =
-            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-          if ((nullptr != P094_data)) {
+          } else if (equals(subcmd, F("dumpstats"))) {
+            // culreader,dumpstats
             P094_data->prepare_dump_stats();
             success = true;
-          }
-        } else if (equals(subcmd, F("clearfilters"))) {
-          // culreader,clearfilters
-          P094_data_struct *P094_data =
-            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-          if ((nullptr != P094_data)) {
+          } else if (equals(subcmd, F("clearfilters"))) {
+            // culreader,clearfilters
             P094_data->clearFilters();
             success = true;
-          }
-        } else if (equals(subcmd, F("savefilters"))) {
-          // culreader,savefilters
-          P094_data_struct *P094_data =
-            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-          if ((nullptr != P094_data)) {
+          } else if (equals(subcmd, F("savefilters"))) {
+            // culreader,savefilters
             P094_data->saveFilters(event);
             SaveSettings();
             success = true;
-          }
-        } else if (equals(subcmd, F("addfilter"))) {
-          // culreader,addfilter,<filter>
-          // Examples for a filter definition
-          //   EBZ.02.12345678;all
-          //   *.02.*;15m
-          //   TCH.44.*;once
-          //   *.*.*;5m
-          P094_data_struct *P094_data =
-            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-          if ((nullptr != P094_data)) {
+          } else if (equals(subcmd, F("addfilter"))) {
+            // culreader,addfilter,<filter>
+            // Examples for a filter definition
+            //   EBZ.02.12345678;all
+            //   *.02.*;15m
+            //   TCH.44.*;once
+            //   *.*.*;5m
             success = true;
             P094_data->addFilter(event, parseString(string, 3));
-          }
-        } else if (equals(subcmd, F("setfilters"))) {
-          // culreader,setfilters,<filter1>,...,<filterN>
-          // Examples for a filter definition
-          //   EBZ.02.12345678;all
-          //   *.02.*;15m
-          //   TCH.44.*;once
-          //   *.*.*;5m
-          P094_data_struct *P094_data =
-            static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-          if ((nullptr != P094_data)) {
+          } else if (equals(subcmd, F("setfilters"))) {
+            // culreader,setfilters,<filter1>|...|<filterN>
+            // Examples for a filter definition
+            // culreader,setfilters,EBZ.02.12345678;all|*.02.*;15m|TCH.44.*;once|*.*.*;5m
             success = true;
             P094_data->clearFilters();
-            int argNr = 3;
+            const String argument = parseString(string, 3);
+            int argNr             = 1;
+
             while (argNr > 0) {
-              const String filter = parseString(string, argNr);
-              if (!filter.isEmpty() && 
-                  P094_data->addFilter(event, filter)) 
+              const String filter = parseString(argument, argNr, '|');
+
+              if (!filter.isEmpty())
               {
+                P094_data->addFilter(event, filter);
                 ++argNr;
               } else {
                 argNr = 0;
@@ -466,11 +471,11 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, const S
   if (res && fromCUL) {
   # endif // ifdef ESP8266
 
-    // Only collect stats from the actual CUL receiver, not when processing forwarded packets.
-    // On ESP8266: only collect stats on the filtered nodes or else we will likely run out of memory
-    P094_data->collect_stats_add(packet, source);
+  // Only collect stats from the actual CUL receiver, not when processing forwarded packets.
+  // On ESP8266: only collect stats on the filtered nodes or else we will likely run out of memory
+  P094_data->collect_stats_add(packet, source);
   # ifdef ESP8266
-  }
+}
 
   # endif // ifdef ESP8266
 
