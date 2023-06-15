@@ -45,17 +45,6 @@ struct EventStruct;
 
 extern int deviceCount;
 
-// Array of function pointers to call plugins.
-extern boolean (*Plugin_ptr[PLUGIN_MAX])(uint8_t,
-                                         struct EventStruct *,
-                                         String&);
-
-// Vector to match a "DeviceIndex" to a plugin ID.
-// INVALID_DEVICE_INDEX may be used as index for this array, thus one larger
-extern pluginID_t DeviceIndex_to_Plugin_id[PLUGIN_MAX + 1];
-
-// Map to match a plugin ID to a "DeviceIndex"
-extern std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 
 // Vector containing "DeviceIndex" alfabetically sorted.
 extern std::vector<deviceIndex_t> DeviceIndex_sorted;
@@ -111,11 +100,6 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 \*********************************************************************************************/
 bool PluginCall(uint8_t Function, struct EventStruct *event, String& str);
 
-
-/*********************************************************************************************\
-* Adding plugins at boot
-\*********************************************************************************************/
-bool addPlugin(pluginID_t pluginID, deviceIndex_t x);
 
 
 #endif // GLOBALS_PLUGIN_H

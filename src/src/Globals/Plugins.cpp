@@ -29,6 +29,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/_Plugin_init.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
@@ -37,21 +38,12 @@
 
 int deviceCount = -1;
 
-boolean (*Plugin_ptr[PLUGIN_MAX])(uint8_t,
-                                  struct EventStruct *,
-                                  String&);
-
-pluginID_t DeviceIndex_to_Plugin_id[PLUGIN_MAX + 1];
-std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index) {
-  if (index < PLUGIN_MAX) {
-    const pluginID_t pluginID = DeviceIndex_to_Plugin_id[index];
-    return pluginID != INVALID_PLUGIN_ID;
-  }
-  return false;
+  const pluginID_t pluginID = getPluginID_from_DeviceIndex(index);
+  return pluginID != INVALID_PLUGIN_ID;
 }
 
 bool validTaskIndex(taskIndex_t index) {
@@ -63,11 +55,7 @@ bool validPluginID(pluginID_t pluginID) {
 }
 
 bool validPluginID_fullcheck(pluginID_t pluginID) {
-  if (!validPluginID(pluginID)) {
-    return false;
-  }
-  auto it = Plugin_id_to_DeviceIndex.find(pluginID);
-  return (it != Plugin_id_to_DeviceIndex.end());
+  return getDeviceIndex_from_PluginID(pluginID) != INVALID_DEVICE_INDEX;
 }
 
 bool validUserVarIndex(userVarIndex_t index) {
@@ -95,10 +83,7 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
 pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
   if (validTaskIndex(taskIndex)) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-
-    if (validDeviceIndex(DeviceIndex)) {
-      return DeviceIndex_to_Plugin_id[DeviceIndex];
-    }
+    return getPluginID_from_DeviceIndex(DeviceIndex);
   }
   return INVALID_PLUGIN_ID;
 }
@@ -119,20 +104,7 @@ bool isPluginI2CPowerManager_from_TaskIndex(taskIndex_t taskIndex) {
 
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 {
-  if (pluginID != INVALID_PLUGIN_ID) {
-    auto it = Plugin_id_to_DeviceIndex.find(pluginID);
-
-    if (it != Plugin_id_to_DeviceIndex.end())
-    {
-      if (!validDeviceIndex(it->second)) { return INVALID_DEVICE_INDEX; }
-      if (Device[it->second].Number != pluginID) {
-        // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
-        addLog(LOG_LEVEL_ERROR, F("getDeviceIndex error in Device Vector"));
-      }
-      return it->second;
-    }
-  }
-  return INVALID_DEVICE_INDEX;
+  return getDeviceIndex_from_PluginID(pluginID);
 }
 
 /********************************************************************************************\
@@ -146,7 +118,7 @@ String getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex) {
   String deviceName;
 
   if (validDeviceIndex(deviceIndex)) {
-    Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, nullptr, deviceName);
+    PluginCall(deviceIndex, PLUGIN_GET_DEVICENAME, nullptr, deviceName);
   }
   return deviceName;
 }
@@ -171,7 +143,7 @@ bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2c
     String dummy;
     struct EventStruct TempEvent;
     TempEvent.Par1 = i2cAddress;
-    hasI2CAddress = Plugin_ptr[deviceIndex](PLUGIN_I2C_HAS_ADDRESS, &TempEvent, dummy);
+    hasI2CAddress = PluginCall(deviceIndex, PLUGIN_I2C_HAS_ADDRESS, &TempEvent, dummy);
   }
   return hasI2CAddress;
 }
@@ -187,7 +159,7 @@ uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
     struct EventStruct TempEvent;
     TempEvent.setTaskIndex(taskIndex);
     TempEvent.Par1 = 0;
-    if (Plugin_ptr[deviceIndex](PLUGIN_I2C_GET_ADDRESS, &TempEvent, dummy)) {
+    if (PluginCall(deviceIndex, PLUGIN_I2C_GET_ADDRESS, &TempEvent, dummy)) {
       getI2CAddress = TempEvent.Par1;
     }
   }
@@ -204,7 +176,7 @@ void sortDeviceIndexArray() {
   DeviceIndex_sorted.resize(deviceCount + 1);
 
   for (deviceIndex_t x = 0; x <= deviceCount; x++) {
-    if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
+    if (validPluginID(getPluginID_from_DeviceIndex(x))) {
       DeviceIndex_sorted[x] = x;
     } else {
       DeviceIndex_sorted[x] = INVALID_DEVICE_INDEX;
@@ -385,7 +357,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           }
           #endif
           START_TIMER;
-          retval = (Plugin_ptr[DeviceIndex](Function, TempEvent, command));
+          retval = (PluginCall(DeviceIndex, Function, TempEvent, command));
           STOP_TIMER_TASK(DeviceIndex, Function);
 
           if (Function == PLUGIN_INIT) {
@@ -460,8 +432,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_DEVICE_ADD:
     case PLUGIN_UNCONDITIONAL_POLL:    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
 
-      for (deviceIndex_t x = 0; x < PLUGIN_MAX; x++) {
-        if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
+      for (deviceIndex_t x = 0; validDeviceIndex(x); x++) {
           if (Function == PLUGIN_DEVICE_ADD) {
             #ifdef USE_SECOND_HEAP
             //HeapSelectIram ephemeral;
@@ -473,15 +444,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               unsigned int newSize = Device.size();
               newSize = newSize + 16 - (newSize % 16);
               Device.resize(newSize);
-
-              // FIXME TD-er: Also resize DeviceIndex_to_Plugin_id ?
             }
           }
           START_TIMER;
-          Plugin_ptr[x](Function, event, str);
+          PluginCall(x, Function, event, str);
           STOP_TIMER_TASK(x, Function);
           delay(0); // SMY: call delay(0) unconditionally
-        }
       }
       return true;
 
@@ -498,7 +466,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           const deviceIndex_t DeviceIndex = it->second.x;
           if (validDeviceIndex(DeviceIndex))  {
             START_TIMER;
-            Plugin_ptr[DeviceIndex](Function, &TempEvent, str);
+            PluginCall(DeviceIndex, Function, &TempEvent, str);
             STOP_TIMER_TASK(DeviceIndex, Function);
           }
         }
@@ -589,13 +557,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 /*
       if (Function == PLUGIN_REQUEST) {
         // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
-        for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
-          if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
-            if (Plugin_ptr[deviceIndex](Function, event, str)) {
-              delay(0); // SMY: call delay(0) unconditionally
-              CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
-              return true;
-            }
+        for (deviceIndex_t deviceIndex = 0; validDeviceIndex(deviceIndex); deviceIndex++) {
+          if (PluginCall(deviceIndex, Function, event, str)) {
+            delay(0); // SMY: call delay(0) unconditionally
+            CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
+            return true;
           }
         }
       }
@@ -789,7 +755,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // FIXME TD-er: Not sure if this should be called here.
             // It may be better if ranges are set in the call for default values and error values set via PLUGIN_INIT.
             // Also these may be plugin specific so perhaps create a helper function to load/save these values and call these helpers from the plugin code.
-            Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str); // Initialize value range(s)
+            PluginCall(DeviceIndex, PLUGIN_INIT_VALUE_RANGES, event, str); // Initialize value range(s)
           }
 
           if ((Function == PLUGIN_INIT)
@@ -812,7 +778,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
 
           if (performPluginCall) {
-            retval = Plugin_ptr[DeviceIndex](Function, event, str);
+            retval = PluginCall(DeviceIndex, Function, event, str);
           } else {
             retval = event->Source == EventValueSource::Enum::VALUE_SOURCE_UDP;
           }
@@ -820,7 +786,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           if (Function == PLUGIN_READ) {
             if (!retval) {
               String errorStr;
-              if (Plugin_ptr[DeviceIndex](PLUGIN_READ_ERROR_OCCURED, event, errorStr))
+              if (PluginCall(DeviceIndex, PLUGIN_READ_ERROR_OCCURED, event, errorStr))
               {
                 // Apparently the last read call resulted in an error
                 // Send event indicating the error.
@@ -942,7 +908,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
 
         START_TIMER;
-        bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
+        bool retval =  PluginCall(DeviceIndex, Function, event, str);
 
         // Calls may have updated ExtraTaskSettings, so validate them.
         ExtraTaskSettings.validate();
@@ -992,16 +958,3 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
   return false;
 }
 
-bool addPlugin(pluginID_t pluginID, deviceIndex_t x) {
-  if (x < PLUGIN_MAX) { 
-    DeviceIndex_to_Plugin_id[x] = pluginID; 
-    Plugin_id_to_DeviceIndex[pluginID] = x;
-    return true;
-  }
-  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    String log = F("System: Error - Too many Plugins. PLUGIN_MAX = ");
-    log += PLUGIN_MAX;
-    addLogMove(LOG_LEVEL_ERROR, log);
-  }
-  return false;
-}
