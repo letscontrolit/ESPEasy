@@ -110,14 +110,22 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
   size_t currentFilter = 0;
   const size_t chunkSize = P094_filter::getBinarySize();
   const size_t nrChunks  = 8;
-  const size_t bufferSize = nrChunks * chunkSize;
+  #ifdef ESP32
+  const size_t bufferSize = 1024;
+  #else
+  const size_t bufferSize = 256;
+  #endif
 
-  while (offset_in_block < 800 && res.isEmpty()) {
+  std::vector<uint8_t> buffer;
+  buffer.resize(bufferSize);
+  
 
-    uint8_t buffer[bufferSize];
-    ZERO_FILL(buffer);
+  while ((offset_in_block + bufferSize) <= 1024 && res.isEmpty()) {
+    for (auto it = buffer.begin(); it != buffer.end(); ++it) {
+      *it = 0;
+    }
 
-    uint8_t *writePos  = buffer;
+    uint8_t *writePos  = &buffer[0];
     size_t   writeSize = 0;
 
     while (writeSize < bufferSize && currentFilter < nrFilters) {
@@ -130,7 +138,7 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
       }
       ++currentFilter;
     }
-    res              = SaveCustomTaskSettings(event->TaskIndex, buffer, bufferSize, offset_in_block);
+    res              = SaveCustomTaskSettings(event->TaskIndex, &buffer[0], bufferSize, offset_in_block);
     offset_in_block += bufferSize;
   }
   return res;
