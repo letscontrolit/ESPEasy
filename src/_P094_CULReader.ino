@@ -407,17 +407,19 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             success = true;
             P094_data->clearFilters();
             const String argument = parseString(string, 3);
-            int argNr             = 1;
+            if (!argument.isEmpty()) {
+              int argNr             = 1;
 
-            while (argNr > 0) {
-              const String filter = parseString(argument, argNr, '|');
+              while (argNr > 0) {
+                const String filter = parseString(argument, argNr, '|');
 
-              if (!filter.isEmpty())
-              {
-                P094_data->addFilter(event, filter);
-                ++argNr;
-              } else {
-                argNr = 0;
+                if (!filter.isEmpty())
+                {
+                  P094_data->addFilter(event, filter);
+                  ++argNr;
+                } else {
+                  argNr = 0;
+                }
               }
             }
             P094_data->saveFilters(event);
