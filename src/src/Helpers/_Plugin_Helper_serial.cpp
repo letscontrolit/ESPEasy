@@ -196,19 +196,19 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 " var style = 'none';"
 " var i2cstyle = elem.value == 1 ? '' : 'none';"
 "	if (elem.value == 2) {"
-"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX0) ";"
-"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX0) ";"
+//"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX0) ";"
+//"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX0) ";"
 "   style = '';"
 # if SOC_UART_NUM > 1
 "	} else if (elem.value == 4) {"
-"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX1) ";"
-"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX1) ";"
+//"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX1) ";"
+//"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX1) ";"
 "   style = '';"
 #endif
 # if SOC_UART_NUM > 2
 "	} else if (elem.value == 5) {"
-"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX2) ";"
-"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX2) ";"
+//"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX2) ";"
+//"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX2) ";"
 "   style = '';"
 #endif
 #if USES_SW_SERIAL
@@ -221,7 +221,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 " document.getElementById('tr_i2cuart_addr').style.display   = i2cstyle;"
 " document.getElementById('tr_i2cuart_ch').style.display     = i2cstyle;"
 "}"),
-                  false);
+                  true);
   #endif // ifdef ESP32
 
   #if !USES_SW_SERIAL
