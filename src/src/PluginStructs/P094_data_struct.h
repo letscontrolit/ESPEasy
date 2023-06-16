@@ -73,11 +73,13 @@ public:
   bool init(ESPEasySerialPort port,
             const int16_t     serial_rx,
             const int16_t     serial_tx,
-            unsigned long     baudrate,
-            unsigned long     filterOffWindowTime_ms,
-            bool              intervalFilterEnabled,
-            bool              mute,
-            bool              collectStats);
+            unsigned long     baudrate);
+
+  void setFlags(unsigned long filterOffWindowTime_ms,
+                bool          intervalFilterEnabled,
+                bool          mute,
+                bool          collectStats);
+
 
   void          loadFilters(struct EventStruct *event,
                             uint8_t             nrFilters);

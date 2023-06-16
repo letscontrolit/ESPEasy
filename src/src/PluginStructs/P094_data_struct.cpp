@@ -38,11 +38,7 @@ void P094_data_struct::reset() {
 bool P094_data_struct::init(ESPEasySerialPort port,
                             const int16_t     serial_rx,
                             const int16_t     serial_tx,
-                            unsigned long     baudrate,
-                            unsigned long     filterOffWindowTime_ms,
-                            bool              intervalFilterEnabled,
-                            bool              mute,
-                            bool              collectStats) {
+                            unsigned long     baudrate) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
@@ -53,12 +49,20 @@ bool P094_data_struct::init(ESPEasySerialPort port,
     return false;
   }
   easySerial->begin(baudrate);
+  return true;
+}
+
+void  P094_data_struct::setFlags(unsigned long filterOffWindowTime_ms,
+                bool          intervalFilterEnabled,
+                bool          mute,
+                bool          collectStats)
+{
   filterOffWindowTime     = filterOffWindowTime_ms;
   interval_filter.enabled = intervalFilterEnabled;
   collect_stats           = collectStats;
   mute_messages           = mute;
-  return true;
 }
+
 
 void P094_data_struct::loadFilters(struct EventStruct *event, uint8_t nrFilters)
 {

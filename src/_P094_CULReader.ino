@@ -27,6 +27,8 @@ bool Plugin_094_match_all(taskIndex_t   taskIndex,
                           const String& source,
                           bool          fromCUL);
 
+void Plugin_094_setFlags(struct EventStruct *event);
+
 // Plugin settings:
 // Validate:
 // - [0..9]
@@ -215,11 +217,12 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             port,
             serial_rx,
             serial_tx,
-            P094_BAUDRATE,
-            P094_DISABLE_WINDOW_TIME_MS,
-            P094_GET_INTERVAL_FILTER,
-            P094_GET_MUTE_MESSAGES,
-            P094_GET_COLLECT_STATS)) {
+            P094_BAUDRATE)) {
+        P094_data->setFlags(
+          P094_DISABLE_WINDOW_TIME_MS,
+          P094_GET_INTERVAL_FILTER,
+          P094_GET_MUTE_MESSAGES,
+          P094_GET_COLLECT_STATS);
         P094_data->loadFilters(event, P094_NR_FILTERS);
 # if P094_DEBUG_OPTIONS
         P094_data->setGenerate_DebugCulData(P094_GET_GENERATE_DEBUG_CUL_DATA);
@@ -421,8 +424,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             success = true;
             P094_data->clearFilters();
             const String argument = parseString(string, 3);
+
             if (!argument.isEmpty()) {
-              int argNr             = 1;
+              int argNr = 1;
 
               while (argNr > 0) {
                 const String filter = parseString(argument, argNr, '|');
@@ -439,6 +443,10 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             P094_data->saveFilters(event);
             SaveSettings();
           }
+        }
+
+        if (success) {
+          Plugin_094_setFlags(event);
         }
       }
 
@@ -496,6 +504,20 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, const S
   # endif // ifdef ESP8266
 
   return res;
+}
+
+void Plugin_094_setFlags(struct EventStruct *event)
+{
+  P094_data_struct *P094_data =
+    static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if (nullptr != P094_data) {
+    P094_data->setFlags(
+      P094_DISABLE_WINDOW_TIME_MS,
+      P094_GET_INTERVAL_FILTER,
+      P094_GET_MUTE_MESSAGES,
+      P094_GET_COLLECT_STATS);
+  }
 }
 
 String Plugin_094_valuename(uint8_t value_nr, bool displayString) {
