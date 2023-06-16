@@ -41,6 +41,7 @@ bool P094_data_struct::init(ESPEasySerialPort port,
                             unsigned long     baudrate,
                             unsigned long     filterOffWindowTime_ms,
                             bool              intervalFilterEnabled,
+                            bool              mute,
                             bool              collectStats) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
@@ -55,6 +56,7 @@ bool P094_data_struct::init(ESPEasySerialPort port,
   filterOffWindowTime     = filterOffWindowTime_ms;
   interval_filter.enabled = intervalFilterEnabled;
   collect_stats           = collectStats;
+  mute_messages           = mute;
   return true;
 }
 
@@ -179,20 +181,31 @@ bool P094_data_struct::addFilter(struct EventStruct *event, const String& filter
 
 String P094_data_struct::getFiltersMD5() const
 {
+  if (mute_messages) {
+    return F("blockall");
+  }
+
   MD5Builder md5;
   uint8_t  checksum[16]{};
   md5.begin();
+
+  uint8_t nrFiltersAdded = 0;
 
   bool firstByte = false;
   const char separator[] = {'|', 0};
   for (auto it = _filters.begin(); it != _filters.end(); ++it) {
     if (it->isValid()) {
-      if (!firstByte) {
+      if (nrFiltersAdded == 0) {
         md5.add(separator);
-        firstByte = true;
       }
       md5.add(it->toString().c_str());
+      ++nrFiltersAdded;
     }
+  }
+
+  if (nrFiltersAdded == 0) {
+    // No filters, thus all messages will just pass
+    return F("pass");
   }
 
   md5.calculate();
@@ -703,6 +716,14 @@ bool P094_data_struct::parsePacket(const String& received, mBusPacket_t& packet)
       }
 
       return false;
+    }
+
+    if (mute_messages) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLogMove(LOG_LEVEL_INFO, concat(F("CUL Filter: Muted "), packet.toString()));
+      }
+
+      return false; // Mute all messages
     }
 
     if (!interval_filter.enabled || (_filters.size() == 0)) {

@@ -146,6 +146,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 # endif // if P094_DEBUG_OPTIONS
 
       addFormSubHeader(F("Filtering"));
+      addFormCheckBox(F("Mute Messages"), F("mute"), P094_GET_MUTE_MESSAGES);
       P094_html_show_matchForms(event);
       addFormCheckBox(F("Enable Interval Filter"), F("interval_filter"), P094_GET_INTERVAL_FILTER);
 
@@ -192,6 +193,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       P094_SET_GENERATE_DEBUG_CUL_DATA(isFormItemChecked(F("debug_data")));
 # endif // if P094_DEBUG_OPTIONS
       P094_SET_INTERVAL_FILTER(isFormItemChecked(F("interval_filter")));
+      P094_SET_MUTE_MESSAGES(isFormItemChecked(F("mute")));
       P094_SET_COLLECT_STATS(isFormItemChecked(F("collect_stats")));
 
       break;
@@ -216,6 +218,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             P094_BAUDRATE,
             P094_DISABLE_WINDOW_TIME_MS,
             P094_GET_INTERVAL_FILTER,
+            P094_GET_MUTE_MESSAGES,
             P094_GET_COLLECT_STATS)) {
         P094_data->loadFilters(event, P094_NR_FILTERS);
 # if P094_DEBUG_OPTIONS
@@ -347,6 +350,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         } else if (equals(command, F("getfilterenabled"))) {
           string  = P094_GET_INTERVAL_FILTER;
           success = true;
+        } else if (equals(command, F("getmuteenabled"))) {
+          string  = P094_GET_MUTE_MESSAGES;
+          success = true;
         }
       }
       break;
@@ -368,6 +374,14 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         } else if (equals(subcmd, F("disablefilter"))) {
           // culreader,disablefilter
           P094_SET_INTERVAL_FILTER(0);
+          success = true;
+        } else if (equals(subcmd, F("mute"))) {
+          // culreader,mute
+          P094_SET_MUTE_MESSAGES(1);
+          success = true;
+        } else if (equals(subcmd, F("unmute"))) {
+          // culreader,unmute
+          P094_SET_MUTE_MESSAGES(0);
           success = true;
         } else if ((nullptr != P094_data)) {
           if (equals(cmd, F("culreader_write")) ||

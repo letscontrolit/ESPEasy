@@ -39,6 +39,8 @@
 # define P094_GET_COLLECT_STATS    bitRead(PCONFIG(0), 3)
 # define P094_SET_COLLECT_STATS(X) bitWrite(PCONFIG(0), 3, X)
 
+# define P094_GET_MUTE_MESSAGES    bitRead(PCONFIG(0), 4)
+# define P094_SET_MUTE_MESSAGES(X) bitWrite(PCONFIG(0), 4, X)
 
 # define P094_NR_FILTERS           PCONFIG(1)
 
@@ -74,6 +76,7 @@ public:
             unsigned long     baudrate,
             unsigned long     filterOffWindowTime_ms,
             bool              intervalFilterEnabled,
+            bool              mute,
             bool              collectStats);
 
   void          loadFilters(struct EventStruct *event,
@@ -171,6 +174,7 @@ private:
   bool     debug_generate_CUL_data = false;
   # endif // if P094_DEBUG_OPTIONS
   bool collect_stats = false;
+  bool mute_messages = false;
 
   bool firstStatsIndexActive = false;
 
