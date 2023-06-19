@@ -194,12 +194,10 @@ String P094_data_struct::getFiltersMD5() const
   md5.begin();
 
   uint8_t nrFiltersAdded = 0;
-
-  bool firstByte = false;
   const char separator[] = {'|', 0};
   for (auto it = _filters.begin(); it != _filters.end(); ++it) {
     if (it->isValid()) {
-      if (nrFiltersAdded == 0) {
+      if (nrFiltersAdded != 0) {
         md5.add(separator);
       }
       md5.add(it->toString().c_str());
