@@ -15,9 +15,14 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex);
 
 boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string);
 
-
+void PluginSetup();
 
 void PluginInit(bool priorityOnly = false);
+
+extern const pluginID_t DeviceIndex_to_Plugin_id[];
+extern boolean (*Plugin_ptr[])(uint8_t,
+                        struct EventStruct *,
+                        String&);
 
 // Macro to forward declare the Plugin_NNN functions.
 //

@@ -429,23 +429,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
   switch (Function)
   {
     // Unconditional calls to all plugins
-    case PLUGIN_DEVICE_ADD:
     case PLUGIN_UNCONDITIONAL_POLL:    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
 
       for (deviceIndex_t x = 0; validDeviceIndex(x); x++) {
-          if (Function == PLUGIN_DEVICE_ADD) {
-            #ifdef USE_SECOND_HEAP
-            //HeapSelectIram ephemeral;
-            // TD-er: Disabled for now, as it is suspect for crashes.
-            #endif
-
-            if ((deviceCount + 2) > static_cast<int>(Device.size())) {
-              // Increase with 16 to get some compromise between number of resizes and wasted space
-              unsigned int newSize = Device.size();
-              newSize = newSize + 16 - (newSize % 16);
-              Device.resize(newSize);
-            }
-          }
           START_TIMER;
           PluginCall(x, Function, event, str);
           STOP_TIMER_TASK(x, Function);

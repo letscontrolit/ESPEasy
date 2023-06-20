@@ -2,6 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../Globals/Device.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
@@ -15,7 +16,7 @@
 
 
 // Vector to match a "DeviceIndex" to a plugin ID.
-static const pluginID_t DeviceIndex_to_Plugin_id[] PROGMEM =
+const pluginID_t DeviceIndex_to_Plugin_id[] PROGMEM =
 {
 #ifdef USES_P001
   1,
@@ -2080,7 +2081,7 @@ boolean (*Plugin_ptr[])(uint8_t,
 #endif // ifdef USES_P255
 };
 
-pluginID_t Plugin_id_to_DeviceIndex[PLUGIN_MAX + 1]{};
+deviceIndex_t Plugin_id_to_DeviceIndex[PLUGIN_MAX + 1]{};
 
 constexpr size_t DeviceIndex_to_Plugin_id_size = sizeof(DeviceIndex_to_Plugin_id);
 constexpr size_t Plugin_ptr_size               = sizeof(Plugin_ptr);
@@ -2100,6 +2101,7 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
 {
   if (deviceIndex < DeviceIndex_to_Plugin_id_size)
   {
+//    return static_cast<pluginID_t>(DeviceIndex_to_Plugin_id[deviceIndex]);
     return static_cast<pluginID_t>(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex));
   }
   return INVALID_PLUGIN_ID;
@@ -2114,44 +2116,53 @@ boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStru
   return false;
 }
 
-void PluginInit(bool priorityOnly)
+void PluginSetup()
 {
-  for (pluginID_t id = 0; id < Plugin_id_to_DeviceIndex_size; ++id)
+  static bool setupDone = false;
+  if (setupDone) return;
+
+  for (size_t id = 0; id < Plugin_id_to_DeviceIndex_size; ++id)
   {
     Plugin_id_to_DeviceIndex[id] = INVALID_DEVICE_INDEX;
   }
+  Device.resize(DeviceIndex_to_Plugin_id_size);
 
   for (deviceIndex_t deviceIndex = 0; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
   {
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
-    if (validPluginID(pluginID)) {
+    if (validPluginID(pluginID)) { 
       Plugin_id_to_DeviceIndex[pluginID] = deviceIndex;
+      struct EventStruct TempEvent;
+      String dummy;
+      PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
     }
   }
-
-  String dummy;
-  if (deviceCount == -1) {
-    PluginCall(PLUGIN_DEVICE_ADD, nullptr, dummy);
-      // Set all not supported plugins to disabled.
-    for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-      if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex])) {
-        Settings.TaskDeviceEnabled[taskIndex] = false;
-      }
-    }
-  }
-
 #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("PLUGIN_DEVICE_ADD"));
 #endif
 
+  sortDeviceIndexArray(); // Used in device selector dropdown.
+
+  setupDone = true;
+}
+
+void PluginInit(bool priorityOnly)
+{
+
+  // Set all not supported plugins to disabled.
+  for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
+    if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex])) {
+      Settings.TaskDeviceEnabled[taskIndex] = false;
+    }
+  }
+
+
   if (!priorityOnly) {
+    String dummy;
     PluginCall(PLUGIN_INIT_ALL, nullptr, dummy);
     #ifndef BUILD_NO_RAM_TRACKER
     logMemUsageAfter(F("PLUGIN_INIT_ALL"));
     #endif
-
-    sortDeviceIndexArray(); // Used in device selector dropdown.
   }
-
 }
