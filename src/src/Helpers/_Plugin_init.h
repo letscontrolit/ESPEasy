@@ -18,12 +18,12 @@ boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStru
 void PluginSetup();
 
 void PluginInit(bool priorityOnly = false);
-
+/*
 extern const pluginID_t DeviceIndex_to_Plugin_id[];
 extern boolean (*Plugin_ptr[])(uint8_t,
                         struct EventStruct *,
                         String&);
-
+*/
 // Macro to forward declare the Plugin_NNN functions.
 //
 // Uncrustify must not be used on macros, so turn it off.

@@ -1050,7 +1050,7 @@ const pluginID_t DeviceIndex_to_Plugin_id[] PROGMEM =
 // Array of function pointers to call plugins.
 boolean (*Plugin_ptr[])(uint8_t,
                         struct EventStruct *,
-                        String&) =
+                        String&) PROGMEM =
 {
 #ifdef USES_P001
   &Plugin_001,
@@ -2084,7 +2084,7 @@ boolean (*Plugin_ptr[])(uint8_t,
 deviceIndex_t Plugin_id_to_DeviceIndex[PLUGIN_MAX + 1]{};
 
 constexpr size_t DeviceIndex_to_Plugin_id_size = sizeof(DeviceIndex_to_Plugin_id);
-constexpr size_t Plugin_ptr_size               = sizeof(Plugin_ptr);
+//constexpr size_t Plugin_ptr_size               = sizeof(Plugin_ptr);
 constexpr size_t Plugin_id_to_DeviceIndex_size = sizeof(Plugin_id_to_DeviceIndex) / sizeof(Plugin_id_to_DeviceIndex[0]);
 
 
