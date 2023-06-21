@@ -136,6 +136,9 @@ struct LabelType {
     BINARY_FILENAME,
     BUILD_PLATFORM,
     GIT_HEAD,
+    #ifdef CONFIGURATION_CODE
+    CONFIGURATION_CODE_LBL,
+    #endif // ifdef CONFIGURATION_CODE
 
 
     I2C_BUS_STATE,

@@ -191,6 +191,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
     case LabelType::BUILD_PLATFORM:         return F("Build Platform");
     case LabelType::GIT_HEAD:               return F("Git HEAD");
+    #ifdef CONFIGURATION_CODE
+    case LabelType::CONFIGURATION_CODE_LBL: return F("Configuration code");
+    #endif // ifdef CONFIGURATION_CODE
 
     case LabelType::I2C_BUS_STATE:          return F("I2C Bus State");
     case LabelType::I2C_BUS_CLEARED_COUNT:  return F("I2C bus cleared count");
@@ -474,6 +477,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::GIT_HEAD:               return get_git_head();
+    #ifdef CONFIGURATION_CODE
+    case LabelType::CONFIGURATION_CODE_LBL: return getConfigurationCode();
+    #endif // ifdef CONFIGURATION_CODE
     case LabelType::I2C_BUS_STATE:          return toString(I2C_state);
     case LabelType::I2C_BUS_CLEARED_COUNT:  return String(I2C_bus_cleared_count);
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
