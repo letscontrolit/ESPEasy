@@ -162,7 +162,7 @@ void handle_sysinfo_json() {
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
   json_prop(F("git_head"),       getValue(LabelType::GIT_HEAD));
   #ifdef CONFIGURATION_CODE
-  json_prop(F("configuration_code"), getValue(LabelType::CONFIGURATION_CODE));
+  json_prop(F("configuration_code"), getValue(LabelType::CONFIGURATION_CODE_LBL));
   #endif // ifdef CONFIGURATION_CODE
   json_close();
 
