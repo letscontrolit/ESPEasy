@@ -9,9 +9,6 @@
 #include "../DataTypes/DeviceIndex.h"
 #include "../DataTypes/TaskIndex.h"
 
-#include <map>
-#include <vector>
-
 
 /********************************************************************************************\
    Structures to address the plugins and device configurations.

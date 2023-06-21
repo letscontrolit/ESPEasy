@@ -143,6 +143,7 @@ void ESPEasy_setup()
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
   PluginSetup();
+  CPluginSetup();
   
   initWiFi();
   WiFiEventData.clearAll();
