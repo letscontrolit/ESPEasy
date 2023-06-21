@@ -161,6 +161,9 @@ void handle_sysinfo_json() {
   json_prop(F("filename"),       getValue(LabelType::BINARY_FILENAME));
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
   json_prop(F("git_head"),       getValue(LabelType::GIT_HEAD));
+  #ifdef CONFIGURATION_CODE
+  json_prop(F("configuration_code"), getValue(LabelType::CONFIGURATION_CODE));
+  #endif // ifdef CONFIGURATION_CODE
   json_close();
 
   json_open(false, F("esp"));
@@ -514,6 +517,9 @@ void handle_sysinfo_Firmware() {
   addRowLabelValue_copy(LabelType::BINARY_FILENAME);
   addRowLabelValue_copy(LabelType::BUILD_PLATFORM);
   addRowLabelValue_copy(LabelType::GIT_HEAD);
+  #ifdef CONFIGURATION_CODE
+  addRowLabelValue_copy(LabelType::CONFIGURATION_CODE_LBL);
+  #endif  // ifdef CONFIGURATION_CODE
 }
 
 #ifndef WEBSERVER_SYSINFO_MINIMAL
