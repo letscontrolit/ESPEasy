@@ -50,6 +50,19 @@
 .. |P145_compileinfo| replace:: `.`
 .. |P145_usedlibraries| replace:: `.`
 
+.. |P146_name| replace:: :cyan:`Cache Reader`
+.. |P146_type| replace:: :cyan:`Generic`
+.. |P146_typename| replace:: :cyan:`Generic - Cache Reader`
+.. |P146_porttype| replace:: `.`
+.. |P146_status| replace:: :green:`NORMAL`
+.. |P146_github| replace:: P146_CacheControllerReader.ino
+.. _P146_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P146_CacheControllerReader.ino
+.. |P146_usedby| replace:: `.`
+.. |P146_shortinfo| replace:: `Cache Reader`
+.. |P146_maintainer| replace:: `TD-er`
+.. |P146_compileinfo| replace:: `.`
+.. |P146_usedlibraries| replace:: `.`
+
 .. |P147_name| replace:: :cyan:`SGP4x VOC/NOx sensor`
 .. |P147_type| replace:: :cyan:`Gases`
 .. |P147_typename| replace:: :cyan:`Gases - SGP4x VOC(/NOx)`
