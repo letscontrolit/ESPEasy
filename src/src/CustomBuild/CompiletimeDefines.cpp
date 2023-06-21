@@ -116,3 +116,11 @@ const __FlashStringHelper * get_CDN_url_prefix() {
     //return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/");
   #endif
 }
+
+const __FlashStringHelper * getConfigurationCode() {
+  #ifndef CONFIGURATION_CODE
+    return F("");
+  #else // ifndef CONFIGURATION_CODE
+    return F(CONFIGURATION_CODE);
+  #endif // ifndef CONFIGURATION_CODE
+}

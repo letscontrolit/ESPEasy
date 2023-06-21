@@ -120,7 +120,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
       char thumbprint[60] = {0};
-      LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<const uint8_t *>(&thumbprint), sizeof(thumbprint));
+      LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(&thumbprint), sizeof(thumbprint));
 
       if (strlen(thumbprint) != 59) {
         strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);

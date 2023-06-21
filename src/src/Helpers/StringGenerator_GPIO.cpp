@@ -79,6 +79,16 @@ String formatGpioName_RX(bool optional) {
   return formatGpioName(F("TX"), gpio_direction::gpio_input, optional);
 }
 
+String formatGpioName_serialTX(bool optional)
+{
+  return concat(F("ESP TX "), formatGpioName_TX(optional));
+}
+
+String formatGpioName_serialRX(bool optional)
+{
+  return concat(F("ESP RX "), formatGpioName_RX(optional));
+}
+
 String formatGpioName_TX_HW(bool optional) {
   return formatGpioName(F("RX (HW)"), gpio_direction::gpio_output, optional);
 }
@@ -153,92 +163,42 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
 
 const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 {
+#ifdef PIN_USB_D_MIN
+  if (gpio == PIN_USB_D_MIN) { return F("USB_D-"); }
+#endif
+#ifdef PIN_USB_D_PLUS
+  if (gpio == PIN_USB_D_PLUS) { return F("USB_D+"); }
+#endif
 
-  # ifdef ESP32S2
-
-  if (Settings.UseSerial) {
-    if (gpio == 1) { return F("TX0"); }
-
-    if (gpio == 3) { return F("RX0"); }
+  if (isFlashInterfacePin(gpio)) {
+    return F("Flash");
   }
 
-
-  if (FoundPSRAM() && (gpio == 26)) {
-    // ESP32-S2 PSRAM can use GPIO 26 (and 27..32 but those are always unavailable)
+#ifdef isPSRAMInterfacePin
+  if (isPSRAMInterfacePin(gpio)) {
     return F("PSRAM");
   }
 
+#endif
+
+  # ifdef ESP32S2
+
+
   #elif defined(ESP32S3)
-
-  // SPI0/1: GPIO26-32 are usually used for SPI flash and PSRAM and not recommended for other uses. 
-  // When using Octal Flash or Octal PSRAM or both, GPIO33~37 are connected to SPIIO4 ~ SPIIO7 and SPIDQS. 
-  // Therefore, on boards embedded with ESP32-S3R8 / ESP32-S3R8V chip, GPIO33~37 are also not recommended for other uses.
-
-  if ((gpio >= 26) && (gpio <= 37)) {
-    if (FoundPSRAM()) {
-      return F("PSRAM");
-    } else {
-      return F("Flash");
-    }
-  }
 
   // See Appendix A, page 71: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
 
-  if (gpio == 19) { return F("USB_D-"); }
-  if (gpio == 20) { return F("USB_D+"); }
-
-  if (Settings.UseSerial) {
-    if (gpio == 43) { return F("TX0"); }
-
-    if (gpio == 44) { return F("RX0"); }
-  }
-
   #elif defined(ESP32C3)
 
-  if (Settings.UseSerial) {
-    if (gpio == 21) { return F("TX0"); }
-
-    if (gpio == 20) { return F("RX0"); }
-  }
-
-  if (gpio == 18) { return F("USB_D-"); }
-  if (gpio == 19) { return F("USB_D+"); }
-  
   if (gpio == 11) {
     // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11
     // only when the chip is connected to an external flash, and this flash is powered by an external power supply
     return F("Flash Vdd"); 
   }
-  if ((gpio >= 12) && (gpio <= 17)) {
-    return F("Flash");
-  }
-
 
   # elif defined(ESP32_CLASSIC)
 
-  if (Settings.UseSerial) {
-    if (gpio == 1) { return F("TX0"); }
-
-    if (gpio == 3) { return F("RX0"); }
-  }
-
-
-  if (FoundPSRAM()) {
-    // ESP32 PSRAM can use GPIO 16 and 17
-    switch (gpio) {
-      case 16:
-      case 17:
-        return F("PSRAM");
-    }
-  }
-
   # elif defined(ESP8266)
-
-  if (Settings.UseSerial) {
-    if (gpio == 1) { return F("TX0"); }
-
-    if (gpio == 3) { return F("RX0"); }
-  }
 
   # else
     static_assert(false, "Implement processor architecture");
@@ -247,6 +207,12 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
   bool includeI2C = true;
   bool includeSPI = true;
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  // FIXME TD-er: Must check whether this can be a conflict.
+  bool includeSerial = false;
+  #else
+  bool includeSerial = true;
+  #endif
 
   #if FEATURE_ETHERNET
   bool includeEthernet = true;
@@ -259,6 +225,10 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     case PinSelectPurpose::SPI:
     case PinSelectPurpose::SPI_MISO:
       includeSPI = false;
+      break;
+    case PinSelectPurpose::Serial_input:
+    case PinSelectPurpose::Serial_output:
+      includeSerial = false;
       break;
     case PinSelectPurpose::Ethernet:
       #if FEATURE_ETHERNET
@@ -280,6 +250,22 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   if (includeSPI && Settings.isSPI_pin(gpio)) {
     return F("SPI");
   }
+
+  if (includeSerial) {
+    #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+    if (Settings.UseSerial && 
+        Settings.console_serial_port == 2)  // 2 == ESPEasySerialPort::serial0
+    #else
+    if (Settings.UseSerial) 
+    #endif
+    {
+      if (gpio == SOC_TX0) { return F("TX0"); }
+
+      if (gpio == SOC_RX0) { return F("RX0"); }
+    }
+  }
+
+
   #if FEATURE_ETHERNET
 
   if (Settings.isEthernetPin(gpio)) {
