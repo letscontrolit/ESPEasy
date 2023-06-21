@@ -872,7 +872,7 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 
   if (validDeviceIndex(deviceIndex)) {
     String dummy;
-    Plugin_ptr[deviceIndex](PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
+    PluginCall(deviceIndex, PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
   }
   STOP_TIMER(PLUGIN_CALL_DEVICETIMER_IN);
 }
@@ -1251,7 +1251,7 @@ void ESPEasy_Scheduler::process_system_event_queue() {
           // FIXME TD-er: LoadTaskSettings should only be called when needed, not pre-emptive.
           LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
         }
-        Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
+        PluginCall(Index, Function, &ScheduledEventQueue.front().event, tmpString);
       }
       break;
     case PluginPtrType::ControllerPlugin:

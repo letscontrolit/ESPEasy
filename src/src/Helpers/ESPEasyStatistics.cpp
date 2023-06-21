@@ -7,6 +7,8 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../Globals/Protocol.h"
 #include "../Helpers/Convert.h"
+#include "../Helpers/_Plugin_init.h"
+
 
 void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
   uint64_t minVal, maxVal;
@@ -44,7 +46,7 @@ void jsonStatistics(bool clearStats) {
         // Start new plugin stream
         json_open(); // open new plugin
         json_prop(F("name"), getPluginNameFromDeviceIndex(deviceIndex));
-        json_prop(F("id"),   String(DeviceIndex_to_Plugin_id[deviceIndex]));
+        json_prop(F("id"),   String(getPluginID_from_DeviceIndex(deviceIndex)));
         json_open(true, F("function")); // open function
         json_open(); // open first function element
       }

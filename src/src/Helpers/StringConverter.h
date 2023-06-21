@@ -10,6 +10,7 @@
 #include "../Helpers/StringConverter_Numerical.h"
 
 #include <IPAddress.h>
+#include <vector>
 
 // -V::569
 
