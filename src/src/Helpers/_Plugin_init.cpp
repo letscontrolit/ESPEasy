@@ -2081,12 +2081,10 @@ boolean (*Plugin_ptr[])(uint8_t,
 #endif // ifdef USES_P255
 };
 
-deviceIndex_t Plugin_id_to_DeviceIndex[PLUGIN_MAX + 1]{};
+deviceIndex_t* Plugin_id_to_DeviceIndex = nullptr;
+size_t Plugin_id_to_DeviceIndex_size = 0;
 
 constexpr size_t DeviceIndex_to_Plugin_id_size = sizeof(DeviceIndex_to_Plugin_id);
-//constexpr size_t Plugin_ptr_size               = sizeof(Plugin_ptr);
-constexpr size_t Plugin_id_to_DeviceIndex_size = sizeof(Plugin_id_to_DeviceIndex) / sizeof(Plugin_id_to_DeviceIndex[0]);
-
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {
@@ -2120,6 +2118,16 @@ void PluginSetup()
 {
   static bool setupDone = false;
   if (setupDone) return;
+  
+  if (DeviceIndex_to_Plugin_id_size > 0) {
+    // Get highest PluginID
+    // The last usable index of the Plugin_id_to_DeviceIndex array 
+    // must be usable to store the highest plugin ID.
+    // Thus size of array must be highest pluginID + 1.
+    Plugin_id_to_DeviceIndex_size = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] + 1;
+    Plugin_id_to_DeviceIndex = new deviceIndex_t[Plugin_id_to_DeviceIndex_size];
+  }
+
 
   for (size_t id = 0; id < Plugin_id_to_DeviceIndex_size; ++id)
   {
