@@ -43,8 +43,8 @@ struct EventStruct;
 extern int deviceCount;
 
 
-// Vector containing "DeviceIndex" alfabetically sorted.
-extern std::vector<deviceIndex_t> DeviceIndex_sorted;
+// Array containing "DeviceIndex" alfabetically sorted.
+extern deviceIndex_t* DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index);
@@ -83,8 +83,6 @@ uint8_t getTaskI2CAddress(taskIndex_t taskIndex);
 #endif // if FEATURE_I2C_GET_ADDRESS
 
 String        getPluginNameFromPluginID(pluginID_t pluginID);
-
-void          sortDeviceIndexArray();
 
 
 // Prepare I2C bus for next call to task

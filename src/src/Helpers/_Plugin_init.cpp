@@ -2118,6 +2118,8 @@ void PluginSetup()
 {
   static bool setupDone = false;
   if (setupDone) return;
+
+  setupDone = true;
   
   if (DeviceIndex_to_Plugin_id_size > 0) {
     // Get highest PluginID
@@ -2150,9 +2152,43 @@ void PluginSetup()
   logMemUsageAfter(F("PLUGIN_DEVICE_ADD"));
 #endif
 
-  sortDeviceIndexArray(); // Used in device selector dropdown.
+  // ********************************************************************************
+  // Device Sort routine, actual sorting alfabetically by plugin name.
+  // Sorting does happen case sensitive.
+  // Used in device selector dropdown.
+  // ********************************************************************************
 
-  setupDone = true;
+  // First fill the existing number of the DeviceIndex.
+  if (DeviceIndex_sorted) {
+    delete[] DeviceIndex_sorted;
+    DeviceIndex_sorted = nullptr;
+  }
+  DeviceIndex_sorted = new deviceIndex_t[deviceCount + 1];
+
+  for (deviceIndex_t x = 0; x <= deviceCount; x++) {
+    DeviceIndex_sorted[x] = getPluginID_from_DeviceIndex(x);
+  }
+
+  // Do the sorting.
+  int innerLoop;
+  int mainLoop;
+
+  for (mainLoop = 1; mainLoop <= deviceCount; mainLoop++)
+  {
+    innerLoop = mainLoop;
+
+    while (innerLoop  >= 1)
+    {
+      const String cur(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]));
+      const String prev(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1]));
+      if (cur < prev) {
+        deviceIndex_t temp = DeviceIndex_sorted[innerLoop - 1];
+        DeviceIndex_sorted[innerLoop - 1] = DeviceIndex_sorted[innerLoop];
+        DeviceIndex_sorted[innerLoop]     = temp;
+      }
+      innerLoop--;
+    }
+  }  
 }
 
 void PluginInit(bool priorityOnly)

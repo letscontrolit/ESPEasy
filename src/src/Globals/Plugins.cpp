@@ -38,7 +38,7 @@
 
 int deviceCount = -1;
 
-std::vector<deviceIndex_t> DeviceIndex_sorted;
+deviceIndex_t* DeviceIndex_sorted = nullptr;
 
 
 bool validDeviceIndex(deviceIndex_t index) {
@@ -82,8 +82,9 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
  ********************************************************************************************/
 pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
   if (validTaskIndex(taskIndex)) {
-    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-    return getPluginID_from_DeviceIndex(DeviceIndex);
+    const pluginID_t pluginID = Settings.TaskDeviceNumber[taskIndex];
+    if (supportedPluginID(pluginID))
+      return pluginID;
   }
   return INVALID_PLUGIN_ID;
 }
@@ -167,43 +168,6 @@ uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
 }
 #endif // if FEATURE_I2C_GET_ADDRESS
 
-// ********************************************************************************
-// Device Sort routine, actual sorting alfabetically by plugin name.
-// Sorting does happen case sensitive.
-// ********************************************************************************
-void sortDeviceIndexArray() {
-  // First fill the existing number of the DeviceIndex.
-  DeviceIndex_sorted.resize(deviceCount + 1);
-
-  for (deviceIndex_t x = 0; x <= deviceCount; x++) {
-    if (validPluginID(getPluginID_from_DeviceIndex(x))) {
-      DeviceIndex_sorted[x] = x;
-    } else {
-      DeviceIndex_sorted[x] = INVALID_DEVICE_INDEX;
-    }
-  }
-
-  // Do the sorting.
-  int innerLoop;
-  int mainLoop;
-
-  for (mainLoop = 1; mainLoop <= deviceCount; mainLoop++)
-  {
-    innerLoop = mainLoop;
-
-    while (innerLoop  >= 1)
-    {
-      const String cur(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]));
-      const String prev(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1]));
-      if (cur < prev) {
-        deviceIndex_t temp = DeviceIndex_sorted[innerLoop - 1];
-        DeviceIndex_sorted[innerLoop - 1] = DeviceIndex_sorted[innerLoop];
-        DeviceIndex_sorted[innerLoop]     = temp;
-      }
-      innerLoop--;
-    }
-  }
-}
 
 // ********************************************************************************
 // Functions to assist changing I2C multiplexer port or clock speed 
@@ -292,9 +256,9 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
   if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-    if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
-    {
-      if (validDeviceIndex(DeviceIndex)) {
+    if (validDeviceIndex(DeviceIndex)) {
+      if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
+      {
         if (Function == PLUGIN_INIT) {
           LoadTaskSettings(taskIndex);
         }
@@ -384,21 +348,21 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
 
         post_I2C_by_taskIndex(taskIndex, DeviceIndex);
         delay(0); // SMY: call delay(0) unconditionally
-      }
-    } else {
-      #if FEATURE_PLUGIN_STATS
-      if (Function == PLUGIN_INIT && Device[DeviceIndex].PluginStats) {
-        PluginTaskData_base *taskData = getPluginTaskData(taskIndex);
-        if (taskData == nullptr) {
-          // Plugin apparently does not have PluginTaskData.
-          // Create Plugin Task data if it has "Stats" checked.
-          LoadTaskSettings(taskIndex);
-          if (ExtraTaskSettings.anyEnabledPluginStats()) {
-            initPluginTaskData(taskIndex, new (std::nothrow) _StatsOnly_data_struct());
+      } else {
+        #if FEATURE_PLUGIN_STATS
+        if (Function == PLUGIN_INIT && Device[DeviceIndex].PluginStats) {
+          PluginTaskData_base *taskData = getPluginTaskData(taskIndex);
+          if (taskData == nullptr) {
+            // Plugin apparently does not have PluginTaskData.
+            // Create Plugin Task data if it has "Stats" checked.
+            LoadTaskSettings(taskIndex);
+            if (ExtraTaskSettings.anyEnabledPluginStats()) {
+              initPluginTaskData(taskIndex, new (std::nothrow) _StatsOnly_data_struct());
+            }
           }
         }
+        #endif // if FEATURE_PLUGIN_STATS
       }
-      #endif // if FEATURE_PLUGIN_STATS
     }
   }
   return retval;
