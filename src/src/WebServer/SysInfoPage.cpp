@@ -605,20 +605,8 @@ void handle_sysinfo_ESP_Board() {
 #   if defined(ESP32)
 
   addRowLabel(F("ESP Chip Features"));
-  {
-    String features;
-
-    if (getChipFeatures().wifi_bgn) { features += F("Wi-Fi bgn / "); }
-    if (getChipFeatures().bluetooth_ble) { features += F("BLE / "); }
-    if (getChipFeatures().ieee_802_15_4) { features += F("IEEE 802.15.4 / "); }
-    if (getChipFeatures().embeddedFlash) { features += F("Emb. Flash / "); }
-    if (getChipFeatures().embeddedPSRAM) { features += F("Emb. PSRAM"); }
-    features.trim();
-
-    if (features.endsWith(F("/"))) { features = features.substring(0, features.length() - 1); }
-    addHtml(features);
-  }
-
+  addHtml(getChipFeaturesString());
+  
   addRowLabelValue(LabelType::ESP_CHIP_REVISION);
 #   endif // if defined(ESP32)
   addRowLabelValue(LabelType::ESP_CHIP_CORES);

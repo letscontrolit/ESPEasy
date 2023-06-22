@@ -671,6 +671,20 @@ esp32_chip_features getChipFeatures() {
   return res;
 }
 
+String getChipFeaturesString() {
+  String features;
+
+  if (getChipFeatures().wifi_bgn) { features += F("Wi-Fi bgn / "); }
+  if (getChipFeatures().bluetooth_ble) { features += F("BLE / "); }
+  if (getChipFeatures().ieee_802_15_4) { features += F("IEEE 802.15.4 / "); }
+  if (getChipFeatures().embeddedFlash) { features += F("Emb. Flash / "); }
+  if (getChipFeatures().embeddedPSRAM) { features += F("Emb. PSRAM"); }
+  features.trim();
+
+  if (features.endsWith(F("/"))) { features = features.substring(0, features.length() - 1); }
+  return features;
+}
+
 bool getFlashChipOPI_wired() {
   #ifdef ESP32_CLASSIC
     return false;

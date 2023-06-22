@@ -3,23 +3,13 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../Helpers/SerialWriteBuffer.h"
-
-#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-# include <ESPeasySerial.h>
-#else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-# include <HardwareSerial.h>
-#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-#include <deque>
-
+#include "../ESPEasyCore/ESPEasy_Console_Port.h"
 
 class EspEasy_Console_t {
 public:
 
   EspEasy_Console_t();
 
-  ~EspEasy_Console_t();
 
   // Typically called after settings have been loaded.
   void reInit();
@@ -53,7 +43,7 @@ private:
 
   bool handledByPluginSerialIn();
 
-  void readInput(Stream& stream);
+  void readInput(EspEasy_Console_Port& port);
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPeasySerial * getPort();
@@ -65,48 +55,19 @@ private:
 
   int             availableForWrite();
 
-
-#define CONSOLE_INPUT_BUFFER_SIZE          128
-
-  int SerialInByteCounter{};
-  char InputBuffer_Serial[CONSOLE_INPUT_BUFFER_SIZE + 2]{};
-
-
-  SerialWriteBuffer_t _serialWriteBuffer;
-
   uint32_t _baudrate = 115200u;
+  EspEasy_Console_Port _mainSerial;
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+# if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  EspEasy_Console_Port _fallbackSerial;
+# endif
 
   // Cache the used settings, so we can check whether to change the console serial
   uint8_t _console_serial_port = DEFAULT_CONSOLE_PORT;
   int8_t _console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
   int8_t _console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
-  ESPeasySerial *_serial       = nullptr;
-# if USES_ESPEASY_CONSOLE_FALLBACK_PORT
-  ESPeasySerial *_serial_fallback = nullptr;
-  SerialWriteBuffer_t _serial_fallback_WriteBuffer;
-# endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
-
-#else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-# if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
-  HardwareSerial *_serial = &Serial0;
-# else // if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT
-  HardwareSerial *_serial = &Serial;
-# endif // if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT
-#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-
-
-  /*
-   #if ARDUINO_USB_MODE
-   #if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
-     HWCDC Serial;
-   #else
-     HWCDC USBSerial;
-   #endif
-   #endif
-   */
+#endif
 };
 
 
