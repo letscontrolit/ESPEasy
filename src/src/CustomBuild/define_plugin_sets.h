@@ -1517,9 +1517,9 @@ To create/register a plugin, you have to :
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
     #define USES_P129   // 74HC165 Input shiftregisters
-    #define USES_P133   // LTR390 UV
     #define USES_P135   // SCD4x
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+    #define USES_P133     // LTR390 UV
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
@@ -1819,6 +1819,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P153
     #define USES_P153   // Environment - SHT4x
+  #endif
+  #ifndef USES_P133
+    #define USES_P133     // LTR390 UV
   #endif
 
   // Controllers
@@ -3000,6 +3003,18 @@ To create/register a plugin, you have to :
   #ifdef ESP32S2
     #undef FEATURE_MDNS
     #define FEATURE_MDNS 0
+  #endif
+#endif
+
+#ifndef FEATURE_IMPROV
+  #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
+    #define FEATURE_IMPROV 0
+  #else
+    #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+      #define FEATURE_IMPROV 1
+    #else
+      #define FEATURE_IMPROV 0
+    #endif
   #endif
 #endif
 

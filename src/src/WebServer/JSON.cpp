@@ -14,6 +14,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/NPlugins.h"
 
+#include "../Helpers/_Plugin_init.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -564,9 +565,10 @@ void handle_buildinfo() {
     json_open(true, F("plugins"));
 
     for (deviceIndex_t x = 0; x <= deviceCount; x++) {
-      if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
+      const pluginID_t pluginID = getPluginID_from_DeviceIndex(x);
+      if (validPluginID(pluginID)) {
         json_open();
-        json_number(F("id"), String(DeviceIndex_to_Plugin_id[x]));
+        json_number(F("id"), String(pluginID));
         json_prop(F("name"), getPluginNameFromDeviceIndex(x));
         json_close();
       }

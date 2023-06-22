@@ -147,6 +147,9 @@ void ESPEasy_setup()
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
+  PluginSetup();
+  CPluginSetup();
+  
   initWiFi();
   WiFiEventData.clearAll();
 
