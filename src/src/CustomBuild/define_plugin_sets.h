@@ -2931,6 +2931,10 @@ To create/register a plugin, you have to :
 # if USES_HWCDC || USES_USBCDC
 #  define USES_ESPEASY_CONSOLE_FALLBACK_PORT 1
 # endif // if USES_HWCDC || USES_USBCDC
+# ifndef PLUGIN_USES_SERIAL
+// Needs Plugin_Helper_serial
+#  define PLUGIN_USES_SERIAL
+# endif
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
 
