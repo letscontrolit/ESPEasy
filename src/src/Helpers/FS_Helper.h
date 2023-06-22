@@ -1,7 +1,6 @@
 #ifndef HELPERS_SPIFFS_HELPER_H
 #define HELPERS_SPIFFS_HELPER_H
 
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 

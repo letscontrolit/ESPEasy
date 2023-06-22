@@ -232,7 +232,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Separator"), F("separator"), 3, separatorLabels, separatorOptions, P146_SEPARATOR_CHARACTER);
       }
       addFormCheckBox(F("Join Samples with same Timestamp"), F("jointimestamp"), P146_GET_JOIN_TIMESTAMP);
-      addFormCheckBox(F("Export only set tasks"),            F("onlysettasks"),  P146_GET_ONLY_SET_TASKS);
+      addFormCheckBox(F("Export only enabled tasks"),            F("onlysettasks"),  P146_GET_ONLY_SET_TASKS);
 
       addFormNote(F("Download button link only updated after saving"));
 

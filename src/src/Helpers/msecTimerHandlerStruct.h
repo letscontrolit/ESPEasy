@@ -2,7 +2,7 @@
 #define HELPERS_MSECTIMERHANDLERSTRUCT_H
 
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 #include <list>
 
 #include "../DataStructs/timer_id_couple.h"

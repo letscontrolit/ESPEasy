@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2023-04-30
+// FIX: Loading and saving line-settings for font and alignment used overlapping page-variables
 // @tonhuisman: 2023-03-07
 // CHG: Parse text to display without trimming off leading and trailing spaces
 // @tonhuisman: 2023-01-02
@@ -466,7 +468,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Modify font"));
           html_table_header(F("Alignment"));
 
-          for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
+          for (int varNr = 0; varNr < P36_Nlines; varNr++)
           {
             html_TR_TD();                     // All columns use max. width available
             addHtml(F("&nbsp;"));
@@ -482,7 +484,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                        );            // class name
             html_TD();               // font
             FontChoice[varNr] = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
-            addSelector(getPluginCustomArgName(varNr),
+            addSelector(getPluginCustomArgName(varNr + 100),
                         5,
                         optionsFont,
                         optionValuesFont,
@@ -494,7 +496,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                         );
             html_TD();                     // alignment
             AlignmentChoice[varNr] = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
-            addSelector(getPluginCustomArgName(varNr + 100),
+            addSelector(getPluginCustomArgName(varNr + 200),
                         4,
                         optionsAlignment,
                         optionValuesAlignment,
@@ -594,10 +596,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_lines.DisplayLinesV1[varNr].FontType = 0xff;
             lModifyLayout                             = 0xC0; // keep 2 upper bits untouched
             // ModifyFont
-            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Font,      uint8_t(getFormItemInt(getPluginCustomArgName(varNr)) & 0xff));
+            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Font,      uint8_t(getFormItemInt(getPluginCustomArgName(varNr + 100)) & 0xff));
 
             // Alignment
-            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Alignment, uint8_t(getFormItemInt(getPluginCustomArgName(varNr + 100)) & 0xff));
+            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Alignment, uint8_t(getFormItemInt(getPluginCustomArgName(varNr + 200)) & 0xff));
             P036_lines.DisplayLinesV1[varNr].ModifyLayout = uint8_t(lModifyLayout & 0xff);
             P036_lines.DisplayLinesV1[varNr].FontSpace    = 0xff;
             P036_lines.DisplayLinesV1[varNr].reserved     = 0xff;
@@ -1198,7 +1200,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
             if (strlen > 0) {
               const float fAvgPixPerChar = static_cast<float>(PixLength) / strlen;
-              const int   iCharToRemove  = ceil((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
+              const int   iCharToRemove  = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
               // shorten string because OLED controller can not handle such long strings
               *currentLine = currentLine->substring(0, strlen - iCharToRemove);

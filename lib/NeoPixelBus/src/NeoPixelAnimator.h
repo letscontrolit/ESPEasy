@@ -27,7 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
-#include "internal/NeoEase.h"
+#include "internal/animations/NeoEase.h"
 
 enum AnimationState
 {

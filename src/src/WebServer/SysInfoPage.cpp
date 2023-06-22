@@ -2,68 +2,66 @@
 
 #if defined(WEBSERVER_SYSINFO) || SHOW_SYSINFO_JSON
 
-#include "../WebServer/AccessControl.h"
-#include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
+# include "../WebServer/AccessControl.h"
+# include "../WebServer/ESPEasy_WebServer.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/Markup.h"
+# include "../WebServer/Markup_Buttons.h"
 
 
-#include "../../ESPEasy-Globals.h"
+# include "../../ESPEasy-Globals.h"
 
-#include "../Commands/Diagnostic.h"
+# include "../Commands/Diagnostic.h"
 
-#include "../CustomBuild/CompiletimeDefines.h"
+# include "../CustomBuild/CompiletimeDefines.h"
 
-#include "../DataStructs/RTCStruct.h"
+# include "../DataStructs/RTCStruct.h"
 
-#include "../ESPEasyCore/ESPEasyEth.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+# include "../ESPEasyCore/ESPEasyEth.h"
+# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../ESPEasyCore/ESPEasyWifi.h"
 
-#include "../Globals/CRCValues.h"
-#include "../Globals/ESPEasy_time.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
-#include "../Globals/NetworkState.h"
-#include "../Globals/RTC.h"
-#include "../Globals/Settings.h"
+# include "../Globals/CRCValues.h"
+# include "../Globals/ESPEasy_time.h"
+# include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Globals/NetworkState.h"
+# include "../Globals/RTC.h"
+# include "../Globals/Settings.h"
 
-#include "../Helpers/Convert.h"
-#include "../Helpers/ESPEasyStatistics.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Hardware.h"
-#include "../Helpers/Memory.h"
-#include "../Helpers/Misc.h"
-#include "../Helpers/Networking.h"
-#include "../Helpers/OTA.h"
-#include "../Helpers/StringConverter.h"
-#include "../Helpers/StringGenerator_GPIO.h"
-#include "../Helpers/StringGenerator_System.h"
-#include "../Helpers/StringProvider.h"
+# include "../Helpers/Convert.h"
+# include "../Helpers/ESPEasyStatistics.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Hardware.h"
+# include "../Helpers/Memory.h"
+# include "../Helpers/Misc.h"
+# include "../Helpers/Networking.h"
+# include "../Helpers/OTA.h"
+# include "../Helpers/StringConverter.h"
+# include "../Helpers/StringGenerator_GPIO.h"
+# include "../Helpers/StringGenerator_System.h"
+# include "../Helpers/StringProvider.h"
 
-#include "../Static/WebStaticData.h"
+# include "../Static/WebStaticData.h"
 
-#if FEATURE_MQTT
-# include "../Globals/MQTT.h"
-# include "../ESPEasyCore/Controller.h" // For finding enabled MQTT controller
-#endif
+# if FEATURE_MQTT
+#  include "../Globals/MQTT.h"
+#  include "../ESPEasyCore/Controller.h" // For finding enabled MQTT controller
+# endif // if FEATURE_MQTT
 
-#ifdef ESP32
-# include <esp_partition.h>
-#endif // ifdef ESP32
-
-
+# ifdef ESP32
+#  include <esp_partition.h>
+# endif // ifdef ESP32
 
 
+# if SHOW_SYSINFO_JSON
 
-#if SHOW_SYSINFO_JSON
 // ********************************************************************************
 // Web Interface sysinfo page
 // ********************************************************************************
 void handle_sysinfo_json() {
-  # ifndef BUILD_NO_RAM_TRACKER
+  #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysinfo"));
-  # endif // ifndef BUILD_NO_RAM_TRACKER
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
@@ -163,6 +161,9 @@ void handle_sysinfo_json() {
   json_prop(F("filename"),       getValue(LabelType::BINARY_FILENAME));
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
   json_prop(F("git_head"),       getValue(LabelType::GIT_HEAD));
+  #ifdef CONFIGURATION_CODE
+  json_prop(F("configuration_code"), getValue(LabelType::CONFIGURATION_CODE_LBL));
+  #endif // ifdef CONFIGURATION_CODE
   json_close();
 
   json_open(false, F("esp"));
@@ -480,7 +481,7 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
 # endif // ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
   addRowLabelValue(LabelType::WIFI_TX_MAX_PWR);
   addRowLabelValue(LabelType::WIFI_CUR_TX_PWR);
   addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
@@ -516,6 +517,9 @@ void handle_sysinfo_Firmware() {
   addRowLabelValue_copy(LabelType::BINARY_FILENAME);
   addRowLabelValue_copy(LabelType::BUILD_PLATFORM);
   addRowLabelValue_copy(LabelType::GIT_HEAD);
+  #ifdef CONFIGURATION_CODE
+  addRowLabelValue_copy(LabelType::CONFIGURATION_CODE_LBL);
+  #endif  // ifdef CONFIGURATION_CODE
 }
 
 #ifndef WEBSERVER_SYSINFO_MINIMAL
@@ -529,6 +533,13 @@ void handle_sysinfo_SystemStatus() {
   # if FEATURE_SD
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
   # endif // if FEATURE_SD
+
+  addRowLabelValue(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
+  addRowLabelValue(LabelType::CONSOLE_SERIAL_PORT);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  addRowLabelValue(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
+  addRowLabelValue(LabelType::CONSOLE_FALLBACK_PORT);
+#endif
 
   if (Settings.EnableClearHangingI2Cbus()) {
     addRowLabelValue(LabelType::I2C_BUS_STATE);
@@ -571,24 +582,28 @@ void handle_sysinfo_ESP_Board() {
 
   addRowLabelValue(LabelType::ESP_CHIP_FREQ);
   addHtml(F(" MHz"));
-#ifdef ESP32
+#   ifdef ESP32
   addRowLabelValue(LabelType::ESP_CHIP_XTAL_FREQ);
   addHtml(F(" MHz"));
   addRowLabelValue(LabelType::ESP_CHIP_APB_FREQ);
   addHtml(F(" MHz"));
-#endif
+#   endif // ifdef ESP32
 
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
+#   if defined(ESP32)
 
-  # if defined(ESP32)
+  addRowLabel(F("ESP Chip Features"));
+  addHtml(getChipFeaturesString());
+  
   addRowLabelValue(LabelType::ESP_CHIP_REVISION);
-  # endif // if defined(ESP32)
+#   endif // if defined(ESP32)
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
   addRowLabelValue(LabelType::ESP_BOARD_NAME);
 }
-#endif
 
-#ifndef WEBSERVER_SYSINFO_MINIMAL
+#  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
+
+#  ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
@@ -616,6 +631,11 @@ void handle_sysinfo_Storage() {
     }
     addHtml(F(" Device: "));
     addHtml(getValue(LabelType::FLASH_CHIP_MODEL));
+    #ifdef ESP32
+    if (getChipFeatures().embeddedFlash) {
+      addHtml(F(" (Embedded)"));
+    }
+    #endif
   }
   const uint32_t realSize = getFlashRealSizeInBytes();
   const uint32_t ideSize  = ESP.getFlashChipSize();

@@ -1,7 +1,7 @@
 #ifndef DATATYPES_TASKINDEX_H
 #define DATATYPES_TASKINDEX_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 typedef uint8_t taskIndex_t;
 typedef uint16_t userVarIndex_t;

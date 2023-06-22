@@ -13,6 +13,8 @@
 struct UserVarStruct {
   UserVarStruct();
 
+  void          clear();
+
   // Overloading [] operator to access elements in array style
   float       & operator[](unsigned int index);
   const float & operator[](unsigned int index) const;
@@ -30,7 +32,7 @@ struct UserVarStruct {
   void    setInt32(taskIndex_t taskIndex,
                    uint8_t     varNr,
                    int32_t     value);
-#endif
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   // 32 bit unsigned int stored at the memory location of the float
   uint32_t getUint32(taskIndex_t taskIndex,
@@ -54,7 +56,7 @@ struct UserVarStruct {
   void     setUint64(taskIndex_t taskIndex,
                      uint8_t     varNr,
                      uint64_t    value);
-#endif
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   float getFloat(taskIndex_t taskIndex,
                  uint8_t     varNr) const;
@@ -63,7 +65,7 @@ struct UserVarStruct {
                  float       value);
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
-
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   // Double stored at the memory location of the float
   double getDouble(taskIndex_t taskIndex,
                    uint8_t     varNr) const;
@@ -71,8 +73,9 @@ struct UserVarStruct {
                    uint8_t     varNr,
                    double      value);
 #endif
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
-  double getAsDouble(taskIndex_t  taskIndex,
+  ESPEASY_RULES_FLOAT_TYPE getAsDouble(taskIndex_t  taskIndex,
                      uint8_t      varNr,
                      Sensor_VType sensorType) const;
 
@@ -84,21 +87,19 @@ struct UserVarStruct {
 
   void set(taskIndex_t   taskIndex,
            uint8_t       varNr,
-           const double& value,
+           const ESPEASY_RULES_FLOAT_TYPE& value,
            Sensor_VType  sensorType);
 
   bool isValid(taskIndex_t  taskIndex,
                uint8_t      varNr,
                Sensor_VType sensorType) const;
 
-
-
-  size_t                   getNrElements() const;
-
-  uint8_t                * get();
+  uint8_t                * get(size_t& sizeInBytes);
 
   const TaskValues_Data_t* getTaskValues_Data(taskIndex_t taskIndex) const;
-  TaskValues_Data_t* getTaskValues_Data(taskIndex_t taskIndex);
+  TaskValues_Data_t      * getTaskValues_Data(taskIndex_t taskIndex);
+
+  uint32_t                 compute_CRC32() const;
 
 private:
 

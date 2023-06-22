@@ -1,7 +1,5 @@
 #include "../Helpers/StringParser.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/GPIO.h"
@@ -13,17 +11,17 @@
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
 #include "../Globals/Protocol.h"
+#include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
-#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include <Arduino.h>
+
 
 /********************************************************************************************\
    Parse string template
@@ -82,7 +80,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         unsigned int varNum;
 
         if (validUIntFromString(valueName, varNum)) {
-          unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
+          unsigned char nr_decimals = maxNrDecimals_fpType(getCustomFloatVar(varNum));
           bool trimTrailingZeros    = true;
 
           if (devNameEqInt) {
@@ -92,7 +90,11 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             // There is some formatting here, so do not throw away decimals
             trimTrailingZeros = false;
           }
+          #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
           String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          #else
+          String value = floatToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          #endif
           transformValue(
             newString, 
             minimal_lineSize, 
@@ -334,7 +336,7 @@ void transformValue(
     if (valueFormat.length() > 0) // do the checks only if a Format is defined to optimize loop
     {
       int logicVal    = 0;
-      double valFloat = 0.0;
+      ESPEASY_RULES_FLOAT_TYPE valFloat{};
 
       if (validDoubleFromString(value, valFloat))
       {
@@ -430,7 +432,11 @@ void transformValue(
                   break;
               }
               bool trimTrailingZeros = false;
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
               value = doubleToString(valFloat, y, trimTrailingZeros);
+#else
+              value = floatToString(valFloat, y, trimTrailingZeros);
+#endif
               int indexDot = value.indexOf('.');
 
               if (indexDot == -1) {
@@ -443,10 +449,18 @@ void transformValue(
               break;
             }
             case 'F': // FLOOR (round down)
+            #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
               value = static_cast<int>(floor(valFloat));
+            #else
+              value = static_cast<int>(floorf(valFloat));
+            #endif
               break;
             case 'E': // CEILING (round up)
+            #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
               value = static_cast<int>(ceil(valFloat));
+            #else
+              value = static_cast<int>(ceilf(valFloat));
+            #endif
               break;
             default:
               value = F("ERR");

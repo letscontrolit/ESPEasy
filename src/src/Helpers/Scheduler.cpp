@@ -47,13 +47,11 @@ String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
   if (timer >= IntervalTimer_e::TIMER_C001_DELAY_QUEUE && 
       timer <= IntervalTimer_e::TIMER_C025_DELAY_QUEUE) 
   {
+    const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
     String res;
     res.reserve(24);
-    res = F("TIMER_C0");
-    const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
-
-    if (id < 10) { res += '0'; }
-    res += id;
+    res = F("TIMER_");
+    res += get_formatted_Controller_number(id);
     res += F("_DELAY_QUEUE");
     return res;
   }
@@ -874,7 +872,7 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 
   if (validDeviceIndex(deviceIndex)) {
     String dummy;
-    Plugin_ptr[deviceIndex](PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
+    PluginCall(deviceIndex, PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
   }
   STOP_TIMER(PLUGIN_CALL_DEVICETIMER_IN);
 }
@@ -1109,7 +1107,8 @@ void ESPEasy_Scheduler::reschedule_task_device_timer(unsigned long task_index, u
 void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
   if (!validTaskIndex(task_index)) { return; }
   START_TIMER;
-  SensorSendTask(task_index, 0, lasttimer);
+  struct EventStruct TempEvent(task_index);
+  SensorSendTask(&TempEvent, 0, lasttimer);
   STOP_TIMER(SENSOR_SEND_TASK);
 }
 
@@ -1252,7 +1251,7 @@ void ESPEasy_Scheduler::process_system_event_queue() {
           // FIXME TD-er: LoadTaskSettings should only be called when needed, not pre-emptive.
           LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
         }
-        Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
+        PluginCall(Index, Function, &ScheduledEventQueue.front().event, tmpString);
       }
       break;
     case PluginPtrType::ControllerPlugin:

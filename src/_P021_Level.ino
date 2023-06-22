@@ -15,7 +15,7 @@
 //                         apply float/double math compare functions instead of regular comparisons
 
 # include "src/Helpers/ESPEasy_math.h"
-# include "src/Helpers/Rules_calculate.h"
+# include "src/Globals/RulesCalculate.h"
 # include "src/WebServer/ESPEasy_WebServer.h"
 
 # define PLUGIN_021
@@ -131,10 +131,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       if (equals(command, F("setlevel"))) {
         String value  = parseString(string, 2);
-        double result = 0.0;
+        ESPEASY_RULES_FLOAT_TYPE result{};
 
         if (!isError(Calculate(value, result))) {
-          if (!essentiallyEqual(static_cast<double>(P021_TRIGGER_LEVEL), result)) { // Save only if different
+          if (!essentiallyEqual(static_cast<ESPEASY_RULES_FLOAT_TYPE>(P021_TRIGGER_LEVEL), result)) { // Save only if different
             P021_TRIGGER_LEVEL = result;
 
             if (P021_DONT_ALWAYS_SAVE == 0) {                                       // save only if explicitly enabled

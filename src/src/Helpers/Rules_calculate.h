@@ -10,6 +10,9 @@
 #define STACK_SIZE 10 // was 50
 #define TOKEN_MAX 20
 
+#define TOKEN_LENGTH 25
+#define OPERATOR_STACK_SIZE 32
+
 enum class CalculateReturnCode : uint8_t{
   OK                           = 0u,
   ERROR_STACK_OVERFLOW         = 1u,
@@ -57,9 +60,9 @@ const __FlashStringHelper* toString(UnaryOperator op);
 class RulesCalculate_t {
 private:
 
-  double globalstack[STACK_SIZE];
-  double *sp     = globalstack - 1;
-  const double *sp_max = &globalstack[STACK_SIZE - 1];
+  ESPEASY_RULES_FLOAT_TYPE globalstack[STACK_SIZE]{};
+  ESPEASY_RULES_FLOAT_TYPE *sp     = globalstack - 1;
+  const ESPEASY_RULES_FLOAT_TYPE *sp_max = &globalstack[STACK_SIZE - 1];
 
   // Check if it matches part of a number (identifier)
   // @param oc  Previous character
@@ -71,16 +74,16 @@ private:
 
   bool                is_unary_operator(char c);
 
-  CalculateReturnCode push(double value);
+  CalculateReturnCode push(ESPEASY_RULES_FLOAT_TYPE value);
 
-  double              pop();
+  ESPEASY_RULES_FLOAT_TYPE              pop();
 
-  double              apply_operator(char   op,
-                                     double first,
-                                     double second);
+  ESPEASY_RULES_FLOAT_TYPE              apply_operator(char   op,
+                                     ESPEASY_RULES_FLOAT_TYPE first,
+                                     ESPEASY_RULES_FLOAT_TYPE second);
 
-  double apply_unary_operator(char   op,
-                              double first);
+  ESPEASY_RULES_FLOAT_TYPE apply_unary_operator(char   op,
+                              ESPEASY_RULES_FLOAT_TYPE first);
 
   //  char              * next_token(char *linep);
 
@@ -102,23 +105,13 @@ public:
   RulesCalculate_t();
 
   CalculateReturnCode doCalculate(const char *input,
-                                  double     *result);
+                                  ESPEASY_RULES_FLOAT_TYPE     *result);
 
   // Try to replace multi byte operators with single character ones.
   // For example log, sin, cos, tan.
   static String preProces(const String& input);
 };
 
-extern RulesCalculate_t RulesCalculate;
-
-/*******************************************************************************************
-* Helper functions to actually interact with the rules calculation functions.
-* *****************************************************************************************/
-
-int                 CalculateParam(const String& TmpStr);
-
-CalculateReturnCode Calculate(const String& input,
-                              double      & result);
 
 
 #endif // ifndef HELPERS_RULES_CALCULATE_H

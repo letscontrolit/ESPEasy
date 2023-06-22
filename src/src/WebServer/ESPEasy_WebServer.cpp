@@ -167,7 +167,7 @@ bool captivePortal() {
   }
   if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
     String redirectURL = F("http://");
-    redirectURL += web_server.client().localIP().toString();
+    redirectURL += formatIP(web_server.client().localIP());
     #ifdef WEBSERVER_SETUP
     if (fromAP && !hasWiFiCredentials) {
       redirectURL += F("/setup");
@@ -289,6 +289,10 @@ void WebServerInit()
   web_server.on(F("/upload"),      HTTP_GET,  handle_upload);
   web_server.on(F("/upload"),      HTTP_POST, handle_upload_post, handleFileUpload);
 #endif // ifdef WEBSERVER_UPLOAD
+#if FEATURE_SD
+  web_server.on(F("/uploadsd"),    HTTP_GET,  handle_upload);
+  web_server.on(F("/uploadsd"),    HTTP_POST, handle_upload_post, handleSDFileUpload);
+#endif // if FEATURE_SD
 #ifdef WEBSERVER_WIFI_SCANNER
   web_server.on(F("/wifiscanner"), handle_wifiscanner);
 #endif // ifdef WEBSERVER_WIFI_SCANNER

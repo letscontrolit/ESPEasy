@@ -133,7 +133,7 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
 {
   // Protocol has changed and it was not an empty one.
   // reset (some) default-settings
-  protocolIndex_t ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+  protocolIndex_t ProtocolIndex = getProtocolIndex_from_CPluginID(Settings.Protocol[controllerindex]);
 
   if (!validProtocolIndex(ProtocolIndex)) {
     return;

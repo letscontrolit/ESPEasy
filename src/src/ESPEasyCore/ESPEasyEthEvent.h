@@ -9,9 +9,13 @@
 // Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 #ifdef ESP32
- #if ESP_IDF_VERSION_MAJOR > 3
-  void EthEvent(WiFiEvent_t event, arduino_event_info_t info);
- #endif
+#if FEATURE_ETHERNET
+#if ESP_IDF_VERSION_MAJOR > 3
+#include <WiFi.h>
+#include <WiFiType.h>
+void EthEvent(WiFiEvent_t event, arduino_event_info_t info);
+#endif
+#endif
 #endif
 
 
