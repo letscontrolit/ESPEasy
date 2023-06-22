@@ -93,6 +93,7 @@ struct esp32_chip_features {
 };
 
 esp32_chip_features        getChipFeatures();
+String                     getChipFeaturesString();
 
 // @retval true:   octal (8 data lines)
 // @retval false:  quad (4 data lines)

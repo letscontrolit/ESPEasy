@@ -3006,4 +3006,16 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_IMPROV
+  #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
+    #define FEATURE_IMPROV 0
+  #else
+    #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+      #define FEATURE_IMPROV 1
+    #else
+      #define FEATURE_IMPROV 0
+    #endif
+  #endif
+#endif
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
