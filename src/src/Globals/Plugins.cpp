@@ -38,7 +38,7 @@
 
 int deviceCount = -1;
 
-deviceIndex_t* DeviceIndex_sorted = nullptr;
+std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index) {

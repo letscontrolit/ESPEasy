@@ -2159,36 +2159,20 @@ void PluginSetup()
   // ********************************************************************************
 
   // First fill the existing number of the DeviceIndex.
-  if (DeviceIndex_sorted) {
-    delete[] DeviceIndex_sorted;
-    DeviceIndex_sorted = nullptr;
-  }
-  DeviceIndex_sorted = new deviceIndex_t[deviceCount + 1];
-
+  DeviceIndex_sorted.resize(deviceCount + 1);
   for (deviceIndex_t x = 0; x <= deviceCount; x++) {
-    DeviceIndex_sorted[x] = getPluginID_from_DeviceIndex(x);
+    DeviceIndex_sorted[x] = x;
   }
 
-  // Do the sorting.
-  int innerLoop;
-  int mainLoop;
-
-  for (mainLoop = 1; mainLoop <= deviceCount; mainLoop++)
+  struct
   {
-    innerLoop = mainLoop;
-
-    while (innerLoop  >= 1)
-    {
-      const String cur(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]));
-      const String prev(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1]));
-      if (cur < prev) {
-        deviceIndex_t temp = DeviceIndex_sorted[innerLoop - 1];
-        DeviceIndex_sorted[innerLoop - 1] = DeviceIndex_sorted[innerLoop];
-        DeviceIndex_sorted[innerLoop]     = temp;
-      }
-      innerLoop--;
+    bool operator()(deviceIndex_t a, deviceIndex_t b) const { 
+      return getPluginNameFromDeviceIndex(a) < 
+             getPluginNameFromDeviceIndex(b); 
     }
-  }  
+  }
+  customLess;
+  std::sort(DeviceIndex_sorted.begin(), DeviceIndex_sorted.end(), customLess);
 }
 
 void PluginInit(bool priorityOnly)
