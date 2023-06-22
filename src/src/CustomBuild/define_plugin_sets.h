@@ -337,6 +337,7 @@ To create/register a plugin, you have to :
   #if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
     #define LIMIT_BUILD_SIZE
   #endif
+
   #ifndef FEATURE_I2CMULTIPLEXER
     #define FEATURE_I2CMULTIPLEXER  1
   #endif
@@ -1355,6 +1356,10 @@ To create/register a plugin, you have to :
     #define USES_P063   // TTP229_KeyPad
     #define USES_P073   // 7DGT
     #define USES_P079   // Wemos Motoshield
+
+    #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
+      #define USES_P152 // ESP32 DAC
+    #endif
 #endif
 
 
@@ -1512,9 +1517,9 @@ To create/register a plugin, you have to :
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
     #define USES_P129   // 74HC165 Input shiftregisters
-    #define USES_P133   // LTR390 UV
     #define USES_P135   // SCD4x
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+    #define USES_P133     // LTR390 UV
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
@@ -1531,11 +1536,17 @@ To create/register a plugin, you have to :
   #ifndef USES_P145
     #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
 #endif
@@ -1701,15 +1712,19 @@ To create/register a plugin, you have to :
   #define USES_P005   // DHT
   #define USES_P006   // BMP085
 
+  #define USES_P010   // BH1750
   #define USES_P011   // PME
   #define USES_P012   // LCD
+  #define USES_P013   // HCSR04
   #define USES_P014   // SI7021
+  #define USES_P015   // TSL2561
   #define USES_P018   // Dust
   #define USES_P019   // PCF8574
 
   #define USES_P021   // Level
   #define USES_P023   // OLED
   #define USES_P024   // MLX90614
+  #define USES_P025   // ADS1115
   #define USES_P026   // SysInfo
   #define USES_P028   // BME280
   #define USES_P029   // Output
@@ -1790,6 +1805,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
@@ -1798,6 +1816,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
+  #endif
+  #ifndef USES_P133
+    #define USES_P133     // LTR390 UV
   #endif
 
   // Controllers
@@ -2144,11 +2168,20 @@ To create/register a plugin, you have to :
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
+  #ifndef USES_P147
+    #define USES_P147   // Gases - SGP4x CO2
+  #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
+    #define USES_P152   // ESP32 DAC
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
   // Controllers
@@ -2198,7 +2231,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_P144) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056)  || defined(USES_P065) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_P144) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -2329,6 +2362,17 @@ To create/register a plugin, you have to :
   #define FEATURE_EXT_RTC 0
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
+  #endif
+  #ifndef PLUGIN_NEOPIXEL_COLLECTION
+    #ifdef USES_P041  // Disable NeoPixel specials
+      #undef USES_P041
+    #endif
+    #ifdef USES_P042
+      #undef USES_P042
+    #endif
+    #ifdef USES_P043
+      #undef USES_P043
+    #endif
   #endif
 #endif
 
@@ -2871,6 +2915,26 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  #ifdef ESP8266_1M
+    #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 0
+  #else
+    #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 1
+  #endif
+#endif
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+# if USES_HWCDC || USES_USBCDC
+#  define USES_ESPEASY_CONSOLE_FALLBACK_PORT 1
+# endif // if USES_HWCDC || USES_USBCDC
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+
+#ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
+# define USES_ESPEASY_CONSOLE_FALLBACK_PORT 0
+#endif // ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+
 #if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)
   #undef FEATURE_PLUGIN_PRIORITY
   #define FEATURE_PLUGIN_PRIORITY   1
@@ -2890,6 +2954,67 @@ To create/register a plugin, you have to :
     #define FEATURE_EXTENDED_TASK_VALUE_TYPES  0
   #else
     #define FEATURE_EXTENDED_TASK_VALUE_TYPES  1
+  #endif
+#endif
+
+#ifndef FEATURE_SET_WIFI_TX_PWR
+  #ifdef ESP32
+    #if defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+      #define FEATURE_SET_WIFI_TX_PWR   1
+    #else
+      // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+      #define FEATURE_SET_WIFI_TX_PWR   1
+    #endif
+  #elif defined(ESP8266)
+    #define FEATURE_SET_WIFI_TX_PWR   1
+  #endif
+#endif
+
+
+#ifndef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
+    #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0
+  #else
+    #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 1
+  #endif
+#endif
+
+// ESPEASY_RULES_FLOAT_TYPE should be either double (default) or float.
+// It is solely based on FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+#ifdef ESPEASY_RULES_FLOAT_TYPE
+  #undef ESPEASY_RULES_FLOAT_TYPE
+#endif
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  #define ESPEASY_RULES_FLOAT_TYPE double
+#else
+  #define ESPEASY_RULES_FLOAT_TYPE float
+#endif
+
+#ifndef ESPEASY_SERIAL_0
+#if defined(ESP32) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
+  #define ESPEASY_SERIAL_0 Serial0
+#else
+  #define ESPEASY_SERIAL_0 Serial
+#endif
+#endif
+
+
+#if FEATURE_MDNS
+  #ifdef ESP32S2
+    #undef FEATURE_MDNS
+    #define FEATURE_MDNS 0
+  #endif
+#endif
+
+#ifndef FEATURE_IMPROV
+  #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
+    #define FEATURE_IMPROV 0
+  #else
+    #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+      #define FEATURE_IMPROV 1
+    #else
+      #define FEATURE_IMPROV 0
+    #endif
   #endif
 #endif
 

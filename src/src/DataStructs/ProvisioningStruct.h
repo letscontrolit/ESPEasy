@@ -8,6 +8,8 @@
 # include "../DataStructs/FactoryDefaultPref.h"
 # include "../DataTypes/ESPEasyFileType.h"
 
+# include <memory> // for std::shared_ptr
+
 /*********************************************************************************************\
 * ProvisioningStruct
 \*********************************************************************************************/

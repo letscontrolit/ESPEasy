@@ -2,7 +2,7 @@
 
 #ifdef USES_P002
 
-# include "../Helpers/Rules_calculate.h"
+# include "../Globals/RulesCalculate.h"
 
 
 # ifndef DEFAULT_VREF
@@ -269,13 +269,28 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     addFormTextBox(F("query-input widenumber"),
                    label,
                    getPluginCustomArgName(varNr),
-                   _multipoint.size() > line_nr ? doubleToString(static_cast<double>(_multipoint[line_nr]._adc), _nrDecimals,
-                                                                 true) : EMPTY_STRING,
+
+                   _multipoint.size() > line_nr ? 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                   doubleToString
+#else
+                   floatToString
+#endif
+                    (static_cast<ESPEASY_RULES_FLOAT_TYPE>(_multipoint[line_nr]._adc), 
+                    _nrDecimals,
+                    true) : EMPTY_STRING,
                    0);
     html_add_estimate_symbol();
     addTextBox(getPluginCustomArgName(varNr + 1),
-               _multipoint.size() > line_nr ?  doubleToString(static_cast<double>(_multipoint[line_nr]._value), _nrDecimals,
-                                                              true) : EMPTY_STRING,
+               _multipoint.size() > line_nr ?  
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                   doubleToString
+#else
+                   floatToString
+#endif
+               (static_cast<ESPEASY_RULES_FLOAT_TYPE>(_multipoint[line_nr]._value), 
+               _nrDecimals,
+               true) : EMPTY_STRING,
                0,
                false,
                false,
@@ -950,7 +965,7 @@ int P002_data_struct::computeADC_to_bin(const int& currentValue) const
 
     formula.replace(F("%value%"), toString(calibrated_value, _nrDecimals));
 
-    double result = 0;
+    ESPEASY_RULES_FLOAT_TYPE result{};
 
     if (!isError(RulesCalculate.doCalculate(parseTemplate(formula).c_str(), &result))) {
       calibrated_value = result;

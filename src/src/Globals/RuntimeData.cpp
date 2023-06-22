@@ -1,14 +1,14 @@
 #include "../Globals/RuntimeData.h"
 
 
-std::map<uint32_t, double> customFloatVar;
+std::map<uint32_t, ESPEASY_RULES_FLOAT_TYPE> customFloatVar;
 
 //float UserVar[VARS_PER_TASK * TASKS_MAX];
 
 UserVarStruct UserVar;
 
 
-double getCustomFloatVar(uint32_t index) {
+ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(uint32_t index) {
   auto it = customFloatVar.find(index);
 
   if (it != customFloatVar.end()) {
@@ -17,11 +17,11 @@ double getCustomFloatVar(uint32_t index) {
   return 0.0;
 }
 
-void setCustomFloatVar(uint32_t index, const double& value) {
+void setCustomFloatVar(uint32_t index, const ESPEASY_RULES_FLOAT_TYPE& value) {
   customFloatVar[index] = value;
 }
 
-bool getNextCustomFloatVar(uint32_t& index, double& value) {
+bool getNextCustomFloatVar(uint32_t& index, ESPEASY_RULES_FLOAT_TYPE& value) {
   auto it = customFloatVar.find(index);
 
   if (it == customFloatVar.end()) { return false; }

@@ -2,8 +2,10 @@
 #define DATATYPES_ESPEASYTIMESOURCE_H
 
 
+#include "../../ESPEasy_common.h"
+
 #include <stdint.h>
-#include <Arduino.h>
+
 
 class String;
 

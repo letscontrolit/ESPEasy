@@ -14,8 +14,11 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/_Plugin_Helper_serial.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
 
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
@@ -53,7 +56,21 @@ void handle_advanced() {
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.SyslogPort     = getFormItemInt(F("syslogport"));
-    Settings.UseSerial      = isFormItemChecked(F("useserial"));
+    Settings.UseSerial      = isFormItemChecked(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+    Settings.console_serial_rxpin = getFormItemInt(F("taskdevicepin1"), Settings.console_serial_rxpin);
+    Settings.console_serial_txpin = getFormItemInt(F("taskdevicepin2"), Settings.console_serial_txpin);
+
+    serialHelper_webformSave(
+      Settings.console_serial_port, 
+      Settings.console_serial_rxpin,
+      Settings.console_serial_txpin);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    Settings.console_serial0_fallback = isFormItemChecked(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
+#endif
+
+#endif
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
@@ -96,7 +113,7 @@ void handle_advanced() {
 #ifdef SUPPORT_ARP
     Settings.gratuitousARP(isFormItemChecked(LabelType::PERIODICAL_GRAT_ARP));
 #endif // ifdef SUPPORT_ARP
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     Settings.setWiFi_TX_power(getFormItemFloat(LabelType::WIFI_TX_MAX_PWR));
     Settings.WiFi_sensitivity_margin = getFormItemInt(LabelType::WIFI_SENS_MARGIN);
     Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
@@ -213,15 +230,40 @@ void handle_advanced() {
 #endif // if FEATURE_SD
 
 
-  addFormSubHeader(F("Serial Settings"));
-
-  addFormCheckBox(F("Enable Serial port"), F("useserial"), Settings.UseSerial);
+  addFormSubHeader(F("Serial Console Settings"));
+  addFormCheckBox(LabelType::ENABLE_SERIAL_PORT_CONSOLE, Settings.UseSerial);
   addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  serialHelper_webformLoad(
+    static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
+    Settings.console_serial_rxpin, 
+    Settings.console_serial_txpin, 
+    true);
+
+  // Show serial port selection
+  addFormPinSelect(
+    PinSelectPurpose::Serial_input, 
+    formatGpioName_serialRX(false),
+    F("taskdevicepin1"), 
+    Settings.console_serial_rxpin);
+  addFormPinSelect(
+    PinSelectPurpose::Serial_output, 
+    formatGpioName_serialTX(false),
+    F("taskdevicepin2"), 
+    Settings.console_serial_txpin);
+
+  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0, Settings.console_serial0_fallback);
+#endif
+
+#endif
 
 
   addFormSubHeader(F("Inter-ESPEasy Network"));
   if (Settings.UDPPort != 8266 ) addFormNote(F("Preferred P2P port is 8266"));
-  addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
+  addFormNumericBox(F("ESPEasy p2p UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
   // TODO sort settings in groups or move to other pages/groups
   addFormSubHeader(F("Special and Experimental Settings"));
@@ -302,11 +344,12 @@ void handle_advanced() {
 #endif // ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
   {
     float maxTXpwr;
-    float threshold = GetRSSIthreshold(maxTXpwr);
-    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, 20.5f, 2, 0.25f);
+    float sensitivity = GetRSSIthreshold(maxTXpwr);
+    
+    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, MAX_TX_PWR_DBM_11b, 2, 0.25f);
     addUnit(F("dBm"));
     String note;
     note = F("Current max: ");
@@ -316,8 +359,8 @@ void handle_advanced() {
 
     addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
     addUnit(F("dB")); // Relative, thus the unit is dB, not dBm
-    note = F("Adjust TX power to target the AP with (threshold + margin) dBm signal strength. Current threshold: ");
-    note += toString(threshold, 2);
+    note = F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: ");
+    note += toString(sensitivity, 2);
     note += F(" dBm");
     addFormNote(note);
   }

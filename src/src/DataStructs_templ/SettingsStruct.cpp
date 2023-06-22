@@ -425,13 +425,33 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1 << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
+  if (VariousBits1 > (1u << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 
   if ((I2C_clockSpeed == 0) || (I2C_clockSpeed > 3400000)) { I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED; }
   if (WebserverPort == 0) { WebserverPort = 80;}
   if (SyslogPort == 0) { SyslogPort = 514; }
+
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  if (console_serial_port == 0 && UseSerial) {
+    console_serial_port = DEFAULT_CONSOLE_PORT;
+    // Set default RX/TX pins for Serial0
+    console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+    console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+  }
+#ifdef ESP8266
+  if (console_serial_port == 2) {
+    // Set default RX/TX pins for Serial0
+    console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+    console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+  } else if (console_serial_port == 3) {
+    // Set default RX/TX pins for Serial0_swapped
+    console_serial_rxpin = 13;
+    console_serial_txpin = 15;
+  }
+#endif
+  #endif
 }
 
 template<unsigned int N_TASKS>
@@ -508,8 +528,8 @@ void SettingsStruct_tmpl<N_TASKS>::clearUnitNameSettings() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
-  PID                      = 0;
-  Version                  = 0;
+  PID                      = ESP_PROJECT_PID;
+  Version                  = VERSION;
   Build                    = 0;
   IP_Octet                 = 0;
   Delay                    = 0;
@@ -541,23 +561,25 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
     // can now be directly accessed.
     // In all other use cases, use the get and set functions for it.
     constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
-    for (uint8_t i = 0; i < maxStates; ++i) { 
-      PinBootStates[i] = 0; 
+
+    for (uint8_t i = 0; i < maxStates; ++i) {
+      PinBootStates[i] = 0;
     }
-    #ifdef ESP32
+    # ifdef ESP32
     constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+
     for (uint8_t i = 0; i < maxStatesesp32; ++i) {
       PinBootStates_ESP32[i] = 0;
     }
-    #endif
+    # endif // ifdef ESP32
   }
   BaudRate                         = 0;
   MessageDelay_unused              = 0;
   deepSleep_wakeTime               = 0;
   CustomCSS                        = false;
   WDI2CAddress                     = 0;
-  UseRules                         = false;
-  UseSerial                        = true;
+  UseRules                         = DEFAULT_USE_RULES;
+  UseSerial                        = DEFAULT_USE_SERIAL;
   UseSSDP                          = false;
   WireClockStretchLimit            = 0;
   I2C_clockSpeed                   = 400000;
@@ -576,6 +598,13 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   StructSize                       = sizeof(SettingsStruct_tmpl<N_TASKS>);
   MQTTUseUnitNameAsClientId_unused = 0;
   VariousBits1                     = 0;
+
+  console_serial_port              = DEFAULT_CONSOLE_PORT; 
+  console_serial_rxpin             = DEFAULT_CONSOLE_PORT_RXPIN;
+  console_serial_txpin             = DEFAULT_CONSOLE_PORT_TXPIN;
+  console_serial0_fallback         = DEFAULT_CONSOLE_SER0_FALLBACK;
+
+
   OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
   WiFiRestart_connection_lost(DEFAULT_WIFI_RESTART_WIFI_CONN_LOST);
@@ -622,7 +651,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   for (uint8_t cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
-  TaskDeviceSendDataFlags[task]  = 0u;
+  TaskDeviceSendDataFlags[task] = 0u;
   VariousTaskBits[task]         = 0;
   TaskDeviceDataFeed[task]      = 0u;
   TaskDeviceTimer[task]         = 0u;
@@ -649,39 +678,136 @@ String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
 template<unsigned int N_TASKS>
 String SettingsStruct_tmpl<N_TASKS>::getName() const {
   String unitname = this->Name;
+
   return parseTemplate(unitname);
 }
 
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
+  uint8_t   gpio_pin,
+  int8_t& index_low
+    # ifdef ESP32
+  , int8_t& index_high
+    # endif // ifdef ESP32
+  ) const {
+  index_low = -1;
+# ifdef ESP32
+  index_high = -1;
+
+  if (!GPIO_IS_VALID_GPIO(gpio_pin)) { return false; }
+# endif // ifdef ESP32
+  constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
+
+  if (gpio_pin < maxStates) {
+    index_low = gpio_pin;
+    return true;
+  }
+# ifdef ESP32
+  constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+
+  index_high = gpio_pin - maxStates;
+
+#  if defined(ESP32_CLASSIC) || defined(ESP32C3)
+
+  // These can all store in the PinBootStates_ESP32 array
+  return (index_high < maxStatesesp32);
+
+#  elif defined(ESP32S2)
+
+  // First make sure we're not dealing with flash/PSRAM connected pins
+  if (!((gpio_pin > 21) && (gpio_pin < 33) && (gpio_pin != 26))) {
+    // Previously used index, to maintain compatibility with previous settings.
+
+    if (index_high >= maxStatesesp32) {
+      // Now try to fix the bug by inserting the missing ones into unused spots
+      // This way we don't need to convert existing settings
+      index_high -= maxStatesesp32;
+      constexpr int8_t offsetFlashPin = 22 - maxStates;
+      index_high += offsetFlashPin;
+
+      if (gpio_pin >= 26) {
+        // Skip index for GPIO 26
+        ++index_high;
+      }
+    }
+    return (index_high < maxStatesesp32);
+  }
+
+#  elif defined(ESP32S3)
+
+  // GPIO 22 ... 32 should never be used.
+  // Thus:
+  //  - map <maxStates> ... <21> to the beginning of PinBootStates_ESP32
+  //  - map <33> ... <48> to the end of PinBootStates_ESP32
+  if (gpio_pin < 22) {
+    return true;
+  }
+
+  if (gpio_pin >= 33) {
+    index_high = gpio_pin - maxStates + 22 - 33;
+    return true;
+  }
+#  else // if defined(ESP32_CLASSIC) || defined(ESP32C3)
+
+  static_assert(false, "Implement processor architecture");
+  
+#  endif // if defined(ESP32_CLASSIC) || defined(ESP32C3)
+# endif // ifdef ESP32
+
+  return false;
+}
 
 template<unsigned int N_TASKS>
 PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(uint8_t gpio_pin) const {
-  constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
-  if (gpio_pin < maxStates) {
-    return static_cast<PinBootState>(PinBootStates[gpio_pin]);
+# ifdef ESP8266
+  int8_t index_low{};
+
+  if (getPinBootStateIndex(gpio_pin, index_low)) {
+    return static_cast<PinBootState>(PinBootStates[index_low]);
   }
-  #ifdef ESP32
-  constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
-  const uint8_t addr = gpio_pin - maxStates;
-  if (addr < maxStatesesp32) {
-    return static_cast<PinBootState>(PinBootStates_ESP32[addr]);
+
+# endif // ifdef ESP8266
+# ifdef ESP32
+  int8_t index_low{};
+  int8_t index_high{};
+
+  if (getPinBootStateIndex(gpio_pin, index_low, index_high)) {
+    if (index_low >= 0) {
+      return static_cast<PinBootState>(PinBootStates[index_low]);
+    }
+
+    if (index_high >= 0) {
+      return static_cast<PinBootState>(PinBootStates_ESP32[index_high]);
+    }
   }
-  #endif
+# endif // ifdef ESP32
   return PinBootState::Default_state;
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setPinBootState(uint8_t gpio_pin, PinBootState state) {
-  constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
-  if (gpio_pin < maxStates) {
-    PinBootStates[gpio_pin] = static_cast<int8_t>(state);
+# ifdef ESP8266
+  int8_t index_low{};
+
+  if (getPinBootStateIndex(gpio_pin, index_low)) {
+    PinBootStates[index_low] = static_cast<int8_t>(state);
   }
-  #ifdef ESP32
-  constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
-  const uint8_t addr = gpio_pin - maxStates;
-  if (addr < maxStatesesp32) {
-    PinBootStates_ESP32[addr] = static_cast<int8_t>(state);
+# endif // ifdef ESP8266
+
+# ifdef ESP32
+  int8_t index_low{};
+  int8_t index_high{};
+
+  if (getPinBootStateIndex(gpio_pin, index_low, index_high)) {
+    if (index_low >= 0) {
+      PinBootStates[index_low] = static_cast<int8_t>(state);
+    }
+
+    if (index_high >= 0) {
+      PinBootStates_ESP32[index_high] = static_cast<int8_t>(state);
+    }
   }
-  #endif
+# endif // ifdef ESP32
 }
 
 template<unsigned int N_TASKS>
@@ -689,22 +815,28 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   spi_gpios[0] = -1;
   spi_gpios[1] = -1;
   spi_gpios[2] = -1;
+
   if (isSPI_valid()) {
     # ifdef ESP32
     const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+
     switch (SPI_selection) {
-      case SPI_Options_e::Vspi:
+      case SPI_Options_e::Vspi_Fspi:
       {
-        spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
+        spi_gpios[0] = VSPI_FSPI_SCK; 
+        spi_gpios[1] = VSPI_FSPI_MISO; 
+        spi_gpios[2] = VSPI_FSPI_MOSI;
         break;
       }
+#ifdef ESP32_CLASSIC
       case SPI_Options_e::Hspi:
       {
-        spi_gpios[0] = 14; // HSPI_SCLK
-        spi_gpios[1] = 12; // HSPI_MISO
-        spi_gpios[2] = 13; // HSPI_MOSI
+        spi_gpios[0] = HSPI_SCLK;
+        spi_gpios[1] = HSPI_MISO;
+        spi_gpios[2] = HSPI_MOSI;
         break;
       }
+#endif
       case SPI_Options_e::UserDefined:
       {
         spi_gpios[0] = SPI_SCLK_pin;
@@ -726,11 +858,12 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
-  if (pin < 0) return false;
+  if (pin < 0) { return false; }
   int8_t spi_gpios[3];
+
   if (getSPI_pins(spi_gpios)) {
     for (uint8_t i = 0; i < 3; ++i) {
-      if (spi_gpios[i] == pin) return true;
+      if (spi_gpios[i] == pin) { return true; }
     }
   }
   return false;
@@ -738,20 +871,22 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid() const {
-  if (InitSPI == static_cast<uint8_t>(SPI_Options_e::None)) return false;
-  if (InitSPI == static_cast<uint8_t>(SPI_Options_e::UserDefined))
+  if (InitSPI == static_cast<uint8_t>(SPI_Options_e::None)) { return false; }
+
+  if (InitSPI == static_cast<uint8_t>(SPI_Options_e::UserDefined)) {
     return !((SPI_SCLK_pin == -1) ||
              (SPI_MISO_pin == -1) ||
              (SPI_MOSI_pin == -1) ||
              (SPI_SCLK_pin == SPI_MISO_pin) ||
              (SPI_MISO_pin == SPI_MOSI_pin) ||
              (SPI_MOSI_pin == SPI_SCLK_pin));
+  }
   return true;
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
-  if (pin < 0) return false;
+  if (pin < 0) { return false; }
   return Pin_i2c_sda == pin || Pin_i2c_scl == pin;
 }
 
@@ -816,4 +951,4 @@ void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
   WiFi_TX_power = dBm * 4.0f;
 }
 
-#endif
+#endif // ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP

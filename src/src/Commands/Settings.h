@@ -1,7 +1,7 @@
 #ifndef COMMAND_SETTINGS_H
 #define COMMAND_SETTINGS_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line);
 String Command_Settings_Unit(struct EventStruct *event, const char* Line);

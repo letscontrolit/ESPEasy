@@ -1,7 +1,11 @@
 #ifndef CUSTOMBUILD_COMPILETIMEDEFINES_H
 #define CUSTOMBUILD_COMPILETIMEDEFINES_H
 
+
 #include <Arduino.h>
+#ifdef ESP8266
+#undef round //see https://github.com/esp8266/Arduino/issues/5787#issuecomment-465852231
+#endif
 
 
 // Build NR is used as a "revision" nr for settings
@@ -17,6 +21,7 @@ const __FlashStringHelper * get_build_platform();
 const __FlashStringHelper * get_git_head();
 const __FlashStringHelper * get_board_name();
 const __FlashStringHelper * get_CDN_url_prefix();
+const __FlashStringHelper * getConfigurationCode();
 
 
 #endif // CUSTOMBUILD_COMPILETIMEDEFINES_H

@@ -9,7 +9,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
 
 #include <GPIO_Direct_Access.h>
 

@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/NetworkState.h"
@@ -141,6 +142,9 @@ void ESPEasy_setup()
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
+  PluginSetup();
+  CPluginSetup();
+  
   initWiFi();
   WiFiEventData.clearAll();
 
@@ -169,8 +173,7 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-
-  Serial.begin(115200);
+  ESPEasy_Console.begin(115200);
 
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
@@ -270,6 +273,8 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
+  ESPEasy_Console.reInit();
+
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif
@@ -432,7 +437,7 @@ void ESPEasy_setup()
 
 # ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
-    Serial.setDebugOutput(true);
+    ESPEasy_Console.setDebugOutput(true);
   }
 #endif
 
@@ -450,6 +455,9 @@ void ESPEasy_setup()
   #endif // if FEATURE_NOTIFIER
 
   PluginInit();
+
+  initSerial(); // Plugins may have altered serial, so re-init serial
+  
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("PluginInit()"));
   #endif
@@ -492,15 +500,23 @@ void ESPEasy_setup()
     const uint32_t gpio_strap =   GPIO_REG_READ(GPIO_STRAP_REG);
 //    BOOT_MODE_GET();
 
-    // Event values: GPIO-5, GPIO-15, GPIO-4, GPIO-2
+    // Event values: 
+    // ESP32   :  GPIO-5, GPIO-15, GPIO-4, GPIO-2, GPIO-0, GPIO-12
+    // ESP32-C3:  bit 0: GPIO2, bit 2: GPIO8, bit 3: GPIO9
+    // ESP32-S2: Unclear what bits represent which strapping state.
+    // ESP32-S3: bit5 ~ bit2 correspond to stripping pins GPIO3, GPIO45, GPIO0, and GPIO46 respectively.
     String event = F("System#BootMode=");
-    event += bitRead(gpio_strap, 0); // GPIO-5
+    event += bitRead(gpio_strap, 0); 
     event += ',';
-    event += bitRead(gpio_strap, 1); // GPIO-15
+    event += bitRead(gpio_strap, 1); 
     event += ',';
-    event += bitRead(gpio_strap, 2); // GPIO-4
+    event += bitRead(gpio_strap, 2); 
     event += ',';
-    event += bitRead(gpio_strap, 3); // GPIO-2
+    event += bitRead(gpio_strap, 3); 
+    event += ',';
+    event += bitRead(gpio_strap, 4); 
+    event += ',';
+    event += bitRead(gpio_strap, 5); 
     rulesProcessing(event);
   }
   #endif

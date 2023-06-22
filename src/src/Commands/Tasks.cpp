@@ -12,12 +12,12 @@
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
-#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
@@ -131,7 +131,7 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
     // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
 
     // Perform calculation with float result.
-    double result = 0;
+    ESPEASY_RULES_FLOAT_TYPE result{};
 
     if (isError(Calculate(TmpStr1, result))) {
       success = false;
@@ -261,7 +261,9 @@ const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *even
   if (success)
   {
     START_TIMER;
-    SensorSendTask(taskIndex);
+    struct EventStruct TempEvent(taskIndex);
+    TempEvent.Source = event->Source;
+    SensorSendTask(&TempEvent);
     STOP_TIMER(SENSOR_SEND_TASK);
 
     return return_command_success();
@@ -308,7 +310,9 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   }
 
   START_TIMER;
-  SensorSendTask(taskIndex, unixTime);
+  struct EventStruct TempEvent(taskIndex);
+  TempEvent.Source = event->Source;
+  SensorSendTask(&TempEvent, unixTime);
   STOP_TIMER(SENSOR_SEND_TASK);
 
   return return_command_success();

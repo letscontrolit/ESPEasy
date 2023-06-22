@@ -21,6 +21,21 @@ Maintainer: |P031_maintainer|
 
 Used libraries: |P031_usedlibraries|
 
+Description
+-----------
+
+Plugin to use the Sensirion Humidity and Temperature Sensor SHT10 / SHT11 / SHT15.
+
+SHT1x Specifications:
+ * Temperature (-40 °C to +125 °C)
+ * Relative humidity (0 - 100 %RH)
+
+Datasheet
+----------
+
+- `SHT1x <https://sensirion.com/media/documents/BD45ECB5/61642783/Sensirion_Humidity_Sensors_SHT1x_Datasheet.pdf>`_
+
+
 Supported hardware
 ------------------
 
