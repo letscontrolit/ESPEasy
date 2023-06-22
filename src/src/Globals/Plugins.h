@@ -9,6 +9,7 @@
 #include "../DataTypes/DeviceIndex.h"
 #include "../DataTypes/TaskIndex.h"
 
+#include <vector>
 
 /********************************************************************************************\
    Structures to address the plugins and device configurations.
@@ -44,7 +45,7 @@ extern int deviceCount;
 
 
 // Array containing "DeviceIndex" alfabetically sorted.
-extern deviceIndex_t* DeviceIndex_sorted;
+extern std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index);
