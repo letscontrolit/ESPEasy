@@ -23,6 +23,13 @@
   #endif
 #endif
 
+#ifdef ESP32
+  #define LOG_BUFFER_ACTIVE_READ_TIMEOUT 30000
+#else
+  #define LOG_BUFFER_ACTIVE_READ_TIMEOUT 5000
+#endif
+
+
 struct LogStruct {
     
     void add(const uint8_t loglevel, const String& line);

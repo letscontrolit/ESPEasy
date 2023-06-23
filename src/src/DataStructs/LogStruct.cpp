@@ -51,7 +51,7 @@ bool LogStruct::isFull() const {
 
 bool LogStruct::logActiveRead() {
   clearExpiredEntries();
-  return timePassedSince(lastReadTimeStamp) < LOG_BUFFER_EXPIRE;
+  return timePassedSince(lastReadTimeStamp) < LOG_BUFFER_ACTIVE_READ_TIMEOUT;
 }
 
 void LogStruct::clearExpiredEntries() {
