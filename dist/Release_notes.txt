@@ -1,4 +1,240 @@
 -------------------------------------------------
+Changes in release mega-20230623 (since mega-20230508)
+-------------------------------------------------
+
+Release date: vr 23 jun 2023 22:56:40 CEST
+
+Florian Binder (3):
+      Enhance P098 to work without encoder and limit sensors
+      remove PLUGIN_TIME_CHANGE
+      use PCONFIG_LONG instead of PCONFIG
+
+Joan Soler Galmes (2):
+      Added Start and End Pixel feature for scan and dualscan modes
+      Modified description of the command
+
+Joan Soler Galmés (1):
+      Replaced all occurences of hex2rrggbb("000000") for hex2rrggbb(F("000000")) and An int doesn't need to be converted to an int. (Thx  TD-er)
+
+TD-er (146):
+      [ESP32-C3 / -S3] Add support for ESP32-C3 & ESP32-S3
+      [ESP32-C3] Disable P097 ESP32Touch for ESP32-C3
+      [GPIO info] Define flash pins for ESP32-C3 and ESP32-S3
+      [GPIO info] Add hardware/GPIO specifics for ESP32-C3/S3
+      [GPIO Boot States] Fix bug storing ESP32-S2 boot states + add ESP32-S3
+      [Build] Fix missing include
+      [Build] Fix build for ESP8266 missing a define macro
+      [NeoPixelBus] Update NeoPixelBus library to 2.7.5
+      [ESP32-S3] Fix board definitions + build errors on ESP32-S3
+      [ESP32-S3] Add 16M max_ESP32s3_16M8M_LittleFS build
+      [ESP32-C3] Fix computing free stack on ESP32-C3
+      [Docs] Document pins to use for ESP32-S2/S3/C3
+      [PSRAM] Fix PSRAM detection on ESP32-S3
+      [Docs] Update documentation regarding supported ESP chips
+      [NeoPixelBus] Work-around to compile on older compilers (ESP8266 2.7.4)
+      [docs] Fix copy/paste error in ESP32-C3 docs
+      [Docs] Update specs of supported (and not yet supported) ESP modules
+      [Docs] Document future ESP32 C2/C6/H2
+      [Cleanup] Simplify detection of active flash mode
+      [p2p] Fix task value data exchange between nodes via p2p (#4649)
+      [p2p] Fix check on received data for matching plugin IDs
+      [p2p] Fix collecting stats + send to controller on p2p received data
+      [p2p] Fix build on LIMIT_BUILD_SIZE builds
+      [p2p] Fix receiving p2p data on another node (stupid copy/paste bug)
+      [ESP32-S2/S3/C3]  Update user configurable SPI bus in ESPEasy.
+      [Build] Fix PlatformIO env definition.
+      [Build] Fix build for ESP8266 due to misplaced #ifdef ESP32
+      [ESP32-S3/C3] Generate web flasher manifest files for all ESP platforms
+      [WiFi] Make Wi-Fi TX power configurable for ESP32-S2/S3/C3
+      [ESP32 SDK] Update to ESP32 SDK 2.0.9 + Enable WiFi TX pwr for ESP32
+      [PIO build] Update build scripts for scons 4.5.x
+      [Build] Fix build error due to strange cast of double type in rules
+      [Build] Work-around for new ESP8266 macro of round()
+      [Build ESP8266] Replace calls to round()
+      [Build] Use HWrandom to overcome build issues
+      [Build] Fix missing include
+      [Build] Remove extern "C" to allow for (C++) function overloading
+      [Build] include ESPEasy_common.h instead of Arduino.h where possible
+      [Cleanup] Moving not commonly needed code out of ESPEasy_common.h
+      [Build] Remove "Helpers" folder from concat script
+      [Build] Include ESPEasy_common.h instead of ESPEasy_config.h
+      [Build] Add Helpers folder to concat .cpp for ESP8266
+      [Build] Add ESPEasyCore to concat cpp & split global RulesCalculate obj
+      [Build test] Disable lots of plugins + not concat Helpers/*.cpp
+      [Build test] Disable P037 to test build failures
+      [Build test] Undef round right after include <Arduino.h>
+      [Build] Revert disabling plugins + concat Helpers/*.cpp
+      [Build] Include cmath after Arduino.h to redefine round()
+      [Build] Fix building ESPEasy in PlatformIO 6.1.7 (#4656)
+      [Cleanup] Fix IP address formatting
+      [Python] Create tool to generate web flasher files from build
+      [Python] Generate index.html for web flasher
+      [Build] Include obviously missing plugins from Climate builds
+      Change jquery CDN URL for China users
+      [Cleanup] Reduce build size by using float instead of double in rules
+      [Cleanup] Fix build, removing double function declaration
+      [Cleanup] Use float version of geometric functions to reduce bin size
+      [Cleanup] Remove duplicate code for leading zeroes formatting int
+      [Cleanup] Keep flags for rules floating point value type in sync
+      [Cleanup] Revert some changes based on review feedback
+      [Custom build] Make it easier for custom builds to force float type
+      [USB CDC] Support USB serial port for ESP32-S2/S3/C3
+      [ESPEasySerial] Split common code to separate .cpp file
+      [ESPEasy Console] Split console to separate class
+      [ESPEasy Console] Fix build error
+      [Build] Fix building on ESP32-S2
+      [ESPEasy Console] Enable USB CDC for ESP32-S2
+      [mDNS] Disable mDNS for ESP32-S2 as it seems to affect WiFi stability
+      [ESPEasySerial] Add platform specific default pins for Serial0 and 1
+      [HWCDC] Add event handling to automatically switch to USB serial
+      [HWCDC] Fix automatic switching to USB console port
+      [USBCDC] Add using USBCDC as console for ESP32-S2
+      [ESPEasySerial] Start adding USB serial to ESPEasySerial
+      [ESPEasySerial] Create wrapper classes for USBCDC and HWCDC
+      [ESPEasySerial] Split files into wrappers and drivers
+      [ESPEasySerial] Cleanup ESPEasySerial class
+      [ESPEasySerial] Fix compile errors
+      [ESPEasySerial] Fix compile errors.
+      [ESPEasySerial] Fix build on ESP32-S2 CDC builds
+      [ESPEasySerial] Fix build errors on ESP8266
+      [ESPEasySerial] Fix (another) build issue on ESP8266 with SWserial disabled
+      [ESPEasySerial] Fix selecting HWCDC on ESP32-C3/S3 for console
+      [ESPEasySerial] Fix Custom ESP32 build
+      [ESPEasySerial] Simplify check availability nr serial ports on SoC
+      [ESPEasySerial] Fix switching HWCDC + dynamically set default pins
+      [ESPEasySerial] Add preliminary support for console serial port fallback
+      [ESPEasySerial] Refactor file names to clarify their use
+      [ESPEasySerial] Fix build issue inconsistent defines
+      [ESPEasySerial] Fix USBCDC on ESP32-S2
+      [ESPEasySerial] Fix fallback USBCDC to Serial0 (input not working yet)
+      [ESPEasySerial] Add separate output buffers for fallback serial
+      [ESPEasySerial] Add setting to enable/disable fallback to serial0
+      [ESPEasySerial] Fix parsing commands via any serial console
+      [ESPEasySerial] Fix crashes on ESP32-C3
+      [USBCDC] Remove 2nd USB CDC port + use USB CDC on ESP32-S3
+      [ESPEasy Console] Show actual serial port config on sysinfo page
+      [Console] Reduce boottime when using CDC as port for console
+      [USB CDC] Add max_ESP32s3_16M8M_LittleFS_CDC  (e.g. for Lilygo T-dongle)
+      [ESP32-S3 CDC] Switch USB serial to HWCDC for ESP32-S3 for web flasher
+      [ESPEasySerial] Fix setting correct baudrate
+      [ESPEasySerial] Fix saving SW serial pins
+      [ESPEasySerial] Get actual baudrate from SW Serial
+      [ESPEasySerial] Add SW Serial support for ESP32
+      [ESPEasySerial] Do not show default GPIO pins on SW Serial
+      [ESPEasySerial] Document new USB serial ports + SWserial for ESP32-xx
+      [ESPEasySerial] Update version nr to v3.0.0
+      [Cleanup] Improve formatting of GPIO description on devices page
+      [HWCDC] Enable HWCDC for all ESP32-C3 builds
+      [USBCDC] Enable USB CDC for all ESP32-S2 builds
+      [HWCDC] Enable HWCDC for all ESP32-S3 builds
+      [Web Flasher] Remove separation of CDC builds in dropdown list
+      [Build] Fix missing include for WiFi.h / ESP8266WiFi.h
+      [Build] Remove confusing custom build env. for ESP32-S2
+      [Build] Fix build not using ESPEasySerial
+      [ESP32 SDK] Update SDK to fixed code for HWCDC.end()
+      [DNS] Fix DNS server corruption by IPv6 global IP prefix
+      [DNS] Allow DNS cache of 0.0.0.0 to be restored
+      [Web flasher] Add link to list of plugins per build to flasher page
+      [Web flasher] Use Tasmota's version of ESP Web Tools JS to flash USBCDC
+      [ESP32-S3] Clarify OPI flash requirements in 16M PSRAM build
+      [Build] Mark P065 as dependency on ESPEasySerial
+      [ESP32-S3] Document SPI mode quirks for ESP32-S3
+      [IMPROV] Implement Improv to ease deployment via web flasher
+      [ESP32-S2] Fix esptool.py upload parameters to help autoreset flashing
+      [Serial Helper] Disable updating GPIOs on switch serial port on webpage
+      [IMPROV] Replace library + modify
+      [IMPROV] Add WiFi scan + board/build identification for web flasher
+      [IMPROV] Fix build on ESP8266
+      [IMPROV] Fix ESP8266
+      [IMPROV] Fix build on ESP8266
+      [IMPROV] Do not include IMPROV in ESP8266 limited build size builds
+      [IMPROV] Fix connect to Wifi + add logging
+      [IMPROV] Clear scan result
+      [IMPROV] Clean up ESPEasy console handling fallback serial
+      [ETH] No DNS entries when using Ethernet (#4702)
+      [IMPROV] Feed invalid IMPROV messages to console input again
+      [IMPROV] Use parse state to check parse result
+      [ESP32 IDF] Update to IDF 4.4.5 (2023-06-14)
+      [ESP32 IDF] Update to IDF 4.4.5 (2023-06-14)
+      [Cleanup] Simplify init plugins
+      [Cleanup] Fix simplify init plugins
+      [Cleanup] Move  Plugin_ptr[] to PROGMEM
+      [Cleanup] Simplify init included controllers
+      [Cleanup] Reduce memory usage on builds with low numbered plugins
+      [Cleanup] Fix missing include
+      [Devices] Fix showing all included plugins in devices pull-down list
+
+Ton Huisman (62):
+      [P152] Add plugin Output - ESP32 DAC
+      [P152] Add plugin to ESP32 and ESP32-S2 Normal (all) builds
+      [Core] Add support for ESP32 DAC GPIO selection, display and checks
+      [P152] Review feedback
+      [Core] ESP32 DAC GPIO review feedback
+      [P152] Add documentation
+      [Core] ESP32 DAC GPIO Show warning for PSRAM pin
+      [P152] Update documentation for PSRAM warning
+      [P153] Add plugin Environment - SHT4x (Temperature Humidity sensor)
+      [P145] Fix compiler warning (unused variable)
+      [P152] Update documentation removing non-existent PSRAM warning (#4624)
+      [P153] Add command support, apply feedback and other improvements
+      [P147] Add plugin Gases - CO2 SGP4x
+      [Helpers] Add `calc_CRC8()` function
+      [P147] Rename plugin Gases - SGP4x VOC(/NOx), add to I2C Scanner
+      [P083] Rename plugin: Gases - SGP30 TVOC/eCO2
+      [Custom] Add P147 options, format some definitions
+      [Lib] Add Sensirion Arduino Gas Index Algorithm library
+      [P147] Implement Sensirion Gas Index lib, finish SGP41 support
+      [P147] Change term Calibration to Compensation
+      [Lib] Revert unsupported sampling frequency from NOxGasIndexAlgorithm
+      [P147] Adjust timing for SGP41, Fix low-power measurement, fix settings-save issue
+      [P147] Include plugin in Collection F build
+      [P152] Minor improvements, add to Custom-sample.h
+      [P153] Minor UI improvements
+      [P153] Add documentation
+      [P147] Make Compensation values each optional, minor UI adjustment
+      [P147] Add documentation
+      [Build] ESP32 derivates available in separate archives
+      [Build] Fix typo in script
+      [Build] Update README.md
+      [Build] Fix quotes in script
+      [Build] Fix quotes in script
+      [Build] Fix wildcards in find command
+      [Build] Fix wildcards in find command
+      [Build] Fix build issue with latest SCons (temp. fix: downgrade)
+      [Build] Fix build issue with latest SCons (copied)
+      [Build] Linux find doesn't like wildcards in variables
+      [Build] Restore for loop and fix silly typo
+      [P152] Apply new CPU defines for enabling plugin
+      [P128] Adjust to latest updates of NeoPixelBuxfx library
+      [P128] Definition improvements for new CPU types, add support for BGR neopixels
+      [C018] Correct include paths (Arduino IDE compilation)
+      [P025] Correct include path (Arduino IDE compilation)
+      [C018][P025] Shorten include paths
+      [P152] Fix typo
+      [SD] Corrections for writing logging to sd-card
+      [SD] Fix SD card filebrowser, add `uploadsd` feature
+      [SD] Fix traversing subdirectories in filebrowser
+      [SD] Corrections for writing logging to sd-card
+      [SD] Fix SD card filebrowser, add `uploadsd` feature
+      [SD] Fix traversing subdirectories in filebrowser
+      [P146] Add documentation
+      [P153] [Bugfix] Using Startup config with Heater enabled causes checksum errors
+      [P153] Return NaN on command-, read- or checksum-error
+      [P146] Clarify setting description
+      [P146] Extend documentation, add example
+      [P146] Extend documentation, fix some typos
+      [Build] Add CONFIGURATION_CODE on System Info page
+      [P037] Remove unsupported Formula fields from settings
+      [C015] Blynk: Fix compile-error when enabling the SSL option
+      [Build] [Bugfix] Typo in enum code for CONFIGURATION_CODE
+
+almirus (3):
+      Plugin P133 (LTR390 UV) was moved from Collection_E to Climate
+      Update define_plugin_sets.h
+      Update doc for P133
+
+
+-------------------------------------------------
 Changes in release mega-20230508 (since mega-20230507)
 -------------------------------------------------
 
