@@ -109,7 +109,7 @@ void sendSyslog(uint8_t logLevel, const String& message)
       // problem resolving the hostname or port
       return;
     }
-    uint8_t prio = Settings.SyslogFacility * 8;
+    unsigned int prio = Settings.SyslogFacility * 8;
 
     if (logLevel == LOG_LEVEL_ERROR) {
       prio += 3; // syslog error
@@ -126,15 +126,14 @@ void sendSyslog(uint8_t logLevel, const String& message)
     // Using Settings.Name as the Hostname (Hostname must NOT content space)
     {
       String header;
-      String hostname = NetworkCreateRFCCompliantHostname(true);
-      hostname.trim();
-      hostname.replace(' ', '_');
-      header.reserve(16 + hostname.length());
-      char str[8] = { 0 };
-      snprintf_P(str, sizeof(str), PSTR("<%u>"), prio);
-      header  = str;
-      header += hostname;
+      header += '<';
+      header += prio;
+      header += '>';
+      header += NetworkCreateRFCCompliantHostname(true);
       header += F(" EspEasy: ");
+      header.trim();
+      header.replace(' ', '_');
+      
       #ifdef ESP8266
       portUDP.write(header.c_str(),                                    header.length());
       #endif // ifdef ESP8266
@@ -143,16 +142,13 @@ void sendSyslog(uint8_t logLevel, const String& message)
       #endif // ifdef ESP32
     }
 
-    const size_t messageLength = message.length();
+    #ifdef ESP8266
+    portUDP.write(message.c_str(), message.length());
+    #endif // ifdef ESP8266
+    #ifdef ESP32
+    portUDP.write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
+    #endif // ifdef ESP32
 
-    for (size_t i = 0; i < messageLength; ++i) {
-      #ifdef ESP8266
-      portUDP.write(message[i]);
-      #endif // ifdef ESP8266
-      #ifdef ESP32
-      portUDP.write((uint8_t)message[i]);
-      #endif // ifdef ESP32
-    }
     portUDP.endPacket();
     FeedSW_watchdog();
     delay(0);

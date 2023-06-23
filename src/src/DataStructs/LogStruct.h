@@ -4,13 +4,13 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/LogEntry.h"
+
 /*********************************************************************************************\
  * LogStruct
 \*********************************************************************************************/
-#define LOG_STRUCT_MESSAGE_SIZE 128
 #ifdef ESP32
   #define LOG_STRUCT_MESSAGE_LINES 60
-  #define LOG_BUFFER_EXPIRE         30000  // Time after which a buffered log item is considered expired.
 #else
   #ifdef USE_SECOND_HEAP
     #define LOG_STRUCT_MESSAGE_LINES 60
@@ -21,7 +21,6 @@
       #define LOG_STRUCT_MESSAGE_LINES 15
     #endif
   #endif
-  #define LOG_BUFFER_EXPIRE         5000  // Time after which a buffered log item is considered expired.
 #endif
 
 struct LogStruct {
@@ -44,7 +43,7 @@ struct LogStruct {
 
   private:
 
-    void add_end(const uint8_t loglevel);
+    void add_end();
 
     void clearExpiredEntries();
 
@@ -55,14 +54,11 @@ struct LogStruct {
       return (idx + 1) % LOG_STRUCT_MESSAGE_LINES;
     }
 
-    String Message[LOG_STRUCT_MESSAGE_LINES] = {};
-    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES] = {0};
+    LogEntry_t Message[LOG_STRUCT_MESSAGE_LINES];
     int write_idx = 0;
     int read_idx = 0;
     unsigned long lastReadTimeStamp = 0;
-    uint8_t log_level[LOG_STRUCT_MESSAGE_LINES] = {0};
     bool is_full = false;
-
 };
 
 
