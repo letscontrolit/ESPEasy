@@ -19,6 +19,7 @@
 
 # include "../Static/WebStaticData.h"
 
+# include "../Helpers/_Plugin_init.h"
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/_Plugin_Helper_serial.h"
 # include "../Helpers/ESPEasy_Storage.h"
@@ -216,21 +217,19 @@ void addDeviceSelect(const __FlashStringHelper *name,  int choice)
   {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
-    if (validDeviceIndex(deviceIndex)) {
-      const pluginID_t pluginID = DeviceIndex_to_Plugin_id[deviceIndex];
+    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
-      if (validPluginID(pluginID)) {
-        deviceName = getPluginNameFromDeviceIndex(deviceIndex);
+    if (validPluginID(pluginID)) {
+      deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
-        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+      # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+      deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
+      # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
-        addSelector_Item(deviceName,
-                         Device[deviceIndex].Number,
-                         choice == Device[deviceIndex].Number);
-      }
+      addSelector_Item(deviceName,
+                        Device[deviceIndex].Number,
+                        choice == Device[deviceIndex].Number);
     }
   }
   addSelector_Foot();
@@ -413,7 +412,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
     if (Device[DeviceIndex].ErrorStateValues) {
       // FIXME TD-er: Must collect these from the web page.
-      Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, &TempEvent, dummy);
+      PluginCall(DeviceIndex, PLUGIN_INIT_VALUE_RANGES, &TempEvent, dummy);
     }
 
     // Make sure the task needs to reload using the new settings.

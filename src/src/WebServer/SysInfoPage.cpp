@@ -161,6 +161,9 @@ void handle_sysinfo_json() {
   json_prop(F("filename"),       getValue(LabelType::BINARY_FILENAME));
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
   json_prop(F("git_head"),       getValue(LabelType::GIT_HEAD));
+  #ifdef CONFIGURATION_CODE
+  json_prop(F("configuration_code"), getValue(LabelType::CONFIGURATION_CODE_LBL));
+  #endif // ifdef CONFIGURATION_CODE
   json_close();
 
   json_open(false, F("esp"));
@@ -514,6 +517,9 @@ void handle_sysinfo_Firmware() {
   addRowLabelValue_copy(LabelType::BINARY_FILENAME);
   addRowLabelValue_copy(LabelType::BUILD_PLATFORM);
   addRowLabelValue_copy(LabelType::GIT_HEAD);
+  #ifdef CONFIGURATION_CODE
+  addRowLabelValue_copy(LabelType::CONFIGURATION_CODE_LBL);
+  #endif  // ifdef CONFIGURATION_CODE
 }
 
 #ifndef WEBSERVER_SYSINFO_MINIMAL
@@ -587,20 +593,8 @@ void handle_sysinfo_ESP_Board() {
 #   if defined(ESP32)
 
   addRowLabel(F("ESP Chip Features"));
-  {
-    String features;
-
-    if (getChipFeatures().wifi_bgn) { features += F("Wi-Fi bgn / "); }
-    if (getChipFeatures().bluetooth_ble) { features += F("BLE / "); }
-    if (getChipFeatures().ieee_802_15_4) { features += F("IEEE 802.15.4 / "); }
-    if (getChipFeatures().embeddedFlash) { features += F("Emb. Flash / "); }
-    if (getChipFeatures().embeddedPSRAM) { features += F("Emb. PSRAM"); }
-    features.trim();
-
-    if (features.endsWith(F("/"))) { features = features.substring(0, features.length() - 1); }
-    addHtml(features);
-  }
-
+  addHtml(getChipFeaturesString());
+  
   addRowLabelValue(LabelType::ESP_CHIP_REVISION);
 #   endif // if defined(ESP32)
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
