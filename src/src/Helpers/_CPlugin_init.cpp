@@ -1040,10 +1040,11 @@ const cpluginID_t ProtocolIndex_to_CPlugin_id[] PROGMEM =
 };
 
 
-bool (*CPlugin_ptr[])(CPlugin::Function,
+typedef bool (*CPlugin_ptr_t)(CPlugin::Function,
                       struct EventStruct *,
-                      String&) PROGMEM =
+                      String&);
 
+const CPlugin_ptr_t PROGMEM CPlugin_ptr[] =
 {
 #ifdef USES_C001
   &CPlugin_001,
@@ -2098,7 +2099,8 @@ bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, stru
 {
   if (protocolIndex < ProtocolIndex_to_CPlugin_id_size)
   {
-    return CPlugin_ptr[protocolIndex](Function, event, string);
+    CPlugin_ptr_t cplugin_call = (CPlugin_ptr_t)pgm_read_ptr(CPlugin_ptr + protocolIndex);
+    return cplugin_call(Function, event, string);
   }
   return false;
 }
