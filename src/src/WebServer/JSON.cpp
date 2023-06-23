@@ -413,7 +413,7 @@ void handle_json()
             nrDecimals = 255;
           }
           stream_next_json_object_value(F("ValueNumber"), x + 1);
-          stream_next_json_object_value(F("Name"),        getTaskValueName(TaskIndex, x));
+          stream_next_json_object_value(F("Name"),        Cache.getTaskDeviceValueName(TaskIndex, x));
           stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
           stream_last_json_object_value(F("Value"), value);
 

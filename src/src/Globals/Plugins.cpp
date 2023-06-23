@@ -660,19 +660,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
         }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-        {
-          #ifndef BUILD_NO_RAM_TRACKER
-          String descr;
-          descr.reserve(20);
-          descr  = F("PluginCall_task_");
-          descr += (event->TaskIndex + 1);
-          #if FEATURE_TIMING_STATS
-          checkRAM(descr, getPluginFunctionName(Function));
-          #else // if FEATURE_TIMING_STATS
-          checkRAM(descr, String(Function));
-          #endif // if FEATURE_TIMING_STATS
-          #endif
-        }
+
+        #ifndef BUILD_NO_RAM_TRACKER
+        checkRAM_PluginCall_task(event->TaskIndex, Function);
+        #endif
+
         if (!prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex)) {
           return false;
         }
@@ -795,8 +787,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     // Call to specific task not interacting with hardware
     case PLUGIN_GET_CONFIG_VALUE:
     case PLUGIN_GET_DEVICEVALUENAMES:
-    case PLUGIN_GET_DEVICEVALUECOUNT:
-    case PLUGIN_GET_DEVICEVTYPE:
     case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_WEBFORM_SAVE:
     case PLUGIN_WEBFORM_SHOW_VALUES:
@@ -807,7 +797,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     #if FEATURE_PLUGIN_STATS
     case PLUGIN_WEBFORM_LOAD_SHOW_STATS:
     #endif // if FEATURE_PLUGIN_STATS
-    case PLUGIN_FORMAT_USERVAR:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
     case PLUGIN_I2C_HAS_ADDRESS:
@@ -818,6 +807,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     //case PLUGIN_MQTT_CONNECTION_STATE:
     //case PLUGIN_MQTT_IMPORT:
     {
+      START_TIMER;
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
       if (validDeviceIndex(DeviceIndex)) {
@@ -831,33 +821,17 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           LoadTaskSettings(event->TaskIndex);
         }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-        {
-          #ifndef BUILD_NO_RAM_TRACKER
-          String descr;
-          descr.reserve(20);
-          descr  = F("PluginCall_task_");
-          descr += (event->TaskIndex + 1);
-          #if FEATURE_TIMING_STATS
-          checkRAM(descr, getPluginFunctionName(Function));
-          #else // if FEATURE_TIMING_STATS
-          checkRAM(descr, String(Function));
-          #endif // if FEATURE_TIMING_STATS
-          #endif
 
-        }
+        #ifndef BUILD_NO_RAM_TRACKER
+        checkRAM_PluginCall_task(event->TaskIndex, Function);
+        #endif
+
         if (Function == PLUGIN_SET_DEFAULTS) {
           for (int i = 0; i < VARS_PER_TASK; ++i) {
             UserVar[event->BaseVarIndex + i] = 0.0f;
           }
         }
-        if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
-          event->Par1 = Device[DeviceIndex].ValueCount;
-        }
-        if (Function == PLUGIN_GET_DEVICEVTYPE) {
-          event->sensorType = Device[DeviceIndex].VType;
-        }
 
-        START_TIMER;
         bool retval =  PluginCall(DeviceIndex, Function, event, str);
 
         // Calls may have updated ExtraTaskSettings, so validate them.
@@ -886,6 +860,36 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
         }
 
+        
+        STOP_TIMER_TASK(DeviceIndex, Function);
+        delay(0); // SMY: call delay(0) unconditionally
+        return retval;
+      }
+      return false;
+    }
+
+    // Frequently made call to specific task not interacting with hardware
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    case PLUGIN_GET_DEVICEVTYPE:
+    case PLUGIN_FORMAT_USERVAR:
+    {
+      START_TIMER;
+      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+
+      if (validDeviceIndex(DeviceIndex)) {
+        event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+
+        #ifndef BUILD_NO_RAM_TRACKER
+//        checkRAM_PluginCall_task(event->TaskIndex, Function);
+        #endif
+
+        if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
+          event->Par1 = Device[DeviceIndex].ValueCount;
+        }
+        if (Function == PLUGIN_GET_DEVICEVTYPE) {
+          event->sensorType = Device[DeviceIndex].VType;
+        }
+        bool retval =  PluginCall(DeviceIndex, Function, event, str);
         if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
           // Check if we have a valid value count.
           if (Output_Data_type_t::Simple == Device[DeviceIndex].OutputDataType) {
@@ -896,13 +900,13 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           }
         }
-        
         STOP_TIMER_TASK(DeviceIndex, Function);
         delay(0); // SMY: call delay(0) unconditionally
         return retval;
       }
       return false;
     }
+
 
   } // case
   return false;

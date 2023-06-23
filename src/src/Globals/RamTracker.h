@@ -56,10 +56,11 @@ void checkRAM(const __FlashStringHelper * flashString,
               const __FlashStringHelper * a);
 void checkRAM(const String& flashString,
               const String& a);
-
+void checkRAM_PluginCall_task(uint8_t taskIndex, uint8_t Function);
 
 void checkRAM(const __FlashStringHelper *  descr);
 void checkRAM(const String& descr);
+bool checkRAM_continue();
 #endif
 
 

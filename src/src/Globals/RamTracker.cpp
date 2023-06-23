@@ -2,6 +2,9 @@
 
 #ifndef BUILD_NO_RAM_TRACKER
 
+#if FEATURE_TIMING_STATS
+#include "../DataStructs/TimingStats.h"
+#endif
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -10,6 +13,7 @@
 
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 RamTracker myRamTracker;
 
@@ -49,6 +53,16 @@ void checkRAM(const __FlashStringHelper * descr ) {
   checkRAM(String(descr));
 }
 
+void checkRAM_PluginCall_task(uint8_t taskIndex, uint8_t Function) {
+  if (!checkRAM_continue()) return;
+  const String descr = concat(F("PluginCall_task_"), taskIndex + 1);
+  #if FEATURE_TIMING_STATS
+  checkRAM(descr, getPluginFunctionName(Function));
+  #else // if FEATURE_TIMING_STATS
+  checkRAM(descr, String(Function));
+  #endif // if FEATURE_TIMING_STATS
+}
+
 void checkRAM(const String& descr ) {
   if (Settings.EnableRAMTracking())
     myRamTracker.registerRamState(descr);
@@ -69,6 +83,22 @@ void checkRAM(const String& descr ) {
     lowestRAM = freeRAM;
     lowestRAMfunction = std::move(descr);
   }
+}
+
+bool checkRAM_continue()
+{
+#ifdef ESP32
+  const uint32_t freeRAM = ESP.getMinFreeHeap();
+#else
+  const uint32_t freeRAM = FreeMem();
+#endif
+  if (freeRAM <= lowestRAM)
+    return true;
+
+  if (getFreeStackWatermark() <= lowestFreeStack) {
+    return true;
+  }
+  return Settings.EnableRAMTracking();
 }
 
 

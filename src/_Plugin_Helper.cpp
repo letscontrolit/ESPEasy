@@ -5,6 +5,7 @@
 #include "src/CustomBuild/ESPEasyLimits.h"
 #include "src/DataStructs/PluginTaskData_base.h"
 #include "src/DataStructs/SettingsStruct.h"
+#include "src/DataStructs/TimingStats.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"

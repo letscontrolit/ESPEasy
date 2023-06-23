@@ -4,6 +4,7 @@
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -295,6 +296,7 @@ void replaceUnicodeByChar(String& line, char replChar) {
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCheck, bool& isvalid) {
   if (event == nullptr) return EMPTY_STRING;
+  START_TIMER;
   isvalid = true;
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -363,7 +365,9 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       return toString(f, nrDecimals);
     }
   }
-  return UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
+  String res =  UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
+  STOP_TIMER(FORMAT_USER_VAR);
+  return res;
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
@@ -537,34 +541,25 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // First we check for not allowed special characters.
     const size_t val_length = value.length();
     for (size_t i = 0; i < val_length; ++i) {
-      switch (value[i]) {
-        case '\n':
-        case '\r':
-        case '\t':
-        case '\\':
-        case '\b':
-        case '\f':
-        case '"':
-        {
-          // Special characters not allowed in JSON:
-          //  \b  Backspace (ascii code 08)
-          //  \f  Form feed (ascii code 0C)
-          //  \n  New line
-          //  \r  Carriage return
-          //  \t  Tab
-          //  \"  Double quote
-          //  \\  Backslash character
-          // Must replace characters, so make a deepcopy
-          String tmpValue(value);
-          tmpValue.replace('\n', '^');
-          tmpValue.replace('\r', '^');
-          tmpValue.replace('\t', ' ');
-          tmpValue.replace('\\', '^');
-          tmpValue.replace('\b', '^');
-          tmpValue.replace('\f', '^');
-          tmpValue.replace('"',  '\'');
-          return wrap_String(tmpValue, '"');
-        }
+      const char c = value[i];
+      // Special characters not allowed in JSON:
+      if (c == '\n'|| //  \n  New line
+          c == '\r'|| //  \r  Carriage return
+          c == '\t'|| //  \t  Tab
+          c == '\\'|| //  \\  Backslash character
+          c == '\b'|| //  \b  Backspace (ascii code 08)
+          c == '\f'|| //  \f  Form feed (ascii code 0C)
+          c == '"') { //  \"  Double quote
+        // Must replace characters, so make a deepcopy
+        String tmpValue(value);
+        tmpValue.replace('\n', '^');
+        tmpValue.replace('\r', '^');
+        tmpValue.replace('\t', ' ');
+        tmpValue.replace('\\', '^');
+        tmpValue.replace('\b', '^');
+        tmpValue.replace('\f', '^');
+        tmpValue.replace('"',  '\'');
+        return wrap_String(tmpValue, '"');
       }
     }
     return wrap_String(value, '"');

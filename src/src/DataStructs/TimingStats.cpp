@@ -76,9 +76,12 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
     case PLUGIN_FORMAT_USERVAR:        return F("FORMAT_USERVAR");
     case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME");
     case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
+    case PLUGIN_GET_DEVICEVALUECOUNT:  return F("GET_DEVICEVALUECOUNT");
+    case PLUGIN_GET_DEVICEVTYPE:       return F("GET_DEVICEVTYPE");
     case PLUGIN_WRITE:                 return F("WRITE");
     case PLUGIN_EVENT_OUT:             return F("EVENT_OUT");
     case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG");
+    case PLUGIN_WEBFORM_LOAD_SHOW_STATS: return F("WEBFORM_LOAD_SHOW_STATS");
     case PLUGIN_SERIAL_IN:             return F("SERIAL_IN");
     case PLUGIN_UDP_IN:                return F("UDP_IN");
     case PLUGIN_CLOCK_IN:              return F("CLOCK_IN");
@@ -110,9 +113,11 @@ bool mustLogFunction(int function) {
     case PLUGIN_WEBFORM_SAVE:          return false;
     case PLUGIN_WEBFORM_LOAD:          return false;
     case PLUGIN_WEBFORM_SHOW_VALUES:   return false;
-    case PLUGIN_FORMAT_USERVAR:        return false;
-    case PLUGIN_GET_DEVICENAME:        return false;
-    case PLUGIN_GET_DEVICEVALUENAMES:  return false;
+    case PLUGIN_FORMAT_USERVAR:        return true;
+    case PLUGIN_GET_DEVICENAME:        return true;
+    case PLUGIN_GET_DEVICEVALUENAMES:  return true;
+    case PLUGIN_GET_DEVICEVALUECOUNT:  return true;
+    case PLUGIN_GET_DEVICEVTYPE:       return true;
     case PLUGIN_WRITE:                 return true;
     case PLUGIN_EVENT_OUT:             return true;
     case PLUGIN_WEBFORM_SHOW_CONFIG:   return false;
@@ -242,6 +247,9 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::SAVE_TO_RTC:                return F("saveToRTC()");
     case TimingStatsElements::BACKGROUND_TASKS:           return F("backgroundtasks()");
     case TimingStatsElements::PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
+    case TimingStatsElements::FORMAT_USER_VAR:            return F("doFormatUserVar()");
+    case TimingStatsElements::IS_NUMERICAL:               return F("isNumerical()");
+    case TimingStatsElements::GET_TASKVALUE_AS_STRING:    return F("TaskValueGetAsString()");
     case TimingStatsElements::HANDLE_SCHEDULER_IDLE:      return F("handle_schedule() idle");
     case TimingStatsElements::HANDLE_SCHEDULER_TASK:      return F("handle_schedule() task");
     case TimingStatsElements::PARSE_TEMPLATE_PADDED:      return F("parseTemplate_padded()");
