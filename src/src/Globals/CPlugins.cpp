@@ -7,16 +7,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
-
-
-
-// FIXME TD-er: Make these private and add functions to access its content.
-std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;
-cpluginID_t ProtocolIndex_to_CPlugin_id[CPLUGIN_MAX + 1];
-
-bool (*CPlugin_ptr[CPLUGIN_MAX])(CPlugin::Function,
-                                 struct EventStruct *,
-                                 String&);
+#include "../Helpers/_CPlugin_init.h"
 
 
 /********************************************************************************************\
@@ -25,7 +16,7 @@ bool (*CPlugin_ptr[CPLUGIN_MAX])(CPlugin::Function,
 bool CPluginCall(CPlugin::Function Function, struct EventStruct *event) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
-  #endif
+  #endif // ifdef USE_SECOND_HEAP
 
   String dummy;
 
@@ -36,7 +27,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
-  #endif
+  #endif // ifdef USE_SECOND_HEAP
 
   struct EventStruct TempEvent;
 
@@ -46,46 +37,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
   switch (Function)
   {
-    // Unconditional calls to all included controller in the build
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
-
-      for (protocolIndex_t x = 0; x < CPLUGIN_MAX; x++) {
-        const cpluginID_t cpluginID = ProtocolIndex_to_CPlugin_id[x];
-        if (validCPluginID(cpluginID)) {
-          #ifndef BUILD_NO_RAM_TRACKER
-          checkRAM(F("CPluginCallADD"), x);
-          #endif
-
-          /*
-          #ifndef BUILD_NO_DEBUG
-          const int freemem_begin = ESP.getFreeHeap();
-          #endif
-          */
-
-          String dummy;
-          CPluginCall(x, Function, event, dummy);
-          /*
-          #ifndef BUILD_NO_DEBUG
-          if (Function == CPlugin::Function::CPLUGIN_PROTOCOL_ADD) {
-            // See also logMemUsageAfter()
-            const int freemem_end = ESP.getFreeHeap();
-            String log = F("After CPLUGIN_ADD ");
-            log += cpluginID;
-            while (log.length() < 30) log += ' ';
-            log += F("Free mem after: ");
-            log += freemem_end;
-            while (log.length() < 54) log += ' ';
-            log += F("ctrlr: ");
-            log += freemem_begin - freemem_end;
-
-            addLog(LOG_LEVEL_INFO, log);
-          }
-          #endif
-          */
-        }
-      }
-      return true;
-
+      // only called from CPluginSetup() directly using protocolIndex
+      break;
 
     // calls to all active controllers
     case CPlugin::Function::CPLUGIN_INIT_ALL:
@@ -98,7 +52,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:
     case CPlugin::Function::CPLUGIN_WRITE:
     {
-      bool success = Function != CPlugin::Function::CPLUGIN_WRITE;
+      const bool success = Function != CPlugin::Function::CPLUGIN_WRITE;
 
       if (Function == CPlugin::Function::CPLUGIN_INIT_ALL) {
         Function = CPlugin::Function::CPLUGIN_INIT;
@@ -106,13 +60,22 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
         if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
-          protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
           event->ControllerIndex = x;
           String command;
-          if (Function == CPlugin::Function::CPLUGIN_WRITE) command = str;
-          const bool success = CPluginCall(ProtocolIndex, Function, event, command);
-          if (success && Function == CPlugin::Function::CPLUGIN_WRITE) {
-            return success;
+
+          if (Function == CPlugin::Function::CPLUGIN_WRITE) {
+            command = str;
+          }
+
+          if (CPluginCall(
+                getProtocolIndex_from_ControllerIndex(x),
+                Function,
+                event,
+                command)) {
+            if (Function == CPlugin::Function::CPLUGIN_WRITE) {
+              // Need to stop when write call was handled
+              return true;
+            }
           }
         }
       }
@@ -132,72 +95,45 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:
     case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
     {
-      controllerIndex_t controllerindex = event->ControllerIndex;
+      const controllerIndex_t controllerindex = event->ControllerIndex;
+      bool success                            = false;
+
       if (validControllerIndex(controllerindex)) {
         if (Settings.ControllerEnabled[controllerindex] && supportedCPluginID(Settings.Protocol[controllerindex]))
         {
           if (Function == CPlugin::Function::CPLUGIN_PROTOCOL_SEND) {
             checkDeviceVTypeForTask(event);
           }
-          protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
-          CPluginCall(ProtocolIndex, Function, event, str);
+          success = CPluginCall(
+            getProtocolIndex_from_ControllerIndex(controllerindex),
+            Function,
+            event,
+            str);
         }
         #ifdef ESP32
+
         if (Function == CPlugin::Function::CPLUGIN_EXIT) {
           Cache.clearControllerSettings(controllerindex);
         }
-        #endif
+        #endif // ifdef ESP32
       }
-      break;
+      return success;
     }
 
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE: // calls to send acknowledge back to controller
 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
         if (Settings.ControllerEnabled[x] && supportedCPluginID(Settings.Protocol[x])) {
-          protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
-          CPluginCall(ProtocolIndex, Function, event, str);
+          CPluginCall(
+            getProtocolIndex_from_ControllerIndex(x),
+            Function,
+            event,
+            str);
         }
       }
       return true;
   }
 
-  return false;
-}
-
-bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, struct EventStruct *event, String& str) {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectDram ephemeral;
-  #endif
-  if (validProtocolIndex(protocolIndex)) {
-    #ifndef BUILD_NO_DEBUG
-    const int freemem_begin = ESP.getFreeHeap();
-    #endif
-
-    START_TIMER;
-    bool ret = CPlugin_ptr[protocolIndex](Function, event, str);
-    STOP_TIMER_CONTROLLER(protocolIndex, Function);
-    #ifndef BUILD_NO_DEBUG
-    if (Function == CPlugin::Function::CPLUGIN_INIT) {
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        // See also logMemUsageAfter()
-        const int freemem_end = ESP.getFreeHeap();
-        String log = F("After CPLUGIN_INIT ");
-        while (log.length() < 30) log += ' ';
-        log += F("Free mem after: ");
-        log += freemem_end;
-        while (log.length() < 54) log += ' ';
-        log += F("ctrlr: ");
-        log += freemem_begin - freemem_end;
-        while (log.length() < 73) log += ' ';
-        log += getCPluginNameFromProtocolIndex(protocolIndex);
-
-        addLogMove(LOG_LEVEL_DEBUG, log);
-      }
-    }
-    #endif
-    return ret;
-  }
   return false;
 }
 
@@ -213,13 +149,11 @@ bool anyControllerEnabled() {
 
 // Find first enabled controller index with this protocol
 controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid) {
-  if (!supportedCPluginID(cpluginid)) {
-    return INVALID_CONTROLLER_INDEX;
-  }
-
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; i++) {
-    if ((Settings.Protocol[i] == cpluginid) && Settings.ControllerEnabled[i]) {
-      return i;
+  if (supportedCPluginID(cpluginid)) {
+    for (controllerIndex_t i = 0; i < CONTROLLER_MAX; i++) {
+      if ((Settings.Protocol[i] == cpluginid) && Settings.ControllerEnabled[i]) {
+        return i;
+      }
     }
   }
   return INVALID_CONTROLLER_INDEX;
@@ -237,31 +171,27 @@ bool validControllerIndex(controllerIndex_t index)
 
 bool validCPluginID(cpluginID_t cpluginID)
 {
-  if (cpluginID == INVALID_C_PLUGIN_ID) {
-    return false;
-  }
-  auto it = CPlugin_id_to_ProtocolIndex.find(cpluginID);
-  return it != CPlugin_id_to_ProtocolIndex.end();
+  return getProtocolIndex_from_CPluginID_(cpluginID) != INVALID_C_PLUGIN_ID;
 }
 
 bool supportedCPluginID(cpluginID_t cpluginID)
 {
-  return validProtocolIndex(getProtocolIndex(cpluginID));
+  return validProtocolIndex(getProtocolIndex_from_CPluginID_(cpluginID));
 }
 
 protocolIndex_t getProtocolIndex_from_ControllerIndex(controllerIndex_t index) {
   if (validControllerIndex(index)) {
-    return getProtocolIndex(Settings.Protocol[index]);
+    return getProtocolIndex_from_CPluginID_(Settings.Protocol[index]);
   }
   return INVALID_PROTOCOL_INDEX;
 }
 
+protocolIndex_t getProtocolIndex_from_CPluginID(cpluginID_t cpluginID) {
+  return getProtocolIndex_from_CPluginID_(cpluginID);
+}
+
 cpluginID_t getCPluginID_from_ProtocolIndex(protocolIndex_t index) {
-  if (index < CPLUGIN_MAX) {
-    const cpluginID_t cpluginID = ProtocolIndex_to_CPlugin_id[index];
-    return cpluginID;
-  }
-  return INVALID_C_PLUGIN_ID;
+  return getCPluginID_from_ProtocolIndex_(index);
 }
 
 cpluginID_t getCPluginID_from_ControllerIndex(controllerIndex_t index) {
@@ -270,41 +200,17 @@ cpluginID_t getCPluginID_from_ControllerIndex(controllerIndex_t index) {
   return getCPluginID_from_ProtocolIndex(protocolIndex);
 }
 
-protocolIndex_t getProtocolIndex(cpluginID_t cpluginID)
-{
-  if (cpluginID != INVALID_C_PLUGIN_ID) {
-    auto it = CPlugin_id_to_ProtocolIndex.find(cpluginID);
-
-    if (it != CPlugin_id_to_ProtocolIndex.end())
-    {
-      if (!validProtocolIndex(it->second)) { return INVALID_PROTOCOL_INDEX; }
-      #ifndef BUILD_NO_DEBUG
-      if (Protocol[it->second].Number != cpluginID) {
-        // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
-        String log = F("getProtocolIndex error in Protocol Vector. CPluginID: ");
-        log += String(cpluginID);
-        log += F(" p_index: ");
-        log += String(it->second);
-        addLogMove(LOG_LEVEL_ERROR, log);
-      }
-      #endif
-      return it->second;
-    }
-  }
-  return INVALID_PROTOCOL_INDEX;
-}
-
 String getCPluginNameFromProtocolIndex(protocolIndex_t ProtocolIndex) {
   String controllerName;
 
   if (validProtocolIndex(ProtocolIndex)) {
-    CPlugin_ptr[ProtocolIndex](CPlugin::Function::CPLUGIN_GET_DEVICENAME, nullptr, controllerName);
+    CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_DEVICENAME, nullptr, controllerName);
   }
   return controllerName;
 }
 
 String getCPluginNameFromCPluginID(cpluginID_t cpluginID) {
-  protocolIndex_t protocolIndex = getProtocolIndex(cpluginID);
+  protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID_(cpluginID);
 
   if (!validProtocolIndex(protocolIndex)) {
     String name = F("CPlugin ");
@@ -313,19 +219,4 @@ String getCPluginNameFromCPluginID(cpluginID_t cpluginID) {
     return name;
   }
   return getCPluginNameFromProtocolIndex(protocolIndex);
-}
-
-
-bool addCPlugin(cpluginID_t cpluginID, protocolIndex_t x) {
-  if (x < CPLUGIN_MAX) { 
-    ProtocolIndex_to_CPlugin_id[x] = cpluginID; 
-    CPlugin_id_to_ProtocolIndex[cpluginID] = x;
-    return true;
-  }
-  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    String log = F("System: Error - Too many C-Plugins. CPLUGIN_MAX = ");
-    log += CPLUGIN_MAX;
-    addLogMove(LOG_LEVEL_ERROR, log);
-  }
-  return false;
 }

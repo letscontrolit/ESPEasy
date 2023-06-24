@@ -61,6 +61,8 @@ bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const Checksu
 
 void Caches::updateActiveTaskUseSerial0() {
   activeTaskUseSerial0 = false;
+  if (deviceCount <= 0)
+    return;
 
   // Check to see if a task is enabled and using the pins we also use for receiving commands.
   // We're now receiving only from Serial0, so check if an enabled task is also using it.

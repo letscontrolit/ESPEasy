@@ -28,9 +28,11 @@
     "flash_size": "4MB",
     "maximum_ram_size": 327680,
     "maximum_size": 4194304,
-    "require_upload_port": true,
     "before_reset": "usb_reset",
-    "after_reset": "no_reset",
+    "after_reset": "hard_reset",
+    "use_1200bps_touch": true,
+    "wait_for_upload_port": true,
+    "require_upload_port": true,
     "speed": 460800
   },
   "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/hw-reference/esp32s2/user-guide-saola-1-v1.2.html",
