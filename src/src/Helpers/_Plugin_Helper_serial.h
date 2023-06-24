@@ -8,7 +8,8 @@
 
 struct ESPeasySerialType;
 
-String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType);
+String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType,
+                                       bool              shortName = false);
 
 void   serialHelper_log_GpioDescription(ESPEasySerialPort typeHint,
                                         int               config_pin1,
@@ -32,8 +33,8 @@ ESPEasySerialPort serialHelper_getSerialType(struct EventStruct *event);
 String            serialHelper_getSerialTypeLabel(struct EventStruct *event);
 
 #ifndef DISABLE_SC16IS752_Serial
-void              serialHelper_addI2CuartSelectors(int address,
-                                                   int channel);
+void serialHelper_addI2CuartSelectors(int address,
+                                      int channel);
 #endif // ifndef DISABLE_SC16IS752_Serial
 
 void serialHelper_webformLoad(struct EventStruct *event);

@@ -15,8 +15,8 @@
 #include <ESPEasySerialType.h>
 
 
-String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
-  return ESPEasySerialPort_toString(serType);
+String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType, bool shortName) {
+  return ESPEasySerialPort_toString(serType, shortName);
 }
 
 void serialHelper_log_GpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2) {
