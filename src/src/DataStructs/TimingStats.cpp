@@ -81,7 +81,9 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
     case PLUGIN_WRITE:                 return F("WRITE");
     case PLUGIN_EVENT_OUT:             return F("EVENT_OUT");
     case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG");
+    #if FEATURE_PLUGIN_STATS
     case PLUGIN_WEBFORM_LOAD_SHOW_STATS: return F("WEBFORM_LOAD_SHOW_STATS");
+    #endif
     case PLUGIN_SERIAL_IN:             return F("SERIAL_IN");
     case PLUGIN_UDP_IN:                return F("UDP_IN");
     case PLUGIN_CLOCK_IN:              return F("CLOCK_IN");
