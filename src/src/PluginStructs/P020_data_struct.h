@@ -35,12 +35,16 @@
 # define P020_FLAG_LED_INVERTED         3
 # define P020_FLAG_P1_EVENT_DATA        4
 # define P020_FLAG_P044_MODE_SAVED      8
+# define P020_FLAG_EVENT_SERIAL_ID      9
+# define P020_FLAG_APPEND_TASK_ID       10
 # define P020_IGNORE_CLIENT_CONNECTED   bitRead(P020_FLAGS, P020_FLAG_IGNORE_CLIENT)
 # define P020_HANDLE_MULTI_LINE         bitRead(P020_FLAGS, P020_FLAG_MULTI_LINE)
 # define P020_GET_LED_ENABLED           bitRead(P020_FLAGS, P020_FLAG_LED_ENABLED)
 # define P020_GET_LED_INVERTED          bitRead(P020_FLAGS, P020_FLAG_LED_INVERTED)
 # define P020_GET_P1_EVENT_DATA         bitRead(P020_FLAGS, P020_FLAG_P1_EVENT_DATA)
 # define P020_GET_P044_MODE_SAVED       bitRead(P020_FLAGS, P020_FLAG_P044_MODE_SAVED)
+# define P020_GET_EVENT_SERIAL_ID       bitRead(P020_FLAGS, P020_FLAG_EVENT_SERIAL_ID)
+# define P020_GET_APPEND_TASK_ID        bitRead(P020_FLAGS, P020_FLAG_APPEND_TASK_ID)
 
 # define P020_DEFAULT_SERVER_PORT           1234
 # define P020_DEFAULT_BAUDRATE              115200
@@ -151,6 +155,10 @@ struct P020_Task : public PluginTaskData_base {
   ParserState   state              = ParserState::WAITING;
   char          _space             = 0;
   char          _newline           = 0;
+  bool          _serialId          = false;
+  bool          _appendTaskId      = false;
+
+  ESPEasySerialPort _port;
 };
 
 #endif // ifdef USES_P020

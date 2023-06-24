@@ -8,6 +8,10 @@
 
 /************
  * Changelog:
+ * 2023-06-24 tonhuisman: Fix initialization with non-GPIO serial ports like CDC/HW-CDC
+ *                        Add option: append the task number to the event-name (Generic and RFLink event options)
+ * 2023-06-23 tonhuisman: Add option: use Serial Port name (serialxxx -> xxx= 0/1/2/0swap/i2c/sw/hwcdc/cdc) as event-name for Generic events
+ * 2023-06-02 tonhuisman: Allow buffer up to 2kB. Use ESPEasySerial buffering feature
  * 2023-03-25 tonhuisman: Change serialsendmix to handle 0x00 also, by implementing parseHexTextData()
  * 2022-12-12 tonhuisman: Add character conversion for the received serial data, act on Space and/or Newline
  * 2022-10-11 tonhuisman: Add option for including the message in P1 #data event
@@ -204,6 +208,20 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("When enabled, passes the entire message in the event. <B>Warning:</B> can cause memory overflow issues!"));
         # endif // ifndef LIMIT_BUILD_SIZE
 
+        if (P020_Events::Generic == static_cast<P020_Events>(P020_SERIAL_PROCESSING)) {
+          addFormCheckBox(F("Use Serial Port as eventname"), F("pevtname"), P020_GET_EVENT_SERIAL_ID);
+          # ifndef LIMIT_BUILD_SIZE
+          addFormNote(F("(Event processing: Generic only!)"));
+          # endif // ifndef LIMIT_BUILD_SIZE
+        }
+
+        if (P020_Events::P1WiFiGateway != static_cast<P020_Events>(P020_SERIAL_PROCESSING)) {
+          addFormCheckBox(F("Append Task Number to eventname"), F("papptask"), P020_GET_APPEND_TASK_ID);
+          # ifndef LIMIT_BUILD_SIZE
+          addFormNote(F("(Event processing: Generic and RFLink only!)"));
+          # endif // ifndef LIMIT_BUILD_SIZE
+        }
+
         if (!P020_Emulate_P044) { // Not appropriate for P1 WiFi Gateway
           addFormSeparatorCharInput(F("Replace spaces in event by"),   F("replspace"),
                                     P020_REPLACE_SPACE, F(P020_REPLACE_CHAR_SET), F(""));
@@ -226,7 +244,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         addFormPinSelect(PinSelectPurpose::Generic, F("Reset target after init"), F("presetpin"), P020_RESET_TARGET_PIN);
 
         if (!P020_Emulate_P044) {
-          addFormNumericBox(F("RX buffer size (bytes)"), F("prx_buffer"), P020_RX_BUFFER, 256, 1024);
+          addFormNumericBox(F("RX buffer size (bytes)"), F("prx_buffer"), P020_RX_BUFFER, 256, 2048);
           # ifndef LIMIT_BUILD_SIZE
           addFormNote(F("Standard RX buffer 256B; higher values could be unstable; energy meters could require 1024B"));
           # endif // ifndef LIMIT_BUILD_SIZE
@@ -267,6 +285,14 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P020_FLAG_LED_ENABLED,   isFormItemChecked(F("pled")));
       bitWrite(lSettings, P020_FLAG_LED_INVERTED,  isFormItemChecked(F("pledinv")));
       bitWrite(lSettings, P020_FLAG_P1_EVENT_DATA, isFormItemChecked(F("pp1event")));
+
+      if (P020_Events::Generic == static_cast<P020_Events>(P020_SERIAL_PROCESSING)) {
+        bitWrite(lSettings, P020_FLAG_EVENT_SERIAL_ID, isFormItemChecked(F("pevtname")));
+      }
+
+      if (P020_Events::P1WiFiGateway != static_cast<P020_Events>(P020_SERIAL_PROCESSING)) {
+        bitWrite(lSettings, P020_FLAG_APPEND_TASK_ID, isFormItemChecked(F("papptask")));
+      }
 
       if (P020_Emulate_P044) {
         bitSet(lSettings, P020_FLAG_P044_MODE_SAVED); // Set to P044 configuration done on every save
