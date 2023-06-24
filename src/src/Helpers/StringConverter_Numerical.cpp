@@ -37,18 +37,18 @@ String toString(const float& value, unsigned int decimalPlaces)
   }
   #endif // ifndef LIMIT_BUILD_SIZE
   */
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+// #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
   //  #ifdef ESP8266
   char buf[decimalPlaces + 42];
-  ZERO_FILL(buf);
   String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
 
+/*
 #else
   String sValue = String(value, decimalPlaces);
 #endif
-
+*/
   sValue.trim();
   return sValue;
 }

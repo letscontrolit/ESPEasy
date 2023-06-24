@@ -76,8 +76,9 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
+      const int valueCount = P026_NR_OUTPUT_VALUES;
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        if (i < P026_NR_OUTPUT_VALUES) {
+        if (i < valueCount) {
           const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
@@ -136,8 +137,9 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       // Work around to get the "none" at the end.
       options[index] = Plugin_026_valuename(11, true);
       indices[index] = 11;
-
-      for (uint8_t i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+      
+      const int valueCount = P026_NR_OUTPUT_VALUES;
+      for (uint8_t i = 0; i < valueCount; ++i) {
         const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
         sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options, indices);
       }
@@ -153,7 +155,8 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       // Save output selector parameters.
-      for (uint8_t i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+      const int valueCount = P026_NR_OUTPUT_VALUES;
+      for (uint8_t i = 0; i < valueCount; ++i) {
         const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
         const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_026_valuename(choice, false));
@@ -170,18 +173,19 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+      const int valueCount = P026_NR_OUTPUT_VALUES;
+      for (int i = 0; i < valueCount; ++i) {
         UserVar[event->BaseVarIndex + i] = P026_get_value(PCONFIG(i));
       }
       #ifndef LIMIT_BUILD_SIZE
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
 
-        if (log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1)))
+        if (log.reserve(7 * (valueCount + 1)))
         {
           log += F("SYS  : ");
 
-          for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+          for (int i = 0; i < valueCount; ++i) {
             if (i != 0) {
               log += ',';
             }
