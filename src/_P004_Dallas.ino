@@ -116,10 +116,12 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
+      const int valueCount = P004_NR_OUTPUT_VALUES;
+
       if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
-        addFormCheckBox(F("Auto Select Sensor"), F("autoselect"), P004_SCAN_ON_INIT, P004_NR_OUTPUT_VALUES > 1);
+        addFormCheckBox(F("Auto Select Sensor"), F("autoselect"), P004_SCAN_ON_INIT, valueCount > 1);
         addFormNote(F("Auto Select can only be used for 1 Dallas sensor per GPIO pin."));
-        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
+        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, valueCount);
 
         {
           // Device Resolution select
@@ -155,7 +157,6 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
             static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr != P004_data) {
-            const int valueCount = P004_NR_OUTPUT_VALUES;
             for (uint8_t i = 0; i < valueCount; ++i) {
               if (i == 0) {
                 addFormSubHeader(F("Statistics"));
