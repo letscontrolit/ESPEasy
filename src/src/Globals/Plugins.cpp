@@ -280,7 +280,6 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           case PLUGIN_FIFTY_PER_SECOND:
           case PLUGIN_INIT:           // Second set, instead of PLUGIN_INIT_ALL
           case PLUGIN_CLOCK_IN:
-          case PLUGIN_EVENT_OUT:
           case PLUGIN_TIME_CHANGE:
           #if FEATURE_PLUGIN_PRIORITY
           case PLUGIN_PRIORITY_INIT:
@@ -312,7 +311,6 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
             case PLUGIN_FIFTY_PER_SECOND:
             case PLUGIN_INIT:           // Second set, instead of PLUGIN_INIT_ALL
             case PLUGIN_CLOCK_IN:
-            case PLUGIN_EVENT_OUT:
             case PLUGIN_TIME_CHANGE:
               {
                 checkRAM(F("PluginCall_s"), taskIndex);
@@ -541,7 +539,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_FIFTY_PER_SECOND:
     case PLUGIN_INIT_ALL:
     case PLUGIN_CLOCK_IN:
-    case PLUGIN_EVENT_OUT:
     case PLUGIN_TIME_CHANGE:
     {
       if (Function == PLUGIN_INIT_ALL) {

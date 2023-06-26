@@ -82,11 +82,6 @@ void sendData(struct EventStruct *event)
     }
   }
 
-  // FIXME TD-er: This PLUGIN_EVENT_OUT seems to be unused.
-  {
-    String dummy;
-    PluginCall(PLUGIN_EVENT_OUT, event, dummy);
-  }
   lastSend = millis();
   STOP_TIMER(SEND_DATA_STATS);
 }

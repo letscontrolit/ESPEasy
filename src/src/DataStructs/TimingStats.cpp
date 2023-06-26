@@ -79,7 +79,6 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
     case PLUGIN_GET_DEVICEVALUECOUNT:  return F("GET_DEVICEVALUECOUNT");
     case PLUGIN_GET_DEVICEVTYPE:       return F("GET_DEVICEVTYPE");
     case PLUGIN_WRITE:                 return F("WRITE");
-    case PLUGIN_EVENT_OUT:             return F("EVENT_OUT");
     case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG");
     #if FEATURE_PLUGIN_STATS
     case PLUGIN_WEBFORM_LOAD_SHOW_STATS: return F("WEBFORM_LOAD_SHOW_STATS");
@@ -121,7 +120,6 @@ bool mustLogFunction(int function) {
     case PLUGIN_GET_DEVICEVALUECOUNT:  return true;
     case PLUGIN_GET_DEVICEVTYPE:       return true;
     case PLUGIN_WRITE:                 return true;
-    case PLUGIN_EVENT_OUT:             return true;
     case PLUGIN_WEBFORM_SHOW_CONFIG:   return false;
     case PLUGIN_SERIAL_IN:             return true;
     case PLUGIN_UDP_IN:                return true;
