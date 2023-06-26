@@ -128,17 +128,14 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   {
     infoReply.destUnit = destUnit;
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
-    delay(10);
   } else {
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
-        delay(10);
       }
     }
   }
-  delay(50);
 }
 
 void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t destTaskIndex)
@@ -169,17 +166,14 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   {
     dataReply.destUnit = destUnit;
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
-    delay(10);
   } else {
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
-        delay(10);
       }
     }
   }
-  delay(50);
 }
 
 /*********************************************************************************************\
