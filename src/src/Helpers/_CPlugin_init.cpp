@@ -2099,8 +2099,11 @@ bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, stru
 {
   if (protocolIndex < ProtocolIndex_to_CPlugin_id_size)
   {
+    START_TIMER;
     CPlugin_ptr_t cplugin_call = (CPlugin_ptr_t)pgm_read_ptr(CPlugin_ptr + protocolIndex);
-    return cplugin_call(Function, event, string);
+    const bool res = cplugin_call(Function, event, string);
+    STOP_TIMER_CONTROLLER(protocolIndex, Function);
+    return res;
   }
   return false;
 }

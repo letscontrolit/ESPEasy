@@ -118,9 +118,8 @@ long stream_timing_statistics(bool clearStats) {
           html_TR_TD();
         }
         {
-          addHtml(F("P_"));
-          addHtmlInt(Device[deviceIndex].Number);
-          addHtml('_');
+          addHtml(get_formatted_Plugin_number(Device[deviceIndex].Number));
+          addHtml(' ');
           addHtml(getPluginNameFromDeviceIndex(deviceIndex));
         }
         html_TD();
@@ -142,9 +141,8 @@ long stream_timing_statistics(bool clearStats) {
         html_TR_TD();
       }
       {
-        addHtml(F("C_"));
-        addHtmlInt(Protocol[ProtocolIndex].Number);
-        addHtml('_');
+        addHtml(get_formatted_Controller_number(Protocol[ProtocolIndex].Number));
+        addHtml(' ');
         addHtml(getCPluginNameFromProtocolIndex(ProtocolIndex));
       }
       html_TD();
