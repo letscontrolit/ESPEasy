@@ -3,15 +3,16 @@ Supported ESP Chips
 
 ESPEasy does support a number of variants of the processors manufactured by Espressif.
 
-* ESP8266 The original ESP processor, with external flash.
-* ESP8285 Mainly found in "Chinese" products. Has flash built in the processor. (almost always 1MByte flash)
-* ESP32 The first successor of the ESP82xx, supporting 2 CPU cores, Bluetooth and more RAM and more GPIO pins. (and other new features)
-* ESP32-S2 Has more GPIO pins than the ESP32, but only 1 CPU core. Initial support in ESPEasy added since 2021-09-19.
-* ESP32-S3 Support added: 2023-05-03
-* ESP32-C3 Support added: 2023-05-03
-* ESP32-C2 (ESP8684) Not yet supported
-* ESP32-C6 Not yet supported
-* ESP32-H2 Not yet supported
+* **ESP8266** The original ESP processor, with external flash.
+* **ESP8285** Mainly found in "Chinese" products. Has flash built in the processor. (almost always 1MByte flash)
+* **ESP32** The first successor of the ESP82xx, supporting 2 CPU cores, Bluetooth and more RAM and more GPIO pins. (and other new features)
+* **ESP32-solo1** Same as ESP32, but with 1 core, running at 160 MHz. Used in some commercially sold devices like the early editions of the orange Shelly modules.
+* **ESP32-S2** Has more GPIO pins than the ESP32, but only 1 CPU core. Initial support in ESPEasy added since 2021-09-19.
+* **ESP32-S3** Support added: 2023-05-03
+* **ESP32-C3 / ESP8685** Support added: 2023-05-03
+* **ESP32-C2 / ESP8684** Not yet supported
+* **ESP32-C6** Not yet supported
+* **ESP32-H2** Not yet supported
 
 
 .. list-table:: Espressif platforms
@@ -21,7 +22,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
 
    *  - 
       - ESP8266 (ESP8285)
-      - ESP32
+      - ESP32 (ESP32solo1)
       - ESP32-S2
       - ESP32-S3
       - ESP32-C3 (ESP8685)
@@ -30,7 +31,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - ESP32-H2
    *  - CPU
       - Xtensa® single-core 32-bit L106
-      - Xtensa® dual-core 32-bit LX6
+      - Xtensa® dual-core 32-bit LX6 (solo1:single core)
       - Xtensa® single-core 32-bit LX7
       - Xtensa® dual-core 32-bit LX7
       - 32-bit RISC-V single-core processor
@@ -39,7 +40,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 32-bit RISC-V single-core processor
    *  - Core
       - 1
-      - 2
+      - 2 (solo1:1)
       - 1
       - 2
       - 1
@@ -48,7 +49,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 1
    *  - Freq. (MHz)
       - 80
-      - 240
+      - 240 (solo1:160)
       - 240
       - 240
       - 160
@@ -66,7 +67,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 3.3 ~ 3.6
    *  - ESPEasy supported since
       - 2015/05
-      - 2017/12
+      - 2017/12 (solo1:2023/05)
       - 2021/09
       - 2023/05
       - 2023/05
@@ -84,7 +85,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2021
    *  - Status (2023/05)
       - NRND
-      - Mass Production
+      - Mass Production (solo1: NRND)
       - NRND
       - Mass Production
       - Mass Production
@@ -422,16 +423,17 @@ Sources:
 * `Table content source <https://maker.pro/esp8266/tutorial/a-comparison-of-the-new-esp32-s2-to-the-esp32>`_
 * `Espressif docs <https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32c2/hw-reference/chip-series-comparison.html>`_
 * `Espressif Product Selector <https://products.espressif.com/#/product-comparison>`_
+* `Espressif ESP32-xx modules overview <https://www.espressif.com/en/products/modules>`_
 
 Datasheets
 ==========
 
 * `DS:ESP8266 (ESP8285) <https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf>`_
-* `DS:ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf>`_
+* `DS:ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf>`_ / `DS:ESP32-solo1 <https://www.espressif.com/sites/default/files/documentation/esp32-solo-1_datasheet_en.pdf>`_ 
 * `DS:ESP32-S2 <https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf>`_
 * `DS:ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf>`_
-* `DS:ESP32-C3 (ESP8685) <https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf>`_
-* `DS:ESP32-C2 (ESP8684) <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_
+* `DS:ESP32-C3 <https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf>`_ / `DS:ESP8685 <https://www.espressif.com/sites/default/files/documentation/esp8685_datasheet_en.pdf>`_ 
+* `DS:ESP32-C2 <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_ / `DS:ESP8684 <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_ 
 * `DS:ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf>`_
 * `DS:ESP32-H2 <https://cdn-shop.adafruit.com/product-files/5715/esp32-h2_datasheet_en.pdf>`_
 
@@ -467,12 +469,12 @@ Otherwise the only way to upgrade to a newer build is by flashing using the seri
 
 
 
-ESP32
-=====
+ESP32/ESP32-solo1
+=================
 
 The most important new features of the ESP32, compared to ESP82xx are:
 
-- Dual core CPU @ 240 MHz
+- Dual core CPU @ 240 MHz (solo1: Single core CPU @ 160 MHz)
 - Upto 320 kByte of RAM
 - 3 Hardware serial ports
 - Bluetooth (not supported yet in ESPEasy)
@@ -481,6 +483,20 @@ The most important new features of the ESP32, compared to ESP82xx are:
 - Upto 10 touch pins
 - Support for Ethernet
 
+.. note:: Use ESP32-solo1 build for unknown ESP32-based devices, or when flashing an "ESP32-classic" build results in a boot-loop.
+
+The ESP32-solo1 is known to be used in:
+
+* Shelly Plus 1
+* Shelly Plus 1PM
+* Shelly Plus 2PM
+* Shelly Plus i4 (only early shipped units)
+* Most Xiaomi devices seem to have an OEM ESP32-solo1
+
+Support for the ESP32-solo1 is only added because some vendors have used it in their products. 
+Since there is only a very limited set of devices using a single core ESP32, we only provide the basic versions of ESPEasy builds for this platform.
+
+The "solo1" variant does not add any extras compared to the ESP32 dual core and thus should not be used in new products.
 
 
 ESP32-S2
@@ -642,8 +658,8 @@ Build versions:
 
 
 
-ESP32-C3
-========
+ESP32-C3/ESP8685
+================
 
 Added: 2023/05/09
 
@@ -651,7 +667,9 @@ The ESP32-C3 is available in various versions.
 
 For example there is an ESP32-C3-12F module made by Espressif clearly aimed to be a 1-to-1 replacement of the ESP12-F, which uses the ESP8266.
 
-Due to the used RISC-V core used in the ESP32-C3, this is a very 'snappy' device and the SDK support appears to be far more mature then what one might expect given its relative recent introduction.
+The ESP8685 seems to be low budget alternative for the ESP32-C3 with only difference being the embedded flash inside the ESP chip and slightly smaller dimensions as the GPIO pins for flash are not made available outside the chip.
+
+Due to the RISC-V core used in the ESP32-C3, this is a very 'snappy' device and the SDK support appears to be far more mature then what one might expect given its relative recent introduction.
 
 .. note:: Support for the ESP32-C3 is very preliminary, as in it is hardly tested (as of May 2023)
 
@@ -663,6 +681,7 @@ The ESP32-C2 is only available with embedded flash and can only be found labelle
 
 It looks like it is aimed to be used in single purpose devices, due to its low GPIO count and only requiring a bare minimum of external parts.
 
+It is yet unclear whether the ESP8684 and ESP32-C2 are exchangable, like with the ESP32-C3 and the ESP8685.
 
 .. note:: Not yet supported (as of May 2023)
 
