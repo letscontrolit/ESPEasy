@@ -1129,10 +1129,12 @@ void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    uint8_t                taskValueIndex,
                                    bool             useURLencode) {
-  if (validTaskIndex(event->TaskIndex)) {
-    repl(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex), s, useURLencode);
-  } else {
-    repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
+  if (s.indexOf('%') != -1) {
+    String str;
+    if (validTaskIndex(event->TaskIndex)) {
+      str = getTaskValueName(event->TaskIndex, taskValueIndex);
+    }
+    repl(F("%valname%"), str, s, useURLencode);
   }
 }
 
