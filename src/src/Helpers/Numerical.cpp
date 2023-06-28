@@ -169,10 +169,11 @@ bool mustConsiderAsJSONString(const String& value) {
   }
 
   NumericalType detectedType;
-  const bool    isNum  = isNumerical(value, detectedType);
-  const bool    isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
-
-  return !isBool && (!isNum || value.isEmpty() || mustConsiderAsString(detectedType));
+  if (isNumerical(value, detectedType)) {
+    return mustConsiderAsString(detectedType);
+  }
+  const bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
+  return !isBool;
 }
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
