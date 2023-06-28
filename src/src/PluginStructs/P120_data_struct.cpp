@@ -770,17 +770,14 @@ void P120_data_struct::plugin_get_device_value_names(struct EventStruct *event)
     if (i < valueCount) {
       const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
       uint8_t choice             = PCONFIG(pconfigIndex);
-      safe_strncpy(
-        ExtraTaskSettings.TaskDeviceValueNames[i],
-        P120_data_struct::valuename(choice, false),
-        sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+      ExtraTaskSettings.setTaskDeviceValueName(i, P120_data_struct::valuename(choice, false));
 
       // Set decimals for RAW values to 0, Others to 2 decimals
       if (choice <= 3) {
         ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
       }
     } else {
-      ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+      ExtraTaskSettings.clearTaskDeviceValueName(i);
     }
   }
 }

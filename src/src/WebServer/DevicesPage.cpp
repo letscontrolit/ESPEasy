@@ -316,7 +316,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
         // Restore the settings that were already set by the user
         for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
           if (!oldNames[i].isEmpty()) {
-            safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[i], oldNames[i], sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+            ExtraTaskSettings.setTaskDeviceValueName(i, oldNames[i]);
             ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
           }
         }

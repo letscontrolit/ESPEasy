@@ -20,6 +20,10 @@ ControllerSettingsStruct::ControllerSettingsStruct()
 }
 
 void ControllerSettingsStruct::reset() {
+  // Need to make sure every byte between the members is also zero
+  // Otherwise the checksum will fail and settings will be saved too often.
+  memset(this, 0, sizeof(ControllerSettingsStruct));
+
   UseDNS                     = DEFAULT_SERVER_USEDNS;
   Port                       = DEFAULT_PORT;
   MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
@@ -31,16 +35,6 @@ void ControllerSettingsStruct::reset() {
   SampleSetInitiator         = INVALID_TASK_INDEX;
   VariousFlags               = 0;
 
-  for (uint8_t i = 0; i < 4; ++i) {
-    IP[i] = 0;
-  }
-  ZERO_FILL(HostName);
-  ZERO_FILL(ClientID);
-  ZERO_FILL(Publish);
-  ZERO_FILL(Subscribe);
-  ZERO_FILL(MQTTLwtTopic);
-  ZERO_FILL(LWTMessageConnect);
-  ZERO_FILL(LWTMessageDisconnect);
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 

@@ -80,12 +80,9 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < valueCount) {
           const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_026_valuename(PCONFIG(pconfigIndex), false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_026_valuename(PCONFIG(pconfigIndex), false));
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;

@@ -36,6 +36,11 @@ struct ExtraTaskSettingsStruct
   static bool   validCharForNames(char character);
   static String getInvalidCharsForNames();
 
+  void          setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const String& str);
+  void          setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const __FlashStringHelper * str);
+
+  void          clearTaskDeviceValueName(taskVarIndex_t taskVarIndex);
+
   void          setAllowedRange(taskVarIndex_t taskVarIndex,
                                 const float  & minValue,
                                 const float  & maxValue);

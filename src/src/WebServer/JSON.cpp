@@ -694,9 +694,9 @@ void stream_last_json_object_value(const __FlashStringHelper * object, int value
 void stream_json_object_values(const LabelType::Enum labels[])
 {
   size_t i = 0;
+  LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
 
   while (true) {
-    const LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
     const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
     const bool nextIsLast      = next == LabelType::MAX_LABEL;
 
@@ -707,6 +707,7 @@ void stream_json_object_values(const LabelType::Enum labels[])
       stream_next_json_object_value(cur);
     }
     ++i;
+    cur = next;
   }
 }
 
