@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P153
 
-# include <SparkFun_SCD4x_Arduino_Library.h>
-
 # define P153_I2C_ADDRESS             PCONFIG(0)
 # define P153_STARTUP_CONFIGURATION   PCONFIG(1)
 # define P153_INTERVAL_LOOPS          PCONFIG(2)

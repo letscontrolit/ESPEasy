@@ -87,8 +87,11 @@
   #endif
 #endif
 
+#ifndef DEVICE_INDEX_MAX
+  #define DEVICE_INDEX_MAX                   255
+#endif
 #ifndef PLUGIN_MAX
-  #define PLUGIN_MAX                DEVICES_MAX
+  #define PLUGIN_MAX                         255
 #endif
 #ifndef CPLUGIN_MAX
   #define CPLUGIN_MAX                        20

@@ -1,0 +1,22 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``cachereader,setreadpos[,<filenr>,[<filepos>]]``
+
+    | ``<filenr>``: The file to change the read position, defaults to 0.
+    | ``<filepos>``: The position withing the file, defaults to 0.
+    ","
+    | Updates the reading position with the file, identified by number.
+    "
+    "
+    | ``cachereader,sendtaskinfo``
+    ","
+    | Sends out the cached taskinfo data to the configured (MQTT) Controller.
+    "
+    "
+    | ``cachereader,flush``
+    ","
+    | Flushes any buffers in the Cache Controller, so data is updated on the file-system.
+    "

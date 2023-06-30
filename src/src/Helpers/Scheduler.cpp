@@ -151,11 +151,17 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
     case SchedulerTimerType_e::SystemEventQueue:
     {
       const PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
-      const uint8_t index          = (id >> 8) & 0xFF;
+      const uint8_t index          = (id >> 8) & 0xFF; // DeviceIndex / ProtocolIndex / NotificationProtocolIndex
       const uint8_t function       = id & 0xFF;
       result += toString(ptr_type);
       result += ',';
-      result += (index + 1); // TaskIndex / ControllerIndex / NotificationIndex
+      if (ptr_type == PluginPtrType::ControllerPlugin) {
+        result += getCPluginNameFromProtocolIndex(index);
+      } else if (ptr_type == PluginPtrType::TaskPlugin) {
+        result += getPluginNameFromDeviceIndex(index);
+      } else {
+        result += (index + 1); 
+      }
       result += ',';
       result += function;
 
@@ -872,7 +878,7 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 
   if (validDeviceIndex(deviceIndex)) {
     String dummy;
-    Plugin_ptr[deviceIndex](PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
+    PluginCall(deviceIndex, PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
   }
   STOP_TIMER(PLUGIN_CALL_DEVICETIMER_IN);
 }
@@ -1251,7 +1257,7 @@ void ESPEasy_Scheduler::process_system_event_queue() {
           // FIXME TD-er: LoadTaskSettings should only be called when needed, not pre-emptive.
           LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
         }
-        Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
+        PluginCall(Index, Function, &ScheduledEventQueue.front().event, tmpString);
       }
       break;
     case PluginPtrType::ControllerPlugin:
