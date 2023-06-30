@@ -27,6 +27,7 @@
 # ifndef P036_LIMIT_BUILD_SIZE
 #  define P036_SEND_EVENTS       // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
 #  define P036_ENABLE_LINECOUNT  // Enable the linecount subcommand
+#  define P036_USERDEF_HEADERS   // Enable User defined headers
 # endif // ifndef P036_LIMIT_BUILD_SIZE
 # define P036_ENABLE_HIDE_FOOTER // Enable the Hide indicator (footer) option
 # define P036_ENABLE_LEFT_ALIGN  // Enable the Left-align content option and leftalign subcommand
@@ -107,6 +108,10 @@ enum class eHeaderContent {
   eTime     = 12,
   eDate     = 13,
   ePageNo   = 14,
+  # ifdef P036_USERDEF_HEADERS
+  eUserDef1 = 15,
+  eUserDef2 = 16,
+  # endif // ifdef P036_USERDEF_HEADERS
 };
 
 enum class p036_resolution {
@@ -144,9 +149,9 @@ typedef struct {
 } tScrollingLines;
 
 typedef struct {
-  String                     SPLcontent; // content
+  String                     SPLcontent;    // content
   OLEDDISPLAY_TEXT_ALIGNMENT Alignment = TEXT_ALIGN_LEFT;
-  uint8_t                    SPLidx = 0;     // index to DisplayLinesV1
+  uint8_t                    SPLidx    = 0; // index to DisplayLinesV1
 } tScrollingPageLines;
 
 typedef struct {
@@ -229,9 +234,9 @@ typedef struct {
 
 typedef struct {
   uint8_t fontIdx = 0; // font index for this line setting
-  uint8_t Top = 0;     // top in pix for this line setting
-  uint8_t Height = 0;  // font height in pix
-  int8_t  Space = 0;   // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
+  uint8_t Top     = 0; // top in pix for this line setting
+  uint8_t Height  = 0; // font height in pix
+  int8_t  Space   = 0; // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
 # ifdef P036_FONT_CALC_LOG
   const __FlashStringHelper* FontName() const;
 # endif // ifdef P036_FONT_CALC_LOG
@@ -247,15 +252,15 @@ typedef struct {
 } tSizeSettings;
 
 typedef struct {
-  uint8_t frame = 0;           // frame for this line
+  uint8_t frame           = 0; // frame for this line
   uint8_t DisplayedPageNo = 0; // number of shown pages for this line, set in CalcMaxPageCount()
-  uint8_t ypos = 0;            // ypos for this line
-  uint8_t fontIdx = 0;         // font index for this line
-  uint8_t FontHeight = 0;      // font height for this line
+  uint8_t ypos            = 0; // ypos for this line
+  uint8_t fontIdx         = 0; // font index for this line
+  uint8_t FontHeight      = 0; // font height for this line
 } tLineSettings;
 
 typedef struct {
-  uint8_t NextLineNo = 0;            // number of next line or 0xFF if settings do not fit
+  uint8_t NextLineNo            = 0; // number of next line or 0xFF if settings do not fit
   uint8_t IdxForBiggestFontUsed = 0; // ypos for this line
 } tIndividualFontSettings;
 
@@ -405,6 +410,11 @@ struct P036_data_struct : public PluginTaskData_base {
 
   tLineSettings LineSettings[P36_Nlines]{};
   uint16_t CalcPixLength(uint8_t LineNo);
+
+  # ifdef P036_USERDEF_HEADERS
+  String userDef1;
+  String userDef2;
+  # endif // ifdef P036_USERDEF_HEADERS
 
 private:
 

@@ -119,6 +119,7 @@ const __FlashStringHelper * tFontSettings::FontName() const {
   }
 
 #  ifndef P036_LIMIT_BUILD_SIZE
+
   if (fontData == Dialog_plain_18) {
     return F("Dialog_18");
   }
@@ -129,6 +130,7 @@ const __FlashStringHelper * tFontSettings::FontName() const {
   }
 
 #  ifndef P036_LIMIT_BUILD_SIZE
+
   if (fontData == Dialog_plain_12) {
     return F("Dialog_12");
   }
@@ -380,6 +382,14 @@ void P036_data_struct::display_header() {
         strHeader += (MaxFramesToDisplay + 1);
       }
       break;
+    # ifdef P036_USERDEF_HEADERS
+    case eHeaderContent::eUserDef1:
+      newString = userDef1;
+      break;
+    case eHeaderContent::eUserDef2:
+      newString = userDef1;
+      break;
+    # endif // ifdef P036_USERDEF_HEADERS
     default:
       return;
   }
@@ -1801,6 +1811,7 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
   }
   uint32_t iAlignment =
     get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+
   ScrollingPageLine->Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
   ScrollingPageLine->SPLidx    = Counter; // index to LineSettings[]
 }
