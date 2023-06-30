@@ -130,7 +130,7 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
     }
 
     #ifndef BUILD_NO_DEBUG
-
+/*
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       const int nrArgs = web_server.args();
 
@@ -155,6 +155,7 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
         addLogMove(LOG_LEVEL_INFO, log);
       }
     }
+  */
     #endif // ifndef BUILD_NO_DEBUG
   }
 }
