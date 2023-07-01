@@ -295,7 +295,7 @@ void P036_data_struct::setOrientationRotated(bool rotated) {
   }
 }
 
-# ifdef P036_ENABLE_LINECOUNT
+# if P036_ENABLE_LINECOUNT
 void P036_data_struct::setNrLines(uint8_t NrLines) {
   if ((NrLines >= 1) && (NrLines <= 4)) {
     ScrollingPages.linesPerFrameDef = NrLines;
@@ -306,7 +306,7 @@ void P036_data_struct::setNrLines(uint8_t NrLines) {
   }
 }
 
-# endif // P036_ENABLE_LINECOUNT
+# endif // if P036_ENABLE_LINECOUNT
 
 
 void P036_data_struct::display_header() {
@@ -382,14 +382,14 @@ void P036_data_struct::display_header() {
         strHeader += (MaxFramesToDisplay + 1);
       }
       break;
-    # ifdef P036_USERDEF_HEADERS
+    # if P036_USERDEF_HEADERS
     case eHeaderContent::eUserDef1:
       newString = userDef1;
       break;
     case eHeaderContent::eUserDef2:
       newString = userDef1;
       break;
-    # endif // ifdef P036_USERDEF_HEADERS
+    # endif // if P036_USERDEF_HEADERS
     default:
       return;
   }
@@ -1592,7 +1592,7 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
   return result;
 }
 
-# ifdef P036_ENABLE_LEFT_ALIGN
+# if P036_ENABLE_LEFT_ALIGN
 void P036_data_struct::setTextAlignment(eAlignment aAlignment) {
   switch (aAlignment) {
     case eAlignment::eLeft:   textAlignment = TEXT_ALIGN_LEFT; break;
@@ -1629,7 +1629,7 @@ uint8_t P036_data_struct::GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlig
   else { return getDisplaySizeSettings(disp_resolution).PixLeft; }
 }
 
-# endif // ifdef P036_ENABLE_LEFT_ALIGN
+# endif // if P036_ENABLE_LEFT_ALIGN
 
 void P036_data_struct::registerButtonState(uint8_t newButtonState, bool bPin3Invers) {
   if ((ButtonLastState == 0xFF) || (bPin3Invers != (!!newButtonState))) {
