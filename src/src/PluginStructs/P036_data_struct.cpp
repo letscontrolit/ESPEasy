@@ -387,7 +387,7 @@ void P036_data_struct::display_header() {
       newString = userDef1;
       break;
     case eHeaderContent::eUserDef2:
-      newString = userDef1;
+      newString = userDef2;
       break;
     # endif // if P036_USERDEF_HEADERS
     default:
