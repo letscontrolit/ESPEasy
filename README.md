@@ -99,7 +99,7 @@ Flash size | Description                 |
 4M2M       | 4 MB with 2 MB filesystem   |
 16M        | 16 MB with 14 MB filesystem |
 4M316k     | 4 MB with 316 kB filesystem |
-8M2M       | 8 MB with 2 MB filesystem   |
+8M1M       | 8 MB with 1 MB filesystem   |
 16M1M      | 16 MB with 1 MB filesystem  |
 16M8M      | 16 MB with 8 MB filesystem  |
 
