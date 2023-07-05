@@ -318,6 +318,12 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
               }
           }
           #endif
+          if (Function == PLUGIN_INIT) {
+            // Schedule the plugin to be read.
+            // Do this before actual init, to allow the plugin to schedule a specific first read.
+            Scheduler.schedule_task_device_timer_at_init(TempEvent->TaskIndex);
+          }
+
           START_TIMER;
           retval = (PluginCall(DeviceIndex, Function, TempEvent, command));
           STOP_TIMER_TASK(DeviceIndex, Function);
@@ -336,8 +342,6 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
               }
             }
             #endif // if FEATURE_PLUGIN_STATS
-            // Schedule the plugin to be read.
-            Scheduler.schedule_task_device_timer_at_init(TempEvent->TaskIndex);
             queueTaskEvent(F("TaskInit"), taskIndex, retval);
           }
         #if FEATURE_I2C_DEVICE_CHECK
