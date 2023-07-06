@@ -1,2 +1,2 @@
-platformio==6.1.7
+platformio==https://github.com/platformio/platformio-core/archive/refs/heads/develop.zip
 pygit2>=1.10.1
