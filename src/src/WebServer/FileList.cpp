@@ -395,12 +395,11 @@ void handle_SDfilelist() {
   }
 
 
-  addFormSubHeader(String(F("SD Card: ")) + current_dir);
   html_BR();
   html_table_class_multirow();
   html_table_header(F(""), 50);
-  html_table_header(F("Name"));
-  html_table_header(F("Size"));
+  html_table_header(concat(F("SD Card: "), current_dir));
+  html_table_header(F("Size"), 80);
   html_TR_TD();
   {
     addHtml(F("<TD><a href=\"SDfilelist?chgto="));
@@ -427,8 +426,10 @@ void handle_SDfilelist() {
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir="));
         addHtml(current_dir);
+        if (!current_dir.endsWith(F("/"))) {
+          addHtml('/');
+        }
         addHtml(entry.name());
-        addHtml('/');
         addHtml(F("&chgto="));
         addHtml(current_dir);
         addHtml(F("\">Del</a>"));
@@ -436,8 +437,10 @@ void handle_SDfilelist() {
       {
         addHtml(F("<TD><a href=\"SDfilelist?chgto="));
         addHtml(current_dir);
+        if (!current_dir.endsWith(F("/"))) {
+          addHtml('/');
+        }
         addHtml(entry.name());
-        addHtml('/');
         addHtml('"', '>');
         addHtml(entry.name());
         addHtml(F("</a><TD>dir"));
@@ -447,7 +450,7 @@ void handle_SDfilelist() {
     else
     {
 
-      if (isProtectedFileType(String(entry.name())))
+      if (!isProtectedFileType(String(entry.name())))
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete="));
         addHtml(current_dir);
@@ -464,7 +467,7 @@ void handle_SDfilelist() {
         addHtml('"', '>');
         addHtml(entry.name());
         addHtml(F("</a><TD>"));
-        addHtml(entry.size());
+        addHtmlInt(entry.size());
       }
     }
     entry.close();
@@ -474,7 +477,8 @@ void handle_SDfilelist() {
   html_end_table();
   html_end_form();
 
-  // addHtml(F("<BR><a class='button link' href=\"/upload\">Upload</a>"));
+  html_BR();
+  addButton(F("/uploadsd"), F("Upload"));
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }

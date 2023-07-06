@@ -2,7 +2,7 @@
 .. |P010_type| replace:: :cyan:`Light/Lux`
 .. |P010_typename| replace:: :cyan:`Light/Lux - BH1750`
 .. |P010_porttype| replace:: `.`
-.. |P010_status| replace:: :green:`NORMAL`
+.. |P010_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P010_github| replace:: P010_BH1750.ino
 .. _P010_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P010_BH1750.ino
 .. |P010_usedby| replace:: `.`
@@ -41,7 +41,7 @@
 .. |P013_type| replace:: :cyan:`Position`
 .. |P013_typename| replace:: :cyan:`Position - HC-SR04/RCW-0001/etc.`
 .. |P013_porttype| replace:: `.`
-.. |P013_status| replace:: :green:`NORMAL`
+.. |P013_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P013_github| replace:: P013_HCSR04.ino
 .. _P013_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P013_HCSR04.ino
 .. |P013_usedby| replace:: `.`
@@ -68,7 +68,7 @@
 .. |P015_type| replace:: :cyan:`Light/Lux`
 .. |P015_typename| replace:: :cyan:`Light/Lux - TSL2561`
 .. |P015_porttype| replace:: `.`
-.. |P015_status| replace:: :green:`NORMAL`
+.. |P015_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P015_github| replace:: P015_TSL2561.ino
 .. _P015_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P015_TSL2561.ino
 .. |P015_usedby| replace:: :ref:`P015_TSL2561_page`

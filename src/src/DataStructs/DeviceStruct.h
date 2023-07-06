@@ -2,8 +2,11 @@
 #define DATASTRUCTS_DEVICESTRUCTS_H
 
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
+
 #include <vector>
+
+#include "../DataTypes/SensorVType.h"
 
 #define DEVICE_TYPE_SINGLE                  1 // connected through 1 datapin
 #define DEVICE_TYPE_DUAL                    2 // connected through 2 datapins
@@ -30,32 +33,6 @@
 
 #define I2C_FLAGS_SLOW_SPEED                0 // Force slow speed when this flag is set
 #define I2C_FLAGS_MUX_MULTICHANNEL          1 // Allow multiple multiplexer channels when set
-
-
-enum class Sensor_VType : uint8_t {
-  SENSOR_TYPE_NONE            =    0,
-  SENSOR_TYPE_SINGLE          =    1,
-  SENSOR_TYPE_TEMP_HUM        =    2,
-  SENSOR_TYPE_TEMP_BARO       =    3,
-  SENSOR_TYPE_TEMP_HUM_BARO   =    4,
-  SENSOR_TYPE_DUAL            =    5,
-  SENSOR_TYPE_TRIPLE          =    6,
-  SENSOR_TYPE_QUAD            =    7,
-  SENSOR_TYPE_TEMP_EMPTY_BARO =    8,
-  SENSOR_TYPE_SWITCH          =   10,
-  SENSOR_TYPE_DIMMER          =   11,
-  SENSOR_TYPE_LONG            =   20,
-  SENSOR_TYPE_WIND            =   21,
-  SENSOR_TYPE_STRING          =   22,
-
-  SENSOR_TYPE_NOT_SET = 255
-};
-
-enum class Output_Data_type_t : uint8_t {
-  Default = 0,
-  Simple, // SENSOR_TYPE_SINGLE, _DUAL, _TRIPLE, _QUAD
-  All
-};
 
 
 

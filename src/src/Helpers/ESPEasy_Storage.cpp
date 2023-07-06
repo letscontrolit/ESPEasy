@@ -65,9 +65,6 @@ String patch_fname(const String& fname) {
   return String('/') + fname;
 }
 #endif
-#ifdef ESP8266
-#define patch_fname(F) (F)
-#endif
 
 /********************************************************************************************\
    file system error handling
@@ -170,7 +167,7 @@ bool fileExists(const String& fname) {
   return res;
 }
 
-fs::File tryOpenFile(const String& fname, const String& mode) {
+fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e destination) {
   START_TIMER;
   fs::File f;
   if (fname.isEmpty() || equals(fname, '/')) {
@@ -185,10 +182,12 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
     }
     clearFileCaches();
   }
-  f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
+  if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+    f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
+  }
   #  if FEATURE_SD
 
-  if (!f) {
+  if (!f && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
     // FIXME TD-er: Should this fallback to SD only be done on "r" mode?
     f = SD.open(fname.c_str(), mode.c_str());
   }
@@ -204,7 +203,7 @@ bool fileMatchesTaskSettingsType(const String& fname) {
   return config_dat_file.equalsIgnoreCase(patch_fname(fname));
 }
 
-bool tryRenameFile(const String& fname_old, const String& fname_new) {
+bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestination_e destination) {
   clearFileCaches();
   if (fileExists(fname_old) && !fileExists(fname_new)) {
     if (fileMatchesTaskSettingsType(fname_old)) {
@@ -212,12 +211,21 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
     } else {
       clearAllButTaskCaches();
     }
-    return ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
+    bool res = false;
+    if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+      res = ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
+    }
+    #if FEATURE_SD && defined(ESP32) // FIXME ESP8266 SDClass doesn't support rename
+    if (!res && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
+      res = SD.rename(patch_fname(fname_old), patch_fname(fname_new));
+    }
+    #endif // if FEATURE_SD && defined(ESP32)
+    return res;
   }
   return false;
 }
 
-bool tryDeleteFile(const String& fname) {
+bool tryDeleteFile(const String& fname, FileDestination_e destination) {
   if (fname.length() > 0)
   {
     #if FEATURE_RTC_CACHE_STORAGE
@@ -230,9 +238,12 @@ bool tryDeleteFile(const String& fname) {
     } else {
       clearAllButTaskCaches();
     }
-    bool res = ESPEASY_FS.remove(patch_fname(fname));
+    bool res = false;
+    if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+      res = ESPEASY_FS.remove(patch_fname(fname));
+    }
     #if FEATURE_SD
-    if (!res) {
+    if (!res && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
       res = SD.remove(patch_fname(fname));
     }
     #endif
@@ -252,8 +263,12 @@ bool tryDeleteFile(const String& fname) {
 /********************************************************************************************\
    Fix stuff to clear out differences between releases
  \*********************************************************************************************/
-String BuildFixes()
+bool BuildFixes()
 {
+  if (Settings.Build == get_build_nr()) {
+    // Not changed
+    return false;
+  }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("BuildFixes"));
   #endif
@@ -278,7 +293,6 @@ String BuildFixes()
     Settings.Pin_Reset                 = -1;
     Settings.SyslogFacility            = DEFAULT_SYSLOG_FACILITY;
     Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
-    Settings.StructSize                = sizeof(Settings);
   }
 
   if (Settings.Build < 20103) {
@@ -392,10 +406,14 @@ String BuildFixes()
   // Starting 2022/08/18
   // Use get_build_nr() value for settings transitions.
   // This value will also be shown when building using PlatformIO, when showing the  Compile time defines 
+  Settings.Build      = get_build_nr();
+  Settings.StructSize = sizeof(Settings);
 
+  // We may have changed the settings, so update checksum.
+  // This way we save settings less often as these changes are always reproducible via this
+  // settings transitions function.
 
-  Settings.Build = get_build_nr();
-  return SaveSettings();
+  return !COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings);
 }
 
 /********************************************************************************************\
@@ -522,6 +540,7 @@ String SaveSettings()
     // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 
     Settings.validate();
+    initSerial();
 
     if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings)
     /*
@@ -651,14 +670,20 @@ String LoadSettings()
   if (err.length()) {
     return err;
   }
-  Settings.validate();
-#ifndef BUILD_NO_DEBUG
-  if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
-    addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
-  } else{
-    addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+
+  if (!BuildFixes()) {
+
+    #ifndef BUILD_NO_DEBUG
+    if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
+      addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
+    } else{
+      addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+    }
+    #endif
   }
-#endif
+
+  Settings.validate();
+  initSerial();
 
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
 
@@ -1548,10 +1573,23 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadFromFile"));
   #endif
+  
   fs::File f = tryOpenFile(fname, "r");
   SPIFFS_CHECK(f,                            fname);
-  SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
-  SPIFFS_CHECK(f.read(memAddress, datasize), fname);
+  const int fileSize = f.size();
+  if (fileSize > offset) {
+    SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
+    
+    if (fileSize < (offset + datasize)) {
+      const int newdatasize = datasize + offset - fileSize;
+
+      // File is smaller, make sure to set excess memory to 0.
+      memset(memAddress + newdatasize, 0u, (datasize - newdatasize));
+
+      datasize = newdatasize;
+    }
+    SPIFFS_CHECK(f.read(memAddress, datasize), fname);
+  }
   f.close();
 
   STOP_TIMER(LOADFILE_STATS);

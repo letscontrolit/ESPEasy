@@ -173,9 +173,7 @@ void runOncePerSecond()
   // I2C Watchdog feed
   if (Settings.WDI2CAddress != 0)
   {
-    Wire.beginTransmission(Settings.WDI2CAddress);
-    Wire.write(0xA5);
-    Wire.endTransmission();
+    I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
 
   checkResetFactoryPin();
@@ -216,10 +214,12 @@ void runEach30Seconds()
       log += F(" ESPeasy internal wifi status: ");
       log += WiFiEventData.ESPeasyWifiStatusToString();
     }
-
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
     addLogMove(LOG_LEVEL_INFO, log);
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+//    addLogMove(LOG_LEVEL_INFO,  ESPEASY_SERIAL_CONSOLE_PORT.getLogString());
+#endif
   }
   WiFi_AP_Candidates.purge_expired();
   #if FEATURE_ESPEASY_P2P

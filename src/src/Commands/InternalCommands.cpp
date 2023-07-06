@@ -39,6 +39,8 @@
 #include "../Commands/wd.h"
 #include "../Commands/WiFi.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Helpers/Misc.h"
@@ -213,7 +215,9 @@ bool do_command_case(command_case_data         & data,
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
+    START_TIMER;
     data.status = pFunc(data.event, data.line.c_str());
+    STOP_TIMER(COMMAND_EXEC_INTERNAL);
     return true;
   }
   return false;
@@ -229,7 +233,9 @@ bool do_command_case(command_case_data         & data,
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
+    START_TIMER;
     data.status = pFunc(data.event, data.line.c_str());
+    STOP_TIMER(COMMAND_EXEC_INTERNAL);
     return true;
   }
   return false;
@@ -319,6 +325,9 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_A(      "gpio", Command_GPIO,        2); // Gpio.h
       COMMAND_CASE_A("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
       break;
+    }
+    case 'h': {
+      COMMAND_CASE_R("hiddenssid", Command_Wifi_HiddenSSID, 1); // wifi.h
     }
     case 'i': {
       COMMAND_CASE_R("i2cscanner", Command_i2c_Scanner, -1); // i2c.h
@@ -413,6 +422,9 @@ bool executeInternalCommand(command_case_data & data)
 #if FEATURE_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,     -1); // MQTT.h
 #endif // if FEATURE_MQTT
+      #if FEATURE_PUT_TO_HTTP
+      COMMAND_CASE_A("puttohttp", Command_HTTP_PutToHTTP,  -1); // HTTP.h
+      #endif // if FEATURE_PUT_TO_HTTP
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }

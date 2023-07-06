@@ -5,7 +5,6 @@
 
 #if FEATURE_SERVO
 
-# include <Arduino.h>
 # include <map>
 # include <Servo.h>
 

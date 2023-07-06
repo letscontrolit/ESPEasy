@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
+
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 

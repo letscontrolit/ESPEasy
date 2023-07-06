@@ -61,6 +61,8 @@ bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const Checksu
 
 void Caches::updateActiveTaskUseSerial0() {
   activeTaskUseSerial0 = false;
+  if (deviceCount <= 0)
+    return;
 
   // Check to see if a task is enabled and using the pins we also use for receiving commands.
   // We're now receiving only from Serial0, so check if an enabled task is also using it.
@@ -72,14 +74,24 @@ void Caches::updateActiveTaskUseSerial0() {
       if ((Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL) ||
           (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1)) {
         const ESPEasySerialPort port = ESPeasySerialType::getSerialType(
-                  ESPEasySerialPort::not_set,
+                  static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[task]),
                   Settings.TaskDevicePin1[task],
                   Settings.TaskDevicePin2[task]);
+
+        // FIXME TD-er: Must not check for conflict with serial0, but for conflict with ESPEasy_Console.
+        #ifdef ESP32
+        if (port == ESPEasySerialPort::serial0) 
+        {
+          activeTaskUseSerial0 = true;
+        }
+        #endif
+        #ifdef ESP8266
         if (port == ESPEasySerialPort::serial0_swap ||
             port == ESPEasySerialPort::serial0) 
         {
           activeTaskUseSerial0 = true;
         }
+        #endif
       }
     }
   }

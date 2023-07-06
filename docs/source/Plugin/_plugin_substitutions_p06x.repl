@@ -102,9 +102,9 @@
 .. |P067_compileinfo| replace:: `.`
 .. |P067_usedlibraries| replace:: `.`
 
-.. |P068_name| replace:: :cyan:`SHT30/31/35`
+.. |P068_name| replace:: :cyan:`SHT3x`
 .. |P068_type| replace:: :cyan:`Environment`
-.. |P068_typename| replace:: :cyan:`Environment - SHT30/31/35`
+.. |P068_typename| replace:: :cyan:`Environment - SHT3x`
 .. |P068_porttype| replace:: `.`
 .. |P068_status| replace:: :yellow:`COLLECTION A` :yellow:`CLIMATE`
 .. |P068_github| replace:: P068_SHT3x.ino

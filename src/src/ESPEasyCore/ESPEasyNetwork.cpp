@@ -19,6 +19,11 @@
 #endif
 
 void setNetworkMedium(NetworkMedium_t new_medium) {
+#if !(FEATURE_ETHERNET)
+  if (new_medium == NetworkMedium_t::Ethernet) {
+    new_medium = NetworkMedium_t::WIFI;
+  }
+#endif
   if (active_network_medium == new_medium) {
     return;
   }
@@ -230,12 +235,12 @@ void CheckRunningServices() {
     node_time.lastNTPSyncTime_ms = 0;
     node_time.initTime();
   }
-  #ifdef ESP8266
+#if FEATURE_SET_WIFI_TX_PWR
   if (active_network_medium == NetworkMedium_t::WIFI) 
   {
     SetWiFiTXpower();
   }
-  #endif
+#endif
   set_mDNS();
 }
 

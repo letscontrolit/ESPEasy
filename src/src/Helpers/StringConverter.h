@@ -3,14 +3,14 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 
 #include "../Helpers/Convert.h"
+#include "../Helpers/StringConverter_Numerical.h"
 
 #include <IPAddress.h>
+#include <vector>
 
 // -V::569
 
@@ -44,25 +44,6 @@ bool equals(const String& str, const T &val) {
   return str.equals(String(val));
 }
 */
-
-/********************************************************************************************\
-   Convert a char string to integer
- \*********************************************************************************************/
-
-// FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string);
-
-String        ull2String(uint64_t value,
-                         uint8_t  base = 10);
-
-String        ll2String(int64_t value,
-                         uint8_t  base = 10);
-
-/********************************************************************************************\
-   Check if valid float and convert string to float.
- \*********************************************************************************************/
-bool string2float(const String& string,
-                  float       & floatvalue);
 
 
 /********************************************************************************************\
@@ -172,6 +153,12 @@ String formatUserVar(struct EventStruct *event,
 
 
 String get_formatted_Controller_number(cpluginID_t cpluginID);
+
+String get_formatted_Plugin_number(pluginID_t pluginID);
+
+// Prepend zeroes till the string value length is nrDigits 
+String formatIntLeadingZeroes(int value, int nrDigits);
+String formatIntLeadingZeroes(const String& value, int nrDigits);
 
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.

@@ -63,11 +63,11 @@ uint16_t P127_data_struct::readData() {
 }
 
 uint8_t P127_data_struct::getAltitude() {
-  return I2C_read8_ST_reg(_i2cAddress, CDM7160_REG_HIT);
+  return I2C_read8_reg(_i2cAddress, CDM7160_REG_HIT);
 }
 
 uint8_t P127_data_struct::getCompensation() {
-  return I2C_read8_ST_reg(_i2cAddress, CDM7160_REG_FUNC);
+  return I2C_read8_reg(_i2cAddress, CDM7160_REG_FUNC);
 }
 
 bool P127_data_struct::setPowerDown(void)
@@ -123,7 +123,7 @@ uint8_t P127_data_struct::getStatus()
 // Returns true (1) if successful, false (0) if there was an I2C error
 {
   // Get content of status register
-  return I2C_read8_ST_reg(_i2cAddress, CDM7160_REG_STATUS);
+  return I2C_read8_reg(_i2cAddress, CDM7160_REG_STATUS);
 }
 
 uint16_t P127_data_struct::getCO2()
@@ -132,26 +132,7 @@ uint16_t P127_data_struct::getCO2()
 // Returns the value
 {
   // Get co2 ppm data out of result registers
-  return I2C_read16_LE_ST_reg(_i2cAddress, CDM7160_REG_DATA);
-}
-
-// Reads an 8 bit value from a register over I2C, no repeated start
-uint8_t P127_data_struct::I2C_read8_ST_reg(uint8_t i2caddr, byte reg) {
-  Wire.beginTransmission(i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission();
-  Wire.requestFrom(i2caddr, (byte)1);
-  return Wire.read();
-}
-
-// Reads a 16 bit value starting at a given register over I2C, no repeated start
-uint16_t P127_data_struct::I2C_read16_LE_ST_reg(uint8_t i2caddr, byte reg) {
-  Wire.beginTransmission(i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission();
-  Wire.requestFrom(i2caddr, (byte)2);
-
-  return (Wire.read()) | Wire.read() << 8;
+  return I2C_read16_LE_reg(_i2cAddress, CDM7160_REG_DATA);
 }
 
 bool P127_data_struct::plugin_fifty_per_second() {

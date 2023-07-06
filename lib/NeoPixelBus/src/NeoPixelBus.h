@@ -27,103 +27,20 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-// some platforms do not come with STL or properly defined one, specifically functional
-// if you see...
-// undefined reference to `std::__throw_bad_function_call()'
-// ...then you can either add the platform symbol to the list so NEOPIXEBUS_NO_STL gets defined or
-// go to boards.txt and enable c++ by adding (teensy31.build.flags.libs=-lstdc++) and set to "smallest code" option in Arduino
-//
-#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR) || defined(STM32L432xx) || defined(STM32L476xx) || defined(ARDUINO_ARCH_SAM)
-#define NEOPIXEBUS_NO_STL 1
-#endif
+// standard neo definitions
+// 
+const uint8_t NEO_DIRTY = 0x80; // a change was made to pixel data that requires a show
+const uint16_t PixelIndex_OutOfBounds = 0xffff;
 
-// some platforms do not define this standard progmem type for some reason
-//
-#ifndef PGM_VOID_P
-#define PGM_VOID_P const void *
-#endif
-
-// '_state' flags for internal state
-#define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
-
-#include "internal/NeoHueBlend.h"
-
+#include "internal/NeoUtil.h"
+#include "internal/animations/NeoEase.h"
 #include "internal/NeoSettings.h"
-
-#include "internal/RgbColor.h"
-#include "internal/Rgb16Color.h"
-#include "internal/Rgb48Color.h"
-
-#include "internal/HslColor.h"
-#include "internal/HsbColor.h"
-#include "internal/HtmlColor.h"
-
-#include "internal/RgbwColor.h"
-#include "internal/Rgbw64Color.h"
-
-#include "internal/SegmentDigit.h"
-
+#include "internal/NeoColors.h"
 #include "internal/NeoColorFeatures.h"
-#include "internal/NeoTm1814ColorFeatures.h"
-#include "internal/NeoTm1914ColorFeatures.h"
-#include "internal/DotStarColorFeatures.h"
-#include "internal/Lpd8806ColorFeatures.h"
-#include "internal/Lpd6803ColorFeatures.h"
-#include "internal/P9813ColorFeatures.h"
-#include "internal/NeoSegmentFeatures.h"
-
-#include "internal/Layouts.h"
-#include "internal/NeoTopology.h"
-#include "internal/NeoRingTopology.h"
-#include "internal/NeoTiles.h"
-#include "internal/NeoMosaic.h"
-
-#include "internal/NeoBufferContext.h"
-#include "internal/NeoBufferMethods.h"
-#include "internal/NeoBuffer.h"
-#include "internal/NeoSpriteSheet.h"
-#include "internal/NeoDib.h"
-#include "internal/NeoBitmapFile.h"
-
-#include "internal/NeoEase.h"
-#include "internal/NeoGamma.h"
-
+#include "internal/NeoTopologies.h"
+#include "internal/NeoBuffers.h"
 #include "internal/NeoBusChannel.h"
-
-#include "internal/DotStarGenericMethod.h"
-#include "internal/Lpd8806GenericMethod.h"
-#include "internal/Lpd6803GenericMethod.h"
-#include "internal/Ws2801GenericMethod.h"
-#include "internal/P9813GenericMethod.h"
-
-#if defined(ARDUINO_ARCH_ESP8266)
-
-#include "internal/NeoEsp8266DmaMethod.h"
-#include "internal/NeoEsp8266UartMethod.h"
-#include "internal/NeoEspBitBangMethod.h"
-
-#elif defined(ARDUINO_ARCH_ESP32)
-
-#include "internal/NeoEsp32I2sMethod.h"
-#include "internal/NeoEsp32RmtMethod.h"
-#include "internal/NeoEspBitBangMethod.h"
-#include "internal/DotStarEsp32DmaSpiMethod.h"
-
-#elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
-
-#include "internal/NeoNrf52xMethod.h"
-
-#elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
-
-#include "internal/NeoArmMethod.h"
-
-#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
-
-#include "internal/NeoAvrMethod.h"
-
-#else
-#error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"
-#endif
+#include "internal/NeoMethods.h"
 
 
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
@@ -150,6 +67,13 @@ public:
         _countPixels(countPixels),
         _state(0),
         _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
+    {
+    }
+
+    NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
+        _countPixels(countPixels),
+        _state(0),
+        _method(pinClock, pinData, pinLatch, pinOutputEnable, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
     {
     }
 
@@ -190,9 +114,16 @@ public:
         ClearTo(0);
     }
 
+    // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting oct SPI
+    void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
+    {
+        _method.Initialize(sck, dat0, dat1, dat2, dat3, dat4, dat5, dat6, dat7, ss);
+        ClearTo(0);
+    }
+
     void Show(bool maintainBufferConsistency = true)
     {
-        if (!IsDirty())
+        if (!IsDirty() && !_method.AlwaysUpdate())
         {
             return;
         }
@@ -386,7 +317,7 @@ public:
 
     void SetPixelSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
     {
-        T_COLOR_FEATURE::applySettings(_method.getData(), settings);
+        T_COLOR_FEATURE::applySettings(_method.getData(), _method.getDataSize(), settings);
         Dirty();
     };
 
@@ -418,13 +349,13 @@ protected:
     uint8_t* _pixels()
     {
         // get pixels data within the data stream
-        return T_COLOR_FEATURE::pixels(_method.getData());
+        return T_COLOR_FEATURE::pixels(_method.getData(), _method.getDataSize());
     }
 
     const uint8_t* _pixels() const
     {
         // get pixels data within the data stream
-        return T_COLOR_FEATURE::pixels(_method.getData());
+        return T_COLOR_FEATURE::pixels(_method.getData(), _method.getDataSize());
     }
 
     void _rotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)

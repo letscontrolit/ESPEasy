@@ -153,6 +153,11 @@ All these values are described in great detail in the Advanced section, where th
 * **Send With Max TX Power**:	``true`` indicates the WiFi TX power will not be changed and thus is sending at maximum TX power for the active WiFi mode (802.11 b/g/n)
 * **Extra WiFi scan loops**:	The set number of extra scans of all channels when a WiFi scan is needed.
 * **Use Last Connected AP from RTC**:	``false`` means the ESPEasy node needs to scan at reboot and cannot reuse the last used connection before the reboot.
+* **Extra Wait WiFi Connect**: ``true`` means there is an extra wait upto 1000 msec after initiating a connection to an access point. This can be useful when connecting to some FritzBox access points or routers. (Added: 2023/04/05)
+* **Enable SDK WiFi Auto Reconnect**: ``true`` means the Espressif SDK will automatically attempt a reconnect when a connection is briefly lost. Access points (like TP-Link Omada) with "Band Steering" enabled may trigger a quick disconnect to force nodes to connect on the 5 GHz band. (Added: 2023/04/05)
+
+
+
 
 .. note:: On ESP32, WiFi TX power settings are disabled as these may cause undesired behavior and also use more power compared to using the ECO mode.
 
@@ -306,17 +311,44 @@ See `Log section <Tools.html#log>`_ for more detailed information.
 * SD Log Level - Log Level for sending logs to a SD card (only when included in the build)
 
 
-Serial Settings
----------------
+Serial Console Settings
+-----------------------
 
-These settings only apply to using the serial port in core ESPEasy functionality,
-like sending out logs or receiving commands via the serial port.
+ESPEasy has a command line style console.
+This console will show the logs (when Serial Log Level is not set to "None") and accept commands.
 
-* Enable Serial Port - When unchecked, logs will not be sent to the serial port and commands will not be read from it.
+This console can be accessed via a serial port.
+
+* Enable Serial Port Console - When unchecked, logs will not be sent to the serial port and commands will not be read from it.
 * Baud Rate - Baud rate of the serial port. (default: 115200)
 
-Make sure to disable the serial port here when a sensor is connected to Serial0 
-or the GPIO pins are used for something other then a serial port.
+(Serial port selection added: 2023-06-01)
+
+* Serial Port - The selected serial port to use for the console.
+* ESP RX GPIO ← TX - GPIO pin used as RX, to connect with the TX of the other device.
+* ESP TX GPIO → RX - GPIO pin used as TX, to connect with the RX of the other device.
+* Fallback to Serial 0 - (Only on ESP32-C3/S2/S3) Configure HW Serial0 port as secondary port for the ESPEasy console.
+
+GPIO pin selection will only be shown for Serial Port types which require action GPIO pins.
+For example USB CDC and HW CDC ports do not need specific GPIO pins for their configuration.
+
+See also: `Serial Helper <../Plugin/SerialHelper.html>`__
+
+.. note:: Make sure to either uncheck "Enable Serial Port Console" or configure another serial port for the console, when either HW Serial0 or its pins are used in a task.
+
+Special notes on Software Serial
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When configuring "Software Serial" as a serial port for the console, please be aware that there might be some bit errors during transmission.
+Higher baudrate will only make this problem worse and may even causes issues where entered commands are not received by ESPEasy.
+The default baud rate of 115200 is for sure too high for software serial, regardless the platform (ESP8266/ESP32-xx).
+
+The best baud rate for the ESPEasy Console when using Software Serial may differ per module.
+
+For example on an ESP32-S3, software serial is remarkably usable at 28800 baud.
+But the ESP32-C3 does seem to perform horrible, regardless the baud rate.
+
+Do not use multiple instances of a Software Serial port as both will greatly affect each other in a bad way when used at the same time.
 
 
 Inter-ESPEasy Network
@@ -689,6 +721,35 @@ This is no new functionality, as it was present before and also enabled by defau
 
 New default value since 2021-06-20: unchecked
 
+
+Extra Wait WiFi Connect
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-04-05
+
+Some FritzBox routers may be difficult to connect with using Espressif modules.
+It is unclear what exactly causes these issues.
+However experiments have shown that an added delay of upto 1000 msec right after calling ``WiFi.begin()`` does improve the success rate of connecting to such access points.
+
+
+Enable SDK WiFi Auto Reconnect
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-04-05
+
+Some dual band access points (2.4 GHz and 5 GHz) try to balance connected nodes over these bands, based on their signal strength.
+This is called "Band Steering".
+
+WiFi clients supporting 802.11k and/or 802.11v can be redirected to another band and/or other meshed access point.
+Older WiFi clients, not supporting these protocols, will briefly be disconnected to force them to reconnect. Hopefully to another access point or frequency band.
+
+The problem is that such disconnects cause issues with Espressif modules, messing up the internal state of the WiFi.
+
+ESPEasy does act on WiFi events. But these events are not always dealt with in due time, messing up the connected state even more.
+In such cases, where "Band Steering" cannot be disabled, one can enable the Espressif SDK WiFi Auto Reconnect option.
+This will act much faster on these disconnect events. However it also seems to suppress some WiFi events.
+
+Whenever ESPEasy calls for a disconnect, or the disconnect takes longer than such a very brief disconnect initiated by the Band Steering algorithm of the access point, ESPEasy will turn off the WiFi and turn it on again as if "Restart WiFi Lost Conn" was enabled.
 
 
 Show JSON

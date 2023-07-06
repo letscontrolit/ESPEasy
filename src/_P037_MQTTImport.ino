@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2023-06-17, tonhuisman: Replace Device[].FormulaOption by Device[].DecimalsOnly option, as no (successful) PLUGIN_READ is done
  * 2023-03-06, tonhuisman: Fix PLUGIN_INIT behavior to now always return success = true
  * 2022-11-14, tonhuisman: Add support for selecting JSON sub-attributes, using the . notation, like main.sub (1 level only)
  * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
@@ -116,7 +117,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true; // Need this in order to get the decimals option
+      Device[deviceCount].DecimalsOnly       = true; // We only want to have the decimals option
       Device[deviceCount].ValueCount         = VARS_PER_TASK;
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = false;
@@ -589,7 +590,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
               bool numericPayload = true; // Unless it's not
 
               if (!checkJson || (checkJson && (!key.isEmpty()))) {
-                double doublePayload;
+                ESPEASY_RULES_FLOAT_TYPE doublePayload{};
 
                 if (!validDoubleFromString(Payload, doublePayload)) {
                   if (!checkJson && (P037_SEND_EVENTS == 0)) { // If we want all values as events, then no error logged and don't stop here

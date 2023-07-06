@@ -2,6 +2,7 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_common.h"
 
 /*********************************************************************************************\
@@ -78,6 +79,16 @@ String formatGpioName_RX(bool optional) {
   return formatGpioName(F("TX"), gpio_direction::gpio_input, optional);
 }
 
+String formatGpioName_serialTX(bool optional)
+{
+  return concat(F("ESP TX "), formatGpioName_TX(optional));
+}
+
+String formatGpioName_serialRX(bool optional)
+{
+  return concat(F("ESP RX "), formatGpioName_RX(optional));
+}
+
 String formatGpioName_TX_HW(bool optional) {
   return formatGpioName(F("RX (HW)"), gpio_direction::gpio_output, optional);
 }
@@ -106,8 +117,18 @@ String formatGpioName_ADC(int gpio_pin) {
     }
     return res;
   }
-  return "";
+  return EMPTY_STRING;
 }
+
+String formatGpioName_DAC(int gpio_pin) {
+  int dac;
+
+  if (getDAC_gpio_info(gpio_pin, dac)) {
+    return concat(F("DAC"), dac);
+  }
+  return EMPTY_STRING;
+}
+
 
 #endif // ifdef ESP32
 
@@ -142,13 +163,56 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
 
 const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 {
-  if (Settings.UseSerial) {
-    if (gpio == 1) { return F("TX0"); }
+#ifdef PIN_USB_D_MIN
+  if (gpio == PIN_USB_D_MIN) { return F("USB_D-"); }
+#endif
+#ifdef PIN_USB_D_PLUS
+  if (gpio == PIN_USB_D_PLUS) { return F("USB_D+"); }
+#endif
 
-    if (gpio == 3) { return F("RX0"); }
+  if (isFlashInterfacePin(gpio)) {
+    return F("Flash");
   }
+
+#ifdef isPSRAMInterfacePin
+  if (isPSRAMInterfacePin(gpio)) {
+    return F("PSRAM");
+  }
+
+#endif
+
+  # ifdef ESP32S2
+
+
+  #elif defined(ESP32S3)
+
+  // See Appendix A, page 71: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
+
+  #elif defined(ESP32C3)
+
+  if (gpio == 11) {
+    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11
+    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
+    return F("Flash Vdd"); 
+  }
+
+  # elif defined(ESP32_CLASSIC)
+
+  # elif defined(ESP8266)
+
+  # else
+    static_assert(false, "Implement processor architecture");
+
+  # endif 
+
   bool includeI2C = true;
   bool includeSPI = true;
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  // FIXME TD-er: Must check whether this can be a conflict.
+  bool includeSerial = false;
+  #else
+  bool includeSerial = true;
+  #endif
 
   #if FEATURE_ETHERNET
   bool includeEthernet = true;
@@ -162,6 +226,10 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     case PinSelectPurpose::SPI_MISO:
       includeSPI = false;
       break;
+    case PinSelectPurpose::Serial_input:
+    case PinSelectPurpose::Serial_output:
+      includeSerial = false;
+      break;
     case PinSelectPurpose::Ethernet:
       #if FEATURE_ETHERNET
       includeEthernet = false;
@@ -171,6 +239,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     case PinSelectPurpose::Generic_input:
     case PinSelectPurpose::Generic_output:
     case PinSelectPurpose::Generic_bidir:
+    case PinSelectPurpose::DAC:
       break;
   }
 
@@ -181,6 +250,22 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   if (includeSPI && Settings.isSPI_pin(gpio)) {
     return F("SPI");
   }
+
+  if (includeSerial) {
+    #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+    if (Settings.UseSerial && 
+        Settings.console_serial_port == 2)  // 2 == ESPEasySerialPort::serial0
+    #else
+    if (Settings.UseSerial) 
+    #endif
+    {
+      if (gpio == SOC_TX0) { return F("TX0"); }
+
+      if (gpio == SOC_RX0) { return F("RX0"); }
+    }
+  }
+
+
   #if FEATURE_ETHERNET
 
   if (Settings.isEthernetPin(gpio)) {
@@ -200,16 +285,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   }
   #endif // if FEATURE_ETHERNET
 
-#ifdef ESP32
-  if (FoundPSRAM()) {
-    // PSRAM can use GPIO 16 and 17
-    switch (gpio) {
-      case 16:
-      case 17:
-        return F("PSRAM");
-    }
-  }
-#endif
+
 
   return F("");
 }

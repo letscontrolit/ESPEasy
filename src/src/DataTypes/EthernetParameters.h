@@ -1,7 +1,7 @@
 #ifndef DATASTRUCTS_ETHERNETPARAMETERS_H
 #define DATASTRUCTS_ETHERNETPARAMETERS_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 // Is stored in settings
 enum class EthClockMode_t : uint8_t {

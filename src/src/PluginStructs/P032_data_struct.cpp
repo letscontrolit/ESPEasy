@@ -28,10 +28,7 @@ P032_data_struct::P032_data_struct(uint8_t i2c_addr) : i2cAddress(i2c_addr) {}
 // Initialize MS5611
 // **************************************************************************/
 bool P032_data_struct::begin() {
-  Wire.beginTransmission(i2cAddress);
-  uint8_t ret = Wire.endTransmission(true);
-
-  return ret == 0;
+  return 0 == I2C_wakeup(i2cAddress);
 }
 
 // **************************************************************************/
@@ -83,39 +80,39 @@ unsigned long P032_data_struct::read_adc(unsigned char aCMD)
 void P032_data_struct::readout() {
   unsigned long D1 = 0, D2 = 0;
 
-  double dT;
-  double Offset;
-  double SENS;
+  ESPEASY_RULES_FLOAT_TYPE dT;
+  ESPEASY_RULES_FLOAT_TYPE Offset;
+  ESPEASY_RULES_FLOAT_TYPE SENS;
 
   D2 = read_adc(MS5xxx_CMD_ADC_D2 + MS5xxx_CMD_ADC_4096);
   D1 = read_adc(MS5xxx_CMD_ADC_D1 + MS5xxx_CMD_ADC_4096);
 
   // calculate 1st order pressure and temperature (MS5611 1st order algorithm)
-  dT                 = D2 - ms5611_prom[5] * static_cast<double>(1 << 8);
-  Offset             = ms5611_prom[2] * static_cast<double>(1 << 16) + dT * ms5611_prom[4] / static_cast<double>(1 << 7);
-  SENS               = ms5611_prom[1] * static_cast<double>(1 << 15) + dT * ms5611_prom[3] / static_cast<double>(1 << 8);
-  ms5611_temperature = (2000 + (dT * ms5611_prom[6]) / static_cast<double>(1 << 23));
+  dT                 = D2 - ms5611_prom[5] * static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 8);
+  Offset             = ms5611_prom[2] * static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 16) + dT * ms5611_prom[4] / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 7);
+  SENS               = ms5611_prom[1] * static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 15) + dT * ms5611_prom[3] / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 8);
+  ms5611_temperature = (2000 + (dT * ms5611_prom[6]) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 23));
 
   // perform higher order corrections
-  double T2 = 0., OFF2 = 0., SENS2 = 0.;
+  ESPEASY_RULES_FLOAT_TYPE T2 = 0., OFF2 = 0., SENS2 = 0.;
 
   if (ms5611_temperature < 2000) {
-    T2    = dT * dT / static_cast<double>(1 << 31);
-    const double temp_20deg = ms5611_temperature - 2000;
-    OFF2  = 5.0 * temp_20deg * temp_20deg / static_cast<double>(1 << 1);
-    SENS2 = 5.0 * temp_20deg * temp_20deg / static_cast<double>(1 << 2);
+    T2    = dT * dT / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 31);
+    const ESPEASY_RULES_FLOAT_TYPE temp_20deg = ms5611_temperature - 2000;
+    OFF2  = 5.0 * temp_20deg * temp_20deg / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 1);
+    SENS2 = 5.0 * temp_20deg * temp_20deg / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 2);
 
     if (ms5611_temperature < -1500) {
-      const double temp_min15deg = ms5611_temperature + 1500;
+      const ESPEASY_RULES_FLOAT_TYPE temp_min15deg = ms5611_temperature + 1500;
       OFF2  += 7.0 * temp_min15deg * temp_min15deg;
-      SENS2 += 11.0 * temp_min15deg * temp_min15deg / static_cast<double>(1 << 1);
+      SENS2 += 11.0 * temp_min15deg * temp_min15deg / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 1);
     }
   }
 
   ms5611_temperature -= T2;
   Offset             -= OFF2;
   SENS               -= SENS2;
-  ms5611_pressure     = (((D1 * SENS) / static_cast<double>(1 << 21) - Offset) / static_cast<double>(1 << 15));
+  ms5611_pressure     = (((D1 * SENS) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 21) - Offset) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 15));
 }
 
 

@@ -63,7 +63,7 @@ NeoRingTopology<MyRingsLayout> topo;
 
 // declare our strip
 //
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 
 // define some handy colors
 //

@@ -17,7 +17,7 @@
 # define PLUGIN_102
 # define PLUGIN_ID_102        102
 # define PLUGIN_102_DEBUG     true       // activate extra log info in the debug
-# define PLUGIN_NAME_102      "PZEM-004Tv30-Multiple"
+# define PLUGIN_NAME_102      "Energy (AC) - PZEM-004Tv30-Multiple"
 
 # define P102_PZEM_mode       PCONFIG(1) // 0=read value ; 1=reset energy; 2=programm address
 # define P102_PZEM_ADDR       PCONFIG(2)
@@ -38,9 +38,9 @@
 # define P102_NR_OUTPUT_OPTIONS  6
 # define P102_QUERY1_CONFIG_POS  3
 
-# define P102_PZEM_MAX_ATTEMPT      3 // Number of tentative before declaring NAN value
+# define P102_PZEM_MAX_ATTEMPT   3 // Number of tentative before declaring NAN value
 
-PZEM004Tv30 *P102_PZEM_sensor = nullptr;
+PZEM004Tv30 * P102_PZEM_sensor = nullptr;
 
 boolean Plugin_102_init    = false;
 uint8_t P102_PZEM_ADDR_SET = 0; // Flag for status of programmation/Energy reset: 0=Reading / 1=Prog confirmed / 3=Prog done / 4=Reset

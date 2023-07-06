@@ -14,7 +14,7 @@
 
 #include <map>
 #include <vector>
-#include <Arduino.h>
+
 
 typedef uint8_t    nprotocolIndex_t;
 

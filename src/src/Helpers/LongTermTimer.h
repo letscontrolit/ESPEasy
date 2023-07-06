@@ -1,7 +1,7 @@
 #ifndef HELPERS_LONGTERMTIMER_H
 #define HELPERS_LONGTERMTIMER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 
@@ -73,7 +73,7 @@ private:
     return static_cast<int64_t>(next) - static_cast<int64_t>(prev);
   }
 
-  uint64_t _timer_usec = 0ull;
+  uint64_t _timer_usec{};
 };
 
 #endif // HELPERS_LONGTERMTIMER_H
