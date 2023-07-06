@@ -67,8 +67,8 @@ class HLW8012 {
 
     public:
 
-        void cf_interrupt();
-        void cf1_interrupt();
+        void cf_interrupt() IRAM_ATTR;
+        void cf1_interrupt() IRAM_ATTR;
 
         void begin(
             unsigned char cf_pin,
@@ -111,7 +111,7 @@ class HLW8012 {
 
         // Perform some IIR filtering
         // new = (old + 3 * new) / 4
-        static unsigned long filter(unsigned long oldvalue, unsigned long newvalue);
+        static unsigned long filter(unsigned long oldvalue, unsigned long newvalue) IRAM_ATTR;
 
         unsigned char _cf_pin{};
         unsigned char _cf1_pin{};

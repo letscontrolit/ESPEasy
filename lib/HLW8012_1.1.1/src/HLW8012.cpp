@@ -259,7 +259,8 @@ void IRAM_ATTR HLW8012::cf_interrupt() {
             const unsigned long pulse_width = (pulse_count < 10) 
                 ? (now - last_cf_interrupt) // long pulses, use the last one as it is probably the most stable one
                 : (time_since_first / pulse_count);
-            _power_pulse_width = filter(_power_pulse_width, pulse_width);
+            //_power_pulse_width = filter(_power_pulse_width, pulse_width);
+            _power_pulse_width = pulse_width;
         }
         
     } else {
@@ -311,9 +312,11 @@ void IRAM_ATTR HLW8012::cf1_interrupt() {
             // Perform some IIR filtering
             // new = (old + 3 * new) / 4
             if (mode == _current_mode) {
-                _current_pulse_width = filter(_current_pulse_width, pulse_width);
+                //_current_pulse_width = filter(_current_pulse_width, pulse_width);
+                _current_pulse_width = pulse_width;
             } else {
-                _voltage_pulse_width = filter(_voltage_pulse_width, pulse_width);
+                //_voltage_pulse_width = filter(_voltage_pulse_width, pulse_width);
+                _voltage_pulse_width = pulse_width;
             }
         }        
     } else {
