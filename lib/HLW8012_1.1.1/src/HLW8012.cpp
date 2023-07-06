@@ -218,7 +218,7 @@ void HLW8012::setResistors(float current, float voltage_upstream, float voltage_
     }
 }
 
-unsigned long HLW8012::filter(unsigned long oldvalue, unsigned long newvalue) {
+unsigned long IRAM_ATTR HLW8012::filter(unsigned long oldvalue, unsigned long newvalue) {
     if (oldvalue == 0) {
         return newvalue;
     }
