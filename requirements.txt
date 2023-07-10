@@ -1,2 +1,2 @@
-platformio @ https://github.com/platformio/platformio-core/archive/refs/heads/develop.zip
+platformio>=6.1.9
 pygit2>=1.10.1
