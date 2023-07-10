@@ -332,6 +332,7 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 'h': {
       COMMAND_CASE_R("hiddenssid", Command_Wifi_HiddenSSID, 1); // wifi.h
+      break;
     }
     case 'i': {
       COMMAND_CASE_R("i2cscanner", Command_i2c_Scanner, -1); // i2c.h

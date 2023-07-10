@@ -16,6 +16,7 @@
 
 ControllerSettingsStruct::ControllerSettingsStruct()
 {
+  memset(this, 0, sizeof(ControllerSettingsStruct));
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 

@@ -132,8 +132,10 @@ float PluginStats::getSample(int& lastNrSamples) const
   } else if (lastNrSamples < 0) {
     i = abs(lastNrSamples) - 1;
   }
-
-  return _samples[i];
+  if (i < _samples.size()) {
+    return _samples[i];
+  }
+  return _errorValue;
 }
 
 float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const

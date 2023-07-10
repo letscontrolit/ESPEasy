@@ -320,7 +320,7 @@ void EspEasy_Console_t::setDebugOutput(bool enable)
 {
   auto port = getPort();
 
-  if (port == nullptr) {
+  if (port != nullptr) {
     port->setDebugOutput(enable);
   }
 }
