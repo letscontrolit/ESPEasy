@@ -14,7 +14,7 @@
 #include "src/Helpers/StringParser.h"
 
 
-PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { nullptr, };
+PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
 
 
 String PCONFIG_LABEL(int n) {

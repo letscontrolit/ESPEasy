@@ -351,13 +351,6 @@ bool PluginStats::usableValue(float value) const
   return false;
 }
 
-PluginStats_array::PluginStats_array()
-{
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    _plugin_stats[i] = nullptr;
-  }
-}
-
 PluginStats_array::~PluginStats_array()
 {
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
