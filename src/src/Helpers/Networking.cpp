@@ -1803,14 +1803,14 @@ bool downloadFirmware(String filename, String& error)
 # if FEATURE_CUSTOM_PROVISIONING
   MakeProvisioningSettings(ProvisioningSettings);
 
-  if (AllocatedProvisioningSettings()) {
-    loadProvisioningSettings(ProvisioningSettings);
-    if (!ProvisioningSettings.allowedFlags.allowFetchFirmware) {
+  if (ProvisioningSettings.get()) {
+    loadProvisioningSettings(*ProvisioningSettings);
+    if (!ProvisioningSettings->allowedFlags.allowFetchFirmware) {
       return false;
     }
-    baseurl = ProvisioningSettings.url;
-    user = ProvisioningSettings.user;
-    pass = ProvisioningSettings.pass;
+    baseurl = ProvisioningSettings->url;
+    user = ProvisioningSettings->user;
+    pass = ProvisioningSettings->pass;
   }
 # endif // if FEATURE_CUSTOM_PROVISIONING
 

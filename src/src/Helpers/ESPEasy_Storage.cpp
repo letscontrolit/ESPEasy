@@ -309,7 +309,7 @@ bool BuildFixes()
     if (validControllerIndex(controller_idx)) {
       MakeControllerSettings(ControllerSettings); //-V522
       if (AllocatedControllerSettings()) {
-        LoadControllerSettings(controller_idx, ControllerSettings);
+        LoadControllerSettings(controller_idx, *ControllerSettings);
 
         String clientid;
         if (Settings.MQTTUseUnitNameAsClientId_unused) {
@@ -321,11 +321,11 @@ bool BuildFixes()
         else {
           clientid  = F("ESPClient_%mac%");
         }
-        safe_strncpy(ControllerSettings.ClientID, clientid, sizeof(ControllerSettings.ClientID));
+        safe_strncpy(ControllerSettings->ClientID, clientid, sizeof(ControllerSettings->ClientID));
 
-        ControllerSettings.mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
-        ControllerSettings.mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
-        SaveControllerSettings(controller_idx, ControllerSettings);
+        ControllerSettings->mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
+        ControllerSettings->mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
+        SaveControllerSettings(controller_idx, *ControllerSettings);
       }
     }
     #endif // if FEATURE_MQTT
@@ -651,10 +651,10 @@ void afterloadSettings() {
   #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
-    if (AllocatedProvisioningSettings()) {
-      loadProvisioningSettings(ProvisioningSettings);
-      if (ProvisioningSettings.matchingFlashSize()) {
-        pref_temp = ProvisioningSettings.ResetFactoryDefaultPreference.getPreference();
+    if (ProvisioningSettings.get()) {
+      loadProvisioningSettings(*ProvisioningSettings);
+      if (ProvisioningSettings->matchingFlashSize()) {
+        pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
       }
     }
   }
@@ -2087,16 +2087,16 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
   {
     MakeProvisioningSettings(ProvisioningSettings);
 
-    if (AllocatedProvisioningSettings()) {
-      loadProvisioningSettings(ProvisioningSettings);
+    if (ProvisioningSettings.get()) {
+      loadProvisioningSettings(*ProvisioningSettings);
 
-      if (!ProvisioningSettings.fetchFileTypeAllowed(filetype, filenr)) {
+      if (!ProvisioningSettings->fetchFileTypeAllowed(filetype, filenr)) {
         return F("Not Allowed");
       }
 
-      url  = ProvisioningSettings.url;
-      user = ProvisioningSettings.user;
-      pass = ProvisioningSettings.pass;
+      url  = ProvisioningSettings->url;
+      user = ProvisioningSettings->user;
+      pass = ProvisioningSettings->pass;
     }
   }
   String res = downloadFileType(url, user, pass, filetype, filenr);
