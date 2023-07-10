@@ -84,7 +84,7 @@ public:
   float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const;
    
   // Compute sample stored values
-  float getSample(int& lastNrSamples) const;
+  float getSample(int lastNrSamples) const;
   
   float operator[](PluginStatsBuffer_t::index_t index) const;
 

@@ -121,7 +121,7 @@ float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, 
   return res;
 }
 
-float PluginStats::getSample(int& lastNrSamples) const
+float PluginStats::getSample(int lastNrSamples) const
 {
   if ((_samples.size() == 0) || (_samples.size() < abs(lastNrSamples))) { return _errorValue; }
 
