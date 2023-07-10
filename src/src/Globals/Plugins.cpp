@@ -293,7 +293,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
         #if FEATURE_I2C_DEVICE_CHECK
         bool i2cStatusOk = true;
         if ((Function == PLUGIN_INIT) && (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && !Device[DeviceIndex].I2CNoDeviceCheck) {
-          const uint8_t i2cAddr = getTaskI2CAddress(event->TaskIndex);
+          const uint8_t i2cAddr = getTaskI2CAddress(taskIndex);
           if (i2cAddr > 0) {
             START_TIMER;
             i2cStatusOk = I2C_deviceCheck(i2cAddr);
