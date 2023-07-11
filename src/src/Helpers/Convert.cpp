@@ -7,7 +7,7 @@
 \*********************************************************************************************/
 const __FlashStringHelper * getBearing(int degrees)
 {
-  const __FlashStringHelper* strings[] {
+  const __FlashStringHelper* directions[] {
     F("N"),
     F("NNE"),
     F("NE"),
@@ -25,16 +25,14 @@ const __FlashStringHelper * getBearing(int degrees)
     F("NW"),
     F("NNW")
   };
-  constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
-  const float stepsize       = (360.0f / nrStrings);
+  constexpr size_t nrDirections = sizeof(directions) / sizeof(directions[0]);
+  const float stepsize          = (360.0f / nrDirections);
 
   if (degrees < 0) { degrees += 360; } // Allow for bearing -360 .. 359
-  int bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nrStrings;
+  const size_t bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nrDirections;
 
-  if (bearing_idx >= 0) {
-    if (static_cast<size_t>(bearing_idx) < nrStrings) {
-      return strings[bearing_idx];
-    }
+  if (bearing_idx < nrDirections) {
+    return directions[bearing_idx];
   }
   return F("");
 }
