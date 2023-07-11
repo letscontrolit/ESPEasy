@@ -103,6 +103,14 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       addUnit(F("uSec"));
       addFormNote(F("Use 0 to read values stored on chip / default values"));
 
+      P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P077_data) {
+        addRowLabel(F("Pulses per kWh"));
+        const int pulsesPerKwh = P077_data->cf_frequency * 3600;
+        addHtmlInt(pulsesPerKwh);
+      }
+
       success = true;
       break;
     }
@@ -145,25 +153,42 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    {
+      P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P077_data) {
+        uint8_t varNr = VARS_PER_TASK;
+        const float pulsesPerKwh = P077_data->cf_frequency * 3600;
+        const float kWh = P077_data->cf_pulses / pulsesPerKwh;
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("kWh"), toString(kWh, 3), true);
+      }
+      break;
+    }
+
     case PLUGIN_READ: {
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: plugin read"));
       # endif // ifndef BUILD_NO_DEBUG
 
-      // Variables set in PLUGIN_SERIAL_IN/PLUGIN_TEN_PER_SECOND as soon as there are new values!
-      success = true;
+      P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P077_data) {
+        // Variables set in PLUGIN_SERIAL_IN/PLUGIN_TEN_PER_SECOND as soon as there are new values!
+        // Update when there is a new value
+        success = P077_data->newValue;
+        P077_data->newValue = false;
+      }
       break;
     }
 
     case PLUGIN_SERIAL_IN:      // When using HWSerial0
-    case PLUGIN_TEN_PER_SECOND: // When using other than HWSerial0
-    {
-      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
-
-      if (((ESPEasySerialPort::serial0 == port) && (PLUGIN_TEN_PER_SECOND == function)) || // Negative checks...
-          ((ESPEasySerialPort::serial0 != port) && (PLUGIN_SERIAL_IN == function))) {
+      if (ESPEasySerialPort::serial0 != static_cast<ESPEasySerialPort>(CONFIG_PORT)) {
         return success;
       }
+      // fallthrough
+    case PLUGIN_TEN_PER_SECOND: // When using other than HWSerial0
+    {
       P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P077_data) {
@@ -175,7 +200,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
           # endif // ifndef BUILD_NO_DEBUG
 
-          if (CseReceived(event)) {
+          if (P077_data->processCseReceived(event)) {
             # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
@@ -259,22 +284,6 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
     }
   }
   return success;
-}
-
-bool CseReceived(struct EventStruct *event) {
-  P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-  if (nullptr == P077_data) {
-    return false;
-  }
-
-  if (!P077_data->processCseReceived(event)) {
-    # ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, F("CSE: Abnormal hardware"));
-    # endif // ifndef BUILD_NO_DEBUG
-    return false;
-  }
-  return true;
 }
 
 #endif // USES_P077

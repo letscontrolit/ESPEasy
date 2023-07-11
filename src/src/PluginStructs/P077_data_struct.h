@@ -20,6 +20,8 @@ public:
 
   ~P077_data_struct();
 
+  long get_24bit_value(uint8_t offset) const;
+
   bool processCseReceived(struct EventStruct *event);
 
   bool processSerialData();
@@ -41,17 +43,17 @@ public:
 
   //  uint8_t cse_receive_flag = 0;
 
-  uint8_t serial_in_buffer[32] = { 0 };
-  long    voltage_cycle        = 0;
-  long    current_cycle        = 0;
-  long    power_cycle          = 0;
-  long    power_cycle_first    = 0;
-  long    cf_pulses            = 0;
-  long    cf_pulses_last_time  = CSE_PULSES_NOT_INITIALIZED;
-  long    cf_frequency         = 0;
-  float   energy_voltage       = 0; // 123.1 V
-  float   energy_current       = 0; // 123.123 A
-  float   energy_power         = 0; // 123.1 W
+  uint8_t  serial_in_buffer[32] = { 0 };
+  long     voltage_cycle        = 0;
+  long     current_cycle        = 0;
+  long     power_cycle          = 0;
+  long     power_cycle_first    = 0;
+  uint32_t last_cf_pulses       = 0;
+  uint32_t cf_pulses            = 0;
+  float    cf_frequency         = (1e9f / 5364000);
+  float    energy_voltage       = 0; // 123.1 V
+  float    energy_current       = 0; // 123.123 A
+  float    energy_power         = 0; // 123.1 W
 
   // stats
   long     t_max       = 0;
@@ -63,6 +65,8 @@ public:
   uint16_t count_pkt   = 0;
   uint8_t  checksum    = 0;
   uint8_t  adjustment  = 0;
+
+  bool     newValue    = false;
 
 private:
 
