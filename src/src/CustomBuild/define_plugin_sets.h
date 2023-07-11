@@ -718,7 +718,7 @@ To create/register a plugin, you have to :
         #undef BUILD_NO_DEBUG
       #endif
       
-      #define FEATURE_MDNS  1
+//      #define FEATURE_MDNS  1
       #define FEATURE_CUSTOM_PROVISIONING 1
       #define FEATURE_DOWNLOAD 1
     #endif
@@ -2615,7 +2615,12 @@ To create/register a plugin, you have to :
 #if FEATURE_ARDUINO_OTA
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
-      #define FEATURE_MDNS  1
+      #ifdef ESP32
+        #define FEATURE_MDNS  1
+      #else
+        // Do not use MDNS on ESP8266 due to memory leak
+        #define FEATURE_MDNS  0
+      #endif
     #endif
   #endif
 #endif
