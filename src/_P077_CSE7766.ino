@@ -203,30 +203,12 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           if (P077_data->processCseReceived(event)) {
             # ifndef BUILD_NO_DEBUG
 
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-              String log = F("CSE: adjustment ");
-              log += P077_data->adjustment;
-              addLogMove(LOG_LEVEL_DEBUG_DEV, log);
-              log  = F("CSE: voltage_cycle ");
-              log += P077_data->voltage_cycle;
-              addLogMove(LOG_LEVEL_DEBUG_DEV, log);
-              log  = F("CSE: current_cycle ");
-              log += P077_data->current_cycle;
-              addLogMove(LOG_LEVEL_DEBUG_DEV, log);
-              log  = F("CSE: power_cycle ");
-              log += P077_data->power_cycle;
-              addLogMove(LOG_LEVEL_DEBUG_DEV, log);
-              log  = F("CSE: cf_pulses ");
-              log += P077_data->cf_pulses;
-              addLogMove(LOG_LEVEL_DEBUG_DEV, log);
-            }
-
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
               String log = F("CSE voltage: ");
               log += P077_data->energy_voltage;
               addLogMove(LOG_LEVEL_DEBUG, log);
               log  = F("CSE power: ");
-              log += P077_data->energy_power;
+              log += P077_data->_activePower;
               addLogMove(LOG_LEVEL_DEBUG, log);
               log  = F("CSE current: ");
               log += P077_data->energy_current;
@@ -240,7 +222,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
 
           // new packet received, update values
           UserVar[event->BaseVarIndex]     = P077_data->energy_voltage;
-          UserVar[event->BaseVarIndex + 1] = P077_data->energy_power;
+          UserVar[event->BaseVarIndex + 1] = P077_data->_activePower;
           UserVar[event->BaseVarIndex + 2] = P077_data->energy_current;
           UserVar[event->BaseVarIndex + 3] = P077_data->cf_pulses;
 

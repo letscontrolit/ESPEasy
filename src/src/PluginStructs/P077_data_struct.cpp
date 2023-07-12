@@ -37,8 +37,8 @@ bool P077_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
   return false;
 }
 
-long P077_data_struct::get_24bit_value(uint8_t offset) const {
-  long res{};
+uint32_t P077_data_struct::get_24bit_value(uint8_t offset) const {
+  uint32_t res{};
   constexpr size_t bufsize = sizeof(serial_in_buffer) / sizeof(serial_in_buffer[0]);
 
   if ((offset + 2u) < bufsize) {
@@ -50,11 +50,23 @@ long P077_data_struct::get_24bit_value(uint8_t offset) const {
 }
 
 bool P077_data_struct::processCseReceived(struct EventStruct *event) {
-  uint8_t header = serial_in_buffer[0];
+  const uint8_t header = serial_in_buffer[0];
 
-  if ((header & 0xFC) == 0xFC) {
-    //  Abnormal hardware
-    return false;
+  const bool voltage_cycle_exceeds_range = (header & 0xF8) == 0xF8;
+  const bool current_cycle_exceeds_range = (header & 0xF4) == 0xF4;
+  const bool power_cycle_exceeds_range   = (header & 0xF2) == 0xF2;
+
+
+  if (header != 0x55) {
+    if ((header & 0xF0) == 0xF0) {
+      // Header1 = FxH
+      if (voltage_cycle_exceeds_range || current_cycle_exceeds_range) {
+        // Abnormal external circuit or chip damage
+        return false;
+      }
+    } else {
+      return false;
+    }
   }
 
   // Get chip calibration data (coefficients) and use as initial defaults
@@ -101,21 +113,18 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
 
-  voltage_cycle = get_24bit_value(5);
-  current_cycle = get_24bit_value(11);
-  power_cycle   = get_24bit_value(17);
-  adjustment    = serial_in_buffer[20];
+  adjustment = serial_in_buffer[20];
 
-  const bool voltage_valid     = adjustment & 0x40;
-  const bool current_valid     = adjustment & 0x20;
-  const bool power_valid       = adjustment & 0x10;
-  //const bool cf_pulse_overflow = adjustment & 0x80;
+  const bool voltage_valid = bitRead(adjustment, 6);
+  const bool current_valid = bitRead(adjustment, 5);
+  const bool power_valid   = bitRead(adjustment, 4);
 
-  //const bool voltage_cycle_exceeds_range = (header & 0xF8) == 0xF8;
-  //const bool current_cycle_exceeds_range = (header & 0xF4) == 0xF4;
-  const bool power_cycle_exceeds_range   = (header & 0xF2) == 0xF2;
+  // const bool cf_pulse_overflow = bitRead(adjustment, 7);
+
 
   if (voltage_valid) {
+    const uint32_t voltage_cycle = get_24bit_value(5);
+
     if (voltage_cycle != 0) {
       energy_voltage = static_cast<float>(PCONFIG(0) * CSE_UREF) / static_cast<float>(voltage_cycle);
       newValue       = true;
@@ -133,10 +142,9 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     uint32_t diff{};
 
     if (cur_cf_pulses < last_cf_pulses) {
+      diff = cur_cf_pulses + (0xFFFF - last_cf_pulses) + 1;
+    } else {
       diff = cur_cf_pulses - last_cf_pulses;
-    }
-    else {
-      diff = cur_cf_pulses - ((1 << 16) - last_cf_pulses);
     }
 
     last_cf_pulses = cur_cf_pulses;
@@ -144,29 +152,32 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     cf_pulses += diff;
 
     if (power_cycle_exceeds_range) {
-      energy_power = 0;
+      _activePower = 0;
     } else {
+      const long power_cycle = get_24bit_value(17);
+
       if (0 == power_cycle_first) {
         power_cycle_first = power_cycle; // Skip first incomplete power_cycle
       }
 
       if ((power_cycle_first != power_cycle) && (power_cycle != 0)) {
         power_cycle_first = -1;
-        energy_power      = static_cast<float>(PCONFIG(2) * CSE_PREF) / static_cast<float>(power_cycle);
+        _activePower      = static_cast<float>(PCONFIG(2) * CSE_PREF) / static_cast<float>(power_cycle);
         newValue          = true;
       } else {
-        energy_power = 0;
+        _activePower = 0;
       }
     }
   } else {
     power_cycle_first = 0;
-    energy_power      = 0; // Powered on but no load
+    _activePower      = 0; // Powered on but no load
   }
 
   if (current_valid) {
     newValue = true;
+    const uint32_t current_cycle = get_24bit_value(11);
 
-    if ((0 == energy_power) || (current_cycle == 0)) {
+    if ((0 == _activePower) || (current_cycle == 0)) {
       energy_current = 0;
     } else {
       energy_current = static_cast<float>(PCONFIG(1)) / static_cast<float>(current_cycle);
@@ -187,14 +198,12 @@ bool P077_data_struct::processSerialData() {
       uint8_t serial_in_byte = easySerial->read();
       --available;
       count_bytes++;
-      checksum -= serial_in_buffer[2];             // substract from checksum data to be removed
       memmove(serial_in_buffer, serial_in_buffer + 1,
-              sizeof(serial_in_buffer) - 1);       // scroll buffer
-      serial_in_buffer[25] = serial_in_byte;       // add new data
-      checksum            += serial_in_buffer[22]; // add online checksum
+              sizeof(serial_in_buffer) - 1); // scroll buffer
+      serial_in_buffer[23] = serial_in_byte; // add new data
 
-      if ((checksum == serial_in_buffer[23]) &&
-          (serial_in_buffer[1] == 0x5A)) {         // Packet header 2=5AH？
+      if ((serial_in_buffer[1] == 0x5A)      // Packet header2 = 5AH？
+          && checksumMatch()) {
         count_pkt++;
         found = true;
       }
@@ -215,6 +224,17 @@ bool P077_data_struct::processSerialData() {
   }
 
   return found;
+}
+
+bool P077_data_struct::checksumMatch() const
+{
+  uint8_t checksum = 0;
+
+  // Sum of all data, except for 2 byte header and tail (checksum)
+  for (uint8_t i = 2; i < 23; i++) {
+    checksum += serial_in_buffer[i];
+  }
+  return checksum == serial_in_buffer[23];
 }
 
 /**
@@ -262,7 +282,7 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
     }
 
     if (hasCalibPwr) {
-      PCONFIG(2) = static_cast<uint16_t>(static_cast<float>(PCONFIG(2)) * (CalibAcPwr / energy_power));
+      PCONFIG(2) = static_cast<uint16_t>(static_cast<float>(PCONFIG(2)) * (CalibAcPwr / _activePower));
       changed    = true;
     } else if (changed) {
       // Force reload of factory calibration of pwr corrected with offset for voltage/current
