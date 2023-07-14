@@ -13,6 +13,42 @@
 # define CSE_UREF_PULSE              1950  // was 1666us = 600Hz = 220V
 # define CSE_IREF_PULSE              3500  // was 1666us = 600Hz = 4.545A
 
+# define P077_NR_OUTPUT_VALUES   VARS_PER_TASK
+
+
+# define P077_UREF       PCONFIG(0)
+# define P077_UREF_LABEL PCONFIG_LABEL(0)
+# define P077_IREF       PCONFIG(1)
+# define P077_IREF_LABEL PCONFIG_LABEL(1)
+# define P077_PREF       PCONFIG(2)
+# define P077_PREF_LABEL PCONFIG_LABEL(2)
+
+
+# define P077_QUERY1_CONFIG_POS  3
+# define P077_QUERY1         PCONFIG(3) // P077_QUERY1_CONFIG_POS
+# define P077_QUERY2         PCONFIG(4) // P077_QUERY1_CONFIG_POS + 1
+# define P077_QUERY3         PCONFIG(5) // P077_QUERY1_CONFIG_POS + 2
+# define P077_QUERY4         PCONFIG(6) // P077_QUERY1_CONFIG_POS + 3
+
+
+enum class P077_query : uint8_t {
+  P077_QUERY_VOLTAGE = 0,
+  P077_QUERY_ACTIVE_POWER = 1,
+  P077_QUERY_CURRENT = 2,
+  P077_QUERY_PULSES = 3,
+  P077_QUERY_KWH = 4,
+  P077_QUERY_VA = 5,
+  P077_QUERY_PF = 6,
+  P077_QUERY_REACTIVE_POWER = 7,
+
+
+  P077_QUERY_NR_OUTPUT_OPTIONS
+};
+
+const __FlashStringHelper * Plugin_077_valuename(P077_query value_nr, bool displayString);
+
+P077_query Plugin_077_from_valuename(const String& valuename);
+
 struct P077_data_struct : public PluginTaskData_base {
 public:
 
@@ -43,6 +79,10 @@ public:
   int  serial_Available();
   # endif // ifndef BUILD_NO_DEBUG
 
+  void setOutputValue(struct EventStruct *event, P077_query outputType, float value);
+
+  float getValue(P077_query outputType) const;
+
   //  uint8_t cse_receive_flag = 0;
 
   uint8_t  serial_in_buffer[24] = { 0 };
@@ -50,9 +90,8 @@ public:
   uint32_t last_cf_pulses       = 0;
   uint32_t cf_pulses            = 0;
   float    cf_frequency         = (1e9f / 5364000);
-  float    energy_voltage       = 0; // 123.1 V
-  float    energy_current       = 0; // 123.123 A
-  float    _activePower         = 0; // 123.1 W
+
+  float _cache[static_cast<uint8_t>(P077_query::P077_QUERY_NR_OUTPUT_OPTIONS)]{};
 
   // stats
   long     t_max       = 0;

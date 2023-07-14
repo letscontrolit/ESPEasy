@@ -4,6 +4,38 @@
 
 # include <ESPeasySerial.h>
 
+
+const __FlashStringHelper* Plugin_077_valuename(P077_query value_nr, bool displayString)
+{
+  const __FlashStringHelper *strings[] = {
+    F("Voltage"),        F("V"),
+    F("Active Power"),   F("W"),
+    F("Current"),        F("A"),
+    F("Pulses"),         F("pulses"),
+    F("Energy"),         F("kWh"),
+    F("Apparent Power"), F("VA"),
+    F("Power Factor"),   F("pf"),
+    F("Reactive Power"), F("VAR")
+  };
+  constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+  const size_t     index     = static_cast<size_t>(value_nr) * 2 + (displayString ? 0 : 1);
+
+  if (index < nrStrings) {
+    return strings[index];
+  }
+  return F("");
+}
+
+P077_query Plugin_077_from_valuename(const String& valuename)
+{
+  for (uint8_t query = 0; query < static_cast<uint8_t>(P077_query::P077_QUERY_NR_OUTPUT_OPTIONS); ++query) {
+    if (valuename.equalsIgnoreCase(Plugin_077_valuename(static_cast<P077_query>(query), false))) {
+      return static_cast<P077_query>(query);
+    }
+  }
+  return P077_query::P077_QUERY_NR_OUTPUT_OPTIONS;
+}
+
 P077_data_struct::~P077_data_struct() {
   delete easySerial;
   easySerial = nullptr;
@@ -87,29 +119,29 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
   if (voltage_coefficient != 0) {
-    if (CSE_UREF_PULSE == PCONFIG(0)) {
-      PCONFIG(0) = voltage_coefficient / CSE_UREF;
-      V2R        = 1.0f;
+    if (CSE_UREF_PULSE == P077_UREF) {
+      P077_UREF = voltage_coefficient / CSE_UREF;
+      V2R       = 1.0f;
     } else {
-      V2R = static_cast<float>(PCONFIG(0) * CSE_UREF) / voltage_coefficient;
+      V2R = static_cast<float>(P077_UREF * CSE_UREF) / voltage_coefficient;
     }
   }
 
   if (current_coefficient != 0) {
-    if (CSE_IREF_PULSE == PCONFIG(1)) {
-      PCONFIG(1) = current_coefficient;
-      V1R        = 1.0f;
+    if (CSE_IREF_PULSE == P077_IREF) {
+      P077_IREF = current_coefficient;
+      V1R       = 1.0f;
     } else {
-      V1R = static_cast<float>(PCONFIG(1)) / current_coefficient;
+      V1R = static_cast<float>(P077_IREF) / current_coefficient;
     }
   }
 
-  if (CSE_PREF_PULSE == PCONFIG(2)) {
-    PCONFIG(2) = (V1R * V2R * power_coefficient) / CSE_PREF;
+  if (CSE_PREF_PULSE == P077_PREF) {
+    P077_PREF = (V1R * V2R * power_coefficient) / CSE_PREF;
   }
 
-  if (PCONFIG(2) != 0) {
-    cf_frequency = (1e9f) / (PCONFIG(2) * CSE_PREF);
+  if (P077_PREF != 0) {
+    cf_frequency = (1e9f) / (P077_PREF * CSE_PREF);
   }
 
 
@@ -126,8 +158,8 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     const uint32_t voltage_cycle = get_24bit_value(5);
 
     if (voltage_cycle != 0) {
-      energy_voltage = static_cast<float>(PCONFIG(0) * CSE_UREF) / static_cast<float>(voltage_cycle);
-      newValue       = true;
+      setOutputValue(event, P077_query::P077_QUERY_VOLTAGE, static_cast<float>(P077_UREF * CSE_UREF) / static_cast<float>(voltage_cycle));
+      newValue = true;
     }
   }
 
@@ -152,7 +184,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     cf_pulses += diff;
 
     if (power_cycle_exceeds_range) {
-      _activePower = 0;
+      setOutputValue(event, P077_query::P077_QUERY_ACTIVE_POWER, 0);
     } else {
       const long power_cycle = get_24bit_value(17);
 
@@ -162,27 +194,58 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
 
       if ((power_cycle_first != power_cycle) && (power_cycle != 0)) {
         power_cycle_first = -1;
-        _activePower      = static_cast<float>(PCONFIG(2) * CSE_PREF) / static_cast<float>(power_cycle);
-        newValue          = true;
+        setOutputValue(event, P077_query::P077_QUERY_ACTIVE_POWER,
+                       static_cast<float>(P077_PREF * CSE_PREF) / static_cast<float>(power_cycle));
+        newValue = true;
       } else {
-        _activePower = 0;
+        setOutputValue(event, P077_query::P077_QUERY_ACTIVE_POWER, 0);
       }
     }
   } else {
     power_cycle_first = 0;
-    _activePower      = 0; // Powered on but no load
+
+    // Powered on but no load
+    setOutputValue(event, P077_query::P077_QUERY_ACTIVE_POWER, 0);
   }
 
   if (current_valid) {
     newValue = true;
     const uint32_t current_cycle = get_24bit_value(11);
 
-    if ((0 == _activePower) || (current_cycle == 0)) {
-      energy_current = 0;
+    if (essentiallyZero(getValue(P077_query::P077_QUERY_ACTIVE_POWER)) || (current_cycle == 0)) {
+      setOutputValue(event, P077_query::P077_QUERY_CURRENT, 0);
     } else {
-      energy_current = static_cast<float>(PCONFIG(1)) / static_cast<float>(current_cycle);
+      setOutputValue(event, P077_query::P077_QUERY_CURRENT, static_cast<float>(P077_IREF) / static_cast<float>(current_cycle));
     }
   }
+
+  // Update derived values
+  {
+    const float pulsesPerKwh = cf_frequency * 3600;
+    setOutputValue(event, P077_query::P077_QUERY_KWH,    cf_pulses / pulsesPerKwh);
+    setOutputValue(event, P077_query::P077_QUERY_PULSES, cf_pulses);
+
+    const float voltage  = getValue(P077_query::P077_QUERY_VOLTAGE);
+    const float current  = getValue(P077_query::P077_QUERY_CURRENT);
+    const float active   = getValue(P077_query::P077_QUERY_ACTIVE_POWER);
+    const float apparent = voltage * current;
+    setOutputValue(event, P077_query::P077_QUERY_VA, apparent);
+
+    float reactivePower{};
+
+    if (definitelyGreaterThan(apparent, active)) {
+      reactivePower = sqrtf(apparent * apparent - active * active);
+    }
+    setOutputValue(event, P077_query::P077_QUERY_REACTIVE_POWER, reactivePower);
+
+    float powerfactor = 1.0f;
+
+    if (!essentiallyZero(voltage) && !essentiallyZero(current)) {
+      powerfactor = active / voltage / current;
+    }
+    setOutputValue(event, P077_query::P077_QUERY_PF, powerfactor);
+  }
+
 
   return true;
 }
@@ -250,11 +313,11 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
   bool changed     = false;
 
   if (equals(cmd, F("csereset"))) { // Reset to defaults
-    PCONFIG(0) = CSE_UREF_PULSE;
-    PCONFIG(1) = CSE_IREF_PULSE;
-    PCONFIG(2) = CSE_PREF_PULSE;
-    success    = true;
-    changed    = true;
+    P077_UREF = CSE_UREF_PULSE;
+    P077_IREF = CSE_IREF_PULSE;
+    P077_PREF = CSE_PREF_PULSE;
+    success   = true;
+    changed   = true;
   } else if (equals(cmd, F("csecalibrate"))) { // Set 1 or more calibration values, 0 will skip that value
     success = true;
     float CalibVolt  = 0.0f;
@@ -267,26 +330,34 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
       }
     }
 
-    const bool hasCalibVolt = definitelyGreaterThan(CalibVolt, 0.0f);
-    const bool hasCalibCurr = definitelyGreaterThan(CalibCurr, 0.0f);
-    const bool hasCalibPwr  = definitelyGreaterThan(CalibAcPwr, 0.0f);
+    const float Volt        = getValue(P077_query::P077_QUERY_VOLTAGE);
+    const float ActivePower = getValue(P077_query::P077_QUERY_ACTIVE_POWER);
+    const float Current     = getValue(P077_query::P077_QUERY_CURRENT);
 
-    if (hasCalibVolt) {
-      PCONFIG(0) = static_cast<uint16_t>(static_cast<float>(PCONFIG(0)) * (CalibVolt / energy_voltage));
-      changed    = true;
+    const bool applyCalibVolt = definitelyGreaterThan(CalibVolt, 0.0f)  && !essentiallyZero(Volt);
+    const bool applyCalibCurr = definitelyGreaterThan(CalibCurr, 0.0f)  && !essentiallyZero(Current);
+    const bool applyCalibPwr  = definitelyGreaterThan(CalibAcPwr, 0.0f) && !essentiallyZero(ActivePower);
+
+
+    if (applyCalibVolt) {
+      P077_UREF = static_cast<uint16_t>(static_cast<float>(P077_UREF) *
+                                        (CalibVolt / Volt));
+      changed = true;
     }
 
-    if (hasCalibCurr) {
-      PCONFIG(1) = static_cast<uint16_t>(static_cast<float>(PCONFIG(1)) * (CalibCurr / energy_current));
-      changed    = true;
+    if (applyCalibCurr) {
+      P077_IREF = static_cast<uint16_t>(static_cast<float>(P077_IREF) *
+                                        (CalibCurr / Current));
+      changed = true;
     }
 
-    if (hasCalibPwr) {
-      PCONFIG(2) = static_cast<uint16_t>(static_cast<float>(PCONFIG(2)) * (CalibAcPwr / _activePower));
-      changed    = true;
+    if (applyCalibPwr) {
+      P077_PREF = static_cast<uint16_t>(static_cast<float>(P077_PREF) *
+                                        (CalibAcPwr / ActivePower));
+      changed = true;
     } else if (changed) {
       // Force reload of factory calibration of pwr corrected with offset for voltage/current
-      PCONFIG(2) = CSE_PREF_PULSE;
+      P077_PREF = CSE_PREF_PULSE;
     }
   }
 
@@ -306,4 +377,32 @@ int P077_data_struct::serial_Available() {
 
 # endif // ifndef BUILD_NO_DEBUG
 
-#endif  // ifdef USES_P077
+void P077_data_struct::setOutputValue(struct EventStruct *event, P077_query outputType, float value) {
+  const uint8_t index          = static_cast<uint8_t>(outputType);
+  constexpr uint8_t nrElements = sizeof(_cache) / sizeof(_cache[0]);
+
+  if (index < nrElements) {
+    _cache[index] = value;
+  }
+
+  for (uint8_t i = 0; i < P077_NR_OUTPUT_VALUES; ++i) {
+    const uint8_t pconfigIndex = i + P077_QUERY1_CONFIG_POS;
+
+    if (PCONFIG(pconfigIndex) == index) {
+      UserVar[event->BaseVarIndex + i] = value;
+    }
+  }
+}
+
+float P077_data_struct::getValue(P077_query outputType) const
+{
+  const uint8_t index          = static_cast<uint8_t>(outputType);
+  constexpr uint8_t nrElements = sizeof(_cache) / sizeof(_cache[0]);
+
+  if (index < nrElements) {
+    return _cache[index];
+  }
+  return 0.0f;
+}
+
+#endif // ifdef USES_P077
