@@ -1517,9 +1517,9 @@ To create/register a plugin, you have to :
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
     #define USES_P129   // 74HC165 Input shiftregisters
-    #define USES_P133   // LTR390 UV
     #define USES_P135   // SCD4x
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
+    #define USES_P133     // LTR390 UV
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F
@@ -1544,6 +1544,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
 #endif
@@ -1813,6 +1816,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
+  #endif
+  #ifndef USES_P133
+    #define USES_P133     // LTR390 UV
   #endif
 
   // Controllers
@@ -2168,8 +2177,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
   #endif
-  #if !defined(USES_P152) && defined(ESP32) && !(defined(ESP32C3) || defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C6) || defined(ESP32H2)) // Only supported on ESP32 and ESP32-S2
+  #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
     #define USES_P152   // ESP32 DAC
+  #endif
+  #ifndef USES_P153
+    #define USES_P153   // Environment - SHT4x
   #endif
 
   // Controllers
@@ -2219,7 +2231,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_P144) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056)  || defined(USES_P065) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_P144) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -2903,6 +2915,26 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  #ifdef ESP8266_1M
+    #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 0
+  #else
+    #define FEATURE_DEFINE_SERIAL_CONSOLE_PORT 1
+  #endif
+#endif
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+# if USES_HWCDC || USES_USBCDC
+#  define USES_ESPEASY_CONSOLE_FALLBACK_PORT 1
+# endif // if USES_HWCDC || USES_USBCDC
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+
+#ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
+# define USES_ESPEASY_CONSOLE_FALLBACK_PORT 0
+#endif // ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
+
+
 #if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)
   #undef FEATURE_PLUGIN_PRIORITY
   #define FEATURE_PLUGIN_PRIORITY   1
@@ -2958,5 +2990,32 @@ To create/register a plugin, you have to :
   #define ESPEASY_RULES_FLOAT_TYPE float
 #endif
 
+#ifndef ESPEASY_SERIAL_0
+#if defined(ESP32) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
+  #define ESPEASY_SERIAL_0 Serial0
+#else
+  #define ESPEASY_SERIAL_0 Serial
+#endif
+#endif
+
+
+#if FEATURE_MDNS
+  #ifdef ESP32S2
+    #undef FEATURE_MDNS
+    #define FEATURE_MDNS 0
+  #endif
+#endif
+
+#ifndef FEATURE_IMPROV
+  #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
+    #define FEATURE_IMPROV 0
+  #else
+    #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+      #define FEATURE_IMPROV 1
+    #else
+      #define FEATURE_IMPROV 0
+    #endif
+  #endif
+#endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

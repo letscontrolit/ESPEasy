@@ -1,5 +1,5 @@
-#ifndef ESPeasySC16IS752_Serial_h
-#define ESPeasySC16IS752_Serial_h
+#ifndef ESPEASYSERIAL_DRIVER_ESPEASYSC16IS752_SERIAL_H
+#define ESPEASYSERIAL_DRIVER_ESPEASYSC16IS752_SERIAL_H
 
 #ifndef DISABLE_SC16IS752_Serial
 #include <inttypes.h>
@@ -44,4 +44,4 @@ private:
 
 #endif
 
-#endif // ESPeasySC16IS752_Serial_h
+#endif // ESPEASYSERIAL_DRIVER_ESPEASYSC16IS752_SERIAL_H

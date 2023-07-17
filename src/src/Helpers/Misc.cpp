@@ -235,13 +235,13 @@ String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
 void emergencyReset()
 {
   // Direct Serial is allowed here, since this is only an emergency task.
-  Serial.begin(115200);
-  Serial.write(0xAA);
-  Serial.write(0x55);
+  ESPEASY_SERIAL_0.begin(115200);
+  ESPEASY_SERIAL_0.write(0xAA);
+  ESPEASY_SERIAL_0.write(0x55);
   delay(1);
 
-  if (Serial.available() == 2) {
-    if ((Serial.read() == 0xAA) && (Serial.read() == 0x55))
+  if (ESPEASY_SERIAL_0.available() == 2) {
+    if ((ESPEASY_SERIAL_0.read() == 0xAA) && (ESPEASY_SERIAL_0.read() == 0x55))
     {
       serialPrintln(F("\n\n\rSystem will reset to factory defaults in 10 seconds..."));
       delay(10000);
@@ -324,8 +324,8 @@ void SendValueLogger(taskIndex_t TaskIndex)
 #endif // if !defined(BUILD_NO_DEBUG) || FEATURE_SD
 
 #if FEATURE_SD
-  String filename = F("VALUES.CSV");
-  fs::File   logFile  = SD.open(filename, FILE_WRITE);
+  String   filename = patch_fname(F("VALUES.CSV"));
+  fs::File logFile  = SD.open(filename, "a+");
 
   if (logFile) {
     logFile.print(logger);

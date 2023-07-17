@@ -12,6 +12,7 @@
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 
+
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
  #define DEFAULT_SPI 0
@@ -399,12 +400,14 @@ public:
 
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
-  uint8_t       md5[16]{}; // Store checksum of the settings.
-  
-//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-
+  uint8_t       md5[16]; // Store checksum of the settings.
   uint32_t      VariousBits2 = 0;
 
+  uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 
+  int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+  int8_t        console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+  uint8_t       console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
+  
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };
 

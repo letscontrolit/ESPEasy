@@ -14,6 +14,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #endif
 
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -105,6 +106,13 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:           return F("JSON bool output without quotes");
     case LabelType::ENABLE_TIMING_STATISTICS:   return F("Collect Timing Statistics");
     case LabelType::ENABLE_RULES_CACHING:       return F("Enable Rules Cache");
+    case LabelType::ENABLE_SERIAL_PORT_CONSOLE: return F("Enable Serial Port Console");
+    case LabelType::CONSOLE_SERIAL_PORT:        return F("Console Serial Port");
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    case LabelType::CONSOLE_FALLBACK_TO_SERIAL0: return F("Fallback to Serial 0");
+    case LabelType::CONSOLE_FALLBACK_PORT:       return F("Console Fallback Port");
+#endif
+
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return F("Optimize Rules Cache Event Order"); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return F("Allow TaskValueSet on all plugins");
     case LabelType::ALLOW_OTA_UNLIMITED:        return F("Allow OTA without size-check");
@@ -176,6 +184,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
     case LabelType::BUILD_PLATFORM:         return F("Build Platform");
     case LabelType::GIT_HEAD:               return F("Git HEAD");
+    #ifdef CONFIGURATION_CODE
+    case LabelType::CONFIGURATION_CODE_LBL: return F("Configuration code");
+    #endif // ifdef CONFIGURATION_CODE
 
     case LabelType::I2C_BUS_STATE:          return F("I2C Bus State");
     case LabelType::I2C_BUS_CLEARED_COUNT:  return F("I2C bus cleared count");
@@ -348,6 +359,14 @@ String getValue(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:           return jsonBool(Settings.JSONBoolWithoutQuotes());
     case LabelType::ENABLE_TIMING_STATISTICS:   return jsonBool(Settings.EnableTimingStats());
     case LabelType::ENABLE_RULES_CACHING:       return jsonBool(Settings.EnableRulesCaching());
+    case LabelType::ENABLE_SERIAL_PORT_CONSOLE: return jsonBool(Settings.UseSerial);
+    case LabelType::CONSOLE_SERIAL_PORT:        return ESPEasy_Console.getPortDescription();
+
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    case LabelType::CONSOLE_FALLBACK_TO_SERIAL0: return jsonBool(Settings.console_serial0_fallback);
+    case LabelType::CONSOLE_FALLBACK_PORT:       return ESPEasy_Console.getFallbackPortDescription();
+#endif
+
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return jsonBool(Settings.EnableRulesEventReorder()); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return jsonBool(Settings.AllowTaskValueSetAllPlugins());
     case LabelType::ALLOW_OTA_UNLIMITED:        return jsonBool(Settings.AllowOTAUnlimited());
@@ -441,6 +460,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::GIT_HEAD:               return get_git_head();
+    #ifdef CONFIGURATION_CODE
+    case LabelType::CONFIGURATION_CODE_LBL: return getConfigurationCode();
+    #endif // ifdef CONFIGURATION_CODE
     case LabelType::I2C_BUS_STATE:          return toString(I2C_state);
     case LabelType::I2C_BUS_CLEARED_COUNT:  return String(I2C_bus_cleared_count);
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
