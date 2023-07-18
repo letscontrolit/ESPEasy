@@ -176,6 +176,16 @@ void runOncePerSecond()
     I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
 
+  #if FEATURE_MDNS
+  #ifdef ESP8266
+  // Allow MDNS processing
+  if (NetworkConnected()) {
+    MDNS.announce();
+  }
+  #endif
+  #endif // if FEATURE_MDNS
+
+
   checkResetFactoryPin();
   STOP_TIMER(PLUGIN_CALL_1PS);
 }
