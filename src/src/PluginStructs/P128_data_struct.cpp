@@ -21,7 +21,7 @@ P128_data_struct::P128_data_struct(int8_t   _gpioPin,
   
   if (nullptr != Plugin_128_pixels) {
     Plugin_128_pixels->Begin(); // This initializes the NeoPixelBus library.
-    Plugin_128_pixels->SetLuminance(maxBright);
+    Plugin_128_pixels->SetBrightness(maxBright);
   }
 }
 
@@ -146,7 +146,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     else if (equals(subCommand, F("dim"))) {
       if ((str3i >= 0) && (str3i <= maxBright)) { // Safety check
         success = true;
-        Plugin_128_pixels->SetLuminance(str3i);
+        Plugin_128_pixels->SetBrightness(str3i);
       }
     }
 
@@ -987,7 +987,7 @@ void P128_data_struct::rainbow(void) {
   float progress = (float)counter / (float)fadetime;
 
   if (fadeIn == true) {
-    Plugin_128_pixels->SetLuminance(progress * maxBright); // Safety check
+    Plugin_128_pixels->SetBrightness(progress * maxBright); // Safety check
     fadeIn = (progress == 1) ? false : true;
   }
 
@@ -1521,7 +1521,7 @@ void P128_data_struct::NeoPixelSendStatus(struct EventStruct *eventSource) {
   json += ','; json += '\n';
   json += to_json_object_value(F("fadedelay"), toString(fadedelay, 0));                   // 15..19
   json += ','; json += '\n';
-  json += to_json_object_value(F("dim"), toString(Plugin_128_pixels->GetLuminance(), 0)); // 8..10
+  json += to_json_object_value(F("dim"), toString(Plugin_128_pixels->GetBrightness(), 0)); // 8..10
   json += ','; json += '\n';
   json += to_json_object_value(F("rgb"), colorStr, true);                                 // 15..17
   json += ','; json += '\n';
