@@ -80,6 +80,9 @@ struct LabelType {
 #if FEATURE_AUTO_DARK_MODE
     ENABLE_AUTO_DARK_MODE,
 #endif
+#if FEATURE_RULES_EASY_COLOR_CODE
+    DISABLE_RULES_AUTOCOMPLETE,
+#endif // if FEATURE_RULES_EASY_COLOR_CODE
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
