@@ -6,7 +6,8 @@
 // #######################################################################################################
 //
 // Changelog:
-// 2022-08-08, tonhuisman:  Fix listProtocols()/listACProtocols() to ignore 1-character type names 
+// 2023-07-21, tonhuisman:  Add 'Inverted output' option, as supported by the IRsend class.
+// 2022-08-08, tonhuisman:  Fix listProtocols()/listACProtocols() to ignore 1-character type names
 // 2022-01-11, tonhuisman:  Move all code and globals to PluginStructs/P035_data_struct to enable multi-instance use
 // No previous changelog recorded.
 
@@ -75,6 +76,8 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormCheckBox(F("Inverted output"), F("invert"), PCONFIG(0) == 1);
+
       addRowLabel(F("Command"));
       addHtml(F("IRSEND,[PROTOCOL],[DATA],[BITS optional],[REPEATS optional]<BR>BITS and REPEATS are optional and default to 0<BR/>"));
       addHtml(F("IRSENDAC,{JSON formated AC command}"));
@@ -83,9 +86,15 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SAVE:
+    {
+      PCONFIG(0) = isFormItemChecked(F("invert")) ? 1 : 0;
+      break;
+    }
+
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P035_data_struct(CONFIG_PIN1));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P035_data_struct(CONFIG_PIN1, PCONFIG(0) == 1));
       P035_data_struct *P035_data = static_cast<P035_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P035_data) {

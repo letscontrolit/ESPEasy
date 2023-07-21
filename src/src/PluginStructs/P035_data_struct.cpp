@@ -5,8 +5,8 @@
 // **************************************************************************/
 // Constructor
 // **************************************************************************/
-P035_data_struct::P035_data_struct(int8_t gpioPin)
-  : _gpioPin(gpioPin) {}
+P035_data_struct::P035_data_struct(int8_t gpioPin, bool inverted)
+  : _gpioPin(gpioPin), _inverted(inverted) {}
 
 // **************************************************************************/
 // Destructor
@@ -36,7 +36,7 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
       addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
       # endif // ifdef P035_DEBUG_LOG
     }
-    Plugin_035_irSender = new (std::nothrow) IRsend(_gpioPin);
+    Plugin_035_irSender = new (std::nothrow) IRsend(_gpioPin, _inverted);
 
     if (Plugin_035_irSender != nullptr) {
       Plugin_035_irSender->begin(); // Start the sender
