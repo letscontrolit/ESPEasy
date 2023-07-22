@@ -58,9 +58,9 @@ private:
                     int           repeats);
   String listProtocols();
   bool   addErrorTrue();
-  bool   sendIRCode(int const      irtype,
-                    uint64_t const code,
-                    char const    *code_str,
+  bool   sendIRCode(const int      irtype,
+                    const uint64_t code,
+                    const char    *code_str,
                     uint16_t       bits,
                     uint16_t       repeat);
   bool parseStringAndSendAirCon(const int    irtype,
