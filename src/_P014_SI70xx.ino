@@ -78,7 +78,7 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P014_VALUES_COUNT = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
+      P014_VALUES_COUNT = getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
       break;
     }
 
