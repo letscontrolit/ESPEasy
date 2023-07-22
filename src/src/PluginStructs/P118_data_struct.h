@@ -14,7 +14,7 @@
 
 # if (defined(LIMIT_BUILD_SIZE) || defined(BUILD_NO_DEBUG)) && defined(P118_DEBUG_LOG)
 #  undef P118_DEBUG_LOG
-# endif // if defined(LIMIT_BUILD_SIZE) && defined(P118_DEBUG_LOG)
+# endif // if (defined(LIMIT_BUILD_SIZE) || defined(BUILD_NO_DEBUG)) && defined(P118_DEBUG_LOG)
 # ifdef LIMIT_BUILD_SIZE
 // #  if P118_FEATURE_ORCON
 // #   undef P118_FEATURE_ORCON
