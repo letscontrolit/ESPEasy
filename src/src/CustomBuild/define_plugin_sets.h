@@ -2019,7 +2019,7 @@ To create/register a plugin, you have to :
     #define USES_P042   // Candle
   #endif
   #ifndef USES_P046
-    // #define USES_P046  // VentusW266
+    #define USES_P046  // VentusW266
   #endif
   #ifndef USES_P087
     #define USES_P087   // Serial Proxy

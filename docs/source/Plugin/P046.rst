@@ -69,7 +69,7 @@ The plugin can only **read** the sensors of the outdoor unit.
 .. danger::
    CONNECTING THIS PLUGIN WILL VOID THE WARRANTY OF YOUR WEATHER STATION!
 
-   If you are not yet prepared to void the warranty have a look at `P124_Ventus_W266_RFM69.ino <https://github.com/letscontrolit/ESPEasyPluginPlayground/blob/master/_P124_Ventus_W266_RFM69.ino>`_ in the playground.
+   If you are not yet prepared to void the warranty have a look at `P190_Ventus_W266_RFM69.ino <https://github.com/letscontrolit/ESPEasyPluginPlayground/blob/master/_P190_Ventus_W266_RFM69.ino>`_ in the playground.
    The RFM69HCW unit is able to communicate with the outdoor unit using radio, thus you aren't forced to do any tinkering with the indoor unit.
 
 This device plugin is multi functional and you'll want to install multiple instances (add
