@@ -191,7 +191,6 @@
 # define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 # define PLUGIN_VALUENAME1_036 "OLED"
 
-# ifdef P036_SEND_EVENTS
 #  define P036_EVENT_DISPLAY  0 // event: <taskname>#display=0/1
 #  define P036_EVENT_CONTRAST 1 // event: <taskname>#contrast=0/1/2
 #  define P036_EVENT_FRAME    2 // event: <taskname>#frame=1..n
@@ -199,6 +198,7 @@
 #  define P036_EVENT_LINECNT  4 // event: <taskname>#linecount=1..4
 #  define P036_EVENT_RESTORE  5 // event: <taskname>#restore=1..n
 #  define P036_EVENT_SCROLL   6 // event: <taskname>#scroll=ePSS_VerySlow..ePSS_Ticker
+# ifdef P036_SEND_EVENTS
 void P036_SendEvent(struct EventStruct *event,
                     uint8_t             eventId,
                     int16_t             eventValue);
