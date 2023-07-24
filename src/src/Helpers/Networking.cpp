@@ -342,15 +342,11 @@ void checkUDP()
 # ifndef BUILD_NO_DEBUG
 
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                    String log;
-                    log.reserve(64);
-                    log  = F("UDP  : ");
-                    log += received.STA_MAC().toString();
-                    log += ',';
-                    log += formatIP(received.IP());
-                    log += ',';
-                    log += received.unit;
-                    addLog(LOG_LEVEL_DEBUG_MORE, log);
+                    addLogMove(LOG_LEVEL_DEBUG_MORE,  
+                      strformat(F("UDP  : %s,%s,%d"), 
+                        received.STA_MAC().toString().c_str(), 
+                        formatIP(received.IP()).c_str(), 
+                        received.unit));
                   }
 
 #endif // ifndef BUILD_NO_DEBUG
@@ -1694,10 +1690,7 @@ bool start_downloadFile(WiFiClient  & client,
     );
 
   if (httpCode != HTTP_CODE_OK) {
-    error  = F("HTTP code: ");
-    error += httpCode;
-    error += ' ';
-    error += url;
+    error  = strformat(F("HTTP code: %d %s"), httpCode, url);
 
     addLog(LOG_LEVEL_ERROR, error);
     http.end();

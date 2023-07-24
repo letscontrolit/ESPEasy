@@ -72,13 +72,9 @@ String patch_fname(const String& fname) {
  \*********************************************************************************************/
 String FileError(int line, const char *fname)
 {
-  String err = F("FS   : Error while reading/writing ");
-
-  err += fname;
-  err += F(" in ");
-  err += line;
-  addLog(LOG_LEVEL_ERROR, err);
-  return err;
+  String log = strformat(F("FS   : Error while reading/writing %s in %d"), fname, line);
+  addLog(LOG_LEVEL_ERROR, log);
+  return log;
 }
 
 /********************************************************************************************\
@@ -1904,7 +1900,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
           }
 #ifndef BUILD_NO_DEBUG
         } else {
-          addLog(LOG_LEVEL_INFO, String(F("RTC  : Cannot get count from: ")) + fname);
+          addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
 #endif
         }
       }

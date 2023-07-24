@@ -270,7 +270,8 @@ void Web_StreamingBuffer::endStream() {
 */
 
   } else {
-    addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
+    if (loglevelActiveFor(LOG_LEVEL_ERROR))
+      addLog(LOG_LEVEL_ERROR, concat("Webpage skipped: low memory: ", finalRam));
     lowMemorySkip = false;
   }
 }

@@ -164,10 +164,13 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
   if (power_valid) {
+    const uint32_t cur_millis = millis();
+
     // Only use CF pulses when a power cycle has completed
     const uint32_t cur_cf_pulses = serial_in_buffer[21] << 8 | serial_in_buffer[22];
 
     if (last_cf_pulses == 0) {
+      last_cf_pulses_moment = cur_millis;
       last_cf_pulses = cur_cf_pulses;
     }
 
@@ -183,24 +186,30 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
 
     cf_pulses += diff;
 
-    if (power_cycle_exceeds_range) {
-      setOutputValue(event, P077_query::P077_QUERY_ACTIVE_POWER, 0);
-    } else {
+    float activePower{};
+
+    if (!power_cycle_exceeds_range) {
       const long power_cycle = get_24bit_value(17);
 
       if (0 == power_cycle_first) {
         power_cycle_first = power_cycle; // Skip first incomplete power_cycle
       }
 
-      if ((power_cycle_first != power_cycle) && (power_cycle != 0)) {
+      if (power_cycle_first != power_cycle) {
         power_cycle_first = -1;
-        setOutputValue(event, P077_query::P077_QUERY_ACTIVE_POWER,
-                       static_cast<float>(P077_PREF * CSE_PREF) / static_cast<float>(power_cycle));
+        if (power_cycle != 0) {
+          activePower = static_cast<float>(P077_PREF * CSE_PREF) / static_cast<float>(power_cycle); 
+        } else {
+          if (diff > 0 && (last_cf_pulses_moment != cur_millis)) {
+            const float time_passed_diff_sec = timeDiff(last_cf_pulses_moment, cur_millis) / 1000.0f;
+            activePower = (diff / time_passed_diff_sec) / cf_frequency;
+          }
+        }
         newValue = true;
-      } else {
-        setOutputValue(event, P077_query::P077_QUERY_ACTIVE_POWER, 0);
       }
     }
+    setOutputValue(event, P077_query::P077_QUERY_ACTIVE_POWER, activePower);
+    last_cf_pulses_moment = cur_millis;
   } else {
     power_cycle_first = 0;
 

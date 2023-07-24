@@ -252,11 +252,11 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("INA3221: Values: ");
         log += UserVar[event->BaseVarIndex];
-        log += F(", ");
+        log += '/';
         log += UserVar[event->BaseVarIndex + 1];
-        log += F(", ");
+        log += '/';
         log += UserVar[event->BaseVarIndex + 2];
-        log += F(", ");
+        log += '/';
         log += UserVar[event->BaseVarIndex + 3];
         addLog(LOG_LEVEL_INFO, log);
       }

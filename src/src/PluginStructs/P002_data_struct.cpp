@@ -1008,14 +1008,11 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
   #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("ADC getBinnedValue: bin cnt: ");
-
-    log += highest_bin_count;
-    log += F(" Value: ");
-    log += float_value;
-    log += F(" RAW: ");
-    log += raw_value;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, 
+      strformat(F("ADC getBinnedValue: bin cnt: %u  Value: %f RAW: %d"), 
+        highest_bin_count, 
+        float_value, 
+        raw_value));
   }
   #  endif // ifndef BUILD_NO_DEBUG
 

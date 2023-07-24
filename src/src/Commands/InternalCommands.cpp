@@ -631,26 +631,16 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     {
-      String log = F("Command: ");
-      log += cmd;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, concat(F("Command: "), cmd));
     }
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
-    {
-      String parameters;
-      parameters.reserve(64);
-      parameters += F("Par1: ");
-      parameters += TempEvent.Par1;
-      parameters += F(" Par2: ");
-      parameters += TempEvent.Par2;
-      parameters += F(" Par3: ");
-      parameters += TempEvent.Par3;
-      parameters += F(" Par4: ");
-      parameters += TempEvent.Par4;
-      parameters += F(" Par5: ");
-      parameters += TempEvent.Par5;
-      addLogMove(LOG_LEVEL_DEBUG, parameters);
-    }
+    addLogMove(LOG_LEVEL_DEBUG, strformat(
+        F("Par1: %d Par2: %d Par3: %d Par4: %d Par5: %d"),
+        TempEvent.Par1,
+        TempEvent.Par2,
+        TempEvent.Par3,
+        TempEvent.Par4,
+        TempEvent.Par5));
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -715,8 +705,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       return true;
     }
   }
-  String errorUnknown = F("Command unknown: ");
-  errorUnknown += action;
+  const String errorUnknown = concat(F("Command unknown: "), action);
   addLog(LOG_LEVEL_INFO, errorUnknown);
   SendStatus(&TempEvent, errorUnknown);
   delay(0);

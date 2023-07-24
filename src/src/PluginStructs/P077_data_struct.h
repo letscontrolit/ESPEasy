@@ -32,22 +32,23 @@
 
 
 enum class P077_query : uint8_t {
-  P077_QUERY_VOLTAGE = 0,
-  P077_QUERY_ACTIVE_POWER = 1,
-  P077_QUERY_CURRENT = 2,
-  P077_QUERY_PULSES = 3,
-  P077_QUERY_KWH = 4,
-  P077_QUERY_VA = 5,
-  P077_QUERY_PF = 6,
+  P077_QUERY_VOLTAGE        = 0,
+  P077_QUERY_ACTIVE_POWER   = 1,
+  P077_QUERY_CURRENT        = 2,
+  P077_QUERY_PULSES         = 3,
+  P077_QUERY_KWH            = 4,
+  P077_QUERY_VA             = 5,
+  P077_QUERY_PF             = 6,
   P077_QUERY_REACTIVE_POWER = 7,
 
 
   P077_QUERY_NR_OUTPUT_OPTIONS
 };
 
-const __FlashStringHelper * Plugin_077_valuename(P077_query value_nr, bool displayString);
+const __FlashStringHelper* Plugin_077_valuename(P077_query value_nr,
+                                                bool       displayString);
 
-P077_query Plugin_077_from_valuename(const String& valuename);
+P077_query                 Plugin_077_from_valuename(const String& valuename);
 
 struct P077_data_struct : public PluginTaskData_base {
 public:
@@ -79,7 +80,9 @@ public:
   int  serial_Available();
   # endif // ifndef BUILD_NO_DEBUG
 
-  void setOutputValue(struct EventStruct *event, P077_query outputType, float value);
+  void setOutputValue(struct EventStruct *event,
+                      P077_query          outputType,
+                      float               value);
 
   float getValue(P077_query outputType) const;
 
@@ -90,6 +93,7 @@ public:
   uint32_t last_cf_pulses       = 0;
   uint32_t cf_pulses            = 0;
   float    cf_frequency         = (1e9f / 5364000);
+  uint32_t last_cf_pulses_moment{};
 
   float _cache[static_cast<uint8_t>(P077_query::P077_QUERY_NR_OUTPUT_OPTIONS)]{};
 
