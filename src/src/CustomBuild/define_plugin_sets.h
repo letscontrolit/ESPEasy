@@ -2007,10 +2007,10 @@ To create/register a plugin, you have to :
 
   // Plugins
   #ifndef USES_P016
-//    #define USES_P016   // IR
+    #define USES_P016   // IR TSOP4838
   #endif
   #ifndef USES_P035
-//    #define USES_P035   // IRTX
+    #define USES_P035   // IRTX
   #endif
   #ifndef USES_P041
     #define USES_P041   // NeoClock
@@ -2023,6 +2023,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P087
     #define USES_P087   // Serial Proxy
+  #endif
+  #ifndef USES_P088
+    #define USES_P088   // ToniA IR plugin
   #endif
   #ifndef USES_P094
     #define USES_P094  // CUL Reader
