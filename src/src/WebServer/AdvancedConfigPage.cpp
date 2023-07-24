@@ -151,6 +151,9 @@ void handle_advanced() {
 #if FEATURE_AUTO_DARK_MODE
     Settings.setCssMode(getFormItemInt(getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE)));
 #endif // FEATURE_AUTO_DARK_MODE
+#if FEATURE_RULES_EASY_COLOR_CODE
+    Settings.DisableRulesCodeCompletion(isFormItemChecked(LabelType::DISABLE_RULES_AUTOCOMPLETE));
+#endif // if FEATURE_RULES_EASY_COLOR_CODE
 
     addHtmlError(SaveSettings());
 
@@ -325,6 +328,11 @@ void handle_advanced() {
                     cssModeOptions,
                     Settings.getCssMode());
   #endif // FEATURE_AUTO_DARK_MODE
+
+  #if FEATURE_RULES_EASY_COLOR_CODE
+  addFormCheckBox(LabelType::DISABLE_RULES_AUTOCOMPLETE, Settings.DisableRulesCodeCompletion());
+  addFormNote(F("Also disables Rules syntax highlighting!"));
+  #endif // if FEATURE_RULES_EASY_COLOR_CODE
 
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());

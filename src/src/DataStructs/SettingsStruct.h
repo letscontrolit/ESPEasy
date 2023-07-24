@@ -158,6 +158,12 @@ class SettingsStruct_tmpl
   bool SDK_WiFi_autoreconnect() const;
   void SDK_WiFi_autoreconnect(bool value);
 
+  #if FEATURE_RULES_EASY_COLOR_CODE
+  // Inhibit RulesCodeCompletion
+  bool DisableRulesCodeCompletion() const;
+  void DisableRulesCodeCompletion(bool value);
+  #endif // if FEATURE_RULES_EASY_COLOR_CODE
+
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;

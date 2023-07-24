@@ -128,6 +128,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #if FEATURE_AUTO_DARK_MODE
     case LabelType::ENABLE_AUTO_DARK_MODE:  return F("Web light/dark mode");
 #endif // FEATURE_AUTO_DARK_MODE
+#if FEATURE_RULES_EASY_COLOR_CODE
+    case LabelType::DISABLE_RULES_AUTOCOMPLETE:  return F("Disable Rules auto-completion");
+#endif // if FEATURE_RULES_EASY_COLOR_CODE
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -387,6 +390,9 @@ String getValue(LabelType::Enum label) {
 #if FEATURE_AUTO_DARK_MODE
     case LabelType::ENABLE_AUTO_DARK_MODE:      return toString(Settings.getCssMode());
 #endif // FEATURE_AUTO_DARK_MODE
+#if FEATURE_RULES_EASY_COLOR_CODE
+    case LabelType::DISABLE_RULES_AUTOCOMPLETE: return jsonBool(Settings.DisableRulesCodeCompletion());
+#endif // if FEATURE_RULES_EASY_COLOR_CODE
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;

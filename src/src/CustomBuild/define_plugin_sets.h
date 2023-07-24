@@ -2520,6 +2520,7 @@ To create/register a plugin, you have to :
 
 // Timing stats page needs timing stats
 #if defined(WEBSERVER_TIMINGSTATS) && !FEATURE_TIMING_STATS
+  #undef FEATURE_TIMING_STATS
   #define FEATURE_TIMING_STATS  1
 #endif
 
