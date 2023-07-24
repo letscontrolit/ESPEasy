@@ -99,6 +99,7 @@ Flash size | Description                 |
 4M2M       | 4 MB with 2 MB filesystem   |
 16M        | 16 MB with 14 MB filesystem |
 4M316k     | 4 MB with 316 kB filesystem |
+8M1M       | 8 MB with 1 MB filesystem   |
 16M1M      | 16 MB with 1 MB filesystem  |
 16M8M      | 16 MB with 8 MB filesystem  |
 
@@ -113,18 +114,19 @@ Domoticz        | Only Domoticz controllers (HTTP+MQTT) and plugins included    
 FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included   |
 ETH             | Ethernet interface enabled (ESP32 only)                                    |
 PSRAM           | Specific configuration to enable PSRAM detection, ESP32-S3 only            |
+CDC             | Support USBCDC/HWCDC-serial console on ESP32-C3, ESP32-S2 and ESP32-S3     |
 
 Some example firmware names:
 Firmware name                                       | Hardware                       | Included plugins                 |
 ----------------------------------------------------|--------------------------------|----------------------------------|
-ESPEasy_mega-20230508_normal_ESP8266_1M.bin         | ESP8266/ESP8285 with 1MB flash | Stable                           |
-ESPEasy_mega-20230508_normal_ESP8266_4M1M.bin       | ESP8266 with 4MB flash         | Stable                           |
-ESPEasy_mega-20230508_collection_A_ESP8266_4M1M.bin | ESP8266 with 4MB flash         | Stable + Collection base + set A |
-ESPEasy_mega-20230508_normal_ESP32_4M316k.bin       | ESP32 with 4MB flash           | Stable                           |
-ESPEasy_mega-20230508_collection_A_ESP32_4M316k.bin | ESP32 with 4MB flash           | Stable + Collection base + set A |
-ESPEasy_mega-20230508_collection_B_ESP32_4M316k.bin | ESP32 with 4MB flash           | Stable + Collection base + set B |
-ESPEasy_mega-20230508_max_ESP32_16M1M.bin           | ESP32 with 16MB flash          | All available plugins            |
-ESPEasy_mega-20230508_max_ESP32_16M8M_LittleFS.bin  | ESP32 with 16MB flash          | All available plugins            |
+ESPEasy_mega-20230623_normal_ESP8266_1M.bin         | ESP8266/ESP8285 with 1MB flash | Stable                           |
+ESPEasy_mega-20230623_normal_ESP8266_4M1M.bin       | ESP8266 with 4MB flash         | Stable                           |
+ESPEasy_mega-20230623_collection_A_ESP8266_4M1M.bin | ESP8266 with 4MB flash         | Stable + Collection base + set A |
+ESPEasy_mega-20230623_normal_ESP32_4M316k.bin       | ESP32 with 4MB flash           | Stable                           |
+ESPEasy_mega-20230623_collection_A_ESP32_4M316k.bin | ESP32 with 4MB flash           | Stable + Collection base + set A |
+ESPEasy_mega-20230623_collection_B_ESP32_4M316k.bin | ESP32 with 4MB flash           | Stable + Collection base + set B |
+ESPEasy_mega-20230623_max_ESP32_16M1M.bin           | ESP32 with 16MB flash          | All available plugins            |
+ESPEasy_mega-20230623_max_ESP32_16M8M_LittleFS.bin  | ESP32 with 16MB flash          | All available plugins            |
 
 NB: Since 2023-05-10 the binary files for the different ESP32 variants (S2, C3, S3, 'Classic') are available in separate archives.
 
