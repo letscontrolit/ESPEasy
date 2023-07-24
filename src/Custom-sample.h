@@ -376,6 +376,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P033   // Dummy
 // #define USES_P034   // DHT12
 // #define USES_P036   // FrameOLED
+//   #define P036_ENABLE_TICKER   1 // Enable ticker function
 // #define USES_P037   // MQTTImport
 //   #define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
 //   #define P037_FILTER_SUPPORT  1 // Enable filtering support
