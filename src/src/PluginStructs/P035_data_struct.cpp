@@ -5,8 +5,8 @@
 // **************************************************************************/
 // Constructor
 // **************************************************************************/
-P035_data_struct::P035_data_struct(int8_t gpioPin)
-  : _gpioPin(gpioPin) {}
+P035_data_struct::P035_data_struct(int8_t gpioPin, bool inverted)
+  : _gpioPin(gpioPin), _inverted(inverted) {}
 
 // **************************************************************************/
 // Destructor
@@ -33,10 +33,10 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
       addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
       addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_STR));
       # ifdef P035_DEBUG_LOG
-      addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
+      addLog(LOG_LEVEL_INFO, concat(F("Supported Protocols by IRSEND: "), listProtocols()));
       # endif // ifdef P035_DEBUG_LOG
     }
-    Plugin_035_irSender = new (std::nothrow) IRsend(_gpioPin);
+    Plugin_035_irSender = new (std::nothrow) IRsend(_gpioPin, _inverted);
 
     if (Plugin_035_irSender != nullptr) {
       Plugin_035_irSender->begin(); // Start the sender
@@ -57,7 +57,7 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
       #  ifdef P035_DEBUG_LOG
-      addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
+      addLog(LOG_LEVEL_INFO, concat(F("Supported Protocols by IRSENDAC: "), listACProtocols()));
       #  endif // ifdef P035_DEBUG_LOG
     }
     Plugin_035_commonAc = new (std::nothrow) IRac(_gpioPin);
@@ -91,9 +91,9 @@ bool P035_data_struct::plugin_exit(struct EventStruct *event) {
 bool P035_data_struct::plugin_write(struct EventStruct *event, const String& string) {
   bool success = false;
 
-  String cmdCode = parseString(string, 1);
+  const String cmdCode = parseString(string, 1);
 
-  if (cmdCode.equalsIgnoreCase(F("IRSEND")) && (Plugin_035_irSender != nullptr)) {
+  if (equals(cmdCode, F("irsend")) && (Plugin_035_irSender != nullptr)) {
     success = true;
     enableIR_RX(false);
 
@@ -105,7 +105,7 @@ bool P035_data_struct::plugin_write(struct EventStruct *event, const String& str
   }
 
   # ifdef P016_P035_Extended_AC
-  else if (cmdCode.equalsIgnoreCase(F("IRSENDAC")) && (Plugin_035_commonAc != nullptr)) {
+  else if (equals(cmdCode, F("irsendac")) && (Plugin_035_commonAc != nullptr)) {
     success = true;
     enableIR_RX(false);
     handle_AC_IRremote(parseStringToEnd(string, 2));
@@ -164,7 +164,8 @@ bool P035_data_struct::handle_AC_IRremote(const String& irData) {
 
   if (error) {                                               // Test if parsing succeeds.
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
+      String errorMsg(error.c_str());
+      addLog(LOG_LEVEL_INFO, concat(F("IRTX: Deserialize Json failed: "), errorMsg));
     }
     return false; // do not continue with sending the signal.
   }
@@ -174,7 +175,7 @@ bool P035_data_struct::handle_AC_IRremote(const String& irData) {
 
   if (!IRac::isProtocolSupported(st.protocol)) { // Check if we support the protocol
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported:")) + sprotocol);
+      addLog(LOG_LEVEL_INFO, concat(F("IRTX: Protocol not supported:"), sprotocol));
     }
     return false; // do not continue with sending of the signal.
   }
@@ -244,7 +245,7 @@ bool P035_data_struct::handleRawRaw2Encoding(const String& cmd) {
   bool   raw    = true;
   String IrType = parseString(cmd, 2);
 
-  if (IrType.isEmpty()) { return false; }
+  if (IrType.isEmpty())           { return false; }
 
   if (IrType.equalsIgnoreCase(F("RAW"))) {
     raw = true;
@@ -493,10 +494,12 @@ bool P035_data_struct::addErrorTrue() {
 //   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
 // Returns:
 //   bool: Successfully sent or not.
-bool P035_data_struct::sendIRCode(int const irtype,
-                                  uint64_t const code, char const *code_str, uint16_t bits,
-                                  uint16_t repeat) {
-  decode_type_t irType = (decode_type_t)irtype;
+bool P035_data_struct::sendIRCode(const int      irtype,
+                                  const uint64_t code,
+                                  const char    *code_str,
+                                  uint16_t       bits,
+                                  uint16_t       repeat) {
+  decode_type_t irType = static_cast<decode_type_t>(irtype);
   bool success         = true; // Assume success.
 
   repeat = std::max(IRsend::minRepeats(irType), repeat);
