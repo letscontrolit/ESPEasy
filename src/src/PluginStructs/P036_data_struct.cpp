@@ -260,6 +260,8 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
     prepare_pagescrolling(ScrollSpeed, NrLines);
   }
 
+  bRunning = NetworkConnected();
+  
   return isInitialized();
 }
 
@@ -1314,7 +1316,6 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
   }
 
   if (!bUseTicker) {
-    // for Ticker start with a black page
     for (uint8_t j = 0; j < ScrollingPages.linesPerFrameOut; j++) {
       if ((initialScroll && (lscrollspeed < ePageScrollSpeed::ePSS_Instant)) ||
           !initialScroll) {
@@ -1330,6 +1331,7 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
   }
 # if P036_ENABLE_TICKER
   else {
+    // for Ticker start with the set alignment
     display->setTextAlignment(TEXT_ALIGN_LEFT);
     display->setFont(FontSizes[LineSettings[ScrollingLines.SLine[0].SLidx].fontIdx].fontData);
     display->drawString(ScrollingLines.SLine[0].CurrentLeft,
@@ -1405,6 +1407,7 @@ void P036_data_struct::display_scrolling_lines() {
                                   ScrollingLines.Ticker.Tcontent.substring(ScrollingLines.Ticker.IdxStart, ScrollingLines.Ticker.IdxEnd));
 
               // add more characters to display
+              iCurrentLeft -= getDisplaySizeSettings(disp_resolution).PixLeft;
               while (true) {
                 if (ScrollingLines.Ticker.IdxEnd >= ScrollingLines.Ticker.len) { // end of string
                   break;
@@ -1420,7 +1423,8 @@ void P036_data_struct::display_scrolling_lines() {
               }
 
               // remove already displayed characters
-              while (ScrollingLines.SLine[0].fPixSum < (-2.0f * ScrollingLines.Ticker.TickerAvgPixPerChar)) {
+              float fCurrentPixLeft = static_cast<float>(getDisplaySizeSettings(disp_resolution).PixLeft) - 2.0f * ScrollingLines.Ticker.TickerAvgPixPerChar;
+              while (ScrollingLines.SLine[0].fPixSum < fCurrentPixLeft) {
                 uint8_t c          = ScrollingLines.Ticker.Tcontent.charAt(ScrollingLines.Ticker.IdxStart);
                 uint8_t PixForChar = display->getCharWidth(c); // PixForChar can be 0 if c is non ascii
                 ScrollingLines.SLine[0].fPixSum += static_cast<float>(PixForChar);
@@ -1688,7 +1692,8 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     bool bScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24);                                            // Bit 24
     bool bScrollLines       = bitRead(PCONFIG_LONG(0), 17);                                            // Bit 17
-    bLineScrollEnabled = ((bScrollLines || bUseTicker) && (NetworkConnected() || bScrollWithoutWifi)); // scroll lines only if
+    bRunning           = NetworkConnected() || bScrollWithoutWifi;
+    bLineScrollEnabled = ((bScrollLines || bUseTicker) && bRunning);// scroll lines only if
                                                                                                        // WifiIsConnected,
     // otherwise too slow
 
@@ -1702,7 +1707,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       Scheduler.setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
     }
 
-    if (NetworkConnected() || bScrollWithoutWifi) {
+    if (bRunning) {
       // scroll lines only if WifiIsConnected, otherwise too slow
       bPageScrollDisabled = false; // next PLUGIN_READ will do page scrolling
     }

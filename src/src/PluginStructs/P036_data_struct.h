@@ -430,6 +430,7 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t frameCounter          = 0;     // need to keep track of framecounter from call to call
   uint8_t disableFrameChangeCnt = 0;     // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
   bool    bPageScrollDisabled   = true;  // first page after INIT or after JumpToPage without scrolling
+  bool    bRunning              = false; // page updates are rumming = (NetworkConnected() || bScrollWithoutWifi)
   bool    bUseTicker            = false; // scroll line like a ticker
 
   OLEDDISPLAY_TEXT_ALIGNMENT textAlignment = TEXT_ALIGN_CENTER;

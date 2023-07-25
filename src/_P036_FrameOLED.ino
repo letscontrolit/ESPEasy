@@ -14,6 +14,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2023-07-25
+// BUG: Calculation for ticker IdxStart and IdxEnd was wrong for 64x48 display
+// CHG: Start page updates after network has connected in PLUGIN_ONCE_A_SECOND, faster than waiting for the next PLUGIN_READ
 // @uwekaditz: 2023-07-23
 // NEW: Add ticker for scrolling speed, solves issue #4188
 // ADD: Setting and support for oledframedcmd,restore,<0|<nn>> subcommand  par2: (0=all|Line Content<nn>)
@@ -181,6 +184,7 @@
 // CHG: Parameters sorted
 
 
+# include "src/ESPEasyCore/ESPEasyNetwork.h"
 # include "src/PluginStructs/P036_data_struct.h"
 # ifdef P036_CHECK_HEAP
 #  include "src/Helpers/Memory.h"
@@ -891,15 +895,22 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (P036_DisplayIsOn) {
         // Display is on.
 
-        P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER)); // HeaderContent
-        P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE));
+        if (!P036_data->bRunning && NetworkConnected() && (P036_data->ScrollingPages.Scrolling == 0)) {
+          // start page updates after network has connected
+          P036_data->P036_DisplayPage(event);
+        }
+        else {
 
-        // HeaderContentAlternative
-        P036_data->display_header(); // Update Header
+          P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));// HeaderContent
+          P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE));
 
-        if (P036_data->isInitialized() && P036_data->display_wifibars()) {
-          // WiFi symbol was updated.
-          P036_data->update_display();
+          // HeaderContentAlternative
+          P036_data->display_header();// Update Header
+
+          if (P036_data->isInitialized() && P036_data->display_wifibars()) {
+            // WiFi symbol was updated.
+            P036_data->update_display();
+          }
         }
       }
 
@@ -1159,9 +1170,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                                         get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION), // Bit23-20 Version CustomTaskSettings
                                         LineNo);
 
-          if (LineNo == 0) {
+          if (LineNo == 0)
             LineNo = 1; // after restoring all contents start with first Line
-          }
           eventId        = P036_EVENT_RESTORE;
           bUpdateDisplay = true;
         }
