@@ -5,6 +5,11 @@
 // #################### Plugin 028 BME280 I2C Temp/Hum/Barometric Pressure Sensor  #######################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-07-25 tonhuisman: Add setting to enable forcing the plugin into either BME280 or BMP280 mode, default is Auto-detect
+ *                        Add changelog
+ */
+
 # include "src/PluginStructs/P028_data_struct.h"
 
 // #include <math.h>
@@ -138,7 +143,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P028_data) {
         if (P028_data->sensorID != P028_data_struct::Unknown_DEVICE) {
           String detectedString = F("Detected: ");
-          detectedString += P028_data->getDeviceName();
+          detectedString += P028_data->getDeviceName(P028_data->sensorID);
           addUnit(detectedString);
         }
       }
@@ -156,6 +161,20 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         }
       }
       addFormNote(offsetNote);
+
+      {
+        const __FlashStringHelper *detectOptionList[] = {
+          F("Auto"),
+          P028_data_struct::getDeviceName(P028_data_struct::BMx_ChipId::BME280_DEVICE),
+          P028_data_struct::getDeviceName(P028_data_struct::BMx_ChipId::BMP280_DEVICE),
+        };
+        const int detectOptions[] = {
+          static_cast<int>(P028_data_struct::BMx_DetectMode::Auto),
+          static_cast<int>(P028_data_struct::BMx_DetectMode::BME280),
+          static_cast<int>(P028_data_struct::BMx_DetectMode::BMP280),
+        };
+        addFormSelector(F("Sensor model"), F("det"), 3, detectOptionList, detectOptions, P028_DETECTION_MODE);
+      }
 
       success = true;
       break;
@@ -221,6 +240,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       P028_ALTITUDE           = getFormItemInt(F("elev"));
       P028_TEMPERATURE_OFFSET = getFormItemInt(F("tempoffset"));
       P028_ERROR_STATE_OUTPUT = getFormItemInt(F("err"));
+      P028_DETECTION_MODE     = getFormItemInt(F("det"));
       success                 = true;
       break;
     }
@@ -261,7 +281,10 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         } else {
           P028_data->state = P028_data_struct::BMx_Values_read;
 
-          if (!P028_data->hasHumidity()) {
+          const P028_data_struct::BMx_DetectMode detectMode = static_cast<P028_data_struct::BMx_DetectMode>(P028_DETECTION_MODE);
+
+          if (((detectMode == P028_data_struct::BMx_DetectMode::Auto) && !P028_data->hasHumidity()) ||
+              (detectMode == P028_data_struct::BMx_DetectMode::BMP280)) {
             // Patch the sensor type to output only the measured values.
             event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
           }
@@ -281,24 +304,24 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
             String log;
 
             if (log.reserve(40)) { // Prevent re-allocation
-              log  = P028_data->getDeviceName();
+              log  = P028_data->getDeviceName(P028_data->sensorID);
               log += F(": Address: ");
               log += formatToHex(P028_I2C_ADDRESS, 2);
               addLogMove(LOG_LEVEL_INFO, log);
 
               // addLogMove does also clear the string.
-              log  = P028_data->getDeviceName();
+              log  = P028_data->getDeviceName(P028_data->sensorID);
               log += F(": Temperature: ");
               log += formatUserVarNoCheck(event->TaskIndex, 0);
               addLogMove(LOG_LEVEL_INFO, log);
 
               if (P028_data->hasHumidity()) {
-                log  = P028_data->getDeviceName();
+                log  = P028_data->getDeviceName(P028_data->sensorID);
                 log += F(": Humidity: ");
                 log += formatUserVarNoCheck(event->TaskIndex, 1);
                 addLogMove(LOG_LEVEL_INFO, log);
               }
-              log  = P028_data->getDeviceName();
+              log  = P028_data->getDeviceName(P028_data->sensorID);
               log += F(": Barometric Pressure: ");
               log += formatUserVarNoCheck(event->TaskIndex, 2);
               addLogMove(LOG_LEVEL_INFO, log);

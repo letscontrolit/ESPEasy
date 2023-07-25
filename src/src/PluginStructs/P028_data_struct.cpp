@@ -21,10 +21,10 @@ uint8_t P028_data_struct::get_control_settings() const {
   return sensorID == Unknown_DEVICE ? 0u : 0x93; // Oversampling: 8x P, 8x T, normal mode
 }
 
-const __FlashStringHelper * P028_data_struct::getDeviceName() const {
+const __FlashStringHelper * P028_data_struct::getDeviceName(BMx_ChipId sensorID) {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
-    case BMP280_DEVICE_SAMPLE2: return F("BMP280 sample");
+    case BMP280_DEVICE_SAMPLE2: return F("sample BMP280");
     case BMP280_DEVICE:         return F("BMP280");
     case BME280_DEVICE:         return F("BME280");
     default: return F("Unknown");
@@ -102,7 +102,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log.reserve(120); // Prevent re-allocation
-    log  = getDeviceName();
+    log  = getDeviceName(sensorID);
     log += ':';
   }
   bool logAdded = false;
@@ -210,7 +210,7 @@ bool P028_data_struct::check() {
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("BMx280: Detected ");
-            log += getDeviceName();
+            log += getDeviceName(sensorID);
             addLogMove(LOG_LEVEL_INFO, log);
           }
         }
