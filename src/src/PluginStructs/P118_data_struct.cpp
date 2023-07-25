@@ -416,8 +416,8 @@ void P118_data_struct::ITHOcheck() {
 
     if (_rfLog && loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, strformat(
-        F("ITHO: Received from ID: %d ; raw cmd: %d"), 
-        Id,  cmd));
+        F("ITHO: Received from ID: %s ; raw cmd: %d"), 
+        Id.c_str(),  cmd));
     }
 
     // Move check here to prevent function calling within ISR
@@ -437,7 +437,7 @@ void P118_data_struct::ITHOcheck() {
 
     if (index > 0) {
       if (_dbgLog) {
-        log += strformat(F("Command received from remote-ID: %d , command: "), Id);
+        log += strformat(F("Command received from remote-ID: %s , command: "), Id.c_str());
       }
 
       switch (cmd) {

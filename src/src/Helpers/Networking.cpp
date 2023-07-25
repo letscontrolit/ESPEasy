@@ -1690,7 +1690,7 @@ bool start_downloadFile(WiFiClient  & client,
     );
 
   if (httpCode != HTTP_CODE_OK) {
-    error  = strformat(F("HTTP code: %d %s"), httpCode, url);
+    error  = strformat(F("HTTP code: %d %s"), httpCode, url.c_str());
 
     addLog(LOG_LEVEL_ERROR, error);
     http.end();
