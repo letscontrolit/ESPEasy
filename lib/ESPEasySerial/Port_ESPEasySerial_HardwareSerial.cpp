@@ -114,7 +114,6 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
   // Timeout added for 1.0.1
   // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
   // getHW()->begin(baud, config, _config.receivePin, _config.transmitPin, invert, timeout_ms);
-  if (_config.baud != baud) {
     _config.baud = baud;
 
     // Allow to flush data from the serial buffers
@@ -133,7 +132,6 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
 
     _serial->begin(baud, _config.config, _config.receivePin, _config.transmitPin, _config.inverse_logic);
     _serial->flush();
-  }
 }
 
 #endif // ifdef ESP32
