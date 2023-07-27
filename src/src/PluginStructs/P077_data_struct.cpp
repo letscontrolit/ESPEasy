@@ -119,7 +119,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
   if (voltage_coefficient != 0) {
-    if (CSE_UREF_PULSE == P077_UREF) {
+    if (CSE_UREF_PULSE == P077_UREF || P077_UREF == 0) {
       P077_UREF = voltage_coefficient / CSE_UREF;
       V2R       = 1.0f;
     } else {
@@ -128,7 +128,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
   if (current_coefficient != 0) {
-    if (CSE_IREF_PULSE == P077_IREF) {
+    if (CSE_IREF_PULSE == P077_IREF || P077_IREF == 0) {
       P077_IREF = current_coefficient;
       V1R       = 1.0f;
     } else {
@@ -136,7 +136,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     }
   }
 
-  if (CSE_PREF_PULSE == P077_PREF) {
+  if (CSE_PREF_PULSE == P077_PREF || P077_PREF == 0) {
     P077_PREF = (V1R * V2R * power_coefficient) / CSE_PREF;
   }
 
@@ -309,6 +309,27 @@ bool P077_data_struct::checksumMatch() const
   return checksum == serial_in_buffer[23];
 }
 
+bool P077_data_struct::plugin_read(struct EventStruct *event) {
+  constexpr uint8_t nrElements = sizeof(_cache) / sizeof(_cache[0]);
+
+  for (uint8_t i = 0; i < P077_NR_OUTPUT_VALUES; ++i) {
+    const uint8_t pconfigIndex = i + P077_QUERY1_CONFIG_POS;
+    const uint8_t index = static_cast<uint8_t>(PCONFIG(pconfigIndex));
+    if (index < nrElements) {
+      float value{};
+      if (_cache[index].peek(value)) {
+        UserVar[event->BaseVarIndex + i] = value;
+      }
+    }
+  }
+  for (uint8_t i = 0; i < nrElements; ++i) {
+    _cache[i].resetKeepLast();
+  }
+  const bool res = newValue;
+  newValue = false;
+  return res;
+}
+
 /**
  * plugin_write: Handle commands
  * csereset: reset calibration values
@@ -391,14 +412,17 @@ void P077_data_struct::setOutputValue(struct EventStruct *event, P077_query outp
   constexpr uint8_t nrElements = sizeof(_cache) / sizeof(_cache[0]);
 
   if (index < nrElements) {
-    _cache[index] = value;
+    _cache[index].add(value);
   }
 
   for (uint8_t i = 0; i < P077_NR_OUTPUT_VALUES; ++i) {
     const uint8_t pconfigIndex = i + P077_QUERY1_CONFIG_POS;
 
     if (PCONFIG(pconfigIndex) == index) {
-      UserVar[event->BaseVarIndex + i] = value;
+#if FEATURE_PLUGIN_STATS
+      getPluginStats(i)->trackPeak(value);
+#endif
+//      UserVar[event->BaseVarIndex + i] = value;
     }
   }
 }
@@ -408,10 +432,12 @@ float P077_data_struct::getValue(P077_query outputType) const
   const uint8_t index          = static_cast<uint8_t>(outputType);
   constexpr uint8_t nrElements = sizeof(_cache) / sizeof(_cache[0]);
 
+  float res{};
+
   if (index < nrElements) {
-    return _cache[index];
+    _cache[index].peek(res);
   }
-  return 0.0f;
+  return res;
 }
 
 #endif // ifdef USES_P077

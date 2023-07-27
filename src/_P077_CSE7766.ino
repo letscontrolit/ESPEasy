@@ -54,6 +54,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].TaskLogsOwnPeaks   = true;
       break;
     }
 
@@ -109,7 +110,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         const P077_query query = Plugin_077_from_valuename(string);
 
         if (query != P077_query::P077_QUERY_NR_OUTPUT_OPTIONS) {
-          const float value = P077_data->_cache[static_cast<uint8_t>(query)];
+          const float value = P077_data->getValue(query);
           int nrDecimals    = 2;
 
           if ((query == P077_query::P077_QUERY_PULSES)) {
@@ -264,8 +265,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       if (nullptr != P077_data) {
         // Variables set in PLUGIN_SERIAL_IN/PLUGIN_TEN_PER_SECOND as soon as there are new values!
         // Update when there is a new value
-        success             = P077_data->newValue;
-        P077_data->newValue = false;
+        success = P077_data->plugin_read(event);
       }
       break;
     }

@@ -142,7 +142,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
           if (P002_OVERSAMPLING == P002_USE_OVERSAMPLING) {
             log += F(" (");
-            log += P002_data->OversamplingCount;
+            log += P002_data->getOversamplingCount();
             log += F(" samples)");
           }
 

@@ -855,47 +855,22 @@ void P002_data_struct::reset()
 # endif // ifndef LIMIT_BUILD_SIZE
 }
 
+uint32_t P002_data_struct::getOversamplingCount() const
+{
+  return OverSampling.getCount();
+}
+
 void P002_data_struct::resetOversampling() {
-  OversamplingValue  = 0;
-  OversamplingCount  = 0;
-  OversamplingMinVal = MAX_ADC_VALUE;
-  OversamplingMaxVal = -MAX_ADC_VALUE;
+  OverSampling.reset();
 }
 
 void P002_data_struct::addOversamplingValue(int currentValue) {
-  // Extra check to only add min or max readings once.
-  // They will be taken out of the averaging only one time.
-  if ((currentValue == 0) && (currentValue == OversamplingMinVal)) {
-    return;
-  }
+  OverSampling.add(currentValue);
 
-  if ((currentValue == MAX_ADC_VALUE) && (currentValue == OversamplingMaxVal)) {
-    return;
-  }
-
-  OversamplingValue += currentValue;
-  ++OversamplingCount;
-
-  if (currentValue > OversamplingMaxVal) {
-    OversamplingMaxVal = currentValue;
-  }
-
-  if (currentValue < OversamplingMinVal) {
-    OversamplingMinVal = currentValue;
-  }
 }
 
 bool P002_data_struct::getOversamplingValue(float& float_value, int& raw_value) const {
-  if (OversamplingCount > 0) {
-    float sum   = static_cast<float>(OversamplingValue);
-    float count = static_cast<float>(OversamplingCount);
-
-    if (OversamplingCount >= 3) {
-      sum   -= OversamplingMaxVal;
-      sum   -= OversamplingMinVal;
-      count -= 2;
-    }
-    float_value = sum / count;
+  if (OverSampling.peek(float_value)) {
     raw_value   = static_cast<int>(float_value);
 
 # ifdef ESP32

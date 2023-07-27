@@ -3,7 +3,7 @@
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P077
-
+#include "../Helpers/OversamplingHelper.h"
 
 # define CSE_NOT_CALIBRATED          0xAA
 # define CSE_PULSES_NOT_INITIALIZED  -1
@@ -71,6 +71,8 @@ public:
                 unsigned long     baudrate,
                 uint8_t           config);
 
+  bool plugin_read(struct EventStruct *event);
+
   bool plugin_write(struct EventStruct *event,
                     String              string);
   void reset();
@@ -88,6 +90,7 @@ public:
 
   //  uint8_t cse_receive_flag = 0;
 
+
   uint8_t  serial_in_buffer[24] = { 0 };
   long     power_cycle_first    = 0;
   uint32_t last_cf_pulses       = 0;
@@ -95,8 +98,10 @@ public:
   float    cf_frequency         = (1e9f / 5364000);
   uint32_t last_cf_pulses_moment{};
 
-  float _cache[static_cast<uint8_t>(P077_query::P077_QUERY_NR_OUTPUT_OPTIONS)]{};
+private:
+  OversamplingHelper<float> _cache[static_cast<uint8_t>(P077_query::P077_QUERY_NR_OUTPUT_OPTIONS)]{};
 
+public:
   // stats
   long     t_max       = 0;
   long     t_all       = 0;
