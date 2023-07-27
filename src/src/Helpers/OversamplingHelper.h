@@ -39,8 +39,7 @@ public:
       sum   -= _minval;
       count -= 2;
     }
-    value  = sum;
-    value /= count;
+    value  = sum / count;
     return true;
   }
 

@@ -413,16 +413,18 @@ void P077_data_struct::setOutputValue(struct EventStruct *event, P077_query outp
 
   if (index < nrElements) {
     _cache[index].add(value);
-  }
+    for (uint8_t i = 0; i < P077_NR_OUTPUT_VALUES; ++i) {
+      const uint8_t pconfigIndex = i + P077_QUERY1_CONFIG_POS;
 
-  for (uint8_t i = 0; i < P077_NR_OUTPUT_VALUES; ++i) {
-    const uint8_t pconfigIndex = i + P077_QUERY1_CONFIG_POS;
-
-    if (PCONFIG(pconfigIndex) == index) {
+      if (PCONFIG(pconfigIndex) == index) {
 #if FEATURE_PLUGIN_STATS
-      getPluginStats(i)->trackPeak(value);
+        getPluginStats(i)->trackPeak(value);
 #endif
-//      UserVar[event->BaseVarIndex + i] = value;
+        // Set preliminary averaged value as task value.
+        // This way we can see intermediate updates.
+        _cache[index].peek(value);
+        UserVar[event->BaseVarIndex + i] = value;
+      }
     }
   }
 }
