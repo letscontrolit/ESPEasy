@@ -75,6 +75,23 @@ public:
     }
   }
 
+  // Clear all oversampling values and add last average if there were samples available.
+  // Last value will be added with a weight according to the given ratio of the last count.
+  // @param countRatio  New weight will be previous nr of samples / countRatio
+  void resetKeepLastWeighted(int countRatio) {
+    float value{};
+    const uint32_t count = getCount();
+
+    if (get(value)) {
+      add(static_cast<T>(value));
+      if (count > countRatio) {
+        const uint32_t weight = (count + (countRatio / 2)) / countRatio;
+        _count *= weight;
+        _sum = value * _count;
+      }
+    }
+  }
+
   void setFilterPeaks(bool enable) {
     _filterPeaks = enable;
   }
