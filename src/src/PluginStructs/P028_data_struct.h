@@ -124,9 +124,8 @@ struct P028_data_struct : public PluginTaskData_base {
   };
 
 
-  P028_data_struct(uint8_t        addr,
-                   float          tempOffset,
-                   BMx_DetectMode detectMode);
+  P028_data_struct(uint8_t addr,
+                   float   tempOffset);
   P028_data_struct()          = delete;
   virtual ~P028_data_struct() = default;
 
@@ -198,7 +197,6 @@ private:
 
   bme280_uncomp_data uncompensated;
   bme280_calib_data  calib;
-  BMx_DetectMode     _detectMode;
 
   unsigned long last_measurement = 0;
 

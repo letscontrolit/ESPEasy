@@ -9,8 +9,8 @@
 // 1 second = 63% of the time needed to perform a measurement.
 # define P028_MEASUREMENT_TIMEOUT 1.587f
 
-P028_data_struct::P028_data_struct(uint8_t addr, float tempOffset, BMx_DetectMode detectMode) :
-  i2cAddress(addr), temp_offset(tempOffset), _detectMode(detectMode) {}
+P028_data_struct::P028_data_struct(uint8_t addr, float tempOffset) :
+  i2cAddress(addr), temp_offset(tempOffset) {}
 
 
 uint8_t P028_data_struct::get_config_settings() const {
@@ -108,7 +108,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
   bool logAdded = false;
 # endif // ifndef LIMIT_BUILD_SIZE
 
-  if ((BMx_DetectMode::BMP280 != _detectMode) && hasHumidity()) {
+  if (hasHumidity()) {
     // Apply half of the temp offset, to correct the dew point offset.
     // The sensor is warmer than the surrounding air, which has effect on the perceived humidity.
     last_dew_temp_val = compute_dew_point_temp(last_temp_val + (temp_offset / 2.0f), last_hum_val);
@@ -128,7 +128,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
     }
     # endif // ifndef LIMIT_BUILD_SIZE
 
-    if ((BMx_DetectMode::BMP280 != _detectMode) && hasHumidity()) {
+    if (hasHumidity()) {
       # ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -172,7 +172,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 
 # ifndef LIMIT_BUILD_SIZE
 
-  if ((BMx_DetectMode::BMP280 != _detectMode) && hasHumidity()) {
+  if (hasHumidity()) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log     += F(" dew point: ");
       log     += last_dew_temp_val;
@@ -273,7 +273,7 @@ void P028_data_struct::readCoefficients()
   calib.dig_P8 = I2C_readS16_LE_reg(i2cAddress, BMx280_REGISTER_DIG_P8);
   calib.dig_P9 = I2C_readS16_LE_reg(i2cAddress, BMx280_REGISTER_DIG_P9);
 
-  if ((BMx_DetectMode::BMP280 != _detectMode) && hasHumidity()) {
+  if (hasHumidity()) {
     calib.dig_H1 = I2C_read8_reg(i2cAddress, BMx280_REGISTER_DIG_H1);
     calib.dig_H2 = I2C_readS16_LE_reg(i2cAddress, BMx280_REGISTER_DIG_H2);
     calib.dig_H3 = I2C_read8_reg(i2cAddress, BMx280_REGISTER_DIG_H3);
@@ -364,7 +364,7 @@ float P028_data_struct::readPressure() const
 
 float P028_data_struct::readHumidity() const
 {
-  if (!hasHumidity() || (BMx_DetectMode::BMP280 == _detectMode)) {
+  if (!hasHumidity()) {
     // No support for humidity
     return 0.0f;
   }
