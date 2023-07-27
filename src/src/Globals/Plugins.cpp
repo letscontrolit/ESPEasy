@@ -630,6 +630,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_INIT:
     case PLUGIN_EXIT:
     case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_LOAD_ALWAYS:
     case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
@@ -654,7 +655,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // Only exception is when ErrorStateValues is needed.
             // Therefore only need to call LoadTaskSettings for those tasks with ErrorStateValues
             LoadTaskSettings(event->TaskIndex);
-          } else if (Function == PLUGIN_INIT || Function == PLUGIN_WEBFORM_LOAD) {
+          } else if (Function == PLUGIN_INIT || Function == PLUGIN_WEBFORM_LOAD || Function == PLUGIN_WEBFORM_LOAD_ALWAYS) {
             // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
             LoadTaskSettings(event->TaskIndex);
           }
@@ -824,6 +825,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_DEVICEVALUENAMES ||
             Function == PLUGIN_WEBFORM_SAVE ||
             Function == PLUGIN_WEBFORM_LOAD ||
+            Function == PLUGIN_WEBFORM_LOAD_ALWAYS ||
             Function == PLUGIN_SET_DEFAULTS ||
             Function == PLUGIN_INIT_VALUE_RANGES ||
             Function == PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS

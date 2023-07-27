@@ -60,6 +60,7 @@
 #define PLUGIN_PROCESS_CONTROLLER_DATA     48 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
 #define PLUGIN_PRIORITY_INIT_ALL           49 // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
 #define PLUGIN_PRIORITY_INIT               50 // Pre-initialize a singe plugins that is set to PowerManager priority
+#define PLUGIN_WEBFORM_LOAD_ALWAYS         51 // Loaded *after* PLUGIN_WEBFORM_LOAD, also shown for remote data-feed devices
 
 
 

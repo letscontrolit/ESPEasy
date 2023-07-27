@@ -970,10 +970,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       addFormSubHeader(F("Device Settings"));
     }
 
+    String webformLoadString;
+    struct EventStruct TempEvent(taskIndex);
     // add plugins content
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors
-      String webformLoadString;
-      struct EventStruct TempEvent(taskIndex);
       PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
 
       if (webformLoadString.length() > 0) {
@@ -982,6 +982,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         errorMessage += F(": Bug in PLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead");
         addHtmlError(errorMessage);
       }
+
+      PluginCall(PLUGIN_WEBFORM_LOAD_ALWAYS, &TempEvent, webformLoadString); // Load settings also useful for remote-datafeed devices
     }
     else {
       #if FEATURE_ESPEASY_P2P
@@ -1001,6 +1003,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       }
       addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
       #endif
+
+      PluginCall(PLUGIN_WEBFORM_LOAD_ALWAYS, &TempEvent, webformLoadString); // Load settings also useful for remote-datafeed devices
     }
 
     devicePage_show_output_data_type(taskIndex, DeviceIndex);
