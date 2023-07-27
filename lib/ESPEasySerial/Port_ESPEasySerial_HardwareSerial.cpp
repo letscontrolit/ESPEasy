@@ -4,76 +4,6 @@
 #include "ESPEasySerialType.h"
 
 
-#ifdef ESP32
-
-// Temporary work-around for bug in ESP32 code, where the pin matrix is not cleaned up between calling end() and begin()
-// Work-around is to keep track of the last used pins for a serial port,
-// as it is likely that a node will always use the same pins most of the time.
-// If not, a reboot may be OK to fix it.
-// Another idea is to swap pins among UART ports.
-// e.g. use the same pins on Serial1 if it was used on Serial2 before.
-
-// PR to fix it: https://github.com/espressif/arduino-esp32/pull/5385
-// See: https://github.com/espressif/arduino-esp32/issues/3878
-
-
-static int receivePin0  = -1;
-static int transmitPin0 = -1;
-static int receivePin1  = -1;
-static int transmitPin1 = -1;
-static int receivePin2  = -1;
-static int transmitPin2 = -1;
-
-bool pinsChanged(ESPEasySerialPort port,
-                 int               receivePin,
-                 int               transmitPin)
-{
-  switch (port) {
-    case  ESPEasySerialPort::serial0: return receivePin != receivePin0 || transmitPin != transmitPin0;
-    # if SOC_UART_NUM > 1
-    case  ESPEasySerialPort::serial1: return receivePin != receivePin1 || transmitPin != transmitPin1;
-    # endif // if SOC_UART_NUM > 1
-    # if SOC_UART_NUM > 2
-    case  ESPEasySerialPort::serial2: return receivePin != receivePin2 || transmitPin != transmitPin2;
-    # endif // if SOC_UART_NUM > 2
-    default:
-      // No other hardware serial ports
-      break;
-  }
-  return false;
-}
-
-void setPinsCache(ESPEasySerialPort port,
-                  int               receivePin,
-                  int               transmitPin)
-{
-  switch (port) {
-    case  ESPEasySerialPort::serial0:
-      receivePin0  = receivePin;
-      transmitPin0 = transmitPin;
-      break;
-    # if SOC_UART_NUM > 1
-    case  ESPEasySerialPort::serial1:
-      receivePin1  = receivePin;
-      transmitPin1 = transmitPin;
-      break;
-    # endif // if SOC_UART_NUM > 1
-
-    # if SOC_UART_NUM > 2
-    case  ESPEasySerialPort::serial2:
-      receivePin2  = receivePin;
-      transmitPin2 = transmitPin;
-      break;
-
-    # endif // if SOC_UART_NUM > 2
-    default:
-      // No other hardware serial ports
-      break;
-  }
-}
-
-#endif // ifdef ESP32
-
 Port_ESPEasySerial_HardwareSerial_t::Port_ESPEasySerial_HardwareSerial_t() {}
 
 Port_ESPEasySerial_HardwareSerial_t::~Port_ESPEasySerial_HardwareSerial_t() {}
@@ -184,8 +114,7 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
   // Timeout added for 1.0.1
   // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
   // getHW()->begin(baud, config, _config.receivePin, _config.transmitPin, invert, timeout_ms);
-  if (pinsChanged(_config.port, _config.receivePin, _config.transmitPin) || (_config.baud != baud)) {
-    setPinsCache(_config.port, _config.receivePin, _config.transmitPin);
+  if (_config.baud != baud) {
     _config.baud = baud;
 
     // Allow to flush data from the serial buffers
