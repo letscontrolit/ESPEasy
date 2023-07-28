@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2023-07-20, tonhuisman Revert change to NeoWs2812xMethod, as this doesn't properly work on ESP8266 (yet)
 // 2023-05-13, tonhuisman Add P128_USES_BGR / BGR definitions and support (compile-time)
 //                        Use more global NeoWs2812xMethod, as the library uses best matching hardware features per CPU type
 // 2023-05-12, tonhuisman Update for latest NeoPixelBusFx changes (NeoPixelBusLg class, (S/G)etLuminance method)

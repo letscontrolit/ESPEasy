@@ -332,8 +332,9 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
       serve_CSS(CSSfiles_e::ESPEasy_default);
     // }
     #if FEATURE_RULES_EASY_COLOR_CODE
-    if (MENU_INDEX_RULES == navMenuIndex ||
-        MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {
+    if (!Settings.DisableRulesCodeCompletion() &&
+       (MENU_INDEX_RULES == navMenuIndex ||
+        MENU_INDEX_CUSTOM_PAGE == navMenuIndex)) {
       serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
     }
     #endif
@@ -349,8 +350,9 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif // if FEATURE_CHART_JS
 
     #if FEATURE_RULES_EASY_COLOR_CODE
-    if (MENU_INDEX_RULES == navMenuIndex ||
-        MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {
+    if (!Settings.DisableRulesCodeCompletion() &&
+       (MENU_INDEX_RULES == navMenuIndex ||
+        MENU_INDEX_CUSTOM_PAGE == navMenuIndex)) {
       html_add_Easy_color_code_script();
     }
     #endif
