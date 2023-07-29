@@ -2788,7 +2788,11 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_I2C_DEVICE_SCAN               
-#define FEATURE_I2C_DEVICE_SCAN               0
+  #ifdef ESP32
+    #define FEATURE_I2C_DEVICE_SCAN           1
+  #else
+    #define FEATURE_I2C_DEVICE_SCAN           0
+  #endif
 #endif
 
 #ifndef FEATURE_MDNS                          
