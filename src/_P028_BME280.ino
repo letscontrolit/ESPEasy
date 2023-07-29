@@ -197,7 +197,6 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P028_data_struct::BMx_DetectMode::BMP280),
         };
         addFormSelector(F("Output values mode"), F("det"), 2, detectOptionList, detectOptions, P028_DETECTION_MODE);
-        addFormNote(F("'Auto' is the suggested setting, see documentation (i)"));
 
         success = true;
       }

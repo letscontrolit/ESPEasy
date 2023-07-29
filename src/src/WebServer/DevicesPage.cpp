@@ -989,7 +989,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       #if FEATURE_ESPEASY_P2P
       // Show remote feed information.
       addFormSubHeader(F("Data Source"));
-      uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
+      const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
       addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
 
       if (remoteUnit != 255) {
