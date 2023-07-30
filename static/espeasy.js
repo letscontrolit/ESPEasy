@@ -52,7 +52,7 @@ var commonPlugins = [
   //P067
   "tareChanA", "tareChanB",
   //P073
-  "7dn", "7dst", "7dsd", "7dtext", "7dtt", "7dt", "7dtfont", "7dtbin", "7don", "7doff", "7output",
+  "7dn", "7dst", "7dsd", "7dtext", "7ddt", "7dt", "7dtfont", "7dtbin", "7don", "7doff", "7output",
   //P076
   "HLWCalibrate", "HLWReset",
   //P079
