@@ -124,7 +124,7 @@ constexpr p078_register_description register_description_list[] = {
 };
 // *INDENT-ON*
 
-constexpr size_t register_description_list_size = sizeof(register_description_list) / sizeof(register_description_list[0]);
+constexpr int register_description_list_size = sizeof(register_description_list) / sizeof(register_description_list[0]);
 
 const __FlashStringHelper* SDM_UOMtoString(SDM_UOM uom, bool display) {
   const __FlashStringHelper *strings[] = {
@@ -193,9 +193,6 @@ String SDM_getValueNameForModel(SDM_MODEL model, int choice)
 
   if (index >= 0) {
     const SDM_UOM uom       = register_description_list[index].getUnitOfMeasure();
-    const int     phase     = register_description_list[index].getPhase();
-    const bool    showPhase = phase != 0 &&
-                              (model == SDM_MODEL::SDM630 || model == SDM_MODEL::SDM72_V2);
 
     return concat(
       SDM_UOMtoString(uom, false),
