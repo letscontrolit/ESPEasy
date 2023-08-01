@@ -76,12 +76,12 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     {
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P078_NR_OUTPUT_VALUES) {
-          const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
-          const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+          const SDM_MODEL model  = static_cast<SDM_MODEL>(P078_MODEL);
+          const uint8_t   choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
           safe_strncpy(
-              ExtraTaskSettings.TaskDeviceValueNames[i],
-              SDM_getValueNameForModel(model, choice),
-              sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+            ExtraTaskSettings.TaskDeviceValueNames[i],
+            SDM_getValueNameForModel(model, choice),
+            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
         } else {
           ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
         }
@@ -195,9 +195,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
         const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(
-          event, 
-          pconfigIndex, 
-          i, 
+          event,
+          pconfigIndex,
+          i,
           SDM_getValueNameForModel(model, choice));
       }
 
@@ -277,6 +277,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
 float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
   if (Plugin_078_SDM == nullptr) { return 0.0f; }
+  const uint16_t reg = SDM_getRegisterForModel(static_cast<SDM_MODEL>(model), query);
+
+  if (reg == std::numeric_limits<uint16_t>::max()) { return 0.0f; }
 
   uint8_t retry_count = 3;
   bool    success     = false;
@@ -284,39 +287,38 @@ float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
 
   while (retry_count > 0 && !success) {
     Plugin_078_SDM->clearErrCode();
-    _tempvar = Plugin_078_SDM->readVal(SDM_getRegisterForModel(static_cast<SDM_MODEL>(model), query), node);
+    _tempvar = Plugin_078_SDM->readVal(reg, node);
     --retry_count;
 
     if (Plugin_078_SDM->getErrCode() == SDM_ERR_NO_ERROR) {
       success = true;
     }
   }
-/*
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("EASTRON: (");
-    log += node;
-    log += ',';
-    log += model;
-    log += F(") ");
-    log += p078_getQueryString(query, model);
-    log += F(": ");
-    log += _tempvar;
-    addLogMove(LOG_LEVEL_INFO, log);
-  }
-  */
+
+  /*
+     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("EASTRON: (");
+      log += node;
+      log += ',';
+      log += model;
+      log += F(") ");
+      log += p078_getQueryString(query, model);
+      log += F(": ");
+      log += _tempvar;
+      addLogMove(LOG_LEVEL_INFO, log);
+     }
+   */
   delay(1);
   return _tempvar;
 }
 
-
-
 int p078_storageValueToBaudrate(uint8_t baudrate_setting) {
   int baudrate = 9600;
-  if (baudrate_setting < 6) 
+
+  if (baudrate_setting < 6) {
     baudrate = 1200 << baudrate_setting;
+  }
   return baudrate;
 }
-
-
 
 #endif // USES_P078

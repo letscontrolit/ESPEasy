@@ -2,8 +2,12 @@
 
 #include "../../_Plugin_Helper.h"
 
-# include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
+#include <limits>
 
+#include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
+
+// Uncrustify may mess up this nice table, so turn uncrustify off for this table.
+// *INDENT-OFF*
 constexpr p078_register_description register_description_list[] = {
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //      REGISTERS LIST FOR SDM DEVICES                                                                                                                                                           |
@@ -118,45 +122,56 @@ constexpr p078_register_description register_description_list[] = {
 { DDM_IMPORT_ACTIVE_ENERGY                      /* 0x0100 */              ,  SDM_UOM::kWh         ,   0   ,  1  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    1    },
 { DDM_IMPORT_REACTIVE_ENERGY                    /* 0x0400 */              ,  SDM_UOM::kVArh       ,   0   ,  1  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    1    }
 };
+// *INDENT-ON*
 
 constexpr size_t register_description_list_size = sizeof(register_description_list) / sizeof(register_description_list[0]);
 
 const __FlashStringHelper* SDM_UOMtoString(SDM_UOM uom, bool display) {
-  switch (uom) {
-    case SDM_UOM::percent: return (display) ? F("THD")             :  F("%");
-    case SDM_UOM::V:       return (display) ? F("Voltage")         :  F("V");
-    case SDM_UOM::A:       return (display) ? F("Current")         :  F("A");
-    case SDM_UOM::W:       return (display) ? F("Active Power")    :  F("W");
-    case SDM_UOM::kWh:     return (display) ? F("Active Energy")   :  F("kWh");
-    case SDM_UOM::Ah:      return (display) ? F("Ah")              :  F("Ah");
-    case SDM_UOM::Hz:      return (display) ? F("Frequency")       :  F("Hz");
-    case SDM_UOM::degrees: return (display) ? F("Phase Angle")     :  F("Degrees");
-    case SDM_UOM::cos_phi: return (display) ? F("Power Factor")    :  F("cosphi");
-    case SDM_UOM::VA:      return (display) ? F("Apparent Power")  :  F("VA");
-    case SDM_UOM::VAr:     return (display) ? F("Reactive Power")  :  F("VAr");
-    case SDM_UOM::kVAh:    return (display) ? F("Apparent Energy") :  F("kVAh");
-    case SDM_UOM::kVArh:   return (display) ? F("Reactive Energy") :  F("kVArh");
-  }
+  const __FlashStringHelper *strings[] = {
+    F("THD"),             F("%"),
+    F("Voltage"),         F("V"),
+    F("Current"),         F("A"),
+    F("Active Power"),    F("W"),
+    F("Active Energy"),   F("kWh"),
+    F("Ah"),              F("Ah"),
+    F("Frequency"),       F("Hz"),
+    F("Phase Angle"),     F("Degrees"),
+    F("Power Factor"),    F("cosphi"),
+    F("Apparent Power"),  F("VA"),
+    F("Reactive Power"),  F("VAr"),
+    F("Apparent Energy"), F("kVAh"),
+    F("Reactive Energy"), F("kVArh")
+  };
+  constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+  size_t index               = 2 * static_cast<size_t>(uom);
+
+  if (!display) { ++index; }
+
+  if (index < nrStrings) { return strings[index]; }
   return F("");
 }
 
 const __FlashStringHelper* SDM_directionToString(SDM_DIRECTION dir) {
-    if (dir == SDM_DIRECTION::Import) return F("Import");
-    if (dir == SDM_DIRECTION::Export) return F("Export");
-    if (dir == SDM_DIRECTION::Total)  return F("Total");
-    return F("");
+  if (dir == SDM_DIRECTION::Import) { return F("Import"); }
+
+  if (dir == SDM_DIRECTION::Export) { return F("Export"); }
+
+  if (dir == SDM_DIRECTION::Total) { return F("Total"); }
+  return F("");
 }
 
 int SDM_getRegisterDescriptionIndexForModel(SDM_MODEL model, int x)
 {
   int count = -1;
+
   for (int index = 0; index < register_description_list_size; ++index)
   {
     if (register_description_list[index].match_SDM_model(model)) {
-        ++count;
-        if (x == count) {
-            return index;
-        }
+      ++count;
+
+      if (x == count) {
+        return index;
+      }
     }
   }
   return -1;
@@ -165,28 +180,26 @@ int SDM_getRegisterDescriptionIndexForModel(SDM_MODEL model, int x)
 uint16_t SDM_getRegisterForModel(SDM_MODEL model, int choice)
 {
   const int index = SDM_getRegisterDescriptionIndexForModel(model, choice);
+
   if (index >= 0) {
     return register_description_list[index].getRegister();
   }
-  return 0u;
+  return std::numeric_limits<uint16_t>::max();
 }
 
 String SDM_getValueNameForModel(SDM_MODEL model, int choice)
 {
   const int index = SDM_getRegisterDescriptionIndexForModel(model, choice);
-  if (index >= 0) {
-    const SDM_UOM uom = register_description_list[index].getUnitOfMeasure();
-    const int phase = register_description_list[index].getPhase();
-    const bool showPhase = phase != 0 &&
-      (model == SDM_MODEL::SDM630 || model == SDM_MODEL::SDM72_V2);
 
-    String res = SDM_UOMtoString(uom, false);
-    if (showPhase) {
-        res += '_';
-        res += 'L';
-        res += phase;
-    }
-    return res;
+  if (index >= 0) {
+    const SDM_UOM uom       = register_description_list[index].getUnitOfMeasure();
+    const int     phase     = register_description_list[index].getPhase();
+    const bool    showPhase = phase != 0 &&
+                              (model == SDM_MODEL::SDM630 || model == SDM_MODEL::SDM72_V2);
+
+    return concat(
+      SDM_UOMtoString(uom, false),
+      register_description_list[index].getPhaseDescription(model, '_'));
   }
   return EMPTY_STRING;
 }
@@ -194,177 +207,187 @@ String SDM_getValueNameForModel(SDM_MODEL model, int choice)
 void SDM_loadOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr)
 {
   const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
-  const String label = concat(F("Value "), valuenr + 1);
-  const String id = PCONFIG_LABEL(pconfigIndex);
+  const String    label = concat(F("Value "), valuenr + 1);
+  const String    id    = PCONFIG_LABEL(pconfigIndex);
+
   addRowLabel_tr_id(label, id);
   do_addSelector_Head(id, F("wide"), EMPTY_STRING, false);
   const int selectedIndex = PCONFIG(pconfigIndex);
 
   uint8_t x{};
+
   for (int index = 0; index < register_description_list_size; ++index)
   {
     if (register_description_list[index].match_SDM_model(model)) {
-        const String option = register_description_list[index].getDescription(model);
-        addSelector_Item(option, x, selectedIndex == x, false, EMPTY_STRING);
-        ++x;    
+      const String option = register_description_list[index].getDescription(model);
+      addSelector_Item(option, x, selectedIndex == x, false, EMPTY_STRING);
+      ++x;
     }
-    if (x % 10 == 0) delay(0);
+
+    if (x % 10 == 0) { delay(0); }
   }
   addSelector_Foot();
 }
 
-
 uint16_t p078_register_description::getRegister() const
 {
-    return static_cast<uint16_t>((val >> 16) & 0xFFFF);
+  return static_cast<uint16_t>((val >> 16) & 0xFFFF);
 }
 
 SDM_UOM p078_register_description::getUnitOfMeasure() const
 {
-    return static_cast<SDM_UOM>(val & 0xF);
+  return static_cast<SDM_UOM>(val & 0xF);
 }
 
 uint8_t p078_register_description::getPhase() const
 {
-    return static_cast<uint8_t>((val >> 4) & 0x3);
+  return static_cast<uint8_t>((val >> 4) & 0x3);
 }
 
 SDM_DIRECTION p078_register_description::getDirection() const
 {
-    return static_cast<SDM_DIRECTION>((val >> 6) & 0x3);
+  return static_cast<SDM_DIRECTION>((val >> 6) & 0x3);
 }
 
 bool p078_register_description::match_SDM_model(SDM_MODEL model) const
 {
-    switch (model) {
-        case SDM_MODEL::SDM630: return bitRead(val, 8);
-        case SDM_MODEL::SDM230: return bitRead(val, 9);
-        case SDM_MODEL::SDM220_SDM120CT_SDM120: return bitRead(val, 10);
-        case SDM_MODEL::SDM72D: return bitRead(val, 13);
-        case SDM_MODEL::SDM72_V2: return bitRead(val, 14);
-        case SDM_MODEL::DDM18SD: return bitRead(val, 15);
-    }
-    return false;
+  switch (model) {
+    case SDM_MODEL::SDM630: return bitRead(val, 8);
+    case SDM_MODEL::SDM230: return bitRead(val, 9);
+    case SDM_MODEL::SDM220_SDM120CT_SDM120: return bitRead(val, 10);
+    case SDM_MODEL::SDM72D: return bitRead(val, 13);
+    case SDM_MODEL::SDM72_V2: return bitRead(val, 14);
+    case SDM_MODEL::DDM18SD: return bitRead(val, 15);
+  }
+  return false;
 }
 
 String p078_register_description::getDescription(SDM_MODEL model) const
 {
-    String res;
-    const SDM_DIRECTION direction = getDirection();
-    const SDM_UOM uom = getUnitOfMeasure();
-    bool showFullUnitOfMeasure = true;
-    const int phase = getPhase();
-    const bool showPhase = phase != 0 &&
-      (model == SDM_MODEL::SDM630 || model == SDM_MODEL::SDM72_V2);
+  String res;
+  const SDM_DIRECTION direction = getDirection();
+  const SDM_UOM uom             = getUnitOfMeasure();
+  bool showFullUnitOfMeasure    = true;
 
-    // Check first for specific strings not generated using the description bitmap
+  // Check first for specific strings not generated using the description bitmap
 
-    switch (getRegister())
-    {
-      case SDM_MAXIMUM_TOTAL_SYSTEM_POWER_DEMAND:
-      case SDM_MAXIMUM_TOTAL_SYSTEM_VA_DEMAND:
-      case SDM_MAXIMUM_NEUTRAL_CURRENT:
-      case SDM_MAXIMUM_SYSTEM_POSITIVE_POWER_DEMAND:
-      case SDM_MAXIMUM_SYSTEM_REVERSE_POWER_DEMAND:
-      case SDM_MAXIMUM_PHASE_1_CURRENT_DEMAND:
-      case SDM_MAXIMUM_PHASE_2_CURRENT_DEMAND:
-      case SDM_MAXIMUM_PHASE_3_CURRENT_DEMAND:
+  switch (getRegister())
+  {
+    case SDM_MAXIMUM_TOTAL_SYSTEM_POWER_DEMAND:
+    case SDM_MAXIMUM_TOTAL_SYSTEM_VA_DEMAND:
+    case SDM_MAXIMUM_NEUTRAL_CURRENT:
+    case SDM_MAXIMUM_SYSTEM_POSITIVE_POWER_DEMAND:
+    case SDM_MAXIMUM_SYSTEM_REVERSE_POWER_DEMAND:
+    case SDM_MAXIMUM_PHASE_1_CURRENT_DEMAND:
+    case SDM_MAXIMUM_PHASE_2_CURRENT_DEMAND:
+    case SDM_MAXIMUM_PHASE_3_CURRENT_DEMAND:
 
-        res = F("Maximum ");
-        break;
-    
-      case SDM_CURRENT_RESETTABLE_TOTAL_ACTIVE_ENERGY:
-      case SDM_CURRENT_RESETTABLE_TOTAL_REACTIVE_ENERGY:
-      case SDM_CURRENT_RESETTABLE_IMPORT_ENERGY:
-      case SDM_CURRENT_RESETTABLE_EXPORT_ENERGY:
+      res = F("Maximum ");
+      break;
 
-        res = F("Resetable ");
-        break;
+    case SDM_CURRENT_RESETTABLE_TOTAL_ACTIVE_ENERGY:
+    case SDM_CURRENT_RESETTABLE_TOTAL_REACTIVE_ENERGY:
+    case SDM_CURRENT_RESETTABLE_IMPORT_ENERGY:
+    case SDM_CURRENT_RESETTABLE_EXPORT_ENERGY:
 
-      case SDM_AVERAGE_LINE_TO_LINE_VOLTS:
-      case SDM_AVERAGE_L_TO_N_VOLTS:
-      case SDM_AVERAGE_LINE_CURRENT:
-      case SDM_AVERAGE_LINE_TO_NEUTRAL_VOLTS_THD:
-      case SDM_AVERAGE_LINE_CURRENT_THD:
-      case SDM_AVERAGE_LINE_TO_LINE_VOLTS_THD:
-        res = F("Average ");
-        break;
+      res = F("Resetable ");
+      break;
 
-      case SDM_SUM_LINE_CURRENT:
-        res = F("Sum ");
-        break;
+    case SDM_AVERAGE_LINE_TO_LINE_VOLTS:
+    case SDM_AVERAGE_L_TO_N_VOLTS:
+    case SDM_AVERAGE_LINE_CURRENT:
+    case SDM_AVERAGE_LINE_TO_NEUTRAL_VOLTS_THD:
+    case SDM_AVERAGE_LINE_CURRENT_THD:
+    case SDM_AVERAGE_LINE_TO_LINE_VOLTS_THD:
+      res = F("Average ");
+      break;
 
-      default:
-        break;
-    }
+    case SDM_SUM_LINE_CURRENT:
+      res = F("Sum ");
+      break;
 
-    switch (getRegister())
-    {
-      case SDM_NEUTRAL_CURRENT_DEMAND:
-      case SDM_MAXIMUM_NEUTRAL_CURRENT:
-      case SDM_NEUTRAL_CURRENT:
+    default:
+      break;
+  }
 
-        res += F("Neutral ");
-        break;
-      
-      case SDM_LINE_1_TO_LINE_2_VOLTS:
-      case SDM_LINE_1_TO_LINE_2_VOLTS_THD:
-        res += F("L1 to L2 ");
-        break;
-      case SDM_LINE_2_TO_LINE_3_VOLTS:
-      case SDM_LINE_2_TO_LINE_3_VOLTS_THD:
-        res += F("L2 to L3 ");
-        break;
-      case SDM_LINE_3_TO_LINE_1_VOLTS:
-      case SDM_LINE_3_TO_LINE_1_VOLTS_THD:
-        res += F("L3 to L1 ");
-        break;
-      case SDM_AVERAGE_LINE_TO_LINE_VOLTS:
-      case SDM_AVERAGE_LINE_TO_LINE_VOLTS_THD:
-        res += F("Line to Line ");
-        break;
-      case SDM_AVERAGE_L_TO_N_VOLTS:
-      case SDM_AVERAGE_LINE_TO_NEUTRAL_VOLTS_THD:
-      case SDM_PHASE_1_LN_VOLTS_THD:
-      case SDM_PHASE_2_LN_VOLTS_THD:
-      case SDM_PHASE_3_LN_VOLTS_THD:
-        res += F("L to N ");
-        break;
-      case SDM_AVERAGE_LINE_CURRENT:
-      case SDM_AVERAGE_LINE_CURRENT_THD:
-      case SDM_SUM_LINE_CURRENT:
-        res += F("Line ");
-        break;
-    }
-    
-    if (direction != SDM_DIRECTION::NotSpecified) {
-        res += SDM_directionToString(direction);
-        res += ' ';
-    }
-    
-    if (showFullUnitOfMeasure) {
-      res += SDM_UOMtoString(uom, true);
-    }
+  switch (getRegister())
+  {
+    case SDM_NEUTRAL_CURRENT_DEMAND:
+    case SDM_MAXIMUM_NEUTRAL_CURRENT:
+    case SDM_NEUTRAL_CURRENT:
 
-    switch (getRegister())
-    {
-      case SDM_VAH_SINCE_LAST_RESET:
-      case SDM_AH_SINCE_LAST_RESET:
+      res += F("Neutral ");
+      break;
 
-        res += F(" since last reset");
-        break;
-    }
+    case SDM_LINE_1_TO_LINE_2_VOLTS:
+    case SDM_LINE_1_TO_LINE_2_VOLTS_THD:
+      res += F("L1 to L2 ");
+      break;
+    case SDM_LINE_2_TO_LINE_3_VOLTS:
+    case SDM_LINE_2_TO_LINE_3_VOLTS_THD:
+      res += F("L2 to L3 ");
+      break;
+    case SDM_LINE_3_TO_LINE_1_VOLTS:
+    case SDM_LINE_3_TO_LINE_1_VOLTS_THD:
+      res += F("L3 to L1 ");
+      break;
+    case SDM_AVERAGE_LINE_TO_LINE_VOLTS:
+    case SDM_AVERAGE_LINE_TO_LINE_VOLTS_THD:
+      res += F("Line to Line ");
+      break;
+    case SDM_AVERAGE_L_TO_N_VOLTS:
+    case SDM_AVERAGE_LINE_TO_NEUTRAL_VOLTS_THD:
+    case SDM_PHASE_1_LN_VOLTS_THD:
+    case SDM_PHASE_2_LN_VOLTS_THD:
+    case SDM_PHASE_3_LN_VOLTS_THD:
+      res += F("L to N ");
+      break;
+    case SDM_AVERAGE_LINE_CURRENT:
+    case SDM_AVERAGE_LINE_CURRENT_THD:
+    case SDM_SUM_LINE_CURRENT:
+      res += F("Line ");
+      break;
+  }
 
+  if (direction != SDM_DIRECTION::NotSpecified) {
+    res += SDM_directionToString(direction);
     res += ' ';
-    res += '(';
-    res += SDM_UOMtoString(uom, false);
-    res += ')';
+  }
 
-    
-    if (showPhase) {
-        res += ' ';
-        res += 'L';
-        res += phase;
+  if (showFullUnitOfMeasure) {
+    res += SDM_UOMtoString(uom, true);
+  }
+
+  switch (getRegister())
+  {
+    case SDM_VAH_SINCE_LAST_RESET:
+    case SDM_AH_SINCE_LAST_RESET:
+
+      res += F(" since last reset");
+      break;
+  }
+
+  res += ' ';
+  res += '(';
+  res += SDM_UOMtoString(uom, false);
+  res += ')';
+  res += getPhaseDescription(model, ' ');
+  return res;
+}
+
+String p078_register_description::getPhaseDescription(SDM_MODEL model, char separator) const
+{
+  const int  phase     = getPhase();
+  const bool showPhase = phase != 0 &&
+                         (model == SDM_MODEL::SDM630 || model == SDM_MODEL::SDM72_V2);
+  String res;
+
+  if (showPhase) {
+    if (separator != '\0') {
+      res += separator;
     }
-    return res;
+    res += 'L';
+    res += phase;
+  }
+  return res;
 }
