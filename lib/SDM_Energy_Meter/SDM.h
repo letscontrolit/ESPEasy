@@ -200,6 +200,7 @@
 #define SDM_CURRENT_RESETTABLE_IMPORT_ENERGY          0x0184                    //  kWh         |         |         |         |         |         |    1    |    1    |
 #define SDM_CURRENT_RESETTABLE_EXPORT_ENERGY          0x0186                    //  kWh         |         |         |         |         |         |    1    |    1    |
 #define SDM_NET_KWH                                   0x018C                    //  kWh         |         |         |         |         |         |         |    1    |
+#define SDM_NET_KVARH                                 0x018E                    //  kVArh       |         |         |         |         |         |         |    1    |
 #define SDM_IMPORT_POWER                              0x0500                    //  W           |         |         |         |         |         |    1    |    1    |
 #define SDM_EXPORT_POWER                              0x0502                    //  W           |         |         |         |         |         |    1    |    1    |
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------

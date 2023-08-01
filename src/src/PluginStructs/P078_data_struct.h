@@ -106,12 +106,12 @@ struct p078_register_description {
 
   bool match_SDM_model(SDM_MODEL model) const;
 
-  String getDescription() const;
+  String getDescription(SDM_MODEL model) const;
 
   uint32_t val{};
 };
 
-bool SDM_getRegisterDescriptionForModel(SDM_MODEL model, int x, const p078_register_description* reg);
+int SDM_getRegisterDescriptionIndexForModel(SDM_MODEL model, int x);
 
 uint16_t SDM_getRegisterForModel(SDM_MODEL model, int choice);
 

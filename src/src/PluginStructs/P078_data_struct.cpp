@@ -105,6 +105,7 @@ constexpr p078_register_description register_description_list[] = {
 { SDM_CURRENT_RESETTABLE_IMPORT_ENERGY          /* 0x0184 */              ,  SDM_UOM::kWh         ,   0   ,  1  ,    0    ,    0    ,    0    ,    0    ,    0    ,    1    ,    1     ,    0    },
 { SDM_CURRENT_RESETTABLE_EXPORT_ENERGY          /* 0x0186 */              ,  SDM_UOM::kWh         ,   0   ,  2  ,    0    ,    0    ,    0    ,    0    ,    0    ,    1    ,    1     ,    0    },
 { SDM_NET_KWH                                   /* 0x018C */              ,  SDM_UOM::kWh         ,   0   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    1     ,    0    },
+{ SDM_NET_KVARH                                 /* 0x018E */              ,  SDM_UOM::kVArh       ,   0   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    1     ,    0    },
 { SDM_IMPORT_POWER                              /* 0x0500 */              ,  SDM_UOM::W           ,   0   ,  1  ,    0    ,    0    ,    0    ,    0    ,    0    ,    1    ,    1     ,    0    },
 { SDM_EXPORT_POWER                              /* 0x0502 */              ,  SDM_UOM::W           ,   0   ,  2  ,    0    ,    0    ,    0    ,    0    ,    0    ,    1    ,    1     ,    0    },
 
@@ -146,7 +147,7 @@ const __FlashStringHelper* SDM_directionToString(SDM_DIRECTION dir) {
     return F("");
 }
 
-bool SDM_getRegisterDescriptionForModel(SDM_MODEL model, int x, const p078_register_description* reg)
+int SDM_getRegisterDescriptionIndexForModel(SDM_MODEL model, int x)
 {
   int count = -1;
   for (int index = 0; index < register_description_list_size; ++index)
@@ -154,30 +155,38 @@ bool SDM_getRegisterDescriptionForModel(SDM_MODEL model, int x, const p078_regis
     if (register_description_list[index].match_SDM_model(model)) {
         ++count;
         if (x == count) {
-            reg = &(register_description_list[index]);
-            return true;
+            return index;
         }
     }
   }
-  reg = nullptr;
-  return false;
+  return -1;
 }
 
 uint16_t SDM_getRegisterForModel(SDM_MODEL model, int choice)
 {
-  const p078_register_description* reg = nullptr;          
-  if (SDM_getRegisterDescriptionForModel(model, choice, reg) && reg != nullptr) {
-    return reg->getRegister();
+  const int index = SDM_getRegisterDescriptionIndexForModel(model, choice);
+  if (index >= 0) {
+    return register_description_list[index].getRegister();
   }
   return 0u;
 }
 
 String SDM_getValueNameForModel(SDM_MODEL model, int choice)
 {
-  const p078_register_description* reg = nullptr;          
-  if (SDM_getRegisterDescriptionForModel(model, choice, reg) && reg != nullptr) {
-    const SDM_UOM uom = reg->getUnitOfMeasure();
-    return SDM_UOMtoString(uom, false);
+  const int index = SDM_getRegisterDescriptionIndexForModel(model, choice);
+  if (index >= 0) {
+    const SDM_UOM uom = register_description_list[index].getUnitOfMeasure();
+    const int phase = register_description_list[index].getPhase();
+    const bool showPhase = phase != 0 &&
+      (model == SDM_MODEL::SDM630 || model == SDM_MODEL::SDM72_V2);
+
+    String res = SDM_UOMtoString(uom, false);
+    if (showPhase) {
+        res += '_';
+        res += 'L';
+        res += phase;
+    }
+    return res;
   }
   return EMPTY_STRING;
 }
@@ -195,7 +204,7 @@ void SDM_loadOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uin
   for (int index = 0; index < register_description_list_size; ++index)
   {
     if (register_description_list[index].match_SDM_model(model)) {
-        const String option = register_description_list[index].getDescription();
+        const String option = register_description_list[index].getDescription(model);
         addSelector_Item(option, x, selectedIndex == x, false, EMPTY_STRING);
         ++x;    
     }
@@ -238,14 +247,17 @@ bool p078_register_description::match_SDM_model(SDM_MODEL model) const
     return false;
 }
 
-String p078_register_description::getDescription() const
+String p078_register_description::getDescription(SDM_MODEL model) const
 {
     String res;
     const SDM_DIRECTION direction = getDirection();
     const SDM_UOM uom = getUnitOfMeasure();
-    const int phase = getPhase();
     bool showFullUnitOfMeasure = true;
-    // TODO TD-er: Check first for specific strings not generated using the description bitmap
+    const int phase = getPhase();
+    const bool showPhase = phase != 0 &&
+      (model == SDM_MODEL::SDM630 || model == SDM_MODEL::SDM72_V2);
+
+    // Check first for specific strings not generated using the description bitmap
 
     switch (getRegister())
     {
@@ -349,7 +361,7 @@ String p078_register_description::getDescription() const
     res += ')';
 
     
-    if (phase != 0) {
+    if (showPhase) {
         res += ' ';
         res += 'L';
         res += phase;
