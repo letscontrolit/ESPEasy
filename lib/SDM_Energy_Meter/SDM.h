@@ -48,7 +48,7 @@
 
   #if defined ( ESP8266 ) || defined ( ESP32 )
     #if !defined ( SDM_UART_CONFIG )
-      #define SDM_UART_CONFIG                         SWSERIAL_8N1              //  default softwareware uart config for esp8266/esp32
+      #define SDM_UART_CONFIG                         SERIAL_8N1              //  default softwareware uart config for esp8266/esp32
     #endif
   #endif
 
@@ -242,11 +242,7 @@ class SDM {
     SDM(HardwareSerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN, int config = SDM_UART_CONFIG);
   #endif
 #else                                                                           //  software serial
-  #if defined ( ESP8266 ) || defined ( ESP32 )                                  //  on esp8266/esp32
-    SDM(ESPeasySerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN, int config = SDM_UART_CONFIG, int8_t rx_pin = SDM_RX_PIN, int8_t tx_pin = SDM_TX_PIN);
-  #else                                                                         //  on avr
     SDM(ESPeasySerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN);
-  #endif
 #endif
     virtual ~SDM();
 

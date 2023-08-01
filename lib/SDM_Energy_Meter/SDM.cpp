@@ -30,20 +30,10 @@ SDM::SDM(HardwareSerial& serial, long baud, int dere_pin, int config) : sdmSer(s
 }
 #endif
 #else
-#if defined ( ESP8266 ) || defined ( ESP32 )
-SDM::SDM(ESPeasySerial& serial, long baud, int dere_pin, int config, int8_t rx_pin, int8_t tx_pin) : sdmSer(serial) {
-  this->_baud = baud;
-  this->_dere_pin = dere_pin;
-  this->_config = config;
-  this->_rx_pin = rx_pin;
-  this->_tx_pin = tx_pin;
-}
-#else
 SDM::SDM(ESPeasySerial& serial, long baud, int dere_pin) : sdmSer(serial) {
   this->_baud = baud;
   this->_dere_pin = dere_pin;
 }
-#endif
 #endif
 
 SDM::~SDM() {
@@ -59,11 +49,7 @@ void SDM::begin(void) {
   sdmSer.begin(_baud, _config);
 #endif
 #else
-#if defined ( ESP8266 ) || defined ( ESP32 )
-  sdmSer.begin(_baud, (EspSoftwareSerial::Config)_config, _rx_pin, _tx_pin);
-#else
   sdmSer.begin(_baud);
-#endif
 #endif
 
 #if defined ( USE_HARDWARESERIAL ) && defined ( ESP8266 )
@@ -159,7 +145,7 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
   }
 
 #if !defined ( USE_HARDWARESERIAL )
-  sdmSer.stopListening();                                                       //disable softserial rx interrupt
+//  sdmSer.stopListening();                                                       //disable softserial rx interrupt
 #endif
 
   return (res);
