@@ -63,6 +63,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -176,7 +177,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *options_model[] =
-        { F("SDM220 & SDM120CT & SDM120"), F("SDM230"), F("SDM72D"), F("DDM18SD"), F("SDM630"), F("SDM72_V2") };
+        { F("SDM220 & SDM120CT & SDM120"), F("SDM230"), F("SDM72D"), F("DDM18SD"), F("SDM630"), F("SDM72_V2"), F("SDM320C") };
         constexpr size_t nrOptions = sizeof(options_model) / sizeof(options_model[0]);
         addFormSelector(F("Model Type"), P078_MODEL_LABEL, nrOptions, options_model, nullptr, P078_MODEL);
         addFormNote(F("Submit after changing the modell to update Output Configuration."));

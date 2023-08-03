@@ -50,7 +50,8 @@ enum class SDM_MODEL {
   SDM72D                 = 2,
   DDM18SD                = 3,
   SDM630                 = 4,
-  SDM72_V2               = 5
+  SDM72_V2               = 5,
+  SDM320C                = 6
 };
 
 enum class SDM_DIRECTION {
@@ -75,6 +76,7 @@ struct p078_register_description {
     uint8_t  phase,
     uint8_t  direction,
     uint8_t  SDM630,
+    uint8_t  SDM320C,
     uint8_t  SDM230,
     uint8_t  SDM220,
     uint8_t  SDM120CT,
@@ -87,13 +89,14 @@ struct p078_register_description {
       static_cast<uint32_t>(phase & 0x3) << 4 |
         static_cast<uint32_t>(direction & 0x3) << 6 |
         static_cast<uint32_t>(SDM630 & 0x1)    << 8 |
-        static_cast<uint32_t>(SDM230 & 0x1)    << 9 |
-        static_cast<uint32_t>(SDM220 & 0x1)    << 10 |
-        static_cast<uint32_t>(SDM120CT & 0x1)  << 11 |
-        static_cast<uint32_t>(SDM120 & 0x1)    << 12 |
-        static_cast<uint32_t>(SDM72D & 0x1)    << 13 |
-        static_cast<uint32_t>(SDM72_V2 & 0x1)  << 14 |
-        static_cast<uint32_t>(DDM18SD & 0x1)   << 15 |
+        static_cast<uint32_t>(SDM320C & 0x1)   << 9 |
+        static_cast<uint32_t>(SDM230 & 0x1)    << 10 |
+        static_cast<uint32_t>(SDM220 & 0x1)    << 11 |
+        static_cast<uint32_t>(SDM120CT & 0x1)  << 11 | // Same set of registers as SDM220
+        static_cast<uint32_t>(SDM120 & 0x1)    << 11 | // Nearly same set of registers as SDM220
+        static_cast<uint32_t>(SDM72D & 0x1)    << 12 |
+        static_cast<uint32_t>(SDM72_V2 & 0x1)  << 13 |
+        static_cast<uint32_t>(DDM18SD & 0x1)   << 14 |
         static_cast<uint32_t>(reg & 0xFFFF)    << 16)
   {}
 

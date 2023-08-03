@@ -151,6 +151,8 @@
 #define SDM_MAXIMUM_TOTAL_SYSTEM_VA_DEMAND            0x0066                    //  VA          |    1    |         |         |         |         |         |         |
 #define SDM_NEUTRAL_CURRENT_DEMAND                    0x0068                    //  A           |    1    |         |         |         |         |         |         |
 #define SDM_MAXIMUM_NEUTRAL_CURRENT                   0x006A                    //  A           |    1    |         |         |         |         |         |         |
+#define SDM_REACTIVE_POWER_DEMAND                     0x006C                    //  VAr         |    1    |         |         |         |         |         |         |
+#define SDM_MAXIMUM_REACTIVE_POWER_DEMAND             0x006E                    //  VAr         |    1    |         |         |         |         |         |         |
 #define SDM_LINE_1_TO_LINE_2_VOLTS                    0x00C8                    //  V           |    1    |         |         |         |         |         |    1    |
 #define SDM_LINE_2_TO_LINE_3_VOLTS                    0x00CA                    //  V           |    1    |         |         |         |         |         |    1    |
 #define SDM_LINE_3_TO_LINE_1_VOLTS                    0x00CC                    //  V           |    1    |         |         |         |         |         |    1    |
@@ -199,6 +201,8 @@
 #define SDM_CURRENT_RESETTABLE_TOTAL_REACTIVE_ENERGY  0x0182                    //  kVArh       |         |    1    |         |         |         |         |         |
 #define SDM_CURRENT_RESETTABLE_IMPORT_ENERGY          0x0184                    //  kWh         |         |         |         |         |         |    1    |    1    |
 #define SDM_CURRENT_RESETTABLE_EXPORT_ENERGY          0x0186                    //  kWh         |         |         |         |         |         |    1    |    1    |
+#define SDM_CURRENT_RESETTABLE_IMPORT_REACTIVE_ENERGY 0x0188                    //  kVArh       |         |         |         |         |         |    1    |    1    |
+#define SDM_CURRENT_RESETTABLE_EXPORT_REACTIVE_ENERGY 0x018A                    //  kVArh       |         |         |         |         |         |    1    |    1    |
 #define SDM_NET_KWH                                   0x018C                    //  kWh         |         |         |         |         |         |         |    1    |
 #define SDM_NET_KVARH                                 0x018E                    //  kVArh       |         |         |         |         |         |         |    1    |
 #define SDM_IMPORT_POWER                              0x0500                    //  W           |         |         |         |         |         |    1    |    1    |
