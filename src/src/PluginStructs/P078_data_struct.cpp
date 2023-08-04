@@ -2,9 +2,11 @@
 
 #include "../../_Plugin_Helper.h"
 
-#include <limits>
+#ifdef USES_P078
 
-#include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
+# include <limits>
+
+# include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 
 // Uncrustify may mess up this nice table, so turn uncrustify off for this table.
 // *INDENT-OFF*
@@ -196,7 +198,7 @@ String SDM_getValueNameForModel(SDM_MODEL model, int choice)
   const int index = SDM_getRegisterDescriptionIndexForModel(model, choice);
 
   if (index >= 0) {
-    const SDM_UOM uom       = register_description_list[index].getUnitOfMeasure();
+    const SDM_UOM uom = register_description_list[index].getUnitOfMeasure();
 
     return concat(
       SDM_UOMtoString(uom, false),
@@ -421,3 +423,59 @@ String p078_register_description::getPhaseDescription(SDM_MODEL model, char sepa
   }
   return res;
 }
+
+SDM_RegisterReadQueue _SDM_RegisterReadQueue;
+
+void SDM_removeRegisterReadQueueElement(taskIndex_t TaskIndex, taskVarIndex_t TaskVarIndex)
+{
+  if (validTaskIndex(TaskIndex) && validTaskVarIndex(TaskVarIndex)) {
+    for (auto it = _SDM_RegisterReadQueue.begin(); it != _SDM_RegisterReadQueue.end();) {
+      if ((it->taskIndex == TaskIndex) && (it->taskVarIndex == TaskVarIndex)) {
+        it = _SDM_RegisterReadQueue.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+}
+
+void SDM_addRegisterReadQueueElement(taskIndex_t TaskIndex, taskVarIndex_t TaskVarIndex, uint16_t reg, uint8_t dev_id)
+{
+  SDM_removeRegisterReadQueueElement(TaskIndex, TaskVarIndex);
+
+  if ((reg != std::numeric_limits<uint16_t>::max()) &&
+      validTaskIndex(TaskIndex) &&
+      validTaskVarIndex(TaskVarIndex)) {
+    _SDM_RegisterReadQueue.emplace_back(TaskIndex, TaskVarIndex, reg, dev_id);
+
+    //    _SDM_RegisterReadQueue.sort(compare_SDM_RegisterReadQueueElement);
+  }
+}
+
+void SDM_loopRegisterReadQueue(SDM *sdm)
+{
+  if (sdm == nullptr) { return; }
+  auto it = _SDM_RegisterReadQueue.begin();
+
+  if (it == _SDM_RegisterReadQueue.end()) { return; }
+
+  if (it->_state == 0) {
+    sdm->startReadVal(it->_reg, it->_dev_id);
+    it->_state = 1;
+  } else {
+    uint16_t readErr = sdm->readValReady(it->_dev_id);
+
+    if (readErr == SDM_ERR_STILL_WAITING) { return; }
+
+    if (readErr == SDM_ERR_NO_ERROR) {
+      UserVar.setFloat(it->taskIndex, it->taskVarIndex, sdm->decodeFloatValue());
+    } else {
+      sdm->clearErrCode();
+    }
+    it->_state = 0;
+    _SDM_RegisterReadQueue.emplace_back(*it);
+    _SDM_RegisterReadQueue.pop_front();
+  }
+}
+
+#endif // ifdef USES_P078

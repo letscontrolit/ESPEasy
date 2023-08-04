@@ -3,25 +3,34 @@
 
 #include "../../ESPEasy_common.h"
 
-#define P078_DEV_ID          PCONFIG(0)
-#define P078_DEV_ID_LABEL    PCONFIG_LABEL(0)
-#define P078_MODEL           PCONFIG(1)
-#define P078_MODEL_LABEL     PCONFIG_LABEL(1)
-#define P078_BAUDRATE        PCONFIG(2)
-#define P078_BAUDRATE_LABEL  PCONFIG_LABEL(2)
-#define P078_QUERY1          PCONFIG(3)
-#define P078_QUERY2          PCONFIG(4)
-#define P078_QUERY3          PCONFIG(5)
-#define P078_QUERY4          PCONFIG(6)
-#define P078_DEPIN           CONFIG_PIN3
+#ifdef USES_P078
+# include <ESPeasySerial.h>
 
-#define P078_DEV_ID_DFLT     1
-#define P078_MODEL_DFLT      0 // SDM120C
-#define P078_BAUDRATE_DFLT   3 // 9600 baud
-#define P078_QUERY1_DFLT     0 // Voltage (V)
-#define P078_QUERY2_DFLT     1 // Current (A)
-#define P078_QUERY3_DFLT     2 // Power (W)
-#define P078_QUERY4_DFLT     5 // Power Factor (cos-phi)
+# include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
+
+
+# define P078_DEV_ID          PCONFIG(0)
+# define P078_DEV_ID_LABEL    PCONFIG_LABEL(0)
+# define P078_MODEL           PCONFIG(1)
+# define P078_MODEL_LABEL     PCONFIG_LABEL(1)
+# define P078_BAUDRATE        PCONFIG(2)
+# define P078_BAUDRATE_LABEL  PCONFIG_LABEL(2)
+
+# define P078_QUERY1_CONFIG_POS  3
+
+# define P078_QUERY1          PCONFIG(P078_QUERY1_CONFIG_POS)
+# define P078_QUERY2          PCONFIG((P078_QUERY1_CONFIG_POS)+1)
+# define P078_QUERY3          PCONFIG((P078_QUERY1_CONFIG_POS)+2)
+# define P078_QUERY4          PCONFIG((P078_QUERY1_CONFIG_POS)+3)
+# define P078_DEPIN           CONFIG_PIN3
+
+# define P078_DEV_ID_DFLT     1
+# define P078_MODEL_DFLT      0 // SDM120C
+# define P078_BAUDRATE_DFLT   3 // 9600 baud
+# define P078_QUERY1_DFLT     0 // Voltage (V)
+# define P078_QUERY2_DFLT     1 // Current (A)
+# define P078_QUERY3_DFLT     2 // Power (W)
+# define P078_QUERY4_DFLT     5 // Power Factor (cos-phi)
 
 
 enum class SDM_UOM {
@@ -112,7 +121,8 @@ struct p078_register_description {
 
   String        getDescription(SDM_MODEL model) const;
 
-  String        getPhaseDescription(SDM_MODEL model, char separator) const;
+  String        getPhaseDescription(SDM_MODEL model,
+                                    char      separator) const;
 
   uint32_t val{};
 };
@@ -126,5 +136,39 @@ uint16_t SDM_getRegisterForModel(SDM_MODEL model,
 String   SDM_getValueNameForModel(SDM_MODEL model,
                                   int       choice);
 
+struct SDM_RegisterReadQueueElement {
+  SDM_RegisterReadQueueElement(taskIndex_t TaskIndex, taskVarIndex_t TaskVarIndex, uint16_t reg, uint8_t dev_id)
+    : taskIndex(TaskIndex),
+    taskVarIndex(TaskVarIndex),
+    _reg(reg),
+    _dev_id(dev_id)
+  {}
+
+  taskIndex_t    taskIndex    = INVALID_TASK_INDEX;
+  taskVarIndex_t taskVarIndex = INVALID_TASKVAR_INDEX;
+  uint16_t       _reg         = std::numeric_limits<uint16_t>::max(); // Modbus register
+  uint8_t        _dev_id      = 0;                                    // Modbus address
+  uint8_t        _state       = 0;
+};
+
+/*
+   bool compare_SDM_RegisterReadQueueElement(const SDM_RegisterReadQueueElement& first, const SDM_RegisterReadQueueElement& second) const {
+    return first._userVarIndex < second._userVarIndex;
+   }
+ */
+
+
+typedef std::list<SDM_RegisterReadQueueElement> SDM_RegisterReadQueue;
+
+void SDM_removeRegisterReadQueueElement(taskIndex_t    TaskIndex,
+                                        taskVarIndex_t TaskVarIndex);
+void SDM_addRegisterReadQueueElement(taskIndex_t    TaskIndex,
+                                     taskVarIndex_t TaskVarIndex,
+                                     uint16_t       reg,
+                                     uint8_t        dev_id);
+
+void SDM_loopRegisterReadQueue(SDM *sdm);
+
+#endif // ifdef USES_P078
 
 #endif // ifndef PLUGINSTRUCTS_P078_DATA_STRUCT_H

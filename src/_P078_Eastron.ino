@@ -23,10 +23,6 @@
 # define P078_NR_OUTPUT_OPTIONS_SDM72D                    9
 # define P078_NR_OUTPUT_OPTIONS_DDM18SD                   7
 
-# define P078_QUERY1_CONFIG_POS  3
-
-# include <ESPeasySerial.h>
-# include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 
 # include "src/PluginStructs/P078_data_struct.h"
 
@@ -35,6 +31,8 @@
 ESPeasySerial *Plugin_078_SoftSerial = nullptr;
 SDM *Plugin_078_SDM                  = nullptr;
 boolean Plugin_078_init              = false;
+int Plugin_078_last_read             = -1;
+
 
 
 // Forward declaration helper functions
@@ -176,8 +174,15 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper *options_model[] =
-        { F("SDM220 & SDM120CT & SDM120"), F("SDM230"), F("SDM72D"), F("DDM18SD"), F("SDM630"), F("SDM72_V2"), F("SDM320C") };
+        const __FlashStringHelper *options_model[] = { 
+          F("SDM220 & SDM120CT & SDM120"), 
+          F("SDM230"), 
+          F("SDM72D"), 
+          F("DDM18SD"), 
+          F("SDM630"), 
+          F("SDM72_V2"), 
+          F("SDM320C") 
+          };
         constexpr size_t nrOptions = sizeof(options_model) / sizeof(options_model[0]);
         addFormSelector(F("Model Type"), P078_MODEL_LABEL, nrOptions, options_model, nullptr, P078_MODEL);
         addFormNote(F("Submit after changing the modell to update Output Configuration."));
@@ -236,12 +241,24 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       if (Plugin_078_SDM != nullptr) {
         Plugin_078_SDM->begin();
         success = true;
+
+        SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+        uint8_t dev_id  = P078_DEV_ID;
+
+        for (taskVarIndex_t i = 0; i < VARS_PER_TASK; ++i) {
+          const uint16_t reg = SDM_getRegisterForModel(model, PCONFIG((P078_QUERY1_CONFIG_POS) + i));
+          SDM_addRegisterReadQueueElement(event->TaskIndex, i, reg, dev_id);
+        }
       }
       break;
     }
 
     case PLUGIN_EXIT:
     {
+      for (taskVarIndex_t i = 0; i < VARS_PER_TASK; ++i) {
+          SDM_removeRegisterReadQueueElement(event->TaskIndex, i);
+      }
+
       Plugin_078_init = false;
 
       if (Plugin_078_SoftSerial != nullptr) {
@@ -256,17 +273,27 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_TEN_PER_SECOND:
+    {
+      if (Plugin_078_init)
+      {
+        SDM_loopRegisterReadQueue(Plugin_078_SDM);
+      }
+      break;
+    }
+
     case PLUGIN_READ:
     {
       if (Plugin_078_init)
       {
+/*
         int model      = P078_MODEL;
         uint8_t dev_id = P078_DEV_ID;
         UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, dev_id, model);
         UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, dev_id, model);
         UserVar[event->BaseVarIndex + 2] = p078_readVal(P078_QUERY3, dev_id, model);
         UserVar[event->BaseVarIndex + 3] = p078_readVal(P078_QUERY4, dev_id, model);
-
+*/
         success = true;
         break;
       }
