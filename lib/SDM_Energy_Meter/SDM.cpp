@@ -63,16 +63,31 @@ void SDM::begin(void) {
 }
 
 float SDM::readVal(uint16_t reg, uint8_t node) {
-  uint16_t temp;
-  unsigned long resptime;
-  uint8_t sdmarr[FRAMESIZE] = {node, SDM_B_02, 0, 0, SDM_B_05, SDM_B_06, 0, 0, 0};
-  float res = NAN;
-  uint16_t readErr = SDM_ERR_NO_ERROR;
+  startReadVal(reg, node);
+
+  uint16_t readErr = SDM_ERR_STILL_WAITING;
+
+  while (readErr == SDM_ERR_STILL_WAITING) {
+    readErr = readValReady(node);
+    delay(1);
+  }
+
+  if (readErr == SDM_ERR_NO_ERROR) {    
+    return decodeFloatValue();
+  }
+
+  constexpr float res = NAN;
+  return (res);
+}
+
+void SDM::startReadVal(uint16_t reg, uint8_t node) {
+  const uint8_t tmparr[] = {node, SDM_B_02, 0, 0, SDM_B_05, SDM_B_06, 0, 0, 0};
+  memcpy(sdmarr, tmparr, sizeof(tmparr));
 
   sdmarr[2] = highByte(reg);
   sdmarr[3] = lowByte(reg);
 
-  temp = calculateCRC(sdmarr, FRAMESIZE - 3);                                   //calculate out crc only from first 6 bytes
+  const uint16_t temp = calculateCRC(sdmarr, FRAMESIZE - 3);                                   //calculate out crc only from first 6 bytes
 
   sdmarr[6] = lowByte(temp);
   sdmarr[7] = highByte(temp);
@@ -94,6 +109,14 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
   dereSet(LOW);                                                                 //receive from SDM -> DE Disable, /RE Enable (for control MAX485)
 
   resptime = millis();
+}
+
+uint16_t SDM::readValReady(uint8_t node) {
+  uint16_t readErr = SDM_ERR_NO_ERROR;
+  if (sdmSer.available() < FRAMESIZE && ((millis() - resptime) < msturnaround)) 
+  {
+    return SDM_ERR_STILL_WAITING;
+  }
 
   while (sdmSer.available() < FRAMESIZE) {
     if (millis() - resptime > msturnaround) {
@@ -113,12 +136,7 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 
       if (sdmarr[0] == node && sdmarr[1] == SDM_B_02 && sdmarr[2] == SDM_REPLY_BYTE_COUNT) {
 
-        if ((calculateCRC(sdmarr, FRAMESIZE - 2)) == ((sdmarr[8] << 8) | sdmarr[7])) {  //calculate crc from first 7 bytes and compare with received crc (bytes 7 & 8)
-          ((uint8_t*)&res)[3]= sdmarr[3];
-          ((uint8_t*)&res)[2]= sdmarr[4];
-          ((uint8_t*)&res)[1]= sdmarr[5];
-          ((uint8_t*)&res)[0]= sdmarr[6];
-        } else {
+        if (!(calculateCRC(sdmarr, FRAMESIZE - 2)) == ((sdmarr[8] << 8) | sdmarr[7])) {  //calculate crc from first 7 bytes and compare with received crc (bytes 7 & 8)
           readErr = SDM_ERR_CRC_ERROR;                                          //err debug (1)
         }
 
@@ -147,8 +165,20 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 #if !defined ( USE_HARDWARESERIAL )
 //  sdmSer.stopListening();                                                       //disable softserial rx interrupt
 #endif
+  return readErr;
+}
 
-  return (res);
+float SDM::decodeFloatValue() const {  
+  if ((calculateCRC(sdmarr, FRAMESIZE - 2)) == ((sdmarr[8] << 8) | sdmarr[7])) {  //calculate crc from first 7 bytes and compare with received crc (bytes 7 & 8)
+    float res{};
+    ((uint8_t*)&res)[3]= sdmarr[3];
+    ((uint8_t*)&res)[2]= sdmarr[4];
+    ((uint8_t*)&res)[1]= sdmarr[5];
+    ((uint8_t*)&res)[0]= sdmarr[6];
+    return res;
+  }
+  constexpr float res = NAN;
+  return res;
 }
 
 uint16_t SDM::getErrCode(bool _clear) {
@@ -210,7 +240,7 @@ uint16_t SDM::getMsTimeout() {
   return (mstimeout);
 }
 
-uint16_t SDM::calculateCRC(uint8_t *array, uint8_t len) {
+uint16_t SDM::calculateCRC(const uint8_t *array, uint8_t len) const {
   uint16_t _crc, _flag;
   _crc = 0xFFFF;
   for (uint8_t i = 0; i < len; i++) {
@@ -227,9 +257,12 @@ uint16_t SDM::calculateCRC(uint8_t *array, uint8_t len) {
 
 void SDM::flush(unsigned long _flushtime) {
   unsigned long flushstart = millis();
-  while (sdmSer.available() || (millis() - flushstart < _flushtime)) {
-    if (sdmSer.available())                                                     //read serial if any old data is available
+  while (sdmSer.available() || ((millis() - flushstart) < _flushtime)) {
+    if (sdmSer.available()) {
+      flushstart = millis();
+      //read serial if any old data is available
       sdmSer.read();
+    }
     delay(1);
   }
 }

@@ -70,15 +70,15 @@
 #endif
 
 #if !defined ( RESPONSE_TIMEOUT )
-  #define RESPONSE_TIMEOUT                            500                       //  time in ms to wait for return response from all devices before next request
+  #define RESPONSE_TIMEOUT                            10                       //  time in ms to wait for return response from all devices before next request
 #endif
 
 #if !defined ( SDM_MIN_DELAY )
-  #define SDM_MIN_DELAY                               20                        //  minimum value (in ms) for WAITING_TURNAROUND_DELAY and RESPONSE_TIMEOUT
+  #define SDM_MIN_DELAY                               5                        //  minimum value (in ms) for WAITING_TURNAROUND_DELAY and RESPONSE_TIMEOUT
 #endif
 
 #if !defined ( SDM_MAX_DELAY )
-  #define SDM_MAX_DELAY                               5000                      //  maximum value (in ms) for WAITING_TURNAROUND_DELAY and RESPONSE_TIMEOUT
+  #define SDM_MAX_DELAY                               20                      //  maximum value (in ms) for WAITING_TURNAROUND_DELAY and RESPONSE_TIMEOUT
 #endif
 
 //------------------------------------------------------------------------------
@@ -88,6 +88,7 @@
 #define SDM_ERR_WRONG_BYTES                           2                         //  bytes b0,b1 or b2 wrong
 #define SDM_ERR_NOT_ENOUGHT_BYTES                     3                         //  not enough bytes from sdm
 #define SDM_ERR_TIMEOUT                               4                         //  timeout
+#define SDM_ERR_STILL_WAITING                         5
 
 //------------------------------------------------------------------------------
 
@@ -253,6 +254,12 @@ class SDM {
 
     void begin(void);
     float readVal(uint16_t reg, uint8_t node = SDM_B_01);                       //  read value from register = reg and from deviceId = node
+    void startReadVal(uint16_t reg, uint8_t node = SDM_B_01);                   //  Start sending out the request to read a register from a specific node (allows for async access)
+    uint16_t readValReady(uint8_t node = SDM_B_01);                             //  Check to see if a reply is ready reading from a node (allow for async access)
+
+    float decodeFloatValue() const;
+
+
     uint16_t getErrCode(bool _clear = false);                                   //  return last errorcode (optional clear this value, default flase)
     uint32_t getErrCount(bool _clear = false);                                  //  return total errors count (optional clear this value, default flase)
     uint32_t getSuccCount(bool _clear = false);                                 //  return total success count (optional clear this value, default false)
@@ -293,7 +300,9 @@ class SDM {
     uint16_t mstimeout = RESPONSE_TIMEOUT;
     uint32_t readingerrcount = 0;                                               //  total errors counter
     uint32_t readingsuccesscount = 0;                                           //  total success counter
-    uint16_t calculateCRC(uint8_t *array, uint8_t len);
+    unsigned long resptime = 0;
+    uint8_t sdmarr[FRAMESIZE] = {};
+    uint16_t calculateCRC(const uint8_t *array, uint8_t len) const;
     void flush(unsigned long _flushtime = 0);                                   //  read serial if any old data is available or for a given time in ms
     void dereSet(bool _state = LOW);                                            //  for control MAX485 DE/RE pins, LOW receive from SDM, HIGH transmit to SDM
 };
