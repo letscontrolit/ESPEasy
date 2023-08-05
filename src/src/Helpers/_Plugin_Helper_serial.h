@@ -23,6 +23,11 @@ void serialHelper_getGpioNames(struct EventStruct *event,
                                bool                rxOptional = false,
                                bool                txOptional = false);
 
+void serialHelper_modbus_getGpioNames(struct EventStruct *event,
+                               bool                rxOptional = false,
+                               bool                txOptional = false,
+                               bool                DE_RE_optional = true);
+
 int8_t            serialHelper_getRxPin(struct EventStruct *event);
 
 int8_t            serialHelper_getTxPin(struct EventStruct *event);

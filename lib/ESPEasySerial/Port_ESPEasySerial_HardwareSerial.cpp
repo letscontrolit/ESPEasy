@@ -276,12 +276,14 @@ size_t Port_ESPEasySerial_HardwareSerial_t::setTxBufferSize(size_t new_size)
 bool Port_ESPEasySerial_HardwareSerial_t::setRS485Mode(int8_t rtsPin)
 {
   #ifdef ESP32
-  if (_serial != nullptr && rtsPin >= 0) {
-    return _serial->setPins(-1, -1, -1, rtsPin) &&
-           _serial->setHwFlowCtrlMode(HW_FLOWCTRL_DISABLE) &&
-           _serial->setMode(UART_MODE_RS485_HALF_DUPLEX);
+  if (_serial != nullptr) {
+    if (rtsPin >= 0) {
+      return _serial->setPins(-1, -1, -1, rtsPin) &&
+            _serial->setHwFlowCtrlMode(UART_HW_FLOWCTRL_RTS) &&
+            _serial->setMode(UART_MODE_RS485_HALF_DUPLEX);
+    }
+    _serial->setMode(UART_MODE_UART);
   }
-  _serial->setMode(UART_MODE_UART);
   #endif  
   return false;
 }
