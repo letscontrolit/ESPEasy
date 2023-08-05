@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 #ifdef USES_P078
+#include "../../_Plugin_Helper.h"
 # include <ESPeasySerial.h>
 
 # include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/

@@ -72,6 +72,13 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
     delay(1);
   }
 
+  if (readErr != SDM_ERR_NO_ERROR) {                                            //if error then copy temp error value to global val and increment global error counter
+    readingerrcode = readErr;
+    readingerrcount++; 
+  } else {
+    ++readingsuccesscount;
+  }
+
   if (readErr == SDM_ERR_NO_ERROR) {    
     return decodeFloatValue();
   }
@@ -80,38 +87,22 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
   return (res);
 }
 
-void SDM::startReadVal(uint16_t reg, uint8_t node) {
-  const uint8_t tmparr[] = {node, SDM_B_02, 0, 0, SDM_B_05, SDM_B_06, 0, 0, 0};
-  memcpy(sdmarr, tmparr, sizeof(tmparr));
+void SDM::startReadVal(uint16_t reg, uint8_t node, uint8_t functionCode) {
+  uint8_t data[] = {
+    node,             // Address
+    functionCode,     // Modbus function
+    highByte(reg),    // Start address high byte
+    lowByte(reg),     // Start address low byte
+    SDM_B_05,         // Number of points high byte
+    SDM_B_06,         // Number of points low byte
+    0,                // Checksum low byte
+    0};               // Checksum high byte
 
-  sdmarr[2] = highByte(reg);
-  sdmarr[3] = lowByte(reg);
-
-  const uint16_t temp = calculateCRC(sdmarr, FRAMESIZE - 3);                                   //calculate out crc only from first 6 bytes
-
-  sdmarr[6] = lowByte(temp);
-  sdmarr[7] = highByte(temp);
-
-#if !defined ( USE_HARDWARESERIAL )
-  sdmSer.listen();                                                              //enable softserial rx interrupt
-#endif
-
-  flush();                                                                      //read serial if any old data is available
-
-  dereSet(HIGH);                                                                //transmit to SDM  -> DE Enable, /RE Disable (for control MAX485)
-
-  delay(2);                                                                     //fix for issue (nan reading) by sjfaustino: https://github.com/reaper7/SDM_Energy_Meter/issues/7#issuecomment-272111524
-
-  sdmSer.write(sdmarr, FRAMESIZE - 1);                                          //send 8 bytes
-
-  sdmSer.flush();                                                               //clear out tx buffer
-
-  dereSet(LOW);                                                                 //receive from SDM -> DE Disable, /RE Enable (for control MAX485)
-
-  resptime = millis();
+  constexpr size_t messageLength = sizeof(data) / sizeof(data[0]);
+  modbusWrite(data, messageLength);
 }
 
-uint16_t SDM::readValReady(uint8_t node) {
+uint16_t SDM::readValReady(uint8_t node, uint8_t functionCode) {
   uint16_t readErr = SDM_ERR_NO_ERROR;
   if (sdmSer.available() < FRAMESIZE && ((millis() - resptime) < msturnaround)) 
   {
@@ -119,11 +110,20 @@ uint16_t SDM::readValReady(uint8_t node) {
   }
 
   while (sdmSer.available() < FRAMESIZE) {
-    if (millis() - resptime > msturnaround) {
+    if ((millis() - resptime) > msturnaround) {
       readErr = SDM_ERR_TIMEOUT;                                                //err debug (4)
+
+      if (sdmSer.available() == 5) {
+        for(int n=0; n<5; n++) {
+          sdmarr[n] = sdmSer.read();
+        }
+        if (validChecksum(sdmarr, 5)) {
+          readErr = sdmarr[2];
+        }
+      }
       break;
     }
-    yield();
+    delay(1);
   }
 
   if (readErr == SDM_ERR_NO_ERROR) {                                            //if no timeout...
@@ -134,9 +134,10 @@ uint16_t SDM::readValReady(uint8_t node) {
         sdmarr[n] = sdmSer.read();
       }
 
-      if (sdmarr[0] == node && sdmarr[1] == SDM_B_02 && sdmarr[2] == SDM_REPLY_BYTE_COUNT) {
-
-        if (!(calculateCRC(sdmarr, FRAMESIZE - 2)) == ((sdmarr[8] << 8) | sdmarr[7])) {  //calculate crc from first 7 bytes and compare with received crc (bytes 7 & 8)
+      if (sdmarr[0] == node && 
+          sdmarr[1] == functionCode && 
+          sdmarr[2] == SDM_REPLY_BYTE_COUNT) {
+        if (!validChecksum(sdmarr, FRAMESIZE)) {
           readErr = SDM_ERR_CRC_ERROR;                                          //err debug (1)
         }
 
@@ -168,8 +169,8 @@ uint16_t SDM::readValReady(uint8_t node) {
   return readErr;
 }
 
-float SDM::decodeFloatValue() const {  
-  if ((calculateCRC(sdmarr, FRAMESIZE - 2)) == ((sdmarr[8] << 8) | sdmarr[7])) {  //calculate crc from first 7 bytes and compare with received crc (bytes 7 & 8)
+float SDM::decodeFloatValue() const {
+  if (validChecksum(sdmarr, FRAMESIZE)) {
     float res{};
     ((uint8_t*)&res)[3]= sdmarr[3];
     ((uint8_t*)&res)[2]= sdmarr[4];
@@ -178,6 +179,77 @@ float SDM::decodeFloatValue() const {
     return res;
   }
   constexpr float res = NAN;
+  return res;
+}
+
+float SDM::readHoldingRegister(uint16_t reg, uint8_t node) {
+  startReadVal(reg, node, SDM_READ_HOLDING_REGISTER);
+
+  uint16_t readErr = SDM_ERR_STILL_WAITING;
+
+  while (readErr == SDM_ERR_STILL_WAITING) {
+    delay(1);
+    readErr = readValReady(node, SDM_READ_HOLDING_REGISTER);
+  }
+
+  if (readErr != SDM_ERR_NO_ERROR) {                                            //if error then copy temp error value to global val and increment global error counter
+    readingerrcode = readErr;
+    readingerrcount++; 
+  } else {
+    ++readingsuccesscount;
+  }
+
+  if (readErr == SDM_ERR_NO_ERROR) {    
+    return decodeFloatValue();
+  }
+
+  constexpr float res = NAN;
+  return (res);
+}
+
+bool SDM::writeHoldingRegister(float value, uint16_t reg, uint8_t node) {
+  {
+    uint8_t data[] = {
+      node,                       // Address
+      SDM_WRITE_HOLDING_REGISTER, // Function
+      highByte(reg),              // Starting Address High
+      lowByte(reg),               // Starting Address Low
+      SDM_B_05,                   // Number of Registers High
+      SDM_B_06,                   // Number of Registers Low
+      4,                          // Byte count
+      ((uint8_t*)&value)[3],
+      ((uint8_t*)&value)[2],
+      ((uint8_t*)&value)[1],
+      ((uint8_t*)&value)[0],
+      0, 0};
+
+    constexpr size_t messageLength = sizeof(data) / sizeof(data[0]);
+    modbusWrite(data, messageLength);
+  }
+  uint16_t readErr = SDM_ERR_STILL_WAITING;
+  while (readErr == SDM_ERR_STILL_WAITING) {
+    delay(1);
+    readErr = readValReady(node, SDM_READ_HOLDING_REGISTER);
+  }
+
+  if (readErr != SDM_ERR_NO_ERROR) {                                            //if error then copy temp error value to global val and increment global error counter
+    readingerrcode = readErr;
+    readingerrcount++; 
+  } else {
+    ++readingsuccesscount;
+  }
+
+  return readErr == SDM_ERR_NO_ERROR;
+}
+
+uint32_t SDM::getSerialNumber(uint8_t node) {
+  uint32_t res{};
+  readHoldingRegister(SDM_HOLDING_SERIAL_NUMBER, node);
+//  if (getErrCode() == SDM_ERR_NO_ERROR) {
+    for (size_t i = 0; i < 4; ++i) {
+      res = (res << 8) + sdmarr[3 + i];
+    }
+//  }
   return res;
 }
 
@@ -257,17 +329,60 @@ uint16_t SDM::calculateCRC(const uint8_t *array, uint8_t len) const {
 
 void SDM::flush(unsigned long _flushtime) {
   unsigned long flushstart = millis();
-  while (sdmSer.available() || ((millis() - flushstart) < _flushtime)) {
-    if (sdmSer.available()) {
+  sdmSer.flush();
+  int available = sdmSer.available();
+  while (available > 0 || ((millis() - flushstart) < _flushtime)) {
+    while (available > 0) {
+      --available;
       flushstart = millis();
       //read serial if any old data is available
       sdmSer.read();
     }
     delay(1);
+    available = sdmSer.available();    
   }
 }
 
 void SDM::dereSet(bool _state) {
   if (_dere_pin != NOT_A_PIN)
     digitalWrite(_dere_pin, _state);                                            //receive from SDM -> DE Disable, /RE Enable (for control MAX485)
+}
+
+bool SDM::validChecksum(const uint8_t* data, size_t messageLength) const {
+  const uint16_t temp = calculateCRC(data, messageLength - 2);                                   //calculate out crc only from first 6 bytes
+
+  return data[messageLength - 2] == lowByte(temp) &&
+         data[messageLength - 1] == highByte(temp);
+
+}
+
+void SDM::modbusWrite(uint8_t* data, size_t messageLength) {
+  const uint16_t temp = calculateCRC(data, messageLength - 2);                                   //calculate out crc only from first 6 bytes
+
+  data[messageLength - 2] = lowByte(temp);
+  data[messageLength - 1] = highByte(temp);
+
+#if !defined ( USE_HARDWARESERIAL )
+  sdmSer.listen();                                                              //enable softserial rx interrupt
+#endif
+
+  flush();                                                                      //read serial if any old data is available
+
+  dereSet(HIGH);                                                                //transmit to SDM  -> DE Enable, /RE Disable (for control MAX485)
+
+  delay(2);                                                                     //fix for issue (nan reading) by sjfaustino: https://github.com/reaper7/SDM_Energy_Meter/issues/7#issuecomment-272111524
+
+  // Need to wait for all bytes in TX buffer are sent.
+  // N.B. flush() on serial port does often only clear the send buffer, not wait till all is sent.
+  const unsigned long waitForBytesSent_ms = (messageLength * 10000) / sdmSer.getBaudRate() + 1;
+  resptime = millis();
+  sdmSer.write(data, messageLength);                                          //send 8 bytes
+  while ((millis() - resptime) < waitForBytesSent_ms) {
+    delay(1);                                                                   //clear out tx buffer
+  }
+  dereSet(LOW);                                                                 //receive from SDM -> DE Disable, /RE Enable (for control MAX485)
+  flush();
+
+  resptime = millis();
+
 }

@@ -258,6 +258,13 @@ String ESPeasySerial::getLogString() const {
   return getSerialConfig().getLogString();
 }
 
+bool ESPeasySerial::setRS485Mode(int8_t rtsPin) {
+  if (_serialPort != nullptr) {
+    return _serialPort->setRS485Mode(rtsPin);
+  }
+  return false;
+}
+
 bool ESPeasySerial::isValid() const {
   // FIXME TD-er: Must call isValid() on the individual _serialPort types
   return _serialPort != nullptr;

@@ -28,18 +28,9 @@
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
-ESPeasySerial *Plugin_078_SoftSerial = nullptr;
+ESPeasySerial *Plugin_078_ESPEasySerial = nullptr;
 SDM *Plugin_078_SDM                  = nullptr;
 boolean Plugin_078_init              = false;
-int Plugin_078_last_read             = -1;
-
-
-
-// Forward declaration helper functions
-float p078_readVal(uint8_t      query,
-                   uint8_t      node,
-                   unsigned int model);
-
 
 boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -174,15 +165,15 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper *options_model[] = { 
-          F("SDM220 & SDM120CT & SDM120"), 
-          F("SDM230"), 
-          F("SDM72D"), 
-          F("DDM18SD"), 
-          F("SDM630"), 
-          F("SDM72_V2"), 
-          F("SDM320C") 
-          };
+        const __FlashStringHelper *options_model[] = {
+          F("SDM220 & SDM120CT & SDM120"),
+          F("SDM230"),
+          F("SDM72D"),
+          F("DDM18SD"),
+          F("SDM630"),
+          F("SDM72_V2"),
+          F("SDM320C")
+        };
         constexpr size_t nrOptions = sizeof(options_model) / sizeof(options_model[0]);
         addFormSelector(F("Model Type"), P078_MODEL_LABEL, nrOptions, options_model, nullptr, P078_MODEL);
         addFormNote(F("Submit after changing the modell to update Output Configuration."));
@@ -220,31 +211,59 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     {
       Plugin_078_init = true;
 
-      if (Plugin_078_SoftSerial != nullptr) {
-        delete Plugin_078_SoftSerial;
-        Plugin_078_SoftSerial = nullptr;
+      if (Plugin_078_ESPEasySerial != nullptr) {
+        delete Plugin_078_ESPEasySerial;
+        Plugin_078_ESPEasySerial = nullptr;
       }
-      Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), CONFIG_PIN1, CONFIG_PIN2);
+      Plugin_078_ESPEasySerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), CONFIG_PIN1, CONFIG_PIN2);
 
-      if (Plugin_078_SoftSerial == nullptr) {
+      if (Plugin_078_ESPEasySerial == nullptr) {
         break;
       }
       unsigned int baudrate = p078_storageValueToBaudrate(P078_BAUDRATE);
-      Plugin_078_SoftSerial->begin(baudrate);
+      Plugin_078_ESPEasySerial->begin(baudrate);
 
       if (Plugin_078_SDM != nullptr) {
         delete Plugin_078_SDM;
         Plugin_078_SDM = nullptr;
       }
-      Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
+      if (Plugin_078_ESPEasySerial->setRS485Mode(P078_DEPIN)) {
+        Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate);
+      } else {
+        Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate, P078_DEPIN);
+      }
 
       if (Plugin_078_SDM != nullptr) {
-        Plugin_078_SDM->begin();
         success = true;
+        Plugin_078_SDM->begin();
 
-        SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
-        uint8_t dev_id  = P078_DEV_ID;
+        // Set timeout to time needed to receive 1 byte
+        Plugin_078_SDM->setMsTimeout((10000 / baudrate) + 1);
 
+        SDM_MODEL model  = static_cast<SDM_MODEL>(P078_MODEL);
+        uint8_t   dev_id = P078_DEV_ID;
+/*
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
+          log = F("Eastron: SN: ");
+          log += Plugin_078_SDM->getSerialNumber(dev_id);
+          log += ',';
+          log += Plugin_078_SDM->getErrCode(true);
+          log += F(" SW-ver: ");
+          log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_SOFTWARE_VERSION, dev_id);
+          log += ',';
+          log += Plugin_078_SDM->getErrCode(true);
+          log += F(" ID: ");
+          log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_METER_ID, dev_id);
+          log += ',';
+          log += Plugin_078_SDM->getErrCode(true);
+          log += F(" baudrate: ");
+          log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_BAUD_RATE, dev_id);
+          log += ',';
+          log += Plugin_078_SDM->getErrCode(true);
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+*/
         for (taskVarIndex_t i = 0; i < VARS_PER_TASK; ++i) {
           const uint16_t reg = SDM_getRegisterForModel(model, PCONFIG((P078_QUERY1_CONFIG_POS) + i));
           SDM_addRegisterReadQueueElement(event->TaskIndex, i, reg, dev_id);
@@ -256,14 +275,14 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
     {
       for (taskVarIndex_t i = 0; i < VARS_PER_TASK; ++i) {
-          SDM_removeRegisterReadQueueElement(event->TaskIndex, i);
+        SDM_removeRegisterReadQueueElement(event->TaskIndex, i);
       }
 
       Plugin_078_init = false;
 
-      if (Plugin_078_SoftSerial != nullptr) {
-        delete Plugin_078_SoftSerial;
-        Plugin_078_SoftSerial = nullptr;
+      if (Plugin_078_ESPEasySerial != nullptr) {
+        delete Plugin_078_ESPEasySerial;
+        Plugin_078_ESPEasySerial = nullptr;
       }
 
       if (Plugin_078_SDM != nullptr) {
@@ -286,14 +305,6 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     {
       if (Plugin_078_init)
       {
-/*
-        int model      = P078_MODEL;
-        uint8_t dev_id = P078_DEV_ID;
-        UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, dev_id, model);
-        UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, dev_id, model);
-        UserVar[event->BaseVarIndex + 2] = p078_readVal(P078_QUERY3, dev_id, model);
-        UserVar[event->BaseVarIndex + 3] = p078_readVal(P078_QUERY4, dev_id, model);
-*/
         success = true;
         break;
       }
@@ -301,43 +312,6 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
-}
-
-float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
-  if (Plugin_078_SDM == nullptr) { return 0.0f; }
-  const uint16_t reg = SDM_getRegisterForModel(static_cast<SDM_MODEL>(model), query);
-
-  if (reg == std::numeric_limits<uint16_t>::max()) { return 0.0f; }
-
-  uint8_t retry_count = 3;
-  bool    success     = false;
-  float   _tempvar    = NAN;
-
-  while (retry_count > 0 && !success) {
-    Plugin_078_SDM->clearErrCode();
-    _tempvar = Plugin_078_SDM->readVal(reg, node);
-    --retry_count;
-
-    if (Plugin_078_SDM->getErrCode() == SDM_ERR_NO_ERROR) {
-      success = true;
-    }
-  }
-
-  /*
-     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("EASTRON: (");
-      log += node;
-      log += ',';
-      log += model;
-      log += F(") ");
-      log += p078_getQueryString(query, model);
-      log += F(": ");
-      log += _tempvar;
-      addLogMove(LOG_LEVEL_INFO, log);
-     }
-   */
-  delay(1);
-  return _tempvar;
 }
 
 int p078_storageValueToBaudrate(uint8_t baudrate_setting) {
