@@ -54,7 +54,7 @@ Available options:
 
 * *No PWM*: The motor is controlled by applying a High level (or Low when the matching Inverted option is checked) to the Forward or Reverse GPIO pin.
 
-* *PWM*: The motor is controlled by applying a PWM signal with the set frequency and duty-cycle (next options).
+* *PWM*: The motor is controlled by applying a PWM signal with the set frequency and duty-cycle (next options). **Attention** Check the documentation if the motor can be controlled via PWM, as in some cases this can cause damage to the motor or electronics involved!
 
 .. ..spacer
 
