@@ -258,9 +258,13 @@ String ESPeasySerial::getLogString() const {
   return getSerialConfig().getLogString();
 }
 
-bool ESPeasySerial::setRS485Mode(int8_t rtsPin) {
+bool ESPeasySerial::setRS485Mode(int8_t rtsPin, bool enableCollisionDetection) {
   if (_serialPort != nullptr) {
-    return _serialPort->setRS485Mode(rtsPin);
+    #ifdef ESP32
+    return _serialPort->setRS485Mode(rtsPin, enableCollisionDetection);
+    #else
+    return _serialPort->setRS485Mode(rtsPin, false);
+    #endif
   }
   return false;
 }

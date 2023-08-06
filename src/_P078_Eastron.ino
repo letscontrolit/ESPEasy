@@ -139,6 +139,13 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Modbus Address"), P078_DEV_ID_LABEL, P078_DEV_ID, 1, 247);
 
+      #ifdef ESP32
+      addFormCheckBox(F("Enable Collision Detection"), F(P078_FLAG_COLL_DETECT_LABEL), P078_GET_FLAG_COLL_DETECT);
+      addFormNote(F("/RE connected to GND, only supported on hardware serial"));
+      #endif
+
+
+
       if (Plugin_078_SDM != nullptr) {
         addRowLabel(F("Checksum (pass/fail)"));
         String chksumStats;
@@ -201,6 +208,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       P078_DEV_ID   = getFormItemInt(P078_DEV_ID_LABEL);
       P078_MODEL    = getFormItemInt(P078_MODEL_LABEL);
       P078_BAUDRATE = getFormItemInt(P078_BAUDRATE_LABEL);
+      #ifdef ESP32
+      P078_SET_FLAG_COLL_DETECT(isFormItemChecked(F(P078_FLAG_COLL_DETECT_LABEL)));
+      #endif
 
       Plugin_078_init = false; // Force device setup next time
       success         = true;
@@ -228,7 +238,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         Plugin_078_SDM = nullptr;
       }
 
-      if (Plugin_078_ESPEasySerial->setRS485Mode(P078_DEPIN)) {
+      if (Plugin_078_ESPEasySerial->setRS485Mode(P078_DEPIN, P078_GET_FLAG_COLL_DETECT)) {
         Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate);
       } else {
         Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate, P078_DEPIN);
@@ -371,7 +381,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
                 for (int i = 0; i < nrBaudRates && new_baud > 5; ++i) {
                   if (new_baud == baudrates[i]) {
-                    new_baud = baudrates[i];
+                    new_baud = i;
                   }
                 }
               }

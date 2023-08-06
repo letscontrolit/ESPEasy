@@ -169,7 +169,7 @@ size_t Port_ESPEasySerial_SW_Serial_t::setTxBufferSize(size_t new_size)
   return 0;
 }
 
-bool Port_ESPEasySerial_SW_Serial_t::setRS485Mode(int8_t rtsPin)
+bool Port_ESPEasySerial_SW_Serial_t::setRS485Mode(int8_t rtsPin, bool enableCollisionDetection)
 {
   // TODO TD-er: Check if we can include toggling this pin in the SW serial lib
   return false;

@@ -261,7 +261,7 @@ size_t Port_ESPEasySerial_USBCDC_t::setTxBufferSize(size_t new_size)
   return 0;
 }
 
-bool Port_ESPEasySerial_USBCDC_t::setRS485Mode(int8_t rtsPin)
+bool Port_ESPEasySerial_USBCDC_t::setRS485Mode(int8_t rtsPin, bool enableCollisionDetection)
 {
   return false;
 }

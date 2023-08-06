@@ -50,7 +50,7 @@ public:
   // Try enabling RTS pin and set to UART_RS485_HALF_DUPLEX
   // RTS pin can then be connected to ~RE/DE pin of MAX485
   // @retval True when supported and successful.
-  bool setRS485Mode(int8_t rtsPin);
+  bool setRS485Mode(int8_t rtsPin, bool enableCollisionDetection = false);
 
 private:
 

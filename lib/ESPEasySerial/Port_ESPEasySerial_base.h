@@ -76,7 +76,7 @@ public:
 
   virtual size_t setRxBufferSize(size_t new_size) = 0;
   virtual size_t setTxBufferSize(size_t new_size) = 0;
-  virtual bool   setRS485Mode(int8_t rtsPin) = 0;
+  virtual bool   setRS485Mode(int8_t rtsPin, bool enableCollisionDetection) = 0;
 
 
 
