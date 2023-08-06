@@ -1565,9 +1565,6 @@ To create/register a plugin, you have to :
     #ifndef P037_LIMIT_BUILD_SIZE
       #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
     #endif
-    // FIXME TD-er: Limit build size for energy builds on ESP8266 for now.
-    // Does no longer fit with Eastron plugin extensions.
-    #define LIMIT_BUILD_SIZE
   #endif
    #ifndef USES_P025
      #define USES_P025   // ADS1115
