@@ -1558,6 +1558,7 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
     // #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Energy plugins
+    #define BUILD_NO_DEBUG // Reduce build size without sacrificing features other than some logging
     #ifndef P036_LIMIT_BUILD_SIZE
       #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
     #endif
