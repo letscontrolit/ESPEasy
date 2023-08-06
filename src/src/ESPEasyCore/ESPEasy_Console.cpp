@@ -229,6 +229,8 @@ void EspEasy_Console_t::init() {
 
 void EspEasy_Console_t::loop()
 {
+  if (!Settings.UseSerial) return;
+
   START_TIMER;
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
