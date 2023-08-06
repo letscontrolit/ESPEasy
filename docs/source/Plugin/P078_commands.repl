@@ -20,6 +20,7 @@
 
     ","
     | The optional ``<node_id>`` parameter indicates the current Modbus address. When not given, the default of address ``1`` is assumed.
+    | Valid node IDs are ``1 ... 247``.
     | Call ``Eastron,Pause`` before changing settings on the module.
     | On some modules, like the SDM120, the user must press the button for 3 seconds to enter ``-set-`` mode.
     | After enabling the ``-set-`` mode, these commands can be given and then the user must press the button for 3 seconds to store the changed settings.

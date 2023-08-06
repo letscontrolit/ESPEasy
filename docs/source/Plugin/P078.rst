@@ -62,7 +62,7 @@ This allows for a single GPIO pin to be used to toggle between sending and recei
 
 
 Manual switching of transmitter/receiver without collision detection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The most commonly used schematic for connecting a RS485 transceiver chip to a microcontroller, like the ESP boards:
 
@@ -85,15 +85,14 @@ The most commonly used schematic for connecting a RS485 transceiver chip to a mi
 
 
 Collision detection circuit
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By connecting the ``/RE`` pin to GND, the transceiver chip has "receiving" enabled even when sending.
 This allows to detect "collision", when other devices are sending data when the ESP attempts to send data.
 
-Do not use this method on ESP8266 as this processor has no hardware support for collision detection.
-Only ESP32 can handle these kinds of setup.
+If there is only a single 'master' on the RS485 bus, there is no need for using this kind of setup.
 
-But when there is only a single 'master' on the RS485 bus, there is no need for using these kind of setup.
+.. note:: Only ESP32 (and variants) can handle collision detection on RS485.
 
 .. code-block::
 
@@ -111,37 +110,78 @@ But when there is only a single 'master' on the RS485 bus, there is no need for 
                 |            |
                GND          GND
 
+Wiring RS485 bus
+^^^^^^^^^^^^^^^^
+
+The RS485 bus transports a differential signal to all connected modules.
+
+There is some debate about whether the GND should also be connected, since the ``A`` and ``B`` line carry all what is needed.
+When there is no common GND among modules and the ESP board, the voltage on both A and B might be too high compared to the module's GND, which may cause damage to the module.
+So when possible, also wire the GND between modules and the GND of the RS485 transceiver chip.
+
+It is best to twist the A/B lines when using longer wires to reduce effects of noise.
+
+All modules on the same bus must be daisy chained from one to the other. 
+A star topology is not allowed.
+
+Most MAX485 modules already have a 120 Ohm resistor over the A/B pins.
+It is adviced to add another 120 Ohm resistor over the A/B connector of the last module on the bus to act as a 'terminator', to reduce signal reflections.
+For short links, a second 120 Ohm resistor is almost never needed, especially given the rather low baud rate used by these modules.
 
 
 Configuration
 -------------
 
+See: :ref:`SerialHelper_page`
+
+.. note:: All Eastron modules on the same ESPEasy node must use the same serial settings, like baud rate and serial port config.
 
 
-
-Sensor
-^^^^^^
+Set Baudrate/ID
+^^^^^^^^^^^^^^^
 
 The default baud rate of 2400 of most of these sensors may be too low for using Software Serial.
 On ESP8266, the module may rather frequently crash due to watch dog resets when running Software Serial at such low baud rates.
 
 It is adviced to set the module to 9600 baud.
-This can be done from within ESPEasy and on some modules it can be set using the menu on the module itself.
 
-Set Baudrate
-~~~~~~~~~~~~
+Using a higher baud rate will also take less resources of the ESPEasy node.
+For example, writing the 8 byte command to the module takes roughly 35 msec @2400 baud and only 13 msec @9600 baud.
 
-On some modules, like the SDM120, the baud rate can only be set via the Modbus interface.
+When running at 9600 baud, ESPEasy can typically read upto 10 registers per second for all connected Eastron modules.
+
+On some modules, like the SDM120, the module settings can only be set via the Modbus interface.
+
+When an Eastron task is enabled in ESPEasy, it will continously read the set registers on all connected Eastron modules.
+This will affect the commands used to change settings and thus this continous reading must be paused.
+
+The commands in ESPEasy to change settings have a last optional parameter ``node_id``, which is the current set address of the module.
+If none is given, the factory default address ``1`` is assumed.
+Valid node IDs are ``1 ... 247``.
+
+Steps to change settings:
+
+* Pause continously reading registers on the module by calling ``Eastron,Pause`` in ESPEasy.
+* Enable ``-set-`` mode on the module by pressing the button on the module for 3 seconds.
+* To change the baud rate, call ``Eastron,SetBaud,<new_baudrate>[,<node_id>]`` in ESPEasy, where the new baud rate parameter can be given either as a value ``0`` ... ``5``, or the exact (supported) baud rate. (see description below).
+* To change the node ID (address), call ``Eastron,SetID,<new_id>[,<node_id>]``.
+* Press the button on the module again for 3 seconds to save the new values.
+* Reading the set registers can be resumed with the command ``Eastron,Resume``
+
+Since changing the node ID is effective immediately, it makes sense to change the baud rate first and then the ID if both need to be changed.
+
+.. note:: The new baud rate will only be used after a power cycle of the module.
 
 
 
-See: :ref:`SerialHelper_page`
+
+Sensor
+------
 
 
-**TODO**: Complete this documentation...
 
 Commands available
-^^^^^^^^^^^^^^^^^^
+------------------
 
 .. include:: P078_commands.repl
 
@@ -156,9 +196,10 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |added| 2023-08-06: Add support for many more modules
-  |added| 2023-08-06: Add commands to set ID and baud rate
-  |added| 2023-08-06: Massively reduce use of resources when reading sensor
+  |added| 2023-08-06: 
+  * Add support for many more modules
+  * Add commands to set ID and baud rate
+  * Massively reduce use of resources when reading sensor
 
 .. versionadded:: 1.0
   ...
