@@ -2118,7 +2118,7 @@ void CPluginSetup()
   {
     const cpluginID_t cpluginID = getCPluginID_from_ProtocolIndex_(protocolIndex);
 
-    if (validCPluginID(cpluginID)) {
+    if (INVALID_C_PLUGIN_ID != cpluginID) {
       CPlugin_id_to_ProtocolIndex[cpluginID] = protocolIndex;
       struct EventStruct TempEvent;
       String dummy;
