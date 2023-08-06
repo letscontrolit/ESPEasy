@@ -14,7 +14,7 @@
 
 # define PLUGIN_078
 # define PLUGIN_ID_078         78
-# define PLUGIN_NAME_078       "Energy (AC) - Eastron SDM120/SDM120CT/220/230/630/72D/DDM18SD"
+# define PLUGIN_NAME_078       "Energy (AC) - Eastron SDMxxx Modbus"
 
 # define P078_NR_OUTPUT_VALUES                            4
 # define P078_NR_OUTPUT_OPTIONS_SDM220_SDM120CT_SDM120    14

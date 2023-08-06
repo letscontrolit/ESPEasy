@@ -28,18 +28,122 @@ Supported hardware
 
 |P078_usedby|
 
+Introduction
+------------
+
+Eastron is the manufacturer of many energy meters.
+These can be had in various form factors, from DIN rail modules to panel meters.
+There are many variations in number of phases, direct metering or using current transformer clamps (``CT`` in the name).
+
+Apart from all these differences in features, there are also variations in interfacing to read the meter.
+The ESPEasy plugin for these meters only can interact with them using Modbus RTU.
+
+This Modbus RTU protocol uses the half-duplex RS485 serial interface.
+
+
+RS485 Modbus Interface
+----------------------
+
+RS485 allows to 'daisy chain' various meters on to the same bus over long distances. (upto 1200 m).
+
+Interfacing RS485 devices with an ESP module requires some chip to convert typical serial signals to the differential signal required for RS485 devices.
+Commonly used chips are the MAX485 or ADM483, but there are lots of other variants which can also be used.
+
+Typically such a chip has a data input (``DI`` or ``D``) and data output (``RO`` or ``R``).
+To toggle between sending and listening, the ``DE`` pin must be pulled 'high' when sending data.
+
+The ``/RE`` pin is logically inverted and thus can be connected to the ``DE`` pin.
+This allows for a single GPIO pin to be used to toggle between sending and receiving data.
+
+.. note:: 
+  Most RS485 transceiver chips, like the MAX485, allow for a supply voltage (for the chip) higher than the 3.3V used for the ESP.
+  Keep in mind that the ``RO`` signal level will be close to the supplied voltage.
+  Meaning when you connect this chip to 5V, the signal connected to the RX pin on the ESP should be converted down to the lower 3.3V levels the ESP board uses.
+
+
+Manual switching of transmitter/receiver without collision detection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The most commonly used schematic for connecting a RS485 transceiver chip to a microcontroller, like the ESP boards:
+
+
+.. code-block::
+
+          VCC ---------------+
+                             |
+                     +-------x-------+
+          RXD <------| RO            |
+                     |              B|-----------<> B
+          TXD ------>| DI   ADM483   |
+  ESP                |               |     RS485 bus side
+          RTS --+--->| DE            |
+                |    |              A|-----------<> A
+                +----| /RE           |
+                     +-------x-------+
+                             |
+                            GND
+
+
+Collision detection circuit
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By connecting the ``/RE`` pin to GND, the transceiver chip has "receiving" enabled even when sending.
+This allows to detect "collision", when other devices are sending data when the ESP attempts to send data.
+
+Do not use this method on ESP8266 as this processor has no hardware support for collision detection.
+Only ESP32 can handle these kinds of setup.
+
+But when there is only a single 'master' on the RS485 bus, there is no need for using these kind of setup.
+
+.. code-block::
+
+          VCC ---------------+
+                             |
+                     +-------x-------+
+          RXD <------| R             |
+                     |              B|----------<> B
+          TXD ------>| D    ADM483   |
+  ESP32              |               |     RS485 bus side
+          RTS ------>| DE            |
+                     |              A|----------<> A
+                +----| /RE           |
+                |    +-------x-------+
+                |            |
+               GND          GND
+
+
+
+Configuration
+-------------
+
+
+
+
 Sensor
 ^^^^^^
+
+The default baud rate of 2400 of most of these sensors may be too low for using Software Serial.
+On ESP8266, the module may rather frequently crash due to watch dog resets when running Software Serial at such low baud rates.
+
+It is adviced to set the module to 9600 baud.
+This can be done from within ESPEasy and on some modules it can be set using the menu on the module itself.
+
+Set Baudrate
+~~~~~~~~~~~~
+
+On some modules, like the SDM120, the baud rate can only be set via the Modbus interface.
+
+
 
 See: :ref:`SerialHelper_page`
 
 
 **TODO**: Complete this documentation...
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P078_commands.repl
+.. include:: P078_commands.repl
 
 .. Events
 .. ~~~~~~
@@ -52,8 +156,9 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |added|
-  Major overhaul for 2.0 release.
+  |added| 2023-08-06: Add support for many more modules
+  |added| 2023-08-06: Add commands to set ID and baud rate
+  |added| 2023-08-06: Massively reduce use of resources when reading sensor
 
 .. versionadded:: 1.0
   ...
