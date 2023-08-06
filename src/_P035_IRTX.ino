@@ -6,6 +6,7 @@
 // #######################################################################################################
 //
 // Changelog:
+// 2023-07-25, tonhuisman:  Code optimization and deduplication, remove some commented code
 // 2023-07-22, tonhuisman:  Minor code improvements, show IRSENDAC command only in config page if included in build
 // 2023-07-21, tonhuisman:  Add 'Inverted output' option, as supported by the IRsend class.
 // 2022-08-08, tonhuisman:  Fix listProtocols()/listACProtocols() to ignore 1-character type names
@@ -104,17 +105,6 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P035_data) {
         success = P035_data->plugin_init(event);
       }
-      break;
-    }
-
-    case PLUGIN_EXIT:
-    {
-      P035_data_struct *P035_data = static_cast<P035_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P035_data) {
-        success = P035_data->plugin_exit(event);
-      }
-
       break;
     }
 

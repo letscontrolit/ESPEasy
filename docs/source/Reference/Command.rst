@@ -660,6 +660,12 @@ P095 :ref:`P095_page`
 
 See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
 
+P098 :ref:`P098_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P098_commands.repl
+
+
 P099 :ref:`P099_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
