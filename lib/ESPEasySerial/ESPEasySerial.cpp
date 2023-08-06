@@ -258,6 +258,17 @@ String ESPeasySerial::getLogString() const {
   return getSerialConfig().getLogString();
 }
 
+bool ESPeasySerial::setRS485Mode(int8_t rtsPin, bool enableCollisionDetection) {
+  if (_serialPort != nullptr) {
+    #ifdef ESP32
+    return _serialPort->setRS485Mode(rtsPin, enableCollisionDetection);
+    #else
+    return _serialPort->setRS485Mode(rtsPin, false);
+    #endif
+  }
+  return false;
+}
+
 bool ESPeasySerial::isValid() const {
   // FIXME TD-er: Must call isValid() on the individual _serialPort types
   return _serialPort != nullptr;

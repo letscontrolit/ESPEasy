@@ -40,6 +40,8 @@ public:
   size_t setRxBufferSize(size_t new_size);
   size_t setTxBufferSize(size_t new_size);
 
+  bool setRS485Mode(int8_t rtsPin, bool enableCollisionDetection = false);
+
 private:
 
 # if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
