@@ -38,8 +38,8 @@
 .. |P012_usedlibraries| replace:: `.`
 
 .. |P013_name| replace:: :cyan:`HC-SR04/RCW-0001`
-.. |P013_type| replace:: :cyan:`Position`
-.. |P013_typename| replace:: :cyan:`Position - HC-SR04/RCW-0001/etc.`
+.. |P013_type| replace:: :cyan:`Distance`
+.. |P013_typename| replace:: :cyan:`Distance - HC-SR04/RCW-0001/etc.`
 .. |P013_porttype| replace:: `.`
 .. |P013_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P013_github| replace:: P013_HCSR04.ino

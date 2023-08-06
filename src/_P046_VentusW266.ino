@@ -77,10 +77,14 @@
 // CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
-
+/** Changelog
+ * 2023-07-24 tonhuisman: Fix compilation issues
+ * 2023-07-23 tonhuisman: Add Changelog
+ *                        Only destruct plugin instance if the 'main' task is being stopped (PLUGIN_EXIT)
+ */
 
 //edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
-#ifdef PLUGIN_BUILD_DISABLED
+// #ifdef PLUGIN_BUILD_DISABLED
 
 #define PLUGIN_046_DEBUG            true                        // Shows received frames and crc in log@INFO
 
@@ -112,6 +116,8 @@ struct P046_data_struct {
   uint8_t Plugin_046_receivedData;                                   // Byte to store received bits
 
 };
+
+#include "./ESPEasy-Globals.h"
 
 P046_data_struct* P046_data = nullptr;
 
@@ -168,7 +174,8 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             F("Unknown 3, uint8_t 19"),
           };
 
-          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, nullptr, choice);
+          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, nullptr, choice, true);
+          addFormNote(F("Changing the function will reload this page."));
         }
 
         if (choice==0) {
@@ -270,7 +277,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
-        if (P046_data) {
+        if (P046_data && (PCONFIG(0) == 0)) { // Only destruct instance when main unit is stopped
           delete P046_data;
           P046_data = nullptr;
         }
@@ -336,7 +343,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             P046_data->Plugin_046_MasterSlave = false;
             P046_data->Plugin_046_newData = false;
             #ifndef BUILD_NO_DEBUG
-            if (PLUGIN_046_DEBUG) {
+            #if PLUGIN_046_DEBUG
               String log = F("Ventus W266 Rcvd(");
               log += node_time.getTimeString(':');
               log += F(") ");
@@ -359,8 +366,8 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
               if (myHex > 0x39) { myHex += 7; }
               log += myHex;
               addLogMove(LOG_LEVEL_INFO, log);
-            }
-            #endif
+            #endif // PLUGIN_046_DEBUG
+            #endif // BUILD_NO_DEBUG
             if (crc != 00)
             {
               P046_data->Plugin_046_databuffer[0] = 0;                   // Not MagicByte, so not valid.
@@ -529,5 +536,5 @@ void Plugin_046_ISR_SCLK()                                      // Interrupt on 
       }
     }
   }
-#endif // PLUGIN_BUILD_DISABLED
+// #endif // PLUGIN_BUILD_DISABLED
 #endif // USES_P046

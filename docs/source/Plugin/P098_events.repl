@@ -1,0 +1,32 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``<taskname>#limitA``
+   
+   Limit switch A is reached
+   ","
+   If limit switch A is configured, then this event will be generated once the switch is reached.
+   "
+   "
+   ``<taskname>#limitB``
+   
+   Limit switch B is reached
+   ","
+   If limit switch B is configured, then this event will be generated once the switch is reached.
+   "
+   "
+   ``<taskname>#positionReached``
+   
+   Requested position is reached
+   ","
+   After a command ``pwmmotor<command>[,<argument>]`` is completed, this event will be generated.
+   "
+   "
+   ``<taskname>#encoderTimeout``
+   
+   A time-out has occurred.
+   ","
+   The command took longer then the configured time-out duration, causing this event to be generated.
+   "

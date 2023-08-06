@@ -9,7 +9,9 @@
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 
-# define P141_FEATURE_CURSOR_XY_VALUES  1   // Enable availability of CursorX and CursorY values
+# ifndef P141_FEATURE_CURSOR_XY_VALUES
+#  define P141_FEATURE_CURSOR_XY_VALUES  1  // Enable availability of CursorX and CursorY values
+# endif // ifndef P141_FEATURE_CURSOR_XY_VALUES
 
 # ifdef LIMIT_BUILD_SIZE
 #  if P141_FEATURE_CURSOR_XY_VALUES
@@ -88,7 +90,7 @@ public:
                    uint16_t            bgcolor         = ADAGFX_BLACK,
                    bool                textBackFill    = true,
                    bool                displayInverted = false);
-  P141_data_struct() = delete;
+  P141_data_struct()                                   = delete;
   virtual ~P141_data_struct();
 
   bool plugin_init(struct EventStruct *event);
@@ -122,10 +124,10 @@ private:
   Adafruit_PCD8544   *pcd8544   = nullptr;
   AdafruitGFX_helper *gfxHelper = nullptr;
 
-  uint16_t _xpix = 84; // Fixed size
-  uint16_t _ypix = 48;
-  uint16_t _textcols = 0;
-  uint16_t _textrows = 0;
+  uint16_t _xpix         = 84; // Fixed size
+  uint16_t _ypix         = 48;
+  uint16_t _textcols     = 0;
+  uint16_t _textrows     = 0;
   uint8_t  _fontwidth    = 6; // Default font characteristics
   uint8_t  _fontheight   = 10;
   uint8_t  _heightOffset = 0;
