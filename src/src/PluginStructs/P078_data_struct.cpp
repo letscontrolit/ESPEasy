@@ -459,22 +459,54 @@ void SDM_loopRegisterReadQueue(SDM *sdm)
 
   if (it == _SDM_RegisterReadQueue.end()) { return; }
 
-  if (it->_state == 0) {
-    sdm->startReadVal(it->_reg, it->_dev_id);
-    it->_state = 1;
-  } else {
+  if (it->_state == 1) {
     uint16_t readErr = sdm->readValReady(it->_dev_id);
 
     if (readErr == SDM_ERR_STILL_WAITING) { return; }
 
     if (readErr == SDM_ERR_NO_ERROR) {
-      UserVar.setFloat(it->taskIndex, it->taskVarIndex, sdm->decodeFloatValue());
+      const float value = sdm->decodeFloatValue();
+      UserVar.setFloat(it->taskIndex, it->taskVarIndex, value);
+
+# if FEATURE_PLUGIN_STATS
+      PluginTaskData_base *taskdata = getPluginTaskDataBaseClassOnly(it->taskIndex);
+
+      if (taskdata != nullptr) {
+        if (taskdata->getPluginStats(it->taskVarIndex) != nullptr) {
+          taskdata->getPluginStats(it->taskVarIndex)->trackPeak(value);
+        }
+      }
+# endif // if FEATURE_PLUGIN_STATS
     } else {
       sdm->clearErrCode();
     }
     it->_state = 0;
     _SDM_RegisterReadQueue.emplace_back(*it);
     _SDM_RegisterReadQueue.pop_front();
+    it = _SDM_RegisterReadQueue.begin();
+  }
+
+  if (it->_state == 0) {
+    sdm->startReadVal(it->_reg, it->_dev_id);
+    it->_state = 1;
+  }
+}
+
+void SDM_pause_loopRegisterReadQueue()
+{
+  auto it = _SDM_RegisterReadQueue.begin();
+
+  if (it != _SDM_RegisterReadQueue.end()) {
+    it->_state = 2;
+  }
+}
+
+void SDM_resume_loopRegisterReadQueue()
+{
+  auto it = _SDM_RegisterReadQueue.begin();
+
+  if (it != _SDM_RegisterReadQueue.end()) {
+    it->_state = 0;
   }
 }
 

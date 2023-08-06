@@ -251,12 +251,67 @@
 //---------------------------------------------------------------------------------------------------------
 //      REGISTER NAME                                 REGISTER ADDRESS              UNIT        | DEVNAME |
 //---------------------------------------------------------------------------------------------------------
+
+// Read minutes into first demand calculation. 
+// When the Demand Time reaches the Demand Period
+// then the demand values are valid.
 #define SDM_HOLDING_DEMAND_TIME                       0x0000
+
+// Write demand period: 0~60 minutes.
+// Default 60.
+// Range: 0~60, 0 means function disabled
 #define SDM_HOLDING_DEMAND_PERIOD                     0x0002
+
+// Write relay on period in milliseconds: 
+// 60, 100 or 200 ms.
+// default: 100 ms
 #define SDM_HOLDING_RELAY_PULSE_WIDTH                 0x000C
-#define SDM_HOLDING_NETWORK_PARITY_STOP               0x0012
+
+// Parity / stop bit settings:
+// 0 = One stop bit and no parity, default. 
+// 1 = One stop bit and even parity. 
+// 2 = One s top bit and odd parity.
+// 3 = Two stop bits and no parity.
+// Requires a restart to become effective.
+#define SDM_HOLDING_NETWORK_PARITY_STOP               0x0012  
+
+// Ranges from 1 to 247. Default ID is 1.
 #define SDM_HOLDING_METER_ID                          0x0014
+
+// Write the network port baud rate for MODBUS Protocol, where:
+/*
+SDM120 / SDM230:
+  0 = 2400 baud (default)
+  1 = 4800 baud
+  2 = 9600 baud
+  5 = 1200 baud
+
+SDM320 / SDM530Y:
+  0 = 2400 baud
+  1 = 4800 baud
+  2 = 9600 baud (default)
+  5 = 1200 band
+
+SDM630 / SDM72 / SDM72V2:
+  0 = 2400 baud
+  1 = 4800 baud
+  2 = 9600 baud (default)
+  3 = 19200 baud
+  4 = 38400 baud
+*/
 #define SDM_HOLDING_BAUD_RATE                         0x001C
+
+// Write MODBUS Protocol input parameter for pulse out 1:
+// 1: Import active energy
+// 2: Import + export (total) active energy 
+// 4: Export active energy (default).
+// 5: Import reactive energy
+// 6: Import + export (total) reactive energy
+// 8: Export reactive energy
+#define SDM_HOLDING_PULSE_1_OUTPUT_MODE               0x0056
+
+
+
 #define SDM_HOLDING_SERIAL_NUMBER                     0xFC00
 #define SDM_HOLDING_SOFTWARE_VERSION                  0xFC03
 

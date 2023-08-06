@@ -29,8 +29,8 @@
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
 ESPeasySerial *Plugin_078_ESPEasySerial = nullptr;
-SDM *Plugin_078_SDM                  = nullptr;
-boolean Plugin_078_init              = false;
+SDM *Plugin_078_SDM                     = nullptr;
+boolean Plugin_078_init                 = false;
 
 boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -53,6 +53,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].TaskLogsOwnPeaks   = true;
       break;
     }
 
@@ -226,6 +227,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         delete Plugin_078_SDM;
         Plugin_078_SDM = nullptr;
       }
+
       if (Plugin_078_ESPEasySerial->setRS485Mode(P078_DEPIN)) {
         Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate);
       } else {
@@ -241,28 +243,29 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
         SDM_MODEL model  = static_cast<SDM_MODEL>(P078_MODEL);
         uint8_t   dev_id = P078_DEV_ID;
-/*
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          log = F("Eastron: SN: ");
-          log += Plugin_078_SDM->getSerialNumber(dev_id);
-          log += ',';
-          log += Plugin_078_SDM->getErrCode(true);
-          log += F(" SW-ver: ");
-          log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_SOFTWARE_VERSION, dev_id);
-          log += ',';
-          log += Plugin_078_SDM->getErrCode(true);
-          log += F(" ID: ");
-          log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_METER_ID, dev_id);
-          log += ',';
-          log += Plugin_078_SDM->getErrCode(true);
-          log += F(" baudrate: ");
-          log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_BAUD_RATE, dev_id);
-          log += ',';
-          log += Plugin_078_SDM->getErrCode(true);
-          addLogMove(LOG_LEVEL_INFO, log);
-        }
-*/
+
+        /*
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log;
+                  log = F("Eastron: SN: ");
+                  log += Plugin_078_SDM->getSerialNumber(dev_id);
+                  log += ',';
+                  log += Plugin_078_SDM->getErrCode(true);
+                  log += F(" SW-ver: ");
+                  log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_SOFTWARE_VERSION, dev_id);
+                  log += ',';
+                  log += Plugin_078_SDM->getErrCode(true);
+                  log += F(" ID: ");
+                  log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_METER_ID, dev_id);
+                  log += ',';
+                  log += Plugin_078_SDM->getErrCode(true);
+                  log += F(" baudrate: ");
+                  log += Plugin_078_SDM->readHoldingRegister(SDM_HOLDING_BAUD_RATE, dev_id);
+                  log += ',';
+                  log += Plugin_078_SDM->getErrCode(true);
+                  addLogMove(LOG_LEVEL_INFO, log);
+                }
+         */
         for (taskVarIndex_t i = 0; i < VARS_PER_TASK; ++i) {
           const uint16_t reg = SDM_getRegisterForModel(model, PCONFIG((P078_QUERY1_CONFIG_POS) + i));
           SDM_addRegisterReadQueueElement(event->TaskIndex, i, reg, dev_id);
@@ -306,6 +309,79 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       {
         success = true;
         break;
+      }
+      break;
+    }
+
+    case PLUGIN_WRITE:
+    {
+      if (Plugin_078_init && (Plugin_078_SDM != nullptr)) {
+        const String cmd = parseString(string, 1);
+
+        if (equals(cmd, F("eastron"))) {
+          const String subcmd = parseString(string, 2);
+
+          if (equals(subcmd, F("pause"))) {
+            SDM_pause_loopRegisterReadQueue();
+            success = true;
+          } else if (equals(subcmd, F("resume"))) {
+            SDM_resume_loopRegisterReadQueue();
+            success = true;
+          } else {
+            uint8_t node_id = event->Par3;
+
+            if ((node_id < 1) || (node_id > 247)) { node_id = 1; }
+
+            if (equals(subcmd, F("setid"))) {
+              // Example command: eastron,setid,<new_id>[,<node_id>]
+
+              const uint8_t new_id = event->Par2;
+
+              if ((new_id >= 1) && (new_id <= 247) && (new_id != node_id)) {
+                success = Plugin_078_SDM->writeHoldingRegister(new_id, SDM_HOLDING_METER_ID, node_id);
+              }
+            } else if (equals(subcmd, F("setbaud"))) {
+              // Example command: eastron,setbaud,<new_baudrate>[,<id>]
+
+              /*
+                 SDM120 / SDM230:
+                 0 = 2400 baud (default)
+                 1 = 4800 baud
+                 2 = 9600 baud
+                 5 = 1200 baud
+
+                 SDM320 / SDM530Y:
+                 0 = 2400 baud
+                 1 = 4800 baud
+                 2 = 9600 baud (default)
+                 5 = 1200 band
+
+                 SDM630 / SDM72 / SDM72V2:
+                 0 = 2400 baud
+                 1 = 4800 baud
+                 2 = 9600 baud (default)
+                 3 = 19200 baud
+                 4 = 38400 baud
+               */
+              int new_baud = event->Par2;
+
+              if (new_baud > 5) {
+                const int baudrates[]     = { 2400, 4800, 9600, 19200, 38400, 1200 };
+                constexpr int nrBaudRates = sizeof(baudrates) / sizeof(baudrates[0]);
+
+                for (int i = 0; i < nrBaudRates && new_baud > 5; ++i) {
+                  if (new_baud == baudrates[i]) {
+                    new_baud = baudrates[i];
+                  }
+                }
+              }
+
+              if ((new_baud >= 0) && (new_baud <= 5)) {
+                success = Plugin_078_SDM->writeHoldingRegister(new_baud, SDM_HOLDING_BAUD_RATE, node_id);
+              }
+            }
+          }
+        }
       }
       break;
     }

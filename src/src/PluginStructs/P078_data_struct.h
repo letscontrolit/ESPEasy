@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 #ifdef USES_P078
-#include "../../_Plugin_Helper.h"
+# include "../../_Plugin_Helper.h"
 # include <ESPeasySerial.h>
 
 # include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
@@ -169,6 +169,10 @@ void SDM_addRegisterReadQueueElement(taskIndex_t    TaskIndex,
                                      uint8_t        dev_id);
 
 void SDM_loopRegisterReadQueue(SDM *sdm);
+
+void SDM_pause_loopRegisterReadQueue();
+
+void SDM_resume_loopRegisterReadQueue();
 
 #endif // ifdef USES_P078
 
