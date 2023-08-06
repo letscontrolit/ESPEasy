@@ -277,6 +277,10 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           const uint16_t reg = SDM_getRegisterForModel(model, PCONFIG((P078_QUERY1_CONFIG_POS) + i));
           SDM_addRegisterReadQueueElement(event->TaskIndex, i, reg, dev_id);
         }
+
+        // Need a few seconds to read the first sample, so trigger a new read a few seconds after init.
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 2000);
+
       }
       break;
     }
