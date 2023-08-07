@@ -78,6 +78,20 @@ void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional, bool 
   event->String2 = formatGpioName_serialTX(txOptional);
 }
 
+void serialHelper_modbus_getGpioNames(struct EventStruct *event,
+                               bool                rxOptional,
+                               bool                txOptional,
+                               bool                DE_RE_optional)
+{
+  serialHelper_getGpioNames(event, rxOptional, txOptional);
+  event->String1.replace(F("TX"), F("TX (RO)"));
+  event->String2.replace(F("RX"), F("RX (DI)"));
+  if (DE_RE_optional)
+    event->String3 = formatGpioName_output_optional(F("~RE/DE"));
+  else 
+    event->String3 = formatGpioName_output(F("~RE/DE"));
+}
+
 int8_t serialHelper_getRxPin(struct EventStruct *event) {
   return CONFIG_PIN1;
 }
