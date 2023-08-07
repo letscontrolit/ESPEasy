@@ -76,10 +76,10 @@ void run_compiletime_checks() {
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   #ifdef ESP32
-  const unsigned int SettingsStructSize = (336 + 84 * TASKS_MAX);
+  constexpr unsigned int SettingsStructSize = (340 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  const unsigned int SettingsStructSize = (312 + 84 * TASKS_MAX);
+  constexpr unsigned int SettingsStructSize = (316 + 84 * TASKS_MAX);
   #endif
   #if FEATURE_CUSTOM_PROVISIONING
   check_size<ProvisioningStruct,                    256u>();  
@@ -124,7 +124,7 @@ void run_compiletime_checks() {
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
   #ifdef USES_C013
-  check_size<C013_SensorInfoStruct,                 137u>();
+  check_size<C013_SensorInfoStruct,                 138u>();
   check_size<C013_SensorDataStruct,                 24u>();
   #endif
   #ifdef USES_C016

@@ -1,7 +1,7 @@
 #ifndef HELPERS_STRINGGENERATOR_PLUGIN_H
 #define HELPERS_STRINGGENERATOR_PLUGIN_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 
 // Generate string with appending nr (when > 0)

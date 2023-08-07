@@ -665,13 +665,13 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
           }
           case 1: // % => percentage of mapping
           {
-            double inputDouble;
-            double mappingDouble;
+            ESPEASY_RULES_FLOAT_TYPE inputDouble;
+            ESPEASY_RULES_FLOAT_TYPE mappingDouble;
 
             if (validDoubleFromString(input, inputDouble) &&
                 validDoubleFromString(valu, mappingDouble)) {
               if (compareDoubleValues('>', mappingDouble, 0.0)) {
-                double resultDouble = (100.0 / mappingDouble) * inputDouble; // Simple calculation to percentage
+                ESPEASY_RULES_FLOAT_TYPE resultDouble = (static_cast<ESPEASY_RULES_FLOAT_TYPE>(100) / mappingDouble) * inputDouble; // Simple calculation to percentage
                 int8_t decimals     = 0;
                 int8_t dotPos       = input.indexOf('.');
 
@@ -774,7 +774,7 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
     String  filters = P037_FILTER_LIST;
     String  valueData = value;
     String  fltKey, fltIndex, filterData, fltOper;
-    double  from, to, doubleValue;
+    ESPEASY_RULES_FLOAT_TYPE  from, to, doubleValue;
     int8_t  rangeSeparator;
     bool    accept       = true;
     bool    matchTopicId = true;

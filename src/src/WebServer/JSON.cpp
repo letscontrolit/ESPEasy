@@ -14,6 +14,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/NPlugins.h"
 
+#include "../Helpers/_Plugin_init.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -264,7 +265,7 @@ void handle_json()
         LabelType::FORCE_ESPEASY_NOW_CHANNEL,
 #endif
         LabelType::CONNECTION_FAIL_THRESH,
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
         LabelType::WIFI_TX_MAX_PWR,
         LabelType::WIFI_CUR_TX_PWR,
         LabelType::WIFI_SENS_MARGIN,
@@ -337,7 +338,7 @@ void handle_json()
           if (rssi < 0) {
             stream_next_json_object_value(F("rssi"), rssi);
           }
-          stream_next_json_object_value(F("ip"), it->second.IP().toString());
+          stream_next_json_object_value(F("ip"), formatIP(it->second.IP()));
           stream_last_json_object_value(F("age"), it->second.getAge());
         } // if node info exists
       }   // for loop
@@ -545,7 +546,7 @@ void handle_nodes_list_json() {
 
       if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
       json_prop(F("type"), it->second.getNodeTypeDisplayString());
-      json_prop(F("ip"),   it->second.ip.toString());
+      json_prop(F("ip"),   formatIP(it->second.ip));
       json_number(F("age"), String(it->second.getAge() / 1000)); // time in seconds
       json_close();
     }
@@ -564,9 +565,10 @@ void handle_buildinfo() {
     json_open(true, F("plugins"));
 
     for (deviceIndex_t x = 0; x <= deviceCount; x++) {
-      if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
+      const pluginID_t pluginID = getPluginID_from_DeviceIndex(x);
+      if (validPluginID(pluginID)) {
         json_open();
-        json_number(F("id"), String(DeviceIndex_to_Plugin_id[x]));
+        json_number(F("id"), String(pluginID));
         json_prop(F("name"), getPluginNameFromDeviceIndex(x));
         json_close();
       }

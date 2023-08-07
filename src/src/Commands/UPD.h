@@ -3,7 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
 String Command_UDP_Port(struct EventStruct *event, const char* Line);
 
 #if FEATURE_ESPEASY_P2P

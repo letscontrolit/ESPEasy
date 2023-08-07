@@ -5,6 +5,8 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/Networking.h"
 
+#include <ETH.h>
+
 // Bit numbers for Eth status
 #define ESPEASY_ETH_CONNECTED               0
 #define ESPEASY_ETH_GOT_IP                  1
@@ -97,11 +99,11 @@ void EthernetEventData_t::setEthConnected() {
 bool EthernetEventData_t::setEthServicesInitialized() {
   if (!unprocessedEthEvents() && !EthServicesInitialized()) {
     if (EthGotIP() && EthConnected()) {
-      if (valid_DNS_address(WiFi.dnsIP(0))) {
-        dns0_cache = WiFi.dnsIP(0);
+      if (valid_DNS_address(ETH.dnsIP(0))) {
+        dns0_cache = ETH.dnsIP(0);
       }
-      if (valid_DNS_address(WiFi.dnsIP(1))) {
-        dns1_cache = WiFi.dnsIP(1);
+      if (valid_DNS_address(ETH.dnsIP(1))) {
+        dns1_cache = ETH.dnsIP(1);
       }
 
       #ifndef BUILD_NO_DEBUG

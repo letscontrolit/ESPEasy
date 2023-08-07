@@ -2,16 +2,18 @@
 
 #ifdef USES_C016
 
-#include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../Globals/Plugins.h"
-#include "../Globals/RuntimeData.h"
-#include "../Helpers/ESPEasy_math.h"
+# include "../DataStructs/ESPEasy_EventStruct.h"
+# include "../Globals/Plugins.h"
+# include "../Globals/RuntimeData.h"
+# include "../Helpers/_Plugin_SensorTypeHelper.h"
+# include "../Helpers/ESPEasy_math.h"
 
 C016_queue_element::C016_queue_element() :  sensorType(
     Sensor_VType::SENSOR_TYPE_NONE) {
   _timestamp      = 0;
   _controller_idx = 0;
   _taskIndex      = INVALID_TASK_INDEX;
+  values.clear();
 }
 
 C016_queue_element::C016_queue_element(C016_queue_element&& other)
@@ -21,10 +23,7 @@ C016_queue_element::C016_queue_element(C016_queue_element&& other)
   _timestamp      = other._timestamp;
   _controller_idx = other._controller_idx;
   _taskIndex      = other._taskIndex;
-
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    values[i] = other.values[i];
-  }
+  values          = other.values;
 }
 
 C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count) :
@@ -34,12 +33,12 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t 
 {
   _controller_idx = event->ControllerIndex;
   _taskIndex      = event->TaskIndex;
+  values.clear();
+  const TaskValues_Data_t* data = UserVar.getTaskValues_Data(event->TaskIndex);
 
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if ((i < value_count) && validTaskIndex(event->TaskIndex)) {
-      values[i] = UserVar[event->BaseVarIndex + i];
-    } else {
-      values[i] = 0.0f;
+  if (data != nullptr) {
+    for (uint8_t i = 0; i < value_count; ++i) {
+      values.copyValue(*data, i, sensorType);
     }
   }
 }
@@ -51,10 +50,8 @@ C016_queue_element& C016_queue_element::operator=(C016_queue_element&& other) {
   sensorType      = other.sensorType;
   valueCount      = other.valueCount;
   unixTime        = other.unixTime;
+  values          = other.values;
 
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    values[i] = other.values[i];
-  }
   return *this;
 }
 
@@ -72,9 +69,15 @@ bool C016_queue_element::isDuplicate(const Queue_element_base& other) const {
     return false;
   }
 
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (!essentiallyEqual(oth.values[i], values[i])) {
-      return false;
+  for (uint8_t i = 0; i < valueCount; ++i) {
+    if (isFloatOutputDataType(sensorType)) {
+      if (!essentiallyEqual(oth.values.getFloat(i), values.getFloat(i))) {
+        return false;
+      }
+    } else {
+      if (oth.values.getUint32(i) != values.getUint32(i)) {
+        return false;
+      }
     }
   }
   return true;
@@ -83,13 +86,11 @@ bool C016_queue_element::isDuplicate(const Queue_element_base& other) const {
 C016_binary_element C016_queue_element::getBinary() const {
   C016_binary_element element;
 
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    element.values[i] = values[i];
-  }
   element.unixTime   = unixTime;
   element.TaskIndex  = _taskIndex;
   element.sensorType = sensorType;
   element.valueCount = valueCount;
+  element.values     = values;
 
   // It makes no sense to keep the controller index when storing it.
   // re-purpose it to store the pluginID

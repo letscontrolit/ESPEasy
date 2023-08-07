@@ -12,6 +12,7 @@
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 
+
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
  #define DEFAULT_SPI 0
@@ -226,6 +227,22 @@ class SettingsStruct_tmpl
   // Return the name of the unit, without unitnr appended, with template parsing applied, replacement for Settings.Name in most places
   String getName() const;
 
+private:
+
+  // Compute the index in either 
+  // - PinBootStates array (index_low) or 
+  // - PinBootStates_ESP32 (index_high)
+  // Returns whether it is a valid index
+  bool getPinBootStateIndex(
+    uint8_t gpio_pin, 
+    int8_t& index_low
+    #ifdef ESP32
+    , int8_t& index_high
+    #endif
+    ) const;
+  
+public:
+
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);
 
@@ -383,12 +400,14 @@ class SettingsStruct_tmpl
 
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
-  uint8_t       md5[16]{}; // Store checksum of the settings.
-  
-//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-
+  uint8_t       md5[16]; // Store checksum of the settings.
   uint32_t      VariousBits2 = 0;
 
+  uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 
+  int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+  int8_t        console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+  uint8_t       console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
+  
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };
 

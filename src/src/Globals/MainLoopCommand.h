@@ -1,7 +1,7 @@
 #ifndef GLOBALS_MAINLOOPCOMMAND_H
 #define GLOBALS_MAINLOOPCOMMAND_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 extern uint8_t cmd_within_mainloop;
 

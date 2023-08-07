@@ -1,7 +1,7 @@
 #ifndef GLOBALS_PLUGIN_OTHER_H
 #define GLOBALS_PLUGIN_OTHER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
 

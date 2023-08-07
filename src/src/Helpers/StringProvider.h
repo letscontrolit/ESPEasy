@@ -22,7 +22,7 @@ struct LabelType {
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
     CPU_ECO_MODE,        // true
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     WIFI_TX_MAX_PWR,     // Unit: 0.25 dBm, 0 = use default (do not set)
     WIFI_CUR_TX_PWR,     // Unit dBm of current WiFi TX power.
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
@@ -61,6 +61,12 @@ struct LabelType {
     JSON_BOOL_QUOTES,
     ENABLE_TIMING_STATISTICS,
     ENABLE_RULES_CACHING,
+    ENABLE_SERIAL_PORT_CONSOLE,
+    CONSOLE_SERIAL_PORT,
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    CONSOLE_FALLBACK_TO_SERIAL0,
+    CONSOLE_FALLBACK_PORT,
+#endif
 //    ENABLE_RULES_EVENT_REORDER, // TD-er: Disabled for now
     TASKVALUESET_ALL_PLUGINS,
     ALLOW_OTA_UNLIMITED,
@@ -130,6 +136,9 @@ struct LabelType {
     BINARY_FILENAME,
     BUILD_PLATFORM,
     GIT_HEAD,
+    #ifdef CONFIGURATION_CODE
+    CONFIGURATION_CODE_LBL,
+    #endif // ifdef CONFIGURATION_CODE
 
 
     I2C_BUS_STATE,

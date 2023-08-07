@@ -16,10 +16,13 @@ P020_Task::P020_Task(struct EventStruct *event) : _taskIndex(event->TaskIndex) {
   if (P020_GET_LED_ENABLED) {
     _ledPin = P020_LED_PIN; // Default pin (12) is already initialized in P020_Task
   }
-  _ledEnabled  = P020_GET_LED_ENABLED == 1;
-  _ledInverted = P020_GET_LED_INVERTED == 1;
-  _space       = static_cast<char>(P020_REPLACE_SPACE);
-  _newline     = static_cast<char>(P020_REPLACE_NEWLINE);
+  _ledEnabled   = P020_GET_LED_ENABLED == 1;
+  _ledInverted  = P020_GET_LED_INVERTED == 1;
+  _space        = static_cast<char>(P020_REPLACE_SPACE);
+  _newline      = static_cast<char>(P020_REPLACE_NEWLINE);
+  _port         = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+  _serialId     = P020_GET_EVENT_SERIAL_ID;
+  _appendTaskId = P020_GET_APPEND_TASK_ID;
 }
 
 P020_Task::~P020_Task() {
@@ -55,10 +58,9 @@ void P020_Task::startServer(uint16_t portnumber) {
     ser2netServer->begin();
 
     if (serverActive(ser2netServer)) {
-      addLog(LOG_LEVEL_INFO, String(F("Ser2Net  : WiFi server started at port ")) + portnumber);
+      addLog(LOG_LEVEL_INFO, concat(F("Ser2Net: WiFi server started at port "), portnumber));
     } else {
-      addLog(LOG_LEVEL_ERROR, String(F("Ser2Net   : WiFi server start failed at port ")) +
-             portnumber + String(F(", retrying...")));
+      addLog(LOG_LEVEL_ERROR, concat(F("Ser2Net: WiFi server start failed at port "), portnumber) + F(", retrying..."));
     }
   }
 }
@@ -69,7 +71,7 @@ void P020_Task::checkServer() {
     ser2netServer->begin();
 
     if (serverActive(ser2netServer)) {
-      addLog(LOG_LEVEL_INFO, F("Ser2net   : WiFi server started"));
+      addLog(LOG_LEVEL_INFO, F("Ser2Net: WiFi server started"));
     }
   }
 }
@@ -79,7 +81,7 @@ void P020_Task::stopServer() {
     if (ser2netClient) { ser2netClient.stop(); }
     clientConnected = false;
     ser2netServer->close();
-    addLog(LOG_LEVEL_INFO, F("Ser2net   : WiFi server closed"));
+    addLog(LOG_LEVEL_INFO, F("Ser2Net: WiFi server closed"));
     delete ser2netServer;
     ser2netServer = nullptr;
   }
@@ -102,7 +104,7 @@ bool P020_Task::hasClientConnected() {
     # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
     sendConnectedEvent(true);
-    addLog(LOG_LEVEL_INFO, F("Ser2Net   : Client connected!"));
+    addLog(LOG_LEVEL_INFO, F("Ser2Net: Client connected!"));
   }
 
   if (ser2netClient.connected())
@@ -115,7 +117,7 @@ bool P020_Task::hasClientConnected() {
     {
       clientConnected = false;
       sendConnectedEvent(false);
-      addLog(LOG_LEVEL_INFO, F("Ser2net   : Client disconnected!"));
+      addLog(LOG_LEVEL_INFO, F("Ser2Net: Client disconnected!"));
     }
   }
   return clientConnected;
@@ -140,7 +142,7 @@ void P020_Task::clearBuffer() {
 void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, unsigned long baud, uint8_t config) {
   serialEnd();
 
-  if (rxPin >= 0) {
+  if (ESPEasySerialPort::not_set != port) {
     ser2netSerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin);
 
     if (nullptr != ser2netSerial) {
@@ -150,7 +152,7 @@ void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t
       ser2netSerial->begin(baud, config);
       # endif // if defined(ESP8266)
       # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("Ser2net   : Serial opened"));
+      addLog(LOG_LEVEL_DEBUG, F("Ser2Net: Serial opened"));
       # endif // ifndef BUILD_NO_DEBUG
     }
   }
@@ -162,7 +164,7 @@ void P020_Task::serialEnd() {
     clearBuffer();
     ser2netSerial = nullptr;
     # ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, F("Ser2net   : Serial closed"));
+    addLog(LOG_LEVEL_DEBUG, F("Ser2Net: Serial closed"));
     # endif // ifndef BUILD_NO_DEBUG
   }
 }
@@ -195,7 +197,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
       if ((serial_processing != P020_Events::P1WiFiGateway) // P1 handling without this check
           && (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER))) {
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
+        addLog(LOG_LEVEL_DEBUG, F("Ser2Net: Error: Buffer overflow, discarded input."));
         # endif // ifndef BUILD_NO_DEBUG
         ser2netSerial->read();
       }
@@ -239,7 +241,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
     ser2netClient.flush();
     clearBuffer();
     # ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : data send!"));
+    addLog(LOG_LEVEL_DEBUG, F("Ser2Net: data send!"));
     # endif // ifndef BUILD_NO_DEBUG
   } // done
 }
@@ -254,7 +256,7 @@ void P020_Task::discardSerialIn() {
 
 // We can also use the rules engine for local control!
 void P020_Task::rulesEngine(const String& message) {
-  if (!Settings.UseRules || message.isEmpty()) { return; }
+  if (!Settings.UseRules || message.isEmpty() || (P020_Events::None == serial_processing)) { return; }
   int NewLinePos    = 0;
   uint16_t StartPos = 0;
 
@@ -280,7 +282,18 @@ void P020_Task::rulesEngine(const String& message) {
       case P020_Events::None: { break; }
       case P020_Events::Generic: { // Generic
         if (NewLinePos > StartPos) {
-          eventString  = F("!Serial#");
+          eventString = '!';       // F("!Serial");
+
+          if (_serialId) {
+            eventString += ESPEasySerialPort_toString(_port, true);
+          } else {
+            eventString += F("Serial");
+          }
+
+          if (_appendTaskId) {
+            eventString += (_taskIndex + 1);
+          }
+          eventString += '#';
           eventString += message.substring(StartPos, NewLinePos);
         }
         break;
@@ -291,10 +304,15 @@ void P020_Task::rulesEngine(const String& message) {
         if (message.substring(StartPos, NewLinePos)
             .startsWith(F("ESPEASY"))) { // Special treatment for gpio values, strip unneeded parts...
           StartPos   += 8;               // Strip "ESPEASY;"
-          eventString = F("RFLink#");
+          eventString = F("RFLink");
         } else {
-          eventString = F("!RFLink#");   // default event as it comes in, literal match needed in rules, using '!'
+          eventString = F("!RFLink");    // default event as it comes in, literal match needed in rules, using '!'
         }
+
+        if (_appendTaskId) {
+          eventString += (_taskIndex + 1);
+        }
+        eventString += '#';
 
         if (NewLinePos > StartPos) {
           eventString += message.substring(StartPos, NewLinePos);

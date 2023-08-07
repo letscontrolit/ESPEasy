@@ -1,21 +1,9 @@
 #ifndef HELPER_CPLUGIN_SENSORTYPEHELPER_H
 #define HELPER_CPLUGIN_SENSORTYPEHELPER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../DataStructs/DeviceStruct.h"
-
-/*********************************************************************************************\
-   Get value count from sensor type
-
-   Only use this function to determine nr of output values when changing output type of a task
-   To get the actual output values for a task, use getValueCountForTask
-\*********************************************************************************************/
-uint8_t getValueCountFromSensorType(Sensor_VType sensorType);
-
-bool isSimpleOutputDataType(Sensor_VType sensorType);
-
-const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType);
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pconfigIndex);
 

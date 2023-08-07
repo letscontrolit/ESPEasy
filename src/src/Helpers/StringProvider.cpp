@@ -14,6 +14,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #endif
 
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -65,7 +66,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
     case LabelType::CPU_ECO_MODE:           return F("CPU Eco Mode");
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:        return F("Max WiFi TX Power");
     case LabelType::WIFI_CUR_TX_PWR:        return F("Current WiFi TX Power");
     case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
@@ -105,6 +106,13 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:           return F("JSON bool output without quotes");
     case LabelType::ENABLE_TIMING_STATISTICS:   return F("Collect Timing Statistics");
     case LabelType::ENABLE_RULES_CACHING:       return F("Enable Rules Cache");
+    case LabelType::ENABLE_SERIAL_PORT_CONSOLE: return F("Enable Serial Port Console");
+    case LabelType::CONSOLE_SERIAL_PORT:        return F("Console Serial Port");
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    case LabelType::CONSOLE_FALLBACK_TO_SERIAL0: return F("Fallback to Serial 0");
+    case LabelType::CONSOLE_FALLBACK_PORT:       return F("Console Fallback Port");
+#endif
+
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return F("Optimize Rules Cache Event Order"); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return F("Allow TaskValueSet on all plugins");
     case LabelType::ALLOW_OTA_UNLIMITED:        return F("Allow OTA without size-check");
@@ -176,6 +184,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
     case LabelType::BUILD_PLATFORM:         return F("Build Platform");
     case LabelType::GIT_HEAD:               return F("Git HEAD");
+    #ifdef CONFIGURATION_CODE
+    case LabelType::CONFIGURATION_CODE_LBL: return F("Configuration code");
+    #endif // ifdef CONFIGURATION_CODE
 
     case LabelType::I2C_BUS_STATE:          return F("I2C Bus State");
     case LabelType::I2C_BUS_CLEARED_COUNT:  return F("I2C bus cleared count");
@@ -258,13 +269,10 @@ String getValue(LabelType::Enum label) {
   {
     case LabelType::UNIT_NR:                return String(Settings.Unit);
     #if FEATURE_ZEROFILLED_UNITNUMBER
-    case LabelType::UNIT_NR_0: // Fixed 3-digit unitnumber
+    case LabelType::UNIT_NR_0: 
     {
-      String _unit;
-      if (Settings.Unit < 10) { _unit += '0'; }
-      if (Settings.Unit < 100) { _unit += '0'; }
-      _unit += Settings.Unit;
-      return _unit;
+      // Fixed 3-digit unitnumber
+      return formatIntLeadingZeroes(Settings.Unit, 3);
     }
     #endif // FEATURE_ZEROFILLED_UNITNUMBER
     case LabelType::UNIT_NAME:              return Settings.getName(); // Only return the set name, no appended unit.
@@ -305,7 +313,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return toString(getCPUload(), 2);
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:        return toString(Settings.getWiFi_TX_power(), 2);
     case LabelType::WIFI_CUR_TX_PWR:        return toString(WiFiEventData.wifi_TX_pwr, 2);
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
@@ -351,6 +359,14 @@ String getValue(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:           return jsonBool(Settings.JSONBoolWithoutQuotes());
     case LabelType::ENABLE_TIMING_STATISTICS:   return jsonBool(Settings.EnableTimingStats());
     case LabelType::ENABLE_RULES_CACHING:       return jsonBool(Settings.EnableRulesCaching());
+    case LabelType::ENABLE_SERIAL_PORT_CONSOLE: return jsonBool(Settings.UseSerial);
+    case LabelType::CONSOLE_SERIAL_PORT:        return ESPEasy_Console.getPortDescription();
+
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    case LabelType::CONSOLE_FALLBACK_TO_SERIAL0: return jsonBool(Settings.console_serial0_fallback);
+    case LabelType::CONSOLE_FALLBACK_PORT:       return ESPEasy_Console.getFallbackPortDescription();
+#endif
+
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return jsonBool(Settings.EnableRulesEventReorder()); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return jsonBool(Settings.AllowTaskValueSetAllPlugins());
     case LabelType::ALLOW_OTA_UNLIMITED:        return jsonBool(Settings.AllowOTAUnlimited());
@@ -378,18 +394,18 @@ String getValue(LabelType::Enum label) {
                                                             LabelType::IP_CONFIG_DYNAMIC));
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
-    case LabelType::IP_ADDRESS:             return NetworkLocalIP().toString();
-    case LabelType::IP_SUBNET:              return NetworkSubnetMask().toString();
+    case LabelType::IP_ADDRESS:             return formatIP(NetworkLocalIP());
+    case LabelType::IP_SUBNET:              return formatIP(NetworkSubnetMask());
     case LabelType::IP_ADDRESS_SUBNET:      return getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET);
-    case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
+    case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
 
     #if FEATURE_MDNS
     case LabelType::M_DNS:                  return NetworkGetHostname() + F(".local");
     #endif // if FEATURE_MDNS
     case LabelType::DNS:                    return getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2);
-    case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
-    case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
+    case LabelType::DNS_1:                  return formatIP(NetworkDnsIP(0));
+    case LabelType::DNS_2:                  return formatIP(NetworkDnsIP(1));
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
     case LabelType::STA_MAC:                return WifiSTAmacAddress().toString();
     case LabelType::AP_MAC:                 return WifiSoftAPmacAddress().toString();
@@ -444,6 +460,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::GIT_HEAD:               return get_git_head();
+    #ifdef CONFIGURATION_CODE
+    case LabelType::CONFIGURATION_CODE_LBL: return getConfigurationCode();
+    #endif // ifdef CONFIGURATION_CODE
     case LabelType::I2C_BUS_STATE:          return toString(I2C_state);
     case LabelType::I2C_BUS_CLEARED_COUNT:  return String(I2C_bus_cleared_count);
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
@@ -460,7 +479,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_APB_FREQ:      return String(getApbFrequency() / 1000000);
 #endif
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
-    case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
+    case LabelType::ESP_CHIP_REVISION:      return getChipRevision();
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return formatToHex(getFlashChipId(), 6);
@@ -485,12 +504,12 @@ String getValue(LabelType::Enum label) {
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
 #if FEATURE_ETHERNET
-    case LabelType::ETH_IP_ADDRESS:         return NetworkLocalIP().toString();
-    case LabelType::ETH_IP_SUBNET:          return NetworkSubnetMask().toString();
+    case LabelType::ETH_IP_ADDRESS:         return formatIP(NetworkLocalIP());
+    case LabelType::ETH_IP_SUBNET:          return formatIP(NetworkSubnetMask());
     case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") +
                                                           getValue(LabelType::ETH_IP_SUBNET));
-    case LabelType::ETH_IP_GATEWAY:         return NetworkGatewayIP().toString();
-    case LabelType::ETH_IP_DNS:             return NetworkDnsIP(0).toString();
+    case LabelType::ETH_IP_GATEWAY:         return formatIP(NetworkGatewayIP());
+    case LabelType::ETH_IP_DNS:             return formatIP(NetworkDnsIP(0));
     case LabelType::ETH_MAC:                return NetworkMacAddress().toString();
     case LabelType::ETH_DUPLEX:             return EthLinkUp() ? (EthFullDuplex() ? F("Full Duplex") : F("Half Duplex")) : F("Link Down");
     case LabelType::ETH_SPEED:              return EthLinkUp() ? getEthSpeed() : F("Link Down");
