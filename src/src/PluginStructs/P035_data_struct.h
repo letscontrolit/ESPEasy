@@ -26,13 +26,13 @@ extern void enableIR_RX(boolean enable); // To be found in _P016_IR.ino
 struct P035_data_struct : public PluginTaskData_base {
 public:
 
-  P035_data_struct(int8_t gpioPin);
+  P035_data_struct(int8_t gpioPin,
+                   bool   inverted);
 
   P035_data_struct() = delete;
   virtual ~P035_data_struct();
 
   bool plugin_init(struct EventStruct *event);
-  bool plugin_exit(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
 
@@ -57,15 +57,16 @@ private:
                     int           repeats);
   String listProtocols();
   bool   addErrorTrue();
-  bool   sendIRCode(int const      irtype,
-                    uint64_t const code,
-                    char const    *code_str,
+  bool   sendIRCode(const int      irtype,
+                    const uint64_t code,
+                    const char    *code_str,
                     uint16_t       bits,
                     uint16_t       repeat);
   bool parseStringAndSendAirCon(const int    irtype,
                                 const String str);
 
   int8_t _gpioPin;
+  bool   _inverted;
 };
 #endif // ifdef USES_P035
 #endif // ifndef PLUGINSTRUCTS_P035_DATA_STRUCT_H
