@@ -69,12 +69,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         if (i < P078_NR_OUTPUT_VALUES) {
           const SDM_MODEL model  = static_cast<SDM_MODEL>(P078_MODEL);
           const uint8_t   choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            SDM_getValueNameForModel(model, choice),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, SDM_getValueNameForModel(model, choice));
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;
@@ -280,6 +277,10 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           const uint16_t reg = SDM_getRegisterForModel(model, PCONFIG((P078_QUERY1_CONFIG_POS) + i));
           SDM_addRegisterReadQueueElement(event->TaskIndex, i, reg, dev_id);
         }
+
+        // Need a few seconds to read the first sample, so trigger a new read a few seconds after init.
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 2000);
+
       }
       break;
     }

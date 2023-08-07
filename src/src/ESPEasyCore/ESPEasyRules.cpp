@@ -351,9 +351,6 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
   }
   
   if (cmd_s_lower.startsWith(F("bit"))) {
-    #define bitSetULL(value, bit) ((value) |= (1ULL << (bit)))
-    #define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
-    #define bitWriteULL(value, bit, bitvalue) (bitvalue ? bitSetULL(value, bit) : bitClearULL(value, bit))
     uint32_t bitnr = 0;
     uint64_t iarg2 = 0;
 

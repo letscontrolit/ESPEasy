@@ -86,13 +86,9 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
       String log = concat(F("HX711: ("), (int)event->TaskIndex + 1);
       log += F(") ChanA: ");
 
-      if (OversamplingCountChanA > 0) {
-        UserVar[event->BaseVarIndex + 2] = static_cast<float>(OversamplingValueChanA) /
-                                           OversamplingCountChanA;
-
-        OversamplingValueChanA = 0;
-        OversamplingCountChanA = 0;
-
+      float value{};
+      if (OversamplingChanA.get(value)) {
+        UserVar[event->BaseVarIndex + 2] = value;
         UserVar[event->BaseVarIndex] = UserVar[event->BaseVarIndex + 2] + _offsetChanA; // Offset
 
         log += formatUserVarNoCheck(event->TaskIndex, 0);
@@ -123,13 +119,9 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
       String log = concat(F("HX711: ("), (int)event->TaskIndex + 1);
       log += F(") ChanB: ");
 
-      if (OversamplingCountChanB > 0) {
-        UserVar[event->BaseVarIndex + 3] = static_cast<float>(OversamplingValueChanB) /
-                                           OversamplingCountChanB;
-
-        OversamplingValueChanB = 0;
-        OversamplingCountChanB = 0;
-
+      float value{};
+      if (OversamplingChanB.get(value)) {
+        UserVar[event->BaseVarIndex + 3] = value;
         UserVar[event->BaseVarIndex + 1] = UserVar[event->BaseVarIndex + 3] + _offsetChanB; // Offset
 
         log += formatUserVarNoCheck(event->TaskIndex, 1);
@@ -173,28 +165,24 @@ bool P067_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
       case P067_Channel_e::chanA64:  //
       case P067_Channel_e::chanA128:
       {
-        if (P067_GET_CHANNEL_A_OS) { // Oversampling on channel A?
-          if (OversamplingCountChanA < 250) {
-            OversamplingValueChanA += value;
-            OversamplingCountChanA++;
-          }
-        } else {
-          OversamplingValueChanA = value;
-          OversamplingCountChanA = 1;
+        if (!P067_GET_CHANNEL_A_OS) { // Oversampling on channel A?
+          OversamplingChanA.reset();
         }
+        if (OversamplingChanA.getCount() > 250) {
+          OversamplingChanA.resetKeepLast();
+        }
+        OversamplingChanA.add(value);
         break;
       }
       case P067_Channel_e::chanB32:
       {
-        if (P067_GET_CHANNEL_B_OS) { // Oversampling on channel B?
-          if (OversamplingCountChanB < 250) {
-            OversamplingValueChanB += value;
-            OversamplingCountChanB++;
-          }
-        } else {
-          OversamplingValueChanB = value;
-          OversamplingCountChanB = 1;
+        if (!P067_GET_CHANNEL_B_OS) { // Oversampling on channel B?
+          OversamplingChanB.reset();
         }
+        if (OversamplingChanB.getCount() > 250) {
+          OversamplingChanB.resetKeepLast();
+        }
+        OversamplingChanB.add(value);
         break;
       }
     }
@@ -215,16 +203,14 @@ bool P067_data_struct::plugin_write(struct EventStruct *event,
   if (equals(command, F("tarechana"))) {
     P067_float2int(-UserVar[event->BaseVarIndex + 2], &P067_OFFSET_CHANNEL_A_1, &P067_OFFSET_CHANNEL_A_2);
     P067_int2float(P067_OFFSET_CHANNEL_A_1, P067_OFFSET_CHANNEL_A_2, &_offsetChanA);
-    OversamplingValueChanA = 0;
-    OversamplingCountChanA = 0;
+    OversamplingChanA.reset();
 
     addLog(LOG_LEVEL_INFO, F("HX711: tare channel A"));
     success = true;
   } else if (equals(command, F("tarechanb"))) {
     P067_float2int(-UserVar[event->BaseVarIndex + 3], &P067_OFFSET_CHANNEL_B_1, &P067_OFFSET_CHANNEL_B_2);
     P067_int2float(P067_OFFSET_CHANNEL_B_1, P067_OFFSET_CHANNEL_B_2, &_offsetChanB);
-    OversamplingValueChanB = 0;
-    OversamplingCountChanB = 0;
+    OversamplingChanB.reset();
 
     addLog(LOG_LEVEL_INFO, F("HX711: tare channel B"));
     success = true;

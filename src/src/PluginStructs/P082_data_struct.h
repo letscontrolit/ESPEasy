@@ -151,7 +151,7 @@ public:
   String _currentSentence;
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)];
+  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)]{};
 };
 
 #endif // ifdef USES_P082

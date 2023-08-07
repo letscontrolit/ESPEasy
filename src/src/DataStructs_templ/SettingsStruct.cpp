@@ -1,6 +1,7 @@
 #include "../DataStructs/SettingsStruct.h"
 
 #include "../../ESPEasy_common.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/SPI_options.h"
@@ -543,12 +544,13 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   PID                      = ESP_PROJECT_PID;
   Version                  = VERSION;
-  Build                    = 0;
+  Build                    = get_build_nr();
   IP_Octet                 = 0;
-  Delay                    = 0;
+  Delay                    = DEFAULT_DELAY;
   Pin_i2c_sda              = DEFAULT_PIN_I2C_SDA;
   Pin_i2c_scl              = DEFAULT_PIN_I2C_SCL;
   Pin_status_led           = DEFAULT_PIN_STATUS_LED;
+  Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Pin_sd_cs                = -1;
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
@@ -586,7 +588,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
     }
     # endif // ifdef ESP32
   }
-  BaudRate                         = 0;
+  BaudRate                         = DEFAULT_SERIAL_BAUD;
   MessageDelay_unused              = 0;
   deepSleep_wakeTime               = 0;
   CustomCSS                        = false;
@@ -595,14 +597,13 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   UseSerial                        = DEFAULT_USE_SERIAL;
   UseSSDP                          = false;
   WireClockStretchLimit            = 0;
-  I2C_clockSpeed                   = 400000;
+  I2C_clockSpeed                   = DEFAULT_I2C_CLOCK_SPEED;
   WebserverPort                    = 80;
   SyslogPort                       = 514;
   GlobalSync                       = false;
   ConnectionFailuresThreshold      = 0;
   MQTTRetainFlag_unused            = false;
   InitSPI                          = DEFAULT_SPI;
-  Pin_status_led_Inversed          = false;
   deepSleepOnFail                  = false;
   UseValueLogger                   = false;
   ArduinoOTAEnable                 = false;
