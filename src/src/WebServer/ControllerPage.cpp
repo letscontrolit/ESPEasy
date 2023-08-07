@@ -260,7 +260,7 @@ void handle_controllers_ShowAllControllersTable()
 
         html_TD();
         if ((INVALID_PROTOCOL_INDEX == ProtocolIndex) || (Protocol[ProtocolIndex].usesPort)) {
-          addHtmlInt(13 != Settings.Protocol[x] ? ControllerSettings.Port : Settings.UDPPort); // P2P exception
+          addHtmlInt(13 == Settings.Protocol[x] ? Settings.UDPPort : ControllerSettings.Port); // P2P/C013 exception
         }
       }
       else {
