@@ -44,13 +44,6 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
     }
   }
 
-  // if ((Plugin_035_irSender != nullptr) && (_gpioPin == -1)) { // This can never be true because of the validGpio() check above
-  //   addLog(LOG_LEVEL_INFO, F("INIT: IR TX Removed"));
-  //   delete Plugin_035_irSender;
-  //   Plugin_035_irSender = nullptr;
-  //   success             = false;
-  // }
-
   # ifdef P016_P035_Extended_AC
 
   if (success && (Plugin_035_commonAc == nullptr) && validGpio(_gpioPin)) {
@@ -61,31 +54,11 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
       #  endif // ifdef P035_DEBUG_LOG
     }
     Plugin_035_commonAc = new (std::nothrow) IRac(_gpioPin);
+    success             = nullptr != Plugin_035_commonAc;
   }
 
-  // if ((Plugin_035_commonAc != nullptr) && (_gpioPin == -1)) { // This can never be true because of the validGpio() check above
-  //   addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
-  //   delete Plugin_035_commonAc;
-  //   Plugin_035_commonAc = nullptr;
-  //   success             = false;
-  // }
   # endif // ifdef P016_P035_Extended_AC
   return success;
-}
-
-bool P035_data_struct::plugin_exit(struct EventStruct *event) {
-  if (Plugin_035_irSender != nullptr) {
-    delete Plugin_035_irSender;
-    Plugin_035_irSender = nullptr;
-  }
-  # ifdef P016_P035_Extended_AC
-
-  if (Plugin_035_commonAc != nullptr) {
-    delete Plugin_035_commonAc;
-    Plugin_035_commonAc = nullptr;
-  }
-  # endif // ifdef P016_P035_Extended_AC
-  return true;
 }
 
 bool P035_data_struct::plugin_write(struct EventStruct *event, const String& string) {
@@ -164,8 +137,7 @@ bool P035_data_struct::handle_AC_IRremote(const String& irData) {
 
   if (error) {                                               // Test if parsing succeeds.
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String errorMsg(error.c_str());
-      addLog(LOG_LEVEL_INFO, concat(F("IRTX: Deserialize Json failed: "), errorMsg));
+      addLog(LOG_LEVEL_INFO, concat(F("IRTX: Deserialize Json failed: "), error.c_str()));
     }
     return false; // do not continue with sending the signal.
   }
@@ -230,7 +202,7 @@ bool P035_data_struct::handle_AC_IRremote(const String& irData) {
                                                                                 // off.). Defaults to -1 if missing from JSON
 
   // Send the IR command
-  bool IRsent = Plugin_035_commonAc->sendAc(st, &prev);
+  const bool IRsent = Plugin_035_commonAc->sendAc(st, &prev);
 
   if (IRsent) {
     printToLog(typeToString(st.protocol), irData, 0, 0);
@@ -242,14 +214,14 @@ bool P035_data_struct::handle_AC_IRremote(const String& irData) {
 
 
 bool P035_data_struct::handleRawRaw2Encoding(const String& cmd) {
-  bool   raw    = true;
-  String IrType = parseString(cmd, 2);
+  bool raw            = true;
+  const String IrType = parseString(cmd, 2);
 
   if (IrType.isEmpty())           { return false; }
 
-  if (IrType.equalsIgnoreCase(F("RAW"))) {
+  if (equals(IrType, F("raw"))) {
     raw = true;
-  } else if (IrType.equalsIgnoreCase(F("RAW2"))) {
+  } else if (equals(IrType, F("raw2"))) {
     raw = false;
   }
 
@@ -440,7 +412,7 @@ String P035_data_struct::listProtocols() {
   if (temp.reserve(1024)) {
     for (uint32_t i = 0; i <= kLastDecodeType; i++) {
       if (IRsend::defaultBits((decode_type_t)i) > 0) {
-        String typ = typeToString((decode_type_t)i);
+        const String typ = typeToString((decode_type_t)i);
 
         if (typ.length() > 1) {
           temp += typ;
@@ -534,7 +506,7 @@ bool P035_data_struct::parseStringAndSendAirCon(const int irtype, const String s
   }
 
   // Calculate how many hexadecimal characters there are.
-  uint16_t inputLength = str.length() - strOffset;
+  const uint16_t inputLength = str.length() - strOffset;
 
   if (inputLength == 0) {
     // debug("Zero length AirCon code encountered. Ignored.");

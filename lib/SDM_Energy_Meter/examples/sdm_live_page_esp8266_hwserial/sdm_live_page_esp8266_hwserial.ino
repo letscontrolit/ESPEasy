@@ -28,17 +28,17 @@ TX SSer/HSer swap D8|15                            |GND
 #include <ESPAsyncTCP.h>                                                        //https://github.com/me-no-dev/ESPAsyncTCP
 #include <ESPAsyncWebServer.h>                                                  //https://github.com/me-no-dev/ESPAsyncWebServer
 
-#include <SoftwareSerial.h>                                                     //import SoftwareSerial library (if used)
 #include <SDM.h>                                                                //https://github.com/reaper7/SDM_Energy_Meter
 
 #include "index_page.h"
+
+#if !defined ( USE_HARDWARESERIAL )
+  #error "This example works with Hardware Serial on esp8266, please uncomment #define USE_HARDWARESERIAL in SDM_Config_User.h"
+#endif
 //------------------------------------------------------------------------------
 AsyncWebServer server(80);
 
-SoftwareSerial swSerSDM(13, 15);                                                //config SoftwareSerial (rx->pin13 / tx->pin15) (if used)
-
-SDM sdm(swSerSDM, 9600, NOT_A_PIN);                                             //SOFTWARE SERIAL
-//SDM sdm(Serial, 9600, NOT_A_PIN, SERIAL_8N1, false);                            //HARDWARE SERIAL
+SDM sdm(Serial, SDM_UART_BAUD, NOT_A_PIN, SERIAL_8N1, false);                            //HARDWARE SERIAL
 
 //------------------------------------------------------------------------------
 String devicename = "PWRMETER";
@@ -62,16 +62,16 @@ typedef volatile struct {
 } sdm_struct;
 
 volatile sdm_struct sdmarr[NBREG] = {
-  {0.00, SDM220T_VOLTAGE},                                                      //V
-  {0.00, SDM220T_CURRENT},                                                      //A
-  {0.00, SDM220T_POWER},                                                        //W
-  {0.00, SDM220T_POWER_FACTOR},                                                 //PF
-  {0.00, SDM220T_FREQUENCY},                                                    //Hz
+  {0.00, SDM_PHASE_1_VOLTAGE},                                                  //V
+  {0.00, SDM_PHASE_1_CURRENT},                                                  //A
+  {0.00, SDM_PHASE_1_POWER},                                                    //W
+  {0.00, SDM_PHASE_1_POWER_FACTOR},                                             //PF
+  {0.00, SDM_FREQUENCY}                                                         //Hz
 };
 //------------------------------------------------------------------------------
 void xmlrequest(AsyncWebServerRequest *request) {
   String XML = F("<?xml version='1.0'?><xml>");
-  for (int i = 0; i < NBREG; i++) { 
+  for (int i = 0; i < NBREG; i++) {
     XML += "<response" + (String)i + ">";
     XML += String(sdmarr[i].regvalarr,2);
     XML += "</response" + (String)i + ">";
@@ -87,7 +87,7 @@ void xmlrequest(AsyncWebServerRequest *request) {
 }
 //------------------------------------------------------------------------------
 void indexrequest(AsyncWebServerRequest *request) {
-  request->send_P(200, "text/html", index_page); 
+  request->send_P(200, "text/html", index_page);
 }
 //------------------------------------------------------------------------------
 void ledOn() {

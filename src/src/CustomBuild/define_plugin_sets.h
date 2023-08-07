@@ -1558,6 +1558,7 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
     // #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Energy plugins
+    #define BUILD_NO_DEBUG // Reduce build size without sacrificing features other than some logging
     #ifndef P036_LIMIT_BUILD_SIZE
       #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
     #endif
@@ -2007,10 +2008,10 @@ To create/register a plugin, you have to :
 
   // Plugins
   #ifndef USES_P016
-//    #define USES_P016   // IR
+    #define USES_P016   // IR TSOP4838
   #endif
   #ifndef USES_P035
-//    #define USES_P035   // IRTX
+    #define USES_P035   // IRTX
   #endif
   #ifndef USES_P041
     #define USES_P041   // NeoClock
@@ -2018,8 +2019,14 @@ To create/register a plugin, you have to :
   #ifndef USES_P042
     #define USES_P042   // Candle
   #endif
+  #ifndef USES_P046
+    #define USES_P046  // VentusW266
+  #endif
   #ifndef USES_P087
     #define USES_P087   // Serial Proxy
+  #endif
+  #ifndef USES_P088
+    #define USES_P088   // ToniA IR plugin
   #endif
   #ifndef USES_P094
     #define USES_P094  // CUL Reader
@@ -2030,11 +2037,20 @@ To create/register a plugin, you have to :
   #ifndef USES_P096
     #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
   #endif
+  #ifndef USES_P097
+    #define USES_P097   // Touch ESP32
+  #endif
   #ifndef USES_P098
     #define USES_P098   // PWM motor
   #endif
   #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
+  #endif
+  #ifndef USES_P100
+    #define USES_P100   // DS2423
+  #endif
+  #ifndef USES_P101
+    #define USES_P101   // Wake on Lan
   #endif
   #ifndef USES_P102
     #define USES_P102   // PZEM004Tv3
@@ -2043,16 +2059,16 @@ To create/register a plugin, you have to :
     #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
   #endif
   #ifndef USES_P104
-    #define USES_P104   //
+    #define USES_P104   // MAX7219 Dot matrix display
   #endif
   #ifndef USES_P105
     #define USES_P105   // AHT10/20/21
   #endif
-  #ifndef USES_P104
-    #define USES_P104   //
+  #ifndef USES_P106
+    #define USES_P106   // BME68x
   #endif
-  #ifndef USES_P105
-    #define USES_P105   // AHT10/20/21
+  #ifndef USES_P107
+    #define USES_P107   // SI1145
   #endif
   #ifndef USES_P108
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
@@ -2100,10 +2116,10 @@ To create/register a plugin, you have to :
     #define USES_P122   // SHT2x
   #endif
   #ifndef USES_P123
-//    #define USES_P123   //
+//    #define USES_P123   // FT62x6
   #endif
   #ifndef USES_P124
-    #define USES_P124   //
+    #define USES_P124   // I2C Multi relay
   #endif
   #ifndef USES_P125
     #define USES_P125   // ADXL345 SPI Acceleration / Gravity
@@ -2130,22 +2146,22 @@ To create/register a plugin, you have to :
     #define USES_P132   // INA3221
   #endif
   #ifndef USES_P133
-//    #define USES_P133   //
+    #define USES_P133   // LTR390
   #endif
   #ifndef USES_P134
-//    #define USES_P134   //
+    #define USES_P134   // A02YYUW
   #endif
   #ifndef USES_P135
-//    #define USES_P135   //
+    #define USES_P135   // SCD4x
   #endif
   #ifndef USES_P136
-//    #define USES_P136   //
+//    #define USES_P136   // OLED w. AdafruitGFX_Helper
   #endif
   #ifndef USES_P137
     #define USES_P137   // AXP192
   #endif
   #ifndef USES_P138
-//    #define USES_P138   //
+    #define USES_P138   // IP5306
   #endif
   #ifndef USES_P139
 //    #define USES_P139   //
@@ -2157,7 +2173,7 @@ To create/register a plugin, you have to :
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
   #ifndef USES_P142
-//    #define USES_P142   //
+//    #define USES_P142   // GT911 Touchscreen
   #endif
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
@@ -2165,11 +2181,20 @@ To create/register a plugin, you have to :
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
   #endif
+  #ifndef USES_P145
+    #define USES_P145   // gasses MQxxx (MQ135, MQ3, etc)
+  #endif
   #ifndef USES_P146
     #define USES_P146   // Cache Controller Reader
   #endif
   #ifndef USES_P147
     #define USES_P147   // Gases - SGP4x CO2
+  #endif
+  #ifndef USES_P148
+    #define USES_P148   // POWR3xxD/THR3xxD
+  #endif
+  #ifndef USES_P149
+    // #define USES_P149   //ePaper 1.9" 91 segments
   #endif
   #ifndef USES_P150
     #define USES_P150   // TMP117 Temperature
@@ -2764,7 +2789,11 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_I2C_DEVICE_SCAN               
-#define FEATURE_I2C_DEVICE_SCAN               0
+  #ifdef ESP32
+    #define FEATURE_I2C_DEVICE_SCAN           1
+  #else
+    #define FEATURE_I2C_DEVICE_SCAN           0
+  #endif
 #endif
 
 #ifndef FEATURE_MDNS                          
