@@ -37,7 +37,7 @@ typedef bool (*do_process_function)(int,
 * ControllerDelayHandlerStruct
 \*********************************************************************************************/
 struct ControllerDelayHandlerStruct {
-  ControllerDelayHandlerStruct() = default;
+  ControllerDelayHandlerStruct();
 
   bool cacheControllerSettings(controllerIndex_t ControllerIndex);
   void cacheControllerSettings(const ControllerSettingsStruct& settings);

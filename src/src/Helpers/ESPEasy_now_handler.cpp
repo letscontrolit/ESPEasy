@@ -1440,14 +1440,14 @@ void ESPEasy_now_handler_t::load_ControllerSettingsCache(controllerIndex_t contr
     MakeControllerSettings(ControllerSettings);
 
     if (AllocatedControllerSettings()) {
-      LoadControllerSettings(controllerIndex, ControllerSettings);
-      _enableESPEasyNowFallback = ControllerSettings.enableESPEasyNowFallback();
+      LoadControllerSettings(controllerIndex, *ControllerSettings);
+      _enableESPEasyNowFallback = ControllerSettings->enableESPEasyNowFallback();
 
       if ((Settings.Protocol[controllerIndex] == 19) && customConfig) {
         _enableESPEasyNowFallback = customConfig->forwardMQTT;
       }
-      _ClientTimeout   = ControllerSettings.ClientTimeout;
-      _mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+      _ClientTimeout   = ControllerSettings->ClientTimeout;
+      _mqtt_retainFlag = ControllerSettings->mqtt_retainFlag();
       _controllerIndex = controllerIndex;
     }
   }
