@@ -344,7 +344,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           }
           #if FEATURE_MQTT_TLS
           if (Protocol[ProtocolIndex].usesMQTT && Protocol[ProtocolIndex].usesTLS) {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE);
             addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
           }
           #endif
@@ -473,7 +473,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
               if (!AllocatedControllerSettings()) {
                 addHtmlError(F("Out of memory, cannot load page"));
               } else {
-                LoadControllerSettings(controllerindex, ControllerSettings);
+                LoadControllerSettings(controllerindex, *ControllerSettings);
 
                 addFormSubHeader(F("Peer Certificate"));
 
@@ -495,7 +495,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                                   fingerprint,
                                   64,
                                   true); // ReadOnly
-                    addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT);
+                    addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT);
                   }
                 }
                 addFormSubHeader(F("Peer Certificate Chain"));
@@ -546,7 +546,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                       }
                       if (chain->ca_istrue && chain->next == nullptr) {
                         // Add checkbox to store CA cert
-                        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT);
+                        addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT);
                       }
 //                    }
                     chain = chain->next;
