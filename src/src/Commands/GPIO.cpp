@@ -277,16 +277,11 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     }
 
 
-    String log = logPrefix;
-    log += F(" : port ");
-    log += event->Par1;
-    log += F(". Pulse H:");
-    log += event->Par3;
+    String log = concat(
+      logPrefix, 
+      strformat(F(" : port %d. Pulse H:%d"), event->Par1, event->Par3));
     if (event->Par4 > 0 && event->Par5 != 0) {
-      log += F(" L:");
-      log += event->Par4;
-      log += F(" #:");
-      log += event->Par5;
+      log += strformat(F(" L:%d #:%d"), event->Par4, event->Par5);
     }
     log += F(" ms");
     addLog(LOG_LEVEL_INFO, log);
@@ -350,21 +345,14 @@ const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const ch
   uint32_t key       = 0;
 
   if (set_Gpio_PWM(event->Par1, event->Par2, event->Par3, frequency, key)) {
-    String log = F("PWM  : GPIO: ");
-    log += event->Par1;
-    log += F(" duty: ");
-    log += event->Par2;
+    String log = strformat(F("PWM  : GPIO: %d duty: %d"), event->Par1, event->Par2);
 
     if (event->Par3 != 0) {
-      log += F(" Fade: ");
-      log += event->Par3;
-      log += F(" ms");
+      log += strformat(F(" Fade: %d ms"), event->Par3);
     }
 
     if (event->Par4 != 0) {
-      log += F(" f: ");
-      log += frequency;
-      log += F(" Hz");
+      log += strformat(F(" f: %d Hz"), frequency);
     }
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
@@ -465,8 +453,7 @@ const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const 
     createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, !event->Par2);
     GPIO_Write(pluginID, event->Par1, !event->Par2);
 
-    String log;
-    log += logPrefix;
+    String log = logPrefix;
     log += concat(F(" : port "),  event->Par1);
     log += concat(F(". Pulse set for "),  event->Par3);
     log += F(" ms");
@@ -617,7 +604,7 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
 void logErrorGpio(const __FlashStringHelper * prefix, int port, const __FlashStringHelper * description)
 {
   if (port >= 0) {
-    addLog(LOG_LEVEL_ERROR, concat(prefix, F(" : port#")) + String(port) + description);
+    addLog(LOG_LEVEL_ERROR, concat(prefix, concat(F(" : port#"), port)) + description);
   }
 }
 

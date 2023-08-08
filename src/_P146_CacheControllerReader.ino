@@ -177,8 +177,9 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
             if (P146_GET_ERASE_BINFILES) {
               // Check whether we must delete the oldest file
-              if (P146_TASKVALUE_FILENR != 0 && P146_TASKVALUE_FILENR  < readFileNr) {
-                ControllerCache.deleteCacheBlock(P146_TASKVALUE_FILENR);
+              const int filenr = P146_TASKVALUE_FILENR;
+              if (filenr != 0 && filenr  < readFileNr) {
+                ControllerCache.deleteCacheBlock(filenr);
               }
             }
 

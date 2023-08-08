@@ -13,19 +13,19 @@ ControllerDelayHandlerStruct::ControllerDelayHandlerStruct() :
   deduplicate(false),
   useLocalSystemTime(false) {}
 
-bool ControllerDelayHandlerStruct::configureControllerSettings(controllerIndex_t ControllerIndex)
+bool ControllerDelayHandlerStruct::cacheControllerSettings(controllerIndex_t ControllerIndex)
 {
   MakeControllerSettings(ControllerSettings);
 
   if (!AllocatedControllerSettings()) {
     return false;
   }
-  LoadControllerSettings(ControllerIndex, ControllerSettings);
-  configureControllerSettings(ControllerSettings);
+  LoadControllerSettings(ControllerIndex, *ControllerSettings);
+  cacheControllerSettings(*ControllerSettings);
   return true;
 }
 
-void ControllerDelayHandlerStruct::configureControllerSettings(const ControllerSettingsStruct& settings) {
+void ControllerDelayHandlerStruct::cacheControllerSettings(const ControllerSettingsStruct& settings) {
   minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
   max_queue_depth        = settings.MaxQueueDepth;
   max_retries            = settings.MaxRetry;
@@ -268,10 +268,10 @@ void ControllerDelayHandlerStruct::process(
     MakeControllerSettings(ControllerSettings);
 
     if (AllocatedControllerSettings()) {
-      LoadControllerSettings(element->_controller_idx, ControllerSettings);
-      configureControllerSettings(ControllerSettings);
+      LoadControllerSettings(element->_controller_idx, *ControllerSettings);
+      cacheControllerSettings(*ControllerSettings);
       START_TIMER;
-      markProcessed(func(controller_number, *element, ControllerSettings));
+      markProcessed(func(controller_number, *element, *ControllerSettings));
       #if FEATURE_TIMING_STATS
       STOP_TIMER_VAR(timerstats_id);
       #endif

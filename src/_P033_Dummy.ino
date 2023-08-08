@@ -78,9 +78,12 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
+      #ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        for (uint8_t x = 0; x < getValueCountFromSensorType(static_cast < Sensor_VType > (PCONFIG(0))); x++)
+        const uint8_t valueCount = 
+          getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(0)));
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           String log = F("Dummy: value ");
           log += x + 1;
@@ -89,6 +92,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO, log);
         }
       }
+      #endif
       success = true;
       break;
     }

@@ -88,6 +88,8 @@
   # define CONFIG_PORT (Settings.TaskDevicePort[event->TaskIndex])
 #endif // ifndef CONFIG_PORT
 
+extern PluginTaskData_base *Plugin_task_data[TASKS_MAX];
+
 String PCONFIG_LABEL(int n);
 
 // ==============================================

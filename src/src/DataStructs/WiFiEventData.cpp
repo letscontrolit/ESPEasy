@@ -136,7 +136,6 @@ bool WiFiEventData_t::WiFiServicesInitialized() const {
 }
 
 void WiFiEventData_t::setWiFiDisconnected() {
-  wifiConnectInProgress = false;
   wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
   last_wifi_connect_attempt_moment.clear();
   wifiConnectInProgress = false;

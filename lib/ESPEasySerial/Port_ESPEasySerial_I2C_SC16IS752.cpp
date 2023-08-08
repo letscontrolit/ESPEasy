@@ -135,4 +135,10 @@ size_t Port_ESPEasySerial_I2C_SC16IS752_t::setTxBufferSize(size_t new_size)
   return 0;
 }
 
+bool Port_ESPEasySerial_I2C_SC16IS752_t::setRS485Mode(int8_t rtsPin, bool enableCollisionDetection)
+{
+  // TODO TD-er: Check if we can enable RTS on this chip
+  return false;
+}
+
 #endif // ifndef DISABLE_SC16IS752_Serial

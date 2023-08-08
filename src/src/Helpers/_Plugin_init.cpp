@@ -1047,10 +1047,12 @@ const pluginID_t DeviceIndex_to_Plugin_id[] PROGMEM =
 #endif // ifdef USES_P255
 };
 
-// Array of function pointers to call plugins.
-boolean (*Plugin_ptr[])(uint8_t,
+typedef boolean (*Plugin_ptr_t)(uint8_t,
                         struct EventStruct *,
-                        String&) PROGMEM =
+                        String&);
+
+// Array of function pointers to call plugins.
+const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 {
 #ifdef USES_P001
   &Plugin_001,
@@ -2109,7 +2111,8 @@ boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStru
 {
   if (deviceIndex < DeviceIndex_to_Plugin_id_size)
   {
-    return Plugin_ptr[deviceIndex](function, event, string);
+    Plugin_ptr_t plugin_call = (Plugin_ptr_t)pgm_read_ptr(Plugin_ptr + deviceIndex);
+    return plugin_call(function, event, string);
   }
   return false;
 }
