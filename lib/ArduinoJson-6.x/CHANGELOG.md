@@ -1,6 +1,68 @@
 ArduinoJson: change log
 =======================
 
+v6.21.2 (2023-04-12)
+-------
+
+* Fix compatibility with the Zephyr Project (issue #1905)
+* Allow using PROGMEM outside of Arduino (issue #1903)
+* Set default for `ARDUINOJSON_ENABLE_PROGMEM` to `1` on AVR
+
+v6.21.1 (2023-03-27)
+-------
+
+* Double speed of `DynamicJsonDocument::garbageCollect()`
+* Fix compatibility with GCC 5.2 (issue #1897)
+
+v6.21.0 (2023-03-14)
+-------
+
+* Drop support for C++98/C++03. Minimum required is C++11.
+* Remove `ARDUINOJSON_NAMESPACE`; use `ArduinoJson` instead.
+* Make string support generic (issue #1807)
+
+v6.20.1 (2023-02-08)
+-------
+
+* Remove explicit exclusion of `as<char*>()` and `as<char>()` (issue #1860)
+  If you try to call them, you'll now get the same error message as any unsupported type.
+  You could also add a custom converter for `char*` and `char`.
+
+v6.20.0 (2022-12-26)
+-------
+
+* Add `JsonVariant::shallowCopy()` (issue #1343)
+* Fix `9.22337e+18 is outside the range of representable values of type 'long'`
+* Fix comparison operators for `JsonArray`, `JsonArrayConst`, `JsonObject`, and `JsonObjectConst`
+* Fix lax parsing of `true`, `false`, and `null` (issue #1781)
+* Remove undocumented `accept()` functions
+* Rename `addElement()` to `add()`
+* Remove `getElement()`, `getOrAddElement()`, `getMember()`, and `getOrAddMember()`
+* Remove undocumented `JsonDocument::data()` and `JsonDocument::memoryPool()`
+* Remove undocumented `JsonArrayIterator::internal()` and `JsonObjectIterator::internal()`
+* Rename things in `ARDUINOJSON_NAMESPACE` to match the public names
+* Add documentation to most public symbols
+* Remove support for naked `char` (was deprecated since 6.18.0)
+
+> ### BREAKING CHANGES
+>
+> This release hides `JsonVariant`'s functions that were only intended for internal use.
+> If you were using them in your programs, you must replace with `operator[]` and `to<JsonVariant>()`, like so:
+>
+> ```c++
+> // before
+> JsonVariant a = variant.getElement(idx);
+> JsonVariant b = variant.getOrAddElement(idx);
+> JsonVariant c = variant.getMember(key);
+> JsonVariant d = variant.getOrAddMember(key);
+>
+> // after
+> JsonVariant a = variant[idx];
+> JsonVariant b = idx < variant.size() ? variant[idx] : variant[idx].to<JsonVariant>();
+> JsonVariant c = variant[key];
+> JsonVariant d = variant.containsKey(key) ? variant[key] : variant[key].to<JsonVariant>();
+> ```
+
 v6.19.4 (2022-04-05)
 -------
 

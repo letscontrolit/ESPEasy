@@ -6,9 +6,7 @@
 # include "../Helpers/Hardware.h"
 
 ProvisioningStruct::ProvisioningStruct() {
-  ZERO_FILL(user);
-  ZERO_FILL(pass);
-  ZERO_FILL(url);
+  memset(this, 0, sizeof(ProvisioningStruct));
 }
 
 void ProvisioningStruct::validate() {

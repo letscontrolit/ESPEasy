@@ -1121,9 +1121,10 @@ Convert an integer value into a binary or hexadecimal representation.
 Usage: 
 
 * ``{toBin:<value>}`` Convert the number into binary representation.
-* ``{toHex:<value>}`` Convert the number into hexadecimal representation.
+* ``{toHex:<value>[:<minHexDigits>]}`` Convert the number into hexadecimal representation.
 
 * ``<value>`` The number to convert, if it is representing a valid unsigned integer value.
+* ``<minHexDigits>`` Optional. The minimal number to digits to output the hex value in
 
 
 For example:
@@ -1134,7 +1135,7 @@ For example:
    let,1,%eventvalue1%
    let,2,{bitset:9:%eventvalue1%}
    LogEntry,'Values {tobin:[int#1]} {tohex:[int#1]}'
-   LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]}'
+   LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]:4}'
  endon
 
 
@@ -1146,8 +1147,8 @@ For example:
  320603: ACT : let,2,635
  320612: ACT : LogEntry,'Values 1111011 7b'
  320618: Values 1111011 7b
- 320631: ACT : LogEntry,'Values 1001111011 27b'
- 320635: Values 1001111011 27b
+ 320631: ACT : LogEntry,'Values 1001111011 027b'
+ 320635: Values 1001111011 027b
 
 ord
 ^^^

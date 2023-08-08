@@ -4,6 +4,7 @@
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -56,6 +57,69 @@ bool equals(const String& str, const __FlashStringHelper * f_str) {
 bool equals(const String& str, const char& c) {
   return str.equals(String(c));
 }
+
+
+/********************************************************************************************\
+   Format string using vsnprintf
+ \*********************************************************************************************/
+
+String strformat(const String& format, ...)
+{
+  String res;
+  {
+    va_list arg;
+    va_start(arg, format); // variable args start after parameter 'format'
+    char temp[64];
+    char* buffer = temp;
+    int len = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
+    va_end(arg);
+    if (len > static_cast<int>(sizeof(temp) - 1)) {
+        buffer = new (std::nothrow) char[len + 1];
+        if (!buffer) {
+            return res;
+        }
+        va_start(arg, format);
+        vsnprintf_P(buffer, len + 1, format.c_str(), arg);
+        va_end(arg);
+    }
+    res.reserve(len + 1);
+    res = buffer;
+    if (buffer != temp) {
+        delete[] buffer;
+    }
+  }
+  return res;
+}
+
+String strformat(const __FlashStringHelper * format, ...)
+{
+  String res;
+  {
+    va_list arg;
+    va_start(arg, format); // variable args start after parameter 'format'
+    char temp[64];
+    char* buffer = temp;
+    int len = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
+    va_end(arg);
+    if (len > static_cast<int>(sizeof(temp) - 1)) {
+        buffer = new (std::nothrow) char[len + 1];
+        if (!buffer) {
+            return res;
+        }
+        va_start(arg, format);
+        vsnprintf_P(buffer, len + 1, (PGM_P)format, arg);
+        va_end(arg);
+    }
+    res.reserve(len + 1);
+    res = buffer;
+    if (buffer != temp) {
+        delete[] buffer;
+    }
+  }
+  return res;
+}
+
+
 
 /********************************************************************************************\
    Convert a char string to IP uint8_t array
@@ -168,10 +232,7 @@ String formatToHex_array(const uint8_t* data, size_t size)
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
-  String hex(value, HEX);
-
-  hex.toUpperCase();
-  return concat(prefix, formatIntLeadingZeroes(hex, minimal_hex_digits));
+  return concat(prefix, formatToHex_no_prefix(value, minimal_hex_digits));
 }
 
 String formatToHex(unsigned long value,
@@ -184,7 +245,8 @@ String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
 }
 
 String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
-  return formatToHex(value, F(""), minimal_hex_digits);
+  const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
+  return strformat(fmt, value);
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
@@ -307,6 +369,7 @@ void replaceUnicodeByChar(String& line, char replChar) {
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCheck, bool& isvalid) {
   if (event == nullptr) return EMPTY_STRING;
+  START_TIMER;
   isvalid = true;
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -375,7 +438,9 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       return toString(f, nrDecimals);
     }
   }
-  return UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
+  String res =  UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
+  STOP_TIMER(FORMAT_USER_VAR);
+  return res;
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
@@ -429,7 +494,9 @@ String get_formatted_Plugin_number(pluginID_t pluginID)
 
 String formatIntLeadingZeroes(int value, int nrDigits)
 {
-  return formatIntLeadingZeroes(String(value), nrDigits);
+  const String fmt = strformat(F("%%0%dd"), nrDigits);
+  return strformat(fmt, value);
+//  return formatIntLeadingZeroes(String(value), nrDigits);
 }
 
 String formatIntLeadingZeroes(const String& value, int nrDigits)
@@ -549,34 +616,25 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // First we check for not allowed special characters.
     const size_t val_length = value.length();
     for (size_t i = 0; i < val_length; ++i) {
-      switch (value[i]) {
-        case '\n':
-        case '\r':
-        case '\t':
-        case '\\':
-        case '\b':
-        case '\f':
-        case '"':
-        {
-          // Special characters not allowed in JSON:
-          //  \b  Backspace (ascii code 08)
-          //  \f  Form feed (ascii code 0C)
-          //  \n  New line
-          //  \r  Carriage return
-          //  \t  Tab
-          //  \"  Double quote
-          //  \\  Backslash character
-          // Must replace characters, so make a deepcopy
-          String tmpValue(value);
-          tmpValue.replace('\n', '^');
-          tmpValue.replace('\r', '^');
-          tmpValue.replace('\t', ' ');
-          tmpValue.replace('\\', '^');
-          tmpValue.replace('\b', '^');
-          tmpValue.replace('\f', '^');
-          tmpValue.replace('"',  '\'');
-          return wrap_String(tmpValue, '"');
-        }
+      const char c = value[i];
+      // Special characters not allowed in JSON:
+      if (c == '\n'|| //  \n  New line
+          c == '\r'|| //  \r  Carriage return
+          c == '\t'|| //  \t  Tab
+          c == '\\'|| //  \\  Backslash character
+          c == '\b'|| //  \b  Backspace (ascii code 08)
+          c == '\f'|| //  \f  Form feed (ascii code 0C)
+          c == '"') { //  \"  Double quote
+        // Must replace characters, so make a deepcopy
+        String tmpValue(value);
+        tmpValue.replace('\n', '^');
+        tmpValue.replace('\r', '^');
+        tmpValue.replace('\t', ' ');
+        tmpValue.replace('\\', '^');
+        tmpValue.replace('\b', '^');
+        tmpValue.replace('\f', '^');
+        tmpValue.replace('"',  '\'');
+        return wrap_String(tmpValue, '"');
       }
     }
     return wrap_String(value, '"');
@@ -1146,10 +1204,12 @@ void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    uint8_t                taskValueIndex,
                                    bool             useURLencode) {
-  if (validTaskIndex(event->TaskIndex)) {
-    repl(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex), s, useURLencode);
-  } else {
-    repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
+  if (s.indexOf('%') != -1) {
+    String str;
+    if (validTaskIndex(event->TaskIndex)) {
+      str = getTaskValueName(event->TaskIndex, taskValueIndex);
+    }
+    repl(F("%valname%"), str, s, useURLencode);
   }
 }
 

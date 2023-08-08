@@ -72,6 +72,17 @@ String patch_fname(const String& fname);
 #endif
 
 /********************************************************************************************\
+   Low level clear RFcal and SDK WiFi parameters.
+ \*********************************************************************************************/
+ #ifdef ESP8266
+bool clearRFcalPartition();
+
+bool clearWiFiSDKpartition();
+
+#endif
+
+
+/********************************************************************************************\
    Garbage collection
  \*********************************************************************************************/
 bool GarbageCollection();
@@ -95,9 +106,9 @@ bool GarbageCollection();
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
-String SaveSettings();
+String SaveSettings(bool forFactoryReset = false);
 
-String SaveSecuritySettings();
+String SaveSecuritySettings(bool forFactoryReset = false);
 
 void afterloadSettings();
 

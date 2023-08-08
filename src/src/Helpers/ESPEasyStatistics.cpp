@@ -57,7 +57,6 @@ void jsonStatistics(bool clearStats) {
         stream_json_timing_stats(x.second, timeSinceLastReset);
       }
       json_close(false);
-      if (clearStats) { x.second.reset(); }
       firstPlugin = false;
     }
   }
@@ -98,7 +97,6 @@ void jsonStatistics(bool clearStats) {
         stream_json_timing_stats(x.second, timeSinceLastReset);
       }
       json_close(false);
-      if (clearStats) { x.second.reset(); }
       firstController = false;
     }
   }
@@ -129,13 +127,15 @@ void jsonStatistics(bool clearStats) {
       json_close();     // close first function element
       json_close(true); // close function
       json_close();     // close misc item
-      if (clearStats) { x.second.reset(); }
     }
   }
 
   json_close(true);   // Close misc list
 
   if (clearStats) {
+    pluginStats.clear();
+    controllerStats.clear();
+    miscStats.clear();
     timingstats_last_reset = millis();
   }
 }

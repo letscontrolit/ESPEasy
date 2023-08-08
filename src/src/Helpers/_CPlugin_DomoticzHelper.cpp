@@ -231,7 +231,7 @@ bool deserializeDomoticzJson(const String& json,
 
   // FIXME TD-er: Is this compare even useful?
   // nvalue is already assigned the same value as nvaluealt and not changed since.
-  if (nvalue == 0) {
+  if (essentiallyZero(nvalue)) {
     nvalue = nvaluealt;
   }
 

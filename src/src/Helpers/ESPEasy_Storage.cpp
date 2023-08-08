@@ -72,13 +72,9 @@ String patch_fname(const String& fname) {
  \*********************************************************************************************/
 String FileError(int line, const char *fname)
 {
-  String err = F("FS   : Error while reading/writing ");
-
-  err += fname;
-  err += F(" in ");
-  err += line;
-  addLog(LOG_LEVEL_ERROR, err);
-  return err;
+  String log = strformat(F("FS   : Error while reading/writing %s in %d"), fname, line);
+  addLog(LOG_LEVEL_ERROR, log);
+  return log;
 }
 
 /********************************************************************************************\
@@ -309,7 +305,7 @@ bool BuildFixes()
     if (validControllerIndex(controller_idx)) {
       MakeControllerSettings(ControllerSettings); //-V522
       if (AllocatedControllerSettings()) {
-        LoadControllerSettings(controller_idx, ControllerSettings);
+        LoadControllerSettings(controller_idx, *ControllerSettings);
 
         String clientid;
         if (Settings.MQTTUseUnitNameAsClientId_unused) {
@@ -321,11 +317,11 @@ bool BuildFixes()
         else {
           clientid  = F("ESPClient_%mac%");
         }
-        safe_strncpy(ControllerSettings.ClientID, clientid, sizeof(ControllerSettings.ClientID));
+        safe_strncpy(ControllerSettings->ClientID, clientid, sizeof(ControllerSettings->ClientID));
 
-        ControllerSettings.mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
-        ControllerSettings.mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
-        SaveControllerSettings(controller_idx, ControllerSettings);
+        ControllerSettings->mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
+        ControllerSettings->mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
+        SaveControllerSettings(controller_idx, *ControllerSettings);
       }
     }
     #endif // if FEATURE_MQTT
@@ -500,6 +496,31 @@ int getPartionCount(uint8_t pType, uint8_t pSubType) {
 
 #endif
 
+ #ifdef ESP8266
+bool clearPartition(ESP8266_partition_type ptype) {
+  uint32_t address;
+  int32_t size;
+  int32_t sector = getPartitionInfo(ESP8266_partition_type::rf_cal, address, size);
+  while (size > 0) {
+    if (!ESP.flashEraseSector(sector)) return false;
+    ++sector;
+    size -= SPI_FLASH_SEC_SIZE;
+
+  }
+  return true;
+}
+
+bool clearRFcalPartition() {
+  return clearPartition(ESP8266_partition_type::rf_cal);
+}
+
+bool clearWiFiSDKpartition() {
+  return clearPartition(ESP8266_partition_type::wifi);
+}
+
+#endif
+
+
 /********************************************************************************************\
    Garbage collection
  \*********************************************************************************************/
@@ -528,7 +549,7 @@ bool GarbageCollection() {
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
-String SaveSettings()
+String SaveSettings(bool forFactoryReset)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveSettings"));
@@ -572,23 +593,27 @@ String SaveSettings()
 
   //  }
 
-  err = SaveSecuritySettings();
+  err = SaveSecuritySettings(forFactoryReset);
 
   return err;
 }
 
-String SaveSecuritySettings() {
+String SaveSecuritySettings(bool forFactoryReset) {
   String     err;
 
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+
+  if (forFactoryReset) {
+    SecuritySettings.forceSave();
+  }
 
   if (SecuritySettings.updateChecksum()) {
     // Settings have changed, save to file.
     err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
     // Security settings are saved, may be update of WiFi settings or hostname.
-    if (!NetworkConnected()) {
+    if (!forFactoryReset && !NetworkConnected()) {
       if (SecuritySettings.hasWiFiCredentials() && active_network_medium == NetworkMedium_t::WIFI) {
         WiFiEventData.wifiConnectAttemptNeeded = true;
         WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
@@ -603,8 +628,14 @@ String SaveSecuritySettings() {
   }
 #endif
 
+  // FIXME TD-er: How to check if these have changed?
+  if (forFactoryReset) {
+    ExtendedControllerCredentials.clear();
+  }
+
   ExtendedControllerCredentials.save();
-  afterloadSettings();
+  if (!forFactoryReset)
+    afterloadSettings();
   return err;
 }
 
@@ -616,10 +647,10 @@ void afterloadSettings() {
   #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
-    if (AllocatedProvisioningSettings()) {
-      loadProvisioningSettings(ProvisioningSettings);
-      if (ProvisioningSettings.matchingFlashSize()) {
-        pref_temp = ProvisioningSettings.ResetFactoryDefaultPreference.getPreference();
+    if (ProvisioningSettings.get()) {
+      loadProvisioningSettings(*ProvisioningSettings);
+      if (ProvisioningSettings->matchingFlashSize()) {
+        pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
       }
     }
   }
@@ -2031,7 +2062,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
           }
 #ifndef BUILD_NO_DEBUG
         } else {
-          addLog(LOG_LEVEL_INFO, String(F("RTC  : Cannot get count from: ")) + fname);
+          addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
 #endif
         }
       }
@@ -2214,16 +2245,16 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
   {
     MakeProvisioningSettings(ProvisioningSettings);
 
-    if (AllocatedProvisioningSettings()) {
-      loadProvisioningSettings(ProvisioningSettings);
+    if (ProvisioningSettings.get()) {
+      loadProvisioningSettings(*ProvisioningSettings);
 
-      if (!ProvisioningSettings.fetchFileTypeAllowed(filetype, filenr)) {
+      if (!ProvisioningSettings->fetchFileTypeAllowed(filetype, filenr)) {
         return F("Not Allowed");
       }
 
-      url  = ProvisioningSettings.url;
-      user = ProvisioningSettings.user;
-      pass = ProvisioningSettings.pass;
+      url  = ProvisioningSettings->url;
+      user = ProvisioningSettings->user;
+      pass = ProvisioningSettings->pass;
     }
   }
   String res = downloadFileType(url, user, pass, filetype, filenr);

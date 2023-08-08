@@ -112,4 +112,10 @@ void P022_data_struct::Plugin_022_initialize(int address)
   p022_set_init(address);
 }
 
+String P022_data_struct::P022_logPrefix(int address) {
+  String res = formatToHex(address, F("PCA 0x"), 2);
+  res += F(": ");
+  return res;
+}
+
 #endif // ifdef USES_P022
