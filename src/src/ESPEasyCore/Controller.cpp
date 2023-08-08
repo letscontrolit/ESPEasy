@@ -201,12 +201,12 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
-  uint16_t mqttPort = ControllerSettings.Port;
+  uint16_t mqttPort = ControllerSettings->Port;
 
 #if FEATURE_MQTT_TLS
   mqtt_tls_last_errorstr.clear();
   mqtt_tls_last_error = 0;
-  const TLS_types TLS_type = ControllerSettings.TLStype();
+  const TLS_types TLS_type = ControllerSettings->TLStype();
   if (TLS_type != TLS_types::NoTLS && nullptr == mqtt_tls) {
     #ifdef ESP32
     mqtt_tls = new ESPEasy_WiFiClientSecure;
@@ -229,9 +229,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     // For example because the server does not give an acknowledgement.
     // This way, we always need the set amount of timeout to handle the request.
     // Thus we should not make the timeout dynamic here if set to ignore ack.
-    const uint32_t timeout = ControllerSettings.MustCheckReply 
-      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings.ClientTimeout)
-      : ControllerSettings.ClientTimeout;
+    const uint32_t timeout = ControllerSettings->MustCheckReply 
+      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
+      : ControllerSettings->ClientTimeout;
 
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -273,7 +273,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       */
 
       if (mqtt_rootCA.isEmpty() && mqtt_tls != nullptr) {
-        LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_rootCA);
+        LoadCertificate(ControllerSettings->getCertificateFilename(), mqtt_rootCA);
         if (mqtt_rootCA.isEmpty()) {
           // Fingerprint must be of some minimal length to continue.
           mqtt_tls_last_errorstr = F("MQTT : No TLS root CA");
@@ -304,7 +304,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       // Fingerprint is checked when making the connection.
       mqtt_rootCA.clear();
       mqtt_fingerprint.clear();
-      LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_fingerprint, false);
+      LoadCertificate(ControllerSettings->getCertificateFilename(), mqtt_fingerprint, false);
       if (mqtt_fingerprint.length() < 32) {
         // Fingerprint must be of some minimal length to continue.
         mqtt_tls_last_errorstr = F("MQTT : Stored TLS fingerprint too small");
@@ -332,9 +332,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     // For example because the server does not give an acknowledgement.
     // This way, we always need the set amount of timeout to handle the request.
     // Thus we should not make the timeout dynamic here if set to ignore ack.
-    const uint32_t timeout = ControllerSettings.MustCheckReply 
-      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings.ClientTimeout)
-      : ControllerSettings.ClientTimeout;
+    const uint32_t timeout = ControllerSettings->MustCheckReply 
+      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
+      : ControllerSettings->ClientTimeout;
 
 #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -453,7 +453,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       const int newlinepos = mqtt_fingerprint.indexOf('\n');
       String fp;
       String dn;
-      if (ControllerSettings.UseDNS) dn = ControllerSettings.getHost();
+      if (ControllerSettings->UseDNS) dn = ControllerSettings->getHost();
       if (newlinepos == -1) {
         fp = mqtt_fingerprint;
       } else {
@@ -514,7 +514,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (mqtt_tls != nullptr && loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log = F("MQTT : Peer certificate info: ");
-    log += ControllerSettings.getHost();
+    log += ControllerSettings->getHost();
     log += ' ';
     log += mqtt_tls->getPeerCertificateInfo();
     addLogMove(LOG_LEVEL_INFO, log);
