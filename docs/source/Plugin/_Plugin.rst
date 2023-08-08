@@ -217,7 +217,7 @@ List of official plugins
 
 There are different released versions of ESP Easy:
 
-:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
+:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTTL, DEBUG logging, etc.
 
 :yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and some DEBUG logging.
 
@@ -332,6 +332,7 @@ There are different released versions of ESP Easy:
    ":ref:`P094_page`","|P094_status|","P094"
    ":ref:`P095_page`","|P095_status|","P095"
    ":ref:`P097_page`","|P097_status|","P097"
+   ":ref:`P098_page`","|P098_status|","P098"
    ":ref:`P099_page`","|P099_status|","P099"
    ":ref:`P100_page`","|P100_status|","P100"
    ":ref:`P101_page`","|P101_status|","P101"

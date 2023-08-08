@@ -193,6 +193,16 @@ void runOncePerSecond()
     I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
 
+  #if FEATURE_MDNS
+  #ifdef ESP8266
+  // Allow MDNS processing
+  if (NetworkConnected()) {
+    MDNS.announce();
+  }
+  #endif
+  #endif // if FEATURE_MDNS
+
+
   checkResetFactoryPin();
   STOP_TIMER(PLUGIN_CALL_1PS);
 }
@@ -574,6 +584,7 @@ void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
   ethPower(false);
   #endif
   ESPEASY_FS.end();
+  process_serialWriteBuffer();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
   Scheduler.markIntendedReboot(reason);

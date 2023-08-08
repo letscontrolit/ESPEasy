@@ -80,15 +80,13 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
+      const int valueCount = P026_NR_OUTPUT_VALUES;
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        if (i < P026_NR_OUTPUT_VALUES) {
+        if (i < valueCount) {
           const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_026_valuename(PCONFIG(pconfigIndex), false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_026_valuename(PCONFIG(pconfigIndex), false));
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;
@@ -140,8 +138,9 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       // Work around to get the "none" at the end.
       options[index] = Plugin_026_valuename(11, true);
       indices[index] = 11;
-
-      for (uint8_t i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+      
+      const int valueCount = P026_NR_OUTPUT_VALUES;
+      for (uint8_t i = 0; i < valueCount; ++i) {
         const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
         sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options, indices);
       }
@@ -157,7 +156,8 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       // Save output selector parameters.
-      for (uint8_t i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+      const int valueCount = P026_NR_OUTPUT_VALUES;
+      for (uint8_t i = 0; i < valueCount; ++i) {
         const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
         const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_026_valuename(choice, false));
@@ -174,18 +174,19 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+      const int valueCount = P026_NR_OUTPUT_VALUES;
+      for (int i = 0; i < valueCount; ++i) {
         UserVar[event->BaseVarIndex + i] = P026_get_value(PCONFIG(i));
       }
-
+      #ifndef LIMIT_BUILD_SIZE
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
 
-        if (log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1)))
+        if (log.reserve(7 * (valueCount + 1)))
         {
           log += F("SYS  : ");
 
-          for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+          for (int i = 0; i < valueCount; ++i) {
             if (i != 0) {
               log += ',';
             }
@@ -195,6 +196,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
         }
       }
       ++p026_read_count;
+      #endif
       success = true;
       break;
     }
@@ -228,35 +230,37 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
 float P026_get_value(uint8_t type)
 {
+  float res{};
   switch (type)
   {
-    case 0: return getUptimeMinutes();
-    case 1: return FreeMem();
-    case 2: return WiFi.RSSI();
+    case 0: res = getUptimeMinutes(); break;
+    case 1: res = FreeMem(); break;
+    case 2: res = WiFi.RSSI(); break;
     case 3:
 # if FEATURE_ADC_VCC
-      return vcc;
+      res = vcc;
 # else // if FEATURE_ADC_VCC
-      return -1.0f;
+      res = -1.0f;
 # endif // if FEATURE_ADC_VCC
-    case 4: return getCPUload();
+      break;
+    case 4: res = getCPUload(); break;
     case 5:
     case 6:
     case 7:
     case 8:
-      return NetworkLocalIP()[type - 5];
-    case 9:  return timePassedSince(lastWeb) / 1000.0f; // respond in seconds
-    case 10: return getCurrentFreeStack();
-    case 12: return WiFiEventData.wifi_TX_pwr;
+      res = NetworkLocalIP()[type - 5]; break;
+    case 9:  res = timePassedSince(lastWeb) / 1000.0f; break; // respond in seconds
+    case 10: res = getCurrentFreeStack(); break;
+    case 12: res = WiFiEventData.wifi_TX_pwr; break;
     case 13:
       # ifdef USE_SECOND_HEAP
-      return FreeMem2ndHeap();
-      # else // ifdef USE_SECOND_HEAP
-      break;
+      res = FreeMem2ndHeap();
       # endif // ifdef USE_SECOND_HEAP
+      break;
     case 14: return p026_read_count;
+      break;
   }
-  return 0.0f;
+  return res;
 }
 
 #endif // USES_P026

@@ -71,8 +71,8 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings); //-V522
 
         if (AllocatedControllerSettings()) {
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          C011_sendBinary = ControllerSettings.sendBinary();
+          LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+          C011_sendBinary = ControllerSettings->sendBinary();
         }
       }
       success = init_c011_delay_queue(event->ControllerIndex);
@@ -128,8 +128,8 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         if (!AllocatedControllerSettings()) {
           addHtmlError(F("Out of memory, cannot load page"));
         } else {
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          addControllerParameterForm(ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
+          LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+          addControllerParameterForm(*ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
           addFormNote(F("Do not 'percent escape' body when send binary checked"));
         }
       }

@@ -151,11 +151,17 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
     case SchedulerTimerType_e::SystemEventQueue:
     {
       const PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
-      const uint8_t index          = (id >> 8) & 0xFF;
+      const uint8_t index          = (id >> 8) & 0xFF; // DeviceIndex / ProtocolIndex / NotificationProtocolIndex
       const uint8_t function       = id & 0xFF;
       result += toString(ptr_type);
       result += ',';
-      result += (index + 1); // TaskIndex / ControllerIndex / NotificationIndex
+      if (ptr_type == PluginPtrType::ControllerPlugin) {
+        result += getCPluginNameFromProtocolIndex(index);
+      } else if (ptr_type == PluginPtrType::TaskPlugin) {
+        result += getPluginNameFromDeviceIndex(index);
+      } else {
+        result += (index + 1); 
+      }
       result += ',';
       result += function;
 

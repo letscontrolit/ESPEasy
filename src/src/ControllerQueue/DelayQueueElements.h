@@ -70,7 +70,7 @@
       C##NNN####M##_DelayHandler = new (std::nothrow) (ControllerDelayHandlerStruct);                                \
     }                                                                                                                \
     if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                     \
-    return C##NNN####M##_DelayHandler->configureControllerSettings(ControllerIndex);                                 \
+    return C##NNN####M##_DelayHandler->cacheControllerSettings(ControllerIndex);                                 \
   }                                                                                                                  \
   void exit_c##NNN####M##_delay_queue() {                                                                            \
     if (C##NNN####M##_DelayHandler != nullptr) {                                                                     \

@@ -21,26 +21,53 @@ Maintainer: |P035_maintainer|
 
 Used libraries: |P035_usedlibraries|
 
-Supported hardware
-------------------
+Introduction
+------------
+This plugin can be used to send out IR signals, usually at 38 kHz, to IR-controlled devices like ventilators, TVs, airconditioners etc.
 
-|P035_usedby|
+.. Supported hardware
+.. ------------------
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+.. .. |P035_usedby|
 
-.. .. include:: P035_commands.repl
+Wiring
+------
 
-.. Events
-.. ~~~~~~
+The IR led can be connected directly to an ESP GPIO pin. The default is that the Anode of the LED is connected to the GPIO pin, and the Cathode to GND, but using the **Inverted output** configuration setting allows to connect the Anode to VCC, and the Cathode to the GPIO pin.
 
-.. .. include:: P035_events.repl
+Device Configuration
+--------------------
+
+.. image:: P035_DeviceConfiguration.png
+
+* **Name**: Required by ESPEasy, must be unique among the list of available devices/tasks.
+
+* **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
+
+Actuator
+^^^^^^^^
+
+* **GPIO -> LED**: Select the GPIO pin the LED is connected to.
+
+Device Settings
+^^^^^^^^^^^^^^^
+
+* **Inverted output**: With this setting enabled, the signal will be sent out inverted (On and Off swapped), so the LED can be connected to VCC and the GPIO pin, instead of between the GPIO pin and GND. This allows for a somewhat larger current through the LED.
+
+
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P035_commands.repl
 
 Change log
 ----------
 
 .. versionchanged:: 2.0
   ...
+
+  |added|
+  2023-07-21 Inverted output option introduced.
 
   |added|
   Major overhaul for 2.0 release.

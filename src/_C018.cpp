@@ -303,12 +303,12 @@ bool C018_init(struct EventStruct *event) {
       return false;
     }
 
-    LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-    C018_DelayHandler->configureControllerSettings(ControllerSettings);
-    AppEUI             = getControllerUser(event->ControllerIndex, ControllerSettings);
-    AppKey             = getControllerPass(event->ControllerIndex, ControllerSettings);
-    SampleSetInitiator = ControllerSettings.SampleSetInitiator;
-    Port               = ControllerSettings.Port;
+    LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+    C018_DelayHandler->cacheControllerSettings(*ControllerSettings);
+    AppEUI             = getControllerUser(event->ControllerIndex, *ControllerSettings);
+    AppKey             = getControllerPass(event->ControllerIndex, *ControllerSettings);
+    SampleSetInitiator = ControllerSettings->SampleSetInitiator;
+    Port               = ControllerSettings->Port;
   }
 
   std::shared_ptr<C018_ConfigStruct> customConfig;

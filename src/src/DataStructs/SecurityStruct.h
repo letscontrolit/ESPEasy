@@ -31,6 +31,9 @@ struct SecurityStruct
 
   bool peerMacSet(uint8_t peer_index) const;
 
+  // Clear the checksum to make sure file will be saved
+  void forceSave();
+
   void clearWiFiCredentials();
 
   void clearWiFiCredentials(WiFiCredentialsSlot slot);

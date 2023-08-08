@@ -9,7 +9,10 @@ LongTermTimer last_network_medium_set_moment;
 
 bool webserverRunning(false);
 bool webserver_init(false);
+
+#if FEATURE_MDNS
 bool mDNS_init(false);
+#endif
 
 
 // NTP status

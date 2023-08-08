@@ -1,0 +1,56 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``Eastron,Pause``
+    | ``Eastron,Resume``
+
+    ","
+    | ``Pause`` and ``Resume`` refer to the continuous reading of set registers of all connected Eastron modules. 
+    | When changing a setting on a specific module, this background register reading must be temporarily halted by calling ``Eastron,Pause`` first.
+    | All commands are case insensitive.
+
+    "
+    "
+
+    | ``Eastron,SetBaud,<new_baudrate>[,<node_id>]``
+    | ``Eastron,SetID,<new_id>[,<node_id>]``
+
+    ","
+    | The optional ``<node_id>`` parameter indicates the current Modbus address. When not given, the default of address ``1`` is assumed.
+    | Valid node IDs are ``1 ... 247``.
+    | Call ``Eastron,Pause`` before changing settings on the module.
+    | On some modules, like the SDM120, the user must press the button for 3 seconds to enter ``-set-`` mode.
+    | After enabling the ``-set-`` mode, these commands can be given and then the user must press the button for 3 seconds to store the changed settings.
+    |
+    | Changing ID is active immediately, thus the new ID must be used for commands given after changing the ID.
+    | Change of baud rate is only active after the module is power cycled.
+    |
+    | Allowed baud rates:
+    | SDM120 / SDM230:
+    | ``0`` = 2400 baud (default)
+    | ``1`` = 4800 baud
+    | ``2`` = 9600 baud
+    | ``5`` = 1200 baud
+    | 
+    | SDM320 / SDM530Y:
+    | ``0`` = 2400 baud
+    | ``1`` = 4800 baud
+    | ``2`` = 9600 baud (default)
+    | ``5`` = 1200 baud
+    | 
+    | SDM630 / SDM72 / SDM72V2:
+    | ``0`` = 2400 baud
+    | ``1`` = 4800 baud
+    | ``2`` = 9600 baud (default)
+    | ``3`` = 19200 baud
+    | ``4`` = 38400 baud    
+    |
+    | The baud rate parameter can be given either as a value ``0`` ... ``5``, or the exact (supported) baud rate.
+    |
+    | All commands are case insensitive.
+
+    "
+

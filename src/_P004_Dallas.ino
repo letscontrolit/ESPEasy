@@ -116,10 +116,12 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
+      const int valueCount = P004_NR_OUTPUT_VALUES;
+
       if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
-        addFormCheckBox(F("Auto Select Sensor"), F("autoselect"), P004_SCAN_ON_INIT, P004_NR_OUTPUT_VALUES > 1);
+        addFormCheckBox(F("Auto Select Sensor"), F("autoselect"), P004_SCAN_ON_INIT, valueCount > 1);
         addFormNote(F("Auto Select can only be used for 1 Dallas sensor per GPIO pin."));
-        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
+        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, valueCount);
 
         {
           // Device Resolution select
@@ -155,7 +157,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
             static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr != P004_data) {
-            for (uint8_t i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
+            for (uint8_t i = 0; i < valueCount; ++i) {
               if (i == 0) {
                 addFormSubHeader(F("Statistics"));
               } else {
@@ -204,6 +206,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
+      const int valueCount = P004_NR_OUTPUT_VALUES;
 
       if (Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
@@ -211,7 +214,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        if (i < P004_NR_OUTPUT_VALUES) {
+        if (i < valueCount) {
           if (i != 0) {
             string += F("<br>");
           }
@@ -240,6 +243,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
       const uint8_t res              = P004_RESOLUTION;
+      const int valueCount = P004_NR_OUTPUT_VALUES;
 
       if (Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
@@ -250,12 +254,12 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                            Plugin_004_DallasPin_RX,
                            Plugin_004_DallasPin_TX,
                            res,
-                           P004_NR_OUTPUT_VALUES == 1 && P004_SCAN_ON_INIT));
+                           valueCount == 1 && P004_SCAN_ON_INIT));
       P004_data_struct *P004_data =
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P004_data) {
-        for (uint8_t i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
+        for (uint8_t i = 0; i < valueCount; ++i) {
           uint8_t addr[8] = { 0 };
           Dallas_plugin_get_addr(addr, event->TaskIndex, i);
           P004_data->add_addr(addr, i);
@@ -273,7 +277,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P004_data) {
-        if ((P004_NR_OUTPUT_VALUES == 1) && P004_SCAN_ON_INIT) {
+        const int valueCount = P004_NR_OUTPUT_VALUES;
+        if ((valueCount == 1) && P004_SCAN_ON_INIT) {
           if (!P004_data->sensorAddressSet()) {
             P004_data->init();
           }
@@ -292,7 +297,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
             P004_data->collect_values();
 
-            for (uint8_t i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
+            for (uint8_t i = 0; i < valueCount; ++i) {
               float value = 0.0f;
 
               if (P004_data->read_temp(value, i))

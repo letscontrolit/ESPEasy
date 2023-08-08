@@ -1,0 +1,44 @@
+.. csv-table::
+    :header: "Command", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``irsend,<protocol>,<data>[,<bits>[,<repeats>]]``
+
+    | Arguments:
+
+    | ``<protocol>``: Required. The IR protocol to use for sending the data.
+
+    | ``<data>``: Required. The data to send out.
+
+    | ``<bits>``: Optional. The number of bits of the protocol used. When using 0 (or not providing a value), the protocol-default will be used.
+
+    | ``<repeats>``: Optional. How often should the data be transmitted. Many manual IR remotes repeat the same signal up to 3 times, and each protocol has a default setting for this parameter, that will be used when not specified.
+    ","
+    | Send data out, using the protocol specified. The protocol and required data for a specific command can be obtained from f.i. a manual IR remote by using a TSOP4838 IR receiver and plugin P016: :ref:`P016_page`, retrieving the relevant data from the logs.
+
+    | Supported protocols are available from the |IR_protocols_page| (external link)
+    "
+    "
+    | ``irsendac,<{JSON-formatted-AC-command}>``
+
+    | Argument:
+
+    | ``<{JSON-formatted-AC-command}>``: Required. A complete JSON string (single line) to control an airconditioner.
+    ","
+    | Send a complete AC control command. These devices often require more complex commands and arguments, that can be \'carefully crafted\' and sent using this command.
+
+    | Documentation on how to craft these JSON commands can be found in this |IR_aircondition_commands| (external link)
+
+    | This JSON string does *not* have to be quoted if it contains spaces or commas, the entire text supplied is used as-is. It has to be valid JSON to be successfully processed, though.
+
+    | This command is only available if the Extended AC support is included in the build. (This command is shown on the Device Configuration page when included)
+    "
+
+.. |IR_protocols_page| raw:: html
+
+   <a href="https://github.com/crankyoldgit/IRremoteESP8266/blob/master/SupportedProtocols.md" target="_blank">Protocols page at IRremoteESP8266</a>
+
+.. |IR_aircondition_commands| raw:: html
+
+   <a href="https://github.com/crankyoldgit/IRremoteESP8266/wiki/Frequently-Asked-Questions#user-content-The_libraryexample_code_doesnt_understand_my_Air_Conditioner_remote_" target="_blank">IRremoteESP8266 F.A.Q. answer</a>

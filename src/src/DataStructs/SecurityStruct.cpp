@@ -69,6 +69,10 @@ bool SecurityStruct::peerMacSet(uint8_t peer_index) const {
   return false;
 }
 
+void SecurityStruct::forceSave() {
+  memset(md5, 0, 16);
+}
+
 void SecurityStruct::clearWiFiCredentials() {
   ZERO_FILL(WifiSSID);
   ZERO_FILL(WifiKey);

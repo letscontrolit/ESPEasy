@@ -213,9 +213,10 @@ void handle_root() {
     {
       addRowLabel(LabelType::M_DNS);
       addHtml(F("<a href='http://"));
-      addHtml(getValue(LabelType::M_DNS));
+      const String url = getValue(LabelType::M_DNS);
+      addHtml(url);
       addHtml(F("'>"));
-      addHtml(getValue(LabelType::M_DNS));
+      addHtml(url);
       addHtml(F("</a>"));
     }
       # endif // if FEATURE_MDNS

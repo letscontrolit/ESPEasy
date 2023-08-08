@@ -462,6 +462,13 @@ When using Dark-mode as an Operating System or Web-browser setting, the ESPEasy 
 
 NB: If this option is not available, the regular non-dark mode will be used.
 
+Disable Rules auto-completion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-07-20
+
+When Rules auto-completion, also including syntax highlighting, is available in the build, some users have difficulty working with the auto-completion. This option disables the auto-completion, and that also inhibits the syntax highlighting as these 2 features are closely integrated.
+
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
 

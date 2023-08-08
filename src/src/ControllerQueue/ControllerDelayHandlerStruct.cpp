@@ -1,29 +1,42 @@
 #include "../ControllerQueue/ControllerDelayHandlerStruct.h"
 
 
-bool ControllerDelayHandlerStruct::configureControllerSettings(controllerIndex_t ControllerIndex)
+ControllerDelayHandlerStruct::ControllerDelayHandlerStruct() :
+  lastSend(0),
+  minTimeBetweenMessages(CONTROLLER_DELAY_QUEUE_DELAY_DFLT),
+  expire_timeout(0),
+  max_queue_depth(CONTROLLER_DELAY_QUEUE_DEPTH_DFLT),
+  attempt(0),
+  max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
+  delete_oldest(false),
+  must_check_reply(false),
+  deduplicate(false),
+  useLocalSystemTime(false) {}
+
+bool ControllerDelayHandlerStruct::cacheControllerSettings(controllerIndex_t ControllerIndex)
 {
   MakeControllerSettings(ControllerSettings);
 
   if (!AllocatedControllerSettings()) {
     return false;
   }
-  LoadControllerSettings(ControllerIndex, ControllerSettings);
-  configureControllerSettings(ControllerSettings);
+  LoadControllerSettings(ControllerIndex, *ControllerSettings);
+  cacheControllerSettings(*ControllerSettings);
   return true;
 }
 
-void ControllerDelayHandlerStruct::configureControllerSettings(const ControllerSettingsStruct& settings) {
-  minTimeBetweenMessages   = settings.MinimalTimeBetweenMessages;
-  max_queue_depth          = settings.MaxQueueDepth;
-  max_retries              = settings.MaxRetry;
-  delete_oldest            = settings.DeleteOldest;
-  must_check_reply         = settings.MustCheckReply;
-  deduplicate              = settings.deduplicate();
-  useLocalSystemTime       = settings.useLocalSystemTime();
+void ControllerDelayHandlerStruct::cacheControllerSettings(const ControllerSettingsStruct& settings) {
+  minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
+  max_queue_depth        = settings.MaxQueueDepth;
+  max_retries            = settings.MaxRetry;
+  delete_oldest          = settings.DeleteOldest;
+  must_check_reply       = settings.MustCheckReply;
+  deduplicate            = settings.deduplicate();
+  useLocalSystemTime     = settings.useLocalSystemTime();
 #ifdef USES_ESPEASY_NOW
   enableESPEasyNowFallback = settings.enableESPEasyNowFallback();
 #endif
+
   if (settings.allowExpire()) {
     expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
 
@@ -260,10 +273,10 @@ void ControllerDelayHandlerStruct::process(
     MakeControllerSettings(ControllerSettings);
 
     if (AllocatedControllerSettings()) {
-      LoadControllerSettings(element->_controller_idx, ControllerSettings);
-      configureControllerSettings(ControllerSettings);
+      LoadControllerSettings(element->_controller_idx, *ControllerSettings);
+      cacheControllerSettings(*ControllerSettings);
       START_TIMER;
-      markProcessed(func(controller_number, *element, ControllerSettings));
+      markProcessed(func(controller_number, *element, *ControllerSettings));
       #if FEATURE_TIMING_STATS
       STOP_TIMER_VAR(timerstats_id);
       #endif
