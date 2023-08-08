@@ -11,7 +11,6 @@
 # include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_time_calc.h"
 
-# include <Arduino.h>
 # include <map>
 #endif // if FEATURE_TIMING_STATS
 
@@ -68,11 +67,17 @@ enum class TimingStatsElements {
   PARSE_SYSVAR,
   PARSE_SYSVAR_NOCHANGE,
   PARSE_TEMPLATE_PADDED,
+  IS_NUMERICAL,
+  GET_TASKVALUE_AS_STRING,
+  FORMAT_USER_VAR,
   PROCESS_SYSTEM_EVENT_QUEUE,
   RULES_MATCH,
   RULES_PROCESSING,
   RULES_PROCESS_MATCHED,
   RULES_PARSE_LINE,
+  COMMAND_EXEC_INTERNAL,
+  CONSOLE_LOOP,
+  CONSOLE_WRITE_SERIAL,
   
   // Related to file access
   LOADFILE_STATS,

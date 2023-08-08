@@ -1,0 +1,51 @@
+.. |P150_name| replace:: :cyan:`TMP117 Temperature`
+.. |P150_type| replace:: :cyan:`Environment`
+.. |P150_typename| replace:: :cyan:`Environment - TMP117 Temperature`
+.. |P150_porttype| replace:: `.`
+.. |P150_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P150_github| replace:: P150_TMP117.ino
+.. _P150_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P150_TMP117.ino
+.. |P150_usedby| replace:: `.`
+.. |P150_shortinfo| replace:: `TMP117 Precision temperature sensor`
+.. |P150_maintainer| replace:: `tonhuisman`
+.. |P150_compileinfo| replace:: `.`
+.. |P150_usedlibraries| replace:: `.`
+
+.. |P151_name| replace:: :cyan:`I2C Honeywell Pressure`
+.. |P151_type| replace:: :cyan:`Environment`
+.. |P151_typename| replace:: :cyan:`Environment - I2C Honeywell Pressure`
+.. |P151_porttype| replace:: `.`
+.. |P151_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P151_github| replace:: P151_Honeywell_pressure.ino
+.. _P151_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P151_Honeywell_pressure.ino
+.. |P151_usedby| replace:: `.`
+.. |P151_shortinfo| replace:: `I2C Honeywell Pressure`
+.. |P151_maintainer| replace:: `TD-er`
+.. |P151_compileinfo| replace:: `.`
+.. |P151_usedlibraries| replace:: `.`
+
+.. |P152_name| replace:: :cyan:`ESP32 DAC`
+.. |P152_type| replace:: :cyan:`Output`
+.. |P152_typename| replace:: :cyan:`Output - ESP32 DAC`
+.. |P152_porttype| replace:: `.`
+.. |P152_status| replace:: :green:`NORMAL`
+.. |P152_github| replace:: P152_DAC.ino
+.. _P152_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P152_DAC.ino
+.. |P152_usedby| replace:: `.`
+.. |P152_shortinfo| replace:: `ESP32 and ESP32-S2 Digital Analog Converter (DAC)`
+.. |P152_maintainer| replace:: `tonhuisman`
+.. |P152_compileinfo| replace:: `.`
+.. |P152_usedlibraries| replace:: `.`
+
+.. |P153_name| replace:: :cyan:`SHT4x`
+.. |P153_type| replace:: :cyan:`Environment`
+.. |P153_typename| replace:: :cyan:`Environment - SHT4x`
+.. |P153_porttype| replace:: `.`
+.. |P153_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P153_github| replace:: P153_SHT4x.ino
+.. _P153_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P153_SHT4x.ino
+.. |P153_usedby| replace:: `.`
+.. |P153_shortinfo| replace:: `SHT4x Temperature and Humidity sensors`
+.. |P153_maintainer| replace:: `tonhuisman`
+.. |P153_compileinfo| replace:: `.`
+.. |P153_usedlibraries| replace:: `.`

@@ -1,6 +1,8 @@
 #ifndef GLOBALS_RUNTIMEDATA_H
 #define GLOBALS_RUNTIMEDATA_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../CustomBuild/ESPEasyLimits.h"
 
 #include "../DataStructs/UserVarStruct.h"
@@ -15,12 +17,12 @@
 * let,1,10
 * if %v1%=10 do ...
 \*********************************************************************************************/
-extern std::map<uint32_t, double> customFloatVar;
+extern std::map<uint32_t, ESPEASY_RULES_FLOAT_TYPE> customFloatVar;
 
-double getCustomFloatVar(uint32_t index);
-void setCustomFloatVar(uint32_t index, const double& value);
+ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(uint32_t index);
+void setCustomFloatVar(uint32_t index, const ESPEASY_RULES_FLOAT_TYPE& value);
 
-bool getNextCustomFloatVar(uint32_t& index, double& value);
+bool getNextCustomFloatVar(uint32_t& index, ESPEASY_RULES_FLOAT_TYPE& value);
 
 
 /*********************************************************************************************\

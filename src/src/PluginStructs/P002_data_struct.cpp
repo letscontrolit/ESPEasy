@@ -2,7 +2,7 @@
 
 #ifdef USES_P002
 
-# include "../Helpers/Rules_calculate.h"
+# include "../Globals/RulesCalculate.h"
 
 
 # ifndef DEFAULT_VREF
@@ -269,13 +269,28 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     addFormTextBox(F("query-input widenumber"),
                    label,
                    getPluginCustomArgName(varNr),
-                   _multipoint.size() > line_nr ? doubleToString(static_cast<double>(_multipoint[line_nr]._adc), _nrDecimals,
-                                                                 true) : EMPTY_STRING,
+
+                   _multipoint.size() > line_nr ? 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                   doubleToString
+#else
+                   floatToString
+#endif
+                    (static_cast<ESPEASY_RULES_FLOAT_TYPE>(_multipoint[line_nr]._adc), 
+                    _nrDecimals,
+                    true) : EMPTY_STRING,
                    0);
     html_add_estimate_symbol();
     addTextBox(getPluginCustomArgName(varNr + 1),
-               _multipoint.size() > line_nr ?  doubleToString(static_cast<double>(_multipoint[line_nr]._value), _nrDecimals,
-                                                              true) : EMPTY_STRING,
+               _multipoint.size() > line_nr ?  
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                   doubleToString
+#else
+                   floatToString
+#endif
+               (static_cast<ESPEASY_RULES_FLOAT_TYPE>(_multipoint[line_nr]._value), 
+               _nrDecimals,
+               true) : EMPTY_STRING,
                0,
                false,
                false,
@@ -840,47 +855,22 @@ void P002_data_struct::reset()
 # endif // ifndef LIMIT_BUILD_SIZE
 }
 
+uint32_t P002_data_struct::getOversamplingCount() const
+{
+  return OverSampling.getCount();
+}
+
 void P002_data_struct::resetOversampling() {
-  OversamplingValue  = 0;
-  OversamplingCount  = 0;
-  OversamplingMinVal = MAX_ADC_VALUE;
-  OversamplingMaxVal = -MAX_ADC_VALUE;
+  OverSampling.reset();
 }
 
 void P002_data_struct::addOversamplingValue(int currentValue) {
-  // Extra check to only add min or max readings once.
-  // They will be taken out of the averaging only one time.
-  if ((currentValue == 0) && (currentValue == OversamplingMinVal)) {
-    return;
-  }
+  OverSampling.add(currentValue);
 
-  if ((currentValue == MAX_ADC_VALUE) && (currentValue == OversamplingMaxVal)) {
-    return;
-  }
-
-  OversamplingValue += currentValue;
-  ++OversamplingCount;
-
-  if (currentValue > OversamplingMaxVal) {
-    OversamplingMaxVal = currentValue;
-  }
-
-  if (currentValue < OversamplingMinVal) {
-    OversamplingMinVal = currentValue;
-  }
 }
 
 bool P002_data_struct::getOversamplingValue(float& float_value, int& raw_value) const {
-  if (OversamplingCount > 0) {
-    float sum   = static_cast<float>(OversamplingValue);
-    float count = static_cast<float>(OversamplingCount);
-
-    if (OversamplingCount >= 3) {
-      sum   -= OversamplingMaxVal;
-      sum   -= OversamplingMinVal;
-      count -= 2;
-    }
-    float_value = sum / count;
+  if (OverSampling.peek(float_value)) {
     raw_value   = static_cast<int>(float_value);
 
 # ifdef ESP32
@@ -950,7 +940,7 @@ int P002_data_struct::computeADC_to_bin(const int& currentValue) const
 
     formula.replace(F("%value%"), toString(calibrated_value, _nrDecimals));
 
-    double result = 0;
+    ESPEASY_RULES_FLOAT_TYPE result{};
 
     if (!isError(RulesCalculate.doCalculate(parseTemplate(formula).c_str(), &result))) {
       calibrated_value = result;
@@ -993,14 +983,11 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
   #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("ADC getBinnedValue: bin cnt: ");
-
-    log += highest_bin_count;
-    log += F(" Value: ");
-    log += float_value;
-    log += F(" RAW: ");
-    log += raw_value;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, 
+      strformat(F("ADC getBinnedValue: bin cnt: %u  Value: %f RAW: %d"), 
+        highest_bin_count, 
+        float_value, 
+        raw_value));
   }
   #  endif // ifndef BUILD_NO_DEBUG
 

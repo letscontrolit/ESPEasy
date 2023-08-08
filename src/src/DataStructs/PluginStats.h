@@ -80,9 +80,18 @@ public:
   // Compute the standard deviation  over last N stored values
   float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
-
+  // Compute min/max over last N stored values
+  float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const;
+   
+  // Compute sample stored values
+  float getSample(int lastNrSamples) const;
+  
   float operator[](PluginStatsBuffer_t::index_t index) const;
 
+private:
+  static bool matchedCommand(const String& command, const __FlashStringHelper *cmd_match, int& nrSamples);
+
+public:
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
@@ -98,7 +107,7 @@ public:
   void webformLoad_show_val(
     struct EventStruct *event,
     const String      & label,
-    double              value,
+    ESPEASY_RULES_FLOAT_TYPE              value,
     const String      & unit) const;
 
 
@@ -154,7 +163,7 @@ private:
 class PluginStats_array {
 public:
 
-  PluginStats_array();
+  PluginStats_array() = default;
   ~PluginStats_array();
 
   void    initPluginStats(taskVarIndex_t taskVarIndex);
@@ -187,7 +196,7 @@ public:
 
 private:
 
-  PluginStats *_plugin_stats[VARS_PER_TASK] = { nullptr, };
+  PluginStats *_plugin_stats[VARS_PER_TASK] = {};
 };
 
 #endif // if FEATURE_PLUGIN_STATS

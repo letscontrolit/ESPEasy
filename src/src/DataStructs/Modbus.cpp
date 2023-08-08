@@ -238,7 +238,7 @@ bool Modbus::hasTimeout()
 // tryread can be called in a round robin fashion. It will initiate a read if Modbus is idle and update the result once it is available.
 // subsequent calls (if Modbus is busy etc. ) will return false and not update the result.
 // Use to read multiple values non blocking in an re-entrant function. Not tested yet.
-bool Modbus::tryRead(uint8_t ModbusID, uint16_t M_register,  MODBUS_registerTypes_t type, char *IPaddress, double& result) {
+bool Modbus::tryRead(uint8_t ModbusID, uint16_t M_register,  MODBUS_registerTypes_t type, char *IPaddress, ESPEASY_RULES_FLOAT_TYPE& result) {
   if (isBusy()) { return false; // not done yet
   }
 

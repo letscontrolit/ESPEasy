@@ -39,6 +39,8 @@
 #include "../Commands/wd.h"
 #include "../Commands/WiFi.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Helpers/Misc.h"
@@ -213,7 +215,9 @@ bool do_command_case(command_case_data         & data,
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
+    START_TIMER;
     data.status = pFunc(data.event, data.line.c_str());
+    STOP_TIMER(COMMAND_EXEC_INTERNAL);
     return true;
   }
   return false;
@@ -229,7 +233,9 @@ bool do_command_case(command_case_data         & data,
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
+    START_TIMER;
     data.status = pFunc(data.event, data.line.c_str());
+    STOP_TIMER(COMMAND_EXEC_INTERNAL);
     return true;
   }
   return false;
@@ -275,6 +281,10 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R( "clearaccessblock", Command_AccessInfo_Clear,   0); // Network Command
       COMMAND_CASE_R(    "clearpassword", Command_Settings_Password_Clear,     1); // Settings.h
       COMMAND_CASE_R(      "clearrtcram", Command_RTC_Clear,          0); // RTC.h
+      #ifdef ESP8266
+      COMMAND_CASE_R(     "clearsdkwifi", Command_System_Erase_SDK_WiFiconfig,  0); // System.h
+      COMMAND_CASE_R(   "clearwifirfcal", Command_System_Erase_RFcal,  0); // System.h
+      #endif
       COMMAND_CASE_R(           "config", Command_Task_RemoteConfig, -1); // Tasks.h
       COMMAND_CASE_R("controllerdisable", Command_Controller_Disable, 1); // Controller.h
       COMMAND_CASE_R( "controllerenable", Command_Controller_Enable,  1); // Controller.h
@@ -318,6 +328,10 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R(   "gateway", Command_Gateway,     1); // Network Command
       COMMAND_CASE_A(      "gpio", Command_GPIO,        2); // Gpio.h
       COMMAND_CASE_A("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
+      break;
+    }
+    case 'h': {
+      COMMAND_CASE_R("hiddenssid", Command_Wifi_HiddenSSID, 1); // wifi.h
       break;
     }
     case 'i': {
@@ -413,6 +427,9 @@ bool executeInternalCommand(command_case_data & data)
 #if FEATURE_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,     -1); // MQTT.h
 #endif // if FEATURE_MQTT
+      #if FEATURE_PUT_TO_HTTP
+      COMMAND_CASE_A("puttohttp", Command_HTTP_PutToHTTP,  -1); // HTTP.h
+      #endif // if FEATURE_PUT_TO_HTTP
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }
@@ -614,26 +631,16 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     {
-      String log = F("Command: ");
-      log += cmd;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, concat(F("Command: "), cmd));
     }
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
-    {
-      String parameters;
-      parameters.reserve(64);
-      parameters += F("Par1: ");
-      parameters += TempEvent.Par1;
-      parameters += F(" Par2: ");
-      parameters += TempEvent.Par2;
-      parameters += F(" Par3: ");
-      parameters += TempEvent.Par3;
-      parameters += F(" Par4: ");
-      parameters += TempEvent.Par4;
-      parameters += F(" Par5: ");
-      parameters += TempEvent.Par5;
-      addLogMove(LOG_LEVEL_DEBUG, parameters);
-    }
+    addLogMove(LOG_LEVEL_DEBUG, strformat(
+        F("Par1: %d Par2: %d Par3: %d Par4: %d Par5: %d"),
+        TempEvent.Par1,
+        TempEvent.Par2,
+        TempEvent.Par3,
+        TempEvent.Par4,
+        TempEvent.Par5));
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -698,8 +705,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       return true;
     }
   }
-  String errorUnknown = F("Command unknown: ");
-  errorUnknown += action;
+  const String errorUnknown = concat(F("Command unknown: "), action);
   addLog(LOG_LEVEL_INFO, errorUnknown);
   SendStatus(&TempEvent, errorUnknown);
   delay(0);

@@ -2218,6 +2218,8 @@ const uint8_t PROGMEM ftv_colors[] = {
 # define SPEED_MAX 50
 # define ARRAYSIZE 300 // Max LED Count
 
+// # define P128_USES_GRB // Different type of pixel?
+
 // Choose your color order below:
 # if defined(P128_USES_GRB)
 #  define GRB
@@ -2229,6 +2231,8 @@ const uint8_t PROGMEM ftv_colors[] = {
 #  define RGBW
 # elif defined(P128_USES_BRG)
 #  define BRG
+# elif defined(P128_USES_BGR)
+#  define BGR
 # elif defined(P128_USES_RBG)
 #  define RBG
 # else // if defined(P128_USES_GRB)
@@ -2244,7 +2248,7 @@ const uint8_t PROGMEM ftv_colors[] = {
 
 # define NEOPIXEL_LIB NeoPixelBrightnessBus   // Neopixel library type
 # if defined(ESP32)
-#  define METHOD NeoEsp32Rmt1800KbpsMethod    // RMT, user selected pin - use NeoEsp32RmtMethod
+#  define METHOD NeoEsp32Rmt1800KbpsMethod    // RMT, user selected pin - use NeoEsp32RmtMethod (CPU dependent)
 # endif // if defined(ESP32)
 # if defined(ESP8266)
 #  define METHOD NeoEsp8266Uart1800KbpsMethod // GPIO2 - use NeoEsp8266Uart0800KbpsMethod for GPIO1(TX)
@@ -2260,6 +2264,8 @@ const uint8_t PROGMEM ftv_colors[] = {
   #  define FEATURE NeoRgbwFeature
 # elif defined BRG
   #  define FEATURE NeoBrgFeature
+# elif defined BGR
+  #  define FEATURE NeoBgrFeature
 # elif defined RBG
   #  define FEATURE NeoRbgFeature
 # else // if defined GRB
@@ -2330,12 +2336,14 @@ private:
            rgb_s      = HtmlColor(0xFF0000);
 # endif // if defined(RGBW) || defined(GRBW)
 
-  const int8_t   gpioPin = -1;
+  const int8_t   gpioPin    = -1;
   const uint16_t pixelCount = 0;
-  const uint8_t  maxBright = 0;
+  const uint8_t  maxBright  = 0;
 
   int16_t fadedelay = 20;
 
+  uint16_t ledi = 0;
+  uint16_t ledf = 0;
 
   int8_t defaultspeed  = 25;
   int8_t rainbowspeed  = 1;

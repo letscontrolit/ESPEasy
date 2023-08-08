@@ -80,18 +80,18 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       return false;
     }
 
-    LoadControllerSettings(controllerIndex, ControllerSettings);
-    MustCheckReply = ControllerSettings.MustCheckReply;
-    hostname = ControllerSettings.getHost();
-    pass = getControllerPass(controllerIndex, ControllerSettings);
-    ClientTimeout = ControllerSettings.ClientTimeout;
+    LoadControllerSettings(controllerIndex, *ControllerSettings);
+    MustCheckReply = ControllerSettings->MustCheckReply;
+    hostname = ControllerSettings->getHost();
+    pass = getControllerPass(controllerIndex, *ControllerSettings);
+    ClientTimeout = ControllerSettings->ClientTimeout;
 
     if (pass.isEmpty()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
       return false;
     }
 
-    if (!try_connect_host(/* CPLUGIN_ID_012 */ 12, client, ControllerSettings)) {
+    if (!try_connect_host(/* CPLUGIN_ID_012 */ 12, client, *ControllerSettings)) {
       return false;
     }
   }

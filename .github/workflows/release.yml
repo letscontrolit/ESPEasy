@@ -152,16 +152,29 @@ jobs:
           mkdir bin
           mv *.* bin
           find . -not -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP82xx.zip
-          find . -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP32.zip 
+          # ESP32 and derived chips
+          # TODO if/when available: ESP32c2 ESP32c6 ESP32h2
+          find . -name '*ESP32s2*' -print | zip -@ ../../ESPEasy_ESP32s2.zip 
+          find . -name '*ESP32c3*' -print | zip -@ ../../ESPEasy_ESP32c3.zip 
+          find . -name '*ESP32s3*' -print | zip -@ ../../ESPEasy_ESP32s3.zip 
+          find . -name '*ESP32solo1*' -print | zip -@ ../../ESPEasy_ESP32solo1.zip 
+          find . -name '*ESP32_*' -print | zip -@ ../../ESPEasy_ESP32.zip 
           cd ../..
           mv artifacts/Distribution/ESPEasy_dist* .
           cp ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
           mv ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
           zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip "ESP.Easy.Flasher.exe" "bin/blank_1MB.bin" "bin/blank_2MB.bin" "bin/ESPEasy_2step_UploaderMega_1024.bin"
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
+          # TODO if/when available: ESP32c2 ESP32c6 ESP32h2
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32s2.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32c3.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32s3.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32solo1.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,artifacts/Distribution/*.zip"
+          # Include all separately supported CPU models
+          # TODO if/when available: ESP32c2 ESP32c6 ESP32h2
+          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip,artifacts/Distribution/*.zip"
           body: ${{ needs.prepare-notes.outputs.notes }}
           token: ${{ secrets.GITHUB_TOKEN }}

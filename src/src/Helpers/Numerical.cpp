@@ -1,5 +1,7 @@
 #include "../Helpers/Numerical.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
 
@@ -7,12 +9,11 @@
    Check if string is valid float
  \*********************************************************************************************/
 bool isValidFloat(float f) {
-  if (isnan(f)) { return false; // ("isnan");
-  }
+  return !isnan(f) && !isinf(f);
+}
 
-  if (isinf(f)) { return false; // ("isinf");
-  }
-  return true;
+bool isValidDouble(ESPEASY_RULES_FLOAT_TYPE f) {
+  return !isnan(f) && !isinf(f);
 }
 
 bool validIntFromString(const String& tBuf, int& result) {
@@ -119,7 +120,7 @@ bool validFloatFromString(const String& tBuf, float& result) {
   return isvalid;
 }
 
-bool validDoubleFromString(const String& tBuf, double& result) {
+bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result) {
   #if defined(CORE_POST_2_5_0) || defined(ESP32)
 
   // String.toDouble() is introduced in core 2.5.0
@@ -130,7 +131,7 @@ bool validDoubleFromString(const String& tBuf, double& result) {
       (detectedType == NumericalType::HexadecimalUInt)) {
     uint64_t tmp;
     bool     isvalid = validUInt64FromString(tBuf, tmp);
-    result = static_cast<double>(tmp);
+    result = static_cast<ESPEASY_RULES_FLOAT_TYPE>(tmp);
     return isvalid;
   }
 
@@ -143,7 +144,7 @@ bool validDoubleFromString(const String& tBuf, double& result) {
   #else // if defined(CORE_POST_2_5_0) || defined(ESP32)
   float tmp = static_cast<float>(result);
   bool  res = validFloatFromString(tBuf, tmp);
-  result = static_cast<double>(tmp);
+  result = static_cast<ESPEASY_RULES_FLOAT_TYPE>(tmp);
   return res;
   #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 }
@@ -168,10 +169,11 @@ bool mustConsiderAsJSONString(const String& value) {
   }
 
   NumericalType detectedType;
-  const bool    isNum  = isNumerical(value, detectedType);
-  const bool    isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
-
-  return !isBool && (!isNum || value.isEmpty() || mustConsiderAsString(detectedType));
+  if (isNumerical(value, detectedType)) {
+    return mustConsiderAsString(detectedType);
+  }
+  const bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
+  return !isBool;
 }
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
@@ -317,6 +319,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
 }
 
 bool isNumerical(const String& tBuf, NumericalType& detectedType) {
+  START_TIMER;
   NumericalType requestedType = NumericalType::FloatingPoint;
   const String  result        = getNumerical(tBuf, requestedType, detectedType);
 
@@ -330,9 +333,9 @@ bool isNumerical(const String& tBuf, NumericalType& detectedType) {
     // Resulting size should be the same size as the given string.
     // Not sure if it is possible to have a longer result, but better be sure to also allow for larger resulting strings.
     // For example ".123" -> "0.123"
+    STOP_TIMER(IS_NUMERICAL);
     return result.length() >= tmp.length();
   }
-
 
   return result.length() > 0;
 }

@@ -5,6 +5,7 @@
 #include "src/CustomBuild/ESPEasyLimits.h"
 #include "src/DataStructs/PluginTaskData_base.h"
 #include "src/DataStructs/SettingsStruct.h"
+#include "src/DataStructs/TimingStats.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
@@ -13,7 +14,7 @@
 #include "src/Helpers/StringParser.h"
 
 
-PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { nullptr, };
+PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
 
 
 String PCONFIG_LABEL(int n) {
@@ -48,29 +49,27 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
   clearPluginTaskData(taskIndex);
 
-  if (data == nullptr) {
-    return;
-  }
+  if (data != nullptr) {
+    if (Settings.TaskDeviceEnabled[taskIndex]) {
+      Plugin_task_data[taskIndex]                     = data;
+      Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
 
-  if (Settings.TaskDeviceEnabled[taskIndex]) {
-    Plugin_task_data[taskIndex]                     = data;
-    Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
-
-#if FEATURE_PLUGIN_STATS
-    const uint8_t valueCount = getValueCountForTask(taskIndex);
-    for (size_t i = 0; i < valueCount; ++i) {
-      if (Cache.enabledPluginStats(taskIndex, i)) {
-        Plugin_task_data[taskIndex]->initPluginStats(i);
+  #if FEATURE_PLUGIN_STATS
+      const uint8_t valueCount = getValueCountForTask(taskIndex);
+      for (size_t i = 0; i < valueCount; ++i) {
+        if (Cache.enabledPluginStats(taskIndex, i)) {
+          Plugin_task_data[taskIndex]->initPluginStats(i);
+        }
       }
+  #endif
+  #if FEATURE_PLUGIN_FILTER
+  // TODO TD-er: Implement init
+
+  #endif
+
+    } else {
+      delete data;
     }
-#endif
-#if FEATURE_PLUGIN_FILTER
-// TODO TD-er: Implement init
-
-#endif
-
-  } else if (data != nullptr) {
-    delete data;
   }
 }
 
@@ -188,6 +187,7 @@ int getValueCountForTask(taskIndex_t taskIndex) {
 }
 
 int checkDeviceVTypeForTask(struct EventStruct *event) {
+  // TD-er:  Do not use event->getSensorType() here
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
     if (validTaskIndex(event->TaskIndex)) {
       String dummy;

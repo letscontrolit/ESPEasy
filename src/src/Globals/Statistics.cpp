@@ -1,6 +1,5 @@
 #include "../Globals/Statistics.h"
 
-#include <Arduino.h>
 
 #ifndef BUILD_NO_RAM_TRACKER
 uint32_t lowestRAM = 0;

@@ -20,14 +20,14 @@
 
 #define VEML6070_ADDR_H             0x39
 #define VEML6070_ADDR_L             0x38
-#define VEML6070_RSET_DEFAULT       270000      // 270K default resistor value 270000 ohm, range from 220K..1Meg
-#define VEML6070_UV_MAX_INDEX       15          // normal 11, internal on weather laboratories and NASA it's 15 so far the sensor is linear
-#define VEML6070_UV_MAX_DEFAULT     11          // 11 = public default table values
-#define VEML6070_POWER_COEFFCIENT   0.025       // based on calculations from Karel Vanicek and reorder by hand
-#define VEML6070_TABLE_COEFFCIENT   32.86270591 // calculated by hand with help from a friend of mine, a professor which works in aero space
-                                                // things
-                                                // (resistor, differences, power coefficients and official UV index calculations (LAT & LONG
-                                                // will be added later)
+#define VEML6070_RSET_DEFAULT       270000       // 270K default resistor value 270000 ohm, range from 220K..1Meg
+#define VEML6070_UV_MAX_INDEX       15           // normal 11, internal on weather laboratories and NASA it's 15 so far the sensor is linear
+#define VEML6070_UV_MAX_DEFAULT     11           // 11 = public default table values
+#define VEML6070_POWER_COEFFCIENT   0.025f       // based on calculations from Karel Vanicek and reorder by hand
+#define VEML6070_TABLE_COEFFCIENT   32.86270591f // calculated by hand with help from a friend of mine, a professor which works in aero space
+                                                 // things
+                                                 // (resistor, differences, power coefficients and official UV index calculations (LAT & LONG
+                                                 // will be added later)
 
 #define VEML6070_base_value ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (1)
 #define VEML6070_max_value  ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (VEML6070_UV_MAX_INDEX)
@@ -116,7 +116,7 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       uint16_t uv_raw;
-      double   uv_risk, uv_power;
+      ESPEASY_RULES_FLOAT_TYPE   uv_risk, uv_power;
       bool     read_status;
 
       uv_raw   = VEML6070_ReadUv(&read_status); // get UV raw values
@@ -183,12 +183,15 @@ bool VEML6070_Init(uint8_t it)
 // 11.0 - 12.9 "BurnL1/2" = sun->skin burns level 1..2
 // 13.0 - 25.0 "BurnL3"   = sun->skin burns with level 3
 
-double VEML6070_UvRiskLevel(uint16_t uv_level)
+ESPEASY_RULES_FLOAT_TYPE VEML6070_UvRiskLevel(uint16_t uv_level)
 {
-  double risk = 0;
+  ESPEASY_RULES_FLOAT_TYPE risk{};
 
-  if (uv_level < VEML6070_max_value) {
-    return (double)uv_level / VEML6070_base_value;
+  constexpr ESPEASY_RULES_FLOAT_TYPE max_value = VEML6070_max_value;
+
+  if (uv_level < max_value) {
+    constexpr ESPEASY_RULES_FLOAT_TYPE factor = VEML6070_base_value;
+    return (ESPEASY_RULES_FLOAT_TYPE)uv_level / factor;
   } else {
     // out of range and much to high - it must be outerspace or sensor damaged
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -201,7 +204,7 @@ double VEML6070_UvRiskLevel(uint16_t uv_level)
   }
 }
 
-double VEML6070_UvPower(double uvrisk)
+ESPEASY_RULES_FLOAT_TYPE VEML6070_UvPower(ESPEASY_RULES_FLOAT_TYPE uvrisk)
 {
   // based on calculations for effective irradiation from Karel Vanicek
   return VEML6070_POWER_COEFFCIENT * uvrisk;

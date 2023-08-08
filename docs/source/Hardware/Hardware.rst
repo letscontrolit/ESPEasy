@@ -303,8 +303,9 @@ For some GPIO pins, the boot state (initial configuration after startup) can be 
 
 Some differences exist between ESP8266 and ESP32:
 
-* ESP8266 can't initialize GPIO's 6, 7 and 8 (technical limitation of ESP8266 chip) and 16 (always has pull-down setting)
-* ESP32 can't initialize GPIO's from 16 and up (settings storage limitation, could be initialized from Rules in `System#Boot` event)
+* ESP8266 can't initialize GPIO's 6, 7, 8, 9 and 11 (used for flash-chip by ESP8266 chip).
+* ESP8285 can't initialize GPIO's 6, 7, 8 and 11 (used by flash of ESP8285 chip).
+* ESP32 / ESP32-S2 can't initialize all GPIO's, only GPIO pins that are actually available for use are shown.
 
 *ESP8266 GPIO boot states:*
 
@@ -313,3 +314,25 @@ Some differences exist between ESP8266 and ESP32:
 *ESP32 GPIO boot states:*
 
 .. image:: Hardware_GPIObootstatesESP32.png
+
+(Besides the serial pins, also I2C and SPI are configured)
+
+If the board supports PSRAM, it has these differences:
+
+.. image:: Hardware_GPIObootstatesESP32-PSRAM.png
+
+Overview of the GPIO pin mapping of ESP32 (link to Espressif documentation): `ESP32 DevKitC <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/_images/esp32-devkitC-v4-pinout.png>`_
+
+*ESP32-S2 GPIO boot states:*
+
+.. image:: Hardware_GPIObootstatesESP32-S2.png
+
+(Only the serial port logging is enabled on this unit, no SPI or I2C)
+
+If the board supports PSRAM, it hides GPIO-26
+
+.. image:: Hardware_GPIObootstatesESP32-S2-PSRAM.png
+
+(GPIO-26 is missing from the range, as it can not be used if PSRAM is present)
+
+Overview of the GPIO pin mapping of ESP32-S2 (link to Espressif documentation): `ESP32-S2 Saola1 <https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/_images/esp32-s2_saola1-pinout.jpg>`_

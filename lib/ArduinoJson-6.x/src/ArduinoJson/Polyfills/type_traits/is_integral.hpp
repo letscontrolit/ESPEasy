@@ -1,5 +1,5 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -10,7 +10,7 @@
 #include "is_same.hpp"
 #include "remove_cv.hpp"
 
-namespace ARDUINOJSON_NAMESPACE {
+ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 // clang-format off
 template <typename T>
@@ -23,15 +23,10 @@ struct is_integral : integral_constant<bool,
     is_same<typename remove_cv<T>::type, unsigned int>::value ||
     is_same<typename remove_cv<T>::type, signed long>::value ||
     is_same<typename remove_cv<T>::type, unsigned long>::value ||
-#if ARDUINOJSON_HAS_LONG_LONG
     is_same<typename remove_cv<T>::type, signed long long>::value ||
     is_same<typename remove_cv<T>::type, unsigned long long>::value ||
-#endif
-#if ARDUINOJSON_HAS_INT64
-    is_same<typename remove_cv<T>::type, signed __int64>::value ||
-    is_same<typename remove_cv<T>::type, unsigned __int64>::value ||
-#endif
     is_same<typename remove_cv<T>::type, char>::value ||
     is_same<typename remove_cv<T>::type, bool>::value> {};
 // clang-format on
-}  // namespace ARDUINOJSON_NAMESPACE
+
+ARDUINOJSON_END_PRIVATE_NAMESPACE

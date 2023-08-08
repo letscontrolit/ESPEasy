@@ -213,9 +213,10 @@ void handle_root() {
     {
       addRowLabel(LabelType::M_DNS);
       addHtml(F("<a href='http://"));
-      addHtml(getValue(LabelType::M_DNS));
+      const String url = getValue(LabelType::M_DNS);
+      addHtml(url);
       addHtml(F("'>"));
-      addHtml(getValue(LabelType::M_DNS));
+      addHtml(url);
       addHtml(F("</a>"));
     }
       # endif // if FEATURE_MDNS
@@ -329,7 +330,7 @@ void handle_root() {
           html_add_wide_button_prefix();
 
           addHtml(F("http://"));
-          addHtml(it->second.IP().toString());
+          addHtml(formatIP(it->second.IP()));
           uint16_t port = it->second.webgui_portnumber;
 
           if ((port != 0) && (port != 80)) {
@@ -337,7 +338,7 @@ void handle_root() {
             addHtmlInt(port);
           }
           addHtml('\'', '>');
-          addHtml(it->second.IP().toString());
+          addHtml(formatIP(it->second.IP()));
           addHtml(F("</a>"));
         }
         html_TD();

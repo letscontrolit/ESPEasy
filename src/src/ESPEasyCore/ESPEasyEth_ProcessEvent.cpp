@@ -98,7 +98,7 @@ void check_Eth_DNS_valid() {
         if (timePassedSince(lastLog) > 1000) {
           addLogMove(LOG_LEVEL_ERROR, concat(
             F("ETH  : DNS server was cleared, use cached DNS IP: "), 
-            EthEventData.dns0_cache.toString()));
+            formatIP(EthEventData.dns0_cache)));
           lastLog = millis();
         }
         setDNS(0, EthEventData.dns0_cache);
@@ -183,17 +183,17 @@ void processEthernetGotIP() {
         log += F("DHCP");
       }
       log += F(" IP: ");
-      log += ip.toString();
+      log += formatIP(ip);
       log += ' ';
       log += wrap_braces(NetworkGetHostname());
       log += F(" GW: ");
-      log += gw.toString();
+      log += formatIP(gw);
       log += F(" SN: ");
-      log += subnet.toString();
+      log += formatIP(subnet);
       log += F(" DNS: ");
-      log += dns0.toString();
+      log += formatIP(dns0);
       log += '/';
-      log += dns1.toString();
+      log += formatIP(dns1);
 
       if (EthLinkUp()) {
         if (EthFullDuplex()) {

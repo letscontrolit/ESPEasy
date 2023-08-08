@@ -23,9 +23,9 @@ const uint16_t PixelCount = 144; // the sample images are meant for 144 pixels
 const uint16_t PixelPin = 2;
 const uint16_t AnimCount = 1; // we only need one
 
-NeoPixelBus<MyPixelColorFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<MyPixelColorFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 // for esp8266 omit the pin
-//NeoPixelBus<MyPixelColorFeature, Neo800KbpsMethod> strip(PixelCount);
+//NeoPixelBus<MyPixelColorFeature, NeoWs2812xMethod> strip(PixelCount);
 NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 
 // our NeoBitmapFile will use the same color feature as NeoPixelBus and

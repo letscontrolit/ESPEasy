@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/PinMode.h"
 #include "../DataTypes/DeviceModel.h"
@@ -13,29 +11,7 @@
 
 #include "../Globals/ResetFactoryDefaultPref.h"
 
-#ifdef ESP32
-# include <driver/adc.h>
-
-// Needed to get ADC Vref
-# include <esp_adc_cal.h>
-# include <driver/adc.h>
-#endif // ifdef ESP32
-
-#ifdef ESP32
-# if CONFIG_IDF_TARGET_ESP32
-  #  define MAX_ADC_VALUE 4095
-# else // if CONFIG_IDF_TARGET_ESP32
-  #  define MAX_ADC_VALUE ((1 << SOC_ADC_MAX_BITWIDTH) - 1)
-# endif  // if CONFIG_IDF_TARGET_ESP32
-#endif  // ifdef ESP32
-#ifdef ESP8266
-  #if FEATURE_ADC_VCC
-  // Vcc in units of 1/1024 V
-  # define MAX_ADC_VALUE 4095
-  #else
-  # define MAX_ADC_VALUE 1023
-  #endif
-#endif // ifdef ESP8266
+#include "../Helpers/Hardware_defines.h"
 
 
 /********************************************************************************************\
@@ -98,6 +74,24 @@ extern esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
 /********************************************************************************************\
    Hardware information
  \*********************************************************************************************/
+#ifdef ESP8266
+enum class ESP8266_partition_type {
+  sketch,
+  ota,
+  fs,
+  eeprom,
+  rf_cal,
+  wifi
+};
+
+// Get info on the partition type
+// @retval The flash sector. (negative on unknown ptype)
+int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_t& size);
+
+
+#endif
+
+
 uint32_t                   getFlashChipId();
 
 uint32_t                   getFlashRealSizeInBytes();
@@ -106,6 +100,22 @@ uint32_t                   getFlashChipSpeed();
 
 #ifdef ESP32
 uint32_t                   getXtalFrequencyMHz();
+
+struct esp32_chip_features {
+  bool embeddedFlash{};
+  bool wifi_bgn{};
+  bool bluetooth_ble{};
+  bool bluetooth_classic{};
+  bool ieee_802_15_4{};
+  bool embeddedPSRAM{};
+};
+
+esp32_chip_features        getChipFeatures();
+String                     getChipFeaturesString();
+
+// @retval true:   octal (8 data lines)
+// @retval false:  quad (4 data lines)
+bool                       getFlashChipOPI_wired();
 #endif // ifdef ESP32
 
 const __FlashStringHelper* getFlashChipMode();
@@ -125,7 +135,7 @@ const __FlashStringHelper* getChipModel();
 
 bool                       isESP8285();
 
-uint8_t                    getChipRevision();
+String                     getChipRevision();
 
 uint32_t                   getSketchSize();
 
@@ -168,6 +178,10 @@ bool CanUsePSRAM();
 
 // Based on code from https://raw.githubusercontent.com/espressif/esp-idf/master/components/esp32/hw_random.c
 uint32_t HwRandom();
+
+long HwRandom(long howbig);
+
+long HwRandom(long howsmall, long howbig);
 
 
 /********************************************************************************************\
@@ -218,6 +232,8 @@ bool getGpioPullResistor(int   gpio,
 
 bool validGpio(int gpio);
 
+bool isSerialConsolePin(int gpio);
+
 
 #ifdef ESP32
 
@@ -231,6 +247,8 @@ bool getADC_gpio_info(int  gpio_pin,
                       int& ch,
                       int& t);
 int touchPinToGpio(int touch_pin);
+bool getDAC_gpio_info(int gpio_pin, 
+                      int& dac);
 
 #endif // ifdef ESP32
 

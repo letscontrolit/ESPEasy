@@ -4,7 +4,8 @@
 /*********************************************************************************************\
 * ControllerSettingsStruct definition
 \*********************************************************************************************/
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
+
 #include <memory> // For std::shared_ptr
 #include <new> // for std::nothrow
 
@@ -12,7 +13,6 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
-#include "../../ESPEasy_common.h"
 #include "../DataStructs/ChecksumType.h"
 #include "../Globals/Plugins.h"
 
@@ -177,32 +177,10 @@ private:
   bool updateIPcache();
 };
 
-
-#ifdef USE_SECOND_HEAP
-#include <umm_malloc/umm_heap_select.h>
-#endif
-
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
-
-
-#ifdef USE_SECOND_HEAP
-// Try to allocate the controller settings to the 2nd heap
-#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr; \
-{                                                                                                 \
-  HeapSelectIram ephemeral;                                                                       \
-  ControllerSettingsStruct_ptr_type tmp_shared(new (std::nothrow)  ControllerSettingsStruct());   \
-  ControllerSettingsStruct_ptr = std::move(tmp_shared);                                           \
-}                                                                                                 \
-ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
-
-#else
-
-#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new (std::nothrow)  ControllerSettingsStruct()); \
-  ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
-
-#endif
+#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type T(new (std::nothrow)  ControllerSettingsStruct());
 
 // Check to see if MakeControllerSettings was successful
-#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr ? true : false)
+#define AllocatedControllerSettings() (ControllerSettings.get() != nullptr)
 
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H

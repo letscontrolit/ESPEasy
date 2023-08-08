@@ -4,6 +4,10 @@
 
 #include "../Globals/ESPEasyWiFiEvent.h"
 
+#ifdef ESP8266
+#include <ESP8266WiFi.h>
+#endif
+
 const __FlashStringHelper * WiFi_encryptionType(uint8_t encryptionType) {
 switch (encryptionType) {
   #ifdef ESP32

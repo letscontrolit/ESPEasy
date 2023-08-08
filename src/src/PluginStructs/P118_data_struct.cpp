@@ -46,13 +46,14 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
     // DeviceID used to send commands, can also be changed on the fly for multi itho control, 10,87,81 corresponds with old library
     _rf->setDeviceID(P118_CONFIG_DEVID1, P118_CONFIG_DEVID2, P118_CONFIG_DEVID3);
     _rf->init();
-    uint32_t finishInit = millis();
 
-    if (finishInit - startInit > P118_TIMEOUT_LIMIT) {
-      String log = F("ITHO: Init duration was: ");
-      log += finishInit - startInit;
-      log += F("msec. suggesting that the CC1101 board is not (correctly) connected.");
-      addLog(LOG_LEVEL_ERROR, log);
+    const long duration = timePassedSince(startInit);
+    if (duration > P118_TIMEOUT_LIMIT) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLogMove(LOG_LEVEL_ERROR, strformat(
+        F("ITHO: Init duration was: %d msec. suggesting that the CC1101 board is not (correctly) connected."),
+         duration));
+      }
       success = false;
     }
 
@@ -414,11 +415,9 @@ void P118_data_struct::ITHOcheck() {
     String Id       = _rf->getLastIDstr();
 
     if (_rfLog && loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("ITHO: Received from ID: ");
-      log += Id;
-      log += F("; raw cmd: ");
-      log += cmd;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(
+        F("ITHO: Received from ID: %s ; raw cmd: %d"), 
+        Id.c_str(),  cmd));
     }
 
     // Move check here to prevent function calling within ISR
@@ -438,9 +437,7 @@ void P118_data_struct::ITHOcheck() {
 
     if (index > 0) {
       if (_dbgLog) {
-        log += F("Command received from remote-ID: ");
-        log += Id;
-        log += F(", command: ");
+        log += strformat(F("Command received from remote-ID: %s , command: "), Id.c_str());
       }
 
       switch (cmd) {
@@ -489,7 +486,7 @@ void P118_data_struct::ITHOcheck() {
           break;
         case IthoTimer1:
 
-          if (_dbgLog) { log += +F("timer1"); }
+          if (_dbgLog) { log += F("timer1"); }
           _State       = 13;
           _Timer       = PLUGIN_118_Time1;
           _LastIDindex = index;
@@ -554,35 +551,35 @@ void P118_data_struct::ITHOcheck() {
           break;
         case OrconTimer0:
 
-          if (_dbgLog) { log += +F("Orcon Timer0"); }
+          if (_dbgLog) { log += F("Orcon Timer0"); }
           _State       = 110;
           _Timer       = PLUGIN_118_OrconTime0;
           _LastIDindex = index;
           break;
         case OrconTimer1:
 
-          if (_dbgLog) { log += +F("Orcon Timer1"); }
+          if (_dbgLog) { log += F("Orcon Timer1"); }
           _State       = 111;
           _Timer       = PLUGIN_118_OrconTime1;
           _LastIDindex = index;
           break;
         case OrconTimer2:
 
-          if (_dbgLog) { log += +F("Orcon Timer2"); }
+          if (_dbgLog) { log += F("Orcon Timer2"); }
           _State       = 112;
           _Timer       = PLUGIN_118_OrconTime2;
           _LastIDindex = index;
           break;
         case OrconTimer3:
 
-          if (_dbgLog) { log += +F("Orcon Timer3"); }
+          if (_dbgLog) { log += F("Orcon Timer3"); }
           _State       = 113;
           _Timer       = PLUGIN_118_OrconTime3;
           _LastIDindex = index;
           break;
         case OrconAutoCO2:
 
-          if (_dbgLog) { log += +F("Orcon AutoCO2"); }
+          if (_dbgLog) { log += F("Orcon AutoCO2"); }
           _State       = 114;
           _Timer       = 0;
           _LastIDindex = index;
@@ -707,18 +704,18 @@ void P118_data_struct::SetDestIDSrcID(struct EventStruct *event, uint8_t (& srcI
   #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = (F("srcID: "));
-    log += String(srcID[0]);
-    log += (F(","));
-    log += String(srcID[1]);
-    log += (F(","));
-    log += String(srcID[2]);
-    log += (F(" destID: "));
-    log += String(destID[0]);
-    log += (F(","));
-    log += String(destID[1]);
-    log += (F(","));
-    log += String(destID[2]);
+    String log = F("srcID: ");
+    log += static_cast<int>(srcID[0]);
+    log += ',';
+    log += static_cast<int>(srcID[1]);
+    log += ',';
+    log += static_cast<int>(srcID[2]);
+    log += F(" destID: ");
+    log += static_cast<int>(destID[0]);
+    log += ',';
+    log += static_cast<int>(destID[1]);
+    log += ',';
+    log += static_cast<int>(destID[2]);
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
   #  endif // ifndef BUILD_NO_DEBUG
