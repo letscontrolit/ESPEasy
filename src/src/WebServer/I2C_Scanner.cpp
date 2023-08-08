@@ -286,6 +286,7 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x58:
       result +=  F("SGP30");
+      break;
     case 0x59:
       result +=  F("SGP4x");
       break;

@@ -296,6 +296,10 @@ public:
 #endif
 
 
+  // Create mixed ID for scheduling a system event to be handled by the scheduler.
+  // ptr_type: Indicating whether it should be handled by controller, plugin or notifier
+  // Index   : DeviceIndex / ProtocolIndex / NotificationProtocolIndex  (thus not the Plugin_ID/CPlugin_ID/NPlugin_ID, saving an extra lookup when processing)
+  // Function: The function to be called for handling the event.
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,
                                                 uint8_t       Index,
                                                 uint8_t       Function);

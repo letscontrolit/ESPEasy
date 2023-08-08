@@ -171,7 +171,7 @@ bool validControllerIndex(controllerIndex_t index)
 
 bool validCPluginID(cpluginID_t cpluginID)
 {
-  return getProtocolIndex_from_CPluginID_(cpluginID) != INVALID_C_PLUGIN_ID;
+  return getProtocolIndex_from_CPluginID_(cpluginID) != INVALID_PROTOCOL_INDEX;
 }
 
 bool supportedCPluginID(cpluginID_t cpluginID)

@@ -61,12 +61,9 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
         if (i < P052_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P052_QUERY1_CONFIG_POS;
           uint8_t choice             = PCONFIG(pconfigIndex);
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            P052_data_struct::Plugin_052_valuename(choice, false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, P052_data_struct::Plugin_052_valuename(choice, false));
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;

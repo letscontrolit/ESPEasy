@@ -72,10 +72,13 @@ public:
 
   virtual operator bool() const = 0;
 
-  virtual void               setDebugOutput(bool) = 0;
+  virtual void   setDebugOutput(bool) = 0;
 
-  virtual size_t             setRxBufferSize(size_t new_size) = 0;
-  virtual size_t             setTxBufferSize(size_t new_size) = 0;
+  virtual size_t setRxBufferSize(size_t new_size) = 0;
+  virtual size_t setTxBufferSize(size_t new_size) = 0;
+  virtual bool   setRS485Mode(int8_t rtsPin, bool enableCollisionDetection) = 0;
+
+
 
   const ESPEasySerialConfig& getSerialConfig() const {
     return _config;

@@ -29,6 +29,9 @@ struct SecurityStruct
 
   void validate();
 
+  // Clear the checksum to make sure file will be saved
+  void forceSave();
+
   void clearWiFiCredentials();
 
   void clearWiFiCredentials(WiFiCredentialsSlot slot);

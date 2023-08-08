@@ -42,8 +42,8 @@
 #  define P137_GET_CONFIG_DCDC3   P137_settingToValue((P137_REG_DCDC3_LDO3 >> 16) & 0xFFFF, P137_CONST_MAX_DCDC)  // DCDC3
 #  define P137_GET_CONFIG_LDOIO   P137_settingToValue(P137_REG_LDOIO & 0xFFFF, P137_CONST_MAX_LDOIO)              // GPIO
 
-#  define P137_GET_GPIO_FLAGS(i) (static_cast<int8_t>(get3BitFromUL(P137_CONFIG_FLAGS, i * 3)))
-#  define P137_SET_GPIO_FLAGS(i, v) set3BitToUL(P137_CONFIG_FLAGS, i * 3, v)
+#  define P137_GET_GPIO_FLAGS(i) (static_cast<int8_t>(get3BitFromUL(P137_CONFIG_FLAGS, (i) * 3)))
+#  define P137_SET_GPIO_FLAGS(i, v) set3BitToUL(P137_CONFIG_FLAGS, (i) * 3, (v))
 #  define P137_GET_FLAG_GPIO0     P137_GET_GPIO_FLAGS(0)
 #  define P137_GET_FLAG_GPIO1     P137_GET_GPIO_FLAGS(1)
 #  define P137_GET_FLAG_GPIO2     P137_GET_GPIO_FLAGS(2)

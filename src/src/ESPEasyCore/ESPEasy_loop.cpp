@@ -20,6 +20,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
 
 void updateLoopStats() {
   ++loopCounter;
@@ -85,7 +86,6 @@ void ESPEasy_loop()
       eventQueue.addMove(std::move(event));
     }
 
-
     RTC.bootFailedCount = 0;
     saveToRTC();
     #if FEATURE_ESPEASY_P2P
@@ -129,10 +129,12 @@ void ESPEasy_loop()
 
 
   // Work around for nodes that do not have WiFi connection for a long time and may reboot after N unsuccessful connect attempts
-  if (getUptimeMinutes() > 2) {
+  static bool bootFailedCountReset = false;
+  if (getUptimeMinutes() > 2 && !bootFailedCountReset) {
     // Apparently the uptime is already a few minutes. Let's consider it a successful boot.
     RTC.bootFailedCount = 0;
     saveToRTC();
+    bootFailedCountReset = true;
   }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible

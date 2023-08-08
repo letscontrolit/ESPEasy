@@ -118,9 +118,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
       return return_command_success();
     }
   } else {
-    String log = logIdentifier;
-    log += F(": Not connected to network");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, concat(logIdentifier, F(": Not connected to network")));
   }
   return return_command_failed();
 }

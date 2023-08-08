@@ -302,11 +302,11 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // ifdef P124_DEBUG_LOG
 
-      String command = parseString(string, 1);
+      const String command = parseString(string, 1);
 
       if (P124_data->isInitialized() &&
           equals(command, F("multirelay"))) {
-        String subcommand = parseString(string, 2);
+        const String subcommand = parseString(string, 2);
 
         if (equals(subcommand, F("on"))) {
           success = P124_data->turn_on_channel(event->Par2);
