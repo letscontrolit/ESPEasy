@@ -33,7 +33,6 @@ public:
   virtual ~P035_data_struct();
 
   bool plugin_init(struct EventStruct *event);
-  bool plugin_exit(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
 

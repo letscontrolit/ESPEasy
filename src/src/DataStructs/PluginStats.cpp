@@ -121,7 +121,7 @@ float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, 
   return res;
 }
 
-float PluginStats::getSample(int& lastNrSamples) const
+float PluginStats::getSample(int lastNrSamples) const
 {
   if ((_samples.size() == 0) || (_samples.size() < abs(lastNrSamples))) { return _errorValue; }
 
@@ -132,8 +132,10 @@ float PluginStats::getSample(int& lastNrSamples) const
   } else if (lastNrSamples < 0) {
     i = abs(lastNrSamples) - 1;
   }
-
-  return _samples[i];
+  if (i < _samples.size()) {
+    return _samples[i];
+  }
+  return _errorValue;
 }
 
 float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
@@ -347,13 +349,6 @@ bool PluginStats::usableValue(float value) const
     }
   }
   return false;
-}
-
-PluginStats_array::PluginStats_array()
-{
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    _plugin_stats[i] = nullptr;
-  }
 }
 
 PluginStats_array::~PluginStats_array()

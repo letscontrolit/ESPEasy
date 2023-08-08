@@ -579,7 +579,7 @@ bool Rule_Download(const String& path)
 
   if (!dataFile)
   {
-    addLog(LOG_LEVEL_ERROR, String(F("Invalid path: ")) + path);
+    addLog(LOG_LEVEL_ERROR, concat(F("Invalid path: "), path));
     return false;
   }
   String filename = path + String(F(".txt"));

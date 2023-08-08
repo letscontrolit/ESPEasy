@@ -4,6 +4,11 @@
 
 #include <MD5Builder.h>
 
+ChecksumType::ChecksumType(const ChecksumType& rhs)
+{
+  memcpy(_checksum, rhs._checksum, 16);
+}
+
 ChecksumType::ChecksumType(uint8_t checksum[16])
 {
   memcpy(_checksum, checksum, 16);

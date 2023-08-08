@@ -58,7 +58,7 @@ private:
 
   WiFiClient *ModbusClient = nullptr; // pointer to tcp client
   unsigned int errcnt      = 0;
-  char sendBuffer[12]      =  { 0, 1, 0, 0, 0, 6, 0x7e, 4, 0x9d, 7, 0, 1 };
+  uint8_t sendBuffer[12]      =  { 0, 1, 0, 0, 0, 6, 0x7e, 4, 0x9d, 7, 0, 1 };
   # ifndef BUILD_NO_DEBUG
   String LogString;                                // for debug logging
   # endif // ifndef BUILD_NO_DEBUG

@@ -11,6 +11,8 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P145
 
+#include "../Helpers/OversamplingHelper.h"
+
 // Maximum number of types that can be selected from
 #define P145_MAXTYPES  10
 
@@ -71,11 +73,7 @@ struct P145_data_struct : public PluginTaskData_base
     struct P145_SENSORDEF sensordef = {}; // Sensor type specific data
 
     /* Oversampling static data */
-    long   ovs_value = 0;   // Oversampling algorithm summed value
-    uint   ovs_min = 0;     // Oversampling algorithm minimum value
-    uint   ovs_max = 0;     // Oversampling algorithm maximum value
-    uint   ovs_cnt = 0;     // Oversampling algorithm sample counter
-    float  last_ain = 0.0;  // Oversampling algorithm last measured analog input value
+    OversamplingHelper<uint32_t> ovs;
     /* Calibration static data */
     ulong  last_cal = 0U;   // Last calibration timestamp
     float  cal_data = 0.0f; // Building calibration resistance [Ohm]
