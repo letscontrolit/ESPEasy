@@ -36,7 +36,7 @@ var commonPlugins = [
   //P035
   "IRSEND", "IRSENDAC",
   //P036
-  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign",
+  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,low", "OledFramedCmd,med", "OledFramedCmd,high", /*"OledFramedCmd,user",*/ "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign", "OledFramedCmd,align", "OledFramedCmd,userDef1", "OledFramedCmd,userDef2",
   //P038
   "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV", "NeoPixelBright",
   //P048
