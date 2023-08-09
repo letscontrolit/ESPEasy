@@ -12,8 +12,10 @@
 //
 // Major work on this plugin has been done by 'Namirda'
 // Added to the main repository with some optimizations and some limitations.
-// Al long as the device is not selected, no RAM is waisted.
+// Al long as the device is not selected, no RAM is wasted.
 //
+// @tonhuisman: 2023-08-08
+// CHG: Enable Userdefined headers feature, even on LIMIT_BUILD_SIZE builds
 // @tonhuisman: 2023-07-01
 // CHG: Make compile-time defines for P036_SEND_EVENTS boolean
 // CHG: Make compile-time defines for P036_ENABLE_LINECOUNT boolean

@@ -47,13 +47,17 @@
 #  ifndef P036_ENABLE_LINECOUNT
 #   define P036_ENABLE_LINECOUNT  0 // Disable the linecount subcommand
 #  endif // ifndef P036_ENABLE_LINECOUNT
-#  if defined(P036_USERDEF_HEADERS) && P036_USERDEF_HEADERS
-#   undef P036_USERDEF_HEADERS
-#  endif // if defined(P036_USERDEF_HEADERS) && P036_USERDEF_HEADERS
-#  ifndef P036_USERDEF_HEADERS
-#   define P036_USERDEF_HEADERS   0 // Disable User defined headers
-#  endif // ifndef P036_USERDEF_HEADERS
+// We can always disable this feature later, if needed
+// #  if defined(P036_USERDEF_HEADERS) && P036_USERDEF_HEADERS
+// #   undef P036_USERDEF_HEADERS
+// #  endif // if defined(P036_USERDEF_HEADERS) && P036_USERDEF_HEADERS
+// #  ifndef P036_USERDEF_HEADERS
+// #   define P036_USERDEF_HEADERS   0 // Disable User defined headers
+// #  endif // ifndef P036_USERDEF_HEADERS
 # endif // ifndef P036_LIMIT_BUILD_SIZE
+# ifndef P036_USERDEF_HEADERS
+#  define P036_USERDEF_HEADERS   1  // Enable User defined headers if not handled yet
+# endif // ifndef P036_USERDEF_HEADERS
 # ifndef P036_ENABLE_HIDE_FOOTER
 #  define P036_ENABLE_HIDE_FOOTER 1 // Enable the Hide indicator (footer) option
 # endif // ifndef P036_ENABLE_HIDE_FOOTER
