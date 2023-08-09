@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+NeoRgbFeature provides feature classes to describe color order and
+color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
 
@@ -26,30 +26,39 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "colors/NeoHueBlend.h"
+class NeoRgbFeature :
+    public Neo3ByteFeature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbColorIndexes.h"
-#include "colors/RgbColorBase.h"
+class NeoRbgFeature :
+    public Neo3ByteFeature<ColorIndexR, ColorIndexB, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
+class NeoGbrFeature :
+    public Neo3ByteFeature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
+class NeoGrbFeature :
+    public Neo3ByteFeature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
+class NeoBgrFeature :
+    public Neo3ByteFeature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbwwColor.h"
+class NeoBrgFeature :
+    public Neo3ByteFeature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/SegmentDigit.h"
-
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaDynamicTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
-#include "colors/NeoGammaInvertMethod.h"

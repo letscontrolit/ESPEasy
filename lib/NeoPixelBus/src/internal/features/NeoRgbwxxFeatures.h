@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+NeoRgbwxxFeatures provides feature classes to describe color order and
+color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
 
@@ -26,30 +26,8 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "colors/NeoHueBlend.h"
-
-#include "colors/RgbColorIndexes.h"
-#include "colors/RgbColorBase.h"
-
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
-
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
-
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
-
-#include "colors/RgbwwColor.h"
-
-#include "colors/SegmentDigit.h"
-
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaDynamicTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
-#include "colors/NeoGammaInvertMethod.h"
+class NeoRgbwxxFeature :
+    public Neo6xxByteFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};

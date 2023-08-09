@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+NeoRgbw64Feature provides feature classes to describe color order and
+color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
 
@@ -26,30 +26,41 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "colors/NeoHueBlend.h"
 
-#include "colors/RgbColorIndexes.h"
-#include "colors/RgbColorBase.h"
+class NeoRgbw64Feature : 
+    public Neo4WordFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
+class NeoRbgw64Feature :
+    public Neo4WordFeature<ColorIndexR, ColorIndexB, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
+class NeoGbrw64Feature :
+    public Neo4WordFeature<ColorIndexG, ColorIndexB, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
+class NeoGrbw64Feature :
+    public Neo4WordFeature<ColorIndexG, ColorIndexR, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbwwColor.h"
+class NeoBgrw64Feature :
+    public Neo4WordFeature<ColorIndexB, ColorIndexG, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/SegmentDigit.h"
+class NeoBrgw64Feature :
+    public Neo4WordFeature<ColorIndexB, ColorIndexR, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaDynamicTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
-#include "colors/NeoGammaInvertMethod.h"
+

@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+Lpd6803RgbFeature provides feature class to describe color order and
+color depth for NeoPixelBus template class when used with DotStar like chips
 
 Written by Michael C. Miller.
 
@@ -26,30 +26,27 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "colors/NeoHueBlend.h"
+class  Lpd6803RgbFeature :
+    public Neo2Byte555Feature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbColorIndexes.h"
-#include "colors/RgbColorBase.h"
 
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
+class  Lpd6803GrbFeature :
+    public Neo2Byte555Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
+class  Lpd6803GbrFeature :
+    public Neo2Byte555Feature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
-
-#include "colors/RgbwwColor.h"
-
-#include "colors/SegmentDigit.h"
-
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaDynamicTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
-#include "colors/NeoGammaInvertMethod.h"
+class  Lpd6803BrgFeature :
+    public Neo2Byte555Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};

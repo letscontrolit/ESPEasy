@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+RgbColorIndexes provides constants for color element vector access on 
+   RGB(w) Color Objects
 
 Written by Michael C. Miller.
 
@@ -24,32 +24,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
+
 #pragma once
 
-#include "colors/NeoHueBlend.h"
-
-#include "colors/RgbColorIndexes.h"
-#include "colors/RgbColorBase.h"
-
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
-
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
-
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
-
-#include "colors/RgbwwColor.h"
-
-#include "colors/SegmentDigit.h"
-
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaDynamicTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
-#include "colors/NeoGammaInvertMethod.h"
+const uint8_t ColorIndexR = 0;
+const uint8_t ColorIndexG = 1;
+const uint8_t ColorIndexB = 2;
+const uint8_t ColorIndexW = 3;
+const uint8_t ColorIndexWW = 3; // warmer white
+const uint8_t ColorIndexCW = 4; // cooler white

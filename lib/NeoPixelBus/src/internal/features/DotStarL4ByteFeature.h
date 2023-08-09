@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoAbcdefgpsSegmentFeature provides feature classes to describe color order and
-color depth for NeoPixelBus template class when used with seven segment display
+DotStarL4Feature provides feature base class to describe color order for
+  3 color but 4 byte features when used with DotStars, exposing Luminance as W
 
 Written by Michael C. Miller.
 
@@ -26,32 +26,31 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-// Abcdefgps byte order
-class NeoAbcdefgpsSegmentFeature : 
-    public NeoByteElements<9, SevenSegDigit, uint8_t>,
-    public NeoElementsNoSettings
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
+class DotStarL4Feature :
+    public NeoByteElements<4, RgbwColor, uint32_t>
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
-        uint8_t commonSize = (PixelSize < color.Count) ? PixelSize : color.Count;
-        for (uint8_t iSegment = 0; iSegment < commonSize; iSegment++)
-        {
-            *p++ = color.Segment[iSegment];
-        }
+
+        *p++ = 0xE0 | (color.W < 31 ? color.W : 31); // upper three bits are always 111
+        *p++ = color[V_IC_1];
+        *p++ = color[V_IC_2];
+        *p = color[V_IC_3];
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-        uint8_t commonSize = (PixelSize < color.Count) ? PixelSize : color.Count;
 
-        for (uint8_t iSegment = 0; iSegment < commonSize; iSegment++)
-        {
-            color.Segment[iSegment] = *p++;
-        }
+        color.W = (*p++) & 0x1F; // mask out upper three bits
+        color[V_IC_1] = *p++;
+        color[V_IC_2] = *p++;
+        color[V_IC_3] = *p;
+
         return color;
     }
 
@@ -59,12 +58,11 @@ public:
     {
         ColorObject color;
         const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-        uint8_t commonSize = (PixelSize < color.Count) ? PixelSize : color.Count;
 
-        for (uint8_t iSegment = 0; iSegment < commonSize; iSegment++)
-        {
-            color.Segment[iSegment] = pgm_read_byte(p++);
-        }
+        color.W = pgm_read_byte(p++) & 0x1F; // mask out upper three bits
+        color[V_IC_1] = pgm_read_byte(p++);
+        color[V_IC_2] = pgm_read_byte(p++);
+        color[V_IC_3] = pgm_read_byte(p);
 
         return color;
     }

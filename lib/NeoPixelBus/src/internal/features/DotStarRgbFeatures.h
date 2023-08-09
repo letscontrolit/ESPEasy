@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+DotStarRbgFeature provides feature classes to describe color order and
+color depth for NeoPixelBus template class when used with DotStars
 
 Written by Michael C. Miller.
 
@@ -26,30 +26,40 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "colors/NeoHueBlend.h"
+class DotStarRgbFeature :
+    public DotStarX4Feature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbColorIndexes.h"
-#include "colors/RgbColorBase.h"
+class DotStarRbgFeature :
+    public DotStarX4Feature<ColorIndexR, ColorIndexB, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
 
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
+class DotStarGbrFeature :
+    public DotStarX4Feature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
+class DotStarGrbFeature :
+    public DotStarX4Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/RgbwwColor.h"
 
-#include "colors/SegmentDigit.h"
+class DotStarBrgFeature :
+    public DotStarX4Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
 
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaDynamicTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
-#include "colors/NeoGammaInvertMethod.h"
+class DotStarBgrFeature :
+    public DotStarX4Feature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
