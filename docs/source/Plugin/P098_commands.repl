@@ -1,0 +1,62 @@
+.. csv-table::
+   :header: "Command", "Extra information"
+   :widths: 20, 30
+
+   "
+   ``pwmmotorhome``
+
+   Move the motor to the Home position.
+   ","
+   Revert the motor until the limit switch A, aka Home, position is reached.
+
+   This will cause the ``limitA`` event to be generated.
+   "
+   "
+   ``pwmmotorend``
+
+   Move the motor to the End position.
+   ","
+   Move the motor forward until the limit switch B, aka End, position is reached.
+
+   This will cause the ``limitB`` event to be generated.
+   "
+   "
+   ``pwmmotorforward[,<steps>]``
+
+   Move the motor forward.
+
+   ``steps``: Number of steps to move. If steps <= 0 it will move forward until limit switch B (End) is reached.
+   ","
+   Move the motor a number of steps, or until the limit switch B, aka End, position is reached. If ``steps`` <= 0 then it will move forward until the End position is reached.
+
+   This will cause the ``positionReached`` event to be generated, and also the ``limitB`` event if End is reached.
+   "
+   "
+   ``pwmmotorreverse[,<steps>]``
+
+   Move the motor backward (reverse).
+
+   ``steps``: Number of steps to move. If steps <= 0 it will move backward until limit switch A (Home) is reached.
+   ","
+   Move the motor a number of steps, or until the limit switch A, aka Home, position is reached. If ``steps`` <= 0 then it will move backward until the Home position is reached.
+
+   This will cause the ``positionReached`` event to be generated, and also the ``limitA`` event if Home is reached.
+   "
+   "
+   ``pwmmotorstop``
+
+   Stop the motor.
+   ","
+   Stop the motor moving (if, of course, it *is* moving).
+   "
+   "
+   ``pwmmotormovetopos,<absolute_position>``
+
+   ``absolute_position``: The absolute position, relative to the Home position.
+
+   Move the motor to an absolute position.
+   ","
+   Move the motor to an absolute position. Expects to have the Home position defined, by moving to the Home position at least once.
+
+   This will cause the ``positionReached`` event to be generated, and also the ``limitA`` or ``limitB`` event if that is reached.
+   "

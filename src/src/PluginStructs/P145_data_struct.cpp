@@ -419,21 +419,10 @@ float P145_data_struct::getTempHumCorrection(float temperature, float humidity) 
 /*****************************************************************************/
 float P145_data_struct::getAnalogValue()
 {
-  float ain = last_ain;                        // Build result, start with previous
-  float sum = (float)(ovs_value);              // OversamplingValue
-  int count = ovs_cnt;                         // OversamplingCount
-  if (count > 0)                               // Any samples gathered?
-  {
-    if (count >= 3)
-    {
-      sum -= (float)ovs_max;                   // remove OversamplingMaxVal
-      sum -= (float)ovs_min;                   // remove OversamplingMinVal
-      count -= 2;
-    }
-    ain = sum / (float)count;                  // Scale to single sample value
-    last_ain = (unsigned long)(sum / 100);     // Remember result
-  }
-  return ain;
+  float value{};
+  ovs.peek(value);
+  ovs.resetKeepLast();
+  return value;
 }
 
 /*****************************************************************************/
@@ -501,7 +490,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
     float rSensor = 0.0f;         // Sensor resistance Rs
     float value = 0.0f;           // Return value
 #ifdef P145_DEBUG
-    uint  ovs = 0;                // Oversampling count (for debugging)
+    uint32_t  ovs_cnt = 0;                // Oversampling count (for debugging)
 #endif
 #ifdef P145_TEST
     static float injector = 50.0f;
@@ -525,7 +514,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
     {
       ain = getAnalogValue();     // Use acually being measured value
 #ifdef P145_DEBUG
-      ovs = ovs_cnt;
+      ovs_cnt = ovs.getCount();
 #endif
       resetOversampling();        // Reset the oversampling variables.
     }
@@ -555,7 +544,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Temp= "), temperature));    // Temperature for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Hum= "), humidity));        // Humidity for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ain= "), ain));             // Measured analog input value
-      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ovs= "), ovs));             // Oversampling count
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ovs= "), ovs_cnt));         // Oversampling count
       if (calibration)
       {
         addLog(LOG_LEVEL_INFO, F("MQ-xx: Calibration enabled"));
@@ -575,10 +564,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
 /*****************************************************************************/
 void P145_data_struct::resetOversampling()
 {
-    ovs_value = 0;                    // OversamplingValue
-    ovs_cnt = 0;                      // OversamplingCount
-    ovs_min = MAX_ADC_VALUE;          // OversamplingMinVal
-    ovs_max = 0;                      // OversamplingMaxVal
+  ovs.reset();
 }
 /*****************************************************************************/
 /*!
@@ -591,7 +577,6 @@ void P145_data_struct::resetOversampling()
 bool P145_data_struct::plugin_init()
 {
   resetOversampling();
-  last_ain = 0;                   // No measured analog input value yet
   last_cal = millis();            // Initialise the calibration interval
   return true;
 }
@@ -606,26 +591,13 @@ bool P145_data_struct::plugin_init()
 /*****************************************************************************/
 bool P145_data_struct::plugin_ten_per_second()
 {
-    uint16_t currentValue;
-
     // Measure the analog input value for oversampling
     // Algorithm uses mean value with exeption of max and min values
     // See declaraion of the global variables for their usage
     // Skip measurement in analog input is used to calibrate WiFi
     if (!WiFiEventData.wifiConnectInProgress)
     {
-      currentValue = espeasy_analogRead(analogPin);
-      ovs_value += currentValue;
-      ovs_cnt++;
-
-      if (currentValue > ovs_max)
-      {
-        ovs_max = currentValue;
-      }
-      if (currentValue < ovs_min)
-      {
-        ovs_min = currentValue;
-      }
+      ovs.add(espeasy_analogRead(analogPin));
     }
     return true;
 }

@@ -128,17 +128,14 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   {
     infoReply.destUnit = destUnit;
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
-    delay(10);
   } else {
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
-        delay(10);
       }
     }
   }
-  delay(50);
 }
 
 void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t destTaskIndex)
@@ -169,17 +166,14 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   {
     dataReply.destUnit = destUnit;
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
-    delay(10);
   } else {
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
-        delay(10);
       }
     }
   }
-  delay(50);
 }
 
 /*********************************************************************************************\
@@ -243,11 +237,11 @@ void C013_Receive(struct EventStruct *event) {
     case 3: // sensor info
     {
       struct C013_SensorInfoStruct infoReply;
-      int count = sizeof(C013_SensorInfoStruct);
+      int structSize = sizeof(C013_SensorInfoStruct);
 
-      if (event->Par2 < count) { count = event->Par2; }
+      if (event->Par2 < structSize) { structSize = event->Par2; }
 
-      memcpy(reinterpret_cast<uint8_t *>(&infoReply), event->Data, count);
+      memcpy(reinterpret_cast<uint8_t *>(&infoReply), event->Data, structSize);
 
       if (infoReply.isValid()) {
         // to prevent flash wear out (bugs in communication?) we can only write to an empty task
@@ -290,10 +284,10 @@ void C013_Receive(struct EventStruct *event) {
     case 5: // sensor data
     {
       struct C013_SensorDataStruct dataReply;
-      int count = sizeof(C013_SensorDataStruct);
+      int structSize = sizeof(C013_SensorDataStruct);
 
-      if (event->Par2 < count) { count = event->Par2; }
-      memcpy(reinterpret_cast<uint8_t *>(&dataReply), event->Data, count);
+      if (event->Par2 < structSize) { structSize = event->Par2; }
+      memcpy(reinterpret_cast<uint8_t *>(&dataReply), event->Data, structSize);
 
       // FIXME TD-er: We should check for sensorType and pluginID on both sides.
       // For example sending different sensor type data from one dummy to another is probably not going to work well

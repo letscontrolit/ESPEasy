@@ -114,12 +114,9 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
     {
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P137_NR_OUTPUT_VALUES) {
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            toString(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i)), false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, toString(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i)), false));
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;

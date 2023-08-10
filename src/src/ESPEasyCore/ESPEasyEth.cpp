@@ -68,7 +68,7 @@ bool ethCheckSettings() {
       && isValid(Settings.NetworkMedium)
       && validGpio(Settings.ETH_Pin_mdc)
       && validGpio(Settings.ETH_Pin_mdio)
-      && validGpio(Settings.ETH_Pin_power);
+      && (validGpio(Settings.ETH_Pin_power) || (Settings.ETH_Pin_power == -1)); // Some boards have fixed power
 }
 
 bool ethPrepare() {

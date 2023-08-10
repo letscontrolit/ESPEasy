@@ -49,7 +49,7 @@ void backgroundtasks()
 
   // Rate limit calls to run backgroundtasks
   static uint32_t lastRunBackgroundTasks = 0;
-  if (timePassedSince(lastRunBackgroundTasks) < 5) return;
+  if (timePassedSince(lastRunBackgroundTasks) < 10) return;
   lastRunBackgroundTasks = millis();
 
   START_TIMER

@@ -143,6 +143,7 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
       addToSerialBuffer('>');
       addToSerialBuffer(String(InputBuffer_Serial));
+      addToSerialBuffer('\n');
       ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer

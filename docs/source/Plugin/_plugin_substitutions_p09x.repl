@@ -85,6 +85,19 @@
 .. |P097_compileinfo| replace:: `.`
 .. |P097_usedlibraries| replace:: `.`
 
+.. |P098_name| replace:: :cyan:`PWM Motor`
+.. |P098_type| replace:: :cyan:`Motor`
+.. |P098_typename| replace:: :cyan:`Motor - PWM Motor`
+.. |P098_porttype| replace:: `.`
+.. |P098_status| replace:: :yellow:`COLLECTION A` :yellow:`COLLECTION D`
+.. |P098_github| replace:: _P098_PWM_motor.ino
+.. _P098_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P098_PWM_motor.ino
+.. |P098_usedby| replace:: `.`
+.. |P098_shortinfo| replace:: `.`
+.. |P098_maintainer| replace:: `TD-er`
+.. |P098_compileinfo| replace:: `.`
+.. |P098_usedlibraries| replace:: `.`
+
 .. |P099_name| replace:: :cyan:`XPT2046 touchscreen on TFT display`
 .. |P099_type| replace:: :cyan:`Touch`
 .. |P099_typename| replace:: :cyan:`Touch - XPT2046 touchscreen on TFT display`
