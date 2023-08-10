@@ -13,7 +13,10 @@
 // Major work on this plugin has been done by 'Namirda'
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
-//
+// @uwekaditz: 2023-08-10
+// BUG: Individual font setting can only enlarge or maximize the font, if more than 1 line should be displayed (it was buggy not only for ticker!)
+// BUG: CalculateIndividualFontSettings() must be called until the font fits (it was buggy not only for ticker!)
+// BUG: Compiler error for '#ifdef P036_FONT_CALC_LOG'
 // @uwekaditz: 2023-07-25
 // BUG: Calculation for ticker IdxStart and IdxEnd was wrong for 64x48 display
 // CHG: Start page updates after network has connected in PLUGIN_ONCE_A_SECOND, faster than waiting for the next PLUGIN_READ

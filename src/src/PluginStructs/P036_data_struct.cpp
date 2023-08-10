@@ -577,14 +577,20 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
     switch (static_cast<eModifyFont>(iModifyFont)) {
       case eModifyFont::eEnlarge:
-        lFontIndex -= 1;
+        if (ScrollingPages.linesPerFrameDef > 1) {
+          // Font can only be enlarged if more than 1 line is displayed
+          lFontIndex -= 1;
 
-        if (lFontIndex < IdxForBiggestFont) { lFontIndex = IdxForBiggestFont; }
-        result.IdxForBiggestFontUsed = lFontIndex;
+          if (lFontIndex < IdxForBiggestFont) { lFontIndex = IdxForBiggestFont; }
+          result.IdxForBiggestFontUsed = lFontIndex;
+        }
         break;
       case eModifyFont::eMaximize:
-        lFontIndex                   = IdxForBiggestFont;
-        result.IdxForBiggestFontUsed = lFontIndex;
+        if (ScrollingPages.linesPerFrameDef > 1) {
+          // Font can only be maximized if more than 1 line is displayed
+          lFontIndex                   = IdxForBiggestFont;
+          result.IdxForBiggestFontUsed = lFontIndex;
+        }
         break;
       case eModifyFont::eReduce:
         lFontIndex += 1;
@@ -618,6 +624,9 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
     // just one lines per frame -> no space inbetween
     lSpace = 0;
     lTop   = (MaxHeight - lHeight) / 2;
+    if (lHeight > MaxHeight) {
+        result.NextLineNo = 0xFF; // settings do not fit
+    }
   } else {
     if (deltaHeight >= (lLinesPerFrame - 1)) {
       // individual line setting fits
@@ -658,6 +667,28 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
       LineSettings[k].ypos = LineSettings[k - 1].ypos + FontSizes[LineSettings[k - 1].fontIdx].Height + lSpace;
     }
   }
+# ifdef P036_CHECK_INDIVIDUAL_FONT
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log1;
+
+    if (log1.reserve(140)) { // estimated
+      delay(10);             // otherwise it is may be to fast for the serial monitor
+      log1.clear();
+      log1  = F("IndividualFontSettings:");
+      log1 += F(" result.NextLineNo:"); log1 += result.NextLineNo;
+      log1 += F(" result.IdxForBiggestFontUsed:"); log1 += result.IdxForBiggestFontUsed;
+      log1 += F(" LineNo:"); log1 += LineNo;
+      log1 += F(" LinesPerFrame:"); log1 += LinesPerFrame;
+      if (result.NextLineNo != 0xFF) {
+        log1 += F(" FrameNo:"); log1 += FrameNo;
+        log1 += F(" lTop:"); log1 += lTop;
+        log1 += F(" lSpace:"); log1 += lSpace;
+      }
+      addLogMove(LOG_LEVEL_INFO, log1);
+    }
+  }
+#endif // # ifdef P036_CHECK_INDIVIDUAL_FONT
   return result;
 }
 
@@ -687,8 +718,8 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
       strformat(F("P036 CalculateFontSettings lines: %d, height: %d, header: %s, footer: %s"),
        iLinesPerFrame, 
        iHeight, 
-       boolToString(!bHideHeader).c_str(), 
-       boolToString(!bHideFooter).c_str()));
+       boolToString(!bHideHeader), 
+       boolToString(!bHideFooter)));
   }
   # endif // ifdef P036_FONT_CALC_LOG
 
@@ -806,8 +837,8 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
 
       if (IndividualFontSettings.NextLineNo == 0xFF) {
         // individual settings do not fit
-        if (bReduceLinesPerFrame) {
-          currentLinesPerFrame--;                                                // reduce numer of lines per frame
+        if ((bReduceLinesPerFrame) && (currentLinesPerFrame > 1)) {
+          currentLinesPerFrame--;                                                // reduce number of lines per frame
         } else {
           iIdxForBiggestFont = IndividualFontSettings.IdxForBiggestFontUsed + 1; // use smaller font size as maximum
         }
@@ -826,17 +857,6 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
       String log1;
 
       if (log1.reserve(140)) { // estimated
-        delay(5);              // otherwise it is may be to fast for the serial monitor
-        log1.clear();
-        log1  = F("IndividualFontSettings:");
-        log1 += F(" iFontIndex:"); log1 += iFontIndex;
-        log1 += F(" iLinesPerFrame:"); log1 += iLinesPerFrame;
-        log1 += F(" TopLineOffset:"); log1 += TopLineOffset;
-        log1 += F(" iHeight:"); log1 += iHeight;
-        log1 += F(" iUsedHeightForFonts:"); log1 += iUsedHeightForFonts;
-        log1 += F(" iMaxHeightForFont:"); log1 += iMaxHeightForFont;
-        addLogMove(LOG_LEVEL_INFO, log1);
-
         for (uint8_t i = 0; i < P36_Nlines; i++) {
           delay(5); // otherwise it is may be to fast for the serial monitor
           log1.clear();
@@ -1397,6 +1417,7 @@ void P036_data_struct::display_scrolling_lines() {
 
               // add more characters to display
               iCurrentLeft -= getDisplaySizeSettings(disp_resolution).PixLeft;
+
               while (true) {
                 if (ScrollingLines.Ticker.IdxEnd >= ScrollingLines.Ticker.len) { // end of string
                   break;
@@ -1412,7 +1433,9 @@ void P036_data_struct::display_scrolling_lines() {
               }
 
               // remove already displayed characters
-              float fCurrentPixLeft = static_cast<float>(getDisplaySizeSettings(disp_resolution).PixLeft) - 2.0f * ScrollingLines.Ticker.TickerAvgPixPerChar;
+              float fCurrentPixLeft = static_cast<float>(getDisplaySizeSettings(disp_resolution).PixLeft) - 2.0f *
+                                      ScrollingLines.Ticker.TickerAvgPixPerChar;
+
               while (ScrollingLines.SLine[0].fPixSum < fCurrentPixLeft) {
                 uint8_t c          = ScrollingLines.Ticker.Tcontent.charAt(ScrollingLines.Ticker.IdxStart);
                 uint8_t PixForChar = display->getCharWidth(c); // PixForChar can be 0 if c is non ascii
@@ -1422,9 +1445,12 @@ void P036_data_struct::display_scrolling_lines() {
                 if (ScrollingLines.Ticker.IdxStart >= ScrollingLines.Ticker.IdxEnd) {
                   ScrollingLines.SLine[0].Width = 0; // Stop scrolling
 
+# ifdef PLUGIN_036_DEBUG
+
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                     addLog(LOG_LEVEL_INFO, F("Ticker finished"));
                   }
+# endif // PLUGIN_036_DEBUG
                   break;
                 }
 
