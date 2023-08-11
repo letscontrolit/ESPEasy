@@ -19,11 +19,17 @@ bool P113_data_struct::begin() {
   initState = nullptr != sensor;
 
   if (initState) {
-    sensor->setI2CAddress(i2cAddress); // Initialize for configured address
+    uint16_t id = sensor->getID();
 
-    if (sensor->begin()) {             // False is NO-ERROR
+    // FIXME 2023-08-11 tonhuisman: Disabled, as it seems to mess up the sensor
+    // sensor->setI2CAddress(i2cAddress); // Initialize for configured address
+
+    uint8_t res = sensor->begin();
+
+    if (res) { // 0/false is NO-ERROR
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLogMove(LOG_LEVEL_ERROR, strformat(F("VL53L1X: Sensor not found, init failed for 0x%02x"), i2cAddress));
+        addLogMove(LOG_LEVEL_ERROR, strformat(F("VL53L1X: Sensor not found, init failed for 0x%02x, id: 0x%04X status: %d"),
+                                              i2cAddress, id, res));
       }
       initState = false;
       return initState;
@@ -38,7 +44,7 @@ bool P113_data_struct::begin() {
     }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L1X: Sensor initialized at address 0x%02x"), i2cAddress));
+      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L1X: Sensor initialized at address 0x%02x, id: 0x%04x"), i2cAddress, id));
     }
   }
 
