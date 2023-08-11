@@ -19,9 +19,9 @@ bool P113_data_struct::begin() {
   initState = nullptr != sensor;
 
   if (initState) {
-    sensor->setI2CAddress(i2cAddress << 1); // Initialize for configured address, compensate for >> 1 in library... :(
+    sensor->setI2CAddress(i2cAddress); // Initialize for configured address
 
-    if (sensor->begin()) {                  // False is NO-ERROR
+    if (sensor->begin()) {             // False is NO-ERROR
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         addLogMove(LOG_LEVEL_ERROR, strformat(F("VL53L1X: Sensor not found, init failed for 0x%02x"), i2cAddress));
       }

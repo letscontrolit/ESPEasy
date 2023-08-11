@@ -157,7 +157,7 @@ VL53L1X_ERROR VL53L1X::VL53L1X_SetI2CAddress(uint8_t new_address)
 {
 	VL53L1X_ERROR status = 0;
 
-	status = VL53L1_WrByte(Device, VL53L1_I2C_SLAVE__DEVICE_ADDRESS, new_address >> 1);
+	status = VL53L1_WrByte(Device, VL53L1_I2C_SLAVE__DEVICE_ADDRESS, new_address);
 	Device->I2cDevAddr = new_address;
 
 	return status;
