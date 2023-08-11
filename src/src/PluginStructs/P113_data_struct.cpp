@@ -2,32 +2,44 @@
 
 #ifdef USES_P113
 
-P113_data_struct::P113_data_struct(uint8_t i2c_addr, int timing, bool range) : i2cAddress(i2c_addr), timing(timing), range(range) {}
+P113_data_struct::P113_data_struct(uint8_t i2c_addr, int timing, bool range) : i2cAddress(i2c_addr), timing(timing), range(range) {
+  sensor = new (std::nothrow) SFEVL53L1X();
+}
+
+P113_data_struct::~P113_data_struct() {
+  if (nullptr != sensor) {
+    delete sensor;
+  }
+}
 
 // **************************************************************************/
 // Initialize VL53L1X
 // **************************************************************************/
 bool P113_data_struct::begin() {
-  initState = true;
+  initState = nullptr != sensor;
 
-  sensor.setI2CAddress(i2cAddress); // Initialize for configured address
+  if (initState) {
+    sensor->setI2CAddress(i2cAddress << 1); // Initialize for configured address, compensate for >> 1 in library... :(
 
-  if (sensor.begin() != 0) {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("VL53L1X: Sensor not found, init failed for 0x");
-      log += String(i2cAddress, HEX);
-      addLogMove(LOG_LEVEL_INFO, log);
+    if (sensor->begin()) {                  // False is NO-ERROR
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        addLogMove(LOG_LEVEL_ERROR, strformat(F("VL53L1X: Sensor not found, init failed for 0x%02x"), i2cAddress));
+      }
+      initState = false;
+      return initState;
     }
-    initState = false;
-    return initState;
-  }
 
-  sensor.setTimingBudgetInMs(timing);
+    sensor->setTimingBudgetInMs(timing);
 
-  if (range) {
-    sensor.setDistanceModeLong();
-  } else {
-    sensor.setDistanceModeShort();
+    if (range) {
+      sensor->setDistanceModeLong();
+    } else {
+      sensor->setDistanceModeShort();
+    }
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L1X: Sensor initialized at address 0x%02x"), i2cAddress));
+    }
   }
 
   return initState;
@@ -35,7 +47,7 @@ bool P113_data_struct::begin() {
 
 bool P113_data_struct::startRead() {
   if (initState && !readActive) {
-    sensor.startRanging();
+    sensor->startRanging();
     readActive = true;
     distance   = -1;
   }
@@ -43,12 +55,12 @@ bool P113_data_struct::startRead() {
 }
 
 bool P113_data_struct::readAvailable() {
-  bool ready = sensor.checkForDataReady();
+  bool ready = sensor->checkForDataReady();
 
   if (ready) {
-    distance = sensor.getDistance();
-    sensor.clearInterrupt();
-    sensor.stopRanging();
+    distance = sensor->getDistance();
+    sensor->clearInterrupt();
+    sensor->stopRanging();
 
     // readActive = false;
   }
@@ -64,11 +76,7 @@ uint16_t P113_data_struct::readDistance() {
   # ifdef P113_DEBUG_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    log  = F("VL53L1X  : idx: 0x");
-    log += String(i2cAddress, HEX);
-    log += F(" init: ");
-    log += String(initState, BIN);
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L1X  : idx: 0x%x init: %s"), i2cAddress, initState ? 1 : 0));
   }
   # endif // P113_DEBUG_DEBUG
 
@@ -83,16 +91,10 @@ uint16_t P113_data_struct::readDistance() {
   }
 
   # ifdef P113_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    log  = F("VL53L1X: Address: 0x");
-    log += String(i2cAddress, HEX);
-    log += F(" / Timing: ");
-    log += String(timing, DEC);
-    log += F(" / Long Range: ");
-    log += String(range, BIN);
-    log += F(" / Distance: ");
-    log += distance;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L1X: Address: 0x%02x / Timing: %d / Long Range: %d / Distance: %d"),
+                                         i2cAddress, timing, range ? 1 : 0, distance));
   }
   # endif // P113_DEBUG
 
@@ -100,7 +102,7 @@ uint16_t P113_data_struct::readDistance() {
 }
 
 uint16_t P113_data_struct::readAmbient() {
-  return sensor.getAmbientRate();
+  return sensor->getAmbientRate();
 }
 
 bool P113_data_struct::isReadSuccessful() {

@@ -5,9 +5,12 @@
 // ########################### Plugin 113 VL53L1X I2C Ranging LIDAR      #################################
 // #######################################################################################################
 
-// Changelog:
-// 2021-04-06, tonhuisman: Remove Interval optional attribute to avoid system overload, cleanup source
-// 2021-04-05, tonhuisman: Add VL53L1X Time of Flight sensor to main repo (similar to but not compatible with VL53L0X)
+/** Changelog:
+ * 2023-08-11, tonhuisman: Fix issue not surfacing before, that the library right-shifts the I2C address when that is set...
+ *                         Also use new/delete on sensor object (code improvement)
+ * 2021-04-06, tonhuisman: Remove Interval optional attribute to avoid system overload, cleanup source
+ * 2021-04-05, tonhuisman: Add VL53L1X Time of Flight sensor to main repo (similar to but not compatible with VL53L0X)
+ */
 
 // needs SparkFun_VL53L1X library from https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library
 
