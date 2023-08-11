@@ -13,30 +13,61 @@
   Development environment specifics:
   Arduino IDE 1.8.1
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  GNU General Public License for more details.
+	==== MIT License ====	
+	Copyright © 2022 SparkFun Electronics
 
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the “Software”), to deal in the Software without restriction, 
+	including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+	and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE 
+	WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS 
+	OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+	TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+	=====================	
 */
 
 #pragma once
 
 #include "Arduino.h"
 #include "Wire.h"
-#include "RangeSensor.h"
-#include "vl53l1_error_codes.h"
-#include "vl53l1x_class.h"
+#include "st_src/RangeSensor.h"
+#include "st_src/vl53l1_error_codes.h"
+#include "st_src/vl53l1x_class.h"
+#include "st_src/ComponentObject.h"
+#include "st_src/RangeSensor.h"
+
+#define DISTANCE_SHORT 	1
+#define DISTANCE_LONG 	2
+#define WINDOW_BELOW	0
+#define WINDOW_ABOVE	1
+#define WINDOW_OUT		2
+#define WINDOW_IN		3
+
+struct DetectionConfig
+{
+	uint16_t distanceMode = DISTANCE_SHORT;	// distance mode : DISTANCE_SHORT (0) or DISTANCE_LONG (1)
+	uint16_t windowMode = WINDOW_IN;		// window mode : WINDOW_BELOW (0), WINDOW_ABOVE (1), WINDOW_OUT (2), WINDOW_IN (3)
+	uint8_t IntOnNoTarget = 1;				// = 1 (No longer used - just use 1)
+	uint16_t thresholdHigh = 0;				// (in mm) :  the threshold above which one the device raises an interrupt if Window = 1
+	uint16_t thresholdLow = 0;				// (in mm) : the threshold under which one the device raises an interrupt if Window = 0
+};
 
 class SFEVL53L1X
 {
 	public:
-	SFEVL53L1X(TwoWire &i2cPort = Wire, int shutdownPin = -1, int interruptPin = -1); //Constructs our Distance sensor without an interrupt or shutdown pin
+	//Constructs our Distance sensor
+	SFEVL53L1X(); // Default to Wire. Set both pins to -1 (undefined).
+	SFEVL53L1X(TwoWire &i2cPort, int shutdownPin = -1, int interruptPin = -1);
+	~SFEVL53L1X();
 	bool init(); //Deprecated version of begin
 	bool begin(); //Initialization of sensor
+	bool begin(TwoWire &i2cPort); //Initialization of sensor
 	bool checkID(); //Check the ID of the sensor, returns true if ID is correct
+	uint16_t getID();
 	void sensorOn(); //Toggles shutdown pin to turn sensor on and off
     void sensorOff(); //Toggles shutdown pin to turn sensor on and off
 	VL53L1X_Version_t getSoftwareVersion(); //Get's the current ST software version
@@ -47,6 +78,7 @@ class SFEVL53L1X
 	void setInterruptPolarityLow(); //Set the polarity of an active interrupt to Low
 	uint8_t getInterruptPolarity(); //get the current interrupt polarity
 	void startRanging(); //Begins taking measurements
+	void startOneshotRanging(); // Start one-shot ranging
 	void stopRanging(); //Stops taking measurements
 	bool checkForDataReady(); //Checks the to see if data is ready
 	void setTimingBudgetInMs(uint16_t timingBudget); //Set the timing budget for a measurement
@@ -108,6 +140,9 @@ class SFEVL53L1X
 	void startTemperatureUpdate(); //Recalibrates the sensor for temperature changes. Run this any time the temperature has changed by more than 8°C
 	void calibrateOffset(uint16_t targetDistanceInMm); //Autocalibrate the offset by placing a target a known distance away from the sensor and passing this known distance into the function.
 	void calibrateXTalk(uint16_t targetDistanceInMm); //Autocalibrate the crosstalk by placing a target a known distance away from the sensor and passing this known distance into the function.
+	bool setThresholdConfig(DetectionConfig* config); //Sets threshold configuration struct
+	bool getThresholdConfig(DetectionConfig* config); //Gets current threshold settings. Returns false on error, true otherwise. Stores results in pointer to struct argument.
+
 	private:
 	TwoWire *_i2cPort;
 	int _shutdownPin;

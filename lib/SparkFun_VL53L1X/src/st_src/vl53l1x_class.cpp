@@ -223,11 +223,18 @@ VL53L1X_ERROR VL53L1X::VL53L1X_GetInterruptPolarity(uint8_t *pInterruptPolarity)
 VL53L1X_ERROR VL53L1X::VL53L1X_StartRanging()
 {
 	VL53L1X_ERROR status = 0;
-
+	VL53L1_WrByte(Device, SYSTEM__INTERRUPT_CLEAR, 0x01); /* clear interrupt trigger */
 	status = VL53L1_WrByte(Device, SYSTEM__MODE_START, 0x40); /* Enable VL53L1X */
 	return status;
 }
 
+VL53L1X_ERROR VL53L1X::VL53L1X_StartOneshotRanging()
+{
+	VL53L1X_ERROR status = 0;
+	VL53L1_WrByte(Device, SYSTEM__INTERRUPT_CLEAR, 0x01); /*  clear interrupt trigger */
+	status = VL53L1_WrByte(Device, SYSTEM__MODE_START, 0x10); /* Enable VL53L1X one-shot ranging */
+	return status;
+}
 VL53L1X_ERROR VL53L1X::VL53L1X_StopRanging()
 {
 	VL53L1X_ERROR status = 0;
@@ -963,7 +970,7 @@ VL53L1X_ERROR VL53L1X::VL53L1_RdDWord(VL53L1_DEV Dev, uint16_t index, uint32_t *
 	status = VL53L1_I2CRead(Dev->I2cDevAddr, index, buffer, 4);
 	if (!status)
 	{
-		*data = (buffer[0] << 24) + (buffer[1] << 16) + (buffer[2] << 8) + buffer[3];
+		*data = (buffer[0] << 24) + (buffer[1] << 16U) + (buffer[2] << 8) + buffer[3];
 	}
 	return status;
 }
@@ -998,7 +1005,7 @@ VL53L1X_ERROR VL53L1X::VL53L1_I2CWrite(uint8_t DeviceAddr, uint16_t RegisterAddr
 	buffer[0] = RegisterAddr >> 8;
 	buffer[1] = RegisterAddr & 0xFF;
 	dev_i2c->write(buffer, 2);
-	for (int i = 0; i < NumByteToWrite; i++)
+	for (uint16_t i = 0; i < NumByteToWrite; i++)
 		dev_i2c->write(pBuffer[i]);
 
 	dev_i2c->endTransmission(true);
