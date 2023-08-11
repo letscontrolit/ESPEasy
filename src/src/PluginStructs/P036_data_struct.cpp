@@ -674,7 +674,6 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
     if (log1.reserve(140)) { // estimated
       delay(10);             // otherwise it is may be to fast for the serial monitor
-      log1.clear();
       log1  = F("IndividualFontSettings:");
       log1 += F(" result.NextLineNo:"); log1 += result.NextLineNo;
       log1 += F(" result.IdxForBiggestFontUsed:"); log1 += result.IdxForBiggestFontUsed;
@@ -738,7 +737,6 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
 # ifdef P036_FONT_CALC_LOG
     String log1;
     log1.reserve(80);
-    log1.clear();
 # endif // ifdef P036_FONT_CALC_LOG
 
     for (i = 0; i < P36_MaxFontCount - 1; i++) {
@@ -881,7 +879,6 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
 
     if (log1.reserve(140)) { // estimated
       delay(5);              // otherwise it is may be to fast for the serial monitor
-      log1.clear();
       log1  = F("CalculateFontSettings: Font:");
       log1 += result.FontName();
       log1 += F(" Idx:");
