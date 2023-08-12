@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2023-08-12 tonhuisman: Strip off occasional 8th bit from received data, to avoid unexpected failures on P1 data reception
  * 2023-06-24 tonhuisman: Fix initialization with non-GPIO serial ports like CDC/HW-CDC
  *                        Add option: append the task number to the event-name (Generic and RFLink event options)
  * 2023-06-23 tonhuisman: Add option: use Serial Port name (serialxxx -> xxx= 0/1/2/0swap/i2c/sw/hwcdc/cdc) as event-name for Generic events

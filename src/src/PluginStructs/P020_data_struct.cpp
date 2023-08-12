@@ -323,7 +323,9 @@ void P020_Task::rulesEngine(const String& message) {
 
         if (_P1EventData) {
           eventString += '=';
-          eventString += message; // Include entire message, may cause memory overflow!
+          eventString += message;               // Include entire message, may cause memory overflow!
+          eventString.replace(F("\n"), F(",")); // Make it a single line, comma-separated, as much as possible
+          eventString.replace(F("\r"), F(""));  // We don't need no st*n carriage returns :)
         }
         break;
     } // switch
@@ -467,6 +469,7 @@ bool P020_Task::handleP1Char(char ch) {
     # endif // ifndef BUILD_NO_DEBUG
     state = ParserState::WAITING; // reset
   }
+  ch &= 0x7F;                     // Strip off occasional 8th bit for now
 
   bool done    = false;
   bool invalid = false;
@@ -500,6 +503,7 @@ bool P020_Task::handleP1Char(char ch) {
         state = ParserState::WAITING; // reset
         return handleP1Char(ch);
       } else {
+        addLog(LOG_LEVEL_ERROR, strformat(F("P1   : Receiving unknown: %d,'%c'"), ch, ch));
         invalid = true;
       }
       break;
