@@ -8,8 +8,9 @@
 #include "../Helpers/ESPEasy_Storage.h"
 
 
+#ifdef PLUGIN_USES_SERIAL
 #include <ESPeasySerial.h>
-
+#endif
 
 void Caches::clearAllCaches()
 {
@@ -61,6 +62,7 @@ bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const Checksu
 
 void Caches::updateActiveTaskUseSerial0() {
   activeTaskUseSerial0 = false;
+#ifdef PLUGIN_USES_SERIAL
   if (deviceCount <= 0)
     return;
 
@@ -95,6 +97,7 @@ void Caches::updateActiveTaskUseSerial0() {
       }
     }
   }
+#endif
 }
 
 uint8_t Caches::getTaskDeviceValueDecimals(taskIndex_t TaskIndex, uint8_t rel_index)

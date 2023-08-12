@@ -85,12 +85,9 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P102_NR_OUTPUT_VALUES) {
           uint8_t choice = PCONFIG(i + P102_QUERY1_CONFIG_POS);
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            p102_getQueryString(choice),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, p102_getQueryString(choice));
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;

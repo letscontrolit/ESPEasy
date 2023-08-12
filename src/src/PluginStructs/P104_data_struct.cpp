@@ -1704,15 +1704,9 @@ bool P104_data_struct::saveSettings() {
         # ifdef P104_DEBUG_DEV
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          log.reserve(64);
-          log  = F("P104: saveSettings zone: ");
-          log += it->zone;
-          log += F(" bufferSize: ");
-          log += bufferSize;
-          log += F(" offset: ");
-          log += saveOffset;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, format(
+            F("P104: saveSettings zone: %d bufferSize: %d offset: %d"),
+            it->zone, bufferSize, saveOffset));
           zbuffer.replace(P104_FIELD_SEP, P104_FIELD_DISP);
           addLog(LOG_LEVEL_INFO, zbuffer);
         }

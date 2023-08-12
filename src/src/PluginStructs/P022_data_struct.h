@@ -14,8 +14,8 @@
 # define PCA9685_NUMS_ADDRESS       (PCA9685_MAX_ADDRESS - PCA9685_ADDRESS)
 # define PCA9685_MAX_PINS           15
 # define PCA9685_MAX_PWM            4095
-# define PCA9685_MIN_FREQUENCY      23.0   // Min possible PWM cycle frequency
-# define PCA9685_MAX_FREQUENCY      1500.0 // Max possible PWM cycle frequency
+# define PCA9685_MIN_FREQUENCY      23   // Min possible PWM cycle frequency
+# define PCA9685_MAX_FREQUENCY      1500 // Max possible PWM cycle frequency
 # define PCA9685_ALLLED_REG         (uint8_t)0xFA
 
 // FIXME TD-er: This still uses a bitmask to keep track of what address was initialized.
@@ -51,6 +51,8 @@ struct P022_data_struct : public PluginTaskData_base {
 
   void Plugin_022_initialize(int address);
 
+
+  static String P022_logPrefix(int address);
 
   uint32_t initializeState_lo = 0;
   uint32_t initializeState_hi = 0;

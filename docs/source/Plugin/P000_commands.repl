@@ -65,6 +65,32 @@
 
     ``ClearRTCram``"
     "
+    ClearSdkWifi","
+    :red:`Internal`","
+	  ESP8266 only (added: 2022/11/11)
+    Clear the 12k SDK WiFi partition at the end of the flash memory.
+    This data is used by the ESP8266 Arduino SDK to keep some persistent WiFi settings.
+    When WiFi is performing badly, it might be useful to clear this section. 
+    Especially when switching SDK build revisions, like when switching between regular builds and "beta" or "alt.WiFi" builds.
+    Please reboot after clearing this partition.
+    See also ``ClearWifiRFcal`` command.
+
+    ``ClearSdkWifi``"
+    "
+    ClearWifiRFcal","
+    :red:`Internal`","
+    ESP8266 only (added: 2022/11/11)
+    Clear the 4k RFcal partition near the end of the flash memory.
+    This data is used by the ESP8266 Arduino SDK to keep store WiFi RF calibration data.
+    When WiFi is performing badly, it might be useful to clear this section. 
+    Especially when switching SDK build revisions, like when switching between regular builds and "beta" or "alt.WiFi" builds.
+    Another reason to clear the RF calibration is when initial RF calibration was done with a different power supply, or when WiFi performs badly after placing the ESP in a different enclosure which may de-tune the antenna.
+    Please reboot after clearing this partition.
+    See also ``ClearSdkWifi`` command.
+
+    ``ClearWifiRFcal``"
+
+    "
     Config","
     :red:`Internal`","
     Remote config of a task. 

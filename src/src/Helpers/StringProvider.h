@@ -59,7 +59,9 @@ struct LabelType {
 #endif // ifdef ESP32
 
     JSON_BOOL_QUOTES,
+#if FEATURE_TIMING_STATS
     ENABLE_TIMING_STATISTICS,
+#endif
     ENABLE_RULES_CACHING,
     ENABLE_SERIAL_PORT_CONSOLE,
     CONSOLE_SERIAL_PORT,
@@ -194,7 +196,9 @@ struct LabelType {
     ETH_SPEED_STATE,
     ETH_CONNECTED,
 #endif // if FEATURE_ETHERNET
+# if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     ETH_WIFI_MODE,
+#endif
     SUNRISE,
     SUNSET,
     ISNTP,

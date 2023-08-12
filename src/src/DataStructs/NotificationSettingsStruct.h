@@ -32,8 +32,7 @@ struct NotificationSettingsStruct
 
 typedef std::shared_ptr<NotificationSettingsStruct> NotificationSettingsStruct_ptr_type;
 #define MakeNotificationSettings(T) NotificationSettingsStruct_ptr_type NotificationSettingsStruct_ptr(new (std::nothrow)  NotificationSettingsStruct());\
-                                    NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr; \
-                                    if (NotificationSettingsStruct_ptr) { memset(&T, 0, sizeof(NotificationSettingsStruct)); }
+                                    NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr;
 
 // Need to make sure every byte between the members is also zero
 // Otherwise the checksum will fail and settings will be saved too often.

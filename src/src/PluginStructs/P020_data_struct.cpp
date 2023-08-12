@@ -269,10 +269,6 @@ void P020_Task::rulesEngine(const String& message) {
 
     String eventString;
 
-    if ((NewLinePos - StartPos) + 10 > 12) {
-      eventString.reserve((NewLinePos - StartPos) + 10); // Include the prefix
-    }
-
     // Remove preceeding CR also
     if ((message[NewLinePos] == '\n') && (message[NewLinePos - 1] == '\r')) {
       NewLinePos--;
@@ -298,10 +294,11 @@ void P020_Task::rulesEngine(const String& message) {
         }
         break;
       }
-      case P020_Events::RFLink: {        // RFLink
-        StartPos += 6;                   // RFLink, strip 20;xx; from incoming message
+      case P020_Events::RFLink: { // RFLink
+        StartPos += 6;            // RFLink, strip 20;xx; from incoming message
 
-        if (message.substring(StartPos, NewLinePos)
+        if (((NewLinePos - StartPos) >= 8) &&
+            message.substring(StartPos, StartPos + 8)
             .startsWith(F("ESPEASY"))) { // Special treatment for gpio values, strip unneeded parts...
           StartPos   += 8;               // Strip "ESPEASY;"
           eventString = F("RFLink");
@@ -317,6 +314,7 @@ void P020_Task::rulesEngine(const String& message) {
         if (NewLinePos > StartPos) {
           eventString += message.substring(StartPos, NewLinePos);
         }
+        eventQueue.addMove(std::move(eventString));
         break;
       }
       case P020_Events::P1WiFiGateway: // P1 WiFi Gateway
