@@ -52,7 +52,7 @@ bool P113_data_struct::begin() {
 }
 
 bool P113_data_struct::startRead() {
-  if (initState && !readActive) {
+  if (initState && !readActive && (nullptr != sensor)) {
     sensor->startRanging();
     readActive = true;
     distance   = -1;
