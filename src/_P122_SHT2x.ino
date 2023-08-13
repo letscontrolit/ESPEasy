@@ -8,11 +8,11 @@
 
 # include "src/PluginStructs/P122_data_struct.h"
 
-#define PLUGIN_122
-#define PLUGIN_ID_122     122               // plugin id
-#define PLUGIN_NAME_122   "Environment - SHT2x" // What will be dislpayed in the selection list
-#define PLUGIN_VALUENAME1_122 "Temperature" // variable output of the plugin. The label is in quotation marks
-#define PLUGIN_VALUENAME2_122 "Humidity"    // multiple outputs are supported
+# define PLUGIN_122
+# define PLUGIN_ID_122     122                   // plugin id
+# define PLUGIN_NAME_122   "Environment - SHT2x" // What will be dislpayed in the selection list
+# define PLUGIN_VALUENAME1_122 "Temperature"     // variable output of the plugin. The label is in quotation marks
+# define PLUGIN_VALUENAME2_122 "Humidity"        // multiple outputs are supported
 
 //   PIN/port configuration is stored in the following:
 //   CONFIG_PIN1 - The first GPIO pin selected within the task
@@ -26,7 +26,7 @@
 //
 //   N.B. these are aliases for a longer less readable amount of code. See _Plugin_Helper.h
 //
-//   PCONFIG_LABEL(x) is a function to generate a unique label used as HTML id to be able to match 
+//   PCONFIG_LABEL(x) is a function to generate a unique label used as HTML id to be able to match
 //                    returned values when saving a configuration.
 
 // Make accessing specific parameters more readable in the code
@@ -62,9 +62,10 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].I2CNoDeviceCheck   = true;
-      //Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Default;
+
+      // Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats    = true;
+      Device[deviceCount].OutputDataType = Output_Data_type_t::Default;
       break;
     }
 
@@ -89,8 +90,8 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
     {
       // Set a default config here, which will be called when a plugin is assigned to a task.
       P122_I2C_ADDRESS = P122_I2C_ADDRESS_AD0_0;
-      P122_RESOLUTION = P122_RESOLUTION_14T_12RH;
-      success = true;
+      P122_RESOLUTION  = P122_RESOLUTION_14T_12RH;
+      success          = true;
       break;
     }
 
@@ -108,12 +109,12 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
     {
       const uint8_t i2cAddressValues[] = { P122_I2C_ADDRESS_AD0_0, P122_I2C_ADDRESS_AD0_1 };
 
-      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) 
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS)
       {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P122_I2C_ADDRESS);
         addFormNote(F("ADO Low=0x40, High=0x41"));
-      } 
-      else 
+      }
+      else
       {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -128,13 +129,13 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
 
       # define P122_RESOLUTION_OPTIONS 4
 
-      const __FlashStringHelper *options[P122_RESOLUTION_OPTIONS] = {
+      const __FlashStringHelper *options[] = {
         F("Temp 14 bits / RH 12 bits"),
         F("Temp 13 bits / RH 10 bits"),
         F("Temp 12 bits / RH  8 bits"),
         F("Temp 11 bits / RH 11 bits"),
       };
-      const int optionValues[P014_RESOLUTION_OPTIONS] = {
+      const int optionValues[] = {
         P122_RESOLUTION_14T_12RH,
         P122_RESOLUTION_13T_10RH,
         P122_RESOLUTION_12T_08RH,
@@ -142,27 +143,28 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       };
       addFormSelector(F("Resolution"), P122_RESOLUTION_LABEL, P122_RESOLUTION_OPTIONS, options, optionValues, P122_RESOLUTION);
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (P122_data != nullptr) 
+
+      if (P122_data != nullptr)
       {
         uint32_t eida;
         uint32_t eidb;
-        uint8_t firmware;
+        uint8_t  firmware;
         P122_data->getEID(eida, eidb, firmware);
         String txt = F("CHIP ID:");
         txt += formatToHex(eida);
         txt += ',';
         txt += formatToHex(eidb);
         txt += F(" firmware=");
-        txt += String (firmware);
-#ifdef PLUGIN_122_DEBUG
+        txt += String(firmware);
+#  ifdef PLUGIN_122_DEBUG
         txt += F(" userReg= ");
         txt += formatToHex(P122_data->getUserReg());
-#endif
+#  endif // ifdef PLUGIN_122_DEBUG
         addFormNote(txt);
       }
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
@@ -174,9 +176,9 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       // ping configuration should be read from CONFIG_PIN1 and stored
 
       // after the form has been saved successfuly, set success and break
-      P122_I2C_ADDRESS  = getFormItemInt(F("i2c_addr"));
-      P122_RESOLUTION   = getFormItemInt(P122_RESOLUTION_LABEL);        
-      success = true;
+      P122_I2C_ADDRESS = getFormItemInt(F("i2c_addr"));
+      P122_RESOLUTION  = getFormItemInt(P122_RESOLUTION_LABEL);
+      success          = true;
       break;
     }
 
@@ -186,7 +188,7 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P122_data_struct());
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (P122_data != nullptr) 
+      if (P122_data != nullptr)
       {
         P122_data->setupDevice(P122_I2C_ADDRESS, P122_RESOLUTION);
         P122_data->reset();
@@ -203,15 +205,16 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       // code to be executed to read data
       // It is executed according to the delay configured on the device configuration page, only once
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (nullptr != P122_data) 
+
+      if (nullptr != P122_data)
       {
-        if (P122_data->inError()) 
+        if (P122_data->inError())
         {
           UserVar[event->BaseVarIndex]     = NAN;
           UserVar[event->BaseVarIndex + 1] = NAN;
           addLog(LOG_LEVEL_ERROR, F("SHT2x: in Error!"));
         }
-        else  if (P122_data->newValues()) 
+        else if (P122_data->newValues())
         {
           UserVar[event->BaseVarIndex]     = P122_data->getTemperature();
           UserVar[event->BaseVarIndex + 1] = P122_data->getHumidity();
@@ -219,7 +222,7 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) 
+      if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
         String log = F("P122: Temperature: ");
         log += UserVar[event->BaseVarIndex + 0];
@@ -242,15 +245,15 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       // code to be executed 10 times per second. Tasks which require fast response can be added here
       // be careful on what is added here. Heavy processing will result in slowing the module down!
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (nullptr != P122_data) 
+
+      if (nullptr != P122_data)
       {
-        P122_data->update();    // SHT2x FSM evaluation
+        P122_data->update(); // SHT2x FSM evaluation
       }
       success = true;
     }
   } // switch
   return success;
 }   // function
-
 
 #endif  //USES_P122
