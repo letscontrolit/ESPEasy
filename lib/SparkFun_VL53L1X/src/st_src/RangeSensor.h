@@ -41,7 +41,7 @@
 #define __RANGE_SENSOR_CLASS_H
 
 /* Includes ------------------------------------------------------------------*/
-#include <ComponentObject.h>
+#include <st_src/ComponentObject.h>
 
 /* Classes  ------------------------------------------------------------------*/
 /** An abstract class for range sensors
