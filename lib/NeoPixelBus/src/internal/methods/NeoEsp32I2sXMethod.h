@@ -444,13 +444,17 @@ public:
         i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, s_context.MuxMap.MuxBusDataSize, invert);
     }
 
-    void DeregisterMuxBus()
+    void DeregisterMuxBus(uint8_t pin)
     {
         if (s_context.MuxMap.DeregisterMuxBus(_muxId))
         {
             s_context.Destruct(T_BUS::I2sBusNumber);
         }
-        // disconnect muxed pin?
+
+        // disconnect muxed pin
+        gpio_matrix_out(pin, 0x100, false, false);
+        pinMode(pin, INPUT);
+
         _muxId = s_context.MuxMap.InvalidMuxId;
     }
 
@@ -471,7 +475,7 @@ public:
         }
     }
 
-    bool IsWriteDone()
+    bool IsWriteDone() const
     {
         return i2sWriteDone(T_BUS::I2sBusNumber);
     }
@@ -531,7 +535,7 @@ public:
             yield();
         }
 
-        _bus.DeregisterMuxBus();
+        _bus.DeregisterMuxBus(_pin);
 
         free(_data);
     }

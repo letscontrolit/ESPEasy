@@ -27,7 +27,9 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 // BACEDF.G+ byte order
-class NeoBacedfpgsSegmentFeature : public Neo9ByteElementsNoSettings
+class NeoBacedfpgsSegmentFeature :
+    public NeoByteElements<9, SevenSegDigit, uint8_t>,
+    public NeoElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
