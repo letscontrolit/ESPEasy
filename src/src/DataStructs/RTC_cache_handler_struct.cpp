@@ -322,7 +322,6 @@ String RTC_cache_handler_struct::getNextCacheFileName(int& fileNr, bool& islast)
 
 bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
   if (updateRTC_filenameCounters()) {
-    const int nrCacheFiles = RTC_cache.writeFileNr - RTC_cache.readFileNr;
     return deleteCacheBlock(RTC_cache.readFileNr);
   }
 #ifdef RTC_STRUCT_DEBUG
@@ -348,7 +347,6 @@ void RTC_cache_handler_struct::closeOpenFiles()
 bool RTC_cache_handler_struct::deleteAllCacheBlocks()
 {
   if (updateRTC_filenameCounters()) {
-    const int nrCacheFiles = RTC_cache.writeFileNr - RTC_cache.readFileNr;
 
     if (RTC_cache.readFileNr < RTC_cache.writeFileNr) {
       bool fileDeleted = false;
