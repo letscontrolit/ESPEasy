@@ -44,12 +44,12 @@ P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
  * Destructor
  ******************************/
 P104_data_struct::~P104_data_struct() {
-  # ifdef P104_USE_BAR_GRAPH
+  # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
 
   if (nullptr != pM) {
     pM = nullptr; // Not created here, only reset
   }
-  # endif // ifdef P104_USE_BAR_GRAPH
+  # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
 
   if (nullptr != P) {
     // P->~MD_Parola(); // Call destructor directly, as delete of the object fails miserably
@@ -73,9 +73,9 @@ bool P104_data_struct::begin() {
     addLog(LOG_LEVEL_INFO, F("dotmatrix: begin() called"));
     # endif // ifdef P104_DEBUG
     P->begin(expectedZones);
-    # ifdef P104_USE_BAR_GRAPH
+    # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
     pM = P->getGraphicObject();
-    # endif // ifdef P104_USE_BAR_GRAPH
+    # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
     return true;
   }
   return false;
@@ -373,10 +373,10 @@ void P104_data_struct::configureZones() {
     if (it->zone <= expectedZones) {
       zoneOffset += it->offset;
       P->setZone(currentZone, zoneOffset, zoneOffset + it->size - 1);
-      # ifdef P104_USE_BAR_GRAPH
+      # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
       it->_startModule = zoneOffset;
       P->getDisplayExtent(currentZone, it->_lower, it->_upper);
-      # endif // ifdef P104_USE_BAR_GRAPH
+      # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
       zoneOffset += it->size;
 
       switch (it->font) {
@@ -590,7 +590,7 @@ void P104_data_struct::updateZone(uint8_t                 zone,
   }
 }
 
-# ifdef P104_USE_BAR_GRAPH
+# if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
 
 /***********************************************
  * Enable/Disable updating a range of modules
@@ -600,6 +600,10 @@ void P104_data_struct::modulesOnOff(uint8_t start, uint8_t end, MD_MAX72XX::cont
     pM->control(m, MD_MAX72XX::UPDATE, on_off);
   }
 }
+
+# endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
+
+# ifdef P104_USE_BAR_GRAPH
 
 /********************************************************
  * draw a single bar-graph, arguments already adjusted for direction
@@ -841,6 +845,50 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
 
 # endif // ifdef P104_USE_BAR_GRAPH
 
+# ifdef P104_USE_DOT_SET
+void P104_data_struct::displayDots(uint8_t                 zone,
+                                   const P104_zone_struct& zstruct,
+                                   const String          & dots) {
+  if ((nullptr == P) || (nullptr == pM) || dots.isEmpty()) { return; }
+  {
+    uint8_t idx = 0;
+    int     row;
+    int     col;
+    String  sRow;
+    String  sCol;
+    String  sOn_off;
+    bool    on_off = true;
+    modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_OFF); // Stop updates on modules
+    P->setIntensity(zstruct.zone - 1, zstruct.brightness);                                           // don't forget to set the brightness
+    sRow    = parseString(dots, idx + 1);
+    sCol    = parseString(dots, idx + 2);
+    sOn_off = parseString(dots, idx + 3);
+
+    while (!sRow.isEmpty() && !sCol.isEmpty()) {
+      on_off = true; // Default On
+
+      if (validIntFromString(sRow, row) &&
+          validIntFromString(sCol, col) &&
+          (row > 0) && ((row - 1) < 8) &&
+          (col > 0) && ((col - 1) <= (zstruct._upper - zstruct._lower))) { // Valid coordinates?
+        if (equals(sOn_off, F("0"))) {                                     // Dot On is the default
+          on_off = false;
+          idx++;                                                           // 3rd argument used
+        }
+        pM->setPoint(row - 1, zstruct._upper - (col - 1), on_off);         // Reverse layout
+      }
+      idx    += 2;                                                         // Skip to next argument set
+      sRow    = parseString(dots, idx + 1);
+      sCol    = parseString(dots, idx + 2);
+      sOn_off = parseString(dots, idx + 3);
+    }
+
+    modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_ON); // Continue updates on modules
+  }
+}
+
+# endif // ifdef P104_USE_DOT_SET
+
 /**************************************************
  * Check if an animation is available in the current build
  *************************************************/
@@ -965,7 +1013,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
         (static_cast<unsigned int>(zoneIndex) <= zones.size())) {
       // subcommands are processed in the same order as they are presented in the UI
       for (auto it = zones.begin(); it != zones.end() && !success; ++it) {
-        if ((it->zone == zoneIndex)) {  // This zone
+        if ((it->zone == zoneIndex)) {   // This zone
           if (equals(sub, F("clear"))) { // subcommand: clear,<zone>
             P->displayClear(zoneIndex - 1);
             success = true;
@@ -990,11 +1038,11 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           }
           # endif // ifdef P104_USE_COMMANDS
 
-          if ((equals(sub, F("txt")) ||                                                          // subcommand: [set]txt,<zone>,<text> (only
-               equals(sub, F("settxt"))) &&                                                      // allowed for zones with Text content)
+          if ((equals(sub, F("txt")) ||                                                         // subcommand: [set]txt,<zone>,<text> (only
+               equals(sub, F("settxt"))) &&                                                     // allowed for zones with Text content)
               ((it->content == P104_CONTENT_TEXT) || (it->content == P104_CONTENT_TEXT_REV))) { // no length check, so longer than the UI
                                                                                                 // allows is made possible
-            if (equals(sub, F("settxt")) &&                                                      // subcommand: settxt,<zone>,<text> (stores
+            if (equals(sub, F("settxt")) &&                                                     // subcommand: settxt,<zone>,<text> (stores
                 (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) {                          // the text in the settings, is not saved)
               it->text = string4;                                                               // Only if not too long, could 'blow up' the
             }                                                                                   // settings when saved
@@ -1014,7 +1062,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (equals(sub, F("alignment")) &&                             // subcommand: alignment,<zone>,<alignment> (0..3)
+          if (equals(sub, F("alignment")) &&                            // subcommand: alignment,<zone>,<alignment> (0..3)
               (value4 >= 0) &&
               (value4 <= static_cast<int>(textPosition_t::PA_RIGHT))) { // last item in the enum
             it->alignment = value4;
@@ -1160,10 +1208,10 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           # ifdef P104_USE_BAR_GRAPH
 
-          if ((equals(sub, F("bar")) ||                                 // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones
-               equals(sub, F("setbar"))) &&                             // with Bargraph content) no length check, so longer than the UI
+          if ((equals(sub, F("bar")) ||                                // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones
+               equals(sub, F("setbar"))) &&                            // with Bargraph content) no length check, so longer than the UI
               (it->content == P104_CONTENT_BAR_GRAPH)) {               // allows is made possible
-            if (equals(sub, F("setbar")) &&                             // subcommand: setbar,<zone>,<graph-string> (stores the graph-string
+            if (equals(sub, F("setbar")) &&                            // subcommand: setbar,<zone>,<graph-string> (stores the graph-string
                 (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) { // in the settings, is not saved)
               it->text = string4;                                      // Only if not too long, could 'blow up' the settings when saved
             }
@@ -1172,6 +1220,14 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
           # endif // ifdef P104_USE_BAR_GRAPH
+
+          # ifdef P104_USE_DOT_SET
+
+          if (equals(sub, F("dot"))) {                                    // subcommand: dot,<zone>,<r>,<c>[,0][,<r>,<c>[,0]...] to draw
+            displayDots(zoneIndex - 1, *it, parseStringToEnd(string, 4)); // dots at row/column, add ,0 to turn a dot off
+            success = true;
+          }
+          # endif // ifdef P104_USE_DOT_SET
 
           // FIXME TD-er: success is always false here. Maybe this must be done outside the for-loop?
           if (success) { // Reset the repeat timer
@@ -1705,8 +1761,8 @@ bool P104_data_struct::saveSettings() {
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, format(
-            F("P104: saveSettings zone: %d bufferSize: %d offset: %d"),
-            it->zone, bufferSize, saveOffset));
+                       F("P104: saveSettings zone: %d bufferSize: %d offset: %d"),
+                       it->zone, bufferSize, saveOffset));
           zbuffer.replace(P104_FIELD_SEP, P104_FIELD_DISP);
           addLog(LOG_LEVEL_INFO, zbuffer);
         }
