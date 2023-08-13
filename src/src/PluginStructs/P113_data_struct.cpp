@@ -61,7 +61,7 @@ bool P113_data_struct::startRead() {
 }
 
 bool P113_data_struct::readAvailable() {
-  bool ready = sensor->checkForDataReady();
+  bool ready = (nullptr != sensor) && sensor->checkForDataReady();
 
   if (ready) {
     distance = sensor->getDistance();
@@ -108,6 +108,9 @@ uint16_t P113_data_struct::readDistance() {
 }
 
 uint16_t P113_data_struct::readAmbient() {
+  if (nullptr == sensor) {
+    return 0u;
+  }
   return sensor->getAmbientRate();
 }
 
