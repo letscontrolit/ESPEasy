@@ -252,11 +252,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       # ifdef P104_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log;
-        log.reserve(38);
-        log  = F("dotmatrix: PLUGIN_INIT numDevices: ");
-        log += numDevices;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("dotmatrix: PLUGIN_INIT numDevices: "), numDevices));
       }
       # endif // ifdef P104_DEBUG
 
