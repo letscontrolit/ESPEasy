@@ -40,6 +40,7 @@
 #   define VL53L1X_API
 #endif
 
+
 /* Includes ------------------------------------------------------------------*/
 #include "Arduino.h"
 #include "Wire.h"
@@ -260,6 +261,7 @@ class VL53L1X : public RangeSensor
 /* VL53L1X_api.h functions */
 
 
+
 	/**
 	 * @brief This function returns the SW driver version
 	 */
@@ -301,6 +303,11 @@ class VL53L1X : public RangeSensor
 	 * 1=active high (default), 0=active low, use SetInterruptPolarity() to change the interrupt polarity if required.
 	 */
 	VL53L1X_ERROR VL53L1X_StartRanging();
+
+	/**
+	 * @brief This function starts a one-shot ranging distance operation\n
+	 */
+	VL53L1X_ERROR VL53L1X_StartOneshotRanging();
 
 	/**
 	 * @brief This function stops the ranging.
@@ -519,6 +526,7 @@ class VL53L1X : public RangeSensor
 
 
 
+
  protected:
     
 
@@ -545,10 +553,13 @@ class VL53L1X : public RangeSensor
 	
 	
 
- protected:
+ public:
 
     /* IO Device */
     TwoWire *dev_i2c;
+
+ protected:
+
     /* Digital out pin */
 	int gpio0;
 	int gpio1Int;
