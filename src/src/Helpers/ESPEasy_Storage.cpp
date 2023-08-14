@@ -1122,15 +1122,8 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
       ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
     }      
   }
-
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) {
-    // if field set empty, reload defaults
-    struct EventStruct TempEvent(TaskIndex);
-    String tmp;
-
-    // the plugin call should populate ExtraTaskSettings with its default values.
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
-  }
+  loadDefaultTaskValueNames_ifEmpty(TaskIndex);
+  
   ExtraTaskSettings.validate();
   Cache.updateExtraTaskSettingsCache_afterLoad_Save();
   STOP_TIMER(LOAD_TASK_SETTINGS);

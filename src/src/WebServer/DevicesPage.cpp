@@ -295,32 +295,16 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     case Output_Data_type_t::All:
     {
       int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
+      Sensor_VType VType = TempEvent.sensorType;
 
       if ((pconfigIndex >= 0) && (pconfigIndex < PLUGIN_CONFIGVAR_MAX)) {
-        Sensor_VType VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
+        VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
         Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
-        ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
-
-        // nr output values has changed, generate new variable names
-        String  oldNames[VARS_PER_TASK];
-        uint8_t oldNrDec[VARS_PER_TASK];
-
-        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-          oldNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
-          oldNrDec[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
-        }
-
-        String dummy;
-        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
-
-        // Restore the settings that were already set by the user
-        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-          if (!oldNames[i].isEmpty()) {
-            ExtraTaskSettings.setTaskDeviceValueName(i, oldNames[i]);
-            ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
-          }
-        }
       }
+      ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
+
+      // nr output values has changed, generate new variable names
+      loadDefaultTaskValueNames_ifEmpty(taskIndex);
       break;
     }
   }
