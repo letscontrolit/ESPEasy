@@ -1,14 +1,16 @@
 /*
-  Reading distance from the laser based VL53L1X
+  Reading distance from the laser based VL53L1X using a one-shot measurement.
   By: Nathan Seidle
+  Revised by: Andy England, Ricardo Ramos
+  Pull request by: Joseph Duchesne
   SparkFun Electronics
-  Date: April 4th, 2018
+  Date: January 31st, 2022
   License: This code is public domain but you buy me a beer if you use this and we meet someday (Beerware license).
 
-  SparkFun labored with love to create this code. Feel like supporting open source hardware?
+  SparkFun labored with love to create this code. Feel like supporting open source hardware? 
   Buy a board from SparkFun! https://www.sparkfun.com/products/14667
 
-  This example prints the distance to an object.
+  This example makes a one shot measurement.
 
   Are you getting weird readings? Be sure the vacuum tape has been removed from the sensor.
 */
@@ -38,18 +40,18 @@ void setup(void)
       ;
   }
   Serial.println("Sensor online!");
+
+
 }
 
 void loop(void)
 {
-  distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+  distanceSensor.startOneshotRanging(); //Write configuration bytes to initiate measurement
   while (!distanceSensor.checkForDataReady())
   {
     delay(1);
   }
   int distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
-  distanceSensor.clearInterrupt();
-  distanceSensor.stopRanging();
 
   Serial.print("Distance(mm): ");
   Serial.print(distance);
