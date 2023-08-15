@@ -1853,7 +1853,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -3171,12 +3171,14 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
         // }                         // end malloc check
       }                        // end depth check
     } // end planes/compression check
-  }                            // end signature
+    #  ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
+    #  endif // ifndef BUILD_NO_DEBUG
+  } else { // end signature
+    addLog(LOG_LEVEL_ERROR, F("showBmp: File signature error."));
+  }
 
   file.close();
-  #  ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
-  #  endif // ifndef BUILD_NO_DEBUG
   return status; // -V680
 
   // }
