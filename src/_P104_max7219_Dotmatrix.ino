@@ -68,6 +68,11 @@
 //                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings, and use that to significantly improve saving the settings on LittleFS by
+//                        a) only storing the settings-version (V3) in regular CustomTaskSettings file, and the rest in the Extended
+//                           CustomTaskSettings file, by using the offset as a starting location for the data elements
+//                        b) Combine storing the size and the data-block in a single save action
+//                        Apply toStringNoZero() converter to reduce the settings-data to be saved
 // 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
 // 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
 // 2021-10-03 tonhuisman: Add Inverted option per zone

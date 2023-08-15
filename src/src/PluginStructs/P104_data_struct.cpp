@@ -90,6 +90,9 @@ bool P104_data_struct::begin() {
                                         // version.
                                         // Any third version or later could use 0xE000, etc. The 'version' is stored in the first uint16_t
                                         // stored in the custom settings
+# define P104_CONFIG_VERSION_V3  0xE000 // Marker to indicate we're using V3 of the settings, same base-format as V2, but using the
+                                        // CustomTaskSettings Extension file only, by inserting an offset of DAT_TASKS_CUSTOM_SIZE
+                                        // ATTENTION: V3 is _only_ activated for FEATURE_EXTENDED_CUSTOM_SETTINGS, ESP32 & USE_LITTLEFS !!!
 
 /*
    Settings layout:
@@ -104,6 +107,15 @@ bool P104_data_struct::begin() {
    - char[x]  : Blob
    - ...
    - Max. allowed total custom settings size = 1024
+   Version 3:
+   - uint16_t : marker with content P104_CONFIG_VERSION_V2
+   - empty space, size of DAT_TASKS_CUSTOM_SIZE - 2 so the actual storage is in the extension file
+   - uint16_t : size of next blob holding 1 zone settings string
+   - char[y]  : Blob holding 1 zone settings string, with csv like string, using P104_FIELD_SEP separators
+   - uint16_t : next size, if 0 then no more blobs
+   - char[x]  : Blob
+   - ...
+   - Max. allowed total custom settings size = 4096
  */
 /**************************************
  * loadSettings
@@ -118,20 +130,30 @@ void P104_data_struct::loadSettings() {
     // Read size of the used buffer, could be the settings-version marker
     LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), loadOffset);
     bool settingsVersionV2  = (bufferSize == P104_CONFIG_VERSION_V2) || (bufferSize == 0u);
+    bool settingsVersionV3  = (bufferSize == P104_CONFIG_VERSION_V3) || (bufferSize == 0u);
     uint16_t structDataSize = 0;
     uint16_t reservedBuffer = 0;
 
-    if (!settingsVersionV2) {
+    if (!settingsVersionV2 && !settingsVersionV3) {
       reservedBuffer = bufferSize + 1;              // just add 1 for storing a string-terminator
-      addLog(LOG_LEVEL_INFO, F("dotmatrix: Reading Settings V1, will be stored as Settings V2."));
+      addLog(LOG_LEVEL_INFO, F("dotmatrix: Reading Settings V1, will be stored as Settings V2/V3."));
     } else {
       reservedBuffer = P104_SETTINGS_BUFFER_V2 + 1; // just add 1 for storing a string-terminator
     }
     reservedBuffer++;                               // Add 1 for 0..size use
     settingsBuffer = new char[reservedBuffer]();    // Allocate buffer and reset to all zeroes
-    loadOffset    += sizeof(bufferSize);
+    # if P104_FEATURE_STORAGE_V3
 
-    if (settingsVersionV2) {
+    if (settingsVersionV3) {
+      loadOffset = DAT_TASKS_CUSTOM_SIZE; // Skip storage in config.dat
+    } else {
+      loadOffset += sizeof(bufferSize);
+    }
+    # else // if P104_FEATURE_STORAGE_V3
+    loadOffset += sizeof(bufferSize);
+    # endif // if P104_FEATURE_STORAGE_V3
+
+    if (settingsVersionV2 || settingsVersionV3) {
       LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), loadOffset);
       loadOffset += sizeof(bufferSize); // Skip the size
     }
@@ -279,7 +301,7 @@ void P104_data_struct::loadSettings() {
 
         numDevices += zones[zoneIndex].size + zones[zoneIndex].offset;
 
-        if (!settingsVersionV2) {
+        if (!settingsVersionV2 && !settingsVersionV3) { // V1 check
           prev2   = offset2 + 1;
           offset2 = buffer.indexOf(P104_ZONE_SEP, prev2);
         } else {
@@ -965,7 +987,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
         (static_cast<unsigned int>(zoneIndex) <= zones.size())) {
       // subcommands are processed in the same order as they are presented in the UI
       for (auto it = zones.begin(); it != zones.end() && !success; ++it) {
-        if ((it->zone == zoneIndex)) {  // This zone
+        if ((it->zone == zoneIndex)) {   // This zone
           if (equals(sub, F("clear"))) { // subcommand: clear,<zone>
             P->displayClear(zoneIndex - 1);
             success = true;
@@ -990,11 +1012,11 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           }
           # endif // ifdef P104_USE_COMMANDS
 
-          if ((equals(sub, F("txt")) ||                                                          // subcommand: [set]txt,<zone>,<text> (only
-               equals(sub, F("settxt"))) &&                                                      // allowed for zones with Text content)
+          if ((equals(sub, F("txt")) ||                                                         // subcommand: [set]txt,<zone>,<text> (only
+               equals(sub, F("settxt"))) &&                                                     // allowed for zones with Text content)
               ((it->content == P104_CONTENT_TEXT) || (it->content == P104_CONTENT_TEXT_REV))) { // no length check, so longer than the UI
                                                                                                 // allows is made possible
-            if (equals(sub, F("settxt")) &&                                                      // subcommand: settxt,<zone>,<text> (stores
+            if (equals(sub, F("settxt")) &&                                                     // subcommand: settxt,<zone>,<text> (stores
                 (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) {                          // the text in the settings, is not saved)
               it->text = string4;                                                               // Only if not too long, could 'blow up' the
             }                                                                                   // settings when saved
@@ -1014,7 +1036,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (equals(sub, F("alignment")) &&                             // subcommand: alignment,<zone>,<alignment> (0..3)
+          if (equals(sub, F("alignment")) &&                            // subcommand: alignment,<zone>,<alignment> (0..3)
               (value4 >= 0) &&
               (value4 <= static_cast<int>(textPosition_t::PA_RIGHT))) { // last item in the enum
             it->alignment = value4;
@@ -1160,10 +1182,10 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           # ifdef P104_USE_BAR_GRAPH
 
-          if ((equals(sub, F("bar")) ||                                 // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones
-               equals(sub, F("setbar"))) &&                             // with Bargraph content) no length check, so longer than the UI
+          if ((equals(sub, F("bar")) ||                                // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones
+               equals(sub, F("setbar"))) &&                            // with Bargraph content) no length check, so longer than the UI
               (it->content == P104_CONTENT_BAR_GRAPH)) {               // allows is made possible
-            if (equals(sub, F("setbar")) &&                             // subcommand: setbar,<zone>,<graph-string> (stores the graph-string
+            if (equals(sub, F("setbar")) &&                            // subcommand: setbar,<zone>,<graph-string> (stores the graph-string
                 (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) { // in the settings, is not saved)
               it->text = string4;                                      // Only if not too long, could 'blow up' the settings when saved
             }
@@ -1625,59 +1647,76 @@ bool P104_data_struct::saveSettings() {
 
   numDevices = 0;                      // Count the number of connected display units
 
+  # if P104_FEATURE_STORAGE_V3
+  bufferSize = P104_CONFIG_VERSION_V3; // Save special marker that we're using V3 (extended) settings
+  # else // if P104_FEATURE_STORAGE_V3
   bufferSize = P104_CONFIG_VERSION_V2; // Save special marker that we're using V2 settings
+  # endif // if P104_FEATURE_STORAGE_V3
+
   // This write is counting
-  error      += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
+  error += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
+  # if P104_FEATURE_STORAGE_V3
+  saveOffset = DAT_TASKS_CUSTOM_SIZE; // Start in the extension file
+  # else // if P104_FEATURE_STORAGE_V3
   saveOffset += sizeof(bufferSize);
+  # endif // if P104_FEATURE_STORAGE_V3
 
   if (zbuffer.reserve(P104_SETTINGS_BUFFER_V2 + 2)) {
     for (auto it = zones.begin(); it != zones.end() && error.length() == 0; ++it) {
       zbuffer.clear();
 
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
-      zbuffer += it->size;          // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->text;          // 2 + ~15
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->content;       // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->alignment;     // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->animationIn;   // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->speed;         // 5
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->animationOut;  // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->pause;         // 5
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->font;          // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->layout;        // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->specialEffect; // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->offset;        // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->brightness;    // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->repeatDelay;   // 4
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->inverted;      // 1
-      zbuffer += P104_FIELD_SEP;    // 1
+      zbuffer += it->size;                          // 2
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += it->text;                          // 2 + ~15
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->content);       // 1
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->alignment);     // 1
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->animationIn);   // 2
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->speed);         // 5
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->animationOut);  // 2
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->pause);         // 5
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->font);          // 1
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->layout);        // 1
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->specialEffect); // 1
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->offset);        // 2
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->brightness);    // 2
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->repeatDelay);   // 4
+      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer += toStringNoZero(it->inverted);      // 1
+      zbuffer += P104_FIELD_SEP;                    // 1
 
       // 47 total + (max) 100 characters for it->text requires a buffer of ~150 (P104_SETTINGS_BUFFER_V2), but only the required length is
       // stored with the length prefixed
 
-      numDevices += (it->size != 0 ? it->size : 1) + it->offset;                                // Count corrected for newly added zones
+      numDevices += (it->size != 0 ? it->size : 1) + it->offset; // Count corrected for newly added zones
 
-      if (saveOffset + zbuffer.length() + (sizeof(bufferSize) * 2) > (DAT_TASKS_CUSTOM_SIZE)) { // Detect ourselves if we've reached the
-        error.reserve(55);                                                                      // high-water mark
+      ZERO_FILL(P104_storeThis);                                 // Clean previous data
+
+      if (saveOffset + zbuffer.length() + (sizeof(P104_dataSize) * 2) >
+          (
+            # if !P104_FEATURE_STORAGE_V3       // Don't count the skipped storage
+            DAT_TASKS_CUSTOM_SIZE +
+            # endif // if !P104_FEATURE_STORAGE_V3
+            DAT_TASKS_CUSTOM_EXTENSION_SIZE)) { // Detect ourselves if we've reached the
+        error.reserve(55);                      // high-water mark
         error += F("Total combination of Zones & text too long to store.\n");
         addLogMove(LOG_LEVEL_ERROR, error);
       } else {
         // Store length of buffer
-        bufferSize = zbuffer.length();
+        P104_dataSize = zbuffer.length();
+        safe_strncpy(P104_data, zbuffer.c_str(), P104_dataSize + 1);
 
         // As we write in parts, only count as single write.
         if (RTC.flashDayCounter > 0) {
@@ -1685,28 +1724,17 @@ bool P104_data_struct::saveSettings() {
         }
         error += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
                             taskIndex,
-                            (uint8_t *)&bufferSize,
-                            sizeof(bufferSize),
+                            (uint8_t *)P104_storeThis,
+                            P104_dataSize + sizeof(P104_dataSize),
                             saveOffset);
-        saveOffset += sizeof(bufferSize);
-
-        // As we write in parts, only count as single write.
-        if (RTC.flashDayCounter > 0) {
-          RTC.flashDayCounter--;
-        }
-        error += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
-                            taskIndex,
-                            (uint8_t *)zbuffer.c_str(),
-                            bufferSize,
-                            saveOffset);
-        saveOffset += bufferSize;
+        saveOffset += P104_dataSize + sizeof(P104_dataSize);
 
         # ifdef P104_DEBUG_DEV
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, format(
-            F("P104: saveSettings zone: %d bufferSize: %d offset: %d"),
-            it->zone, bufferSize, saveOffset));
+                       F("P104: saveSettings zone: %d bufferSize: %d offset: %d"),
+                       it->zone, bufferSize, saveOffset));
           zbuffer.replace(P104_FIELD_SEP, P104_FIELD_DISP);
           addLog(LOG_LEVEL_INFO, zbuffer);
         }
