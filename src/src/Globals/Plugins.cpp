@@ -261,7 +261,9 @@ void loadDefaultTaskValueNames_ifEmpty(taskIndex_t TaskIndex) {
 
   // Restore the settings that were already set by the user
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (!oldNames[i].isEmpty()) {
+    const bool isDefault = oldNames[i].isEmpty();
+    ExtraTaskSettings.isDefaultTaskVarName(i, isDefault);
+    if (!isDefault) {
       ExtraTaskSettings.setTaskDeviceValueName(i, oldNames[i]);
       ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
     }
