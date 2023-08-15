@@ -47,7 +47,7 @@ public:
 #endif // ifndef BUILD_MINIMAL_OTA
 
   static SettingsFileEnum getSettingsFile(Enum settingsType);
-  static String           getSettingsFileName(Enum settingsType);
+  static String           getSettingsFileName(Enum settingsType, int index = TASKS_MAX);
   static const __FlashStringHelper * getSettingsFileName(SettingsType::SettingsFileEnum file_type);
   static size_t           getInitFileSize(SettingsType::SettingsFileEnum file_type);
 };

@@ -1025,6 +1025,13 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
     writePos += bufpos;
   }
 
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      ((writePos - posInBlock) <= DAT_TASKS_CUSTOM_SIZE)) { // Not needed, so can be deleted
+    DeleteExtendedCustomTaskSettingsFile(settingsType, index);
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
   if ((writePos >= max_size) && (stringCount < nrStrings)) {
     result += F("Error: Not all strings fit in custom settings.");
   }
@@ -1678,8 +1685,42 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
   if ((datasize + offset_in_block) > max_size) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  const String fname = SettingsType::getSettingsFileName(settingsType);
-  return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress, datasize);
+
+  int dataOffset = 0;
+
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  int taskIndex = INVALID_TASK_INDEX; // Use base filename
+
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      ((offset_in_block + datasize) > DAT_TASKS_CUSTOM_SIZE)) {
+    if (offset_in_block < DAT_TASKS_CUSTOM_SIZE) { // block starts in regular Custom config: Load first part
+      const String fname = SettingsType::getSettingsFileName(settingsType);
+      dataOffset = DAT_TASKS_CUSTOM_SIZE - offset_in_block;
+      const String res = LoadFromFile(fname.c_str(), offset + offset_in_block, memAddress, dataOffset);
+
+      if (!res.isEmpty()) { return res; } // Error occurred?
+
+      datasize       -= dataOffset;
+      offset_in_block = DAT_TASKS_CUSTOM_SIZE;
+    }
+    const String fname = SettingsType::getSettingsFileName(settingsType, index);
+
+    if (fileExists(fname)) { // Do we have a task-specific extension stored?
+      if (offset_in_block >= DAT_TASKS_CUSTOM_SIZE) {
+        offset_in_block -= DAT_TASKS_CUSTOM_SIZE;
+      }
+      offset    = 0;
+      taskIndex = index; // Use task-specific filename
+    }
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  const String fname = SettingsType::getSettingsFileName(settingsType
+                                                         #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                         , taskIndex
+                                                         #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                        );
+  return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress + dataOffset, datasize);
 }
 
 String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock) {
@@ -1693,14 +1734,57 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if ((datasize > max_size) || ((posInBlock + datasize) > max_size)) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  const String fname = SettingsType::getSettingsFileName(settingsType);
-  if (!fileExists(fname)) {
-    InitFile(settingsType);
+
+  int dataOffset = 0;
+
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  int taskIndex = INVALID_TASK_INDEX; // Use base filename
+
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      (posInBlock + datasize > (DAT_TASKS_CUSTOM_SIZE))) { // max_size already handled above
+    if (posInBlock < DAT_TASKS_CUSTOM_SIZE) {              // Partial in regular config.dat, save that part first
+      const String fname = SettingsType::getSettingsFileName(settingsType);
+      dataOffset = (DAT_TASKS_CUSTOM_SIZE - posInBlock);   // Bytes to keep 'local'
+      # ifndef BUILD_NO_DEBUG
+      const String styp = SettingsType::getSettingsTypeString(settingsType);
+      addLog(LOG_LEVEL_INFO, concat(F("ExtraSaveToFile: "), styp) + concat(F(" file: "), fname) +
+             strformat(F(" size: %d pos: %d"), dataOffset, posInBlock));
+      # endif // ifndef BUILD_NO_DEBUG
+      const String res = SaveToFile(fname.c_str(), offset + posInBlock, memAddress, dataOffset);
+
+      if (!res.isEmpty()) { return res; } // Error occurred
+
+      datasize  -= dataOffset;
+      posInBlock = 0;
+    } else {
+      posInBlock -= DAT_TASKS_CUSTOM_SIZE;
+    }
+    offset    = 0;     // Start of the extension file
+    taskIndex = index; // Use task-specific filename
   }
-#ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) + concat(F(" index: "), index));
-#endif
-  return SaveToFile(fname.c_str(), offset + posInBlock, memAddress, datasize);
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  const String fname = SettingsType::getSettingsFileName(settingsType
+                                                         #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                         , taskIndex
+                                                         #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                        );
+  if (!fileExists(fname)) {
+    #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+    if (INVALID_TASK_INDEX == taskIndex) {
+    #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+      InitFile(settingsType);
+    #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+    } else {
+      InitFile(fname, DAT_TASKS_CUSTOM_EXTENSION_SIZE); // Initialize task-specific file
+    }
+    #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  }
+  #ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) +
+                         strformat(F(" file: %s task: %d"), fname.c_str(), index + 1));
+  #endif
+  return SaveToFile(fname.c_str(), offset + posInBlock, memAddress + dataOffset, datasize);
 }
 
 String ClearInFile(SettingsType::Enum settingsType, int index) {
@@ -1710,10 +1794,33 @@ String ClearInFile(SettingsType::Enum settingsType, int index) {
   if (!getAndLogSettingsParameters(read, settingsType, index, offset, max_size)) {
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  if (SettingsType::Enum::CustomTaskSettings_Type == settingsType) {
+    max_size = DAT_TASKS_CUSTOM_SIZE; // Don't also wipe the external size inside the config.dat file...
+    DeleteExtendedCustomTaskSettingsFile(settingsType, index);
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
   const String fname = SettingsType::getSettingsFileName(settingsType);
   return ClearInFile(fname.c_str(), offset, max_size);
 }
 
+#if FEATURE_EXTENDED_CUSTOM_SETTINGS
+bool DeleteExtendedCustomTaskSettingsFile(SettingsType::Enum settingsType, int index) {
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) && (INVALID_TASK_INDEX !=index)) {
+    const String fname = SettingsType::getSettingsFileName(settingsType, index);
+
+    if (fileExists(fname)) {
+      const bool deleted = tryDeleteFile(fname); // Don't need the extension file anymore, so delete it
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, concat(F("CustomTaskSettings: Removing no longer needed file: "), fname));
+      # endif // ifndef BUILD_NO_DEBUG
+      return deleted;
+    }
+  }
+  return false;
+}
+#endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
 /********************************************************************************************\
    Check file system area settings
  \*********************************************************************************************/
