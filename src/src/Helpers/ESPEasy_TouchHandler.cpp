@@ -85,9 +85,11 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
                                                TOUCH_CALIBRATION_LOG_ENABLED, TOUCH_SETTINGS_SEPARATOR) == 1;
   int lSettings = 0;
 
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_XY,         TOUCH_TS_SEND_XY);
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_Z,          TOUCH_TS_SEND_Z);
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_OBJECTNAME, TOUCH_TS_SEND_OBJECTNAME);
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_XY,          TOUCH_TS_SEND_XY); // Defaults initialized
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_Z,           TOUCH_TS_SEND_Z);
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_OBJECTNAME,  TOUCH_TS_SEND_OBJECTNAME);
+  bitWrite(lSettings, TOUCH_FLAGS_DEDUPLICATE,      TOUCH_TS_DEDUPLICATE);
+  bitWrite(lSettings, TOUCH_FLAGS_INIT_OBJECTEVENT, TOUCH_TS_INIT_OBJECTEVENT);
   Touch_Settings.flags = parseStringToInt(settingsArray[TOUCH_CALIBRATION_START],
                                           TOUCH_COMMON_FLAGS, TOUCH_SETTINGS_SEPARATOR, lSettings);
   Touch_Settings.top_left.x     = parseStringToInt(settingsArray[TOUCH_CALIBRATION_START], TOUCH_CALIBRATION_TOP_X, TOUCH_SETTINGS_SEPARATOR);
@@ -120,10 +122,10 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
       (Touch_Settings.colorBorder          == 0u) &&
       (Touch_Settings.colorDisabled        == 0u) &&
       (Touch_Settings.colorDisabledCaption == 0u)) {
-    Touch_Settings.colorOn              = ADAGFX_BLUE;
-    Touch_Settings.colorOff             = ADAGFX_RED;
-    Touch_Settings.colorCaption         = ADAGFX_WHITE;
-    Touch_Settings.colorBorder          = ADAGFX_WHITE;
+    Touch_Settings.colorOn              = TOUCH_DEFAULT_COLOR_ON;
+    Touch_Settings.colorOff             = TOUCH_DEFAULT_COLOR_OFF;
+    Touch_Settings.colorCaption         = TOUCH_DEFAULT_COLOR_CAPTION;
+    Touch_Settings.colorBorder          = TOUCH_DEFAULT_COLOR_BORDER;
     Touch_Settings.colorDisabled        = TOUCH_DEFAULT_COLOR_DISABLED;
     Touch_Settings.colorDisabledCaption = TOUCH_DEFAULT_COLOR_DISABLED_CAPTION;
   }
@@ -362,9 +364,10 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
 
   if ((idx = touchObject.indexOf('.')) > -1) {
     String part = touchObject.substring(0, idx);
-    int    grp  = -1;
 
     # if TOUCH_FEATURE_EXTENDED_TOUCH
+
+    int grp = -1;
 
     if (validIntFromString(part, grp) && validButtonGroup(static_cast<int16_t>(grp), false)) {
       part = touchObject.substring(idx + 1);
@@ -449,7 +452,7 @@ bool ESPEasy_TouchHandler::setTouchObjectState(struct EventStruct *event,
 
       if (success) {
         log += F(", new state: ");
-        log += (state ? F("en") : F("dis"));
+        log += state ? F("en") : F("dis");
         log += F("abled.");
       } else {
         log += F(" failed!");
@@ -513,7 +516,7 @@ bool ESPEasy_TouchHandler::setTouchButtonOnOff(struct EventStruct *event,
       log += '/';
       log += objectNr;
       log += F(", new state: ");
-      log += (state ? F("on") : F("off"));
+      log += state ? F("on") : F("off");
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef TOUCH_DEBUG
@@ -875,7 +878,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
 
   addFormSubHeader(F("Touch configuration"));
 
-  addFormCheckBox(F("Flip rotation 180&deg;"), F("rotation_flipped"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_ROTATION_FLIPPED));
+  addFormCheckBox(F("Flip rotation 180&deg;"), F("rot_flip"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_ROTATION_FLIPPED));
   # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Some touchscreens are mounted 180&deg; rotated on the display."));
   # endif // ifndef LIMIT_BUILD_SIZE
@@ -904,16 +907,16 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     const int optionValues3[TOUCH_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
     addFormSelector(F("Events"), F("events"), TOUCH_EVENTS_OPTIONS, options3, optionValues3, choice3);
 
-    addFormCheckBox(F("Draw buttons when started"), F("init_objectevent"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT));
+    addFormCheckBox(F("Draw buttons when started"), F("initobj"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT));
     # ifndef LIMIT_BUILD_SIZE
     addFormNote(F("Needs Objectnames 'Events' to be enabled."));
     # endif // ifndef LIMIT_BUILD_SIZE
   }
 
-  addFormCheckBox(F("Prevent duplicate events"), F("deduplicate"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_DEDUPLICATE));
+  addFormCheckBox(F("Prevent duplicate events"), F("dedupe"),   bitRead(Touch_Settings.flags, TOUCH_FLAGS_DEDUPLICATE));
 
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  addFormCheckBox(F("Ignore touch-screen"),      F("ignoretouch"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_IGNORE_TOUCH));
+  addFormCheckBox(F("Ignore touch-screen"),      F("igntouch"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_IGNORE_TOUCH));
   #  ifndef LIMIT_BUILD_SIZE
   addFormNote(F("To enable the use of touch-object display-functions only."));
   #  endif // ifndef LIMIT_BUILD_SIZE
@@ -932,7 +935,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     const __FlashStringHelper *noYesOptions[2] = { F("No"), F("Yes") };
     const int noYesOptionValues[2]             = { 0, 1 };
     addFormSelector(F("Calibrate to screen resolution"),
-                    F("use_calibration"),
+                    F("usecalib"),
                     2,
                     noYesOptions,
                     noYesOptionValues,
@@ -978,7 +981,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     html_end_table();
   }
 
-  addFormCheckBox(F("Enable logging for calibration"), F("log_calibration"),
+  addFormCheckBox(F("Enable logging for calibration"), F("logcalib"),
                   Touch_Settings.logEnabled);
 
   addFormSubHeader(F("Object settings"));
@@ -1055,7 +1058,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     html_end_table();
   }
   {
-    addFormNumericBox(F("Initial button group"), F("initial_group"),
+    addFormNumericBox(F("Initial button group"), F("initgrp"),
                       get8BitFromUL(Touch_Settings.flags, TOUCH_FLAGS_INITIAL_GROUP), 0, TOUCH_MAX_BUTTON_GROUPS
                       #  if TOUCH_FEATURE_TOOLTIPS
                       , F("Initial group")
@@ -1063,11 +1066,11 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                       );
     addFormCheckBox(F("Draw buttons via Rules"), F("via_rules"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_DRAWBTN_VIA_RULES));
-    addFormCheckBox(F("Enable/Disable page buttons"), F("page_buttons"),
+    addFormCheckBox(F("Enable/Disable page buttons"), F("pagebtns"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_AUTO_PAGE_ARROWS));
-    addFormCheckBox(F("PageUp/PageDown reversed"), F("page_below"),
+    addFormCheckBox(F("PageUp/PageDown reversed"), F("pageblw"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU));
-    addFormCheckBox(F("Swipe Left/Right/Up/Down menu reversed"), F("swipe_swap"),
+    addFormCheckBox(F("Swipe Left/Right/Up/Down menu reversed"), F("swipeswap"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_SWAP_LEFT_RIGHT));
   }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
@@ -1440,17 +1443,6 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
 }
 
 /**
- * Helper: Convert an integer to string, but return an empty string for 0, to save a little space in settings
- */
-String toStringNoZero(int64_t value) {
-  if (value != 0) {
-    return toString(value, 0);
-  } else {
-    return EMPTY_STRING;
-  }
-}
-
-/**
  * Save the settings from the web page to flash
  */
 bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
@@ -1472,21 +1464,21 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   bitWrite(lSettings, TOUCH_FLAGS_SEND_XY,          bitRead(eventsValue, TOUCH_FLAGS_SEND_XY));
   bitWrite(lSettings, TOUCH_FLAGS_SEND_Z,           bitRead(eventsValue, TOUCH_FLAGS_SEND_Z));
   bitWrite(lSettings, TOUCH_FLAGS_SEND_OBJECTNAME,  bitRead(eventsValue, TOUCH_FLAGS_SEND_OBJECTNAME));
-  bitWrite(lSettings, TOUCH_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("rotation_flipped")));
-  bitWrite(lSettings, TOUCH_FLAGS_DEDUPLICATE,      isFormItemChecked(F("deduplicate")));
-  bitWrite(lSettings, TOUCH_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("init_objectevent")));
+  bitWrite(lSettings, TOUCH_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("rot_flip")));
+  bitWrite(lSettings, TOUCH_FLAGS_DEDUPLICATE,      isFormItemChecked(F("dedupe")));
+  bitWrite(lSettings, TOUCH_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("initobj")));
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  set8BitToUL(lSettings, TOUCH_FLAGS_INITIAL_GROUP, getFormItemInt(F("initial_group"))); // Button group
+  set8BitToUL(lSettings, TOUCH_FLAGS_INITIAL_GROUP, getFormItemInt(F("initgrp"))); // Button group
   bitWrite(lSettings, TOUCH_FLAGS_DRAWBTN_VIA_RULES, isFormItemChecked(F("via_rules")));
-  bitWrite(lSettings, TOUCH_FLAGS_AUTO_PAGE_ARROWS,  isFormItemChecked(F("page_buttons")));
-  bitWrite(lSettings, TOUCH_FLAGS_PGUP_BELOW_MENU,   isFormItemChecked(F("page_below")));
-  bitWrite(lSettings, TOUCH_FLAGS_SWAP_LEFT_RIGHT,   isFormItemChecked(F("swipe_swap")));
-  bitWrite(lSettings, TOUCH_FLAGS_IGNORE_TOUCH,      isFormItemChecked(F("ignoretouch")));
+  bitWrite(lSettings, TOUCH_FLAGS_AUTO_PAGE_ARROWS,  isFormItemChecked(F("pagebtns")));
+  bitWrite(lSettings, TOUCH_FLAGS_PGUP_BELOW_MENU,   isFormItemChecked(F("pageblw")));
+  bitWrite(lSettings, TOUCH_FLAGS_SWAP_LEFT_RIGHT,   isFormItemChecked(F("swipeswap")));
+  bitWrite(lSettings, TOUCH_FLAGS_IGNORE_TOUCH,      isFormItemChecked(F("igntouch")));
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
-  config += getFormItemInt(F("use_calibration")); // First value should NEVER be empty, or parseString() wil get confused
+  config += getFormItemInt(F("usecalib")); // First value should NEVER be empty, or parseString() wil get confused
   config += TOUCH_SETTINGS_SEPARATOR;
-  config += toStringNoZero(isFormItemChecked(F("log_calibration")) ? 1 : 0);
+  config += toStringNoZero(isFormItemChecked(F("logcalib")) ? 1 : 0);
   config += TOUCH_SETTINGS_SEPARATOR;
   config += toStringNoZero(getFormItemInt(F("cal_tl_x")));
   config += TOUCH_SETTINGS_SEPARATOR;
@@ -1643,11 +1635,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
     if (loglevelActiveFor(LOG_LEVEL_INFO) &&
         !config.isEmpty()) {
       config.replace(TOUCH_SETTINGS_SEPARATOR, ',');
-      String log;
-      log.reserve(config.length() + 32);
-      log  = concat(F("Save object #"), objectNr);
-      log += concat(F(" settings: "), config);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("Save touch object #%d settings: %s"), objectNr, config));
     }
     # endif // ifdef TOUCH_DEBUG
   }
@@ -1660,7 +1648,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   error = SaveCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, concat(F("TOUCH Save settings size: "), static_cast<int>(saveSize)));
+    addLogMove(LOG_LEVEL_INFO, strformat(F("TOUCH: Save settings, size: %d"), saveSize));
   }
 
   if (!error.isEmpty()) {

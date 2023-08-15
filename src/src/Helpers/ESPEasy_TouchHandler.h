@@ -11,6 +11,7 @@
 
 /*****
  * Changelog:
+ * 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings, minor improvements
  * 2022-09-26 tonhuisman: Fix issue with touch-disable option. Code optimizations, improved log/string handling
  *                        Make Swipe feature part of Extended Touch feature
  * 2022-08-27 tonhuisman: Enable identifying an object using the <groupnr>.<objectnr> notation, where groupnr = 0..255, and objectnr
@@ -122,26 +123,28 @@
 # define TOUCH_VALUE_Y UserVar[event->BaseVarIndex + 1]
 # define TOUCH_VALUE_Z UserVar[event->BaseVarIndex + 2]
 
-# define TOUCH_TS_ROTATION            0     // Rotation 0-3 = 0/90/180/270 degrees
+# define TOUCH_TS_ROTATION              0   // Rotation 0-3 = 0/90/180/270 degrees
 # define TOUCH_TS_SEND_XY             true  // Enable/Disable X/Y events
 # define TOUCH_TS_SEND_Z              false // Disable/Enable Z events
 # define TOUCH_TS_SEND_OBJECTNAME     true  // Enable/Disable objectname events
 # define TOUCH_TS_USE_CALIBRATION     false // Disable/Enable calibration
 # define TOUCH_TS_LOG_CALIBRATION     true  // Enable/Disable calibration logging
 # define TOUCH_TS_ROTATION_FLIPPED    false // Enable/Disable rotation flipped 180 deg.
+# define TOUCH_TS_DEDUPLICATE         true  // Enable/Disable deduplication of events
+# define TOUCH_TS_INIT_OBJECTEVENT    true  // Enable/Disable drawing of touch objects
 # define TOUCH_TS_X_RES               320   // Pixels, should match with the screen it is mounted on
 # define TOUCH_TS_Y_RES               480
-# define TOUCH_DEBOUNCE_MILLIS        100   // Debounce delay for On/Off button function
+# define TOUCH_DEBOUNCE_MILLIS         50   // Debounce delay for On/Off button function
 # define TOUCH_DEF_SWIPE_MINIMAL        3   // Minimal swipe pixels
 # define TOUCH_DEF_SWIPE_MARGIN        10   // Default swipe margin
 
-# define TOUCH_MAX_COLOR_INPUTLENGTH  11    // 11 Characters is enough to type in all recognized color names and values
-# define TOUCH_MaxObjectNameLength    15    // 15 character objectnames
-# define TOUCH_MaxCaptionNameLength   30    // 30 character captions, to allow variable names
-# define TOUCH_MAX_CALIBRATION_COUNT  1     //
-# define TOUCH_MAX_OBJECT_COUNT       40    // This count of touchobjects should be enough, because of limited
+# define TOUCH_MAX_COLOR_INPUTLENGTH   11   // 11 Characters is enough to type in all recognized color names and values
+# define TOUCH_MaxObjectNameLength     15   // 15 character objectnames
+# define TOUCH_MaxCaptionNameLength    30   // 30 character captions, to allow variable names
+# define TOUCH_MAX_CALIBRATION_COUNT    1   //
+# define TOUCH_MAX_OBJECT_COUNT        40   // This count of touchobjects should be enough, because of limited
                                             // settings storage, 1024 bytes
-# define TOUCH_EXTRA_OBJECT_COUNT     5     // The number of empty objects to show if max not reached
+# define TOUCH_EXTRA_OBJECT_COUNT       5   // The number of empty objects to show if max not reached
 # define TOUCH_ARRAY_SIZE (TOUCH_MAX_OBJECT_COUNT + TOUCH_MAX_CALIBRATION_COUNT)
 
 # define TOUCH_MAX_BUTTON_GROUPS      255   // Max. allowed button groups
@@ -205,6 +208,10 @@
 # define TOUCH_OBJECT_GROUP_ACTIONGROUP     8  // 8 bits used as action group
 # define TOUCH_OBJECT_GROUP_ACTION          16 // 4 bits used as action option
 
+# define TOUCH_DEFAULT_COLOR_ON               ADAGFX_BLUE
+# define TOUCH_DEFAULT_COLOR_OFF              ADAGFX_RED
+# define TOUCH_DEFAULT_COLOR_CAPTION          ADAGFX_WHITE
+# define TOUCH_DEFAULT_COLOR_BORDER           ADAGFX_WHITE
 # define TOUCH_DEFAULT_COLOR_DISABLED         0x9410
 # define TOUCH_DEFAULT_COLOR_DISABLED_CAPTION 0x5A69
 

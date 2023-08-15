@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P123
 
 // #######################################################################################################
@@ -6,6 +7,7 @@
 
 /**
  * Changelog:
+ * 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings
  * 2022-12-04 tonhuisman: Remove [Testing] tag from plugin name
  * 2022-09-26 tonhuisman: Add nullptr checks, improved log/string handling
  * 2022-08-15 tonhuisman: Add Swipe and Slider support (to TouchHandler)
@@ -38,15 +40,14 @@
  * Other commands: see ESPEasy_TouchHandler.h
  */
 
-#define PLUGIN_123
-#define PLUGIN_ID_123         123
-#define PLUGIN_NAME_123       "Touch - FT62x6 touchscreen"
-#define PLUGIN_VALUENAME1_123 "X"
-#define PLUGIN_VALUENAME2_123 "Y"
-#define PLUGIN_VALUENAME3_123 "Z"
+# define PLUGIN_123
+# define PLUGIN_ID_123         123
+# define PLUGIN_NAME_123       "Touch - FT62x6 touchscreen"
+# define PLUGIN_VALUENAME1_123 "X"
+# define PLUGIN_VALUENAME2_123 "Y"
+# define PLUGIN_VALUENAME3_123 "Z"
 
-#include "_Plugin_Helper.h"
-#include "src/PluginStructs/P123_data_struct.h"
+# include "src/PluginStructs/P123_data_struct.h"
 
 
 boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
@@ -107,15 +108,15 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
-      #ifdef PLUGIN_123_DEBUG
+      # ifdef PLUGIN_123_DEBUG
       addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_WEBFORM_LOAD"));
-      #endif // ifdef PLUGIN_123_DEBUG
+      # endif // ifdef PLUGIN_123_DEBUG
       {
         addRowLabel(F("Display task"));
         addTaskSelect(F("dsptask"), P123_CONFIG_DISPLAY_TASK);
-        #ifndef P123_LIMIT_BUILD_SIZE
+        # ifndef P123_LIMIT_BUILD_SIZE
         addFormNote(F("Screen Width, Heigth, Rotation &amp; Color-depth will be fetched from the Display task if possible."));
-        #endif // ifndef P123_LIMIT_BUILD_SIZE
+        # endif // ifndef P123_LIMIT_BUILD_SIZE
       }
 
       uint16_t width_      = P123_CONFIG_X_RES;
@@ -168,9 +169,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      #ifdef PLUGIN_123_DEBUG
+      # ifdef PLUGIN_123_DEBUG
       addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_WEBFORM_SAVE"));
-      #endif // ifdef PLUGIN_123_DEBUG
+      # endif // ifdef PLUGIN_123_DEBUG
       P123_CONFIG_DISPLAY_PREV = P123_CONFIG_DISPLAY_TASK;
       P123_CONFIG_THRESHOLD    = getFormItemInt(F("threshold"));
       P123_CONFIG_DISPLAY_TASK = getFormItemInt(F("dsptask"));
@@ -207,9 +208,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      #ifdef PLUGIN_123_DEBUG
+      # ifdef PLUGIN_123_DEBUG
       addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_INIT"));
-      #endif // ifdef PLUGIN_123_DEBUG
+      # endif // ifdef PLUGIN_123_DEBUG
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P123_data_struct());
       P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
