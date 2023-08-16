@@ -1853,7 +1853,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -3171,9 +3171,14 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
         // }                         // end malloc check
       }                        // end depth check
     } // end planes/compression check
+
+    if (status) {
     #  ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
+      addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
     #  endif // ifndef BUILD_NO_DEBUG
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("showBmp: Only uncompressed and 24 or 1 bit color-depth supported."));
+    }
   } else { // end signature
     addLog(LOG_LEVEL_ERROR, F("showBmp: File signature error."));
   }
