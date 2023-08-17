@@ -152,7 +152,7 @@ struct P020_Task : public PluginTaskData_base {
   bool          _CRCcheck          = false;
   bool          _P1EventData       = false;
   size_t        _maxDataGramSize   = P020_DATAGRAM_MAX_SIZE;
-  ParserState   state              = ParserState::WAITING;
+  ParserState   _state             = ParserState::WAITING;
   char          _space             = 0;
   char          _newline           = 0;
   bool          _serialId          = false;

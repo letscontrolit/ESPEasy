@@ -8,6 +8,8 @@
 
 /************
  * Changelog:
+ * 2023-08-17 tonhuisman: P1 data: Allow some extra reading timeout between the data and the checksum, as some meters need more time to
+ *                        calculate the CRC. Add CR/LF before sending P1 data.
  * 2023-08-12 tonhuisman: Strip off occasional 8th bit from received data, to avoid unexpected failures on P1 data reception
  * 2023-06-24 tonhuisman: Fix initialization with non-GPIO serial ports like CDC/HW-CDC
  *                        Add option: append the task number to the event-name (Generic and RFLink event options)

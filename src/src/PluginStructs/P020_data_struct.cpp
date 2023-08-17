@@ -188,9 +188,11 @@ void P020_Task::handleClientIn(struct EventStruct *event) {
 
 void P020_Task::handleSerialIn(struct EventStruct *event) {
   if (nullptr == ser2netSerial) { return; }
-  int  RXWait  = P020_RX_WAIT;
-  int  timeOut = RXWait;
-  bool done    = false;
+  int  RXWait    = P020_RX_WAIT;
+  int  timeOut   = RXWait;
+  int  maxExtend = 5;
+  bool done      = false;
+  char ch;
 
   do {
     if (ser2netSerial->available()) {
@@ -206,10 +208,12 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
           digitalWrite(_ledPin, _ledInverted ? 0 : 1);
         }
 
+        ch = static_cast<char>(ser2netSerial->read());
+
         if (serial_processing == P020_Events::P1WiFiGateway) {
-          done = handleP1Char(static_cast<char>(ser2netSerial->read()));
+          done = handleP1Char(ch);
         } else {
-          addChar(static_cast<char>(ser2netSerial->read()));
+          addChar(ch);
         }
 
         if (_ledEnabled) {
@@ -217,10 +221,22 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
         }
       }
 
-      if (done) { break; }
+      if (done) {
+        break;
+      }
       timeOut = RXWait; // if serial received, reset timeout counter
     } else {
-      if (timeOut <= 0) { break; }
+      if (timeOut <= 0) {
+        if ((RXWait > 0) && (serial_processing == P020_Events::P1WiFiGateway) &&
+            ((_state == ParserState::READING) ||
+             (_state == ParserState::CHECKSUM)) &&
+            (maxExtend > 0)) {
+          timeOut = RXWait;
+          maxExtend--;
+        } else {
+          break;
+        }
+      }
       delay(1);
       --timeOut;
     }
@@ -228,10 +244,9 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
   if (serial_buffer.length() > 0) {
     if (ser2netClient.connected()) { // Only send out if a client is connected
-      // FIXME tonhuisman: Disable extra check for now as it reportedly doesn't work as intended
-      // if ((serial_processing == P020_Events::P1WiFiGateway) && !serial_buffer.endsWith(F("\r\n"))) {
-      //   serial_buffer += F("\r\n");
-      // }
+      if ((serial_processing == P020_Events::P1WiFiGateway) && !serial_buffer.endsWith(F("\r\n"))) {
+        serial_buffer += F("\r\n");
+      }
       ser2netClient.print(serial_buffer);
     }
 
@@ -467,20 +482,20 @@ bool P020_Task::handleP1Char(char ch) {
     # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Buffer overflow, discarded input."));
     # endif // ifndef BUILD_NO_DEBUG
-    state = ParserState::WAITING; // reset
+    _state = ParserState::WAITING; // reset
   }
-  ch &= 0x7F;                     // Strip off occasional 8th bit for now
+  ch &= 0x7F;                      // Strip off occasional 8th bit for now
 
   bool done    = false;
   bool invalid = false;
 
-  switch (state) {
+  switch (_state) {
     case ParserState::WAITING:
 
       if (ch == P020_DATAGRAM_START_CHAR)  {
         clearBuffer();
         addChar(ch);
-        state = ParserState::READING;
+        _state = ParserState::READING;
       } // else ignore data
       break;
     case ParserState::READING:
@@ -492,7 +507,7 @@ bool P020_Task::handleP1Char(char ch) {
 
         if (_CRCcheck) {
           checkI = 0;
-          state  = ParserState::CHECKSUM;
+          _state = ParserState::CHECKSUM;
         } else {
           done = true;
         }
@@ -500,7 +515,7 @@ bool P020_Task::handleP1Char(char ch) {
         # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
         # endif // ifndef BUILD_NO_DEBUG
-        state = ParserState::WAITING; // reset
+        _state = ParserState::WAITING; // reset
         return handleP1Char(ch);
       } else {
         addLog(LOG_LEVEL_ERROR, strformat(F("P1   : Receiving unknown: %d,'%c'"), ch, ch));
@@ -533,7 +548,7 @@ bool P020_Task::handleP1Char(char ch) {
     serialPrint(String(ch));
     serialPrintln("<");
     # endif // if PLUGIN_020_DEBUG
-    state = ParserState::WAITING; // reset
+    _state = ParserState::WAITING; // reset
   }
 
   if (done) {
@@ -553,7 +568,7 @@ bool P020_Task::handleP1Char(char ch) {
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid datagram, dropped data"));
       # endif // ifndef BUILD_NO_DEBUG
     }
-    state = ParserState::WAITING; // prepare for next one
+    _state = ParserState::WAITING; // prepare for next one
   }
 
   return done;
