@@ -35,6 +35,7 @@ License along with NeoPixel.  If not, see
 #include "methods/P9813GenericMethod.h"
 #include "methods/Tlc5947GenericMethod.h"
 #include "methods/Sm16716GenericMethod.h"
+#include "methods/Mbi6033GenericMethod.h"
 
 // Platform specific and One Wire (data) methods
 //

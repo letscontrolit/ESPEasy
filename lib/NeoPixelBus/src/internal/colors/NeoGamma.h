@@ -66,6 +66,15 @@ public:
             T_METHOD::Correct(original.B),
             T_METHOD::Correct(original.W));
     }
+
+    static RgbwwColor Correct(const RgbwwColor& original)
+    {
+        return RgbwwColor(T_METHOD::Correct(original.R),
+            T_METHOD::Correct(original.G),
+            T_METHOD::Correct(original.B),
+            T_METHOD::Correct(original.WW),
+            T_METHOD::Correct(original.CW));
+    }
 };
 
 

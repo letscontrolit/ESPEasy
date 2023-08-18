@@ -322,20 +322,16 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-        if (equals(command, F("serialsend"))) {
-          task->ser2netSerial->write(string.substring(11).c_str());
-          task->ser2netSerial->flush();
-          success = true;
-        } else
-
-        if (equals(command, F("serialsendmix"))) {
-          std::vector<uint8_t> argument = parseHexTextData(string);
-          task->ser2netSerial->write(&argument[0], argument.size());
-          task->ser2netSerial->flush();
-          success = true;
-        } else
-
-      if ((equals(command, F("ser2netclientsend"))) && (task->hasClientConnected())) {
+      if (equals(command, F("serialsend"))) {
+        task->ser2netSerial->write(string.substring(11).c_str());
+        task->ser2netSerial->flush();
+        success = true;
+      } else if (equals(command, F("serialsendmix"))) {
+        std::vector<uint8_t> argument = parseHexTextData(string);
+        task->ser2netSerial->write(&argument[0], argument.size());
+        task->ser2netSerial->flush();
+        success = true;
+      } else if ((equals(command, F("ser2netclientsend"))) && (task->hasClientConnected())) {
         task->ser2netClient.print(string.substring(18));
         task->ser2netClient.flush();
         success = true;
