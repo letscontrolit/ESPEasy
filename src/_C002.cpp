@@ -95,9 +95,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               bool   mustSendEvent = false;
 
               switch (Settings.TaskDeviceNumber[x]) {
-                case 1: // temp solution, if input switch, update state
+                case 1:                 // temp solution, if input switch, update state
                 {
-                  action  = F("inputSwitchState,");
+                  action  = F("gpio,"); // FIXME tonhuisman: Was: InputSwitchState
                   action += x;
                   action += ',';
                   action += nvalue;
@@ -105,7 +105,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                 }
                 case 29: // temp solution, if plugin 029, set gpio
                 {
-                  int baseVar = x * VARS_PER_TASK;
+                  const int baseVar = x * VARS_PER_TASK;
 
                   if (switchtype.equalsIgnoreCase(F("dimmer")))
                   {
@@ -130,8 +130,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                     }
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action  = F("pwm,");
-                      action += Settings.TaskDevicePin1[x];
+                      action  = concat(F("pwm,"), Settings.TaskDevicePin1[x]);
                       action += ',';
                       action += pwmValue;
                     }
@@ -140,30 +139,25 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                     UserVar[baseVar] = nvalue;
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action  = F("gpio,");
-                      action += Settings.TaskDevicePin1[x];
+                      action  = concat(F("gpio,"), Settings.TaskDevicePin1[x]);
                       action += ',';
                       action += static_cast<int>(nvalue);
                     }
                   }
                   break;
                 }
-# if defined(USES_P088)  // || defined(USES_P115)
-                case 88: // Send heatpump IR (P088) if IDX matches
-                  //                case 115:            // Send heatpump IR (P115) if IDX matches
+                # if defined(USES_P088)
+                case 88:                                      // Send heatpump IR (P088) if IDX matches
                 {
-                  action  = F("heatpumpir,");
-                  action += svalue1; // svalue1 is like 'gree,1,1,0,22,0,0'
+                  action = concat(F("heatpumpir,"), svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
-# endif // USES_P088 || USES_P115
+                # endif // if defined(USES_P088)
                 default:
                   break;
               }
 
-              const bool validCommand = action.length() > 0;
-
-              if (validCommand) {
+              if (action.length() != 0) {
                 mustSendEvent = true;
 
                 // Try plugin and internal
@@ -194,19 +188,19 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       if (event->idx != 0)
       {
         String json = serializeDomoticzJson(event);
-# ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           addLogMove(LOG_LEVEL_DEBUG, concat(F("MQTT : "), json));
         }
-# endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef BUILD_NO_DEBUG
 
         String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
         // Publish using move operator, thus pubname and json are empty after this call
         success = MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(pubname), std::move(json), CPlugin_002_mqtt_retainFlag);
-      } // if ixd !=0
+      } // if idx !=0
       else
       {
         addLog(LOG_LEVEL_ERROR, F("MQTT : IDX cannot be zero!"));
