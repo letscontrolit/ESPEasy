@@ -5,14 +5,6 @@
 # include "../Globals/Plugins.h"
 
 
-C013_SensorInfoStruct::C013_SensorInfoStruct()
-{
-  ZERO_FILL(taskName);
-
-  for (int i = 0; i < VARS_PER_TASK; ++i) {
-    ZERO_FILL(ValueNames[i]);
-  }
-}
 
 bool C013_SensorInfoStruct::isValid() const
 {

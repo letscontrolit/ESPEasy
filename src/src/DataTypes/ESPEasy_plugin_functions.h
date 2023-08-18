@@ -22,7 +22,7 @@
 #define PLUGIN_GET_DEVICEVALUECOUNT        13 // Optional function call to allow tasks to specify the number of output values (e.g. P026_Sysinfo.ino)
 #define PLUGIN_GET_DEVICEVTYPE             14 // Only needed when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
 #define PLUGIN_WRITE                       15 // Called to allow a task to process a command. Must return success = true when it can handle the command.
-#define PLUGIN_EVENT_OUT                   16 // Does not seem to be used
+//#define PLUGIN_EVENT_OUT                   16 // Does not seem to be used
 #define PLUGIN_WEBFORM_SHOW_CONFIG         17 // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
 #define PLUGIN_SERIAL_IN                   18 // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
 #define PLUGIN_UDP_IN                      19 // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)

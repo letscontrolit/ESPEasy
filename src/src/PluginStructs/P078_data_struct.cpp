@@ -472,8 +472,10 @@ void SDM_loopRegisterReadQueue(SDM *sdm)
       PluginTaskData_base *taskdata = getPluginTaskDataBaseClassOnly(it->taskIndex);
 
       if (taskdata != nullptr) {
-        if (taskdata->getPluginStats(it->taskVarIndex) != nullptr) {
-          taskdata->getPluginStats(it->taskVarIndex)->trackPeak(value);
+        PluginStats *stats = taskdata->getPluginStats(it->taskVarIndex);
+
+        if (stats != nullptr) {
+          stats->trackPeak(value);
         }
       }
 # endif // if FEATURE_PLUGIN_STATS

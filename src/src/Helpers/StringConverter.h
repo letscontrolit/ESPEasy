@@ -45,6 +45,15 @@ bool equals(const String& str, const T &val) {
 }
 */
 
+/********************************************************************************************\
+   Format string using vsnprintf
+   See: https://cplusplus.com/reference/cstdio/printf/
+ \*********************************************************************************************/
+
+String strformat(const String& format, ...);
+String strformat(const __FlashStringHelper * format, ...);
+
+
 
 /********************************************************************************************\
    Convert a char string to IP uint8_t array

@@ -1,30 +1,8 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
-
-#if __cplusplus >= 201103L
-#  define ARDUINOJSON_HAS_LONG_LONG 1
-#  define ARDUINOJSON_HAS_RVALUE_REFERENCES 1
-#else
-#  define ARDUINOJSON_HAS_LONG_LONG 0
-#  define ARDUINOJSON_HAS_RVALUE_REFERENCES 0
-#endif
-
-#ifndef ARDUINOJSON_HAS_NULLPTR
-#  if __cplusplus >= 201103L
-#    define ARDUINOJSON_HAS_NULLPTR 1
-#  else
-#    define ARDUINOJSON_HAS_NULLPTR 0
-#  endif
-#endif
-
-#if defined(_MSC_VER) && !ARDUINOJSON_HAS_LONG_LONG
-#  define ARDUINOJSON_HAS_INT64 1
-#else
-#  define ARDUINOJSON_HAS_INT64 0
-#endif
 
 // Support std::istream and std::ostream
 #ifndef ARDUINOJSON_ENABLE_STD_STREAM
@@ -83,8 +61,7 @@
 
 // Store integral values with long (0) or long long (1)
 #ifndef ARDUINOJSON_USE_LONG_LONG
-#  if ARDUINOJSON_HAS_LONG_LONG && defined(__SIZEOF_POINTER__) && \
-          __SIZEOF_POINTER__ >= 4 ||                              \
+#  if defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ >= 4 || \
       defined(_MSC_VER)
 #    define ARDUINOJSON_USE_LONG_LONG 1
 #  endif
@@ -153,9 +130,13 @@
 #    define ARDUINOJSON_ENABLE_ARDUINO_PRINT 0
 #  endif
 
-// Disable support for PROGMEM
+// Enable PROGMEM support on AVR only
 #  ifndef ARDUINOJSON_ENABLE_PROGMEM
-#    define ARDUINOJSON_ENABLE_PROGMEM 0
+#    ifdef __AVR__
+#      define ARDUINOJSON_ENABLE_PROGMEM 1
+#    else
+#      define ARDUINOJSON_ENABLE_PROGMEM 0
+#    endif
 #  endif
 
 #endif  // ARDUINO
@@ -230,7 +211,7 @@
 #  endif
 #endif
 
-#if ARDUINOJSON_HAS_NULLPTR && defined(nullptr)
+#if defined(nullptr)
 #  error nullptr is defined as a macro. Remove the faulty #define or #undef nullptr
 // See https://github.com/bblanchon/ArduinoJson/issues/1355
 #endif

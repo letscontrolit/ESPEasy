@@ -316,7 +316,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
         // Restore the settings that were already set by the user
         for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
           if (!oldNames[i].isEmpty()) {
-            safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[i], oldNames[i], sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+            ExtraTaskSettings.setTaskDeviceValueName(i, oldNames[i]);
             ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
           }
         }
@@ -1140,6 +1140,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
 }
 
+#ifdef PLUGIN_USES_SERIAL
 void devicePage_show_serial_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
@@ -1149,6 +1150,7 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }
+#endif
 
 void devicePage_show_I2C_config(taskIndex_t taskIndex)
 {

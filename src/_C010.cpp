@@ -80,8 +80,8 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           if (!AllocatedControllerSettings()) {
             break;
           }
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          pubname = ControllerSettings.Publish;
+          LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+          pubname = ControllerSettings->Publish;
         }
 
         parseControllerVariables(pubname, event, false);

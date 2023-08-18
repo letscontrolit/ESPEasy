@@ -77,8 +77,8 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings); // -V522
 
         if (AllocatedControllerSettings()) {
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          C016_allowLocalSystemTime = ControllerSettings.useLocalSystemTime();
+          LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+          C016_allowLocalSystemTime = ControllerSettings->useLocalSystemTime();
         }
       }
       success = init_c016_delay_queue(event->ControllerIndex);

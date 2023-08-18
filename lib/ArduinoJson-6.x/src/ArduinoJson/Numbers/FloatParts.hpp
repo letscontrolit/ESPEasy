@@ -1,5 +1,5 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -8,7 +8,7 @@
 #include <ArduinoJson/Numbers/FloatTraits.hpp>
 #include <ArduinoJson/Polyfills/math.hpp>
 
-namespace ARDUINOJSON_NAMESPACE {
+ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 template <typename TFloat>
 struct FloatParts {
@@ -63,8 +63,8 @@ struct FloatParts {
 
     if (value >= ARDUINOJSON_POSITIVE_EXPONENTIATION_THRESHOLD) {
       for (; index >= 0; index--) {
-        if (value >= traits::positiveBinaryPowerOfTen(index)) {
-          value *= traits::negativeBinaryPowerOfTen(index);
+        if (value >= traits::positiveBinaryPowersOfTen()[index]) {
+          value *= traits::negativeBinaryPowersOfTen()[index];
           powersOf10 = int16_t(powersOf10 + bit);
         }
         bit >>= 1;
@@ -73,8 +73,8 @@ struct FloatParts {
 
     if (value > 0 && value <= ARDUINOJSON_NEGATIVE_EXPONENTIATION_THRESHOLD) {
       for (; index >= 0; index--) {
-        if (value < traits::negativeBinaryPowerOfTenPlusOne(index)) {
-          value *= traits::positiveBinaryPowerOfTen(index);
+        if (value < traits::negativeBinaryPowersOfTen()[index] * 10) {
+          value *= traits::positiveBinaryPowersOfTen()[index];
           powersOf10 = int16_t(powersOf10 - bit);
         }
         bit >>= 1;
@@ -84,4 +84,5 @@ struct FloatParts {
     return powersOf10;
   }
 };
-}  // namespace ARDUINOJSON_NAMESPACE
+
+ARDUINOJSON_END_PRIVATE_NAMESPACE

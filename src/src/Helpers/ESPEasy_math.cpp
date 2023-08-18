@@ -6,11 +6,11 @@
 #include <cmath>
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-double ESPEASY_DOUBLE_EPSILON     = ESPEASY_DOUBLE_EPSILON_FACTOR *  std::numeric_limits<double>::epsilon();
-double ESPEASY_DOUBLE_EPSILON_NEG = -1.0 * ESPEASY_DOUBLE_EPSILON_FACTOR *  std::numeric_limits<double>::epsilon();
+constexpr double ESPEASY_DOUBLE_EPSILON     = ESPEASY_DOUBLE_EPSILON_FACTOR *  std::numeric_limits<double>::epsilon();
+constexpr double ESPEASY_DOUBLE_EPSILON_NEG = -1.0 * ESPEASY_DOUBLE_EPSILON_FACTOR *  std::numeric_limits<double>::epsilon();
 #endif
-float  ESPEASY_FLOAT_EPSILON      = std::numeric_limits<float>::epsilon();
-float  ESPEASY_FLOAT_EPSILON_NEG  = -1.0f * std::numeric_limits<float>::epsilon();
+constexpr float  ESPEASY_FLOAT_EPSILON      = std::numeric_limits<float>::epsilon();
+constexpr float  ESPEASY_FLOAT_EPSILON_NEG  = -1.0f * std::numeric_limits<float>::epsilon();
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 int maxNrDecimals_fpType(const double& value)

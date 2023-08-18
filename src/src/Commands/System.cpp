@@ -8,6 +8,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/DeepSleep.h"
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
 
@@ -36,3 +37,23 @@ const __FlashStringHelper * Command_System_Reboot(struct EventStruct *event, con
 	return return_command_success();
 }
 
+#ifdef ESP8266
+// Erase the RF calibration partition (4k)
+const __FlashStringHelper * Command_System_Erase_RFcal(struct EventStruct *event, const char* Line)
+{
+	if (clearRFcalPartition()) {
+		return F("Cleared RFcal partition. Please reboot!");
+	}
+	return return_command_failed();
+}
+
+// Erase the SDK WiFI partition (12k)
+const __FlashStringHelper * Command_System_Erase_SDK_WiFiconfig(struct EventStruct *event, const char* Line)
+{
+	if (clearWiFiSDKpartition()) {
+		return F("Cleared SDK WiFi partition. Please reboot!");
+	}
+	return return_command_failed();
+}
+
+#endif
