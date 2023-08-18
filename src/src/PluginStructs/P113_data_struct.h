@@ -24,8 +24,8 @@ public:
   P113_data_struct(uint8_t i2c_addr,
                    int     timing,
                    bool    range);
-  P113_data_struct()          = delete;
-  virtual ~P113_data_struct() = default;
+  P113_data_struct() = delete;
+  virtual ~P113_data_struct();
 
   bool     begin();
   bool     startRead();
@@ -36,7 +36,7 @@ public:
 
 private:
 
-  SFEVL53L1X sensor;
+  SFEVL53L1X *sensor = nullptr;
 
   const uint8_t i2cAddress;
   bool          initState = false;
