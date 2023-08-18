@@ -350,8 +350,8 @@ public:
   boolean       TaskDeviceEnabled[N_TASKS] = {0};
   boolean       ControllerEnabled[CONTROLLER_MAX] = {0};
   boolean       NotificationEnabled[NOTIFICATION_MAX] = {0};
-  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS];        // IDX number (mainly used by Domoticz)
-  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS];
+  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS]{};        // IDX number (mainly used by Domoticz)
+  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS]{};
   boolean       Pin_status_led_Inversed = false;
   boolean       deepSleepOnFail = false;
   boolean       UseValueLogger = false;
@@ -388,7 +388,7 @@ public:
   NetworkMedium_t NetworkMedium = NetworkMedium_t::WIFI;
   int8_t          I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t          I2C_Multiplexer_Addr = -1;
-  int8_t          I2C_Multiplexer_Channel[N_TASKS];
+  int8_t          I2C_Multiplexer_Channel[N_TASKS]{};
   uint8_t         I2C_Flags[N_TASKS] = {0};
   uint32_t        I2C_clockSpeed_Slow = 100000;
   int8_t          I2C_Multiplexer_ResetPin = -1;
@@ -406,7 +406,7 @@ public:
 
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
-  uint8_t       md5[16]; // Store checksum of the settings.
+  uint8_t       md5[16]{}; // Store checksum of the settings.
   uint32_t      VariousBits2 = 0;
 
   uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 

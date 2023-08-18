@@ -371,24 +371,24 @@ void SDM::modbusWrite(uint8_t* data, size_t messageLength) {
   if (_dere_pin != NOT_A_PIN) {
     dereSet(HIGH);                                                              //transmit to SDM  -> DE Enable, /RE Disable (for control MAX485)
 
-    delay(2);                                                                   //fix for issue (nan reading) by sjfaustino: https://github.com/reaper7/SDM_Energy_Meter/issues/7#issuecomment-272111524
+    delay(1);                                                                   //fix for issue (nan reading) by sjfaustino: https://github.com/reaper7/SDM_Energy_Meter/issues/7#issuecomment-272111524
 
-    resptime = millis();
+    // Need to wait for all bytes in TX buffer are sent.
+    // N.B. flush() on serial port does often only clear the send buffer, not wait till all is sent.
+    const unsigned long waitForBytesSent_ms = (messageLength * 11000) / sdmSer.getBaudRate() + 1;
+    resptime = millis() + waitForBytesSent_ms;
   }
 
   sdmSer.write(data, messageLength);                                            //send 8 bytes
   
   if (_dere_pin != NOT_A_PIN) {
-    // Need to wait for all bytes in TX buffer are sent.
-    // N.B. flush() on serial port does often only clear the send buffer, not wait till all is sent.
-    const unsigned long waitForBytesSent_ms = (messageLength * 10000) / sdmSer.getBaudRate() + 1;
-    while ((millis() - resptime) < waitForBytesSent_ms) {
-      delay(1);                                                                 //clear out tx buffer
+    const int32_t timeleft = (int32_t) (resptime - millis());
+    if (timeleft > 0) {
+      delay(timeleft);                                                          //clear out tx buffer
     }
     dereSet(LOW);                                                               //receive from SDM -> DE Disable, /RE Enable (for control MAX485)
     flush();
   }
 
   resptime = millis();
-
 }

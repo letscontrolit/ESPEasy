@@ -22,6 +22,12 @@ bool ExtendedControllerCredentialsStruct::validateChecksum() const
   return false;
 }
 
+void ExtendedControllerCredentialsStruct::clear() {
+  for (size_t i = 0; i < CONTROLLER_MAX * 2; ++i) {
+    _strings[i] = String();
+  }
+}
+
 String ExtendedControllerCredentialsStruct::load()
 {
   const String res =

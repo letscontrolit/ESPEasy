@@ -14,7 +14,9 @@ extern NetworkMedium_t active_network_medium;
 
 extern bool webserverRunning;
 extern bool webserver_init;
+#if FEATURE_MDNS
 extern bool mDNS_init;
+#endif
 
 
 // NTP status

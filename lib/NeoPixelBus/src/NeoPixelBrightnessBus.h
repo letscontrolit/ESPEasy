@@ -28,8 +28,8 @@ License along with NeoPixel.  If not, see
 
 #include "NeoPixelBus.h"
 
-
-template<typename T_COLOR_FEATURE, typename T_METHOD> class [[deprecated("Use NeoPixelBusLg instead.")]] NeoPixelBrightnessBus :
+// FIXME 2023-08-09 tonhuisman: Disabled deprecation warning as the newer classes won't properly work with ESP8266 for ESPEasy P128
+template<typename T_COLOR_FEATURE, typename T_METHOD> class /*[[deprecated("Use NeoPixelBusLg instead.")]]*/ NeoPixelBrightnessBus :
     public NeoPixelBus<T_COLOR_FEATURE, T_METHOD>
 {
 private:

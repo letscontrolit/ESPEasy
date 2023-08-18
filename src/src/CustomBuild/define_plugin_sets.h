@@ -718,7 +718,7 @@ To create/register a plugin, you have to :
         #undef BUILD_NO_DEBUG
       #endif
       
-      #define FEATURE_MDNS  1
+//      #define FEATURE_MDNS  1
       #define FEATURE_CUSTOM_PROVISIONING 1
       #define FEATURE_DOWNLOAD 1
     #endif
@@ -2297,7 +2297,7 @@ To create/register a plugin, you have to :
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
-//  #define FEATURE_MODBUS  1
+  #define FEATURE_MODBUS  1
 #endif
 
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
@@ -2641,7 +2641,12 @@ To create/register a plugin, you have to :
 #if FEATURE_ARDUINO_OTA
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
-      #define FEATURE_MDNS  1
+      #ifdef ESP32
+        #define FEATURE_MDNS  1
+      #else
+        // Do not use MDNS on ESP8266 due to memory leak
+        #define FEATURE_MDNS  0
+      #endif
     #endif
   #endif
 #endif
@@ -2937,6 +2942,10 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef DISABLE_SC16IS752_SPI
+  #define DISABLE_SC16IS752_SPI
+#endif
+
 #ifndef FEATURE_PINSTATE_EXTENDED
   #ifdef ESP8266_1M
     #define FEATURE_PINSTATE_EXTENDED           0 // Don't use extended pinstate feature on 1M builds
@@ -2957,6 +2966,10 @@ To create/register a plugin, you have to :
 # if USES_HWCDC || USES_USBCDC
 #  define USES_ESPEASY_CONSOLE_FALLBACK_PORT 1
 # endif // if USES_HWCDC || USES_USBCDC
+# ifndef PLUGIN_USES_SERIAL
+// Needs Plugin_Helper_serial
+#  define PLUGIN_USES_SERIAL
+# endif
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
 
