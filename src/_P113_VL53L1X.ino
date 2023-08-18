@@ -5,9 +5,14 @@
 // ########################### Plugin 113 VL53L1X I2C Ranging LIDAR      #################################
 // #######################################################################################################
 
-// Changelog:
-// 2021-04-06, tonhuisman: Remove Interval optional attribute to avoid system overload, cleanup source
-// 2021-04-05, tonhuisman: Add VL53L1X Time of Flight sensor to main repo (similar to but not compatible with VL53L0X)
+/** Changelog:
+ * 2023-08-11, tonhuisman: Fix issue not surfacing before, that the library right-shifts the I2C address when that is set...
+ *                         Also use new/delete on sensor object (code improvement)
+ *                         Limit the selection list of I2C addresses to 1 item, as changing the I2C address of the sensor does not work as
+ *                         intended/expected
+ * 2021-04-06, tonhuisman: Remove Interval optional attribute to avoid system overload, cleanup source
+ * 2021-04-05, tonhuisman: Add VL53L1X Time of Flight sensor to main repo (similar to but not compatible with VL53L0X)
+ */
 
 // needs SparkFun_VL53L1X library from https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library
 
@@ -59,12 +64,13 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
+      # define P113_ACTIVE_I2C_ADDRESSES 1 // Setting the address messes up the sensor, so disabled
       const uint8_t i2cAddressValues[] = { 0x29, 0x30 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c"), 2, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("i2c"), P113_ACTIVE_I2C_ADDRESSES, i2cAddressValues, PCONFIG(0));
       } else {
-        success = intArrayContains(2, i2cAddressValues, event->Par1);
+        success = intArrayContains(P113_ACTIVE_I2C_ADDRESSES, i2cAddressValues, event->Par1);
       }
       break;
     }

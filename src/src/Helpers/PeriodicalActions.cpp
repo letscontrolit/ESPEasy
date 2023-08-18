@@ -176,6 +176,16 @@ void runOncePerSecond()
     I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
 
+  #if FEATURE_MDNS
+  #ifdef ESP8266
+  // Allow MDNS processing
+  if (NetworkConnected()) {
+    MDNS.announce();
+  }
+  #endif
+  #endif // if FEATURE_MDNS
+
+
   checkResetFactoryPin();
   STOP_TIMER(PLUGIN_CALL_1PS);
 }
@@ -214,10 +224,12 @@ void runEach30Seconds()
       log += F(" ESPeasy internal wifi status: ");
       log += WiFiEventData.ESPeasyWifiStatusToString();
     }
-
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
     addLogMove(LOG_LEVEL_INFO, log);
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+//    addLogMove(LOG_LEVEL_INFO,  ESPEASY_SERIAL_CONSOLE_PORT.getLogString());
+#endif
   }
   WiFi_AP_Candidates.purge_expired();
   #if FEATURE_ESPEASY_P2P
@@ -479,6 +491,7 @@ void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
   saveUserVarToRTC();
   setWifiMode(WIFI_OFF);
   ESPEASY_FS.end();
+  process_serialWriteBuffer();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
   Scheduler.markIntendedReboot(reason);

@@ -7,6 +7,8 @@ struct ChecksumType {
   // Empty checksum
   ChecksumType() = default;
 
+  ChecksumType(const ChecksumType& rhs);
+
   ChecksumType(uint8_t checksum[16]);
 
   // Construct with checksum over entire range of given data

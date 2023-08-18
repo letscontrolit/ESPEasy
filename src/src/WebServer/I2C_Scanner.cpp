@@ -8,6 +8,7 @@
 
 #include "../Globals/Settings.h"
 
+#include "../Helpers/_Plugin_init.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 
@@ -152,19 +153,17 @@ String getKnownI2Cdevice(uint8_t address) {
   for (uint8_t x = 0; x <= deviceCount; x++) {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
-    if (validDeviceIndex(deviceIndex)) {
-      const pluginID_t pluginID = DeviceIndex_to_Plugin_id[deviceIndex];
+    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
-      if (validPluginID(pluginID) &&
-          checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
-        result += F("(Device) ");
+    if (validPluginID(pluginID) &&
+        checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
+      result += F("(Device) ");
 
-        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
-        result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
-        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        result += getPluginNameFromDeviceIndex(deviceIndex);
-        result += ',';
-      }
+      # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
+      result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
+      # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+      result += getPluginNameFromDeviceIndex(deviceIndex);
+      result += ',';
     }
   }
   #endif // if FEATURE_I2C_DEVICE_SCAN
@@ -250,7 +249,10 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x44:
     case 0x45:
-      result +=  F("SHT30/31/35,INA219");
+      result +=  F("SHT30/31/35,INA219,SHT4x");
+      break;
+    case 0x46:
+      result +=  F("SHT4x");
       break;
     case 0x48:
     case 0x4A:
@@ -284,6 +286,7 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x58:
       result +=  F("SGP30");
+      break;
     case 0x59:
       result +=  F("SGP4x");
       break;

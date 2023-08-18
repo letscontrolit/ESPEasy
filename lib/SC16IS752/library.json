@@ -1,6 +1,6 @@
 {
     "name": "SC16IS752",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "keywords": [
       "serial", "io", "sc16is752", "i2c", "uart"
     ],

@@ -217,7 +217,7 @@ List of official plugins
 
 There are different released versions of ESP Easy:
 
-:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
+:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTTL, DEBUG logging, etc.
 
 :yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and some DEBUG logging.
 
@@ -332,6 +332,7 @@ There are different released versions of ESP Easy:
    ":ref:`P094_page`","|P094_status|","P094"
    ":ref:`P095_page`","|P095_status|","P095"
    ":ref:`P097_page`","|P097_status|","P097"
+   ":ref:`P098_page`","|P098_status|","P098"
    ":ref:`P099_page`","|P099_status|","P099"
    ":ref:`P100_page`","|P100_status|","P100"
    ":ref:`P101_page`","|P101_status|","P101"
@@ -373,11 +374,13 @@ There are different released versions of ESP Easy:
    ":ref:`P143_page`","|P143_status|","P143"
    ":ref:`P144_page`","|P144_status|","P144"
    ":ref:`P145_page`","|P145_status|","P145"
+   ":ref:`P146_page`","|P146_status|","P146"
    ":ref:`P147_page`","|P147_status|","P147"
    ":ref:`P148_page`","|P148_status|","P148"
    ":ref:`P150_page`","|P150_status|","P150"
    ":ref:`P151_page`","|P151_status|","P151"
    ":ref:`P152_page`","|P152_status|","P152"
+   ":ref:`P153_page`","|P153_status|","P153"
 
 
 Internal GPIO handling

@@ -84,7 +84,7 @@ public:
   float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const;
    
   // Compute sample stored values
-  float getSample(int& lastNrSamples) const;
+  float getSample(int lastNrSamples) const;
   
   float operator[](PluginStatsBuffer_t::index_t index) const;
 
@@ -163,7 +163,7 @@ private:
 class PluginStats_array {
 public:
 
-  PluginStats_array();
+  PluginStats_array() = default;
   ~PluginStats_array();
 
   void    initPluginStats(taskVarIndex_t taskVarIndex);
@@ -196,7 +196,7 @@ public:
 
 private:
 
-  PluginStats *_plugin_stats[VARS_PER_TASK] = { nullptr, };
+  PluginStats *_plugin_stats[VARS_PER_TASK] = {};
 };
 
 #endif // if FEATURE_PLUGIN_STATS

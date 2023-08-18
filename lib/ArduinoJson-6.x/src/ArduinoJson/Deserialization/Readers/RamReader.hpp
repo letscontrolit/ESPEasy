@@ -1,12 +1,12 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
 #include <ArduinoJson/Polyfills/type_traits.hpp>
 
-namespace ARDUINOJSON_NAMESPACE {
+ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 template <typename T>
 struct IsCharOrVoid {
@@ -21,18 +21,19 @@ struct IsCharOrVoid<const T> : IsCharOrVoid<T> {};
 template <typename TSource>
 struct Reader<TSource*,
               typename enable_if<IsCharOrVoid<TSource>::value>::type> {
-  const char* _ptr;
+  const char* ptr_;
 
  public:
   explicit Reader(const void* ptr)
-      : _ptr(ptr ? reinterpret_cast<const char*>(ptr) : "") {}
+      : ptr_(ptr ? reinterpret_cast<const char*>(ptr) : "") {}
 
   int read() {
-    return static_cast<unsigned char>(*_ptr++);
+    return static_cast<unsigned char>(*ptr_++);
   }
 
   size_t readBytes(char* buffer, size_t length) {
-    for (size_t i = 0; i < length; i++) buffer[i] = *_ptr++;
+    for (size_t i = 0; i < length; i++)
+      buffer[i] = *ptr_++;
     return length;
   }
 };
@@ -47,4 +48,4 @@ struct BoundedReader<TSource*,
                                     reinterpret_cast<const char*>(ptr) + len) {}
 };
 
-}  // namespace ARDUINOJSON_NAMESPACE
+ARDUINOJSON_END_PRIVATE_NAMESPACE

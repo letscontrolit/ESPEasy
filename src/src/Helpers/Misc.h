@@ -8,6 +8,12 @@
 #include "../DataTypes/TaskIndex.h"
 #include "../Helpers/Scheduler.h"
 
+
+#define bitSetULL(value, bit) ((value) |= (1ULL << (bit)))
+#define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
+#define bitWriteULL(value, bit, bitvalue) (bitvalue ? bitSetULL(value, bit) : bitClearULL(value, bit))
+
+
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
 

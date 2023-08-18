@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/NetworkState.h"
@@ -48,6 +49,11 @@
 #include <soc/efuse_reg.h>
 
 #include <esp_pm.h>
+
+#if CONFIG_IDF_TARGET_ESP32
+# include "hal/efuse_ll.h"
+# include "hal/efuse_hal.h"
+#endif
 
 #endif
 
@@ -141,6 +147,9 @@ void ESPEasy_setup()
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
+  PluginSetup();
+  CPluginSetup();
+  
   initWiFi();
   WiFiEventData.clearAll();
 
@@ -169,8 +178,7 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-
-  Serial.begin(115200);
+  ESPEasy_Console.begin(115200);
 
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
@@ -270,6 +278,8 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
+  ESPEasy_Console.reInit();
+
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif
@@ -281,7 +291,7 @@ void ESPEasy_setup()
     // automatic light sleep is enabled if tickless idle support is enabled.
 #if CONFIG_IDF_TARGET_ESP32
     esp_pm_config_esp32_t pm_config = {
-            .max_freq_mhz = 240,
+            .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
 #elif CONFIG_IDF_TARGET_ESP32S2
     esp_pm_config_esp32s2_t pm_config = {
             .max_freq_mhz = 240,
@@ -301,6 +311,19 @@ void ESPEasy_setup()
 #endif
     };
     esp_pm_configure(&pm_config);
+#if CONFIG_IDF_TARGET_ESP32
+  } else {
+    // Set the max/min frequency based on what's being reported by the efuses.
+    // Only ESP32 seems to have this function.
+    esp_pm_config_esp32_t pm_config = {
+            .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
+            .min_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
+#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
+            .light_sleep_enable = false
+#endif
+    };
+    esp_pm_configure(&pm_config);
+#endif
   }
 #endif
 
@@ -432,7 +455,7 @@ void ESPEasy_setup()
 
 # ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
-    Serial.setDebugOutput(true);
+    ESPEasy_Console.setDebugOutput(true);
   }
 #endif
 
@@ -450,6 +473,9 @@ void ESPEasy_setup()
   #endif // if FEATURE_NOTIFIER
 
   PluginInit();
+
+  initSerial(); // Plugins may have altered serial, so re-init serial
+  
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("PluginInit()"));
   #endif

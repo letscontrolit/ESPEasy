@@ -10,6 +10,7 @@
 #include "../Helpers/StringConverter_Numerical.h"
 
 #include <IPAddress.h>
+#include <vector>
 
 // -V::569
 
@@ -43,6 +44,15 @@ bool equals(const String& str, const T &val) {
   return str.equals(String(val));
 }
 */
+
+/********************************************************************************************\
+   Format string using vsnprintf
+   See: https://cplusplus.com/reference/cstdio/printf/
+ \*********************************************************************************************/
+
+String strformat(const String& format, ...);
+String strformat(const __FlashStringHelper * format, ...);
+
 
 
 /********************************************************************************************\

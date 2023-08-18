@@ -34,8 +34,12 @@ template<typename T_BUFFER_METHOD> class NeoBuffer
 public:
     NeoBuffer(uint16_t width,
         uint16_t height,
-        PGM_VOID_P pixels) :
+        PGM_VOID_P pixels = nullptr) :
         _method(width, height, pixels)
+    {
+    }
+
+    ~NeoBuffer()
     {
     }
 
@@ -64,14 +68,14 @@ public:
         int16_t y,
         typename T_BUFFER_METHOD::ColorObject color)
     {
-        _method.SetPixelColor(pixelIndex(x, y), color);
+        _method.SetPixelColor(PixelIndex(x, y), color);
     };
 
     typename T_BUFFER_METHOD::ColorObject GetPixelColor(
         int16_t x,
         int16_t y) const
     {
-        return _method.GetPixelColor(pixelIndex(x, y));
+        return _method.GetPixelColor(PixelIndex(x, y));
     };
 
     void ClearTo(typename T_BUFFER_METHOD::ColorObject color)
@@ -120,7 +124,7 @@ public:
  
                 if (indexDest < destPixelCount)
                 {
-                    const uint8_t* pSrc = T_BUFFER_METHOD::ColorFeature::getPixelAddress(_method.Pixels(), pixelIndex(xSrc + x, ySrc + y));
+                    const uint8_t* pSrc = T_BUFFER_METHOD::ColorFeature::getPixelAddress(_method.Pixels(), PixelIndex(xSrc + x, ySrc + y));
                     uint8_t* pDest = T_BUFFER_METHOD::ColorFeature::getPixelAddress(destBuffer.Pixels, indexDest);
 
                     _method.CopyPixels(pDest, pSrc, 1);
@@ -155,10 +159,7 @@ public:
         }
     }
 
-private:
-    T_BUFFER_METHOD _method;
-
-    uint16_t pixelIndex(
+    uint16_t PixelIndex(
         int16_t x,
         int16_t y) const
     {
@@ -173,4 +174,7 @@ private:
         }
         return result;
     }
+
+private:
+    T_BUFFER_METHOD _method;
 };

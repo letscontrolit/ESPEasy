@@ -1,5 +1,5 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -9,23 +9,20 @@
 #include <ArduinoJson/Strings/StringAdapters.hpp>
 #include <ArduinoJson/Variant/VariantData.hpp>
 
-namespace ARDUINOJSON_NAMESPACE {
-
-inline bool variantEquals(const VariantData* a, const VariantData* b) {
-  return variantCompare(a, b) == COMPARE_RESULT_EQUAL;
-}
+ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 inline VariantSlot* CollectionData::addSlot(MemoryPool* pool) {
   VariantSlot* slot = pool->allocVariant();
   if (!slot)
     return 0;
 
-  if (_tail) {
-    _tail->setNextNotNull(slot);
-    _tail = slot;
+  if (tail_) {
+    ARDUINOJSON_ASSERT(pool->owns(tail_));  // Can't alter a linked array/object
+    tail_->setNextNotNull(slot);
+    tail_ = slot;
   } else {
-    _head = slot;
-    _tail = slot;
+    head_ = slot;
+    tail_ = slot;
   }
 
   slot->clear();
@@ -36,12 +33,11 @@ inline VariantData* CollectionData::addElement(MemoryPool* pool) {
   return slotData(addSlot(pool));
 }
 
-template <typename TAdaptedString, typename TStoragePolicy>
+template <typename TAdaptedString>
 inline VariantData* CollectionData::addMember(TAdaptedString key,
-                                              MemoryPool* pool,
-                                              TStoragePolicy storage) {
+                                              MemoryPool* pool) {
   VariantSlot* slot = addSlot(pool);
-  if (!slotSetKey(slot, key, pool, storage)) {
+  if (!slotSetKey(slot, key, pool)) {
     removeSlot(slot);
     return 0;
   }
@@ -49,8 +45,8 @@ inline VariantData* CollectionData::addMember(TAdaptedString key,
 }
 
 inline void CollectionData::clear() {
-  _head = 0;
-  _tail = 0;
+  head_ = 0;
+  tail_ = 0;
 }
 
 template <typename TAdaptedString>
@@ -61,11 +57,12 @@ inline bool CollectionData::containsKey(const TAdaptedString& key) const {
 inline bool CollectionData::copyFrom(const CollectionData& src,
                                      MemoryPool* pool) {
   clear();
-  for (VariantSlot* s = src._head; s; s = s->next()) {
+  for (VariantSlot* s = src.head_; s; s = s->next()) {
     VariantData* var;
     if (s->key() != 0) {
-      String key(s->key(), s->ownsKey() ? String::Copied : String::Linked);
-      var = addMember(adaptString(key), pool, getStringStoragePolicy(key));
+      JsonString key(s->key(),
+                     s->ownsKey() ? JsonString::Copied : JsonString::Linked);
+      var = addMember(adaptString(key), pool);
     } else {
       var = addElement(pool);
     }
@@ -77,38 +74,11 @@ inline bool CollectionData::copyFrom(const CollectionData& src,
   return true;
 }
 
-inline bool CollectionData::equalsObject(const CollectionData& other) const {
-  size_t count = 0;
-  for (VariantSlot* slot = _head; slot; slot = slot->next()) {
-    VariantData* v1 = slot->data();
-    VariantData* v2 = other.getMember(adaptString(slot->key()));
-    if (!variantEquals(v1, v2))
-      return false;
-    count++;
-  }
-  return count == other.size();
-}
-
-inline bool CollectionData::equalsArray(const CollectionData& other) const {
-  VariantSlot* s1 = _head;
-  VariantSlot* s2 = other._head;
-  for (;;) {
-    if (s1 == s2)
-      return true;
-    if (!s1 || !s2)
-      return false;
-    if (!variantEquals(s1->data(), s2->data()))
-      return false;
-    s1 = s1->next();
-    s2 = s2->next();
-  }
-}
-
 template <typename TAdaptedString>
 inline VariantSlot* CollectionData::getSlot(TAdaptedString key) const {
   if (key.isNull())
     return 0;
-  VariantSlot* slot = _head;
+  VariantSlot* slot = head_;
   while (slot) {
     if (stringEquals(key, adaptString(slot->key())))
       break;
@@ -118,13 +88,13 @@ inline VariantSlot* CollectionData::getSlot(TAdaptedString key) const {
 }
 
 inline VariantSlot* CollectionData::getSlot(size_t index) const {
-  if (!_head)
+  if (!head_)
     return 0;
-  return _head->next(index);
+  return head_->next(index);
 }
 
 inline VariantSlot* CollectionData::getPreviousSlot(VariantSlot* target) const {
-  VariantSlot* current = _head;
+  VariantSlot* current = head_;
   while (current) {
     VariantSlot* next = current->next();
     if (next == target)
@@ -140,9 +110,9 @@ inline VariantData* CollectionData::getMember(TAdaptedString key) const {
   return slot ? slot->data() : 0;
 }
 
-template <typename TAdaptedString, typename TStoragePolicy>
-inline VariantData* CollectionData::getOrAddMember(
-    TAdaptedString key, MemoryPool* pool, TStoragePolicy storage_policy) {
+template <typename TAdaptedString>
+inline VariantData* CollectionData::getOrAddMember(TAdaptedString key,
+                                                   MemoryPool* pool) {
   // ignore null key
   if (key.isNull())
     return 0;
@@ -152,7 +122,7 @@ inline VariantData* CollectionData::getOrAddMember(
   if (slot)
     return slot->data();
 
-  return addMember(key, pool, storage_policy);
+  return addMember(key, pool);
 }
 
 inline VariantData* CollectionData::getElement(size_t index) const {
@@ -162,7 +132,7 @@ inline VariantData* CollectionData::getElement(size_t index) const {
 
 inline VariantData* CollectionData::getOrAddElement(size_t index,
                                                     MemoryPool* pool) {
-  VariantSlot* slot = _head;
+  VariantSlot* slot = head_;
   while (slot && index > 0) {
     slot = slot->next();
     index--;
@@ -184,9 +154,9 @@ inline void CollectionData::removeSlot(VariantSlot* slot) {
   if (prev)
     prev->setNext(next);
   else
-    _head = next;
+    head_ = next;
   if (!next)
-    _tail = prev;
+    tail_ = prev;
 }
 
 inline void CollectionData::removeElement(size_t index) {
@@ -195,7 +165,7 @@ inline void CollectionData::removeElement(size_t index) {
 
 inline size_t CollectionData::memoryUsage() const {
   size_t total = 0;
-  for (VariantSlot* s = _head; s; s = s->next()) {
+  for (VariantSlot* s = head_; s; s = s->next()) {
     total += sizeof(VariantSlot) + s->data()->memoryUsage();
     if (s->ownsKey())
       total += strlen(s->key()) + 1;
@@ -203,18 +173,8 @@ inline size_t CollectionData::memoryUsage() const {
   return total;
 }
 
-inline size_t CollectionData::nesting() const {
-  size_t maxChildNesting = 0;
-  for (VariantSlot* s = _head; s; s = s->next()) {
-    size_t childNesting = s->data()->nesting();
-    if (childNesting > maxChildNesting)
-      maxChildNesting = childNesting;
-  }
-  return maxChildNesting + 1;
-}
-
 inline size_t CollectionData::size() const {
-  return slotSize(_head);
+  return slotSize(head_);
 }
 
 template <typename T>
@@ -228,10 +188,10 @@ inline void movePointer(T*& p, ptrdiff_t offset) {
 
 inline void CollectionData::movePointers(ptrdiff_t stringDistance,
                                          ptrdiff_t variantDistance) {
-  movePointer(_head, variantDistance);
-  movePointer(_tail, variantDistance);
-  for (VariantSlot* slot = _head; slot; slot = slot->next())
+  movePointer(head_, variantDistance);
+  movePointer(tail_, variantDistance);
+  for (VariantSlot* slot = head_; slot; slot = slot->next())
     slot->movePointers(stringDistance, variantDistance);
 }
 
-}  // namespace ARDUINOJSON_NAMESPACE
+ARDUINOJSON_END_PRIVATE_NAMESPACE

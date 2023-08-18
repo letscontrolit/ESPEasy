@@ -4,6 +4,8 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P067
 
+#include "../Helpers/OversamplingHelper.h"
+
 # define P067_CONFIG_FLAGS          PCONFIG(0)
 # define P067_CONFIG_CHANNEL_A_OS   0
 # define P067_GET_CHANNEL_A_OS      bitRead(P067_CONFIG_FLAGS, P067_CONFIG_CHANNEL_A_OS)
@@ -96,10 +98,8 @@ private:
   P067_ChannelA_State_e _modeChanA = P067_ChannelA_State_e::modeAoff;
   P067_ChannelB_State_e _modeChanB = P067_ChannelB_State_e::modeBoff;
 
-  int32_t OversamplingValueChanA = 0;
-  int16_t OversamplingCountChanA = 0;
-  int32_t OversamplingValueChanB = 0;
-  int16_t OversamplingCountChanB = 0;
+  OversamplingHelper<int32_t> OversamplingChanA;
+  OversamplingHelper<int32_t> OversamplingChanB;
 
   float _offsetChanA = 0.0f;
   float _offsetChanB = 0.0f;

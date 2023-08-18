@@ -110,7 +110,7 @@ bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
   }
 
   gps        = new (std::nothrow) TinyGPSPlus();
-  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx, false, 512);
 
   if (easySerial != nullptr) {
     easySerial->begin(9600);

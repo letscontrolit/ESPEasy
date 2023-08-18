@@ -12,6 +12,7 @@
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 
+
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
  #define DEFAULT_SPI 0
@@ -156,6 +157,12 @@ class SettingsStruct_tmpl
   // Use Espressif's auto reconnect.
   bool SDK_WiFi_autoreconnect() const;
   void SDK_WiFi_autoreconnect(bool value);
+
+  #if FEATURE_RULES_EASY_COLOR_CODE
+  // Inhibit RulesCodeCompletion
+  bool DisableRulesCodeCompletion() const;
+  void DisableRulesCodeCompletion(bool value);
+  #endif // if FEATURE_RULES_EASY_COLOR_CODE
 
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
@@ -343,8 +350,8 @@ public:
   boolean       TaskDeviceEnabled[N_TASKS] = {0};
   boolean       ControllerEnabled[CONTROLLER_MAX] = {0};
   boolean       NotificationEnabled[NOTIFICATION_MAX] = {0};
-  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS];        // IDX number (mainly used by Domoticz)
-  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS];
+  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS]{};        // IDX number (mainly used by Domoticz)
+  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS]{};
   boolean       Pin_status_led_Inversed = false;
   boolean       deepSleepOnFail = false;
   boolean       UseValueLogger = false;
@@ -381,7 +388,7 @@ public:
   NetworkMedium_t NetworkMedium = NetworkMedium_t::WIFI;
   int8_t          I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t          I2C_Multiplexer_Addr = -1;
-  int8_t          I2C_Multiplexer_Channel[N_TASKS];
+  int8_t          I2C_Multiplexer_Channel[N_TASKS]{};
   uint8_t         I2C_Flags[N_TASKS] = {0};
   uint32_t        I2C_clockSpeed_Slow = 100000;
   int8_t          I2C_Multiplexer_ResetPin = -1;
@@ -400,11 +407,13 @@ public:
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
   uint8_t       md5[16]{}; // Store checksum of the settings.
-  
-//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-
   uint32_t      VariousBits2 = 0;
 
+  uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 
+  int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+  int8_t        console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+  uint8_t       console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
+  
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };
 

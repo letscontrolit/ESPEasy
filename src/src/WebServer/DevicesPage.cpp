@@ -19,6 +19,7 @@
 
 # include "../Static/WebStaticData.h"
 
+# include "../Helpers/_Plugin_init.h"
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/_Plugin_Helper_serial.h"
 # include "../Helpers/ESPEasy_Storage.h"
@@ -216,21 +217,19 @@ void addDeviceSelect(const __FlashStringHelper *name,  int choice)
   {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
-    if (validDeviceIndex(deviceIndex)) {
-      const pluginID_t pluginID = DeviceIndex_to_Plugin_id[deviceIndex];
+    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
-      if (validPluginID(pluginID)) {
-        deviceName = getPluginNameFromDeviceIndex(deviceIndex);
+    if (validPluginID(pluginID)) {
+      deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
-        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+      # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+      deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
+      # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
-        addSelector_Item(deviceName,
-                         Device[deviceIndex].Number,
-                         choice == Device[deviceIndex].Number);
-      }
+      addSelector_Item(deviceName,
+                        Device[deviceIndex].Number,
+                        choice == Device[deviceIndex].Number);
     }
   }
   addSelector_Foot();
@@ -317,7 +316,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
         // Restore the settings that were already set by the user
         for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
           if (!oldNames[i].isEmpty()) {
-            safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[i], oldNames[i], sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+            ExtraTaskSettings.setTaskDeviceValueName(i, oldNames[i]);
             ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
           }
         }
@@ -413,7 +412,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
     if (Device[DeviceIndex].ErrorStateValues) {
       // FIXME TD-er: Must collect these from the web page.
-      Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, &TempEvent, dummy);
+      PluginCall(DeviceIndex, PLUGIN_INIT_VALUE_RANGES, &TempEvent, dummy);
     }
 
     // Make sure the task needs to reload using the new settings.
@@ -653,13 +652,18 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             case DEVICE_TYPE_SERIAL:
             {
               # ifdef PLUGIN_USES_SERIAL
-              addHtml(serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x],
-                                                      Settings.TaskDevicePin2[x], F("<BR>")));
+              const String serialDescription = serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x],
+                                                      Settings.TaskDevicePin2[x], F("<BR>"));
+              addHtml(serialDescription);
               # else // ifdef PLUGIN_USES_SERIAL
               addHtml(F("PLUGIN_USES_SERIAL not defined"));
               # endif // ifdef PLUGIN_USES_SERIAL
 
-              if (showpin3) {
+              if (
+#ifdef PLUGIN_USES_SERIAL
+                serialDescription.length() || 
+#endif
+                showpin3) {
                 html_BR();
               }
               break;
@@ -1093,7 +1097,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       if (Device[DeviceIndex].isSerial())
       {
         // Pin1 = GPIO <--- TX
-        purpose = PinSelectPurpose::Generic_input;
+        purpose = PinSelectPurpose::Serial_input;
       } else if (Device[DeviceIndex].isSPI())
       {
         // All selectable SPI pins are output only
@@ -1106,9 +1110,13 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     if (Device[DeviceIndex].usesTaskDevicePin(2)) {
       PinSelectPurpose purpose = PinSelectPurpose::Generic;
 
-      if (Device[DeviceIndex].isSerial() || Device[DeviceIndex].isSPI())
+      if (Device[DeviceIndex].isSerial())
       {
         // Serial Pin2 = GPIO ---> RX
+        purpose = PinSelectPurpose::Serial_output;
+      }
+      if (Device[DeviceIndex].isSPI())
+      {
         // SPI only needs output pins
         purpose = PinSelectPurpose::Generic_output;
       }
@@ -1128,6 +1136,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
 }
 
+#ifdef PLUGIN_USES_SERIAL
 void devicePage_show_serial_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
@@ -1137,6 +1146,7 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }
+#endif
 
 void devicePage_show_I2C_config(taskIndex_t taskIndex)
 {

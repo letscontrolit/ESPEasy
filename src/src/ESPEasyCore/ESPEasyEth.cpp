@@ -23,6 +23,8 @@
  #include <eth_phy/phy.h>
 #endif
 
+#include <WiFi.h>
+
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;
 }
@@ -66,7 +68,7 @@ bool ethCheckSettings() {
       && isValid(Settings.NetworkMedium)
       && validGpio(Settings.ETH_Pin_mdc)
       && validGpio(Settings.ETH_Pin_mdio)
-      && validGpio(Settings.ETH_Pin_power);
+      && (validGpio(Settings.ETH_Pin_power) || (Settings.ETH_Pin_power == -1)); // Some boards have fixed power
 }
 
 bool ethPrepare() {

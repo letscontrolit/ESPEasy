@@ -84,12 +84,11 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str, int length) 
     const char* cur_char = str;
     while (!done) {
       const uint8_t ch = mmu_get_uint8(cur_char++);
-      if (length == 0 || ch == 0) return *this;
+      if (ch == 0) return *this;
       if (this->buf.length() >= CHUNKED_BUFFER_SIZE) {
         flush();
       }
       this->buf += (char)ch;
-      --length;
     }
   }
   #endif
@@ -97,38 +96,29 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str, int length) 
   ++flashStringCalls;
 
   if (lowMemorySkip) { return *this; }
-  if (length < 0) {
-    length = strlen_P((PGM_P)str);
-  }
-
-  if (length == 0) { return *this; }
-  flashStringData += length;
 
   checkFull();
 
   int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
   if (flush_step < 1) { flush_step = 0; }
 
-  /*
-  // This part does act strange on 1 heap builds
-  // See: https://github.com/letscontrolit/ESPEasy/pull/3680#issuecomment-1031716163
-  if (length < static_cast<unsigned int>(flush_step)) {
-    // Just use the faster String operator to copy flash strings.
-    // Very likely casting it to FPSTR first does fix the crashes, but it does not yield any noticable speed improvements
-    this->buf += FPSTR(str); 
-    return *this;
-  }
-  */
   {
     // Copy to internal buffer and send in chunks
-    int pos          = 0;
-    while (pos < length) {
+    PGM_P pos = str;
+    while (length != 0) {
       if (flush_step == 0) {
         flush();
         flush_step = CHUNKED_BUFFER_SIZE;
       }
-      this->buf += (char)pgm_read_byte(&str[pos]);
+      const char c = (char)pgm_read_byte(pos);
+      if (c == '\0' && length < 0) {
+        // Only check for \0 when length was given (e.g. binary data)
+        return *this;
+      }
+      this->buf += c;
+      ++flashStringData;
       ++pos;
+      --length;
       --flush_step;
     }
   }
@@ -280,7 +270,8 @@ void Web_StreamingBuffer::endStream() {
 */
 
   } else {
-    addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
+    if (loglevelActiveFor(LOG_LEVEL_ERROR))
+      addLog(LOG_LEVEL_ERROR, concat("Webpage skipped: low memory: ", finalRam));
     lowMemorySkip = false;
   }
 }
