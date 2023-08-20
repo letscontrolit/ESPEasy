@@ -82,7 +82,7 @@ uint16_t P113_data_struct::readDistance() {
   # ifdef P113_DEBUG_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L1X  : idx: 0x%x init: %s"), i2cAddress, initState ? 1 : 0));
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L1X  : idx: 0x%x init: %d"), i2cAddress, initState ? 1 : 0));
   }
   # endif // P113_DEBUG_DEBUG
 
