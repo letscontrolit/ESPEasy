@@ -383,12 +383,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # endif // if P036_ENABLE_HIDE_FOOTER
 
       {
-        # if P036_USERDEF_HEADERS
-        #  define P036_OPTIONS9_SIZE 16
-        # else // if P036_USERDEF_HEADERS
-        #  define P036_OPTIONS9_SIZE 14
-        # endif // if P036_USERDEF_HEADERS
-        const __FlashStringHelper *options9[P036_OPTIONS9_SIZE] =
+        const __FlashStringHelper *options9[] =
         { F("SSID"),           F("SysName"),               F("IP"),              F("MAC"),                    F("RSSI"),
           F("BSSID"),          F("WiFi channel"),          F("Unit"),            F("SysLoad"),                F("SysHeap"),
           F("SysStack"),       F("Date"),                  F("Time"),            F("PageNumbers"),
@@ -397,7 +392,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           F("User defined 2"),
           # endif // if P036_USERDEF_HEADERS
         };
-        const int optionValues9[16] =
+        const int optionValues9[] =
         { static_cast<int>(eHeaderContent::eSSID),
           static_cast<int>(eHeaderContent::eSysName),
           static_cast<int>(eHeaderContent::eIP),
@@ -417,9 +412,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eHeaderContent::eUserDef2),
           # endif // if P036_USERDEF_HEADERS
         };
-        addFormSelector(F("Header"), F("header"), P036_OPTIONS9_SIZE, options9, optionValues9,
+        constexpr int nrOptions9 = sizeof(options9) / sizeof(options9[0]);
+        addFormSelector(F("Header"), F("header"), nrOptions9, options9, optionValues9,
                         get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));             // HeaderContent
-        addFormSelector(F("Header (alternate)"), F("headerAlternate"), P036_OPTIONS9_SIZE, options9, optionValues9,
+        addFormSelector(F("Header (alternate)"), F("headerAlternate"), nrOptions9, options9, optionValues9,
                         get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE)); // HeaderContentAlternative
       }
 
