@@ -1,11 +1,3 @@
-#include <Arduino.h>
-
-#include <ComponentObject.h>
-#include <RangeSensor.h>
-#include <SparkFun_VL53L1X.h>
-#include <vl53l1x_class.h>
-#include <vl53l1_error_codes.h>
-
 /*
  Calling distance offset calibration for the laser based VL53L1X
  By: Armin Joachimsmeyer
