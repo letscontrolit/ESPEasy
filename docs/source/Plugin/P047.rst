@@ -40,6 +40,8 @@ Supported hardware
 
   .. image:: P047_BeFlESensor.png
 
+Though not directly applicable, as it is about selecting an Analog Soil-moisture sensor, `this Youtube video <https://www.youtube.com/watch?v=IGP38bz-K48>`_ has usable tips on finding a reliable sensor.
+
 Configuration
 -------------
 
