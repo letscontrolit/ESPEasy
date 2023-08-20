@@ -140,7 +140,7 @@ jobs:
               cd dist
               find . -exec cp -r --parents {} ../ESPEasy_dist_${cpu}/ \;
               cd ../ESPEasy_dist_${cpu}
-              rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
+              rm bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
               cd ../artifacts/Binaries
               find . -name "$spec" -exec mv {} ../../ESPEasy_dist_${cpu}/bin/ \;
               cd ../..
