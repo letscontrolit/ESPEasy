@@ -256,6 +256,7 @@ void Caches::updateExtraTaskSettingsCache()
     if (it != extraTaskSettings_cache.end()) {
       // We need to keep the original checksum, from when loaded from storage
       tmp.md5checksum = it->second.md5checksum;
+      tmp.defaultTaskDeviceValueName = it->second.defaultTaskDeviceValueName;
 
       // Now clear it so we can create a fresh copy.
       extraTaskSettings_cache.erase(it);
@@ -312,22 +313,16 @@ void Caches::updateExtraTaskSettingsCache_afterLoad_Save()
     return;
   }
 
-  // Check if we need to update the cache
-  auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
-
-  if (it != extraTaskSettings_cache.end()) {
-    if (ExtraTaskSettings.computeChecksum() == it->second.md5checksum) {
-      return;
-    }
-  }
-
   // First update all other values
   updateExtraTaskSettingsCache();
 
   // Iterator has changed
-  it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+  auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
 
   if (it != extraTaskSettings_cache.end()) {
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      bitWrite(it->second.defaultTaskDeviceValueName, i, ExtraTaskSettings.isDefaultTaskVarName(i));
+    }
     it->second.md5checksum = ExtraTaskSettings.computeChecksum();
   }
 }

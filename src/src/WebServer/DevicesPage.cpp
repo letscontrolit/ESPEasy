@@ -277,10 +277,12 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.I2C_Flags[taskIndex] = flags;
   }
 
-  struct EventStruct TempEvent(taskIndex);
-
+  // Must load from file system to make sure all caches and checksums match.
   ExtraTaskSettings.clear();
   ExtraTaskSettings.TaskIndex = taskIndex;
+  Cache.clearTaskCache(taskIndex);
+
+  struct EventStruct TempEvent(taskIndex);
 
   // Save selected output type.
   switch (Device[DeviceIndex].OutputDataType) {
@@ -407,10 +409,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   for (int pconfigIndex = 0; pconfigIndex < PLUGIN_CONFIGVAR_MAX; ++pconfigIndex) {
     pconfig_webformSave(&TempEvent, pconfigIndex);
   }
+  // ExtraTaskSettings may have changed during PLUGIN_WEBFORM_SAVE, so again update the cache.
+  Cache.updateExtraTaskSettingsCache();
 
   loadDefaultTaskValueNames_ifEmpty(taskIndex);
-
-  // ExtraTaskSettings may have changed during PLUGIN_WEBFORM_SAVE, so again update the cache.
   Cache.updateExtraTaskSettingsCache();
 
   // notify controllers: CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION
