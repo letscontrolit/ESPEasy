@@ -127,6 +127,7 @@ jobs:
           mkdir ESPEasy_dist_ESP82xx
           cd dist
           find . -exec cp -r --parents {} ../ESPEasy_dist_ESP82xx/ \;
+          rm ../ESPEasy_dist_ESP82xx/bin/blank_8MB.bin
           cd ../artifacts/Binaries
           find . -not -name '*ESP32*' -exec mv {} ../../ESPEasy_dist_ESP82xx/bin/ \;
           cd ../..
