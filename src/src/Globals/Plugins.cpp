@@ -244,6 +244,33 @@ void queueTaskEvent(const __FlashStringHelper * eventName, taskIndex_t taskIndex
   queueTaskEvent(String(eventName), taskIndex, String(value1));
 }
 
+void loadDefaultTaskValueNames_ifEmpty(taskIndex_t TaskIndex) {
+  String  oldNames[VARS_PER_TASK];
+  uint8_t oldNrDec[VARS_PER_TASK];
+  LoadTaskSettings(TaskIndex);
+
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    oldNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
+    oldNrDec[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
+    oldNames[i].trim();
+  }
+
+  struct EventStruct TempEvent(TaskIndex);
+  String dummy;
+  // the plugin call should populate ExtraTaskSettings with its default values.
+  PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
+
+  // Restore the settings that were already set by the user
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    const bool isDefault = oldNames[i].isEmpty();
+    ExtraTaskSettings.isDefaultTaskVarName(i, isDefault);
+    if (!isDefault) {
+      ExtraTaskSettings.setTaskDeviceValueName(i, oldNames[i]);
+      ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
+    }
+  }
+}
+
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
  */
@@ -894,7 +921,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
           // Check if we have a valid value count.
           if (Output_Data_type_t::Simple == Device[DeviceIndex].OutputDataType) {
-            if (event->Par1 < 1 || event->Par1 > 4) {
+            if (event->Par1 < 1 || event->Par1 > VARS_PER_TASK) {
               // Output_Data_type_t::Simple only allows for 1 .. 4 output types.
               // Apparently the value is not correct, so use the default.
               event->Par1 = Device[DeviceIndex].ValueCount;
