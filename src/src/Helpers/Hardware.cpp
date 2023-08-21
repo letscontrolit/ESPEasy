@@ -817,7 +817,8 @@ uint8_t getFlashChipVendorId() {
 bool flashChipVendorPuya() {
   const uint8_t vendorId = getFlashChipVendorId();
 
-  return vendorId == 0x85; // 0x146085 PUYA
+  return vendorId == 0x85 || // 0x146085 PUYA
+         vendorId == 0xBA;   // 0x1460BA ZP25WQ80
 }
 
 uint32_t getChipId() {
