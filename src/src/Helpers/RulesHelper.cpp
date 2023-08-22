@@ -62,6 +62,57 @@ bool rules_strip_trailing_comments(String& line)
   int comment = line.indexOf(F("//"));
 
   if (comment >= 0) {
+    uint8_t quotes     = 0u;
+    uint8_t qindex     = 0u;
+    bool    firstSlash = false;
+    bool    haveColon  = false;
+    comment = -1; // No comment confirmed yet
+
+    // Find first comment '//' that's not quoted or prefixed with a colon '://'
+    for (size_t i = 0; i < line.length() && comment == -1; i++) {
+      switch (line[i]) {
+        case ':':
+          haveColon = true;
+          break;
+        case '/':
+
+          if (!quotes && !haveColon) {
+            if (firstSlash) {
+              comment = i - 1u; // Found a valid comment-start
+            } else {
+              firstSlash = true;
+            }
+          } else {
+            firstSlash = false;
+            haveColon  = false;
+          }
+          break;
+        case '\"': // bit 2
+          qindex++;
+        case '\'': // bit 1
+          qindex++;
+        case '`':  // bit 0
+
+          if (bitRead(quotes, qindex)) {
+            bitClear(quotes, qindex);
+          } else {
+            bitSet(quotes, qindex);
+          }
+          firstSlash = false;
+          haveColon  = false;
+          qindex     = 0;
+          break;
+        default:
+          firstSlash = false;
+          haveColon  = false;
+          break;
+      }
+    }
+
+    // We could report an 'unbalanced quotes error' if quotes != 0, but it would only be logged if the line contains a comment...
+  }
+
+  if (comment >= 0) {
     line = line.substring(0, comment);
     line.trim();
     return true;
@@ -220,7 +271,7 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
       if (!commentFound) {
         line += '/';
 
-        if (line.endsWith(F("//"))) {
+        if (line.endsWith(F("//")) && !line.endsWith(F("://"))) {
           // consider the rest of the line a comment
           commentFound = true;
         }
