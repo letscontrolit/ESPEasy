@@ -62,10 +62,9 @@ bool rules_strip_trailing_comments(String& line)
   int comment = line.indexOf(F("//"));
 
   if (comment >= 0) {
-    uint8_t quotes     = 0u;
-    uint8_t qindex     = 0u;
-    bool    firstSlash = false;
-    bool    haveColon  = false;
+    bool firstSlash = false;
+    bool haveColon  = false;
+    char wrapQuote  = '\0';
     comment = -1; // No comment confirmed yet
 
     // Find first comment '//' that's not quoted or prefixed with a colon '://'
@@ -76,7 +75,7 @@ bool rules_strip_trailing_comments(String& line)
           break;
         case '/':
 
-          if (!quotes && !haveColon) {
+          if ((wrapQuote == '\0') && !haveColon) {
             if (firstSlash) {
               comment = i - 1u; // Found a valid comment-start
             } else {
@@ -87,29 +86,26 @@ bool rules_strip_trailing_comments(String& line)
             haveColon  = false;
           }
           break;
-        case '\"': // bit 2
-          qindex++;
-        case '\'': // bit 1
-          qindex++;
-        case '`':  // bit 0
+        case '"':
+        case '\'':
+        case '`':
 
-          if (bitRead(quotes, qindex)) {
-            bitClear(quotes, qindex);
-          } else {
-            bitSet(quotes, qindex);
+          if ((wrapQuote == '\0') && (i > 0) && ((line[i - 1] == ' ') || (line[i - 1] == ','))) { // Start-quote?
+            wrapQuote = line[i];                                                                  // Start quoted range
+          } else if ((line[i] == wrapQuote) &&                                                    // End-quote equals start-quote?
+                                                                                                  // And next is a separator: ' ,/'
+                     (((i < line.length() - 1) && ((line[i + 1] == ' ') || (line[i + 1] == ',') || (line[i + 1] == '/'))) ||
+                      (i == line.length() - 1))) {                                                // Or end of line?
+            wrapQuote = '\0';                                                                     // No longer in quoted range
           }
-          firstSlash = false;
-          haveColon  = false;
-          qindex     = 0;
-          break;
+
+        // Fall through
         default:
           firstSlash = false;
           haveColon  = false;
           break;
       }
     }
-
-    // We could report an 'unbalanced quotes error' if quotes != 0, but it would only be logged if the line contains a comment...
   }
 
   if (comment >= 0) {
@@ -232,7 +228,7 @@ size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buff
 
 #endif // ifndef CACHE_RULES_IN_MEMORY
 
-bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead,  bool& commentFound)
+bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead)
 {
   switch (c)
   {
@@ -242,9 +238,7 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
       line.trim();
 
       if ((line.length() > 0) && !line.startsWith(F("//"))) {
-        if (commentFound) {
-          rules_strip_trailing_comments(line);
-        }
+        rules_strip_trailing_comments(line);
         check_rules_line_user_errors(line);
         return true;
       }
@@ -252,7 +246,6 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
       // Prepare for new line
       line.clear();
       firstNonSpaceRead = false;
-      commentFound      = false;
       break;
     }
     case '\r': // Just skip this character
@@ -266,25 +259,11 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
       }
       break;
     }
-    case '/':
-    {
-      if (!commentFound) {
-        line += '/';
-
-        if (line.endsWith(F("//")) && !line.endsWith(F("://"))) {
-          // consider the rest of the line a comment
-          commentFound = true;
-        }
-      }
-      break;
-    }
     default: // Any other character
     {
       firstNonSpaceRead = true;
 
-      if (!commentFound) {
-        line += c;
-      }
+      line += c;
       break;
     }
   }
@@ -308,18 +287,16 @@ String RulesHelperClass::readLn(const String& filename,
       RulesLines lines;
       String     tmpStr;
       bool firstNonSpaceRead = false;
-      bool commentFound      = false;
 
       // Keep track of which line we're reading for the event cache.
       size_t readPos = 0;
 
       while (f.available()) {
-        if (addChar(char(f.read()), tmpStr, firstNonSpaceRead, commentFound)) {
+        if (addChar(char(f.read()), tmpStr, firstNonSpaceRead)) {
           lines.push_back(tmpStr);
           ++readPos;
 
           firstNonSpaceRead = false;
-          commentFound      = false;
           tmpStr.clear();
         }
       }
@@ -371,7 +348,6 @@ String RulesHelperClass::readLn(const String& filename,
   buf.resize(RULES_BUFFER_SIZE);
 
   bool firstNonSpaceRead = false;
-  bool commentFound      = false;
 
   // Try to get the best possible estimate on line length based on earlier parsing of the rules.
   static size_t longestLineSize = RULES_BUFFER_SIZE;
@@ -391,7 +367,7 @@ String RulesHelperClass::readLn(const String& filename,
     for (int x = 0; x < len; x++) {
       int data = buf[x];
 
-      if (addChar(char(data), line, firstNonSpaceRead, commentFound)) {
+      if (addChar(char(data), line, firstNonSpaceRead)) {
         if (line.length() > longestLineSize) {
           longestLineSize = line.length();
         }
