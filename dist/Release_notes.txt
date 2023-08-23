@@ -1,4 +1,190 @@
 -------------------------------------------------
+Changes in release mega-20230822 (since mega-20230623)
+-------------------------------------------------
+
+Release date: Tue Aug 22 09:40:44 PM CEST 2023
+
+TD-er (102):
+      [Eastron] Fix merge issues
+      [Eastron] Uncrustify + remove 500 bytes of  duplicate strings
+      [Eastron] Fix merge issues
+      [Cleanup] Reduce bin size by stripping unused code
+      [Cleanup] Reduce bin size by deduplicate factory reset code
+      [Factory Reset] Fix keeping settings (#4263)
+      [RFcal] Fix typo in command "clearwifirfcal"
+      [SendToHTTP] Only include "Authorization" header  when credentials set
+      [ESP32 2.0.5.x] Fix crashes calling noInterrupt() in ISR callback
+      [Adafruit NeoPixel] Update lib to fix noInterrupts
+      [Quad Enc] Fix ESP32 noInterrupts()
+      [Build] Fix merge issues, missing #endif
+      [ESP32-solo1] Add support for single-core ESP32
+      [Web flasher] Split "4M collections builds" in a separate group
+      [release build] Copy ESP32solo1 binaries during release
+      [Crash Analysis] Show controller/plugin name on crash at system event
+      [Build] Fix merge issue with duplicate PlatformIO envs
+      [Build] Fix missing #ifdef check
+      [Devices] Fix showing all included plugins in devices pull-down list
+      [Cleanup] Move plugin function pointer array to PROGMEM
+      [Cleanup] Simplify weblog buffer
+      [Cleanup] Fix build error due to missing defines
+      [Cleanup] Improve web serve speed + value formatting speed
+      [Cleanup] Reduce resouces used on Dallas, Sysinfo and Dummy tasks
+      [Build] Fix missing #ifdef check
+      [Cleanup] Reduce CPU usage only calculate valuecount once
+      [ESPEasy p2p] Remove delay() calls from p2p messaging
+      [Cleanup] Remove unused PLUGIN_EVENT_OUT
+      [Cleanup] Get timing stats for controller function calls
+      [cleanup] Simplify parse controller variables
+      [P2P] unit with latest build not receiving values of shared plugins (#4718)
+      [P2P] Check for unset DeviceNumber in matchesSensorType
+      [Cleanup] Speedup frequent calls + reduce build size
+      [Cleanup] Reduce calls to saveToRTC()
+      [Cleanup] Simplify mustConsiderAsJSONString()
+      [Cleanup] Remove long webserver debug log
+      [Cleanup] Reduce backgroundtasks() frequency
+      [Cleanup] Reduce mem allocs for ADC logs
+      [HLW8012] Improve stability and accuracy
+      [Cleanup] Allow a task to set initial PLUGIN_READ on init
+      [Cleanup] Reduce memory usage when timingstats is disabled (or read)
+      [PlatformIO] Force PIO to 6.1.7
+      [HLW8012] Fix instability due to IRAM
+      [Build] Move "hard_" builds to ESP8266 SDK 3.1.2
+      [Cleanup] Reduce items being logged in TimingStats
+      [Build] Revert switching 'hard_' builds to ESP8266 SDK 2.7.x
+      [HLW8012] Remove IIR filter from interrupt callback function
+      [PlatformIO] Test build with PIO 6.1.9rc1
+      [PlatformIO] Test build PIO 6.1.9rc1 (2nd attempt)
+      [PIO] Set minimal PIO version to 6.1.9
+      [Cleanup] Simplify allocation of ControllerSettings allocation, memleak?
+      [PVS Studio] Fix issues found by PVS Studio
+      [PVS Studio] Fix build error & unsafe macro
+      [PVS Studio] Fix some issues found by PVS Studio
+      [Cleanup] Attempt to fix memory leak in PluginTaskData
+      [ArduinoJSON] Update to ArduinoJson 6.21.2
+      [Cleanup] Simplify PluginStats::getSample
+      [PVS Studio] Fix some issues reported by PVS Studio
+      [MDNS] Disable MDNS for ESP8266 due to memory leak
+      [CSE7766] Improve reliability + fix issue with console port selection
+      [CSE7766] Fix parsing packets with lost bytes
+      [CSE7766] Add output selection of units of measure
+      [WiFi] Fix ESP8266 instability  compiler optimization flag -O2
+      [mDNS] Call MDNS.announce() every second on ESP8266 (mem leak?)
+      [Cleanup] Add strformat function to simplify log line creation
+      [Build] Fix build errors incorrect use of strformat()
+      [Cleanup] Move duplicate oversampling code to helper class
+      [ESP32 Serial] Fix serial tasks not working after save or restart task
+      [ESP32 Serial] Do not cache baud rate between end() and begin()
+      [Cleanup] Replace oversampling code duplication P145
+      [Cleanup] Replace oversampling code duplication P060
+      [Cleanup] Replace oversampling code duplication P067
+      [CSE7766] Update task value with intermediate oversampling value
+      [Oversampling] Add reset + weighted keep last
+      [ESP32 Serial] Fix serial tasks not working after save or restart task
+      [Eastron] Update SDM library to v2.2.2
+      [Eastron] Re-apply ESPEasy specific changes to SDM library
+      [Eastron] Generate all SDM register strings
+      [Eastron] Cleanup showing default taskvalue names + SDM72_V2add
+      [Eastron] Cleanup code duplicates & uncrustify
+      [Eastron] Fix compiler warnings
+      [Eastron] Add support for SDM320C
+      [Eastron] Split 'readVal' function to allow async reads
+      [Eastron] Add "demand" in register description
+      [Eastron] Implement complete async read of Eastron registers
+      [Eastron] Add hardware RTS support for ESP32 (for ~RE/DE pin on RS485)
+      [Eastron] Fix ESP32 hardware RTS flow control
+      [Eastron] improve speed & add commands to set modbusID & baudrate
+      [Eastron] Start documentation
+      [Eastron] Document RS485 specific wiring
+      [Eastron] Complete documentation on Eastron plugin
+      [Eastron] Add support for RS485 collision detection on ESP32
+      [Serial Console] Fix HW Serial0 unusable on ESP8266 limited builds
+      [Eastron] Add delay on first PLUGIN_READ to allow reading registers
+      [Build] Set ESP8266 Energy build to LIMIT_BUILD_SIZE
+      [Build] Change LIMIT_BUILD_SIZE on ESP8266 Energy to BUILD_NO_DEBUG
+      [Eastron] Improve read stability on ESP8266
+      [CSE7766] Fix crash when not all stats are enabled
+      [Settings] Fix setting task var names & load default names
+      [Settings] Fix task value names not being updated on ESP32 (cache)
+      [Settings] Fix setting custom task value name on Eastron task
+      [ADS1115] Retry on error reads within timeout
+
+Ton Huisman (68):
+      [Release][Bugfix] Script should deploy an archive per CPU Architecture
+      [Docs] Describe `Wrk` and `Wkd` indicators for `Clock#Time` event
+      [P153] Remove unused #include
+      [Build] Add support for ESP32-S3 8MB units
+      [Build] Rearrange 8M2M to 8M1M configuration
+      [P118] Fix compilation when suppressing only DEBUG logging
+      [Build] Check all ESP32 builds correctly for factory.bin filesize
+      [Docs] Fix typo on Plugin page
+      [Build] Add `boards` definitions for ESP32-S3 8MB and ESP32-S3 16MB
+      [ETH] Allow Ethernet Power GPIO pin unset (#4724)
+      [P014] Set default output values to Temp/Hum
+      [P118] Fix compilation when included in Custom builds
+      [Build] Update board_name for custom_ESP32_4M2M_NO_OTA_LittleFS
+      [Build] Add missing #undef FEATURE_TIMING_STATS
+      [Rules] Add minHexDigits to toHex function
+      [Docs] Improvements and various fixes
+      [Build] Add some missing defines to MAX build to make them explicitly available
+      [P128] Revert changes after library update (not working with ESP8266)
+      [UI] Add option for disabling Rules auto-completion
+      [P035] Add Inverted output option, as supported by the IRsend library
+      [P035] Code improvements
+      [P035] Add documentation
+      [P009] Small documentation typo
+      [P014] Fix invalid cast
+      [Build] Move ESP32_4M2M settings to own board file
+      [Build] Remove unused board definition files
+      [P118] Allow enable/disable of ORCON feature via Custom.h
+      [P141] Allow enable/disable of Cursor X/Y values feature via Custom.h
+      [Console] Add newline after console command to avoid mixing in with logging
+      [P046] Fix documentation, address some code issues, WiP
+      [P046] Fix compilation issue and include in MAX build
+      [Build] Include IR plugins in MAX builds
+      [P035] Small size reductions, remove some unused commented code
+      [Build] Enable I2C device scan for ESP32 builds
+      [P098] Add documentation
+      [EasyColorCode] Fix typo `7ddt` (was 7dtt)
+      [EasyColorCode] Add some missing commands
+      [P013] Move to category Distance (from position), add missing [P134] to Distance too
+      [Controllers] Fix `validCPluginID` check (initialization and actual check)
+      [P098] Add precaution to documentation for PWM usage
+      [Build] Reduce ENERGY build size by removing DEBUG logging
+      [Build] Fix compiler warnings
+      [EasyColorCode] Fix some auto-complete issues and typos
+      [EasyColorCode] Add few missing commands for P036
+      [Lib] Update NeoPixelBus to current latest
+      [P128] Use customized NeoPixelBus library, upgrading to latest features won't properly work
+      [P113] Fix for shifted I2C address in library, code improvements
+      [P113] Apply the fix at the original crime-scene ;-)
+      [Libs] Update VL53L1X library to current latest v1.2.12 (with fix)
+      [P113] Disable I2C address selection as that seems to mess up the sensor
+      [P113] Update documentation
+      [P122] Uncrustify and move initialization from constructor to .h file
+      [P153] Remove unused variable
+      [P020] Sourcecode formatting for clarification
+      [Docs] Correct some layout issues, causing parts of documentation to disappear
+      [P113] Add a few extra nullptr checks
+      [Core] Fix some string/message inconsistencies
+      [P113] Add a few extra nullptr checks
+      [Converters] Add toStringNoZero() function
+      [Generic] Improvements and fixes part 2, Aug 2023
+      [P113] Fix typo in log statement
+      [AdaGFX] Additional error information for unsupported bmp files, improve docs
+      [UI] Widen `textarea` fields for easier input of larger/wider text
+      [Docs] P002 / P047 Add YT link for selecting a proper (analog) Soil-moisture sensor
+      [Converters] Use the correct conversion
+      [Tools] Remove ESP Easy Flasher, update Espressif Download tool
+      [Tools] Revert esptool to last version
+      [Tools] Add `blank_8MB.bin` for erasing 8MB units, exclude from ESP8266 archive
+
+tomcatxx (3):
+      Update SDM.h
+      Update _P078_Eastron.ino
+      Update SDM.h
+
+
+-------------------------------------------------
 Changes in release mega-20230623 (since mega-20230508)
 -------------------------------------------------
 
