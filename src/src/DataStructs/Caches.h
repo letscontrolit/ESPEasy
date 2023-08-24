@@ -41,6 +41,7 @@ struct ExtraTaskSettings_cache_t {
   String       TaskDeviceName;
   ChecksumType md5checksum;
   uint8_t      decimals[VARS_PER_TASK] = { 0 };
+  uint8_t      defaultTaskDeviceValueName{};
   #if FEATURE_PLUGIN_STATS
   uint8_t enabledPluginStats = 0;
   #endif // if FEATURE_PLUGIN_STATS
