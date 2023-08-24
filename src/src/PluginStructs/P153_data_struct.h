@@ -68,7 +68,6 @@ private:
             uint8_t LSB,
             uint8_t CRC);
 
-  uint8_t              _sensorType;
   uint8_t              _address;
   float                _tempOffset;
   P153_configuration_e _startupConfiguration;
