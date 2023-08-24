@@ -41,9 +41,9 @@ public:
         return NeoBufferContext<T_COLOR_FEATURE>(Pixels(), PixelsSize());
     }
 
-    uint8_t* Pixels() const
+    const uint8_t* Pixels() const
     {
-        return (uint8_t*)_pixels;
+        return reinterpret_cast<const uint8_t*>(_pixels);
     };
 
     size_t PixelsSize() const

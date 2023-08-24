@@ -13,26 +13,43 @@
   Development environment specifics:
   Arduino IDE 1.8.1
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  GNU General Public License for more details.
+	==== MIT License ====	
+	Copyright © 2022 SparkFun Electronics
 
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the “Software”), to deal in the Software without restriction, 
+	including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+	and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE 
+	WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS 
+	OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+	TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+	=====================	
 */
 
 #include <stdlib.h>
-#include "Arduino.h"
 #include "SparkFun_VL53L1X.h"
-#include "vl53l1x_class.h"
 
+SFEVL53L1X::SFEVL53L1X()
+{
+	_i2cPort = &Wire;
+	_shutdownPin = -1;
+	_interruptPin = -1;
+	_device = new VL53L1X(&Wire, -1, -1);
+}
 SFEVL53L1X::SFEVL53L1X(TwoWire &i2cPort, int shutdownPin, int interruptPin)
 {
 	_i2cPort = &i2cPort;
 	_shutdownPin = shutdownPin;
 	_interruptPin = interruptPin;
 	_device = new VL53L1X(&i2cPort, shutdownPin, interruptPin);
+}
+SFEVL53L1X::~SFEVL53L1X()
+{
+	delete (VL53L1X *)_device;
 }
 
 bool SFEVL53L1X::init()
@@ -42,10 +59,18 @@ bool SFEVL53L1X::init()
 
 bool SFEVL53L1X::begin()
 {
-	if (checkID() == false)
-		return (VL53L1_ERROR_PLATFORM_SPECIFIC_START);
+	// if (checkID() == false)
+	// 	return (VL53L1_ERROR_PLATFORM_SPECIFIC_START);
 
 	return _device->VL53L1X_SensorInit();
+}
+
+bool SFEVL53L1X::begin(TwoWire &i2cPort)
+{
+	_i2cPort = &i2cPort;
+	_device->dev_i2c = &i2cPort;
+
+	return begin();
 }
 
 /*Checks the ID of the device, returns true if ID is correct*/
@@ -54,9 +79,16 @@ bool SFEVL53L1X::checkID()
 {
 	uint16_t sensorId;
 	_device->VL53L1X_GetSensorId(&sensorId);
-	return sensorId == 0xEACC;
+	if ((sensorId == 0xEACC) || (sensorId == 0xEBAA))
+		return true;
+	return false;
 }
 
+uint16_t SFEVL53L1X::getID() {
+	uint16_t sensorId;
+	_device->VL53L1X_GetSensorId(&sensorId);
+	return sensorId;
+}
 /*Turns the sensor on if the Shutdown pin is connected*/
 
 void SFEVL53L1X::sensorOn()
@@ -131,6 +163,11 @@ void SFEVL53L1X::startRanging()
 	_device->VL53L1X_StartRanging();
 }
 
+void SFEVL53L1X::startOneshotRanging() 
+{
+  	_device->VL53L1X_StartOneshotRanging();
+}
+
 void SFEVL53L1X::stopRanging()
 {
 	_device->VL53L1X_StopRanging();
@@ -157,12 +194,12 @@ uint16_t SFEVL53L1X::getTimingBudgetInMs()
 
 void SFEVL53L1X::setDistanceModeLong()
 {
-	_device->VL53L1X_SetDistanceMode(2);
+	_device->VL53L1X_SetDistanceMode(DISTANCE_LONG);
 }
 
 void SFEVL53L1X::setDistanceModeShort()
 {
-	_device->VL53L1X_SetDistanceMode(1);
+	_device->VL53L1X_SetDistanceMode(DISTANCE_SHORT);
 }
 
 uint8_t SFEVL53L1X::getDistanceMode()
@@ -358,3 +395,43 @@ void SFEVL53L1X::calibrateXTalk(uint16_t targetDistanceInMm)
 	uint16_t xTalk = getXTalk();
 	_device->VL53L1X_CalibrateXtalk(targetDistanceInMm, &xTalk);
 };
+
+bool SFEVL53L1X::setThresholdConfig(DetectionConfig *config)
+{
+	return _device->VL53L1X_SetDistanceMode(config->distanceMode) == VL53L1_ERROR_NONE &&
+	       _device->VL53L1X_SetDistanceThreshold(config->thresholdLow, config->thresholdHigh,
+	       	(uint8_t)config->windowMode, (uint8_t)config->IntOnNoTarget) == VL53L1_ERROR_NONE;
+}
+
+bool SFEVL53L1X::getThresholdConfig(DetectionConfig *config)
+{
+	uint16_t temp16 = 0;
+
+	VL53L1X_ERROR error = _device->VL53L1X_GetDistanceMode(&temp16);
+	if (error != 0)
+		return false;
+	else
+		config->distanceMode = temp16;
+
+	error = _device->VL53L1X_GetDistanceThresholdWindow(&temp16);
+	if (error != 0)
+		return false;
+	else
+		config->windowMode = temp16;
+
+	config->IntOnNoTarget = 1;
+
+	error = _device->VL53L1X_GetDistanceThresholdLow(&temp16);
+	if (error != 0)
+		return false;
+	else
+		config->thresholdLow = temp16;
+
+	error = _device->VL53L1X_GetDistanceThresholdHigh(&temp16);
+	if (error != 0)
+		return false;
+	else
+		config->thresholdHigh = temp16;
+
+	return true;
+}

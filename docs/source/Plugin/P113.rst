@@ -42,7 +42,7 @@ I2C Options
 
 The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
 
-**I2C Address**: The address the device is using. The chip allows to select the secondary address and keep that active until the next power-cycle of the sensor.
+**I2C Address**: The address the device is using. Because of an issue with changing the I2C address of the sensor, this list is limited to 1 item, and the address isn't changed/set.
 
 Device Settings
 ^^^^^^^^^^^^^^^^

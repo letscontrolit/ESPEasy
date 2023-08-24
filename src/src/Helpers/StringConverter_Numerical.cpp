@@ -116,6 +116,17 @@ String trimTrailingZeros(const String& value) {
 
 }
 
+/**
+ * Helper: Convert an integer to string, but return an empty string for 0, to save a little space in settings
+ */
+String toStringNoZero(int64_t value) {
+  if (value != 0) {
+    return ll2String(value);
+  } else {
+    return EMPTY_STRING;
+  }
+}
+
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros_b) {
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code

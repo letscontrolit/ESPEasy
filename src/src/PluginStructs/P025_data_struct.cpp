@@ -27,29 +27,44 @@ P025_data_struct::P025_data_struct(struct EventStruct *event) {
   _fullScaleFactor = 1.0f;
 
   if (P025_VOLT_OUT_GET) {
-    if (P025_GAIN == 0) { 
-      _fullScaleFactor = 6.144 / 32768.0f; 
+    if (P025_GAIN == 0) {
+      _fullScaleFactor = 6144;
     } else {
       const uint8_t shift = 13 - P025_GAIN;
-      _fullScaleFactor = (1 << shift) / 32768000.0f;
+      _fullScaleFactor = (1 << shift);
     }
+    _fullScaleFactor /= 32768000.0f;
   }
 }
 
 bool P025_data_struct::read(float& value) const {
-  if (!waitReady025(5)) { return false; }
+  if (!waitReady025(5)) {
+    //    addLog(LOG_LEVEL_INFO, F("ADS1115: Not Ready at start read"));
+    return false;
+  }
 
   if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, _configRegisterValue)) {
+    //    addLog(LOG_LEVEL_INFO, F("ADS1115: Start measurement failed"));
     return false;
   }
 
   // See https://github.com/letscontrolit/ESPEasy/issues/3159#issuecomment-660546091
-  if (!waitReady025(10)) { return false; }
+  if (!waitReady025(10)) {
+    //    addLog(LOG_LEVEL_INFO, F("ADS1115: Not Ready after start measurement"));
+
+    return false;
+  }
 
   int16_t raw = 0;
-  if (!readConversionRegister025(raw)) return false;
+
+  if (!readConversionRegister025(raw)) {
+    addLog(LOG_LEVEL_INFO, F("ADS1115: Cannot read from conversion register"));
+    return false;
+  }
 
   value = _fullScaleFactor * raw;
+
+  //  addLog(LOG_LEVEL_INFO, strformat(F("ADS1115: RAW value: %d, output value: %f"), raw, value));
   return true;
 }
 
@@ -65,14 +80,11 @@ bool P025_data_struct::waitReady025(unsigned long timeout_ms) const {
   const unsigned long timeout = millis() + timeout_ms;
 
   while (!timeOutReached(timeout)) {
-    bool is_ok = false;
-
     // bit15=0 performing a conversion   =1 not performing a conversion
+    bool is_ok       = false;
     const bool ready = (I2C_read16_reg(_i2cAddress, P025_CONFIG_REGISTER, &is_ok) & 0x8000) != 0;
 
-    if (!is_ok) { return false; }
-
-    if (ready) { return true; }
+    if (ready && is_ok) { return true; }
     delay(1);
   }
   return false;

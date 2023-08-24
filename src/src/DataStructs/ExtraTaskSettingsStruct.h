@@ -40,6 +40,7 @@ struct ExtraTaskSettingsStruct
   void          setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const __FlashStringHelper * str);
 
   void          clearTaskDeviceValueName(taskVarIndex_t taskVarIndex);
+  void          clearDefaultTaskDeviceValueNames();
 
   void          setAllowedRange(taskVarIndex_t taskVarIndex,
                                 const float  & minValue,
@@ -59,6 +60,11 @@ struct ExtraTaskSettingsStruct
                                   bool           enabled);
   bool          anyEnabledPluginStats() const;
 #endif // if FEATURE_PLUGIN_STATS
+
+  bool          isDefaultTaskVarName(taskVarIndex_t taskVarIndex) const;
+  void          isDefaultTaskVarName(taskVarIndex_t taskVarIndex,
+                                     bool           isDefault);
+
 
   void          populateDeviceValueNamesSeq(const __FlashStringHelper *valuename,
                                             size_t                     nrValues,

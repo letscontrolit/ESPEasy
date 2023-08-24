@@ -1,9 +1,3 @@
-#include <ComponentObject.h>
-#include <RangeSensor.h>
-#include <SparkFun_VL53L1X.h>
-#include <vl53l1x_class.h>
-#include <vl53l1_error_codes.h>
-
 /*
   Reading distance from the laser based VL53L1X
   By: Nathan Seidle
