@@ -28,6 +28,7 @@ License along with NeoPixel.  If not, see
 
 #include "colors/NeoHueBlend.h"
 
+#include "colors/RgbColorIndexes.h"
 #include "colors/RgbColorBase.h"
 
 #include "colors/RgbColor.h"
@@ -40,6 +41,8 @@ License along with NeoPixel.  If not, see
 
 #include "colors/RgbwColor.h"
 #include "colors/Rgbw64Color.h"
+
+#include "colors/RgbwwColor.h"
 
 #include "colors/SegmentDigit.h"
 

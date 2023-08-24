@@ -116,15 +116,17 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigInde
 
 void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uint8_t valueIndex, const String& defaultValueName)
 {
-  if (defaultValueName.equals(ExtraTaskSettings.TaskDeviceValueNames[valueIndex])) {
+  const bool isDefault = defaultValueName.equals(ExtraTaskSettings.TaskDeviceValueNames[valueIndex]);
+  if (isDefault) {
     ExtraTaskSettings.clearTaskDeviceValueName(valueIndex);
   }
+  ExtraTaskSettings.isDefaultTaskVarName(valueIndex, isDefault);
   pconfig_webformSave(event, pconfigIndex);
 }
 
 void pconfig_webformSave(struct EventStruct *event, uint8_t pconfigIndex)
 {
-  PCONFIG(pconfigIndex) = getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0);
+  PCONFIG(pconfigIndex) = getFormItemInt(PCONFIG_LABEL(pconfigIndex), PCONFIG(pconfigIndex));
 }
 
 void sensorTypeHelper_loadOutputSelector(
