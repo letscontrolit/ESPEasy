@@ -2180,6 +2180,26 @@ String downloadFileType(const String& url, const String& user, const String& pas
 
 #endif // if FEATURE_DOWNLOAD
 
+bool validateUploadConfigDat(const uint8_t *buf) {
+  bool result = false;
+  struct TempStruct {
+    unsigned long PID;
+    int           Version;
+  } Temp;
+
+  for (unsigned int x = 0; x < sizeof(struct TempStruct); x++) {
+    memcpy(reinterpret_cast<uint8_t *>(&Temp) + x, &buf[x], 1);
+  }
+  #ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_INFO, strformat(F("Validate config.dat, Version: %d = %d, PID: %d = %d"), 
+                                   Temp.Version, VERSION, Temp.PID, ESP_PROJECT_PID));
+  #endif
+  if ((Temp.Version == VERSION) && (Temp.PID == ESP_PROJECT_PID)) {
+    result = true;
+  }
+  return result;
+}
+
 #if FEATURE_CUSTOM_PROVISIONING
 
 String downloadFileType(FileType::Enum filetype, unsigned int filenr)

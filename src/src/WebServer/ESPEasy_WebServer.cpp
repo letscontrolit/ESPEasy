@@ -204,6 +204,9 @@ void WebServerInit()
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
   web_server.on(F("/advanced"),    handle_advanced);
+  #if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
+  web_server.on(F("/backup"),      handle_full_backup);
+  #endif // if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
   #endif // ifdef WEBSERVER_ADVANCED
   #ifdef WEBSERVER_CONFIG
   web_server.on(F("/config"),      handle_config);

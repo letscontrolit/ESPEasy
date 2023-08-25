@@ -480,6 +480,11 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching I2C device address
 
+    #ifdef FEATURE_TARSTREAM_SUPPORT
+      #undef FEATURE_TARSTREAM_SUPPORT
+    #endif
+    #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarFile support for size
+
     #ifndef USES_P001
         #define USES_P001   // switch
     #endif
@@ -3060,6 +3065,10 @@ To create/register a plugin, you have to :
     #endif
   #endif
 #endif
+
+#ifndef FEATURE_TARSTREAM_SUPPORT
+  #define FEATURE_TARSTREAM_SUPPORT   1
+#endif // FEATURE_TARSTREAM_SUPPORT
 
 // Check for plugins that will use Extended Custom Settings storage when available
 #ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS

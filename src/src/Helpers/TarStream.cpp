@@ -1,0 +1,603 @@
+#include "../Helpers/TarStream.h"
+
+#if FEATURE_TARSTREAM_SUPPORT
+# include "../Globals/ESPEasy_time.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/StringConverter.h"
+
+/**
+ * TarStream : Create/receive a .tar file while streaming via http webserver
+ * Copyright (c) 2023.. Ton Huisman for ESPEasy
+ *
+ * Changelog: See TarStream.h
+ */
+
+/**
+ * TarFileInfo_struct implementation
+ */
+TarFileInfo_struct::TarFileInfo_struct(const String _fileName,
+                                       size_t       _fileSize) :
+  fileName(_fileName), fileSize(_fileSize) {
+  tarSize = ((_fileSize % TAR_BLOCK_SIZE == 0 ? 0 : 1) + (_fileSize / TAR_BLOCK_SIZE)) * TAR_BLOCK_SIZE; // Multiple of block size
+  # if TAR_STREAM_DEBUG
+  addLog(LOG_LEVEL_INFO, strformat(F("Added file: %s, size: %d, tarSize: %d"), _fileName.c_str(), fileSize, tarSize));
+  # endif // if TAR_STREAM_DEBUG
+}
+
+/**
+ * TarStream implementation
+ */
+TarStream::TarStream() {}
+
+TarStream::TarStream(const String fileName)
+  : _fileName(fileName) {}
+
+TarStream::TarStream(const String fileName, FileDestination_e destination)
+  : _fileName(fileName), _destination(destination) {}
+
+TarStream::~TarStream() {
+  if (_filesList.size() > 0) {
+    _filesList.clear();
+  }
+}
+
+size_t TarStream::write(uint8_t ch) {
+  // TODO implement
+  addLogMove(LOG_LEVEL_ERROR, concat(F("TarStream: "), F("write(ch) NOT IMPLEMENTED YET.")));
+  return 1u;
+}
+
+size_t TarStream::write(const uint8_t *buf,
+                        size_t         size) {
+  size_t bufOffset  = 0u;   // Offset into the buffer
+  bool   stayInLoop = true; // To allow processing the rest of the data
+
+  while (stayInLoop) {
+    stayInLoop = false;
+
+    switch (_streamState) {
+      case TarStreamState_e::Initial: // Initial behaves like WritingHeader
+      case TarStreamState_e::WritingHeader:
+      {
+        if (_headerPosition == 0) {
+          clearHeader();
+        }
+        size_t toMove = std::min(size - bufOffset, TAR_HEADER_SIZE - _headerPosition);
+
+        memcpy(&_tarData[_headerPosition], &buf[bufOffset], toMove);
+        _headerPosition += toMove;
+        bufOffset       += toMove;
+
+        if (_headerPosition == TAR_HEADER_SIZE) {
+          bool isBlank = true;
+
+          for (size_t n = 0; n < TAR_HEADER_SIZE && isBlank; n++) {
+            isBlank &= (_tarData[n] == 0u);
+          }
+
+          if (isBlank) {
+            _headerPosition = 0;
+            _streamState    = TarStreamState_e::WritingFinal;
+            # if TAR_STREAM_DEBUG
+            addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial/WritingHeader to WritingFinal")));
+            # endif // if TAR_STREAM_DEBUG
+          } else {
+            String fname(_tarHeader.name);
+            size_t fsize   = strtoul(_tarHeader.size, nullptr, 8); // Octal
+            bool   isValid = validateHeader();
+
+            # if TAR_STREAM_DEBUG
+            addLog(LOG_LEVEL_INFO,
+                   strformat(F("%sWrite Receiving file %s size: %d"), String(F("TarStream: ")).c_str(), fname.c_str(), fsize));
+            # endif // if TAR_STREAM_DEBUG
+
+            if ((_tarHeader.typeflag == REGTYPE) &&
+                isValid) {           // Checked: typeflag, magic & checksum
+              addFile(fname, fsize); // Add to list
+              _fileIndex++;
+              _filesSizes += fsize;
+              bool validConfig = true;
+
+              bufOffset += TAR_BLOCK_SIZE - TAR_HEADER_SIZE; // Skip remaining bytes to start of next block
+
+              if (matchFileType(fname, FileType::CONFIG_DAT)) {
+                validConfig = validateUploadConfigDat(&buf[bufOffset]);
+              }
+
+              if (validConfig) {
+                _streamState = TarStreamState_e::WritingFile;
+
+                size_t available = UINT32_MAX;
+
+                if (FileDestination_e::SD != _destination) { // Check flash storage only
+                  available = SpiffsFreeSpace();
+                  fs::File tmpfile = tryOpenFile(patch_fname(_filesList[_fileIndex].fileName).c_str(), "r", _destination);
+
+                  if (tmpfile) {
+                    available += tmpfile.size();                  // Existing file will be deleted
+                    tmpfile.close();
+                  }
+                  available -= 2 * SpiffsBlocksize();             // Leave at least 2 blocks free after save
+                }
+
+                if (available > _filesList[_fileIndex].tarSize) { // Use rounded-up size
+                  // delete and create file for write mode
+                  if (!tryDeleteFile(patch_fname(_filesList[_fileIndex].fileName), _destination)) {
+                    addLog(LOG_LEVEL_ERROR, concat(F("TarStream: "), concat(F("Can't delete file: "), _filesList[_fileIndex].fileName)));
+                  }
+                  _currentFile = tryOpenFile(patch_fname(_filesList[_fileIndex].fileName).c_str(), "w", _destination);
+
+                  if (!_currentFile) {
+                    addLog(LOG_LEVEL_ERROR, concat(F("TarStream: "), concat(F("Can't create file: "), _filesList[_fileIndex].fileName)));
+                  }
+                } else {
+                  addLog(LOG_LEVEL_ERROR,
+                         concat(F("TarStream: "), concat(F("Not enough space to save file: "), _filesList[_fileIndex].fileName)));
+                }
+
+                # if TAR_STREAM_DEBUG
+                addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial/WritingHeader to WritingFile")));
+                # endif // if TAR_STREAM_DEBUG
+              } else {
+                _streamState = TarStreamState_e::WritingSlack;
+                addLog(LOG_LEVEL_ERROR, concat(F("TarStream: "), F("Received invalid config.dat, ignored.")));
+                _filesList[_fileIndex].fileName = F("(ignored)"); // Won't be recognized
+                # if TAR_STREAM_DEBUG
+                addLog(LOG_LEVEL_INFO,  concat(F("TarStream: Switch from "), F("Initial/WritingHeader to WritingSlack")));
+                # endif // if TAR_STREAM_DEBUG
+              }
+              _writePosition = 0u; // Start at file-position 0
+            } else {
+              _streamState = TarStreamState_e::Error;
+              addLog(LOG_LEVEL_ERROR, strformat(F("%sUnsupported file: %s, type: %c"),
+                                                String(F("TarStream: ")).c_str(), fname.c_str(), _tarHeader.typeflag));
+              # if TAR_STREAM_DEBUG
+              addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial/WritingHeader to Error")));
+              # endif // if TAR_STREAM_DEBUG
+            }
+          }
+        }
+
+        # if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
+        addLog(TAR_LOG_LEVEL_DEBUG,
+               strformat(F("%sDEBUG WritingHeader size: %d, offset: %d, stay: %d"), String(F("TarStream: ")).c_str(), size, bufOffset,
+                         stayInLoop));
+        # endif // if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
+
+        break;
+      }
+      case TarStreamState_e::WritingFile:
+      {
+        size_t toWrite = std::min(size - bufOffset, _filesList[_fileIndex].fileSize - _writePosition);
+
+        // write to file
+        if (_currentFile) {
+          _currentFile.write(&buf[bufOffset], toWrite);
+        }
+
+        _writePosition += toWrite;
+        bufOffset      += toWrite;
+        # if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
+        addLog(TAR_LOG_LEVEL_DEBUG,
+               strformat(F("%sDEBUG WritingFile %d bytes of %d to file, pos: %d, size: %d, bufoff: %d, stay: %d"),
+                         String(
+                           F("TarStream: ")).c_str(), toWrite, _filesList[_fileIndex].fileSize, _writePosition, size, bufOffset, stayInLoop));
+        # endif // if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
+
+        if (_writePosition == _filesList[_fileIndex].fileSize) { // Done with this file?
+          // close the file
+          if (_currentFile) {
+            _currentFile.close();
+          }
+
+          if (_writePosition < _filesList[_fileIndex].tarSize) {
+            _streamState = TarStreamState_e::WritingSlack;
+            # if TAR_STREAM_DEBUG
+            addLog(LOG_LEVEL_INFO,
+                   strformat(F("%sWritingFile to WritingSlack, bytes: %d"), String(F("TarStream: Switch from ")).c_str(), _writePosition));
+            # endif // if TAR_STREAM_DEBUG
+          } else {
+            _streamState = TarStreamState_e::WritingHeader;
+            # if TAR_STREAM_DEBUG
+            addLog(LOG_LEVEL_INFO,
+                   strformat(F("%sWritingFile to WritingHeader, bytes: %d"), String(F("TarStream: Switch from ")).c_str(), _writePosition));
+            # endif // if TAR_STREAM_DEBUG
+            _headerPosition = 0;
+          }
+        }
+
+        break;
+      }
+      case TarStreamState_e::WritingSlack:
+      {
+        size_t toSkip = std::min(size - bufOffset, _filesList[_fileIndex].tarSize - _writePosition);
+
+        _writePosition += toSkip;
+        bufOffset      += toSkip;
+        # if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
+        addLog(TAR_LOG_LEVEL_DEBUG, strformat(F("%sDEBUG WritingSlack %d bytes of %d to file"),
+                                              String(F("TarStream: ")).c_str(), toSkip, _filesList[_fileIndex].tarSize));
+        # endif // if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
+
+        if (_writePosition == _filesList[_fileIndex].tarSize) {
+          _streamState = TarStreamState_e::WritingHeader;
+          # if TAR_STREAM_DEBUG
+          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("WritingSlack to WritingHeader")));
+          # endif // if TAR_STREAM_DEBUG
+          _headerPosition = 0;
+        }
+        break;
+      }
+      case TarStreamState_e::WritingFinal:
+      {
+        // FIXME check entire 512 byte block or just ignore?
+        size_t toMove = std::min(size - bufOffset, TAR_HEADER_SIZE - _headerPosition);
+        memcpy(&_tarData[_headerPosition], &buf[bufOffset], toMove);
+        _headerPosition += toMove;
+        bufOffset       += toMove;
+        bool isBlank = true;
+
+        if (_headerPosition == TAR_HEADER_SIZE) {
+          for (size_t n = 0; n < TAR_HEADER_SIZE && isBlank; n++) {
+            isBlank &= (_tarData[n] == 0u);
+          }
+          _streamState = TarStreamState_e::WritingDone;
+          # if TAR_STREAM_DEBUG
+          addLog(LOG_LEVEL_INFO,
+                 strformat(F("%sWritingFinal to WritingDone, isBlank: %d"), String(F("TarStream: Switch from ")).c_str(), isBlank));
+          # endif // if TAR_STREAM_DEBUG
+        }
+        break;
+      }
+      case TarStreamState_e::WritingDone:
+      {
+        size_t toSkip = size - bufOffset;
+        bufOffset += toSkip;
+        # if TAR_STREAM_DEBUG
+        addLog(LOG_LEVEL_INFO, strformat(F("%sWritingDone, skipping: %d"), String(F("TarStream: ")).c_str(), toSkip));
+        # endif // if TAR_STREAM_DEBUG
+        break;
+      }
+      case TarStreamState_e::ReadingHeader: // Not here
+      case TarStreamState_e::ReadingFile:
+      case TarStreamState_e::ReadingSlack:
+      case TarStreamState_e::ReadingFinal:
+        break;
+      case TarStreamState_e::Error: // No real error state
+        break;
+    }
+
+    if (bufOffset < size) { // We got leftover bytes
+      stayInLoop = true;
+    }
+  }
+  delay(0);
+  _tarSize += size;
+  return size;
+}
+
+int TarStream::available() {
+  return _tarRemaining;
+}
+
+void TarStream::clearHeader() {
+  memset(&_tarHeader, 0, TAR_HEADER_SIZE);
+}
+
+void TarStream::setupHeader() {
+  clearHeader();
+  safe_strncpy(_tarHeader.name, _currentIndex.fileName.c_str(), sizeof(_tarHeader.name));
+  sprintf(_tarHeader.mode,    "%07o",  /*0777); //*/ TUREAD + TUWRITE + TUEXEC + TGREAD + TGWRITE + TGEXEC + TOREAD + TOWRITE + TOEXEC);
+  sprintf(_tarHeader.uid,     "%07o",  0);
+  sprintf(_tarHeader.gid,     "%07o",  0);
+  sprintf(_tarHeader.size,    "%011o", _currentIndex.fileSize);
+  sprintf(_tarHeader.mtime,   "%011o", node_time.getUnixTime()); // We don't have file-date/times, use current date/time
+  _tarHeader.typeflag = REGTYPE;
+  sprintf(_tarHeader.magic,   "%s",    TMAGIC);
+  sprintf(_tarHeader.version, "%s",    TVERSION);
+
+  for (size_t c = 0; c < sizeof(_tarHeader.chksum); c++) { _tarHeader.chksum[c] = ' '; }
+  uint32_t chksum = 0u;
+
+  for (uint16_t hdr = 0; hdr < TAR_HEADER_SIZE; hdr++) {
+    chksum += _tarData[hdr];
+  }
+  sprintf(_tarHeader.chksum, "%06o", chksum); // FIXME Compatible with 7-zip: 6 octal digits + 0x0 + space?
+}
+
+bool TarStream::validateHeader() {
+  String _magic(_tarHeader.magic);
+
+  _magic = _magic.substring(0, 6);                          // Only get magic part
+  _magic.trim();
+  size_t expected = strtoul(_tarHeader.chksum, nullptr, 8); // Octal
+
+  for (size_t c = 0; c < sizeof(_tarHeader.chksum); c++) { _tarHeader.chksum[c] = ' '; }
+
+  uint32_t chksum = 0u;
+
+  for (uint16_t hdr = 0; hdr < TAR_HEADER_SIZE; hdr++) {
+    chksum += _tarData[hdr];
+  }
+  # if TAR_STREAM_DEBUG
+  addLog(LOG_LEVEL_INFO, strformat(F("%sValidate Header, magic: %s checksum: 0x%x/%06o expected: 0x%x/%06o"),
+                                   String(F("TarStream: ")).c_str(), _magic.c_str(), chksum, chksum, expected, expected));
+  # endif // if TAR_STREAM_DEBUG
+  return _magic.equals(F(TMAGIC)) && chksum == expected;
+}
+
+int TarStream::read() {
+  int result = EOF;
+
+  switch (_streamState) {
+    case TarStreamState_e::Initial:
+    {
+      _currentIterator = _filesList.begin();
+      _currentIndex    = *_currentIterator;
+      _currentFile     = tryOpenFile(_currentIndex.fileName, F("r"));
+
+      // Set up header
+      setupHeader();
+
+      // Header done
+      _streamState    = TarStreamState_e::ReadingHeader;
+      _headerPosition = 0;
+      result          = _tarData[_headerPosition];
+      # if TAR_STREAM_DEBUG
+      addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial to ReadingHeader")));
+      # endif // if TAR_STREAM_DEBUG
+      break;
+    }
+    case TarStreamState_e::ReadingHeader:
+    {
+      _headerPosition++;
+
+      if (_headerPosition < TAR_HEADER_SIZE) {
+        result = _tarData[_headerPosition];
+      } else if (_headerPosition < TAR_BLOCK_SIZE) {
+        result = 0;
+      } else {
+        _tarPosition = 0;
+
+        if (_currentFile) {
+          if (_tarPosition < _currentFile.size()) {
+            result       = _currentFile.read();
+            _streamState = TarStreamState_e::ReadingFile;
+            # if TAR_STREAM_DEBUG
+            addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingHeader to ReadingFile")));
+            # endif // if TAR_STREAM_DEBUG
+          } else {
+            _streamState = TarStreamState_e::ReadingSlack;
+            # if TAR_STREAM_DEBUG
+            addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingHeader to ReadingSlack 0")));
+            # endif // if TAR_STREAM_DEBUG
+            result = 0;
+          }
+        } else {
+          _streamState = TarStreamState_e::Error;
+          # if TAR_STREAM_DEBUG
+          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingHeader to Error")));
+          # endif // if TAR_STREAM_DEBUG
+        }
+      }
+      break;
+    }
+    case TarStreamState_e::ReadingFile:
+    {
+      _tarPosition++;
+
+      if (_tarPosition < _currentFile.size()) {
+        result = _currentFile.read();
+        break;
+      } else if (_tarPosition < _currentIndex.tarSize) {
+        _currentFile.close();
+        result       = 0;
+        _streamState = TarStreamState_e::ReadingSlack;
+        # if TAR_STREAM_DEBUG
+        addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingFile to ReadingSlack 1")));
+        # endif // if TAR_STREAM_DEBUG
+        break;
+      }
+      _currentFile.close();
+      _tarPosition--; // revert 1 position
+      _streamState = TarStreamState_e::ReadingSlack;
+      # if TAR_STREAM_DEBUG
+      addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingFile to ReadingSlack 2")));
+      # endif // if TAR_STREAM_DEBUG
+
+      // Fall through
+    }
+    case TarStreamState_e::ReadingSlack:
+    {
+      _tarPosition++;
+
+      if (_tarPosition < _currentIndex.tarSize) {
+        result = 0;
+      } else {
+        _currentIterator++;
+
+        if (_currentIterator != _filesList.end()) {
+          _currentIndex = *_currentIterator;
+          _currentFile  = tryOpenFile(_currentIndex.fileName, F("r"));
+
+          if (_currentFile) {
+            // Set up header
+            setupHeader();
+
+            // Header done
+            _streamState = TarStreamState_e::ReadingHeader;
+            # if TAR_STREAM_DEBUG
+            addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingSlack to ReadingHeader")));
+            # endif // if TAR_STREAM_DEBUG
+          } else {
+            _streamState = TarStreamState_e::Error;
+            # if TAR_STREAM_DEBUG
+            addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingSlack to Error")));
+            # endif // if TAR_STREAM_DEBUG
+          }
+        } else {
+          memset(&_tarHeader, 0, TAR_HEADER_SIZE);
+          _streamState = TarStreamState_e::ReadingFinal;
+          # if TAR_STREAM_DEBUG
+          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingSlack to ReadingFinal")));
+          # endif // if TAR_STREAM_DEBUG
+        }
+        _headerPosition = 0;
+        result          = _tarData[_headerPosition];
+      }
+      break;
+    }
+    case TarStreamState_e::ReadingFinal:
+    {
+      _headerPosition++;
+      result = 0;
+
+      if (_headerPosition == (TAR_BLOCK_SIZE * 2)) {
+        result = EOF;
+        # if TAR_STREAM_DEBUG
+        addLog(LOG_LEVEL_INFO, concat(F("TarStream: "), F("Reached ReadingFinal EOF")));
+        # endif // if TAR_STREAM_DEBUG
+      } else if (_headerPosition > (TAR_BLOCK_SIZE * 2)) {
+        result       = EOF;
+        _streamState = TarStreamState_e::Error;
+        # if TAR_STREAM_DEBUG
+        addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingFinal to Error")));
+        # endif // if TAR_STREAM_DEBUG
+      }
+      break;
+    }
+    case TarStreamState_e::WritingHeader: // Not here
+    case TarStreamState_e::WritingFile:
+    case TarStreamState_e::WritingSlack:
+    case TarStreamState_e::WritingFinal:
+    case TarStreamState_e::WritingDone:
+      break;
+    case TarStreamState_e::Error:
+      result = EOF; // Endstate, something went wrong
+      break;
+  }
+
+  if (_tarRemaining > 0u) {
+    _tarRemaining--;
+  }
+
+  return result;
+}
+
+int TarStream::peek() {
+  int result = 0;
+
+  # if TAR_STREAM_PEEK
+
+  switch (_streamState) {
+    case TarStreamState_e::Initial:
+      break;
+    case TarStreamState_e::ReadingHeader:
+    {
+      if (_headerPosition < TAR_HEADER_SIZE - 1) {
+        result = _tarData[_headerPosition];
+      } else if (_headerPosition < TAR_BLOCK_SIZE - 1) {
+        result = 0;
+      } else if (_currentFile) {
+        result = _currentFile.peek();
+      }
+      break;
+    }
+    case TarStreamState_e::ReadingFile:
+    {
+      if (_tarPosition < _currentIndex.fileSize + 1) {
+        result = _currentFile.peek();
+      }
+      break;
+    }
+    case TarStreamState_e::ReadingFinal:
+    {
+      if (_headerPosition == (TAR_BLOCK_SIZE * 2) - 1) {
+        result = EOF;
+      }
+      break;
+    }
+    case TarStreamState_e::ReadingSlack:
+    case TarStreamState_e::WritingHeader: // Ignore
+    case TarStreamState_e::WritingFile:
+    case TarStreamState_e::WritingSlack:
+    case TarStreamState_e::WritingFinal:
+    case TarStreamState_e::WritingDone:
+      break;
+    case TarStreamState_e::Error:
+      result = EOF; // Endstate, something went wrong
+      break;
+  }
+  # endif // if TAR_STREAM_PEEK
+
+  return result;
+}
+
+void TarStream::flush() {
+  if (_currentFile) {
+    _currentFile.flush();
+  }
+  _tarRemaining = 0u;
+}
+
+size_t TarStream::size() {
+  return _tarSize;
+}
+
+const char * TarStream::name() {
+  return _fileName.c_str();
+}
+
+bool TarStream::addFileIfExists(const String& fileName) {
+  fs::File tryFile = tryOpenFile(fileName, "r");
+
+  if (tryFile) {
+    TarFileInfo_struct tarFileInfo(fileName, tryFile.size());
+    _filesList.push_back(tarFileInfo);
+
+    tryFile.close();
+
+    if (_tarSize == 0) {
+      _tarSize = TAR_BLOCK_SIZE * 2;                      // Closing 2 blocks of 0s
+    }
+    _tarSize     += TAR_BLOCK_SIZE + tarFileInfo.tarSize; // Header block + rounded-up file-size
+    _filesSizes  += tarFileInfo.fileSize;                 // Actual file-size
+    _tarRemaining = _tarSize;
+
+    return true;
+  }
+  return false;
+}
+
+bool TarStream::addFile(const String& fileName,
+                        size_t        fileSize) {
+  TarFileInfo_struct tarFileInfo(fileName, fileSize);
+
+  _filesList.push_back(tarFileInfo);
+
+  if (_tarSize == 0) {
+    _tarSize = TAR_BLOCK_SIZE * 2;                      // Closing 2 blocks of 0s
+  }
+  _tarSize     += TAR_BLOCK_SIZE + tarFileInfo.tarSize; // Header block + rounded-up file-size
+  _filesSizes  += tarFileInfo.fileSize;                 // Actual file-size
+  _tarRemaining = _tarSize;
+
+  return true;
+}
+
+bool TarStream::isFileIncluded(const String& filename) {
+  if (!filename.isEmpty()) {
+    for (auto it = _filesList.begin(); it != _filesList.end(); ++it) {
+      if (it->fileName.equalsIgnoreCase(filename)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+size_t TarStream::getFileCount() const {
+  return _filesList.size();
+}
+
+#endif // if FEATURE_TARSTREAM_SUPPORT
