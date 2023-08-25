@@ -1,0 +1,30 @@
+.. csv-table::
+  :header: "Command", "Extra information"
+  :widths: 20, 30
+
+  "
+  ``oledcmd,off``
+  ","
+  Turn the display off.
+  "
+  "
+  ``oledcmd,on``
+  ","
+  Turn the display on.
+  "
+  "
+  ``oledcmd,clear``
+  ","
+  Remove all content from the screen.
+  "
+  "
+  ``oled,<line>,<column>,<content>``
+
+  ``<line>``: The line to place the content on, range: 1..8.
+
+  ``<column>``: The column to start writing the content. The number of characters that can be displayed can vary, depending on the ``Font Width`` setting.
+
+  ``<content>``: The text content to place on the display. Can include system variables, taskvalue references, etc.
+  ","
+  Write a line of text on the display, at the given position.
+  "
