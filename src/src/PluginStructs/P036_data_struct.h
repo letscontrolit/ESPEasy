@@ -23,6 +23,17 @@
 // # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)
 // # define P036_CHECK_HEAP        // Enable to add extra logging during Plugin_036()
 // # define P036_CHECK_INDIVIDUAL_FONT // /Enable to add extra logging for individual font calculation
+# ifndef P036_FEATURE_DISPLAY_PREVIEW
+#  define P036_FEATURE_DISPLAY_PREVIEW   1
+# endif // ifndef P036_FEATURE_DISPLAY_PREVIEW
+# ifdef P036_FEATURE_ALIGN_PREVIEW
+#  define P036_FEATURE_ALIGN_PREVIEW     1
+# endif // ifdef P036_FEATURE_ALIGN_PREVIEW
+
+# if defined(ESP8266_1M) && defined(P036_FEATURE_ALIGN_PREVIEW) && P036_FEATURE_ALIGN_PREVIEW
+#  undef P036_FEATURE_ALIGN_PREVIEW
+#  define P036_FEATURE_ALIGN_PREVIEW   0 // Disable for 1M builds
+# endif // if defined(ESP8266_1M) && defined(P036_FEATURE_ALIGN_PREVIEW) && P036_FEATURE_ALIGN_PREVIEW
 
 # ifndef P036_LIMIT_BUILD_SIZE
 #  ifndef P036_SEND_EVENTS
@@ -33,7 +44,7 @@
 #  endif // ifndef P036_ENABLE_LINECOUNT
 #  ifndef P036_USERDEF_HEADERS
 #   define P036_USERDEF_HEADERS   1 // Enable User defined headers
-#  endif // ifndef
+#  endif // ifndef P036_USERDEF_HEADERS
 # else // ifndef P036_LIMIT_BUILD_SIZE
 #  if defined(P036_SEND_EVENTS) && P036_SEND_EVENTS
 #   undef P036_SEND_EVENTS
@@ -75,12 +86,12 @@
 #  define P36_MaxFontCount 5        // number of different fonts
 # endif // ifdef P036_LIMIT_BUILD_SIZE
 
-# define P36_MaxDisplayWidth 128
+# define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight 64
-# define P36_DisplayCentre 64
-# define P36_HeaderHeight 12
-# define P036_IndicatorTop     56
-# define P036_IndicatorHeight   8
+# define P36_DisplayCentre    64
+# define P36_HeaderHeight     12
+# define P036_IndicatorTop    56
+# define P036_IndicatorHeight 8
 
 # define P36_WIFI_STATE_UNSET          -2
 # define P36_WIFI_STATE_NOT_CONNECTED  -1
@@ -90,7 +101,7 @@
 # define P36_PageScrollTick            (P36_PageScrollTimer + 20) // total time for one PageScrollTick (including the handling time of 20ms
                                                                   // in PLUGIN_TIMER_IN)
 # define P36_PageScrollPix             4                          // min pixel change while page scrolling
-# define P36_DebounceTreshold           5                         // number of 20 msec (fifty per second) ticks before the button has
+# define P36_DebounceTreshold          5                          // number of 20 msec (fifty per second) ticks before the button has
                                                                   // settled
 # define P36_RepeatDelay               50                         // number of 20 msec ticks before repeating the button action when holding
 
@@ -103,8 +114,8 @@
 # define P036_CONTRAST    PCONFIG(6)
 # define P036_RESOLUTION  PCONFIG(7)
 
-# define P036_FLAGS_0     PCONFIG_LONG(0)
-# define P036_FLAGS_1     PCONFIG_LONG(1)
+# define P036_FLAGS_0     PCONFIG_ULONG(0)
+# define P036_FLAGS_1     PCONFIG_ULONG(1)
 
 // P036_FLAGS_0
 # define P036_FLAG_HEADER_ALTERNATIVE   0 // Bit 7-0 HeaderContentAlternative
@@ -127,43 +138,43 @@
 # define P036_FLAG_REDUCE_LINE_NO      2  // Bit 2 Reduce line number to fit individual line font settings
 
 enum class eHeaderContent : uint8_t {
-  eSSID     = 1,
-  eSysName  = 2,
-  eIP       = 3,
-  eMAC      = 4,
-  eRSSI     = 5,
-  eBSSID    = 6,
-  eWiFiCh   = 7,
-  eUnit     = 8,
-  eSysLoad  = 9,
-  eSysHeap  = 10,
-  eSysStack = 11,
-  eTime     = 12,
-  eDate     = 13,
-  ePageNo   = 14,
+  eSSID     = 1u,
+  eSysName  = 2u,
+  eIP       = 3u,
+  eMAC      = 4u,
+  eRSSI     = 5u,
+  eBSSID    = 6u,
+  eWiFiCh   = 7u,
+  eUnit     = 8u,
+  eSysLoad  = 9u,
+  eSysHeap  = 10u,
+  eSysStack = 11u,
+  eTime     = 12u,
+  eDate     = 13u,
+  ePageNo   = 14u,
   # if P036_USERDEF_HEADERS
-  eUserDef1 = 15,
-  eUserDef2 = 16,
+  eUserDef1 = 15u,
+  eUserDef2 = 16u,
   # endif // if P036_USERDEF_HEADERS
 };
 
 enum class p036_resolution : uint8_t {
-  pix128x64 = 0,
-  pix128x32 = 1,
-  pix64x48  = 2
+  pix128x64 = 0u,
+  pix128x32 = 1u,
+  pix64x48  = 2u
 };
 
 enum class ePageScrollSpeed : uint8_t {
-  ePSS_VerySlow = 1, // 800ms
-  ePSS_Slow     = 2, // 400ms
-  ePSS_Fast     = 4, // 200ms
-  ePSS_VeryFast = 8, // 100ms
-  ePSS_Instant  = 32 // 20ms
+  ePSS_VerySlow = 1u, // 800ms
+  ePSS_Slow     = 2u, // 400ms
+  ePSS_Fast     = 4u, // 200ms
+  ePSS_VeryFast = 8u, // 100ms
+  ePSS_Instant  = 32u // 20ms
 };
 
 enum class eP036pinmode : uint8_t {
-  ePPM_Input       = 0,
-  ePPM_InputPullUp = 1
+  ePPM_Input       = 0u,
+  ePPM_InputPullUp = 1u
 };
 
 typedef struct {
@@ -199,18 +210,18 @@ typedef struct {
 } tScrollingPages;
 
 enum class eModifyFont : uint8_t {
-  eMinimize = 4,
-  eReduce   = 3,
-  eNone     = 7, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
-  eEnlarge  = 1,
-  eMaximize = 2
+  eMinimize = 4u,
+  eReduce   = 3u,
+  eNone     = 7u, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
+  eEnlarge  = 1u,
+  eMaximize = 2u
 };
 
 enum class eAlignment : uint8_t {
-  eGlobal = 7, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
-  eLeft   = 1,
-  eCenter = 0,
-  eRight  = 2
+  eGlobal = 7u, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
+  eLeft   = 1u,
+  eCenter = 0u,
+  eRight  = 2u
 };
 
 # define P036_FLAG_ModifyLayout_Font        0 // Bit 2-0 eModifyFont
@@ -373,8 +384,8 @@ struct P036_data_struct : public PluginTaskData_base {
   void                       update_display();
 
   // get pixel positions
-  int16_t                    GetHeaderHeight();
-  int16_t                    GetIndicatorTop();
+  int16_t                    GetHeaderHeight() const;
+  int16_t                    GetIndicatorTop() const;
   tFontSettings              CalculateFontSettings(uint8_t _defaultLines);
 
   void                       P036_JumpToPage(struct EventStruct *event,
@@ -395,9 +406,13 @@ struct P036_data_struct : public PluginTaskData_base {
 
   # if P036_ENABLE_LEFT_ALIGN
   void                       setTextAlignment(eAlignment aAlignment);
-  OLEDDISPLAY_TEXT_ALIGNMENT getTextAlignment(eAlignment aAlignment);
-  uint8_t                    GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment);
-# endif // if P036_ENABLE_LEFT_ALIGN
+  OLEDDISPLAY_TEXT_ALIGNMENT getTextAlignment(eAlignment aAlignment) const;
+  uint8_t                    GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) const;
+  # endif // ifdef P036_ENABLE_LEFT_ALIGN
+
+  # if P036_FEATURE_DISPLAY_PREVIEW
+  bool web_show_values();
+  # endif // if P036_FEATURE_DISPLAY_PREVIEW
 
   // Instantiate display here - does not work to do this within the INIT call
   OLEDDisplay *display = nullptr;
@@ -464,6 +479,10 @@ private:
                                  OLEDDISPLAY_TEXT_ALIGNMENT textAlignment);
   void     CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine,
                                    uint8_t              Counter);
+
+  # if P036_FEATURE_DISPLAY_PREVIEW
+  String currentLines[P36_MAX_LinesPerPage]{};
+  # endif // if P036_FEATURE_DISPLAY_PREVIEW
 };
 
 #endif // ifdef USES_P036
