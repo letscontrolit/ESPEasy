@@ -44,7 +44,7 @@
 #  endif // ifndef P036_ENABLE_LINECOUNT
 #  ifndef P036_USERDEF_HEADERS
 #   define P036_USERDEF_HEADERS   1 // Enable User defined headers
-#  endif // ifndef
+#  endif // ifndef P036_USERDEF_HEADERS
 # else // ifndef P036_LIMIT_BUILD_SIZE
 #  if defined(P036_SEND_EVENTS) && P036_SEND_EVENTS
 #   undef P036_SEND_EVENTS

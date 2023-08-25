@@ -15,7 +15,7 @@
 # ifndef P036_LIMIT_BUILD_SIZE
 #  include <Dialog_Plain_12_font.h>
 #  include <Dialog_Plain_18_font.h>
-# endif // ifdef P036_LIMIT_BUILD_SIZE
+# endif // ifndef P036_LIMIT_BUILD_SIZE
 # include <OLED_SSD1306_SH1106_images.h>
 
 void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion) {
@@ -686,12 +686,12 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   # ifdef P036_FONT_CALC_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, 
-      strformat(F("P036 CalculateFontSettings lines: %d, height: %d, header: %s, footer: %s"),
-       iLinesPerFrame, 
-       iHeight, 
-       boolToString(!bHideHeader).c_str(), 
-       boolToString(!bHideFooter).c_str()));
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("P036 CalculateFontSettings lines: %d, height: %d, header: %s, footer: %s"),
+                         iLinesPerFrame,
+                         iHeight,
+                         boolToString(!bHideHeader).c_str(),
+                         boolToString(!bHideFooter).c_str()));
   }
   String log;
   # endif // ifdef P036_FONT_CALC_LOG
@@ -700,11 +700,12 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   // Fonts already have their own extra space, no need to add an extra pixel space
 
 # ifdef P036_FONT_CALC_LOG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, 
-      strformat(F("CalculateFontSettings LinesPerFrame: %d, iHeight: %d, maxFontHeight: %d"), 
-        iLinesPerFrame, iHeight, iMaxHeightForFont));
-}
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("CalculateFontSettings LinesPerFrame: %d, iHeight: %d, maxFontHeight: %d"),
+                         iLinesPerFrame, iHeight, iMaxHeightForFont));
+  }
 # endif // ifdef P036_FONT_CALC_LOG
 
   while (iFontIndex < 0) {

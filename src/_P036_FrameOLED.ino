@@ -590,11 +590,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # endif // if P036_ENABLE_HIDE_FOOTER
 
       bitWrite(lSettings, P036_FLAG_INPUT_PULLUP,       getFormItemInt(F("pinmode")));                            // Input PullUp
-# ifdef P036_SEND_EVENTS
+      # if P036_SEND_EVENTS
       const uint8_t generateEvents = getFormItemInt(F("generateEvents")) & 0xFF;
       bitWrite(lSettings, P036_FLAG_SEND_EVENTS,        bitRead(generateEvents, 0));                              // SendEvents
       bitWrite(lSettings, P036_FLAG_EVENTS_FRAME_LINE,  bitRead(generateEvents, 1));                              // SendEventsFrameLine
-# endif // if P036_SEND_EVENTS
+      # endif // if P036_SEND_EVENTS
 
       P036_FLAGS_0 = lSettings;
 
@@ -836,9 +836,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P036_data->bLineScrollEnabled) {
-        # ifdef P036_SEND_EVENTS
+        # if P036_SEND_EVENTS
         const uint8_t currentFrame = P036_data->currentFrameToDisplay;
-        # endif // ifdef P036_SEND_EVENTS
+        # endif // if P036_SEND_EVENTS
 
         if (P036_DisplayIsOn && (P036_data->ScrollingPages.Scrolling == 0)) {
           // Display is on.
@@ -1025,9 +1025,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       const String command = parseString(string, 1);
       const int    LineNo  = event->Par1;
-      # ifdef P036_SEND_EVENTS
+      # if P036_SEND_EVENTS
       const bool sendEvents = bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS); // Bit 28 Send Events
-      # endif // ifdef P036_SEND_EVENTS
+      # endif // if P036_SEND_EVENTS
 
       if ((equals(command, F("oledframedcmd"))) && P036_data->isInitialized()) {
         const String subcommand = parseString(string, 2);
@@ -1240,9 +1240,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
           P036_data->MaxFramesToDisplay = 0xff; // update frame count
 
-          # ifdef P036_SEND_EVENTS
+          # if P036_SEND_EVENTS
           const uint8_t currentFrame = P036_data->currentFrameToDisplay;
-          # endif // ifdef P036_SEND_EVENTS
+          # endif // if P036_SEND_EVENTS
 
           if (!P036_DisplayIsOn &&
               !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE)) { // Bit 18 NoDisplayOnReceivedText
