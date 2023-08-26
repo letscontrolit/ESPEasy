@@ -1,0 +1,29 @@
+.. csv-table::
+  :header: "Event", "Example"
+  :widths: 30, 20
+
+  "
+  ``OLedFramed#display=<on|off>``
+  Will trigger when the display is turned on(1) or off(0).
+  ","
+  "
+  "
+  ``OLedFramed#frame=<framenr>``
+  Will trigger when the displayed frame is changed.
+  ","
+  "
+  "
+  ``OLedFramed#line=<linenr>``
+  Will trigger when a line is updated via the ``OLedFramedCmd,<linenr>,'<content>'`` command.
+  ","
+  "
+  "
+  ``OLedFramed#linecount=<count>``
+  Will trigger when the number of lines to display is changed via the ``OLedFramedCmd,linecount,<count>`` command, and when the display is initialized.
+  ","
+  "
+  "
+  ``OLedFramed#contrast=<contrast>``
+  Will trigger when the contrast of the display is changed.
+  ","
+  "

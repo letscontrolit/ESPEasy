@@ -121,7 +121,7 @@ String trimTrailingZeros(const String& value) {
  */
 String toStringNoZero(int64_t value) {
   if (value != 0) {
-    return toString(value, 0);
+    return ll2String(value);
   } else {
     return EMPTY_STRING;
   }

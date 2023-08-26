@@ -3171,12 +3171,19 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
         // }                         // end malloc check
       }                        // end depth check
     } // end planes/compression check
-  }                            // end signature
+
+    if (status) {
+    #  ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
+    #  endif // ifndef BUILD_NO_DEBUG
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("showBmp: Only uncompressed and 24 or 1 bit color-depth supported."));
+    }
+  } else { // end signature
+    addLog(LOG_LEVEL_ERROR, F("showBmp: File signature error."));
+  }
 
   file.close();
-  #  ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
-  #  endif // ifndef BUILD_NO_DEBUG
   return status; // -V680
 
   // }
