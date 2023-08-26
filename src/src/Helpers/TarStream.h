@@ -3,6 +3,7 @@
  * Copyright (c) 2023.. Ton Huisman for ESPEasy
  *
  * Changelog:
+ * 2023-08-26 tonhuisman: Code improvements en de-duplication
  * 2023-08-24 tonhuisman: Implement streaming in a .tar storing all regular files in the chosen storage (Flash or SD), replacing existing
  *                        files, Flash: adding/replacing only if there is at least 2 blocks of storage available
  * 2023-08-23 tonhuisman: Implement streaming out a .tar via the read() method
@@ -87,14 +88,18 @@ struct posix_header       /* Using POSIX Tar-definitions for accuracy */
 # define TOWRITE  00002 /* write by other */
 # define TOEXEC   00001 /* execute/search by other */
 
+# define TAR_HEADER_EXPECTED_SIZE 500
 constexpr size_t TAR_HEADER_SIZE = sizeof(posix_header);
-constexpr size_t TAR_BLOCK_SIZE  = 512u;
+static_assert(TAR_HEADER_SIZE == TAR_HEADER_EXPECTED_SIZE, "TarStream: posix_header invalid size");
+# undef TAR_HEADER_EXPECTED_SIZE
+
+constexpr size_t TAR_BLOCK_SIZE = 512u;
 
 struct TarFileInfo_struct {
   TarFileInfo_struct() {}
 
-  TarFileInfo_struct(const String _fileName,
-                     size_t       _fileSize);
+  TarFileInfo_struct(const String fname,
+                     size_t       fsize);
 
   String fileName;
   size_t fileSize; // Actual file size in bytes
@@ -140,19 +145,20 @@ public:
                               size_t        fileSize);         // Add a file to the list and update _tarSize
   bool                isFileIncluded(const String& filename);  // Is this file included?
   size_t              getFileCount() const;                    // Actual number of files in the achive when uploading
-  size_t              getFilesSizes() {                        // Actual size of all files in bytes
+  size_t              getFilesSizes() const {                  // Actual size of all files in bytes
     return _filesSizes;
   }
 
 private:
 
-  void clearHeader();
-  void setupHeader();
-  bool validateHeader();
+  void     clearHeader();
+  void     setupHeader();
+  bool     validateHeader();
+  uint32_t clearAndCalculateHeaderChecksum();
 
   union {
     posix_header _tarHeader;                                  // Header
-    uint8_t      _tarData[TAR_HEADER_SIZE];                   // Access to the tarheader data
+    uint8_t      _tarData[TAR_HEADER_SIZE]{};                 // Access to the tarheader data
   };
   std::vector<TarFileInfo_struct>_filesList;                  // List of files
   String _fileName;                                           // Archive name

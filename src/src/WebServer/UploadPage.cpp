@@ -134,12 +134,13 @@ void handleSDFileUpload() {
 void handleFileUploadBase(bool toSDcard) {
   if (!isLoggedIn()) { return; }
 
-  static boolean valid   = false;
-  bool receivedConfigDat = false;
+  static boolean valid                = false;
+  bool receivedConfigDat              = false;
+  const FileDestination_e destination = toSDcard ? FileDestination_e::SD : FileDestination_e::ANY;
 
   HTTPUpload& upload = web_server.upload();
 
-  if (upload.filename.c_str()[0] == 0)
+  if (upload.filename.isEmpty())
   {
     uploadResult = uploadResult_e::NoFilename;
     return;
@@ -167,21 +168,22 @@ void handleFileUploadBase(bool toSDcard) {
       }
 
       if (valid) {
-        String filename = patch_fname(upload.filename);
-
         # if FEATURE_TARSTREAM_SUPPORT
 
-        if ((filename.length() > 3) && filename.substring(filename.length() - 4).equalsIgnoreCase(F(".tar"))) {
-          tarStream = new TarStream(filename, toSDcard ? FileDestination_e::SD : FileDestination_e::ANY);
+        if ((upload.filename.length() > 3) && upload.filename.substring(upload.filename.length() - 4).equalsIgnoreCase(F(".tar"))) {
+          tarStream = new TarStream(upload.filename, destination);
           #  ifndef BUILD_NO_DEBUG
-          addLogMove(LOG_LEVEL_INFO, concat(F("Upload: TAR Processing .tar file: "), filename));
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLogMove(LOG_LEVEL_INFO, concat(F("Upload: TAR Processing .tar file: "), upload.filename));
+          }
           #  endif // ifndef BUILD_NO_DEBUG
         } else
         # endif // if FEATURE_TARSTREAM_SUPPORT
         {
           // once we're safe, remove file and create empty one...
-          tryDeleteFile(filename, toSDcard ? FileDestination_e::SD : FileDestination_e::ANY);
-          uploadFile = tryOpenFile(filename.c_str(), "w", toSDcard ? FileDestination_e::SD : FileDestination_e::ANY);
+          tryDeleteFile(upload.filename, destination);
+          uploadFile = tryOpenFile(upload.filename, F("w"), destination);
         }
 
         // dont count manual uploads: flashCount();
@@ -216,12 +218,12 @@ void handleFileUploadBase(bool toSDcard) {
       if (tarStream->isFileIncluded(getFileName(FileType::CONFIG_DAT))) { // Is config.dat included?
         receivedConfigDat = true;
 
-        for (uint8_t n = 1; n <= TASKS_MAX; n++) {
-          const String tmpfile = strformat(F(DAT_TASKS_CUSTOM_EXTENSION_FILEMASK), n);
+        for (uint8_t n = 0; n < TASKS_MAX; n++) {
+          const String extcfgFilename = SettingsType::getSettingsFileName(SettingsType::Enum::CustomTaskSettings_Type, n);
 
-          if (!tarStream->isFileIncluded(tmpfile) &&
-              tryDeleteFile(tmpfile)) {
-            addLogMove(LOG_LEVEL_INFO, concat(F("Upload: Removing not included extended settings: "), tmpfile));
+          if (!tarStream->isFileIncluded(extcfgFilename) &&
+              tryDeleteFile(extcfgFilename) && loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLogMove(LOG_LEVEL_INFO, concat(F("Upload: Removing not included extended settings: "), extcfgFilename));
           }
         }
       }

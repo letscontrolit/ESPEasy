@@ -3,6 +3,7 @@
 #ifdef WEBSERVER_DOWNLOAD
 
 # include "../WebServer/ESPEasy_WebServer.h"
+# include "../DataTypes/SettingsType.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_Storage.h"
@@ -100,8 +101,8 @@ void handle_config_download(bool fullBackup) {
       tarStream->addFile(dataFile.name(), dataFile.size());
 
       // extcfg<tasknr>.dat files
-      for (uint8_t n = 1; n <= TASKS_MAX; n++) {
-        tarStream->addFileIfExists(strformat(F(DAT_TASKS_CUSTOM_EXTENSION_FILEMASK), n));
+      for (uint8_t n = 0; n < TASKS_MAX; n++) {
+        tarStream->addFileIfExists(SettingsType::getSettingsFileName(SettingsType::Enum::CustomTaskSettings_Type, n));
       }
 
       // other config files
