@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2023-08-26 tonhuisman: P044 mode: Set RX time-out default to 50 msec for better receive pace of P1 data
  * 2023-08-17 tonhuisman: P1 data: Allow some extra reading timeout between the data and the checksum, as some meters need more time to
  *                        calculate the CRC. Add CR/LF before sending P1 data.
  * 2023-08-12 tonhuisman: Strip off occasional 8th bit from received data, to avoid unexpected failures on P1 data reception
@@ -121,7 +122,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         P020_RESET_TARGET_PIN  = P020_DEFAULT_RESET_TARGET_PIN;
         P020_SERIAL_PROCESSING = static_cast<int>(P020_Events::P1WiFiGateway); // Enable P1 WiFi Gateway processing (only)
         P020_LED_PIN           = P020_STATUS_LED;
-        P020_RX_WAIT           = 0;
+        P020_RX_WAIT           = 50;                                           // 50 msec for proper P1 packet receive mode
         P020_REPLACE_SPACE     = 0;                                            // Force empty
         P020_REPLACE_NEWLINE   = 0;
         P020_FLAGS             = 0u;                                           // Reset
