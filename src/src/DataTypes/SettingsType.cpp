@@ -209,7 +209,7 @@ SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
 
 String SettingsType::getSettingsFileName(Enum settingsType, int index) {
   #if FEATURE_EXTENDED_CUSTOM_SETTINGS
-  if ((Enum::CustomTaskSettings_Type == settingsType) && (INVALID_TASK_INDEX != index)) {
+  if ((Enum::CustomTaskSettings_Type == settingsType) && validTaskIndex(index)) {
     return strformat(F(DAT_TASKS_CUSTOM_EXTENSION_FILEMASK), index + 1); // Add 0/1 offset to match displayed task ID
   }
   #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
