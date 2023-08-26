@@ -18,7 +18,7 @@ struct P023_data_struct : public PluginTaskData_base {
     OLED_128x32  = 0x04
   };
 
-  enum class Spacing {
+  enum class Spacing : uint8_t {
     normal    = 0x01,
     optimized = 0x02
   };
@@ -28,7 +28,7 @@ struct P023_data_struct : public PluginTaskData_base {
                    Spacing _font_spacing,
                    uint8_t _displayTimer,
                    uint8_t _use_sh1106);
-  P023_data_struct() = delete;
+  P023_data_struct()          = delete;
   virtual ~P023_data_struct() = default;
 
   void   setDisplayTimer(uint8_t _displayTimer);
@@ -39,16 +39,26 @@ struct P023_data_struct : public PluginTaskData_base {
 
   void   resetDisplay();
 
-  void   StartUp_OLED();
+  void   StartUp_OLED(struct EventStruct *event);
 
-  void   displayOn();
+  bool   plugin_read(struct EventStruct *event);
+  bool   plugin_write(struct EventStruct *event,
+                      String            & string);
 
-  void   displayOff();
+  bool   web_show_values();
 
-  void   clearDisplay();
+  void   setCurrentText(const String& string,
+                        int           X,
+                        int           Y);
+
+  void displayOn();
+
+  void displayOff();
+
+  void clearDisplay();
 
   // Actually this sends a byte, not a char to draw in the display.
-  void   sendChar(unsigned char data);
+  void sendChar(unsigned char data);
 
   // Prints a display char (not just a byte) in coordinates X Y,
   // currently unused:
@@ -79,6 +89,11 @@ struct P023_data_struct : public PluginTaskData_base {
   Spacing font_spacing = Spacing::normal;
   uint8_t displayTimer = 0;
   uint8_t use_sh1106   = 0;
+
+private:
+
+  String strings[P23_Nlines]{};
+  String currentLines[P23_Nlines]{};
 };
 
 #endif // ifdef USES_P023
