@@ -20,13 +20,13 @@ bool isProtectedFileType(const String& filename)
 {
   #if FEATURE_EXTENDED_CUSTOM_SETTINGS
   bool isTaskSpecificConfig = false;
-  const String  fname       = filename.substring(filename.startsWith(F("/")) ? 1 : 0);
-  const String  mask        = F(DAT_TASKS_CUSTOM_EXTENSION_FILEMASK);
-  const uint8_t mPerc       = mask.indexOf('%');
+  const String fname        = filename.substring(filename.startsWith(F("/")) ? 1 : 0);
+  const String mask         = F(DAT_TASKS_CUSTOM_EXTENSION_FILEMASK);
+  const int8_t mPerc        = mask.indexOf('%');
 
-  if (fname.startsWith(mask.substring(0, mPerc))) {
-    for (uint8_t n = 1; n <= TASKS_MAX && !isTaskSpecificConfig; n++) {
-      isTaskSpecificConfig |= (fname.equalsIgnoreCase(strformat(mask, n)));
+  if ((mPerc > -1) && fname.startsWith(mask.substring(0, mPerc))) {
+    for (uint8_t n = 0; n < TASKS_MAX && !isTaskSpecificConfig; n++) {
+      isTaskSpecificConfig |= (fname.equalsIgnoreCase(strformat(mask, n + 1)));
     }
   }
   #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
