@@ -430,11 +430,7 @@ void fileSystemCheck()
   {
     clearAllCaches();
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("FS   : Mount successful, used ");
-      log += SpiffsUsedBytes();
-      log += F(" bytes of ");
-      log += SpiffsTotalBytes();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("FS   : Mount successful, used %d bytes of %d"), SpiffsUsedBytes(), SpiffsTotalBytes()));
     }
 
     // Run garbage collection before any file is open.
@@ -1466,9 +1462,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SaveToFile: free stack: ");
-    log += getCurrentFreeStack();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("SaveToFile: free stack: "), getCurrentFreeStack()));
   }
   #endif
   delay(1);
@@ -1528,9 +1522,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   STOP_TIMER(SAVEFILE_STATS);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SaveToFile: free stack after: ");
-    log += getCurrentFreeStack();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("SaveToFile: free stack after: "), getCurrentFreeStack()));
   }
   #endif
 
@@ -1746,8 +1738,10 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
       dataOffset = (DAT_TASKS_CUSTOM_SIZE - posInBlock);   // Bytes to keep 'local'
       # ifndef BUILD_NO_DEBUG
       const String styp = SettingsType::getSettingsTypeString(settingsType);
-      addLog(LOG_LEVEL_INFO, concat(F("ExtraSaveToFile: "), styp) + concat(F(" file: "), fname) +
-             strformat(F(" size: %d pos: %d"), dataOffset, posInBlock));
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, strformat(F("ExtraSaveToFile: %s file: %s size: %d pos: %d"), 
+                                         styp.c_str(), fname.c_str(), dataOffset, posInBlock));
+      }
       # endif // ifndef BUILD_NO_DEBUG
       const String res = SaveToFile(fname.c_str(), offset + posInBlock, memAddress, dataOffset);
 
@@ -1770,7 +1764,7 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
                                                         );
   if (!fileExists(fname)) {
     #if FEATURE_EXTENDED_CUSTOM_SETTINGS
-    if (INVALID_TASK_INDEX == taskIndex) {
+    if (!validTaskIndex(taskIndex)) {
     #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
       InitFile(settingsType);
     #if FEATURE_EXTENDED_CUSTOM_SETTINGS
@@ -1780,8 +1774,10 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
     #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
   }
   #ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) +
-                         strformat(F(" file: %s task: %d"), fname.c_str(), index + 1));
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) +
+           strformat(F(" file: %s task: %d"), fname.c_str(), index + 1));
+  }
   #endif
   return SaveToFile(fname.c_str(), offset + posInBlock, memAddress + dataOffset, datasize);
 }
@@ -1806,13 +1802,15 @@ String ClearInFile(SettingsType::Enum settingsType, int index) {
 
 #if FEATURE_EXTENDED_CUSTOM_SETTINGS
 bool DeleteExtendedCustomTaskSettingsFile(SettingsType::Enum settingsType, int index) {
-  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) && (INVALID_TASK_INDEX !=index)) {
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) && validTaskIndex(index)) {
     const String fname = SettingsType::getSettingsFileName(settingsType, index);
 
     if (fileExists(fname)) {
       const bool deleted = tryDeleteFile(fname); // Don't need the extension file anymore, so delete it
       # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, concat(F("CustomTaskSettings: Removing no longer needed file: "), fname));
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, concat(F("CustomTaskSettings: Removing no longer needed file: "), fname));
+      }
       # endif // ifndef BUILD_NO_DEBUG
       return deleted;
     }
@@ -2006,7 +2004,9 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
           }
 #ifndef BUILD_NO_DEBUG
         } else {
-          addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
+          }
 #endif
         }
       }
