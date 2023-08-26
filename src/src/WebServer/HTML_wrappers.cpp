@@ -495,9 +495,9 @@ void addHtmlLink(const String& htmlclass, const String& url, const String& label
   addHtml(F("</a>"));
 }
 
-void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content, const String& id)
+void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content, const String& id, const String& attribute)
 {
-  addHtmlDiv(String(htmlclass), content, id);
+  addHtmlDiv(String(htmlclass), content, id, attribute);
 }
 
 
@@ -509,11 +509,15 @@ void addHtmlDiv(const String& htmlclass, const String& content) {
   addHtmlDiv(htmlclass, content, EMPTY_STRING);
 }
 
-void addHtmlDiv(const String& htmlclass, const String& content, const String& id) {
+void addHtmlDiv(const String& htmlclass, const String& content, const String& id, const String& attribute) {
   addHtml(F(" <div "));
   addHtmlAttribute(F("class"), htmlclass);
   if (id.length() > 0) {
     addHtmlAttribute(F("id"), id);
+  }
+  if (attribute.length() > 0) {
+    addHtml(' ');
+    addHtml(attribute);
   }
   addHtml('>');
   addHtml(content);
