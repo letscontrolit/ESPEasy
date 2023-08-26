@@ -147,11 +147,11 @@ void addDisabled();
 
 void addHtmlLink(const String& htmlclass, const String& url, const String& label);
 
-void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content = EMPTY_STRING, const String& id = EMPTY_STRING);
+void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content = EMPTY_STRING, const String& id = EMPTY_STRING, const String& attribute = EMPTY_STRING);
 
 void addHtmlDiv(const String& htmlclass);
 void addHtmlDiv(const String& htmlclass, const String& content);
-void addHtmlDiv(const String& htmlclass, const String& content, const String& id);
+void addHtmlDiv(const String& htmlclass, const String& content, const String& id, const String& attribute = EMPTY_STRING);
 
 void addEnabled(boolean enabled);
 

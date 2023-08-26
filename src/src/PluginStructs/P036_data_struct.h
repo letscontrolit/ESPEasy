@@ -16,37 +16,82 @@
 
 // Macros
 # define P036_DisplayIsOn (UserVar[event->BaseVarIndex] > 0)
-# define P036_SetDisplayOn(uint8_t) (UserVar[event->BaseVarIndex] = uint8_t)
+# define P036_SetDisplayOn(_state) (UserVar[event->BaseVarIndex] = _state)
 
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
 // # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)
 // # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)
 // # define P036_CHECK_HEAP        // Enable to add extra logging during Plugin_036()
 // # define P036_CHECK_INDIVIDUAL_FONT // /Enable to add extra logging for individual font calculation
+# ifndef P036_FEATURE_DISPLAY_PREVIEW
+#  define P036_FEATURE_DISPLAY_PREVIEW   1
+# endif // ifndef P036_FEATURE_DISPLAY_PREVIEW
+# ifdef P036_FEATURE_ALIGN_PREVIEW
+#  define P036_FEATURE_ALIGN_PREVIEW     1
+# endif // ifdef P036_FEATURE_ALIGN_PREVIEW
+
+# if defined(ESP8266_1M) && defined(P036_FEATURE_ALIGN_PREVIEW) && P036_FEATURE_ALIGN_PREVIEW
+#  undef P036_FEATURE_ALIGN_PREVIEW
+#  define P036_FEATURE_ALIGN_PREVIEW   0 // Disable for 1M builds
+# endif // if defined(ESP8266_1M) && defined(P036_FEATURE_ALIGN_PREVIEW) && P036_FEATURE_ALIGN_PREVIEW
 
 # ifndef P036_LIMIT_BUILD_SIZE
-#  define P036_SEND_EVENTS       // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
-#  define P036_ENABLE_LINECOUNT  // Enable the linecount subcommand
+#  ifndef P036_SEND_EVENTS
+#   define P036_SEND_EVENTS       1 // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
+#  endif // ifndef P036_SEND_EVENTS
+#  ifndef P036_ENABLE_LINECOUNT
+#   define P036_ENABLE_LINECOUNT  1 // Enable the linecount subcommand
+#  endif // ifndef P036_ENABLE_LINECOUNT
+#  ifndef P036_USERDEF_HEADERS
+#   define P036_USERDEF_HEADERS   1 // Enable User defined headers
+#  endif // ifndef P036_USERDEF_HEADERS
+# else // ifndef P036_LIMIT_BUILD_SIZE
+#  if defined(P036_SEND_EVENTS) && P036_SEND_EVENTS
+#   undef P036_SEND_EVENTS
+#  endif // if defined(P036_SEND_EVENTS) && P036_SEND_EVENTS
+#  ifndef P036_SEND_EVENTS
+#   define P036_SEND_EVENTS       0 // Disable sending events
+#  endif // ifndef P036_SEND_EVENTS
+#  if defined(P036_ENABLE_LINECOUNT) && P036_ENABLE_LINECOUNT
+#   undef P036_ENABLE_LINECOUNT
+#  endif // if defined(P036_ENABLE_LINECOUNT) && P036_ENABLE_LINECOUNT
+#  ifndef P036_ENABLE_LINECOUNT
+#   define P036_ENABLE_LINECOUNT  0 // Disable the linecount subcommand
+#  endif // ifndef P036_ENABLE_LINECOUNT
+// We can always disable this feature later, if needed
+// #  if defined(P036_USERDEF_HEADERS) && P036_USERDEF_HEADERS
+// #   undef P036_USERDEF_HEADERS
+// #  endif // if defined(P036_USERDEF_HEADERS) && P036_USERDEF_HEADERS
+// #  ifndef P036_USERDEF_HEADERS
+// #   define P036_USERDEF_HEADERS   0 // Disable User defined headers
+// #  endif // ifndef P036_USERDEF_HEADERS
 # endif // ifndef P036_LIMIT_BUILD_SIZE
-# define P036_ENABLE_HIDE_FOOTER // Enable the Hide indicator (footer) option
-# define P036_ENABLE_LEFT_ALIGN  // Enable the Left-align content option and leftalign subcommand
+# ifndef P036_USERDEF_HEADERS
+#  define P036_USERDEF_HEADERS   1  // Enable User defined headers if not handled yet
+# endif // ifndef P036_USERDEF_HEADERS
+# ifndef P036_ENABLE_HIDE_FOOTER
+#  define P036_ENABLE_HIDE_FOOTER 1 // Enable the Hide indicator (footer) option
+# endif // ifndef P036_ENABLE_HIDE_FOOTER
+# ifndef P036_ENABLE_LEFT_ALIGN
+#  define P036_ENABLE_LEFT_ALIGN  1 // Enable the Left-align content option and leftalign subcommand
+# endif // ifndef P036_ENABLE_LEFT_ALIGN
 
-# define P36_Nlines 12           // The number of different lines which can be displayed - each line is 64 chars max
-# define P36_NcharsV0 32         // max chars per line up to 22.11.2019 (V0)
-# define P36_NcharsV1 64         // max chars per line from 22.11.2019 (V1)
-# define P36_MaxSizesCount 3     // number of different OLED sizes
+# define P36_Nlines 12              // The number of different lines which can be displayed - each line is 64 chars max
+# define P36_NcharsV0 32            // max chars per line up to 22.11.2019 (V0)
+# define P36_NcharsV1 64            // max chars per line from 22.11.2019 (V1)
+# define P36_MaxSizesCount 3        // number of different OLED sizes
 # ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 3     // number of different fonts
+#  define P36_MaxFontCount 3        // number of different fonts
 # else // ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 5     // number of different fonts
+#  define P36_MaxFontCount 5        // number of different fonts
 # endif // ifdef P036_LIMIT_BUILD_SIZE
 
-# define P36_MaxDisplayWidth 128
+# define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight 64
-# define P36_DisplayCentre 64
-# define P36_HeaderHeight 12
-# define P036_IndicatorTop     56
-# define P036_IndicatorHeight   8
+# define P36_DisplayCentre    64
+# define P36_HeaderHeight     12
+# define P036_IndicatorTop    56
+# define P036_IndicatorHeight 8
 
 # define P36_WIFI_STATE_UNSET          -2
 # define P36_WIFI_STATE_NOT_CONNECTED  -1
@@ -56,7 +101,7 @@
 # define P36_PageScrollTick            (P36_PageScrollTimer + 20) // total time for one PageScrollTick (including the handling time of 20ms
                                                                   // in PLUGIN_TIMER_IN)
 # define P36_PageScrollPix             4                          // min pixel change while page scrolling
-# define P36_DebounceTreshold           5                         // number of 20 msec (fifty per second) ticks before the button has
+# define P36_DebounceTreshold          5                          // number of 20 msec (fifty per second) ticks before the button has
                                                                   // settled
 # define P36_RepeatDelay               50                         // number of 20 msec ticks before repeating the button action when holding
 
@@ -69,8 +114,8 @@
 # define P036_CONTRAST    PCONFIG(6)
 # define P036_RESOLUTION  PCONFIG(7)
 
-# define P036_FLAGS_0     PCONFIG_LONG(0)
-# define P036_FLAGS_1     PCONFIG_LONG(1)
+# define P036_FLAGS_0     PCONFIG_ULONG(0)
+# define P036_FLAGS_1     PCONFIG_ULONG(1)
 
 // P036_FLAGS_0
 # define P036_FLAG_HEADER_ALTERNATIVE   0 // Bit 7-0 HeaderContentAlternative
@@ -83,7 +128,7 @@
 # define P036_FLAG_SCROLL_WITHOUTWIFI  24 // Bit 24 ScrollWithoutWifi
 # define P036_FLAG_HIDE_HEADER         25 // Bit 25 Hide header
 # define P036_FLAG_INPUT_PULLUP        26 // Bit 26 Input PullUp
-// # define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 not longer used
+// # define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 no longer used
 # define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
 # define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
 # define P036_FLAG_HIDE_FOOTER         30 // Bit 30 Hide footer
@@ -92,40 +137,44 @@
 # define P036_FLAG_LEFT_ALIGNED        0  // Bit1-0 Layout left aligned
 # define P036_FLAG_REDUCE_LINE_NO      2  // Bit 2 Reduce line number to fit individual line font settings
 
-enum class eHeaderContent {
-  eSSID     = 1,
-  eSysName  = 2,
-  eIP       = 3,
-  eMAC      = 4,
-  eRSSI     = 5,
-  eBSSID    = 6,
-  eWiFiCh   = 7,
-  eUnit     = 8,
-  eSysLoad  = 9,
-  eSysHeap  = 10,
-  eSysStack = 11,
-  eTime     = 12,
-  eDate     = 13,
-  ePageNo   = 14,
+enum class eHeaderContent : uint8_t {
+  eSSID     = 1u,
+  eSysName  = 2u,
+  eIP       = 3u,
+  eMAC      = 4u,
+  eRSSI     = 5u,
+  eBSSID    = 6u,
+  eWiFiCh   = 7u,
+  eUnit     = 8u,
+  eSysLoad  = 9u,
+  eSysHeap  = 10u,
+  eSysStack = 11u,
+  eTime     = 12u,
+  eDate     = 13u,
+  ePageNo   = 14u,
+  # if P036_USERDEF_HEADERS
+  eUserDef1 = 15u,
+  eUserDef2 = 16u,
+  # endif // if P036_USERDEF_HEADERS
 };
 
-enum class p036_resolution {
-  pix128x64 = 0,
-  pix128x32 = 1,
-  pix64x48  = 2
+enum class p036_resolution : uint8_t {
+  pix128x64 = 0u,
+  pix128x32 = 1u,
+  pix64x48  = 2u
 };
 
-enum class ePageScrollSpeed {
-  ePSS_VerySlow = 1, // 800ms
-  ePSS_Slow     = 2, // 400ms
-  ePSS_Fast     = 4, // 200ms
-  ePSS_VeryFast = 8, // 100ms
-  ePSS_Instant  = 32 // 20ms
+enum class ePageScrollSpeed : uint8_t {
+  ePSS_VerySlow = 1u, // 800ms
+  ePSS_Slow     = 2u, // 400ms
+  ePSS_Fast     = 4u, // 200ms
+  ePSS_VeryFast = 8u, // 100ms
+  ePSS_Instant  = 32u // 20ms
 };
 
-enum class eP036pinmode {
-  ePPM_Input       = 0,
-  ePPM_InputPullUp = 1
+enum class eP036pinmode : uint8_t {
+  ePPM_Input       = 0u,
+  ePPM_InputPullUp = 1u
 };
 
 typedef struct {
@@ -144,9 +193,9 @@ typedef struct {
 } tScrollingLines;
 
 typedef struct {
-  String                     SPLcontent; // content
+  String                     SPLcontent;    // content
   OLEDDISPLAY_TEXT_ALIGNMENT Alignment = TEXT_ALIGN_LEFT;
-  uint8_t                    SPLidx = 0;     // index to DisplayLinesV1
+  uint8_t                    SPLidx    = 0; // index to DisplayLinesV1
 } tScrollingPageLines;
 
 typedef struct {
@@ -160,19 +209,19 @@ typedef struct {
   uint8_t             linesPerFrameOut = 0; // the number of lines in frame out
 } tScrollingPages;
 
-enum class eModifyFont {
-  eMinimize = 4,
-  eReduce   = 3,
-  eNone     = 7, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
-  eEnlarge  = 1,
-  eMaximize = 2
+enum class eModifyFont : uint8_t {
+  eMinimize = 4u,
+  eReduce   = 3u,
+  eNone     = 7u, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
+  eEnlarge  = 1u,
+  eMaximize = 2u
 };
 
-enum class eAlignment {
-  eGlobal = 7, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
-  eLeft   = 1,
-  eCenter = 0,
-  eRight  = 2
+enum class eAlignment : uint8_t {
+  eGlobal = 7u, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
+  eLeft   = 1u,
+  eCenter = 0u,
+  eRight  = 2u
 };
 
 # define P036_FLAG_ModifyLayout_Font        0 // Bit 2-0 eModifyFont
@@ -229,9 +278,9 @@ typedef struct {
 
 typedef struct {
   uint8_t fontIdx = 0; // font index for this line setting
-  uint8_t Top = 0;     // top in pix for this line setting
-  uint8_t Height = 0;  // font height in pix
-  int8_t  Space = 0;   // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
+  uint8_t Top     = 0; // top in pix for this line setting
+  uint8_t Height  = 0; // font height in pix
+  int8_t  Space   = 0; // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
 # ifdef P036_FONT_CALC_LOG
   const __FlashStringHelper* FontName() const;
 # endif // ifdef P036_FONT_CALC_LOG
@@ -247,15 +296,15 @@ typedef struct {
 } tSizeSettings;
 
 typedef struct {
-  uint8_t frame = 0;           // frame for this line
+  uint8_t frame           = 0; // frame for this line
   uint8_t DisplayedPageNo = 0; // number of shown pages for this line, set in CalcMaxPageCount()
-  uint8_t ypos = 0;            // ypos for this line
-  uint8_t fontIdx = 0;         // font index for this line
-  uint8_t FontHeight = 0;      // font height for this line
+  uint8_t ypos            = 0; // ypos for this line
+  uint8_t fontIdx         = 0; // font index for this line
+  uint8_t FontHeight      = 0; // font height for this line
 } tLineSettings;
 
 typedef struct {
-  uint8_t NextLineNo = 0;            // number of next line or 0xFF if settings do not fit
+  uint8_t NextLineNo            = 0; // number of next line or 0xFF if settings do not fit
   uint8_t IdxForBiggestFontUsed = 0; // ypos for this line
 } tIndividualFontSettings;
 
@@ -305,9 +354,9 @@ struct P036_data_struct : public PluginTaskData_base {
   void setContrast(uint8_t OLED_contrast);
 
   void setOrientationRotated(bool rotated);
-  # ifdef P036_ENABLE_LINECOUNT
+  # if P036_ENABLE_LINECOUNT
   void setNrLines(uint8_t NrLines);
-  # endif // P036_ENABLE_LINECOUNT
+  # endif // if P036_ENABLE_LINECOUNT
 
 
   // The screen is set up as:
@@ -335,8 +384,8 @@ struct P036_data_struct : public PluginTaskData_base {
   void                       update_display();
 
   // get pixel positions
-  int16_t                    GetHeaderHeight();
-  int16_t                    GetIndicatorTop();
+  int16_t                    GetHeaderHeight() const;
+  int16_t                    GetIndicatorTop() const;
   tFontSettings              CalculateFontSettings(uint8_t _defaultLines);
 
   void                       P036_JumpToPage(struct EventStruct *event,
@@ -355,11 +404,15 @@ struct P036_data_struct : public PluginTaskData_base {
 
   void                       markButtonStateProcessed();
 
-  # ifdef P036_ENABLE_LEFT_ALIGN
+  # if P036_ENABLE_LEFT_ALIGN
   void                       setTextAlignment(eAlignment aAlignment);
-  OLEDDISPLAY_TEXT_ALIGNMENT getTextAlignment(eAlignment aAlignment);
-  uint8_t                    GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment);
-# endif // ifdef P036_ENABLE_LEFT_ALIGN
+  OLEDDISPLAY_TEXT_ALIGNMENT getTextAlignment(eAlignment aAlignment) const;
+  uint8_t                    GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) const;
+  # endif // ifdef P036_ENABLE_LEFT_ALIGN
+
+  # if P036_FEATURE_DISPLAY_PREVIEW
+  bool web_show_values();
+  # endif // if P036_FEATURE_DISPLAY_PREVIEW
 
   // Instantiate display here - does not work to do this within the INIT call
   OLEDDisplay *display = nullptr;
@@ -406,6 +459,11 @@ struct P036_data_struct : public PluginTaskData_base {
   tLineSettings LineSettings[P36_Nlines]{};
   uint16_t CalcPixLength(uint8_t LineNo);
 
+  # if P036_USERDEF_HEADERS
+  String userDef1;
+  String userDef2;
+  # endif // if P036_USERDEF_HEADERS
+
 private:
 
   tIndividualFontSettings CalculateIndividualFontSettings(uint8_t LineNo,
@@ -421,6 +479,10 @@ private:
                                  OLEDDISPLAY_TEXT_ALIGNMENT textAlignment);
   void     CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine,
                                    uint8_t              Counter);
+
+  # if P036_FEATURE_DISPLAY_PREVIEW
+  String currentLines[P36_MAX_LinesPerPage]{};
+  # endif // if P036_FEATURE_DISPLAY_PREVIEW
 };
 
 #endif // ifdef USES_P036
