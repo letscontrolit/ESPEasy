@@ -100,10 +100,13 @@ void handle_config_download(bool fullBackup) {
     if (nullptr != tarStream) {
       tarStream->addFile(dataFile.name(), dataFile.size());
 
+      #  if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
       // extcfg<tasknr>.dat files
       for (uint8_t n = 0; n < TASKS_MAX; n++) {
         tarStream->addFileIfExists(SettingsType::getSettingsFileName(SettingsType::Enum::CustomTaskSettings_Type, n));
       }
+      #  endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
 
       // other config files
       tarStream->addFileIfExists(getFileName(FileType::NOTIFICATION_DAT));
