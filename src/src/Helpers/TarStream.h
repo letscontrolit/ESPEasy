@@ -1,9 +1,13 @@
 /**
  * TarStream : Create/receive a .tar file while streaming via http webserver
  * Copyright (c) 2023.. Ton Huisman for ESPEasy
+ * Code is inspired by this example: https://github.com/esp8266/Arduino/issues/3966#issuecomment-351850298
  *
  * Changelog:
- * 2023-08-26 tonhuisman: Code improvements en de-duplication
+ * 2023-08-27 tonhuisman: Add explicit check for / in filename, to avoid subdirectory/file to overwrite file (subdir is ignored by SPIFFS)
+ *                        Check if file exists before trying to delete it, avoiding unneeded error log messages
+ *                        Add link to the code that inspired this class
+ * 2023-08-26 tonhuisman: Code improvements and de-duplication
  * 2023-08-24 tonhuisman: Implement streaming in a .tar storing all regular files in the chosen storage (Flash or SD), replacing existing
  *                        files, Flash: adding/replacing only if there is at least 2 blocks of storage available
  * 2023-08-23 tonhuisman: Implement streaming out a .tar via the read() method

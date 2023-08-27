@@ -95,8 +95,8 @@ size_t TarStream::write(const uint8_t *buf,
             # endif // if TAR_STREAM_DEBUG
           } else {
             const String fname(_tarHeader.name);
-            const size_t fsize   = strtoul(_tarHeader.size, nullptr, 8); // Octal
-            const bool   isValid = validateHeader();
+            const size_t fsize   = strtoul(_tarHeader.size, nullptr, 8);         // Octal
+            const bool   isValid = validateHeader() && fname.indexOf('/') == -1; // Don't _allow_ subdirectories
 
             # if TAR_STREAM_DEBUG
 
@@ -136,7 +136,9 @@ size_t TarStream::write(const uint8_t *buf,
 
                 if (available > _filesList[_fileIndex].tarSize) { // Use rounded-up size
                   // delete and create file for write mode
-                  if (!tryDeleteFile(_filesList[_fileIndex].fileName, _destination) && loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                  if (fileExists(_filesList[_fileIndex].fileName) &&
+                      !tryDeleteFile(_filesList[_fileIndex].fileName, _destination) &&
+                      loglevelActiveFor(LOG_LEVEL_ERROR)) {
                     addLog(LOG_LEVEL_ERROR, concat(F("TarStream: "), concat(F("Can't delete file: "), _filesList[_fileIndex].fileName)));
                   }
                   _currentFile = tryOpenFile(_filesList[_fileIndex].fileName, F("w"), _destination);
