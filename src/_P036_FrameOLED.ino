@@ -1298,7 +1298,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       if (success && (eventId > 0)) {
         if (bDisplayON) {
-          # ifdef P036_SEND_EVENTS
+          # if P036_SEND_EVENTS
 
           if (sendEvents) {
             P036_SendEvent(event, eventId, LineNo);
@@ -1307,7 +1307,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
             }
           }
-          # endif // ifdef P036_SEND_EVENTS
+          # endif // if P036_SEND_EVENTS
           P036_SetDisplayOn(1); //  Save the fact that the display is now ON
         }
 
