@@ -1340,9 +1340,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           if (P036_DisplayIsOn) {
             P036_data->bLineScrollEnabled=false;  // disable scrolling temporary
+            # if P036_ENABLE_TICKER
             if (P036_data->bUseTicker)
               P036_data->P036_JumpToPage(event, 0);  // Restart the Ticker
             else
+            # endif // if P036_ENABLE_TICKER
               P036_data->P036_JumpToPageOfLine(event, LineNo - 1); // Start to display the selected page, function needs 65ms!
             # if P036_SEND_EVENTS
 
