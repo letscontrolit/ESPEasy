@@ -1272,26 +1272,28 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           *currentLine = parseStringKeepCaseNoTrim(string, 3);
           *currentLine = P036_data->P36_parseTemplate(*currentLine, LineNo - 1);
 
-          // calculate Pix length of new Content
-          uint16_t PixLength = P036_data->CalcPixLength(LineNo - 1);
+          if (!P036_data->bUseTicker) {
+            // calculate Pix length of new content, not necessary for ticker
+            uint16_t PixLength = P036_data->CalcPixLength(LineNo - 1);
 
-          if (PixLength > 255) {
-            String str_error = F("Pixel length of ");
-            str_error += PixLength;
-            str_error += F(" too long for line! Max. 255 pix!");
-            addHtmlError(str_error);
+            if (PixLength > 255) {
+              String str_error = F("Pixel length of ");
+              str_error += PixLength;
+              str_error += F(" too long for line! Max. 255 pix!");
+              addHtmlError(str_error);
 
-            const unsigned int strlen = currentLine->length();
+              const unsigned int strlen = currentLine->length();
 
-            if (strlen > 0) {
-              const float fAvgPixPerChar       = static_cast<float>(PixLength) / strlen;
-              const unsigned int iCharToRemove = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
+              if (strlen > 0) {
+                const float fAvgPixPerChar = static_cast<float>(PixLength) / strlen;
+                const unsigned int iCharToRemove = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
-              // shorten string because OLED controller can not handle such long strings
-              *currentLine = currentLine->substring(0, strlen - iCharToRemove);
+                // shorten string because OLED controller can not handle such long strings
+                *currentLine = currentLine->substring(0, strlen - iCharToRemove);
+              }
             }
           }
-          eventId        = P036_FLAG_EVENTS_FRAME_LINE;
+          eventId        = P036_EVENT_LINE;
           bUpdateDisplay = true;
         }
       }
@@ -1337,8 +1339,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
 
           if (P036_DisplayIsOn) {
-            P036_data->P036_JumpToPageOfLine(event, LineNo - 1); // Start to display the selected page
-            // function needs 65ms!
+            P036_data->bLineScrollEnabled=false;  // disable scrolling temporary
+            if (P036_data->bUseTicker)
+              P036_data->P036_JumpToPage(event, 0);  // Restart the Ticker
+            else
+              P036_data->P036_JumpToPageOfLine(event, LineNo - 1); // Start to display the selected page, function needs 65ms!
             # if P036_SEND_EVENTS
 
             if (sendEvents && bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE) && (currentFrame != P036_data->currentFrameToDisplay)) {
@@ -1349,7 +1354,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
 # ifdef PLUGIN_036_DEBUG
 
-          if (eventId == P036_FLAG_EVENTS_FRAME_LINE) {
+          if (eventId == P036_EVENT_LINE) {
           String log;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO) &&
