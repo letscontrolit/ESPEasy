@@ -40,6 +40,7 @@ ESPEasy_mega\_*[releasedate]*\_*[build-type]*\_*[opt-arduino-library]*\_*[hardwa
 *[build-type]* can be any of:
 Build type   | Description                               | included plugins                 |
 -------------|-------------------------------------------|----------------------------------|
+climate      | All plugins related to climate measurement| Stable + Climate                 |
 custom       | Custom predefined set/Defined in Custom.h | Specific                         |
 normal       | Standard plugins                          | Stable                           |
 collection_A | Normal + plugin collection A              | Stable + Collection base + set A |

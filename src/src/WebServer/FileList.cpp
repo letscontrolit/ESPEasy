@@ -413,12 +413,9 @@ void handle_SDfilelist() {
     // size_t entrynameLength = strlen(entry.name());
     if (entry.isDirectory())
     {
-      char SDcardChildDir[80];
-
       // take a look in the directory for entries
       String child_dir = current_dir + entry.name();
-      child_dir.toCharArray(SDcardChildDir, child_dir.length() + 1);
-      fs::File child         = SD.open(SDcardChildDir);
+      fs::File child         = SD.open(child_dir.c_str());
       fs::File dir_has_entry = child.openNextFile();
 
       // when the directory is empty, display the button to delete them
