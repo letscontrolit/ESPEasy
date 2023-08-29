@@ -76,6 +76,20 @@
         Set the global align option for content to centre (0), left (1) or right (2).
         "
         "
+        ``oledframedcmd,userDef1,'<user Defined Header1>'``
+        ","
+        Set the user defined header nr. 1 with any desired text value.
+
+        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
+        "
+        "
+        ``oledframedcmd,userDef2,'<user Defined Header2>'``
+        ","
+        Set the user defined header nr. 2 with any desired text value.
+
+        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
+        "
+        "
         ``oledframedcmd,restore,<line>``
         ","
         If the <line> parameter is set to 0 all line contents will be restored from the settings.
@@ -88,17 +102,4 @@
         The <speed> parameter corresponds with the line number of the scroll parameter of the settings (1=Very slow ... 6=Ticker).
         After applying the new scroll speed the display restarts with the first page.
         "
-        "
-        ``oledframedcmd,userDef1,"<user Defined Header1>"``
-        ","
-        Set the user defined header nr. 1 with any desired text value.
 
-        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
-        "
-        "
-        ``oledframedcmd,userDef2,"<user Defined Header2>"``
-        ","
-        Set the user defined header nr. 2 with any desired text value.
-
-        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
-        "
