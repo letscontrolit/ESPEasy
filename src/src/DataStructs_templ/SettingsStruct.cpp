@@ -364,6 +364,17 @@ void SettingsStruct_tmpl<N_TASKS>::DisableRulesCodeCompletion(bool value) {
 }
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
 
+#if FEATURE_TARSTREAM_SUPPORT
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::DisableSaveConfigAsTar() const { 
+  return bitRead(VariousBits2, 3);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::DisableSaveConfigAsTar(bool value) { 
+  bitWrite(VariousBits2, 3, value);
+}
+#endif // if FEATURE_TARSTREAM_SUPPORT
 
 
 template<unsigned int N_TASKS>

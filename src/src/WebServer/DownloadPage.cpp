@@ -69,7 +69,9 @@ void handle_config_download(bool fullBackup) {
   # if FEATURE_TARSTREAM_SUPPORT
   bool useTarFile       = false;
   const int  equalsSign = str.indexOf('=');
-  TarStream *tarStream  = new TarStream(str.substring(equalsSign + 1) + F(".tar"));
+  TarStream *tarStream  = (fullBackup || !Settings.DisableSaveConfigAsTar())
+    ? new TarStream(str.substring(equalsSign + 1) + F(".tar"))
+    : nullptr;
 
   if (fullBackup && (nullptr != tarStream)) {
     #  if defined(ESP8266)

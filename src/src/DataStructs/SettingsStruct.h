@@ -164,6 +164,10 @@ class SettingsStruct_tmpl
   void DisableRulesCodeCompletion(bool value);
   #endif // if FEATURE_RULES_EASY_COLOR_CODE
 
+  #if FEATURE_TARSTREAM_SUPPORT
+  bool DisableSaveConfigAsTar() const;
+  void DisableSaveConfigAsTar(bool value);
+  #endif // if FEATURE_TARSTREAM_SUPPORT
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
