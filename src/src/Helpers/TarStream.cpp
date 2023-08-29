@@ -98,13 +98,14 @@ size_t TarStream::write(const uint8_t *buf,
             const size_t fsize   = strtoul(_tarHeader.size, nullptr, 8);         // Octal
             const bool   isValid = validateHeader() && fname.indexOf('/') == -1; // Don't _allow_ subdirectories
 
-            # if TAR_STREAM_DEBUG
-
-            if (logInfo) {
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              # if TAR_STREAM_DEBUG
               addLog(LOG_LEVEL_INFO, strformat(F("%sWrite Receiving file %s size: %d"),
                                                String(F("TarStream: ")).c_str(), fname.c_str(), fsize));
+              # else // if TAR_STREAM_DEBUG
+              addLog(LOG_LEVEL_INFO, concat(F("Tar   : Load file: "), fname));
+              # endif // if TAR_STREAM_DEBUG
             }
-            # endif // if TAR_STREAM_DEBUG
 
             if (((_tarHeader.typeflag == REGTYPE) || (_tarHeader.typeflag == AREGTYPE)) &&
                 isValid) {           // Checked: typeflag, magic & checksum
