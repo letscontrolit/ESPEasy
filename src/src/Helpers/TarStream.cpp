@@ -345,16 +345,16 @@ void TarStream::setupHeader() {
 
   clearHeader();
   safe_strncpy(_tarHeader.name, _currentIndex.fileName.c_str(), tarHeader_name_size);
-  sprintf(_tarHeader.mode,    "%07o",  TUREAD + TUWRITE + TUEXEC + TGREAD + TGWRITE + TGEXEC + TOREAD + TOWRITE + TOEXEC);
-  sprintf(_tarHeader.uid,     "%07o",  0);
-  sprintf(_tarHeader.gid,     "%07o",  0);
-  sprintf(_tarHeader.size,    "%011o", _currentIndex.fileSize);
-  sprintf(_tarHeader.mtime,   "%011o", node_time.getUnixTime()); // We don't have file-date/times, use current date/time
+  sprintf(_tarHeader.mode,  "%07o",  TUREAD + TUWRITE + TUEXEC + TGREAD + TGWRITE + TGEXEC + TOREAD + TOWRITE + TOEXEC);
+  sprintf(_tarHeader.uid,   "%07o",  0);
+  sprintf(_tarHeader.gid,   "%07o",  0);
+  sprintf(_tarHeader.size,  "%011o", _currentIndex.fileSize);
+  sprintf(_tarHeader.mtime, "%011o", node_time.getUnixTime()); // We don't have file-date/times, use current date/time
   _tarHeader.typeflag = REGTYPE;
-  sprintf(_tarHeader.magic,   "%s",    TMAGIC);
-  sprintf(_tarHeader.version, "%s",    TVERSION);
+  sprintf(_tarHeader.magic, "%s",    TMAGIC);
+  _tarHeader.version[0] = TVERSION[0]; _tarHeader.version[1] = TVERSION[1];
 
-  uint32_t chksum = clearAndCalculateHeaderChecksum();
+  const uint32_t chksum = clearAndCalculateHeaderChecksum();
 
   sprintf(_tarHeader.chksum, "%06o", chksum); // FIXME Compatible with 7-zip: 6 octal digits + 0x0 + space?
 }
@@ -405,19 +405,34 @@ int TarStream::read() {
       _currentIndex    = *_currentIterator;
       _currentFile     = tryOpenFile(_currentIndex.fileName, F("r"));
 
-      // Set up header
-      setupHeader();
+      if (_currentFile) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, concat(F("Tar   : Save file: "), _currentIndex.fileName));
+        }
 
-      // Header done
-      _streamState    = TarStreamState_e::ReadingHeader;
-      _headerPosition = 0;
-      result          = _tarData[_headerPosition];
-      # if TAR_STREAM_DEBUG
+        // Set up header
+        setupHeader();
 
-      if (logInfo) {
-        addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial to ReadingHeader")));
+        // Header done
+        _streamState    = TarStreamState_e::ReadingHeader;
+        _headerPosition = 0;
+        result          = _tarData[_headerPosition];
+        # if TAR_STREAM_DEBUG
+
+        if (logInfo) {
+          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial to ReadingHeader")));
+        }
+        # endif // if TAR_STREAM_DEBUG
+      } else {
+        _streamState = TarStreamState_e::Error;
+
+        # if TAR_STREAM_DEBUG
+
+        if (logInfo) {
+          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial to Error")));
+        }
+        # endif // if TAR_STREAM_DEBUG
       }
-      # endif // if TAR_STREAM_DEBUG
       break;
     }
     case TarStreamState_e::ReadingHeader:
@@ -508,6 +523,10 @@ int TarStream::read() {
           _currentFile  = tryOpenFile(_currentIndex.fileName, F("r"));
 
           if (_currentFile) {
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              addLog(LOG_LEVEL_INFO, concat(F("Tar   : Save file: "), _currentIndex.fileName));
+            }
+
             // Set up header
             setupHeader();
 
