@@ -249,7 +249,6 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
 
-
   uint8_t flags = 0;
 
   if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
@@ -278,10 +277,12 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.I2C_Flags[taskIndex] = flags;
   }
 
-  struct EventStruct TempEvent(taskIndex);
-
+  // Must load from file system to make sure all caches and checksums match.
   ExtraTaskSettings.clear();
   ExtraTaskSettings.TaskIndex = taskIndex;
+  Cache.clearTaskCache(taskIndex);
+
+  struct EventStruct TempEvent(taskIndex);
 
   // Save selected output type.
   switch (Device[DeviceIndex].OutputDataType) {
@@ -295,32 +296,13 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     case Output_Data_type_t::All:
     {
       int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
+      Sensor_VType VType = TempEvent.sensorType;
 
       if ((pconfigIndex >= 0) && (pconfigIndex < PLUGIN_CONFIGVAR_MAX)) {
-        Sensor_VType VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
+        VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
         Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
-        ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
-
-        // nr output values has changed, generate new variable names
-        String  oldNames[VARS_PER_TASK];
-        uint8_t oldNrDec[VARS_PER_TASK];
-
-        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-          oldNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
-          oldNrDec[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
-        }
-
-        String dummy;
-        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
-
-        // Restore the settings that were already set by the user
-        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-          if (!oldNames[i].isEmpty()) {
-            ExtraTaskSettings.setTaskDeviceValueName(i, oldNames[i]);
-            ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
-          }
-        }
       }
+      ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
       break;
     }
   }
@@ -421,7 +403,16 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     }    
   }
 
+  // Store all PCONFIG values on the web page
+  // Must be done after PLUGIN_WEBFORM_SAVE, to allow tasks to clear the default task value names
+  // Output type selectors are typically stored in PCONFIG 
+  for (int pconfigIndex = 0; pconfigIndex < PLUGIN_CONFIGVAR_MAX; ++pconfigIndex) {
+    pconfig_webformSave(&TempEvent, pconfigIndex);
+  }
   // ExtraTaskSettings may have changed during PLUGIN_WEBFORM_SAVE, so again update the cache.
+  Cache.updateExtraTaskSettingsCache();
+
+  loadDefaultTaskValueNames_ifEmpty(taskIndex);
   Cache.updateExtraTaskSettingsCache();
 
   // notify controllers: CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION

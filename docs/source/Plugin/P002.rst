@@ -36,6 +36,8 @@ See below for the limitations on sampling analog values with WiFi active.
 
 See the `ESP32 API reference <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html>`_ for more detailed information on the features and limitations of these pins.
 
+When using an analog input for connecting an Analog Soil-moisture sensor, `this Youtube video <https://www.youtube.com/watch?v=IGP38bz-K48>`_ has very usable tips on finding a reliable sensor.
+
 Range and Calibration
 ---------------------
 
