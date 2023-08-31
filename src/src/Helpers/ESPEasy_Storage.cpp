@@ -439,7 +439,7 @@ void fileSystemCheck()
       --retries;
     }
 
-    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), "r");
+    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type), "r");
     if (f) { 
       f.close(); 
     } else {
@@ -456,17 +456,18 @@ void fileSystemCheck()
 }
 
 bool FS_format() {
-  #ifdef USE_LITTLEFS
-    #ifdef ESP32
-    const bool res = ESPEASY_FS.begin(true);
-    ESPEASY_FS.end();
-    return res;
-    #else
-    return ESPEASY_FS.format();
-    #endif
-  #else
+  // 'Fix' for IDF 4.4 LittleFS not needed anymore
+  // #ifdef USE_LITTLEFS
+  //   #ifdef ESP32
+  //   const bool res = ESPEASY_FS.begin(true);
+  //   ESPEASY_FS.end();
+  //   return res;
+  //   #else
+  //   return ESPEASY_FS.format();
+  //   #endif
+  // #else
   return ESPEASY_FS.format();
-  #endif
+  // #endif
 }
 
 #ifdef ESP32
