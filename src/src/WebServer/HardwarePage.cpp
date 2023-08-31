@@ -227,7 +227,7 @@ void handle_hardware() {
   
 #if FEATURE_SD
   addFormSubHeader(F("SD Card"));
-  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
+  addFormPinSelect(PinSelectPurpose::SD_Card, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
 #endif // if FEATURE_SD
   
 #if FEATURE_ETHERNET

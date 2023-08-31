@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2023-08-26 tonhuisman: BUGFIX: Fixed wrong VType to correctly use SENSOR_TYPE_TEMP_HUM, so it will send data correctly to Domoticz
  * 2023-06-10 tonhuisman: Return NaN values if there is an error connecting to the sensor, or a checksum error is reported
  * 2023-06-10 tonhuisman: BUGFIX: The switch to Normal configuration wasn't working, resulting in checksum errors
  * 2023-04-24 tonhuisman: Rename Boot configuration to Startup configuration, add PLUGIN_WRITE support for commands
@@ -55,7 +56,7 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_153;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
