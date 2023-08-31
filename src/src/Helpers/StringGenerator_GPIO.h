@@ -27,7 +27,10 @@ enum class PinSelectPurpose : uint8_t {
   Ethernet,
   Serial_input,
   Serial_output,
-  DAC
+  DAC,
+  #if FEATURE_SD
+  SD_Card,
+  #endif
 
 };
 
