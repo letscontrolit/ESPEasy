@@ -5,9 +5,6 @@
 
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/Markup_Forms.h"
-# if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
-#  include <SD.h>
-# endif // if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 
 # if ADAGFX_FONTS_INCLUDED
 #  include "../Static/Fonts/Seven_Segment24pt7b.h"
@@ -66,6 +63,11 @@
 #   include "../Static/Fonts/whitrabt20pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
+
+# if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+#  include <SD.h>
+# endif // if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+
 
 /******************************************************************************************
  * get the display text for a 'text print mode' enum value
@@ -740,6 +742,105 @@ void AdafruitGFX_helper::invertDisplay(bool i) {
 /****************************************************************************
  * processCommand: Parse string to <command>,<subcommand>[,<arguments>...] and execute that command
  ***************************************************************************/
+const char adagfx_commands[] PROGMEM = "txt|txp|txz|txl|txc|txs|txtfull|clear|rot|tpm|" // 0..9
+                                       "asciitable|font|l|lh|lv|lm|lmr|r|rf|c|"         // 10..19
+                                       "cf|t|tf|rr|rrf|px|pxh|pxv|bmp|btn|"             // 20..29
+                                       "win|defwin|delwin";                             // 30..
+enum class adagfx_commands_e : int8_t {
+  invalid = -1,
+  txt     = 0,                                                                          // 0
+  txp,
+  txz,
+  txl,
+  txc,
+  txs,
+  txtfull,
+  clear,
+  rot,
+  tpm,        // 9
+  asciitable, // 10
+  font,
+  l,
+  lh,
+  lv,
+  lm,
+  lmr,
+  r,
+  rf,
+  c,  // 19
+  cf, // 20
+  t,
+  tf,
+  rr,
+  rrf,
+  px,
+  pxh,
+  pxv,
+  bmp,
+  btn, // 29
+  win, // 30
+  defwin,
+  delwin,
+};
+const char adagfx_fonts[] PROGMEM = "default|sevenseg24|sevenseg18|freesans|"
+                                    # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+                                    "angelina8prop|novamono8pt|unispace8pt|unispaceitalic8pt|whiterabbit8pt|roboto8pt|robotocond8pt|robotomono8pt|"
+                                    # endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+                                    # ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+                                    "angelina12prop|novamono12pt|repetitionscrolling12pt|unispace12pt|unispaceitalic12pt|whiterabbit12pt|roboto12pt|robotocond12pt|robotomono12pt|"
+                                    # endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+                                    # ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+                                    "amerikasans16pt|whiterabbit16pt|roboto16pt|robotocond16pt|robotomono16pt|"
+                                    # endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+                                    # ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+                                    "whiterabbit18pt|"
+                                    # endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+                                    # ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+                                    "whiterabbit20pt"
+                                    # endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+                                    "";
+enum class adagfx_fonts_e : int8_t {
+  invalid      = -1,
+  default_font = 0,
+  sevenseg24,
+  sevenseg18,
+  freesans,
+  # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  angelina8prop,
+  novamono8pt, // 8pt
+  unispace8pt,
+  unispaceitalic8pt,
+  whiterabbit8pt,
+  roboto8pt,
+  robotocond8pt,
+  robotomono8pt,  // 8pt
+  # endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  # ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+  angelina12prop, // 12pt
+  novamono12pt,
+  repetitionscrolling12pt,
+  unispace12pt,
+  unispaceitalic12pt,
+  whiterabbit12pt,
+  roboto12pt,
+  robotocond12pt,
+  robotomono12pt,  // 12pt
+  # endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+  # ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+  amerikasans16pt, // 16pt
+  whiterabbit16pt,
+  roboto16pt,
+  robotocond16pt,
+  robotomono16pt,  // 16pt
+  # endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+  # ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+  whiterabbit18pt, // 18pt
+  # endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+  # ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  whiterabbit20pt, // 20pt
+  # endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+};
+
 bool AdafruitGFX_helper::processCommand(const String& string) {
   bool success = false;
 
@@ -770,7 +871,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   while (loop) { // Process all provided arguments
     // 0-offset + 1st and 2nd argument used by trigger/subcommand, don't trim off spaces
-    sParams.push_back(parseStringKeepCase(string, argCount + 3, ',', false));
+    sParams.push_back(parseStringKeepCaseNoTrim(string, argCount + 3));
     nParams.push_back(0);
     validIntFromString(sParams[argCount], nParams[argCount]);
 
@@ -812,11 +913,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  if (subcommand.equals(F("txt")))                          // txt: Print text at last cursor position, ends at next line!
+  char tmp[12]{};
+  const int subcommand_i         = GetCommandCode(tmp, sizeof(tmp), subcommand.c_str(), adagfx_commands);
+  const adagfx_commands_e subcmd = static_cast<adagfx_commands_e>(subcommand_i);
+
+  if (adagfx_commands_e::txt == subcmd)                           // txt: Print text at last cursor position, ends at next line!
   {
-    _display->println(parseStringToEndKeepCase(string, 3)); // Print entire rest of provided line
+    _display->println(parseStringToEndKeepCaseNoTrim(string, 3)); // Print entire rest of provided line
   }
-  else if (subcommand.equals(F("txp")) && (argCount == 2))  // txp: Text position
+  else if ((adagfx_commands_e::txp == subcmd) && (argCount == 2)) // txp: Text position
   {
     # if ADAGFX_ARGUMENT_VALIDATION
 
@@ -832,7 +937,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       }
     }
   }
-  else if (subcommand.equals(F("txz")) && (argCount >= 3)) // txz: Text at position
+  else if ((adagfx_commands_e::txz == subcmd) && (argCount >= 3)) // txz: Text at position
   {
     # if ADAGFX_ARGUMENT_VALIDATION
 
@@ -846,10 +951,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       } else {
         _display->setCursor(nParams[0] + _xo, nParams[1] + _yo);
       }
-      _display->println(parseStringToEndKeepCase(string, 5)); // Print entire rest of provided line
+      _display->println(parseStringToEndKeepCaseNoTrim(string, 5)); // Print entire rest of provided line
     }
   }
-  else if (subcommand.equals(F("txl")) && (argCount >= 2))    // txl: Text at line(s)
+  else if ((adagfx_commands_e::txl == subcmd) && (argCount >= 2))   // txl: Text at line(s)
   {
     uint8_t _line              = 0;
     uint8_t _column            = 0;
@@ -868,7 +973,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
     setColumnRowMode(currentColRowState);
   }
-  else if (subcommand.equals(F("txc")) && ((argCount == 1) || (argCount == 2))) // txc: Textcolor, fg and opt. bg colors
+  else if ((adagfx_commands_e::txc == subcmd) && ((argCount == 1) || (argCount == 2))) // txc: Textcolor, fg and opt. bg colors
   {
     _fgcolor = AdaGFXparseColor(sParams[0], _colorDepth);
 
@@ -880,7 +985,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setTextColor(_fgcolor, _bgcolor);
     }
   }
-  else if (subcommand.equals(F("txs")) && (argCount == 1)) // txs: Text size = font scaling, 1..10
+  else if ((adagfx_commands_e::txs == subcmd) && (argCount == 1)) // txs: Text size = font scaling, 1..10
   {
     if ((nParams[0] >= 0) && (nParams[0] <= 10)) {
       _fontscaling = nParams[0];
@@ -890,9 +995,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       success = false;
     }
   }
-  else if (subcommand.equals(F("txtfull")) && (argCount >= 3) && (argCount <= 8)) { // txtfull: Text at position, with size and color
+  else if ((adagfx_commands_e::txtfull == subcmd) && (argCount >= 3) && (argCount <= 8)) { // txtfull: Text at position, with size and color
     switch (argCount) {
-      case 3:                                                                       // single text
+      case 3:                                                                              // single text
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
@@ -996,7 +1101,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         break;
     }
   }
-  else if (subcommand.equals(F("clear"))) // Clear display
+  else if (adagfx_commands_e::clear == subcmd) // clear: Clear display
   {
     # if ADAGFX_ENABLE_FRAMED_WINDOW
 
@@ -1015,7 +1120,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
     # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   }
-  else if (subcommand.equals(F("rot")) && (argCount == 1)) // Rotation
+  else if ((adagfx_commands_e::rot == subcmd) && (argCount == 1)) // rot: Rotation
   {
     if ((nParams[0] < 0) || (nParams[0] > 3)) {
       success = false;
@@ -1023,7 +1128,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       setRotation(nParams[0]);
     }
   }
-  else if (subcommand.equals(F("tpm")) && (argCount == 1)) // Text Print Mode
+  else if ((adagfx_commands_e::tpm == subcmd) && (argCount == 1)) // tpm: Text Print Mode
   {
     if ((nParams[0] < 0) || (nParams[0] >= static_cast<int>(AdaGFXTextPrintMode::MAX))) {
       success = false;
@@ -1033,7 +1138,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # if ADAGFX_USE_ASCIITABLE
-  else if (subcommand.equals(F("asciitable"))) // Show ASCII table
+  else if (adagfx_commands_e::asciitable == subcmd) // Show ASCII table
   {
     String line;
     const int16_t start        = 0x80 + (argCount >= 1 && nParams[0] >= -4 && nParams[0] < 4 ? nParams[0] * 0x20 : 0);
@@ -1081,59 +1186,63 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # endif // if ADAGFX_USE_ASCIITABLE
-  else if (subcommand.equals(F("font")) && (argCount == 1)) { // font: Change font
+  else if ((adagfx_commands_e::font == subcmd) && (argCount == 1)) { // font: Change font
     # if ADAGFX_FONTS_INCLUDED
     sParams[0].toLowerCase();
 
-    if (sParams[0].equals(F("sevenseg24"))) {
+    char ftmp[24]{};
+    const int font_i          = GetCommandCode(ftmp, sizeof(ftmp), sParams[0].c_str(), adagfx_fonts);
+    const adagfx_fonts_e font = static_cast<adagfx_fonts_e>(font_i);
+
+    if (adagfx_fonts_e::sevenseg24 == font) {
       _display->setFont(&Seven_Segment24pt7b);
       calculateTextMetrics(21, 42, 35, true);
-    } else if (sParams[0].equals(F("sevenseg18"))) {
+    } else if (adagfx_fonts_e::sevenseg18 == font) {
       _display->setFont(&Seven_Segment18pt7b);
       calculateTextMetrics(16, 33, 26, true);
-    } else if (sParams[0].equals(F("freesans"))) {
+    } else if (adagfx_fonts_e::freesans == font) {
       _display->setFont(&FreeSans9pt7b);
       calculateTextMetrics(10, 16, 12);
 
       // Extra 8pt fonts:
     #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
-    } else if (sParams[0].equals(F("angelina8prop"))) { // Proportional font!
+    } else if (adagfx_fonts_e::angelina8prop == font) { // Proportional font!
       _display->setFont(&angelina8pt7b);
       calculateTextMetrics(6, 16, 12, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-    } else if (sParams[0].equals(F("novamono8pt"))) {
+    } else if (adagfx_fonts_e::novamono8pt == font) {
       _display->setFont(&NovaMono8pt7b);
       calculateTextMetrics(9, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-    } else if (sParams[0].equals(F("unispace8pt"))) {
+    } else if (adagfx_fonts_e::unispace8pt == font) {
       _display->setFont(&unispace8pt7b);
       calculateTextMetrics(13, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-    } else if (sParams[0].equals(F("unispaceitalic8pt"))) {
+    } else if (adagfx_fonts_e::unispaceitalic8pt == font) {
       _display->setFont(&unispace_italic8pt7b);
       calculateTextMetrics(13, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
-    } else if (sParams[0].equals(F("whiterabbit8pt"))) {
+    } else if (adagfx_fonts_e::whiterabbit8pt == font) {
       _display->setFont(&whitrabt8pt7b);
       calculateTextMetrics(10, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
-    } else if (sParams[0].equals(F("roboto8pt"))) { // Proportional font!
+    } else if (adagfx_fonts_e::roboto8pt == font) { // Proportional font!
       _display->setFont(&Roboto_Regular8pt7b);
       calculateTextMetrics(10, 16, 12, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
-    } else if (sParams[0].equals(F("robotocond8pt"))) { // Proportional font!
+    } else if (adagfx_fonts_e::robotocond8pt == font) { // Proportional font!
       _display->setFont(&RobotoCondensed_Regular8pt7b);
       calculateTextMetrics(9, 16, 12, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
-    } else if (sParams[0].equals(F("robotomono8pt"))) {
+    } else if (adagfx_fonts_e::robotomono8pt == font) {
       _display->setFont(&RobotoMono_Regular8pt7b);
       calculateTextMetrics(10, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
@@ -1141,93 +1250,93 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       // Extra 12pt fonts:
     #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
-    } else if (sParams[0].equals(F("angelina12prop"))) { // Proportional font!
+    } else if (adagfx_fonts_e::angelina12prop == font) { // Proportional font!
       _display->setFont(&angelina12pt7b);
       calculateTextMetrics(8, 22, 18, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-    } else if (sParams[0].equals(F("novamono12pt"))) {
+    } else if (adagfx_fonts_e::novamono12pt == font) {
       _display->setFont(&NovaMono12pt7b);
       calculateTextMetrics(13, 26, 22);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-    } else if (sParams[0].equals(F("repetitionscrolling12pt"))) {
+    } else if (adagfx_fonts_e::repetitionscrolling12pt == font) {
       _display->setFont(&RepetitionScrolling12pt7b);
       calculateTextMetrics(13, 22, 18);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-    } else if (sParams[0].equals(F("unispace12pt"))) {
+    } else if (adagfx_fonts_e::unispace12pt == font) {
       _display->setFont(&unispace12pt7b);
       calculateTextMetrics(18, 30, 26);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-    } else if (sParams[0].equals(F("unispaceitalic12pt"))) {
+    } else if (adagfx_fonts_e::unispaceitalic12pt == font) {
       _display->setFont(&unispace_italic12pt7b);
       calculateTextMetrics(18, 30, 26);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-    } else if (sParams[0].equals(F("whiterabbit12pt"))) {
+    } else if (adagfx_fonts_e::whiterabbit12pt == font) {
       _display->setFont(&whitrabt12pt7b);
       calculateTextMetrics(13, 20, 16);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-    } else if (sParams[0].equals(F("roboto12pt"))) { // Proportional font!
+    } else if (adagfx_fonts_e::roboto12pt == font) { // Proportional font!
       _display->setFont(&Roboto_Regular12pt7b);
       calculateTextMetrics(13, 20, 16, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-    } else if (sParams[0].equals(F("robotocond12pt"))) { // Proportional font!
+    } else if (adagfx_fonts_e::robotocond12pt == font) { // Proportional font!
       _display->setFont(&RobotoCondensed_Regular12pt7b);
       calculateTextMetrics(13, 20, 16, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-    } else if (sParams[0].equals(F("robotomono12pt"))) {
+    } else if (adagfx_fonts_e::robotomono12pt == font) {
       _display->setFont(&RobotoMono_Regular12pt7b);
       calculateTextMetrics(13, 20, 16);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
     #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
-    } else if (sParams[0].equals(F("amerikasans16pt"))) { // Proportional font!
+    } else if (adagfx_fonts_e::amerikasans16pt == font) { // Proportional font!
       _display->setFont(&AmerikaSans16pt7b);
       calculateTextMetrics(17, 30, 26, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
-    } else if (sParams[0].equals(F("whiterabbit16pt"))) {
+    } else if (adagfx_fonts_e::whiterabbit16pt == font) {
       _display->setFont(&whitrabt16pt7b);
       calculateTextMetrics(18, 26, 22);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-    } else if (sParams[0].equals(F("roboto16pt"))) { // Proportional font!
+    } else if (adagfx_fonts_e::roboto16pt == font) { // Proportional font!
       _display->setFont(&Roboto_Regular16pt7b);
       calculateTextMetrics(18, 27, 23, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
-    } else if (sParams[0].equals(F("robotocond16pt"))) { // Proportional font!
+    } else if (adagfx_fonts_e::robotocond16pt == font) { // Proportional font!
       _display->setFont(&RobotoCondensed_Regular16pt7b);
       calculateTextMetrics(18, 27, 23, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
-    } else if (sParams[0].equals(F("robotomono16pt"))) {
+    } else if (adagfx_fonts_e::robotomono16pt == font) {
       _display->setFont(&RobotoMono_Regular16pt7b);
       calculateTextMetrics(18, 27, 23);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
     #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-    } else if (sParams[0].equals(F("whiterabbit18pt"))) {
+    } else if (adagfx_fonts_e::whiterabbit18pt == font) {
       _display->setFont(&whitrabt18pt7b);
       calculateTextMetrics(21, 30, 26);
       #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
     #  endif    // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
     #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
-    } else if (sParams[0].equals(F("whiterabbit20pt"))) {
+    } else if (adagfx_fonts_e::whiterabbit20pt == font) {
       _display->setFont(&whitrabt20pt7b);
       calculateTextMetrics(24, 32, 28);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-    } else if (sParams[0].equals(F("default"))) { // font,default is always available!
+    } else if (adagfx_fonts_e::default_font == font) { // font,default is always available!
       _display->setFont();
       calculateTextMetrics(6, 9);
     } else {
@@ -1237,7 +1346,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     success = false;
     # endif  // if ADAGFX_FONTS_INCLUDED
   }
-  else if (subcommand.equals(F("l")) && (argCount == 5)) { // l: Line
+  else if ((adagfx_commands_e::l == subcmd) && (argCount == 5)) { // l: Line
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1249,7 +1358,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawLine(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("lh")) && (argCount == 3)) { // lh: Horizontal line
+  else if ((adagfx_commands_e::lh == subcmd) && (argCount == 3)) { // lh: Horizontal line
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if ((nParams[0] < 0) || (nParams[0] > res_x)) {
@@ -1260,7 +1369,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawFastHLine(_xo, nParams[0] + _yo, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("lv")) && (argCount == 3)) { // lv: Vertical line
+  else if ((adagfx_commands_e::lv == subcmd) && (argCount == 3)) { // lv: Vertical line
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if ((nParams[0] < 0) || (nParams[0] > res_y)) {
@@ -1272,7 +1381,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # if ADAGFX_ENABLE_EXTRA_CMDS
-  else if ((subcommand.equals(F("lm")) || subcommand.equals(F("lmr"))) && (argCount >= 5)) { // lm/lmr: Multi-line, multiple coordinates
+  else if (((adagfx_commands_e::lm == subcmd) || (adagfx_commands_e::lmr == subcmd)) && (argCount >= 5)) { // lm/lmr: Multi-line, multiple
+                                                                                                           // coordinates
     uint16_t mcolor   = AdaGFXparseColor(sParams[0], _colorDepth);
     bool     mloop    = true;
     uint8_t  parCount = 0;
@@ -1280,7 +1390,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     int  cx           = -1;
     int  cy           = -1;
     bool closeLine    = false;
-    bool relativeMode = subcommand.equals(F("lmr")); // Use Relative mode
+    bool relativeMode = (adagfx_commands_e::lmr == subcmd); // Use Relative mode
     #  ifndef BUILD_NO_DEBUG
     String log;
     log.reserve(40);
@@ -1295,11 +1405,11 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         if (optCount > 0) { optCount--; }
       }
       mloop     = !sParams[optCount].isEmpty();
-      closeLine = sParams[optCount].equals(F("c"));
+      closeLine = equals(sParams[optCount], 'c');
 
       if (mloop) { parCount++; optCount++; } // Next argument
 
-      if ((optCount == 4) || closeLine) { // 0..3 = 4th argument or close the line
+      if ((optCount == 4) || closeLine) {    // 0..3 = 4th argument or close the line
         if (relativeMode) {
           nParams[2] += nParams[0];
           nParams[3] += nParams[1];
@@ -1348,7 +1458,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # endif // if ADAGFX_ENABLE_EXTRA_CMDS
-  else if (subcommand.equals(F("r")) && (argCount == 5)) { // r: Rectangle
+  else if ((adagfx_commands_e::r == subcmd) && (argCount == 5)) { // r: Rectangle
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1360,7 +1470,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("rf")) && (argCount == 6)) { // rf: Rectangled, filled
+  else if ((adagfx_commands_e::rf == subcmd) && (argCount == 6)) { // rf: Rectangled, filled
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1373,7 +1483,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("c")) && (argCount == 4)) { // c: Circle
+  else if ((adagfx_commands_e::c == subcmd) && (argCount == 4)) { // c: Circle
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1385,7 +1495,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("cf")) && (argCount == 5)) { // cf: Circle, filled
+  else if ((adagfx_commands_e::cf == subcmd) && (argCount == 5)) { // cf: Circle, filled
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1398,7 +1508,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("t")) && (argCount == 7)) { // t: Triangle
+  else if ((adagfx_commands_e::t == subcmd) && (argCount == 7)) { // t: Triangle
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1412,7 +1522,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                              AdaGFXparseColor(sParams[6], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("tf")) && (argCount == 8)) { // tf: Triangle, filled
+  else if ((adagfx_commands_e::tf == subcmd) && (argCount == 8)) { // tf: Triangle, filled
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1438,7 +1548,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                              AdaGFXparseColor(sParams[6], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("rr")) && (argCount == 6)) { // rr: Rounded rectangle
+  else if ((adagfx_commands_e::rr == subcmd) && (argCount == 6)) { // rr: Rounded rectangle
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1456,7 +1566,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                               AdaGFXparseColor(sParams[5], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("rrf")) && (argCount == 7)) { // rrf: Rounded rectangle, filled
+  else if ((adagfx_commands_e::rrf == subcmd) && (argCount == 7)) { // rrf: Rounded rectangle, filled
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
@@ -1480,7 +1590,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                               AdaGFXparseColor(sParams[5], _colorDepth));
     }
   }
-  else if (subcommand.equals(F("px")) && (argCount == 3)) { // px: Pixel
+  else if ((adagfx_commands_e::px == subcmd) && (argCount == 3)) { // px: Pixel
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1])) {
@@ -1491,8 +1601,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawPixel(nParams[0] + _xo, nParams[1] + _yo, AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
-  else if ((subcommand.equals(F("pxh")) || subcommand.equals(F("pxv"))) && (argCount > 2)) { // pxh/pxv: Pixels, hor./vert. incremented
-    # if ADAGFX_ARGUMENT_VALIDATION                                                          // merged loop is smaller than 2 separate loops
+  else if (((adagfx_commands_e::pxh == subcmd) || (adagfx_commands_e::pxv == subcmd)) && (argCount > 2)) { // pxh/pxv: Pixels, hor./vert.
+                                                                                                           // incremented merged loop is
+    # if ADAGFX_ARGUMENT_VALIDATION                                                                        // smaller than 2 separate loops
 
     if (invalidCoordinates(nParams[0], nParams[1])) {
       success = false;
@@ -1504,7 +1615,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       loop = true;
       uint8_t h     = 0;
       uint8_t v     = 0;
-      bool    isPxh = subcommand.equals(F("pxh"));
+      bool    isPxh = (adagfx_commands_e::pxh == subcmd);
 
       if (isPxh) {
         h++;
@@ -1536,7 +1647,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # if ADAGFX_ENABLE_BMP_DISPLAY
-  else if (subcommand.equals(F("bmp")) && (argCount == 3)) { // bmp,x,y,filename.bmp : show bmp from file
+  else if ((adagfx_commands_e::bmp == subcmd) && (argCount == 3)) { // bmp,x,y,filename.bmp : show bmp from file
     if (!sParams[2].isEmpty()) {
       success = showBmp(sParams[2], nParams[0] + _xo, nParams[1] + _yo);
     } else {
@@ -1545,7 +1656,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
   # if ADAGFX_ENABLE_BUTTON_DRAW
-  else if (subcommand.equals(F("btn")) && (argCount >= 8) && (nParams[7] != 0))
+  else if ((adagfx_commands_e::btn == subcmd) && (argCount >= 8) && (nParams[7] != 0))
   { // btn,state,m,x,y,w,h,id,type[,ONclr,OFFclr,Captionclr,fontscale,ONcaption,OFFcapt,Borderclr,DisabClr,DisabCaptclr],TaskIndex,Group,SelGrp,objectname
     // ev: 1     2 3 4 5 6 7  8     9     10     11         12        13        14      15        16       17,18,19,20,21
     // nP: 0     1 2 3 4 5 6  7     8     9      10         11        12        13      14        15       16,17,18,19,20
@@ -1734,10 +1845,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   # endif // if ADAGFX_ENABLE_BUTTON_DRAW
   # if ADAGFX_ENABLE_FRAMED_WINDOW
-  else if (subcommand.equals(F("win")) && (argCount >= 1) && (argCount <= 2)) {    // win: select window by id
+  else if ((adagfx_commands_e::win == subcmd) && (argCount >= 1) && (argCount <= 2)) {    // win: select window by id
     success = selectWindow(nParams[0], nParams[1]);
   }
-  else if (subcommand.equals(F("defwin")) && (argCount >= 5) && (argCount <= 6)) { // defwin: define window
+  else if ((adagfx_commands_e::defwin == subcmd) && (argCount >= 5) && (argCount <= 6)) { // defwin: define window
     const int8_t rot = _rotation;
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
@@ -1761,7 +1872,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       if (curWin != 0) { selectWindow(curWin); } // restore current window
       #  endif // if ADAGFX_ARGUMENT_VALIDATION
 
-      if (nParams[4] > 0) { // Window 0 is the raw window, having the full size, created at initialization of this helper instance
+      if (nParams[4] > 0) {                      // Window 0 is the raw window, having the full size, created at initialization of this
+                                                 // helper instance
         #  ifndef BUILD_NO_DEBUG
         int16_t win = // avoid compiler warning
         #  endif // ifndef BUILD_NO_DEBUG
@@ -1786,10 +1898,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       // logWindows(F(" deFwin ")); // Use for debugging only?
     }
   }
-  else if (subcommand.equals(F("delwin")) && (argCount == 1)) { // delwin: delete window
+  else if ((adagfx_commands_e::delwin == subcmd) && (argCount == 1)) { // delwin: delete window
     // logWindows(F(" deLwin ")); // use for debugging only
 
-    if (nParams[0] > 0) {                                       // don't delete window 0
+    if (nParams[0] > 0) {                                              // don't delete window 0
       success = deleteWindow(nParams[0]);
     }
   }
@@ -1805,62 +1917,106 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
  * Get a config value from the plugin
  ***************************************************************************/
 # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+const char adagfx_getcommands[] PROGMEM = "win|iswin|width|height|length|textheight|rot|txs|tpm";
+enum class adagfx_getcommands_e : int8_t {
+  invalid = -1,
+  win     = 0,
+  iswin,
+  width,
+  height,
+  length,
+  textheight,
+  rot,
+  txs,
+  tpm,
+};
+
 bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.equals(F("win"))) {     // win: get current window id
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
-    string  = getWindow();
-    success = true;
-    #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-  } else if (command.equals(F("iswin"))) { // iswin: check if windows exists
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW      // if feature enabled
-    command = parseString(string, 2);
-    int win = 0;
+  char tmp[12]{};
+  const int command_i            = GetCommandCode(tmp, sizeof(tmp), command.c_str(), adagfx_getcommands);
+  const adagfx_getcommands_e cmd = static_cast<adagfx_getcommands_e>(command_i);
 
-    if (validIntFromString(command, win)) {
-      string = validWindow(static_cast<uint8_t>(win));
-    } else {
-      string = '0';
+  switch (cmd) {
+    case adagfx_getcommands_e::win:
+    {                                   // win: get current window id
+      #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+      string  = getWindow();
+      success = true;
+      #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+      break;
     }
-    success = true;                          // Always correct, just return 'false' if wrong
-    #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-  } else if ((command.equals(F("width"))) || // width/height: get window width or height
-             (command.equals(F("height")))) {
-    #  if ADAGFX_ENABLE_FRAMED_WINDOW        // if feature enabled
-    uint16_t w = 0, h = 0;
-    getWindowLimits(w, h);
+    case adagfx_getcommands_e::iswin:
+    {                                   // iswin: check if windows exists
+      #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+      command = parseString(string, 2);
+      int win = 0;
 
-    if (command.equals(F("width"))) {
-      string = w;
-    } else {
-      string = h;
+      if (validIntFromString(command, win)) {
+        string = validWindow(static_cast<uint8_t>(win));
+      } else {
+        string = '0';
+      }
+      success = true; // Always correct, just return 'false' if wrong
+      #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+      break;
     }
-    success = true;
-    #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-  } else if ((command.equals(F("length"))) || // length/textheight: get text length or height
-             (command.equals(F("textheight")))) {
-    int16_t  x1, y1;
-    uint16_t w1, h1;
-    String   newString = AdaGFXparseTemplate(parseStringToEndKeepCase(string, 2), 0);
-    _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
+    case adagfx_getcommands_e::width:
+    case adagfx_getcommands_e::height:
+      // width/height: get window width or height
+    {
+      #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+      uint16_t w = 0, h = 0;
+      getWindowLimits(w, h);
 
-    if (command.equals(F("length"))) {
-      string = w1;
-    } else {
-      string = h1;
+      if (adagfx_getcommands_e::width == cmd) {
+        string = w;
+      } else {
+        string = h;
+      }
+      success = true;
+      #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+      break;
     }
-    success = true;
-  } else if (command.equals(F("rot"))) { // rot: get current rotation setting
-    string  = _rotation;
-    success = true;
-  } else if (command.equals(F("txs"))) { // txs: get current text scaling setting
-    string  = _fontscaling;
-    success = true;
-  } else if (command.equals(F("tpm"))) { // tpm: get current text print mode setting
-    string  = static_cast<int>(_textPrintMode);
-    success = true;
+    case adagfx_getcommands_e::length:
+    case adagfx_getcommands_e::textheight:
+      // length/textheight: get text length or height
+    {
+      int16_t  x1, y1;
+      uint16_t w1, h1;
+      String   newString = AdaGFXparseTemplate(parseStringToEndKeepCaseNoTrim(string, 2), 0);
+      _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
+
+      if (adagfx_getcommands_e::length == cmd) {
+        string = w1;
+      } else {
+        string = h1;
+      }
+      success = true;
+      break;
+    }
+    case adagfx_getcommands_e::rot:
+    { // rot: get current rotation setting
+      string  = _rotation;
+      success = true;
+      break;
+    }
+    case adagfx_getcommands_e::txs:
+    { // txs: get current text scaling setting
+      string  = _fontscaling;
+      success = true;
+      break;
+    }
+    case adagfx_getcommands_e::tpm:
+    { // tpm: get current text print mode setting
+      string  = static_cast<int>(_textPrintMode);
+      success = true;
+      break;
+    }
+    case adagfx_getcommands_e::invalid:
+      break;
   }
 
   return success;
@@ -2107,86 +2263,98 @@ uint16_t color565(const uint8_t& red,
 // Param [in] colorDepth: The requiresed color depth, default: FullColor
 // param [in] defaultWhite: Return White color if empty, default: true
 // return : color (default ADAGFX_WHITE)
+const char adagfx_colornames[] PROGMEM = "black|white|inverse|red|yellow|dark|light|green|blue|orange|navy|darkcyan|"
+                                         "darkgreen|maroon|purple|olive|lightgrey|darkgrey|cyan|magenta|greenyellow|pink";
+enum class adagfx_colornames_e : int8_t {
+  invalid = -1,
+  black   = 0,
+  white,
+  inverse,
+  red,
+  yellow,
+  dark,
+  light,
+  green,
+  blue,
+  orange,
+  navy,
+  darkcyan,
+  darkgreen,
+  maroon,
+  purple,
+  olive,
+  lightgrey,
+  darkgrey,
+  cyan,
+  magenta,
+  greenyellow,
+  pink,
+};
+
 uint16_t AdaGFXparseColor(String                & s,
                           const AdaGFXColorDepth& colorDepth,
                           const bool              emptyIsBlack) {
   s.toLowerCase();
-  int32_t result = -1; // No result yet
+  int32_t   result = -1; // No result yet
+  char      tmp[12]{};
+  const int color_i = GetCommandCode(tmp, sizeof(tmp), s.c_str(), adagfx_colornames);
+
+  const adagfx_colornames_e color = static_cast<adagfx_colornames_e>(color_i);
 
   if ((colorDepth == AdaGFXColorDepth::Monochrome) ||
       (colorDepth == AdaGFXColorDepth::BlackWhiteRed) ||
       (colorDepth == AdaGFXColorDepth::BlackWhite2Greyscales)) { // Only a limited set of colors is supported
-    if (s.equals(F("black")))   { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); }
+    switch (color) {
+      case adagfx_colornames_e::black: return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK);
+      case adagfx_colornames_e::inverse: return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_INVERSE);
+      case adagfx_colornames_e::yellow: // Synonym for red
+      case adagfx_colornames_e::red: return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED);
+      case adagfx_colornames_e::dark: return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK);
+      case adagfx_colornames_e::light: return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT);
 
-    if (s.equals(F("white")))   { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE); }
-
-    if (s.equals(F("inverse"))) { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_INVERSE); }
-
-    if (s.equals(F("red")))     { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED); }
-
-    // Synonym for red
-    if (s.equals(F("yellow")))  { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED); }
-
-    if (s.equals(F("dark")))    { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK); }
-
-    if (s.equals(F("light")))   { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT); }
-
-    // If we get this far, return the default
-    return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE);
+      // case adagfx_colornames_e::white: return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE);
+      // If we get this far, return the default
+      default:
+        return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE);
+    }
   # if ADAGFX_SUPPORT_7COLOR
   } else if (colorDepth == AdaGFXColorDepth::SevenColor) {
-    if (s.equals(F("black")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK); }
-
-    if (s.equals(F("white")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); }
-
-    if (s.equals(F("green")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN); }
-
-    if (s.equals(F("blue")))   { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE); }
-
-    if (s.equals(F("red")))    { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_RED); }
-
-    if (s.equals(F("yellow"))) { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_YELLOW); }
-
-    if (s.equals(F("orange"))) { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_ORANGE); }
+    switch (color) {
+      case adagfx_colornames_e::black: result  = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK); break;
+      case adagfx_colornames_e::white: result  = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); break;
+      case adagfx_colornames_e::green: result  = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN); break;
+      case adagfx_colornames_e::blue: result   = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE); break;
+      case adagfx_colornames_e::red: result    = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_RED); break;
+      case adagfx_colornames_e::yellow: result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_YELLOW); break;
+      case adagfx_colornames_e::orange: result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_ORANGE); break;
+      default:
+        break;
+    }
   # endif // if ADAGFX_SUPPORT_7COLOR
   } else { // Some predefined colors
-    if (s.equals(F("black")))       { result = ADAGFX_BLACK; }
-
-    if (s.equals(F("navy")))        { result = ADAGFX_NAVY; }
-
-    if (s.equals(F("darkgreen")))   { result = ADAGFX_DARKGREEN; }
-
-    if (s.equals(F("darkcyan")))    { result = ADAGFX_DARKCYAN; }
-
-    if (s.equals(F("maroon")))      { result = ADAGFX_MAROON; }
-
-    if (s.equals(F("purple")))      { result = ADAGFX_PURPLE; }
-
-    if (s.equals(F("olive")))       { result = ADAGFX_OLIVE; }
-
-    if (s.equals(F("lightgrey")))   { result = ADAGFX_LIGHTGREY; }
-
-    if (s.equals(F("darkgrey")))    { result = ADAGFX_DARKGREY; }
-
-    if (s.equals(F("blue")))        { result = ADAGFX_BLUE; }
-
-    if (s.equals(F("green")))       { result = ADAGFX_GREEN; }
-
-    if (s.equals(F("cyan")))        { result = ADAGFX_CYAN; }
-
-    if (s.equals(F("red")))         { result = ADAGFX_RED; }
-
-    if (s.equals(F("magenta")))     { result = ADAGFX_MAGENTA; }
-
-    if (s.equals(F("yellow")))      { result = ADAGFX_YELLOW; }
-
-    if (s.equals(F("white")))       { result = ADAGFX_WHITE; }
-
-    if (s.equals(F("orange")))      { result = ADAGFX_ORANGE; }
-
-    if (s.equals(F("greenyellow"))) { result = ADAGFX_GREENYELLOW; }
-
-    if (s.equals(F("pink")))        { result = ADAGFX_PINK; }
+    switch (color) {
+      case adagfx_colornames_e::black: result       = ADAGFX_BLACK; break;
+      case adagfx_colornames_e::navy: result        = ADAGFX_NAVY; break;
+      case adagfx_colornames_e::darkgreen: result   = ADAGFX_DARKGREEN; break;
+      case adagfx_colornames_e::darkcyan: result    = ADAGFX_DARKCYAN; break;
+      case adagfx_colornames_e::maroon: result      = ADAGFX_MAROON; break;
+      case adagfx_colornames_e::purple: result      = ADAGFX_PURPLE; break;
+      case adagfx_colornames_e::olive: result       = ADAGFX_OLIVE; break;
+      case adagfx_colornames_e::lightgrey: result   = ADAGFX_LIGHTGREY; break;
+      case adagfx_colornames_e::darkgrey: result    = ADAGFX_DARKGREY; break;
+      case adagfx_colornames_e::blue: result        = ADAGFX_BLUE; break;
+      case adagfx_colornames_e::green: result       = ADAGFX_GREEN; break;
+      case adagfx_colornames_e::cyan: result        = ADAGFX_CYAN; break;
+      case adagfx_colornames_e::red: result         = ADAGFX_RED; break;
+      case adagfx_colornames_e::magenta: result     = ADAGFX_MAGENTA; break;
+      case adagfx_colornames_e::yellow: result      = ADAGFX_YELLOW; break;
+      case adagfx_colornames_e::white: result       = ADAGFX_WHITE; break;
+      case adagfx_colornames_e::orange: result      = ADAGFX_ORANGE; break;
+      case adagfx_colornames_e::greenyellow: result = ADAGFX_GREENYELLOW; break;
+      case adagfx_colornames_e::pink: result        = ADAGFX_PINK; break;
+      default:
+        break;
+    }
   }
 
   // Parse default hex #rgb565 (hex) string (1-4 hex nibbles accepted!)
@@ -2262,7 +2430,7 @@ void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
                                            AdaGFXColorDepth colorDepth) {
   const __FlashStringHelper *clr = AdaGFXcolorToString_internal(color, colorDepth, false);
 
-  if (clr != F("*")) {
+  if (!equals(clr, '*')) {
     addHtml(F("<option value=\""));
     addHtml(clr);
     addHtml(F("\">"));
@@ -2345,7 +2513,7 @@ String AdaGFXcolorToString(const uint16_t        & color,
                            bool                    blackIsEmpty) {
   String result = AdaGFXcolorToString_internal(color, colorDepth, blackIsEmpty);
 
-  if (result.equals(F("*"))) {
+  if (equals(result, '*')) {
     result  = '#';
     result += String(color, HEX);
     result.toUpperCase();
@@ -3003,12 +3171,19 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
         // }                         // end malloc check
       }                        // end depth check
     } // end planes/compression check
-  }                            // end signature
+
+    if (status) {
+    #  ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
+    #  endif // ifndef BUILD_NO_DEBUG
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("showBmp: Only uncompressed and 24 or 1 bit color-depth supported."));
+    }
+  } else { // end signature
+    addLog(LOG_LEVEL_ERROR, F("showBmp: File signature error."));
+  }
 
   file.close();
-  #  ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
-  #  endif // ifndef BUILD_NO_DEBUG
   return status; // -V680
 
   // }

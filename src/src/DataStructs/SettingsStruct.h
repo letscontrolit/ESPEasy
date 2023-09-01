@@ -5,11 +5,13 @@
 #include "../../ESPEasy_common.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/ChecksumType.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
+
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
@@ -54,7 +56,7 @@ class SettingsStruct_tmpl
 {
   public:
 
-  SettingsStruct_tmpl(); //-V730
+//  SettingsStruct_tmpl() = default;
 
   // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
   bool appendUnitToHostname() const;
@@ -141,6 +143,27 @@ class SettingsStruct_tmpl
   bool SendToHTTP_follow_redirects() const;
   void SendToHTTP_follow_redirects(bool value);
 
+  #if FEATURE_I2C_DEVICE_CHECK
+  // Check if an I2C device is found at configured address at plugin_INIT and plugin_READ
+  bool CheckI2Cdevice() const;
+  void CheckI2Cdevice(bool value);
+  #endif // if FEATURE_I2C_DEVICE_CHECK
+
+  // Wait for a second after calling WiFi.begin()
+  // Especially useful for some FritzBox routers.
+  bool WaitWiFiConnect() const;
+  void WaitWiFiConnect(bool value);
+
+  // Use Espressif's auto reconnect.
+  bool SDK_WiFi_autoreconnect() const;
+  void SDK_WiFi_autoreconnect(bool value);
+
+  #if FEATURE_RULES_EASY_COLOR_CODE
+  // Inhibit RulesCodeCompletion
+  bool DisableRulesCodeCompletion() const;
+  void DisableRulesCodeCompletion(bool value);
+  #endif // if FEATURE_RULES_EASY_COLOR_CODE
+
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
@@ -169,6 +192,15 @@ class SettingsStruct_tmpl
   void    setCssMode(uint8_t value);
   #endif // FEATURE_AUTO_DARK_MODE
 
+  bool isTaskEnableReadonly(taskIndex_t taskIndex) const;
+  void setTaskEnableReadonly(taskIndex_t taskIndex, bool value);
+
+  #if FEATURE_PLUGIN_PRIORITY
+  bool isPowerManagerTask(taskIndex_t taskIndex) const;
+  void setPowerManagerTask(taskIndex_t taskIndex, bool value);
+
+  bool isPriorityTask(taskIndex_t taskIndex) const;
+  #endif // if FEATURE_PLUGIN_PRIORITY
 
   void validate();
 
@@ -197,6 +229,25 @@ class SettingsStruct_tmpl
 
   // Return hostname with explicit set append unit.
   String getHostname(bool appendUnit) const;
+
+  // Return the name of the unit, without unitnr appended, with template parsing applied, replacement for Settings.Name in most places
+  String getName() const;
+
+private:
+
+  // Compute the index in either 
+  // - PinBootStates array (index_low) or 
+  // - PinBootStates_ESP32 (index_high)
+  // Returns whether it is a valid index
+  bool getPinBootStateIndex(
+    uint8_t gpio_pin, 
+    int8_t& index_low
+    #ifdef ESP32
+    , int8_t& index_high
+    #endif
+    ) const;
+  
+public:
 
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);
@@ -242,9 +293,9 @@ class SettingsStruct_tmpl
   char          NTPHost[64] = {0};
   // FIXME TD-er: Issue #2690
   unsigned long Delay = 0;              // Sleep time in seconds
-  int8_t        Pin_i2c_sda = -1;
-  int8_t        Pin_i2c_scl = -1;
-  int8_t        Pin_status_led = -1;
+  int8_t        Pin_i2c_sda = DEFAULT_PIN_I2C_SDA;
+  int8_t        Pin_i2c_scl = DEFAULT_PIN_I2C_SCL;
+  int8_t        Pin_status_led = DEFAULT_PIN_STATUS_LED;
   int8_t        Pin_sd_cs = -1;
   int8_t        PinBootStates[17] = {0};  // Only use getPinBootState and setPinBootState as multiple pins are packed for ESP32
   uint8_t       Syslog_IP[4] = {0};
@@ -282,25 +333,25 @@ class SettingsStruct_tmpl
       int8_t        TaskDevicePin3[N_TASKS];
       uint8_t       TaskDevicePort[N_TASKS];
     };
-    int8_t        TaskDevicePin[4][N_TASKS];
+    int8_t        TaskDevicePin[4][N_TASKS]{};
   };
   boolean       TaskDevicePin1PullUp[N_TASKS] = {0};
-  int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX];
+  int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX]{};
   boolean       TaskDevicePin1Inversed[N_TASKS] = {0};
-  float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
+  float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX]{};
   union {
     int32_t  TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
-    uint32_t TaskDevicePluginConfigULong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
+    uint32_t TaskDevicePluginConfigULong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX]{};
   };
   uint8_t       TaskDeviceSendDataFlags[N_TASKS] = {0};
-  uint8_t       OLD_TaskDeviceGlobalSync[N_TASKS] = {0};
+  uint8_t       VariousTaskBits[N_TASKS] = {0};
   uint8_t       TaskDeviceDataFeed[N_TASKS] = {0};    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS] = {0};
   boolean       TaskDeviceEnabled[N_TASKS] = {0};
   boolean       ControllerEnabled[CONTROLLER_MAX] = {0};
   boolean       NotificationEnabled[NOTIFICATION_MAX] = {0};
-  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS];        // IDX number (mainly used by Domoticz)
-  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS];
+  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS]{};        // IDX number (mainly used by Domoticz)
+  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS]{};
   boolean       Pin_status_led_Inversed = false;
   boolean       deepSleepOnFail = false;
   boolean       UseValueLogger = false;
@@ -337,7 +388,7 @@ class SettingsStruct_tmpl
   NetworkMedium_t NetworkMedium = NetworkMedium_t::WIFI;
   int8_t          I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t          I2C_Multiplexer_Addr = -1;
-  int8_t          I2C_Multiplexer_Channel[N_TASKS];
+  int8_t          I2C_Multiplexer_Channel[N_TASKS]{};
   uint8_t         I2C_Flags[N_TASKS] = {0};
   uint32_t        I2C_clockSpeed_Slow = 100000;
   int8_t          I2C_Multiplexer_ResetPin = -1;
@@ -355,11 +406,14 @@ class SettingsStruct_tmpl
 
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
-  uint8_t       md5[16]; // Store checksum of the settings.
+  uint8_t       md5[16]{}; // Store checksum of the settings.
+  uint32_t      VariousBits2 = 0;
+
+  uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 
+  int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+  int8_t        console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+  uint8_t       console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
   
-//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-
-
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };
 

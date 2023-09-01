@@ -111,6 +111,9 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::SYSBUILD_GIT:      label = LabelType::GIT_BUILD; break;
     case SystemVariables::SYSSTACK:          label = LabelType::FREE_STACK; break;
     case SystemVariables::UNIT_sysvar:       label = LabelType::UNIT_NR; break;
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    case SystemVariables::UNIT_0_sysvar:     label = LabelType::UNIT_NR_0; break;
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     case SystemVariables::FLASH_FREQ:        label = LabelType::FLASH_CHIP_SPEED; break;
     case SystemVariables::FLASH_SIZE:        label = LabelType::FLASH_CHIP_REAL_SIZE; break;
     case SystemVariables::FLASH_CHIP_VENDOR: label = LabelType::FLASH_CHIP_VENDOR; break;
@@ -146,18 +149,17 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case BSSID:             return String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr());
     case CR:                return String('\r');
     case IP4:               return String(static_cast<int>(NetworkLocalIP()[3])); // 4th IP octet
+    case ISMQTT:            return String(
     #if FEATURE_MQTT
-    case ISMQTT:            return String(MQTTclient_connected ? 1 : 0);
-    #else // if FEATURE_MQTT
-    case ISMQTT:            return String('0');
-    #endif // if FEATURE_MQTT
-
+      MQTTclient_connected ? 1 : 
+    #endif
+      0);
+    
+    case ISMQTTIMP:         return String(
     #ifdef USES_P037
-    case ISMQTTIMP:         return String(P037_MQTTImport_connected ? 1 : 0);
-    #else // ifdef USES_P037
-    case ISMQTTIMP:         return String('0');
-    #endif // USES_P037
-
+      P037_MQTTImport_connected ? 1 : 
+    #endif
+      0);
 
     case ISNTP:             return String(statusNTPInitialized ? 1 : 0);
     case ISWIFI:            return String(WiFiEventData.wifiStatus); // 0=disconnected, 1=connected, 2=got ip, 4=services
@@ -178,6 +180,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSMIN:            return String(node_time.minute());
     case SYSMIN_0:          return timeReplacement_leadZero(node_time.minute());
     case SYSMONTH:          return String(node_time.month());
+    case SYSMONTH_S:        return String(node_time.month_str());
     case SYSNAME:           return Settings.getHostname();
     case SYSSEC:            return String(node_time.second());
     case SYSSEC_0:          return timeReplacement_leadZero(node_time.second());
@@ -192,6 +195,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSTM_HM_AM:       return node_time.getTimeString_ampm(':', false);
     case SYSTM_HM_AM_0:     return node_time.getTimeString_ampm(':', false, '0');
     case SYSTM_HM_AM_SP:    return node_time.getTimeString_ampm(':', false, ' ');
+    case SYSTZOFFSET:       return node_time.getTimeZoneOffsetString();
     case SYSWEEKDAY:        return String(node_time.weekday());
     case SYSWEEKDAY_S:      return node_time.weekday_str();
     case SYSYEAR_0:
@@ -208,7 +212,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     #if FEATURE_ADC_VCC
     case VCC:               return String(vcc);
     #else // if FEATURE_ADC_VCC
-    case VCC:               return String(-1);
+    case VCC:               return F("-1");
     #endif // if FEATURE_ADC_VCC
     case WI_CH:             return String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel());
 
@@ -269,8 +273,12 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       key += '%';
 
       if (s.indexOf(key) != -1) {
-        const bool   trimTrailingZeros = true;
-        const String value             = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        const bool trimTrailingZeros = true;
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        #else
+        const String value = floatToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        #endif
         repl(key, value, s, useURLencode);
       }
     }
@@ -387,6 +395,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSMIN:             return F("sysmin");
     case Enum::SYSMIN_0:           return F("sysmin_0");
     case Enum::SYSMONTH:           return F("sysmonth");
+    case Enum::SYSMONTH_S:         return F("sysmonth_s");
     case Enum::SYSNAME:            return F("sysname");
     case Enum::SYSSEC:             return F("syssec");
     case Enum::SYSSEC_0:           return F("syssec_0");
@@ -402,6 +411,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSTM_HM_AM:        return F("systm_hm_am");
     case Enum::SYSTM_HM_AM_0:      return F("systm_hm_am_0");
     case Enum::SYSTM_HM_AM_SP:     return F("systm_hm_am_sp");
+    case Enum::SYSTZOFFSET:        return F("systzoffset");
     case Enum::SYSWEEKDAY:         return F("sysweekday");
     case Enum::SYSWEEKDAY_S:       return F("sysweekday_s");
     case Enum::SYSYEAR:            return F("sysyear");
@@ -411,6 +421,9 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::S_CR:               return F("R");
     case Enum::S_LF:               return F("N");
     case Enum::UNIT_sysvar:        return F("unit");
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    case Enum::UNIT_0_sysvar:      return F("unit_0");
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     case Enum::UNIXDAY:            return F("unixday");
     case Enum::UNIXDAY_SEC:        return F("unixday_sec");
     case Enum::UNIXTIME:           return F("unixtime");

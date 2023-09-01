@@ -18,13 +18,14 @@
 // #######################################################################################################
 
 // Changelog:
+// 2023-04-28 @iz8mbw: Rename sensor to SHT3x from SHT30/31/35
 // 2021-06-12 @tonhuisman: Add temperature offset setting, with humidity compensation method 'borrowed' from BME280 sensor
 // 2020-??    @TD-er: Maitenance updates
 // 2017-07-18 @JK-de: Plugin adaption for ESPEasy 2.0
 
 # define PLUGIN_068
 # define PLUGIN_ID_068         68
-# define PLUGIN_NAME_068       "Environment - SHT30/31/35"
+# define PLUGIN_NAME_068       "Environment - SHT3x"
 # define PLUGIN_VALUENAME1_068 "Temperature"
 # define PLUGIN_VALUENAME2_068 "Humidity"
 
@@ -82,9 +83,18 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = PCONFIG(0);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Temperature offset"), F("p068_tempoffset"), PCONFIG(1));
+      addFormNumericBox(F("Temperature offset"), F("tempoffset"), PCONFIG(1));
       addUnit(F("x 0.1C"));
       addFormNote(F("Offset in units of 0.1 degree Celsius"));
       success = true;
@@ -94,7 +104,7 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-      PCONFIG(1) = getFormItemInt(F("p068_tempoffset"));
+      PCONFIG(1) = getFormItemInt(F("tempoffset"));
 
       success = true;
       break;
@@ -103,7 +113,9 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P068_SHT3X(PCONFIG(0)));
-      success = true;
+      P068_SHT3X *P068_data = static_cast<P068_SHT3X *>(getPluginTaskData(event->TaskIndex));
+
+      success = (nullptr != P068_data);
       break;
     }
 

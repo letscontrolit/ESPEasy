@@ -75,7 +75,7 @@
    ``System#BootMode``
    Added: 2021-10-18
   
-   On ESP32 only.
+   On ESP32-series only.
 
    Event is sent right before network connection is attempted.
 
@@ -89,7 +89,7 @@
           LogEntry,'Boot pins: GPIO-5: %eventvalue1%, GPIO-15: %eventvalue2%, GPIO-4: %eventvalue3%, GPIO-2: %eventvalue4%'
         endon
 
-   The event values represent the state of these pins in the following order:
+   For the classic ESP32, the event values represent the state of these pins in the following order:
 
    * GPIO-5: ``%eventvalue1%`` (internal pull-up, default: ``1``)
    * GPIO-15: ``%eventvalue2%`` (internal pull-up, default: ``1``)
@@ -101,6 +101,8 @@
    N.B. When pulling down GPIO-15 during boot, the ROM bootloader messages will be silenced.
 
    N.B.2 Do not pull GPIO-2 high when GPIO-0 is low for programming mode.
+
+   See 'Boot Strapping Pins' documentation for the boot strapping pins for all ESP32-series chips.
 
    "
    "
@@ -311,6 +313,8 @@
    "
    ``Clock#Time=``
    Triggered every minute with day and time like: Mon,12:30 or Tue,14:45. You can define triggers on specific days or all days using 'All' for days indicator. You can also use wildcards in the time setting like All,**:00 to run every hour.
+
+   For handling events to only be executed on weekdays (Mon..Fri), the day indicator 'Wrk' (work) can be used, and for weekend days (Sat, Sun), the day indicator 'Wkd' is available.
    ","
 
    .. code-block:: none

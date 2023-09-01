@@ -7,7 +7,7 @@
 #include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
-
+#include "../Helpers/Networking.h"
 
 // Bit numbers for WiFi status
 #define ESPEASY_WIFI_CONNECTED               0
@@ -104,6 +104,8 @@ void WiFiEventData_t::clear_processed_flags() {
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
   processingDisconnect.clear();
+  dns0_cache = IPAddress();
+  dns1_cache = IPAddress();
 }
 
 void WiFiEventData_t::markWiFiBegin() {
@@ -134,7 +136,6 @@ bool WiFiEventData_t::WiFiServicesInitialized() const {
 }
 
 void WiFiEventData_t::setWiFiDisconnected() {
-  wifiConnectInProgress = false;
   wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
   last_wifi_connect_attempt_moment.clear();
   wifiConnectInProgress = false;
@@ -143,6 +144,12 @@ void WiFiEventData_t::setWiFiDisconnected() {
 void WiFiEventData_t::setWiFiGotIP() {
   bitSet(wifiStatus, ESPEASY_WIFI_GOT_IP);
   processedGotIP = true;
+  if (valid_DNS_address(WiFi.dnsIP(0))) {
+    dns0_cache = WiFi.dnsIP(0);
+  }
+  if (valid_DNS_address(WiFi.dnsIP(1))) {
+    dns1_cache = WiFi.dnsIP(1);
+  }
 }
 
 void WiFiEventData_t::setWiFiConnected() {
@@ -158,6 +165,8 @@ void WiFiEventData_t::setWiFiServicesInitialized() {
     bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
     wifiConnectInProgress = false;
     wifiConnectAttemptNeeded = false;
+    dns0_cache = WiFi.dnsIP(0);
+    dns1_cache = WiFi.dnsIP(1);
   }
 }
 

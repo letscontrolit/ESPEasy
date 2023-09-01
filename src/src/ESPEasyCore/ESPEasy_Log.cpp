@@ -3,6 +3,7 @@
 #include "../DataStructs/LogStruct.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/Logging.h"
 #include "../Globals/Settings.h"
@@ -12,6 +13,7 @@
 
 #if FEATURE_SD
 #include <SD.h>
+#include "../Helpers/ESPEasy_Storage.h"
 #endif
 
 /********************************************************************************************\
@@ -87,16 +89,17 @@ void setLogLevelFor(uint8_t destination, uint8_t logLevel) {
 
 void updateLogLevelCache() {
   uint8_t max_lvl = 0;
+  // FIXME TD-er: Must add check whether SW serial may be using the same pins as Serial0
   const bool useSerial = Settings.UseSerial && !activeTaskUseSerial0();
   if (log_to_serial_disabled) {
     if (useSerial) {
-      Serial.setDebugOutput(false);
+      ESPEasy_Console.setDebugOutput(false);
     }
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
 #ifndef BUILD_NO_DEBUG
     if (useSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
-      Serial.setDebugOutput(true);
+      ESPEasy_Console.setDebugOutput(true);
     }
 #endif
   }
@@ -115,7 +118,12 @@ bool loglevelActiveFor(uint8_t logLevel) {
 }
 
 uint8_t getSerialLogLevel() {
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  // FIXME TD-er: Must add check whether SW serial may be using the same pins as Serial0
+  if (log_to_serial_disabled || !Settings.UseSerial) return 0;
+#else
   if (log_to_serial_disabled || !Settings.UseSerial || activeTaskUseSerial0()) return 0;
+#endif
   if (!(WiFiEventData.WiFiServicesInitialized())){
     if (Settings.SerialLogLevel < LOG_LEVEL_INFO) {
       return LOG_LEVEL_INFO;
@@ -243,18 +251,18 @@ void addLog(uint8_t logLevel, String&& string)
 void addToSerialLog(uint8_t logLevel, const String& string)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    addToSerialBuffer(String(millis()));
-    addToSerialBuffer(F(" : "));
+    ESPEasy_Console.addToSerialBuffer(String(millis()));
+    ESPEasy_Console.addToSerialBuffer(F(" : "));
     {
       String loglevelDisplayString = getLogLevelDisplayString(logLevel);
       while (loglevelDisplayString.length() < 6) {
         loglevelDisplayString += ' ';
       }
-      addToSerialBuffer(loglevelDisplayString);
+      ESPEasy_Console.addToSerialBuffer(loglevelDisplayString);
     }
-    addToSerialBuffer(F(" : "));
-    addToSerialBuffer(string);
-    addNewlineToSerialBuffer();
+    ESPEasy_Console.addToSerialBuffer(F(" : "));
+    ESPEasy_Console.addToSerialBuffer(string);
+    ESPEasy_Console.addNewlineToSerialBuffer();
   }
 }
 
@@ -269,7 +277,8 @@ void addToSDLog(uint8_t logLevel, const String& string)
 {
 #if FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
-    fs::File logFile = SD.open("log.dat", FILE_WRITE);
+    String   logName = patch_fname(F("log.txt"));
+    fs::File logFile = SD.open(logName, "a+");
     if (logFile) {
       const size_t stringLength = string.length();
       for (size_t i = 0; i < stringLength; ++i) {

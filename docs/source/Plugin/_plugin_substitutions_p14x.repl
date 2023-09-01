@@ -9,4 +9,82 @@
 .. |P141_shortinfo| replace:: `Nokia 5110 monochrome LCD`
 .. |P141_maintainer| replace:: `tonhuisman`
 .. |P141_compileinfo| replace:: `.`
-.. |P141_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_NeoMatrix`
+.. |P141_usedlibraries| replace:: `https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library`
+
+.. |P143_name| replace:: :cyan:`I2C Rotary encoders`
+.. |P143_type| replace:: :cyan:`Switch input`
+.. |P143_typename| replace:: :cyan:`Switch input - I2C Rotary encoders`
+.. |P143_porttype| replace:: `.`
+.. |P143_status| replace:: :yellow:`COLLECTION C` :yellow:`DISPLAY`
+.. |P143_github| replace:: P143_I2C_Rotary.ino
+.. _P143_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P143_I2C_Rotary.ino
+.. |P143_usedby| replace:: `.`
+.. |P143_shortinfo| replace:: `I2C Rotary encoders`
+.. |P143_maintainer| replace:: `tonhuisman`
+.. |P143_compileinfo| replace:: `.`
+.. |P143_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_Seesaw`
+
+.. |P144_name| replace:: :cyan:`PM1006(K) Vindriktning`
+.. |P144_type| replace:: :cyan:`Dust`
+.. |P144_typename| replace:: :cyan:`Dust - PM1006(K) (Vindriktning)`
+.. |P144_porttype| replace:: `.`
+.. |P144_status| replace:: :yellow:`COLLECTION E`
+.. |P144_github| replace:: P144_Vindriktning.ino
+.. _P144_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P144_Vindrikning.ino
+.. |P144_usedby| replace:: `.`
+.. |P144_shortinfo| replace:: `Dust level sensors`
+.. |P144_maintainer| replace:: `flashmark`
+.. |P144_compileinfo| replace:: `.`
+.. |P144_usedlibraries| replace:: `ESPEasy Serial`
+
+.. |P145_name| replace:: :cyan:`MQxxx (MQ135 CO2, MQ3 Alcohol)`
+.. |P145_type| replace:: :cyan:`Gases`
+.. |P145_typename| replace:: :cyan:`Gases - MQxxx (MQ135 CO2, MQ3 Alcohol)`
+.. |P145_porttype| replace:: `.`
+.. |P145_status| replace:: :yellow:`COLLECTION F`
+.. |P145_github| replace:: P145_MQxxx.ino
+.. _P145_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P145_MQxxx.ino
+.. |P145_usedby| replace:: `.`
+.. |P145_shortinfo| replace:: `Gas level sensors`
+.. |P145_maintainer| replace:: `flashmark`
+.. |P145_compileinfo| replace:: `.`
+.. |P145_usedlibraries| replace:: `.`
+
+.. |P146_name| replace:: :cyan:`Cache Reader`
+.. |P146_type| replace:: :cyan:`Generic`
+.. |P146_typename| replace:: :cyan:`Generic - Cache Reader`
+.. |P146_porttype| replace:: `.`
+.. |P146_status| replace:: :green:`NORMAL`
+.. |P146_github| replace:: P146_CacheControllerReader.ino
+.. _P146_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P146_CacheControllerReader.ino
+.. |P146_usedby| replace:: `.`
+.. |P146_shortinfo| replace:: `Cache Reader`
+.. |P146_maintainer| replace:: `TD-er`
+.. |P146_compileinfo| replace:: `.`
+.. |P146_usedlibraries| replace:: `.`
+
+.. |P147_name| replace:: :cyan:`SGP4x VOC/NOx sensor`
+.. |P147_type| replace:: :cyan:`Gases`
+.. |P147_typename| replace:: :cyan:`Gases - SGP4x VOC(/NOx)`
+.. |P147_porttype| replace:: `.`
+.. |P147_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P147_github| replace:: P147_SGP4x.ino
+.. _P147_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P147_SGP4x.ino
+.. |P147_usedby| replace:: `.`
+.. |P147_shortinfo| replace:: `SGP4x VOC(/NOx)`
+.. |P147_maintainer| replace:: `tonhuisman`
+.. |P147_compileinfo| replace:: `.`
+.. |P147_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_Seesaw`
+
+.. |P148_name| replace:: :cyan:`POWR3xxD/THR3xxD`
+.. |P148_type| replace:: :cyan:`Display`
+.. |P148_typename| replace:: :cyan:`Display - POWR3xxD/THR3xxD`
+.. |P148_porttype| replace:: `.`
+.. |P148_status| replace:: :yellow:`ENERGY` :yellow:`DISPLAY`
+.. |P148_github| replace:: P148_POWRxxD_THR3xxD.ino
+.. _P148_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P148_POWRxxD_THR3xxD.ino
+.. |P148_usedby| replace:: `.`
+.. |P148_shortinfo| replace:: `Display for Sonoff Elite POWR3xxD/THR3xxD`
+.. |P148_maintainer| replace:: `TD-er`
+.. |P148_compileinfo| replace:: `.`
+.. |P148_usedlibraries| replace:: `.`

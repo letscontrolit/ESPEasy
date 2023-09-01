@@ -165,7 +165,7 @@ void CC1101::writeBurstRegister(uint8_t address, uint8_t *data, uint8_t length)
   SPI.transfer(address | CC1101_WRITE_BURST);
 
   for (i = 0; i < length; i++) {
-    SPI.transfer(data[i]);
+    SPI.transfer(pgm_read_byte(&(data[i])));
   }
   deselect();
 }

@@ -23,6 +23,72 @@ Maintainer: |P052_maintainer|
 
 Used libraries: |P052_usedlibraries|
 
+Description
+-----------
+
+SenseAir is a Swedish manufacturer known for their CO2 sensors.
+
+Below, in the "Supported Hardware" section, are links to a number of their sensors.
+
+CO2 is a gas which we humans exhale. It is also formed as a by-product from burning any carbon based substance.
+For example, burning gas or wood.
+
+It is important to keep CO2 levels low to create a healthy indoor climate.
+Typically one would aim for an indoor CO2 concentration of less than 700 ppm.
+
+The outdoor global CO2 levels are about 411 ppm and rising quite fast.
+
+
+Calibration
+-----------
+
+As with any sensor, CO2 sensors need calibration.
+That's why CO2 sensors are calibrated at the factory using highly specialized chambers with full control of the air entering those chambers.
+
+.. warning:: Do NOT!!! try to calibrate using the bCAL pin on the CO2 sensor, unless you know what you're doing.
+  Many sensors may already have been destroyed or at least have their factory calibration cleared by improper calibration.
+
+CO2 sensors have at least two important calibration points:
+
+* 0 ppm, where the sensor is placed in a gas which contains no CO2.
+* 400 ppm, which is an approximation of the global CO2 levels (sadly already outdated).
+
+Apparently a number of sites and/or blogs instruct users to pull the bCAL pin to GND for a certain amount of time.
+On SenseAir sensors, this may trigger one of these calibration points to be set:
+
+* 4 ... 8 seconds: The current CO2 levels will be assumed to be the new "400 ppm" level.
+* 16+ seconds: The current CO2 levels will be assumed to be the new "0 ppm" level.
+
+As may be clear from the warning above, one should **NOT** try to do this!!
+
+It is very hard to create a proper 400 ppm CO2 concentration as simply breathing near the sensor will cause a significant rise in CO2 concentration.
+
+Other factors affecting the CO2 levels:
+
+* Industrial areas.
+* Busy roads.
+* Being in a city.
+* Near plants while the sun has set. (plants convert CO2 into O2 due to sunlight, but this process reverses while the sun has set)
+* Close to something burning. (e.g. cooking using gas, burning candles, wood fire, etc.)
+* Living creatures, like humans or animals.
+
+A NDIR CO2 sensor generates IR light of a specific wave length and measures the absorption of this light.
+Thus direct sunlight and/or heat from a stove, heater, etc. may affect CO2 measurements as this is adding extra IR light into the measurement.
+
+CO2 sensors typically have an Automatic Base Calibration mode (sometimes referred to as ABC mode, but it is unsure whether this is a trademarked name).
+With this mode enabled, the sensor keeps track of the minimal raw sensor value seen in some time period (e.g. 1 week).
+This new value is then considered to be the new 400 ppm value.
+SenseAir sensors will not immediately jump to this value if it differs a lot from the current value.
+So it may take several weeks (sometimes months) for a sensor to correct an incorrect 400 ppm level calibration.
+
+Therefore, again the warning: **Do NOT perform manual calibration using the bCAL pin**
+
+It may seem a bit strange to put all those warnings here, but it really happens a lot that people immediately start to damage CO2 sensors by trying to calibrate them while there is nothing wrong with the sensors.
+It is unclear as to why this happens to CO2 sensors over-and-over again. 
+Maybe there is some popular blog out there instructing readers to do so.
+
+But please, **DO NOT CALIBRATE CO2 SENSORS using the bCAL pin**
+
 Supported hardware
 ------------------
 

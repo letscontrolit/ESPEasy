@@ -14,8 +14,11 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/_Plugin_Helper_serial.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
 
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
@@ -53,7 +56,21 @@ void handle_advanced() {
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.SyslogPort     = getFormItemInt(F("syslogport"));
-    Settings.UseSerial      = isFormItemChecked(F("useserial"));
+    Settings.UseSerial      = isFormItemChecked(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+    Settings.console_serial_rxpin = getFormItemInt(F("taskdevicepin1"), Settings.console_serial_rxpin);
+    Settings.console_serial_txpin = getFormItemInt(F("taskdevicepin2"), Settings.console_serial_txpin);
+
+    serialHelper_webformSave(
+      Settings.console_serial_port, 
+      Settings.console_serial_rxpin,
+      Settings.console_serial_txpin);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+    Settings.console_serial0_fallback = isFormItemChecked(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
+#endif
+
+#endif
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
@@ -96,7 +113,7 @@ void handle_advanced() {
 #ifdef SUPPORT_ARP
     Settings.gratuitousARP(isFormItemChecked(LabelType::PERIODICAL_GRAT_ARP));
 #endif // ifdef SUPPORT_ARP
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
     Settings.setWiFi_TX_power(getFormItemFloat(LabelType::WIFI_TX_MAX_PWR));
     Settings.WiFi_sensitivity_margin = getFormItemInt(LabelType::WIFI_SENS_MARGIN);
     Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
@@ -104,9 +121,18 @@ void handle_advanced() {
     Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
     Settings.UseLastWiFiFromRTC(isFormItemChecked(LabelType::WIFI_USE_LAST_CONN_FROM_RTC));
     Settings.JSONBoolWithoutQuotes(isFormItemChecked(LabelType::JSON_BOOL_QUOTES));
+#if FEATURE_TIMING_STATS
     Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
+#endif
     Settings.AllowTaskValueSetAllPlugins(isFormItemChecked(LabelType::TASKVALUESET_ALL_PLUGINS));
     Settings.EnableClearHangingI2Cbus(isFormItemChecked(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS));
+    #if FEATURE_I2C_DEVICE_CHECK
+    Settings.CheckI2Cdevice(isFormItemChecked(LabelType::ENABLE_I2C_DEVICE_CHECK));
+    #endif // if FEATURE_I2C_DEVICE_CHECK
+
+    Settings.WaitWiFiConnect(isFormItemChecked(LabelType::WAIT_WIFI_CONNECT));
+    Settings.SDK_WiFi_autoreconnect(isFormItemChecked(LabelType::SDK_WIFI_AUTORECONNECT));
+
 
 #ifndef BUILD_NO_RAM_TRACKER
     Settings.EnableRAMTracking(isFormItemChecked(LabelType::ENABLE_RAM_TRACKING));
@@ -125,6 +151,9 @@ void handle_advanced() {
 #if FEATURE_AUTO_DARK_MODE
     Settings.setCssMode(getFormItemInt(getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE)));
 #endif // FEATURE_AUTO_DARK_MODE
+#if FEATURE_RULES_EASY_COLOR_CODE
+    Settings.DisableRulesCodeCompletion(isFormItemChecked(LabelType::DISABLE_RULES_AUTOCOMPLETE));
+#endif // if FEATURE_RULES_EASY_COLOR_CODE
 
     addHtmlError(SaveSettings());
 
@@ -206,15 +235,40 @@ void handle_advanced() {
 #endif // if FEATURE_SD
 
 
-  addFormSubHeader(F("Serial Settings"));
-
-  addFormCheckBox(F("Enable Serial port"), F("useserial"), Settings.UseSerial);
+  addFormSubHeader(F("Serial Console Settings"));
+  addFormCheckBox(LabelType::ENABLE_SERIAL_PORT_CONSOLE, Settings.UseSerial);
   addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  serialHelper_webformLoad(
+    static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
+    Settings.console_serial_rxpin, 
+    Settings.console_serial_txpin, 
+    true);
+
+  // Show serial port selection
+  addFormPinSelect(
+    PinSelectPurpose::Serial_input, 
+    formatGpioName_serialRX(false),
+    F("taskdevicepin1"), 
+    Settings.console_serial_rxpin);
+  addFormPinSelect(
+    PinSelectPurpose::Serial_output, 
+    formatGpioName_serialTX(false),
+    F("taskdevicepin2"), 
+    Settings.console_serial_txpin);
+
+  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+#if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0, Settings.console_serial0_fallback);
+#endif
+
+#endif
 
 
   addFormSubHeader(F("Inter-ESPEasy Network"));
   if (Settings.UDPPort != 8266 ) addFormNote(F("Preferred P2P port is 8266"));
-  addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
+  addFormNumericBox(F("ESPEasy p2p UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
   // TODO sort settings in groups or move to other pages/groups
   addFormSubHeader(F("Special and Experimental Settings"));
@@ -242,15 +296,18 @@ void handle_advanced() {
   #endif // if defined(ESP32)
 
   addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
-  #if FEATURE_TIMING_STATS
+#if FEATURE_TIMING_STATS
   addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
-  #endif // if FEATURE_TIMING_STATS
+#endif // if FEATURE_TIMING_STATS
 #ifndef BUILD_NO_RAM_TRACKER
   addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
 #endif
 
   addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
   addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
+  #if FEATURE_I2C_DEVICE_CHECK
+  addFormCheckBox(LabelType::ENABLE_I2C_DEVICE_CHECK, Settings.CheckI2Cdevice());
+  #endif // if FEATURE_I2C_DEVICE_CHECK
 
   # ifndef NO_HTTP_UPDATER
   addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());
@@ -272,6 +329,11 @@ void handle_advanced() {
                     Settings.getCssMode());
   #endif // FEATURE_AUTO_DARK_MODE
 
+  #if FEATURE_RULES_EASY_COLOR_CODE
+  addFormCheckBox(LabelType::DISABLE_RULES_AUTOCOMPLETE, Settings.DisableRulesCodeCompletion());
+  addFormNote(F("Also disables Rules syntax highlighting!"));
+  #endif // if FEATURE_RULES_EASY_COLOR_CODE
+
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
   #endif
@@ -282,14 +344,7 @@ void handle_advanced() {
   #endif // if FEATURE_SSDP
 
   addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, Settings.ConnectionFailuresThreshold, 0, 100);
-#ifdef ESP8266
   addFormCheckBox(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
-#endif // ifdef ESP8266
-#ifdef ESP32
-
-  // Disabled for now, since it is not working properly.
-  addFormCheckBox_disabled(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
-#endif // ifdef ESP32
 
   addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
   addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());
@@ -299,11 +354,12 @@ void handle_advanced() {
 #endif // ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
-#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
+#if FEATURE_SET_WIFI_TX_PWR
   {
     float maxTXpwr;
-    float threshold = GetRSSIthreshold(maxTXpwr);
-    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, 20.5f, 2, 0.25f);
+    float sensitivity = GetRSSIthreshold(maxTXpwr);
+    
+    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, MAX_TX_PWR_DBM_11b, 2, 0.25f);
     addUnit(F("dBm"));
     String note;
     note = F("Current max: ");
@@ -313,8 +369,8 @@ void handle_advanced() {
 
     addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
     addUnit(F("dB")); // Relative, thus the unit is dB, not dBm
-    note = F("Adjust TX power to target the AP with (threshold + margin) dBm signal strength. Current threshold: ");
-    note += toString(threshold, 2);
+    note = F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: ");
+    note += toString(sensitivity, 2);
     note += F(" dBm");
     addFormNote(note);
   }
@@ -325,6 +381,10 @@ void handle_advanced() {
     addFormNote(F("Number of extra times to scan all channels to have higher chance of finding the desired AP"));
   }
   addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
+
+
+  addFormCheckBox(LabelType::WAIT_WIFI_CONNECT,      Settings.WaitWiFiConnect());
+  addFormCheckBox(LabelType::SDK_WIFI_AUTORECONNECT, Settings.SDK_WiFi_autoreconnect());
 
 
 

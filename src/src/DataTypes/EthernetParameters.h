@@ -1,7 +1,7 @@
 #ifndef DATASTRUCTS_ETHERNETPARAMETERS_H
 #define DATASTRUCTS_ETHERNETPARAMETERS_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 // Is stored in settings
 enum class EthClockMode_t : uint8_t {
@@ -15,6 +15,8 @@ bool   isValid(EthClockMode_t clockMode);
 
 const __FlashStringHelper * toString(EthClockMode_t clockMode);
 
+bool isGpioUsedInETHClockMode(EthClockMode_t clockMode,
+                              int8_t gpio);
 
 // Is stored in settings
 enum class EthPhyType_t : uint8_t {

@@ -1,8 +1,6 @@
 #ifndef HELPERS_SYSTEMVARIABLES_H
 #define HELPERS_SYSTEMVARIABLES_H
 
-#include <Arduino.h>
-
 #include "../../ESPEasy_common.h"
 
 class SystemVariables {
@@ -62,6 +60,7 @@ public:
     SYSMIN,
     SYSMIN_0,
     SYSMONTH,
+    SYSMONTH_S,
     SYSNAME,
     SYSSEC,
     SYSSEC_0,
@@ -77,6 +76,7 @@ public:
     SYSTM_HM_AM,
     SYSTM_HM_AM_0,
     SYSTM_HM_AM_SP,
+    SYSTZOFFSET,
     SYSWEEKDAY,
     SYSWEEKDAY_S,
     SYSYEAR,
@@ -86,6 +86,9 @@ public:
     S_CR,
     S_LF,
     UNIT_sysvar,   // We already use UNIT as define.
+    #if FEATURE_ZEROFILLED_UNITNUMBER
+    UNIT_0_sysvar,
+    #endif // FEATURE_ZEROFILLED_UNITNUMBER
     UNIXDAY,
     UNIXDAY_SEC,
     UNIXTIME,

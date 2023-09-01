@@ -97,6 +97,9 @@ For example using just like normal task value data:
 * ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
 * ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
 * ``[bme#temp.min]`` See ``[bme#temp.max]`` 
+* ``[bme#temp.size]`` Return the number of samples in memory.
+* ``[bme#temp.sample]`` Access the last sample in memory.
+* ``[bme#temp.sampleN]`` Access the N-th last sample in memory.
 
 
 Commands on "Stats" data:
@@ -214,7 +217,7 @@ List of official plugins
 
 There are different released versions of ESP Easy:
 
-:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
+:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTTL, DEBUG logging, etc.
 
 :yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and some DEBUG logging.
 
@@ -224,7 +227,7 @@ There are different released versions of ESP Easy:
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
 
-:gray:`RETIRED` plugin has been retired from ESPEasy (though the source code is still available). Not included in any build.
+:gray:`RETIRED` plugin has been retired and removed from ESPEasy.
 
 2022-07-22: :yellow:`TESTING` builds renamed to :yellow:`COLLECTION`.
 
@@ -329,6 +332,7 @@ There are different released versions of ESP Easy:
    ":ref:`P094_page`","|P094_status|","P094"
    ":ref:`P095_page`","|P095_status|","P095"
    ":ref:`P097_page`","|P097_status|","P097"
+   ":ref:`P098_page`","|P098_status|","P098"
    ":ref:`P099_page`","|P099_status|","P099"
    ":ref:`P100_page`","|P100_status|","P100"
    ":ref:`P101_page`","|P101_status|","P101"
@@ -342,6 +346,7 @@ There are different released versions of ESP Easy:
    ":ref:`P109_page`","|P109_status|","P109"
    ":ref:`P110_page`","|P110_status|","P110"
    ":ref:`P111_page`","|P111_status|","P111"
+   ":ref:`P112_page`","|P112_status|","P112"
    ":ref:`P113_page`","|P113_status|","P113"
    ":ref:`P114_page`","|P114_status|","P114"
    ":ref:`P115_page`","|P115_status|","P115"
@@ -351,6 +356,7 @@ There are different released versions of ESP Easy:
    ":ref:`P119_page`","|P119_status|","P119"
    ":ref:`P120_page`","|P120_status|","P120"
    ":ref:`P121_page`","|P121_status|","P121"
+   ":ref:`P122_page`","|P122_status|","P122"
    ":ref:`P124_page`","|P124_status|","P124"
    ":ref:`P125_page`","|P125_status|","P125"
    ":ref:`P126_page`","|P126_status|","P126"
@@ -363,7 +369,19 @@ There are different released versions of ESP Easy:
    ":ref:`P133_page`","|P133_status|","P133"
    ":ref:`P134_page`","|P134_status|","P134"
    ":ref:`P135_page`","|P135_status|","P135"
+   ":ref:`P137_page`","|P137_status|","P137"
+   ":ref:`P138_page`","|P138_status|","P138"
    ":ref:`P141_page`","|P141_status|","P141"
+   ":ref:`P143_page`","|P143_status|","P143"
+   ":ref:`P144_page`","|P144_status|","P144"
+   ":ref:`P145_page`","|P145_status|","P145"
+   ":ref:`P146_page`","|P146_status|","P146"
+   ":ref:`P147_page`","|P147_status|","P147"
+   ":ref:`P148_page`","|P148_status|","P148"
+   ":ref:`P150_page`","|P150_status|","P150"
+   ":ref:`P151_page`","|P151_status|","P151"
+   ":ref:`P152_page`","|P152_status|","P152"
+   ":ref:`P153_page`","|P153_status|","P153"
 
 
 Internal GPIO handling
@@ -382,6 +400,11 @@ Acceleration
 ------------
 
 Plugins: |Plugin_Acceleration|
+
+Color
+-----
+
+Plugins: |Plugin_Color|
 
 Communication
 -------------
@@ -423,7 +446,7 @@ Environment
 
 Plugins: |Plugin_Environment|
 
-Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|, |P030_usedby|
+Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|, |P151_usedby|
 
 Extra IO
 --------
@@ -509,6 +532,11 @@ Position
 Plugins: |Plugin_Position|
 
 Hardware: |P013_usedby|, |P082_usedby|
+
+Power management
+----------------
+
+Plugins: |Plugin_PowerMgt|
 
 Regulator
 ---------

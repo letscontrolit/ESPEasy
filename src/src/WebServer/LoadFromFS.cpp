@@ -90,7 +90,12 @@ void serveEmbedded(const String& path, const __FlashStringHelper* contentType, b
 #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
 
   if (matchFilename(path, F("esp.css"))) {
+    #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ
+    sendHeader(F("Content-Encoding"), F("gzip"));
+    do_serveEmbedded(contentType, (PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS_GZ), espeasy_default_min_css_gz_len, serve_inline);
+    #else
     do_serveEmbedded(contentType, (PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS), -1, serve_inline);
+    #endif
     return;
   }
 #endif // if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
@@ -229,18 +234,18 @@ bool loadFromFS(String path) {
     addLog(LOG_LEVEL_INFO, concat(F("static_file: "), path));
   }
 #endif // ifndef BUILD_NO_DEBUG
-  const bool fileEmbedded = fileIsEmbedded(path);
-
-  if (!fileExists(path) && !fileEmbedded) {
-    return false;
-  }
-
 #ifdef WEBSERVER_CUSTOM
 
   if (path.endsWith(F(".esp"))) {
     return handle_custom(path);
   }
 #endif // ifdef WEBSERVER_CUSTOM
+
+  const bool fileEmbedded = fileIsEmbedded(path);
+
+  if (!fileExists(path) && !fileEmbedded) {
+    return false;
+  }
 
   bool mustCheckCredentials = false;
   const __FlashStringHelper* contentType  = get_ContentType(path, mustCheckCredentials);

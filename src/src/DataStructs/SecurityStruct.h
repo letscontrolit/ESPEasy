@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/ChecksumType.h"
 
 /*********************************************************************************************\
  * SecurityStruct
@@ -17,7 +18,19 @@ struct SecurityStruct
 
   SecurityStruct();
 
+  ChecksumType computeChecksum() const;
+
+  // Return true when stored checksum matches.
+  bool checksumMatch() const;
+
+  // Check and update checksum when content was changed.
+  // Return true when stored checksum is updated.
+  bool updateChecksum();
+
   void validate();
+
+  // Clear the checksum to make sure file will be saved
+  void forceSave();
 
   void clearWiFiCredentials();
 

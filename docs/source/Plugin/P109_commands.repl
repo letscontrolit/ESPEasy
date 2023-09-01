@@ -1,0 +1,75 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``oledframedcmd,<sub>``
+
+    Sub:
+
+    * ``on`` will turn the display ON.
+    * ``off`` will turn the display OFF.
+    * ``low`` will dim the display to low.
+    * ``med`` will dim the display to medium.
+    * ``high`` will set the brightness to maximum.
+
+    ","
+    OLED displays will age quite fast, so it is not adviced to run them continously at max brightness.
+
+    Some displays do not accept all brightness levels and some also make a quite high pitch coil whine noise when running on some brightness levels.
+    So different levels of brightness can also be of help on those displays.
+
+    This command is shared with :ref:`P036_page`, so when having both plugins enabled, the command has to be prefixed with the taskname and a periode, like ``[thermo].oledframedcmd...``
+    "
+    "
+    ``thermo,setpoint,<temperature>``
+    ","
+    Set the setpoint value, that the thermostat feature will try to maintain.
+    "
+    "
+    ``thermo,down``
+    ","
+    Change the setpoint value down by 0.5 degrees, simulating a keypress on the Down button. This enables an alternative way to control the setpoint.
+
+    If Manual mode is active, the timeout will be decreased by 5 minutes.
+    "
+    "
+    ``thermo,up``
+    ","
+    Change the setpoint value up by 0.5 degrees, simulating a keypress on the Up button. This enables an alternative way to control the setpoint.
+
+    If Manual mode is active, the timeout will be increased by 5 minutes.
+    "
+    "
+    ``thermo,modebtn``
+    ","
+    Change the mode to the next circular value in the 1, 2, 0 range, simulating a keypress on the Mode button. This enables an alternative way to control the thermostat mode.
+
+    When Manual mode is selected, the timeout is by default set to 5 minutes, and after the timeout it returns to automatic mode.
+    "
+    "
+    ``thermo,heating,<state>``
+
+    State:
+
+    ``1`` / ``on``: Turn on the heating
+
+    Any other value: Turn off the heating.
+    ","
+    Set on the heating manually, either to ``1`` / ``on`` (on) or off (any other value).
+    "
+    "
+    ``thermo,mode,<mode>[,<timeout>]``
+
+    Mode:
+
+    ``0`` / ``x`` = Off
+
+    ``1`` / ``a`` = Automatic, the default thermostat mode.
+
+    ``2`` / ``m`` = Manual, turns heating on, with a <timeout> value in minutes, after which the Automatic mode is enabled again.
+
+    Timeout: A timeout for Manual mode in minutes. When no timeout is provided it will return to Automatic mode nearly immediately (~1 second).
+    ","
+    Set the thermostat mode.
+    "

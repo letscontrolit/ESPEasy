@@ -229,11 +229,11 @@ void  Adafruit_NeoPixel::rp2040Show(uint8_t pin, uint8_t *pixels, uint32_t numBy
 
 #if defined(ESP8266)
 // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
-extern "C" IRAM_ATTR void espShow(uint16_t pin, uint8_t *pixels,
-                                  uint32_t numBytes, uint8_t type);
+extern "C" IRAM_ATTR void espShow(uint8_t pin, uint8_t *pixels,
+                                  uint32_t numBytes, boolean is800KHz);
 #elif defined(ESP32)
-extern "C" void espShow(uint16_t pin, uint8_t *pixels, uint32_t numBytes,
-                        uint8_t type);
+extern "C" void espShow(uint8_t pin, uint8_t *pixels, uint32_t numBytes,
+                        boolean is800KHz);
 #endif // ESP8266
 
 #if defined(K210)

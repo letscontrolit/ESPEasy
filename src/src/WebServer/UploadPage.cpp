@@ -48,7 +48,6 @@ void handle_upload_post() {
   switch (uploadResult) {
     case uploadResult_e::Success:
       addHtml(F("Upload OK!<BR>You may need to reboot to apply all settings..."));
-      clearAllCaches();
       LoadSettings();
       break;
     case uploadResult_e::InvalidFile:
@@ -95,6 +94,19 @@ void handleFileUpload() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handleFileUpload"));
   #endif
+  handleFileUploadBase(false);
+}
+
+#if FEATURE_SD
+void handleSDFileUpload() {
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handleSDFileUpload"));
+  #endif
+  handleFileUploadBase(true);
+}
+#endif // if FEATURE_SD
+
+void handleFileUploadBase(bool toSDcard) {
 
   if (!isLoggedIn()) { return; }
 
@@ -148,15 +160,11 @@ void handleFileUpload() {
 
       if (valid)
       {
-        String filename;
-#if defined(ESP32)
-        filename += '/';
-#endif // if defined(ESP32)
-        filename += upload.filename;
+        String filename = patch_fname(upload.filename);
 
         // once we're safe, remove file and create empty one...
-        tryDeleteFile(filename);
-        uploadFile = tryOpenFile(filename.c_str(), "w");
+        tryDeleteFile(filename, toSDcard ? FileDestination_e::SD : FileDestination_e::ANY);
+        uploadFile = tryOpenFile(filename.c_str(), "w", toSDcard ? FileDestination_e::SD : FileDestination_e::ANY);
 
         // dont count manual uploads: flashCount();
       }

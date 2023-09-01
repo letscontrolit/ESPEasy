@@ -1,7 +1,5 @@
 #include "../DataTypes/ESPEasyTimeSource.h"
 
-#include <Arduino.h>
-
 #include "../../ESPEasy_common.h"
 
 const __FlashStringHelper* toString(timeSource_t timeSource)

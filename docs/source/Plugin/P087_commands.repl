@@ -1,0 +1,28 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``serialproxy_write,'<content>'``
+
+        ``Content``: Data to send out via the serial port. Should use quotes when containing spaces or commas.
+
+        ","
+        Send out data via the configured serial port.
+        "
+        "
+        ``serialproxy_writemix,'<content to send>'[,...]``
+
+        ``<content to send>``: Text and/or hex byte(s) (having 0x prefix) that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the serial port.
+        ","
+        This command requires quotes to be used if spaces or commas are part of the content.
+
+        Any data can be sent, even if it can not be typed in a text content, by specifying that as a separate argument: ``serialproxy_writemix,'text, optionally including spaces or commas',0xXX,'0xXXxx XX,xx-XX:xx'``
+
+        ``'text, optionally including spaces or commas'``: Any text content to be sent to the serial port. Can contain variables. Quotes are only required if spaces or commas (separators) are used.
+
+        ``0xXX``: A single character in hexadecimal notation (range: 0x00..0xFF), that is appended to the data to send.
+
+        ``'0xXXxx XX,xx-XX:xx'``: A sequence of hexadecimal values (range: 0x00..0xFF), that *can* be separated by a space, comma, dash, colon, semicolon or period, or are just entered adjecent. Only the first 2 characters should be ``0x`` or ``0X``, the rest is interpreted as hex bytes, and appended to the data to send. Quotes are only required if space or comma separators are used.
+        Using this command, either from rules, via http or mqtt, the text that is provided as content is completely sent to the serial port. No extra data is added, other than any (system) variables that are included, being replaced.
+        "

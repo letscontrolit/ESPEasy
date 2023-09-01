@@ -1,0 +1,20 @@
+.. csv-table::
+    :header: "Event", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``<taskname>#Counter=<counter>,<delta>``
+
+    | ``counter``: Current counter value.
+
+    | ``delta``: Change of counter from previous position.
+    ","
+    | This event is generated on every change of the rotary encoder. Because the encoder can be rotated rather quick, the delta since the previous reading is calculated. If the value is below 0 the encoder is turned counter-clockwise, and when delta is positive, the rotation is clockwise.
+    "
+    "
+    | ``<taskname>#State=<state>``
+
+    | ``state``: Current state value. Possible values: 0, 1, 10, 11. 0 and 1 for regulat button states, 10 and 11 for longpress states.
+    ","
+    | This event is generated on buttonpress action. Depending on the action defined, either the button-down and button-up cause this event (Pushbutton), or when the state is changed (Toggle switch).
+    "

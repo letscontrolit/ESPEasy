@@ -3,15 +3,21 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataTypes/DeviceIndex.h"
+#include "../DataTypes/PluginID.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
-
-
-#include <Arduino.h>
 
 
 struct EventStruct;
 
-void PluginInit();
+deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID);
+pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex);
+
+boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string);
+
+void PluginSetup();
+
+void PluginInit(bool priorityOnly = false);
 
 // Macro to forward declare the Plugin_NNN functions.
 //
@@ -410,7 +416,7 @@ void PluginInit();
 #endif
 
 #ifdef USES_P097
-  #ifdef ESP32
+  #if defined(ESP32) && !defined(ESP32C3)
   ADDPLUGIN_H(097) // Touch (ESP32)
   #endif
 #endif

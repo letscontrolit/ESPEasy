@@ -233,6 +233,9 @@ The node type is defined as:
 * 33 = "ESP Easy 32"
 * 34 = "ESP Easy 32-S2"
 * 35 = "ESP Easy 32-C3"
+* 36 = "ESP Easy 32-S3"
+* 37 = "ESP Easy 32-C2"
+* 38 = "ESP Easy 32-H2"
 * 65 = "Arduino Easy"
 * 81 = "Nano Easy"
 

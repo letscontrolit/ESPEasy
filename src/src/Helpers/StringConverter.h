@@ -3,20 +3,23 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 
 #include "../Helpers/Convert.h"
+#include "../Helpers/StringConverter_Numerical.h"
 
-class IPAddress;
+#include <IPAddress.h>
+#include <vector>
 
 // -V::569
 
 /********************************************************************************************\
    Concatenate using code which results in the smallest compiled code
  \*********************************************************************************************/
+
+String concat(const __FlashStringHelper * str, const String &val);
+String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
 
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
@@ -32,25 +35,24 @@ String concat(const String& str, const T &val) {
   return res;
 }
 
+bool equals(const String& str, const __FlashStringHelper * f_str);
+bool equals(const String& str, const char& c);
+
+/*
+template <typename T>
+bool equals(const String& str, const T &val) {
+  return str.equals(String(val));
+}
+*/
 
 /********************************************************************************************\
-   Convert a char string to integer
+   Format string using vsnprintf
+   See: https://cplusplus.com/reference/cstdio/printf/
  \*********************************************************************************************/
 
-// FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string);
+String strformat(const String& format, ...);
+String strformat(const __FlashStringHelper * format, ...);
 
-String        ull2String(uint64_t value,
-                         uint8_t  base = 10);
-
-String        ll2String(int64_t value,
-                         uint8_t  base = 10);
-
-/********************************************************************************************\
-   Check if valid float and convert string to float.
- \*********************************************************************************************/
-bool string2float(const String& string,
-                  float       & floatvalue);
 
 
 /********************************************************************************************\
@@ -91,6 +93,12 @@ unsigned long long hexToULL(const String& input_c,
                             size_t        startpos,
                             size_t        nrHexDecimals);
 
+void appendHexChar(uint8_t data, String& string);
+
+// Binary data to HEX
+// Returned string length will be twice the size of the data array.
+String formatToHex_array(const uint8_t* data, size_t size);
+
 String formatToHex(unsigned long value,
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits);
@@ -120,6 +128,9 @@ const __FlashStringHelper * boolToString(bool value);
    Typical string replace functions.
 \*********************************************************************************************/
 void   removeExtraNewLine(String& line);
+
+// Remove all occurences of given character from the string
+void   removeChar(String& line, char character);
 
 void   addNewLine(String& line);
 
@@ -151,6 +162,12 @@ String formatUserVar(struct EventStruct *event,
 
 
 String get_formatted_Controller_number(cpluginID_t cpluginID);
+
+String get_formatted_Plugin_number(pluginID_t pluginID);
+
+// Prepend zeroes till the string value length is nrDigits 
+String formatIntLeadingZeroes(int value, int nrDigits);
+String formatIntLeadingZeroes(const String& value, int nrDigits);
 
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
@@ -250,6 +267,10 @@ String parseStringKeepCase(const String& string,
                            char          separator = ',',
                            bool          trimResult = true);
 
+String parseStringKeepCaseNoTrim(const String& string,
+                                 uint8_t       indexFind,
+                                 char          separator = ',');
+
 String parseStringToEnd(const String& string,
                         uint8_t       indexFind,
                         char          separator = ',',
@@ -260,6 +281,10 @@ String parseStringToEndKeepCase(const String& string,
                                 char          separator = ',',
                                 bool          trimResult = true);
 
+String parseStringToEndKeepCaseNoTrim(const String& string,
+                                      uint8_t       indexFind,
+                                      char          separator = ',');
+
 String tolerantParseStringKeepCase(const char * string,
                                    uint8_t      indexFind,
                                    char         separator = ',',
@@ -269,6 +294,30 @@ String tolerantParseStringKeepCase(const String& string,
                                    uint8_t       indexFind,
                                    char          separator = ',',
                                    bool          trimResult = true);
+
+String parseHexTextString(const String& argument,
+                          int           index = 2);
+std::vector<uint8_t> parseHexTextData(const String& argument,
+                                      int           index = 2);
+
+
+/*********************************************************************************************\
+   GetTextIndexed: Get text from large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L937
+\*********************************************************************************************/
+char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index, const char* haystack);
+
+/*********************************************************************************************\
+   GetCommandCode: Find string in large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L967
+\*********************************************************************************************/
+int GetCommandCode(char* destination, size_t destination_size, const char* needle, const char* haystack);
+
+
 
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,

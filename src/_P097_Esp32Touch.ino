@@ -6,7 +6,20 @@
 // #######################################################################################################
 
 
-#ifdef ESP32
+#if defined(ESP32) && !defined(ESP32C3)
+
+#ifdef ESP32_CLASSIC
+  # define HAS_T0_INPUT  1
+  # define HAS_T10_TO_T14 0
+  # define LAST_TOUCH_INPUT_INDEX 10
+#endif
+#if defined(ESP32S2) || defined(ESP32S3)
+  # define HAS_T0_INPUT  0
+  # define HAS_T10_TO_T14 1
+  # define LAST_TOUCH_INPUT_INDEX 15
+  
+#endif
+
 
 
 # define PLUGIN_097
@@ -31,11 +44,7 @@
 // Share this bitmap among all instances of this plugin
 DRAM_ATTR uint32_t p097_pinTouched     = 0;
 DRAM_ATTR uint32_t p097_pinTouchedPrev = 0;
-#ifdef ESP32S2
-DRAM_ATTR uint32_t p097_timestamp[15]  = { 0 };
-#else
-DRAM_ATTR uint32_t p097_timestamp[10]  = { 0 };
-#endif
+DRAM_ATTR uint32_t p097_timestamp[LAST_TOUCH_INPUT_INDEX]  = { 0 };
 
 boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -88,10 +97,10 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Touch Settings"));
 
-      addFormCheckBox(F("Send Touch Event"),    F("p097_sendtouch"),    P097_SEND_TOUCH_EVENT);
-      addFormCheckBox(F("Send Release Event"),  F("p097_sendrelease"),  P097_SEND_RELEASE_EVENT);
-      addFormCheckBox(F("Send Duration Event"), F("p097_sendduration"), P097_SEND_DURATION_EVENT);
-      addFormNumericBox(F("Touch Threshold"), F("p097_threshold"), P097_TOUCH_THRESHOLD, 0, P097_MAX_ADC_VALUE);
+      addFormCheckBox(F("Send Touch Event"),    F("sendtouch"),    P097_SEND_TOUCH_EVENT);
+      addFormCheckBox(F("Send Release Event"),  F("sendrelease"),  P097_SEND_RELEASE_EVENT);
+      addFormCheckBox(F("Send Duration Event"), F("sendduration"), P097_SEND_DURATION_EVENT);
+      addFormNumericBox(F("Touch Threshold"), F("threshold"), P097_TOUCH_THRESHOLD, 0, P097_MAX_ADC_VALUE);
 
       // Show current value
       addRowLabel(F("Current Pressure"));
@@ -103,10 +112,10 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P097_SEND_TOUCH_EVENT    = isFormItemChecked(F("p097_sendtouch"));
-      P097_SEND_RELEASE_EVENT  = isFormItemChecked(F("p097_sendrelease"));
-      P097_SEND_DURATION_EVENT = isFormItemChecked(F("p097_sendduration"));
-      P097_TOUCH_THRESHOLD     = getFormItemInt(F("p097_threshold"));
+      P097_SEND_TOUCH_EVENT    = isFormItemChecked(F("sendtouch"));
+      P097_SEND_RELEASE_EVENT  = isFormItemChecked(F("sendrelease"));
+      P097_SEND_DURATION_EVENT = isFormItemChecked(F("sendduration"));
+      P097_TOUCH_THRESHOLD     = getFormItemInt(F("threshold"));
 
       success = true;
       break;
@@ -151,12 +160,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 
               if (P097_SEND_DURATION_EVENT) {
                 if (Settings.UseRules) {
-                  String eventString;
-                  eventString.reserve(32);
-                  eventString += getTaskDeviceName(event->TaskIndex);
-                  eventString += F("#Duration=");
-                  eventString += timePassedSince(p097_timestamp[t]);
-                  eventQueue.addMove(std::move(eventString));
+                  eventQueue.add(event->TaskIndex, F("Duration"), timePassedSince(p097_timestamp[t]));
                 }
               }
               bitClear(p097_pinTouchedPrev, t);
@@ -196,7 +200,7 @@ void P097_setEventParams(int pin, uint16_t threshold) {
 
   if (getADC_gpio_info(pin, adc, ch, t)) {
     switch (t) {
-#ifndef ESP32S2
+#if HAS_T0_INPUT
       case 0: touchAttachInterrupt(T0, P097_got_T0, threshold); break;
 #endif
       case 1: touchAttachInterrupt(T1, P097_got_T1, threshold); break;
@@ -208,7 +212,7 @@ void P097_setEventParams(int pin, uint16_t threshold) {
       case 7: touchAttachInterrupt(T7, P097_got_T7, threshold); break;
       case 8: touchAttachInterrupt(T8, P097_got_T8, threshold); break;
       case 9: touchAttachInterrupt(T9, P097_got_T9, threshold); break;
-#ifdef ESP32S2
+#if HAS_T10_TO_T14
 /*
       case 10: touchAttachInterrupt(T10, P097_got_T10, threshold); break;
       case 11: touchAttachInterrupt(T11, P097_got_T11, threshold); break;
@@ -221,7 +225,7 @@ void P097_setEventParams(int pin, uint16_t threshold) {
   }
 }
 
-#ifndef ESP32S2
+#if HAS_T0_INPUT
 void P097_got_T0() IRAM_ATTR;
 #endif
 void P097_got_T1() IRAM_ATTR;
@@ -233,7 +237,7 @@ void P097_got_T6() IRAM_ATTR;
 void P097_got_T7() IRAM_ATTR;
 void P097_got_T8() IRAM_ATTR;
 void P097_got_T9() IRAM_ATTR;
-#ifdef ESP32S2
+#if HAS_T10_TO_T14
 void P097_got_T10() IRAM_ATTR;
 void P097_got_T11() IRAM_ATTR;
 void P097_got_T12() IRAM_ATTR;
@@ -241,7 +245,7 @@ void P097_got_T13() IRAM_ATTR;
 void P097_got_T14() IRAM_ATTR;
 #endif
 
-#ifndef ESP32S2
+#if HAS_T0_INPUT
 void P097_got_T0() {
   bitSet(p097_pinTouched, 0);
 
@@ -303,7 +307,7 @@ void P097_got_T9() {
   if (p097_timestamp[9] == 0) { p097_timestamp[9] = millis(); }
 }
 
-#ifdef ESP32S2
+#if HAS_T10_TO_T14
 void P097_got_T10() {
   bitSet(p097_pinTouched, 10);
 
@@ -336,7 +340,7 @@ void P097_got_T14() {
 
 #endif
 
-#endif // ifdef ESP32
+#endif 
 
 
 #endif // USES_P097

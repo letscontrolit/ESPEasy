@@ -109,6 +109,13 @@ Please check `here <https://espeasy.readthedocs.io/en/latest/Reference/Command.h
 
 Please `check <https://community.openhab.org/t/mitsubishi-heat-pump/91765>`_ for an example integration with openHAB.
 
+Get Config Values
+-----------------
+
+Get Config Values retrieves values or settings from the sensor or plugin, and can be used in Rules, Display plugins, Formula's etc. The square brackets **are** part of the variable. Replace ``<taskname>`` by the **Name** of the task.
+
+.. include:: P093_config_values.repl
+
 Special thanks
 --------------
 

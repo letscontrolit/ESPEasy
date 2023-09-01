@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2023-02-26 tonhuisman: Use GetCommandCode() / PROGMEM for parsing of commands and colors to reduce .bin size.
  * 2022-10-05 tonhuisman: No longer trim off spaces from arguments to commands
  * 2022-09-23 tonhuisman: Allow backlight percentage from 0% instead of from 1% to be able to completely turn it off
  * 2022-09-12 tonhuisman: Add line-spacing option for Column/Row mode, default set to auto, optional 0..14 pixels line-spacing
@@ -37,7 +38,12 @@
  *                        Make 8 and 16 color support optional to squeeze a few bytes from size limited builds
  * 2022-05-23 tonhuisman: Add changelog, older changes have not been logged.
  ***************************************************************************/
-# include <Arduino.h>
+
+# include "../Helpers/Numerical.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../ESPEasyCore/ESPEasy_Log.h"
+
+
 # include <Adafruit_GFX.h>
 # include <Adafruit_SPITFT.h>
 # include <FS.h>
@@ -45,10 +51,6 @@
 
 // Used for bmp support
 # define BUFPIXELS 200 ///< 200 * 5 = 1000 bytes
-
-# include "../Helpers/Numerical.h"
-# include "../Helpers/ESPEasy_Storage.h"
-# include "../ESPEasyCore/ESPEasy_Log.h"
 
 # define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
 # ifndef ADAGFX_ARGUMENT_VALIDATION

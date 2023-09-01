@@ -42,8 +42,8 @@ for ( title, controller_config, controller_recv ) in [
         #long is actually quite hackish in espeasy: since uservar only supports floats, we use 2 uservars and some bitshifting. the controller will see just one value
         node[0].serialcmd("TaskValueSet 1,1,{0}".format(a & 0xffff))
         node[0].serialcmd("TaskValueSet 1,2,{0}".format(a>>16))
-        espeasy[0].device_p033(index=1, TDID1=5101, plugin_033_sensortype=SENSOR_TYPE_LONG)
-        results=controller_recv(SENSOR_TYPE_LONG,5101)
+        espeasy[0].device_p033(index=1, TDID1=5101, plugin_033_sensortype=SENSOR_TYPE_ULONG)
+        results=controller_recv(SENSOR_TYPE_ULONG,5101)
         test_is(results, [ a ])
 
 

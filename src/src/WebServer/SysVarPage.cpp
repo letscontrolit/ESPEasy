@@ -80,6 +80,9 @@ void handle_sysvars() {
 
   addTableSeparator(F("System"), 3, 3);
   addSysVar_enum_html(SystemVariables::UNIT_sysvar);
+  #if FEATURE_ZEROFILLED_UNITNUMBER
+  addSysVar_enum_html(SystemVariables::UNIT_0_sysvar);
+  #endif // FEATURE_ZEROFILLED_UNITNUMBER
   addSysVar_enum_html(SystemVariables::SYSLOAD);
   addSysVar_enum_html(SystemVariables::SYSHEAP);
   addSysVar_enum_html(SystemVariables::SYSSTACK);
@@ -93,7 +96,9 @@ void handle_sysvars() {
 
   addSysVar_enum_html(SystemVariables::ISWIFI);
   addSysVar_enum_html(SystemVariables::ISNTP);
+#if FEATURE_MQTT
   addSysVar_enum_html(SystemVariables::ISMQTT);
+#endif
 #ifdef USES_P037
   addSysVar_enum_html(SystemVariables::ISMQTTIMP);
 #endif // USES_P037
@@ -126,6 +131,7 @@ void handle_sysvars() {
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
   addSysVar_html(F("%sysmonth% // %sysmonth_0%"));
+  addSysVar_enum_html(SystemVariables::SYSMONTH_S);
   addSysVar_html(F("%sysday%   // %sysday_0%"));
   addSysVar_html(F("%syshour%  // %syshour_0%"));
   addSysVar_html(F("%sysmin%   // %sysmin_0%"));
@@ -133,6 +139,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSSEC_D);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY_S);
+  addSysVar_enum_html(SystemVariables::SYSTZOFFSET);
 
   addTableSeparator(F("Sunrise/Sunset"), 3, 3);
   addSysVar_html(F("%sunset%"));

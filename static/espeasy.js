@@ -5,8 +5,8 @@
 var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
-  "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
-  "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
+  "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DisablePriorityTask", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
+  "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "PostToHTTP", "Publish",
   "Reboot", "Reset", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
   "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAPkey", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
@@ -36,7 +36,7 @@ var commonPlugins = [
   //P035
   "IRSEND", "IRSENDAC",
   //P036
-  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign",
+  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,low", "OledFramedCmd,med", "OledFramedCmd,high", /*"OledFramedCmd,user",*/ "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign", "OledFramedCmd,align", "OledFramedCmd,userDef1", "OledFramedCmd,userDef2",
   //P038
   "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV", "NeoPixelBright",
   //P048
@@ -52,7 +52,7 @@ var commonPlugins = [
   //P067
   "tareChanA", "tareChanB",
   //P073
-  "7dn", "7dst", "7dsd", "7dtext", "7dtt", "7dt", "7dtfont", "7dtbin", "7don", "7doff", "7output",
+  "7dn", "7dst", "7dsd", "7dtext", "7ddt", "7dt", "7dtfont", "7dtbin", "7don", "7doff", "7output",
   //P076
   "HLWCalibrate", "HLWReset",
   //P079
@@ -68,7 +68,7 @@ var commonPlugins = [
   //P094
   "Culreader_Write",
   //P099 & P123
-  "Touch", "Touch,Rot", "Touch,Flip", "Touch,Enable", "Touch,Disable", "Touch,On", "Touch,Off", "Touch,Toggle", "Touch,Setgrp", "Touch,Ingrp", "Touch,Decgrp", "Touch,Incpage", "Touch,Decpage", "Touch,Updatebutton",
+  "Touch", "Touch,Rot", "Touch,Flip", "Touch,Enable", "Touch,Disable", "Touch,On", "Touch,Off", "Touch,Toggle", "Touch,Setgrp", "Touch,Incgrp", "Touch,Decgrp", "Touch,Incpage", "Touch,Decpage", "Touch,Updatebutton",
   //P101
   "WakeOnLan",
   //P104
@@ -84,10 +84,26 @@ var commonPlugins = [
   "multirelay", "multirelay,on", "multirelay,off", "multirelay,set", "multirelay,get", "multirelay,loop",
   //P126
   "ShiftOut", "ShiftOut,Set", "ShiftOut,SetNoUpdate", "ShiftOut,Update", "ShiftOut,SetAll", "ShiftOut,SetAllNoUpdate", "ShiftOut,SetAllLow", "ShiftOut,SetAllHigh", "ShiftOut,SetChipCount", "ShiftOut,SetHexBin",
+  //P127
+  "cdmrst",
+  //P128
+  "nfx", "nfx,off", "nfx,on", "nfx,dim", "nfx,line,", "nfx,hsvline,", "nfx,one,", "nfx,hsvone,", "nfx,all,", "nfx,rgb,", "nfx,fade,", "nfx,hsv,", "nfx,colorfade,", "nfx,rainbow", "nfx,kitt,", "nfx,comet,", "nfx,theatre,", "nfx,scan,", "nfx,dualscan,", "nfx,twinkle,", "nfx,twinklefade,", "nfx,sparkle,", "nfx,wipe,", "nfx,dualwipe", "nfx,fire", "nfx,fireflicker", "nfx,faketv", "nfx,simpleclock", "nfx,stop", "nfx,statusrequest", "nfx,fadetime,", "nfx,fadedelay,", "nfx,speed,", "nfx,count,", "nfx,bgcolor",
   //P129
   "ShiftIn", "ShiftIn,PinEvent", "ShiftIn,ChipEvent", "ShiftIn,SetChipCount", "ShiftIn,SampleFrequency", "ShiftIn,EventPerPin",
-  //P127
-  "cdmrst"
+  //P135
+  "scd4x", "scd4x,storesettings", "scd4x,facoryreset", "scd4x,selftest", "scd4x,setfrc,",
+  //P137
+  "axp", "axp,ldo2", "axp,ldo3", "axp,ldoio", "axp,gpio0", "axp,gpio1", "axp,gpio2", "axp,gpio3", "axp,gpio4", "axp,dcdc2", "axp,dcdc3", "axp,ldo2map", "axp,ldo3map", "axp,ldoiomap", "axp,dcdc2map", "axp,dcdc3map", "axp,ldo2perc", "axp,ldo3perc", "axp,ldoioperc", "axp,dcdc2perc", "axp,dcdc3perc",
+  //P143
+  "I2CEncoder", "I2CEncoder,bright", "I2CEncoder,led1", "I2CEncoder,led2", "I2CEncoder,gain", "I2CEncoder,set",
+  //P146
+  "cachereader", "cachereader,readpos", "cachereader,sendtaskinfo", "cachereader,flush",
+  //P148
+  "tm1621", "tm1621,write,", "tm1621,writerow,", "tm1621,voltamp,", "tm1621,energy,", "tm1621,celcius,", "tm1621,fahrenheit,", "tm1621,humidity,", "tm1621,raw,",
+  //P152
+  "dac", "dac,1", "dac,2",
+  //P153
+  "sht4x", "sht4x,startup",
 ];
 var pluginDispKind = [
   //P095
@@ -108,8 +124,14 @@ var pluginDispCmd = [
 ];
 var commonTag = ["On", "Do", "Endon"];
 var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
-var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d"];
+var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sin_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "aTan_d"];
 var commonWarning = ["delay", "Delay", "ResetFlashWriteCounter"];
+var taskSpecifics = [
+  //Task settings
+  "settings.Enabled", "settings.Interval", "settings.ValueCount",
+  "settings.Controller1.Enabled", "settings.Controller2.Enabled", "settings.Controller3.Enabled",
+  "settings.Controller1.Idx", "settings.Controller2.Idx", "settings.Controller3.Idx"
+];
 //things that does not fit in any other catergory (for now)
 var AnythingElse = [
   //System Variables
@@ -121,13 +143,11 @@ var AnythingElse = [
   "%rssi%", "%ip%", "%unit%", "%ssid%", "%bssid%", "%wi_ch%", "%iswifi%", "%vcc%", "%mac%", "%mac_int%", "%isntp%", "%ismqtt%",
   "%dns%", "%dns1%", "%dns2%", "%flash_freq%", "%flash_size%", "%flash_chip_vendor%", "%flash_chip_model%", "%fs_free%", "%fs_size%",
   "%cpu_id%", "%cpu_freq%", "%cpu_model%", "%cpu_rev%", "%cpu_cores%", "%board_name%",
-  //Task settings
-  "settings.Enabled", "settings.Interval", "settings.ValueCount",
-  "settings.Controller1.Enabled", "settings.Controller2.Enabled", "settings.Controller3.Enabled",
-  "settings.Controller1.Idx", "settings.Controller2.Idx", "settings.Controller3.Idx",
   //Standard Conversions
   "%c_w_dir%", "%c_c2f%", "%c_ms2Bft%", "%c_dew_th%", "%c_alt_pres_sea%", "%c_sea_pres_alt%", "%c_cm2imp%", "%c_mm2imp%",
-  "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_2hex%", "%c_u2ip%"
+  "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_2hex%", "%c_u2ip%",
+  //Variables
+  "var", "int"
 ];
 
 //merging displayspecific commands of P095,P096,P116,P131 into commonPlugins
@@ -141,34 +161,10 @@ for (const element2 of pluginDispKind) {
   }
 }
 
-var EXTRAWORDS = commonAtoms.concat(commonPlugins, commonKeywords, commonCommands, commonString2, commonTag, commonNumber, commonMath, commonWarning, AnythingElse);
+var EXTRAWORDS = commonAtoms.concat(commonPlugins, commonKeywords, commonCommands, commonString2, commonTag, commonNumber, commonMath, commonWarning, taskSpecifics, AnythingElse);
 
 var rEdit;
 function initCM() {
-  //this is causing issues
-  /*var onlongtouch;
-  var timer;
-  var touchduration = 800; 
-
-  function touchstart(e) {
-    if (!timer) {
-      timer = setTimeout(onlongtouch, touchduration);
-    }
-  }
-  function touchend() {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
-  }
-  onlongtouch = function () {
-    timer = null;
-    rEdit.execCommand('replace');
-  };
-  document.addEventListener("DOMContentLoaded", function (event) {
-    window.addEventListener("touchstart", touchstart, false);
-    window.addEventListener("touchend", touchend, false);
-  });*/
   CodeMirror.commands.autocomplete = function (cm) { cm.showHint({ hint: CodeMirror.hint.anyword }); }
   rEdit = CodeMirror.fromTextArea(document.getElementById('rules'), {
     tabSize: 2, indentWithTabs: false, lineNumbers: true, autoCloseBrackets: true,
@@ -191,7 +187,7 @@ function initCM() {
   rEdit.on('change', function () { rEdit.save() });
   //hinting on input
   rEdit.on("inputRead", function (cm, event) {
-    var letters = /[\w%,#]/; //characters for activation
+    var letters = /[\w%,.]/; //characters for activation
     var cur = cm.getCursor();
     var token = cm.getTokenAt(cur);
     if (letters.test(event.text) && token.type != "comment") {
@@ -242,6 +238,12 @@ function initCM() {
     var lCcommonMath = commonMath.map(name => name.toLowerCase());
     commonMath = commonMath.concat(lCcommonMath);
 
+    var lCAnythingElse = AnythingElse.map(name => name.toLowerCase());
+    AnythingElse = AnythingElse.concat(lCAnythingElse);
+
+    var lCtaskSpecifics = taskSpecifics.map(name => name.toLowerCase());
+    taskSpecifics = taskSpecifics.concat(lCtaskSpecifics);
+
     define('atom', commonAtoms);
     define('keyword', commonKeywords);
     define('builtin', commonCommands);
@@ -251,6 +253,8 @@ function initCM() {
     define('number', commonNumber);
     define('bracket', commonMath);
     define('warning', commonWarning);
+    define('hr', AnythingElse);
+    define('comment', taskSpecifics);
 
     function tokenBase(stream, state) {
       if (stream.eatSpace()) return null;
@@ -282,7 +286,7 @@ function initCM() {
       if (/\w/.test(ch)) {
         for (const element of EXTRAWORDS) {
           let WinDB = element.substring(1);
-          if ((element.includes(":") || element.includes(",")) && stream.match(WinDB)) void (0)
+          if ((element.includes(":") || element.includes(",") || element.includes(".")) && stream.match(WinDB)) void (0)
         }
       }
       //P022 addition
@@ -343,7 +347,7 @@ function initCM() {
 
       if (/\w/.test(ch)) {
         if (stream.match("#")) {
-          stream.eatWhile(/[\w#]/);
+          stream.eatWhile(/[\w.#]/);
           return 'string-2';
         }
       }

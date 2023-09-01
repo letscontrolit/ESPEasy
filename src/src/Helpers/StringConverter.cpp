@@ -4,6 +4,7 @@
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -27,66 +28,86 @@
 
 // -V::569
 
-
-/********************************************************************************************\
-   Convert a char string to integer
- \*********************************************************************************************/
-
-// FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string)
-{
-  unsigned int temp = 0;
-
-  validUIntFromString(string, temp);
-
-  return static_cast<unsigned long>(temp);
-}
-
-String ull2String(uint64_t value, uint8_t base) {
-  String res;
-
-  if (value == 0) {
-    res = '0';
-    return res;
-  }
-
-  while (value > 0) {
-    res   += String(static_cast<uint32_t>(value % base), base);
-    value /= base;
-  }
-
-  int endpos   = res.length() - 1;
-  int beginpos = 0;
-
-  while (endpos > beginpos) {
-    const char c = res[beginpos];
-    res[beginpos] = res[endpos];
-    res[endpos]   = c;
-    ++beginpos;
-    --endpos;
-  }
-
+String concat(const __FlashStringHelper * str, const String &val) {
+  String res(str);
+  res.concat(val);
   return res;
 }
 
-String ll2String(int64_t value, uint8_t  base) {
-  if (value < 0) {
-    String res;
-    res = '-';
-    res += ull2String(value * -1ll, base);
-    return res;
-  } else {
-    return ull2String(value, base);
-  }
+String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
+  return concat(str, String(val));
+}
+
+bool equals(const String& str, const __FlashStringHelper * f_str) {
+  return str.equals(String(f_str));
+}
+
+bool equals(const String& str, const char& c) {
+  return str.equals(String(c));
 }
 
 
 /********************************************************************************************\
-   Check if valid float and convert string to float.
+   Format string using vsnprintf
  \*********************************************************************************************/
-bool string2float(const String& string, float& floatvalue) {
-  return validFloatFromString(string, floatvalue);
+
+String strformat(const String& format, ...)
+{
+  String res;
+  {
+    va_list arg;
+    va_start(arg, format); // variable args start after parameter 'format'
+    char temp[64];
+    char* buffer = temp;
+    int len = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
+    va_end(arg);
+    if (len > static_cast<int>(sizeof(temp) - 1)) {
+        buffer = new (std::nothrow) char[len + 1];
+        if (!buffer) {
+            return res;
+        }
+        va_start(arg, format);
+        vsnprintf_P(buffer, len + 1, format.c_str(), arg);
+        va_end(arg);
+    }
+    res.reserve(len + 1);
+    res = buffer;
+    if (buffer != temp) {
+        delete[] buffer;
+    }
+  }
+  return res;
 }
+
+String strformat(const __FlashStringHelper * format, ...)
+{
+  String res;
+  {
+    va_list arg;
+    va_start(arg, format); // variable args start after parameter 'format'
+    char temp[64];
+    char* buffer = temp;
+    int len = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
+    va_end(arg);
+    if (len > static_cast<int>(sizeof(temp) - 1)) {
+        buffer = new (std::nothrow) char[len + 1];
+        if (!buffer) {
+            return res;
+        }
+        va_start(arg, format);
+        vsnprintf_P(buffer, len + 1, (PGM_P)format, arg);
+        va_end(arg);
+    }
+    res.reserve(len + 1);
+    res = buffer;
+    if (buffer != temp) {
+        delete[] buffer;
+    }
+  }
+  return res;
+}
+
+
 
 /********************************************************************************************\
    Convert a char string to IP uint8_t array
@@ -115,12 +136,24 @@ bool str2ip(const char *string, uint8_t *IP)
 }
 
 String formatIP(const IPAddress& ip) {
+#ifdef ESP8266
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
   return tmp.toString();
 #else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   return ip.toString();
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+#endif
+#ifdef ESP32
+  #if LWIP_IPV6
+  if (ip.isAny()) {
+    IPAddress tmp;
+    tmp.setV4();
+    return tmp.toString();
+  }
+  #endif
+  return ip.toString();
+#endif
 }
 
 
@@ -167,21 +200,27 @@ unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHex
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
+void appendHexChar(uint8_t data, String& string)
+{
+  const char *hex_chars = "0123456789abcdef";
+  string += hex_chars[(data >> 4) & 0xF];
+  string += hex_chars[(data) & 0xF];
+}
+
+String formatToHex_array(const uint8_t* data, size_t size)
+{
+  String res;
+  res.reserve(2 * size);
+  for (size_t i = 0; i < size; ++i) {
+    appendHexChar(data[i], res);
+  }
+  return res;
+}
+
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
-  String result = prefix;
-  String hex(value, HEX);
-
-  hex.toUpperCase();
-  if (hex.length() < minimal_hex_digits) {
-    const size_t leading_zeros = minimal_hex_digits - hex.length();
-    for (size_t i = 0; i < leading_zeros; ++i) {
-      result += '0';
-    }
-  }
-  result += hex;
-  return result;
+  return concat(prefix, formatToHex_no_prefix(value, minimal_hex_digits));
 }
 
 String formatToHex(unsigned long value,
@@ -194,7 +233,8 @@ String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
 }
 
 String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
-  return formatToHex(value, F(""), minimal_hex_digits);
+  const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
+  return strformat(fmt, value);
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
@@ -262,6 +302,10 @@ void removeExtraNewLine(String& line) {
   }
 }
 
+void removeChar(String& line, char character) {
+  line.replace(String(character), EMPTY_STRING);
+}
+
 void addNewLine(String& line) {
   line += F("\r\n");
 }
@@ -313,6 +357,7 @@ void replaceUnicodeByChar(String& line, char replChar) {
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCheck, bool& isvalid) {
   if (event == nullptr) return EMPTY_STRING;
+  START_TIMER;
   isvalid = true;
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -334,9 +379,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     }
   }
 
-
-  const uint8_t   valueCount = getValueCountForTask(event->TaskIndex);
-  Sensor_VType sensorType = event->getSensorType();
+  const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
+  const Sensor_VType sensorType = event->getSensorType();
 
   if (valueCount <= rel_index) {
     isvalid = false;
@@ -356,31 +400,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  switch (sensorType) {
-    case Sensor_VType::SENSOR_TYPE_LONG:
-      return String(UserVar.getSensorTypeLong(event->TaskIndex));
-    case Sensor_VType::SENSOR_TYPE_STRING:
-      return event->String2;
-
-    default:
-      break;
-  }
-
-  float f(UserVar[event->BaseVarIndex + rel_index]);
-
-  if (mustCheck && !isValidFloat(f)) {
-    isvalid = false;
-#ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("Invalid float value for TaskIndex: ");
-      log += event->TaskIndex;
-      log += F(" varnumber: ");
-      log += rel_index;
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
-#endif // ifndef BUILD_NO_DEBUG
-    f = 0;
+  if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+    return event->String2;
   }
 
   uint8_t nrDecimals = 0;
@@ -388,9 +409,26 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
-  String result = toString(f, nrDecimals);
-  result.trim();
-  return result;
+  if (mustCheck) {
+    if (!UserVar.isValid(event->TaskIndex, rel_index, sensorType)) {
+      isvalid = false;
+#ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("Invalid float value for TaskIndex: ");
+        log += event->TaskIndex;
+        log += F(" varnumber: ");
+        log += rel_index;
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
+#endif // ifndef BUILD_NO_DEBUG
+      const float f = 0.0f;
+      return toString(f, nrDecimals);
+    }
+  }
+  String res =  UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
+  STOP_TIMER(FORMAT_USER_VAR);
+  return res;
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
@@ -427,12 +465,39 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
   }
   String result;
   result += 'C';
-
-  if (cpluginID < 100) { result += '0'; }
-
-  if (cpluginID < 10) { result += '0'; }
-  result += cpluginID;
+  result += formatIntLeadingZeroes(cpluginID, 3);
   return result;
+}
+
+String get_formatted_Plugin_number(pluginID_t pluginID)
+{
+  if (!validPluginID(pluginID)) {
+    return F("P---");
+  }
+  String result;
+  result += 'P';
+  result += formatIntLeadingZeroes(pluginID, 3);
+  return result;
+}
+
+String formatIntLeadingZeroes(int value, int nrDigits)
+{
+  const String fmt = strformat(F("%%0%dd"), nrDigits);
+  return strformat(fmt, value);
+//  return formatIntLeadingZeroes(String(value), nrDigits);
+}
+
+String formatIntLeadingZeroes(const String& value, int nrDigits)
+{
+  String res;
+  res.reserve(nrDigits);
+  int nrZeroes = nrDigits - value.length();
+  while (nrZeroes > 0) {
+    --nrZeroes;
+    res += '0';
+  }
+  res += value;
+  return res;
 }
 
 /*********************************************************************************************\
@@ -535,16 +600,32 @@ String to_json_value(const String& value, bool wrapInQuotes) {
   }
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
-    if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
-      // Must replace characters, so make a deepcopy
-      String tmpValue(value);
-      tmpValue.replace('\n', '^');
-      tmpValue.replace('\r', '^');
-      tmpValue.replace('"',  '\'');
-      return wrap_String(tmpValue, '"');
-    } else {
-      return wrap_String(value, '"');
+
+    // First we check for not allowed special characters.
+    const size_t val_length = value.length();
+    for (size_t i = 0; i < val_length; ++i) {
+      const char c = value[i];
+      // Special characters not allowed in JSON:
+      if (c == '\n'|| //  \n  New line
+          c == '\r'|| //  \r  Carriage return
+          c == '\t'|| //  \t  Tab
+          c == '\\'|| //  \\  Backslash character
+          c == '\b'|| //  \b  Backspace (ascii code 08)
+          c == '\f'|| //  \f  Form feed (ascii code 0C)
+          c == '"') { //  \"  Double quote
+        // Must replace characters, so make a deepcopy
+        String tmpValue(value);
+        tmpValue.replace('\n', '^');
+        tmpValue.replace('\r', '^');
+        tmpValue.replace('\t', ' ');
+        tmpValue.replace('\\', '^');
+        tmpValue.replace('\b', '^');
+        tmpValue.replace('\f', '^');
+        tmpValue.replace('"',  '\'');
+        return wrap_String(tmpValue, '"');
+      }
     }
+    return wrap_String(value, '"');
   } 
   // It is a numerical
   return value;
@@ -668,6 +749,10 @@ String parseString(const String& string, uint8_t indexFind, char separator, bool
   return result;
 }
 
+String parseStringKeepCaseNoTrim(const String& string, uint8_t indexFind, char separator) {
+  return parseStringKeepCase(string, indexFind, separator, false);
+}
+
 String parseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result;
 
@@ -685,6 +770,10 @@ String parseStringToEnd(const String& string, uint8_t indexFind, char separator,
 
   result.toLowerCase();
   return result;
+}
+
+String parseStringToEndKeepCaseNoTrim(const String& string, uint8_t indexFind, char separator) {
+  return parseStringToEndKeepCase(string, indexFind, separator, false);
 }
 
 String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
@@ -736,6 +825,166 @@ String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char
   }
   return parseStringKeepCase(string, indexFind, separator, trimResult);
 }
+
+/*****************************************************************************
+ * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
+ ****************************************************************************/
+String parseHexTextString(const String& argument, int index) {
+  String result;
+
+  // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
+  const String skipChars = F(" -:,.;");
+
+  result.reserve(argument.length()); // longer than needed, most likely
+  int i      = index;
+  String arg = parseStringKeepCase(argument, i, ',', false);
+
+  while (!arg.isEmpty()) {
+    if ((arg.startsWith(F("0x")) || arg.startsWith(F("0X")))) {
+      size_t j = 2;
+
+      while (j < arg.length()) {
+        int hex = -1;
+
+        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > 0) && (hex < 256)) {
+          result += char(hex);
+        }
+        j += 2;
+        int c = skipChars.indexOf(arg.substring(j, j + 1));
+
+        while (j < arg.length() && c > -1) {
+          j++;
+          c = skipChars.indexOf(arg.substring(j, j + 1));
+        }
+      }
+    } else {
+      result += arg;
+    }
+    i++;
+    arg = parseStringKeepCase(argument, i, ',', false);
+  }
+
+  return result;
+}
+
+/*****************************************************************************
+ * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
+ ****************************************************************************/
+std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
+  std::vector<uint8_t> result;
+
+  // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
+  const String skipChars = F(" -:,.;");
+
+  result.reserve(argument.length()); // longer than needed, most likely
+  int i      = index;
+  String arg = parseStringKeepCase(argument, i, ',', false);
+
+  while (!arg.isEmpty()) {
+    if ((arg.startsWith(F("0x")) || arg.startsWith(F("0X")))) {
+      size_t j = 2;
+
+      while (j < arg.length()) {
+        int hex = -1;
+
+        if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > -1) && (hex < 256)) {
+          result.push_back(char(hex));
+        }
+        j += 2;
+        int c = skipChars.indexOf(arg.substring(j, j + 1));
+
+        while (j < arg.length() && c > -1) {
+          j++;
+          c = skipChars.indexOf(arg.substring(j, j + 1));
+        }
+      }
+    } else {
+      for (size_t s = 0; s < arg.length(); s++) {
+        result.push_back(arg[s]);
+      }
+    }
+    i++;
+    arg = parseStringKeepCase(argument, i, ',', false);
+  }
+
+  return result;
+}
+
+/*********************************************************************************************\
+   GetTextIndexed: Get text from large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L937
+\*********************************************************************************************/
+char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index, const char* haystack)
+{
+  // Returns empty string if not found
+  // Returns text of found
+  char* write = destination;
+  const char* read = haystack;
+
+  index++;
+  while (index--) {
+    size_t size = destination_size -1;
+    write = destination;
+    char ch = '.';
+    while ((ch != '\0') && (ch != '|')) {
+      ch = pgm_read_byte(read++);
+      if (size && (ch != '|'))  {
+        *write++ = ch;
+        size--;
+      }
+    }
+    if (0 == ch) {
+      if (index) {
+        write = destination;
+      }
+      break;
+    }
+  }
+  *write = '\0';
+  return destination;
+}
+
+/*********************************************************************************************\
+   GetCommandCode: Find string in large PROGMEM stored string
+   Items are separated by a '|'
+   Code (c) Tasmota:
+   https://github.com/arendst/Tasmota/blob/293ae8064d753e6d38488b46d21cdc52a4a6e637/tasmota/tasmota_support/support.ino#L967
+\*********************************************************************************************/
+int GetCommandCode(char* destination, size_t destination_size, const char* needle, const char* haystack)
+{
+  // Returns -1 of not found
+  // Returns index and command if found
+  int result = -1;
+  const char* read = haystack;
+  char* write = destination;
+
+  while (true) {
+    result++;
+    size_t size = destination_size -1;
+    write = destination;
+    char ch = '.';
+    while ((ch != '\0') && (ch != '|')) {
+      ch = pgm_read_byte(read++);
+      if (size && (ch != '|'))  {
+        *write++ = ch;
+        size--;
+      }
+    }
+    *write = '\0';
+    if (!strcasecmp(needle, destination)) {
+      break;
+    }
+    if (0 == ch) {
+      result = -1;
+      break;
+    }
+  }
+  return result;
+}
+
+
 
 // escapes special characters in strings for use in html-forms
 bool htmlEscapeChar(char c, String& esc)
@@ -806,7 +1055,6 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 String URLEncode(const String& msg)
 {
-  const char *hex = "0123456789abcdef";
   String encodedMsg;
 
   const size_t msg_length = msg.length();
@@ -821,8 +1069,7 @@ String URLEncode(const String& msg)
       encodedMsg += ch;
     } else {
       encodedMsg += '%';
-      encodedMsg += hex[ch >> 4];
-      encodedMsg += hex[ch & 15];
+      appendHexChar(ch, encodedMsg);
     }
   }
   return encodedMsg;
@@ -945,10 +1192,12 @@ void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    uint8_t                taskValueIndex,
                                    bool             useURLencode) {
-  if (validTaskIndex(event->TaskIndex)) {
-    repl(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex), s, useURLencode);
-  } else {
-    repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
+  if (s.indexOf('%') != -1) {
+    String str;
+    if (validTaskIndex(event->TaskIndex)) {
+      str = getTaskValueName(event->TaskIndex, taskValueIndex);
+    }
+    repl(F("%valname%"), str, s, useURLencode);
   }
 }
 
@@ -965,27 +1214,29 @@ void parseSystemVariables(String& s, bool useURLencode)
 
 void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)
 {
+  if (s.indexOf('%') == -1) {
+    return;
+  }
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
-      if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
-        SMART_REPL(F("%val1%"), String(UserVar.getSensorTypeLong(event->TaskIndex)))
-      } else {
-        for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
-          String valstr = F("%val");
-          valstr += (i + 1);
-          valstr += '%';
-          SMART_REPL(valstr, formatUserVarNoCheck(event, i));
-        }
+      const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_ULONG) ? 1 : getValueCountForTask(event->TaskIndex);
+      for (uint8_t i = 0; i < valueCount; ++i) {
+        String valstr = F("%val");
+        valstr += (i + 1);
+        valstr += '%';
+        SMART_REPL(valstr, formatUserVarNoCheck(event, i));
       }
     }
   }
 
-  if (validTaskIndex(event->TaskIndex)) {
-    repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
-  } else {
-    repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
+  if (s.indexOf(F("%tskname%")) != -1) {
+    if (validTaskIndex(event->TaskIndex)) {
+      repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
+    } else {
+      repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
+    }
   }
 
   const bool vname_found = s.indexOf(F("%vname")) != -1;

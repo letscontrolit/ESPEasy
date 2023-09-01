@@ -2,18 +2,22 @@
 
 #ifdef USES_C016
 
-#include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/AccessControl.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/JSON.h"
-#include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataStructs/DeviceStruct.h"
-#include "../DataTypes/TaskIndex.h"
-#include "../Globals/C016_ControllerCache.h"
-#include "../Helpers/ESPEasy_math.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Misc.h"
-
+# include "../WebServer/ESPEasy_WebServer.h"
+# include "../WebServer/AccessControl.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/JSON.h"
+# include "../CustomBuild/ESPEasyLimits.h"
+# include "../DataStructs/DeviceStruct.h"
+# include "../DataStructs/ESPEasyControllerCache_CSV_dumper.h"
+# include "../DataTypes/TaskIndex.h"
+# include "../Globals/C016_ControllerCache.h"
+# include "../Globals/Cache.h"
+# include "../Globals/ESPEasy_time.h"
+# include "../Globals/Settings.h"
+# include "../Helpers/ESPEasy_math.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/ESPEasy_time_calc.h"
+# include "../Helpers/Misc.h"
 
 
 // ********************************************************************************
@@ -23,77 +27,71 @@
 void handle_dumpcache() {
   if (!isLoggedIn()) { return; }
 
-  C016_startCSVdump();
-  unsigned long timestamp;
-  uint8_t  controller_idx;
-  uint8_t  TaskIndex;
-  Sensor_VType  sensorType;
-  uint8_t  valueCount;
-  float val1;
-  float val2;
-  float val3;
-  float val4;
+  // Filters/export settings
+  char separator     = ';';
+  bool joinTimestamp = false;
+  bool onlySetTasks  = false;
 
-  TXBuffer.startStream();
-  addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
 
-  for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-    for (int j = 0; j < VARS_PER_TASK; ++j) {
-      addHtml(';');
-      addHtml(getTaskDeviceName(i));
-      addHtml('#');
-      addHtml(getTaskValueName(i, j));
+  if (hasArg(F("separator"))) {
+    String sep = webArg(F("separator"));
+
+    if (isWrappedWithQuotes(sep)) {
+      removeChar(sep, sep[0]);
     }
-  }
-  html_BR();
-  float csv_values[VARS_PER_TASK * TASKS_MAX];
 
-  for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-    csv_values[i] = 0.0f;
+    if (sep.equalsIgnoreCase(F("Tab"))) { separator = '\t'; }
+    else if (sep.equalsIgnoreCase(F("Comma"))) { separator = ','; }
+    else if (sep.equalsIgnoreCase(F("Semicolon"))) { separator = ';'; }
   }
 
-  while (C016_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
-                         valueCount, val1, val2, val3, val4)) {
+  if (hasArg(F("jointimestamp"))) {
+    joinTimestamp = true;
+  }
+
+  if (hasArg(F("onlysettasks"))) {
+    onlySetTasks = true;
+  }
+
+  {
+    // Send HTTP headers to directly save the dump as a CSV file
+    String str =  F("attachment; filename=cachedump_");
+    str += Settings.getName();
+    str += F("_U");
+    str += Settings.Unit;
+
+    if (node_time.systemTimePresent())
     {
-      String html;
-      html.reserve(64);
-      html += timestamp;
-      html += ';';
-      html += controller_idx;
-      html += ';';
-      html += static_cast<uint8_t>(sensorType);
-      html += ';';
-      html += TaskIndex;
-      html += ';';
-      html += valueCount;
-      addHtml(html);
+      str += '_';
+      str += node_time.getDateTimeString('\0', '\0', '\0');
     }
-    int valindex = TaskIndex * VARS_PER_TASK;
-    csv_values[valindex++] = val1;
-    csv_values[valindex++] = val2;
-    csv_values[valindex++] = val3;
-    csv_values[valindex++] = val4;
+    str += F(".csv");
 
-    for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-      String html;
-      html.reserve(12);
-      html += ';';
-
-      if (essentiallyEqual(csv_values[i], 0.0f)) {
-        html += '0';
-      } else {
-        html += String(csv_values[i], 6);
-      }
-      addHtml(html);
-    }
-    html_BR();
-    delay(0);
+    sendHeader(F("Content-Disposition"), str);
+    TXBuffer.startStream(F("application/octet-stream"), F("*"), 200);
   }
+
+
+  ESPEasyControllerCache_CSV_dumper dumper(
+    joinTimestamp, 
+    onlySetTasks, 
+    separator, 
+    ESPEasyControllerCache_CSV_dumper::Target::CSV_file);
+
+  dumper.generateCSVHeader(true);
+
+  while (dumper.createCSVLine()) {
+    dumper.writeCSVLine(true);
+  }
+
   TXBuffer.endStream();
 }
 
 void handle_cache_json() {
   if (!isLoggedIn()) { return; }
+
+  // Flush any data still in RTC memory to the cache files.
+  C016_flush();
 
   TXBuffer.startJsonStream();
   addHtml(F("{\"columns\": ["));
@@ -105,6 +103,11 @@ void handle_cache_json() {
   addHtml(',');
   addHtml(to_json_value(F("task index")));
 
+  if (hasArg(F("pluginID"))) {
+    addHtml(',');
+    addHtml(to_json_value(F("plugin ID")));
+  }
+
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     for (int j = 0; j < VARS_PER_TASK; ++j) {
       String label = getTaskDeviceName(i);
@@ -115,24 +118,35 @@ void handle_cache_json() {
     }
   }
   addHtml(F("],\n"));
-  C016_startCSVdump();
   addHtml(F("\"files\": ["));
-  bool islast = false;
-  int  filenr = 0;
+  bool islast    = false;
+  int  filenr    = 0;
+  int  fileCount = 0;
 
   while (!islast) {
-    String currentFile = C016_getCacheFileName(islast);
+    const String currentFile = C016_getCacheFileName(filenr, islast);
+    ++filenr;
 
     if (currentFile.length() > 0) {
-      if (filenr != 0) {
+      if (fileCount != 0) {
         addHtml(',');
       }
       addHtml(to_json_value(currentFile));
-      ++filenr;
+      ++fileCount;
     }
   }
   addHtml(F("],\n"));
-  stream_last_json_object_value(F("nrfiles"), filenr);
+  addHtml(F("\"pluginID\": ["));
+
+  for (taskIndex_t taskIndex = 0; validTaskIndex(taskIndex); ++taskIndex) {
+    if (taskIndex != 0) {
+      addHtml(',');
+    }
+    addHtmlInt(getPluginID_from_TaskIndex(taskIndex));
+  }
+  addHtml(F("],\n"));
+  stream_next_json_object_value(F("separator"), F(";"));
+  stream_last_json_object_value(F("nrfiles"), fileCount);
   addHtml('\n');
   TXBuffer.endStream();
 }

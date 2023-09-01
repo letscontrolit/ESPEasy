@@ -208,6 +208,11 @@
 #endif // ifdef ESP32
 #define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
+// Optional alternative CDN links:
+// Chart.js: (only used when FEATURE_CHART_JS is enabled)
+// #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+// JQuery:
+// #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.0.min.js"
 
 
 // #define FEATURE_SETTINGS_ARCHIVE 1
@@ -217,6 +222,11 @@
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 // #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
+// #define FEATURE_POST_TO_HTTP 1 // Enable availability of the PostToHTTP command
+// #define FEATURE_PUT_TO_HTTP 1 // Enable availability of the PutToHTTP command
+// #define FEATURE_I2C_DEVICE_CHECK 0 // Disable the I2C Device check feature
+// #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching the I2C address from I2C plugins. Will be enabled when FEATURE_I2C_DEVICE_CHECK is enabled
+// #define FEATURE_RTTTL 1   // Enable rtttl command
 
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -235,6 +245,7 @@
 //  #define DEFAULT_PROVISIONING_FETCH_SECURITY     false
 //  #define DEFAULT_PROVISIONING_FETCH_CONFIG       false
 //  #define DEFAULT_PROVISIONING_FETCH_PROVISIONING false
+//  #define DEFAULT_PROVISIONING_FETCH_FIRMWARE     false
 //  #define DEFAULT_PROVISIONING_SAVE_URL           false
 //  #define DEFAULT_PROVISIONING_SAVE_CREDENTIALS   false
 //  #define DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND false
@@ -273,7 +284,9 @@
 
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
-// #define FEATURE_AUTO_DARK_MODE           0 // Disable auto-dark mode
+// #define FEATURE_AUTO_DARK_MODE           0                // 0 = Disable auto-dark mode
+// #define FEATURE_EXTENDED_TASK_VALUE_TYPES 0               // 0 = Disable extra task value types like 64 bit ints, double, etc. in Dummy tasks
+// #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0  // 0 = switch to float as floating point type for rules/formula processing.
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
@@ -363,6 +376,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P033   // Dummy
 // #define USES_P034   // DHT12
 // #define USES_P036   // FrameOLED
+// #define P036_FEATURE_DISPLAY_PREVIEW   1 // Enable Preview feature, shows on-display content on Devices overview page
+// #define P036_FEATURE_ALIGN_PREVIEW     1 // Enable center/right-align feature when preview is enabled (auto-disabled for 1M builds)
 // #define USES_P037   // MQTTImport
 //   #define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
 //   #define P037_FILTER_SUPPORT  1 // Enable filtering support
@@ -405,7 +420,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P070   // NeoPixel_Clock
 // #define USES_P071   // Kamstrup401
-// #define USES_P072   // HDC1080
+// #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
 // #define USES_P073   // 7DG
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
@@ -457,22 +472,21 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P117   // SCD30
 // #define USES_P118   // Itho
 // #define USES_P119   // ITG3205 Gyro
+
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
-
 // #define USES_P128   // NeoPixelBusFX
-// #define P128_USES_GRB  // Default
-// #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
-// #define P128_USES_RGB
-// #define P128_USES_RGBW
-// #define P128_USES_BRG
-// #define P128_USES_RBG
-// #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
-
-
+//   #define P128_USES_GRB  // Default
+//   #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
+//   #define P128_USES_RGB
+//   #define P128_USES_RGBW
+//   #define P128_USES_BRG
+//   #define P128_USES_BGR
+//   #define P128_USES_RBG
+//   #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 // #define USES_P129   // 74HC165 Input shiftregisters
 // #define USES_P130   // Current Sensor Irms - ADS1015
 // #define USES_P131   // NeoMatrix
@@ -480,19 +494,17 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P133   // LTR390 UV
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
-// #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+//   #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+// #define USES_P137   // AXP192
+// #define USES_P138   // IP5306
+
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
-
-// Special plugins needing IR library
-// #define USES_P016   // IR
-// #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-// #define P016_FEATURE_COMMAND_HANDLING 0 // By default set to 1 to have the command table, that can be dsabled here
-// #define USES_P035   // IRTX
-// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
-                                 //common arguments for controlling all deeply supported A/C units
-// #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-// #define USES_P088   // Heatpump IR
-
+// #define USES_P143   // I2C Rotary encoders
+//   #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
+//   #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
+//   #define P143_FEATURE_COUNTER_COLORMAPPING 0 // Enabled by default, can be turned off here
+// #define USES_P147   // SGP4x
+//   #define P147_FEATURE_GASINDEXALGORITHM    0 // Enabled by default, can be turned off here
 
 
 

@@ -9,6 +9,14 @@ extern "C" {
 
 #include "../../ESPEasy_common.h"
 
+
+#ifdef ESP32
+#include "../Helpers/Hardware.h"
+
+#include <soc/cpu.h>
+#endif
+
+
 /*********************************************************************************************\
    Memory management
 \*********************************************************************************************/
@@ -22,9 +30,7 @@ extern "C" {
 
 // FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack() {
-  register uint8_t *sp asm ("a1");
-
-  return sp - pxTaskGetStackStart(nullptr);
+  return ((uint8_t*)esp_cpu_get_sp()) - pxTaskGetStackStart(nullptr);
 }
 
 uint32_t getFreeStackWatermark() {
@@ -89,4 +95,43 @@ unsigned long getMaxFreeBlock()
   #endif // ifdef CORE_POST_2_5_0
   }
   return freemem;
+}
+
+/********************************************************************************************\
+   Special alloc functions to allocate in PSRAM if available
+ \*********************************************************************************************/
+
+void *special_malloc(uint32_t size) {
+  #ifdef ESP32
+  if (UsePSRAM()) {
+    return heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  } else {
+    return malloc(size);
+  }
+  #else
+  return malloc(size);
+  #endif
+}
+
+void *special_realloc(void *ptr, size_t size) {
+  #ifdef ESP32
+  if (UsePSRAM()) {
+    return heap_caps_realloc(ptr, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  } else {
+    return realloc(ptr, size);
+  }
+  #else
+  return realloc(ptr, size);
+  #endif
+}
+void *special_calloc(size_t num, size_t size) {
+  #ifdef ESP32
+  if (UsePSRAM()) {
+    return heap_caps_calloc(num, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  } else {
+    return calloc(num, size);
+  }
+  #else
+  return calloc(num, size);
+  #endif
 }

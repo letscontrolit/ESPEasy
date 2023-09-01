@@ -34,10 +34,10 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
   const String topic = parseStringKeepCase(Line, 2);
   const String value = tolerantParseStringKeepCase(Line, 3);
   # ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
+  addLog(LOG_LEVEL_DEBUG, concat(F("Publish: "), topic) + value);
   #endif
 
-  if ((topic.length() > 0) && (value.length() > 0)) {
+  if (!topic.isEmpty()) {
 
     bool mqtt_retainFlag;
     {
@@ -48,8 +48,8 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
         return F("MQTT : Cannot publish, out of RAM");
       }
 
-      LoadControllerSettings(enabledMqttController, ControllerSettings);
-      mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+      LoadControllerSettings(enabledMqttController, *ControllerSettings);
+      mqtt_retainFlag = ControllerSettings->mqtt_retainFlag();
     }
 
 
@@ -103,8 +103,8 @@ const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, co
           addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot subscribe, out of RAM"));
           return F("MQTT : Cannot subscribe, out of RAM");
         }
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+        LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+        mqtt_retainFlag = ControllerSettings->mqtt_retainFlag();
       }
 
       String eventName = Line;

@@ -11,6 +11,8 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2023-06-17, tonhuisman: Replace Device[].FormulaOption by Device[].DecimalsOnly option, as no (successful) PLUGIN_READ is done
+ * 2023-03-06, tonhuisman: Fix PLUGIN_INIT behavior to now always return success = true
  * 2022-11-14, tonhuisman: Add support for selecting JSON sub-attributes, using the . notation, like main.sub (1 level only)
  * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
  *                         features were added
@@ -115,7 +117,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true; // Need this in order to get the decimals option
+      Device[deviceCount].DecimalsOnly       = true; // We only want to have the decimals option
       Device[deviceCount].ValueCount         = VARS_PER_TASK;
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = false;
@@ -286,8 +288,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         if (MQTTclient_connected) {
           // Subscribe to ALL the topics from ALL instance of this import module
           MQTTSubscribe_037(event);
-          success = true;
         }
+        success = true;
       }
       break;
     }
@@ -588,7 +590,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
               bool numericPayload = true; // Unless it's not
 
               if (!checkJson || (checkJson && (!key.isEmpty()))) {
-                double doublePayload;
+                ESPEASY_RULES_FLOAT_TYPE doublePayload{};
 
                 if (!validDoubleFromString(Payload, doublePayload)) {
                   if (!checkJson && (P037_SEND_EVENTS == 0)) { // If we want all values as events, then no error logged and don't stop here
@@ -844,7 +846,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   // Test for multi-level wildcard (#) see: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718107 (for MQTT 3 and
   // MQTT 5)
 
-  if (tmpSub.equals(F("#"))) { return true; } // If the subscription is for '#' then all topics are accepted
+  if (equals(tmpSub, '#')) { return true; } // If the subscription is for '#' then all topics are accepted
 
   if (tmpSub.endsWith(F("/#"))) {           // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
     bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));
@@ -904,7 +906,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
     //  If the subtopics match then OK - otherwise fail
     if (pSub == "#") { return true; }
 
-    if ((pTopic != pSub) && (!pSub.equals(F("+")))) { return false; }
+    if ((pTopic != pSub) && (!equals(pSub, '+'))) { return false; }
 
     count = count + 1;
   }

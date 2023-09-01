@@ -122,7 +122,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 
     // There is some offset to apply.
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log += F(" Apply temp offset ");
+      log += F(" Apply temp offset: ");
       log += temp_offset;
       log += 'C';
     }
@@ -132,7 +132,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
       # ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log += F(" humidity ");
+        log += F(" humidity: ");
         log += last_hum_val;
       }
       # endif // ifndef LIMIT_BUILD_SIZE
@@ -153,7 +153,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 # ifndef LIMIT_BUILD_SIZE
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log += F(" temperature ");
+      log += F(" temperature: ");
       log += last_temp_val;
     }
 # endif // ifndef LIMIT_BUILD_SIZE
@@ -174,7 +174,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 
   if (hasHumidity()) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log     += F(" dew point ");
+      log     += F(" dew point: ");
       log     += last_dew_temp_val;
       log     += 'C';
       logAdded = true;
@@ -209,7 +209,7 @@ bool P028_data_struct::check() {
           setUninitialized();
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("BMx280 : Detected ");
+            String log = F("BMx280: Detected ");
             log += getDeviceName();
             addLogMove(LOG_LEVEL_INFO, log);
           }
@@ -226,7 +226,7 @@ bool P028_data_struct::check() {
 
   if (sensorID == Unknown_DEVICE) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("BMx280 : Unable to detect chip ID (");
+      String log = F("BMx280: Unable to detect chip ID (");
       log += chip_id;
 
       if (!wire_status) {

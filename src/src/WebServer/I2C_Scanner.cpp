@@ -8,10 +8,12 @@
 
 #include "../Globals/Settings.h"
 
+#include "../Helpers/_Plugin_init.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 
 
+#include <Wire.h>
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -151,25 +153,17 @@ String getKnownI2Cdevice(uint8_t address) {
   for (uint8_t x = 0; x <= deviceCount; x++) {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
-    if (validDeviceIndex(deviceIndex)) {
-      const pluginID_t pluginID = DeviceIndex_to_Plugin_id[deviceIndex];
+    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
-      if (validPluginID(pluginID) &&
-          checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
-        result += F("(Device) ");
+    if (validPluginID(pluginID) &&
+        checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
+      result += F("(Device) ");
 
-        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
-        result += 'P';
-
-        if (pluginID < 10) { result += '0'; }
-
-        if (pluginID < 100) { result += '0'; }
-        result += pluginID;
-        result += F(" - ");
-        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        result += getPluginNameFromDeviceIndex(deviceIndex);
-        result += ',';
-      }
+      # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
+      result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
+      # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+      result += getPluginNameFromDeviceIndex(deviceIndex);
+      result += ',';
     }
   }
   #endif // if FEATURE_I2C_DEVICE_SCAN
@@ -218,27 +212,35 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x30:
       result +=  F("VL53L0X,VL53L1X");
       break;
+    case 0x34:
+      result +=  F("AXP192");
+      break;
     case 0x36:
-      result +=  F("MAX1704x");
+      result +=  F("MAX1704x,Adafruit Rotary enc");
+      break;
+    case 0x37:
+      result +=  F("Adafruit Rotary enc");
       break;
     case 0x38:
-      result +=  F("LCD,PCF8574A,AHT10/20/21,VEML6070");
+      result +=  F("LCD,PCF8574A,AHT10/20/21,VEML6070,Adafruit Rotary enc");
+      break;
+    case 0x39:
+      result +=  F("LCD,PCF8574A,TSL2561,APDS9960,AHT10,Adafruit Rotary enc");
       break;
     case 0x3A:
     case 0x3B:
+      result +=  F("LCD,PCF8574A,Adafruit Rotary enc");
+      break;
+    case 0x3C:
+    case 0x3D:
+      result +=  F("LCD,PCF8574A,OLED,Adafruit Rotary enc");
+      break;
     case 0x3E:
     case 0x3F:
       result +=  F("LCD,PCF8574A");
       break;
-    case 0x39:
-      result +=  F("LCD,PCF8574A,TSL2561,APDS9960,AHT10");
-      break;
-    case 0x3C:
-    case 0x3D:
-      result +=  F("LCD,PCF8574A,OLED");
-      break;
     case 0x40:
-      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080");
+      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC10xx,M5Stack Rotary enc");
       break;
     case 0x41:
     case 0x42:
@@ -247,15 +249,18 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x44:
     case 0x45:
-      result +=  F("SHT30/31/35,INA219");
+      result +=  F("SHT30/31/35,INA219,SHT4x");
+      break;
+    case 0x46:
+      result +=  F("SHT4x");
       break;
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result +=  F("PCF8591,ADS1115,LM75A,INA219");
+      result +=  F("PCF8591,ADS1115,LM75A,INA219,TMP117");
       break;
     case 0x49:
-      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219");
+      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219,TMP117");
       break;
     case 0x4C:
     case 0x4E:
@@ -271,8 +276,19 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x53:
       result +=  F("ADXL345,LTR390");
       break;
+    case 0x55:
+      result +=  F("DFRobot Rotary enc,BeFlE Moisture");
+      break;
+    case 0x54:
+    case 0x56:
+    case 0x57:
+      result +=  F("DFRobot Rotary enc");
+      break;
     case 0x58:
       result +=  F("SGP30");
+      break;
+    case 0x59:
+      result +=  F("SGP4x");
       break;
     case 0x5A:
       result +=  F("MLX90614,MPR121,CCS811");
@@ -316,8 +332,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("HT16K33,TCA9543a/6a/8a I2C multiplexer");
       break;
     case 0x74:
-    case 0x75:
       result +=  F("HT16K33,TCA9546a/8a I2C multiplexer");
+      break;
+    case 0x75:
+      result +=  F("HT16K33,TCA9546a/8a I2C multiplexer,IP5306");
       break;
     case 0x76:
       result +=  F("BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");

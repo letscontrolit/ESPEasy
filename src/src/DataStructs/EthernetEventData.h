@@ -12,6 +12,7 @@
 
 #ifdef ESP32
 # include <esp_event.h>
+# include <WiFi.h>
 
 #endif // ifdef ESP32
 
@@ -63,8 +64,8 @@ struct EthernetEventData_t {
   LongTermTimer           lastGetIPmoment;
   LongTermTimer::Duration lastConnectedDuration_us = 0ll;
 
-  IPAddress dns0_cache;
-  IPAddress dns1_cache;
+  IPAddress dns0_cache{};
+  IPAddress dns1_cache{};
 
   // Semaphore like bools for processing data gathered from Eth events.
   bool processedConnect          = true;

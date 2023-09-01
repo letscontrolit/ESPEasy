@@ -61,20 +61,13 @@
 
 // TD-er: Needed to fix a mistake in earlier fixes.
 uint8_t P001_getSwitchType(struct EventStruct *event) {
-  uint8_t choice = PCONFIG(0);
-
-  switch (choice) {
-    case 2: // Old implementation for Dimmer
-    case PLUGIN_001_TYPE_DIMMER:
-      choice = PLUGIN_001_TYPE_DIMMER;
-      break;
-    case 1: // Old implementation for switch
-    case PLUGIN_001_TYPE_SWITCH:
-    default:
-      choice = PLUGIN_001_TYPE_SWITCH;
-      break;
+  const uint8_t choice = PCONFIG(0);
+  if (choice == 2 || // Old implementation for Dimmer
+      choice == PLUGIN_001_TYPE_DIMMER)
+  {
+    return PLUGIN_001_TYPE_DIMMER;
   }
-  return choice;
+  return PLUGIN_001_TYPE_SWITCH;
 }
 
 boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
@@ -142,11 +135,11 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options[2] = { F("Switch"),  F("Dimmer") };
         int optionValues[2]                   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
         const uint8_t switchtype              = P001_getSwitchType(event);
-        addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
+        addFormSelector(F("Switch Type"), F("type"), 2, options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
-          addFormNumericBox(F("Dim value"), F("p001_dimvalue"), PCONFIG(1), 0, 255);
+          addFormNumericBox(F("Dim value"), F("dimvalue"), PCONFIG(1), 0, 255);
         }
       }
 
@@ -155,7 +148,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *buttonOptions[3] = { F("Normal Switch"), F("Push Button Active Low"),  F("Push Button Active High") };
         int buttonOptionValues[3]                   =
         { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
-        addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
+        addFormSelector(F("Switch Button Type"), F("button"), 3, buttonOptions, buttonOptionValues, choice);
       }
 
       SwitchWebformLoad(
@@ -173,14 +166,14 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p001_type"));
+      PCONFIG(0) = getFormItemInt(F("type"));
 
       if (PCONFIG(0) == PLUGIN_001_TYPE_DIMMER)
       {
-        PCONFIG(1) = getFormItemInt(F("p001_dimvalue"));
+        PCONFIG(1) = getFormItemInt(F("dimvalue"));
       }
 
-      PCONFIG(2) = getFormItemInt(F("p001_button"));
+      PCONFIG(2) = getFormItemInt(F("button"));
 
       SwitchWebformSave(
         event->TaskIndex,
@@ -263,8 +256,8 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         if (P001_LP_MIN_INT < SWITCH_LONGPRESS_MIN_INTERVAL) {
           P001_LP_MIN_INT = SWITCH_LONGPRESS_MIN_INTERVAL;
         }
+        success = true;
       }
-      success = true;
       break;
     }
 
@@ -664,36 +657,6 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // ifndef BUILD_NO_DEBUG
       success = true;
-      break;
-    }
-
-    case PLUGIN_WRITE:
-    {
-      const String command(parseString(string, 1));
-
-      // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
-
-
-      if (command.equals(F("inputswitchstate"))) {
-        success = true;
-
-        // @giig1967g deprecated since 2019-11-26
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          addLogMove(LOG_LEVEL_ERROR, concat(F("inputswitchstate is deprecated"), string));
-        }
-
-        /*        portStatusStruct tempStatus;
-                const uint32_t key = createKey(PLUGIN_ID_001, Settings.TaskDevicePin1[event->Par1]);
-
-                // WARNING: operator [] creates an entry in the map if key does not exist
-                // So the next command should be part of each command:
-                tempStatus = globalMapPortStatus[key];
-
-                UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
-                tempStatus.output                    = event->Par2;
-                tempStatus.command                   = 1;
-                savePortStatus(key, tempStatus); */
-      }
       break;
     }
 

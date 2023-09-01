@@ -85,9 +85,6 @@ enum class ILI9xxx_type_e : uint8_t {
   # ifdef P095_ENABLE_ILI948X
   ILI9486_320x480 = 10u,
   ILI9488_320x480 = 11u,
-  ILI9xxx_MAX     = 12u // last value = count
-  # else // ifdef P095_ENABLE_ILI948X
-  ILI9xxx_MAX = 10u     // last value = count
   # endif // ifdef P095_ENABLE_ILI948X
 };
 
@@ -100,7 +97,6 @@ enum class P095_CommandTrigger : uint8_t {
   ili9486,
   ili9488,
   # endif // ifdef P095_ENABLE_ILI948X
-  MAX // Keep as last item!
 };
 
 const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device);
@@ -123,7 +119,7 @@ public:
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    bool                textBackFill = true);
-  P095_data_struct() = delete;
+  P095_data_struct()                                = delete;
   virtual ~P095_data_struct();
 
   void init();
@@ -191,6 +187,10 @@ private:
   # ifdef P095_SHOW_SPLASH
   uint8_t _splashCounter = P095_SPLASH_DURATION;
   # endif // ifdef P095_SHOW_SPLASH
+
+  String strings[P095_Nlines];
+  bool   stringsLoaded     = false;
+  bool   stringsHasContent = false;
 };
 
 

@@ -56,7 +56,7 @@ bool handle_custom(const String& path) {
         TXBuffer.startStream();
         sendHeadandTail(F("TmplDsh"), _HEAD);
         addHtml(F("<meta http-equiv=\"refresh\" content=\"0; URL=http://"));
-        addHtml(it->second.IP().toString());
+        addHtml(formatIP(it->second.IP()));
         addHtml(F("/dashboard.esp\">"));
         sendHeadandTail(F("TmplDsh"), _TAIL);
         TXBuffer.endStream();
@@ -93,7 +93,7 @@ bool handle_custom(const String& path) {
           name += it->second.getNodeName();
         }
         else {
-          name += Settings.Name;
+          name += Settings.getName();
         }
         addSelector_Item(name, it->first, choice == it->first);
       }

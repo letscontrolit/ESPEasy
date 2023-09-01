@@ -8,9 +8,10 @@
 
 #define PLUGIN_005
 #define PLUGIN_ID_005         5
-#define PLUGIN_NAME_005       "Environment - DHT11/12/22  SONOFF2301/7021"
-#define PLUGIN_VALUENAME1_005 "Temperature"
-#define PLUGIN_VALUENAME2_005 "Humidity"
+#define PLUGIN_NAME_005       "Environment - DHT11/12/22  SONOFF2301/7021/MS01"
+#define PLUGIN_VALUENAME1_005      "Temperature"
+#define PLUGIN_VALUENAME1_005_MS01 "RAW"
+#define PLUGIN_VALUENAME2_005      "Humidity"
 
 
 
@@ -33,6 +34,7 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].PluginStats = true;
         break;
       }
 
@@ -44,7 +46,11 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_005));
+        if (PCONFIG(0) == P005_MS01) {
+          strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_005_MS01));
+        } else {
+          strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_005));
+        }
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_005));
         break;
       }
@@ -57,10 +63,12 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        const __FlashStringHelper * options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
-        int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021 };
+        const __FlashStringHelper * options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021"), F("Sonoff MS01") };
+        const int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021, P005_MS01 };
 
-        addFormSelector(F("Sensor model"), F("p005_dhttype"), 5, options, indices, PCONFIG(0) );
+        constexpr size_t nrElements = sizeof(indices) / sizeof(indices[0]);
+
+        addFormSelector(F("Sensor model"), F("dhttype"), nrElements, options, indices, PCONFIG(0) );
 
         success = true;
         break;
@@ -68,7 +76,7 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("p005_dhttype"));
+        PCONFIG(0) = getFormItemInt(F("dhttype"));
 
         success = true;
         break;

@@ -86,7 +86,7 @@ struct P082_data_struct : public PluginTaskData_base {
 
   // Return the distance in meters compared to last stored position.
   // @retval  -1 when no fix.
-  double distanceSinceLast(unsigned int maxAge_msec);
+  ESPEASY_RULES_FLOAT_TYPE distanceSinceLast(unsigned int maxAge_msec);
 
   // Return the GPS time stamp, which is in UTC.
   // @param age is the time in msec since the last update of the time +
@@ -131,11 +131,11 @@ public:
   TinyGPSPlus   *gps        = nullptr;
   ESPeasySerial *easySerial = nullptr;
 
-  double _last_lat = 0.0;
-  double _last_lng = 0.0;
-  double _ref_lat  = 0.0;
-  double _ref_lng  = 0.0;
-  double _distance = 0.0;
+  ESPEASY_RULES_FLOAT_TYPE _last_lat{};
+  ESPEASY_RULES_FLOAT_TYPE _last_lng{};
+  ESPEASY_RULES_FLOAT_TYPE _ref_lat{};
+  ESPEASY_RULES_FLOAT_TYPE _ref_lng{};
+  ESPEASY_RULES_FLOAT_TYPE _distance{};
 
 
   unsigned long _pps_time            = 0;
@@ -151,7 +151,7 @@ public:
   String _currentSentence;
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)];
+  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)]{};
 };
 
 #endif // ifdef USES_P082

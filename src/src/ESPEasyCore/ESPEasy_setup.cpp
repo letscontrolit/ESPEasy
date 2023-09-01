@@ -5,11 +5,14 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
 #include "../CustomBuild/CompiletimeDefines.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
+#include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/NetworkState.h"
@@ -46,6 +49,11 @@
 #include <soc/efuse_reg.h>
 
 #include <esp_pm.h>
+
+#if CONFIG_IDF_TARGET_ESP32
+# include "hal/efuse_ll.h"
+# include "hal/efuse_hal.h"
+#endif
 
 #endif
 
@@ -139,6 +147,9 @@ void ESPEasy_setup()
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
+  PluginSetup();
+  CPluginSetup();
+  
   initWiFi();
   WiFiEventData.clearAll();
 
@@ -167,8 +178,7 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-
-  Serial.begin(115200);
+  ESPEasy_Console.begin(115200);
 
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
@@ -268,6 +278,8 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
+  ESPEasy_Console.reInit();
+
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif
@@ -279,7 +291,7 @@ void ESPEasy_setup()
     // automatic light sleep is enabled if tickless idle support is enabled.
 #if CONFIG_IDF_TARGET_ESP32
     esp_pm_config_esp32_t pm_config = {
-            .max_freq_mhz = 240,
+            .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
 #elif CONFIG_IDF_TARGET_ESP32S2
     esp_pm_config_esp32s2_t pm_config = {
             .max_freq_mhz = 240,
@@ -299,6 +311,19 @@ void ESPEasy_setup()
 #endif
     };
     esp_pm_configure(&pm_config);
+#if CONFIG_IDF_TARGET_ESP32
+  } else {
+    // Set the max/min frequency based on what's being reported by the efuses.
+    // Only ESP32 seems to have this function.
+    esp_pm_config_esp32_t pm_config = {
+            .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
+            .min_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
+#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
+            .light_sleep_enable = false
+#endif
+    };
+    esp_pm_configure(&pm_config);
+#endif
   }
 #endif
 
@@ -351,9 +376,20 @@ void ESPEasy_setup()
   // This only works after LoadSettings();
   // Do not call setNetworkMedium here as that may try to clean up settings.
   active_network_medium = Settings.NetworkMedium;
+  #else
+  if (Settings.NetworkMedium == NetworkMedium_t::Ethernet) {
+    Settings.NetworkMedium = NetworkMedium_t::WIFI;
+  }
   #endif // if FEATURE_ETHERNET
 
-  if (active_network_medium == NetworkMedium_t::WIFI) {
+  setNetworkMedium(Settings.NetworkMedium);
+
+  bool initWiFi = active_network_medium == NetworkMedium_t::WIFI;
+  // FIXME TD-er: Must add another check for 'delayed start WiFi' for poorly designed ESP8266 nodes.
+
+
+  if (initWiFi) {
+    WiFi_AP_Candidates.clearCache();
     WiFi_AP_Candidates.load_knownCredentials();
     setSTA(true);
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
@@ -368,8 +404,17 @@ void ESPEasy_setup()
     // Always perform WiFi scan
     // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
     // Perhaps the WiFi radio needs some time to stabilize first?
-    WifiScan(false);
-    setWifiMode(WIFI_OFF);
+    if (!WiFi_AP_Candidates.hasCandidates()) {
+      WifiScan(false, RTC.lastWiFiChannel);
+    }
+    WiFi_AP_Candidates.clearCache();
+    processScanDone();
+    WiFi_AP_Candidates.load_knownCredentials();
+    if (!WiFi_AP_Candidates.hasCandidates()) {
+      addLog(LOG_LEVEL_INFO, F("Setup: Scan all channels"));
+      WifiScan(false);
+    }
+//    setWifiMode(WIFI_OFF);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("WifiScan()"));
@@ -402,11 +447,6 @@ void ESPEasy_setup()
   logMemUsageAfter(F("initSerial()"));
   #endif
 
-
-  if (Settings.Build != get_build_nr()) {
-    BuildFixes();
-  }
-
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log  = F("INIT : Free RAM:");
     log += FreeMem();
@@ -415,7 +455,7 @@ void ESPEasy_setup()
 
 # ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
-    Serial.setDebugOutput(true);
+    ESPEasy_Console.setDebugOutput(true);
   }
 #endif
 
@@ -433,6 +473,9 @@ void ESPEasy_setup()
   #endif // if FEATURE_NOTIFIER
 
   PluginInit();
+
+  initSerial(); // Plugins may have altered serial, so re-init serial
+  
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("PluginInit()"));
   #endif
@@ -475,17 +518,32 @@ void ESPEasy_setup()
     const uint32_t gpio_strap =   GPIO_REG_READ(GPIO_STRAP_REG);
 //    BOOT_MODE_GET();
 
-    // Event values: GPIO-5, GPIO-15, GPIO-4, GPIO-2
+    // Event values: 
+    // ESP32   :  GPIO-5, GPIO-15, GPIO-4, GPIO-2, GPIO-0, GPIO-12
+    // ESP32-C3:  bit 0: GPIO2, bit 2: GPIO8, bit 3: GPIO9
+    // ESP32-S2: Unclear what bits represent which strapping state.
+    // ESP32-S3: bit5 ~ bit2 correspond to stripping pins GPIO3, GPIO45, GPIO0, and GPIO46 respectively.
     String event = F("System#BootMode=");
-    event += bitRead(gpio_strap, 0); // GPIO-5
+    event += bitRead(gpio_strap, 0); 
     event += ',';
-    event += bitRead(gpio_strap, 1); // GPIO-15
+    event += bitRead(gpio_strap, 1); 
     event += ',';
-    event += bitRead(gpio_strap, 2); // GPIO-4
+    event += bitRead(gpio_strap, 2); 
     event += ',';
-    event += bitRead(gpio_strap, 3); // GPIO-2
+    event += bitRead(gpio_strap, 3); 
+    event += ',';
+    event += bitRead(gpio_strap, 4); 
+    event += ',';
+    event += bitRead(gpio_strap, 5); 
     rulesProcessing(event);
   }
+  #endif
+
+  #if FEATURE_ETHERNET
+  if (Settings.ETH_Pin_power != -1) {
+    GPIO_Write(1, Settings.ETH_Pin_power, 1);
+  }
+
   #endif
 
   NetworkConnectRelaxed();

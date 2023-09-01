@@ -215,13 +215,30 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
       }
       uint32_t runTimeUS = 0;
       if (event->Par5 > 0) {
-        // Must set slightly lower than expected duration as it will be rounded up.
-        runTimeUS = event->Par5 * (timeHighUS + timeLowUS) - ((timeHighUS + timeLowUS) / 2);
+        runTimeUS = event->Par5 * (timeHighUS + timeLowUS);
+        if (event->Par2 == 0) {
+          // When having an inverted state repeat-cycle, add some overshoot to return to the original state
+          runTimeUS += timeHighUS / 2;
+        } else {
+          // Must set slightly lower than expected duration as it will be rounded up.
+          runTimeUS -= ((timeHighUS + timeLowUS) / 2);
+        }
       }
 
       pinMode(event->Par1, OUTPUT);
       usingWaveForm = startWaveform(
         pin, timeHighUS, timeLowUS, runTimeUS);
+
+      if (event->Par5 > 0 && event->Par2 == 0) {
+        // Schedule switching pin back to original state
+        Scheduler.setGPIOTimer(
+          (runTimeUS / 1000) + 1, // msecFromNow, rounded up
+          pluginID,    
+          event->Par1,            // Pin/port nr
+          !event->Par2,           // pin state
+          0,                      // repeatInterval
+          0);                     // repeatCount
+      }
     }
     #else
     // waveform function not available on ESP32
@@ -260,16 +277,11 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     }
 
 
-    String log = logPrefix;
-    log += F(" : port ");
-    log += event->Par1;
-    log += F(". Pulse H:");
-    log += event->Par3;
+    String log = concat(
+      logPrefix, 
+      strformat(F(" : port %d. Pulse H:%d"), event->Par1, event->Par3));
     if (event->Par4 > 0 && event->Par5 != 0) {
-      log += F(" L:");
-      log += event->Par4;
-      log += F(" #:");
-      log += event->Par5;
+      log += strformat(F(" L:%d #:%d"), event->Par4, event->Par5);
     }
     log += F(" ms");
     addLog(LOG_LEVEL_INFO, log);
@@ -333,21 +345,14 @@ const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const ch
   uint32_t key       = 0;
 
   if (set_Gpio_PWM(event->Par1, event->Par2, event->Par3, frequency, key)) {
-    String log = F("PWM  : GPIO: ");
-    log += event->Par1;
-    log += F(" duty: ");
-    log += event->Par2;
+    String log = strformat(F("PWM  : GPIO: %d duty: %d"), event->Par1, event->Par2);
 
     if (event->Par3 != 0) {
-      log += F(" Fade: ");
-      log += event->Par3;
-      log += F(" ms");
+      log += strformat(F(" Fade: %d ms"), event->Par3);
     }
 
     if (event->Par4 != 0) {
-      log += F(" f: ");
-      log += frequency;
-      log += F(" Hz");
+      log += strformat(F(" f: %d Hz"), frequency);
     }
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
@@ -448,8 +453,7 @@ const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const 
     createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, !event->Par2);
     GPIO_Write(pluginID, event->Par1, !event->Par2);
 
-    String log;
-    log += logPrefix;
+    String log = logPrefix;
     log += concat(F(" : port "),  event->Par1);
     log += concat(F(". Pulse set for "),  event->Par3);
     log += F(" ms");
@@ -600,7 +604,7 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
 void logErrorGpio(const __FlashStringHelper * prefix, int port, const __FlashStringHelper * description)
 {
   if (port >= 0) {
-    addLog(LOG_LEVEL_ERROR, concat(prefix, F(" : port#")) + String(port) + description);
+    addLog(LOG_LEVEL_ERROR, concat(prefix, concat(F(" : port#"), port)) + description);
   }
 }
 
@@ -1181,49 +1185,96 @@ bool getGPIOPinStateValues(String& str) {
   // parseString(string, 2) = command (pinstate,pinrange)
   // parseString(string, 3) = gpio 1st number or a range separated by '-'
   bool   success = false;
-  const __FlashStringHelper * logPrefix = F("");
   const String device     = parseString(str, 1);
   const String command    = parseString(str, 2);
   const String gpio_descr = parseString(str, 3);
 
   if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinstate")) && (device.length() > 0)) {
+    #ifndef BUILD_NO_DEBUG
+    String logPrefix;
+    #endif
     // returns pin value using syntax: [plugin#xxxxxxx#pinstate#x]
     int par1;
     const bool validArgument = validIntFromString(gpio_descr, par1);
+    #if FEATURE_PINSTATE_EXTENDED
+    pluginID_t pluginID = INVALID_PLUGIN_ID;
+    #endif // if FEATURE_PINSTATE_EXTENDED
 
     if (validArgument) {
       switch (device[0]) {
         case 'g':
-
+        {
+          #if FEATURE_PINSTATE_EXTENDED
+          pluginID  = PLUGIN_GPIO;
+          #endif // if FEATURE_PINSTATE_EXTENDED
           str       = digitalRead(par1);
+          #ifndef BUILD_NO_DEBUG
           logPrefix = F("GPIO");
+          #endif
           success   = true;
           break;
+        }
 
 #ifdef USES_P009
         case 'm':
+          #if FEATURE_PINSTATE_EXTENDED
+          pluginID  = PLUGIN_MCP;
+          #endif // if FEATURE_PINSTATE_EXTENDED
           str       = GPIO_MCP_Read(par1);
+          #ifndef BUILD_NO_DEBUG
           logPrefix = F("MCP");
+          #endif
           success   = true;
           break;
 #endif
 
 #ifdef USES_P019
         case 'p':
+          #if FEATURE_PINSTATE_EXTENDED
+          pluginID  = PLUGIN_PCF;
+          #endif // if FEATURE_PINSTATE_EXTENDED
           str       = GPIO_PCF_Read(par1);
+          #ifndef BUILD_NO_DEBUG
           logPrefix = F("PCF");
+          #endif
           success   = true;
           break;
 #endif
         default:
-          addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
-          return false;
+        {
+          #if FEATURE_PINSTATE_EXTENDED
+          unsigned int plugin = INVALID_PLUGIN_ID;
+          if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID)) { // Valid plugin ID?
+            pluginID  = plugin;
+            #ifndef BUILD_NO_DEBUG
+            logPrefix = get_formatted_Plugin_number(pluginID);
+            #endif
+          } else 
+          #endif // if FEATURE_PINSTATE_EXTENDED
+          {
+            addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+            return false;
+          }
+        }
       }
+      #if FEATURE_PINSTATE_EXTENDED
+      if (pluginID != INVALID_PLUGIN_ID) {
+        const uint32_t key       = createKey(pluginID, par1);
+        const auto it            = globalMapPortStatus.find(key);
+        const bool notGpioMcpPcf = ((pluginID != PLUGIN_GPIO) && (pluginID != PLUGIN_MCP) && (pluginID != PLUGIN_PCF));
+
+        if (it != globalMapPortStatus.end() && ((it->second.mode == PIN_MODE_PWM) || (it->second.mode == PIN_MODE_SERVO) || notGpioMcpPcf)) {
+          // For GPIO/MCP/PCF PWM or SERVO mode get the last set duty cycle or for other plugins get the PWM/SERVO or pinstate
+          str     = it->second.getValue();
+          success = true;
+        }
+      }
+      #endif // if FEATURE_PINSTATE_EXTENDED
     }
 
     if (success) {
       #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, String(logPrefix) + F(" PLUGIN PINSTATE pin =") + String(par1) + F("; value=") + str);
+      addLog(LOG_LEVEL_DEBUG, logPrefix + F(" PLUGIN PINSTATE pin =") + String(par1) + F("; value=") + str);
       #endif // ifndef BUILD_NO_DEBUG
     } else {
       addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric"));
@@ -1241,6 +1292,7 @@ bool getGPIOPinStateValues(String& str) {
     }
 
     if (successPar) {
+      const __FlashStringHelper * logPrefix = F("");
 
       switch (device[0]) {
 #ifdef USES_P009

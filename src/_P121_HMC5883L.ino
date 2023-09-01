@@ -87,6 +87,15 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x1E;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormFloatNumberBox(F("Declination Angle"), F("pdecl"), PCONFIG_FLOAT(0), -180.0f, 180.0f, 2, 0.01f);
@@ -108,9 +117,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P121_data_struct());
       P121_data_struct *P121_data = static_cast<P121_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P121_data) {
-        success = P121_data->begin(event->TaskIndex);
-      }
+      success = (nullptr != P121_data) && P121_data->begin(event->TaskIndex);
       break;
     }
 
