@@ -15,7 +15,7 @@
 # ifndef P036_LIMIT_BUILD_SIZE
 #  include <Dialog_Plain_12_font.h>
 #  include <Dialog_Plain_18_font.h>
-# endif // ifdef P036_LIMIT_BUILD_SIZE
+# endif // ifndef P036_LIMIT_BUILD_SIZE
 # include <OLED_SSD1306_SH1106_images.h>
 
 void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion) {
@@ -152,7 +152,7 @@ const __FlashStringHelper * tFontSettings::FontName() const {
 const tFontSizes FontSizes[P36_MaxFontCount] = {
   { getArialMT_Plain_24(), 24,  28                     }, // 9643
 # ifndef P036_LIMIT_BUILD_SIZE
-  { getDialog_plain_18(),  19,  22                     },
+  { getDialog_plain_18(),  19,  22                     }, // 7399
 # endif // ifndef P036_LIMIT_BUILD_SIZE
   { getArialMT_Plain_16(), 16,  19                     }, // 5049
 # ifndef P036_LIMIT_BUILD_SIZE
@@ -233,7 +233,7 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
 
   LineContent = new (std::nothrow) P036_LineContent();
 
-  if ((display != nullptr) && (LineContent != nullptr)) {
+  if (isInitialized()) {
     display->init(); // call to local override of init function
 
     // disp_resolution = Disp_resolution;
@@ -297,7 +297,7 @@ void P036_data_struct::setOrientationRotated(bool rotated) {
 
 # if P036_ENABLE_LINECOUNT
 void P036_data_struct::setNrLines(uint8_t NrLines) {
-  if ((NrLines >= 1) && (NrLines <= 4)) {
+  if ((NrLines >= 1) && (NrLines <= P36_MAX_LinesPerPage)) {
     ScrollingPages.linesPerFrameDef = NrLines;
     prepare_pagescrolling();   // Recalculate font
     MaxFramesToDisplay = 0xFF; // Recalculate page indicator
@@ -456,12 +456,12 @@ void P036_data_struct::display_logo() {
 
   int left = 24;
   int top;
-  tFontSettings iFontsettings = CalculateFontSettings(2); // get font with max. height for displaying "ESP Easy"
+  const tFontSettings iFontsettings = CalculateFontSettings(2); // get font with max. height for displaying "ESP Easy"
 
-  bDisplayingLogo = true;                                 // next time the display must be cleared completely
+  bDisplayingLogo = true;                                       // next time the display must be cleared completely
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(FontSizes[iFontsettings.fontIdx].fontData);
-  display->clear();                                       // resets all pixels to black
+  display->clear();                                             // resets all pixels to black
   display->setColor(WHITE);
   display->drawString(65, iFontsettings.Top + TopLineOffset,                                              F("ESP"));
   display->drawString(65, iFontsettings.Top + iFontsettings.Height + iFontsettings.Space + TopLineOffset, F("Easy"));
@@ -509,9 +509,8 @@ void P036_data_struct::display_indicator() {
       image = inactiveSymbole;
     }
 
-    int x, y;
-
-    y = P036_IndicatorTop + TopLineOffset; // 2022-01-31 Removed unneeded offset '+ 2'
+    int x;
+    const int y = P036_IndicatorTop + TopLineOffset; // 2022-01-31 Removed unneeded offset '+ 2'
 
     // I would like a margin of 20 pixels on each side of the indicator.
     // Therefore the width of the indicator should be 128-40=88 and so space between indicator dots is 88/(framecount-1)
@@ -535,7 +534,7 @@ void P036_data_struct::display_indicator() {
   }
 }
 
-int16_t P036_data_struct::GetHeaderHeight() {
+int16_t P036_data_struct::GetHeaderHeight() const {
   if (bHideHeader) {
     // no header
     return 0;
@@ -543,7 +542,7 @@ int16_t P036_data_struct::GetHeaderHeight() {
   return P36_HeaderHeight;
 }
 
-int16_t P036_data_struct::GetIndicatorTop() {
+int16_t P036_data_struct::GetIndicatorTop() const {
   if (bHideFooter) {
     // no footer (indicator) -> returm max. display height
     return getDisplaySizeSettings(disp_resolution).Height;
@@ -575,12 +574,13 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
   for (uint8_t i = LineNo; i < P36_Nlines; i++) {
     // calculate individual font settings
-    int8_t   lFontIndex  = FontIndex;
-    uint32_t iModifyFont = get3BitFromUL(LineContent->DisplayLinesV1[i].ModifyLayout, P036_FLAG_ModifyLayout_Font);
+    int8_t lFontIndex             = FontIndex;
+    const eModifyFont iModifyFont =
+      static_cast<eModifyFont>(get3BitFromUL(LineContent->DisplayLinesV1[i].ModifyLayout, P036_FLAG_ModifyLayout_Font));
 
-    switch (static_cast<eModifyFont>(iModifyFont)) {
+    switch (iModifyFont) {
       case eModifyFont::eEnlarge:
-        lFontIndex -= 1;
+        lFontIndex--;
 
         if (lFontIndex < IdxForBiggestFont) { lFontIndex = IdxForBiggestFont; }
         result.IdxForBiggestFontUsed = lFontIndex;
@@ -590,7 +590,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
         result.IdxForBiggestFontUsed = lFontIndex;
         break;
       case eModifyFont::eReduce:
-        lFontIndex += 1;
+        lFontIndex++;
 
         if (lFontIndex > (P36_MaxFontCount - 1)) {
           lFontIndex = P36_MaxFontCount - 1;
@@ -615,7 +615,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
   }
   result.NextLineNo = NextLineNo; // default, settings do fit
 
-  int8_t deltaHeight = (MaxHeight - lHeight);
+  const int8_t deltaHeight = (MaxHeight - lHeight);
 
   if (lLinesPerFrame <= 1) {
     // just one lines per frame -> no space inbetween
@@ -686,12 +686,12 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   # ifdef P036_FONT_CALC_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, 
-      strformat(F("P036 CalculateFontSettings lines: %d, height: %d, header: %s, footer: %s"),
-       iLinesPerFrame, 
-       iHeight, 
-       boolToString(!bHideHeader).c_str(), 
-       boolToString(!bHideFooter).c_str()));
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("P036 CalculateFontSettings lines: %d, height: %d, header: %s, footer: %s"),
+                         iLinesPerFrame,
+                         iHeight,
+                         boolToString(!bHideHeader).c_str(),
+                         boolToString(!bHideFooter).c_str()));
   }
   String log;
   # endif // ifdef P036_FONT_CALC_LOG
@@ -700,11 +700,12 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   // Fonts already have their own extra space, no need to add an extra pixel space
 
 # ifdef P036_FONT_CALC_LOG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, 
-      strformat(F("CalculateFontSettings LinesPerFrame: %d, iHeight: %d, maxFontHeight: %d"), 
-        iLinesPerFrame, iHeight, iMaxHeightForFont));
-}
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("CalculateFontSettings LinesPerFrame: %d, iHeight: %d, maxFontHeight: %d"),
+                         iLinesPerFrame, iHeight, iMaxHeightForFont));
+  }
 # endif // ifdef P036_FONT_CALC_LOG
 
   while (iFontIndex < 0) {
@@ -996,9 +997,9 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 
     // reduce line content for page scrolling to max width
     if (PixLengthLineIn > MaxPixWidthForPageScrolling) {
-      int strlen = ScrollingPages.In[j].SPLcontent.length();
+      const int strlen = ScrollingPages.In[j].SPLcontent.length();
 # ifdef P036_SCROLL_CALC_LOG
-      String LineInStr = ScrollingPages.In[j].SPLcontent;
+      const String LineInStr = ScrollingPages.In[j].SPLcontent;
 # endif // P036_SCROLL_CALC_LOG
       float fAvgPixPerChar = static_cast<float>(PixLengthLineIn) / strlen;
 
@@ -1059,9 +1060,9 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     // reduce line content for page scrolling to max width
 
     if (PixLengthLineOut > MaxPixWidthForPageScrolling) {
-      int strlen = ScrollingPages.Out[j].SPLcontent.length();
+      const int strlen = ScrollingPages.Out[j].SPLcontent.length();
       # ifdef P036_SCROLL_CALC_LOG
-      String LineOutStr = ScrollingPages.Out[j].SPLcontent;
+      const String LineOutStr = ScrollingPages.Out[j].SPLcontent;
       # endif // P036_SCROLL_CALC_LOG
       float fAvgPixPerChar = static_cast<float>(PixLengthLineOut) / strlen;
 
@@ -1231,10 +1232,10 @@ void P036_data_struct::display_scrolling_lines() {
 
   // line scrolling (using PLUGIN_TEN_PER_SECOND)
 
-  int  i;
-  bool bscroll       = false;
-  bool updateDisplay = false;
-  int  iCurrentLeft;
+  uint8_t i;
+  bool    bscroll       = false;
+  bool    updateDisplay = false;
+  int     iCurrentLeft;
 
   for (i = 0; i < ScrollingPages.linesPerFrameIn; i++) {
     if (ScrollingLines.SLine[i].Width != 0) {
@@ -1311,7 +1312,7 @@ bool P036_data_struct::display_wifibars() {
   const int x         = getDisplaySizeSettings(disp_resolution).WiFiIndicatorLeft;
   const int y         = TopLineOffset;
   int size_x          = getDisplaySizeSettings(disp_resolution).WiFiIndicatorWidth;
-  int size_y          = GetHeaderHeight() - 2;
+  const int size_y    = GetHeaderHeight() - 2;
   const int nbars     = 5;
   const int16_t width = (size_x / nbars);
 
@@ -1328,9 +1329,9 @@ bool P036_data_struct::display_wifibars() {
 
   if (NetworkConnected()) {
     for (uint8_t ibar = 0; ibar < nbars; ibar++) {
-      int16_t height = size_y * (ibar + 1) / nbars;
-      int16_t xpos   = x + ibar * width;
-      int16_t ypos   = y + size_y - height;
+      const int16_t height = size_y * (ibar + 1) / nbars;
+      const int16_t xpos   = x + ibar * width;
+      const int16_t ypos   = y + size_y - height;
 
       if (ibar <= nbars_filled) {
         // Fill complete bar
@@ -1360,18 +1361,15 @@ void P036_data_struct::P036_JumpToPage(struct EventStruct *event, uint8_t nextFr
   if (!isInitialized()) {
     return;
   }
+
+  // reschedule page change
   Scheduler.schedule_task_device_timer(event->TaskIndex,
-                                       millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000)); // reschedule page change
-  nextFrameToDisplay  = nextFrame;
-  bPageScrollDisabled = true;                                                                           //  show next page without
-                                                                                                        // scrolling
-  disableFrameChangeCnt = 2;                                                                            //  disable next page change in
-                                                                                                        // PLUGIN_READ if
-  // PLUGIN_READ was already scheduled
-  P036_DisplayPage(event);                                                                              //  Display the selected page,
-                                                                                                        // function needs
-                                                                                                        // 65ms!
-  displayTimer = PCONFIG(4);                                                                            //  Restart timer
+                                       millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
+  nextFrameToDisplay    = nextFrame;
+  bPageScrollDisabled   = true; //  show next page without scrolling
+  disableFrameChangeCnt = 2;    //  disable next page change in PLUGIN_READ if PLUGIN_READ was already scheduled
+  P036_DisplayPage(event);      //  Display the selected page, function needs 65ms!
+  displayTimer = PCONFIG(4);    //  Restart timer
 }
 
 void P036_data_struct::P036_JumpToPageOfLine(struct EventStruct *event, uint8_t LineNo)
@@ -1395,15 +1393,12 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
   if (P036_DisplayIsOn) {
     // Display is on.
-    ScrollingPages.Scrolling = 1;                                                              // page scrolling running -> no
-    // line scrolling allowed
-    NFrames = LineSettings[P36_Nlines - 1].frame;                                              // last prepared page in
-                                                                                               // prepare_pagescrolling()
-    HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8)); // Bit15-8 HeaderContent
-    HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit 7-0
-    // HeaderContentAlternative
+    ScrollingPages.Scrolling = 1;                                  // page scrolling running -> no line scrolling allowed
+    NFrames                  = LineSettings[P36_Nlines - 1].frame; // last prepared page in prepare_pagescrolling()
+    HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), P036_FLAG_HEADER));
+    HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), P036_FLAG_HEADER_ALTERNATIVE));
 
-    //      Construct the outgoing string
+    // Construct the outgoing string
     for (uint8_t i = 0; i < P36_Nlines; i++) {
       if (LineSettings[i].frame == frameCounter) {
         lineCounter = i;
@@ -1428,7 +1423,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     while (!foundText) {
       //        Stop after framecount loops if no data found
-      ntries += 1;
+      ntries++;
 
       if (ntries > (NFrames + 1)) {
         // do not leave the while loop to early
@@ -1474,8 +1469,40 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
         }
         ScrollingPages.linesPerFrameIn = i + 1;
         CreateScrollingPageLine(&ScrollingPages.In[i], lineCounter + i);
+        # if P036_FEATURE_DISPLAY_PREVIEW
+        currentLines[i] = ScrollingPages.In[i].SPLcontent;
+        # endif // if P036_FEATURE_DISPLAY_PREVIEW
 
-        if (ScrollingPages.In[i].SPLcontent.length() > 0) { foundText = true; }
+        if (ScrollingPages.In[i].SPLcontent.length() > 0) {
+          foundText = true;
+
+          # if P036_FEATURE_DISPLAY_PREVIEW && P036_FEATURE_ALIGN_PREVIEW
+
+          // Preview: Center or Right-Align add spaces on the left
+          const bool isAlignCenter = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_CENTER;
+          const bool isAlignRight  = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_RIGHT;
+
+          if (isAlignRight || isAlignCenter) {
+            const uint16_t maxlength  = getDisplaySizeSettings(disp_resolution).Width;
+            const uint16_t pixlength  = display->getStringWidth(currentLines[i]); // pix length for entire string
+            const uint16_t charlength = display->getStringWidth(F(" "));          // pix length for a space char
+            int16_t addSpaces         = (maxlength - pixlength) / charlength;
+
+            if (isAlignCenter) {
+              addSpaces /= 2;
+            }
+
+            if (addSpaces > 0) {
+              currentLines[i].reserve(currentLines[i].length() + addSpaces);
+
+              while (addSpaces > 0) {
+                currentLines[i] = ' ' + currentLines[i];
+                addSpaces--;
+              }
+            }
+          }
+          # endif // if P036_FEATURE_DISPLAY_PREVIEW && P036_FEATURE_ALIGN_PREVIEW
+        }
       }
 
       if (foundText) {
@@ -1494,7 +1521,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     CalcMaxPageCount(); // Update max page count
 
-    //      Update display
+    // Update display
     if (bDisplayingLogo) {
       bDisplayingLogo = false;
       display->clear();        // resets all pixels to black
@@ -1508,8 +1535,8 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     update_display();
 
-    bool bScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24);                            // Bit 24
-    bool bScrollLines       = bitRead(PCONFIG_LONG(0), 17);                            // Bit 17
+    const bool bScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24);                      // Bit 24
+    const bool bScrollLines       = bitRead(PCONFIG_LONG(0), 17);                      // Bit 17
     bLineScrollEnabled = (bScrollLines && (NetworkConnected() || bScrollWithoutWifi)); // scroll lines only if WifiIsConnected,
     // otherwise too slow
 
@@ -1527,10 +1554,10 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       // scroll lines only if WifiIsConnected, otherwise too slow
       bPageScrollDisabled = false; // next PLUGIN_READ will do page scrolling
     }
+  # ifdef PLUGIN_036_DEBUG
   } else {
-    # ifdef PLUGIN_036_DEBUG
     addLog(LOG_LEVEL_INFO, F("P036_DisplayPage Display off"));
-    # endif // PLUGIN_036_DEBUG
+  # endif // PLUGIN_036_DEBUG
   }
 }
 
@@ -1552,10 +1579,10 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
      const char euro_oled[3] = {0xc2, 0x80, 0}; // Euro symbol OLED display font
      result.replace(euro, euro_oled);
    */
-  uint32_t iAlignment =
-    get3BitFromUL(LineContent->DisplayLinesV1[lineIdx].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+  const eAlignment iAlignment =
+    static_cast<eAlignment>(get3BitFromUL(LineContent->DisplayLinesV1[lineIdx].ModifyLayout, P036_FLAG_ModifyLayout_Alignment));
 
-  switch (getTextAlignment(static_cast<eAlignment>(iAlignment))) {
+  switch (getTextAlignment(iAlignment)) {
     case TEXT_ALIGN_LEFT:
 
       // add leading spaces from tmpString to the result
@@ -1563,7 +1590,7 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
         if (tmpString[l] != ' ') {
           break;
         }
-        result = " " + result;
+        result = ' ' + result;
       }
       break;
     case TEXT_ALIGN_RIGHT:
@@ -1573,7 +1600,7 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
         if (tmpString[l] != ' ') {
           break;
         }
-        result = result + " ";
+        result += ' ';
       }
       break;
     default:
@@ -1594,7 +1621,7 @@ void P036_data_struct::setTextAlignment(eAlignment aAlignment) {
   nextFrameToDisplay = 0;    // Reset to first page
 }
 
-OLEDDISPLAY_TEXT_ALIGNMENT P036_data_struct::getTextAlignment(eAlignment aAlignment) {
+OLEDDISPLAY_TEXT_ALIGNMENT P036_data_struct::getTextAlignment(eAlignment aAlignment) const {
   switch (aAlignment) {
     case eAlignment::eGlobal: return textAlignment; break;
     case eAlignment::eLeft:   return TEXT_ALIGN_LEFT; break;
@@ -1603,7 +1630,7 @@ OLEDDISPLAY_TEXT_ALIGNMENT P036_data_struct::getTextAlignment(eAlignment aAlignm
   }
 }
 
-uint8_t P036_data_struct::GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) {
+uint8_t P036_data_struct::GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) const {
   // left margin must be offset with PixLeft (the first shown left pixel on 64x48 displays is 32!)
   if (_textAlignment == TEXT_ALIGN_LEFT) {
     return getDisplaySizeSettings(disp_resolution).PixLeft;
@@ -1729,9 +1756,9 @@ uint16_t P036_data_struct::TrimStringTo255Chars(tScrollingPageLines *ScrollingPa
 
     if (PixLengthLine > 255) {
       // shorten string because OLED controller can not handle such long strings
-      int   strlen         = ScrollingPageLine->SPLcontent.length();
-      float fAvgPixPerChar = static_cast<float>(PixLengthLine) / strlen;
-      int   iCharToRemove  = ceil((static_cast<float>(PixLengthLine - 255)) / fAvgPixPerChar);
+      const int   strlen         = ScrollingPageLine->SPLcontent.length();
+      const float fAvgPixPerChar = static_cast<float>(PixLengthLine) / strlen;
+      const int   iCharToRemove  = ceil((static_cast<float>(PixLengthLine - 255)) / fAvgPixPerChar);
       ScrollingPageLine->SPLcontent = ScrollingPageLine->SPLcontent.substring(0, strlen - iCharToRemove);
       PixLengthLine                 = display->getStringWidth(ScrollingPageLine->SPLcontent);
     }
@@ -1739,19 +1766,11 @@ uint16_t P036_data_struct::TrimStringTo255Chars(tScrollingPageLines *ScrollingPa
   return PixLengthLine;
 }
 
-void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines *ScrollingPageLine, uint16_t Width,
+void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines       *ScrollingPageLine,
+                                             uint16_t                   Width,
                                              OLEDDISPLAY_TEXT_ALIGNMENT textAlignment) {
-  int LeftOffset;
+  int16_t LeftOffset = 0;
 
-  switch (textAlignment) {
-    case TEXT_ALIGN_LEFT: LeftOffset = -P36_MaxDisplayWidth;
-      break;
-    case TEXT_ALIGN_RIGHT: LeftOffset = 0;
-      break;
-    default:
-      LeftOffset = 0;
-      break;
-  }
   display->setFont(FontSizes[LineSettings[ScrollingPageLine->SPLidx].fontIdx].fontData);
 
   if (Width > 0) {
@@ -1764,6 +1783,10 @@ void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines *ScrollingPageL
   } else {
     // line is kept aligned while scrolling page
     display->setTextAlignment(ScrollingPageLine->Alignment);
+
+    if (textAlignment == TEXT_ALIGN_LEFT) {
+      LeftOffset = -P36_MaxDisplayWidth;
+    }
 
     // textAlignment=TEXT_ALIGN_LEFT: for non-scrolling pages ScrollingPages.dPixSum=P36_MaxDisplayWidth -> therefore the calculation must
     // use P36_MaxDisplayWidth, too
@@ -1779,31 +1802,48 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
   ScrollingPageLine->SPLcontent = P36_parseTemplate(tmpString, Counter);
 
   if (ScrollingPageLine->SPLcontent.length() > 0) {
-    int splitIdx = ScrollingPageLine->SPLcontent.indexOf("<|>"); // check for split token
+    const int splitIdx = ScrollingPageLine->SPLcontent.indexOf(F("<|>")); // check for split token
 
     if (splitIdx >= 0) {
       // split line into left and right part
       tmpString = ScrollingPageLine->SPLcontent;
-      tmpString.replace(F("<|>"), " ");                         // replace in tmpString the split token with one space char
+      tmpString.replace(F("<|>"), F(" "));                            // replace in tmpString the split token with one space char
       display->setFont(FontSizes[LineSettings[Counter].fontIdx].fontData);
-      uint16_t pixlength = display->getStringWidth(tmpString);  // pixlength without split token but with one space char
-      tmpString = " ";
-      uint16_t charlength = display->getStringWidth(tmpString); // pix length for a space char
+      uint16_t pixlength = display->getStringWidth(tmpString);        // pixlength without split token but with one space char
+      tmpString = ' ';
+      const uint16_t charlength = display->getStringWidth(tmpString); // pix length for a space char
       pixlength += charlength;
 
       while (pixlength <= getDisplaySizeSettings(disp_resolution).Width) {
         // add more space chars until pixlength of the final line is almost the display width
-        tmpString += " ";                                         // add another space char
+        tmpString += ' ';                                         // add another space char
         pixlength += charlength;
       }
       ScrollingPageLine->SPLcontent.replace(F("<|>"), tmpString); // replace in final line the split token with space chars
     }
   }
-  uint32_t iAlignment =
-    get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+  const eAlignment iAlignment =
+    static_cast<eAlignment>(get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment));
 
-  ScrollingPageLine->Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
+  ScrollingPageLine->Alignment = getTextAlignment(iAlignment);
   ScrollingPageLine->SPLidx    = Counter; // index to LineSettings[]
 }
+
+# if P036_FEATURE_DISPLAY_PREVIEW
+bool P036_data_struct::web_show_values() {
+  addHtml(F("<pre>")); // To keep spaces etc. in the shown output
+
+  for (uint8_t i = 0; i < ScrollingPages.linesPerFrameDef; i++) {
+    addHtmlDiv(F("div_l"), currentLines[i], EMPTY_STRING, F("style='font-size:75%;'"));
+
+    if (i != ScrollingPages.linesPerFrameDef - 1) {
+      addHtmlDiv(F("div_br"));
+    }
+  }
+  addHtml(F("</pre>"));
+  return true;
+}
+
+# endif // if P036_FEATURE_DISPLAY_PREVIEW
 
 #endif // ifdef USES_P036
