@@ -184,8 +184,7 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
   #  if FEATURE_SD
 
   if (!f && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
-    // FIXME TD-er: Should this fallback to SD only be done on "r" mode?
-    f = SD.open(fname.c_str(), mode.c_str());
+    f = SD.open(patch_fname(fname).c_str(), mode.c_str());
   }
   #  endif // if FEATURE_SD
 
