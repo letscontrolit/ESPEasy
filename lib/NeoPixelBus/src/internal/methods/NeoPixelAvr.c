@@ -466,7 +466,10 @@ void send_data_12mhz_800_PortB(uint8_t* data, size_t sizeData, uint8_t pinMask)
         [lo] "r" (lo));
 }
 
-void send_data_12mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
+void send_data_12mhz_400(uint8_t* data, 
+    size_t sizeData, 
+    volatile uint8_t* port, 
+    uint8_t pinMask)
 {
     volatile uint16_t i = (uint16_t)sizeData; // Loop counter
     volatile uint8_t* ptr = data; // Pointer to next byte
@@ -477,7 +480,8 @@ void send_data_12mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port,
     // 30 instruction clocks per bit: HHHHHHxxxxxxxxxLLLLLLLLLLLLLLL
     // ST instructions:               ^     ^        ^    (T=0,6,15)
 
-    volatile uint8_t next, bit;
+    volatile uint8_t next;
+    volatile uint8_t bit;
 
     hi = *port | pinMask;
     lo = *port & ~pinMask;
@@ -577,7 +581,10 @@ void send_data_16mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port,
         [lo]     "r" (lo));
 }
 
-void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
+void send_data_16mhz_400(uint8_t* data, 
+    size_t sizeData, 
+    volatile uint8_t* port, 
+    uint8_t pinMask)
 {
     volatile size_t i = sizeData; // Loop counter
     volatile uint8_t* ptr = data; // Pointer to next byte
@@ -590,7 +597,8 @@ void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port,
     // 40 inst. clocks per bit: HHHHHHHHxxxxxxxxxxxxLLLLLLLLLLLLLLLLLLLL
     // ST instructions:         ^       ^           ^         (T=0,8,20)
 
-    volatile uint8_t next, bit;
+    volatile uint8_t next;
+    volatile uint8_t bit;
 
     hi = *port | pinMask;
     lo = *port & ~pinMask;
@@ -637,6 +645,68 @@ void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port,
         [next]  "+r" (next),
         [count] "+w" (i)
         : [ptr]    "e" (ptr),
+        [hi]     "r" (hi),
+        [lo]     "r" (lo));
+}
+
+// 0 400us (320-480)
+// 1 1100us (960-1200)
+// w 1600us
+void send_data_16mhz_600(uint8_t* data, 
+    size_t sizeData, 
+    volatile uint8_t* port, 
+    uint8_t pinMask)
+{
+    volatile size_t i = sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
+    volatile uint8_t b = *ptr++;    // Current byte value
+    volatile uint8_t hi;            // PORT w/output bit set high
+    volatile uint8_t lo;            // PORT w/output bit set low
+
+    // The 633 KHz clock on 16 MHz MCU.
+    //
+    // 25 inst. clocks per bit: HHHHHHHHxxxxxxxxxxLLLLLLLL
+    // ST instructions:         ^       ^         ^         (T=0,8,18)
+
+
+    volatile uint8_t next;
+    volatile uint8_t bit;
+
+    hi = *port | pinMask;
+    lo = *port & ~pinMask;
+    next = lo;
+    bit = 8;
+
+    asm volatile(
+        "head40:"                  "\n\t" // Clk  Pseudocode    (T =  0)
+            "st   %a[port], %[hi]"    "\n\t" // 2    PORT = hi     (T =  2)
+            "sbrc %[byte] , 7"        "\n\t" // 1-2  if(b & 0b10000000)
+                "mov  %[next] , %[hi]"   "\n\t" // 0-1   next = hi    (T =  4)
+            "rjmp .+0"                "\n\t" // 2    nop nop       (T =  6)
+            "st   %a[port], %[next]"  "\n\t" // 2    PORT = next   (T = 8)
+            "mov  %[next] , %[lo]"    "\n\t" // 1    next = lo     (T = 9)
+            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 11)
+            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 13)
+            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 15)
+            "dec  %[bit]"             "\n\t" // 1    bit--         (T = 16)
+            "breq nextbyte40"         "\n\t" // 1-2  if(bit == 0)
+                "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 18) duplicate here improves high length for non byte boundary
+                "rol  %[byte]"            "\n\t" // 1    b <<= 1       (T = 21)
+                "nop"                     "\n\t" // 1    nop           (T = 22)
+                "rjmp .+0"                "\n\t" // 2    nop nop       (T = 24)
+                "rjmp head40"             "\n\t" // 2    -> head40 (next bit out)
+        "nextbyte40:"              "\n\t" //                    (T = 18)
+            "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 20) duplicate here improves high length while reducing interbyte  
+            "ldi  %[bit]  , 8"        "\n\t" // 1    bit = 8       (T = 21)
+            "ld   %[byte] , %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 23)
+            "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 25)
+            "brne head40"             "\n"   // 1-2  if(i != 0) -> (next byte)
+        : [port] "+e" (port),
+        [byte]  "+r" (b),
+        [bit]   "+r" (bit),
+        [next]  "+r" (next),
+        [count] "+w" (i)
+        : [ptr] "e" (ptr),
         [hi]     "r" (hi),
         [lo]     "r" (lo));
 }
