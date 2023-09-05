@@ -36,34 +36,35 @@ const __FlashStringHelper* toString(P025_sensorType sensorType)
          F("ADS1015") : F("ADS1115");
 }
 
-struct P025_config_register {
-  union ConfigRegister {
-    struct {
-      uint16_t comp_que        : 2;
-      uint16_t comp_lat        : 1;
-      uint16_t comp_pol        : 1;
-      uint16_t compMode        : 1;
-      uint16_t datarate        : 3;
-      uint16_t mode            : 1;
-      uint16_t PGA             : 3;
-      uint16_t MUX             : 3;
-      uint16_t operatingStatus : 1;
-    };
-    uint16_t _regval = 0x8000;
-
-    String toString() const {
-      return strformat(F("reg: %X OS: %d MUX: %d PGA: %d mode: %d DR: %d"),
-                       _regval, operatingStatus, MUX, PGA, mode, datarate
-                       );
-    }
+union P025_config_register {
+  struct {
+    uint16_t comp_que        : 2;
+    uint16_t comp_lat        : 1;
+    uint16_t comp_pol        : 1;
+    uint16_t compMode        : 1;
+    uint16_t datarate        : 3;
+    uint16_t mode            : 1;
+    uint16_t PGA             : 3;
+    uint16_t MUX             : 3;
+    uint16_t operatingStatus : 1;
   };
+  uint16_t _regval = 0x8000;
 
-  ConfigRegister configRegister;
+
+  P025_config_register(uint16_t regval) : _regval(regval) {}
+
+  String toString() const {
+    return strformat(F("reg: %X OS: %d MUX: %d PGA: %d mode: %d DR: %d"),
+                     _regval, operatingStatus, MUX, PGA, mode, datarate
+                     );
+  }
 };
 
 
 P025_data_struct::P025_data_struct(struct EventStruct *event) {
   _i2cAddress = P025_I2C_ADDR;
+
+  const P025_VARIOUS_BITS_t p025_variousBits(P025_VARIOUS_BITS);
 
   constexpr uint16_t defaultValue =
     (0x0003)    | // Disable the comparator (default val)
@@ -73,16 +74,19 @@ P025_data_struct::P025_data_struct(struct EventStruct *event) {
     (0x0100)    | // Single-shot mode (default)
     (0x8000);     // Start a single conversion
 
-  _configRegisterValue = defaultValue |
-                         (static_cast<uint16_t>(P025_SAMPLE_RATE_GET) << 5) |
-                         (static_cast<uint16_t>(P025_GAIN) << 9);
+  P025_config_register reg(defaultValue);
+
+  reg.datarate         = p025_variousBits.getSampleRate();
+  reg.PGA              = P025_GAIN;
+  _configRegisterValue = reg._regval;
+
   _fullScaleFactor = 1.0f;
 
-  if (P025_VOLT_OUT_GET) {
-    if (P025_GAIN == 0) {
+  if (p025_variousBits.outputVolt) {
+    if (reg.PGA == 0) {
       _fullScaleFactor = 6144;
     } else {
-      const uint8_t shift = 13 - P025_GAIN;
+      const uint8_t shift = 13 - reg.PGA;
       _fullScaleFactor = (1 << shift);
     }
     _fullScaleFactor /= 32768000.0f;
@@ -97,22 +101,21 @@ bool P025_data_struct::read(float& value, taskVarIndex_t index) const {
   if (!validTaskVarIndex(index)) {
     return false;
   }
-  P025_config_register reg;
+  P025_config_register reg(_configRegisterValue);
 
-  reg.configRegister._regval = _configRegisterValue;
-  reg.configRegister.MUX     = _mux[index];
+  reg.MUX = _mux[index];
 
-  if (!startMeasurement(_i2cAddress, reg.configRegister._regval)) {
+  if (!startMeasurement(_i2cAddress, reg._regval)) {
     return false;
   }
 
-  if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, reg.configRegister._regval)) {
+  if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, reg._regval)) {
 # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       addLog(LOG_LEVEL_DEBUG,
              concat(F("ADS1x15: Start measurement failed"),
-                    reg.configRegister.toString()));
+                    reg.toString()));
     }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -127,7 +130,7 @@ bool P025_data_struct::read(float& value, taskVarIndex_t index) const {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       addLog(LOG_LEVEL_DEBUG,
              concat(F("ADS1x15: Not Ready after start measurement"),
-                    reg.configRegister.toString()));
+                    reg.toString()));
     }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -152,7 +155,7 @@ bool P025_data_struct::read(float& value, taskVarIndex_t index) const {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       addLog(LOG_LEVEL_DEBUG,
              concat(F("ADS1x15: Cannot read from conversion register"),
-                    reg.configRegister.toString()));
+                    reg.toString()));
     }
 # endif // ifndef BUILD_NO_DEBUG
     return false;
@@ -205,14 +208,12 @@ bool P025_data_struct::startMeasurement(uint8_t i2cAddress, uint16_t configRegis
   }
 # ifndef BUILD_NO_DEBUG
 
-  P025_config_register reg;
-
-  reg.configRegister._regval = configRegisterValue;
+  const P025_config_register reg(configRegisterValue);
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG,
            concat(F("ADS1x15: Start measurement failed"),
-                  reg.configRegister.toString()));
+                  reg.toString()));
   }
 # endif // ifndef BUILD_NO_DEBUG
   return false;
@@ -223,11 +224,10 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
   const uint64_t start   = getMicros64();
   unsigned long  timeout = millis();
 
-  P025_config_register reg;
   bool is_ok = false;
 
   // Only need to set the Address Pointer Register once
-  reg.configRegister._regval = I2C_read16_reg(i2cAddress, P025_CONFIG_REGISTER, &is_ok);
+  P025_config_register reg(I2C_read16_reg(i2cAddress, P025_CONFIG_REGISTER, &is_ok));
 
   if (!is_ok) {
     return 0;
@@ -238,11 +238,11 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
   // Add margin of roughly 50%
   // Add 1 msec as minimum, due to rounding errors at highest frame rate
   // See https://github.com/letscontrolit/ESPEasy/issues/3159#issuecomment-660546091
-  timeout += 1500 / (1 << (reg.configRegister.datarate + 3)) + 1;
+  timeout += 1500 / (1 << (reg.datarate + 3)) + 1;
 
   while (!timeOutReached(timeout)) {
     // bit15=0 performing a conversion   =1 not performing a conversion
-    const bool ready = (reg.configRegister._regval & 0x8000) != 0;
+    const bool ready = reg.operatingStatus == 1;
 
     if (ready && is_ok) {
       const long res = usecPassedSince(start);
@@ -252,7 +252,7 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         addLog(LOG_LEVEL_DEBUG,
                concat(F("ADS1x15: waitReady OK, Config_reg: "),
-                      reg.configRegister.toString()));
+                      reg.toString()));
       }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -261,7 +261,7 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
     delay(0);
 
     // Address Pointer Register is the same, so only need to read bytes again
-    reg.configRegister._regval = I2C_read16(i2cAddress, &is_ok);
+    reg._regval = I2C_read16(i2cAddress, &is_ok);
   }
 
 # ifndef BUILD_NO_DEBUG
@@ -269,7 +269,7 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG,
            concat(F("ADS1x15: waitReady timeout, Config_reg: "),
-                  reg.configRegister.toString()));
+                  reg.toString()));
   }
 # endif // ifndef BUILD_NO_DEBUG
   return 0;
@@ -292,6 +292,8 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
 
   addRowLabel(F("Detected Sensor Type"));
   addHtml(toString(detectedType));
+
+  const P025_VARIOUS_BITS_t p025_variousBits(P025_VARIOUS_BITS);
 
   {
     const __FlashStringHelper *pgaOptions[] = {
@@ -320,7 +322,7 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
     };
     constexpr size_t NR_OPTIONS = NR_ELEMENTS(P025_SPSOptions);
 
-    addFormSelector(F("Sample Rate"), F("sps"), NR_OPTIONS, P025_SPSOptions, nullptr, P025_SAMPLE_RATE_GET);
+    addFormSelector(F("Sample Rate"), F("sps"), NR_OPTIONS, P025_SPSOptions, nullptr, p025_variousBits.getSampleRate());
     addUnit(F("SPS"));
     addFormNote(F("Lower values for ADS1115, higher values for ADS1015"));
 
@@ -329,12 +331,12 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
     }
   }
 
-  addFormCheckBox(F("Convert to Volt"), F("volt"), P025_VOLT_OUT_GET);
+  addFormCheckBox(F("Convert to Volt"), F("volt"), p025_variousBits.outputVolt);
 
 
   addFormSubHeader(F("Two Point Calibration"));
 
-  addFormCheckBox(F("Calibration Enabled"), F("cal"), P025_CAL_GET);
+  addFormCheckBox(F("Calibration Enabled"), F("cal"), p025_variousBits.cal);
 
   addFormNumericBox(F("Point 1"), F("adc1"), P025_CAL_ADC1, -32768, 32767);
   html_add_estimate_symbol();
@@ -359,11 +361,12 @@ bool P025_data_struct::webformSave(struct EventStruct *event)
 
   P025_GAIN = getFormItemInt(F("gain"));
 
-  P025_SAMPLE_RATE_SET(getFormItemInt(F("sps")));
+  P025_VARIOUS_BITS_t p025_variousBits(P025_VARIOUS_BITS);
 
-  P025_VOLT_OUT_SET(isFormItemChecked(F("volt")));
-
-  P025_CAL_SET(isFormItemChecked(F("cal")));
+  p025_variousBits.setSampleRate(getFormItemInt(F("sps")));
+  p025_variousBits.outputVolt = isFormItemChecked(F("volt"));
+  p025_variousBits.cal        = isFormItemChecked(F("cal"));
+  P025_VARIOUS_BITS           = p025_variousBits.pconfigvalue;
 
   P025_CAL_ADC1 = getFormItemInt(F("adc1"));
   P025_CAL_OUT1 = getFormItemFloat(F("out1"));

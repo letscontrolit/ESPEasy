@@ -186,7 +186,9 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
             UserVar[event->BaseVarIndex + i] = value;
 
-            if (P025_CAL_GET) { // Calibration?
+            const P025_VARIOUS_BITS_t p025_variousBits(P025_VARIOUS_BITS);
+
+            if (p025_variousBits.cal) { // Calibration?
               const int   adc1 = P025_CAL_ADC1;
               const int   adc2 = P025_CAL_ADC2;
               const float out1 = P025_CAL_OUT1;

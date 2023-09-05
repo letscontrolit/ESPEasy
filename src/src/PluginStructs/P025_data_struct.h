@@ -5,6 +5,30 @@
 #ifdef USES_P025
 
 
+union P025_VARIOUS_BITS_t {
+  struct {
+    uint16_t cal           : 1;
+    uint16_t outputVolt    : 1;
+    uint16_t sampleRateSet : 1;
+    uint16_t sampleRate    : 3;
+    uint16_t unused        : 10;
+  };
+  int16_t pconfigvalue{};
+
+  P025_VARIOUS_BITS_t(int16_t value) : pconfigvalue(value) {}
+
+  uint16_t getSampleRate() const {
+    if (sampleRateSet) { return sampleRate; }
+    return 0x04; // Default sample rate
+  }
+
+  void setSampleRate(uint16_t sr) {
+    sampleRate    = sr;
+    sampleRateSet = 1;
+  }
+};
+
+
 // For compatibility reasons with existing settings, the output selectors are located at:
 // - PCONFIG(2)  ( = P025_MUX(0) )
 // - PCONFIG(5)
@@ -18,17 +42,7 @@
 # define P025_I2C_ADDR        PCONFIG(0)
 # define P025_GAIN            PCONFIG(1)
 # define P025_MUX(x)          PCONFIG(P025_PCONFIG_INDEX(x))
-# define P025_CAL_GET         bitRead(PCONFIG(3), 0)
-# define P025_CAL_SET(x)      bitWrite(PCONFIG(3), 0, x)
-# define P025_VOLT_OUT_GET    bitRead(PCONFIG(3), 1)
-# define P025_VOLT_OUT_SET(x) bitWrite(PCONFIG(3), 1, x)
-
-// If ever set, return set value, or else the default (0x04)
-# define P025_SAMPLE_RATE_GET ((PCONFIG(3) & 0x4000) ? ((PCONFIG(3) >> 2) & 0x07) : 0x04)
-
-// Set MSB bit (signed) to 1 to detect whether this was ever set.
-# define P025_SAMPLE_RATE_SET(x) (PCONFIG(3) = (PCONFIG(3) & ~(0x07u << 2)) | ((x & 0x07) << 2) | 0x4000)
-
+# define P025_VARIOUS_BITS    PCONFIG(3)
 
 # define P025_CAL_ADC1    PCONFIG_LONG(0)
 # define P025_CAL_OUT1    PCONFIG_FLOAT(0)
