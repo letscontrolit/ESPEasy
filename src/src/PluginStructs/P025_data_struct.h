@@ -13,6 +13,12 @@
 # define P025_VOLT_OUT_GET    bitRead(PCONFIG(3), 1)
 # define P025_VOLT_OUT_SET(x) bitWrite(PCONFIG(3), 1, x)
 
+# define P025_SAMPLE_RATE_GET ((PCONFIG(4) & 0x4000) ? (PCONFIG(4) & 0x07) : 0x04) // If ever set, return set value, or else the default
+# define P025_SAMPLE_RATE_SET(x) (PCONFIG(4) = (x & 0x07) | 0x4000) // Set MSB bit (signed) to 1 to detect whether this was ever set.
+
+//# define P025_SAMPLE_RATE_GET(x) (PCONFIG(4) >> (3*x) & 0x07)
+//# define P025_SAMPLE_RATE_SET(x, y) (PCONFIG(4) = (PCONFIG(4) & ~(0x07 << (3*x)) | ((y & 0x07) << (3*x))))
+
 # define P025_CAL_ADC1    PCONFIG_LONG(0)
 # define P025_CAL_OUT1    PCONFIG_FLOAT(0)
 # define P025_CAL_ADC2    PCONFIG_LONG(1)
@@ -37,7 +43,7 @@ public:
 private:
 
   bool readConversionRegister025(int16_t& value) const;
-  bool waitReady025(unsigned long timeout_ms) const;
+  long waitReady025() const;
 
   float _fullScaleFactor{};
   uint16_t _configRegisterValue{};

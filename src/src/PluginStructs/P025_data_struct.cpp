@@ -8,6 +8,37 @@
 # define P025_CONVERSION_REGISTER  0x00
 # define P025_CONFIG_REGISTER      0x01
 
+struct P025_config_register {
+  /*
+     P025_config_register() {
+      configRegister.comp_que = 3;
+     }
+   */
+
+  union ConfigRegister {
+    struct {
+      uint16_t comp_que        : 2;
+      uint16_t comp_lat        : 1;
+      uint16_t comp_pol        : 1;
+      uint16_t compMode        : 1;
+      uint16_t datarate        : 3;
+      uint16_t mode            : 1;
+      uint16_t PGA             : 3;
+      uint16_t MUX             : 3;
+      uint16_t operatingStatus : 1;
+    };
+    uint16_t _regval = 0x8000;
+
+    String toString() const {
+      return strformat(F("reg: %X OS: %d MUX: %d PGA: %d mode: %d DR: %d"),
+                       _regval, operatingStatus, MUX, PGA, mode, datarate
+                       );
+    }
+  };
+
+  ConfigRegister configRegister;
+};
+
 
 P025_data_struct::P025_data_struct(struct EventStruct *event) {
   _i2cAddress = P025_I2C_ADDR;
@@ -17,11 +48,11 @@ P025_data_struct::P025_data_struct(struct EventStruct *event) {
     (0x0000)    | // Non-latching (default val)
     (0x0000)    | // Alert/Rdy active low   (default val)
     (0x0000)    | // Traditional comparator (default val)
-    (0x0080)    | // 128 samples per second (default)
     (0x0100)    | // Single-shot mode (default)
     (0x8000);     // Start a single conversion
 
   _configRegisterValue = defaultValue |
+                         (static_cast<uint16_t>(P025_SAMPLE_RATE_GET) << 5) |
                          (static_cast<uint16_t>(P025_GAIN) << 9) |
                          (static_cast<uint16_t>(P025_MUX) << 12);
   _fullScaleFactor = 1.0f;
@@ -38,33 +69,61 @@ P025_data_struct::P025_data_struct(struct EventStruct *event) {
 }
 
 bool P025_data_struct::read(float& value) const {
-  if (!waitReady025(5)) {
-    //    addLog(LOG_LEVEL_INFO, F("ADS1115: Not Ready at start read"));
-    return false;
-  }
+  P025_config_register reg;
+
+  reg.configRegister._regval = _configRegisterValue;
 
   if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, _configRegisterValue)) {
-    //    addLog(LOG_LEVEL_INFO, F("ADS1115: Start measurement failed"));
+# ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG,
+             concat(F("ADS1115: Start measurement failed"),
+                    reg.configRegister.toString()));
+    }
+# endif // ifndef BUILD_NO_DEBUG
     return false;
   }
 
-  // See https://github.com/letscontrolit/ESPEasy/issues/3159#issuecomment-660546091
-  if (!waitReady025(10)) {
-    //    addLog(LOG_LEVEL_INFO, F("ADS1115: Not Ready after start measurement"));
+  const long duration = waitReady025();
 
+  if (duration == 0) {
+# ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG,
+             concat(F("ADS1115: Not Ready after start measurement"),
+                    reg.configRegister.toString()));
+    }
+# endif // ifndef BUILD_NO_DEBUG
     return false;
+  } else {
+# ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG,
+             concat(F("ADS1115: waitReady SPS: "), 1000000.0f / duration));
+    }
+# endif // ifndef BUILD_NO_DEBUG
   }
 
   int16_t raw = 0;
 
   if (!readConversionRegister025(raw)) {
-    addLog(LOG_LEVEL_INFO, F("ADS1115: Cannot read from conversion register"));
+# ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG,
+             concat(F("ADS1115: Cannot read from conversion register"),
+                    reg.configRegister.toString()));
+    }
+# endif // ifndef BUILD_NO_DEBUG
     return false;
   }
 
   value = _fullScaleFactor * raw;
 
-  //  addLog(LOG_LEVEL_INFO, strformat(F("ADS1115: RAW value: %d, output value: %f"), raw, value));
+  addLog(LOG_LEVEL_INFO, strformat(F("ADS1115: RAW value: %d, output value: %f"), raw, value));
   return true;
 }
 
@@ -76,18 +135,59 @@ bool P025_data_struct::readConversionRegister025(int16_t& value) const {
   return is_ok;
 }
 
-bool P025_data_struct::waitReady025(unsigned long timeout_ms) const {
-  const unsigned long timeout = millis() + timeout_ms;
+long P025_data_struct::waitReady025() const {
+  const uint64_t start   = getMicros64();
+  unsigned long  timeout = millis();
+
+  P025_config_register reg;
+  bool is_ok = false;
+
+  // Only need to set the Address Pointer Register once
+  reg.configRegister._regval = I2C_read16_reg(_i2cAddress, P025_CONFIG_REGISTER, &is_ok);
+
+  if (!is_ok) {
+    return 0;
+  }
+
+  // Compute expected timeout
+  // Rough estimate of SPS = (1 << (DR + 3))
+  // Add margin of roughly 50%
+  // Add 1 msec as minimum, due to rounding errors at highest frame rate
+  // See https://github.com/letscontrolit/ESPEasy/issues/3159#issuecomment-660546091
+  timeout += 1500 / (1 << (reg.configRegister.datarate + 3)) + 1;
 
   while (!timeOutReached(timeout)) {
     // bit15=0 performing a conversion   =1 not performing a conversion
-    bool is_ok       = false;
-    const bool ready = (I2C_read16_reg(_i2cAddress, P025_CONFIG_REGISTER, &is_ok) & 0x8000) != 0;
+    const bool ready = (reg.configRegister._regval & 0x8000) != 0;
 
-    if (ready && is_ok) { return true; }
-    delay(1);
+    if (ready && is_ok) {
+      const long res = usecPassedSince(start);
+# ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG,
+               concat(F("ADS1115: waitReady OK, Config_reg: "),
+                      reg.configRegister.toString()));
+      }
+# endif // ifndef BUILD_NO_DEBUG
+
+      return res;
+    }
+    delay(0);
+
+    // Address Pointer Register is the same, so only need to read bytes again
+    reg.configRegister._regval = I2C_read16(_i2cAddress, &is_ok);
   }
-  return false;
+
+# ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG,
+           concat(F("ADS1115: waitReady timeout, Config_reg: "),
+                  reg.configRegister.toString()));
+  }
+# endif // ifndef BUILD_NO_DEBUG
+  return 0;
 }
 
 bool P025_data_struct::webformLoad(struct EventStruct *event)
@@ -130,6 +230,23 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
 
     addFormSelector(F("Input Multiplexer"), F("mux"), ADS1115_MUX_OPTIONS, P025_muxOptions, nullptr, P025_MUX);
   }
+  {
+    const __FlashStringHelper *P025_SPSOptions[] = {
+      F("8 / 128"),
+      F("16 / 250"),
+      F("32 / 490"),
+      F("64 / 920"),
+      F("128 / 1600"),
+      F("250 / 2400"),
+      F("475 / 3300"),
+      F("860 / 3300"),
+    };
+    constexpr size_t NR_OPTIONS = sizeof(P025_SPSOptions) / sizeof(P025_SPSOptions[0]);
+
+    addFormSelector(F("Sample Rate"), F("sps"), NR_OPTIONS, P025_SPSOptions, nullptr, P025_SAMPLE_RATE_GET);
+    addUnit(F("SPS"));
+    addFormNote(F("Lower values for ADS1115, higher values for ADS1015"));
+  }
 
   addFormCheckBox(F("Convert to Volt"), F("volt"), P025_VOLT_OUT_GET);
 
@@ -155,6 +272,8 @@ bool P025_data_struct::webformSave(struct EventStruct *event)
   P025_GAIN = getFormItemInt(F("gain"));
 
   P025_MUX = getFormItemInt(F("mux"));
+
+  P025_SAMPLE_RATE_SET(getFormItemInt(F("sps")));
 
   P025_VOLT_OUT_SET(isFormItemChecked(F("volt")));
 
