@@ -8,6 +8,27 @@
 # define P025_CONVERSION_REGISTER  0x00
 # define P025_CONFIG_REGISTER      0x01
 
+
+const __FlashStringHelper* Plugin_025_valuename(uint8_t value_nr, bool displayString) {
+  const __FlashStringHelper *strings[] {
+    F("AIN0 - AIN1 (Differential)"),     F("AIN0_1"),
+    F("AIN0 - AIN3 (Differential)"),     F("AIN0_3"),
+    F("AIN1 - AIN3 (Differential)"),     F("AIN1_3"),
+    F("AIN2 - AIN3 (Differential)"),     F("AIN2_3"),
+    F("AIN0 - GND (Single-Ended)"),      F("AIN0"),
+    F("AIN1 - GND (Single-Ended)"),      F("AIN1"),
+    F("AIN2 - GND (Single-Ended)"),      F("AIN2"),
+    F("AIN3 - GND (Single-Ended)"),      F("AIN3")
+  };
+  const size_t index         = (2 * value_nr) + (displayString ? 0 : 1);
+  constexpr size_t nrStrings = NR_ELEMENTS(strings);
+
+  if (index < nrStrings) {
+    return strings[index];
+  }
+  return F("");
+}
+
 const __FlashStringHelper* toString(P025_sensorType sensorType)
 {
   if (P025_sensorType::None == sensorType) { return F("None"); }
@@ -16,12 +37,6 @@ const __FlashStringHelper* toString(P025_sensorType sensorType)
 }
 
 struct P025_config_register {
-  /*
-     P025_config_register() {
-      configRegister.comp_que = 3;
-     }
-   */
-
   union ConfigRegister {
     struct {
       uint16_t comp_que        : 2;
@@ -60,8 +75,7 @@ P025_data_struct::P025_data_struct(struct EventStruct *event) {
 
   _configRegisterValue = defaultValue |
                          (static_cast<uint16_t>(P025_SAMPLE_RATE_GET) << 5) |
-                         (static_cast<uint16_t>(P025_GAIN) << 9) |
-                         (static_cast<uint16_t>(P025_MUX) << 12);
+                         (static_cast<uint16_t>(P025_GAIN) << 9);
   _fullScaleFactor = 1.0f;
 
   if (P025_VOLT_OUT_GET) {
@@ -73,21 +87,26 @@ P025_data_struct::P025_data_struct(struct EventStruct *event) {
     }
     _fullScaleFactor /= 32768000.0f;
   }
+
+  for (taskVarIndex_t i = 0; i < VARS_PER_TASK; ++i) {
+    _mux[i] = P025_MUX(i);
+  }
 }
 
-bool P025_data_struct::read(float& value) const {
-  if (!startMeasurement(_i2cAddress, _configRegisterValue)) {
+bool P025_data_struct::read(float& value, taskVarIndex_t index) const {
+  if (!validTaskVarIndex(index)) {
     return false;
   }
-
-
-# ifndef BUILD_NO_DEBUG
   P025_config_register reg;
 
   reg.configRegister._regval = _configRegisterValue;
-# endif // ifndef BUILD_NO_DEBUG
+  reg.configRegister.MUX     = _mux[index];
 
-  if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, _configRegisterValue)) {
+  if (!startMeasurement(_i2cAddress, reg.configRegister._regval)) {
+    return false;
+  }
+
+  if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, reg.configRegister._regval)) {
 # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -262,10 +281,11 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
 
   if (port > 0) // map old port logic to new gain and mode settings
   {
-    P025_GAIN     = PCONFIG(0) / 2;
-    P025_I2C_ADDR = 0x48 + ((port - 1) / 4);
-    P025_MUX      = ((port - 1) & 3) | 4;
-    CONFIG_PORT   = 0;
+    P025_GAIN                       = PCONFIG(0) / 2;
+    P025_I2C_ADDR                   = 0x48 + ((port - 1) / 4);
+    P025_MUX(0)                     = ((port - 1) & 3) | 4;
+    CONFIG_PORT                     = 0;
+    PCONFIG(P025_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
   }
 
   const P025_sensorType detectedType = detectType(P025_I2C_ADDR);
@@ -283,24 +303,9 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
       F("16x gain (FS=0.256V)")
     };
 
-    constexpr size_t ADS1115_PGA_OPTIONS = sizeof(pgaOptions) / sizeof(pgaOptions[0]);
+    constexpr size_t ADS1115_PGA_OPTIONS = NR_ELEMENTS(pgaOptions);
     addFormSelector(F("Gain"), F("gain"), ADS1115_PGA_OPTIONS, pgaOptions, nullptr, P025_GAIN);
     addFormNote(F("Do not apply more than VDD + 0.3 V to the analog inputs of the device."));
-  }
-  {
-    const __FlashStringHelper *P025_muxOptions[] = {
-      F("AIN0 - AIN1 (Differential)"),
-      F("AIN0 - AIN3 (Differential)"),
-      F("AIN1 - AIN3 (Differential)"),
-      F("AIN2 - AIN3 (Differential)"),
-      F("AIN0 - GND (Single-Ended)"),
-      F("AIN1 - GND (Single-Ended)"),
-      F("AIN2 - GND (Single-Ended)"),
-      F("AIN3 - GND (Single-Ended)"),
-    };
-    constexpr size_t ADS1115_MUX_OPTIONS = sizeof(P025_muxOptions) / sizeof(P025_muxOptions[0]);
-
-    addFormSelector(F("Input Multiplexer"), F("mux"), ADS1115_MUX_OPTIONS, P025_muxOptions, nullptr, P025_MUX);
   }
   {
     const __FlashStringHelper *P025_SPSOptions[] = {
@@ -313,7 +318,7 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
       F("475 / 3300"),
       F("860 / 3300"),
     };
-    constexpr size_t NR_OPTIONS = sizeof(P025_SPSOptions) / sizeof(P025_SPSOptions[0]);
+    constexpr size_t NR_OPTIONS = NR_ELEMENTS(P025_SPSOptions);
 
     addFormSelector(F("Sample Rate"), F("sps"), NR_OPTIONS, P025_SPSOptions, nullptr, P025_SAMPLE_RATE_GET);
     addUnit(F("SPS"));
@@ -343,11 +348,16 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
 
 bool P025_data_struct::webformSave(struct EventStruct *event)
 {
+  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; i++) {
+    const uint8_t pconfigIndex = P025_PCONFIG_INDEX(i);
+    const uint8_t choice       = PCONFIG(pconfigIndex);
+    sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i,
+                                        Plugin_025_valuename(choice, false));
+  }
+
   P025_I2C_ADDR = getFormItemInt(F("i2c_addr"));
 
   P025_GAIN = getFormItemInt(F("gain"));
-
-  P025_MUX = getFormItemInt(F("mux"));
 
   P025_SAMPLE_RATE_SET(getFormItemInt(F("sps")));
 
@@ -368,21 +378,13 @@ bool P025_data_struct::webform_showConfig(struct EventStruct *event)
 {
   format_I2C_port_description(event->TaskIndex);
 
-  const __FlashStringHelper *P025_muxOptions[] = {
-    F("AIN0/1 (Diff)"),
-    F("AIN0/3 (Diff)"),
-    F("AIN1/3 (Diff)"),
-    F("AIN2/3 (Diff)"),
-    F("AIN0"),
-    F("AIN1"),
-    F("AIN2"),
-    F("AIN3"),
-  };
-  constexpr size_t ADS1115_MUX_OPTIONS = sizeof(P025_muxOptions) / sizeof(P025_muxOptions[0]);
+  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; i++) {
+    const uint8_t choice = PCONFIG(P025_PCONFIG_INDEX(i));
 
-  if ((P025_MUX >= 0) && (P025_MUX < static_cast<int>(ADS1115_MUX_OPTIONS))) {
-    addHtml(F("<br>"));
-    addHtml(P025_muxOptions[P025_MUX]);
+    if ((choice >= 0) && (choice < 8)) {
+      addHtml(F("<br>"));
+      addHtml(Plugin_025_valuename(choice, false));
+    }
   }
 
   return true;
