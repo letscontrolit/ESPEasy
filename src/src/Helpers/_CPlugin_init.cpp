@@ -2073,7 +2073,7 @@ protocolIndex_t CPlugin_id_to_ProtocolIndex[CPLUGIN_MAX + 1]{};
 constexpr size_t ProtocolIndex_to_CPlugin_id_size = sizeof(ProtocolIndex_to_CPlugin_id);
 
 // constexpr size_t Plugin_ptr_size               = sizeof(Plugin_ptr);
-constexpr size_t CPlugin_id_to_ProtocolIndex_size = sizeof(CPlugin_id_to_ProtocolIndex) / sizeof(CPlugin_id_to_ProtocolIndex[0]);
+constexpr size_t CPlugin_id_to_ProtocolIndex_size = NR_ELEMENTS(CPlugin_id_to_ProtocolIndex);
 
 
 protocolIndex_t getProtocolIndex_from_CPluginID_(cpluginID_t cpluginID)
