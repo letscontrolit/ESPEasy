@@ -24,6 +24,12 @@
 # define P025_CAL_ADC2    PCONFIG_LONG(1)
 # define P025_CAL_OUT2    PCONFIG_FLOAT(1)
 
+enum class P025_sensorType {
+  None,
+  ADS1015,
+  ADS1115
+};
+
 
 struct P025_data_struct : public PluginTaskData_base {
 public:
@@ -42,13 +48,20 @@ public:
 
 private:
 
-  bool readConversionRegister025(int16_t& value) const;
-  long waitReady025() const;
+  bool                   readConversionRegister025(int16_t& value) const;
 
-  float _fullScaleFactor{};
+  static P025_sensorType detectType(uint8_t i2cAddress);
+
+  static bool            startMeasurement(uint8_t  i2cAddress,
+                                          uint16_t configRegisterValue);
+
+  // Check to see if the sensor is ready for new values
+  // @retval detected SPS, 0 if timeout
+  static long waitReady025(uint8_t i2cAddress);
+
+  float    _fullScaleFactor{};
   uint16_t _configRegisterValue{};
-
-  uint8_t _i2cAddress;
+  uint8_t  _i2cAddress;
 };
 
 #endif // ifdef USES_P025

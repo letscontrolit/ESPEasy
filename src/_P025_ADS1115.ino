@@ -2,7 +2,7 @@
 #ifdef USES_P025
 
 // #######################################################################################################
-// #################################### Plugin 025: ADS1115 I2C 0x48)  ###############################################
+// #################################### Plugin 025: ADS1x15 I2C 0x48)  ###############################################
 // #######################################################################################################
 
 
@@ -10,9 +10,8 @@
 
 # define PLUGIN_025
 # define PLUGIN_ID_025 25
-# define PLUGIN_NAME_025 "Analog input - ADS1115"
+# define PLUGIN_NAME_025 "Analog input - ADS1x15"
 # define PLUGIN_VALUENAME1_025 "Analog"
-
 
 
 boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
@@ -55,7 +54,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B };
-      constexpr int nrAddressOptions = sizeof(i2cAddressValues) / sizeof(i2cAddressValues[0]);
+      constexpr int nrAddressOptions   = sizeof(i2cAddressValues) / sizeof(i2cAddressValues[0]);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P025_I2C_ADDR);
@@ -76,7 +75,6 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-
       success = P025_data_struct::webformLoad(event);
       break;
     }
@@ -121,7 +119,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           String log;
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            log  = F("ADS1115 : Analog value: ");
+            log  = F("ADS1x15 : Analog value: ");
             log += value;
             log += F(" / Channel: ");
             log += P025_MUX;
