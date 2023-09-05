@@ -51,21 +51,21 @@ It is very well possible you may receive a board with "ADS1015" marked on the si
 Or vice verse.
 
 .. figure:: P025_ADS1015_PCB_ADS1115_chip.jpg
-   :alt: ADS1015 PBC with ADS1115 chip
+   :alt: ADS1015 PCB with ADS1115 chip
    :width: 50 %
    :align: center
    
-   PBC marked as ADS1015, but with ADS1115 chip (see ``BOGI`` marking)
+   PCB marked as ADS1015, but with ADS1115 chip (see ``BOGI`` marking)
 
 If you're really unlucky, you may receive a board with the markings filed off from the chip.
 These are very likely fake clones, which will hardly work.
 
 .. figure:: P025_Fake_ADS1115_chip.jpg
-   :alt: ADS1115 PBC with fake unmarked chip
+   :alt: ADS1115 PCB with fake unmarked chip
    :width: 50 %
    :align: center
    
-   Complete rip-off: ADS1115 PBC with fake unmarked chip
+   Complete rip-off: ADS1115 PCB with fake unmarked chip
 
 ESPEasy will reject those and show "None" as this utter garbage really should NOT be used.
 The sampled value (if any) is very likely not taken from the expected pin and in the end the chip may even stall other I2C communications.
