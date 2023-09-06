@@ -321,9 +321,10 @@ void handle_advanced() {
     F("Dark"),
   };
   const int cssModeOptions[] = { 0, 1, 2};
+  constexpr int nrCssModeOptions = NR_ELEMENTS(cssModeOptions);
     addFormSelector(getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
                     getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
-                    sizeof(cssModeOptions) / sizeof(int),
+                    nrCssModeOptions,
                     cssModeNames,
                     cssModeOptions,
                     Settings.getCssMode());

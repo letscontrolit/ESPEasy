@@ -43,7 +43,7 @@ void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pc
 #endif
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_STRING)
   };
-  constexpr int optionCount = sizeof(optionValues) / sizeof(optionValues[0]);
+  constexpr int optionCount = NR_ELEMENTS(optionValues);
 
   sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, optionValues);
 }
@@ -56,7 +56,7 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, uint8_t pcon
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TRIPLE),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD)
   };
-  constexpr int optionCount = sizeof(optionValues) / sizeof(optionValues[0]);
+  constexpr int optionCount = NR_ELEMENTS(optionValues);
 
   sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, optionValues);
 }
