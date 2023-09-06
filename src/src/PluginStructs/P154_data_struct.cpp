@@ -18,6 +18,11 @@ bool P154_data_struct::begin()
   bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
   bmp.setOutputDataRate(BMP3_ODR_50_HZ);
 
+  // Perform a few reads, so the IIR filter does have a 'seed'
+  for (int i = 0; i < 5; ++i) {
+    bmp.performReading();
+  }
+
   return true;
 }
 
