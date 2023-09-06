@@ -7,49 +7,8 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../Globals/Protocol.h"
 #include "../Helpers/Convert.h"
+#include "../Helpers/_Plugin_init.h"
 
-/*
-   void logStatistics(uint8_t loglevel, bool clearStats) {
-   if (loglevelActiveFor(loglevel)) {
-    String log;
-    log.reserve(80);
-    for (auto& x: pluginStats) {
-        if (!x.second.isEmpty()) {
-            const int deviceIndex = x.first/256;
-            log = F("PluginStats P_");
-            log += deviceIndex + 1;
-            log += '_';
-            log += getPluginNameFromDeviceIndex(deviceIndex);
-            log += ' ';
-            log += getPluginFunctionName(x.first%256);
-            log += ' ';
-            log += getLogLine(x.second);
-            addLog(loglevel, log);
-            if (clearStats) x.second.reset();
-        }
-    }
-    for (auto& x: miscStats) {
-        if (!x.second.isEmpty()) {
-            log = getMiscStatsName(x.first);
-            log += F(" stats: ");
-            log += getLogLine(x.second);
-            addLog(loglevel, log);
-            if (clearStats) x.second.reset();
-        }
-    }
-    log = getMiscStatsName(TIME_DIFF_COMPUTE);
-    log += F(" stats: Count: ");
-    log += timediff_calls;
-    log += F(" - CPU cycles per call: ");
-    log += static_cast<float>(timediff_cpu_cycles_total) / static_cast<float>(timediff_calls);
-    addLog(loglevel, log);
-    if (clearStats) {
-      timediff_calls = 0;
-      timediff_cpu_cycles_total = 0;
-    }
-   }
-   }
- */
 
 void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
   uint64_t minVal, maxVal;
@@ -87,7 +46,7 @@ void jsonStatistics(bool clearStats) {
         // Start new plugin stream
         json_open(); // open new plugin
         json_prop(F("name"), getPluginNameFromDeviceIndex(deviceIndex));
-        json_prop(F("id"),   String(DeviceIndex_to_Plugin_id[deviceIndex]));
+        json_prop(F("id"),   String(getPluginID_from_DeviceIndex(deviceIndex)));
         json_open(true, F("function")); // open function
         json_open(); // open first function element
       }
@@ -98,7 +57,6 @@ void jsonStatistics(bool clearStats) {
         stream_json_timing_stats(x.second, timeSinceLastReset);
       }
       json_close(false);
-      if (clearStats) { x.second.reset(); }
       firstPlugin = false;
     }
   }
@@ -139,7 +97,6 @@ void jsonStatistics(bool clearStats) {
         stream_json_timing_stats(x.second, timeSinceLastReset);
       }
       json_close(false);
-      if (clearStats) { x.second.reset(); }
       firstController = false;
     }
   }
@@ -158,7 +115,7 @@ void jsonStatistics(bool clearStats) {
     if (!x.second.isEmpty()) {
       json_open(); // open new misc item
       json_prop(F("name"), getMiscStatsName(x.first));
-      json_prop(F("id"),   String(x.first));
+      json_prop(F("id"),   String(static_cast<int>(x.first)));
       json_open(true, F("function")); // open function
       json_open(); // open first function element
       // Stream function timing stats
@@ -170,13 +127,15 @@ void jsonStatistics(bool clearStats) {
       json_close();     // close first function element
       json_close(true); // close function
       json_close();     // close misc item
-      if (clearStats) { x.second.reset(); }
     }
   }
 
   json_close(true);   // Close misc list
 
   if (clearStats) {
+    pluginStats.clear();
+    controllerStats.clear();
+    miscStats.clear();
     timingstats_last_reset = millis();
   }
 }

@@ -3,6 +3,11 @@
 #if defined(USES_P089) && defined(ESP8266)
 
 
+#include "../Helpers/Networking.h"
+
+#include "../Helpers/_Plugin_init.h"
+
+
 P089_data_struct::P089_data_struct() {
   destIPAddress.addr = 0;
   idseq              = 0;
@@ -51,13 +56,13 @@ bool P089_data_struct::send_ping(struct EventStruct *event) {
   LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
 
   /* This one lost as well, DNS dead? */
-  if (WiFi.hostByName(hostname, ip) == false) {
+  if (!resolveHostByName(hostname, ip)) {
     return true;
   }
   destIPAddress.addr = ip;
 
   /* Generate random ID & seq */
-  idseq = random(UINT32_MAX);
+  idseq = HwRandom();
   u16_t ping_len            = ICMP_PAYLOAD_LEN + sizeof(struct icmp_echo_hdr);
   struct pbuf *packetBuffer = pbuf_alloc(PBUF_IP, ping_len, PBUF_RAM);
 
@@ -129,7 +134,7 @@ uint8_t PingReceiver(void *origin, struct raw_pcb *pcb, struct pbuf *packetBuffe
     deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(index);
 
     // Match all ping plugin instances and check them
-    if (validDeviceIndex(deviceIndex) && (DeviceIndex_to_Plugin_id[deviceIndex] == PLUGIN_ID_089)) {
+    if (getPluginID_from_DeviceIndex(deviceIndex) == PLUGIN_ID_089) {
       P089_data_struct *P089_taskdata = static_cast<P089_data_struct *>(getPluginTaskData(index));
 
       if ((P089_taskdata != nullptr) && (icmp_hdr->id == (uint16_t)((P089_taskdata->idseq & 0xffff0000) >> 16)) &&

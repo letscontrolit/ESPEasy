@@ -5,6 +5,8 @@
 
 #include "../DataStructs/MAC_address.h"
 
+#include <IPAddress.h>
+
 void setNetworkMedium(NetworkMedium_t medium);
 
 void NetworkConnectRelaxed();
@@ -17,7 +19,6 @@ MAC_address NetworkMacAddress();
 String NetworkGetHostNameFromSettings(bool force_add_unitnr = false);
 String NetworkGetHostname();
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr = false);
-String createRFCCompliantHostname(const String& oldString);
 MAC_address WifiSoftAPmacAddress();
 MAC_address WifiSTAmacAddress();
 

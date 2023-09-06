@@ -4,6 +4,7 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P060
 
+#include "../Helpers/OversamplingHelper.h"
 struct P060_data_struct : public PluginTaskData_base {
 public:
 
@@ -18,9 +19,8 @@ public:
 private:
 
   uint16_t readMCP3221();
-
-  uint32_t OversamplingValue = 0;
-  uint16_t OversamplingCount = 0;
+  
+  OversamplingHelper<uint32_t> Oversampling;
 
   uint8_t i2cAddress;
 };

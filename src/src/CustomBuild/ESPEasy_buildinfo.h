@@ -32,10 +32,14 @@
 #if defined(ESP32)
   #if defined(ESP32S2)
     # define BUILD_NOTES                 " - Mega32-s2"
-  #elif defined(ESP32C2)
+  #elif defined(ESP32S3)
+    # define BUILD_NOTES                 " - Mega32-s3"
+  #elif defined(ESP32C3)
     # define BUILD_NOTES                 " - Mega32-c3"
-  #else
+  # elif defined(ESP32_CLASSIC)
     # define BUILD_NOTES                 " - Mega32"
+  # else
+    static_assert(false, "Implement processor architecture");
   #endif
 #endif // if defined(ESP32)
 #endif
@@ -49,5 +53,35 @@
 #ifndef ESPEASY_NOW_NAME
 # define ESPEASY_NOW_NAME "ESPEasy-NOW"
 #endif
+
+#ifdef ESP32
+
+/*
+ #if CONFIG_IDF_TARGET_ESP32C3 ||  // support USB via HWCDC using JTAG interface
+     CONFIG_IDF_TARGET_ESP32S2 ||  // support USB via USBCDC
+     CONFIG_IDF_TARGET_ESP32S3     // support USB via HWCDC using JTAG interface or USBCDC
+ */
+# if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+
+// #if CONFIG_TINYUSB_CDC_ENABLED              // This define is not recognized here so use USE_USB_CDC_CONSOLE
+#  ifdef USE_USB_CDC_CONSOLE
+#   if ARDUINO_USB_MODE
+
+// ESP32C3/S3 embedded USB using JTAG interface
+#    define USES_HWCDC 1
+#   else // No ARDUINO_USB_MODE
+#    define USES_USBCDC 1
+#   endif // if ARDUINO_USB_MODE
+#  endif // ifdef USE_USB_CDC_CONSOLE
+# endif // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#endif // ifdef ESP32
+
+#ifdef USES_USBCDC
+#ifdef USB_MANUFACTURER
+#undef USB_MANUFACTURER
+#endif
+#define USB_MANUFACTURER "ESPEasy"
+#endif
+
 
 #endif // CUSTOMBUILD_ESPEASY_BUILD_INFO_H

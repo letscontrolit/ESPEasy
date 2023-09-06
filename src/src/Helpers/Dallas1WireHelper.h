@@ -15,6 +15,9 @@
 
 
 struct Dallas_SensorData {
+  Dallas_SensorData();
+
+  void clear();
 
   bool check_sensor(int8_t gpio_rx,
                     int8_t gpio_tx,
@@ -26,25 +29,27 @@ struct Dallas_SensorData {
                      int8_t gpio_tx,
                      int8_t res);
 
-  bool collect_value(int8_t gpio_rx, int8_t gpio_tx);
+  bool   collect_value(int8_t gpio_rx,
+                       int8_t gpio_tx);
 
   String get_formatted_address() const;
 
-  uint64_t addr              = 0;
-  float    value             = 0.0f;
-  uint32_t start_read_failed = 0;  
-  uint32_t start_read_retry  = 0;  
-  uint32_t read_success      = 0;
-  uint32_t read_retry        = 0;
-  uint32_t read_failed       = 0;  
-  uint8_t  actual_res        = 0;
+  uint64_t addr;
+  float    value;
+  uint32_t start_read_failed;
+  uint32_t start_read_retry;
+  uint32_t read_success;
+  uint32_t read_retry;
+  uint32_t read_failed;
+  uint32_t reinit_count;
+  uint8_t  actual_res;
 
-  bool     measurementActive = false;
-  bool     valueRead         = false;
-  bool     parasitePowered   = false;
-  bool     lastReadError     = false;
+  bool measurementActive = false;
+  bool valueRead         = false;
+  bool parasitePowered   = false;
+  bool lastReadError     = false;
+  bool fixed_resolution  = false;
 };
-
 
 
 
@@ -69,9 +74,9 @@ extern int64_t presence_end;   // End presence condition (minimal 60 usec, typ: 
 /*********************************************************************************************\
    Format 1-wire address
 \*********************************************************************************************/
-const __FlashStringHelper * Dallas_getModel(uint8_t family);
+const __FlashStringHelper * Dallas_getModel(uint8_t family, const bool hasFixedResolution = false);
 
-String Dallas_format_address(const uint8_t addr[]);
+String Dallas_format_address(const uint8_t addr[], const bool hasFixedResolution = false);
 
 uint64_t Dallas_addr_to_uint64(const uint8_t addr[]);
 
@@ -134,8 +139,12 @@ bool Dallas_readCounter(const uint8_t ROM[8],
 * Dallas Get Resolution
 \*********************************************************************************************/
 uint8_t Dallas_getResolution(const uint8_t ROM[8],
-                          int8_t        gpio_pin_rx,
-                          int8_t        gpio_pin_tx);
+                             int8_t        gpio_pin_rx,
+                             int8_t        gpio_pin_tx);
+uint8_t Dallas_getResolution(const uint8_t ROM[8],
+                             int8_t        gpio_pin_rx,
+                             int8_t        gpio_pin_tx,
+                             bool        & hasFixedResolution);
 
 /*********************************************************************************************\
 * Dallas Set Resolution

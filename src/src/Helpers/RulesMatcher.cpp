@@ -18,8 +18,8 @@ bool ruleMatch(String event, String rule) {
   }
 
   rule.trim();
-  parseTemplate(rule);
   parseStandardConversions(rule, false);
+  rule = parseTemplate(rule);
 
   event.trim();
 
@@ -36,6 +36,7 @@ bool ruleMatch(String event, String rule) {
     if ((pos1 > 0) && (pos2 > 0)) {
       if (event.substring(0, pos1).equalsIgnoreCase(rule.substring(0, pos2))) // if this is a clock rule
       {
+//        addLog(LOG_LEVEL_INFO, concat(F("Clock#Time="), rule.substring(pos2 + 1)));
         unsigned long clockEvent = string2TimeLong(event.substring(pos1 + 1));
         unsigned long clockSet   = string2TimeLong(rule.substring(pos2 + 1));
 
@@ -71,7 +72,7 @@ bool ruleMatch(String event, String rule) {
 
 
   // parse event into verb and value
-  double value = 0;
+  ESPEASY_RULES_FLOAT_TYPE value{};
   int    equal_pos   = event.indexOf('=');
 
   if (equal_pos >= 0) {
@@ -93,7 +94,7 @@ bool ruleMatch(String event, String rule) {
   }
 
   const bool stringMatch = event.equalsIgnoreCase(rule.substring(0, posStart));
-  double     ruleValue   = 0;
+  ESPEASY_RULES_FLOAT_TYPE     ruleValue{};
 
   if (!validDoubleFromString(rule.substring(posEnd), ruleValue)) {
     return false;
@@ -125,7 +126,7 @@ bool compareIntValues(char compare, const int& Value1, const int& Value2)
   return false;
 }
 
-bool compareDoubleValues(char compare, const double& Value1, const double& Value2)
+bool compareDoubleValues(char compare, const ESPEASY_RULES_FLOAT_TYPE& Value1, const ESPEASY_RULES_FLOAT_TYPE& Value2)
 {
   switch (compare) {
     case '>' + '=': return !definitelyLessThan(Value1, Value2);
@@ -238,8 +239,8 @@ bool getEventFromRulesLine(const String& line, String& event, String& action)
   event.trim();
 
   // Ignore escape char
-  event.replace(F("["), EMPTY_STRING);
-  event.replace(F("]"), EMPTY_STRING);
+//  removeChar(event, '[');
+//  removeChar(event, ']');
 
   // action: The optional part after the " do"
   action = line.substring(pos_do + 3);

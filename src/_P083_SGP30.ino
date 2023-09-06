@@ -13,7 +13,7 @@
 
 #define PLUGIN_083
 #define PLUGIN_ID_083        83
-#define PLUGIN_NAME_083       "Gasses - SGP30"
+#define PLUGIN_NAME_083       "Gases - SGP30 TVOC/eCO2"
 #define PLUGIN_VALUENAME1_083 "TVOC"
 #define PLUGIN_VALUENAME2_083 "eCO2"
 
@@ -65,6 +65,15 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
       success = (event->Par1 == 0x58);
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x58;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
     {

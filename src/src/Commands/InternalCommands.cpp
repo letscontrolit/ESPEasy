@@ -39,6 +39,8 @@
 #include "../Commands/wd.h"
 #include "../Commands/WiFi.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Helpers/Misc.h"
@@ -213,7 +215,9 @@ bool do_command_case(command_case_data         & data,
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
+    START_TIMER;
     data.status = pFunc(data.event, data.line.c_str());
+    STOP_TIMER(COMMAND_EXEC_INTERNAL);
     return true;
   }
   return false;
@@ -229,7 +233,9 @@ bool do_command_case(command_case_data         & data,
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
+    START_TIMER;
     data.status = pFunc(data.event, data.line.c_str());
+    STOP_TIMER(COMMAND_EXEC_INTERNAL);
     return true;
   }
   return false;
@@ -275,6 +281,10 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R( "clearaccessblock", Command_AccessInfo_Clear,   0); // Network Command
       COMMAND_CASE_R(    "clearpassword", Command_Settings_Password_Clear,     1); // Settings.h
       COMMAND_CASE_R(      "clearrtcram", Command_RTC_Clear,          0); // RTC.h
+      #ifdef ESP8266
+      COMMAND_CASE_R(     "clearsdkwifi", Command_System_Erase_SDK_WiFiconfig,  0); // System.h
+      COMMAND_CASE_R(   "clearwifirfcal", Command_System_Erase_RFcal,  0); // System.h
+      #endif
       COMMAND_CASE_R(           "config", Command_Task_RemoteConfig, -1); // Tasks.h
       COMMAND_CASE_R("controllerdisable", Command_Controller_Disable, 1); // Controller.h
       COMMAND_CASE_R( "controllerenable", Command_Controller_Enable,  1); // Controller.h
@@ -282,13 +292,16 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'd': {
-      COMMAND_CASE_R( "datetime", Command_DateTime,         2); // Time.h
-      COMMAND_CASE_R(    "debug", Command_Debug,            1); // Diagnostic.h
-      COMMAND_CASE_A(      "dec", Command_Rules_Dec,       -1); // Rules.h
-      COMMAND_CASE_R("deepsleep", Command_System_deepSleep, 1); // System.h
-      COMMAND_CASE_R(    "delay", Command_Delay,            1); // Timers.h
-      COMMAND_CASE_R(      "dns", Command_DNS,              1); // Network Command
-      COMMAND_CASE_R(      "dst", Command_DST,              1); // Time.h
+      COMMAND_CASE_R(           "datetime", Command_DateTime,             2); // Time.h
+      COMMAND_CASE_R(              "debug", Command_Debug,                1); // Diagnostic.h
+      COMMAND_CASE_A(                "dec", Command_Rules_Dec,           -1); // Rules.h
+      COMMAND_CASE_R(          "deepsleep", Command_System_deepSleep,     1); // System.h
+      COMMAND_CASE_R(              "delay", Command_Delay,                1); // Timers.h
+    #if FEATURE_PLUGIN_PRIORITY
+      COMMAND_CASE_R("disableprioritytask", Command_PriorityTask_Disable, 1); // Tasks.h
+    #endif // if FEATURE_PLUGIN_PRIORITY
+      COMMAND_CASE_R(                "dns", Command_DNS,                  1); // Network Command
+      COMMAND_CASE_R(                "dst", Command_DST,                  1); // Time.h
       break;
     }
     case 'e': {
@@ -315,6 +328,10 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R(   "gateway", Command_Gateway,     1); // Network Command
       COMMAND_CASE_A(      "gpio", Command_GPIO,        2); // Gpio.h
       COMMAND_CASE_A("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
+      break;
+    }
+    case 'h': {
+      COMMAND_CASE_R("hiddenssid", Command_Wifi_HiddenSSID, 1); // wifi.h
       break;
     }
     case 'i': {
@@ -392,7 +409,10 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
 #endif
-      COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
+      COMMAND_CASE_R(  "password", Command_Settings_Password, 1); // Settings.h
+      #if FEATURE_POST_TO_HTTP
+      COMMAND_CASE_A("posttohttp", Command_HTTP_PostToHTTP,  -1); // HTTP.h
+      #endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
       COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
@@ -405,8 +425,11 @@ bool executeInternalCommand(command_case_data & data)
 #endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #if FEATURE_MQTT
-      COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2); // MQTT.h
+      COMMAND_CASE_A( "publish", Command_MQTT_Publish,     -1); // MQTT.h
 #endif // if FEATURE_MQTT
+      #if FEATURE_PUT_TO_HTTP
+      COMMAND_CASE_A("puttohttp", Command_HTTP_PutToHTTP,  -1); // HTTP.h
+      #endif // if FEATURE_PUT_TO_HTTP
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }
@@ -420,7 +443,9 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 's': {
-      COMMAND_CASE_R(    "save", Command_Settings_Save, 0); // Settings.h
+      COMMAND_CASE_R(           "save", Command_Settings_Save, 0); // Settings.h
+      COMMAND_CASE_A("scheduletaskrun", Command_ScheduleTask_Run, 2); // Tasks.h
+
     #if FEATURE_SD
       COMMAND_CASE_R(  "sdcard", Command_SD_LS,         0); // SDCARDS.h
       COMMAND_CASE_R("sdremove", Command_SD_Remove,     1); // SDCARDS.h
@@ -459,6 +484,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_R( "taskdisable", Command_Task_Disable,  1);             // Tasks.h
         COMMAND_CASE_R(  "taskenable", Command_Task_Enable,   1);             // Tasks.h
         COMMAND_CASE_A(           "taskrun", Command_Task_Run,            1); // Tasks.h
+        COMMAND_CASE_A(         "taskrunat", Command_Task_Run,            2); // Tasks.h
         COMMAND_CASE_A(      "taskvalueset", Command_Task_ValueSet,       3); // Tasks.h
         COMMAND_CASE_A(   "taskvaluetoggle", Command_Task_ValueToggle,    2); // Tasks.h
         COMMAND_CASE_A("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3); // Tasks.h
@@ -605,26 +631,16 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     {
-      String log = F("Command: ");
-      log += cmd;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, concat(F("Command: "), cmd));
     }
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
-    {
-      String parameters;
-      parameters.reserve(64);
-      parameters += F("Par1: ");
-      parameters += TempEvent.Par1;
-      parameters += F(" Par2: ");
-      parameters += TempEvent.Par2;
-      parameters += F(" Par3: ");
-      parameters += TempEvent.Par3;
-      parameters += F(" Par4: ");
-      parameters += TempEvent.Par4;
-      parameters += F(" Par5: ");
-      parameters += TempEvent.Par5;
-      addLogMove(LOG_LEVEL_DEBUG, parameters);
-    }
+    addLogMove(LOG_LEVEL_DEBUG, strformat(
+        F("Par1: %d Par2: %d Par3: %d Par4: %d Par5: %d"),
+        TempEvent.Par1,
+        TempEvent.Par2,
+        TempEvent.Par3,
+        TempEvent.Par4,
+        TempEvent.Par5));
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -689,8 +705,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       return true;
     }
   }
-  String errorUnknown = F("Command unknown: ");
-  errorUnknown += action;
+  const String errorUnknown = concat(F("Command unknown: "), action);
   addLog(LOG_LEVEL_INFO, errorUnknown);
   SendStatus(&TempEvent, errorUnknown);
   delay(0);

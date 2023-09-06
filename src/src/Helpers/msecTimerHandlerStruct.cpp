@@ -1,6 +1,5 @@
 #include "../Helpers/msecTimerHandlerStruct.h"
 
-#include <Arduino.h>
 
 #include "../Helpers/ESPEasy_time_calc.h"
 

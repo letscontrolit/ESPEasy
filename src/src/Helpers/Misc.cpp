@@ -28,10 +28,10 @@ bool remoteConfig(struct EventStruct *event, const String& string)
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.equals(F("config")))
+  if (equals(command, F("config")))
   {
     // Command: "config,task,<taskname>,<actual Set Config command>"
-    if (parseString(string, 2).equals(F("task")))
+    if (equals(parseString(string, 2), F("task")))
     {
       String configTaskName = parseStringKeepCase(string, 3);
 
@@ -128,11 +128,12 @@ void taskClear(taskIndex_t taskIndex, bool save)
   checkRAM(F("taskClear"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
   Settings.clearTask(taskIndex);
-  Cache.clearTaskCaches();
-  ExtraTaskSettings.clear(); // Invalidate any cached values.
+  clearTaskCache(taskIndex); // Invalidate any cached values.
+  ExtraTaskSettings.clear(); 
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
+    addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
     SaveTaskSettings(taskIndex);
     SaveSettings();
   }
@@ -234,13 +235,13 @@ String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
 void emergencyReset()
 {
   // Direct Serial is allowed here, since this is only an emergency task.
-  Serial.begin(115200);
-  Serial.write(0xAA);
-  Serial.write(0x55);
+  ESPEASY_SERIAL_0.begin(115200);
+  ESPEASY_SERIAL_0.write(0xAA);
+  ESPEASY_SERIAL_0.write(0x55);
   delay(1);
 
-  if (Serial.available() == 2) {
-    if ((Serial.read() == 0xAA) && (Serial.read() == 0x55))
+  if (ESPEASY_SERIAL_0.available() == 2) {
+    if ((ESPEASY_SERIAL_0.read() == 0xAA) && (ESPEASY_SERIAL_0.read() == 0x55))
     {
       serialPrintln(F("\n\n\rSystem will reset to factory defaults in 10 seconds..."));
       delay(10000);
@@ -323,8 +324,8 @@ void SendValueLogger(taskIndex_t TaskIndex)
 #endif // if !defined(BUILD_NO_DEBUG) || FEATURE_SD
 
 #if FEATURE_SD
-  String filename = F("VALUES.CSV");
-  fs::File   logFile  = SD.open(filename, FILE_WRITE);
+  String   filename = patch_fname(F("VALUES.CSV"));
+  fs::File logFile  = SD.open(filename, "a+");
 
   if (logFile) {
     logFile.print(logger);
@@ -413,6 +414,44 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   rgbw[1] = g;
   rgbw[2] = b;
   rgbw[3] = w;
+}
+
+// Convert RGB Color to HSV Color
+void RGB2HSV(uint8_t r, uint8_t g, uint8_t b, float hsv[3]) {
+  float rf     = static_cast<float>(r) / 255.0f;
+  float gf     = static_cast<float>(g) / 255.0f;
+  float bf     = static_cast<float>(b) / 255.0f;
+  float maxval = rf;
+
+  if (gf > maxval) { maxval = gf; }
+
+  if (bf > maxval) { maxval = bf; }
+  float minval = rf;
+
+  if (gf < minval) { minval = gf; }
+
+  if (bf < minval) { minval = bf; }
+  float h = 0.0f, s, v = maxval;
+  float f = maxval - minval;
+
+  s = maxval == 0.0f ? 0.0f : f / maxval;
+
+  if (maxval == minval) {
+    h = 0.0f; // achromatic
+  } else {
+    if (maxval == rf) {
+      h = (gf - bf) / f + (gf < bf ? 6.0f : 0.0f);
+    } else if (maxval == gf) {
+      h = (bf - rf) / f + 2.0f;
+    } else if (maxval == bf) {
+      h = (rf - gf) / f + 4.0f;
+    }
+    h /= 6.0f;
+  }
+
+  hsv[0] = h * 360.0f;
+  hsv[1] = s * 255.0f;
+  hsv[2] = v * 255.0f;
 }
 
 // Simple bitwise get/set functions

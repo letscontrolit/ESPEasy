@@ -281,12 +281,22 @@ void html_add_form() {
 }
 
 void html_add_JQuery_script() {
-  addHtml(F("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js\"></script>"));
+  #ifndef CDN_URL_JQUERY
+    #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.0.min.js"
+  #endif // ifndef CDN_URL_JQUERY
+  addHtml(F("<script src=\"" CDN_URL_JQUERY "\"></script>"));
 }
 
 #if FEATURE_CHART_JS
 void html_add_ChartJS_script() {
-  addHtml(F("<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>"));
+  // To update the CDN link go to: https://www.chartjs.org/docs/latest/getting-started/installation.html
+  // - Select a CDN (jsdelivr is fine)
+  // - Select the chart.js file (may be called chart.umd.min.js) and copy the url
+  // - Replace the url in below script src element, keeping the quotes
+  #ifndef CDN_URL_CHART_JS
+    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+  #endif // ifndef CDN_URL_CHART_JS
+  addHtml(F("<script src=\"" CDN_URL_CHART_JS "\"></script>"));
 }
 #endif // if FEATURE_CHART_JS
 
@@ -300,8 +310,12 @@ void html_add_Easy_color_code_script() {
 
 void html_add_autosubmit_form() {
   addHtml(F("<script><!--\n"
-            "function dept_onchange(frmselect) {frmselect.submit();}"
-            "function rules_set_onchange(rulesselect) {document.getElementById('rules').disabled = true; rulesselect.submit();}"
+            // "function dept_onchange(frmselect) {frmselect.submit();}"
+            "function dept_onchange(e){e.submit()}"
+            // "function task_select_onchange(frmselect) {var element = document.getElementById('nosave'); if (typeof(element) != 'undefined' && element != null) {element.disabled = false; element.checked = true;} frmselect.submit();}"
+            "function task_select_onchange(e){var n=document.getElementById('nosave');void 0!==n&&null!=n&&(n.disabled=!1,n.checked=!0),e.submit()}"
+            // "function rules_set_onchange(rulesselect) {document.getElementById('rules').disabled = true; rulesselect.submit();}"
+            "function rules_set_onchange(e){document.getElementById('rules').disabled=!0,e.submit()}"
             "\n//--></script>"));
 }
 
@@ -399,9 +413,11 @@ void addHtmlFloat(const float& value, unsigned int nrDecimals) {
   addHtml(toString(value, nrDecimals));
 }
 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 void addHtmlFloat(const double& value, unsigned int nrDecimals) {
   addHtml(doubleToString(value, nrDecimals));
 }
+#endif
 
 
 void addEncodedHtml(const __FlashStringHelper * html) {
@@ -479,9 +495,9 @@ void addHtmlLink(const String& htmlclass, const String& url, const String& label
   addHtml(F("</a>"));
 }
 
-void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content, const String& id)
+void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content, const String& id, const String& attribute)
 {
-  addHtmlDiv(String(htmlclass), content, id);
+  addHtmlDiv(String(htmlclass), content, id, attribute);
 }
 
 
@@ -493,11 +509,15 @@ void addHtmlDiv(const String& htmlclass, const String& content) {
   addHtmlDiv(htmlclass, content, EMPTY_STRING);
 }
 
-void addHtmlDiv(const String& htmlclass, const String& content, const String& id) {
+void addHtmlDiv(const String& htmlclass, const String& content, const String& id, const String& attribute) {
   addHtml(F(" <div "));
   addHtmlAttribute(F("class"), htmlclass);
   if (id.length() > 0) {
     addHtmlAttribute(F("id"), id);
+  }
+  if (attribute.length() > 0) {
+    addHtml(' ');
+    addHtml(attribute);
   }
   addHtml('>');
   addHtml(content);

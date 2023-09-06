@@ -75,6 +75,15 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = 0x62;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_SET_DEFAULTS:
     {
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // CO2 value is an integer
@@ -114,7 +123,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
         # endif // ifndef LIMIT_BUILD_SIZE
       }
 
-      addFormCheckBox(F("Automatic Self Calibration"), F("autocalibrate"), P135_AUTO_CALIBRATION == 1);
+      addFormCheckBox(F("Automatic Self Calibration"), F("autocal"), P135_AUTO_CALIBRATION == 1);
       success = true;
       break;
     }
@@ -127,7 +136,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
       if (alt > 2000) { alt = 2000; }
       P135_SENSOR_ALTITUDE    = alt;
       P135_TEMPERATURE_OFFSET = getFormItemFloat(F("tempoffset"));
-      P135_AUTO_CALIBRATION   = isFormItemChecked(F("autocalibrate")) ? 1 : 0;
+      P135_AUTO_CALIBRATION   = isFormItemChecked(F("autocal")) ? 1 : 0;
       P135_MEASURE_INTERVAL   = isFormItemChecked(F("pinterval")) ? 1 : 0;
 
       if (P135_SENSOR_TYPE == static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD41)) {
@@ -150,9 +159,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
                                                                                 static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD41))));
       P135_data_struct *P135_data = static_cast<P135_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P135_data) {
-        success = P135_data->init();
-      }
+      success = (nullptr != P135_data) && P135_data->init();
 
       break;
     }

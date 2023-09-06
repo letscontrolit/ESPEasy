@@ -113,7 +113,7 @@ void removeWiFiEventHandler();
 void registerWiFiEventHandler();
 #endif
 
-#ifdef ESP8266
+#if FEATURE_SET_WIFI_TX_PWR
 void SetWiFiTXpower();
 void SetWiFiTXpower(float dBm); // 0-20.5
 void SetWiFiTXpower(float dBm, float rssi);

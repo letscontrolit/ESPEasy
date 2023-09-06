@@ -2,11 +2,10 @@
 #define COMMAND_COMMON_H
 
 #include <ctype.h>
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 
-class IPAddress;
+#include <IPAddress.h>
 
 const __FlashStringHelper * return_command_success();
 const __FlashStringHelper * return_command_failed();

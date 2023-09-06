@@ -1,48 +1,44 @@
 #include "../DataStructs/C013_p2p_dataStructs.h"
 
-#include "../Globals/Plugins.h"
-
 #ifdef USES_C013
 
-C013_SensorInfoStruct::C013_SensorInfoStruct()
-{
-  ZERO_FILL(taskName);
+# include "../Globals/Plugins.h"
 
-  for (int i = 0; i < VARS_PER_TASK; ++i) {
-    ZERO_FILL(ValueNames[i]);
-  }
-}
+
 
 bool C013_SensorInfoStruct::isValid() const
 {
   if ((header != 255) || (ID != 3)) { return false; }
 
-  if (!validTaskIndex(sourceTaskIndex) ||
-      !validTaskIndex(destTaskIndex) ||
-      !validPluginID(deviceNumber)) {
-    return false;
-  }
-
-
-  return true;
-}
-
-C013_SensorDataStruct::C013_SensorDataStruct()
-{
-  for (int i = 0; i < VARS_PER_TASK; ++i) {
-    Values[i] = 0.0f;
-  }
+  return validTaskIndex(sourceTaskIndex) &&
+         validTaskIndex(destTaskIndex) &&
+         validPluginID(deviceNumber);
 }
 
 bool C013_SensorDataStruct::isValid() const
 {
   if ((header != 255) || (ID != 5)) { return false; }
 
-  if (!validTaskIndex(sourceTaskIndex) ||
-      !validTaskIndex(destTaskIndex)) {
-    return false;
-  }
-  return true;
+  return validTaskIndex(sourceTaskIndex) &&
+         validTaskIndex(destTaskIndex);
 }
 
-#endif
+bool C013_SensorDataStruct::matchesPluginID(pluginID_t pluginID) const
+{
+  if (deviceNumber == 255 || !validPluginID(deviceNumber) || !validPluginID(pluginID)) {
+    // Was never set, so probably received data from older node.
+    return true;
+  }
+  return pluginID == deviceNumber;
+}
+
+bool C013_SensorDataStruct::matchesSensorType(Sensor_VType sensor_type) const
+{
+  if (deviceNumber == 255 || sensorType == Sensor_VType::SENSOR_TYPE_NONE) {
+    // Was never set, so probably received data from older node.
+    return true;
+  }
+  return sensorType == sensor_type;
+}
+
+#endif // ifdef USES_C013

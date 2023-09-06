@@ -29,7 +29,8 @@ void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
                                           uint8_t sevendgt_hours,
                                           uint8_t sevendgt_minutes,
                                           uint8_t sevendgt_seconds,
-                                          bool    flag12h) {
+                                          bool    flag12h,
+                                          bool    suppressLeading0) {
   ClearBuffer();
 
   if (sevendgt_now) {
@@ -51,12 +52,17 @@ void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
   showbuffer[3] = sevendgt_minutes % 10;
   showbuffer[4] = static_cast<uint8_t>(sevendgt_seconds / 10);
   showbuffer[5] = sevendgt_seconds % 10;
+  # ifdef P073_SUPPRESS_ZERO
+
+  if (suppressLeading0 && (showbuffer[0] == 0)) { showbuffer[0] = 10; } // set to space
+  # endif // ifdef P073_SUPPRESS_ZERO
 }
 
 void P073_data_struct::FillBufferWithDate(bool    sevendgt_now,
                                           uint8_t sevendgt_day,
                                           uint8_t sevendgt_month,
-                                          int     sevendgt_year) {
+                                          int     sevendgt_year,
+                                          bool    suppressLeading0) {
   ClearBuffer();
   int sevendgt_year0 = sevendgt_year;
 
@@ -78,10 +84,15 @@ void P073_data_struct::FillBufferWithDate(bool    sevendgt_now,
   showbuffer[5] = sevendgt_year1 % 10;
   showbuffer[6] = static_cast<uint8_t>(sevendgt_year2 / 10);
   showbuffer[7] = sevendgt_year2 % 10;
+  # ifdef P073_SUPPRESS_ZERO
+
+  if (suppressLeading0 && (showbuffer[0] == 0)) { showbuffer[0] = 10; } // set to space
+  # endif // ifdef P073_SUPPRESS_ZERO
 }
 
 void P073_data_struct::FillBufferWithNumber(const String& number) {
   ClearBuffer();
+
   if (number.length() == 0) {
     return;
   }
@@ -202,8 +213,8 @@ void P073_data_struct::FillBufferWithString(const String& textToShow,
         # ifdef P073_7DBIN_COMMAND
         && !binaryData
         # endif // P073_7DBIN_COMMAND
-        ) {   // If setting periods true
-      if (p == 0) {   // Text starts with a period, becomes a space with a dot
+        ) {         // If setting periods true
+      if (p == 0) { // Text starts with a period, becomes a space with a dot
         showperiods[p] = true;
         p++;
       } else {
@@ -271,12 +282,15 @@ int P073_data_struct::getEffectiveTextLength(const String& text) {
   return p;
 }
 
-void P073_data_struct::NextScroll() {
-  if (txtScrolling && (!_textToScroll.isEmpty())) {
+bool P073_data_struct::NextScroll() {
+  bool result = false;
+
+  if (isScrollEnabled() && (!_textToScroll.isEmpty())) {
     if ((scrollCount > 0) && (scrollCount < 0xFFFF)) { scrollCount--; }
 
     if (scrollCount == 0) {
       scrollCount = 0xFFFF; // Max value to avoid interference when scrolling long texts
+      result      = true;
       const int bufToFill      = getBufferLength(displayModel);
       const int p073_txtlength = _textToScroll.length();
       ClearBuffer();
@@ -289,8 +303,8 @@ void P073_data_struct::NextScroll() {
             #  ifdef P073_7DBIN_COMMAND
             && !binaryData
             #  endif // P073_7DBIN_COMMAND
-            ) {   // If setting periods true
-          if (p == 0) {   // Text starts with a period, becomes a space with a dot
+            ) {         // If setting periods true
+          if (p == 0) { // Text starts with a period, becomes a space with a dot
             showperiods[p] = true;
             p++;
           } else {
@@ -323,6 +337,7 @@ void P073_data_struct::NextScroll() {
       #  endif // P073_DEBUG
     }
   }
+  return result;
 }
 
 void P073_data_struct::setTextToScroll(const String& text) {
@@ -360,6 +375,14 @@ void P073_data_struct::setScrollSpeed(uint8_t speed) {
   _scrollSpeed = speed;
   scrollCount  = _scrollSpeed;
   scrollPos    = 0;
+}
+
+bool P073_data_struct::isScrollEnabled() {
+  return txtScrolling && scrollAllowed;
+}
+
+void P073_data_struct::setScrollEnabled(bool scroll) {
+  scrollAllowed = scroll;
 }
 
 # endif // P073_SCROLL_TEXT

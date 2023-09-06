@@ -31,10 +31,13 @@ NeoTopology<MyPanelLayout> topo(PanelWidth, PanelHeight);
 
 void DumpTopo()
 {
+    int16_t totalWidth = static_cast<int16_t>(topo.getWidth());
+    int16_t totalHeight = static_cast<int16_t>(topo.getHeight());
+
     Serial.println();
 
     Serial.print("\t\t");
-    for (int x = 0; x < topo.getWidth(); x++)
+    for (int16_t x = 0; x < totalWidth; x++)
     {
         Serial.print(x);
         Serial.print("\t");
@@ -42,19 +45,19 @@ void DumpTopo()
     Serial.println();
 
     Serial.print("\t--");
-    for (int x = 0; x < topo.getWidth(); x++)
+    for (int16_t x = 0; x < totalWidth; x++)
     {
         Serial.print("--------");
     }
     Serial.println();
 
-    for (int y = 0; y < topo.getHeight(); y++)
+    for (int16_t y = 0; y < totalHeight; y++)
     {
         Serial.print("  ");
         Serial.print(y);
         Serial.print("\t|\t");
 
-        for (int x = 0; x < topo.getWidth(); x++)
+        for (int16_t x = 0; x < totalWidth; x++)
         {
             Serial.print(topo.Map(x, y));
             Serial.print("\t");

@@ -17,7 +17,7 @@
 # define PLUGIN_102
 # define PLUGIN_ID_102        102
 # define PLUGIN_102_DEBUG     true       // activate extra log info in the debug
-# define PLUGIN_NAME_102      "PZEM-004Tv30-Multiple"
+# define PLUGIN_NAME_102      "Energy (AC) - PZEM-004Tv30-Multiple"
 
 # define P102_PZEM_mode       PCONFIG(1) // 0=read value ; 1=reset energy; 2=programm address
 # define P102_PZEM_ADDR       PCONFIG(2)
@@ -38,9 +38,9 @@
 # define P102_NR_OUTPUT_OPTIONS  6
 # define P102_QUERY1_CONFIG_POS  3
 
-# define P102_PZEM_MAX_ATTEMPT      3 // Number of tentative before declaring NAN value
+# define P102_PZEM_MAX_ATTEMPT   3 // Number of tentative before declaring NAN value
 
-PZEM004Tv30 *P102_PZEM_sensor = nullptr;
+PZEM004Tv30 * P102_PZEM_sensor = nullptr;
 
 boolean Plugin_102_init    = false;
 uint8_t P102_PZEM_ADDR_SET = 0; // Flag for status of programmation/Energy reset: 0=Reading / 1=Prog confirmed / 3=Prog done / 4=Reset
@@ -85,12 +85,9 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P102_NR_OUTPUT_VALUES) {
           uint8_t choice = PCONFIG(i + P102_QUERY1_CONFIG_POS);
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            p102_getQueryString(choice),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, p102_getQueryString(choice));
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;
@@ -155,7 +152,7 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         addFormSubHeader(F("PZEM actions"));
         {
           const __FlashStringHelper *options_model[3] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
-          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 3, options_model, nullptr, P102_PZEM_mode);
+          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), 3, options_model, nullptr, P102_PZEM_mode);
         }
 
         if (P102_PZEM_mode == 2)
@@ -164,14 +161,14 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
                     "<span style=\"color:red\"> <br>When programming an address, only one PZEMv30 must be connected. Otherwise, all connected PZEMv30s will get the same address, which would cause a conflict during reading.</span>"));
           {
             const __FlashStringHelper *options_confirm[2] = { F("NO"), F("YES") };
-            addFormSelector(F("Confirm address programming ?"), F("P102_PZEM_addr_set"), 2, options_confirm, nullptr, P102_PZEM_ADDR_SET);
+            addFormSelector(F("Confirm address programming ?"), F("PZEM_addr_set"), 2, options_confirm, nullptr, P102_PZEM_ADDR_SET);
           }
-          addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
+          addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
           addHtml(F("Select the address to set PZEM. Programming address 0 is forbidden."));
         }
         else
         {
-          addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), P102_PZEM_ADDR, 0, 247);
+          addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), P102_PZEM_ADDR, 0, 247);
           addHtml(F("  Address 0 allows to communicate with any <B>single</B> PZEMv30 whatever its address"));
         }
 
@@ -186,10 +183,10 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         addFormSubHeader(F("PZEM actions"));
         {
           const __FlashStringHelper *options_model[2] = { F("Read_value"), F("Reset_Energy") };
-          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 2, options_model, nullptr, P102_PZEM_mode);
+          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), 2, options_model, nullptr, P102_PZEM_mode);
         }
         addHtml(F(" Tx/Rx Pins config disabled: Configuration is available in the first PZEM plugin.<br>"));
-        addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), P102_PZEM_ADDR, 1, 247);
+        addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), P102_PZEM_ADDR, 1, 247);
       }
 
       addHtml(F("<br><br> Reset energy can be done also by: http://*espeasyip*/control?cmd=resetenergy,*PZEM address*"));
@@ -213,9 +210,9 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, p102_getQueryString(choice));
       }
-      P102_PZEM_mode     = getFormItemInt(F("P102_PZEM_mode"));
-      P102_PZEM_ADDR     = getFormItemInt(F("P102_PZEM_addr"));
-      P102_PZEM_ADDR_SET = getFormItemInt(F("P102_PZEM_addr_set"));
+      P102_PZEM_mode     = getFormItemInt(F("PZEM_mode"));
+      P102_PZEM_ADDR     = getFormItemInt(F("PZEM_addr"));
+      P102_PZEM_ADDR_SET = getFormItemInt(F("PZEM_addr_set"));
       Plugin_102_init    = false; // Force device setup next time
       success            = true;
       break;
@@ -354,7 +351,7 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
       {
         String command = parseString(string, 1);
 
-        if ((command.equals(F("resetenergy"))) && (P102_PZEM_FIRST == event->TaskIndex))
+        if ((equals(command, F("resetenergy"))) && (P102_PZEM_FIRST == event->TaskIndex))
         {
           if ((event->Par1 >= 0) && (event->Par1 <= 247))
           {

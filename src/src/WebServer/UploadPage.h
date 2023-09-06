@@ -35,6 +35,10 @@ void handle_upload_json();
 // ********************************************************************************
 extern fs::File uploadFile;
 void handleFileUpload();
+#if FEATURE_SD
+void handleSDFileUpload();
+#endif // if FEATURE_SD
+void handleFileUploadBase(bool toSDcard);
 
 #endif 
 

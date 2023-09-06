@@ -80,18 +80,18 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       return false;
     }
 
-    LoadControllerSettings(controllerIndex, ControllerSettings);
-    MustCheckReply = ControllerSettings.MustCheckReply;
-    hostname = ControllerSettings.getHost();
-    pass = getControllerPass(controllerIndex, ControllerSettings);
-    ClientTimeout = ControllerSettings.ClientTimeout;
+    LoadControllerSettings(controllerIndex, *ControllerSettings);
+    MustCheckReply = ControllerSettings->MustCheckReply;
+    hostname = ControllerSettings->getHost();
+    pass = getControllerPass(controllerIndex, *ControllerSettings);
+    ClientTimeout = ControllerSettings->ClientTimeout;
 
     if (pass.isEmpty()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
       return false;
     }
 
-    if (!try_connect_host(/* CPLUGIN_ID_012 */ 12, client, ControllerSettings)) {
+    if (!try_connect_host(/* CPLUGIN_ID_012 */ 12, client, *ControllerSettings)) {
       return false;
     }
   }
@@ -133,7 +133,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       #endif
 
       // success ?
-      if (line.substring(0, 15).equals(F("HTTP/1.1 200 OK"))) {
+      if (equals(line.substring(0, 15), F("HTTP/1.1 200 OK"))) {
         #ifndef BUILD_NO_DEBUG
         strcpy_P(log, PSTR("HTTP : Success"));
         #endif
@@ -141,10 +141,10 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
         if (!data) { success = true; }
       }
       #ifndef BUILD_NO_DEBUG
-      else if (line.substring(0, 24).equals(F("HTTP/1.1 400 Bad Request"))) {
+      else if (equals(line.substring(0, 24), F("HTTP/1.1 400 Bad Request"))) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
-      else if (line.substring(0, 25).equals(F("HTTP/1.1 401 Unauthorized"))) {
+      else if (equals(line.substring(0, 25), F("HTTP/1.1 401 Unauthorized"))) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
       addLog(LOG_LEVEL_DEBUG, log);

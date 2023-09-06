@@ -42,15 +42,16 @@ else:
 #    "-DUSES_P080",  # Dallas iButton
     "-DUSES_P081",  # Cron
     "-DUSES_P082",  # GPS
-    "-DUSES_P085",  # AcuDC24x
+#   "-DUSES_P085",  # AcuDC24x
     "-DUSES_P098",  # PWM motor
-
-    "-DUSES_P100",  # Pulse Counter - DS2423
+#   "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
 #   "-DUSES_P094",  # CUL Reader
 #   "-DUSES_P095",  # TFT ILI9341
 #    "-DUSES_P106",  # BME680
 #    "-DUSES_P107",  # SI1145 UV index
+
+    "-DUSES_P146",  # Cache Reader
 
     "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483
@@ -62,10 +63,12 @@ else:
     "-DFEATURE_I2CMULTIPLEXER=1",
     "-DFEATURE_TRIGONOMETRIC_FUNCTIONS_RULES=1",
     "-DFEATURE_CUSTOM_PROVISIONING=1",
+    "-DFEATURE_DEFINE_SERIAL_CONSOLE_PORT=0",
 
     "-DFEATURE_ESPEASY_P2P=1",
 
-    "-DFEATURE_SETTINGS_ARCHIVE=1"
+    "-DFEATURE_SETTINGS_ARCHIVE=1",
+    "-DDISABLE_SC16IS752_SPI"
   ]
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])

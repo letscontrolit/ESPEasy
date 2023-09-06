@@ -94,10 +94,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         if (i < P082_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
           P082_query    choice       = static_cast<P082_query>(PCONFIG(pconfigIndex));
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_082_valuename(choice, false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_082_valuename(choice, false));
 
           switch (choice) {
             case P082_query::P082_QUERY_LONG:
@@ -109,7 +106,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
               break;
           }
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;
@@ -422,12 +419,11 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         if (activeFix != curFixStatus) {
           // Fix status changed, send events.
           if (Settings.UseRules) {
-            String event = curFixStatus ? F("GPS#GotFix") : F("GPS#LostFix");
-            eventQueue.addMove(std::move(event));
+            eventQueue.add(curFixStatus ? F("GPS#GotFix") : F("GPS#LostFix"));
           }
           activeFix = curFixStatus;
         }
-        double distance = 0.0;
+        ESPEASY_RULES_FLOAT_TYPE distance{};
 
         if (curFixStatus) {
           if (P082_data->gps->location.isUpdated()) {
@@ -483,12 +479,12 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
           if (P082_DISTANCE > 0) {
             // Check travelled distance.
-            if ((distance > static_cast<double>(P082_DISTANCE)) || (distance < 0.0)) {
+            if ((distance > static_cast<ESPEASY_RULES_FLOAT_TYPE>(P082_DISTANCE)) || (distance < 0)) {
               if (P082_data->storeCurPos(P082_TIMEOUT)) {
                 distance_passed = true;
 
                 // Add sanity check for distance travelled
-                if (distance > static_cast<double>(P082_DISTANCE)) {
+                if (distance > static_cast<ESPEASY_RULES_FLOAT_TYPE>(P082_DISTANCE)) {
                   if (Settings.UseRules) {
                     String eventString = F("GPS#travelled=");
                     eventString += distance;
@@ -529,18 +525,18 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         const String command    = parseString(string, 1);
         const String subcommand = parseString(string, 2);
 
-        if (command.equals(F("gps"))) {
-          if (subcommand.equals(F("wake"))) {
+        if (equals(command, F("gps"))) {
+          if (equals(subcommand, F("wake"))) {
             success = P082_data->wakeUp();
-          } else if (subcommand.equals(F("sleep"))) {
+          } else if (equals(subcommand, F("sleep"))) {
             success = P082_data->powerDown();
           }
 # ifdef P082_USE_U_BLOX_SPECIFIC
-          else if (subcommand.equals(F("maxperf"))) {
+          else if (equals(subcommand, F("maxperf"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Max_Performance);
-          } else if (subcommand.equals(F("powersave"))) {
+          } else if (equals(subcommand, F("powersave"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Power_Save);
-          } else if (subcommand.equals(F("eco"))) {
+          } else if (equals(subcommand, F("eco"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Eco);
           }
 # endif // P082_USE_U_BLOX_SPECIFIC
@@ -814,8 +810,8 @@ void P082_setSystemTime(struct EventStruct *event) {
     if (updated) {
       // Use floating point precision to use the time since last update from GPS
       // and the given offset in centisecond.
-      double time = makeTime(dateTime);
-      time += static_cast<double>(age) / 1000.0;
+      ESPEASY_RULES_FLOAT_TYPE time = makeTime(dateTime);
+      time += (static_cast<ESPEASY_RULES_FLOAT_TYPE>(age) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1000));
       node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
       P082_data->_last_setSystemTime = millis();
     }

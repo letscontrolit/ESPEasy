@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-
 #include "../DataTypes/ControllerIndex.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../DataTypes/TaskIndex.h"
@@ -47,18 +45,19 @@ public:
   // Check (and update) sensorType if not set, plus return (corrected) sensorType
   Sensor_VType getSensorType();
 
-  String String1;
-  String String2;
-  String String3;
-  String String4;
-  String String5;
-  uint8_t  *Data = nullptr;
-  int    idx  = 0;
-  int    Par1 = 0;
-  int    Par2 = 0;
-  int    Par3 = 0;
-  int    Par4 = 0;
-  int    Par5 = 0;
+  String        String1;
+  String        String2;
+  String        String3;
+  String        String4;
+  String        String5;
+  unsigned long timestamp = 0u;
+  uint8_t      *Data = nullptr;
+  int           idx  = 0;
+  int           Par1 = 0;
+  int           Par2 = 0;
+  int           Par3 = 0;
+  int           Par4 = 0;
+  int           Par5 = 0;
 
   // The origin of the values in the event. See EventValueSource.h
   EventValueSource::Enum Source            = EventValueSource::Enum::VALUE_SOURCE_NOT_SET;

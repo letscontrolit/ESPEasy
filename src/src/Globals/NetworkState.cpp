@@ -4,11 +4,14 @@
 
 
 // Ethernet Connection status
-NetworkMedium_t active_network_medium = DEFAULT_NETWORK_MEDIUM;
+NetworkMedium_t active_network_medium = NetworkMedium_t::NotSet;
 
 bool webserverRunning(false);
 bool webserver_init(false);
+
+#if FEATURE_MDNS
 bool mDNS_init(false);
+#endif
 
 
 // NTP status

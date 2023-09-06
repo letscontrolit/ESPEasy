@@ -128,9 +128,7 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
                                                                                P038_CONFIG_MAXBRIGHT));
       P038_data_struct *P038_data = static_cast<P038_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P038_data) {
-        success = P038_data->plugin_init(event);
-      }
+      success = (nullptr != P038_data) && P038_data->plugin_init(event);
 
       break;
     }

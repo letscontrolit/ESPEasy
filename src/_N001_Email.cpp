@@ -42,7 +42,7 @@ bool NPlugin_001_Auth(WiFiClient  & client,
                       const String& pass);
 bool NPlugin_001_MTA(WiFiClient  & client,
                      const String& aStr,
-                     const String& aWaitForPattern);
+                     uint16_t aWaitForPattern);
 bool getNextMailAddress(const String& data,
                         String      & address,
                         int           index);
@@ -164,10 +164,10 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
     } else {
       String senderName = email_address.substring(0, pos_less);
-      senderName.replace(F("\""), EMPTY_STRING); // Remove quotes
+      removeChar(senderName, '"'); // Remove quotes
       String address = email_address.substring(pos_less + 1);
-      address.replace(F("<"), EMPTY_STRING);
-      address.replace(F(">"), EMPTY_STRING);
+      removeChar(address, '<');
+      removeChar(address, '>');
       address.trim();
       senderName.trim();
       mailheader.replace(F("$nodename"),  senderName);
@@ -187,38 +187,36 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     // Wait for Client to Start Sending
     // The MTA Exchange
     while (true) {
-      if (!NPlugin_001_MTA(client, EMPTY_STRING, F("220 "))) { break; }
+      if (!NPlugin_001_MTA(client, EMPTY_STRING, 220)) { break; }
 
-      if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain, F("250 "))) { break; }
+      if (!NPlugin_001_MTA(client, concat(F("EHLO "), String(notificationsettings.Domain)), 250)) { break; }
 
       if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) { break; }
 
-      if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + notificationsettings.Sender + ">", F("250 "))) { break; }
+      if (!NPlugin_001_MTA(client, concat(F("MAIL FROM:<"), String(notificationsettings.Sender) + '>') , 250)) { break; }
 
       bool   nextAddressAvailable = true;
       int    i                    = 0;
       String emailTo;
-
-      if (!getNextMailAddress(notificationsettings.Receiver, emailTo, i)) {
+      const String receiver(notificationsettings.Receiver);
+      if (!getNextMailAddress(receiver, emailTo, i)) {
         addLog(LOG_LEVEL_ERROR, F("Email: No recipient given"));
         break;
       }
 
       while (nextAddressAvailable) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("Email: To ");
-          log += emailTo;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("Email: To "), emailTo));
         }
 
-        if (!NPlugin_001_MTA(client, String(F("RCPT TO:<")) + emailTo + ">", F("250 "))) { break; }
+        if (!NPlugin_001_MTA(client, concat(F("RCPT TO:<"), emailTo + '>'), 250)) { break; }
         ++i;
-        nextAddressAvailable = getNextMailAddress(notificationsettings.Receiver, emailTo, i);
+        nextAddressAvailable = getNextMailAddress(receiver, emailTo, i);
       }
 
-      if (!NPlugin_001_MTA(client, F("DATA"), F("354 "))) { break; }
+      if (!NPlugin_001_MTA(client, F("DATA"), 354)) { break; }
 
-      if (!NPlugin_001_MTA(client, mailheader + aMesg + F("\r\n.\r\n"), F("250 "))) { break; }
+      if (!NPlugin_001_MTA(client, mailheader + aMesg + F("\r\n.\r\n"), 250)) { break; }
 
       myStatus = true;
       break;
@@ -231,9 +229,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       addLog(LOG_LEVEL_INFO, F("EMAIL: Connection Closed Successfully"));
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("EMAIL: Connection Closed With Error. Used header: ");
-        log += mailheader;
-        addLogMove(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, concat(F("EMAIL: Connection Closed With Error. Used header: "),  mailheader));
       }
     }
   }
@@ -246,22 +242,13 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
     // No user/password given.
     return true;
   }
-
-  if (!NPlugin_001_MTA(client, String(F("AUTH LOGIN")), F("334 "))) { return false; }
   base64 encoder;
-  String auth;
-
-  auth = encoder.encode(user);
-
-  if (!NPlugin_001_MTA(client, auth, F("334 "))) { return false; }
-  auth = encoder.encode(pass);
-
-  if (!NPlugin_001_MTA(client, auth, F("235 "))) { return false; }
-
-  return true;
+  return NPlugin_001_MTA(client, F("AUTH LOGIN"), 334) &&
+         NPlugin_001_MTA(client, encoder.encode(user), 334) &&
+         NPlugin_001_MTA(client, encoder.encode(pass), 235);
 }
 
-bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String& aWaitForPattern)
+bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern)
 {
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -275,6 +262,8 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String& aWait
   unsigned long timer = millis() + NPLUGIN_001_TIMEOUT;
 
   backgroundtasks();
+
+  const String aWaitForPattern_str = String(aWaitForPattern) + ' ';
 
   while (true) {
     if (timeOutReached(timer)) {
@@ -292,7 +281,7 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String& aWait
     String line;
     safeReadStringUntil(client, line, '\n');
 
-    const bool patternFound = line.indexOf(aWaitForPattern) >= 0;
+    const bool patternFound = line.indexOf(aWaitForPattern_str) >= 0;
 
 # ifndef BUILD_NO_DEBUG
 

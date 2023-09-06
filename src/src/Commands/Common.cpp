@@ -158,6 +158,7 @@ String Command_GetORSetBool(struct EventStruct *event,
       if (validIntFromString(TmpStr1, tmp_int)) {
         *value = tmp_int > 0;
       }
+      else if (TmpStr1.isEmpty()) {} // Empty string not always handled nicely by strcmp_P
       else if (strcmp_P(PSTR("on"), TmpStr1.c_str()) == 0) { *value = true; }
       else if (strcmp_P(PSTR("true"), TmpStr1.c_str()) == 0) { *value = true; }
       else if (strcmp_P(PSTR("off"), TmpStr1.c_str()) == 0) { *value = false; }
@@ -197,8 +198,8 @@ String Command_GetORSetETH(struct EventStruct *event,
 
 
       // WiFi/Eth mode
-      else if (TmpStr1.equals(F("wifi"))) { *value = 0; }
-      else if (TmpStr1.equals(F("ethernet"))) { *value = 1; }
+      else if (equals(TmpStr1, F("wifi"))) { *value = 0; }
+      else if (equals(TmpStr1, F("ethernet"))) { *value = 1; }
 
       // ETH clockMode
       else if (TmpStr1.startsWith(F("ext"))) { *value = 0; }

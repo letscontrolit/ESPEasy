@@ -1,70 +1,57 @@
 #include "../Helpers/Convert.h"
 
-
+#include "../Helpers/StringConverter.h"
 
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
 \*********************************************************************************************/
 const __FlashStringHelper * getBearing(int degrees)
 {
-  const int nr_directions = 16;
-  float stepsize      = (360.0f / nr_directions);
+  const __FlashStringHelper* directions[] {
+    F("N"),
+    F("NNE"),
+    F("NE"),
+    F("ENE"),
+    F("E"),
+    F("ESE"),
+    F("SE"),
+    F("SSE"),
+    F("S"),
+    F("SSW"),
+    F("SW"),
+    F("WSW"),
+    F("W"),
+    F("WNW"),
+    F("NW"),
+    F("NNW")
+  };
+  constexpr size_t nrDirections = NR_ELEMENTS(directions);
+  const float stepsize          = (360.0f / nrDirections);
 
   if (degrees < 0) { degrees += 360; } // Allow for bearing -360 .. 359
-  int bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nr_directions;
+  const size_t bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nrDirections;
 
-  if (bearing_idx >= 0) {
-    switch (bearing_idx) {
-      case 0: return F("N");
-      case 1: return F("NNE");
-      case 2: return F("NE");
-      case 3: return F("ENE");
-      case 4: return F("E");
-      case 5: return F("ESE");
-      case 6: return F("SE");
-      case 7: return F("SSE");
-      case 8: return F("S");
-      case 9: return F("SSW");
-      case 10: return F("SW");
-      case 11: return F("WSW");
-      case 12: return F("W");
-      case 13: return F("WNW");
-      case 14: return F("NW");
-      case 15: return F("NNW");
-    }
+  if (bearing_idx < nrDirections) {
+    return directions[bearing_idx];
   }
   return F("");
 }
 
 float CelsiusToFahrenheit(float celsius) {
-  return celsius * (9.0f / 5.0f) + 32;
+  constexpr float ratio = 9.0f / 5.0f;
+  return celsius * ratio + 32;
 }
 
 int m_secToBeaufort(float m_per_sec) {
-  if (m_per_sec < 0.3f) { return 0; }
-
-  if (m_per_sec < 1.6f) { return 1; }
-
-  if (m_per_sec < 3.4f) { return 2; }
-
-  if (m_per_sec < 5.5f) { return 3; }
-
-  if (m_per_sec < 8.0f) { return 4; }
-
-  if (m_per_sec < 10.8f) { return 5; }
-
-  if (m_per_sec < 13.9f) { return 6; }
-
-  if (m_per_sec < 17.2f) { return 7; }
-
-  if (m_per_sec < 20.8f) { return 8; }
-
-  if (m_per_sec < 24.5f) { return 9; }
-
-  if (m_per_sec < 28.5f) { return 10; }
-
-  if (m_per_sec < 32.6f) { return 11; }
-  return 12;
+  // Use ints wit 0.1 m/sec resolution to reduce size.
+  const uint16_t dm_per_sec = 10 * m_per_sec;
+  const uint16_t speeds[]{3, 16, 34, 55, 80, 108, 139, 172, 208, 245, 285, 326};  
+  constexpr int nrElements = NR_ELEMENTS(speeds);
+  
+  for (int bft = 0; bft < nrElements; ++bft) {
+    if (dm_per_sec < speeds[bft]) return bft;
+  }
+  return nrElements;  
 }
 
 String centimeterToImperialLength(float cm) {
@@ -145,7 +132,7 @@ String format_msec_duration(int64_t duration) {
   String result;
 
   if (duration < 0) {
-    result   = "-";
+    result   = '-';
     duration = -1ll * duration;
   }
 
@@ -242,67 +229,4 @@ float ul2float(unsigned long ul)
   return f;
 }
 
-/*********************************************************************************************\
-   Workaround for removing trailing white space when String() converts a float with 0 decimals
-\*********************************************************************************************/
-String toString(const float& value, unsigned int decimalPlaces)
-{
-  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
-  // https://github.com/espressif/arduino-esp32/pull/6138/files
-//  #ifdef ESP8266
-  char *buf = (char*)malloc(decimalPlaces + 42);
-  if (nullptr == buf) {
-    return F("nan");
-  }
-  String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
-  free(buf);
-//  #else
-//  String sValue = String(value, decimalPlaces);
-//  #endif
 
-  sValue.trim();
-  return sValue;
-}
-
-String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros) {
-  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
-  // https://github.com/espressif/arduino-esp32/pull/6138/files
-//  #ifdef ESP8266
-  unsigned int expectedChars = decimalPlaces + 4; // 1 dot, 2 minus signs and terminating zero
-  if (value > 1e32 || value < -1e32) {
-    expectedChars += 308; // Just assume the worst
-  } else {
-    expectedChars += 33;
-  }
-  char *buf = (char*)malloc(expectedChars);
-
-  if (nullptr == buf) {
-    return F("nan");
-  }
-  String res(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
-  free(buf);
-
-//  #else
-//  String res(value, decimalPlaces);
-//  #endif
-  res.trim();
-
-  if (trimTrailingZeros) {
-    int dot_pos = res.lastIndexOf('.');
-    if (dot_pos != -1) {
-      bool someTrimmed = false;
-      for (int i = res.length()-1; i > dot_pos && res[i] == '0'; --i) {
-        someTrimmed = true;
-        res[i] = ' ';
-      }
-      if (someTrimmed) {
-        res.trim();
-      }
-      if (res.endsWith(F("."))) {
-        res[dot_pos] = ' ';
-        res.trim();
-      }
-    }
-  }
-  return res;
-}

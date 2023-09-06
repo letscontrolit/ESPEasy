@@ -22,7 +22,7 @@
 #define PLUGIN_GET_DEVICEVALUECOUNT        13 // Optional function call to allow tasks to specify the number of output values (e.g. P026_Sysinfo.ino)
 #define PLUGIN_GET_DEVICEVTYPE             14 // Only needed when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
 #define PLUGIN_WRITE                       15 // Called to allow a task to process a command. Must return success = true when it can handle the command.
-#define PLUGIN_EVENT_OUT                   16 // Does not seem to be used
+//#define PLUGIN_EVENT_OUT                   16 // Does not seem to be used
 #define PLUGIN_WEBFORM_SHOW_CONFIG         17 // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
 #define PLUGIN_SERIAL_IN                   18 // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
 #define PLUGIN_UDP_IN                      19 // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)
@@ -51,11 +51,15 @@
 #define PLUGIN_WEBFORM_LOAD_SHOW_STATS     40 // Show PluginStats on task config page
 #endif // if FEATURE_PLUGIN_STATS
 #define PLUGIN_I2C_HAS_ADDRESS             41 // Check the I2C addresses from the plugin, output in 'success'
-#define PLUGIN_GET_DISPLAY_PARAMETERS      42 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
-#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 43 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
-#define PLUGIN_INIT_VALUE_RANGES           44 // Initialize the ranges of values, called just before PLUGIN_INIT
-#define PLUGIN_READ_ERROR_OCCURED          45 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
-#define PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR 46 // Show the configuration for output type and what value to set to which taskvalue
+#define PLUGIN_I2C_GET_ADDRESS             42 // Get the current I2C addresses from the plugin, output in 'event->Par1' and 'success'
+#define PLUGIN_GET_DISPLAY_PARAMETERS      43 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
+#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 44 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
+#define PLUGIN_INIT_VALUE_RANGES           45 // Initialize the ranges of values, called just before PLUGIN_INIT
+#define PLUGIN_READ_ERROR_OCCURED          46 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
+#define PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR 47 // Show the configuration for output type and what value to set to which taskvalue
+#define PLUGIN_PROCESS_CONTROLLER_DATA     48 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
+#define PLUGIN_PRIORITY_INIT_ALL           49 // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
+#define PLUGIN_PRIORITY_INIT               50 // Pre-initialize a singe plugins that is set to PowerManager priority
 
 
 

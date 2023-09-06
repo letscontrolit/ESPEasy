@@ -2,14 +2,12 @@
 
 #ifdef USES_P002
 
-# include "../Helpers/Rules_calculate.h"
+# include "../Globals/RulesCalculate.h"
 
 
 # ifndef DEFAULT_VREF
 #  define DEFAULT_VREF 1100
 # endif // ifndef DEFAULT_VREF
-
-
 
 
 void P002_data_struct::init(struct EventStruct *event)
@@ -38,7 +36,7 @@ void P002_data_struct::init(struct EventStruct *event)
     _calib_out1           = P002_CALIBRATION_VALUE1;
     _calib_out2           = P002_CALIBRATION_VALUE2;
   }
-  _nrDecimals        = Cache.getTaskDeviceValueDecimals(event->TaskIndex, 0);
+  _nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, 0);
 # ifndef LIMIT_BUILD_SIZE
   _nrMultiPointItems = P002_NR_MULTIPOINT_ITEMS;
   _useMultipoint     = P002_MULTIPOINT_ENABLED;
@@ -85,11 +83,12 @@ void P002_data_struct::webformLoad_2p_calibPoint(
   addRowLabel_tr_id(label, id_point);
   addTextBox(id_point, String(point), 10, false, false, EMPTY_STRING, F("number"));
 
-#ifdef ESP32
+# ifdef ESP32
+
   if (_useFactoryCalibration) {
     addUnit(F("mV"));
   }
-#endif
+# endif // ifdef ESP32
 
   html_add_estimate_symbol();
   const unsigned int display_nrDecimals = _nrDecimals > 3 ? _nrDecimals : 3;
@@ -104,9 +103,10 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   const float currentValue = P002_data_struct::getCurrentValue(event, raw_value);
 
 # if FEATURE_PLUGIN_STATS
+  PluginStats *stats = getPluginStats(0);
 
-  if (getPluginStats(0) != nullptr) {
-    getPluginStats(0)->trackPeak(raw_value);
+  if (stats != nullptr) {
+    stats->trackPeak(raw_value);
   }
 # endif // if FEATURE_PLUGIN_STATS
 
@@ -127,7 +127,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       P002_ADC_2_5db,
       P002_ADC_0db
     };
-    addFormSelector(F("Attenuation"), F("p002_attn"), 4, outputOptions, outputOptionValues, P002_ATTENUATION);
+    addFormSelector(F("Attenuation"), F("attn"), 4, outputOptions, outputOptionValues, P002_ATTENUATION);
   }
 
 # endif // ifdef ESP32
@@ -152,12 +152,12 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 # else // ifndef LIMIT_BUILD_SIZE
     const int nrOptions = 2;
 # endif // ifndef LIMIT_BUILD_SIZE
-    addFormSelector(F("Oversampling"), F("p002_oversampling"), nrOptions, outputOptions, outputOptionValues, P002_OVERSAMPLING);
+    addFormSelector(F("Oversampling"), F("oversampling"), nrOptions, outputOptions, outputOptionValues, P002_OVERSAMPLING);
   }
 
 # ifdef ESP32
   addFormSubHeader(F("Factory Calibration"));
-  addFormCheckBox(F("Apply Factory Calibration"), F("p002_fac_cal"), P002_APPLY_FACTORY_CALIB, !hasADC_factory_calibration());
+  addFormCheckBox(F("Apply Factory Calibration"), F("fac_cal"), P002_APPLY_FACTORY_CALIB, !hasADC_factory_calibration());
   addFormNote(F("When checked, reading is in mV"));
 
   if (hasADC_factory_calibration()) {
@@ -190,25 +190,25 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   addFormSubHeader(F("Two Point Calibration"));
 
-  addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), P002_CALIBRATION_ENABLED);
+  addFormCheckBox(F("Calibration Enabled"), F("cal"), P002_CALIBRATION_ENABLED);
 
-#ifdef ESP8266
-#if FEATURE_ADC_VCC
+# ifdef ESP8266
+#  if FEATURE_ADC_VCC
   addFormNote(F("Measuring ESP VCC, not A0. Unit is 1/1024 V. See documentation."));
-#endif
-#endif
+#  endif // if FEATURE_ADC_VCC
+# endif // ifdef ESP8266
 
 
   webformLoad_2p_calibPoint(
     F("Point 1"),
-    F("p002_adc1"),
-    F("p002_out1"),
+    F("adc1"),
+    F("out1"),
     P002_CALIBRATION_POINT1,
     P002_CALIBRATION_VALUE1);
   webformLoad_2p_calibPoint(
     F("Point 2"),
-    F("p002_adc2"),
-    F("p002_out2"),
+    F("adc2"),
+    F("out2"),
     P002_CALIBRATION_POINT2,
     P002_CALIBRATION_VALUE2);
 
@@ -244,7 +244,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   const bool useBinning = P002_OVERSAMPLING == P002_USE_BINNING;
   addFormSubHeader(useBinning ? F("Binning Processing") : F("Multipoint Processing"));
   addFormCheckBox(useBinning ? F("Binning Processing Enabled") : F("Multipoint Processing Enabled"),
-                  F("p002_multi_en"),
+                  F("multi_en"),
                   P002_MULTIPOINT_ENABLED);
 
   if (useBinning) {
@@ -252,7 +252,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   }
 
   addFormNumericBox(useBinning ? F("Nr of Bins") : F("Nr Multipoint Fields"),
-                    F("p002_nr_mp"),
+                    F("nr_mp"),
                     P002_NR_MULTIPOINT_ITEMS,
                     0,
                     P002_MAX_NR_MP_ITEMS);
@@ -269,13 +269,28 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     addFormTextBox(F("query-input widenumber"),
                    label,
                    getPluginCustomArgName(varNr),
-                   _multipoint.size() > line_nr ? doubleToString(static_cast<double>(_multipoint[line_nr]._adc), _nrDecimals,
-                                                                 true) : EMPTY_STRING,
+
+                   _multipoint.size() > line_nr ?
+#  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                   doubleToString
+#  else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                   floatToString
+#  endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                     (static_cast<ESPEASY_RULES_FLOAT_TYPE>(_multipoint[line_nr]._adc),
+                     _nrDecimals,
+                     true) : EMPTY_STRING,
                    0);
     html_add_estimate_symbol();
     addTextBox(getPluginCustomArgName(varNr + 1),
-               _multipoint.size() > line_nr ?  doubleToString(static_cast<double>(_multipoint[line_nr]._value), _nrDecimals,
-                                                              true) : EMPTY_STRING,
+               _multipoint.size() > line_nr ?
+#  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+               doubleToString
+#  else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+               floatToString
+#  endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                 (static_cast<ESPEASY_RULES_FLOAT_TYPE>(_multipoint[line_nr]._value),
+                 _nrDecimals,
+                 true) : EMPTY_STRING,
                0,
                false,
                false,
@@ -295,7 +310,7 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
   bool somethingAdded = false;
 
-  const PluginStats* stats = getPluginStats(0);
+  const PluginStats *stats = getPluginStats(0);
 
   if (stats != nullptr) {
     if (stats->webformLoad_show_avg(event)) { somethingAdded = true; }
@@ -672,39 +687,26 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
 
 String P002_data_struct::webformSave(struct EventStruct *event)
 {
-  P002_OVERSAMPLING = getFormItemInt(F("p002_oversampling"), 0); // Set a default for LIMIT_BUILD_SIZE
+  P002_OVERSAMPLING = getFormItemInt(F("oversampling"), 0); // Set a default for LIMIT_BUILD_SIZE
 
-  P002_CALIBRATION_ENABLED = isFormItemChecked(F("p002_cal"));
+  P002_CALIBRATION_ENABLED = isFormItemChecked(F("cal"));
   # ifdef ESP32
-  P002_APPLY_FACTORY_CALIB = isFormItemChecked(F("p002_fac_cal"));
-  P002_ATTENUATION         = getFormItemInt(F("p002_attn"));
+  P002_APPLY_FACTORY_CALIB = isFormItemChecked(F("fac_cal"));
+  P002_ATTENUATION         = getFormItemInt(F("attn"));
   # endif // ifdef ESP32
 
-  {
-    // Map the input "point" values to the nearest int.
-    const float adc1 = getFormItemFloat(F("p002_adc1"));
-    const float adc2 = getFormItemFloat(F("p002_adc2"));
-
-    const float out1 = getFormItemFloat(F("p002_out1"));
-    const float out2 = getFormItemFloat(F("p002_out2"));
-
-
-    P002_CALIBRATION_POINT1 = lround(adc1);
-    P002_CALIBRATION_POINT2 = lround(adc2);
-    P002_CALIBRATION_VALUE1 = mapADCtoFloat(
-      P002_CALIBRATION_POINT1,
-      adc1, adc2,
-      out1, out2);
-    P002_CALIBRATION_VALUE2 = mapADCtoFloat(
-      P002_CALIBRATION_POINT2,
-      adc1, adc2,
-      out1, out2);
-  }
+  // Map the input "point" values to the nearest int.
+  setTwoPointCalibration(
+    event,
+    getFormItemFloat(F("adc1")),
+    getFormItemFloat(F("adc2")),
+    getFormItemFloat(F("out1")),
+    getFormItemFloat(F("out2")));
 
 # ifndef LIMIT_BUILD_SIZE
-  P002_MULTIPOINT_ENABLED = isFormItemChecked(F("p002_multi_en"));
+  P002_MULTIPOINT_ENABLED = isFormItemChecked(F("multi_en"));
 
-  P002_NR_MULTIPOINT_ITEMS = getFormItemInt(F("p002_nr_mp"));
+  P002_NR_MULTIPOINT_ITEMS = getFormItemInt(F("nr_mp"));
 
   const size_t nr_lines = P002_Nlines;
   String lines[nr_lines];
@@ -743,9 +745,10 @@ void P002_data_struct::takeSample()
   int raw = espeasy_analogRead(_pin_analogRead);
 
 # if FEATURE_PLUGIN_STATS
+  PluginStats *stats = getPluginStats(0);
 
-  if (getPluginStats(0) != nullptr) {
-    getPluginStats(0)->trackPeak(raw);
+  if (stats != nullptr) {
+    stats->trackPeak(raw);
   }
 # endif // if FEATURE_PLUGIN_STATS
 
@@ -795,8 +798,10 @@ bool P002_data_struct::getValue(float& float_value,
   raw_value = espeasy_analogRead(_pin_analogRead);
 # if FEATURE_PLUGIN_STATS
 
-  if (getPluginStats(0) != nullptr) {
-    getPluginStats(0)->trackPeak(raw_value);
+  PluginStats *stats = getPluginStats(0);
+
+  if (stats != nullptr) {
+    stats->trackPeak(raw_value);
   }
 # endif // if FEATURE_PLUGIN_STATS
   float_value = raw_value;
@@ -853,48 +858,22 @@ void P002_data_struct::reset()
 # endif // ifndef LIMIT_BUILD_SIZE
 }
 
+uint32_t P002_data_struct::getOversamplingCount() const
+{
+  return OverSampling.getCount();
+}
+
 void P002_data_struct::resetOversampling() {
-  OversamplingValue  = 0;
-  OversamplingCount  = 0;
-  OversamplingMinVal = MAX_ADC_VALUE;
-  OversamplingMaxVal = -MAX_ADC_VALUE;
+  OverSampling.reset();
 }
 
 void P002_data_struct::addOversamplingValue(int currentValue) {
-  // Extra check to only add min or max readings once.
-  // They will be taken out of the averaging only one time.
-  if ((currentValue == 0) && (currentValue == OversamplingMinVal)) {
-    return;
-  }
-
-  if ((currentValue == MAX_ADC_VALUE) && (currentValue == OversamplingMaxVal)) {
-    return;
-  }
-
-  OversamplingValue += currentValue;
-  ++OversamplingCount;
-
-  if (currentValue > OversamplingMaxVal) {
-    OversamplingMaxVal = currentValue;
-  }
-
-  if (currentValue < OversamplingMinVal) {
-    OversamplingMinVal = currentValue;
-  }
+  OverSampling.add(currentValue);
 }
 
 bool P002_data_struct::getOversamplingValue(float& float_value, int& raw_value) const {
-  if (OversamplingCount > 0) {
-    float sum   = static_cast<float>(OversamplingValue);
-    float count = static_cast<float>(OversamplingCount);
-
-    if (OversamplingCount >= 3) {
-      sum   -= OversamplingMaxVal;
-      sum   -= OversamplingMinVal;
-      count -= 2;
-    }
-    float_value = sum / count;
-    raw_value   = static_cast<int>(float_value);
+  if (OverSampling.peek(float_value)) {
+    raw_value = static_cast<int>(float_value);
 
 # ifdef ESP32
 
@@ -963,7 +942,7 @@ int P002_data_struct::computeADC_to_bin(const int& currentValue) const
 
     formula.replace(F("%value%"), toString(calibrated_value, _nrDecimals));
 
-    double result = 0;
+    ESPEASY_RULES_FLOAT_TYPE result{};
 
     if (!isError(RulesCalculate.doCalculate(parseTemplate(formula).c_str(), &result))) {
       calibrated_value = result;
@@ -1006,14 +985,11 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
   #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("ADC getBinnedValue: bin cnt: ");
-
-    log += highest_bin_count;
-    log += F(" Value: ");
-    log += float_value;
-    log += F(" RAW: ");
-    log += raw_value;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG,
+               strformat(F("ADC getBinnedValue: bin cnt: %u  Value: %f RAW: %d"),
+                         highest_bin_count,
+                         float_value,
+                         raw_value));
   }
   #  endif // ifndef BUILD_NO_DEBUG
 
@@ -1197,5 +1173,66 @@ float P002_data_struct::mapADCtoFloat(float float_value,
   return float_value;
 }
 
+void P002_data_struct::setTwoPointCalibration(
+  struct EventStruct *event,
+  float               adc1,
+  float               adc2,
+  float               out1,
+  float               out2)
+{
+  P002_CALIBRATION_POINT1 = lround(adc1);
+  P002_CALIBRATION_POINT2 = lround(adc2);
+  P002_CALIBRATION_VALUE1 = mapADCtoFloat(
+    P002_CALIBRATION_POINT1,
+    adc1, adc2,
+    out1, out2);
+  P002_CALIBRATION_VALUE2 = mapADCtoFloat(
+    P002_CALIBRATION_POINT2,
+    adc1, adc2,
+    out1, out2);
+}
+
+/*****************************************************
+ * plugin_set_config
+ ****************************************************/
+bool P002_data_struct::plugin_set_config(struct EventStruct *event,
+                                         String            & string) {
+  bool success     = false;
+  const String cmd = parseString(string, 1);
+
+  if (equals(cmd, F("setcalib"))) {
+    const String sub = parseString(string, 2);
+
+    if (equals(sub, F("twopoint"))) {
+      // Command:
+      // 1 point : adcsetcalib,twopoint,ADC1,out1
+      // 2 points: adcsetcalib,twopoint,ADC1,out1,ADC2,out2
+      float adc1{};
+      float out1{};
+      float adc2{};
+      float out2{};
+
+      if (validFloatFromString(parseString(string, 3), adc1) &&
+          validFloatFromString(parseString(string, 4), out1))
+      {
+        success = true;
+      }
+
+      if (!validFloatFromString(parseString(string, 5), adc2) ||
+          !validFloatFromString(parseString(string, 6), out2))
+      {
+        // Not a complete 2nd calibration point, so make sure to set both values to 0.
+        adc2 = 0;
+        out2 = 0;
+      }
+
+      if (success) {
+        setTwoPointCalibration(event, adc1, adc2, out1, out2);
+      }
+    }
+  }
+
+  return success;
+}
 
 #endif // ifdef USES_P002

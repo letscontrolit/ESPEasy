@@ -91,8 +91,7 @@ void serve_favicon() {
   addHtmlAttribute(F("rel"), F("icon"));
   addHtmlAttribute(F("type"), F("image/x-icon"));
   addHtmlAttribute(F("href"), generate_external_URL(F("favicon.ico"), true));
-  addHtml('/');
-  addHtml('>');
+  addHtml('/', '>');
   #endif
 }
 

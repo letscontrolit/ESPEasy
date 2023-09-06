@@ -7,7 +7,7 @@
 # include <Adafruit_TCS34725.h>
 
 typedef struct {
-  float matrix[3][3];
+  float matrix[3][3]={};
 } tcsTransformationSettings_t;
 
 struct P050_data_struct : public PluginTaskData_base {

@@ -120,7 +120,6 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         {
-          uint8_t choice = PCONFIG(0);
           const __FlashStringHelper * options[4] = {
             F("Yewelink/TUYA"),
             F("Sonoff Dual"),
@@ -128,61 +127,61 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             F("Moes Wifi Dimmer")
           };
           const int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
-          addFormSelector(F("Switch Type"), F("plugin_091_type"), 4, options, optionValues, choice);
+          addFormSelector(F("Switch Type"), F("type"), 4, options, optionValues, PCONFIG(0));
         }
 
         if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
-          uint8_t choice = PCONFIG(1);
-          const __FlashStringHelper * buttonOptions[4];
-          buttonOptions[0] = F("1");
-          buttonOptions[1] = F("2/Dimmer#2");
-          buttonOptions[2] = F("3/Dimmer#3");
-          buttonOptions[3] = F("4");
-          int buttonoptionValues[4] = { 1, 2, 3, 4 };
-          addFormSelector(F("Number of relays"), F("plugin_091_button"), 4, buttonOptions, buttonoptionValues, choice);
+          const __FlashStringHelper * buttonOptions[4] = {
+            F("1"),
+            F("2/Dimmer#2"),
+            F("3/Dimmer#3"),
+            F("4"),
+          };
+          const int buttonoptionValues[4] = { 1, 2, 3, 4 };
+          addFormSelector(F("Number of relays"), F("button"), 4, buttonOptions, buttonoptionValues, PCONFIG(1));
         }
 
         if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
-          uint8_t choice = PCONFIG(1);
-          const __FlashStringHelper * modeoptions[3];
-          modeoptions[0] = F("Normal");
-          modeoptions[1] = F("Exclude/Blinds mode");
-          modeoptions[2] = F("Simultaneous mode");
-          int modeoptionValues[3] = { 0, 1, 2 };
-          addFormSelector(F("Relay working mode"), F("plugin_091_mode"), 3, modeoptions, modeoptionValues, choice);
+          const __FlashStringHelper * modeoptions[3] = {
+            F("Normal"),
+            F("Exclude/Blinds mode"),
+            F("Simultaneous mode"),
+          };
+          const int modeoptionValues[3] = { 0, 1, 2 };
+          addFormSelector(F("Relay working mode"), F("mode"), 3, modeoptions, modeoptionValues, PCONFIG(1));
         }
 
         if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
           {
-            uint8_t choice = PCONFIG(1);
-            const __FlashStringHelper * buttonOptions[4];
-            buttonOptions[0] = F("1");
-            buttonOptions[1] = F("2");
-            buttonOptions[2] = F("3");
-            buttonOptions[3] = F("4");
-            int buttonoptionValues[4] = { 1, 2, 3, 4 };
-            addFormSelector(F("Number of relays"), F("plugin_091_button"), 4, buttonOptions, buttonoptionValues, choice);
+            const __FlashStringHelper * buttonOptions[4] = {
+              F("1"),
+              F("2"),
+              F("3"),
+              F("4"),
+            };
+            const int buttonoptionValues[4] = { 1, 2, 3, 4 };
+            addFormSelector(F("Number of relays"), F("button"), 4, buttonOptions, buttonoptionValues, PCONFIG(1));
           }
 
           {
-            uint8_t choice = PCONFIG(2);
-            const __FlashStringHelper * speedOptions[8];
-            speedOptions[0] = F("9600");
-            speedOptions[1] = F("19200");
-            speedOptions[2] = F("115200");
-            speedOptions[3] = F("1200");
-            speedOptions[4] = F("2400");
-            speedOptions[5] = F("4800");
-            speedOptions[6] = F("38400");
-            speedOptions[7] = F("57600");
-            addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, nullptr, choice);
+            const __FlashStringHelper * speedOptions[8] = {
+              F("9600"),
+              F("19200"),
+              F("115200"),
+              F("1200"),
+              F("2400"),
+              F("4800"),
+              F("38400"),
+              F("57600"),
+            };
+            addFormSelector(F("Serial speed"), F("speed"), 8, speedOptions, nullptr, PCONFIG(2));
           }
 
-          addFormCheckBox(F("Use command doubling"), F("plugin_091_dbl"), PCONFIG(3));
-          addFormCheckBox(F("Use IPD preamble"), F("plugin_091_ipd"), PCONFIG(4));
+          addFormCheckBox(F("Use command doubling"), F("dbl"), PCONFIG(3));
+          addFormCheckBox(F("Use IPD preamble"), F("ipd"), PCONFIG(4));
         }
 
         success = true;
@@ -192,21 +191,21 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
 
-        PCONFIG(0) = getFormItemInt(F("plugin_091_type"));
+        PCONFIG(0) = getFormItemInt(F("type"));
         if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
-          PCONFIG(1) = getFormItemInt(F("plugin_091_button"));
+          PCONFIG(1) = getFormItemInt(F("button"));
         }
         if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
-          PCONFIG(1) = getFormItemInt(F("plugin_091_mode"));
+          PCONFIG(1) = getFormItemInt(F("mode"));
         }
         if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
-          PCONFIG(1) = getFormItemInt(F("plugin_091_button"));
-          PCONFIG(2) = getFormItemInt(F("plugin_091_speed"));
-          PCONFIG(3) = isFormItemChecked(F("plugin_091_dbl"));
-          PCONFIG(4) = isFormItemChecked(F("plugin_091_ipd"));
+          PCONFIG(1) = getFormItemInt(F("button"));
+          PCONFIG(2) = getFormItemInt(F("speed"));
+          PCONFIG(3) = isFormItemChecked(F("dbl"));
+          PCONFIG(4) = isFormItemChecked(F("ipd"));
           Plugin_091_cmddbl = PCONFIG(3);
           Plugin_091_ipd    = PCONFIG(4);
         }
@@ -221,29 +220,28 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         String log;
-        LoadTaskSettings(event->TaskIndex);
         Plugin_091_ownindex = event->TaskIndex;
         Settings.UseSerial = true;         // make sure that serial enabled
         Settings.SerialLogLevel = 0;       // and logging disabled
-        Serial.setDebugOutput(false);      // really, disable it!
+        ESPEASY_SERIAL_0.setDebugOutput(false);      // really, disable it!
         log = F("SerSW : Init ");
         if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
           Plugin_091_numrelay = PCONFIG(1);
-          Serial.begin(9600, SERIAL_8N1);
-          Serial.setRxBufferSize(BUFFER_SIZE); // Arduino core for ESP8266 WiFi chip 2.4.0
+          ESPEASY_SERIAL_0.begin(9600, SERIAL_8N1);
+          ESPEASY_SERIAL_0.setRxBufferSize(BUFFER_SIZE); // Arduino core for ESP8266 WiFi chip 2.4.0
           delay(1);
           getmcustate(); // request status on startup
           log += F(" Yewe ");
           log += Plugin_091_numrelay;
           log += F(" btn");
-        }
+        } else
         if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
           Plugin_091_numrelay = 3; // 3rd button is the "wifi" button
-          Serial.begin(19230, SERIAL_8N1);
+          ESPEASY_SERIAL_0.begin(19230, SERIAL_8N1);
           log += F(" Sonoff Dual");
-        }
+        } else
         if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
           Plugin_091_numrelay = PCONFIG(1);
@@ -280,19 +278,19 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                 break;
               }
           }
-          Serial.begin(Plugin_091_speed, SERIAL_8N1);
+          ESPEASY_SERIAL_0.begin(Plugin_091_speed, SERIAL_8N1);
           log += F(" LCTech ");
           log += Plugin_091_speed;
           log += F(" baud ");
           log += Plugin_091_numrelay;
           log += F(" btn");
-        }
+        } else
         if (PCONFIG(0) == SER_SWITCH_WIFIDIMMER)
         {
           Plugin_091_numrelay = 2; // 2nd button is the dimvalue
           Plugin_091_switchstate[1] = 255;
           Plugin_091_ostate[1] = 255;
-          Serial.begin(9600, SERIAL_8N1);
+          ESPEASY_SERIAL_0.begin(9600, SERIAL_8N1);
           log += F(" Wifi Dimmer");
         }
 
@@ -329,10 +327,10 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
         if (Plugin_091_init)
         {
-          while (Serial.available() > 0) {
+          while (ESPEASY_SERIAL_0.available() > 0) {
             yield();
             if (bytes_read < BUFFER_SIZE) {
-              serial_buf[bytes_read] = Serial.read();
+              serial_buf[bytes_read] = ESPEASY_SERIAL_0.read();
 
               if (bytes_read == 0) { // packet start
 
@@ -536,7 +534,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                 bytes_read++;
               }
             } else
-              Serial.read(); // if buffer full, dump incoming
+              ESPEASY_SERIAL_0.read(); // if buffer full, dump incoming
           }
         } // plugin initialized end
         success = true;
@@ -576,7 +574,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
         if (Plugin_091_init)
         {
-          if ( command.equals(F("relay"))) // deal with relay change command
+          if ( equals(command, F("relay"))) // deal with relay change command
           {
             success = true;
 
@@ -587,7 +585,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               rcmd = event->Par2;
             }
 
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if (event->Par2 == 2) { // toggle
@@ -624,9 +622,9 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               log += rcmd;
               addLogMove(LOG_LEVEL_INFO, log);
             }
-          }
+          } else
 
-          if ( command.equals(F("relaypulse")))
+          if ( equals(command, F("relaypulse")))
           {
             success = true;
 
@@ -636,7 +634,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             if ((event->Par2 == 0) || (event->Par2 == 1)) {
               rcmd = event->Par2;
             }
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -676,9 +674,9 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               log += F(" mS");
               addLogMove(LOG_LEVEL_INFO, log);
             }
-          }
+          } else
 
-          if ( command.equals(F("relaylongpulse")))
+          if ( equals(command, F("relaylongpulse")))
           {
             success = true;
 
@@ -688,7 +686,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             if ((event->Par2 == 0) || (event->Par2 == 1)) {
               rcmd = event->Par2;
             }
-            LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+            // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
             event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -729,13 +727,13 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               log += F(" sec");
               addLogMove(LOG_LEVEL_INFO, log);
             }
-          }
-          if ( command.equals(F("ydim")) ) // deal with dimmer command
+          } else
+          if ( equals(command, F("ydim")) ) // deal with dimmer command
           {
             if (( (Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) { // only on tuya dimmer
               success = true;
 
-              LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+              // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
               event->setTaskIndex(Plugin_091_ownindex);
 
               sendmcudim(event->Par1, Plugin_091_globalpar0);
@@ -770,7 +768,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t par3 = 0;
 
-        LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
+        // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
         event->setTaskIndex(Plugin_091_ownindex);
 
         if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -819,14 +817,14 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 }
 
 void getmcustate() {
-  Serial.write(0x55); // Tuya header 55AA
-  Serial.write(0xAA);
-  Serial.write(0x00); // version 00
-  Serial.write(0x08); // Tuya command 08 - request status
-  Serial.write(0x00);
-  Serial.write(0x00);
-  Serial.write(0x07);
-  Serial.flush();
+  ESPEASY_SERIAL_0.write(0x55); // Tuya header 55AA
+  ESPEASY_SERIAL_0.write(0xAA);
+  ESPEASY_SERIAL_0.write(0x00); // version 00
+  ESPEASY_SERIAL_0.write(0x08); // Tuya command 08 - request status
+  ESPEASY_SERIAL_0.write(0x00);
+  ESPEASY_SERIAL_0.write(0x00);
+  ESPEASY_SERIAL_0.write(0x07);
+  ESPEASY_SERIAL_0.flush();
 }
 
 void sendmcucommand(uint8_t btnnum, uint8_t state, uint8_t swtype, uint8_t btnum_mode) // btnnum=0,1,2, state=0/1
@@ -837,19 +835,19 @@ void sendmcucommand(uint8_t btnnum, uint8_t state, uint8_t swtype, uint8_t btnum
   {
     case SER_SWITCH_YEWE:
       {
-        Serial.write(0x55); // Tuya header 55AA
-        Serial.write(0xAA);
-        Serial.write(0x00); // version 00
-        Serial.write(0x06); // Tuya command 06 - send order
-        Serial.write(0x00);
-        Serial.write(0x05); // following data length 0x05
-        Serial.write( (btnnum + 1) ); // relay number 1,2,3
-        Serial.write(0x01); // ?
-        Serial.write(0x00); // ?
-        Serial.write(0x01); // ?
-        Serial.write( state ); // status
-        Serial.write((13 + btnnum + state)); // checksum:sum of all bytes in packet mod 256
-        Serial.flush();
+        ESPEASY_SERIAL_0.write(0x55); // Tuya header 55AA
+        ESPEASY_SERIAL_0.write(0xAA);
+        ESPEASY_SERIAL_0.write(0x00); // version 00
+        ESPEASY_SERIAL_0.write(0x06); // Tuya command 06 - send order
+        ESPEASY_SERIAL_0.write(0x00);
+        ESPEASY_SERIAL_0.write(0x05); // following data length 0x05
+        ESPEASY_SERIAL_0.write( (btnnum + 1) ); // relay number 1,2,3
+        ESPEASY_SERIAL_0.write(0x01); // ?
+        ESPEASY_SERIAL_0.write(0x00); // ?
+        ESPEASY_SERIAL_0.write(0x01); // ?
+        ESPEASY_SERIAL_0.write( state ); // status
+        ESPEASY_SERIAL_0.write((13 + btnnum + state)); // checksum:sum of all bytes in packet mod 256
+        ESPEASY_SERIAL_0.flush();
         break;
       }
     case SER_SWITCH_SONOFFDUAL:
@@ -865,11 +863,11 @@ void sendmcucommand(uint8_t btnnum, uint8_t state, uint8_t swtype, uint8_t btnum
           Plugin_091_switchstate[1] = state;
         }
         sstate = Plugin_091_switchstate[0] + (Plugin_091_switchstate[1] << 1) + (Plugin_091_switchstate[2] << 2);
-        Serial.write(0xA0);
-        Serial.write(0x04);
-        Serial.write( sstate );
-        Serial.write(0xA1);
-        Serial.flush();
+        ESPEASY_SERIAL_0.write(0xA0);
+        ESPEASY_SERIAL_0.write(0x04);
+        ESPEASY_SERIAL_0.write( sstate );
+        ESPEASY_SERIAL_0.write(0xA1);
+        ESPEASY_SERIAL_0.flush();
         break;
       }
     case SER_SWITCH_LCTECH:
@@ -885,23 +883,23 @@ void sendmcucommand(uint8_t btnnum, uint8_t state, uint8_t swtype, uint8_t btnum
             delay(1);
           }
           if (Plugin_091_ipd) {
-            Serial.write(0x0D);
-            Serial.write(0x0A);
-            Serial.write(0x2B);
-            Serial.write(0x49);
-            Serial.write(0x50);
-            Serial.write(0x44);
-            Serial.write(0x2C);
-            Serial.write(0x30);
-            Serial.write(0x2C);
-            Serial.write(0x34);
-            Serial.write(0x3A);
+            ESPEASY_SERIAL_0.write(0x0D);
+            ESPEASY_SERIAL_0.write(0x0A);
+            ESPEASY_SERIAL_0.write(0x2B);
+            ESPEASY_SERIAL_0.write(0x49);
+            ESPEASY_SERIAL_0.write(0x50);
+            ESPEASY_SERIAL_0.write(0x44);
+            ESPEASY_SERIAL_0.write(0x2C);
+            ESPEASY_SERIAL_0.write(0x30);
+            ESPEASY_SERIAL_0.write(0x2C);
+            ESPEASY_SERIAL_0.write(0x34);
+            ESPEASY_SERIAL_0.write(0x3A);
           }
-          Serial.write(0xA0);
-          Serial.write((0x01 + btnnum));
-          Serial.write((0x00 + state));
-          Serial.write((0xA1 + state + btnnum));
-          Serial.flush();
+          ESPEASY_SERIAL_0.write(0xA0);
+          ESPEASY_SERIAL_0.write((0x01 + btnnum));
+          ESPEASY_SERIAL_0.write((0x00 + state));
+          ESPEASY_SERIAL_0.write((0xA1 + state + btnnum));
+          ESPEASY_SERIAL_0.flush();
         }
 
         break;
@@ -945,33 +943,33 @@ void sendmcudim(uint8_t dimvalue, uint8_t swtype)
   {
     case SER_SWITCH_YEWE:
       {
-        Serial.write(0x55); // Tuya header 55AA
-        Serial.write(0xAA);
-        Serial.write(0x00); // version 00
-        Serial.write(0x06); // Tuya command 06 - send order
-        Serial.write(0x00);
-        Serial.write(0x08); // following data length 0x08
-        Serial.write(Plugin_091_numrelay); // dimmer order-id? select it at plugin settings 2/3!!!
-        Serial.write(0x02); // type=value
-        Serial.write(0x00); // length hi
-        Serial.write(0x04); // length low
-        Serial.write(0x00); // ?
-        Serial.write(0x00); // ?
-        Serial.write(0x00); // ?
-        Serial.write( dimvalue ); // dim value (0-255)
-        Serial.write( uint8_t(19 + Plugin_091_numrelay + dimvalue) ); // checksum:sum of all bytes in packet mod 256
-        Serial.flush();
+        ESPEASY_SERIAL_0.write(0x55); // Tuya header 55AA
+        ESPEASY_SERIAL_0.write(0xAA);
+        ESPEASY_SERIAL_0.write(0x00); // version 00
+        ESPEASY_SERIAL_0.write(0x06); // Tuya command 06 - send order
+        ESPEASY_SERIAL_0.write(0x00);
+        ESPEASY_SERIAL_0.write(0x08); // following data length 0x08
+        ESPEASY_SERIAL_0.write(Plugin_091_numrelay); // dimmer order-id? select it at plugin settings 2/3!!!
+        ESPEASY_SERIAL_0.write(0x02); // type=value
+        ESPEASY_SERIAL_0.write(0x00); // length hi
+        ESPEASY_SERIAL_0.write(0x04); // length low
+        ESPEASY_SERIAL_0.write(0x00); // ?
+        ESPEASY_SERIAL_0.write(0x00); // ?
+        ESPEASY_SERIAL_0.write(0x00); // ?
+        ESPEASY_SERIAL_0.write( dimvalue ); // dim value (0-255)
+        ESPEASY_SERIAL_0.write( uint8_t(19 + Plugin_091_numrelay + dimvalue) ); // checksum:sum of all bytes in packet mod 256
+        ESPEASY_SERIAL_0.flush();
         break;
       }
     case SER_SWITCH_WIFIDIMMER:
       {
-        Serial.write(0xFF); // Wifidimmer header FF55
-        Serial.write(0x55);
-        Serial.write( dimvalue ); // dim value (0-255)
-        Serial.write(0x05);
-        Serial.write(0xDC);
-        Serial.write(0x0A);
-        Serial.flush();
+        ESPEASY_SERIAL_0.write(0xFF); // Wifidimmer header FF55
+        ESPEASY_SERIAL_0.write(0x55);
+        ESPEASY_SERIAL_0.write( dimvalue ); // dim value (0-255)
+        ESPEASY_SERIAL_0.write(0x05);
+        ESPEASY_SERIAL_0.write(0xDC);
+        ESPEASY_SERIAL_0.write(0x0A);
+        ESPEASY_SERIAL_0.flush();
         Plugin_091_switchstate[1] = dimvalue;
         break;
       }

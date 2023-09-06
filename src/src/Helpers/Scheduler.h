@@ -30,8 +30,11 @@ public:
     TIMER_GRATUITOUS_ARP,
     TIMER_MQTT_DELAY_QUEUE,
     TIMER_C001_DELAY_QUEUE,
+    TIMER_C002_DELAY_QUEUE, // MQTT controller
     TIMER_C003_DELAY_QUEUE,
     TIMER_C004_DELAY_QUEUE,
+    TIMER_C005_DELAY_QUEUE, // MQTT controller
+    TIMER_C006_DELAY_QUEUE, // MQTT controller
     TIMER_C007_DELAY_QUEUE,
     TIMER_C008_DELAY_QUEUE,
     TIMER_C009_DELAY_QUEUE,
@@ -293,6 +296,10 @@ public:
 #endif
 
 
+  // Create mixed ID for scheduling a system event to be handled by the scheduler.
+  // ptr_type: Indicating whether it should be handled by controller, plugin or notifier
+  // Index   : DeviceIndex / ProtocolIndex / NotificationProtocolIndex  (thus not the Plugin_ID/CPlugin_ID/NPlugin_ID, saving an extra lookup when processing)
+  // Function: The function to be called for handling the event.
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,
                                                 uint8_t       Index,
                                                 uint8_t       Function);

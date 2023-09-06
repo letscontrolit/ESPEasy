@@ -14,11 +14,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   documentation:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -39,11 +43,11 @@ jobs:
           name: Documentation
           path: ESPEasy_docs.zip
   generate-matrix:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -54,11 +58,11 @@ jobs:
 
   build:
     needs: generate-matrix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -79,7 +83,7 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt install binutils build-essential libffi-dev python-dev libgit2-dev
+          sudo apt install binutils build-essential libffi-dev libgit2-dev
           pip3 install --upgrade pip
           pip install -r requirements.txt
           platformio update
@@ -93,5 +97,113 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: Binaries
-          path: ESPEasy_${{ matrix.env }}.zip
+          path: |
+            bin
           if-no-files-found: ignore
+
+  # Repackage separately for ESP82xx and ESP32
+  repackage:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
+      - name: Get current date
+        id: date
+        run: |
+          echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+      - uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+      - name: Prepare artifacts
+        run: |
+          # ESP82xx
+          mkdir ESPEasy_dist_ESP82xx
+          cd dist
+          find . -exec cp -r --parents {} ../ESPEasy_dist_ESP82xx/ \;
+          rm ../ESPEasy_dist_ESP82xx/bin/blank_8MB.bin
+          cd ../artifacts/Binaries
+          find . -not -name '*ESP32*' -exec mv {} ../../ESPEasy_dist_ESP82xx/bin/ \;
+          cd ../..
+          # ESP32 and derived cpus, ESP32 (classic) _MUST_ be last in this list!
+          for cpu in ESP32s2 ESP32c3 ESP32s3 ESP32c2 ESP32c6 ESP32h2 ESP32solo1 ESP32
+          do
+            mkdir ESPEasy_dist_${cpu}
+            spec="*${cpu}*"
+            _files=$(find ./artifacts/Binaries -name "$spec"|wc -l)
+            if [[ $_files > 0 ]]; then
+              cd dist
+              find . -exec cp -r --parents {} ../ESPEasy_dist_${cpu}/ \;
+              cd ../ESPEasy_dist_${cpu}
+              rm bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
+              cd ../artifacts/Binaries
+              find . -name "$spec" -exec mv {} ../../ESPEasy_dist_${cpu}/bin/ \;
+              cd ../..
+            fi
+          done
+      # Each supported cpu has to be listed separately, but empty folders are ignored
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32solo1/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32s2/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32c3/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32s3/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32c2/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32c6/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32h2_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32h2/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP82xx/*
+          if-no-files-found: ignore
+      # When successfully re-packaged, the original Binaries can be removed
+      # comment below 3 lines to not remove the Binaries artifact after repackaging
+      - uses: geekyeggo/delete-artifact@v2
+        with:
+            name: Binaries

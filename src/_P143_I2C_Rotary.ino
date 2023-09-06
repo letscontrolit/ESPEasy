@@ -124,6 +124,15 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P143_I2C_ADDR;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = F("Encoder: ");
@@ -466,9 +475,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P143_data_struct(event));
       P143_data_struct *P143_data = static_cast<P143_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P143_data) {
-        success = P143_data->plugin_init(event);
-      }
+      success = (nullptr != P143_data) && P143_data->plugin_init(event);
       break;
     }
 

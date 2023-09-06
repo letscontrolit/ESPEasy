@@ -6,6 +6,9 @@
 #if FEATURE_CUSTOM_PROVISIONING
 # include "../CustomBuild/ESPEasyLimits.h"
 # include "../DataStructs/FactoryDefaultPref.h"
+# include "../DataTypes/ESPEasyFileType.h"
+
+# include <memory> // for std::shared_ptr
 
 /*********************************************************************************************\
 * ProvisioningStruct
@@ -22,6 +25,9 @@ struct ProvisioningStruct
   bool setPass(const String& password);
   bool setUrl(const String& url_str);
 
+  bool fetchFileTypeAllowed(FileType::Enum filetype, unsigned int filenr) const;
+  void setFetchFileTypeAllowed(FileType::Enum filetype, unsigned int filenr, bool checked);
+
   // its safe to extend this struct, up to 4096 bytes, default values in config are 0.
   uint8_t md5[16]        = { 0 };
   uint8_t ProgmemMd5[16] = { 0 }; // crc of the binary that last saved the struct to file.
@@ -32,14 +38,26 @@ struct ProvisioningStruct
   char user[26] = { 0 };
   char pass[64] = { 0 };
   char url[128] = { 0 };
+
+  union {
+    uint16_t allowed{};
+    struct {
+      uint16_t allowFetchFirmware :1;
+      uint16_t allowFetchConfigDat :1;
+      uint16_t allowFetchSecurityDat :1;
+      uint16_t allowFetchNotificationDat :1;
+      uint16_t allowFetchProvisioningDat :1;
+      uint16_t allowFetchRules :4;
+
+      uint16_t unused :7;  // Add to use full 16 bit.
+    } allowedFlags;
+  };
+
+
 };
 
 typedef std::shared_ptr<ProvisioningStruct> ProvisioningStruct_ptr_type;
-# define MakeProvisioningSettings(T) ProvisioningStruct_ptr_type ProvisioningStruct_ptr(new (std::nothrow)  ProvisioningStruct()); \
-  ProvisioningStruct& T = *ProvisioningStruct_ptr;
-
-// Check to see if MakeProvisioningSettings was successful
-# define AllocatedProvisioningSettings() (ProvisioningStruct_ptr.get() != nullptr)
+# define MakeProvisioningSettings(T) ProvisioningStruct_ptr_type T(new (std::nothrow) ProvisioningStruct());
 
 
 #endif // if FEATURE_CUSTOM_PROVISIONING

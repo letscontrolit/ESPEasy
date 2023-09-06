@@ -5,6 +5,7 @@
 #include "src/CustomBuild/ESPEasyLimits.h"
 #include "src/DataStructs/PluginTaskData_base.h"
 #include "src/DataStructs/SettingsStruct.h"
+#include "src/DataStructs/TimingStats.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
@@ -13,7 +14,7 @@
 #include "src/Helpers/StringParser.h"
 
 
-PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { nullptr, };
+PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
 
 
 String PCONFIG_LABEL(int n) {
@@ -48,38 +49,47 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
   clearPluginTaskData(taskIndex);
 
-  if (data == nullptr) {
-    return;
-  }
+  if (data != nullptr) {
+    if (Settings.TaskDeviceEnabled[taskIndex]) {
+      Plugin_task_data[taskIndex]                     = data;
+      Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
 
-  if (Settings.TaskDeviceEnabled[taskIndex]) {
-    Plugin_task_data[taskIndex]                     = data;
-    Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
-
-#if FEATURE_PLUGIN_STATS
-    const uint8_t valueCount = getValueCountForTask(taskIndex);
-    for (size_t i = 0; i < valueCount; ++i) {
-      if (Cache.enabledPluginStats(taskIndex, i)) {
-        Plugin_task_data[taskIndex]->initPluginStats(i);
+  #if FEATURE_PLUGIN_STATS
+      const uint8_t valueCount = getValueCountForTask(taskIndex);
+      for (size_t i = 0; i < valueCount; ++i) {
+        if (Cache.enabledPluginStats(taskIndex, i)) {
+          Plugin_task_data[taskIndex]->initPluginStats(i);
+        }
       }
+  #endif
+  #if FEATURE_PLUGIN_FILTER
+  // TODO TD-er: Implement init
+
+  #endif
+
+    } else {
+      delete data;
     }
-#endif
-#if FEATURE_PLUGIN_FILTER
-// TODO TD-er: Implement init
-
-#endif
-
-  } else if (data != nullptr) {
-    delete data;
   }
 }
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {
   if (pluginTaskData_initialized(taskIndex)) {
+    
+    if (!Plugin_task_data[taskIndex]->baseClassOnly()) {
+      return Plugin_task_data[taskIndex];
+    }
+  }
+  return nullptr;
+}
+
+PluginTaskData_base* getPluginTaskDataBaseClassOnly(taskIndex_t taskIndex) {
+  if (pluginTaskData_initialized(taskIndex)) {
     return Plugin_task_data[taskIndex];
   }
   return nullptr;
 }
+
 
 bool pluginTaskData_initialized(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) {
@@ -118,10 +128,13 @@ void pluginWebformShowValue(taskIndex_t   taskIndex,
   if (varNr > 0) {
     addHtmlDiv(F("div_br"));
   }
+  String postfix(taskIndex);
+  postfix += '_';
+  postfix += varNr;
 
   pluginWebformShowValue(
-    label, concat(F("valuename_"), static_cast<int>(taskIndex)) + '_' + varNr,
-    value, concat(F("value_"), static_cast<int>(taskIndex)) + '_' + varNr,
+    label, concat(F("valuename_"), postfix),
+    value, concat(F("value_"), postfix),
     addTrailingBreak);
 }
 
@@ -174,10 +187,12 @@ int getValueCountForTask(taskIndex_t taskIndex) {
 }
 
 int checkDeviceVTypeForTask(struct EventStruct *event) {
+  // TD-er:  Do not use event->getSensorType() here
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
     if (validTaskIndex(event->TaskIndex)) {
       String dummy;
 
+      event->idx = -1;
       if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
         return event->idx; // pconfig_index
       }

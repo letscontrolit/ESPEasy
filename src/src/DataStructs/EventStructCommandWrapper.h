@@ -1,7 +1,8 @@
 #ifndef DATASTRUCTS_EVENTSTRUCTCOMMANDWRAPPER_H
 #define DATASTRUCTS_EVENTSTRUCTCOMMANDWRAPPER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
 struct EventStructCommandWrapper {
