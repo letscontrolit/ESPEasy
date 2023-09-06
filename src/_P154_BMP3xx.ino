@@ -57,6 +57,7 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P154_I2C_ADDR);
+        addFormNote(F("SDO Low=0x76, High=0x77"));
       } else {
         success = intArrayContains(nrAddressOptions, i2cAddressValues, event->Par1);
       }
@@ -71,6 +72,12 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P154_I2C_ADDR = 0x77;
+      break;
+    }
 
     case PLUGIN_INIT:
     {
@@ -95,12 +102,17 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD:
+    {
+      success = P154_data_struct::webformLoad(event);
+      break;
+    }
+
     case PLUGIN_WEBFORM_SAVE:
     {
       success = P154_data_struct::webformSave(event);
       break;
     }
-
   }
   return success;
 }
