@@ -594,15 +594,15 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
     // Here we initialize all data to 0, so this is the ONLY reason why PinBootStates 
     // can now be directly accessed.
     // In all other use cases, use the get and set functions for it.
-    constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
+    constexpr size_t maxStates = NR_ELEMENTS(PinBootStates);
 
-    for (uint8_t i = 0; i < maxStates; ++i) {
+    for (size_t i = 0; i < maxStates; ++i) {
       PinBootStates[i] = 0;
     }
     # ifdef ESP32
-    constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+    constexpr size_t maxStatesesp32 = NR_ELEMENTS(PinBootStates_ESP32);
 
-    for (uint8_t i = 0; i < maxStatesesp32; ++i) {
+    for (size_t i = 0; i < maxStatesesp32; ++i) {
       PinBootStates_ESP32[i] = 0;
     }
     # endif // ifdef ESP32
@@ -729,14 +729,14 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
 
   if (!GPIO_IS_VALID_GPIO(gpio_pin)) { return false; }
 # endif // ifdef ESP32
-  constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
+  constexpr uint8_t maxStates = NR_ELEMENTS(PinBootStates);
 
   if (gpio_pin < maxStates) {
     index_low = gpio_pin;
     return true;
   }
 # ifdef ESP32
-  constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+  constexpr uint8_t maxStatesesp32 = NR_ELEMENTS(PinBootStates_ESP32);
 
   index_high = gpio_pin - maxStates;
 

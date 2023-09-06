@@ -210,7 +210,7 @@ void handle_hardware() {
       #endif
       static_cast<int>(SPI_Options_e::UserDefined)
     };
-    constexpr size_t nrOptions = sizeof(spi_index) / sizeof(spi_index[0]);
+    constexpr size_t nrOptions = NR_ELEMENTS(spi_index);
     addFormSelector_script(F("Init SPI"), F("initspi"), nrOptions, spi_options, spi_index, nullptr, Settings.InitSPI, F("spiOptionChanged(this)"));
     // User-defined pins
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("CLK")),  F("spipinsclk"), Settings.SPI_SCLK_pin);

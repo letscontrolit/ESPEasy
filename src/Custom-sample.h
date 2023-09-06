@@ -366,7 +366,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P022   // PCA9685
 // #define USES_P023   // OLED
 // #define USES_P024   // MLX90614
-// #define USES_P025   // ADS1115
+// #define USES_P025   // ADS1x15
 // #define USES_P026   // SysInfo
 // #define USES_P027   // INA219
 // #define USES_P028   // BME280
