@@ -82,6 +82,7 @@
 
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
+#define NR_ELEMENTS(ARR) sizeof(ARR) / sizeof(ARR[0])
 
 #ifdef ESP32
   // Special macros to disable interrupts from within an ISR function.

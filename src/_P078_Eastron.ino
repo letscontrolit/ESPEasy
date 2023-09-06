@@ -178,7 +178,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           F("SDM72_V2"),
           F("SDM320C")
         };
-        constexpr size_t nrOptions = sizeof(options_model) / sizeof(options_model[0]);
+        constexpr size_t nrOptions = NR_ELEMENTS(options_model);
         addFormSelector(F("Model Type"), P078_MODEL_LABEL, nrOptions, options_model, nullptr, P078_MODEL);
         addFormNote(F("Submit after changing the modell to update Output Configuration."));
       }
@@ -378,7 +378,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
               if (new_baud > 5) {
                 const int baudrates[]     = { 2400, 4800, 9600, 19200, 38400, 1200 };
-                constexpr int nrBaudRates = sizeof(baudrates) / sizeof(baudrates[0]);
+                constexpr int nrBaudRates = NR_ELEMENTS(baudrates);
 
                 for (int i = 0; i < nrBaudRates && new_baud > 5; ++i) {
                   if (new_baud == baudrates[i]) {

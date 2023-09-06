@@ -63,9 +63,9 @@
 .. |P024_compileinfo| replace:: `.`
 .. |P024_usedlibraries| replace:: `.`
 
-.. |P025_name| replace:: :cyan:`ADS1115`
+.. |P025_name| replace:: :cyan:`ADS1x15`
 .. |P025_type| replace:: :cyan:`Analog input`
-.. |P025_typename| replace:: :cyan:`Analog input - ADS1115`
+.. |P025_typename| replace:: :cyan:`Analog input - ADS1x15`
 .. |P025_porttype| replace:: `.`
 .. |P025_status| replace:: :green:`NORMAL` :yellow:`ENERGY` :yellow:`CLIMATE`
 .. |P025_github| replace:: P025_ADS1115.ino

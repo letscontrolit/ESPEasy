@@ -25,7 +25,7 @@ const __FlashStringHelper * getBearing(int degrees)
     F("NW"),
     F("NNW")
   };
-  constexpr size_t nrDirections = sizeof(directions) / sizeof(directions[0]);
+  constexpr size_t nrDirections = NR_ELEMENTS(directions);
   const float stepsize          = (360.0f / nrDirections);
 
   if (degrees < 0) { degrees += 360; } // Allow for bearing -360 .. 359
@@ -38,14 +38,15 @@ const __FlashStringHelper * getBearing(int degrees)
 }
 
 float CelsiusToFahrenheit(float celsius) {
-  return celsius * (9.0f / 5.0f) + 32;
+  constexpr float ratio = 9.0f / 5.0f;
+  return celsius * ratio + 32;
 }
 
 int m_secToBeaufort(float m_per_sec) {
   // Use ints wit 0.1 m/sec resolution to reduce size.
   const uint16_t dm_per_sec = 10 * m_per_sec;
   const uint16_t speeds[]{3, 16, 34, 55, 80, 108, 139, 172, 208, 245, 285, 326};  
-  constexpr int nrElements = sizeof(speeds) / sizeof(speeds[0]);
+  constexpr int nrElements = NR_ELEMENTS(speeds);
   
   for (int bft = 0; bft < nrElements; ++bft) {
     if (dm_per_sec < speeds[bft]) return bft;
