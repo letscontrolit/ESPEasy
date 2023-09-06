@@ -33,4 +33,10 @@ bool P154_data_struct::read(float& temp, float& pressure)
   return true;
 }
 
+bool P154_data_struct::webformSave(struct EventStruct *event)
+{
+  P154_I2C_ADDR = getFormItemInt(F("i2c_addr"));
+  return true;
+}
+
 #endif // ifdef USES_P154

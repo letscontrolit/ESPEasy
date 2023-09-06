@@ -91,13 +91,16 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (!P154_data->begin()) {
-        break;
-      }
-
       success = P154_data->read(UserVar[event->BaseVarIndex], UserVar[event->BaseVarIndex + 1]);
       break;
     }
+
+    case PLUGIN_WEBFORM_SAVE:
+    {
+      success = P154_data_struct::webformSave(event);
+      break;
+    }
+
   }
   return success;
 }

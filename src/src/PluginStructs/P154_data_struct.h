@@ -22,6 +22,8 @@ public:
 
   bool read(float& temp, float& pressure);
 
+  static bool webformSave(struct EventStruct *event);
+
 private:
 
   Adafruit_BMP3XX bmp;
