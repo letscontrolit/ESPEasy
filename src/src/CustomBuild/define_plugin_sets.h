@@ -1322,7 +1322,7 @@ To create/register a plugin, you have to :
     #define USES_P022   // PCA9685
     #define USES_P023   // OLED
     #define USES_P024   // MLX90614
-    #define USES_P025   // ADS1115
+    #define USES_P025   // ADS1x15
     #define USES_P026   // SysInfo
     #define USES_P027   // INA219
     #define USES_P028   // BME280
@@ -1567,7 +1567,7 @@ To create/register a plugin, you have to :
     #endif
   #endif
    #ifndef USES_P025
-     #define USES_P025   // ADS1115
+     #define USES_P025   // ADS1x15
    #endif
    #ifndef USES_P027
      #define USES_P027   // INA219
@@ -1725,7 +1725,7 @@ To create/register a plugin, you have to :
   #define USES_P021   // Level
   #define USES_P023   // OLED
   #define USES_P024   // MLX90614
-  #define USES_P025   // ADS1115
+  #define USES_P025   // ADS1x15
   #define USES_P026   // SysInfo
   #define USES_P028   // BME280
   #define USES_P029   // Output

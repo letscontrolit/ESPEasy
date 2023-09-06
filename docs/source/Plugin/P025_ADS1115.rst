@@ -1,7 +1,7 @@
 .. include:: ../Plugin/_plugin_substitutions_p02x.repl
 .. _P025_ADS1115_page:
 
-ADS1115
+ADS1x15
 =======
 
 |P025_typename|
