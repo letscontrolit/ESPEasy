@@ -2,7 +2,7 @@
 #ifdef USES_P025
 
 // #######################################################################################################
-// #################################### Plugin 025: ADS1115 I2C 0x48)  ###############################################
+// #################################### Plugin 025: ADS1x15 I2C 0x48)  ###############################################
 // #######################################################################################################
 
 
@@ -10,9 +10,8 @@
 
 # define PLUGIN_025
 # define PLUGIN_ID_025 25
-# define PLUGIN_NAME_025 "Analog input - ADS1115"
+# define PLUGIN_NAME_025 "Analog input - ADS1x15"
 # define PLUGIN_VALUENAME1_025 "Analog"
-
 
 
 boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
@@ -35,6 +34,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
       Device[deviceCount].PluginStats        = true;
       break;
     }
@@ -47,20 +47,44 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_025));
+      const int valueCount = P025_NR_OUTPUT_VALUES;
+
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+        if (i < valueCount) {
+          const uint8_t pconfigIndex = P025_PCONFIG_INDEX(i);
+          ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_025_valuename(PCONFIG(pconfigIndex), false));
+        } else {
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
+        }
+      }
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P025_NR_OUTPUT_VALUES;
+      success     = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P025_SENSOR_TYPE_INDEX));
+      event->idx        = P025_SENSOR_TYPE_INDEX;
+      success           = true;
       break;
     }
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      # define ADS1115_I2C_OPTION 4
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B };
+      constexpr int nrAddressOptions   = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), ADS1115_I2C_OPTION, i2cAddressValues, P025_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P025_I2C_ADDR);
       } else {
-        success = intArrayContains(ADS1115_I2C_OPTION, i2cAddressValues, event->Par1);
+        success = intArrayContains(nrAddressOptions, i2cAddressValues, event->Par1);
       }
       break;
     }
@@ -74,10 +98,41 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(P025_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-
       success = P025_data_struct::webformLoad(event);
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
+    {
+      const __FlashStringHelper *valOptions[] = {
+        Plugin_025_valuename(0, true),
+        Plugin_025_valuename(1, true),
+        Plugin_025_valuename(2, true),
+        Plugin_025_valuename(3, true),
+        Plugin_025_valuename(4, true),
+        Plugin_025_valuename(5, true),
+        Plugin_025_valuename(6, true),
+        Plugin_025_valuename(7, true)
+      };
+      constexpr int nrOptions = NR_ELEMENTS(valOptions);
+
+      for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; i++) {
+        sensorTypeHelper_loadOutputSelector(event,
+                                            P025_PCONFIG_INDEX(i),
+                                            i,
+                                            nrOptions,
+                                            valOptions);
+      }
+
+      success = true;
       break;
     }
 
@@ -112,51 +167,54 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       const P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P025_data) {
-        float value{};
+        for (taskVarIndex_t i = 0; i < P025_NR_OUTPUT_VALUES; ++i) {
+          float value{};
 
-        if (P025_data->read(value)) {
-          success = true;
+          if (P025_data->read(value, i)) {
+            success = true;
 
         # ifndef BUILD_NO_DEBUG
-          String log;
+            String log;
 
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            log  = F("ADS1115 : Analog value: ");
-            log += value;
-            log += F(" / Channel: ");
-            log += P025_MUX;
-          }
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              log  = F("ADS1x15 : Analog value: ");
+              log += value;
+              log += F(" / Channel: ");
+              log += P025_MUX(i);
+            }
         # endif // ifndef BUILD_NO_DEBUG
 
-          if (!P025_CAL_GET) { // Calibration?
-            UserVar[event->BaseVarIndex] = value;
-          }
-          else {
-            const int   adc1 = P025_CAL_ADC1;
-            const int   adc2 = P025_CAL_ADC2;
-            const float out1 = P025_CAL_OUT1;
-            const float out2 = P025_CAL_OUT2;
+            UserVar[event->BaseVarIndex + i] = value;
 
-            if (adc1 != adc2)
-            {
-              const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
-              UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+            const P025_VARIOUS_BITS_t p025_variousBits(P025_VARIOUS_BITS);
+
+            if (p025_variousBits.cal) { // Calibration?
+              const int   adc1 = P025_CAL_ADC1;
+              const int   adc2 = P025_CAL_ADC2;
+              const float out1 = P025_CAL_OUT1;
+              const float out2 = P025_CAL_OUT2;
+
+              if (adc1 != adc2)
+              {
+                const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
+                UserVar[event->BaseVarIndex + i] = normalized * (out2 - out1) + out1;
             # ifndef BUILD_NO_DEBUG
 
-              if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                log += ' ';
-                log += formatUserVarNoCheck(event->TaskIndex, 0);
-              }
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                  log += ' ';
+                  log += formatUserVarNoCheck(event->TaskIndex, i);
+                }
             # endif // ifndef BUILD_NO_DEBUG
+              }
             }
-          }
 
         # ifndef BUILD_NO_DEBUG
 
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            addLogMove(LOG_LEVEL_DEBUG, log);
-          }
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLogMove(LOG_LEVEL_DEBUG, log);
+            }
         # endif // ifndef BUILD_NO_DEBUG
+          }
         }
       }
       break;

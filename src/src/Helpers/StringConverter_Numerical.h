@@ -30,6 +30,8 @@ String ll2String(int64_t value,
 
 String trimTrailingZeros(const String& value);
 
+String toStringNoZero(int64_t value);
+
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 String doubleToString(const double& value,
                       unsigned int  decimalPlaces     = 2,

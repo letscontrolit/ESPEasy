@@ -192,6 +192,7 @@ int checkDeviceVTypeForTask(struct EventStruct *event) {
     if (validTaskIndex(event->TaskIndex)) {
       String dummy;
 
+      event->idx = -1;
       if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
         return event->idx; // pconfig_index
       }

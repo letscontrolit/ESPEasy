@@ -647,7 +647,7 @@ String RulesCalculate_t::preProces(const String& input)
 
   };
 
-  constexpr size_t nrOperators = sizeof(operators) / sizeof(operators[0]);
+  constexpr size_t nrOperators = NR_ELEMENTS(operators);
 
   for (size_t i = 0; i < nrOperators; ++i) {
     const UnaryOperator op = operators[i];

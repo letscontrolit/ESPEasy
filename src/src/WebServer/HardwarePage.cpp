@@ -210,7 +210,7 @@ void handle_hardware() {
       #endif
       static_cast<int>(SPI_Options_e::UserDefined)
     };
-    constexpr size_t nrOptions = sizeof(spi_index) / sizeof(spi_index[0]);
+    constexpr size_t nrOptions = NR_ELEMENTS(spi_index);
     addFormSelector_script(F("Init SPI"), F("initspi"), nrOptions, spi_options, spi_index, nullptr, Settings.InitSPI, F("spiOptionChanged(this)"));
     // User-defined pins
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("CLK")),  F("spipinsclk"), Settings.SPI_SCLK_pin);
@@ -227,7 +227,7 @@ void handle_hardware() {
   
 #if FEATURE_SD
   addFormSubHeader(F("SD Card"));
-  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
+  addFormPinSelect(PinSelectPurpose::SD_Card, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
 #endif // if FEATURE_SD
   
 #if FEATURE_ETHERNET

@@ -365,7 +365,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P022   // PCA9685
 // #define USES_P023   // OLED
 // #define USES_P024   // MLX90614
-// #define USES_P025   // ADS1115
+// #define USES_P025   // ADS1x15
 // #define USES_P026   // SysInfo
 // #define USES_P027   // INA219
 // #define USES_P028   // BME280
@@ -376,6 +376,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P033   // Dummy
 // #define USES_P034   // DHT12
 // #define USES_P036   // FrameOLED
+// #define P036_FEATURE_DISPLAY_PREVIEW   1 // Enable Preview feature, shows on-display content on Devices overview page
+// #define P036_FEATURE_ALIGN_PREVIEW     1 // Enable center/right-align feature when preview is enabled (auto-disabled for 1M builds)
 // #define USES_P037   // MQTTImport
 //   #define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
 //   #define P037_FILTER_SUPPORT  1 // Enable filtering support
