@@ -21,7 +21,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -36,7 +36,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -77,7 +77,7 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -162,8 +162,9 @@ jobs:
           cd ../..
           mv artifacts/Distribution/ESPEasy_dist* .
           cp ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
+          zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip "bin/blank_8MB.bin"
           mv ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
-          zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip "ESP.Easy.Flasher.exe" "bin/blank_1MB.bin" "bin/blank_2MB.bin" "bin/ESPEasy_2step_UploaderMega_1024.bin"
+          zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip "bin/blank_1MB.bin" "bin/blank_2MB.bin" "bin/ESPEasy_2step_UploaderMega_1024.bin"
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
           # TODO if/when available: ESP32c2 ESP32c6 ESP32h2
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32s2.zip

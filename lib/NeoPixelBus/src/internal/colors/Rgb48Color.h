@@ -194,12 +194,36 @@ struct Rgb48Color : RgbColorBase
     Rgb48Color Dim(uint16_t ratio) const;
 
     // ------------------------------------------------------------------------
+    // Dim will return a new color that is blended to black with the given ratio
+    // ratio - (0-255) where 255 will return the original color and 0 will return black
+    // 
+    // NOTE: This is a simple linear blend
+    // ------------------------------------------------------------------------
+    Rgb48Color Dim(uint8_t ratio) const
+    {
+        uint16_t expanded = ratio << 8;
+        return Dim(expanded);
+    }
+
+    // ------------------------------------------------------------------------
     // Brighten will return a new color that is blended to white with the given ratio
     // ratio - (0-65535) where 65535 will return the original color and 0 will return white
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
     Rgb48Color Brighten(uint16_t ratio) const;
+
+    // ------------------------------------------------------------------------
+    // Brighten will return a new color that is blended to white with the given ratio
+    // ratio - (0-255) where 255 will return the original color and 0 will return white
+    // 
+    // NOTE: This is a simple linear blend
+    // ------------------------------------------------------------------------
+    Rgb48Color Brighten(uint8_t ratio) const
+    {
+        uint16_t expanded = ratio << 8;
+        return Brighten(expanded);
+    }
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black

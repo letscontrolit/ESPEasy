@@ -17,7 +17,7 @@ const __FlashStringHelper* Plugin_077_valuename(P077_query value_nr, bool displa
     F("Power Factor"),   F("pf"),
     F("Reactive Power"), F("VAR")
   };
-  constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+  constexpr size_t nrStrings = NR_ELEMENTS(strings);
   const size_t     index     = static_cast<size_t>(value_nr) * 2 + (displayString ? 0 : 1);
 
   if (index < nrStrings) {
@@ -71,7 +71,7 @@ bool P077_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
 
 uint32_t P077_data_struct::get_24bit_value(uint8_t offset) const {
   uint32_t res{};
-  constexpr size_t bufsize = sizeof(serial_in_buffer) / sizeof(serial_in_buffer[0]);
+  constexpr size_t bufsize = NR_ELEMENTS(serial_in_buffer);
 
   if ((offset + 2u) < bufsize) {
     res = serial_in_buffer[offset] << 16 |
@@ -119,7 +119,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
   if (voltage_coefficient != 0) {
-    if (CSE_UREF_PULSE == P077_UREF || P077_UREF == 0) {
+    if ((CSE_UREF_PULSE == P077_UREF) || (P077_UREF == 0)) {
       P077_UREF = voltage_coefficient / CSE_UREF;
       V2R       = 1.0f;
     } else {
@@ -128,7 +128,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
   if (current_coefficient != 0) {
-    if (CSE_IREF_PULSE == P077_IREF || P077_IREF == 0) {
+    if ((CSE_IREF_PULSE == P077_IREF) || (P077_IREF == 0)) {
       P077_IREF = current_coefficient;
       V1R       = 1.0f;
     } else {
@@ -136,7 +136,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     }
   }
 
-  if (CSE_PREF_PULSE == P077_PREF || P077_PREF == 0) {
+  if ((CSE_PREF_PULSE == P077_PREF) || (P077_PREF == 0)) {
     P077_PREF = (V1R * V2R * power_coefficient) / CSE_PREF;
   }
 
@@ -171,7 +171,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
 
     if (last_cf_pulses == 0) {
       last_cf_pulses_moment = cur_millis;
-      last_cf_pulses = cur_cf_pulses;
+      last_cf_pulses        = cur_cf_pulses;
     }
 
     uint32_t diff{};
@@ -197,10 +197,11 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
 
       if (power_cycle_first != power_cycle) {
         power_cycle_first = -1;
+
         if (power_cycle != 0) {
-          activePower = static_cast<float>(P077_PREF * CSE_PREF) / static_cast<float>(power_cycle); 
+          activePower = static_cast<float>(P077_PREF * CSE_PREF) / static_cast<float>(power_cycle);
         } else {
-          if (diff > 0 && (last_cf_pulses_moment != cur_millis)) {
+          if ((diff > 0) && (last_cf_pulses_moment != cur_millis)) {
             const float time_passed_diff_sec = timeDiff(last_cf_pulses_moment, cur_millis) / 1000.0f;
             activePower = (diff / time_passed_diff_sec) / cf_frequency;
           }
@@ -310,22 +311,26 @@ bool P077_data_struct::checksumMatch() const
 }
 
 bool P077_data_struct::plugin_read(struct EventStruct *event) {
-  constexpr uint8_t nrElements = sizeof(_cache) / sizeof(_cache[0]);
+  constexpr uint8_t nrElements = NR_ELEMENTS(_cache);
 
   for (uint8_t i = 0; i < P077_NR_OUTPUT_VALUES; ++i) {
     const uint8_t pconfigIndex = i + P077_QUERY1_CONFIG_POS;
-    const uint8_t index = static_cast<uint8_t>(PCONFIG(pconfigIndex));
+    const uint8_t index        = static_cast<uint8_t>(PCONFIG(pconfigIndex));
+
     if (index < nrElements) {
       float value{};
+
       if (_cache[index].peek(value)) {
         UserVar[event->BaseVarIndex + i] = value;
       }
     }
   }
+
   for (uint8_t i = 0; i < nrElements; ++i) {
     _cache[i].resetKeepLast();
   }
   const bool res = newValue;
+
   newValue = false;
   return res;
 }
@@ -409,17 +414,23 @@ int P077_data_struct::serial_Available() {
 
 void P077_data_struct::setOutputValue(struct EventStruct *event, P077_query outputType, float value) {
   const uint8_t index          = static_cast<uint8_t>(outputType);
-  constexpr uint8_t nrElements = sizeof(_cache) / sizeof(_cache[0]);
+  constexpr uint8_t nrElements = NR_ELEMENTS(_cache);
 
   if (index < nrElements) {
     _cache[index].add(value);
+
     for (uint8_t i = 0; i < P077_NR_OUTPUT_VALUES; ++i) {
       const uint8_t pconfigIndex = i + P077_QUERY1_CONFIG_POS;
 
       if (PCONFIG(pconfigIndex) == index) {
-#if FEATURE_PLUGIN_STATS
-        getPluginStats(i)->trackPeak(value);
-#endif
+# if FEATURE_PLUGIN_STATS
+        PluginStats *stats = getPluginStats(i);
+
+        if (stats != nullptr) {
+          stats->trackPeak(value);
+        }
+# endif // if FEATURE_PLUGIN_STATS
+
         // Set preliminary averaged value as task value.
         // This way we can see intermediate updates.
         _cache[index].peek(value);
@@ -432,7 +443,7 @@ void P077_data_struct::setOutputValue(struct EventStruct *event, P077_query outp
 float P077_data_struct::getValue(P077_query outputType) const
 {
   const uint8_t index          = static_cast<uint8_t>(outputType);
-  constexpr uint8_t nrElements = sizeof(_cache) / sizeof(_cache[0]);
+  constexpr uint8_t nrElements = NR_ELEMENTS(_cache);
 
   float res{};
 

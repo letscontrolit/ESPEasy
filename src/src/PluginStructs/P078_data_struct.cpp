@@ -130,7 +130,7 @@ constexpr p078_register_description register_description_list[] = {
 };
 // *INDENT-ON*
 
-constexpr int register_description_list_size = sizeof(register_description_list) / sizeof(register_description_list[0]);
+constexpr int register_description_list_size = NR_ELEMENTS(register_description_list);
 
 const __FlashStringHelper* SDM_UOMtoString(SDM_UOM uom, bool display) {
   const __FlashStringHelper *strings[] = {
@@ -148,7 +148,7 @@ const __FlashStringHelper* SDM_UOMtoString(SDM_UOM uom, bool display) {
     F("Apparent Energy"), F("kVAh"),
     F("Reactive Energy"), F("kVArh")
   };
-  constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+  constexpr size_t nrStrings = NR_ELEMENTS(strings);
   size_t index               = 2 * static_cast<size_t>(uom);
 
   if (!display) { ++index; }
@@ -472,8 +472,10 @@ void SDM_loopRegisterReadQueue(SDM *sdm)
       PluginTaskData_base *taskdata = getPluginTaskDataBaseClassOnly(it->taskIndex);
 
       if (taskdata != nullptr) {
-        if (taskdata->getPluginStats(it->taskVarIndex) != nullptr) {
-          taskdata->getPluginStats(it->taskVarIndex)->trackPeak(value);
+        PluginStats *stats = taskdata->getPluginStats(it->taskVarIndex);
+
+        if (stats != nullptr) {
+          stats->trackPeak(value);
         }
       }
 # endif // if FEATURE_PLUGIN_STATS

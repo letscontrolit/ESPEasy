@@ -125,6 +125,15 @@ void ExtraTaskSettingsStruct::clearTaskDeviceValueName(taskVarIndex_t taskVarInd
   }
 }
 
+void ExtraTaskSettingsStruct::clearDefaultTaskDeviceValueNames()
+{
+  for (int i = 0; i < VARS_PER_TASK; ++i) {
+    if (isDefaultTaskVarName(i)) {
+      clearTaskDeviceValueName(i);
+    }
+  }
+}
+
 void ExtraTaskSettingsStruct::setAllowedRange(taskVarIndex_t taskVarIndex, const float& minValue, const float& maxValue)
 {
   if (validTaskVarIndex(taskVarIndex)) {
@@ -206,6 +215,20 @@ bool ExtraTaskSettingsStruct::anyEnabledPluginStats() const
 }
 
 #endif // if FEATURE_PLUGIN_STATS
+
+bool ExtraTaskSettingsStruct::isDefaultTaskVarName(taskVarIndex_t taskVarIndex) const
+{
+  if (!validTaskVarIndex(taskVarIndex)) { return false; }
+  return bitRead(VariousBits[taskVarIndex], 1);
+}
+
+void ExtraTaskSettingsStruct::isDefaultTaskVarName(taskVarIndex_t taskVarIndex, bool isDefault)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    bitWrite(VariousBits[taskVarIndex], 1, isDefault);
+  }
+}
+
 
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
   const __FlashStringHelper *valuename,
