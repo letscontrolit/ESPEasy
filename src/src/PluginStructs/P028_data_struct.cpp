@@ -22,7 +22,11 @@ uint8_t P028_data_struct::get_control_settings() const {
 }
 
 const __FlashStringHelper * P028_data_struct::getDeviceName() const {
-  switch (sensorID) {
+  return getDeviceName(sensorID);
+}
+
+const __FlashStringHelper * P028_data_struct::getDeviceName(BMx_ChipId id) {
+  switch (id) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2: return F("BMP280 sample");
     case BMP280_DEVICE:         return F("BMP280");

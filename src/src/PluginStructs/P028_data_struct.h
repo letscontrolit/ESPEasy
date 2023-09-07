@@ -119,7 +119,7 @@ struct P028_data_struct : public PluginTaskData_base {
 
   P028_data_struct(uint8_t addr,
                    float   tempOffset);
-  P028_data_struct() = delete;
+  P028_data_struct()          = delete;
   virtual ~P028_data_struct() = default;
 
 private:
@@ -130,11 +130,13 @@ private:
 
 public:
 
-  const __FlashStringHelper* getDeviceName() const;
+  const __FlashStringHelper       * getDeviceName() const;
 
-  bool                       hasHumidity() const;
+  static const __FlashStringHelper* getDeviceName(BMx_ChipId id);
 
-  bool                       initialized() const;
+  bool                              hasHumidity() const;
+
+  bool                              initialized() const;
 
 private:
 

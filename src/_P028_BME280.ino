@@ -132,15 +132,12 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      P028_data_struct *P028_data =
-        static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
+      bool wire_status      = false;
+      const uint8_t chip_id = I2C_read8_reg(P028_I2C_ADDRESS, BMx280_REGISTER_CHIPID, &wire_status);
 
-      if (nullptr != P028_data) {
-        if (P028_data->sensorID != P028_data_struct::Unknown_DEVICE) {
-          String detectedString = F("Detected: ");
-          detectedString += P028_data->getDeviceName();
-          addUnit(detectedString);
-        }
+      if (wire_status) {
+        addRowLabel(F("Detected Sensor Type"));
+        addHtml(P028_data_struct::getDeviceName(static_cast<P028_data_struct::BMx_ChipId>(chip_id)));
       }
 
       addFormNumericBox(F("Altitude"), F("elev"), P028_ALTITUDE);
@@ -149,6 +146,9 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Temperature offset"), F("tempoffset"), P028_TEMPERATURE_OFFSET);
       addUnit(F("x 0.1C"));
       String offsetNote = F("Offset in units of 0.1 degree Celsius");
+
+      P028_data_struct *P028_data =
+        static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
         if (P028_data->hasHumidity()) {
@@ -168,12 +168,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifndef BUILD_NO_DEBUG
 
       // Value in case of Error
-      # ifndef LIMIT_BUILD_SIZE
-      #  define P028_ERROR_STATE_COUNT 6
-      # else // ifndef LIMIT_BUILD_SIZE
-      #  define P028_ERROR_STATE_COUNT 5
-      # endif // ifndef LIMIT_BUILD_SIZE
-      const __FlashStringHelper *resultsOptions[P028_ERROR_STATE_COUNT] = {
+      const __FlashStringHelper *resultsOptions[] = {
         F("Ignore"),
         F("Min -1 (-41&deg;C)"),
         F("0"),
@@ -183,12 +178,17 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         F("-1&deg;K (-274&deg;C)")
         # endif // ifndef LIMIT_BUILD_SIZE
       };
-      int resultsOptionValues[P028_ERROR_STATE_COUNT] = {
-        P028_ERROR_IGNORE, P028_ERROR_MIN_RANGE, P028_ERROR_ZERO, P028_ERROR_MAX_RANGE, P028_ERROR_NAN,
+      const int resultsOptionValues[] = {
+        P028_ERROR_IGNORE,
+        P028_ERROR_MIN_RANGE,
+        P028_ERROR_ZERO,
+        P028_ERROR_MAX_RANGE,
+        P028_ERROR_NAN,
         # ifndef LIMIT_BUILD_SIZE
         P028_ERROR_MIN_K
         # endif // ifndef LIMIT_BUILD_SIZE
       };
+      constexpr int P028_ERROR_STATE_COUNT = NR_ELEMENTS(resultsOptions);
       addFormSelector(F("Temperature Error Value"),
                       F("err"),
                       P028_ERROR_STATE_COUNT,
