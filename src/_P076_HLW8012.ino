@@ -173,7 +173,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           P076_Gosund,
           P076_Shelly_PLUG_S
         };
-        constexpr int nrElements = sizeof(predefinedId) / sizeof(predefinedId[0]);
+        constexpr int nrElements = NR_ELEMENTS(predefinedId);
         addFormSelector(F("Device"),
                         F("preDefDevSel"), nrElements,
                         predefinedNames, predefinedId, devicePinSettings);
