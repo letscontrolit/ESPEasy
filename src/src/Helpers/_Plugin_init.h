@@ -15,6 +15,9 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex);
 
 boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string);
 
+// Get the sizeof() in number of bits for the number of actually included plugins in the build
+unsigned getNrBitsDeviceIndex();
+
 void PluginSetup();
 
 void PluginInit(bool priorityOnly = false);

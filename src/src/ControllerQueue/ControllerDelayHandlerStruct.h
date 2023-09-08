@@ -75,7 +75,7 @@ struct ControllerDelayHandlerStruct {
     int                                controller_number,
     do_process_function                func,
     TimingStatsElements                timerstats_id,
-    ESPEasy_Scheduler::IntervalTimer_e timerID);
+    SchedulerIntervalTimer_e timerID);
 
   std::list<std::unique_ptr<Queue_element_base> >sendQueue;
   mutable UnitLastMessageCount_map               unitLastMessageCount;

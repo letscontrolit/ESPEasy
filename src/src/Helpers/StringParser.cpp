@@ -165,7 +165,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
           if (!isHandled && valueName.startsWith(F("settings."))) {  // Task settings values
             String value;
             if (valueName.endsWith(F(".enabled"))) {           // Task state
-              value = Settings.TaskDeviceEnabled[taskIndex];
+              value = Settings.TaskDeviceEnabled[taskIndex] ? '1' : '0';
             } else if (valueName.endsWith(F(".interval"))) {   // Task interval
               value = Settings.TaskDeviceTimer[taskIndex];
             } else if (valueName.endsWith(F(".valuecount"))) { // Task value count

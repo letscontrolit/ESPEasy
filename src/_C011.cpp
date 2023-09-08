@@ -297,7 +297,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addLog(LOG_LEVEL_ERROR, F("C011  : Could not add to delay handler"));
   }
 
-  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler->getNextScheduleTime());
+  Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler->getNextScheduleTime());
   return success;
 }
 

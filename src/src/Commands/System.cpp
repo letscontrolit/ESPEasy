@@ -33,7 +33,7 @@ const __FlashStringHelper * Command_System_Reboot(struct EventStruct *event, con
 	pinMode(0, INPUT);
 	pinMode(2, INPUT);
 	pinMode(15, INPUT);
-	reboot(ESPEasy_Scheduler::IntendedRebootReason_e::CommandReboot);
+	reboot(IntendedRebootReason_e::CommandReboot);
 	return return_command_success();
 }
 

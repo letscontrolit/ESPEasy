@@ -76,7 +76,7 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
 boolean MQTTsubscribe(controllerIndex_t controller_idx, const char* topic, boolean retained)
 {
   if (MQTTclient.subscribe(topic)) {
-    Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+    Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     scheduleNextMQTTdelayQueue();
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Subscribed to: ");  

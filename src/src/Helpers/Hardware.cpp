@@ -497,7 +497,7 @@ void checkResetFactoryPin() {
 
     if (factoryResetCounter > 3) {
       // normal reboot
-      reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryPinActive);
+      reboot(IntendedRebootReason_e::ResetFactoryPinActive);
     }
     factoryResetCounter = 0; // count was < 3, reset counter
   }
@@ -2461,7 +2461,7 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
       Settings.TaskDeviceTimer[taskIndex] = 0;
     }
   }
-  Settings.TaskDeviceEnabled[taskIndex] = enabled;
+  Settings.TaskDeviceEnabled[taskIndex].enabled = enabled;
   safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 
   // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")

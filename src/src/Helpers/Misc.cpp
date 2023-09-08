@@ -103,15 +103,18 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
     if (!enabled) {
       PluginCall(PLUGIN_EXIT, event, dummy);
     }
-    Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
+    // Toggle enable/disable state via command
+    // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
+    Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
 
     if (enabled) {
+      // Schedule the plugin to be read.
+      // Do this before actual init, to allow the plugin to schedule a specific first read.
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+
       if (!PluginCall(PLUGIN_INIT, event, dummy)) {
         return false;
       }
-
-      // Schedule the task to be executed almost immediately
-      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
     }
     return true;
   }
@@ -253,7 +256,7 @@ void emergencyReset()
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
  \*********************************************************************************************/
-void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e reason)
+void delayedReboot(int rebootDelay, IntendedRebootReason_e reason)
 {
   // Direct Serial is allowed here, since this is only an emergency task.
   while (rebootDelay != 0)
@@ -266,7 +269,7 @@ void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e re
   reboot(reason);
 }
 
-void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
+void reboot(IntendedRebootReason_e reason) {
   prepareShutdown(reason);
   #if defined(ESP32)
   ESP.restart();

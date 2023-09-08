@@ -881,7 +881,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 
-    addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex], Settings.isTaskEnableReadonly(taskIndex)); // ="taskdeviceenabled"
+    addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex].enabled, Settings.isTaskEnableReadonly(taskIndex)); // ="taskdeviceenabled"
 
     #if FEATURE_PLUGIN_PRIORITY
     if (Device[DeviceIndex].PowerManager) { // Check extra priority device flags when available

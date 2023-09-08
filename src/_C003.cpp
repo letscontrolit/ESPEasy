@@ -64,7 +64,7 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
       std::unique_ptr<C003_queue_element> element(new C003_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
 
       success = C003_DelayHandler->addToQueue(std::move(element));
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C003_DELAY_QUEUE, C003_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C003_DELAY_QUEUE, C003_DelayHandler->getNextScheduleTime());
 
       break;
     }

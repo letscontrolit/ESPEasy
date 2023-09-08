@@ -124,7 +124,7 @@ void runOncePerSecond()
 
   if (Settings.ConnectionFailuresThreshold)
     if (WiFiEventData.connectionFailures > Settings.ConnectionFailuresThreshold)
-      delayedReboot(60, ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot);
+      delayedReboot(60, IntendedRebootReason_e::DelayedReboot);
 
   if (cmd_within_mainloop != 0)
   {
@@ -137,7 +137,7 @@ void runOncePerSecond()
         }
       case CMD_REBOOT:
         {
-          reboot(ESPEasy_Scheduler::IntendedRebootReason_e::CommandReboot);
+          reboot(IntendedRebootReason_e::CommandReboot);
           break;
         }
     }
@@ -264,7 +264,7 @@ void runEach30Seconds()
 
 void scheduleNextMQTTdelayQueue() {
   if (MQTTDelayHandler != nullptr) {
-    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+    Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
   }
 }
 
@@ -337,7 +337,7 @@ void processMQTTdelayQueue() {
 #endif // ifndef BUILD_NO_DEBUG
     }
   }
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }
@@ -372,7 +372,7 @@ void updateMQTTclient_connected() {
   } else {
     timermqtt_interval = 250;
   }
-  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  Scheduler.setIntervalTimer(SchedulerIntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
 }
 
@@ -480,7 +480,7 @@ void flushAndDisconnectAllClients() {
 }
 
 
-void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
+void prepareShutdown(IntendedRebootReason_e reason)
 {
   WiFiEventData.intent_to_reboot = true;
 #if FEATURE_MQTT

@@ -484,7 +484,7 @@ void handle_json()
         }
         #endif // if FEATURE_I2CMULTIPLEXER
       }
-      stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
+      stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex].enabled));
       stream_last_json_object_value(F("TaskNumber"), TaskIndex + 1);
 
       if (TaskIndex != lastActiveTaskIndex) {

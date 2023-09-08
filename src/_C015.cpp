@@ -235,7 +235,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
           element.txt[x]  = formattedValue;
         }
       }
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
       break;
     }
 

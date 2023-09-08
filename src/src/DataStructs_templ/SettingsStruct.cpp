@@ -466,6 +466,9 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
   }
 #endif
   #endif
+  for (uint8_t i = 0; i < N_TASKS; ++i) {
+    TaskDeviceEnabled[i].clearTempDisableFlags();
+  }
 }
 
 template<unsigned int N_TASKS>
@@ -669,7 +672,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   VariousTaskBits[task]         = 0;
   TaskDeviceDataFeed[task]      = 0u;
   TaskDeviceTimer[task]         = 0u;
-  TaskDeviceEnabled[task]       = false;
+  TaskDeviceEnabled[task].enabled = false;
   I2C_Multiplexer_Channel[task] = -1;
 }
 
