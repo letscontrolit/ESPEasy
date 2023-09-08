@@ -2086,7 +2086,15 @@ const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 deviceIndex_t* Plugin_id_to_DeviceIndex = nullptr;
 size_t Plugin_id_to_DeviceIndex_size = 0;
 
-constexpr size_t DeviceIndex_to_Plugin_id_size = sizeof(DeviceIndex_to_Plugin_id);
+constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
+
+
+unsigned getNrBitsDeviceIndex()
+{
+  // FIXME TD-er: Must somehow make this a constexpr function
+  constexpr unsigned nrBits = NR_BITS(DeviceIndex_to_Plugin_id_size);
+  return nrBits;
+}
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {

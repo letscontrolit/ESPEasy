@@ -84,6 +84,27 @@
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 #define NR_ELEMENTS(ARR) sizeof(ARR) / sizeof(ARR[0])
 
+
+// Disable Uncrustify on this one...
+// *INDENT-OFF*
+
+constexpr unsigned FLOOR_LOG2(unsigned x)
+{
+  return x == 1 ? 0 : 1+FLOOR_LOG2(x >> 1);
+}
+
+constexpr unsigned CEIL_LOG2(unsigned x)
+{
+  return x == 1 ? 0 : FLOOR_LOG2(x - 1) + 1;
+}
+// *INDENT-ON*
+
+// Compute at compile time the number of bits required to store N states
+#define NR_BITS(NR_STATES)  CEIL_LOG2(NR_STATES)
+
+// Compute a mask given number of bits
+#define MASK_BITS(x)  ((1 << x) - 1)
+
 #ifdef ESP32
   // Special macros to disable interrupts from within an ISR function.
   //

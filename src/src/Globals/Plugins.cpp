@@ -280,7 +280,10 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
   #endif
 
   bool retval = false;
-  if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
+  const bool considerTaskEnabled = Settings.TaskDeviceEnabled[taskIndex] || 
+                          (Settings.TaskDeviceEnabled[taskIndex].enabled && Function == PLUGIN_INIT);
+
+  if (considerTaskEnabled && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
     if (validDeviceIndex(DeviceIndex)) {
@@ -587,7 +590,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         if (Function == PLUGIN_INIT) {
           if (!retval && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
-            Settings.TaskDeviceEnabled[taskIndex] = false; // Initialization failed: Disable plugin!
+            // Disable temporarily as PLUGIN_INIT failed
+            // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
+            Settings.TaskDeviceEnabled[taskIndex].setRetryInit(); 
+//            Scheduler.schedule_event_timer(SchedulerPluginPtrType_e::TaskPlugin, taskIndex, PLUGIN_INIT, std::move(TempEvent));
+
+
             result = false;
           }
           #ifndef BUILD_NO_DEBUG
@@ -774,7 +782,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
           if (Function == PLUGIN_INIT) {
             if (!retval && Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
-              Settings.TaskDeviceEnabled[event->TaskIndex] = false; // Initialization failed: Disable plugin!
+              // Disable temporarily as PLUGIN_INIT failed
+              // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
+              Settings.TaskDeviceEnabled[event->TaskIndex] = false;
             } else {
               #if FEATURE_PLUGIN_STATS
               if (Device[DeviceIndex].PluginStats) {

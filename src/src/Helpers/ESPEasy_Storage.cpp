@@ -750,6 +750,8 @@ uint8_t disablePlugin(uint8_t bootFailedCount) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
+        // Disable temporarily as unit crashed
+        // FIXME TD-er: Should this be stored?
         Settings.TaskDeviceEnabled[i] = false;
       }
     }
@@ -761,6 +763,8 @@ uint8_t disableAllPlugins(uint8_t bootFailedCount) {
   if (bootFailedCount > 0) {
     --bootFailedCount;
     for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
+        // Disable temporarily as unit crashed
+        // FIXME TD-er: Should this be stored?
         Settings.TaskDeviceEnabled[i] = false;
     }
   }

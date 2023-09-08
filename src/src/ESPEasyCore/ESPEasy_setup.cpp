@@ -233,7 +233,7 @@ void ESPEasy_setup()
     {
       RTC.bootFailedCount++;
       RTC.bootCounter++;
-      lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
+      lastMixedSchedulerId_beforereboot.mixed_id = RTC.lastMixedSchedulerId;
       readUserVarFromRTC();
 
       log += F(" #");
@@ -614,12 +614,12 @@ void ESPEasy_setup()
   // Start the interval timers at N msec from now.
   // Make sure to start them at some time after eachother,
   // since they will keep running at the same interval.
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_20MSEC,     5);    // timer for periodic actions 50 x per/sec
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_100MSEC,    66);   // timer for periodic actions 10 x per/sec
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_1SEC,       777);  // timer for periodic actions once per/sec
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_30SEC,      1333); // timer for watchdog once per 30 sec
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT,       88);   // timer for interaction with MQTT
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_STATISTICS, 2222);
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_20MSEC,     5);    // timer for periodic actions 50 x per/sec
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_100MSEC,    66);   // timer for periodic actions 10 x per/sec
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_1SEC,       777);  // timer for periodic actions once per/sec
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_30SEC,      1333); // timer for watchdog once per 30 sec
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT,       88);   // timer for interaction with MQTT
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_STATISTICS, 2222);
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("Scheduler.setIntervalTimerOverride"));
   #endif

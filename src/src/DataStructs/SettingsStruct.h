@@ -9,6 +9,7 @@
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
+#include "../DataTypes/TaskEnabledState.h"
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 
@@ -347,7 +348,7 @@ public:
   uint8_t       VariousTaskBits[N_TASKS] = {0};
   uint8_t       TaskDeviceDataFeed[N_TASKS] = {0};    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS] = {0};
-  boolean       TaskDeviceEnabled[N_TASKS] = {0};
+  TaskEnabledState TaskDeviceEnabled[N_TASKS];
   boolean       ControllerEnabled[CONTROLLER_MAX] = {0};
   boolean       NotificationEnabled[NOTIFICATION_MAX] = {0};
   unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS]{};        // IDX number (mainly used by Domoticz)
