@@ -41,19 +41,23 @@ Supported hardware
 Change log
 ----------
 
-.. versionchanged:: 2.0
+.. versionchanged:: 2023/03/31
   ...
 
   |added|
-  Major overhaul for 2.0 release.
+  Added option to output in Volt
 
-.. versionadded:: 1.0
+.. versionchanged:: 2023/09/05
   ...
 
   |added|
-  Initial release version.
+  Detect ADS1015 or ADS1115
 
+  |added|
+  Select Sample Rate
 
+  |added|
+  Select Multiple Output Values
 
 
 

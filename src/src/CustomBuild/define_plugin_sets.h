@@ -1322,7 +1322,7 @@ To create/register a plugin, you have to :
     #define USES_P022   // PCA9685
     #define USES_P023   // OLED
     #define USES_P024   // MLX90614
-    #define USES_P025   // ADS1115
+    #define USES_P025   // ADS1x15
     #define USES_P026   // SysInfo
     #define USES_P027   // INA219
     #define USES_P028   // BME280
@@ -1548,6 +1548,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P153
     #define USES_P153   // Environment - SHT4x
   #endif
+  #ifndef USES_P154
+    #define USES_P154   // Environment - BMP3xx
+  #endif
 
 #endif
 
@@ -1567,7 +1570,7 @@ To create/register a plugin, you have to :
     #endif
   #endif
    #ifndef USES_P025
-     #define USES_P025   // ADS1115
+     #define USES_P025   // ADS1x15
    #endif
    #ifndef USES_P027
      #define USES_P027   // INA219
@@ -1725,7 +1728,7 @@ To create/register a plugin, you have to :
   #define USES_P021   // Level
   #define USES_P023   // OLED
   #define USES_P024   // MLX90614
-  #define USES_P025   // ADS1115
+  #define USES_P025   // ADS1x15
   #define USES_P026   // SysInfo
   #define USES_P028   // BME280
   #define USES_P029   // Output
@@ -1800,6 +1803,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P127
     #define USES_P127 // CDM7160
   #endif
+  #ifndef USES_P133
+    #define USES_P133     // LTR390 UV
+  #endif
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
@@ -1821,9 +1827,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P153
     #define USES_P153   // Environment - SHT4x
   #endif
-  #ifndef USES_P133
-    #define USES_P133     // LTR390 UV
+  #ifndef USES_P154
+    #define USES_P154   // Environment - BMP3xx
   #endif
+
+
 
   // Controllers
   #ifndef USES_C011
@@ -2207,6 +2215,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P153
     #define USES_P153   // Environment - SHT4x
+  #endif
+  #ifndef USES_P154
+    #define USES_P154   // Environment - BMP3xx
   #endif
 
   // Controllers
