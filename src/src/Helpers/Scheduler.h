@@ -80,6 +80,15 @@ public:
                                           int           Par4 = 0,
                                           int           Par5 = 0);
 
+void                 setPluginTaskTimer(unsigned long msecFromNow,
+                                          taskIndex_t   taskIndex,
+                                          PluginFunctions_e function,
+                                          int           Par1,
+                                          int           Par2 = 0,
+                                          int           Par3 = 0,
+                                          int           Par4 = 0,
+                                          int           Par5 = 0);
+
   void process_plugin_task_timer(SchedulerTimerID timerID);
 
 
