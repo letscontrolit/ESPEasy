@@ -3,6 +3,7 @@
 
 #include "../DataStructs/SchedulerTimerID.h"
 
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../DataTypes/TaskIndex.h"
 
 /*********************************************************************************************\
@@ -11,13 +12,16 @@
 \*********************************************************************************************/
 struct PluginTaskTimerID : SchedulerTimerID {
   // taskIndex and par1 form a unique key that can be used to restart a timer
-  PluginTaskTimerID(taskIndex_t taskIndex,
-                    int         Par1);
+  PluginTaskTimerID(taskIndex_t       taskIndex,
+                    int               Par1,
+                    PluginFunctions_e function = PLUGIN_TASKTIMER_IN);
 
-  taskIndex_t getTaskIndex() const;
+  taskIndex_t       getTaskIndex() const;
+
+  PluginFunctions_e getFunction() const;
 
 #ifndef BUILD_NO_DEBUG
-  String      decode() const override;
+  String            decode() const override;
 #endif // ifndef BUILD_NO_DEBUG
 };
 

@@ -593,9 +593,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // Disable temporarily as PLUGIN_INIT failed
             // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
             Settings.TaskDeviceEnabled[taskIndex].setRetryInit(); 
-//            Scheduler.schedule_event_timer(SchedulerPluginPtrType_e::TaskPlugin, taskIndex, PLUGIN_INIT, std::move(TempEvent));
-
-
+            Scheduler.setPluginTaskTimer(10000, taskIndex, PLUGIN_INIT);
             result = false;
           }
           #ifndef BUILD_NO_DEBUG
