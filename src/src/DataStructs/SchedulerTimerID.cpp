@@ -19,9 +19,10 @@ SchedulerTimerType_e SchedulerTimerID::getTimerType() const
 }
 
 #ifndef BUILD_NO_DEBUG
+/*
 String SchedulerTimerID::decode() const
 {
   return String(id);
 }
-
+*/
 #endif // ifndef BUILD_NO_DEBUG

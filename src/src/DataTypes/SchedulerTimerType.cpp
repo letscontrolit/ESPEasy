@@ -13,5 +13,5 @@ const __FlashStringHelper * toString(SchedulerTimerType_e timerType) {
     case SchedulerTimerType_e::RulesTimer:              return F("Rules#Timer");
     case SchedulerTimerType_e::IntendedReboot:          return F("Intended Reboot");
   }
-  return F("unknown");
+  return F("Unknown");
 }
