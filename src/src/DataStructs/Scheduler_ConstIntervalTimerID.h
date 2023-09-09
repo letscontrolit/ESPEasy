@@ -11,7 +11,7 @@ struct ConstIntervalTimerID : SchedulerTimerID {
   SchedulerIntervalTimer_e getIntervalTimer() const;
 
 #ifndef BUILD_NO_DEBUG
-  String                   decode() const override;
+  String                   decode() const;
 #endif // ifndef BUILD_NO_DEBUG
 };
 

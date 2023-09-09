@@ -7,7 +7,7 @@ struct RulesTimerID : SchedulerTimerID {
   RulesTimerID(unsigned int timerIndex);
 
 #ifndef BUILD_NO_DEBUG
-  String decode() const override;
+  String decode() const;
 #endif // ifndef BUILD_NO_DEBUG
 };
 

@@ -15,7 +15,7 @@ struct TaskDeviceTimerID : SchedulerTimerID {
   taskIndex_t getTaskIndex() const;
 
 #ifndef BUILD_NO_DEBUG
-  String      decode() const override;
+  String      decode() const;
 #endif // ifndef BUILD_NO_DEBUG
 };
 

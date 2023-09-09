@@ -25,7 +25,7 @@ struct SchedulerTimerID {
   SchedulerTimerType_e getTimerType() const;
 
 #ifndef BUILD_NO_DEBUG
-  virtual String       decode() const;
+//  virtual String       decode() const;
 #endif // ifndef BUILD_NO_DEBUG
 };
 

@@ -11,7 +11,7 @@ struct IntendedRebootTimerID : SchedulerTimerID {
   IntendedRebootReason_e getReason() const;
 
 #ifndef BUILD_NO_DEBUG
-  String                 decode() const override;
+  String                 decode() const;
 #endif // ifndef BUILD_NO_DEBUG
 };
 

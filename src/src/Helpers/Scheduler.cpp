@@ -1,33 +1,16 @@
 #include "../Helpers/Scheduler.h"
 
-
 #include "../../ESPEasy-Globals.h"
-
 #include "../../_Plugin_Helper.h"
 
-
-
 #include "../DataStructs/Scheduler_IntendedRebootTimerID.h"
-
-
-
-
-
 #include "../DataStructs/TimingStats.h"
 
-#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 
-#include "../Globals/GlobalMapPortStatus.h"
 #include "../Globals/RTC.h"
-#include "../Globals/NPlugins.h"
 
-#include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
-#include "../Helpers/Networking.h"
-#include "../Helpers/PeriodicalActions.h"
-#include "../Helpers/PortStatus.h"
-
 
 
 void ESPEasy_Scheduler::markIntendedReboot(IntendedRebootReason_e reason) {
@@ -44,36 +27,6 @@ void ESPEasy_Scheduler::setNewTimerAt(SchedulerTimerID id, unsigned long timer) 
   START_TIMER;
   msecTimerHandler.registerAt(id.mixed_id, timer);
   STOP_TIMER(SET_NEW_TIMER);
-}
-
-String ESPEasy_Scheduler::decodeSchedulerId(SchedulerTimerID timerID) {
-  if (timerID.mixed_id == 0) {
-    return F("Background Task");
-  }
-  String idStr                   = String(timerID.id);
-  String result                  = toString(timerID.getTimerType());
-
-  result += F(": ");
-
-#ifndef BUILD_NO_DEBUG
-  result.reserve(64);
-
-  String decoded = timerID.decode();
-
-  // FIXME TD-er: Must call decode on specific class instance.
-
-
-
-
-  if (!decoded.isEmpty()) {
-    result += decoded;
-    return result;
-  }
-
-#endif // ifndef BUILD_NO_DEBUG
-  result += F(" timer, id: ");
-  result += idStr;
-  return result;
 }
 
 /*********************************************************************************************\
@@ -109,6 +62,7 @@ void ESPEasy_Scheduler::handle_schedule() {
   }
 
   const SchedulerTimerID timerID(mixed_id);
+
   delay(0); // See: https://github.com/letscontrolit/ESPEasy/issues/1818#issuecomment-425351328
 
   switch (timerID.getTimerType()) {
@@ -140,16 +94,6 @@ void ESPEasy_Scheduler::handle_schedule() {
   }
   STOP_TIMER(HANDLE_SCHEDULER_TASK);
 }
-
-
-
-
-
-
-
-
-
-
 
 String ESPEasy_Scheduler::getQueueStats() {
   return msecTimerHandler.getQueueStats();

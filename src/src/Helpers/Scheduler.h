@@ -4,17 +4,16 @@
 #include "../../ESPEasy_common.h"
 
 #include "../DataStructs/EventStructCommandWrapper.h"
-#include "../DataStructs/SystemTimerStruct.h"
-#include "../DataTypes/SchedulerPluginPtrType.h"
-#include "../DataTypes/ProtocolIndex.h"
-#include "../DataTypes/IntendedRebootReason.h"
-#include "../DataTypes/ESPEasy_plugin_functions.h"
-#include "../Helpers/msecTimerHandlerStruct.h"
-
-
 #include "../DataStructs/SchedulerTimerID.h"
-#include "../DataTypes/SchedulerIntervalTimer.h"
+#include "../DataStructs/SystemTimerStruct.h"
 
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/IntendedRebootReason.h"
+#include "../DataTypes/ProtocolIndex.h"
+#include "../DataTypes/SchedulerIntervalTimer.h"
+#include "../DataTypes/SchedulerPluginPtrType.h"
+
+#include "../Helpers/msecTimerHandlerStruct.h"
 
 #include <list>
 #include <map>

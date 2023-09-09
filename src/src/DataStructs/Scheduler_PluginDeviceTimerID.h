@@ -18,7 +18,7 @@ struct PluginDeviceTimerID : SchedulerTimerID {
   deviceIndex_t get_deviceIndex() const;
 
 #ifndef BUILD_NO_DEBUG
-  String        decode() const override;
+  String        decode() const;
 #endif // ifndef BUILD_NO_DEBUG
 };
 
