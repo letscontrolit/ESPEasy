@@ -11,7 +11,13 @@ The workflow and flow of data in ESPEasy can be seen as a number of functional b
 * **Notifications** - Extra options to notify a user, like a buzzer or sending an email.
 * **Scheduler** - The internal heart beat of ESPEasy.
 
-  
+.. figure:: ESPEasy_block_diagram.svg
+   :width: 70 %
+   :align: center
+
+   ESPEasy Block Diagram
+
+
 
 Plugin
 ======
