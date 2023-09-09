@@ -298,7 +298,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       if (validTaskIndex(event->TaskIndex) &&
           (cmd.equalsIgnoreCase(F(CMD_NAME_P101)) ||
            cmd.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)))) {
-        taskEnable = Settings.TaskDeviceEnabled[event->TaskIndex];
+        taskEnable = !!Settings.TaskDeviceEnabled[event->TaskIndex];
 
         // Do not process WOL command if plugin disabled. This code is for errant situations which may never occur.
         if (!taskEnable) {
