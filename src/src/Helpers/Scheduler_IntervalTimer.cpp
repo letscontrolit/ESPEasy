@@ -14,7 +14,6 @@
 #include "../Helpers/PeriodicalActions.h"
 
 
-
 /*********************************************************************************************\
 * Interval Timer
 * These timers set a new scheduled timer, based on the old value.
@@ -22,7 +21,8 @@
 \*********************************************************************************************/
 
 // Interval where it is more important to actually run the scheduled job, instead of keeping the time drift to a minimum.
-// For example running the PLUGIN_FIFTY_PER_SECOND calls probably need to run as fast as possible as they need to fetch data before a buffer overflow happens.
+// For example running the PLUGIN_FIFTY_PER_SECOND calls probably need to run as fast as possible as they need to fetch data before a buffer
+// overflow happens.
 // For those it is more important to actually run it than keeping pace.
 void ESPEasy_Scheduler::setNextTimeInterval(unsigned long& timer, const unsigned long step) {
   timer += step;
@@ -54,8 +54,10 @@ void ESPEasy_Scheduler::setNextStrictTimeInterval(unsigned long     & timer,
     // Event has not yet happened, which is fine.
     return;
   }
+
   // Try to get in sync again.
   const unsigned long stepsMissed = static_cast<unsigned long>(passed) / step;
+
   timer += (stepsMissed + 1) * step;
 }
 
@@ -65,6 +67,7 @@ void ESPEasy_Scheduler::setIntervalTimer(SchedulerIntervalTimer_e intervalTimer)
 
 void ESPEasy_Scheduler::setIntervalTimerAt(SchedulerIntervalTimer_e intervalTimer, unsigned long newtimer) {
   const ConstIntervalTimerID timerID(intervalTimer);
+
   setNewTimerAt(timerID, newtimer);
 }
 
@@ -73,6 +76,7 @@ void ESPEasy_Scheduler::setIntervalTimerOverride(SchedulerIntervalTimer_e interv
 
   setNextTimeInterval(timer, msecFromNow);
   const ConstIntervalTimerID timerID(intervalTimer);
+
   setNewTimerAt(timerID, timer);
 }
 
@@ -132,6 +136,7 @@ void ESPEasy_Scheduler::setIntervalTimer(SchedulerIntervalTimer_e intervalTimer,
 
   setNextTimeInterval(timer, interval);
   const ConstIntervalTimerID timerID(intervalTimer);
+
   setNewTimerAt(timerID, timer);
 }
 
@@ -148,7 +153,7 @@ void ESPEasy_Scheduler::process_interval_timer(SchedulerTimerID timerID, unsigne
   // Set the interval timer now, it may be altered by the commands below.
   // This is the default next-run-time.
 
-  const ConstIntervalTimerID* tmp = reinterpret_cast<const ConstIntervalTimerID*>(&timerID);
+  const ConstIntervalTimerID *tmp              = reinterpret_cast<const ConstIntervalTimerID *>(&timerID);
   const SchedulerIntervalTimer_e intervalTimer = tmp->getIntervalTimer();
 
   setIntervalTimer(intervalTimer, lasttimer);
