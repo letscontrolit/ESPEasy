@@ -890,9 +890,12 @@ Example scan showing a single device, with the Plugin included in the build:
 
 .. image:: images/Tools_I2Cscan_single_bus.png
 
-TODO: *Add scan with I2C Multiplexer result*
+Example scan using an I2C multiplexer, showing multiple devices across multiple channels, with the plugins included in the (MAX) build:
 
-.. note:: On builds that have ``LIMIT_BUILD_SIZE`` set, like the ESP8266 Collection and Display builds, the names of the supported devices and plugins are not included in the output, only the address(es) are listed.
+.. image:: images/Tools_I2Cscan_multiplexer.png
+
+
+.. note:: On builds that have ``LIMIT_BUILD_SIZE`` set, like the ESP8266 Collection and Display builds, the names of the supported devices and plugins are **not** included in the output, only the address(es) are listed.
 
 
 Factory Reset
