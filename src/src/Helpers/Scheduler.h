@@ -19,6 +19,69 @@
 #include <map>
 
 
+
+  /*********************************************************************************************\
+  * ESPEasy uses a scheduler, which is essentially its heart beat.
+  * 
+  * It is basically a list of tuples with:
+  * - timestamp (in msec)
+  * - 32-bit value describing what should be done.
+  * 
+  * This list is sorted on timestamp, with the next scheduled action at the front.
+  * 
+  *   Scheduled Action Parameters
+  *   ---------------------------
+  * 
+  * The 32-bit value uses a few bits to signify its timer type.
+  * Per timer type the left over bits can be used to store some arguments.
+  *  
+  * Some timer types need to store more which cannot be stored in this 32-bit value.
+  * For example system timers (e.g. a timer started from rules) need more parameters.
+  * These will be stored in a separate map, where this 32-bit value is used as key to access these arguments.
+  * As it is stored in a map, this 32-bit value for this timer type needs to be unique.
+  * To make those values unique, some of the arguments are also stored in this 32-bit value.
+  * For example "Par1" may be used to make this more unique. 
+  * For GPIO longpulse the rising and falling edge can already be scheduled by including the pin state in this 32-bit value.
+  * 
+  *   Background Actions & System/Rules Events
+  *   ----------------------------------------
+  * 
+  * Whenever timestamp of the first item in this actions list is not yet due, 
+  * the scheduler may perform background tasks or call delay() to reduce power consumption.
+  * 
+  * N.B. These background tasks will also be executed at some minimal guaranteed interval, 
+  *      to make sure a fully loaded ESP will not stall as background work piles up.
+  * 
+  * Some actions do not have a specific scheduled timer, as they just have to be performed as soon as possible.
+  * For example processing rules events are put in a separate event queue.
+  * The Scheduler tries to find a good balance between processing such queued items 
+  * and making sure scheduled actions will be done as close as possible to their scheduled moment.
+  * 
+  *   Fixed Interval 'jitter'
+  *   -----------------------
+  * 
+  * A lot of ESPEasy's operations consists of repetitive actions.
+  * These often have a specific interval, like calls to PLUGIN_TEN_PER_SECOND.
+  * Also each task has its own configured interval.
+  *  
+  * Whenever an interval based scheduled action is running behind its schedule, 
+  * the scheduler will try to keep up with its original pace.
+  * For example:
+  * A call to PLUGIN_TEN_PER_SECOND is scheduled to run at time X.
+  * Whenever it is being processed, the first thing to do is to schedule it at time X + 100 msec.
+  * If the ESP is running behind, this new timestamp could already be in the past.
+  * The scheduler will then try to get in sync again, unless the scheduler missed more then 1 full interval.
+  * If this happens, the scheduler will just 'restart' the interval considering the current timestamp as start of the interval.
+  * 
+  * This will eventually spread scheduled intervals to their optimum interval cadance.
+  * However it may appear some scheduled actions may drift apart where they may have been running nearly in sync before.
+  * 
+  * If actions should be executed in sync, one should trigger such actions from the rules.
+  * For example grouping "taskRun" calls triggered via the same rules event.
+  * 
+  * 
+  * 
+  \*********************************************************************************************/
 class ESPEasy_Scheduler {
 public:
 
