@@ -121,9 +121,6 @@ void ESPEasy_Scheduler::handle_schedule() {
     case SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e:
       process_plugin_timer(timerID);
       break;
-    case SchedulerTimerType_e::PluginCallForTask_e:
-//      process_plugin_call_for_task(timerID);
-      break;
     case SchedulerTimerType_e::RulesTimer:
       process_rules_timer(timerID, timer);
       break;
