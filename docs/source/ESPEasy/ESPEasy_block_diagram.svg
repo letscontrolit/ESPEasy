@@ -203,17 +203,17 @@
   </defs>
   <sodipodi:namedview
      inkscape:window-maximized="1"
-     inkscape:window-y="-8"
-     inkscape:window-x="-8"
-     inkscape:window-height="1009"
-     inkscape:window-width="1920"
+     inkscape:window-y="2151"
+     inkscape:window-x="3831"
+     inkscape:window-height="2071"
+     inkscape:window-width="3840"
      showgrid="false"
      inkscape:document-rotation="0"
      inkscape:current-layer="layer1"
      inkscape:document-units="mm"
-     inkscape:cy="265"
-     inkscape:cx="335"
-     inkscape:zoom="0.70000001"
+     inkscape:cy="435.17857"
+     inkscape:cx="481.60714"
+     inkscape:zoom="2.8"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      borderopacity="1.0"
@@ -519,20 +519,20 @@
        inkscape:export-ydpi="299.9895" />
     <text
        id="text1942"
-       y="23.437288"
-       x="216.77176"
+       y="25.799639"
+       x="228.48901"
        style="font-style:normal;font-weight:normal;font-size:7.71924px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.192981"
        xml:space="preserve"
        inkscape:export-xdpi="299.9895"
        inkscape:export-ydpi="299.9895"><tspan
          id="tspan2258"
          style="text-align:center;text-anchor:middle;stroke-width:0.192981"
-         y="23.437288"
-         x="216.77176"
+         y="25.799639"
+         x="228.48901"
          sodipodi:role="line">MQTT</tspan><tspan
          style="text-align:center;text-anchor:middle;stroke-width:0.192981"
-         y="33.086338"
-         x="216.77176"
+         y="35.448689"
+         x="228.48901"
          sodipodi:role="line"
          id="tspan1030">Broker</tspan></text>
     <path
@@ -571,8 +571,8 @@
          sodipodi:role="line"
          id="tspan1244">- Rules</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3, 3;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker2362);marker-start:url(#marker1068)"
-       d="m 137.44565,62.565419 c 29.79532,0.19356 61.67586,-26.594138 66.82485,-32.808628"
+       style="fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3, 3;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker1068);marker-end:url(#marker2362)"
+       d="M 138.10711,62.565419 C 196.53412,62.853473 186.08133,45.98765 215.60979,32.30813"
        id="path2358"
        sodipodi:nodetypes="cc"
        inkscape:export-xdpi="299.9895"
@@ -632,18 +632,18 @@
        inkscape:export-ydpi="299.9895" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:8.29458px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.207365"
-       x="195.4005"
-       y="70.283981"
+       style="font-style:normal;font-weight:normal;font-size:4.58611px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.207365"
+       x="195.4783"
+       y="67.973976"
        id="text1505"
        transform="rotate(27.659924)"
        inkscape:export-xdpi="299.9895"
        inkscape:export-ydpi="299.9895"><tspan
          sodipodi:role="line"
          id="tspan1503"
-         x="195.4005"
-         y="70.283981"
-         style="stroke-width:0.207365">Events</tspan></text>
+         x="195.4783"
+         y="67.973976"
+         style="font-size:4.58611px;stroke-width:0.207365">+eventvalues</tspan></text>
     <g
        id="g1545"
        transform="translate(64.405916,171.68307)"
@@ -655,7 +655,8 @@
          height="5"
          width="15.208333"
          id="rect1507"
-         style="fill:#00ffff;fill-opacity:1;stroke:none;stroke-width:0.55118;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:3.30709, 3.30709;stroke-dashoffset:0" />
+         style="fill:#00ffff;fill-opacity:1;stroke:#000000;stroke-width:0.451;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:1.353, 1.353;stroke-dashoffset:0;stroke-opacity:1"
+         ry="2.7755576e-17" />
       <text
          id="text1511"
          y="12.918584"
@@ -765,5 +766,61 @@
          y="73.486366"
          style="font-size:6.35px;text-align:center;text-anchor:middle;stroke-width:0.264583"
          id="tspan1032">Controller</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.207365"
+       x="204.82954"
+       y="63.229748"
+       id="text1"
+       transform="rotate(27.659924)"
+       inkscape:export-xdpi="299.9895"
+       inkscape:export-ydpi="299.9895"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         x="204.82954"
+         y="63.229748"
+         style="font-size:6.35px;stroke-width:0.207365">Events</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:5.64444px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.207365"
+       x="102.2915"
+       y="30.461956"
+       id="text2"
+       transform="rotate(34.226456)"
+       inkscape:export-xdpi="299.9895"
+       inkscape:export-ydpi="299.9895"><tspan
+         sodipodi:role="line"
+         id="tspan2"
+         x="102.2915"
+         y="30.461956"
+         style="font-size:5.64444px;stroke-width:0.207365">TaskValues</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:5.64444px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.207365"
+       x="-36.906052"
+       y="172.92097"
+       id="text3"
+       transform="rotate(-34.166225)"
+       inkscape:export-xdpi="299.9895"
+       inkscape:export-ydpi="299.9895"><tspan
+         sodipodi:role="line"
+         id="tspan3"
+         x="-36.906052"
+         y="172.92097"
+         style="font-size:5.64444px;stroke-width:0.207365">TaskValues</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.207365"
+       x="69.670692"
+       y="121.19359"
+       id="text4"
+       transform="rotate(0.92344667)"
+       inkscape:export-xdpi="299.9895"
+       inkscape:export-ydpi="299.9895"><tspan
+         sodipodi:role="line"
+         id="tspan4"
+         x="69.670692"
+         y="121.19359"
+         style="font-size:4.23333px;stroke-width:0.207365">TaskValues</tspan></text>
   </g>
 </svg>
