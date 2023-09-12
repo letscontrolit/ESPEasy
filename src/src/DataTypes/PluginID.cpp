@@ -36,4 +36,4 @@ String pluginID_t::toDisplayString() const {
     return strformat(F("P%03d"), value);
 }
 
-pluginID_t INVALID_PLUGIN_ID;
+const pluginID_t INVALID_PLUGIN_ID;

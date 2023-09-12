@@ -1,17 +1,21 @@
 #include "../DataStructs/SettingsStruct.h"
 
 #include "../../ESPEasy_common.h"
+
+#ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
+#define DATASTRUCTS_SETTINGSSTRUCT_CPP
+
+
 #include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/SPI_options.h"
+#include "../DataTypes/NPluginID.h"
+#include "../DataTypes/PluginID.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringParser.h"
-
-#ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
-#define DATASTRUCTS_SETTINGSSTRUCT_CPP
 
 
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
@@ -505,7 +509,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTimeSettings() {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearNotifications() {
   for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
-    Notification[i]        = 0;
+    Notification[i].setInvalid();
     NotificationEnabled[i] = false;
   }
 }

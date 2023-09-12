@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-//typedef uint8_t pluginID_t;
-
 struct pluginID_t {
     pluginID_t() = default;
 
@@ -24,6 +22,6 @@ struct pluginID_t {
 
 
 
-extern pluginID_t INVALID_PLUGIN_ID;
+extern const pluginID_t INVALID_PLUGIN_ID;
 
 #endif // ifndef DATATYPES_PLUGINID_H

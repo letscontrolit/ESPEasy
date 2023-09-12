@@ -41,8 +41,8 @@ void handle_notifications() {
   // char tmpString[64];
 
 
-  uint8_t notificationindex          = getFormItemInt(F("index"), 0);
-  boolean notificationindexNotSet = notificationindex == 0;
+  npluginID_t  notificationindex  = npluginID_t::toPluginID(getFormItemInt(F("index"), 0));
+  boolean notificationindexNotSet = notificationindex == INVALID_N_PLUGIN_ID;
   --notificationindex;
 
   const int notification = getFormItemInt(F("notification"), -1);
@@ -125,7 +125,7 @@ void handle_notifications() {
       addHtmlInt(x + 1);
       html_TD();
 
-      if (Settings.Notification[x] != 0)
+      if (Settings.Notification[x] != INVALID_N_PLUGIN_ID)
       {
         addEnabled(Settings.NotificationEnabled[x]);
 
