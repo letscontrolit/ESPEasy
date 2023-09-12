@@ -251,7 +251,9 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx
 
 bool Dallas_plugin(pluginID_t pluginID)
 {
-  return (pluginID == 4) || (pluginID == 80) || (pluginID == 100);
+  return (pluginID.value == 4) || 
+         (pluginID.value == 80) || 
+         (pluginID.value == 100);
 }
 
 void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index)

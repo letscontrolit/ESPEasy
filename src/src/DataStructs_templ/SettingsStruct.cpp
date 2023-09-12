@@ -648,7 +648,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDeviceID[i][task]       = 0u;
     TaskDeviceSendData[i][task] = false;
   }
-  TaskDeviceNumber[task]     = 0u;
+  TaskDeviceNumber[task]     = INVALID_PLUGIN_ID;
   OLD_TaskDeviceID[task]     = 0u; // UNUSED: this can be removed
   TaskDevicePin1[task]       = -1;
   TaskDevicePin2[task]       = -1;

@@ -743,7 +743,7 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
     for (taskIndex_t task = 0; task < INVALID_TASK_INDEX && canUnsubscribe; ++task) {
       if (task != event->TaskIndex) {
         if (Settings.TaskDeviceEnabled[task] &&
-            (Settings.TaskDeviceNumber[task] == PLUGIN_ID_037)) {
+            (Settings.TaskDeviceNumber[task] == pluginID_t::toPluginID(PLUGIN_ID_037))) {
           P037_data_struct *P037_data_other = static_cast<P037_data_struct *>(getPluginTaskData(task));
 
           if (nullptr != P037_data_other) {

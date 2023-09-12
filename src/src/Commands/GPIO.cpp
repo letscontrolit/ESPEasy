@@ -297,7 +297,7 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
 const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char *Line)
 {
   bool sendStatusFlag;
-  uint8_t pluginID = 0;
+  pluginID_t pluginID;
 
   switch (tolower(parseString(Line, 2).charAt(0)))
   {
@@ -379,7 +379,7 @@ const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const c
   if (tone_espEasy(event->Par1, event->Par2, duration)) {
     if (mustScheduleToneOff) {
       // For now, we only support the internal GPIO pins.
-      uint8_t pluginID = PLUGIN_GPIO;
+      const pluginID_t pluginID = PLUGIN_GPIO;
       Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, 0);
     }
     return return_command_success();
@@ -418,7 +418,7 @@ const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const 
 {
   const __FlashStringHelper * logPrefix = F("");
   bool   success  = false;
-  uint8_t   pluginID = INVALID_PLUGIN_ID;
+  pluginID_t   pluginID;
 
   switch (tolower(Line[0]))
   {
@@ -527,7 +527,7 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
 
 const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *Line)
 {
-  pluginID_t pluginID = INVALID_PLUGIN_ID;
+  pluginID_t pluginID;
   bool success = false;
 
   // Line[0]='g':gpio; ='p':pcfgpio; ='m':mcpgpio
@@ -541,19 +541,19 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
     if (event->Par2 == 2) { // INPUT
       mode = PIN_MODE_INPUT_PULLUP;
 
-      switch (pluginID) {
-        case PLUGIN_GPIO:
+      switch (pluginID.value) {
+        case PLUGIN_GPIO_INT:
           setInternalGPIOPullupMode(event->Par1);
           state = GPIO_Read_Switch_State(event->Par1, PIN_MODE_INPUT_PULLUP);
           break;
 #ifdef USES_P009
-        case PLUGIN_MCP:
+        case PLUGIN_MCP_INT:
           setMCPInputAndPullupMode(event->Par1, true);
-          GPIO_Read(PLUGIN_MCP, event->Par1, state);
+          GPIO_Read(pluginID, event->Par1, state);
           break;
 #endif
 #ifdef USES_P019
-        case PLUGIN_PCF:
+        case PLUGIN_PCF_INT:
           // PCF8574 specific: only can read 0/low state, so we must send 1
           state = 1;
           break;
@@ -723,11 +723,11 @@ range_pattern_helper_data range_helper_shared(pluginID_t plugin, uint8_t pin1, u
 {
   range_pattern_helper_data data;
 
-  switch (plugin) {
-    case PLUGIN_PCF:
+  switch (plugin.value) {
+    case PLUGIN_PCF_INT:
       data.logPrefix = F("PCF");
       break;
-    case PLUGIN_MCP:
+    case PLUGIN_MCP_INT:
       data.logPrefix = F("MCP");
       break;
   }
@@ -1126,18 +1126,18 @@ bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *ev
     }
 
     if (mode < 255) {
-      switch (pluginID) {
-        case PLUGIN_GPIO:
+      switch (pluginID.value) {
+        case PLUGIN_GPIO_INT:
           /* setSuccess = */ setGPIOMode(pin, mode);
           break;
 #ifdef USES_P019
-        case PLUGIN_PCF:
+        case PLUGIN_PCF_INT:
           // set pin = 1 when INPUT
           /* setSuccess = */ setPCFMode(pin, mode);
           break;
 #endif
 #ifdef USES_P009
-        case PLUGIN_MCP:
+        case PLUGIN_MCP_INT:
           /* setSuccess = */ setMCPMode(pin, mode);
           break;
 #endif
@@ -1243,9 +1243,9 @@ bool getGPIOPinStateValues(String& str) {
         default:
         {
           #if FEATURE_PINSTATE_EXTENDED
-          unsigned int plugin = INVALID_PLUGIN_ID;
-          if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID)) { // Valid plugin ID?
-            pluginID  = plugin;
+          unsigned int plugin = INVALID_PLUGIN_ID.value;
+          if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID.value)) { // Valid plugin ID?
+            pluginID.value  = plugin;
             #ifndef BUILD_NO_DEBUG
             logPrefix = get_formatted_Plugin_number(pluginID);
             #endif

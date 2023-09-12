@@ -16,7 +16,7 @@
 
 
 // Vector to match a "DeviceIndex" to a plugin ID.
-const pluginID_t DeviceIndex_to_Plugin_id[] PROGMEM =
+const /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 {
 #ifdef USES_P001
   1,
@@ -2103,9 +2103,9 @@ unsigned getNrBuiltInDeviceIndex()
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {
-  if (pluginID < Plugin_id_to_DeviceIndex_size)
+  if (pluginID.value < Plugin_id_to_DeviceIndex_size)
   {
-    return Plugin_id_to_DeviceIndex[pluginID];
+    return Plugin_id_to_DeviceIndex[pluginID.value];
   }
   return INVALID_DEVICE_INDEX;
 }
@@ -2115,7 +2115,7 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
   if (deviceIndex < DeviceIndex_to_Plugin_id_size)
   {
 //    return static_cast<pluginID_t>(DeviceIndex_to_Plugin_id[deviceIndex]);
-    return static_cast<pluginID_t>(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
+    return pluginID_t::toPluginID(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
   }
   return INVALID_PLUGIN_ID;
 }
@@ -2158,7 +2158,7 @@ void PluginSetup()
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
     if (validPluginID(pluginID)) { 
-      Plugin_id_to_DeviceIndex[pluginID] = deviceIndex;
+      Plugin_id_to_DeviceIndex[pluginID.value] = deviceIndex;
       struct EventStruct TempEvent;
       String dummy;
       PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);

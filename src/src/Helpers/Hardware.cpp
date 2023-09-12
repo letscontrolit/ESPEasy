@@ -102,7 +102,7 @@ void hardwareInit()
     const bool serialPinConflict = isSerialConsolePin(gpio);
 
     if (!serialPinConflict) {
-      const uint32_t key = createKey(1, gpio);
+      const uint32_t key = createKey(PLUGIN_GPIO, gpio);
       #ifdef ESP32
       checkAndClearPWM(key);
       #endif // ifdef ESP32
@@ -136,13 +136,13 @@ void hardwareInit()
             break;
           case PinBootState::Output_low:
             createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, 0);
-            GPIO_Write(GPIO_PLUGIN_ID, gpio, LOW, PIN_MODE_OUTPUT);
+            GPIO_Write(PLUGIN_GPIO, gpio, LOW, PIN_MODE_OUTPUT);
 
             // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
             break;
           case PinBootState::Output_high:
             createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, 0);
-            GPIO_Write(GPIO_PLUGIN_ID, gpio, HIGH, PIN_MODE_OUTPUT);
+            GPIO_Write(PLUGIN_GPIO, gpio, HIGH, PIN_MODE_OUTPUT);
 
             // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
             break;
@@ -1537,7 +1537,7 @@ void setFactoryDefault(DeviceModel model) {
    Add pre defined plugins and rules.
  \*********************************************************************************************/
 void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow) {
-  setTaskDevice_to_TaskIndex(1, taskIndex);
+  setTaskDevice_to_TaskIndex(PLUGIN_GPIO, taskIndex);
   setBasicTaskValues(
     taskIndex,
     0,    // taskdevicetimer
@@ -2206,7 +2206,9 @@ void initAnalogWrite()
 {
   #if defined(ESP32)
 
-  for (uint8_t x = 0; x < 16; x++) {
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     ledChannelPin[x]  = -1;
     ledChannelFreq[x] = ledcSetup(x, 1000, 10); // Clear the channel
   }
@@ -2227,8 +2229,10 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
 {
   static bool initialized = false;
 
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
   if (!initialized) {
-    for (uint8_t x = 0; x < 16; x++) {
+    for (uint8_t x = 0; x < nrLedChannelPins; x++) {
       ledChannelPin[x]  = -1;
       ledChannelFreq[x] = 0;
     }
@@ -2240,7 +2244,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
   int8_t ledChannel = -1;
   bool mustSetup    = false;
 
-  for (uint8_t x = 0; x < 16; x++) {
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     if (ledChannelPin[x] == pin) {
       ledChannel = x;
     }
@@ -2248,7 +2252,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
 
   if (ledChannel == -1)                                    // no channel set for this pin
   {
-    for (uint8_t x = 0; x < 16 && ledChannel == -1; ++x) { // find free channel
+    for (uint8_t x = 0; x < nrLedChannelPins && ledChannel == -1; ++x) { // find free channel
       if (ledChannelPin[x] == -1)
       {
         if (static_cast<uint32_t>(ledcReadFreq(x)) == ledChannelFreq[x]) {
@@ -2292,7 +2296,9 @@ void detachLedChannel(int pin)
 {
   int8_t ledChannel = -1;
 
-  for (uint8_t x = 0; x < 16; x++) {
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     if (ledChannelPin[x] == pin) {
       ledChannel = x;
     }
@@ -2340,15 +2346,13 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t frequency) {
 bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key)
 {
   // For now, we only support the internal GPIO pins.
-  uint8_t   pluginID = PLUGIN_GPIO;
-
-  if (!checkValidPortRange(pluginID, gpio)) {
+  if (!checkValidPortRange(PLUGIN_GPIO, gpio)) {
     return false;
   }
   portStatusStruct tempStatus;
 
   // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
-  key = createKey(pluginID, gpio);
+  key = createKey(PLUGIN_GPIO, gpio);
 
   // WARNING: operator [] creates an entry in the map if key does not exist
   // So the next command should be part of each command:

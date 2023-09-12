@@ -371,7 +371,7 @@ bool BuildFixes()
     #ifdef USES_P003
     // P003_Pulse was always using the pull-up, now it is a setting.
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-      if (Settings.TaskDeviceNumber[taskIndex] == 3) {
+      if (Settings.TaskDeviceNumber[taskIndex].value == 3) {
         Settings.TaskDevicePin1PullUp[taskIndex] = true;
       }
     }
@@ -388,7 +388,7 @@ bool BuildFixes()
   if (Settings.Build < 20116) {
     // Added PWR button, init to "-none-"
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-      if (Settings.TaskDeviceNumber[taskIndex] == 53) {
+      if (Settings.TaskDeviceNumber[taskIndex].value == 53) {
         Settings.TaskDevicePluginConfig[taskIndex][3] = -1;
       }
     }

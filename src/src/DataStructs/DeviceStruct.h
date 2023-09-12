@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../DataTypes/DeviceIndex.h"
+#include "../DataTypes/PluginID.h"
 #include "../DataTypes/SensorVType.h"
 
 
@@ -57,6 +58,8 @@ struct __attribute__((__packed__)) DeviceStruct
   bool isSPI() const;
 
   bool isCustom() const;
+
+  pluginID_t getPluginID() const;
 
   uint8_t            Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
   uint8_t            Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin

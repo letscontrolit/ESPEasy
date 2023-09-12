@@ -118,7 +118,7 @@ long stream_timing_statistics(bool clearStats) {
           html_TR_TD();
         }
         {
-          addHtml(get_formatted_Plugin_number(Device[deviceIndex].Number));
+          addHtml(get_formatted_Plugin_number(Device[deviceIndex].getPluginID()));
           addHtml(' ');
           addHtml(getPluginNameFromDeviceIndex(deviceIndex));
         }

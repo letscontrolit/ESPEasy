@@ -54,10 +54,10 @@ void handle_devices() {
   pluginID_t taskdevicenumber;
 
   if (hasArg(F("del"))) {
-    taskdevicenumber = 0;
+    taskdevicenumber.setInvalid();
   }
   else {
-    taskdevicenumber = getFormItemInt(F("TDNUM"), 0);
+    taskdevicenumber = pluginID_t::toPluginID(getFormItemInt(F("TDNUM"), 0));
   }
 
 
@@ -148,12 +148,12 @@ void handle_devices() {
       // change of device: cleanup old device and reset default settings
       setTaskDevice_to_TaskIndex(taskdevicenumber, taskIndex);
     }
-    else if (taskdevicenumber != 0) // save settings
+    else if (taskdevicenumber != INVALID_PLUGIN_ID) // save settings
     {
       handle_devices_CopySubmittedSettings(taskIndex, taskdevicenumber);
     }
 
-    if (taskdevicenumber != 0) {
+    if (taskdevicenumber != INVALID_PLUGIN_ID) {
       // Task index has a task device number, so it makes sense to save.
       // N.B. When calling delete, the settings were already saved.
       if (nosave) {
@@ -860,7 +860,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
   if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex]))
   {
     // takes lots of memory/time so call this only when needed.
-    addDeviceSelect(F("TDNUM"), Settings.TaskDeviceNumber[taskIndex]); // ="taskdevicenumber"
+    addDeviceSelect(F("TDNUM"), Settings.TaskDeviceNumber[taskIndex].value); // ="taskdevicenumber"
     addFormSeparator(4);
   }
 
@@ -871,13 +871,13 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     addHtml(F("<input "));
     addHtmlAttribute(F("type"),  F("hidden"));
     addHtmlAttribute(F("name"),  F("TDNUM"));
-    addHtmlAttribute(F("value"), Settings.TaskDeviceNumber[taskIndex]);
+    addHtmlAttribute(F("value"), Settings.TaskDeviceNumber[taskIndex].value);
     addHtml('>');
 
     // show selected device name and delete button
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
 
-    addHelpButton(concat(F("Plugin"), static_cast<int>(Settings.TaskDeviceNumber[taskIndex])));
+    addHelpButton(concat(F("Plugin"), Settings.TaskDeviceNumber[taskIndex].value));
     addRTDPluginButton(Settings.TaskDeviceNumber[taskIndex]);
 
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"

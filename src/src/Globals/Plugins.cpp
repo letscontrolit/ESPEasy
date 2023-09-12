@@ -128,7 +128,7 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
 
   if (!validDeviceIndex(deviceIndex)) {
     String name = F("Plugin ");
-    name += String(static_cast<int>(pluginID));
+    name += String(pluginID.value);
     name += F(" not included in build");
     return name;
   }

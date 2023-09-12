@@ -110,7 +110,8 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
     success = false;
     return F("INVALID_PARAMETERS");
   }
-  if (!Settings.AllowTaskValueSetAllPlugins() && getPluginID_from_TaskIndex(taskIndex) != 33) { // PluginID 33 = Dummy Device
+  if (!Settings.AllowTaskValueSetAllPlugins() && 
+      getPluginID_from_TaskIndex(taskIndex).value != 33) { // PluginID 33 = Dummy Device
     success = false;
     return F("NOT_A_DUMMY_TASK");
   }

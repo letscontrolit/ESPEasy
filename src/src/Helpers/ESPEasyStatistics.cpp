@@ -46,7 +46,7 @@ void jsonStatistics(bool clearStats) {
         // Start new plugin stream
         json_open(); // open new plugin
         json_prop(F("name"), getPluginNameFromDeviceIndex(deviceIndex));
-        json_prop(F("id"),   String(getPluginID_from_DeviceIndex(deviceIndex)));
+        json_prop(F("id"),   String(getPluginID_from_DeviceIndex(deviceIndex).value));
         json_open(true, F("function")); // open function
         json_open(); // open first function element
       }

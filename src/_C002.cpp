@@ -84,9 +84,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
             // We need the index of the controller we are: 0...CONTROLLER_MAX
             if (Settings.TaskDeviceEnabled[x] &&
                 (Settings.TaskDeviceSendData[ControllerID][x]
-                 || (Settings.TaskDeviceNumber[x] == 29)         // Domoticz helper doesn't have controller checkboxes...
+                 || (Settings.TaskDeviceNumber[x] == pluginID_t::toPluginID(29))         // Domoticz helper doesn't have controller checkboxes...
                  # if defined(USES_P088)
-                 || (Settings.TaskDeviceNumber[x] == 88)         // Heatpump IR doesn't have controller checkboxes...
+                 || (Settings.TaskDeviceNumber[x] == pluginID_t::toPluginID(88))         // Heatpump IR doesn't have controller checkboxes...
                  # endif // if defined(USES_P088)
                 ) &&
                 (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
@@ -94,7 +94,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               String action;
               bool   mustSendEvent = false;
 
-              switch (Settings.TaskDeviceNumber[x]) {
+              switch (Settings.TaskDeviceNumber[x].value) {
                 case 1: // temp solution, if input switch, update state
                 {
                   action  = F("inputSwitchState,");

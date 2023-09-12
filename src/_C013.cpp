@@ -254,7 +254,7 @@ void C013_Receive(struct EventStruct *event) {
           Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber;
           Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourceUnit; // remote feed store unit nr sending the data
 
-          if ((infoReply.deviceNumber == 33) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
+          if ((infoReply.deviceNumber == pluginID_t::toPluginID(33)) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
             // Received a dummy device and the sensor type is actually set
             Settings.TaskDevicePluginConfig[infoReply.destTaskIndex][0] = static_cast<int16_t>(infoReply.sensorType);
           }
@@ -302,8 +302,8 @@ void C013_Receive(struct EventStruct *event) {
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
               log += concat(F(" from unit "), dataReply.sourceUnit);
-              log += concat(F(" remote: "), dataReply.deviceNumber);
-              log += concat(F(" local: "), Settings.TaskDeviceNumber[dataReply.destTaskIndex]);
+              log += concat(F(" remote: "), dataReply.deviceNumber.value);
+              log += concat(F(" local: "), Settings.TaskDeviceNumber[dataReply.destTaskIndex].value);
               addLogMove(LOG_LEVEL_ERROR, log);
             }
           } else {

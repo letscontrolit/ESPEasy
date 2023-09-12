@@ -19,6 +19,8 @@
 # define PLUGIN_VALUENAME1_022 "PWM"
 
 
+const pluginID_t P022_PLUGIN_ID = pluginID_t::toPluginID(PLUGIN_ID_022);
+
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
 
 boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
@@ -245,9 +247,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
               P022_data->Plugin_022_Frequency(address, freq);
             }
 
-            // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
+            // setPinState(P022_PLUGIN_ID, event->Par1, PIN_MODE_PWM, event->Par2);
             portStatusStruct newStatus;
-            const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+            const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
             // WARNING: operator [] creates an entry in the map if key does not exist
             newStatus = globalMapPortStatus[key];
@@ -322,7 +324,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, 99);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, 99);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -386,7 +388,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           String dummyString;
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
-          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(P022_PLUGIN_ID, event->Par2), dummyString, 0);
         }
       }
 
@@ -432,7 +434,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, pin, PIN_MODE_OUTPUT, event->Par2);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, pin);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, pin);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -507,7 +509,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -568,7 +570,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
         // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         portStatusStruct newStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+        const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
         // WARNING: operator [] creates an entry in the map if key does not exist
         newStatus         = globalMapPortStatus[key];

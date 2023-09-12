@@ -72,7 +72,10 @@ bool DeviceStruct::isCustom() const {
          (Type == DEVICE_TYPE_CUSTOM3);
 }
 
-
+pluginID_t DeviceStruct::getPluginID() const
+{
+  return pluginID_t::toPluginID(Number);
+}
 
 
 DeviceCount_t& DeviceCount_t::operator++() {

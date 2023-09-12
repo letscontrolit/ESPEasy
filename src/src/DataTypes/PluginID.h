@@ -3,7 +3,26 @@
 
 #include "../../ESPEasy_common.h"
 
-typedef uint8_t pluginID_t;
+//typedef uint8_t pluginID_t;
+
+struct pluginID_t {
+    pluginID_t() = default;
+
+  static pluginID_t toPluginID(unsigned other);
+
+  pluginID_t& operator=(const pluginID_t& other);
+
+  bool operator==(const pluginID_t& other) const;
+  bool operator!=(const pluginID_t& other) const;
+
+  void setInvalid();
+
+  String toDisplayString() const;
+
+  uint8_t value{};
+};
+
+
 
 extern pluginID_t INVALID_PLUGIN_ID;
 

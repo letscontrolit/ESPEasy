@@ -24,14 +24,14 @@ void ESPEasy_Scheduler::setGPIOTimer(
 {
   uint8_t GPIOType = GPIO_TYPE_INVALID;
 
-  switch (pluginID) {
-    case PLUGIN_GPIO:
+  switch (pluginID.value) {
+    case PLUGIN_GPIO_INT:
       GPIOType = GPIO_TYPE_INTERNAL;
       break;
-    case PLUGIN_PCF:
+    case PLUGIN_PCF_INT:
       GPIOType = GPIO_TYPE_PCF;
       break;
-    case PLUGIN_MCP:
+    case PLUGIN_MCP_INT:
       GPIOType = GPIO_TYPE_MCP;
       break;
   }
@@ -53,14 +53,14 @@ void ESPEasy_Scheduler::clearGPIOTimer(pluginID_t pluginID, int pinnr)
 {
   uint8_t GPIOType = GPIO_TYPE_INVALID;
 
-  switch (pluginID) {
-    case PLUGIN_GPIO:
+  switch (pluginID.value) {
+    case PLUGIN_GPIO_INT:
       GPIOType = GPIO_TYPE_INTERNAL;
       break;
-    case PLUGIN_PCF:
+    case PLUGIN_PCF_INT:
       GPIOType = GPIO_TYPE_PCF;
       break;
-    case PLUGIN_MCP:
+    case PLUGIN_MCP_INT:
       GPIOType = GPIO_TYPE_MCP;
       break;
   }
@@ -106,7 +106,7 @@ void ESPEasy_Scheduler::process_gpio_timer(SchedulerTimerID timerID, unsigned lo
     pinStateValue = (pinStateValue > 0) ? 0 : 1;
   }
 
-  uint8_t pluginID = PLUGIN_GPIO;
+  pluginID_t pluginID = PLUGIN_GPIO;
 
   switch (GPIOType)
   {

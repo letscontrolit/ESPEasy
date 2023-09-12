@@ -471,13 +471,7 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
 
 String get_formatted_Plugin_number(pluginID_t pluginID)
 {
-  if (!validPluginID(pluginID)) {
-    return F("P---");
-  }
-  String result;
-  result += 'P';
-  result += formatIntLeadingZeroes(pluginID, 3);
-  return result;
+  return pluginID.toDisplayString();
 }
 
 String formatIntLeadingZeroes(int value, int nrDigits)

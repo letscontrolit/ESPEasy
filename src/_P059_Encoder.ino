@@ -124,7 +124,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
         if (pin >= 0)
         {
           // pinMode(pin, (Settings.TaskDevicePin1PullUp[event->TaskIndex]) ? INPUT_PULLUP : INPUT);
-          const uint32_t key = createKey(PLUGIN_ID_059, pin);
+          const uint32_t key = createKey(pluginID_t::toPluginID(PLUGIN_ID_059), pin);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus = globalMapPortStatus[key];

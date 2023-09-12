@@ -325,7 +325,7 @@ public:
   uint8_t       Protocol[CONTROLLER_MAX] = {0};
   uint8_t       Notification[NOTIFICATION_MAX] = {0}; //notifications, point to a NPLUGIN id
   // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
-  uint8_t       TaskDeviceNumber[N_TASKS] = {0}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
+  pluginID_t    TaskDeviceNumber[N_TASKS]{}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
   unsigned int  OLD_TaskDeviceID[N_TASKS] = {0};  //UNUSED: this can be removed
   union {
     struct {

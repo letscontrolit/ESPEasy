@@ -931,7 +931,7 @@ void addRTDPluginButton(pluginID_t pluginID) {
   url += F(".html");
   addRTDHelpButton(url);
 
-  if ((pluginID == 76) || (pluginID == 77)) {
+  if ((pluginID.value == 76) || (pluginID.value == 77)) {
     addHtmlLink(
       F("button help"),
       makeDocLink(F("Reference/Safety.html"), true),
