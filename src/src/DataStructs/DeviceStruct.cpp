@@ -72,17 +72,33 @@ bool DeviceStruct::isCustom() const {
          (Type == DEVICE_TYPE_CUSTOM3);
 }
 
+
+
+
+DeviceCount_t& DeviceCount_t::operator++() {
+  // pre-increment, ++a
+  ++value;
+  return *this;
+}
+
+
 const DeviceStruct& DeviceVector::operator[](deviceIndex_t index) const
 {
   return _vector[index.value];
 }
 
-DeviceStruct& DeviceVector::operator[](int index)
+DeviceStruct& DeviceVector::operator[](DeviceCount_t index)
 {
-  return _vector[index];
+  return _vector[index.value];
+}
+
+DeviceStruct& DeviceVector::getDeviceStructForEdit(deviceIndex_t index)
+{
+  return _vector[index.value];
 }
 
 size_t DeviceVector::size() const
 {
   return _vector.size();
 }
+

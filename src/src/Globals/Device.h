@@ -3,6 +3,8 @@
 
 #include "../DataStructs/DeviceStruct.h"
 
+
+extern DeviceCount_t deviceCount;
 extern DeviceVector Device;
 
 #endif // GLOBALS_DEVICE_H

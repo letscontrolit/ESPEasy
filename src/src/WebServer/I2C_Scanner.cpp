@@ -6,6 +6,7 @@
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../Globals/Device.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/_Plugin_init.h"
@@ -150,7 +151,8 @@ String getKnownI2Cdevice(uint8_t address) {
   String result;
 
   #if FEATURE_I2C_DEVICE_SCAN
-  for (uint8_t x = 0; x <= deviceCount; x++) {
+  const int sorted_length = DeviceIndex_sorted.size();
+  for (uint8_t x = 0; x < sorted_length; x++) {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);

@@ -213,7 +213,8 @@ void addDeviceSelect(const __FlashStringHelper *name,  int choice)
   addSelector_Head_reloadOnChange(name);
   addSelector_Item(F("- None -"), 0, false);
 
-  for (uint8_t x = 0; x <= deviceCount; x++)
+  const int sorted_length = DeviceIndex_sorted.size();
+  for (uint8_t x = 0; x < sorted_length; x++)
   {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 

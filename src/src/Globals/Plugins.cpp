@@ -36,7 +36,6 @@
 
 #include <vector>
 
-int deviceCount = -1;
 
 std::vector<deviceIndex_t> DeviceIndex_sorted;
 

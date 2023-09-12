@@ -2175,8 +2175,9 @@ void PluginSetup()
   // ********************************************************************************
 
   // First fill the existing number of the DeviceIndex.
-  DeviceIndex_sorted.resize(deviceCount + 1);
-  for (deviceIndex_t x; x <= deviceCount; ++x) {
+  const int sorted_length = deviceCount.value + 1;
+  DeviceIndex_sorted.resize(sorted_length);
+  for (deviceIndex_t x; x < sorted_length; ++x) {
     DeviceIndex_sorted[x.value] = x;
   }
 

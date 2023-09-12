@@ -85,11 +85,29 @@ struct __attribute__((__packed__)) DeviceStruct
   bool I2CNoDeviceCheck   : 1;       // When enabled, NO I2C check will be done on the I2C address returned from PLUGIN_I2C_GET_ADDRESS function call
 };
 
+
+// Specific struct used to only allow changing Device vector in the PLUGIN_ADD call
+struct DeviceCount_t {
+  DeviceCount_t() = default;
+
+  DeviceCount_t& operator++();
+ 
+  //operator int() const { return value; }
+
+  int value = -1;
+
+};
+
 struct DeviceVector {
 
   const DeviceStruct& operator[](deviceIndex_t index) const;
 
-  DeviceStruct& operator[](int index);
+  DeviceStruct& operator[](DeviceCount_t index);
+
+  // Should not change anything in the device vector except for the PLUGIN_ADD call
+  // Whichever calls this function should reconsider doing this
+  // FIXME TD-er: Fix whereever this is called.
+  DeviceStruct& getDeviceStructForEdit(deviceIndex_t index);
 
   size_t size() const;
 

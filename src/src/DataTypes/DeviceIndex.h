@@ -3,8 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-// typedef uint8_t deviceIndex_t;
-
 struct deviceIndex_t {
   deviceIndex_t() = default;
 
@@ -20,22 +18,14 @@ struct deviceIndex_t {
   deviceIndex_t& operator=(const deviceIndex_t& other);
 
   bool           operator<(int other) const;
-  bool           operator<=(int other) const;
   bool           operator!=(int other) const;
   bool           operator!=(const deviceIndex_t& other) const;
 
   deviceIndex_t& operator++();
 
-//  bool           isValid() const;
-
 
   // TD-er: Do not add operator int() as it makes it impossible for the compiler to typecheck use of this struct.
-  /*
-     operator int() const
-     {
-      return value;
-     }
-   */
+  //   operator int() const { return value; }
 
   uint8_t value{}; // Init this to 0, so we can easily iterate over it.
 };

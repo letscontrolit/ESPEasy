@@ -180,7 +180,7 @@ void ESPEasy_Scheduler::process_system_event_queue() {
         if (((Function != PLUGIN_READ) &&
              (Function != PLUGIN_MQTT_CONNECTION_STATE) &&
              (Function != PLUGIN_MQTT_IMPORT))
-            || Device[Index].ErrorStateValues) {
+            || Device[deviceIndex].ErrorStateValues) {
           // FIXME TD-er: LoadTaskSettings should only be called when needed, not pre-emptive.
           LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
         }

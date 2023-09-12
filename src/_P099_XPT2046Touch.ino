@@ -513,15 +513,15 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                 if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Do NOT send a Z event for each
                                                                                                        // touch?
                   // FIXME TD-er: Should not change anything in the Device vector.
-                  Device[DeviceIndex.value].VType      = Sensor_VType::SENSOR_TYPE_DUAL;
-                  Device[DeviceIndex.value].ValueCount = 2;
+                  Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_DUAL;
+                  Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 2;
                 }
                 sendData(event);                                                                       // Send X/Y(/Z) event
 
                 if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Reset device configuration
                   // FIXME TD-er: Should not change anything in the Device vector.
-                  Device[DeviceIndex.value].VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
-                  Device[DeviceIndex.value].ValueCount = 3;
+                  Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
+                  Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 3;
                 }
               }
 

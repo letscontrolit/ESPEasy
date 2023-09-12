@@ -41,8 +41,6 @@
 
 struct EventStruct;
 
-extern int deviceCount;
-
 
 // Array containing "DeviceIndex" alfabetically sorted.
 extern std::vector<deviceIndex_t> DeviceIndex_sorted;

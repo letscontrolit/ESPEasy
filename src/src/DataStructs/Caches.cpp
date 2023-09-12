@@ -63,7 +63,7 @@ bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const Checksu
 void Caches::updateActiveTaskUseSerial0() {
   activeTaskUseSerial0 = false;
 #ifdef PLUGIN_USES_SERIAL
-  if (deviceCount <= 0)
+  if (deviceCount.value <= 0)
     return;
 
   // Check to see if a task is enabled and using the pins we also use for receiving commands.
