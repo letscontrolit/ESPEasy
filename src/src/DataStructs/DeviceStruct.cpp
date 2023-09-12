@@ -71,3 +71,18 @@ bool DeviceStruct::isCustom() const {
          (Type == DEVICE_TYPE_CUSTOM2) || 
          (Type == DEVICE_TYPE_CUSTOM3);
 }
+
+const DeviceStruct& DeviceVector::operator[](deviceIndex_t index) const
+{
+  return _vector[index.value];
+}
+
+DeviceStruct& DeviceVector::operator[](int index)
+{
+  return _vector[index];
+}
+
+size_t DeviceVector::size() const
+{
+  return _vector.size();
+}

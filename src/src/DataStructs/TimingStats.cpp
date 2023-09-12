@@ -311,7 +311,7 @@ String getMiscStatsName(TimingStatsElements stat) {
 
 void stopTimerTask(deviceIndex_t T, int F, uint64_t statisticsTimerStart)
 {
-  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
+  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T.value) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
 }
 
 void stopTimerController(protocolIndex_t T, CPlugin::Function F, uint64_t statisticsTimerStart)

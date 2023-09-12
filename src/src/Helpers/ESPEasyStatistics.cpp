@@ -33,11 +33,11 @@ void jsonStatistics(bool clearStats) {
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
-      const int deviceIndex = x.first / 256;
+      const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(x.first >> 8);
 
-      if (currentPluginId != deviceIndex) {
+      if (deviceIndex != currentPluginId) {
         // new plugin
-        currentPluginId = deviceIndex;
+        currentPluginId = deviceIndex.value;
         if (!firstPlugin) {
           json_close();
           json_close(true); // close previous function list

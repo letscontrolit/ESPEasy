@@ -25,7 +25,7 @@ void ESPEasy_Scheduler::schedule_plugin_task_event_timer(
   if (validDeviceIndex(DeviceIndex)) {
     schedule_event_timer(
       SchedulerPluginPtrType_e::TaskPlugin,
-      DeviceIndex,
+      DeviceIndex.value,
       Function,
       std::move(event));
   }
@@ -62,7 +62,7 @@ void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(
     // This makes sure the relatively large event will not be in memory twice.
     const SystemEventQueueTimerID timerID(
       SchedulerPluginPtrType_e::TaskPlugin,
-      DeviceIndex,
+      DeviceIndex.value,
       static_cast<uint8_t>(Function));
     ScheduledEventQueue.emplace_back(timerID.mixed_id, std::move(event));
   }
@@ -173,8 +173,10 @@ void ESPEasy_Scheduler::process_system_event_queue() {
 
   switch (ptr_type) {
     case SchedulerPluginPtrType_e::TaskPlugin:
+    {
+      const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(Index);
 
-      if (validDeviceIndex(Index)) {
+      if (validDeviceIndex(deviceIndex)) {
         if (((Function != PLUGIN_READ) &&
              (Function != PLUGIN_MQTT_CONNECTION_STATE) &&
              (Function != PLUGIN_MQTT_IMPORT))
@@ -182,12 +184,13 @@ void ESPEasy_Scheduler::process_system_event_queue() {
           // FIXME TD-er: LoadTaskSettings should only be called when needed, not pre-emptive.
           LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
         }
-        PluginCall(Index,
+        PluginCall(deviceIndex,
                    Function,
                    &ScheduledEventQueue.front().event,
                    tmpString);
       }
       break;
+    }
     case SchedulerPluginPtrType_e::ControllerPlugin:
       CPluginCall(Index,
                   static_cast<CPlugin::Function>(Function),

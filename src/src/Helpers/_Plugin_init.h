@@ -17,6 +17,7 @@ boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStru
 
 // Get the sizeof() in number of bits for the number of actually included plugins in the build
 unsigned getNrBitsDeviceIndex();
+unsigned getNrBuiltInDeviceIndex();
 
 void PluginSetup();
 

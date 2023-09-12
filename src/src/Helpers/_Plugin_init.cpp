@@ -2096,11 +2096,16 @@ unsigned getNrBitsDeviceIndex()
   return nrBits;
 }
 
+unsigned getNrBuiltInDeviceIndex()
+{
+  return DeviceIndex_to_Plugin_id_size;
+}
+
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {
   if (pluginID < Plugin_id_to_DeviceIndex_size)
   {
-    return static_cast<deviceIndex_t>(Plugin_id_to_DeviceIndex[pluginID]);
+    return Plugin_id_to_DeviceIndex[pluginID];
   }
   return INVALID_DEVICE_INDEX;
 }
@@ -2110,7 +2115,7 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
   if (deviceIndex < DeviceIndex_to_Plugin_id_size)
   {
 //    return static_cast<pluginID_t>(DeviceIndex_to_Plugin_id[deviceIndex]);
-    return static_cast<pluginID_t>(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex));
+    return static_cast<pluginID_t>(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
   }
   return INVALID_PLUGIN_ID;
 }
@@ -2119,7 +2124,7 @@ boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStru
 {
   if (deviceIndex < DeviceIndex_to_Plugin_id_size)
   {
-    Plugin_ptr_t plugin_call = (Plugin_ptr_t)pgm_read_ptr(Plugin_ptr + deviceIndex);
+    Plugin_ptr_t plugin_call = (Plugin_ptr_t)pgm_read_ptr(Plugin_ptr + deviceIndex.value);
     return plugin_call(function, event, string);
   }
   return false;
@@ -2146,9 +2151,9 @@ void PluginSetup()
   {
     Plugin_id_to_DeviceIndex[id] = INVALID_DEVICE_INDEX;
   }
-  Device.resize(DeviceIndex_to_Plugin_id_size);
+  Device._vector.resize(DeviceIndex_to_Plugin_id_size);
 
-  for (deviceIndex_t deviceIndex = 0; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
+  for (deviceIndex_t deviceIndex; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
   {
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
@@ -2171,8 +2176,8 @@ void PluginSetup()
 
   // First fill the existing number of the DeviceIndex.
   DeviceIndex_sorted.resize(deviceCount + 1);
-  for (deviceIndex_t x = 0; x <= deviceCount; x++) {
-    DeviceIndex_sorted[x] = x;
+  for (deviceIndex_t x; x <= deviceCount; ++x) {
+    DeviceIndex_sorted[x.value] = x;
   }
 
   struct

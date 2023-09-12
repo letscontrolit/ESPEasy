@@ -109,7 +109,7 @@ long stream_timing_statistics(bool clearStats) {
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
-      const deviceIndex_t deviceIndex = static_cast<deviceIndex_t>(x.first / 256);
+      const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(x.first >> 8);
 
       if (validDeviceIndex(deviceIndex)) {
         if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
@@ -131,7 +131,7 @@ long stream_timing_statistics(bool clearStats) {
 
   for (auto& x: controllerStats) {
     if (!x.second.isEmpty()) {
-      const int ProtocolIndex = x.first / 256;
+      const int ProtocolIndex = x.first >> 8;
 
       if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
         html_TR_TD_highlight();

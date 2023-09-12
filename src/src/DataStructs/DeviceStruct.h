@@ -6,7 +6,9 @@
 
 #include <vector>
 
+#include "../DataTypes/DeviceIndex.h"
 #include "../DataTypes/SensorVType.h"
+
 
 #define DEVICE_TYPE_SINGLE                  1 // connected through 1 datapin
 #define DEVICE_TYPE_DUAL                    2 // connected through 2 datapins
@@ -82,7 +84,18 @@ struct __attribute__((__packed__)) DeviceStruct
   bool TaskLogsOwnPeaks   : 1;       // When PluginStats is enabled, a call to PLUGIN_READ will also check for peaks. With this enabled, the plugin must call to check for peaks itself.
   bool I2CNoDeviceCheck   : 1;       // When enabled, NO I2C check will be done on the I2C address returned from PLUGIN_I2C_GET_ADDRESS function call
 };
-typedef std::vector<DeviceStruct> DeviceVector;
+
+struct DeviceVector {
+
+  const DeviceStruct& operator[](deviceIndex_t index) const;
+
+  DeviceStruct& operator[](int index);
+
+  size_t size() const;
+
+  std::vector<DeviceStruct> _vector;
+};
+//typedef std::vector<DeviceStruct> DeviceVector;
 
 
 #endif // DATASTRUCTS_DEVICESTRUCTS_H

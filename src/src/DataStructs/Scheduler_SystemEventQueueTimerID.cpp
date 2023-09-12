@@ -37,7 +37,8 @@ String SystemEventQueueTimerID::decode() const
   if (ptr_type == SchedulerPluginPtrType_e::ControllerPlugin) {
     result += getCPluginNameFromProtocolIndex(index);
   } else if (ptr_type == SchedulerPluginPtrType_e::TaskPlugin) {
-    result += getPluginNameFromDeviceIndex(index);
+    const deviceIndex_t dev_index = deviceIndex_t::toDeviceIndex(index);
+    result += getPluginNameFromDeviceIndex(dev_index);
   } else {
     result += (index + 1);
   }

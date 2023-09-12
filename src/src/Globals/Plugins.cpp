@@ -153,7 +153,7 @@ bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2c
 #if FEATURE_I2C_GET_ADDRESS
 uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
   uint8_t getI2CAddress = 0;
-  const uint8_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   if (validTaskIndex(taskIndex) && validDeviceIndex(deviceIndex)) {
     String dummy;
@@ -426,14 +426,18 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
   {
     // Unconditional calls to all plugins
     case PLUGIN_UNCONDITIONAL_POLL:    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
+    {
 
-      for (deviceIndex_t x = 0; validDeviceIndex(x); x++) {
+      const unsigned maxDeviceIndex = getNrBuiltInDeviceIndex();
+
+      for (deviceIndex_t x/*= 0*/; x < maxDeviceIndex; ++x) {
           START_TIMER;
           PluginCall(x, Function, event, str);
           STOP_TIMER_TASK(x, Function);
           delay(0); // SMY: call delay(0) unconditionally
       }
       return true;
+    }
 
     case PLUGIN_MONITOR:
 

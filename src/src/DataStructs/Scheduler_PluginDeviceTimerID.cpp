@@ -14,7 +14,7 @@ PluginDeviceTimerID::PluginDeviceTimerID(pluginID_t pluginID, int Par1) :
     // FIXME TD-er: Must add a constexpr function with nr of included plugins.
     const unsigned nrBits = getNrBitsDeviceIndex();
     const unsigned mask   = MASK_BITS(nrBits);
-    id = (deviceIndex & mask) | (Par1 << nrBits);
+    id = (deviceIndex.value & mask) | (Par1 << nrBits);
   }
 }
 
@@ -22,7 +22,7 @@ deviceIndex_t PluginDeviceTimerID::get_deviceIndex() const {
   const unsigned nrBits = getNrBitsDeviceIndex();
   const unsigned mask   = MASK_BITS(nrBits);
 
-  return static_cast<deviceIndex_t>(id & mask);
+  return deviceIndex_t::toDeviceIndex(id & mask);
 }
 
 #ifndef BUILD_NO_DEBUG
