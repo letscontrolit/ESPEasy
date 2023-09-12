@@ -592,8 +592,10 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           if (!retval && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
             // Disable temporarily as PLUGIN_INIT failed
             // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
-            Settings.TaskDeviceEnabled[taskIndex].setRetryInit(); 
-            Scheduler.setPluginTaskTimer(10000, taskIndex, PLUGIN_INIT);
+            // What interval?  (see: PR #4793)
+            //Settings.TaskDeviceEnabled[taskIndex].setRetryInit(); 
+            //Scheduler.setPluginTaskTimer(10000, taskIndex, PLUGIN_INIT);
+            Settings.TaskDeviceEnabled[taskIndex] = false;
             result = false;
           }
           #ifndef BUILD_NO_DEBUG

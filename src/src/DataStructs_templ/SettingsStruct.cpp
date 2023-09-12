@@ -672,7 +672,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   VariousTaskBits[task]         = 0;
   TaskDeviceDataFeed[task]      = 0u;
   TaskDeviceTimer[task]         = 0u;
-  TaskDeviceEnabled[task].enabled = false;
+  TaskDeviceEnabled[task].value = 0u; // Should also clear any temporary flags.
   I2C_Multiplexer_Channel[task] = -1;
 }
 
