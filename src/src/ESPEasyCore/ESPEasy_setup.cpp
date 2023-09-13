@@ -482,7 +482,7 @@ void ESPEasy_setup()
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log.reserve(80);
-    log += concat(F("INFO : Plugins: "), deviceCount.value + 1);
+    log += concat(F("INFO : Plugins: "), getDeviceCount() + 1);
     log += ' ';
     log += getPluginDescriptionString();
     log += F(" (");
@@ -491,8 +491,8 @@ void ESPEasy_setup()
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
-  if ((deviceCount.value + 1) >= PLUGIN_MAX) {
-    addLog(LOG_LEVEL_ERROR, concat(F("Programming error! - Increase PLUGIN_MAX ("), deviceCount.value) + ')');
+  if ((getDeviceCount() + 1) >= PLUGIN_MAX) {
+    addLog(LOG_LEVEL_ERROR, concat(F("Programming error! - Increase PLUGIN_MAX ("), getDeviceCount()) + ')');
   }
 
   clearAllCaches();
@@ -522,7 +522,7 @@ void ESPEasy_setup()
     // ESP32   :  GPIO-5, GPIO-15, GPIO-4, GPIO-2, GPIO-0, GPIO-12
     // ESP32-C3:  bit 0: GPIO2, bit 2: GPIO8, bit 3: GPIO9
     // ESP32-S2: Unclear what bits represent which strapping state.
-    // ESP32-S3: bit5 ~ bit2 correspond to stripping pins GPIO3, GPIO45, GPIO0, and GPIO46 respectively.
+    // ESP32-S3: bit5 ~ bit2 correspond to strapping pins GPIO3, GPIO45, GPIO0, and GPIO46 respectively.
     String event = F("System#BootMode=");
     event += bitRead(gpio_strap, 0); 
     event += ',';

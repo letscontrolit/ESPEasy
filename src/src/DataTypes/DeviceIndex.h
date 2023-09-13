@@ -6,26 +6,30 @@
 struct deviceIndex_t {
   deviceIndex_t() = default;
 
-  static deviceIndex_t toDeviceIndex(int other);
+  static deviceIndex_t toDeviceIndex(unsigned other);
 
   // TD-er: Do not add constructor with int as argument,
   // as this makes it impossible for the compiler to typecheck its use.
   //  deviceIndex_t(int other);
 
-  deviceIndex_t& operator=(int other);
+  deviceIndex_t& operator=(unsigned other);
 
 
   deviceIndex_t& operator=(const deviceIndex_t& other);
 
-  bool           operator<(int other) const;
-  bool           operator!=(int other) const;
-  bool           operator!=(const deviceIndex_t& other) const;
+  // TD-er: Using operator unsigned() makes it impossible for the compiler to check for types.
+  // However, since the Device[] array is accessed using a deviceIndex_t, we need this operator unsigned()
+  // on ESP8266.
+  // On ESP32 we have a strongly typed DeviceVector class and thus we can properly check per operator.
+  #ifndef ESP8266
+  bool operator<(unsigned other) const;
+  bool operator!=(unsigned other) const;
+  bool operator!=(const deviceIndex_t& other) const;
+  #else // ifndef ESP8266
+  operator unsigned() const { return value; }
+  #endif // ifndef ESP8266
 
   deviceIndex_t& operator++();
-
-
-  // TD-er: Do not add operator int() as it makes it impossible for the compiler to typecheck use of this struct.
-  //   operator int() const { return value; }
 
   uint8_t value{}; // Init this to 0, so we can easily iterate over it.
 };

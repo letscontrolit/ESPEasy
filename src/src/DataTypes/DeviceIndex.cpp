@@ -2,10 +2,7 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
-
-// deviceIndex_t::deviceIndex_t(int other) : value(other) {}
-
-deviceIndex_t deviceIndex_t::toDeviceIndex(int other) {
+deviceIndex_t deviceIndex_t::toDeviceIndex(unsigned other) {
   deviceIndex_t res;
 
   if (other > DEVICE_INDEX_MAX) {
@@ -18,7 +15,7 @@ deviceIndex_t deviceIndex_t::toDeviceIndex(int other) {
   return res;
 }
 
-deviceIndex_t& deviceIndex_t::operator=(int other) {
+deviceIndex_t& deviceIndex_t::operator=(unsigned other) {
   value = other;
   return *this;
 }
@@ -28,12 +25,14 @@ deviceIndex_t& deviceIndex_t::operator=(const deviceIndex_t& other) {
   return *this;
 }
 
-bool deviceIndex_t::operator<(int other) const
+#ifndef ESP8266
+
+bool deviceIndex_t::operator<(unsigned other) const
 {
   return value < other;
 }
 
-bool deviceIndex_t::operator!=(int other) const
+bool deviceIndex_t::operator!=(unsigned other) const
 {
   return value != other;
 }
@@ -42,6 +41,8 @@ bool deviceIndex_t::operator!=(const deviceIndex_t& other) const
 {
   return value != other.value;
 }
+
+#endif // ifndef ESP8266
 
 deviceIndex_t& deviceIndex_t::operator++() {
   // pre-increment, ++a

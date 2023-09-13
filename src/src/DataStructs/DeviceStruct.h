@@ -89,13 +89,20 @@ struct __attribute__((__packed__)) DeviceStruct
 };
 
 
+// Since Device[] is used in all plugins, creating a strict struct for it will increase build size by about 5k.
+// So for ESP8266, which is severely build size constraint, we use a simple vector typedef.
+// For ESP32, we use the more strictly typed struct to let the compiler find undesired use of this.
+#ifdef ESP8266
+typedef std::vector<DeviceStruct> DeviceVector;
+#else
+
 // Specific struct used to only allow changing Device vector in the PLUGIN_ADD call
 struct DeviceCount_t {
   DeviceCount_t() = default;
 
   DeviceCount_t& operator++();
  
-  //operator int() const { return value; }
+  // operator int() const { return value; }
 
   int value = -1;
 
@@ -114,9 +121,11 @@ struct DeviceVector {
 
   size_t size() const;
 
+  void resize(size_t newSize);
+
   std::vector<DeviceStruct> _vector;
 };
-//typedef std::vector<DeviceStruct> DeviceVector;
+#endif
 
 
 #endif // DATASTRUCTS_DEVICESTRUCTS_H

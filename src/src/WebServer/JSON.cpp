@@ -564,7 +564,7 @@ void handle_buildinfo() {
   {
     json_open(true, F("plugins"));
 
-    for (deviceIndex_t x = 0; x <= deviceCount.value; x++) {
+    for (deviceIndex_t x = 0; x <= getDeviceCount(); x++) {
       const pluginID_t pluginID = getPluginID_from_DeviceIndex(x);
       if (validPluginID(pluginID)) {
         json_open();

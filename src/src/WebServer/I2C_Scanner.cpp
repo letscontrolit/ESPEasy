@@ -153,7 +153,7 @@ String getKnownI2Cdevice(uint8_t address) {
   #if FEATURE_I2C_DEVICE_SCAN
   const int sorted_length = DeviceIndex_sorted.size();
   for (uint8_t x = 0; x < sorted_length; x++) {
-    const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
+    const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(DeviceIndex_sorted[x]);
 
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 

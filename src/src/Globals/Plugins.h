@@ -43,7 +43,7 @@ struct EventStruct;
 
 
 // Array containing "DeviceIndex" alfabetically sorted.
-extern std::vector<deviceIndex_t> DeviceIndex_sorted;
+extern std::vector<uint8_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index);

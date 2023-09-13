@@ -85,6 +85,9 @@ DeviceCount_t& DeviceCount_t::operator++() {
 }
 
 
+
+#ifndef ESP8266
+
 const DeviceStruct& DeviceVector::operator[](deviceIndex_t index) const
 {
   return _vector[index.value];
@@ -105,3 +108,9 @@ size_t DeviceVector::size() const
   return _vector.size();
 }
 
+void DeviceVector::resize(size_t newSize)
+{
+  _vector.resize(newSize);
+}
+
+#endif

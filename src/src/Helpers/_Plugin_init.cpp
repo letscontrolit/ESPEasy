@@ -16,7 +16,7 @@
 
 
 // Vector to match a "DeviceIndex" to a plugin ID.
-const /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
+constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 {
 #ifdef USES_P001
   1,
@@ -1052,7 +1052,7 @@ typedef boolean (*Plugin_ptr_t)(uint8_t,
                         String&);
 
 // Array of function pointers to call plugins.
-const Plugin_ptr_t PROGMEM Plugin_ptr[] =
+constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 {
 #ifdef USES_P001
   &Plugin_001,
@@ -2087,7 +2087,7 @@ deviceIndex_t* Plugin_id_to_DeviceIndex = nullptr;
 size_t Plugin_id_to_DeviceIndex_size = 0;
 
 constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
-
+//constexpr size_t Plugin_id_to_DeviceIndex_size = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] + 1;
 
 unsigned getNrBitsDeviceIndex()
 {
@@ -2151,7 +2151,8 @@ void PluginSetup()
   {
     Plugin_id_to_DeviceIndex[id] = INVALID_DEVICE_INDEX;
   }
-  Device._vector.resize(DeviceIndex_to_Plugin_id_size);
+
+  Device.resize(DeviceIndex_to_Plugin_id_size);
 
   for (deviceIndex_t deviceIndex; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
   {
@@ -2175,17 +2176,17 @@ void PluginSetup()
   // ********************************************************************************
 
   // First fill the existing number of the DeviceIndex.
-  const int sorted_length = deviceCount.value + 1;
+  const unsigned sorted_length = getDeviceCount() + 1;
   DeviceIndex_sorted.resize(sorted_length);
   for (deviceIndex_t x; x < sorted_length; ++x) {
-    DeviceIndex_sorted[x.value] = x;
+    DeviceIndex_sorted[x.value] = x.value;
   }
 
   struct
   {
-    bool operator()(deviceIndex_t a, deviceIndex_t b) const { 
-      return getPluginNameFromDeviceIndex(a) < 
-             getPluginNameFromDeviceIndex(b); 
+    bool operator()(uint8_t a, uint8_t b) const { 
+      return getPluginNameFromDeviceIndex(deviceIndex_t::toDeviceIndex(a)) < 
+             getPluginNameFromDeviceIndex(deviceIndex_t::toDeviceIndex(b)); 
     }
   }
   customLess;

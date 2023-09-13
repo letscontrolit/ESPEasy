@@ -25,7 +25,7 @@ void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset)
 
 void jsonStatistics(bool clearStats) {
   bool firstPlugin     = true;
-  int  currentPluginId = -1;
+  deviceIndex_t  currentDeviceIndex = INVALID_DEVICE_INDEX;
   long timeSinceLastReset = timePassedSince(timingstats_last_reset);
 
 
@@ -35,9 +35,9 @@ void jsonStatistics(bool clearStats) {
     if (!x.second.isEmpty()) {
       const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(x.first >> 8);
 
-      if (deviceIndex != currentPluginId) {
+      if (deviceIndex != currentDeviceIndex) {
         // new plugin
-        currentPluginId = deviceIndex.value;
+        currentDeviceIndex = deviceIndex;
         if (!firstPlugin) {
           json_close();
           json_close(true); // close previous function list
