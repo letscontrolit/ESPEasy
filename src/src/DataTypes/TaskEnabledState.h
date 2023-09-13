@@ -6,6 +6,8 @@
 // Is stored in settings
 struct TaskEnabledState {
 
+  TaskEnabledState();
+
 //  bool isEnabled() const;
   explicit operator bool() const {
     return value == 1;

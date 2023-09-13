@@ -1,5 +1,6 @@
 #include "../DataTypes/TaskEnabledState.h"
 
+TaskEnabledState::TaskEnabledState() : value(0) {}
 
 TaskEnabledState & TaskEnabledState::operator=(const bool& enabledState)
 {

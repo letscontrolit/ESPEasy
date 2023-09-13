@@ -325,7 +325,7 @@ public:
   uint8_t       InitSPI = 0; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       Protocol[CONTROLLER_MAX] = {0};
-  npluginID_t   Notification[NOTIFICATION_MAX] = {}; //notifications, point to a NPLUGIN id
+  npluginID_t   Notification[NOTIFICATION_MAX]{}; //notifications, point to a NPLUGIN id
   // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   pluginID_t    TaskDeviceNumber[N_TASKS]{}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
   unsigned int  OLD_TaskDeviceID[N_TASKS] = {0};  //UNUSED: this can be removed

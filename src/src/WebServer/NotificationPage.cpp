@@ -41,13 +41,13 @@ void handle_notifications() {
   // char tmpString[64];
 
 
-  npluginID_t  notificationindex  = npluginID_t::toPluginID(getFormItemInt(F("index"), 0));
-  boolean notificationindexNotSet = notificationindex == INVALID_N_PLUGIN_ID;
+  uint8_t notificationindex  = getFormItemInt(F("index"), 0);
+  boolean notificationindexNotSet = notificationindex == 0;
   --notificationindex;
 
-  const int notification = getFormItemInt(F("notification"), -1);
+  const npluginID_t notification = npluginID_t::toPluginID(getFormItemInt(F("notification"), INVALID_N_PLUGIN_ID.value));
 
-  if ((notification != -1) && !notificationindexNotSet)
+  if ((notification != INVALID_N_PLUGIN_ID) && !notificationindexNotSet)
   {
     MakeNotificationSettings(NotificationSettings);
 
@@ -57,7 +57,7 @@ void handle_notifications() {
     }
     else
     {
-      if (Settings.Notification[notificationindex] != 0)
+      if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID)
       {
         nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
@@ -166,7 +166,7 @@ void handle_notifications() {
     html_table_class_normal();
     addFormHeader(F("Notification Settings"));
     addRowLabel(F("Notification"));
-    uint8_t choice = Settings.Notification[notificationindex];
+    uint8_t choice = Settings.Notification[notificationindex].value;
     addSelector_Head_reloadOnChange(F("notification"));
     addSelector_Item(F("- None -"), 0, false);
 
@@ -182,7 +182,7 @@ void handle_notifications() {
 
     addHelpButton(F("EasyNotifications"));
 
-    if (Settings.Notification[notificationindex])
+    if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID)
     {
       MakeNotificationSettings(NotificationSettings);
       LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
