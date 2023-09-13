@@ -4,18 +4,38 @@
 #include "../../ESPEasy_common.h"
 
 struct npluginID_t {
-  npluginID_t();
+  npluginID_t() = default;
 
-  static npluginID_t toPluginID(unsigned other);
+  static npluginID_t toPluginID(unsigned other)
+  {
+    npluginID_t res;
 
-  npluginID_t      & operator=(const npluginID_t& other);
+    if (other <= 255) { res.value = other; }
+    return res;
+  }
 
-  bool               operator==(const npluginID_t& other) const;
-  bool               operator!=(const npluginID_t& other) const;
+  npluginID_t& operator=(const npluginID_t& other)
+  {
+    value = other.value;
+    return *this;
+  }
 
-  void               setInvalid();
+  bool operator==(const npluginID_t& other) const
+  {
+    return this->value == other.value;
+  }
 
-  String             toDisplayString() const;
+  bool operator!=(const npluginID_t& other) const
+  {
+    return this->value != other.value;
+  }
+
+  void setInvalid()
+  {
+    value = 0;
+  }
+
+  String toDisplayString() const;
 
   uint8_t value{};
 };

@@ -8,17 +8,6 @@ GPIOTimerID::GPIOTimerID(uint8_t GPIOType, uint8_t pinNumber, int Par1) :
   id = (Par1 << 16) + (pinNumber << 8) + GPIOType;
 }
 
-uint8_t GPIOTimerID::getGPIO_type() const {
-  return static_cast<uint8_t>((id) & 0xFF);
-}
-
-uint8_t GPIOTimerID::getPinNumber() const {
-  return static_cast<uint8_t>((id >> 8) & 0xFF);
-}
-
-uint8_t GPIOTimerID::getPinStateValue() const {
-  return static_cast<uint8_t>((id >> 16) & 0xFF);
-}
 
 #ifndef BUILD_NO_DEBUG
 String GPIOTimerID::decode() const

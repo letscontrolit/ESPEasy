@@ -93,7 +93,8 @@ struct __attribute__((__packed__)) DeviceStruct
 // So for ESP8266, which is severely build size constraint, we use a simple vector typedef.
 // For ESP32, we use the more strictly typed struct to let the compiler find undesired use of this.
 #ifdef ESP8266
-typedef std::vector<DeviceStruct> DeviceVector;
+//typedef std::vector<DeviceStruct> DeviceVector;
+typedef DeviceStruct* DeviceVector;
 #else
 
 // Specific struct used to only allow changing Device vector in the PLUGIN_ADD call

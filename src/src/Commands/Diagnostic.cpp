@@ -22,6 +22,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/_Plugin_init.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
@@ -84,7 +85,7 @@ const __FlashStringHelper * Command_MemInfo(struct EventStruct *event, const cha
   serialPrint(F("ExtraTaskSettingsStruct| "));
   serialPrintln(String(sizeof(ExtraTaskSettings)));
   serialPrint(F("DeviceStruct           | "));
-  serialPrintln(String(Device.size()));
+  serialPrintln(String(getNrBuiltInDeviceIndex()));
   return return_see_serial(event);
 }
 

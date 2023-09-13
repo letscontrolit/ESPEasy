@@ -12,17 +12,6 @@ SystemEventQueueTimerID::SystemEventQueueTimerID(SchedulerPluginPtrType_e ptr_ty
        Function;
 }
 
-uint8_t SystemEventQueueTimerID::getFunction() const {
-  return static_cast<uint8_t>((id) & 0xFF);
-}
-
-uint8_t SystemEventQueueTimerID::getIndex() const {
-  return static_cast<uint8_t>((id >> 8) & 0xFF);
-}
-
-SchedulerPluginPtrType_e SystemEventQueueTimerID::getPtrType() const {
-  return static_cast<SchedulerPluginPtrType_e>((id >> 16) & 0xFF);
-}
 
 #ifndef BUILD_NO_DEBUG
 String SystemEventQueueTimerID::decode() const

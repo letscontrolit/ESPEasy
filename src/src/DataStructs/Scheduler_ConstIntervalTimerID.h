@@ -6,12 +6,23 @@
 #include "../DataTypes/SchedulerIntervalTimer.h"
 
 struct ConstIntervalTimerID : SchedulerTimerID {
-  ConstIntervalTimerID(SchedulerIntervalTimer_e timer);
+  ConstIntervalTimerID(SchedulerIntervalTimer_e timer) :
+    SchedulerTimerID(SchedulerTimerType_e::ConstIntervalTimer)
+  {
+    id = static_cast<uint32_t>(timer);
+  }
 
-  SchedulerIntervalTimer_e getIntervalTimer() const;
+  SchedulerIntervalTimer_e getIntervalTimer() const
+  {
+    return static_cast<SchedulerIntervalTimer_e>(id);
+  }
 
 #ifndef BUILD_NO_DEBUG
-  String                   decode() const;
+  String decode() const
+  {
+    return toString(getIntervalTimer());
+  }
+
 #endif // ifndef BUILD_NO_DEBUG
 };
 

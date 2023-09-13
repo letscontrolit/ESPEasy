@@ -8,18 +8,22 @@
 * Special timer to handle timed GPIO actions
 \*********************************************************************************************/
 struct GPIOTimerID : SchedulerTimerID {
-  GPIOTimerID(uint8_t GPIOType,
-              uint8_t pinNumber,
-              int     Par1);
+  GPIOTimerID(uint8_t GPIOType, uint8_t pinNumber, int Par1);
 
-  uint8_t getGPIO_type() const;
+  uint8_t getGPIO_type() const {
+    return static_cast<uint8_t>((id) & 0xFF);
+  }
 
-  uint8_t getPinNumber() const;
+  uint8_t getPinNumber() const {
+    return static_cast<uint8_t>((id >> 8) & 0xFF);
+  }
 
-  uint8_t getPinStateValue() const;
+  uint8_t getPinStateValue() const {
+    return static_cast<uint8_t>((id >> 16) & 0xFF);
+  }
 
 #ifndef BUILD_NO_DEBUG
-  String  decode() const;
+  String decode() const;
 #endif // ifndef BUILD_NO_DEBUG
 };
 

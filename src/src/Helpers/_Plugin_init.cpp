@@ -2089,6 +2089,38 @@ size_t Plugin_id_to_DeviceIndex_size = 0;
 constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
 //constexpr size_t Plugin_id_to_DeviceIndex_size = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] + 1;
 
+
+/*
+// TD-er: Test to make constexpr array Plugin_id_to_DeviceIndex
+// Have to postpone, since std::integer_sequence is not available in Espressif SDK
+
+// Constexpr functions to create Plugin_id_to_DeviceIndex at compile time
+constexpr uint8_t getDevId_from_PId(unsigned p_id, unsigned d_id) {
+  return (p_id == 0 || d_id == DeviceIndex_to_Plugin_id_size) ? DEVICE_INDEX_MAX
+  :  (p_id == DeviceIndex_to_Plugin_id[d_id]) ? d_id : getDevId_from_PId(p_id, d_id+1);
+}
+
+constexpr uint8_t getDevId_from_PId(unsigned p_id) {
+  return getDevId_from_PId(p_id, 0);
+}
+constexpr auto test = getDevId_from_PId(30);
+
+
+#include <array>
+#include <utility>
+#include <type_traits>
+
+
+template <unsigned... Is>
+constexpr auto get_DevId_from_PId_array(std::integer_sequence<unsigned, Is...> a) -> std::array<uint8_t, a.size()> {
+    std::array<uint8_t, a.size()> vals{};
+    ((vals[Is] = getDevId_from_PId(Is)), ...);
+    return vals;
+}
+
+constexpr auto x = get_DevId_from_PId_array(std::make_integer_sequence<unsigned, Plugin_id_to_DeviceIndex_size>{});
+*/
+
 unsigned getNrBitsDeviceIndex()
 {
   // FIXME TD-er: Must somehow make this a constexpr function
@@ -2151,8 +2183,11 @@ void PluginSetup()
   {
     Plugin_id_to_DeviceIndex[id] = INVALID_DEVICE_INDEX;
   }
-
+  #ifdef ESP8266
+  Device = new DeviceStruct[DeviceIndex_to_Plugin_id_size];
+  #else
   Device.resize(DeviceIndex_to_Plugin_id_size);
+  #endif
 
   for (deviceIndex_t deviceIndex; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
   {

@@ -1,5 +1,6 @@
 #include "../DataStructs/Scheduler_ConstIntervalTimerID.h"
 
+/*
 
 ConstIntervalTimerID::ConstIntervalTimerID(SchedulerIntervalTimer_e timer) :
   SchedulerTimerID(SchedulerTimerType_e::ConstIntervalTimer)
@@ -19,3 +20,4 @@ String ConstIntervalTimerID::decode() const
 }
 
 #endif // ifndef BUILD_NO_DEBUG
+*/

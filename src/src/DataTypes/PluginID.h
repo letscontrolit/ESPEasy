@@ -4,22 +4,41 @@
 #include "../../ESPEasy_common.h"
 
 struct pluginID_t {
-  pluginID_t();
+  pluginID_t() = default;
 
-  static pluginID_t toPluginID(unsigned other);
+  static pluginID_t toPluginID(unsigned other)
+  {
+    pluginID_t res;
 
-  pluginID_t& operator=(const pluginID_t& other);
+    if (other <= 255) { res.value = other; }
 
-  bool operator==(const pluginID_t& other) const;
-  bool operator!=(const pluginID_t& other) const;
+    return res;
+  }
 
-  void setInvalid();
+  pluginID_t& operator=(const pluginID_t& other)
+  {
+    value = other.value;
+    return *this;
+  }
+
+  bool operator==(const pluginID_t& other) const
+  {
+    return this->value == other.value;
+  }
+
+  bool operator!=(const pluginID_t& other) const
+  {
+    return this->value != other.value;
+  }
+
+  void setInvalid() {
+    value = 0;
+  }
 
   String toDisplayString() const;
 
   uint8_t value{};
 };
-
 
 
 extern const pluginID_t INVALID_PLUGIN_ID;
