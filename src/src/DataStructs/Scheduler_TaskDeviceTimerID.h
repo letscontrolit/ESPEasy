@@ -12,10 +12,13 @@
 struct TaskDeviceTimerID : SchedulerTimerID {
   TaskDeviceTimerID(taskIndex_t taskIndex);
 
-  taskIndex_t getTaskIndex() const;
+  taskIndex_t getTaskIndex() const
+  {
+    return static_cast<taskIndex_t>(id);
+  }
 
 #ifndef BUILD_NO_DEBUG
-  String      decode() const;
+  String decode() const;
 #endif // ifndef BUILD_NO_DEBUG
 };
 

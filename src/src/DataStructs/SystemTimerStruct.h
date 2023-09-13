@@ -31,7 +31,7 @@ public:
   systemTimerStruct(int           recurringCount,
                     unsigned long msecFromNow,
                     unsigned int  timerIndex,
-                    int alternateInterval = 0);
+                    int           alternateInterval = 0);
 
   struct EventStruct toEvent() const;
 
@@ -42,25 +42,40 @@ public:
                                int         Par4,
                                int         Par5);
 
-  bool          isRecurring() const;
+  bool isRecurring() const {
+    return _recurringCount != 0;
+  }
 
   void          markNextRecurring();
 
-  unsigned long getInterval() const;
+  unsigned long getInterval() const {
+    return _alternateState ? _alternateInterval : _interval;
+  }
 
-  unsigned int  getTimerIndex() const;
+  unsigned int getTimerIndex() const {
+    return _timerIndex;
+  }
 
-  bool          isPaused() const;
+  bool isPaused() const {
+    return _remainder != 0;
+  }
 
-  int           getRemainder() const;
+  int getRemainder() const {
+    return _remainder;
+  }
 
-  void          setRemainder(int timeLeft);
+  void setRemainder(int timeLeft) {
+    _remainder = timeLeft;
+  }
 
-  int           getLoopCount() const;
+  int getLoopCount() const {
+    if (hasAlternateInterval()) { return _loopCount / 2; }
+    return _loopCount;
+  }
 
-  void          toggleAlternateState();
+  void toggleAlternateState();
 
-  bool          isAlternateState() const {
+  bool isAlternateState() const {
     return _alternateState;
   }
 

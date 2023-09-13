@@ -9,11 +9,6 @@ TaskDeviceTimerID::TaskDeviceTimerID(taskIndex_t taskIndex) :
   id = static_cast<uint32_t>(taskIndex);
 }
 
-taskIndex_t TaskDeviceTimerID::getTaskIndex() const
-{
-  return static_cast<taskIndex_t>(id);
-}
-
 #ifndef BUILD_NO_DEBUG
 String TaskDeviceTimerID::decode() const
 {

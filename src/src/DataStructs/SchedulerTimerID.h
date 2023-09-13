@@ -7,9 +7,12 @@
 
 
 struct SchedulerTimerID {
-  explicit SchedulerTimerID(SchedulerTimerType_e timerType);
+  explicit SchedulerTimerID(SchedulerTimerType_e timerType)
+  {
+    timer_type = static_cast<uint32_t>(timerType);
+  }
 
-  explicit SchedulerTimerID(uint32_t mixedID);
+  explicit SchedulerTimerID(uint32_t mixedID)  : mixed_id(mixedID) {}
 
   union {
     struct {
@@ -20,13 +23,15 @@ struct SchedulerTimerID {
     uint32_t mixed_id{};
   };
 
-  void                 setTimerType(SchedulerTimerType_e timerType);
+  void setTimerType(SchedulerTimerType_e timerType)
+  {
+    timer_type = static_cast<uint32_t>(timerType);
+  }
 
-  SchedulerTimerType_e getTimerType() const;
-
-#ifndef BUILD_NO_DEBUG
-//  virtual String       decode() const;
-#endif // ifndef BUILD_NO_DEBUG
+  SchedulerTimerType_e getTimerType() const
+  {
+    return static_cast<SchedulerTimerType_e>(timer_type);
+  }
 };
 
 
