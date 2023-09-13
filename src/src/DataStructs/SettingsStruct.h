@@ -282,6 +282,8 @@ public:
   float getWiFi_TX_power() const;
   void setWiFi_TX_power(float dBm);
 
+  pluginID_t getPluginID_for_task(taskIndex_t taskIndex) const;
+
 
   unsigned long PID = 0;
   int           Version = 0;
@@ -325,10 +327,10 @@ public:
   uint8_t       InitSPI = 0; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       Protocol[CONTROLLER_MAX] = {0};
-  npluginID_t   Notification[NOTIFICATION_MAX]{}; //notifications, point to a NPLUGIN id
+  uint8_t       Notification[NOTIFICATION_MAX] = {0}; //notifications, point to a NPLUGIN id
   // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
-  pluginID_t    TaskDeviceNumber[N_TASKS]{}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
-  unsigned int  OLD_TaskDeviceID[N_TASKS] = {0};  //UNUSED: this can be removed
+  uint8_t       TaskDeviceNumber[N_TASKS] = {0}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
+  unsigned int  OLD_TaskDeviceID[N_TASKS] = {0};  //UNUSED: this can be reused
   union {
     struct {
       int8_t        TaskDevicePin1[N_TASKS];
@@ -350,7 +352,7 @@ public:
   uint8_t       VariousTaskBits[N_TASKS] = {0};
   uint8_t       TaskDeviceDataFeed[N_TASKS] = {0};    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS] = {0};
-  TaskEnabledState TaskDeviceEnabled[N_TASKS]{};
+  boolean       TaskDeviceEnabled[N_TASKS] = {0};
   boolean       ControllerEnabled[CONTROLLER_MAX] = {0};
   boolean       NotificationEnabled[NOTIFICATION_MAX] = {0};
   unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS]{};        // IDX number (mainly used by Domoticz)

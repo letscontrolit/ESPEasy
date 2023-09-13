@@ -71,7 +71,7 @@ bool supportedPluginID(pluginID_t pluginID) {
 
 deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
   if (validTaskIndex(taskIndex)) {
-    return getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
+    return getDeviceIndex(Settings.getPluginID_for_task(taskIndex));
   }
   return INVALID_DEVICE_INDEX;
 }
@@ -81,7 +81,7 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
  ********************************************************************************************/
 pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
   if (validTaskIndex(taskIndex)) {
-    const pluginID_t pluginID = Settings.TaskDeviceNumber[taskIndex];
+    const pluginID_t pluginID = Settings.getPluginID_for_task(taskIndex);
     if (supportedPluginID(pluginID))
       return pluginID;
   }
@@ -279,10 +279,10 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
   #endif
 
   bool retval = false;
-  const bool considerTaskEnabled = Settings.TaskDeviceEnabled[taskIndex] || 
-                          (Settings.TaskDeviceEnabled[taskIndex].enabled && Function == PLUGIN_INIT);
+  const bool considerTaskEnabled = Settings.TaskDeviceEnabled[taskIndex];
+   //|| (Settings.TaskDeviceEnabled[taskIndex].enabled && Function == PLUGIN_INIT);
 
-  if (considerTaskEnabled && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
+  if (considerTaskEnabled && validPluginID_fullcheck(Settings.getPluginID_for_task(taskIndex)))
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
     if (validDeviceIndex(DeviceIndex)) {
@@ -488,7 +488,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             if (validTaskIndex(thisTask)) {                   // Known taskindex?
 #ifdef USES_P022                                              // Exclude P022 as it has rather explicit differences in commands when used with the [<TaskName>]. prefix
               if (Settings.TaskDeviceEnabled[thisTask]        // and internally needs to know wether it was called with the taskname prefixed
-                && validPluginID_fullcheck(Settings.TaskDeviceNumber[thisTask])
+                && validPluginID_fullcheck(Settings.getPluginID_for_task(thisTask))
                 && Settings.TaskDeviceDataFeed[thisTask] == 0) {
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
                 if (validDeviceIndex(DeviceIndex) && Device[DeviceIndex].Number == 22 /* PLUGIN_ID_022 define no longer available, 'assume' 22 for now */) {

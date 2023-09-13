@@ -101,7 +101,7 @@ nprotocolIndex_t getNProtocolIndex(npluginID_t Number)
 
 nprotocolIndex_t getNProtocolIndex_from_NotifierIndex(notifierIndex_t index) {
   if (validNotifierIndex(index)) {
-    return getNProtocolIndex(Settings.Notification[index]);
+    return getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[index]));
   }
   return INVALID_NPROTOCOL_INDEX;
 }

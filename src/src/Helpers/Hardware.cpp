@@ -2426,7 +2426,7 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   taskClear(taskIndex, false); // clear settings, but do not save
   ClearCustomTaskSettings(taskIndex);
 
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
 
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {
@@ -2465,7 +2465,8 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
       Settings.TaskDeviceTimer[taskIndex] = 0;
     }
   }
-  Settings.TaskDeviceEnabled[taskIndex].enabled = enabled;
+  Settings.TaskDeviceEnabled[taskIndex] = enabled;
+  //Settings.TaskDeviceEnabled[taskIndex].enabled = enabled;
   safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 
   // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")

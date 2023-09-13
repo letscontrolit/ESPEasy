@@ -78,15 +78,14 @@ pluginID_t DeviceStruct::getPluginID() const
 }
 
 
+
+#ifndef ESP8266
+
 DeviceCount_t& DeviceCount_t::operator++() {
   // pre-increment, ++a
   ++value;
   return *this;
 }
-
-
-
-#ifndef ESP8266
 
 const DeviceStruct& DeviceVector::operator[](deviceIndex_t index) const
 {

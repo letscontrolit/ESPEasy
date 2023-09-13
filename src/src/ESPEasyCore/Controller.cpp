@@ -140,7 +140,7 @@ void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int leng
     //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_MQTT_IMPORT
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
     {
-      if (Settings.TaskDeviceEnabled[taskIndex] && (Settings.TaskDeviceNumber[taskIndex] == PLUGIN_ID_MQTT_IMPORT))
+      if (Settings.TaskDeviceEnabled[taskIndex] && (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_MQTT_IMPORT))
       {
         Scheduler.schedule_mqtt_plugin_import_event_timer(
           DeviceIndex, taskIndex, PLUGIN_MQTT_IMPORT,

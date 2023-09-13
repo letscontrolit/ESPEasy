@@ -398,7 +398,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         // SECOND Plugins
         for (taskIndex_t x = 0; x < TASKS_MAX; x++)
         {
-          if (validPluginID_fullcheck((Settings.TaskDeviceNumber[x])))
+          if (validPluginID_fullcheck((Settings.getPluginID_for_task(x))))
           {
             LoadTaskSettings(x);
             deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
@@ -416,7 +416,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 if (Device[DeviceIndex].Number == 86)  // Homie receiver
                 {
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-                    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
+                    if (validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
                       if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) { // do not send if Value Name is empty!
                         CPLUGIN_014_addToList(valuesList, ExtraTaskSettings.TaskDeviceValueNames[varNr]);
 
@@ -502,7 +502,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 { // standard Values
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++)
                   {
-                    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
+                    if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
                     {
                       if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) // do not send if Value Name is empty!
                       {

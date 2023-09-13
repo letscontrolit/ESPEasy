@@ -51,13 +51,13 @@ void handle_notifications() {
   {
     MakeNotificationSettings(NotificationSettings);
 
-    if (Settings.Notification[notificationindex] != notification)
+    if (Settings.Notification[notificationindex] != notification.value)
     {
-      Settings.Notification[notificationindex] = notification;
+      Settings.Notification[notificationindex] = notification.value;
     }
     else
     {
-      if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID)
+      if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
       {
         nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
@@ -125,12 +125,12 @@ void handle_notifications() {
       addHtmlInt(x + 1);
       html_TD();
 
-      if (Settings.Notification[x] != INVALID_N_PLUGIN_ID)
+      if (Settings.Notification[x] != INVALID_N_PLUGIN_ID.value)
       {
         addEnabled(Settings.NotificationEnabled[x]);
 
         html_TD();
-        uint8_t   NotificationProtocolIndex = getNProtocolIndex(Settings.Notification[x]);
+        uint8_t   NotificationProtocolIndex = getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[x]));
         String NotificationName          = F("(plugin not found?)");
 
         if (validNProtocolIndex(NotificationProtocolIndex))
@@ -166,7 +166,7 @@ void handle_notifications() {
     html_table_class_normal();
     addFormHeader(F("Notification Settings"));
     addRowLabel(F("Notification"));
-    uint8_t choice = Settings.Notification[notificationindex].value;
+    uint8_t choice = Settings.Notification[notificationindex];
     addSelector_Head_reloadOnChange(F("notification"));
     addSelector_Item(F("- None -"), 0, false);
 
@@ -182,7 +182,7 @@ void handle_notifications() {
 
     addHelpButton(F("EasyNotifications"));
 
-    if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID)
+    if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {
       MakeNotificationSettings(NotificationSettings);
       LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));

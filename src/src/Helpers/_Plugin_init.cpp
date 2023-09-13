@@ -2198,7 +2198,7 @@ void PluginInit(bool priorityOnly)
 
   // Set all not supported plugins to disabled.
   for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-    if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex])) {
+    if (!supportedPluginID(Settings.getPluginID_for_task(taskIndex))) {
       Settings.TaskDeviceEnabled[taskIndex] = false;
     }
   }

@@ -2,6 +2,8 @@
 
 #include "../Helpers/StringConverter.h"
 
+npluginID_t::npluginID_t() : value(0) {}
+
 npluginID_t npluginID_t::toPluginID(unsigned other)
 {
   npluginID_t res;

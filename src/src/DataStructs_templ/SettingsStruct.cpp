@@ -471,7 +471,8 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 #endif
   #endif
   for (uint8_t i = 0; i < N_TASKS; ++i) {
-    TaskDeviceEnabled[i].clearTempDisableFlags();
+//    TaskDeviceEnabled[i].clearTempDisableFlags();
+    TaskDeviceEnabled[i] = false;
   }
 }
 
@@ -509,7 +510,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTimeSettings() {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearNotifications() {
   for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
-    Notification[i].setInvalid();
+    Notification[i]        = 0u;// .setInvalid();
     NotificationEnabled[i] = false;
   }
 }
@@ -652,7 +653,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDeviceID[i][task]       = 0u;
     TaskDeviceSendData[i][task] = false;
   }
-  TaskDeviceNumber[task]     = INVALID_PLUGIN_ID;
+  TaskDeviceNumber[task]     = 0u; //.setInvalid();
   OLD_TaskDeviceID[task]     = 0u; // UNUSED: this can be removed
   TaskDevicePin1[task]       = -1;
   TaskDevicePin2[task]       = -1;
@@ -676,7 +677,8 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   VariousTaskBits[task]         = 0;
   TaskDeviceDataFeed[task]      = 0u;
   TaskDeviceTimer[task]         = 0u;
-  TaskDeviceEnabled[task].value = 0u; // Should also clear any temporary flags.
+//  TaskDeviceEnabled[task].value = 0u; // Should also clear any temporary flags.
+  TaskDeviceEnabled[task]       = false;
   I2C_Multiplexer_Channel[task] = -1;
 }
 
@@ -970,6 +972,14 @@ float SettingsStruct_tmpl<N_TASKS>::getWiFi_TX_power() const {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
   WiFi_TX_power = dBm * 4.0f;
+}
+
+template<unsigned int N_TASKS>
+pluginID_t SettingsStruct_tmpl<N_TASKS>::getPluginID_for_task(taskIndex_t taskIndex) const {
+  if (validTaskIndex(taskIndex)) {
+    return pluginID_t::toPluginID(TaskDeviceNumber[taskIndex]);
+  }
+  return INVALID_PLUGIN_ID;
 }
 
 #endif // ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP

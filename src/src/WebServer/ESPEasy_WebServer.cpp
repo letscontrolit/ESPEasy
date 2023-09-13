@@ -680,7 +680,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
       }
     }
 
-    if (validTaskIndex(x) && !validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
+    if (validTaskIndex(x) && !validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
       addDisabled();
     }
     {

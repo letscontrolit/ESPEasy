@@ -143,7 +143,7 @@ void handle_devices() {
   // FIXME TD-er: Might have to clear any caches here.
   if ((edit != 0) && !taskIndexNotSet) // when form submitted
   {
-    if (Settings.TaskDeviceNumber[taskIndex] != taskdevicenumber)
+    if (Settings.getPluginID_for_task(taskIndex) != taskdevicenumber)
     {
       // change of device: cleanup old device and reset default settings
       setTaskDevice_to_TaskIndex(taskdevicenumber, taskIndex);
@@ -248,7 +248,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
   unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
 
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
 
   uint8_t flags = 0;
 
@@ -473,11 +473,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
   for (taskIndex_t x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
-    const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.TaskDeviceNumber[x];
+    const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.getPluginID_for_task(x);
 
     html_TR_TD();
 
-    if (pluginID_set && !supportedPluginID(Settings.TaskDeviceNumber[x])) {
+    if (pluginID_set && !supportedPluginID(Settings.getPluginID_for_task(x))) {
       html_add_button_prefix(F("red"), true);
     } else {
       html_add_button_prefix();
@@ -503,7 +503,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
       html_TD();
-      addHtml(getPluginNameFromPluginID(Settings.TaskDeviceNumber[x]));
+      addHtml(getPluginNameFromPluginID(Settings.getPluginID_for_task(x)));
       html_TD();
       addHtml(getTaskDeviceName(x));
       html_TD();
@@ -728,7 +728,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
           for (uint8_t varNr = 0; varNr < valueCount; varNr++)
           {
-            if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
+            if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
             {
               pluginWebformShowValue(x, varNr, getTaskValueName(x, varNr), formatUserVarNoCheck(x, varNr));
             }
@@ -857,10 +857,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
   addHtml(F("<TR><TD style='width:150px;' align='left'>Device:<TD>"));
 
   // no (supported) device selected, this effectively checks for validDeviceIndex
-  if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex]))
+  if (!supportedPluginID(Settings.getPluginID_for_task(taskIndex)))
   {
     // takes lots of memory/time so call this only when needed.
-    addDeviceSelect(F("TDNUM"), Settings.TaskDeviceNumber[taskIndex].value); // ="taskdevicenumber"
+    addDeviceSelect(F("TDNUM"), Settings.getPluginID_for_task(taskIndex).value); // ="taskdevicenumber"
     addFormSeparator(4);
   }
 
@@ -871,18 +871,21 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     addHtml(F("<input "));
     addHtmlAttribute(F("type"),  F("hidden"));
     addHtmlAttribute(F("name"),  F("TDNUM"));
-    addHtmlAttribute(F("value"), Settings.TaskDeviceNumber[taskIndex].value);
+    addHtmlAttribute(F("value"), Settings.getPluginID_for_task(taskIndex).value);
     addHtml('>');
 
     // show selected device name and delete button
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
 
-    addHelpButton(concat(F("Plugin"), Settings.TaskDeviceNumber[taskIndex].value));
-    addRTDPluginButton(Settings.TaskDeviceNumber[taskIndex]);
+    addHelpButton(concat(F("Plugin"), Settings.getPluginID_for_task(taskIndex).value));
+    addRTDPluginButton(Settings.getPluginID_for_task(taskIndex));
 
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 
-    addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex].enabled, Settings.isTaskEnableReadonly(taskIndex)); // ="taskdeviceenabled"
+    addFormCheckBox(F("Enabled"), F("TDE"), 
+      Settings.TaskDeviceEnabled[taskIndex], 
+//    Settings.TaskDeviceEnabled[taskIndex].enabled, 
+      Settings.isTaskEnableReadonly(taskIndex)); // ="taskdeviceenabled"
 
     #if FEATURE_PLUGIN_PRIORITY
     if (Device[DeviceIndex].PowerManager) { // Check extra priority device flags when available
@@ -1028,7 +1031,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
   addHtml(F("<input type='hidden' name='page' value='1'>"));
 
   // if user selected a device, add the delete button, except for Priority tasks
-  if (validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex])
+  if (validPluginID_fullcheck(Settings.getPluginID_for_task(taskIndex))
       #if FEATURE_PLUGIN_PRIORITY
       && !Settings.isPriorityTask(taskIndex)
       #endif // if FEATURE_PLUGIN_PRIORITY

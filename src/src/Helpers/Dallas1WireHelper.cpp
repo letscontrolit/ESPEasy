@@ -111,7 +111,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
   std::map<uint64_t, String> addr_task_map;
 
   for (taskIndex_t task = 0; validTaskIndex(task); ++task) {
-    if (Dallas_plugin(Settings.TaskDeviceNumber[task])) {
+    if (Dallas_plugin(Settings.getPluginID_for_task(task))) {
       uint8_t tmpAddress[8] = { 0 };
 
       for (uint8_t var_index = 0; var_index < VARS_PER_TASK; ++var_index) {

@@ -97,7 +97,7 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Only enable task if it has a Plugin configured
-  if (validPluginID(Settings.TaskDeviceNumber[event->TaskIndex]) || !enabled) {
+  if (validPluginID(Settings.getPluginID_for_task(event->TaskIndex)) || !enabled) {
     String dummy;
 
     if (!enabled) {
@@ -105,7 +105,8 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
     }
     // Toggle enable/disable state via command
     // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
-    Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
+    //Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
+    Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
 
     if (enabled) {
       // Schedule the plugin to be read.

@@ -2,38 +2,41 @@
 
 #include "../Helpers/StringConverter.h"
 
+pluginID_t::pluginID_t() : value(0) {}
+
 pluginID_t pluginID_t::toPluginID(unsigned other)
 {
-    pluginID_t res;
-    if (other <= 255) res.value = other;
+  pluginID_t res;
 
-    return res;
+  if (other <= 255) { res.value = other; }
+
+  return res;
 }
 
 pluginID_t& pluginID_t::operator=(const pluginID_t& other)
 {
-    value = other.value;
-    return *this;
+  value = other.value;
+  return *this;
 }
 
 bool pluginID_t::operator==(const pluginID_t& other) const
 {
-    return this->value == other.value;
+  return this->value == other.value;
 }
 
 bool pluginID_t::operator!=(const pluginID_t& other) const
 {
-    return this->value != other.value;
+  return this->value != other.value;
 }
 
 void pluginID_t::setInvalid()
 {
-    value = 0;
+  value = 0;
 }
 
 String pluginID_t::toDisplayString() const {
-    if (value == 0) return F("P---");
-    return strformat(F("P%03d"), value);
+  if (value == 0) { return F("P---"); }
+  return strformat(F("P%03d"), value);
 }
 
 const pluginID_t INVALID_PLUGIN_ID;

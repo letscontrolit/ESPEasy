@@ -361,7 +361,7 @@ void handle_json()
   taskIndex_t lastActiveTaskIndex = 0;
 
   for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
-    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[TaskIndex])) {
+    if (validPluginID_fullcheck(Settings.getPluginID_for_task(TaskIndex))) {
       lastActiveTaskIndex = TaskIndex;
     }
   }
@@ -449,7 +449,7 @@ void handle_json()
         stream_next_json_object_value(F("TaskInterval"),     taskInterval);
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
-        stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex].value);
+        stream_next_json_object_value(F("TaskDeviceNumber"), Settings.getPluginID_for_task(TaskIndex).value);
         for(int i = 0; i < 3; i++) {
           if (Settings.TaskDevicePin[i][TaskIndex] >= 0) {
             stream_next_json_object_value(concat(F("TaskDeviceGPIO"), i + 1) , String(Settings.TaskDevicePin[i][TaskIndex]));
@@ -484,7 +484,10 @@ void handle_json()
         }
         #endif // if FEATURE_I2CMULTIPLEXER
       }
-      stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex].enabled));
+      stream_next_json_object_value(F("TaskEnabled"), 
+        // jsonBool(Settings.TaskDeviceEnabled[TaskIndex].enabled));
+        jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
+
       stream_last_json_object_value(F("TaskNumber"), TaskIndex + 1);
 
       if (TaskIndex != lastActiveTaskIndex) {

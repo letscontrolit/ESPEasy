@@ -39,7 +39,7 @@ ESPEasyControllerCache_CSV_dumper::ESPEasyControllerCache_CSV_dumper(bool joinTi
   }
 
   for (size_t task = 0; validTaskIndex(task); ++task) {
-    _includeTask[task] = _onlySetTasks ? validPluginID(Settings.TaskDeviceNumber[task]) : true;
+    _includeTask[task] = _onlySetTasks ? validPluginID(Settings.getPluginID_for_task(task)) : true;
   }
 
   if (_target == Target::CSV_file) {

@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 struct pluginID_t {
-    pluginID_t() = default;
+  pluginID_t();
 
   static pluginID_t toPluginID(unsigned other);
 
