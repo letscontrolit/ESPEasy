@@ -52,6 +52,13 @@
 # endif // ifdef ESP32
 
 
+# ifdef ESP8266
+#  define P094_MAX_MSG_LENGTH      550
+# endif // ifdef ESP8266
+# ifdef ESP32
+#  define P094_MAX_MSG_LENGTH      1024
+# endif // ifdef ESP32
+
 # define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 # define P094_NR_OUTPUT_OPTIONS  1
 
@@ -162,7 +169,7 @@ private:
 
   ESPeasySerial *easySerial = nullptr;
   String         sentence_part;
-  uint16_t       max_length = 550;
+  uint16_t       max_length = P094_MAX_MSG_LENGTH;
   uint16_t       nrFilters{};
   unsigned long  filterOffWindowTime      = 0;
   uint32_t       sentences_received       = 0;
