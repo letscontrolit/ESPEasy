@@ -82,11 +82,15 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         if (deserializeDomoticzJson(event->String2, idx, nvalue, nvaluealt, svalue1, switchtype)) {
           for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
             // We need the index of the controller we are: 0...CONTROLLER_MAX
+            constexpr pluginID_t PLUGIN_ID_DOMOTICZ_HELPER(29);
+            # if defined(USES_P088)
+            constexpr pluginID_t PLUGIN_ID_HEATPUMP_IR(88);
+            # endif
             if (Settings.TaskDeviceEnabled[x] &&
                 (Settings.TaskDeviceSendData[ControllerID][x]
-                 || (Settings.getPluginID_for_task(x).value == 29)         // Domoticz helper doesn't have controller checkboxes...
+                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_DOMOTICZ_HELPER)         // Domoticz helper doesn't have controller checkboxes...
                  # if defined(USES_P088)
-                 || (Settings.getPluginID_for_task(x).value == 88)         // Heatpump IR doesn't have controller checkboxes...
+                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_HEATPUMP_IR)         // Heatpump IR doesn't have controller checkboxes...
                  # endif // if defined(USES_P088)
                 ) &&
                 (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index

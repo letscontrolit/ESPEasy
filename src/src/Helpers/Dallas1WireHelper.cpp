@@ -251,9 +251,13 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx
 
 bool Dallas_plugin(pluginID_t pluginID)
 {
-  return (pluginID.value == 4) || 
-         (pluginID.value == 80) || 
-         (pluginID.value == 100);
+  constexpr pluginID_t PLUGIN_ID_P004_DALLAS_TEMP(4);
+  constexpr pluginID_t PLUGIN_ID_P080_DALLAS_IBUTTON(80);
+  constexpr pluginID_t PLUGIN_ID_P100_DS2423_COUNTER(100);
+
+  return (pluginID == PLUGIN_ID_P004_DALLAS_TEMP) || 
+         (pluginID == PLUGIN_ID_P080_DALLAS_IBUTTON) || 
+         (pluginID == PLUGIN_ID_P100_DS2423_COUNTER);
 }
 
 void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index)
