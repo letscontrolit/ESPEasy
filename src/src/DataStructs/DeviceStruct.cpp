@@ -49,11 +49,6 @@ bool DeviceStruct::usesTaskDevicePin(int pin) const {
   return false;
 }
 
-
-bool DeviceStruct::configurableDecimals() const {
-  return FormulaOption || DecimalsOnly;
-}
-
 bool DeviceStruct::isSerial() const {
   return (Type == DEVICE_TYPE_SERIAL) || 
          (Type == DEVICE_TYPE_SERIAL_PLUS1);
@@ -72,44 +67,3 @@ bool DeviceStruct::isCustom() const {
          (Type == DEVICE_TYPE_CUSTOM3);
 }
 
-pluginID_t DeviceStruct::getPluginID() const
-{
-  return pluginID_t::toPluginID(Number);
-}
-
-
-
-#ifndef ESP8266
-
-DeviceCount_t& DeviceCount_t::operator++() {
-  // pre-increment, ++a
-  ++value;
-  return *this;
-}
-
-const DeviceStruct& DeviceVector::operator[](deviceIndex_t index) const
-{
-  return _vector[index.value];
-}
-
-DeviceStruct& DeviceVector::operator[](DeviceCount_t index)
-{
-  return _vector[index.value];
-}
-
-DeviceStruct& DeviceVector::getDeviceStructForEdit(deviceIndex_t index)
-{
-  return _vector[index.value];
-}
-
-size_t DeviceVector::size() const
-{
-  return _vector.size();
-}
-
-void DeviceVector::resize(size_t newSize)
-{
-  _vector.resize(newSize);
-}
-
-#endif

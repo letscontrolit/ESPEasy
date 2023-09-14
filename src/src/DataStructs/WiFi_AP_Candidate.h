@@ -29,7 +29,9 @@ struct WiFi_AP_Candidate {
   // Return true when this one is preferred over 'other'.
   bool               operator<(const WiFi_AP_Candidate& other) const;
 
-  bool               operator==(const WiFi_AP_Candidate& other) const;
+  bool               operator==(const WiFi_AP_Candidate& other) const  {
+    return bssid_match(other.bssid) && ssid.equals(other.ssid);// && key.equals(other.key);
+  }
 
   WiFi_AP_Candidate& operator=(const WiFi_AP_Candidate& other) = default;
 
@@ -40,20 +42,20 @@ struct WiFi_AP_Candidate {
   bool               expired() const;
 
   // For quick connection the channel and BSSID are needed
-  bool               allowQuickConnect() const;
+  bool               allowQuickConnect() const { return (channel != 0) && bssid_set(); }
 
   // Check to see if the BSSID is set
-  bool               bssid_set() const;
+  bool               bssid_set() const  { return !bssid.all_zero(); }
 
-  bool               bssid_match(const uint8_t bssid_c[6]) const;
-  bool               bssid_match(const MAC_address& other) const;
+  bool               bssid_match(const uint8_t bssid_c[6]) const { return bssid == bssid_c; }
+  bool               bssid_match(const MAC_address& other) const {  return bssid == other; }
 
   // Create a formatted string
   String             toString(const String& separator = " ") const;
 
   String             encryption_type() const;
 
-  bool               phy_known() const;
+  bool               phy_known() const { return phy_11b || phy_11g || phy_11n; }
 
   String  ssid;
 //  String  key;

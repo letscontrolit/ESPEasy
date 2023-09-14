@@ -107,10 +107,6 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
   return rssi > other.rssi;
 }
 
-bool WiFi_AP_Candidate::operator==(const WiFi_AP_Candidate& other) const {
-  return bssid_match(other.bssid) && ssid.equals(other.ssid);// && key.equals(other.key);
-}
-
 bool WiFi_AP_Candidate::usable() const {
   // Allow for empty pass
   // if (key.isEmpty()) return false;
@@ -138,22 +134,6 @@ bool WiFi_AP_Candidate::expired() const {
   return timePassedSince(last_seen) > WIFI_AP_CANDIDATE_MAX_AGE;
 }
 
-bool WiFi_AP_Candidate::allowQuickConnect() const {
-  if (channel == 0) { return false; }
-  return bssid_set();
-}
-
-bool WiFi_AP_Candidate::bssid_set() const {
-  return !bssid.all_zero();
-}
-
-bool WiFi_AP_Candidate::bssid_match(const uint8_t bssid_c[6]) const {
-  return bssid == bssid_c;
-}
-
-bool WiFi_AP_Candidate::bssid_match(const MAC_address& other) const {
-  return bssid == other;
-}
 
 String WiFi_AP_Candidate::toString(const String& separator) const {
   String result = ssid;
@@ -188,8 +168,4 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
 
 String WiFi_AP_Candidate::encryption_type() const {
   return WiFi_encryptionType(enc_type);
-}
-
-bool WiFi_AP_Candidate::phy_known() const {
-  return phy_11b || phy_11g || phy_11n;
 }

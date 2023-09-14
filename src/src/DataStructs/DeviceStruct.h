@@ -51,7 +51,10 @@ struct __attribute__((__packed__)) DeviceStruct
 
   bool usesTaskDevicePin(int pin) const;
 
-  bool configurableDecimals() const;
+  bool configurableDecimals() const
+  {
+    return FormulaOption || DecimalsOnly;
+  }
 
   bool isSerial() const;
 
@@ -59,7 +62,11 @@ struct __attribute__((__packed__)) DeviceStruct
 
   bool isCustom() const;
 
-  pluginID_t getPluginID() const;
+  pluginID_t getPluginID() const
+  {
+    return pluginID_t::toPluginID(Number);
+  }
+
 
   uint8_t            Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
   uint8_t            Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
@@ -101,7 +108,11 @@ typedef DeviceStruct* DeviceVector;
 struct DeviceCount_t {
   DeviceCount_t() = default;
 
-  DeviceCount_t& operator++();
+  DeviceCount_t& operator++() {
+    // pre-increment, ++a
+    ++value;
+    return *this;
+  }
  
   // operator int() const { return value; }
 
@@ -111,19 +122,39 @@ struct DeviceCount_t {
 
 struct DeviceVector {
 
-  const DeviceStruct& operator[](deviceIndex_t index) const;
+  const DeviceStruct& operator[](deviceIndex_t index) const
+  {
+    return _vector[index.value];
+  }
 
-  DeviceStruct& operator[](DeviceCount_t index);
+
+  DeviceStruct& operator[](DeviceCount_t index)
+  {
+    return _vector[index.value];
+  }
+
 
   // Should not change anything in the device vector except for the PLUGIN_ADD call
   // Whichever calls this function should reconsider doing this
   // FIXME TD-er: Fix whereever this is called.
-  DeviceStruct& getDeviceStructForEdit(deviceIndex_t index);
+  DeviceStruct& getDeviceStructForEdit(deviceIndex_t index)
+  {
+    return _vector[index.value];
+  }
 
-  size_t size() const;
 
-  void resize(size_t newSize);
+  size_t size() const
+  {
+    return _vector.size();
+  }
 
+
+  void resize(size_t newSize)
+  {
+    _vector.resize(newSize);
+  }
+
+private:
   std::vector<DeviceStruct> _vector;
 };
 #endif
