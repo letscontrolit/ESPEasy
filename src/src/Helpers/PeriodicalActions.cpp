@@ -273,7 +273,7 @@ void schedule_all_MQTTimport_tasks() {
 
   if (!validControllerIndex(ControllerIndex)) { return; }
 
-  static const pluginID_t PLUGIN_MQTT_IMPORT = pluginID_t::toPluginID(PLUGIN_ID_MQTT_IMPORT);
+  constexpr pluginID_t PLUGIN_MQTT_IMPORT(PLUGIN_ID_MQTT_IMPORT);
 
   deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
   if (validDeviceIndex(DeviceIndex)) {

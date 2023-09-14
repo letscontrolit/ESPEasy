@@ -6,6 +6,9 @@
 struct pluginID_t {
   pluginID_t() = default;
 
+  constexpr explicit pluginID_t(uint8_t id) : value(id) {}
+
+
   static pluginID_t toPluginID(unsigned other)
   {
     pluginID_t res;

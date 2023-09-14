@@ -254,7 +254,8 @@ void C013_Receive(struct EventStruct *event) {
           Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber.value;
           Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourceUnit; // remote feed store unit nr sending the data
 
-          if ((infoReply.deviceNumber == pluginID_t::toPluginID(33)) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
+          constexpr pluginID_t DUMMY_PLUGIN_ID{33};
+          if ((infoReply.deviceNumber == DUMMY_PLUGIN_ID) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
             // Received a dummy device and the sensor type is actually set
             Settings.TaskDevicePluginConfig[infoReply.destTaskIndex][0] = static_cast<int16_t>(infoReply.sensorType);
           }

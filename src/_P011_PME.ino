@@ -14,7 +14,7 @@
 
 #define PLUGIN_011_I2C_ADDRESS 0x7f
 
-const pluginID_t P011_PLUGIN_ID = pluginID_t::toPluginID(PLUGIN_ID_011);
+constexpr pluginID_t P011_PLUGIN_ID{PLUGIN_ID_011};
 
 boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 {

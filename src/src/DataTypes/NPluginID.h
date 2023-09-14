@@ -4,7 +4,9 @@
 #include "../../ESPEasy_common.h"
 
 struct npluginID_t {
-  npluginID_t() = default;
+  constexpr npluginID_t() = default;
+
+  constexpr explicit npluginID_t(uint8_t id) : value(id) {}
 
   static npluginID_t toPluginID(unsigned other)
   {

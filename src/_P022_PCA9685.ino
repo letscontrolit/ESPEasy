@@ -18,8 +18,7 @@
 # define PLUGIN_NAME_022       "Extra IO - PCA9685"
 # define PLUGIN_VALUENAME1_022 "PWM"
 
-
-const pluginID_t P022_PLUGIN_ID = pluginID_t::toPluginID(PLUGIN_ID_022);
+constexpr pluginID_t P022_PLUGIN_ID{PLUGIN_ID_022};
 
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
 

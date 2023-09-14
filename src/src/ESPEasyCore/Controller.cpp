@@ -32,7 +32,7 @@
 #include "../Helpers/PortStatus.h"
 
 
-const pluginID_t PLUGIN_ID_MQTT_IMPORT = pluginID_t::toPluginID(37);
+constexpr pluginID_t PLUGIN_ID_MQTT_IMPORT(37);
 
 // ********************************************************************************
 // Interface for Sending to Controllers
