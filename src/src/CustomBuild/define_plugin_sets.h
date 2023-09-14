@@ -1548,6 +1548,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P153
     #define USES_P153   // Environment - SHT4x
   #endif
+  #ifndef USES_P154
+    #define USES_P154   // Environment - BMP3xx
+  #endif
 
 #endif
 
@@ -1800,6 +1803,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P127
     #define USES_P127 // CDM7160
   #endif
+  #ifndef USES_P133
+    #define USES_P133     // LTR390 UV
+  #endif
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
@@ -1821,9 +1827,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P153
     #define USES_P153   // Environment - SHT4x
   #endif
-  #ifndef USES_P133
-    #define USES_P133     // LTR390 UV
+  #ifndef USES_P154
+    #define USES_P154   // Environment - BMP3xx
   #endif
+
+
 
   // Controllers
   #ifndef USES_C011
@@ -2207,6 +2215,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P153
     #define USES_P153   // Environment - SHT4x
+  #endif
+  #ifndef USES_P154
+    #define USES_P154   // Environment - BMP3xx
   #endif
 
   // Controllers
