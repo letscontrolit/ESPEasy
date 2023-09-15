@@ -7,6 +7,7 @@
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
 
@@ -222,9 +223,11 @@ void WebTemplateParser::getErrorNotifications() {
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
     if (Settings.Protocol[x] != 0) {
-      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
 
-      if (validProtocolIndex(ProtocolIndex) && Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
+      if (Settings.ControllerEnabled[x] &&
+          validProtocolIndex(ProtocolIndex) && 
+          getProtocolStruct(ProtocolIndex).usesMQTT) {
         ++nrMQTTenabled;
       }
     }

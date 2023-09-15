@@ -62,7 +62,7 @@ bool ControllerDelayHandlerStruct::readyToProcess(const Queue_element_base& elem
     return false;
   }
 
-  if (Protocol[protocolIndex].needsNetwork) {
+  if (getProtocolStruct(protocolIndex).needsNetwork) {
     return NetworkConnected(10);
   }
   return true;

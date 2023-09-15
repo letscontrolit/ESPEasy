@@ -139,7 +139,7 @@ long stream_timing_statistics(bool clearStats) {
         html_TR_TD();
       }
       {
-        addHtml(get_formatted_Controller_number(Protocol[ProtocolIndex].Number));
+        addHtml(get_formatted_Controller_number(getCPluginID_from_ProtocolIndex(ProtocolIndex)));
         addHtml(' ');
         addHtml(getCPluginNameFromProtocolIndex(ProtocolIndex));
       }

@@ -161,13 +161,15 @@ controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid) {
 
 bool validProtocolIndex(protocolIndex_t index)
 {
-  return getCPluginID_from_ProtocolIndex(index) != INVALID_C_PLUGIN_ID;
+  return validProtocolIndex_init(index);
 }
 
+/*
 bool validControllerIndex(controllerIndex_t index)
 {
   return index < CONTROLLER_MAX;
 }
+*/
 
 bool validCPluginID(cpluginID_t cpluginID)
 {

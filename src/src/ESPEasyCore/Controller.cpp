@@ -338,7 +338,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     return false;
   }
 
-  if (Protocol[ProtocolIndex].usesMQTT)
+  if (getProtocolStruct(ProtocolIndex).usesMQTT)
   {
     bool   mqtt_sendLWT = false;
     String LWTTopic, LWTMessageConnect;
@@ -506,7 +506,7 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
     if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+      if (getProtocolStruct(ProtocolIndex).usesMQTT && Settings.ControllerEnabled[i]) {
         return i;
       }
     }

@@ -19,6 +19,7 @@
 
 # include "../Static/WebStaticData.h"
 
+# include "../Helpers/_CPlugin_init.h"
 # include "../Helpers/_Plugin_init.h"
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/_Plugin_Helper_serial.h"
@@ -573,7 +574,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
 
               if (validProtocolIndex(ProtocolIndex)) {
-                if (Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0))
+                if (getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[controllerNr] != 0))
                 {
                   addHtml(concat(F(" ("), static_cast<int>(Settings.TaskDeviceID[controllerNr][x])));
                   addHtml(')');
@@ -1340,7 +1341,7 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
 
         if (validProtocolIndex(ProtocolIndex) && 
-            Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0)) {
+            getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[controllerNr] != 0)) {
           html_TD();
           addHtml(F("IDX:"));
           html_TD();

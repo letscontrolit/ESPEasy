@@ -491,9 +491,11 @@ void ESPEasy_setup()
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
+/*
   if ((getDeviceCount() + 1) >= PLUGIN_MAX) {
     addLog(LOG_LEVEL_ERROR, concat(F("Programming error! - Increase PLUGIN_MAX ("), getDeviceCount()) + ')');
   }
+*/
 
   clearAllCaches();
   #ifndef BUILD_NO_RAM_TRACKER

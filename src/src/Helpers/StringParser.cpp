@@ -14,6 +14,7 @@
 #include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 
+#include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
@@ -181,7 +182,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
                   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
 
                   if (validProtocolIndex(ProtocolIndex) && 
-                      Protocol[ProtocolIndex].usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
+                      getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
                     value = Settings.TaskDeviceID[ctrlNr - 1][taskIndex];
                   }
                 }

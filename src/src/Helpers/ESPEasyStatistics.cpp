@@ -86,7 +86,7 @@ void jsonStatistics(bool clearStats) {
         // Start new protocol stream
         json_open(); // open new plugin
         json_prop(F("name"), getCPluginNameFromProtocolIndex(ProtocolIndex));
-        json_prop(F("id"),   String(Protocol[ProtocolIndex].Number));
+        json_prop(F("id"),   String(getCPluginID_from_ProtocolIndex(ProtocolIndex)));
         json_open(true, F("function")); // open function
         json_open(); // open first function element
 

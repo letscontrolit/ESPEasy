@@ -82,13 +82,13 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_015;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 80;
-      Protocol[protocolCount].usesID       = false;
+      ProtocolStruct& proto = getProtocolStruct(++protocolCount); //      = CPLUGIN_ID_015;
+      proto.usesMQTT     = false;
+      proto.usesAccount  = false;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 80;
+      proto.usesID       = false;
       break;
     }
 
@@ -137,10 +137,11 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (isFormItemChecked(F("controllerenabled"))) {
         for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-          protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+          const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
 
           if (validProtocolIndex(ProtocolIndex)) {
-            if ((i != event->ControllerIndex) && (Protocol[ProtocolIndex].Number == 15) && Settings.ControllerEnabled[i]) {
+            const cpluginID_t number = getCPluginID_from_ProtocolIndex(ProtocolIndex);
+            if ((i != event->ControllerIndex) && (number == 15) && Settings.ControllerEnabled[i]) {
               success = false;
 
               // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
@@ -209,7 +210,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
           String vPinNumberStr = valueName.substring(1, 4);
           int    vPinNumber    = vPinNumberStr.toInt();
 
-          if (!(vPinNumber > 0) && (vPinNumber < 256)) {
+          if ((vPinNumber < 0) || (vPinNumber > 255)) {
             vPinNumber = -1;
           }
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {

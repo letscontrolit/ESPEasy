@@ -17,13 +17,13 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_010;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = true;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].defaultPort  = 514;
-      Protocol[protocolCount].usesID       = false;
+      ProtocolStruct& proto = getProtocolStruct(++protocolCount); //      = CPLUGIN_ID_010;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = true;
+      proto.usesAccount  = false;
+      proto.usesPassword = false;
+      proto.defaultPort  = 514;
+      proto.usesID       = false;
       break;
     }
 

@@ -42,10 +42,8 @@ struct ProtocolStruct
     uint16_t bits{};
   };
 
-  uint8_t Number{};
+//  uint8_t Number{};
 };
-
-typedef std::vector<ProtocolStruct> ProtocolVector;
 
 
 #endif // DATASTRUCTS_PROTOCOLSTRUCT_H

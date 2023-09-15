@@ -51,17 +51,17 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number       = CPLUGIN_ID_018;
-      Protocol[protocolCount].usesMQTT       = false;
-      Protocol[protocolCount].usesAccount    = true;
-      Protocol[protocolCount].usesPassword   = true;
-      Protocol[protocolCount].defaultPort    = 1;
-      Protocol[protocolCount].usesID         = true;
-      Protocol[protocolCount].usesHost       = false;
-      Protocol[protocolCount].usesCheckReply = false;
-      Protocol[protocolCount].usesTimeout    = false;
-      Protocol[protocolCount].usesSampleSets = true;
-      Protocol[protocolCount].needsNetwork   = false;
+      ProtocolStruct& proto = getProtocolStruct(++protocolCount); //        = CPLUGIN_ID_018;
+      proto.usesMQTT       = false;
+      proto.usesAccount    = true;
+      proto.usesPassword   = true;
+      proto.defaultPort    = 1;
+      proto.usesID         = true;
+      proto.usesHost       = false;
+      proto.usesCheckReply = false;
+      proto.usesTimeout    = false;
+      proto.usesSampleSets = true;
+      proto.needsNetwork   = false;
       break;
     }
 

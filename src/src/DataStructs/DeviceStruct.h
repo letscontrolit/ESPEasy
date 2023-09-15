@@ -122,12 +122,15 @@ struct DeviceCount_t {
 
 struct DeviceVector {
 
+  // Regular access to DeviceStruct elements is 'const'
   const DeviceStruct& operator[](deviceIndex_t index) const
   {
     return _vector[index.value];
   }
 
 
+  // Only 'write' access to DeviceStruct elements via DeviceCount_t type
+  // This should only be done during call to PLUGIN_ADD
   DeviceStruct& operator[](DeviceCount_t index)
   {
     return _vector[index.value];

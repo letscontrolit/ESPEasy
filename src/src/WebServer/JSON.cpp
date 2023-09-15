@@ -581,7 +581,7 @@ void handle_buildinfo() {
   {
     json_open(true, F("controllers"));
 
-    for (protocolIndex_t x = 0; x < CPLUGIN_MAX; x++) {
+    for (protocolIndex_t x = 0; x < getHighestIncludedCPluginID(); x++) {
       if (getCPluginID_from_ProtocolIndex(x) != INVALID_C_PLUGIN_ID) {
         json_open();
         json_number(F("id"), String(x + 1));
