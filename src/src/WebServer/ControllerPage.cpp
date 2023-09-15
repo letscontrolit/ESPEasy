@@ -14,7 +14,6 @@
 # include "../ESPEasyCore/Controller.h"
 
 # include "../Globals/CPlugins.h"
-# include "../Globals/Protocol.h"
 # include "../Globals/Settings.h"
 
 # include "../Helpers/_CPlugin_init.h"
@@ -289,14 +288,16 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addSelector_Head_reloadOnChange(F("protocol"));
   addSelector_Item(F("- Standalone -"), 0, false, false, EMPTY_STRING);
 
-  for (uint8_t x = 0; x <= protocolCount; x++)
+  protocolIndex_t protocolIndex = 0;
+  while (validProtocolIndex(protocolIndex))
   {
-    const cpluginID_t number = getCPluginID_from_ProtocolIndex(x);
+    const cpluginID_t number = getCPluginID_from_ProtocolIndex(protocolIndex);
     boolean disabled = false; // !((controllerindex == 0) || !Protocol[x].usesMQTT);
-    addSelector_Item(getCPluginNameFromProtocolIndex(x),
+    addSelector_Item(getCPluginNameFromProtocolIndex(protocolIndex),
                      number,
                      choice == number,
                      disabled);
+    ++protocolIndex;
   }
   addSelector_Foot();
 

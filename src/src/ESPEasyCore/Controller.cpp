@@ -22,7 +22,6 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/RulesCalculate.h"
 
 #include "../Helpers/_CPlugin_Helper.h"

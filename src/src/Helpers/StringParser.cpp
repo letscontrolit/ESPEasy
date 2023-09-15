@@ -10,7 +10,6 @@
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 

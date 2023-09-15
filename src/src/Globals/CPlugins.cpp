@@ -5,7 +5,6 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/_CPlugin_init.h"
 

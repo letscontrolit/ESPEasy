@@ -57,7 +57,6 @@
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"
 #include "../Globals/NetworkState.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 

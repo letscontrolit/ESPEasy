@@ -19,7 +19,6 @@
 # include "src/Controller_struct/C018_data_struct.h"
 # include "src/DataTypes/ESPEasy_plugin_functions.h"
 # include "src/Globals/CPlugins.h"
-# include "src/Globals/Protocol.h"
 # include "src/Helpers/_Plugin_Helper_serial.h"
 # include "src/Helpers/StringGenerator_GPIO.h"
 # include "src/WebServer/Markup.h"
@@ -51,7 +50,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      ProtocolStruct& proto = getProtocolStruct(++protocolCount); //        = CPLUGIN_ID_018;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //        = CPLUGIN_ID_018;
       proto.usesMQTT       = false;
       proto.usesAccount    = true;
       proto.usesPassword   = true;

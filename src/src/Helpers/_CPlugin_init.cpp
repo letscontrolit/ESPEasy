@@ -6,7 +6,6 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../Globals/CPlugins.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
@@ -2152,6 +2151,7 @@ void CPluginSetup()
     if (INVALID_C_PLUGIN_ID != cpluginID) {
       CPlugin_id_to_ProtocolIndex[cpluginID] = protocolIndex;
       struct EventStruct TempEvent;
+      TempEvent.idx = protocolIndex;
       String dummy;
       CPluginCall(protocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_ADD, &TempEvent, dummy);
     }

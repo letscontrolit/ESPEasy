@@ -15,7 +15,6 @@
 # include "../Globals/ExtraTaskSettings.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/Plugins.h"
-# include "../Globals/Protocol.h"
 
 # include "../Static/WebStaticData.h"
 

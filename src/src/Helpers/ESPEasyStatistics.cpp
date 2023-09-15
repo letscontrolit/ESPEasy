@@ -5,7 +5,6 @@
 
 #include "../DataStructs/TimingStats.h"
 #include "../WebServer/ESPEasy_WebServer.h"
-#include "../Globals/Protocol.h"
 #include "../Helpers/Convert.h"
 #include "../Helpers/_Plugin_init.h"
 

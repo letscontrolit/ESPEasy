@@ -82,7 +82,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      ProtocolStruct& proto = getProtocolStruct(++protocolCount); //      = CPLUGIN_ID_015;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_015;
       proto.usesMQTT     = false;
       proto.usesAccount  = false;
       proto.usesPassword = true;

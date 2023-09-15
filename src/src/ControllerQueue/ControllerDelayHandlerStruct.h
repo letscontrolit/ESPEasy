@@ -11,7 +11,6 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
-#include "../Globals/Protocol.h"
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"

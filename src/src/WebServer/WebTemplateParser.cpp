@@ -4,7 +4,6 @@
 
 #include "../DataTypes/ControllerIndex.h"
 
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/_CPlugin_init.h"

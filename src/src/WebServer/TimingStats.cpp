@@ -10,7 +10,6 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/RamTracker.h"
 
 #include "../Globals/Device.h"
