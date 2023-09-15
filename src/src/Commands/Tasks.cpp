@@ -144,7 +144,7 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
     serialPrintln(formatUserVarNoCheck(&tmpEvent, varNr));
   }
   success = true;
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const char *Line)
@@ -156,7 +156,7 @@ const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const 
   }
 
   taskClear(taskIndex, true);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, const char *Line)
@@ -164,7 +164,7 @@ const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, con
   for (taskIndex_t t = 0; t < TASKS_MAX; t++) {
     taskClear(t, false);
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
@@ -175,14 +175,11 @@ const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event
     event->setTaskIndex(taskIndex);
 
     #if FEATURE_PLUGIN_PRIORITY
-    if (!Settings.isPriorityTask(event->TaskIndex))
-    #endif // if FEATURE_PLUGIN_PRIORITY
-    {
-      if (setTaskEnableStatus(event, enable)) {
-        return return_command_success();
-      }
+    if (Settings.isPriorityTask(event->TaskIndex)) {
+      return return_command_failed_flashstr();
     }
-    return return_command_failed();
+    #endif // if FEATURE_PLUGIN_PRIORITY
+    return return_command_boolean_result_flashstr(setTaskEnableStatus(event, enable));
   }
   return F("INVALID_PARAMETERS");
 }
@@ -199,11 +196,11 @@ const __FlashStringHelper * Command_PriorityTask_DisableTask(struct EventStruct 
     if (Settings.isPowerManagerTask(event->TaskIndex))
     {
       Settings.setPowerManagerTask(event->TaskIndex, false);
-      return return_command_success();
+      return return_command_success_flashstr();
     }
     // Handle other Priotiry task options
     Settings.setTaskEnableReadonly(event->TaskIndex, false);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
   return F("INVALID_PARAMETERS");
 }
@@ -251,7 +248,7 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   if ((result == 0) || (result == 1)) {
     UserVar.set(taskIndex, varNr, (result == 0) ? 1.0 : 0.0, sensorType);
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
@@ -267,7 +264,7 @@ const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *even
     SensorSendTask(&TempEvent);
     STOP_TIMER(SENSOR_SEND_TASK);
 
-    return return_command_success();
+    return return_command_success_flashstr();
   }
   return returnvalue;
 }
@@ -288,7 +285,7 @@ const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, 
   if (GetArgv(Line, par3, 3)) {
     if (validUIntFromString(par3, msecFromNow)) {
       Scheduler.schedule_task_device_timer(taskIndex, millis() + msecFromNow);
-      return return_command_success();
+      return return_command_success_flashstr();
     }
   }
   return F("INVALID_PARAMETERS");  
@@ -316,7 +313,7 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   SensorSendTask(&TempEvent, unixTime);
   STOP_TIMER(SENSOR_SEND_TASK);
 
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Task_RemoteConfig(struct EventStruct *event, const char *Line)
@@ -326,5 +323,5 @@ const __FlashStringHelper * Command_Task_RemoteConfig(struct EventStruct *event,
 
   // FIXME TD-er: Should we call ExecuteCommand here? The command is not parsed like any other call.
   remoteConfig(&TempEvent, request);
-  return return_command_success();
+  return return_command_success_flashstr();
 }

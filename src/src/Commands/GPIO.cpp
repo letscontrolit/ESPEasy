@@ -60,10 +60,7 @@ bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
 
 const __FlashStringHelper * Command_GPIO_Monitor(struct EventStruct *event, const char *Line)
 {
-  if (gpio_monitor_helper(event->Par2, event, Line)) {
-    return return_command_success();
-  }
-  return return_command_failed();
+  return return_command_boolean_result_flashstr(gpio_monitor_helper(event->Par2, event, Line));
 }
 
 const __FlashStringHelper * Command_GPIO_MonitorRange(struct EventStruct *event, const char *Line)
@@ -73,7 +70,7 @@ const __FlashStringHelper * Command_GPIO_MonitorRange(struct EventStruct *event,
   for (uint8_t i = event->Par2; i <= event->Par3; i++) {
     success &= gpio_monitor_helper(i, event, Line);
   }
-  return success ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(success);
 }
 
 bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
@@ -116,12 +113,7 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
 
 const __FlashStringHelper * Command_GPIO_UnMonitor(struct EventStruct *event, const char *Line)
 {
-  if (gpio_unmonitor_helper(event->Par2, event, Line)) {
-    return return_command_success();
-  }
-  else {
-    return return_command_failed();
-  }
+  return return_command_boolean_result_flashstr(gpio_unmonitor_helper(event->Par2, event, Line));
 }
 
 const __FlashStringHelper * Command_GPIO_UnMonitorRange(struct EventStruct *event, const char *Line)
@@ -131,7 +123,7 @@ const __FlashStringHelper * Command_GPIO_UnMonitorRange(struct EventStruct *even
   for (uint8_t i = event->Par2; i <= event->Par3; i++) {
     success &= gpio_unmonitor_helper(i, event, Line);
   }
-  return success ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(success);
 }
 
 bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line)
@@ -287,10 +279,10 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
-    return return_command_success();
+    return return_command_success_flashstr();
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
 }
 
@@ -319,17 +311,17 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
 #endif
     default:
       addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
-      return return_command_failed();
+      return return_command_failed_flashstr();
   }
 
   if (!checkValidPortRange(pluginID, event->Par2))
   {
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
   const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
   String dummy;
   SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const char *Line)
@@ -359,10 +351,10 @@ const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const ch
 
     // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, pluginID, event->Par1, log, 0));
 
-    return return_command_success();
+    return return_command_success_flashstr();
   }
   logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const char *Line)
@@ -382,9 +374,9 @@ const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const c
       const pluginID_t pluginID = PLUGIN_GPIO;
       Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, 0);
     }
-    return return_command_success();
+    return return_command_success_flashstr();
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const char *Line)
@@ -406,12 +398,12 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   }
 
   if (play_rtttl(event->Par1, melody.c_str())) {
-    return return_command_success();
+    return return_command_success_flashstr();
   }
   #else // if FEATURE_RTTTL
   addLog(LOG_LEVEL_ERROR, F("RTTTL : command not included in build"));
   #endif // if FEATURE_RTTTL
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const char *Line)
@@ -460,10 +452,10 @@ const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const 
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
-    return return_command_success();
+    return return_command_success_flashstr();
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
 }
 
@@ -509,19 +501,18 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
-        return return_command_success();
-        break;
+        return return_command_success_flashstr();
       }
       case PIN_MODE_OFFLINE:
         logErrorGpioOffline(logPrefix, event->Par1);
-        return return_command_failed();
+        return return_command_failed_flashstr();
       default:
         logErrorGpioNotOutput(logPrefix, event->Par1);
-        return return_command_failed();
+        return return_command_failed_flashstr();
     }
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
 }
 
@@ -560,7 +551,7 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
 #endif
         default:
           addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
-          return return_command_failed();
+          return return_command_failed_flashstr();
       }
     } else { // OUTPUT
       mode  = PIN_MODE_OUTPUT;
@@ -590,14 +581,14 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
       log += state;
       addLog(LOG_LEVEL_INFO, log);
       SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
-      return return_command_success();
+      return return_command_success_flashstr();
     } else {
       logErrorGpioOffline(logPrefix, event->Par1);
-      return return_command_failed();
+      return return_command_failed_flashstr();
     }
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
 }
 
@@ -835,14 +826,14 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
 #ifdef USES_P009
 const __FlashStringHelper * Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char *Line)
 {
-  return mcpgpio_range_pattern_helper(event, Line, true) ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(mcpgpio_range_pattern_helper(event, Line, true));
 }
 #endif
 
 #ifdef USES_P019
 const __FlashStringHelper * Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char *Line)
 {
-  return pcfgpio_range_pattern_helper(event, Line, true) ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(pcfgpio_range_pattern_helper(event, Line, true));
 }
 #endif
 
@@ -868,14 +859,14 @@ const __FlashStringHelper * Command_GPIO_PcfGPIOPattern(struct EventStruct *even
 #ifdef USES_P009
 const __FlashStringHelper * Command_GPIO_McpGPIORange(struct EventStruct *event, const char *Line)
 {
-  return mcpgpio_range_pattern_helper(event, Line, false) ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(mcpgpio_range_pattern_helper(event, Line, false));
 }
 #endif
 
 #ifdef USES_P019
 const __FlashStringHelper * Command_GPIO_PcfGPIORange(struct EventStruct *event, const char *Line)
 {
-  return pcfgpio_range_pattern_helper(event, Line, false) ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(pcfgpio_range_pattern_helper(event, Line, false));
 }
 #endif
 
@@ -1078,10 +1069,7 @@ bool setPCFMode(uint8_t pin, uint8_t mode)
  **********************************************/
 const __FlashStringHelper * Command_GPIO_Mode(struct EventStruct *event, const char *Line)
 {
-  if (gpio_mode_range_helper(event->Par1, event->Par2, event, Line)) {
-    return return_command_success();
-  }
-  return return_command_failed();
+  return return_command_boolean_result_flashstr(gpio_mode_range_helper(event->Par1, event->Par2, event, Line));
 }
 
 const __FlashStringHelper * Command_GPIO_ModeRange(struct EventStruct *event, const char *Line)
@@ -1091,7 +1079,7 @@ const __FlashStringHelper * Command_GPIO_ModeRange(struct EventStruct *event, co
   for (uint8_t i = event->Par1; i <= event->Par2; i++) {
     success &= gpio_mode_range_helper(i, event->Par3, event, Line);
   }
-  return success ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(success);
 }
 
 bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *event, const char *Line)

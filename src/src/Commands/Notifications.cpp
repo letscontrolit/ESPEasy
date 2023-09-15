@@ -31,7 +31,7 @@ const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *eve
 			}
 		}
 	}
-	return return_command_success();
+	return return_command_success_flashstr();
 }
 
 #endif

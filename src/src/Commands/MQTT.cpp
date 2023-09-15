@@ -66,10 +66,10 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
       success = MQTTpublish(enabledMqttController, INVALID_TASK_INDEX,  topic.c_str(), String(event->Par2).c_str(), mqtt_retainFlag);
     }
     if (success) {
-      return return_command_success();
+      return return_command_success_flashstr();
     }
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 
@@ -109,9 +109,8 @@ const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, co
 
       String eventName = Line;
       String topic = eventName.substring(10);
-      if (!MQTTsubscribe(enabledMqttController, topic.c_str(), mqtt_retainFlag))
-         return return_command_failed();
-      return return_command_success();
+      return return_command_boolean_result_flashstr(
+        MQTTsubscribe(enabledMqttController, topic.c_str(), mqtt_retainFlag));
     }
     return F("No MQTT controller enabled");
   }
