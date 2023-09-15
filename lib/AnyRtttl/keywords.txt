@@ -1,0 +1,16 @@
+anyrtttl	KEYWORD1
+play16Bits	KEYWORD2
+play10Bits	KEYWORD2
+begin	KEYWORD2
+beginProgMem	KEYWORD2
+begin_P	KEYWORD2
+play	KEYWORD2
+playProgMem	KEYWORD2
+play_P	KEYWORD2
+stop	KEYWORD2
+isPlaying	KEYWORD2
+done	KEYWORD2
+setToneFunction	KEYWORD2
+setNoToneFunction	KEYWORD2
+setDelayFunction	KEYWORD2
+setMillisFunction	KEYWORD2

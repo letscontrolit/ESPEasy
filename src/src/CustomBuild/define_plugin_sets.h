@@ -2851,6 +2851,15 @@ To create/register a plugin, you have to :
   #undef FEATURE_RTTTL
   #define FEATURE_RTTTL 1
 #endif
+#if FEATURE_RTTTL && !defined(FEATURE_ANYRTTTL_LIB) //&& defined(ESP32)
+  #define FEATURE_ANYRTTTL_LIB 1    // Enable AnyRtttl library for ESP32 builds
+#endif
+#ifndef FEATURE_ANYRTTTL_LIB
+  #define FEATURE_ANYRTTTL_LIB 0
+#endif
+#ifndef FEATURE_ANYRTTTL_ASYNC
+  #define FEATURE_ANYRTTTL_ASYNC 1 // Use Async by default for better (non-blocking) behavior
+#endif
 
 #ifndef FEATURE_SD                         
 #define FEATURE_SD                            0
