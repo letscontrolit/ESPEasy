@@ -2083,11 +2083,25 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P255
 };
 
+
+constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
+
+// Highest plugin ID included in the build
+constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1];
+
+//constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1;
+
+// Array filled during init.
+// Valid index: 1 ... Highest_Plugin_id
+// Returns index to the DeviceIndex_to_Plugin_id array
+//
+// We do know the Highest_Plugin_id at compile time, so we could already create a fixed array for it at compile time.
+// However it is possible we end up including a single high pluginID_t value and thus making the build size larger than needed.
+// So better to heap-allocate this one.
 deviceIndex_t* Plugin_id_to_DeviceIndex = nullptr;
 size_t Plugin_id_to_DeviceIndex_size = 0;
 
-constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
-//constexpr size_t Plugin_id_to_DeviceIndex_size = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] + 1;
+
 
 
 /*
@@ -2152,6 +2166,11 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
   return INVALID_PLUGIN_ID;
 }
 
+bool validDeviceIndex_init(deviceIndex_t deviceIndex)
+{
+  return deviceIndex < DeviceIndex_to_Plugin_id_size;
+}
+
 boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string)
 {
   if (deviceIndex < DeviceIndex_to_Plugin_id_size)
@@ -2175,7 +2194,7 @@ void PluginSetup()
     // must be usable to store the highest plugin ID.
     // Thus size of array must be highest pluginID + 1.
     Plugin_id_to_DeviceIndex_size = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] + 1;
-    Plugin_id_to_DeviceIndex = new deviceIndex_t[Plugin_id_to_DeviceIndex_size];
+    Plugin_id_to_DeviceIndex = new (std::nothrow) deviceIndex_t[Plugin_id_to_DeviceIndex_size];
   }
 
 
@@ -2184,7 +2203,7 @@ void PluginSetup()
     Plugin_id_to_DeviceIndex[id] = INVALID_DEVICE_INDEX;
   }
   #ifdef ESP8266
-  Device = new DeviceStruct[DeviceIndex_to_Plugin_id_size];
+  Device = new (std::nothrow) DeviceStruct[DeviceIndex_to_Plugin_id_size];
   #else
   Device.resize(DeviceIndex_to_Plugin_id_size);
   #endif

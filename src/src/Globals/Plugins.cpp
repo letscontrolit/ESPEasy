@@ -41,10 +41,9 @@ std::vector<uint8_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index) {
-  const pluginID_t pluginID = getPluginID_from_DeviceIndex(index);
-  return pluginID != INVALID_PLUGIN_ID;
+  return validDeviceIndex_init(index);
 }
-
+/*
 bool validTaskIndex(taskIndex_t index) {
   return index < TASKS_MAX;
 }
@@ -52,11 +51,11 @@ bool validTaskIndex(taskIndex_t index) {
 bool validPluginID(pluginID_t pluginID) {
   return (pluginID != INVALID_PLUGIN_ID);
 }
-
+*/
 bool validPluginID_fullcheck(pluginID_t pluginID) {
   return getDeviceIndex_from_PluginID(pluginID) != INVALID_DEVICE_INDEX;
 }
-
+/*
 bool validUserVarIndex(userVarIndex_t index) {
   return index < USERVAR_MAX_INDEX;
 }
@@ -64,6 +63,7 @@ bool validUserVarIndex(userVarIndex_t index) {
 bool validTaskVarIndex(taskVarIndex_t index) {
   return index < VARS_PER_TASK;
 }
+*/
 
 bool supportedPluginID(pluginID_t pluginID) {
   return validDeviceIndex(getDeviceIndex(pluginID));

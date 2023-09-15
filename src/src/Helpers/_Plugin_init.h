@@ -12,6 +12,7 @@ struct EventStruct;
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID);
 pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex);
+bool validDeviceIndex_init(deviceIndex_t deviceIndex);
 
 boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string);
 
