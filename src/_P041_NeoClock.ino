@@ -299,7 +299,7 @@ void timeToStrip(uint8_t hours, uint8_t minutes)
   }
 }
 
-void pushToStrip(const int* ids, int count) {
+void pushToStrip(const int* ids, size_t count) {
   for (size_t i = 0; i < count; ++i) {
     pushToStrip(ids[i]);
   }
@@ -320,108 +320,108 @@ void pushM_FOUR() {
 }
 void pushIT_IS()  {
   constexpr int ids[] = {1, 2, 3, 5, 6};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushAFTER() {
   constexpr int ids[] = {36, 37, 38, 39};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushQUATER() {
   constexpr int ids[] = {30, 31, 32, 33, 34};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushFOR() {
   constexpr int ids[] = {41, 42, 43, 44};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushHALF() {
   constexpr int ids[] = {50, 51, 52, 53};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushONE()  {
   constexpr int ids[] = {63, 64, 65};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushTWO() {
   constexpr int ids[] = {64, 65, 66, 67};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushTHREE() {
   constexpr int ids[] = {109, 110, 111, 112};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushFOUR() {
   constexpr int ids[] = {57, 58, 59, 60};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushFIVE1() {
   constexpr int ids[] = {8, 9, 10, 11};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushFIVE2() {
   constexpr int ids[] = {92, 93, 94, 95};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushSIX() {
   constexpr int ids[] = {69, 88, 91};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushSEVEN() {
   constexpr int ids[] = {69, 70, 71, 72, 73};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushEIGHT() {
   constexpr int ids[] = {97, 98, 99, 100};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushNINE() {
   constexpr int ids[] = {73, 74, 75, 76, 77};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushTEN() {
   constexpr int ids[] = {54, 59, 76, 81};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushTEN1() {
   constexpr int ids[] = {25, 26, 27, 28};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushELEVEN() {
   constexpr int ids[] = {107, 108, 109};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushTWELVE() {
   constexpr int ids[] = {82, 83, 84, 85, 86, 87};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 void pushTWENTY() {
   constexpr int ids[] = {16, 17, 18, 19, 20, 21, 22};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 
 void pushHOURE() {
   constexpr int ids[] = {102,103,104};
-  constexpr int count = NR_ELEMENTS(ids);
+  constexpr size_t count = NR_ELEMENTS(ids);
   pushToStrip(ids, count);
 }
 
