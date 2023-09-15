@@ -1161,6 +1161,7 @@ float readMax31856(struct EventStruct *event)
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
+      // FIXME TD-er: Part of expression is always false (sr == 0)
       const bool faultResolved = (P039_data->sensorFault) && (sr == 0);
 
       if ((P039_data->sensorFault) || faultResolved) {

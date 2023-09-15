@@ -74,17 +74,7 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
     # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
-    {
-      success = true;
-      break;
-    }
-
     case PLUGIN_WEBFORM_SAVE:
-    {
-      success = true;
-      break;
-    }
-
     case PLUGIN_INIT:
     {
       success = true;
