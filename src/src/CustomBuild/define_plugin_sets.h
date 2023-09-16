@@ -1596,13 +1596,13 @@ To create/register a plugin, you have to :
   #ifndef USES_P153
     #define USES_P153   // Environment - SHT4x
   #endif
-  #ifndef USES_P154
-    #define USES_P154   // Environment - BMP3xx
-  #endif
 
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_G
+  #ifndef USES_P154
+    #define USES_P154   // Environment - BMP3xx
+  #endif
 
 #endif
 

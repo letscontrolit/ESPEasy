@@ -54,7 +54,7 @@
 .. |P154_type| replace:: :cyan:`Environment`
 .. |P154_typename| replace:: :cyan:`Environment - BMP3xx`
 .. |P154_porttype| replace:: `.`
-.. |P154_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P154_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
 .. |P154_github| replace:: P154_BMP3xx.ino
 .. _P154_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P154_BMP3xx.ino
 .. |P154_usedby| replace:: `.`
