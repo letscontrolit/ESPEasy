@@ -248,7 +248,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
   unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
 
-  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
+  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
+  //Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
 
   uint8_t flags = 0;
 

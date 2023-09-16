@@ -2426,7 +2426,8 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   taskClear(taskIndex, false); // clear settings, but do not save
   ClearCustomTaskSettings(taskIndex);
 
-  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
+  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
+//  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
 
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {

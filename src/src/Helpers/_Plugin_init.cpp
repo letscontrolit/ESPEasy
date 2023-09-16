@@ -2086,22 +2086,29 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 
 constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
 
-// Highest plugin ID included in the build
-constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1];
+// Lowest plugin ID included in the build
+constexpr size_t Lowest_Plugin_id = DeviceIndex_to_Plugin_id_size == 0 ? 0 : DeviceIndex_to_Plugin_id[0];
 
-//constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1;
+// Highest plugin ID included in the build
+constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id_size > 1 ? DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] : 0;
+
+// Array size including index of highest plugin ID.
+constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1 - Lowest_Plugin_id;
 
 // Array filled during init.
 // Valid index: 1 ... Highest_Plugin_id
 // Returns index to the DeviceIndex_to_Plugin_id array
 //
-// We do know the Highest_Plugin_id at compile time, so we could already create a fixed array for it at compile time.
-// However it is possible we end up including a single high pluginID_t value and thus making the build size larger than needed.
-// So better to heap-allocate this one.
-deviceIndex_t* Plugin_id_to_DeviceIndex = nullptr;
-size_t Plugin_id_to_DeviceIndex_size = 0;
+// TODO TD-er: Vector size should be lowest pluginID ... highest pluginID
+deviceIndex_t Plugin_id_to_DeviceIndex[Plugin_id_to_DeviceIndex_size]{};
 
 
+size_t get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID_t pluginID)
+{
+  if (pluginID.value < Lowest_Plugin_id)
+    return Plugin_id_to_DeviceIndex_size;
+  return static_cast<size_t>(pluginID.value) - Lowest_Plugin_id;
+}
 
 
 /*
@@ -2149,9 +2156,10 @@ unsigned getNrBuiltInDeviceIndex()
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {
-  if (pluginID.value < Plugin_id_to_DeviceIndex_size)
+  const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
+  if (arrayIndex < Plugin_id_to_DeviceIndex_size)
   {
-    return Plugin_id_to_DeviceIndex[pluginID.value];
+    return Plugin_id_to_DeviceIndex[arrayIndex];
   }
   return INVALID_DEVICE_INDEX;
 }
@@ -2160,7 +2168,6 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
 {
   if (deviceIndex < DeviceIndex_to_Plugin_id_size)
   {
-//    return static_cast<pluginID_t>(DeviceIndex_to_Plugin_id[deviceIndex]);
     return pluginID_t::toPluginID(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
   }
   return INVALID_PLUGIN_ID;
@@ -2187,16 +2194,6 @@ void PluginSetup()
   if (setupDone) return;
 
   setupDone = true;
-  
-  if (DeviceIndex_to_Plugin_id_size > 0) {
-    // Get highest PluginID
-    // The last usable index of the Plugin_id_to_DeviceIndex array 
-    // must be usable to store the highest plugin ID.
-    // Thus size of array must be highest pluginID + 1.
-    Plugin_id_to_DeviceIndex_size = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] + 1;
-    Plugin_id_to_DeviceIndex = new (std::nothrow) deviceIndex_t[Plugin_id_to_DeviceIndex_size];
-  }
-
 
   for (size_t id = 0; id < Plugin_id_to_DeviceIndex_size; ++id)
   {
@@ -2213,8 +2210,10 @@ void PluginSetup()
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
     if (validPluginID(pluginID)) { 
-      Plugin_id_to_DeviceIndex[pluginID.value] = deviceIndex;
+      const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
+      Plugin_id_to_DeviceIndex[arrayIndex] = deviceIndex;
       struct EventStruct TempEvent;
+      TempEvent.idx = deviceIndex.value;
       String dummy;
       PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
     }
