@@ -56,6 +56,8 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
         if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex)) {
           const int pluginID = Device[deviceIndex].Number;
 
+          # ifdef USES_P033
+
           if ((pluginID == 33) ||           // Plugin 33 Dummy Device,
               // backward compatible behavior: if handleCmd = true then execute TaskValueSet regardless of AllowTaskValueSetAllPlugins
               ((handleCmd || Settings.AllowTaskValueSetAllPlugins()) && (pluginID != 86)))
@@ -69,9 +71,16 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
               cmd     = strformat(F("TaskValueSet,%d,%d,%s"), taskIndex + 1, valueNr + 1, event->String2.c_str());
               handled = true;
             }
-          } else if (pluginID == 86) { // Plugin 86 Homie receiver. Schedules the event defined in the plugin.
-                                       // Does NOT store the value.
-                                       // Use HomieValueSet to save the value. This will acknowledge back to the controller too.
+          }
+          # endif // ifdef USES_P033
+          # if defined(USES_P033) && defined(USES_P086)
+          else
+          # endif // if defined(USES_P033) && defined(USES_P086)
+          # ifdef USES_P086
+
+          if (pluginID == 86) { // Plugin 86 Homie receiver. Schedules the event defined in the plugin.
+            // Does NOT store the value.
+            // Use HomieValueSet to save the value. This will acknowledge back to the controller too.
             valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
             if (validTaskVarIndex(valueNr)) {
@@ -101,6 +110,7 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
               handled = true;
             }
           }
+          # endif // ifdef USES_P086
         }
       }
     }
