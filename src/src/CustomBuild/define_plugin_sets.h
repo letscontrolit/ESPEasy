@@ -1342,6 +1342,9 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_SERVO
       #define FEATURE_SERVO 1
     #endif
+    #ifdef FEATURE_RTTTL
+      #undef FEATURE_RTTTL
+    #endif
     #define FEATURE_RTTTL 1
 
     #define USES_P001   // Switch
@@ -1759,7 +1762,9 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_SERVO
     #define FEATURE_SERVO 1
   #endif
-  #define FEATURE_RTTTL 1
+  #ifndef FEATURE_RTTTL
+    #define FEATURE_RTTTL 1
+  #endif
 
   #define USES_P001   // Switch
   #define USES_P002   // ADC
@@ -2349,6 +2354,9 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C018)
+  #ifdef FEATURE_PACKED_RAW_DATA
+    #undef FEATURE_PACKED_RAW_DATA
+  #endif
   #define FEATURE_PACKED_RAW_DATA 1
 #endif
 
@@ -2360,6 +2368,9 @@ To create/register a plugin, you have to :
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
+  #ifdef FEATURE_MODBUS
+    #undef FEATURE_MODBUS
+  #endif
   #define FEATURE_MODBUS  1
 #endif
 
@@ -2647,10 +2658,16 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
+  #ifdef FEATURE_MQTT
+    #undef FEATURE_MQTT
+  #endif
   #define FEATURE_MQTT  1
 #endif
 
 #if defined(USES_C012) || defined (USES_C015)
+  #ifdef FEATURE_BLYNK
+    #undef FEATURE_BLYNK
+  #endif
   #define FEATURE_BLYNK 1
 #endif
 
