@@ -99,9 +99,9 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
     if (state == -1) { globalMapPortStatus[key].mode = PIN_MODE_OFFLINE; }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = logPrefix;
-      log += strformat(F(" port #%d: added to monitor list."), port); 
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, concat(
+        logPrefix,
+        strformat(F(" port #%d: added to monitor list."), port))); 
     }
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
@@ -150,9 +150,9 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
 
     removeMonitorFromPort(key);
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = logPrefix;
-      log += strformat(F(" port #%d: removed from monitor list."), port);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, concat(
+        logPrefix,
+        strformat(F(" port #%d: removed from monitor list."), port)));
     }
 
     return true;
@@ -495,7 +495,9 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
         GPIO_Write(pluginID, event->Par1, !state);
 
         String log = logPrefix;
-        log += strformat(F(" toggle: port#%d: set to %d"), event->Par1, static_cast<int>(!state));
+        log += concat(
+          F(" toggle"),
+          strformat(F(": port#%d: set to %d"), event->Par1, static_cast<int>(!state)));
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
@@ -727,7 +729,7 @@ range_pattern_helper_data range_helper_shared(pluginID_t plugin, uint8_t pin1, u
       !checkValidPortRange(plugin, pin2) ||
       ((pin2 - pin1 + 1) > 16)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLogMove(LOG_LEVEL_ERROR, concat(data.logPrefix, F(": pin numbers out of range.")));
+      addLog(LOG_LEVEL_ERROR, concat(data.logPrefix, F(": pin numbers out of range.")));
     }
     return data;
   }
@@ -785,7 +787,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
       data.write = data.write << data.deltaStart;
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLogMove(LOG_LEVEL_ERROR, concat(data.logPrefix,  F(": write value must be 0 or 1.")));
+        addLog(LOG_LEVEL_ERROR, concat(data.logPrefix,  F(": write value must be 0 or 1.")));
       }
       return data;
     }
@@ -915,9 +917,9 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         const int8_t state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        String log;
-        log += data.logPrefix;
-        log += strformat(F(": port#%d: set to %d"), currentPin, state);
+        String log = concat(
+          data.logPrefix,
+          strformat(F(": port#%d: set to %d"), currentPin, state));
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
@@ -1309,7 +1311,7 @@ bool getGPIOPinStateValues(String& str) {
           str       = String(tempValue);
           break;
         }
-          #endif
+#endif
         default:
           addLog(LOG_LEVEL_ERROR, F("PLUGIN PINSTATE. Plugin not included in build"));
           return false;
@@ -1318,14 +1320,14 @@ bool getGPIOPinStateValues(String& str) {
 
       if (success) {
         #ifndef BUILD_NO_DEBUG
-        String log = logPrefix;
-        log += strformat(F(" PLUGIN RANGE pin start=%d; pin end=%d; value=%s"), par1, par2, str.c_str());
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG, concat(
+          logPrefix,
+          strformat(F(" PLUGIN RANGE pin start=%d; pin end=%d; value=%s"), par1, par2, str.c_str())));
         #endif // ifndef BUILD_NO_DEBUG
       } else {
-        String log = logPrefix;
-        log += strformat(F(" IS OFFLINE. PLUGIN RANGE pin start=%d; pin end=%d; value=%s"), par1, par2, str.c_str());
-        addLogMove(LOG_LEVEL_ERROR, log);
+        addLog(LOG_LEVEL_ERROR, concat(
+          logPrefix,
+          strformat(F(" IS OFFLINE. PLUGIN RANGE pin start=%d; pin end=%d; value=%s"), par1, par2, str.c_str())));
       }
     } else {
       addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric."));
