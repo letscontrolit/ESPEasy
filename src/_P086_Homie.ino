@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-09-10 tonhuisman: Reduce string usage to lower the .bin footprint
  * 2023-09-10 tonhuisman: Add changelog, uncrustify source
  */
 
@@ -27,8 +28,12 @@
 # define PLUGIN_086_VALUE_RGB        5
 # define PLUGIN_086_VALUE_HSV        6
 
-# define PLUGIN_086_VALUE_TYPES      7
-# define PLUGIN_086_VALUE_MAX        4
+// Unsupported (yet) value types:
+// - Percent
+// - DateTime (convert to linuxtime?)
+// - Duration
+
+# define PLUGIN_086_VALUE_MAX        VARS_PER_TASK
 
 # define PLUGIN_086_DEBUG            true
 
@@ -74,12 +79,11 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Translation Plugin for controllers able to receive value updates according to the Homie convention."));
+      # endif // ifndef BUILD_NO_DEBUG
 
-      uint8_t choice = 0;
-      String  labelText;
-      String  keyName;
-      const __FlashStringHelper *options[PLUGIN_086_VALUE_TYPES] = {
+      const __FlashStringHelper *options[] = {
         F("integer"),
         F("float"),
         F("boolean"),
@@ -88,7 +92,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
         F("rgb"),
         F("hsv")
       };
-      const int optionValues[PLUGIN_086_VALUE_TYPES] = {
+      const int optionValues[] = {
         PLUGIN_086_VALUE_INTEGER,
         PLUGIN_086_VALUE_FLOAT,
         PLUGIN_086_VALUE_BOOLEAN,
@@ -97,40 +101,34 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
         PLUGIN_086_VALUE_RGB,
         PLUGIN_086_VALUE_HSV
       };
+      constexpr int PLUGIN_086_VALUE_TYPES = NR_ELEMENTS(optionValues);
 
       for (int i = 0; i < PLUGIN_086_VALUE_MAX; i++) {
-        labelText  = F("Function #");
-        labelText += (i + 1);
-        addFormSubHeader(labelText);
-        choice = PCONFIG(i);
+        addFormSubHeader(concat(F("Function #"), i + 1));
 
-        if (i == 0) { addFormNote(F("Triggers an event when a ../%event%/set topic arrives")); }
-        labelText = F("Event Name");
-        keyName   = F("functionName");
-        keyName  += i;
-        addFormTextBox(labelText, keyName, Cache.getTaskDeviceValueName(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
-        labelText = F("Parameter Type");
-        keyName   = F("valueType");
-        keyName  += i;
-        addFormSelector(labelText, keyName, PLUGIN_086_VALUE_TYPES, options, optionValues, choice);
-        keyName += F("_min");
-        addFormNumericBox(F("Min"), keyName, Cache.getTaskDevicePluginConfig(event->TaskIndex, i));
-        keyName  = F("valueType");
-        keyName += i;
-        keyName += F("_max");
-        addFormNumericBox(F("Max"), keyName, Cache.getTaskDevicePluginConfig(event->TaskIndex, i + PLUGIN_086_VALUE_MAX));
+        if (i == 0) { addFormNote(F("Triggers an event when a ../%taskname%/%event%/set MQTT topic arrives")); }
 
-        if (i == 0) { addFormNote(F("min max values only valid for numeric parameter")); }
-        keyName  = F("decimals");
-        keyName += i;
-        addFormNumericBox(F("Decimals"), keyName, Cache.getTaskDeviceValueDecimals(event->TaskIndex, i), 0, 8);
+        addFormTextBox(F("Event Name"), getPluginCustomArgName((i * 10) + 0),
+                       Cache.getTaskDeviceValueName(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
+        addFormSelector(F("Parameter Type"), getPluginCustomArgName((i * 10) + 1),
+                        PLUGIN_086_VALUE_TYPES, options, optionValues, PCONFIG(i));
 
-        if (i == 0) { addFormNote(F("Decimal counts for float parameter")); }
-        keyName  = F("string");
-        keyName += i;
-        addFormTextBox(F("String or enum"), keyName, Cache.getTaskDeviceFormula(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
+        addFormNumericBox(F("Min"), getPluginCustomArgName((i * 10) + 2),
+                          Cache.getTaskDevicePluginConfig(event->TaskIndex, i));
+        addFormNumericBox(F("Max"), getPluginCustomArgName((i * 10) + 3),
+                          Cache.getTaskDevicePluginConfig(event->TaskIndex, i + PLUGIN_086_VALUE_MAX));
 
-        if (i == 0) { addFormNote(F("Default string or enumumeration list (comma seperated).")); }
+        if (i == 0) { addFormNote(F("min/max values only valid for numeric parameter")); }
+
+        addFormNumericBox(F("Decimals"), getPluginCustomArgName((i * 10) + 4),
+                          Cache.getTaskDeviceValueDecimals(event->TaskIndex, i), 0, 8);
+
+        if (i == 0) { addFormNote(F("Decimal precision for float parameter")); }
+
+        addFormTextBox(F("String or enum"), getPluginCustomArgName((i * 10) + 5),
+                       Cache.getTaskDeviceFormula(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
+
+        if (i == 0) { addFormNote(F("Default string or enumeration list (comma separated)")); }
       }
       success = true;
       break;
@@ -138,30 +136,15 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String keyName;
-
       for (int i = 0; i < PLUGIN_086_VALUE_MAX; i++) {
-        keyName    = F("valueType");
-        keyName   += i;
-        PCONFIG(i) = getFormItemInt(keyName);
-        keyName    = F("functionName");
-        keyName   += i;
-        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[i], keyName);
-        keyName                                                            = F("valueType");
-        keyName                                                           += i;
-        keyName                                                           += F("_min");
-        ExtraTaskSettings.TaskDevicePluginConfig[i]                        = getFormItemInt(keyName);
-        keyName                                                            = F("valueType");
-        keyName                                                           += i;
-        keyName                                                           += F("_max");
-        ExtraTaskSettings.TaskDevicePluginConfig[i + PLUGIN_086_VALUE_MAX] = getFormItemInt(keyName);
-        keyName                                                            = F("decimals");
-        keyName                                                           += i;
-        ExtraTaskSettings.TaskDeviceValueDecimals[i]                       = getFormItemInt(keyName);
-        keyName                                                            = F("string");
-        keyName                                                           += i;
-        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[i], keyName);
+        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[i], getPluginCustomArgName((i * 10) + 0));
+        PCONFIG(i)                                                         = getFormItemInt(getPluginCustomArgName((i * 10) + 1));
+        ExtraTaskSettings.TaskDevicePluginConfig[i]                        = getFormItemInt(getPluginCustomArgName((i * 10) + 2));
+        ExtraTaskSettings.TaskDevicePluginConfig[i + PLUGIN_086_VALUE_MAX] = getFormItemInt(getPluginCustomArgName((i * 10) + 3));
+        ExtraTaskSettings.TaskDeviceValueDecimals[i]                       = getFormItemInt(getPluginCustomArgName((i * 10) + 4));
+        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[i], getPluginCustomArgName((i * 10) + 5));
       }
+
       success = true;
       break;
     }
@@ -174,13 +157,10 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      for (uint8_t x = 0; x < PLUGIN_086_VALUE_MAX; x++)
-      {
-        String log = F("P086 : Value ");
-        log += x + 1;
-        log += F(": ");
-        log += formatUserVarNoCheck(event->TaskIndex, x);
-        addLogMove(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        for (uint8_t x = 0; x < PLUGIN_086_VALUE_MAX; x++) {
+          addLogMove(LOG_LEVEL_INFO, strformat(F("P086 : Value %d: %s"), x + 1, formatUserVarNoCheck(event->TaskIndex, x).c_str()));
+        }
       }
       success = true;
       break;
@@ -202,52 +182,49 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
           String parameter = parseStringToEndKeepCase(string, 4);
           String log;
 
-          /*            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                        log = F("P086 : Acknowledge :");
-                        log += string;
-                        log += F(" / ");
-                        log += ExtraTaskSettings.TaskDeviceName;
-                        log += F(" / ");
-                        log += ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex];
-                        log += F(" sensorType:");
-                        log += event->sensorType;
-                        log += F(" Source:");
-                        log += event->Source;
-                        log += F(" idx:");
-                        log += event->idx;
-                        log += F(" S1:");
-                        log += event->String1;
-                        log += F(" S2:");
-                        log += event->String2;
-                        log += F(" S3:");
-                        log += event->String3;
-                        log += F(" S4:");
-                        log += event->String4;
-                        log += F(" S5:");
-                        log += event->String5;
-                        log += F(" P1:");
-                        log += event->Par1;
-                        log += F(" P2:");
-                        log += event->Par2;
-                        log += F(" P3:");
-                        log += event->Par3;
-                        log += F(" P4:");
-                        log += event->Par4;
-                        log += F(" P5:");
-                        log += event->Par5;
-                        addLog(LOG_LEVEL_DEBUG, log);
-                      } */
+          /*
+             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              log = F("P086 : Acknowledge :");
+              log += string;
+              log += F(" / ");
+              log += ExtraTaskSettings.TaskDeviceName;
+              log += F(" / ");
+              log += ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex];
+              log += F(" sensorType:");
+              log += event->sensorType;
+              log += F(" Source:");
+              log += event->Source;
+              log += F(" idx:");
+              log += event->idx;
+              log += F(" S1:");
+              log += event->String1;
+              log += F(" S2:");
+              log += event->String2;
+              log += F(" S3:");
+              log += event->String3;
+              log += F(" S4:");
+              log += event->String4;
+              log += F(" S5:");
+              log += event->String5;
+              log += F(" P1:");
+              log += event->Par1;
+              log += F(" P2:");
+              log += event->Par2;
+              log += F(" P3:");
+              log += event->Par3;
+              log += F(" P4:");
+              log += event->Par4;
+              log += F(" P5:");
+              log += event->Par5;
+              addLog(LOG_LEVEL_DEBUG, log);
+             } */
           float  floatValue = 0.0f;
           String enumList;
           int    i = 0;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            log  = F("P086 : deviceNr:");
-            log += event->TaskIndex + 1;
-            log += F(" valueNr:");
-            log += event->Par2;
-            log += F(" valueType:");
-            log += Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex];
+            log = strformat(F("P086 : deviceNr: %d valueNr: %d valueType: %d"),
+                            event->TaskIndex + 1, event->Par2, Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex]);
           }
 
           switch (Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex]) {
@@ -257,23 +234,20 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               if (!parameter.isEmpty()) {
                 if (string2float(parameter, floatValue)) {
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                    log += F(" integer/float set to ");
-                    log += floatValue;
+                    log += concat(F(" integer/float set to "), floatValue);
                     addLogMove(LOG_LEVEL_INFO, log);
                   }
                   UserVar[userVarIndex] = floatValue;
                 } else { // float conversion failed!
                   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                    log += F(" parameter:");
-                    log += parameter;
+                    log += concat(F(" parameter: "), parameter);
                     log += F(" not a float value!");
                     addLogMove(LOG_LEVEL_ERROR, log);
                   }
                 }
               } else {
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log += F(" value:");
-                  log += UserVar[userVarIndex];
+                  log += concat(F(" value: "), UserVar[userVarIndex]);
                   addLogMove(LOG_LEVEL_INFO, log);
                 }
               }
@@ -281,7 +255,8 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
             case PLUGIN_086_VALUE_BOOLEAN:
 
-              if (parameter == "false") {
+              if (parameter.equalsIgnoreCase(F("false"))) { // This should be a case-sensitive check...
+                                                            // and also check for "true"
                 floatValue = 0.0f;
               } else {
                 floatValue = 1.0f;
@@ -289,8 +264,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               UserVar[userVarIndex] = floatValue;
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" boolean set to ");
-                log += floatValue;
+                log += concat(F(" boolean set to "), floatValue);
                 addLogMove(LOG_LEVEL_INFO, log);
               }
               break;
@@ -301,42 +275,42 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               // safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(),
               // sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" string set to ");
-                log += parameter;
+                log += concat(F(" string set to "), parameter);
                 addLogMove(LOG_LEVEL_INFO, log);
               }
               break;
 
             case PLUGIN_086_VALUE_ENUM:
+            {
               enumList = Cache.getTaskDeviceFormula(event->TaskIndex, taskVarIndex);
               i        = 1;
+              String enumItem = parseStringKeepCase(enumList, i);
 
-              while (!parseString(enumList, i).isEmpty()) { // lookup result in enum List
-                if (parseString(enumList, i) == parameter) {
+              while (!enumItem.isEmpty()) {                 // lookup result in enum List
+                if (enumItem.equalsIgnoreCase(parameter)) { // This should be a case-sensitive check...
                   floatValue = i;
                   break;
                 }
                 i++;
+                enumItem = parseStringKeepCase(enumList, i);
               }
               UserVar[userVarIndex] = floatValue;
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" enum set to ");
-                log += floatValue;
+                log += concat(F(" enum set to "), floatValue);
                 log += ' ';
                 log += wrap_braces(parameter);
                 addLogMove(LOG_LEVEL_INFO, log);
               }
               break;
-
+            }
             case PLUGIN_086_VALUE_RGB:
 
               // String values not stored to conserve flash memory
               // safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(),
               // sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" RGB received ");
-                log += parameter;
+                log += concat(F(" RGB received "), parameter);
                 addLogMove(LOG_LEVEL_INFO, log);
               }
               break;
@@ -347,8 +321,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               // safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(),
               // sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" HSV received ");
-                log += parameter;
+                log += concat(F(" HSV received "), parameter);
                 addLogMove(LOG_LEVEL_INFO, log);
               }
               break;

@@ -6,6 +6,7 @@
 
 /***************************************************************************************
  * Parse MQTT topic for /cmd and /set ending to handle commands or TaskValueSet
+ * Special C014 case: handleCmd = false and handleSet is true, so *only* pluginID 33 & 86 are accepted
  **************************************************************************************/
 bool MQTT_handle_topic_commands(struct EventStruct *event,
                                 bool                handleCmd,
@@ -47,16 +48,59 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
       if (lastindex > -1) {
         taskName = taskName.substring(lastindex + 1);
 
-        if (!taskName.isEmpty() && !valueName.isEmpty() && !event->String2.isEmpty() &&
-            cmd.reserve(12 + 3 + taskName.length() + valueName.length() + event->String2.length())) {
-          cmd     = F("TaskValueSet");
-          cmd    += ',';
-          cmd    += taskName;
-          cmd    += ',';
-          cmd    += valueName;
-          cmd    += ',';
-          cmd    += event->String2;
-          handled = true;
+        const taskIndex_t    taskIndex    = findTaskIndexByName(taskName);
+        const deviceIndex_t  deviceIndex  = getDeviceIndex_from_TaskIndex(taskIndex);
+        const taskVarIndex_t taskVarIndex = event->Par2 - 1;
+        uint8_t valueNr;
+
+        if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex)) {
+          const int pluginID = Device[deviceIndex].Number;
+
+          if ((pluginID == 33) ||           // Plugin 33 Dummy Device,
+              // backward compatible behavior: if handleCmd = true then execute TaskValueSet regardless of AllowTaskValueSetAllPlugins
+              ((handleCmd || Settings.AllowTaskValueSetAllPlugins()) && (pluginID != 86)))
+          {                                 // TaskValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new
+                                            // version of P033!
+            valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+
+            if (validTaskVarIndex(valueNr)) // value Name identified
+            {
+              // Set a Dummy Device Value, device Number, var number and argument
+              cmd     = strformat(F("TaskValueSet,%d,%d,%s"), taskIndex + 1, valueNr + 1, event->String2.c_str());
+              handled = true;
+            }
+          } else if (pluginID == 86) { // Plugin 86 Homie receiver. Schedules the event defined in the plugin.
+                                       // Does NOT store the value.
+                                       // Use HomieValueSet to save the value. This will acknowledge back to the controller too.
+            valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+
+            if (validTaskVarIndex(valueNr)) {
+              cmd = strformat(F("event,%s="), valueName.c_str());
+
+              if (Settings.TaskDevicePluginConfig[taskIndex][valueNr] == 3) {   // Quote String parameters. PLUGIN_086_VALUE_STRING
+                cmd += wrapWithQuotes(event->String2);
+              } else {
+                if (Settings.TaskDevicePluginConfig[taskIndex][valueNr] == 4) { // Enumeration parameter, find Number of item.
+                                                                                // PLUGIN_086_VALUE_ENUM
+                  const String enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
+                  int i                 = 1;
+                  String part           = parseStringKeepCase(enumList, i);
+
+                  while (!part.isEmpty()) {                      // lookup result in enum List, keep it backward compatible, but
+                    if (part.equalsIgnoreCase(event->String2)) { // Homie spec says it should be case-sensitive...
+                      break;
+                    }
+                    i++;
+                    part = parseStringKeepCase(enumList, i);
+                  }
+                  cmd += i;
+                  cmd += ',';
+                }
+                cmd += event->String2;
+              }
+              handled = true;
+            }
+          }
         }
       }
     }
@@ -160,11 +204,7 @@ bool MQTT_protocol_send(EventStruct *event,
         # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = strformat(F("MQTT C%03d : "), event->ControllerIndex);
-      log += tmppubname;
-      log += ' ';
-      log += value;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLog(LOG_LEVEL_DEBUG, strformat(F("MQTT C%03d : %s %s"), event->ControllerIndex, tmppubname.c_str(), value.c_str()));
     }
         # endif // ifndef BUILD_NO_DEBUG
 
