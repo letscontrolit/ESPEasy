@@ -471,10 +471,6 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
   }
 #endif
   #endif
-  for (uint8_t i = 0; i < N_TASKS; ++i) {
-//    TaskDeviceEnabled[i].clearTempDisableFlags();
-    TaskDeviceEnabled[i] = false;
-  }
 }
 
 template<unsigned int N_TASKS>
