@@ -56,7 +56,8 @@ void handle_controllers() {
       } else {
         // Need to make sure every byte between the members is also zero
         // Otherwise the checksum will fail and settings will be saved too often.
-        ControllerSettings->reset();
+        ControllerSettings.reset();
+
         if (Settings.Protocol[controllerindex] != protocol)
         {
           // Protocol has changed.
@@ -145,7 +146,7 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
   struct EventStruct TempEvent;
 
   // Hand over the controller settings in the Data pointer, so the controller can set some defaults.
-  TempEvent.Data = (uint8_t*)(&ControllerSettings);
+  TempEvent.Data = (uint8_t *)(&ControllerSettings);
 
   if (Protocol[ProtocolIndex].usesTemplate) {
     String dummy;
@@ -244,8 +245,8 @@ void handle_controllers_ShowAllControllersTable()
         html_TD();
         addHtml(getCPluginNameFromCPluginID(Settings.Protocol[x]));
         html_TD();
+        const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
         {
-          const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
           String hostDescription;
           CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
 
@@ -257,7 +258,9 @@ void handle_controllers_ShowAllControllersTable()
         }
 
         html_TD();
-        addHtmlInt(ControllerSettings->Port);
+        if ((INVALID_PROTOCOL_INDEX == ProtocolIndex) || (Protocol[ProtocolIndex].usesPort)) {
+          addHtmlInt(13 == Settings.Protocol[x] ? Settings.UDPPort : ControllerSettings->Port); // P2P/C013 exception
+        }
       }
       else {
         html_TD(3);
@@ -328,6 +331,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
               addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
             }
           }
+
           if (Protocol[ProtocolIndex].usesPort) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
           }
@@ -363,6 +367,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           if (Protocol[ProtocolIndex].usesSampleSets) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
           }
+
           if (Protocol[ProtocolIndex].allowLocalSystemTime) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME);
           }
@@ -385,7 +390,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
           }
-          #if FEATURE_MQTT
+          # if FEATURE_MQTT
+
           if (Protocol[ProtocolIndex].usesMQTT) {
             addTableSeparator(F("MQTT"), 2, 3);
 
@@ -396,7 +402,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addFormNote(F("Updated on load of this page"));
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
           }
-          #endif // if FEATURE_MQTT
+          # endif // if FEATURE_MQTT
 
 
           if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
@@ -404,7 +410,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
           }
-          #if FEATURE_MQTT
+          # if FEATURE_MQTT
+
           if (Protocol[ProtocolIndex].usesMQTT)
           {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
@@ -414,7 +421,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
           }
-          #endif // if FEATURE_MQTT
+          # endif // if FEATURE_MQTT
         }
       }
 

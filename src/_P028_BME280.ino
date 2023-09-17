@@ -5,6 +5,14 @@
 // #################### Plugin 028 BME280 I2C Temp/Hum/Barometric Pressure Sensor  #######################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-07-27 tonhuisman: Revert most below changes and implement PLUGIN_GET_DEVICEVTYPE so the P2P controller validates against the correct
+ *                        setting. Setting is only available if a remote data-feed is active, and offers BME280 and BMP280 options only.
+ * 2023-07-26 tonhuisman: Ignore all humidity data (and log messages) if BMP280 Sensor model is selected
+ * 2023-07-25 tonhuisman: Add setting to enable forcing the plugin into either BME280 or BMP280 mode, default is Auto-detect
+ *                        Add changelog
+ */
+
 # include "src/PluginStructs/P028_data_struct.h"
 
 // #include <math.h>
@@ -94,6 +102,21 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      const P028_data_struct::BMx_DetectMode detectMode = static_cast<P028_data_struct::BMx_DetectMode>(P028_DETECTION_MODE);
+
+      // We want to configure this only when a remote data-feed is used
+      if ((Settings.TaskDeviceDataFeed[event->TaskIndex] != 0) && (P028_data_struct::BMx_DetectMode::BMP280 == detectMode)) {
+        // Patch the sensor type to output only the measured values, and/or match with a P2P remote sensor
+        event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
+        event->idx        = getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO);
+      }
+
+      success = true;
+      break;
+    }
+
     case PLUGIN_INIT:
     {
       const float tempOffset = P028_TEMPERATURE_OFFSET / 10.0f;
@@ -151,13 +174,32 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
-        if (P028_data->hasHumidity()) {
+        if ((P028_data_struct::BMx_DetectMode::BMP280 != static_cast<P028_data_struct::BMx_DetectMode>(P028_DETECTION_MODE)) &&
+            P028_data->hasHumidity()) {
           offsetNote += F(" (also correct humidity)");
         }
       }
       addFormNote(offsetNote);
 
       success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD_ALWAYS:
+    {
+      if (Settings.TaskDeviceDataFeed[event->TaskIndex] != 0) { // We want to configure this *only* when a remote data-feed is used
+        const __FlashStringHelper *detectOptionList[] = {
+          P028_data_struct::getDeviceName(P028_data_struct::BMx_ChipId::BME280_DEVICE),
+          P028_data_struct::getDeviceName(P028_data_struct::BMx_ChipId::BMP280_DEVICE),
+        };
+        const int detectOptions[] = {
+          static_cast<int>(P028_data_struct::BMx_DetectMode::BME280),
+          static_cast<int>(P028_data_struct::BMx_DetectMode::BMP280),
+        };
+        addFormSelector(F("Output values mode"), F("det"), 2, detectOptionList, detectOptions, P028_DETECTION_MODE);
+
+        success = true;
+      }
       break;
     }
 
@@ -221,7 +263,11 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       P028_ALTITUDE           = getFormItemInt(F("elev"));
       P028_TEMPERATURE_OFFSET = getFormItemInt(F("tempoffset"));
       P028_ERROR_STATE_OUTPUT = getFormItemInt(F("err"));
-      success                 = true;
+
+      if (Settings.TaskDeviceDataFeed[event->TaskIndex] != 0) { // We want to configure this only when a remote data-feed is used
+        P028_DETECTION_MODE = getFormItemInt(F("det"));
+      }
+      success = true;
       break;
     }
     case PLUGIN_ONCE_A_SECOND:
@@ -264,6 +310,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
           if (!P028_data->hasHumidity()) {
             // Patch the sensor type to output only the measured values.
             event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
+            event->idx        = getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO);
           }
           UserVar[event->BaseVarIndex]     = ExtraTaskSettings.checkAllowedRange(0, P028_data->last_temp_val);
           UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
@@ -281,24 +328,24 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
             String log;
 
             if (log.reserve(40)) { // Prevent re-allocation
-              log  = P028_data->getDeviceName();
+              log  = P028_data_struct::getDeviceName(P028_data->sensorID);
               log += F(": Address: ");
               log += formatToHex(P028_I2C_ADDRESS, 2);
               addLogMove(LOG_LEVEL_INFO, log);
 
               // addLogMove does also clear the string.
-              log  = P028_data->getDeviceName();
+              log  = P028_data_struct::getDeviceName(P028_data->sensorID);
               log += F(": Temperature: ");
               log += formatUserVarNoCheck(event->TaskIndex, 0);
               addLogMove(LOG_LEVEL_INFO, log);
 
               if (P028_data->hasHumidity()) {
-                log  = P028_data->getDeviceName();
+                log  = P028_data_struct::getDeviceName(P028_data->sensorID);
                 log += F(": Humidity: ");
                 log += formatUserVarNoCheck(event->TaskIndex, 1);
                 addLogMove(LOG_LEVEL_INFO, log);
               }
-              log  = P028_data->getDeviceName();
+              log  = P028_data_struct::getDeviceName(P028_data->sensorID);
               log += F(": Barometric Pressure: ");
               log += formatUserVarNoCheck(event->TaskIndex, 2);
               addLogMove(LOG_LEVEL_INFO, log);

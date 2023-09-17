@@ -61,6 +61,7 @@
 # define P028_ALTITUDE            PCONFIG(1)
 # define P028_TEMPERATURE_OFFSET  PCONFIG(2)
 # define P028_ERROR_STATE_OUTPUT  PCONFIG(3)
+# define P028_DETECTION_MODE      PCONFIG(4)
 
 struct P028_data_struct : public PluginTaskData_base {
   struct bme280_calib_data
@@ -105,6 +106,12 @@ struct P028_data_struct : public PluginTaskData_base {
     BMP280_DEVICE_SAMPLE2 = 0x57,
     BMP280_DEVICE         = 0x58,
     BME280_DEVICE         = 0x60
+  };
+
+  enum BMx_DetectMode : uint8_t {
+    Auto   = 0u,
+    BME280 = BMx_ChipId::BME280_DEVICE,
+    BMP280 = BMx_ChipId::BMP280_DEVICE,
   };
 
   enum BMx_state {
