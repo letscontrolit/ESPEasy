@@ -52,8 +52,7 @@ private:
 
   bool addChar(char    c,
                String& line,
-               bool  & firstNonSpaceRead,
-               bool  & commentFound);
+               bool  & firstNonSpaceRead);
 
 public:
 
