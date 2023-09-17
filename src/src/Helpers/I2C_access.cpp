@@ -265,6 +265,17 @@ uint8_t I2C_read8(uint8_t i2caddr, bool *is_ok) {
   return value;
 }
 
+uint16_t I2C_read16(uint8_t i2caddr, bool *is_ok) {
+  uint16_t value{};
+
+  if (I2C_requestFrom(i2caddr, 2, is_ok)) {
+    value = (Wire.read() << 8) | Wire.read();
+  }
+
+  return value;
+}
+
+
 // **************************************************************************/
 // Reads an 8 bit value from a register over I2C
 // **************************************************************************/

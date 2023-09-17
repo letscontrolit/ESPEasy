@@ -184,8 +184,7 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
   #  if FEATURE_SD
 
   if (!f && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
-    // FIXME TD-er: Should this fallback to SD only be done on "r" mode?
-    f = SD.open(fname.c_str(), mode.c_str());
+    f = SD.open(patch_fname(fname).c_str(), mode.c_str());
   }
   #  endif // if FEATURE_SD
 
@@ -355,7 +354,7 @@ bool BuildFixes()
   }
   if (Settings.Build < 20111) {
     #ifdef ESP32
-    constexpr uint8_t maxStatesesp32 = sizeof(Settings.PinBootStates_ESP32) / sizeof(Settings.PinBootStates_ESP32[0]);
+    constexpr uint8_t maxStatesesp32 = NR_ELEMENTS(Settings.PinBootStates_ESP32);
     for (uint8_t i = 0; i < maxStatesesp32; ++i) {
       Settings.PinBootStates_ESP32[i] = 0;
     }
