@@ -206,7 +206,7 @@ void handle_devices() {
 // TODO TD-er: Add JavaScript filter:
 //             https://www.w3schools.com/howto/howto_js_filter_dropdown.asp
 // ********************************************************************************
-void addDeviceSelect(const __FlashStringHelper *name,  int choice)
+void addDeviceSelect(const __FlashStringHelper *name,  pluginID_t choice)
 {
   String deviceName;
 
@@ -229,8 +229,8 @@ void addDeviceSelect(const __FlashStringHelper *name,  int choice)
       # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
       addSelector_Item(deviceName,
-                        Device[deviceIndex].Number,
-                        choice == Device[deviceIndex].Number);
+                        pluginID.value,
+                        choice == pluginID);
     }
   }
   addSelector_Foot();
@@ -861,7 +861,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
   if (!supportedPluginID(Settings.getPluginID_for_task(taskIndex)))
   {
     // takes lots of memory/time so call this only when needed.
-    addDeviceSelect(F("TDNUM"), Settings.getPluginID_for_task(taskIndex).value); // ="taskdevicenumber"
+    addDeviceSelect(F("TDNUM"), Settings.getPluginID_for_task(taskIndex)); // ="taskdevicenumber"
     addFormSeparator(4);
   }
 

@@ -2099,15 +2099,20 @@ constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1 - Lowest_
 // Valid index: 1 ... Highest_Plugin_id
 // Returns index to the DeviceIndex_to_Plugin_id array
 //
-// TODO TD-er: Vector size should be lowest pluginID ... highest pluginID
+// Vector size should is lowest pluginID ... highest pluginID
 deviceIndex_t Plugin_id_to_DeviceIndex[Plugin_id_to_DeviceIndex_size]{};
 
 
 size_t get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID_t pluginID)
 {
-  if (pluginID.value < Lowest_Plugin_id)
-    return Plugin_id_to_DeviceIndex_size;
-  return static_cast<size_t>(pluginID.value) - Lowest_Plugin_id;
+  if (pluginID.value >= Lowest_Plugin_id)
+  {
+    const size_t arrIndex = static_cast<size_t>(pluginID.value) - Lowest_Plugin_id;
+    if (arrIndex < Plugin_id_to_DeviceIndex_size) {
+      return arrIndex;
+    }
+  }
+  return Plugin_id_to_DeviceIndex_size;
 }
 
 
@@ -2211,11 +2216,14 @@ void PluginSetup()
 
     if (validPluginID(pluginID)) { 
       const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
-      Plugin_id_to_DeviceIndex[arrayIndex] = deviceIndex;
-      struct EventStruct TempEvent;
-      TempEvent.idx = deviceIndex.value;
-      String dummy;
-      PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
+      if (arrayIndex < Plugin_id_to_DeviceIndex_size) {
+        // Should never be outside these limits.
+        Plugin_id_to_DeviceIndex[arrayIndex] = deviceIndex;
+        struct EventStruct TempEvent;
+        TempEvent.idx = deviceIndex.value;
+        String dummy;
+        PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
+      }
     }
   }
 #ifndef BUILD_NO_RAM_TRACKER
