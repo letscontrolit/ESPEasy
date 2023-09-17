@@ -65,7 +65,17 @@ Device Settings
 
 .. image:: P036_ScrollOptions.png
 
-* **Scroll**: Switching between pages can be "instant" or "scrolling". Please note that scrolling will need more resources of the ESP, which can have an effect on other active tasks of the node.
+* **Scroll**: Switching between pages can be "instant", "scrolling" or a "ticker" band. Please note that scrolling will need more resources of the ESP, which can have an effect on other active tasks of the node.
+For the ``Ticker`` there are some restrictions:
+* Depending on the build used (NORMAL and CUSTOM) this option is available
+* only one line is displaying the ticker string
+* all line contents are parsed and combined to this ticker string, the parsing happens only at each ticker start (using the setting ``Interval``)
+* the optional split token ``<|>`` is replaced by three spaces
+* the gaps between the ticker items must be set by the ``line content`` (tailing spaces)
+* the starting alignment (left, center, right) depends on the setting ``Align content (global)``
+* the font is taken from the setting ``Modify font`` of the first line, the ``Alignment`` settings of the lines are ignored (always right aligned)
+* the ticker speed depends on the length of the ticker string and the setting ``Interval`` setting
+* the footer is automatically hidden
 
 * **GPIO <- Display button**: Setting up a ``Display Button``, allows to configure a Display Timeout and wake the display on demand, either by a button, or by using some presence detection.
 
@@ -125,7 +135,7 @@ The user defined texts may also contain a split token ``<|>`` to display the lin
 
 * **Alignment**: For each line, the alignment to be used can be selected, or the global setting can be used.
 
-* **Interval** By default, Interval will be set to 0. If set to a non-zero value, the pre-configured content will be updated automatically using that interval (seconds).
+* **Interval** By default, Interval will be set to 0. It needs to be set to a non-zero value, to switch between the frames using that interval (seconds).
 
 
 General

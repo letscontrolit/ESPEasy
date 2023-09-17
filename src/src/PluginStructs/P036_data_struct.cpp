@@ -114,33 +114,18 @@ void P036_data_struct::reset() {
 
 # ifdef P036_FONT_CALC_LOG
 const __FlashStringHelper * tFontSettings::FontName() const {
-  if (fontData == ArialMT_Plain_24) {
-    return F("Arial_24");
-  }
-
-#  ifndef P036_LIMIT_BUILD_SIZE
-
-  if (fontData == Dialog_plain_18) {
-    return F("Dialog_18");
-  }
-#  endif // ifndef P036_LIMIT_BUILD_SIZE
-
-  if (fontData == ArialMT_Plain_16) {
-    return F("Arial_16");
-  }
-
-#  ifndef P036_LIMIT_BUILD_SIZE
-
-  if (fontData == Dialog_plain_12) {
-    return F("Dialog_12");
-  }
-#  endif // ifndef P036_LIMIT_BUILD_SIZE
-
-  if (fontData == ArialMT_Plain_10) {
-    return F("Arial_10");
-  }
-  else {
-    return F("Unknown font");
+  switch (fontIdx) {
+    case 0: return F("Arial_24"); break;
+    #  ifndef P036_LIMIT_BUILD_SIZE
+    case 1: return F("Dialog_18"); break;
+    case 2: return F("Arial_16"); break;
+    case 3: return F("Dialog_12"); break;
+    case 4: return F("Arial_10"); break;
+    #  else // ifndef P036_LIMIT_BUILD_SIZE
+    case 1: return F("Arial_16"); break;
+    case 2: return F("Arial_10"); break;
+    #  endif // ifndef P036_LIMIT_BUILD_SIZE
+    default: return F("Unknown font");
   }
 }
 
@@ -195,6 +180,7 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
                             bool            Rotated,
                             uint8_t         Contrast,
                             uint16_t        DisplayTimer,
+                            ePageScrollSpeed ScrollSpeed,
                             uint8_t         NrLines) {
   reset();
 
@@ -272,9 +258,11 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
     }
 
     //    prepare font and positions for page and line scrolling
-    prepare_pagescrolling();
+    prepare_pagescrolling(ScrollSpeed, NrLines);
   }
 
+  bRunning = NetworkConnected();
+  
   return isInitialized();
 }
 
@@ -295,11 +283,30 @@ void P036_data_struct::setOrientationRotated(bool rotated) {
   }
 }
 
+void P036_data_struct::RestoreLineContent(taskIndex_t taskIndex,
+                                          uint8_t     LoadVersion,
+                                          uint8_t     LineNo) {
+  P036_LineContent *TempContent = new (std::nothrow) P036_LineContent();
+
+  if (TempContent != nullptr) {
+    TempContent->loadDisplayLines(taskIndex, LoadVersion);
+
+    if (LineNo == 0) {
+      for (int i = 0; i < P36_Nlines; ++i) {
+        *(&LineContent->DisplayLinesV1[i].Content) = TempContent->DisplayLinesV1[i].Content;
+      }
+    }
+    else {
+      *(&LineContent->DisplayLinesV1[LineNo - 1].Content) = TempContent->DisplayLinesV1[LineNo - 1].Content;
+    }
+    delete TempContent;
+  }
+}
+
 # if P036_ENABLE_LINECOUNT
-void P036_data_struct::setNrLines(uint8_t NrLines) {
+void P036_data_struct::setNrLines(struct EventStruct *event, uint8_t NrLines) {
   if ((NrLines >= 1) && (NrLines <= P36_MAX_LinesPerPage)) {
-    ScrollingPages.linesPerFrameDef = NrLines;
-    prepare_pagescrolling();   // Recalculate font
+    prepare_pagescrolling(static_cast<ePageScrollSpeed>(P036_SCROLL), NrLines); // Recalculate font
     MaxFramesToDisplay = 0xFF; // Recalculate page indicator
     CalcMaxPageCount();        // Update max page count
     nextFrameToDisplay = 0;    // Reset to first page
@@ -543,7 +550,7 @@ int16_t P036_data_struct::GetHeaderHeight() const {
 }
 
 int16_t P036_data_struct::GetIndicatorTop() const {
-  if (bHideFooter) {
+  if (bHideFooter || bUseTicker) {
     // no footer (indicator) -> returm max. display height
     return getDisplaySizeSettings(disp_resolution).Height;
   }
@@ -580,14 +587,20 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
     switch (iModifyFont) {
       case eModifyFont::eEnlarge:
+        if (ScrollingPages.linesPerFrameDef > 1) {
+          // Font can only be enlarged if more than 1 line is displayed
         lFontIndex--;
 
-        if (lFontIndex < IdxForBiggestFont) { lFontIndex = IdxForBiggestFont; }
-        result.IdxForBiggestFontUsed = lFontIndex;
+          if (lFontIndex < IdxForBiggestFont) { lFontIndex = IdxForBiggestFont; }
+          result.IdxForBiggestFontUsed = lFontIndex;
+        }
         break;
       case eModifyFont::eMaximize:
-        lFontIndex                   = IdxForBiggestFont;
-        result.IdxForBiggestFontUsed = lFontIndex;
+        if (ScrollingPages.linesPerFrameDef > 1) {
+          // Font can only be maximized if more than 1 line is displayed
+          lFontIndex                   = IdxForBiggestFont;
+          result.IdxForBiggestFontUsed = lFontIndex;
+        }
         break;
       case eModifyFont::eReduce:
         lFontIndex++;
@@ -621,6 +634,9 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
     // just one lines per frame -> no space inbetween
     lSpace = 0;
     lTop   = (MaxHeight - lHeight) / 2;
+    if (lHeight > MaxHeight) {
+        result.NextLineNo = 0xFF; // settings do not fit
+    }
   } else {
     if (deltaHeight >= (lLinesPerFrame - 1)) {
       // individual line setting fits
@@ -661,6 +677,27 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
       LineSettings[k].ypos = LineSettings[k - 1].ypos + FontSizes[LineSettings[k - 1].fontIdx].Height + lSpace;
     }
   }
+# ifdef P036_CHECK_INDIVIDUAL_FONT
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log1;
+
+    if (log1.reserve(140)) { // estimated
+      delay(10);             // otherwise it is may be to fast for the serial monitor
+      log1  = F("IndividualFontSettings:");
+      log1 += F(" result.NextLineNo:"); log1 += result.NextLineNo;
+      log1 += F(" result.IdxForBiggestFontUsed:"); log1 += result.IdxForBiggestFontUsed;
+      log1 += F(" LineNo:"); log1 += LineNo;
+      log1 += F(" LinesPerFrame:"); log1 += LinesPerFrame;
+      if (result.NextLineNo != 0xFF) {
+        log1 += F(" FrameNo:"); log1 += FrameNo;
+        log1 += F(" lTop:"); log1 += lTop;
+        log1 += F(" lSpace:"); log1 += lSpace;
+      }
+      addLogMove(LOG_LEVEL_INFO, log1);
+    }
+  }
+#endif // # ifdef P036_CHECK_INDIVIDUAL_FONT
   return result;
 }
 
@@ -690,10 +727,9 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
                strformat(F("P036 CalculateFontSettings lines: %d, height: %d, header: %s, footer: %s"),
                          iLinesPerFrame,
                          iHeight,
-                         boolToString(!bHideHeader).c_str(),
-                         boolToString(!bHideFooter).c_str()));
+       boolToString(!bHideHeader), 
+       boolToString(!bHideFooter)));
   }
-  String log;
   # endif // ifdef P036_FONT_CALC_LOG
 
   iMaxHeightForFont = lround(iHeight / (iLinesPerFrame * 1.0f)); // no extra space between lines
@@ -712,13 +748,13 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
 # ifdef P036_FONT_CALC_LOG
     String log1;
     log1.reserve(80);
-    log1.clear();
 # endif // ifdef P036_FONT_CALC_LOG
 
     for (i = 0; i < P36_MaxFontCount - 1; i++) {
       // check available fonts for the line setting
       # ifdef P036_FONT_CALC_LOG
-      log1 += F(" -> i: ");
+      delay(5); // otherwise it is may be to fast for the serial monitor
+      log1  = F(" -> i: ");
       log1 += i;
       log1 += F(", h: ");
       log1 += FontSizes[i].Height;
@@ -740,7 +776,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
       # ifdef P036_FONT_CALC_LOG
       log1 += F(", no font fits, fontIdx: ");
       log1 += iFontIndex;
-      addLog(LOG_LEVEL_INFO, log1);
+      addLogMove(LOG_LEVEL_INFO, log1);
       # endif // ifdef P036_FONT_CALC_LOG
       break;
 
@@ -793,6 +829,13 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
     uint8_t iIdxForBiggestFont = 0;
 
     while (currentLine < P36_Nlines) {
+# if P036_ENABLE_TICKER
+
+      if (bUseTicker && (currentLine > 0)) {
+        // for ticker only the first line defines the font
+        break;
+      }
+# endif // if P036_ENABLE_TICKER
       // calculate individual font settings
       IndividualFontSettings = CalculateIndividualFontSettings(currentLine,
                                                                iFontIndex,
@@ -803,8 +846,8 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
 
       if (IndividualFontSettings.NextLineNo == 0xFF) {
         // individual settings do not fit
-        if (bReduceLinesPerFrame) {
-          currentLinesPerFrame--;                                                // reduce numer of lines per frame
+        if ((bReduceLinesPerFrame) && (currentLinesPerFrame > 1)) {
+          currentLinesPerFrame--;                                                // reduce number of lines per frame
         } else {
           iIdxForBiggestFont = IndividualFontSettings.IdxForBiggestFontUsed + 1; // use smaller font size as maximum
         }
@@ -823,24 +866,15 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
       String log1;
 
       if (log1.reserve(140)) { // estimated
-        log1.clear();
-        log1  = F("IndividualFontSettings:");
-        log1 += F(" iFontIndex:"); log1 += iFontIndex;
-        log1 += F(" iLinesPerFrame:"); log1 += iLinesPerFrame;
-        log1 += F(" TopLineOffset:"); log1 += TopLineOffset;
-        log1 += F(" iHeight:"); log1 += iHeight;
-        log1 += F(" iUsedHeightForFonts:"); log1 += iUsedHeightForFonts;
-        log1 += F(" iMaxHeightForFont:"); log1 += iMaxHeightForFont;
-        addLog(LOG_LEVEL_INFO, log1);
-
         for (uint8_t i = 0; i < P36_Nlines; i++) {
+          delay(5); // otherwise it is may be to fast for the serial monitor
           log1.clear();
-          log1 += F("Line["); log1 += i;
+          log1  = F("Line["); log1 += i;
           log1 += F("]: Frame:"); log1 += LineSettings[i].frame;
           log1 += F(" FontIdx:"); log1 += LineSettings[i].fontIdx;
           log1 += F(" ypos:"); log1 += LineSettings[i].ypos - TopLineOffset;
           log1 += F(" FontHeight:"); log1 += LineSettings[i].FontHeight;
-          addLog(LOG_LEVEL_INFO, log1);
+          addLogMove(LOG_LEVEL_INFO, log1);
         }
       }
     }
@@ -855,7 +889,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
     String log1;
 
     if (log1.reserve(140)) { // estimated
-      log1.clear();
+      delay(5);              // otherwise it is may be to fast for the serial monitor
       log1  = F("CalculateFontSettings: Font:");
       log1 += result.FontName();
       log1 += F(" Idx:");
@@ -887,9 +921,22 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   return result;
 }
 
-void P036_data_struct::prepare_pagescrolling() {
+void P036_data_struct::prepare_pagescrolling(ePageScrollSpeed lscrollspeed,
+                                             uint8_t          NrLines) {
   if (!isInitialized()) {
     return;
+  }
+# if P036_ENABLE_TICKER
+  bUseTicker = (lscrollspeed == ePageScrollSpeed::ePSS_Ticker);
+# else // if P036_ENABLE_TICKER
+  bUseTicker = false;
+# endif //if P036_ENABLE_TICKER
+
+  if (bUseTicker) {
+    ScrollingPages.linesPerFrameDef = 1;
+  }
+  else {
+    ScrollingPages.linesPerFrameDef = NrLines;
   }
   CalculateFontSettings(0);
 }
@@ -908,7 +955,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
       log.reserve(32)) {
-    log += F("Start Scrolling: Speed: ");
+    log  = F("Start Scrolling: Speed: ");
     log += static_cast<int>(lscrollspeed);
     addLogMove(LOG_LEVEL_INFO, log);
   }
@@ -920,6 +967,9 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   if (lscrollspeed == ePageScrollSpeed::ePSS_Instant) {
     // no scrolling, just the handling time to build the new page
     iPageScrollTime = P36_PageScrollTick - P36_PageScrollTimer;
+  } else if (lscrollspeed == ePageScrollSpeed::ePSS_Ticker) {
+    // for ticker, no scrolling, just the handling time to build the new page
+    iPageScrollTime = P36_PageScrollTick - P36_PageScrollTimer;
   } else {
     iPageScrollTime = (P36_MaxDisplayWidth / (P36_PageScrollPix * static_cast<int>(lscrollspeed))) * P36_PageScrollTick;
   }
@@ -930,7 +980,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log.reserve(32);
-    log += F("PageScrollTime: ");
+    log  = F("PageScrollTime: ");
     log += iPageScrollTime;
     addLogMove(LOG_LEVEL_INFO, log);
   }
@@ -942,6 +992,22 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     // Reduced scrolling width because line is displayed left or right aligned
     MaxPixWidthForPageScrolling -= getDisplaySizeSettings(disp_resolution).PixLeft;
   }
+
+# if P036_ENABLE_TICKER
+
+  if (bUseTicker) {
+    ScrollingLines.Ticker.Tcontent = EMPTY_STRING;
+    ScrollingLines.Ticker.IdxEnd   = 0;
+    ScrollingLines.Ticker.IdxStart = 0;
+
+    for (uint8_t i = 0; i < P36_Nlines; i++) {
+      String tmpString(LineContent->DisplayLinesV1[i].Content);
+      tmpString.replace(F("<|>"), "   "); // replace the split token with three space char
+      ScrollingLines.Ticker.Tcontent += P36_parseTemplate(tmpString, i);
+    }
+    ScrollingLines.Ticker.len = ScrollingLines.Ticker.Tcontent.length();
+  }
+# endif // if P036_ENABLE_TICKER
 
   for (uint8_t j = 0; j < ScrollingPages.linesPerFrameDef; j++) {
     // default no line scrolling and strings are centered
@@ -965,9 +1031,56 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingLines.SLine[j].LastWidth = PixLengthLineOut; // while page scrolling this line is right aligned
       }
 
-      if ((PixLengthLineIn > getDisplaySizeSettings(disp_resolution).Width) &&
+      if ((bUseTicker || (PixLengthLineIn > getDisplaySizeSettings(disp_resolution).Width)) &&
           (iScrollTime > 0)) {
         // width of the line > display width -> scroll line
+        if (bUseTicker) {
+# if P036_ENABLE_TICKER
+          ScrollingLines.SLine[j].Width = 0;
+          uint16_t AddPixTicker;
+
+          switch (textAlignment) {
+            case TEXT_ALIGN_CENTER: ScrollingLines.SLine[j].CurrentLeft = getDisplaySizeSettings(disp_resolution).PixLeft +
+                                                                          getDisplaySizeSettings(disp_resolution).Width / 2;
+              AddPixTicker = getDisplaySizeSettings(disp_resolution).Width / 2; // half width at begin
+              break;
+            case TEXT_ALIGN_RIGHT:  ScrollingLines.SLine[j].CurrentLeft = getDisplaySizeSettings(disp_resolution).PixLeft +
+                                                                          getDisplaySizeSettings(disp_resolution).Width;
+              AddPixTicker = getDisplaySizeSettings(disp_resolution).Width; // full width at begin
+              break;
+            default:                ScrollingLines.SLine[j].CurrentLeft = getDisplaySizeSettings(disp_resolution).PixLeft;
+              AddPixTicker                                              = 0;
+          }
+          ScrollingLines.SLine[j].fPixSum = ScrollingLines.SLine[j].CurrentLeft;
+
+          display->setFont(FontSizes[LineSettings[j].fontIdx].fontData);
+          ScrollingLines.SLine[j].dPix = (static_cast<float>(display->getStringWidth(ScrollingLines.Ticker.Tcontent) + AddPixTicker)) /
+                                         static_cast<float>(iScrollTime);
+          ScrollingLines.SLine[j].SLcontent = EMPTY_STRING;
+
+          ScrollingLines.Ticker.TickerAvgPixPerChar = lround(static_cast<float>(display->getStringWidth(
+                                                                                  ScrollingLines.Ticker.Tcontent)) /
+                                                             static_cast<float>(ScrollingLines.Ticker.len));
+
+          if (ScrollingLines.Ticker.TickerAvgPixPerChar < ScrollingLines.SLine[j].dPix) {
+            ScrollingLines.Ticker.TickerAvgPixPerChar = round(2 * ScrollingLines.SLine[j].dPix);
+          }
+          ScrollingLines.Ticker.MaxPixLen = getDisplaySizeSettings(disp_resolution).Width + 2 * ScrollingLines.Ticker.TickerAvgPixPerChar;
+
+          // add more characters to display
+          while (true) {
+            char c             = ScrollingLines.Ticker.Tcontent.charAt(ScrollingLines.Ticker.IdxEnd);
+            uint8_t PixForChar = display->getCharWidth(c);
+
+            if ((ScrollingLines.SLine[0].Width + PixForChar) >= ScrollingLines.Ticker.MaxPixLen) {
+              break; // no more characters necessary to add
+            }
+            ScrollingLines.Ticker.IdxEnd++;
+            ScrollingLines.SLine[j].Width += PixForChar;
+          }
+# endif // if P036_ENABLE_TICKER
+        }
+        else {
         ScrollingLines.SLine[j].SLcontent   = ScrollingPages.In[j].SPLcontent;
         ScrollingLines.SLine[j].SLidx       = ScrollingPages.In[j].SPLidx; // index to LineSettings[]
         ScrollingLines.SLine[j].Width       = PixLengthLineIn;             // while page scrolling this line is left aligned
@@ -977,19 +1090,38 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         // pix change per scrolling line tick
         ScrollingLines.SLine[j].dPix =
           (static_cast<float>(PixLengthLineIn - getDisplaySizeSettings(disp_resolution).Width)) / iScrollTime;
+        }
 
 # ifdef P036_SCROLL_CALC_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          delay(5); // otherwise it is may be to fast for the serial monitor
           String log;
           log.reserve(32);
-          log += F("Line: ");
+          log  = F("Line: ");
           log += (j + 1);
           log += F(" width: ");
           log += ScrollingLines.SLine[j].Width;
           log += F(" dPix: ");
           log += ScrollingLines.SLine[j].dPix;
           addLogMove(LOG_LEVEL_INFO, log);
+#  if P036_ENABLE_TICKER
+
+          if (bUseTicker) {
+            delay(5); // otherwise it is may be to fast for the serial monitor
+            String log1;
+            log1.reserve(200);
+            log1  = F("+++ iScrollTime: ");
+            log1 += iScrollTime;
+            log1 += F(" StrLength: ");
+            log1 += ScrollingLines.Ticker.len;
+            log1 += F(" StrInPix: ");
+            log1 += display->getStringWidth(ScrollingLines.Ticker.Tcontent);
+            log1 += F(" PixPerChar: ");
+            log1 += ScrollingLines.Ticker.TickerAvgPixPerChar;
+            addLogMove(LOG_LEVEL_INFO, log1);
+          }
+#  endif // if P036_ENABLE_TICKER
         }
 # endif // P036_SCROLL_CALC_LOG
       }
@@ -1040,13 +1172,14 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 
       if (loglevelActiveFor(LOG_LEVEL_INFO) &&
           log.reserve(128)) {
-        log += F("Line: "); log += (j + 1);
+        delay(5); // otherwise it is may be to fast for the serial monitor
+        log  = F("Line: "); log += (j + 1);
         log += F(" LineIn: "); log += LineInStr;
         log += F(" Length: "); log += strlen;
         log += F(" PixLength: "); log += PixLengthLineIn;
         log += F(" AvgPixPerChar: "); log += fAvgPixPerChar;
         log += F(" CharsRemoved: "); log += iCharToRemove;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         log.clear();
         log += F(" -> Changed to: "); log += ScrollingPages.In[j].SPLcontent;
         log += F(" Length: "); log += ScrollingPages.In[j].SPLcontent.length();
@@ -1145,13 +1278,15 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 
       if (loglevelActiveFor(LOG_LEVEL_INFO) &&
           log.reserve(128)) {
-        log += F("Line: "); log += (j + 1);
+        delay(5); // otherwise it is may be to fast for the serial monitor
+        log  = F("Line: "); log += (j + 1);
         log += F(" LineOut: "); log += LineOutStr;
         log += F(" Length: "); log += strlen;
         log += F(" PixLength: "); log += PixLengthLineOut;
         log += F(" AvgPixPerChar: "); log += fAvgPixPerChar;
         log += F(" CharsRemoved: "); log += iCharToRemove;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
+        delay(5); // otherwise it is may be to fast for the serial monitor
         log.clear();
         log += F(" -> Changed to: "); log += ScrollingPages.Out[j].SPLcontent;
         log += F(" Length: "); log += ScrollingPages.Out[j].SPLcontent.length();
@@ -1198,18 +1333,30 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
     }
   }
 
+  if (!bUseTicker) {
   for (uint8_t j = 0; j < ScrollingPages.linesPerFrameOut; j++) {
     if ((initialScroll && (lscrollspeed < ePageScrollSpeed::ePSS_Instant)) ||
         !initialScroll) {
-      // scrolling, prepare scrolling out to right
+        // scrolling, prepare scrolling page out to right
       DrawScrollingPageLine(&ScrollingPages.Out[j], ScrollingLines.SLine[j].LastWidth, TEXT_ALIGN_RIGHT);
     }
   }
 
   for (uint8_t j = 0; j < ScrollingPages.linesPerFrameIn; j++) {
-    // non-scrolling or scrolling prepare scrolling in from left
+      // non-scrolling or scrolling prepare scrolling page in from left
     DrawScrollingPageLine(&ScrollingPages.In[j], ScrollingLines.SLine[j].Width, TEXT_ALIGN_LEFT);
   }
+  }
+# if P036_ENABLE_TICKER
+  else {
+    // for Ticker start with the set alignment
+    display->setTextAlignment(TEXT_ALIGN_LEFT);
+    display->setFont(FontSizes[LineSettings[ScrollingLines.SLine[0].SLidx].fontIdx].fontData);
+    display->drawString(ScrollingLines.SLine[0].CurrentLeft,
+                        LineSettings[ScrollingLines.SLine[0].SLidx].ypos,
+                        ScrollingLines.Ticker.Tcontent.substring(ScrollingLines.Ticker.IdxStart, ScrollingLines.Ticker.IdxEnd));
+  }
+# endif // if P036_ENABLE_TICKER
 
   update_display();
 
@@ -1245,9 +1392,8 @@ void P036_data_struct::display_scrolling_lines() {
   }
 
   if (bscroll) {
-    ScrollingLines.wait++;
-
     if (ScrollingLines.wait < P36_WaitScrollLines) {
+      ScrollingLines.wait++;
       return; // wait before scrolling line not finished
     }
 
@@ -1268,18 +1414,74 @@ void P036_data_struct::display_scrolling_lines() {
 
           display->setFont(FontSizes[LineSettings[ScrollingLines.SLine[i].SLidx].fontIdx].fontData);
 
-          if (((ScrollingLines.SLine[i].CurrentLeft - getDisplaySizeSettings(disp_resolution).PixLeft) +
-               ScrollingLines.SLine[i].Width) >= getDisplaySizeSettings(disp_resolution).Width) {
+          if (bUseTicker || (((iCurrentLeft - getDisplaySizeSettings(disp_resolution).PixLeft) +
+                              ScrollingLines.SLine[i].Width) >= getDisplaySizeSettings(disp_resolution).Width)) {
             display->setTextAlignment(TEXT_ALIGN_LEFT);
-            display->drawString(ScrollingLines.SLine[i].CurrentLeft,
+
+            if (bUseTicker) {
+#if P036_ENABLE_TICKER
+              display->drawString(iCurrentLeft,
+                                  LineSettings[ScrollingLines.SLine[0].SLidx].ypos,
+                                  ScrollingLines.Ticker.Tcontent.substring(ScrollingLines.Ticker.IdxStart, ScrollingLines.Ticker.IdxEnd));
+
+              // add more characters to display
+              iCurrentLeft -= getDisplaySizeSettings(disp_resolution).PixLeft;
+
+              while (true) {
+                if (ScrollingLines.Ticker.IdxEnd >= ScrollingLines.Ticker.len) {// end of string
+                  break;
+                }
+                uint8_t c          = ScrollingLines.Ticker.Tcontent.charAt(ScrollingLines.Ticker.IdxEnd);
+                uint8_t PixForChar = display->getCharWidth(c);// PixForChar can be 0 if c is non ascii
+
+                if ((static_cast<int>(ScrollingLines.SLine[0].Width + PixForChar) + iCurrentLeft) >= ScrollingLines.Ticker.MaxPixLen) {
+                  break;                                      // no more characters necessary to add
+                }
+                ScrollingLines.Ticker.IdxEnd++;
+                ScrollingLines.SLine[0].Width += PixForChar;
+              }
+
+              // remove already displayed characters
+              float fCurrentPixLeft = static_cast<float>(getDisplaySizeSettings(disp_resolution).PixLeft) - 2.0f *
+                                      ScrollingLines.Ticker.TickerAvgPixPerChar;
+
+              while (ScrollingLines.SLine[0].fPixSum < fCurrentPixLeft) {
+                uint8_t c          = ScrollingLines.Ticker.Tcontent.charAt(ScrollingLines.Ticker.IdxStart);
+                uint8_t PixForChar = display->getCharWidth(c);// PixForChar can be 0 if c is non ascii
+                ScrollingLines.SLine[0].fPixSum += static_cast<float>(PixForChar);
+                ScrollingLines.Ticker.IdxStart++;
+
+                if (ScrollingLines.Ticker.IdxStart >= ScrollingLines.Ticker.IdxEnd) {
+                  ScrollingLines.SLine[0].Width = 0;// Stop scrolling
+
+# ifdef PLUGIN_036_DEBUG
+
+                  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                    addLog(LOG_LEVEL_INFO, F("Ticker finished"));
+                  }
+# endif // PLUGIN_036_DEBUG
+                  break;
+                }
+
+                if (ScrollingLines.SLine[0].Width > PixForChar) {
+                  ScrollingLines.SLine[0].Width -= PixForChar;
+                }
+              }
+              break;
+#endif // if P036_ENABLE_TICKER
+            } else {
+              display->drawString(iCurrentLeft,
                                 LineSettings[ScrollingLines.SLine[i].SLidx].ypos,
                                 ScrollingLines.SLine[i].SLcontent);
+            }
           } else {
+            if (!bUseTicker) {
             // line scrolling finished -> line is shown as aligned right
             display->setTextAlignment(TEXT_ALIGN_RIGHT);
             display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(disp_resolution).PixLeft,
                                 LineSettings[ScrollingLines.SLine[i].SLidx].ypos,
                                 ScrollingLines.SLine[i].SLcontent);
+            }
             ScrollingLines.SLine[i].Width = 0; // Stop scrolling
           }
         }
@@ -1369,7 +1571,7 @@ void P036_data_struct::P036_JumpToPage(struct EventStruct *event, uint8_t nextFr
   bPageScrollDisabled   = true; //  show next page without scrolling
   disableFrameChangeCnt = 2;    //  disable next page change in PLUGIN_READ if PLUGIN_READ was already scheduled
   P036_DisplayPage(event);      //  Display the selected page, function needs 65ms!
-  displayTimer = PCONFIG(4);    //  Restart timer
+  displayTimer = P036_TIMER;    //  Restart timer
 }
 
 void P036_data_struct::P036_JumpToPageOfLine(struct EventStruct *event, uint8_t LineNo)
@@ -1378,6 +1580,9 @@ void P036_data_struct::P036_JumpToPageOfLine(struct EventStruct *event, uint8_t 
   P036_JumpToPage(event, LineSettings[LineNo].DisplayedPageNo);
 }
 
+// Defines the Scroll area layout
+// Displays the selected page, function needs 65ms!
+// Called by PLUGIN_READ and P036_JumpToPage()
 void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 {
   # ifdef PLUGIN_036_DEBUG
@@ -1478,26 +1683,28 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
           # if P036_FEATURE_DISPLAY_PREVIEW && P036_FEATURE_ALIGN_PREVIEW
 
-          // Preview: Center or Right-Align add spaces on the left
-          const bool isAlignCenter = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_CENTER;
-          const bool isAlignRight  = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_RIGHT;
+          if (!bUseTicker) {
+            // Preview: Center or Right-Align add spaces on the left
+            const bool isAlignCenter = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_CENTER;
+            const bool isAlignRight  = ScrollingPages.In[i].Alignment == OLEDDISPLAY_TEXT_ALIGNMENT::TEXT_ALIGN_RIGHT;
 
-          if (isAlignRight || isAlignCenter) {
-            const uint16_t maxlength  = getDisplaySizeSettings(disp_resolution).Width;
-            const uint16_t pixlength  = display->getStringWidth(currentLines[i]); // pix length for entire string
-            const uint16_t charlength = display->getStringWidth(F(" "));          // pix length for a space char
-            int16_t addSpaces         = (maxlength - pixlength) / charlength;
+            if (isAlignRight || isAlignCenter) {
+              const uint16_t maxlength  = getDisplaySizeSettings(disp_resolution).Width;
+              const uint16_t pixlength  = display->getStringWidth(currentLines[i]); // pix length for entire string
+              const uint16_t charlength = display->getStringWidth(F(" "));          // pix length for a space char
+              int16_t addSpaces         = (maxlength - pixlength) / charlength;
 
-            if (isAlignCenter) {
-              addSpaces /= 2;
-            }
+              if (isAlignCenter) {
+                addSpaces /= 2;
+              }
 
-            if (addSpaces > 0) {
-              currentLines[i].reserve(currentLines[i].length() + addSpaces);
+              if (addSpaces > 0) {
+                currentLines[i].reserve(currentLines[i].length() + addSpaces);
 
-              while (addSpaces > 0) {
-                currentLines[i] = ' ' + currentLines[i];
-                addSpaces--;
+                while (addSpaces > 0) {
+                  currentLines[i] = ' ' + currentLines[i];
+                  addSpaces--;
+                }
               }
             }
           }
@@ -1537,10 +1744,12 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     const bool bScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24);                      // Bit 24
     const bool bScrollLines       = bitRead(PCONFIG_LONG(0), 17);                      // Bit 17
-    bLineScrollEnabled = (bScrollLines && (NetworkConnected() || bScrollWithoutWifi)); // scroll lines only if WifiIsConnected,
+    bRunning           = NetworkConnected() || bScrollWithoutWifi;
+    bLineScrollEnabled = ((bScrollLines || bUseTicker) && bRunning);// scroll lines only if WifiIsConnected,
+    // WifiIsConnected,
     // otherwise too slow
 
-    ePageScrollSpeed lscrollspeed = static_cast<ePageScrollSpeed>(PCONFIG(3));
+    ePageScrollSpeed lscrollspeed = static_cast<ePageScrollSpeed>(P036_SCROLL);
 
     if (bPageScrollDisabled) { lscrollspeed = ePageScrollSpeed::ePSS_Instant; } // first page after INIT without scrolling
 
@@ -1550,7 +1759,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       Scheduler.setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
     }
 
-    if (NetworkConnected() || bScrollWithoutWifi) {
+    if (bRunning) {
       // scroll lines only if WifiIsConnected, otherwise too slow
       bPageScrollDisabled = false; // next PLUGIN_READ will do page scrolling
     }
@@ -1582,7 +1791,16 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
   const eAlignment iAlignment =
     static_cast<eAlignment>(get3BitFromUL(LineContent->DisplayLinesV1[lineIdx].ModifyLayout, P036_FLAG_ModifyLayout_Alignment));
 
-  switch (getTextAlignment(iAlignment)) {
+  OLEDDISPLAY_TEXT_ALIGNMENT iTextAlignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
+
+# if P036_ENABLE_TICKER
+
+  if (bUseTicker) {
+    iTextAlignment = TEXT_ALIGN_RIGHT; // ticker is always right aligned
+  }
+# endif // if P036_ENABLE_TICKER
+
+  switch (iTextAlignment) {
     case TEXT_ALIGN_LEFT:
 
       // add leading spaces from tmpString to the result
@@ -1727,19 +1945,19 @@ void P036_data_struct::CalcMaxPageCount(void) {
       String log1;
 
       if (log1.reserve(140)) { // estimated
-        log1.clear();
         log1 = F("CalcMaxPageCount: MaxFramesToDisplay:"); log1 += MaxFramesToDisplay;
-        addLog(LOG_LEVEL_INFO, log1);
+        addLogMove(LOG_LEVEL_INFO, log1);
 
         for (uint8_t i = 0; i < P36_Nlines; i++) {
           log1.clear();
-          log1 += F("Line["); log1 += i;
+          delay(5); // otherwise it is may be to fast for the serial monitor
+          log1  = F("Line["); log1 += i;
           log1 += F("]: Frame:"); log1 += LineSettings[i].frame;
           log1 += F(" DisplayedPageNo:"); log1 += LineSettings[i].DisplayedPageNo;
           log1 += F(" FontIdx:"); log1 += LineSettings[i].fontIdx;
           log1 += F(" ypos:"); log1 += LineSettings[i].ypos - TopLineOffset;
           log1 += F(" FontHeight:"); log1 += LineSettings[i].FontHeight;
-          addLog(LOG_LEVEL_INFO, log1);
+          addLogMove(LOG_LEVEL_INFO, log1);
         }
       }
     }
@@ -1771,6 +1989,15 @@ void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines       *Scrollin
                                              OLEDDISPLAY_TEXT_ALIGNMENT textAlignment) {
   int16_t LeftOffset = 0;
 
+  switch (textAlignment) {
+    case TEXT_ALIGN_LEFT: LeftOffset = -P36_MaxDisplayWidth;
+      break;
+    case TEXT_ALIGN_RIGHT: LeftOffset = 0;
+      break;
+    default:
+      LeftOffset = 0;
+      break;
+  }
   display->setFont(FontSizes[LineSettings[ScrollingPageLine->SPLidx].fontIdx].fontData);
 
   if (Width > 0) {
@@ -1784,10 +2011,6 @@ void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines       *Scrollin
     // line is kept aligned while scrolling page
     display->setTextAlignment(ScrollingPageLine->Alignment);
 
-    if (textAlignment == TEXT_ALIGN_LEFT) {
-      LeftOffset = -P36_MaxDisplayWidth;
-    }
-
     // textAlignment=TEXT_ALIGN_LEFT: for non-scrolling pages ScrollingPages.dPixSum=P36_MaxDisplayWidth -> therefore the calculation must
     // use P36_MaxDisplayWidth, too
     display->drawString(LeftOffset + GetTextLeftMargin(ScrollingPageLine->Alignment) + ScrollingPages.dPixSum,
@@ -1797,6 +2020,12 @@ void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines       *Scrollin
 }
 
 void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine, uint8_t Counter) {
+  if (bUseTicker) {
+# if P036_ENABLE_TICKER
+    ScrollingPageLine->SPLcontent = EMPTY_STRING;
+# endif // if P036_ENABLE_TICKER
+  }
+  else {
   String tmpString(LineContent->DisplayLinesV1[Counter].Content);
 
   ScrollingPageLine->SPLcontent = P36_parseTemplate(tmpString, Counter);
@@ -1827,6 +2056,7 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
 
   ScrollingPageLine->Alignment = getTextAlignment(iAlignment);
   ScrollingPageLine->SPLidx    = Counter; // index to LineSettings[]
+}
 }
 
 # if P036_FEATURE_DISPLAY_PREVIEW
