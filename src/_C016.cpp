@@ -150,6 +150,12 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
+    case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    {
+      string = F("-");
+      break;
+    }
+
     default:
       break;
   }
