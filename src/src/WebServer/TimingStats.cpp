@@ -14,6 +14,8 @@
 
 #include "../Globals/Device.h"
 
+#include "../Helpers/_Plugin_init.h"
+
 
 #define TIMING_STATS_THRESHOLD 100000
 
@@ -117,7 +119,8 @@ long stream_timing_statistics(bool clearStats) {
           html_TR_TD();
         }
         {
-          addHtml(get_formatted_Plugin_number(Device[deviceIndex].getPluginID()));
+          const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
+          addHtml(get_formatted_Plugin_number(pluginID));
           addHtml(' ');
           addHtml(getPluginNameFromDeviceIndex(deviceIndex));
         }

@@ -487,11 +487,14 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
             if (validTaskIndex(thisTask)) {                   // Known taskindex?
 #ifdef USES_P022                                              // Exclude P022 as it has rather explicit differences in commands when used with the [<TaskName>]. prefix
+              const pluginID_t pluginID = Settings.getPluginID_for_task(thisTask);
               if (Settings.TaskDeviceEnabled[thisTask]        // and internally needs to know wether it was called with the taskname prefixed
-                && validPluginID_fullcheck(Settings.getPluginID_for_task(thisTask))
+                && validPluginID_fullcheck(pluginID)
                 && Settings.TaskDeviceDataFeed[thisTask] == 0) {
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
-                if (validDeviceIndex(DeviceIndex) && Device[DeviceIndex].Number == 22 /* PLUGIN_ID_022 define no longer available, 'assume' 22 for now */) {
+                constexpr pluginID_t P022_PCA9685_PLUGIN_ID(22);
+                if (validDeviceIndex(DeviceIndex) && 
+                    pluginID == P022_PCA9685_PLUGIN_ID /* PLUGIN_ID_022 define no longer available, 'assume' 22 for now */) {
                   thisTask = INVALID_TASK_INDEX;
                 }
               }
