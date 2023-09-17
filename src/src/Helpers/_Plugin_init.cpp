@@ -2102,6 +2102,9 @@ constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1 - Lowest_
 // Vector size should is lowest pluginID ... highest pluginID
 deviceIndex_t Plugin_id_to_DeviceIndex[Plugin_id_to_DeviceIndex_size]{};
 
+// Used as lookup for getting an alfabetically sorted deviceIndex
+deviceIndex_t DeviceIndex_sorted[DeviceIndex_to_Plugin_id_size];
+
 
 size_t get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID_t pluginID)
 {
@@ -2183,6 +2186,16 @@ bool validDeviceIndex_init(deviceIndex_t deviceIndex)
   return deviceIndex < DeviceIndex_to_Plugin_id_size;
 }
 
+// Array containing "DeviceIndex" alfabetically sorted.
+deviceIndex_t getDeviceIndex_sorted(deviceIndex_t deviceIndex)
+{
+  if (deviceIndex < DeviceIndex_to_Plugin_id_size) {
+    return DeviceIndex_sorted[deviceIndex.value];
+  }
+  return INVALID_DEVICE_INDEX;
+}
+
+
 boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string)
 {
   if (deviceIndex < DeviceIndex_to_Plugin_id_size)
@@ -2237,21 +2250,19 @@ void PluginSetup()
   // ********************************************************************************
 
   // First fill the existing number of the DeviceIndex.
-  const unsigned sorted_length = getDeviceCount() + 1;
-  DeviceIndex_sorted.resize(sorted_length);
-  for (deviceIndex_t x; x < sorted_length; ++x) {
-    DeviceIndex_sorted[x.value] = x.value;
+  for (deviceIndex_t x; x < DeviceIndex_to_Plugin_id_size; ++x) {
+    DeviceIndex_sorted[x.value] = x;
   }
 
   struct
   {
-    bool operator()(uint8_t a, uint8_t b) const { 
-      return getPluginNameFromDeviceIndex(deviceIndex_t::toDeviceIndex(a)) < 
-             getPluginNameFromDeviceIndex(deviceIndex_t::toDeviceIndex(b)); 
+    bool operator()(deviceIndex_t a, deviceIndex_t b) const { 
+      return getPluginNameFromDeviceIndex(a) < 
+             getPluginNameFromDeviceIndex(b); 
     }
   }
   customLess;
-  std::sort(DeviceIndex_sorted.begin(), DeviceIndex_sorted.end(), customLess);
+  std::sort(DeviceIndex_sorted, DeviceIndex_sorted + DeviceIndex_to_Plugin_id_size, customLess);
 }
 
 void PluginInit(bool priorityOnly)

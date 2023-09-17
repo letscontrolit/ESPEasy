@@ -213,26 +213,31 @@ void addDeviceSelect(const __FlashStringHelper *name,  pluginID_t choice)
   addSelector_Head_reloadOnChange(name);
   addSelector_Item(F("- None -"), 0, false);
 
-  const int sorted_length = DeviceIndex_sorted.size();
-  for (uint8_t x = 0; x < sorted_length; x++)
-  {
-    const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(DeviceIndex_sorted[x]);
+  deviceIndex_t x;
+  bool done = false;
+  while (!done) {
+    const deviceIndex_t deviceIndex = getDeviceIndex_sorted(x);
+    if (!validDeviceIndex(deviceIndex)) {
+      done = true;
+    } else {
+      const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
-    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
-
-    if (validPluginID(pluginID)) {
-      deviceName = getPluginNameFromDeviceIndex(deviceIndex);
+      if (validPluginID(pluginID)) {
+        deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-      # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-      deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
-      # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        deviceName = concat(get_formatted_Plugin_number(pluginID), F(" - ")) + deviceName;
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
-      addSelector_Item(deviceName,
-                        pluginID.value,
-                        choice == pluginID);
+        addSelector_Item(deviceName,
+                          pluginID.value,
+                          choice == pluginID);
+      }
     }
+    ++x;
   }
+
   addSelector_Foot();
 }
 

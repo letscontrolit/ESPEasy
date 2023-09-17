@@ -37,7 +37,6 @@
 #include <vector>
 
 
-std::vector<uint8_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index) {
