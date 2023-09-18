@@ -16,7 +16,7 @@
 #   define PLUGIN_STATS_NR_ELEMENTS 16
 #  endif // ifdef ESP8266
 #  ifdef ESP32
-#   define PLUGIN_STATS_NR_ELEMENTS 64
+#   define PLUGIN_STATS_NR_ELEMENTS 256
 #  endif // ifdef ESP32
 # endif  // ifndef PLUGIN_STATS_NR_ELEMENTS
 

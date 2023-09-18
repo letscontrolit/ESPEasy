@@ -1182,23 +1182,18 @@ void parseControllerVariables(String& s, struct EventStruct *event, bool useURLe
   parseEventVariables(s, event, useURLencode);
 }
 
-void parseSingleControllerVariable(String            & s,
-                                   struct EventStruct *event,
-                                   uint8_t                taskValueIndex,
-                                   bool             useURLencode) {
-  if (s.indexOf('%') != -1) {
-    String str;
-    if (validTaskIndex(event->TaskIndex)) {
-      str = getTaskValueName(event->TaskIndex, taskValueIndex);
-    }
-    repl(F("%valname%"), str, s, useURLencode);
-  }
-}
-
 // FIXME TD-er: These macros really increase build size.
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
+
+void parseSingleControllerVariable(String            & s,
+                                   struct EventStruct *event,
+                                   uint8_t                taskValueIndex,
+                                   bool             useURLencode) {
+  SMART_REPL(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex));
+}
+
 void parseSystemVariables(String& s, bool useURLencode)
 {
   parseSpecialCharacters(s, useURLencode);
@@ -1225,13 +1220,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
     }
   }
 
-  if (s.indexOf(F("%tskname%")) != -1) {
-    if (validTaskIndex(event->TaskIndex)) {
-      repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
-    } else {
-      repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
-    }
-  }
+  SMART_REPL(F("%tskname%"), getTaskDeviceName(event->TaskIndex));
 
   const bool vname_found = s.indexOf(F("%vname")) != -1;
 
@@ -1241,11 +1230,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
       vname += (i + 1);
       vname += '%';
 
-      if (validTaskIndex(event->TaskIndex)) {
-        repl(vname, getTaskValueName(event->TaskIndex, i), s, useURLencode);
-      } else {
-        repl(vname, EMPTY_STRING, s, useURLencode);
-      }
+      SMART_REPL(vname, getTaskValueName(event->TaskIndex, i));
     }
   }
 }
