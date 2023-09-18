@@ -101,7 +101,7 @@ constexpr unsigned CEIL_LOG2(unsigned x)
 # define NR_BITS(NR_STATES) CEIL_LOG2(NR_STATES)
 
 // Compute a mask given number of bits
-# define MASK_BITS(x) ((1 << x) - 1)
+# define MASK_BITS(x) ((1 << (x)) - 1)
 
 
 #ifdef ESP32

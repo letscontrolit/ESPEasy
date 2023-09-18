@@ -6,6 +6,11 @@
 struct npluginID_t {
   constexpr npluginID_t() = default;
 
+  npluginID_t(const npluginID_t& other)
+  {
+    value = other.value;
+  }
+
   constexpr explicit npluginID_t(uint8_t id) : value(id) {}
 
   static npluginID_t toPluginID(unsigned other)

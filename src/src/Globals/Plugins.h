@@ -48,18 +48,18 @@ bool validDeviceIndex(deviceIndex_t index);
 // TD-er: Converted simple functions to defines to reduce bin size
 
 // bool validTaskIndex(taskIndex_t index);
-#define validTaskIndex(X) (X < TASKS_MAX)
+#define validTaskIndex(X) ((X) < (TASKS_MAX))
 
 // bool validPluginID(pluginID_t pluginID);
-#define validPluginID(P_ID) (P_ID != INVALID_PLUGIN_ID)
+#define validPluginID(P_ID) ((P_ID) != (INVALID_PLUGIN_ID))
 
 bool validPluginID_fullcheck(pluginID_t pluginID);
 
 // bool validUserVarIndex(userVarIndex_t index);
-#define validUserVarIndex(U_VAR_X)  (U_VAR_X < USERVAR_MAX_INDEX)
+#define validUserVarIndex(U_VAR_X)  ((U_VAR_X) < (USERVAR_MAX_INDEX))
 
 // bool validTaskVarIndex(taskVarIndex_t index);
-#define validTaskVarIndex(T_VAR_X)  (T_VAR_X < VARS_PER_TASK)
+#define validTaskVarIndex(T_VAR_X)  ((T_VAR_X) < (VARS_PER_TASK))
 
 // Check if plugin is included in build.
 // N.B. Invalid plugin is also not considered supported.

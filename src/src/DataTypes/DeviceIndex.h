@@ -8,6 +8,11 @@
 struct deviceIndex_t {
   deviceIndex_t() = default;
 
+  deviceIndex_t(const deviceIndex_t& other)
+  {
+    value = other.value;
+  }
+
   static deviceIndex_t toDeviceIndex(unsigned other)
   {  
     deviceIndex_t res;

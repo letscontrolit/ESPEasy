@@ -347,7 +347,7 @@ void HSV2RGB(float H, float S, float I, int rgb[3]) {
 
   int rgbw[4]{};
   HSV2RGBW(H, S, I, rgbw);
-  memcpy(rgb, rgbw, 3);
+  memcpy(rgb, rgbw, 3 * sizeof(int));
   /*
 
   int r, g, b;
