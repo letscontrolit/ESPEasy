@@ -34,7 +34,7 @@ enum PluginFunctions_e {
    PLUGIN_GET_DEVICEGPIONAMES         , // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
    PLUGIN_EXIT                        , // Called when a task no longer is enabled (or deleted)
    PLUGIN_GET_CONFIG_VALUE            , // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it can handle the command.  Can also be used to access extra unused task values.
-   PLUGIN_UNCONDITIONAL_POLL          , // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different technique.
+//   PLUGIN_UNCONDITIONAL_POLL          , // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different technique.
    PLUGIN_REQUEST                     , // Specific command to fetch a state (FIXME TD-er: Seems very similar to PLUGIN_GET_CONFIG_VALUE)
    PLUGIN_TIME_CHANGE                 , // Called when system time is set (e.g. via NTP)
    PLUGIN_MONITOR                     , // Replaces PLUGIN_UNCONDITIONAL_POLL

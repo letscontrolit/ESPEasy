@@ -637,7 +637,8 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
     const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
     // Store the previous value, in case %pvalue% is used in the formula
     String preValue[VARS_PER_TASK];
-    if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex)) {
+    const bool processFormula = Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex);
+    if (processFormula) {
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         const String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);
@@ -657,7 +658,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
     if (success)
     {
-      if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex)) {
+      if (processFormula) {
         for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
           String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);

@@ -423,12 +423,14 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
   switch (Function)
   {
     // Unconditional calls to all plugins
-    case PLUGIN_UNCONDITIONAL_POLL:    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
+    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
+    /*
+    case PLUGIN_UNCONDITIONAL_POLL:    
     {
 
       const unsigned maxDeviceIndex = getNrBuiltInDeviceIndex();
 
-      for (deviceIndex_t x/*= 0*/; x < maxDeviceIndex; ++x) {
+      for (deviceIndex_t x; x < maxDeviceIndex; ++x) {
           START_TIMER;
           PluginCall(x, Function, event, str);
           STOP_TIMER_TASK(x, Function);
@@ -436,6 +438,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       }
       return true;
     }
+    */
 
     case PLUGIN_MONITOR:
 
