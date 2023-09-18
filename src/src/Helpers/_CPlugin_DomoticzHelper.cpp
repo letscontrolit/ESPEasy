@@ -15,7 +15,7 @@
 # include "../../ESPEasy-Globals.h"
 
 # ifdef USES_C002
-#  include <ArduinoJson.h>
+# include "../Helpers/ArduinoJsonHelper.h"
 # endif // ifdef USES_C002
 
 
@@ -195,39 +195,34 @@ String formatDomoticzSensorType(struct EventStruct *event) {
 }
 
 # ifdef USES_C002
-#  include <ArduinoJson.h>
 
 bool deserializeDomoticzJson(const String& json,
                              unsigned int& idx, float& nvalue, long& nvaluealt,
                              String& svalue1, String& switchtype) {
-  uint16_t jsonlength = 512;
-
-  DynamicJsonDocument root(jsonlength);
-
-  deserializeJson(root, json);
+  ArduinoJsonHelper_t root(512);
+  root.do_deserializeJson(json);
 
   if (root.isNull()) {
     return false;
   }
 
   // Use long here as intermediate object type to prevent ArduinoJSON from adding a new template variant to the code.
-  const long idx_long = root[F("idx")];
+  const long idx_long = root.getInt(F("idx"));
 
   idx       = idx_long;
-  nvalue    = root[F("nvalue")];
-  nvaluealt = root[F("nvalue")];
+  nvalue    = root.getInt(F("nvalue"));
+  nvaluealt = nvalue;
 
   // const char* name = root["name"]; // Not used
   // const char* svalue = root["svalue"]; // Not used
-  const char *svalue1_c = root[F("svalue1")];
-
-  if (svalue1_c != nullptr) {
-    svalue1 = svalue1_c;
-  }
+  svalue1 = root.getString(F("svalue1"), svalue1);
 
   // const char* svalue2 = root["svalue2"]; // Not used
   // const char* svalue3 = root["svalue3"]; // Not used
-  const char *switchtype_c = root[F("switchType")]; // Expect "On/Off" or "dimmer"
+
+  // Expect "On/Off" or "dimmer"
+  switchtype = '?';
+  switchtype = root.getString(F("switchType"), switchtype);
 
   // FIXME TD-er: Is this compare even useful?
   // nvalue is already assigned the same value as nvaluealt and not changed since.
@@ -235,11 +230,6 @@ bool deserializeDomoticzJson(const String& json,
     nvalue = nvaluealt;
   }
 
-  if (switchtype_c == nullptr) {
-    switchtype = '?';
-  } else {
-    switchtype = switchtype_c;
-  }
   return true;
 }
 

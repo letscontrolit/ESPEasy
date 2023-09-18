@@ -11,8 +11,6 @@
 # include "../Helpers/StringParser.h"
 # include "../Globals/MQTT.h"
 
-# include <ArduinoJson.h>
-
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
 # if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32) \
@@ -98,6 +96,10 @@
 
 # define P037_VALUE_SEPARATOR '\x02'   // Separator outside of the normal ascii character values
 
+
+# if P037_JSON_SUPPORT
+#  include "../Helpers/ArduinoJsonHelper.h"
+# endif
 // Data structure
 struct P037_data_struct : public PluginTaskData_base
 {
@@ -195,8 +197,7 @@ private:
   String _filterListItem;
   # endif // if P037_FILTER_SUPPORT
   # if P037_JSON_SUPPORT
-  DynamicJsonDocument *root                  = nullptr;
-  uint16_t             lastJsonMessageLength = 512;
+  ArduinoJsonHelper_t  root;
   # endif // if P037_JSON_SUPPORT
 };
 

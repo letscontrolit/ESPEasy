@@ -16,14 +16,6 @@ P037_data_struct::P037_data_struct(taskIndex_t taskIndex) : _taskIndex(taskIndex
 {}
 
 P037_data_struct::~P037_data_struct() {
-  # if P037_JSON_SUPPORT
-
-  if (nullptr != root) {
-    root->clear();
-    delete root;
-    root = nullptr;
-  }
-  # endif // if P037_JSON_SUPPORT
 }
 
 /**
@@ -942,47 +934,35 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
 bool P037_data_struct::parseJSONMessage(const String& message) {
   bool result = false;
 
-  if ((nullptr != root) &&
-      (message.length() * 1.5 > lastJsonMessageLength)) {
-    cleanupJSON();
-  }
+  const size_t expectedMessageLength = message.length() * 1.5f;
 
-  if (message.length() * 1.5 > lastJsonMessageLength) {
-    lastJsonMessageLength = message.length() * 1.5;
+
+  if (root.getJsonLength() < expectedMessageLength) {
+    root.resetMemoryPool(expectedMessageLength);
+
     #  ifdef PLUGIN_037_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, concat(F("IMPT : JSON buffer increased to "), (int)lastJsonMessageLength));
+      addLogMove(LOG_LEVEL_INFO, concat(F("IMPT : JSON buffer increased to "), (int)expectedMessageLength));
     }
     #  endif // ifdef PLUGIN_037_DEBUG
   }
 
-  if (nullptr == root) {
-    root = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
-  }
-
-  if (nullptr != root) {
-    deserializeJson(*root, message);
-
-    if (!root->isNull()) {
+  root.do_deserializeJson(message);
+  if (!root.isNull()) {
       result = true;
-      doc    = root->as<JsonObject>();
+      doc    = root.getDoc();
       iter   = doc.begin();
-    }
   }
   return result;
 }
 
-/**
- * Release the created DynamicJsonDocument (if it was allocated)
- */
-void P037_data_struct::cleanupJSON() {
-  if (nullptr != root) {
-    root->clear();
-    delete root;
-    root = nullptr;
-  }
-}
+/** 
+ * Release the created DynamicJsonDocument (if it was allocated) 
+ */ 
+void P037_data_struct::cleanupJSON() { 
+  root.resetMemoryPool(0);
+} 
 
 # endif // P037_JSON_SUPPORT
 
