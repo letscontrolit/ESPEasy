@@ -46,7 +46,7 @@
 #   define P036_USERDEF_HEADERS   1 // Enable User defined headers
 #  endif // ifndef P036_USERDEF_HEADERS
 #  ifndef P036_ENABLE_TICKER
-#   define P036_ENABLE_TICKER   1 // Enable ticker function
+#   define P036_ENABLE_TICKER   1   // Enable ticker function
 #  endif // ifndef
 # else // ifndef P036_LIMIT_BUILD_SIZE
 #  if defined(P036_SEND_EVENTS) && P036_SEND_EVENTS
@@ -144,6 +144,7 @@
 # define P036_FLAG_REDUCE_LINE_NO      2  // Bit 2 Reduce line number to fit individual line font settings
 
 enum class eHeaderContent : uint8_t {
+  eNone     = 0u,
   eSSID     = 1u,
   eSysName  = 2u,
   eIP       = 3u,
@@ -171,10 +172,10 @@ enum class p036_resolution : uint8_t {
 };
 
 enum class ePageScrollSpeed : uint8_t {
-  ePSS_VerySlow = 1u, // 800ms
-  ePSS_Slow     = 2u, // 400ms
-  ePSS_Fast     = 4u, // 200ms
-  ePSS_VeryFast = 8u, // 100ms
+  ePSS_VerySlow = 1u,  // 800ms
+  ePSS_Slow     = 2u,  // 400ms
+  ePSS_Fast     = 4u,  // 200ms
+  ePSS_VeryFast = 8u,  // 100ms
   ePSS_Instant  = 32u, // 20ms
   ePSS_Ticker   = 255u // tickerspeed depends on line length
 };
@@ -192,6 +193,9 @@ typedef struct {
   uint16_t LastWidth   = 0;    // width of last line in pix
   uint16_t Width       = 0;    // width in pix
   uint8_t  SLidx       = 0;    // index to DisplayLinesV1
+  uint8_t  reserved22;         // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t  reserved23;
+  uint8_t  reserved24;
 } tScrollLine;
 
 typedef struct {
@@ -201,6 +205,10 @@ typedef struct {
   uint16_t IdxEnd              = 0; // End index of TickerContent for displaying (right side)
   uint16_t TickerAvgPixPerChar = 0; // max of average pixel per character or pix change per scroll time (100ms)
   int16_t  MaxPixLen           = 0; // Max pix length to display (display width + 2*TickerAvgPixPerChar)
+  # ifdef ESP8266                   // Helpful on ESP8266 only, it seems
+  uint8_t reserved15;               // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved16;
+  # endif // ifdef ESP8266
 } tTicker;
 
 typedef struct {
@@ -208,7 +216,7 @@ typedef struct {
 # if P036_ENABLE_TICKER
   tTicker Ticker;
 # endif // if P036_ENABLE_TICKER
-  uint16_t    wait = 0; // waiting time before scrolling
+  uint16_t wait = 0; // waiting time before scrolling
 } tScrollingLines;
 
 typedef struct {
@@ -312,6 +320,8 @@ typedef struct {
   uint8_t MaxLines;           // max. line count
   uint8_t WiFiIndicatorLeft;  // left of WiFi indicator
   uint8_t WiFiIndicatorWidth; // width of WiFi indicator
+  uint8_t reserved7;          // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved8;
 } tSizeSettings;
 
 typedef struct {
@@ -320,6 +330,11 @@ typedef struct {
   uint8_t ypos            = 0; // ypos for this line
   uint8_t fontIdx         = 0; // font index for this line
   uint8_t FontHeight      = 0; // font height for this line
+  # ifdef ESP8266              // Helpful on ESP8266 only, it seems
+  uint8_t reserved6;           // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved7;
+  uint8_t reserved8;
+  # endif // ifdef ESP8266
 } tLineSettings;
 
 typedef struct {
@@ -352,18 +367,18 @@ struct P036_data_struct : public PluginTaskData_base {
 
   static const tSizeSettings& getDisplaySizeSettings(p036_resolution disp_resolution);
 
-  bool                        init(taskIndex_t     taskIndex,
-                                   uint8_t         LoadVersion,
-                                   uint8_t         Type,
-                                   uint8_t         Address,
-                                   uint8_t         Sda,
-                                   uint8_t         Scl,
-                                   p036_resolution Disp_resolution,
-                                   bool            Rotated,
-                                   uint8_t         Contrast,
-                                   uint16_t        DisplayTimer,
+  bool                        init(taskIndex_t      taskIndex,
+                                   uint8_t          LoadVersion,
+                                   uint8_t          Type,
+                                   uint8_t          Address,
+                                   uint8_t          Sda,
+                                   uint8_t          Scl,
+                                   p036_resolution  Disp_resolution,
+                                   bool             Rotated,
+                                   uint8_t          Contrast,
+                                   uint16_t         DisplayTimer,
                                    ePageScrollSpeed ScrollSpeed,
-                                   uint8_t         NrLines);
+                                   uint8_t          NrLines);
 
   bool isInitialized() const;
 
@@ -475,14 +490,16 @@ struct P036_data_struct : public PluginTaskData_base {
   bool           bReduceLinesPerFrame     = false;
 
   // frames
-  uint8_t MaxFramesToDisplay    = 0;    // total number of frames to display
+  uint8_t MaxFramesToDisplay    = 0;     // total number of frames to display
   uint8_t currentFrameToDisplay = 0;
-  uint8_t nextFrameToDisplay    = 0;    // next frame because content changed in PLUGIN_WRITE
-  uint8_t frameCounter          = 0;    // need to keep track of framecounter from call to call
-  uint8_t disableFrameChangeCnt = 0;    // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
-  bool    bPageScrollDisabled   = true; // first page after INIT or after JumpToPage without scrolling
+  uint8_t nextFrameToDisplay    = 0;     // next frame because content changed in PLUGIN_WRITE
+  uint8_t frameCounter          = 0;     // need to keep track of framecounter from call to call
+  uint8_t disableFrameChangeCnt = 0;     // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
+  bool    bPageScrollDisabled   = true;  // first page after INIT or after JumpToPage without scrolling
   bool    bRunning              = false; // page updates are rumming = (NetworkConnected() || bScrollWithoutWifi)
-  bool    bUseTicker            = false; // scroll line like a ticker
+  # if P036_ENABLE_TICKER
+  bool bUseTicker = false;               // scroll line like a ticker
+  # endif // if P036_ENABLE_TICKER
 
   OLEDDISPLAY_TEXT_ALIGNMENT textAlignment = TEXT_ALIGN_CENTER;
 
