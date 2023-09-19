@@ -7,7 +7,7 @@
 #include "../../ESPEasy_common.h"
 
 #include <memory> // For std::shared_ptr
-#include <new> // for std::nothrow
+#include <new>    // for std::nothrow
 
 #include <IPAddress.h>
 #include <WiFiClient.h>
@@ -96,61 +96,65 @@ struct ControllerSettingsStruct
 
   ControllerSettingsStruct();
 
-  void      reset();
+  void         reset();
 
-  bool      isSet() const;
+  bool         isSet() const;
 
-  void      validate();
+  void         validate();
 
-  ChecksumType computeChecksum() const;
+  ChecksumType computeChecksum() const {
+    return ChecksumType(reinterpret_cast<const uint8_t *>(this), sizeof(ControllerSettingsStruct));
+  }
 
-  IPAddress getIP() const;
+  IPAddress    getIP() const {
+    return IPAddress(IP[0], IP[1], IP[2], IP[3]);
+  }
 
-  String    getHost() const;
+  String       getHost() const;
 
-  void      setHostname(const String& controllerhostname);
+  void         setHostname(const String& controllerhostname);
 
-  bool      checkHostReachable(bool quick);
+  bool         checkHostReachable(bool quick);
 
   #if FEATURE_HTTP_CLIENT
-  bool      connectToHost(WiFiClient& client);
+  bool         connectToHost(WiFiClient& client);
   #endif // FEATURE_HTTP_CLIENT
 
-  bool      beginPacket(WiFiUDP& client);
+  bool         beginPacket(WiFiUDP& client);
 
-  String    getHostPortString() const;
+  String       getHostPortString() const;
 
   // VariousFlags defaults to 0, keep in mind when adding bit lookups.
-  bool      mqtt_cleanSession() const;
-  void      mqtt_cleanSession(bool value);
+  bool         mqtt_cleanSession() const { return VariousBits1.mqtt_cleanSession; }
+  void         mqtt_cleanSession(bool value) { VariousBits1.mqtt_cleanSession = value; }
 
-  bool      mqtt_sendLWT() const;
-  void      mqtt_sendLWT(bool value);
+  bool         mqtt_sendLWT() const { return VariousBits1.mqtt_sendLWT; }
+  void         mqtt_sendLWT(bool value) { VariousBits1.mqtt_sendLWT = value; }
 
-  bool      mqtt_willRetain() const;
-  void      mqtt_willRetain(bool value);
+  bool         mqtt_willRetain() const { return VariousBits1.mqtt_willRetain; }
+  void         mqtt_willRetain(bool value) { VariousBits1.mqtt_willRetain = value; }
 
-  bool      mqtt_uniqueMQTTclientIdReconnect() const;
-  void      mqtt_uniqueMQTTclientIdReconnect(bool value);
+  bool         mqtt_uniqueMQTTclientIdReconnect() const { return VariousBits1.mqtt_uniqueMQTTclientIdReconnect; }
+  void         mqtt_uniqueMQTTclientIdReconnect(bool value) { VariousBits1.mqtt_uniqueMQTTclientIdReconnect = value; }
 
-  bool      mqtt_retainFlag() const;
-  void      mqtt_retainFlag(bool value);
+  bool         mqtt_retainFlag() const { return VariousBits1.mqtt_retainFlag; }
+  void         mqtt_retainFlag(bool value) { VariousBits1.mqtt_retainFlag = value; }
 
-  bool      useExtendedCredentials() const;
-  void      useExtendedCredentials(bool value);
+  bool         useExtendedCredentials() const { return VariousBits1.useExtendedCredentials; }
+  void         useExtendedCredentials(bool value) { VariousBits1.useExtendedCredentials = value; }
 
-  bool      sendBinary() const;
-  void      sendBinary(bool value);
+  bool         sendBinary() const { return VariousBits1.sendBinary; }
+  void         sendBinary(bool value) { VariousBits1.sendBinary = value; }
 
-  bool      allowExpire() const;
-  void      allowExpire(bool value);
+  bool         allowExpire() const { return VariousBits1.allowExpire; }
+  void         allowExpire(bool value) { VariousBits1.allowExpire = value; }
 
-  bool      deduplicate() const;
-  void      deduplicate(bool value);
+  bool         deduplicate() const { return VariousBits1.deduplicate; }
+  void         deduplicate(bool value) { VariousBits1.deduplicate = value; }
 
-  bool      useLocalSystemTime() const;
-  void      useLocalSystemTime(bool value);
-  
+  bool         useLocalSystemTime() const { return VariousBits1.useLocalSystemTime; }
+  void         useLocalSystemTime(bool value) { VariousBits1.useLocalSystemTime = value; }
+
   bool         UseDNS;
   uint8_t      IP[4];
   unsigned int Port;
@@ -167,8 +171,45 @@ struct ControllerSettingsStruct
   unsigned int ClientTimeout;
   bool         MustCheckReply;     // When set to false, a sent message is considered always successful.
   taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
-  uint32_t     VariousFlags;       // Various flags
-  char         ClientID[65];       // Used to define the Client ID used by the controller
+
+  union {
+    struct {
+      uint32_t unused_00                        : 1; // Bit 00
+      uint32_t mqtt_cleanSession                : 1; // Bit 01
+      uint32_t mqtt_sendLWT                     : 1; // Bit 02
+      uint32_t mqtt_willRetain                  : 1; // Bit 03
+      uint32_t mqtt_uniqueMQTTclientIdReconnect : 1; // Bit 04
+      uint32_t mqtt_retainFlag                  : 1; // Bit 05
+      uint32_t useExtendedCredentials           : 1; // Bit 06
+      uint32_t sendBinary                       : 1; // Bit 07
+      uint32_t unused_08                        : 1; // Bit 08
+      uint32_t allowExpire                      : 1; // Bit 09
+      uint32_t deduplicate                      : 1; // Bit 10
+      uint32_t useLocalSystemTime               : 1; // Bit 11
+      uint32_t unused_12                        : 1; // Bit 12
+      uint32_t unused_13                        : 1; // Bit 13
+      uint32_t unused_14                        : 1; // Bit 14
+      uint32_t unused_15                        : 1; // Bit 15
+      uint32_t unused_16                        : 1; // Bit 16
+      uint32_t unused_17                        : 1; // Bit 17
+      uint32_t unused_18                        : 1; // Bit 18
+      uint32_t unused_19                        : 1; // Bit 19
+      uint32_t unused_20                        : 1; // Bit 20
+      uint32_t unused_21                        : 1; // Bit 21
+      uint32_t unused_22                        : 1; // Bit 22
+      uint32_t unused_23                        : 1; // Bit 23
+      uint32_t unused_24                        : 1; // Bit 24
+      uint32_t unused_25                        : 1; // Bit 25
+      uint32_t unused_26                        : 1; // Bit 26
+      uint32_t unused_27                        : 1; // Bit 27
+      uint32_t unused_28                        : 1; // Bit 28
+      uint32_t unused_29                        : 1; // Bit 29
+      uint32_t unused_30                        : 1; // Bit 30
+      uint32_t unused_31                        : 1; // Bit 31
+    }        VariousBits1;
+    uint32_t VariousFlags;                           // Various flags
+  };
+  char ClientID[65];                                 // Used to define the Client ID used by the controller
 
 private:
 
