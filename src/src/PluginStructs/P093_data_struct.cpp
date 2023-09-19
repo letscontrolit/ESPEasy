@@ -56,6 +56,8 @@ bool P093_data_struct::read(String& result) const {
   // FIXME TD-er: See if this macro can be simpler as it does expand to quite some code which is not changing.
     # define map_list(x, list) findByValue(x, list, sizeof(list) / sizeof(Tuple))
 
+  result  = F("{\"remoteTemperature\":");
+  result += toString(_currentValues.remoteTemperature, 1);
   result  = F("{\"roomTemperature\":");
   result += toString(_currentValues.roomTemperature, 1);
   result += F(",\"wideVane\":\"");
@@ -91,6 +93,9 @@ bool P093_data_struct::plugin_get_config_value(struct EventStruct *event,
   bool success         = true;
   const String command = parseString(string, 1);
 
+  if (equals(command, F("remotetemperature"))) {
+    string = toString(_currentValues.remoteTemperature, 1);
+  } else
   if (equals(command, F("roomtemperature"))) {
     string = toString(_currentValues.roomTemperature, 1);
   } else
@@ -149,6 +154,8 @@ void P093_data_struct::write(const String& command, const String& value) {
     _writeStatus.set(Vane);
   } else if ((equals(command, F("widevane"))) && lookup(value, _mappings.wideVane, _wantedSettings.wideVane)) {
     _writeStatus.set(WideVane);
+  } else if ((equals(command, F("remotetemperature"))) && lookup(value, _mappings.remoteTemperature, _wantedSettings.remoteTemperature)) {
+    _writeStatus.set(remoteTemperature);
   }
 
     # undef lookup
@@ -294,6 +301,10 @@ void P093_data_struct::applySettingsLocally() {
   if (_writeStatus.isDirty(WideVane)) {
     _currentValues.wideVane = _wantedSettings.wideVane;
   }
+
+  if (_writeStatus.isDirty(RemoteTemperature)) {
+    _currentValues.remoteTemperature = _wantedSettings.RremoteTemperature;
+  }
 }
 
 void P093_data_struct::cancelWaitingAndTransitTo(P093_data_struct::State state) {
@@ -357,6 +368,24 @@ void P093_data_struct::applySettings() {
   if (_writeStatus.isDirty(WideVane)) {
     packet[18] = _wantedSettings.wideVane | (_wideVaneAdj ? 0x80 : 0x00);
     packet[7] |= 0x01;
+  }
+
+  if (_writeStatus.isDirty(RemoteTemperature)) {
+    packet[5] = 0x07;
+    if(setting > 0) {
+      packet[6] = 0x01;
+      setting = setting * 2;
+      setting = round(setting);
+      setting = setting / 2;
+      float temp1 = 3 + ((setting - 10) * 2);
+      packet[7] = (int)temp1;
+      float temp2 = (setting * 2) + 128;
+      packet[8] = (int)temp2;
+    }
+    else {
+      packet[6] = 0x00;
+      packet[8] = 0x80; //MHK1 send 80, even though it could be 00, since ControlByte is 00
+    } 
   }
 
   packet[21] = checkSum(packet, 21);

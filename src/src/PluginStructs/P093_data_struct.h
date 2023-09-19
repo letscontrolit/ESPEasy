@@ -158,6 +158,7 @@ private:
     uint8_t vane;
     uint8_t wideVane;
     float   roomTemperature;
+    float   remoteTemperature;
     bool    operating;
     uint8_t compressorFrequency;
 
@@ -170,6 +171,7 @@ private:
       vane(0),
       wideVane(0),
       roomTemperature(0),
+      remoteTemperature(0),
       operating(false),
       compressorFrequency(0) {}
 
@@ -182,6 +184,7 @@ private:
              wideVane != rhs.wideVane ||
              iSee != rhs.iSee ||
              roomTemperature != rhs.roomTemperature ||
+             remoteTemperature != rhs.remoteTemperature ||
              operating != rhs.operating ||
              compressorFrequency != rhs.compressorFrequency;
     }
