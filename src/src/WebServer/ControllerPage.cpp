@@ -56,7 +56,7 @@ void handle_controllers() {
       } else {
         // Need to make sure every byte between the members is also zero
         // Otherwise the checksum will fail and settings will be saved too often.
-        ControllerSettings.reset();
+        ControllerSettings->reset();
 
         if (Settings.Protocol[controllerindex] != protocol)
         {
