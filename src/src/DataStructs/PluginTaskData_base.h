@@ -55,7 +55,7 @@ struct PluginTaskData_base {
     return false;
   }
 
-  uint8_t nrSamplesPresent() const {
+  size_t nrSamplesPresent() const {
 #if FEATURE_PLUGIN_STATS
 
     if (_plugin_stats_array != nullptr) {

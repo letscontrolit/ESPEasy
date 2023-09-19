@@ -438,7 +438,7 @@ bool PluginStats_array::hasPeaks() const
   return false;
 }
 
-uint8_t PluginStats_array::nrSamplesPresent() const
+size_t PluginStats_array::nrSamplesPresent() const
 {
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_plugin_stats[i] != nullptr) {
@@ -474,7 +474,7 @@ bool PluginStats_array::plugin_get_config_value_base(struct EventStruct *event,
   const String fullValueName = parseString(string, 1);
   const String valueName     = parseString(fullValueName, 1, '.');
 
-  for (uint8_t i = 0; i < VARS_PER_TASK; i++)
+  for (taskVarIndex_t i = 0; i < VARS_PER_TASK; i++)
   {
     if (_plugin_stats[i] != nullptr) {
       // Check case insensitive, since the user entered value name can have any case.
@@ -530,7 +530,7 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
 # if FEATURE_CHART_JS
 void PluginStats_array::plot_ChartJS() const
 {
-  const uint8_t nrSamples = nrSamplesPresent();
+  const size_t nrSamples = nrSamplesPresent();
 
   if (nrSamples == 0) { return; }
 
