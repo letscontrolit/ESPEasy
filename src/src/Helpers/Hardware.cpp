@@ -1538,14 +1538,13 @@ void setFactoryDefault(DeviceModel model) {
  \*********************************************************************************************/
 void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow) {
   setTaskDevice_to_TaskIndex(PLUGIN_GPIO, taskIndex);
+  const int pins[] = {gpio, -1, -1};
   setBasicTaskValues(
     taskIndex,
     0,    // taskdevicetimer
     true, // enabled
     name, // name
-    gpio, // pin1
-    -1,   // pin2
-    -1);  // pin3
+    pins);
   Settings.TaskDevicePin1PullUp[taskIndex] = true;
 
   if (activeLow) {
@@ -2448,7 +2447,7 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
 // Initialize task with some default values applicable for almost all tasks
 // ********************************************************************************
 void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
-                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
+                        bool enabled, const String& name, const int pins[3]) {
   if (!validTaskIndex(taskIndex)) { return; }
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
@@ -2471,7 +2470,7 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
   safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 
   // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")
-  Settings.TaskDevicePin1[taskIndex] = pin1;
-  Settings.TaskDevicePin2[taskIndex] = pin2;
-  Settings.TaskDevicePin3[taskIndex] = pin3;
+  Settings.TaskDevicePin1[taskIndex] = pins[0];
+  Settings.TaskDevicePin2[taskIndex] = pins[1];
+  Settings.TaskDevicePin3[taskIndex] = pins[2];
 }
