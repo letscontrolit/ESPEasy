@@ -303,7 +303,7 @@ void P093_data_struct::applySettingsLocally() {
   }
 
   if (_writeStatus.isDirty(RemoteTemperature)) {
-    _currentValues.remoteTemperature = _wantedSettings.RremoteTemperature;
+    _currentValues.remoteTemperature = _wantedSettings.remoteTemperature;
   }
 }
 
@@ -371,16 +371,13 @@ void P093_data_struct::applySettings() {
   }
 
   if (_writeStatus.isDirty(RemoteTemperature)) {
-    packet[5] = 0x07;
-    if(setting > 0) {
-      packet[6] = 0x01;
-      setting = setting * 2;
-      setting = round(setting);
-      setting = setting / 2;
-      float temp1 = 3 + ((setting - 10) * 2);
-      packet[7] = (int)temp1;
-      float temp2 = (setting * 2) + 128;
-      packet[8] = (int)temp2;
+    packet[5] |= 0x07;
+    if(_wantedSettings.remoteTemperature > 0) {
+      if (_tempMode) {
+        packet[8] = static_cast<uint8_t>(_wantedSettings.remoteTemperature * 2.0f + 128.0f);
+      } else {
+        packet[7] = _wantedSettings.remoteTemperature;
+      }
     }
     else {
       packet[6] = 0x00;
