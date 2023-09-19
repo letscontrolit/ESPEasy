@@ -10,6 +10,7 @@
 
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/I2C_access.h"
 #include "../Helpers/StringConverter.h"
 
 
@@ -40,8 +41,9 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
     #endif // if FEATURE_I2CMULTIPLEXER
-      Wire.beginTransmission(address);
-      error = Wire.endTransmission();
+      I2C_wakeup(address); // Wakeup, workaround for slow-responding devices, see https://github.com/letscontrolit/ESPEasy/issues/3781
+      delay(1);
+      error = I2C_wakeup(address); // Get status
       delay(1);
 
       if ((error == 0) || (error == 4))
@@ -370,8 +372,9 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
     #endif // if FEATURE_I2CMULTIPLEXER
-      Wire.beginTransmission(address);
-      error = Wire.endTransmission();
+      I2C_wakeup(address); // Wakeup, workaround for slow-responding devices, see https://github.com/letscontrolit/ESPEasy/issues/3781
+      delay(1);
+      error = I2C_wakeup(address); // Get status
       delay(1);
 
       switch (error) {
