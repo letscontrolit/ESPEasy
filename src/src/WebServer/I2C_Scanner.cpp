@@ -173,6 +173,7 @@ String getKnownI2Cdevice(uint8_t address) {
         result += ',';
       }
     }
+    ++x;
   }
   #endif // if FEATURE_I2C_DEVICE_SCAN
   #ifndef LIMIT_BUILD_SIZE
