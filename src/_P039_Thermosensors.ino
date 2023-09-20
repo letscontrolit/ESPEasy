@@ -634,7 +634,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           break;
       }
 
-      if (Plugin_039_Celsius != NAN)
+      if (!isValidFloat(Plugin_039_Celsius))
       {
         UserVar[event->BaseVarIndex] = Plugin_039_Celsius;
 
