@@ -1271,10 +1271,9 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
 
       if (somethingAdded) {
         if (taskData->hasPeaks()) {
-          String note = F("Peak values recorded since last \"");
-          note += getTaskDeviceName(taskIndex);
-          note += F(".resetpeaks\".");
-          addFormNote(note);
+          addFormNote(strformat(
+            F("Peak values recorded since last \"%s.resetpeaks\"."),
+            getTaskDeviceName(taskIndex).c_str()));
         }
       }
     }
@@ -1303,7 +1302,9 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
 
     addRowLabel(F("Single event with all values"));
     addCheckBox(F("TVSE"), Settings.CombineTaskValues_SingleEvent(taskIndex));
-    addFormNote(F("Unchecked: Send event per value. Checked: Send single event (taskname#All) containing all values "));
+    addFormNote(strformat(
+      F("Unchecked: Send event per value. Checked: Send single event (%s#All) containing all values"),
+      getTaskDeviceName(taskIndex).c_str()));
 
     bool separatorAdded = false;
     for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)

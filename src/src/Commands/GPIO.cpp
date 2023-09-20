@@ -566,9 +566,9 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
 
       if ((mode == PIN_MODE_OUTPUT) || (pluginID == PLUGIN_PCF)) { GPIO_Write(pluginID, event->Par1, state, mode); }
 
-
-      String log = logPrefix;
-      log += strformat(F(": port#%d: set to %d"), event->Par1, state);
+      const String log = concat(
+        logPrefix,
+        strformat(F(": port#%d: set to %d"), event->Par1, state));
       addLog(LOG_LEVEL_INFO, log);
       SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       return return_command_success_flashstr();
@@ -864,6 +864,7 @@ const __FlashStringHelper * Command_GPIO_PcfGPIORange(struct EventStruct *event,
 #endif
 
 #ifdef USES_P009
+// FIXME TD-er: Function is nearly identical to pcfgpio_range_pattern_helper
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, bool isWritePattern)
 {
   range_pattern_helper_data data = range_pattern_helper_shared(PLUGIN_MCP, event, Line, isWritePattern);
@@ -931,6 +932,7 @@ uint8_t getPcfAddress(uint8_t pin)
   return retValue;
 }
 
+// FIXME TD-er: Function is nearly identical to mcpgpio_range_pattern_helper
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, bool isWritePattern)
 {
   range_pattern_helper_data data = range_pattern_helper_shared(PLUGIN_PCF, event, Line, isWritePattern);
@@ -940,8 +942,6 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   }
 
   bool   onLine = false;
-  String log;
-
   for (uint8_t i = 0; i < data.numBytes; i++) {
     uint8_t readValue;
     uint8_t    currentAddress = getPcfAddress(event->Par1 + 8 * i);
@@ -966,7 +966,9 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        log = concat(data.logPrefix, F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        const String log = concat(
+          data.logPrefix,
+          strformat(F(": port#%d: set to %d"), currentPin, state));
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       } else {
