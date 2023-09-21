@@ -414,7 +414,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
               if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
               {
-                constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(pluginID_t(86));
+                constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(86);
                 if (pluginID == HOMIE_RECEIVER_PLUGIN_ID)
                 {
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
@@ -527,7 +527,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                                  F("float"),
                                                  errorCounter);
 
-                        constexpr pluginID_t DUMMY_PLUGIN_ID(pluginID_t(33));
+                        constexpr pluginID_t DUMMY_PLUGIN_ID(33);
                         if (pluginID == DUMMY_PLUGIN_ID) { // Dummy Device can send AND receive Data
                           CPlugin_014_sendMQTTnode(nodename,
                                                    deviceName,
@@ -766,8 +766,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
             if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex)) {
               const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
-              constexpr pluginID_t DUMMY_PLUGIN_ID(pluginID_t(33));
-              constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(pluginID_t(86));
+              constexpr pluginID_t DUMMY_PLUGIN_ID(33);
+              constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(86);
 
               if (pluginID == DUMMY_PLUGIN_ID)
               {                                     // TaskValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with

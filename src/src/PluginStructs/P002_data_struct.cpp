@@ -114,6 +114,8 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   addRowLabel(F("Analog Pin"));
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 
+  addFormNote(F("Do not use ADC2 pins with WiFi active"));
+
   {
     const __FlashStringHelper *outputOptions[] = {
       F("11 dB"),
