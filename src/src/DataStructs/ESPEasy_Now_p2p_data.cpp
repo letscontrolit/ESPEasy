@@ -19,7 +19,9 @@ bool ESPEasy_Now_p2p_data::validate() const {
 
   if (!validTaskIndex(sourceTaskIndex)) { return false; }
 
-  if (!validPluginID(plugin_id)) { return false; }
+  // TODO TD-er: Change when pluginID_t is 16 bit.
+
+  if (!validPluginID(pluginID_t::toPluginID(plugin_id))) { return false; }
 
   // TODO TD-er: Must add more sanity checks here.
   return true;

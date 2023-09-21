@@ -18,7 +18,7 @@ uint32_t create_compare_key(taskIndex_t taskIndex, const String& compare_key)
     return SendData_DuplicateChecker_struct::DUPLICATE_CHECKER_INVALID_KEY;
   }
   uint32_t key = calc_CRC32(reinterpret_cast<const uint8_t *>(compare_key.c_str()), compare_key.length());
-  key += id;
+  key += id.value;
 
   // consider the 0 as invalid key, so never return 0 on a valid key
   if (key == SendData_DuplicateChecker_struct::DUPLICATE_CHECKER_INVALID_KEY) {

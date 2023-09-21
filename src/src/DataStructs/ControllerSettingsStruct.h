@@ -151,8 +151,8 @@ struct ControllerSettingsStruct
   bool         sendBinary() const { return VariousBits1.sendBinary; }
   void         sendBinary(bool value) { VariousBits1.sendBinary = value; }
 
-  bool      enableESPEasyNowFallback() const;
-  void      enableESPEasyNowFallback(bool value);
+  bool         enableESPEasyNowFallback() const { return VariousBits1.enableESPEasyNowFallback; }
+  void         enableESPEasyNowFallback(bool value) { VariousBits1.enableESPEasyNowFallback = value; }
 
   bool         allowExpire() const { return VariousBits1.allowExpire; }
   void         allowExpire(bool value) { VariousBits1.allowExpire = value; }
@@ -190,7 +190,7 @@ struct ControllerSettingsStruct
       uint32_t mqtt_retainFlag                  : 1; // Bit 05
       uint32_t useExtendedCredentials           : 1; // Bit 06
       uint32_t sendBinary                       : 1; // Bit 07
-      uint32_t unused_08                        : 1; // Bit 08
+      uint32_t enableESPEasyNowFallback         : 1; // Bit 08
       uint32_t allowExpire                      : 1; // Bit 09
       uint32_t deduplicate                      : 1; // Bit 10
       uint32_t useLocalSystemTime               : 1; // Bit 11

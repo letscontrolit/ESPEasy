@@ -386,7 +386,7 @@ void processMQTTdelayQueue() {
   }
 
 
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 1); // Make sure the MQTT is being processed as soon as possible.
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT, 1); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }
@@ -401,6 +401,7 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
 #endif
                         ) 
 {
+  START_TIMER;
   bool processed = false;
 
   #ifdef USES_ESPEASY_NOW
@@ -496,7 +497,7 @@ void runPeriodicalMQTT() {
 void logTimerStatistics() {
   static bool firstRun = true;
   if (firstRun) {
-    Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_STATISTICS, 1000);
+    Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_STATISTICS, 1000);
     firstRun = false;
   }
 

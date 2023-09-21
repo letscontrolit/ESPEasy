@@ -27,22 +27,22 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number       = CPLUGIN_ID_019;
-      Protocol[protocolCount].usesMQTT       = false;
-      Protocol[protocolCount].usesTemplate   = false;
-      Protocol[protocolCount].usesAccount    = false;
-      Protocol[protocolCount].usesPassword   = false;
-      Protocol[protocolCount].usesExtCreds   = false;
-      Protocol[protocolCount].defaultPort    = 0;
-      Protocol[protocolCount].usesID         = false;
-      Protocol[protocolCount].Custom         = false;
-      Protocol[protocolCount].usesHost       = false;
-      Protocol[protocolCount].usesPort       = false;
-      Protocol[protocolCount].usesQueue      = false;
-      Protocol[protocolCount].usesCheckReply = false;
-      Protocol[protocolCount].usesTimeout    = false;
-      Protocol[protocolCount].usesSampleSets = false;
-      Protocol[protocolCount].needsNetwork   = false;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //        = CPLUGIN_ID_019;
+      proto.usesMQTT       = false;
+      proto.usesTemplate   = false;
+      proto.usesAccount    = false;
+      proto.usesPassword   = false;
+      proto.usesExtCreds   = false;
+      proto.defaultPort    = 0;
+      proto.usesID         = false;
+      proto.Custom         = false;
+      proto.usesHost       = false;
+      proto.usesPort       = false;
+      proto.usesQueue      = false;
+      proto.usesCheckReply = false;
+      proto.usesTimeout    = false;
+      proto.usesSampleSets = false;
+      proto.needsNetwork   = false;
       break;
     }
 
@@ -101,7 +101,7 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
 
       success = C019_DelayHandler->addToQueue(std::move(element));
 
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C019_DELAY_QUEUE, C019_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C019_DELAY_QUEUE, C019_DelayHandler->getNextScheduleTime());
       break;
     }
 
@@ -148,7 +148,7 @@ bool do_process_c019_delay_queue(int controller_number, const Queue_element_base
 
   data.dataType        = ESPEasy_Now_p2p_data_type::PluginData;
   data.sourceTaskIndex = taskIndex;
-  data.plugin_id       = getPluginID_from_TaskIndex(taskIndex);
+  data.plugin_id       = getPluginID_from_TaskIndex(taskIndex).value;
   data.sourceUnit      = Settings.Unit;
   data.idx             = Settings.TaskDeviceID[element._controller_idx][taskIndex];
   data.sensorType      = element.event.sensorType;
