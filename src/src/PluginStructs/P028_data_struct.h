@@ -137,7 +137,9 @@ private:
 
 public:
 
-  static const __FlashStringHelper* getDeviceName(BMx_ChipId sensorID);
+  const __FlashStringHelper       * getDeviceName() const;
+
+  static const __FlashStringHelper* getDeviceName(BMx_ChipId id);
 
   bool                              hasHumidity() const;
 
