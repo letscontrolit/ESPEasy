@@ -92,7 +92,7 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
     case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES");
     case PLUGIN_EXIT:                  return F("EXIT");
     case PLUGIN_GET_CONFIG_VALUE:      return F("GET_CONFIG");
-    case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
+//    case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
     case PLUGIN_PROCESS_CONTROLLER_DATA: return F("PROCESS_CONTROLLER_DATA");
     case PLUGIN_I2C_GET_ADDRESS:       return F("I2C_CHECK_DEVICE");
@@ -323,7 +323,7 @@ String getMiscStatsName(TimingStatsElements stat) {
 
 void stopTimerTask(deviceIndex_t T, int F, uint64_t statisticsTimerStart)
 {
-  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
+  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T.value) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
 }
 
 void stopTimerController(protocolIndex_t T, CPlugin::Function F, uint64_t statisticsTimerStart)

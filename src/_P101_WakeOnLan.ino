@@ -281,7 +281,6 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE: {
       char   ipString[IP_BUFF_SIZE_P101]   = {0};
       char   macString[MAC_BUFF_SIZE_P101] = {0};
-      bool   taskEnable                    = false;
       uint8_t parse_error                  = false;
       String msgStr;
       String strings[2];
@@ -298,10 +297,9 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       if (validTaskIndex(event->TaskIndex) &&
           (cmd.equalsIgnoreCase(F(CMD_NAME_P101)) ||
            cmd.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)))) {
-        taskEnable = Settings.TaskDeviceEnabled[event->TaskIndex];
 
         // Do not process WOL command if plugin disabled. This code is for errant situations which may never occur.
-        if (!taskEnable) {
+        if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
           // String ErrorStr = F("Plugin is Disabled, Command Ignored. ");
           // addLog(LOG_LEVEL_INFO, wolStr + ErrorStr);
           // SendStatus(event, ErrorStr); // Reply (echo) to sender. This will print message on browser.

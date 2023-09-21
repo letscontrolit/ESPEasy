@@ -136,7 +136,10 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
         {
           pinMode(pinSCL, OUTPUT);
           digitalWrite(pinSCL, LOW);
-          uint32_t key = createKey(PLUGIN_ID_063,pinSCL);
+
+          constexpr pluginID_t P063_PLUGIN_ID{PLUGIN_ID_063};
+
+          uint32_t key = createKey(P063_PLUGIN_ID, pinSCL);
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus = globalMapPortStatus[key];
           newStatus.task++; // add this GPIO/port as a task
@@ -147,7 +150,7 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
 
           pinMode(pinSDO, OUTPUT);
           digitalWrite(pinSDO, LOW);
-          key = createKey(PLUGIN_ID_063,pinSDO);
+          key = createKey(P063_PLUGIN_ID, pinSDO);
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus = globalMapPortStatus[key];
           newStatus.task++; // add this GPIO/port as a task

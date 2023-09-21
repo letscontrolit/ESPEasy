@@ -15,6 +15,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #endif
 
+#include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
@@ -484,7 +485,7 @@ String getValue(LabelType::Enum label) {
       return get_git_head();
     }
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
-    case LabelType::PLUGIN_COUNT:           retval = deviceCount + 1; break;
+    case LabelType::PLUGIN_COUNT:           retval = getDeviceCount() + 1; break;
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
     case LabelType::BUILD_TIME:             return String(get_build_date()) + ' ' + get_build_time();
     case LabelType::BINARY_FILENAME:        return get_binary_filename();

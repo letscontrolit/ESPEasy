@@ -255,9 +255,6 @@ void timeToStrip(uint8_t hours, uint8_t minutes)
 
   //show hours
   switch (hours) {
-    case 0:
-      pushTWELVE();
-      break;
     case 1:
       pushONE();
       break;
@@ -291,6 +288,7 @@ void timeToStrip(uint8_t hours, uint8_t minutes)
     case 11:
       pushELEVEN();
       break;
+    case 0:
     case 12:
       pushTWELVE();
       break;
@@ -300,6 +298,13 @@ void timeToStrip(uint8_t hours, uint8_t minutes)
     pushHOURE();
   }
 }
+
+void pushToStrip(const int* ids, size_t count) {
+  for (size_t i = 0; i < count; ++i) {
+    pushToStrip(ids[i]);
+  }
+}
+
 
 void pushM_ONE() {
   pushToStrip(0);
@@ -314,134 +319,110 @@ void pushM_FOUR() {
   pushToStrip(113);
 }
 void pushIT_IS()  {
-  pushToStrip(1);
-  pushToStrip(2);
-  pushToStrip(3);
-  pushToStrip(5);
-  pushToStrip(6);
+  constexpr int ids[] = {1, 2, 3, 5, 6};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushAFTER() {
-  pushToStrip(36);
-  pushToStrip(37);
-  pushToStrip(38);
-  pushToStrip(39);
+  constexpr int ids[] = {36, 37, 38, 39};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushQUATER() {
-  pushToStrip(30);
-  pushToStrip(31);
-  pushToStrip(32);
-  pushToStrip(33);
-  pushToStrip(34);
+  constexpr int ids[] = {30, 31, 32, 33, 34};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushFOR() {
-  pushToStrip(41);
-  pushToStrip(42);
-  pushToStrip(43);
-  pushToStrip(44);
+  constexpr int ids[] = {41, 42, 43, 44};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushHALF() {
-  pushToStrip(50);
-  pushToStrip(51);
-  pushToStrip(52);
-  pushToStrip(53);
+  constexpr int ids[] = {50, 51, 52, 53};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushONE()  {
-  pushToStrip(63);
-  pushToStrip(64);
-  pushToStrip(65);
+  constexpr int ids[] = {63, 64, 65};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushTWO() {
-  pushToStrip(64);
-  pushToStrip(65);
-  pushToStrip(66);
-  pushToStrip(67);
+  constexpr int ids[] = {64, 65, 66, 67};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushTHREE() {
-  pushToStrip(109);
-  pushToStrip(110);
-  pushToStrip(111);
-  pushToStrip(112);
+  constexpr int ids[] = {109, 110, 111, 112};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushFOUR() {
-  pushToStrip(57);
-  pushToStrip(58);
-  pushToStrip(59);
-  pushToStrip(60);
+  constexpr int ids[] = {57, 58, 59, 60};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushFIVE1() {
-  pushToStrip(8);
-  pushToStrip(9);
-  pushToStrip(10);
-  pushToStrip(11);
+  constexpr int ids[] = {8, 9, 10, 11};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushFIVE2() {
-  pushToStrip(92);
-  pushToStrip(93);
-  pushToStrip(94);
-  pushToStrip(95);
+  constexpr int ids[] = {92, 93, 94, 95};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushSIX() {
-  pushToStrip(69);
-  pushToStrip(88);
-  pushToStrip(91);
+  constexpr int ids[] = {69, 88, 91};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushSEVEN() {
-  pushToStrip(69);
-  pushToStrip(70);
-  pushToStrip(71);
-  pushToStrip(72);
-  pushToStrip(73);
+  constexpr int ids[] = {69, 70, 71, 72, 73};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushEIGHT() {
-  pushToStrip(97);
-  pushToStrip(98);
-  pushToStrip(99);
-  pushToStrip(100);
+  constexpr int ids[] = {97, 98, 99, 100};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushNINE() {
-  pushToStrip(73);
-  pushToStrip(74);
-  pushToStrip(75);
-  pushToStrip(76);
-  pushToStrip(77);
+  constexpr int ids[] = {73, 74, 75, 76, 77};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushTEN() {
-  pushToStrip(54);
-  pushToStrip(59);
-  pushToStrip(76);
-  pushToStrip(81);
+  constexpr int ids[] = {54, 59, 76, 81};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushTEN1() {
-  pushToStrip(25);
-  pushToStrip(26);
-  pushToStrip(27);
-  pushToStrip(28);
+  constexpr int ids[] = {25, 26, 27, 28};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushELEVEN() {
-  pushToStrip(107);
-  pushToStrip(108);
-  pushToStrip(109);
+  constexpr int ids[] = {107, 108, 109};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushTWELVE() {
-  pushToStrip(82);
-  pushToStrip(83);
-  pushToStrip(84);
-  pushToStrip(85);
-  pushToStrip(86);
-  pushToStrip(87);
+  constexpr int ids[] = {82, 83, 84, 85, 86, 87};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
 void pushTWENTY() {
-  pushToStrip(16);
-  pushToStrip(17);
-  pushToStrip(18);
-  pushToStrip(19);
-  pushToStrip(20);
-  pushToStrip(21);
-  pushToStrip(22);
+  constexpr int ids[] = {16, 17, 18, 19, 20, 21, 22};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
+
 void pushHOURE() {
-  pushToStrip(102);
-  pushToStrip(103);
-  pushToStrip(104);
+  constexpr int ids[] = {102,103,104};
+  constexpr size_t count = NR_ELEMENTS(ids);
+  pushToStrip(ids, count);
 }
+
 #endif // USES_P041

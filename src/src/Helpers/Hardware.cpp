@@ -103,7 +103,7 @@ void hardwareInit()
     const bool serialPinConflict = isSerialConsolePin(gpio);
 
     if (!serialPinConflict) {
-      const uint32_t key = createKey(1, gpio);
+      const uint32_t key = createKey(PLUGIN_GPIO, gpio);
       #ifdef ESP32
       checkAndClearPWM(key);
       #endif // ifdef ESP32
@@ -137,13 +137,13 @@ void hardwareInit()
             break;
           case PinBootState::Output_low:
             createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, 0);
-            GPIO_Write(GPIO_PLUGIN_ID, gpio, LOW, PIN_MODE_OUTPUT);
+            GPIO_Write(PLUGIN_GPIO, gpio, LOW, PIN_MODE_OUTPUT);
 
             // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
             break;
           case PinBootState::Output_high:
             createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, 0);
-            GPIO_Write(GPIO_PLUGIN_ID, gpio, HIGH, PIN_MODE_OUTPUT);
+            GPIO_Write(PLUGIN_GPIO, gpio, HIGH, PIN_MODE_OUTPUT);
 
             // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
             break;
@@ -501,7 +501,7 @@ void checkResetFactoryPin() {
 
     if (factoryResetCounter > 3) {
       // normal reboot
-      reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryPinActive);
+      reboot(IntendedRebootReason_e::ResetFactoryPinActive);
     }
     factoryResetCounter = 0; // count was < 3, reset counter
   }
@@ -1541,15 +1541,14 @@ void setFactoryDefault(DeviceModel model) {
    Add pre defined plugins and rules.
  \*********************************************************************************************/
 void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow) {
-  setTaskDevice_to_TaskIndex(1, taskIndex);
+  setTaskDevice_to_TaskIndex(PLUGIN_GPIO, taskIndex);
+  const int pins[] = {gpio, -1, -1};
   setBasicTaskValues(
     taskIndex,
     0,    // taskdevicetimer
     true, // enabled
     name, // name
-    gpio, // pin1
-    -1,   // pin2
-    -1);  // pin3
+    pins);
   Settings.TaskDevicePin1PullUp[taskIndex] = true;
 
   if (activeLow) {
@@ -2210,7 +2209,9 @@ void initAnalogWrite()
 {
   #if defined(ESP32)
 
-  for (uint8_t x = 0; x < 16; x++) {
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     ledChannelPin[x]  = -1;
     ledChannelFreq[x] = ledcSetup(x, 1000, 10); // Clear the channel
   }
@@ -2231,8 +2232,10 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
 {
   static bool initialized = false;
 
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
   if (!initialized) {
-    for (uint8_t x = 0; x < 16; x++) {
+    for (uint8_t x = 0; x < nrLedChannelPins; x++) {
       ledChannelPin[x]  = -1;
       ledChannelFreq[x] = 0;
     }
@@ -2244,7 +2247,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
   int8_t ledChannel = -1;
   bool mustSetup    = false;
 
-  for (uint8_t x = 0; x < 16; x++) {
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     if (ledChannelPin[x] == pin) {
       ledChannel = x;
     }
@@ -2252,7 +2255,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
 
   if (ledChannel == -1)                                    // no channel set for this pin
   {
-    for (uint8_t x = 0; x < 16 && ledChannel == -1; ++x) { // find free channel
+    for (uint8_t x = 0; x < nrLedChannelPins && ledChannel == -1; ++x) { // find free channel
       if (ledChannelPin[x] == -1)
       {
         if (static_cast<uint32_t>(ledcReadFreq(x)) == ledChannelFreq[x]) {
@@ -2296,7 +2299,9 @@ void detachLedChannel(int pin)
 {
   int8_t ledChannel = -1;
 
-  for (uint8_t x = 0; x < 16; x++) {
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     if (ledChannelPin[x] == pin) {
       ledChannel = x;
     }
@@ -2344,15 +2349,13 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t frequency) {
 bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key)
 {
   // For now, we only support the internal GPIO pins.
-  uint8_t   pluginID = PLUGIN_GPIO;
-
-  if (!checkValidPortRange(pluginID, gpio)) {
+  if (!checkValidPortRange(PLUGIN_GPIO, gpio)) {
     return false;
   }
   portStatusStruct tempStatus;
 
   // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
-  key = createKey(pluginID, gpio);
+  key = createKey(PLUGIN_GPIO, gpio);
 
   // WARNING: operator [] creates an entry in the map if key does not exist
   // So the next command should be part of each command:
@@ -2426,7 +2429,8 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   taskClear(taskIndex, false); // clear settings, but do not save
   ClearCustomTaskSettings(taskIndex);
 
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
+//  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
 
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {
@@ -2447,7 +2451,7 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
 // Initialize task with some default values applicable for almost all tasks
 // ********************************************************************************
 void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
-                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
+                        bool enabled, const String& name, const int pins[3]) {
   if (!validTaskIndex(taskIndex)) { return; }
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
@@ -2466,10 +2470,11 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
     }
   }
   Settings.TaskDeviceEnabled[taskIndex] = enabled;
+  //Settings.TaskDeviceEnabled[taskIndex].enabled = enabled;
   safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 
   // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")
-  Settings.TaskDevicePin1[taskIndex] = pin1;
-  Settings.TaskDevicePin2[taskIndex] = pin2;
-  Settings.TaskDevicePin3[taskIndex] = pin3;
+  Settings.TaskDevicePin1[taskIndex] = pins[0];
+  Settings.TaskDevicePin2[taskIndex] = pins[1];
+  Settings.TaskDevicePin3[taskIndex] = pins[2];
 }

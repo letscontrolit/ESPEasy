@@ -104,7 +104,7 @@
   #define PLUGIN_MAX                         255
 #endif
 #ifndef CPLUGIN_MAX
-  #define CPLUGIN_MAX                        25
+  #define CPLUGIN_MAX                        255
 #endif
 #ifndef NPLUGIN_MAX
   #define NPLUGIN_MAX                         4

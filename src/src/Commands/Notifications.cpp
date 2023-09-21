@@ -19,8 +19,9 @@ const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *eve
 
 	if (event->Par1 > 0) {
 		int index = event->Par1 - 1;
-		if (Settings.NotificationEnabled[index] && Settings.Notification[index] != 0) {
-			nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex(Settings.Notification[index]);
+		if (Settings.NotificationEnabled[index] && Settings.Notification[index] != INVALID_N_PLUGIN_ID.value) {
+			nprotocolIndex_t NotificationProtocolIndex = 
+			  getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[index]));
 			if (validNProtocolIndex(NotificationProtocolIndex )) {
 				struct EventStruct TempEvent(event->TaskIndex);
 				// TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
@@ -30,7 +31,7 @@ const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *eve
 			}
 		}
 	}
-	return return_command_success();
+	return return_command_success_flashstr();
 }
 
 #endif

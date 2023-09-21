@@ -3,8 +3,52 @@
 
 #include "../../ESPEasy_common.h"
 
-typedef uint8_t pluginID_t;
+struct pluginID_t {
+  pluginID_t() = default;
 
-extern pluginID_t INVALID_PLUGIN_ID;
+  pluginID_t(const pluginID_t& other)
+  {
+    value = other.value;
+  }
+
+  constexpr explicit pluginID_t(uint8_t id) : value(id) {}
+
+
+  static pluginID_t toPluginID(unsigned other)
+  {
+    pluginID_t res;
+
+    if (other <= 255) { res.value = other; }
+
+    return res;
+  }
+
+  pluginID_t& operator=(const pluginID_t& other)
+  {
+    value = other.value;
+    return *this;
+  }
+
+  bool operator==(const pluginID_t& other) const
+  {
+    return this->value == other.value;
+  }
+
+  bool operator!=(const pluginID_t& other) const
+  {
+    return this->value != other.value;
+  }
+
+  void setInvalid() {
+    value = 0;
+  }
+
+  String toDisplayString() const;
+
+  uint8_t value{};
+};
+
+
+extern const pluginID_t INVALID_PLUGIN_ID;
 
 #endif // ifndef DATATYPES_PLUGINID_H

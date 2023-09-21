@@ -296,8 +296,6 @@ void setBasicTaskValues(taskIndex_t   taskIndex,
                         unsigned long taskdevicetimer,
                         bool          enabled,
                         const String& name,
-                        int           pin1,
-                        int           pin2,
-                        int           pin3);
+                        const int     pins[3]);
 
 #endif // HELPERS_HARDWARE_H

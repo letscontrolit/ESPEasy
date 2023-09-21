@@ -743,7 +743,7 @@ void handle_sysinfo_Storage() {
   }
   # endif // ifndef LIMIT_BUILD_SIZE
 
-# ifndef BUILD_MINIMAL_OTA
+#if FEATURE_CHART_STORAGE_LAYOUT
 
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);
@@ -765,7 +765,6 @@ void handle_sysinfo_Storage() {
       getStorageTableSVG(settingsType);
     }
   }
-# endif // ifndef BUILD_MINIMAL_OTA
 
   # ifdef ESP32
   addTableSeparator(F("Partitions"), 2, 3,
@@ -791,6 +790,7 @@ void handle_sysinfo_Storage() {
 
   getPartitionTableSVG();
   #endif
+#endif
 }
 #endif
 

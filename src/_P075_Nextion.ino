@@ -393,7 +393,8 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
               }
 
               __buffer[i] = 0x00;
-
+              
+              // FIXME TD-er: (PVS Studio) A part of conditional expression is always false: (0xFF == __buffer[4]). The value range of char type: [-128, 127].
               if ((0xFF == __buffer[4]) && (0xFF == __buffer[5]) && (0xFF == __buffer[6])) {
                 UserVar[event->BaseVarIndex]     = (__buffer[1] * 256) + __buffer[2] + TOUCH_BASE;
                 UserVar[event->BaseVarIndex + 1] = __buffer[3];

@@ -11,7 +11,6 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
-#include "../Globals/Protocol.h"
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -75,7 +74,7 @@ struct ControllerDelayHandlerStruct {
     int                                controller_number,
     do_process_function                func,
     TimingStatsElements                timerstats_id,
-    ESPEasy_Scheduler::IntervalTimer_e timerID);
+    SchedulerIntervalTimer_e timerID);
 
   std::list<std::unique_ptr<Queue_element_base> >sendQueue;
   mutable UnitMessageRouteInfo_map               unitMessageRouteInfo_map;

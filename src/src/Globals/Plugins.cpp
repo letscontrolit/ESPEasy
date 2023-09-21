@@ -36,16 +36,13 @@
 
 #include <vector>
 
-int deviceCount = -1;
 
-std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index) {
-  const pluginID_t pluginID = getPluginID_from_DeviceIndex(index);
-  return pluginID != INVALID_PLUGIN_ID;
+  return validDeviceIndex_init(index);
 }
-
+/*
 bool validTaskIndex(taskIndex_t index) {
   return index < TASKS_MAX;
 }
@@ -53,11 +50,11 @@ bool validTaskIndex(taskIndex_t index) {
 bool validPluginID(pluginID_t pluginID) {
   return (pluginID != INVALID_PLUGIN_ID);
 }
-
+*/
 bool validPluginID_fullcheck(pluginID_t pluginID) {
   return getDeviceIndex_from_PluginID(pluginID) != INVALID_DEVICE_INDEX;
 }
-
+/*
 bool validUserVarIndex(userVarIndex_t index) {
   return index < USERVAR_MAX_INDEX;
 }
@@ -65,6 +62,7 @@ bool validUserVarIndex(userVarIndex_t index) {
 bool validTaskVarIndex(taskVarIndex_t index) {
   return index < VARS_PER_TASK;
 }
+*/
 
 bool supportedPluginID(pluginID_t pluginID) {
   return validDeviceIndex(getDeviceIndex(pluginID));
@@ -72,7 +70,7 @@ bool supportedPluginID(pluginID_t pluginID) {
 
 deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
   if (validTaskIndex(taskIndex)) {
-    return getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
+    return getDeviceIndex(Settings.getPluginID_for_task(taskIndex));
   }
   return INVALID_DEVICE_INDEX;
 }
@@ -82,7 +80,7 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
  ********************************************************************************************/
 pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
   if (validTaskIndex(taskIndex)) {
-    const pluginID_t pluginID = Settings.TaskDeviceNumber[taskIndex];
+    const pluginID_t pluginID = Settings.getPluginID_for_task(taskIndex);
     if (supportedPluginID(pluginID))
       return pluginID;
   }
@@ -129,7 +127,7 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
 
   if (!validDeviceIndex(deviceIndex)) {
     String name = F("Plugin ");
-    name += String(static_cast<int>(pluginID));
+    name += String(pluginID.value);
     name += F(" not included in build");
     return name;
   }
@@ -153,7 +151,7 @@ bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2c
 #if FEATURE_I2C_GET_ADDRESS
 uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
   uint8_t getI2CAddress = 0;
-  const uint8_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   if (validTaskIndex(taskIndex) && validDeviceIndex(deviceIndex)) {
     String dummy;
@@ -280,7 +278,10 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
   #endif
 
   bool retval = false;
-  if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
+  const bool considerTaskEnabled = Settings.TaskDeviceEnabled[taskIndex];
+   //|| (Settings.TaskDeviceEnabled[taskIndex].enabled && Function == PLUGIN_INIT);
+
+  if (considerTaskEnabled && validPluginID_fullcheck(Settings.getPluginID_for_task(taskIndex)))
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
     if (validDeviceIndex(DeviceIndex)) {
@@ -422,15 +423,22 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
   switch (Function)
   {
     // Unconditional calls to all plugins
-    case PLUGIN_UNCONDITIONAL_POLL:    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
+    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
+    /*
+    case PLUGIN_UNCONDITIONAL_POLL:    
+    {
 
-      for (deviceIndex_t x = 0; validDeviceIndex(x); x++) {
+      const unsigned maxDeviceIndex = getNrBuiltInDeviceIndex();
+
+      for (deviceIndex_t x; x < maxDeviceIndex; ++x) {
           START_TIMER;
           PluginCall(x, Function, event, str);
           STOP_TIMER_TASK(x, Function);
           delay(0); // SMY: call delay(0) unconditionally
       }
       return true;
+    }
+    */
 
     case PLUGIN_MONITOR:
 
@@ -481,11 +489,14 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
             if (validTaskIndex(thisTask)) {                   // Known taskindex?
 #ifdef USES_P022                                              // Exclude P022 as it has rather explicit differences in commands when used with the [<TaskName>]. prefix
+              const pluginID_t pluginID = Settings.getPluginID_for_task(thisTask);
               if (Settings.TaskDeviceEnabled[thisTask]        // and internally needs to know wether it was called with the taskname prefixed
-                && validPluginID_fullcheck(Settings.TaskDeviceNumber[thisTask])
+                && validPluginID_fullcheck(pluginID)
                 && Settings.TaskDeviceDataFeed[thisTask] == 0) {
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
-                if (validDeviceIndex(DeviceIndex) && Device[DeviceIndex].Number == 22 /* PLUGIN_ID_022 define no longer available, 'assume' 22 for now */) {
+                constexpr pluginID_t P022_PCA9685_PLUGIN_ID(22);
+                if (validDeviceIndex(DeviceIndex) && 
+                    pluginID == P022_PCA9685_PLUGIN_ID /* PLUGIN_ID_022 define no longer available, 'assume' 22 for now */) {
                   thisTask = INVALID_TASK_INDEX;
                 }
               }
@@ -587,7 +598,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         if (Function == PLUGIN_INIT) {
           if (!retval && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
-            Settings.TaskDeviceEnabled[taskIndex] = false; // Initialization failed: Disable plugin!
+            // Disable temporarily as PLUGIN_INIT failed
+            // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
+            // What interval?  (see: PR #4793)
+            //Settings.TaskDeviceEnabled[taskIndex].setRetryInit(); 
+            //Scheduler.setPluginTaskTimer(10000, taskIndex, PLUGIN_INIT);
+            Settings.TaskDeviceEnabled[taskIndex] = false;
             result = false;
           }
           #ifndef BUILD_NO_DEBUG
@@ -658,6 +674,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_INIT:
     case PLUGIN_EXIT:
     case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_LOAD_ALWAYS:
     case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
@@ -682,7 +699,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // Only exception is when ErrorStateValues is needed.
             // Therefore only need to call LoadTaskSettings for those tasks with ErrorStateValues
             LoadTaskSettings(event->TaskIndex);
-          } else if (Function == PLUGIN_INIT || Function == PLUGIN_WEBFORM_LOAD) {
+          } else if (Function == PLUGIN_INIT || Function == PLUGIN_WEBFORM_LOAD || Function == PLUGIN_WEBFORM_LOAD_ALWAYS) {
             // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
             LoadTaskSettings(event->TaskIndex);
           }
@@ -774,7 +791,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
           if (Function == PLUGIN_INIT) {
             if (!retval && Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
-              Settings.TaskDeviceEnabled[event->TaskIndex] = false; // Initialization failed: Disable plugin!
+              // Disable temporarily as PLUGIN_INIT failed
+              // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
+              Settings.TaskDeviceEnabled[event->TaskIndex] = false;
             } else {
               #if FEATURE_PLUGIN_STATS
               if (Device[DeviceIndex].PluginStats) {
@@ -843,6 +862,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_DEVICEVALUENAMES ||
             Function == PLUGIN_WEBFORM_SAVE ||
             Function == PLUGIN_WEBFORM_LOAD ||
+            Function == PLUGIN_WEBFORM_LOAD_ALWAYS ||
             Function == PLUGIN_SET_DEFAULTS ||
             Function == PLUGIN_INIT_VALUE_RANGES ||
             Function == PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS

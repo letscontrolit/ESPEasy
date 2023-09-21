@@ -29,7 +29,13 @@
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
 
-#define WIFI_PROCESS_EVENTS_TIMEOUT          20000  // in milliSeconds
+// Bit numbers for WiFi status
+#define ESPEASY_WIFI_CONNECTED               0
+#define ESPEASY_WIFI_GOT_IP                  1
+#define ESPEASY_WIFI_SERVICES_INITIALIZED    2
+
+
+#define WIFI_PROCESS_EVENTS_TIMEOUT          20000 // in milliSeconds
 
 struct WiFiEventData_t {
   bool WiFiConnectAllowed() const;
@@ -41,10 +47,21 @@ struct WiFiEventData_t {
   void clear_processed_flags();
   void markWiFiBegin();
 
-  bool WiFiDisconnected() const;
-  bool WiFiGotIP() const;
-  bool WiFiConnected() const;
-  bool WiFiServicesInitialized() const;
+  bool WiFiDisconnected() const {
+    return wifiStatus == ESPEASY_WIFI_DISCONNECTED;
+  }
+
+  bool WiFiGotIP() const {
+    return bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP);
+  }
+
+  bool WiFiConnected() const {
+    return bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED);
+  }
+
+  bool WiFiServicesInitialized() const {
+    return bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
+  }
 
   void setWiFiDisconnected();
   void setWiFiGotIP();
@@ -57,15 +74,18 @@ struct WiFiEventData_t {
   void markDisconnect(WiFiDisconnectReason reason);
   void markConnected(const String& ssid,
                      const uint8_t bssid[6],
-                     uint8_t          channel);
+                     uint8_t       channel);
   void markConnectedAPmode(const uint8_t mac[6]);
   void markDisconnectedAPmode(const uint8_t mac[6]);
 
-  void setAuthMode(uint8_t newMode);
+  void setAuthMode(uint8_t newMode) {
+    auth_mode = newMode;
+  }
 
-  String ESPeasyWifiStatusToString() const;
+  String   ESPeasyWifiStatusToString() const;
 
-  uint32_t getSuggestedTimeout(int index, uint32_t minimum_timeout) const;
+  uint32_t getSuggestedTimeout(int      index,
+                               uint32_t minimum_timeout) const;
 
 
 
@@ -78,15 +98,15 @@ struct WiFiEventData_t {
   bool          wifi_considered_stable = false;
   int           wifi_reconnects        = -1; // First connection attempt is not a reconnect.
   String        last_ssid;
-  float         wifi_TX_pwr            = 0;
-  bool          bssid_changed          = false;
-  bool          channel_changed        = false;
+  float         wifi_TX_pwr     = 0;
+  bool          bssid_changed   = false;
+  bool          channel_changed = false;
 
-  uint8_t       auth_mode = 0;
-  uint8_t       lastScanChannel = 0;
-  uint8_t       usedChannel = 0;
+  uint8_t auth_mode       = 0;
+  uint8_t lastScanChannel = 0;
+  uint8_t usedChannel     = 0;
 
-  bool          eventError = false;
+  bool eventError = false;
 
 
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
@@ -109,7 +129,7 @@ struct WiFiEventData_t {
 
   // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
   // This can cause recursion, so a semaphore is needed here.
-  LongTermTimer           processingDisconnect;
+  LongTermTimer processingDisconnect;
 
 
   // Semaphore like bools for processing data gathered from WiFi events.
@@ -131,13 +151,11 @@ struct WiFiEventData_t {
 
   unsigned long connectionFailures = 0;
 
-  std::map<uint8_t, long> connectDurations;
+  std::map<uint8_t, long>connectDurations;
 
 #ifdef ESP32
   WiFiEventId_t wm_event_id = 0;
 #endif // ifdef ESP32
-
-
 };
 
 #endif   // ifndef DATASTRUCTS_WIFIEVENTDATA_H
