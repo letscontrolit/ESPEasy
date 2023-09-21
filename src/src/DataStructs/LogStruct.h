@@ -42,9 +42,11 @@ struct LogStruct {
     // Returns whether a line was retrieved.
     bool getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, uint8_t& loglevel);
 
-    bool isEmpty() const;
+    bool isEmpty() const {
+      return !is_full && (write_idx == read_idx);
+    }
 
-    bool isFull() const;
+    bool isFull() const { return is_full; }
 
     bool logActiveRead();
 

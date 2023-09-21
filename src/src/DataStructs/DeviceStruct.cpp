@@ -49,11 +49,6 @@ bool DeviceStruct::usesTaskDevicePin(int pin) const {
   return false;
 }
 
-
-bool DeviceStruct::configurableDecimals() const {
-  return FormulaOption || DecimalsOnly;
-}
-
 bool DeviceStruct::isSerial() const {
   return (Type == DEVICE_TYPE_SERIAL) || 
          (Type == DEVICE_TYPE_SERIAL_PLUS1);
@@ -71,3 +66,4 @@ bool DeviceStruct::isCustom() const {
          (Type == DEVICE_TYPE_CUSTOM2) || 
          (Type == DEVICE_TYPE_CUSTOM3);
 }
+

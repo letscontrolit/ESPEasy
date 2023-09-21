@@ -43,15 +43,15 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_013;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = false;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].usesHost     = false;
-      Protocol[protocolCount].defaultPort  = 8266;
-      Protocol[protocolCount].usesID       = false;
-      Protocol[protocolCount].Custom       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_013;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = false;
+      proto.usesAccount  = false;
+      proto.usesPassword = false;
+      proto.usesHost     = false;
+      proto.defaultPort  = 8266;
+      proto.usesID       = false;
+      proto.Custom       = true;
       break;
     }
 
@@ -113,7 +113,7 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   if (!validTaskIndex(sourceTaskIndex) || !validTaskIndex(destTaskIndex)) {
     return;
   }
-  pluginID_t pluginID = Settings.TaskDeviceNumber[sourceTaskIndex];
+  pluginID_t pluginID = Settings.getPluginID_for_task(sourceTaskIndex);
 
   if (!validPluginID_fullcheck(pluginID)) {
     return;
@@ -155,7 +155,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   dataReply.sourceUnit      = Settings.Unit;
   dataReply.sourceTaskIndex = event->TaskIndex;
   dataReply.destTaskIndex   = destTaskIndex;
-  dataReply.deviceNumber    = Settings.TaskDeviceNumber[event->TaskIndex];
+  dataReply.deviceNumber    = Settings.getPluginID_for_task(event->TaskIndex);
 
   // FIXME TD-er: We should check for sensorType and pluginID on both sides.
   // For example sending different sensor type data from one dummy to another is probably not going to work well
@@ -255,14 +255,15 @@ void C013_Receive(struct EventStruct *event) {
         // to prevent flash wear out (bugs in communication?) we can only write to an empty task
         // so it will write only once and has to be cleared manually through webgui
         // Also check the receiving end does support the plugin ID.
-        if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[infoReply.destTaskIndex]) &&
+        if (!validPluginID_fullcheck(Settings.getPluginID_for_task(infoReply.destTaskIndex)) &&
             supportedPluginID(infoReply.deviceNumber))
         {
           taskClear(infoReply.destTaskIndex, false);
-          Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber;
+          Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber.value;
           Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourceUnit; // remote feed store unit nr sending the data
 
-          if ((infoReply.deviceNumber == 33) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
+          constexpr pluginID_t DUMMY_PLUGIN_ID{33};
+          if ((infoReply.deviceNumber == DUMMY_PLUGIN_ID) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
             // Received a dummy device and the sensor type is actually set
             Settings.TaskDevicePluginConfig[infoReply.destTaskIndex][0] = static_cast<int16_t>(infoReply.sensorType);
           }
@@ -305,13 +306,13 @@ void C013_Receive(struct EventStruct *event) {
 
         if ((remoteFeed != 0) && (remoteFeed == dataReply.sourceUnit))
         {
-          if (!dataReply.matchesPluginID(Settings.TaskDeviceNumber[dataReply.destTaskIndex])) {
+          if (!dataReply.matchesPluginID(Settings.getPluginID_for_task(dataReply.destTaskIndex))) {
             // Mismatch in plugin ID from sending node
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
               log += concat(F(" from unit "), dataReply.sourceUnit);
-              log += concat(F(" remote: "), dataReply.deviceNumber);
-              log += concat(F(" local: "), Settings.TaskDeviceNumber[dataReply.destTaskIndex]);
+              log += concat(F(" remote: "), dataReply.deviceNumber.value);
+              log += concat(F(" local: "), Settings.getPluginID_for_task(dataReply.destTaskIndex).value);
               addLogMove(LOG_LEVEL_ERROR, log);
             }
           } else {

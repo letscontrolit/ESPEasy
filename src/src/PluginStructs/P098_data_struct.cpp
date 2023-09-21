@@ -8,8 +8,6 @@
 
 # include "../Helpers/Hardware.h"
 
-# define GPIO_PLUGIN_ID  1
-
 
 const __FlashStringHelper * P098_config_struct::toString(P098_config_struct::PWM_mode_type PWM_mode) {
   switch (PWM_mode) {
@@ -117,7 +115,7 @@ bool P098_data_struct::homePosSet() const
 
 bool P098_data_struct::canRun()
 {
-  if (checkValidPortRange(GPIO_PLUGIN_ID, _config.limitA.gpio) && !homePosSet()) { return false; }
+  if (checkValidPortRange(PLUGIN_GPIO, _config.limitA.gpio) && !homePosSet()) { return false; }
 
   switch (state) {
     case P098_data_struct::State::Idle:
@@ -308,12 +306,12 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, int8_t s
   uint8_t mode = PIN_MODE_OUTPUT;
 
   state = state == 0 ? gpio_config.low() : gpio_config.high();
-  uint32_t key = createKey(GPIO_PLUGIN_ID, gpio_config.gpio);
+  uint32_t key = createKey(PLUGIN_GPIO, gpio_config.gpio);
 
   if (globalMapPortStatus[key].mode != PIN_MODE_OFFLINE)
   {
     int8_t currentState;
-    GPIO_Read(GPIO_PLUGIN_ID, gpio_config.gpio, currentState);
+    GPIO_Read(PLUGIN_GPIO, gpio_config.gpio, currentState);
 
     if (currentState == -1) {
       mode  = PIN_MODE_OFFLINE;
@@ -325,7 +323,7 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, int8_t s
         if (mode == PIN_MODE_OUTPUT)  {
           createAndSetPortStatus_Mode_State(key, mode, state);
           GPIO_Write(
-            GPIO_PLUGIN_ID,
+            PLUGIN_GPIO,
             gpio_config.gpio,
             state,
             mode);
@@ -348,7 +346,7 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, int8_t s
           // Turn off PWM mode too
           createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, state);
           GPIO_Write(
-            GPIO_PLUGIN_ID,
+            PLUGIN_GPIO,
             gpio_config.gpio,
             state,
             PIN_MODE_OUTPUT);
@@ -363,7 +361,7 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, int8_t s
 
 bool P098_data_struct::setPinMode(const P098_GPIO_config& gpio_config)
 {
-  if (checkValidPortRange(GPIO_PLUGIN_ID, gpio_config.gpio)) {
+  if (checkValidPortRange(PLUGIN_GPIO, gpio_config.gpio)) {
     pinMode(gpio_config.gpio, gpio_config.pullUp ? INPUT_PULLUP : INPUT);
     return true;
   }

@@ -114,6 +114,8 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   addRowLabel(F("Analog Pin"));
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 
+  addFormNote(F("Do not use ADC2 pins with WiFi active"));
+
   {
     const __FlashStringHelper *outputOptions[] = {
       F("11 dB"),
@@ -127,7 +129,8 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       P002_ADC_2_5db,
       P002_ADC_0db
     };
-    addFormSelector(F("Attenuation"), F("attn"), 4, outputOptions, outputOptionValues, P002_ATTENUATION);
+    constexpr int nrOptions = NR_ELEMENTS(outputOptionValues);
+    addFormSelector(F("Attenuation"), F("attn"), nrOptions, outputOptions, outputOptionValues, P002_ATTENUATION);
   }
 
 # endif // ifdef ESP32
@@ -147,11 +150,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       , P002_USE_BINNING
 # endif // ifndef LIMIT_BUILD_SIZE
     };
-# ifndef LIMIT_BUILD_SIZE
-    const int nrOptions = 3;
-# else // ifndef LIMIT_BUILD_SIZE
-    const int nrOptions = 2;
-# endif // ifndef LIMIT_BUILD_SIZE
+    const int nrOptions = NR_ELEMENTS(outputOptionValues);
     addFormSelector(F("Oversampling"), F("oversampling"), nrOptions, outputOptions, outputOptionValues, P002_OVERSAMPLING);
   }
 

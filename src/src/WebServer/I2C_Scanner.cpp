@@ -6,6 +6,7 @@
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../Globals/Device.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/_Plugin_init.h"
@@ -152,21 +153,27 @@ String getKnownI2Cdevice(uint8_t address) {
   String result;
 
   #if FEATURE_I2C_DEVICE_SCAN
-  for (uint8_t x = 0; x <= deviceCount; x++) {
-    const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
+  deviceIndex_t x;
+  bool done = false;
+  while (!done) {
+    const deviceIndex_t deviceIndex = getDeviceIndex_sorted(x);
+    if (!validDeviceIndex(deviceIndex)) {
+      done = true;
+    } else {
+      const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
-    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
+      if (validPluginID(pluginID) &&
+          checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
+        result += F("(Device) ");
 
-    if (validPluginID(pluginID) &&
-        checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
-      result += F("(Device) ");
-
-      # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
-      result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
-      # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-      result += getPluginNameFromDeviceIndex(deviceIndex);
-      result += ',';
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
+        result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        result += getPluginNameFromDeviceIndex(deviceIndex);
+        result += ',';
+      }
     }
+    ++x;
   }
   #endif // if FEATURE_I2C_DEVICE_SCAN
   #ifndef LIMIT_BUILD_SIZE

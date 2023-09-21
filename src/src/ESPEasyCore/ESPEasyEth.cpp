@@ -198,7 +198,7 @@ void ethPower(bool enable) {
     }
 //    gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_power);
 
-    GPIO_Write(1, Settings.ETH_Pin_power, enable ? 1 : 0);
+    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power, enable ? 1 : 0);
     if (!enable) {
       if (Settings.ETH_Clock_Mode == EthClockMode_t::Ext_crystal_osc) {
         delay(600); // Give some time to discharge any capacitors
