@@ -21,8 +21,12 @@ uint8_t P028_data_struct::get_control_settings() const {
   return sensorID == Unknown_DEVICE ? 0u : 0x93; // Oversampling: 8x P, 8x T, normal mode
 }
 
-const __FlashStringHelper * P028_data_struct::getDeviceName(BMx_ChipId sensorID) {
-  switch (sensorID) {
+const __FlashStringHelper * P028_data_struct::getDeviceName() const {
+  return getDeviceName(sensorID);
+}
+
+const __FlashStringHelper * P028_data_struct::getDeviceName(BMx_ChipId id) {
+  switch (id) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2: return F("sample BMP280");
     case BMP280_DEVICE:         return F("BMP280");
