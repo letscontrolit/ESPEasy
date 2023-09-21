@@ -118,12 +118,13 @@ private:
     ReadTimeout
   };
 
-  static const uint8_t Temperature = 0x01;
-  static const uint8_t Power       = 0x02;
-  static const uint8_t Mode        = 0x04;
-  static const uint8_t Fan         = 0x08;
-  static const uint8_t Vane        = 0x10;
-  static const uint8_t WideVane    = 0x20;
+  static const uint8_t Temperature        = 0x01;
+  static const uint8_t Power              = 0x02;
+  static const uint8_t Mode               = 0x04;
+  static const uint8_t Fan                = 0x08;
+  static const uint8_t Vane               = 0x10;
+  static const uint8_t WideVane           = 0x20;
+  static const uint8_t RemoteTemperature  = 0x07;
 
   struct WriteStatus {
     WriteStatus() : _flags(0) {}
@@ -158,6 +159,7 @@ private:
     uint8_t vane;
     uint8_t wideVane;
     float   roomTemperature;
+    float   remoteTemperature;
     bool    operating;
     uint8_t compressorFrequency;
 
@@ -170,6 +172,7 @@ private:
       vane(0),
       wideVane(0),
       roomTemperature(0),
+      remoteTemperature(0),
       operating(false),
       compressorFrequency(0) {}
 
@@ -182,6 +185,7 @@ private:
              wideVane != rhs.wideVane ||
              iSee != rhs.iSee ||
              roomTemperature != rhs.roomTemperature ||
+             remoteTemperature != rhs.remoteTemperature ||
              operating != rhs.operating ||
              compressorFrequency != rhs.compressorFrequency;
     }
