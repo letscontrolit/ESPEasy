@@ -36,15 +36,17 @@ void handle_controllers() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
+  // 'index' value in the URL
   uint8_t controllerindex  = getFormItemInt(F("index"), 0);
   boolean controllerNotSet = controllerindex == 0;
   --controllerindex; // Index in URL is starting from 1, but starting from 0 in the array.
 
-  const int protocol = getFormItemInt(F("protocol"), -1);
+  const int protocol_webarg_value = getFormItemInt(F("protocol"), -1);
 
   // submitted data
-  if ((protocol != -1) && !controllerNotSet)
+  if ((protocol_webarg_value != -1) && !controllerNotSet)
   {
+    const protocolIndex_t protocolIndex = protocol_webarg_value;
     bool mustInit            = false;
     bool mustCallCpluginSave = false;
     {
@@ -58,24 +60,24 @@ void handle_controllers() {
         // Otherwise the checksum will fail and settings will be saved too often.
         ControllerSettings->reset();
 
-        if (Settings.Protocol[controllerindex] != protocol)
+        if (Settings.Protocol[controllerindex] != protocolIndex)
         {
           // Protocol has changed.
-          Settings.Protocol[controllerindex] = protocol;
+          Settings.Protocol[controllerindex] = protocolIndex;
 
-          // there is a protocol selected?
-          if (protocol != 0)
+          // there is a protocolIndex selected?
+          if (protocolIndex != 0)
           {
             mustInit = true;
             handle_controllers_clearLoadDefaults(controllerindex, *ControllerSettings);
           }
         }
 
-        // subitted same protocol
+        // subitted same protocolIndex
         else
         {
-          // there is a protocol selected
-          if (protocol != 0)
+          // there is a protocolIndex selected
+          if (protocolIndex != 0)
           {
             mustInit = true;
             handle_controllers_CopySubmittedSettings(controllerindex, *ControllerSettings);
