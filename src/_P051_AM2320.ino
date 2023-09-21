@@ -12,14 +12,19 @@
 // of the above library
 //
 
+/** Changelog:
+ * 2023-09-05 tonhuisman: Disable I2C device-check during read, as the sensor seems a bit 'itchy' about that
+ * 2023-09-05 tonhuisman: Add changelog
+ */
 
-#include <AM2320.h>
 
-#define PLUGIN_051
-#define PLUGIN_ID_051        51
-#define PLUGIN_NAME_051       "Environment - AM2320"
-#define PLUGIN_VALUENAME1_051 "Temperature"
-#define PLUGIN_VALUENAME2_051 "Humidity"
+# include <AM2320.h>
+
+# define PLUGIN_051
+# define PLUGIN_ID_051        51
+# define PLUGIN_NAME_051       "Environment - AM2320"
+# define PLUGIN_VALUENAME1_051 "Temperature"
+# define PLUGIN_VALUENAME2_051 "Humidity"
 
 
 boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
@@ -42,6 +47,7 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].I2CNoDeviceCheck   = true; // Avoid device check
       break;
     }
 
@@ -74,17 +80,7 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
     # endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_WEBFORM_LOAD:
-    {
-      success = true;
-      break;
-    }
-
     case PLUGIN_WEBFORM_SAVE:
-    {
-      success = true;
-      break;
-    }
-
     case PLUGIN_INIT:
     {
       success = true;

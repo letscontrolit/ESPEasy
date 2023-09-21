@@ -22,6 +22,8 @@ For example, it makes perfect sense to have multiple temperature sensors on a si
 The Devices page shows a list of all tasks, including the last task values.
 These task values may be updated live. The update interval depends on the lowest set task interval of any (enabled) task.
 
+.. _Task Config Page:
+
 Task Config Page
 ================
 
@@ -211,6 +213,7 @@ For example, when referring to a task value on a display via ``[bme#temperature]
 See :ref:`Rules: Formatting referred values <Formatting values>` on how this can be customized.
 Just remember such formatting cannot "make up" more decimals than what was set here in the task setup.
 
+.. _Plugin List:
 
 List of official plugins
 ========================
@@ -381,6 +384,7 @@ There are different released versions of ESP Easy:
    ":ref:`P151_page`","|P151_status|","P151"
    ":ref:`P152_page`","|P152_status|","P152"
    ":ref:`P153_page`","|P153_status|","P153"
+   ":ref:`P154_page`","|P154_status|","P154"
 
 
 Internal GPIO handling

@@ -22,7 +22,6 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/RulesCalculate.h"
 
 #include "../Helpers/_CPlugin_Helper.h"
@@ -33,7 +32,7 @@
 #include "../Helpers/PortStatus.h"
 
 
-#define PLUGIN_ID_MQTT_IMPORT         37
+constexpr pluginID_t PLUGIN_ID_MQTT_IMPORT(37);
 
 // ********************************************************************************
 // Interface for Sending to Controllers
@@ -141,7 +140,7 @@ void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int leng
     //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_MQTT_IMPORT
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
     {
-      if (Settings.TaskDeviceEnabled[taskIndex] && (Settings.TaskDeviceNumber[taskIndex] == PLUGIN_ID_MQTT_IMPORT))
+      if (Settings.TaskDeviceEnabled[taskIndex] && (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_MQTT_IMPORT))
       {
         Scheduler.schedule_mqtt_plugin_import_event_timer(
           DeviceIndex, taskIndex, PLUGIN_MQTT_IMPORT,
@@ -586,7 +585,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     return false;
   }
 
-  if (Protocol[ProtocolIndex].usesMQTT)
+  if (getProtocolStruct(ProtocolIndex).usesMQTT)
   {
     bool   mqtt_sendLWT = false;
     String LWTTopic, LWTMessageConnect;
@@ -754,7 +753,7 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
     if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+      if (getProtocolStruct(ProtocolIndex).usesMQTT && Settings.ControllerEnabled[i]) {
         return i;
       }
     }
@@ -929,7 +928,8 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
     const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
     // Store the previous value, in case %pvalue% is used in the formula
     String preValue[VARS_PER_TASK];
-    if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex)) {
+    const bool processFormula = Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex);
+    if (processFormula) {
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         const String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);
@@ -949,7 +949,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
     if (success)
     {
-      if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex)) {
+      if (processFormula) {
         for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
           String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);

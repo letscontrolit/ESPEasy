@@ -12,6 +12,8 @@ A controller is a component to enable a plugin to send data elsewhere.
 For example, Domoticz needs an 'IDX' value to identify the configured entry in
 Domoticz for which new data is sent.
 
+.. _Controller Plugins:
+
 Controller Plugins
 ==================
 

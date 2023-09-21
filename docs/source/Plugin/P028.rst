@@ -99,10 +99,37 @@ Single event with all values, Send to Controller and Interval settings are stand
 
 * **Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec.
 
+
+Data Source
+^^^^^^^^^^^
+
+.. note:: The **Data Source** section is only available when the task is configured to receive data from a remote node!
+
+When using :ref:`c013_page` and having multiple ESP nodes using the same ``ESPEasy p2p UDP port`` (see the Tools/Advanced page, default: 8266, IANA registered), you can receive values from a remote node with the same plugin active. How to configure this is documented in the P2P Controller page.
+
+In a regular configuration, having the sensor connected locally, the plugin auto-detects what type of sensor is used, either BME280 or BMP280, and auto-adjusts the values supported. When receiving data from the P2P network, this 'setting' is verified and must match on the receiving end of the P2P connection. This information is not included in the P2P protocol data, so a configuration option is available, only shown if the task is configured to receive remote data.
+
+.. image:: P028_DataSource.png
+
+* **Remote Unit**: Shows the unit number and name the data is received from.
+
+* **Output values mode**: Allows selection of the sensor that is installed on the sending unit (node).
+
+.. image:: P028_OutputValuesMode.png
+
+Available options:
+
+* *BME280*: Sending node has a BME280 sensor, will provide the Temperature, Humidity and Pressure values.
+
+* *BMP280*: Sending node has a BMP280 sensor, will provide the Temperature and Pressure values.
+
+
 Values
 ^^^^^^
 
 The measured values are available in ``Temperature``, ``Humidity`` and ``Pressure``. A formula can be set to recalculate. The number of decimals is by default set to 2, and can be set to 0 for ``Humidity`` and ``Pressure``, as no decimals are provided from the measurement.
+
+.. note:: When a BMP280 sensor, that provides only ``Temperature`` and ``Pressure`` data, is connected, the ``Humidity`` value will still be visible, but show 0.
 
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^

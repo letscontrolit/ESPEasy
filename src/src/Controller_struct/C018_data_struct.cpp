@@ -78,15 +78,6 @@ bool C018_data_struct::init(const uint8_t port, const int8_t serial_rx, const in
   return isInitialized();
 }
 
-bool C018_data_struct::isInitialized() const {
-  if ((C018_easySerial != nullptr) && (myLora != nullptr)) {
-    if (autobaud_success) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool C018_data_struct::hasJoined() const {
   if (!isInitialized()) { return false; }
   return myLora->hasJoined();

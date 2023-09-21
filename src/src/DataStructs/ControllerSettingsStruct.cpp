@@ -97,15 +97,6 @@ void ControllerSettingsStruct::validate() {
 
 }
 
-ChecksumType ControllerSettingsStruct::computeChecksum() const {
-  return ChecksumType(reinterpret_cast<const uint8_t *>(this), sizeof(ControllerSettingsStruct));
-}
-
-IPAddress ControllerSettingsStruct::getIP() const {
-  IPAddress host(IP[0], IP[1], IP[2], IP[3]);
-
-  return host;
-}
 
 String ControllerSettingsStruct::getHost() const {
   if (UseDNS) {
@@ -213,7 +204,7 @@ bool ControllerSettingsStruct::updateIPcache() {
   return false;
 }
 
-#if FEATURE_MQTT
+/*
 bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
   return bitRead(VariousFlags, 1);
@@ -314,6 +305,7 @@ void ControllerSettingsStruct::useLocalSystemTime(bool value)
 {
   bitWrite(VariousFlags, 11, value);
 }
+*/
 
 #if FEATURE_MQTT_TLS
 TLS_types ControllerSettingsStruct::TLStype() const
