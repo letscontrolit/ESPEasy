@@ -355,7 +355,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
           }
           #if FEATURE_MQTT_TLS
-          if (Protocol[ProtocolIndex].usesMQTT && Protocol[ProtocolIndex].usesTLS) {
+          if (proto.usesMQTT && proto.usesTLS) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE);
             addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
           }
@@ -467,13 +467,13 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
     }
     {
 #if FEATURE_MQTT
-        if (Protocol[ProtocolIndex].usesMQTT) {
+        if (proto.usesMQTT) {
           addFormSubHeader(F("Connection Status"));
           addRowLabel(F("MQTT Client Connected"));
           addEnabled(MQTTclient_connected);
 
 #if FEATURE_MQTT_TLS
-          if (Protocol[ProtocolIndex].usesTLS) {
+          if (proto.usesTLS) {
             addRowLabel(F("Last Error"));
             addHtmlInt(mqtt_tls_last_error);
             addHtml(F(": "));

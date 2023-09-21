@@ -42,11 +42,10 @@ struct ProtocolStruct
     };
     uint16_t bits{};
     
+  };
 #if FEATURE_MQTT_TLS
   bool     usesTLS              : 1; // May offer TLS related settings and options
 #endif
-
-  };
 
 //  uint8_t Number{};
 };
