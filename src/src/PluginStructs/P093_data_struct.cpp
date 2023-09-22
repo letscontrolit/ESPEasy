@@ -10,6 +10,10 @@
  *
  * Plugin is based on "Arduino library to control Mitsubishi Heat Pumps" from
  * https://github.com/SwiCago/HeatPump.
+ * 
+ * SetRemoteTemperature is based on following Issue and Resolve
+ * https://github.com/SwiCago/HeatPump/pull/144#issue-514996963
+ * https://github.com/SwiCago/HeatPump/pull/144/commits/c50372c7632b9e7324caf0c0fc0773871645688e
  *
  */
 
@@ -380,27 +384,24 @@ void P093_data_struct::applySettings() {
   sendPacket(packet, PACKET_LEN);
 
   if (_writeStatus.isDirty(RemoteTemperature)) {
-    packet[PACKET_LEN] = {};
-
     packet[5] |= 0x07;
     if(_wantedSettings.remoteTemperature > 0) {
       packet[6] |= 0x01;
-      if (_tempMode) {
+      _wantedSettings.remoteTemperature = _wantedSettings.remoteTemperature * 2;
+      _wantedSettings.remoteTemperature = round(_wantedSettings.remoteTemperature);
+      _wantedSettings.remoteTemperature = _wantedSettings.remoteTemperature / 2;
+      if (_tempMode) {        //units that don't support 0.5 increment 
         packet[8] = static_cast<uint8_t>(_wantedSettings.remoteTemperature * 2.0f + 128.0f);
-      } else {
-        packet[7] = _wantedSettings.remoteTemperature;
+      } else {                //units that do support 0.5 increment 
+        packet[7] = static_cast<uint8_t>(3.0f + ((_wantedSettings.remoteTemperature - 10.0f) * 2.0f));
       }
     }
     else {
-      packet[6] |= 0x00;
+      packet[6] = 0x00;
       packet[8] |= 0x80; //MHK1 send 80, even though it could be 00, since ControlByte is 00
     } 
-
-    packet[21] = checkSum(packet, 21);
-
-    sendPacket(packet, PACKET_LEN);
-  }
-
+ }
+  
 }
 
 void P093_data_struct::connect() {
