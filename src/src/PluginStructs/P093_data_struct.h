@@ -167,25 +167,25 @@ private:
       power(0),
       iSee(false),
       mode(0),
-      temperature(0),
+      temperature(0.0f),
       fan(0),
       vane(0),
       wideVane(0),
-      roomTemperature(0),
-      remoteTemperature(0),
+      roomTemperature(0.0f),
+      remoteTemperature(0.0f),
       operating(false),
       compressorFrequency(0) {}
 
     bool operator!=(const Values& rhs) const {
       return power != rhs.power ||
              mode != rhs.mode ||
-             temperature != rhs.temperature ||
+             !essentiallyEqual(temperature, rhs.temperature) ||
              fan != rhs.fan ||
              vane != rhs.vane ||
              wideVane != rhs.wideVane ||
              iSee != rhs.iSee ||
-             roomTemperature != rhs.roomTemperature ||
-             remoteTemperature != rhs.remoteTemperature ||
+             !essentiallyEqual(roomTemperature, rhs.roomTemperature) ||
+             !essentiallyEqual(remoteTemperature, rhs.remoteTemperature) ||
              operating != rhs.operating ||
              compressorFrequency != rhs.compressorFrequency;
     }
