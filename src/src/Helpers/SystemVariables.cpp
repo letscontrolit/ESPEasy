@@ -89,6 +89,9 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::DNS_2:             label = LabelType::DNS_2; break;
     case SystemVariables::GATEWAY:           label = LabelType::GATEWAY; break;
     case SystemVariables::CLIENTIP:          label = LabelType::CLIENT_IP; break;
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case SystemVariables::INTERNAL_TEMPERATURE: label = LabelType::INTERNAL_TEMPERATURE; break;
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
 
     #if FEATURE_ETHERNET
 
@@ -359,6 +362,9 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::ISMQTTIMP:          return F("ismqttimp");
     case Enum::ISNTP:              return F("isntp");
     case Enum::ISWIFI:             return F("iswifi");
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case Enum::INTERNAL_TEMPERATURE: return F("internaltemperature");
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
     #if FEATURE_ETHERNET
     case Enum::ETHWIFIMODE:        return F("ethwifimode");
     case Enum::ETHCONNECTED:       return F("ethconnected");

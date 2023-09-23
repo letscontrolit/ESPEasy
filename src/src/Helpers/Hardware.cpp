@@ -604,6 +604,48 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
 #endif // ifdef ESP32
 
+#if FEATURE_INTERNAL_TEMPERATURE
+
+/**
+ * Code based on: https://github.com/esphome/esphome/blob/518ecb4cc4489c8a76b899bfda7576b05d84c226/esphome/components/internal_temperature/internal_temperature.cpp#L40
+ */
+
+#ifdef ESP32
+#if defined(ESP32_CLASSIC)
+// there is no official API available on the original ESP32
+extern "C" {
+uint8_t temprature_sens_read();
+}
+#elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+#include "driver/temp_sensor.h"
+#endif  // ESP32_CLASSIC
+#endif  // ESP32
+
+float getInternalTemperature() {
+  float temperature = -273.15f; // Inprobable value
+  bool success;
+  #ifdef ESP32
+  #if defined(ESP32_CLASSIC)
+  uint8_t raw = temprature_sens_read();
+  #ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("ESP32: Raw temperature value: "), raw));
+  #endif
+  success = (raw != 128);
+  temperature = (raw - 32) / 1.8f;
+  #elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+  temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
+  temp_sensor_set_config(tsens);
+  temp_sensor_start();
+  esp_err_t result = temp_sensor_read_celsius(&temperature);
+  temp_sensor_stop();
+  if (result = ESP_OK) {
+    temperature = -273.15f;
+  }
+  #endif  // ESP32_CLASSIC
+  #endif  // USE_ESP32
+  return temperature;
+}
+#endif // if FEATURE_INTERNAL_TEMPERATURE
 
 /********************************************************************************************\
    Hardware information
