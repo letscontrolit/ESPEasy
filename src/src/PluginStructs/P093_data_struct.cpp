@@ -347,13 +347,11 @@ void P093_data_struct::applySettings() {
   if (_writeStatus.isDirty(Power)) {
     packet[8]  = _wantedSettings.power;
     packet[6] |= 0x01;
-    packet[21] = checkSum(packet, 21);
   }
 
   if (_writeStatus.isDirty(Mode)) {
     packet[9]  = _wantedSettings.mode;
     packet[6] |= 0x02;
-    packet[21] = checkSum(packet, 21);
   }
 
   if (_writeStatus.isDirty(Temperature)) {
@@ -364,29 +362,26 @@ void P093_data_struct::applySettings() {
     } else {
       packet[10] = 31 - _wantedSettings.temperature;
     }
-    packet[21] = checkSum(packet, 21);
   }
 
   if (_writeStatus.isDirty(Fan)) {
     packet[11] = _wantedSettings.fan;
     packet[6] |= 0x08;
-    packet[21] = checkSum(packet, 21);
   }
 
   if (_writeStatus.isDirty(Vane)) {
     packet[12] = _wantedSettings.vane;
     packet[6] |= 0x10;
-    packet[21] = checkSum(packet, 21);
   }
 
   if (_writeStatus.isDirty(WideVane)) {
     packet[18] = _wantedSettings.wideVane | (_wideVaneAdj ? 0x80 : 0x00);
     packet[7] |= 0x01;
-    packet[21] = checkSum(packet, 21);
   }
 
   if (_writeStatus.isDirty(RemoteTemperature)) {
-    packet[5] |= 0x07;
+    memset(packet + 6, 0, 15);
+    packet[5] = 0x07;
     if(_wantedSettings.remoteTemperature > 0) {
       packet[6] |= 0x01;
       _wantedSettings.remoteTemperature = _wantedSettings.remoteTemperature * 2;
@@ -400,10 +395,10 @@ void P093_data_struct::applySettings() {
     }
     else {
       packet[6] = 0x00;
-      packet[8] |= 0x80; //MHK1 send 80, even though it could be 00, since ControlByte is 00
+      packet[8] = 0x80; //MHK1 send 80, even though it could be 00, since ControlByte is 00
     } 
-    packet[21] = checkSum(packet, 21);
  }
+  packet[21] = checkSum(packet, 21);
   sendPacket(packet, PACKET_LEN);
 }
 
