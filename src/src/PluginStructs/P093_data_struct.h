@@ -124,7 +124,7 @@ private:
   static const uint8_t Fan                = 0x08;
   static const uint8_t Vane               = 0x10;
   static const uint8_t WideVane           = 0x20;
-  static const uint8_t RemoteTemperature  = 0x07;
+  static const uint8_t RemoteTemperature  = 0x30;
 
   struct WriteStatus {
     WriteStatus() : _flags(0) {}
