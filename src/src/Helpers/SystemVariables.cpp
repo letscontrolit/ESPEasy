@@ -363,7 +363,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::ISNTP:              return F("isntp");
     case Enum::ISWIFI:             return F("iswifi");
     #if FEATURE_INTERNAL_TEMPERATURE
-    case Enum::INTERNAL_TEMPERATURE: return F("internaltemperature");
+    case Enum::INTERNAL_TEMPERATURE: return F("inttemp");
     #endif // if FEATURE_INTERNAL_TEMPERATURE
     #if FEATURE_ETHERNET
     case Enum::ETHWIFIMODE:        return F("ethwifimode");

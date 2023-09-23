@@ -623,22 +623,22 @@ uint8_t temprature_sens_read();
 
 float getInternalTemperature() {
   float temperature = -273.15f; // Inprobable value
-  bool success;
   #ifdef ESP32
   #if defined(ESP32_CLASSIC)
   uint8_t raw = temprature_sens_read();
   #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, concat(F("ESP32: Raw temperature value: "), raw));
   #endif
-  success = (raw != 128);
-  temperature = (raw - 32) / 1.8f;
+  if (raw != 128) {
+    temperature = (raw - 32) / 1.8f;
+  }
   #elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
   temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
   temp_sensor_set_config(tsens);
   temp_sensor_start();
   esp_err_t result = temp_sensor_read_celsius(&temperature);
   temp_sensor_stop();
-  if (result = ESP_OK) {
+  if (result != ESP_OK) {
     temperature = -273.15f;
   }
   #endif  // ESP32_CLASSIC

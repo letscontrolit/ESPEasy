@@ -213,23 +213,23 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       // return decode(bytes,
       //  [header, uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
       //  ['header', 'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
-      // on ESP32 you can add 'internaltemperature' of type int16 (1e2) to the list
+      // on ESP32 you can add 'internaltemperature' of type int16 (1e2) to the list (disabled for now, so not available)
       uint8_t index = 0;
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);             // uptime
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);             // freeheap
-      string += LoRa_addFloat(P026_get_value(index++), PackedData_int8);             // rssi
-      string += LoRa_addFloat(P026_get_value(index++), PackedData_vcc);              // vcc
-      string += LoRa_addFloat(P026_get_value(index++), PackedData_pct_8);            // load
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);              // ip1
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);              // ip2
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);              // ip3
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);              // ip4
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);             // web
-      string += LoRa_addInt(P026_get_value(index++), PackedData_uint16);             // freestack
-      #  if FEATURE_INTERNAL_TEMPERATURE
-      string += LoRa_addInt(P026_get_value(index++) * 100.0f, PackedData_int16_1e2); // internal temperature in 0.01 degrees
-      #  endif // if FEATURE_INTERNAL_TEMPERATURE
-      event->Par1 = index;                                                           // valuecount
+      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // uptime
+      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // freeheap
+      string += LoRa_addFloat(P026_get_value(index++), PackedData_int8);  // rssi
+      string += LoRa_addFloat(P026_get_value(index++), PackedData_vcc);   // vcc
+      string += LoRa_addFloat(P026_get_value(index++), PackedData_pct_8); // load
+      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip1
+      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip2
+      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip3
+      string += LoRa_addInt(P026_get_value(index++), PackedData_uint8);   // ip4
+      string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // web
+      string += LoRa_addInt(P026_get_value(index++), PackedData_uint16);  // freestack
+      // #  if FEATURE_INTERNAL_TEMPERATURE
+      // string += LoRa_addInt(P026_get_value(index++) * 100.0f, PackedData_int16_1e2); // internal temperature in 0.01 degrees
+      // #  endif // if FEATURE_INTERNAL_TEMPERATURE
+      event->Par1 = index; // valuecount
       success     = true;
       break;
     }
