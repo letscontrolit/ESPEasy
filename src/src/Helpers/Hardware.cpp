@@ -622,7 +622,7 @@ uint8_t temprature_sens_read();
 #endif  // ESP32
 
 float getInternalTemperature() {
-  float temperature = -273.15f; // Inprobable value
+  float temperature = -273.15f; // Improbable value
   #ifdef ESP32
   #if defined(ESP32_CLASSIC)
   uint8_t raw = temprature_sens_read();
