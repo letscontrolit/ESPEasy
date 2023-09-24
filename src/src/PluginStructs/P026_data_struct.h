@@ -4,6 +4,13 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P026
 
+# include "src/DataStructs/ESPEasy_packed_raw_data.h"
+# include "src/ESPEasyCore/ESPEasyNetwork.h"
+# include "src/Globals/ESPEasyWiFiEvent.h"
+# include "src/Helpers/Memory.h"
+
+# include "ESPEasy-Globals.h"
+
 // place sensor type selector right after the output value settings
 # define P026_QUERY1_CONFIG_POS  0
 # define P026_SENSOR_TYPE_INDEX  (P026_QUERY1_CONFIG_POS + VARS_PER_TASK)

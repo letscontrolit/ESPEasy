@@ -6,19 +6,15 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-09-24 tonhuisman: Add support for getting all values via Get Config option [<taskname>#<valuename>] where <valuename> is the default
+ *                        name as set for an output value. None is ignored. Not available in MINIMAL_OTA builds.
+ *                        Move all includes to P026_data_struct.h
  * 2023-09-23 tonhuisman: Add Internal temperature option for ESP32
  *                        Format source using Uncrustify
  *                        Move #if check to P026_data_struct.h as Arduino compiler doesn't support that :(
  *                        Move other defines to P026_data_struct.h
  * 2023-09-23 tonhuisman: Start changelog
  */
-
-# include "src/DataStructs/ESPEasy_packed_raw_data.h"
-# include "src/ESPEasyCore/ESPEasyNetwork.h"
-# include "src/Globals/ESPEasyWiFiEvent.h"
-# include "src/Helpers/Memory.h"
-
-# include "ESPEasy-Globals.h"
 
 # define PLUGIN_026
 # define PLUGIN_ID_026         26
@@ -206,6 +202,21 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
+    # ifndef PLUGIN_BUILD_MINIMAL_OTA
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      const String cmd = parseString(string, 1);
+
+      for (uint8_t option = 0; option < P026_NR_OUTPUT_OPTIONS; ++option) {
+        if ((option != 11) && equals(cmd, Plugin_026_valuename(option, false))) { // Use default valuename
+          string  = floatToString(P026_get_value(option), 2, true);               // Trim trailing zeroes
+          success = true;
+          break;
+        }
+      }
+      break;
+    }
+    # endif // ifndef PLUGIN_BUILD_MINIMAL_OTA
 # if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
