@@ -6,7 +6,7 @@
     | ``[<taskname>#roomTemperature]``
     ","
     | Value as received from the connected device, includes 1 decimal.
-    | When Remote Temperature is used, received value is rounded by 0.5.
+    | When Remote Temperature is used, received value is rounded to the nearest 0.5 C.
     "
     "
     | ``[<taskname>#wideVane]``

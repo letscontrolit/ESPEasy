@@ -131,7 +131,7 @@ Change log
   ...
 
   |added|
-  Set Remote Temperature (greater than 0.0 external Temperature Sensor is used. equal 0.0 internal Temperature Sensor is used.)
+  Set Remote Temperature. (value > 0: Use external temperature sensor, value = 0: Use internal temperature sensor)
 
 .. versionchanged:: 2021/08/03
   ...
