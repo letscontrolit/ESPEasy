@@ -8,6 +8,7 @@ on:
     tags-ignore: '**'
     paths-ignore:
       - 'dist/Release_notes.txt'
+      - 'docs/**'
   pull_request:
     branches: [mega]
 
