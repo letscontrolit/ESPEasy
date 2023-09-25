@@ -32,3 +32,8 @@
         ","
         Value = ``<<``, ``<``, ``|``, ``>``, ``>>``, ``<>`` or ``SWING``
         "
+        "
+        ``MitsubishiHP,remotetemperature,<value>``
+        ","
+        Value equal ``0.0`` uses internal Temperature Sensor and greater than ``0.0`` external Temperature Sensor .
+        "
