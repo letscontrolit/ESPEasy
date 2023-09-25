@@ -628,6 +628,7 @@ float getInternalTemperature() {
   #if defined(ESP32_CLASSIC)
   uint8_t raw = 128u;
   while ((128u == raw) && (0 != retries)) {
+    delay(0);
     raw = temprature_sens_read(); // Each reading takes about 112 microseconds
     --retries;
   }
