@@ -622,10 +622,15 @@ uint8_t temprature_sens_read();
 #endif  // ESP32
 
 float getInternalTemperature() {
-  float temperature = -273.15f; // Improbable value
+  static float temperature = -273.15f; // Improbable value
+  int8_t retries = 2;
   #ifdef ESP32
   #if defined(ESP32_CLASSIC)
-  uint8_t raw = temprature_sens_read();
+  uint8_t raw = 128u;
+  while ((128u == raw) && (0 != retries)) {
+    raw = temprature_sens_read(); // Each reading takes about 112 microseconds
+    --retries;
+  }
   #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, concat(F("ESP32: Raw temperature value: "), raw));
   #endif
@@ -635,11 +640,12 @@ float getInternalTemperature() {
   #elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
   temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
   temp_sensor_set_config(tsens);
+  float tmpTemp = 0.0f;
   temp_sensor_start();
-  esp_err_t result = temp_sensor_read_celsius(&temperature);
+  esp_err_t result = temp_sensor_read_celsius(&tmpTemp);
   temp_sensor_stop();
-  if (result != ESP_OK) {
-    temperature = -273.15f;
+  if (result == ESP_OK) {
+    temperature = tmpTemp;
   }
   #endif  // ESP32_CLASSIC
   #endif  // USE_ESP32
