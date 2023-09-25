@@ -2982,6 +2982,10 @@ To create/register a plugin, you have to :
     #define FEATURE_INTERNAL_TEMPERATURE 0 // Not evailable on ESP8266
   #endif
 #endif
+#if defined(FEATURE_INTERNAL_TEMPERATURE) && defined(ESP8266)
+  #undef FEATURE_INTERNAL_TEMPERATURE
+  #define FEATURE_INTERNAL_TEMPERATURE   0 // Not evailable on ESP8266
+#endif
 
 #ifndef FEATURE_I2C_DEVICE_CHECK
   #ifdef ESP8266_1M
