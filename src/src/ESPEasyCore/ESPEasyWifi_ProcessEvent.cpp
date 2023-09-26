@@ -424,7 +424,7 @@ void processGotIP() {
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
-  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  Scheduler.setIntervalTimer(SchedulerIntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
 #endif // if FEATURE_MQTT
   Scheduler.sendGratuitousARP_now();
