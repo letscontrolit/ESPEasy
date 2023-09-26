@@ -20,13 +20,13 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_001;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 8080;
-      Protocol[protocolCount].usesID       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_001;
+      proto.usesMQTT     = false;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 8080;
+      proto.usesID       = true;
       break;
     }
 
@@ -103,7 +103,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
           std::unique_ptr<C001_queue_element> element(new C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
 
           success = C001_DelayHandler->addToQueue(std::move(element));
-          Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C001_DELAY_QUEUE,
+          Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C001_DELAY_QUEUE,
                                            C001_DelayHandler->getNextScheduleTime());
         }
       } // if ixd !=0

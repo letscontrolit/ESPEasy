@@ -14,9 +14,6 @@ bool P052_data_struct::init(const ESPEasySerialPort port, const int16_t serial_r
   return modbus.init(port, serial_rx, serial_tx, 9600, P052_MODBUS_SLAVE_ADDRESS);
 }
 
-bool P052_data_struct::isInitialized() const {
-  return modbus.isInitialized();
-}
 
 const __FlashStringHelper * P052_data_struct::Plugin_052_valuename(uint8_t value_nr, bool displayString) {
   const __FlashStringHelper* strings[] {

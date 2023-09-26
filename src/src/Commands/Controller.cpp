@@ -25,19 +25,11 @@ bool validControllerVar(struct EventStruct *event, controllerIndex_t& controller
 const __FlashStringHelper * Command_Controller_Disable(struct EventStruct *event, const char *Line)
 {
   controllerIndex_t controllerIndex;
-
-  if (validControllerVar(event, controllerIndex) && setControllerEnableStatus(controllerIndex, false)) {
-    return return_command_success();
-  }
-  return return_command_failed();
+  return return_command_boolean_result_flashstr(validControllerVar(event, controllerIndex) && setControllerEnableStatus(controllerIndex, false));
 }
 
 const __FlashStringHelper * Command_Controller_Enable(struct EventStruct *event, const char *Line)
 {
   controllerIndex_t controllerIndex;
-
-  if (validControllerVar(event, controllerIndex) && setControllerEnableStatus(controllerIndex, true)) {
-    return return_command_success();
-  }
-  return return_command_failed();
+  return return_command_boolean_result_flashstr(validControllerVar(event, controllerIndex) && setControllerEnableStatus(controllerIndex, true));
 }

@@ -18,9 +18,7 @@
 
 boolean ipLessEqual(const IPAddress& ip, const IPAddress& high)
 {
-  unsigned long u_ip = ((unsigned long )ip[0] << 24) | ((unsigned long )ip[1] << 16) | ((unsigned long )ip[2] << 8) | ip[3];
-  unsigned long u_high = ((unsigned long )high[0] << 24) | ((unsigned long )high[1] << 16) | ((unsigned long )high[2] << 8) | high[3];
-  return u_ip <= u_high;
+  return ip.v4() <= high.v4();
 }
 
 boolean ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& high)

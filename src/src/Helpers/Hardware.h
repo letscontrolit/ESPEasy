@@ -70,6 +70,10 @@ int                        espeasy_analogRead(int  pin,
 extern esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
 #endif // ifdef ESP32
 
+#if FEATURE_INTERNAL_TEMPERATURE
+float getInternalTemperature();
+#endif // if FEATURE_INTERNAL_TEMPERATURE
+
 
 /********************************************************************************************\
    Hardware information
@@ -296,8 +300,6 @@ void setBasicTaskValues(taskIndex_t   taskIndex,
                         unsigned long taskdevicetimer,
                         bool          enabled,
                         const String& name,
-                        int           pin1,
-                        int           pin2,
-                        int           pin3);
+                        const int     pins[3]);
 
 #endif // HELPERS_HARDWARE_H

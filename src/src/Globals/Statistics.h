@@ -7,6 +7,8 @@
 
 #include "../DataStructs/I2CTypes.h"
 
+#include "../DataStructs/SchedulerTimerID.h"
+
 class String;
 
 
@@ -27,7 +29,7 @@ extern String   lowestFreeStackfunction;
 #endif
 
 extern uint8_t lastBootCause;
-extern unsigned long lastMixedSchedulerId_beforereboot;
+extern SchedulerTimerID lastMixedSchedulerId_beforereboot;
 
 extern unsigned long loopCounter;
 extern unsigned long loopCounterLast;

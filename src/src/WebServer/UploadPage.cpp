@@ -142,11 +142,7 @@ void handleFileUploadBase(bool toSDcard) {
           int           Version;
         } Temp;
 
-        for (unsigned int x = 0; x < sizeof(struct TempStruct); x++)
-        {
-          uint8_t b = upload.buf[x];
-          memcpy(reinterpret_cast<uint8_t *>(&Temp) + x, &b, 1);
-        }
+        memcpy(reinterpret_cast<uint8_t *>(&Temp), upload.buf, sizeof(struct TempStruct));
 
         if ((Temp.Version == VERSION) && (Temp.PID == ESP_PROJECT_PID)) {
           valid = true;
