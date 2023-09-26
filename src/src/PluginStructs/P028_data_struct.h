@@ -61,6 +61,7 @@
 # define P028_ALTITUDE            PCONFIG(1)
 # define P028_TEMPERATURE_OFFSET  PCONFIG(2)
 # define P028_ERROR_STATE_OUTPUT  PCONFIG(3)
+# define P028_DETECTION_MODE      PCONFIG(4)
 
 struct P028_data_struct : public PluginTaskData_base {
   struct bme280_calib_data
@@ -107,6 +108,12 @@ struct P028_data_struct : public PluginTaskData_base {
     BME280_DEVICE         = 0x60
   };
 
+  enum BMx_DetectMode : uint8_t {
+    Auto   = 0u,
+    BME280 = BMx_ChipId::BME280_DEVICE,
+    BMP280 = BMx_ChipId::BMP280_DEVICE,
+  };
+
   enum BMx_state {
     BMx_Uninitialized = 0,
     BMx_Initialized,
@@ -119,7 +126,7 @@ struct P028_data_struct : public PluginTaskData_base {
 
   P028_data_struct(uint8_t addr,
                    float   tempOffset);
-  P028_data_struct() = delete;
+  P028_data_struct()          = delete;
   virtual ~P028_data_struct() = default;
 
 private:
@@ -130,11 +137,13 @@ private:
 
 public:
 
-  const __FlashStringHelper* getDeviceName() const;
+  const __FlashStringHelper       * getDeviceName() const;
 
-  bool                       hasHumidity() const;
+  static const __FlashStringHelper* getDeviceName(BMx_ChipId id);
 
-  bool                       initialized() const;
+  bool                              hasHumidity() const;
+
+  bool                              initialized() const;
 
 private:
 

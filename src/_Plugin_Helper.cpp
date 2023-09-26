@@ -52,7 +52,7 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   if (data != nullptr) {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       Plugin_task_data[taskIndex]                     = data;
-      Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
+      Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.getPluginID_for_task(taskIndex);
 
   #if FEATURE_PLUGIN_STATS
       const uint8_t valueCount = getValueCountForTask(taskIndex);
@@ -96,7 +96,7 @@ bool pluginTaskData_initialized(taskIndex_t taskIndex) {
     return false;
   }
   return Plugin_task_data[taskIndex] != nullptr &&
-         (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.TaskDeviceNumber[taskIndex]);
+         (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.getPluginID_for_task(taskIndex));
 }
 
 String getPluginCustomArgName(int varNr) {

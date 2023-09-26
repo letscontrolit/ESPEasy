@@ -33,6 +33,7 @@
 # define P104_USE_BAR_GRAPH                  // Enables the use of Bar-graph feature
 # define P104_USE_ZONE_ACTIONS               // Enables the use of Actions per zone (New above/New below/Delete)
 # define P104_USE_ZONE_ORDERING              // Enables the use of Zone ordering (Numeric order (1..n)/Display order (n..1))
+# define P104_USE_DOT_SET                    // Enables the use of Dot-set feature
 
 # define P104_ADD_SETTINGS_NOTES             // Adds some notes on the Settings page
 
@@ -326,11 +327,11 @@ struct P104_zone_struct {
   int8_t   brightness    = -1;
   int8_t   inverted      = 0;
   int8_t   _lastChecked  = -1;
-  # ifdef P104_USE_BAR_GRAPH
+  # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
   uint16_t _lower       = 0u;
   uint16_t _upper       = 0u; // lower and upper pixel numbers
   uint8_t  _startModule = 0u; // starting module, end module is _startModule + size - 1
-  # endif // ifdef P104_USE_BAR_GRAPH
+  # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
 };
 
 # ifdef P104_USE_BAR_GRAPH
@@ -338,12 +339,12 @@ struct P104_bargraph_struct {
   P104_bargraph_struct() = delete; // Not used, so leave out explicitly
   P104_bargraph_struct(uint8_t _graph) : graph(_graph) {}
 
-  ESPEASY_RULES_FLOAT_TYPE  value{};
-  ESPEASY_RULES_FLOAT_TYPE  max{};
-  ESPEASY_RULES_FLOAT_TYPE  min{};
-  uint8_t graph;
-  uint8_t barType   = 0u;
-  uint8_t direction = 0u;
+  ESPEASY_RULES_FLOAT_TYPE value{};
+  ESPEASY_RULES_FLOAT_TYPE max{};
+  ESPEASY_RULES_FLOAT_TYPE min{};
+  uint8_t                  graph;
+  uint8_t                  barType   = 0u;
+  uint8_t                  direction = 0u;
 };
 # endif // ifdef P104_USE_BAR_GRAPH
 
@@ -384,14 +385,16 @@ private:
   bool saveSettings();
   void updateZone(uint8_t                 zone,
                   const P104_zone_struct& zstruct);
-  # ifdef P104_USE_BAR_GRAPH
+  # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
   MD_MAX72XX *pM = nullptr;
-  void displayBarGraph(uint8_t                 zone,
-                       const P104_zone_struct& zstruct,
-                       const String          & graph);
   void modulesOnOff(uint8_t                    start,
                     uint8_t                    end,
                     MD_MAX72XX::controlValue_t on_off);
+  # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
+  # ifdef P104_USE_BAR_GRAPH
+  void displayBarGraph(uint8_t                 zone,
+                       const P104_zone_struct& zstruct,
+                       const String          & graph);
   void drawOneBarGraph(uint16_t lower,
                        uint16_t upper,
                        int16_t  pixBottom,
@@ -401,6 +404,12 @@ private:
                        uint8_t  barType,
                        uint8_t  row);
   # endif // ifdef P104_USE_BAR_GRAPH
+
+  # ifdef P104_USE_DOT_SET
+  void displayDots(uint8_t                 zone,
+                   const P104_zone_struct& zstruct,
+                   const String          & dots);
+  # endif // ifdef P104_USE_DOT_SET
 
   void displayOneZoneText(uint8_t                 currentZone,
                           const P104_zone_struct& idx,
