@@ -94,6 +94,8 @@ Change log
 .. versionchanged:: 2.0
   ...
 
+  |added| 2023-09-25 ESP32 Internal temperature sensor option, Get Config values
+
   |added|
   Major overhaul for 2.0 release.
 
