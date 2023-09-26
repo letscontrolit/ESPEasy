@@ -175,12 +175,7 @@ void ImprovWiFi::sendDeviceUrl(ImprovTypes::Command cmd)
 {
   // URL where user can finish onboarding or use device
   // Recommended to use website hosted by device
-
-  const IPAddress address = WiFi.localIP();
-  char buffer[16]{};
-
-  sprintf(buffer, "%d.%d.%d.%d", address[0], address[1], address[2], address[3]);
-  std::string ipStr = std::string{ buffer };
+  const std::string ipStr{WiFi.localIP().toString().c_str()};
 
   if (improvWiFiParams.deviceUrl.empty())
   {
@@ -191,9 +186,7 @@ void ImprovWiFi::sendDeviceUrl(ImprovTypes::Command cmd)
     replaceAll(improvWiFiParams.deviceUrl, "{LOCAL_IPV4}", ipStr);
   }
 
-  std::vector<uint8_t> data = build_rpc_response(cmd, { improvWiFiParams.deviceUrl }, false);
-
-  sendResponse(data);
+  sendResponse(build_rpc_response(cmd, { improvWiFiParams.deviceUrl }, false));
 }
 
 void ImprovWiFi::onImprovError(OnImprovError *errorCallback)

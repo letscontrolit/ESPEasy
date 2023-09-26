@@ -16,9 +16,6 @@ bool P108_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
   return modbus.init(port, serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
 }
 
-bool P108_data_struct::isInitialized() const {
-  return modbus.isInitialized();
-}
 
 const __FlashStringHelper* Plugin_108_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {

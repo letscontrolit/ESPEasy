@@ -57,7 +57,6 @@
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"
 #include "../Globals/NetworkState.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 
@@ -320,7 +319,7 @@ void WebServerInit()
   // List of headers to be recorded
   // "If-None-Match" is used to see whether we need to serve a static file, or simply can reply with a 304 (not modified)
   const char * headerkeys[] = {"If-None-Match"};
-  const size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
+  constexpr size_t headerkeyssize = NR_ELEMENTS(headerkeys);
   web_server.collectHeaders(headerkeys, headerkeyssize );
   #if defined(ESP8266) || defined(ESP32)
   {
@@ -683,7 +682,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice, const String& csscla
       }
     }
 
-    if (validTaskIndex(x) && !validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
+    if (validTaskIndex(x) && !validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
       addDisabled();
     }
     {

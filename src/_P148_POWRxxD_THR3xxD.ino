@@ -71,7 +71,7 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
         P148_GPIO_TM1621_RD,
         P148_GPIO_TM1621_CS
       };
-      constexpr size_t nrElements = sizeof(values) / sizeof(values[0]);
+      constexpr size_t nrElements = NR_ELEMENTS(values);
 
       for (size_t i = 0; i < nrElements; ++i) {
         if (i != 0) { addHtml(event->String1); }
@@ -126,7 +126,7 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P148_data_struct::Tm1621Device::POWR3xxD),
           static_cast<int>(P148_data_struct::Tm1621Device::THR3xxD)
         };
-        constexpr size_t nrElements = sizeof(optionValues) / sizeof(optionValues[0]);
+        constexpr size_t nrElements = NR_ELEMENTS(optionValues);
 
         addFormSelector(F("Device Template"), F("devtmpl"), nrElements, options, optionValues, P148_DEVICE_SELECTOR);
         addFormNote(F("GPIO settings will be ignored when selecting other than 'Custom'"));

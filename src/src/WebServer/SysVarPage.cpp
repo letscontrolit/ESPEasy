@@ -91,6 +91,9 @@ void handle_sysvars() {
 #if FEATURE_ADC_VCC
   addSysVar_enum_html(SystemVariables::VCC);
 #endif // if FEATURE_ADC_VCC
+  #if FEATURE_INTERNAL_TEMPERATURE
+  addSysVar_enum_html(SystemVariables::INTERNAL_TEMPERATURE);
+  #endif // if FEATURE_INTERNAL_TEMPERATURE
 
   addTableSeparator(F("Services Status"), 3, 3);
 

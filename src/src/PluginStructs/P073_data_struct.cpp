@@ -415,8 +415,7 @@ void P073_data_struct::LogBufferContent(String prefix) {
 
     for (uint8_t i = 0; i < 8; i++) {
       if (i > 0) { log += ','; }
-      log += F("0x");
-      log += String(showbuffer[i], HEX);
+      log += formatToHex(showbuffer[i]);
       log += ',';
       log += showperiods[i] ? F(".") : F("");
     }

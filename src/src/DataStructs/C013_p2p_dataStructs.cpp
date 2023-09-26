@@ -25,7 +25,7 @@ bool C013_SensorDataStruct::isValid() const
 
 bool C013_SensorDataStruct::matchesPluginID(pluginID_t pluginID) const
 {
-  if (deviceNumber == 255 || !validPluginID(deviceNumber) || !validPluginID(pluginID)) {
+  if (deviceNumber.value == 255 || !validPluginID(deviceNumber) || !validPluginID(pluginID)) {
     // Was never set, so probably received data from older node.
     return true;
   }
@@ -34,7 +34,7 @@ bool C013_SensorDataStruct::matchesPluginID(pluginID_t pluginID) const
 
 bool C013_SensorDataStruct::matchesSensorType(Sensor_VType sensor_type) const
 {
-  if (deviceNumber == 255 || sensorType == Sensor_VType::SENSOR_TYPE_NONE) {
+  if (deviceNumber.value == 255 || sensorType == Sensor_VType::SENSOR_TYPE_NONE) {
     // Was never set, so probably received data from older node.
     return true;
   }
