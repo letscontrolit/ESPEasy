@@ -123,7 +123,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       // @giig1967g: set current task value for taking actions after changes in the task gpio
-      const uint32_t key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
+      const uint32_t key = createKey(PLUGIN_GPIO, CONFIG_PIN1);
 
       auto it = globalMapPortStatus.find(key);
 
@@ -177,7 +177,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
       SwitchWebformSave(
         event->TaskIndex,
-        PLUGIN_ID_001,
+        PLUGIN_GPIO,
         P001_BOOTSTATE,
         P001_DEBOUNCE,
         P001_DOUBLECLICK,
@@ -196,7 +196,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       if (validGpio(CONFIG_PIN1))
       {
         portStatusStruct newStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
+        const uint32_t   key = createKey(PLUGIN_GPIO, CONFIG_PIN1);
 
         // Read current status or create empty if it does not exist
         newStatus = globalMapPortStatus[key];
@@ -360,7 +360,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
       if (validGpio(CONFIG_PIN1))
       {
-        const uint32_t key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
+        const uint32_t key = createKey(PLUGIN_GPIO, CONFIG_PIN1);
 
         // WARNING operator [],creates an entry in map if key doesn't exist:
         portStatusStruct currentStatus = globalMapPortStatus[key];
@@ -642,7 +642,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      removeTaskFromPort(createKey(PLUGIN_ID_001, CONFIG_PIN1));
+      removeTaskFromPort(createKey(PLUGIN_GPIO, CONFIG_PIN1));
       break;
     }
 
@@ -668,7 +668,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       portStatusStruct tempStatus;
 
       // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_001, event->Par1);
+      const uint32_t key = createKey(PLUGIN_GPIO, event->Par1);
       tempStatus = globalMapPortStatus[key];
 
       tempStatus.state = event->Par2;

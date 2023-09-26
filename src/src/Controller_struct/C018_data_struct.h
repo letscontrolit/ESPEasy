@@ -30,7 +30,9 @@ public:
             taskIndex_t   sampleSet_Initiator,
             int8_t        reset_pin);
 
-  bool isInitialized() const;
+  bool isInitialized() const {
+    return ((C018_easySerial != nullptr) && (myLora != nullptr) && autobaud_success);
+  }
 
   bool hasJoined() const;
 

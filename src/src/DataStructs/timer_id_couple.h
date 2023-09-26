@@ -1,7 +1,7 @@
 #ifndef DATASTRUCTS_TIMER_ID_COUPLE_H
 #define DATASTRUCTS_TIMER_ID_COUPLE_H
 
-
+#include "../../ESPEasy_common.h"
 
 
 /*********************************************************************************************\
@@ -9,11 +9,13 @@
 \*********************************************************************************************/
 
 struct timer_id_couple {
-  timer_id_couple(unsigned long id, unsigned long newtimer);
-  
-  timer_id_couple(unsigned long id);
+  timer_id_couple(unsigned long id, unsigned long newtimer) : _id(id), _timer(newtimer) {}
 
-  bool operator<(const timer_id_couple& other);
+  timer_id_couple(unsigned long id) : _id(id) {
+    _timer = millis();
+  }
+
+  bool operator<(const timer_id_couple& other) const;
 
   unsigned long _id;
   unsigned long _timer;

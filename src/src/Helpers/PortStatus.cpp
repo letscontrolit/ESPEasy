@@ -99,12 +99,12 @@ void addMonitorToPort(uint32_t key) {
   globalMapPortStatus[key].monitor = 1;
 }
 
-uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber) {
-  return (uint32_t)pluginNumber << 16 | portNumber;
+uint32_t createKey(pluginID_t pluginNumber, uint16_t portNumber) {
+  return ((uint32_t)pluginNumber.value << 16) | portNumber;
 }
 
 pluginID_t getPluginFromKey(uint32_t key) {
-  return static_cast<pluginID_t>((key >> 16) & 0xFFFF);
+  return pluginID_t::toPluginID((key >> 16) & 0xFFFF);
 }
 
 uint16_t getPortFromKey(uint32_t key) {
@@ -218,7 +218,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
       reply += tmp;
     }
     reply += F("\",\n\"plugin\": ");
-    reply += getPluginFromKey(key);
+    reply += getPluginFromKey(key).value;
     reply += F(",\n\"pin\": ");
     reply += getPortFromKey(key);
     reply += F(",\n\"mode\": \"");

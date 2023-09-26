@@ -41,54 +41,63 @@ void handle_notifications() {
   // char tmpString[64];
 
 
-  uint8_t notificationindex          = getFormItemInt(F("index"), 0);
+  // 'index' value in the URL
+  uint8_t notificationindex  = getFormItemInt(F("index"), 0);
   boolean notificationindexNotSet = notificationindex == 0;
   --notificationindex;
 
-  const int notification = getFormItemInt(F("notification"), -1);
+  const int notification_webarg_value = getFormItemInt(F("notification"), -1);
 
-  if ((notification != -1) && !notificationindexNotSet)
+  if (!notificationindexNotSet && notification_webarg_value != -1)
   {
-    MakeNotificationSettings(NotificationSettings);
+    const npluginID_t notification = npluginID_t::toPluginID(notification_webarg_value);
+    if (notification == INVALID_N_PLUGIN_ID) {
+      Settings.Notification[notificationindex] = INVALID_N_PLUGIN_ID.value;
+      Settings.NotificationEnabled[notificationindex] = false;
 
-    if (Settings.Notification[notificationindex] != notification)
-    {
-      Settings.Notification[notificationindex] = notification;
-    }
-    else
-    {
-      if (Settings.Notification[notificationindex] != 0)
+    } else {
+      MakeNotificationSettings(NotificationSettings);
+
+      if (Settings.Notification[notificationindex] != notification.value)
       {
-        nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
-
-        if (validNProtocolIndex(NotificationProtocolIndex)) {
-          String dummyString;
-          NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
-        }
-        NotificationSettings.Port                       = getFormItemInt(F("port"), 0);
-        NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
-        NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
-        Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
-        strncpy_webserver_arg(NotificationSettings.Domain,   F("domain"));
-        strncpy_webserver_arg(NotificationSettings.Server,   F("server"));
-        strncpy_webserver_arg(NotificationSettings.Sender,   F("sender"));
-        strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
-        strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
-        strncpy_webserver_arg(NotificationSettings.User,     F("user"));
-        strncpy_webserver_arg(NotificationSettings.Pass,     F("pass"));
-        strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
+        Settings.Notification[notificationindex] = notification.value;
       }
+      else
+      {
+        if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
+        {
+          nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
+
+          if (validNProtocolIndex(NotificationProtocolIndex)) {
+            String dummyString;
+            NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
+          }
+          NotificationSettings.Port                       = getFormItemInt(F("port"), 0);
+          NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
+          NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
+          Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
+          strncpy_webserver_arg(NotificationSettings.Domain,   F("domain"));
+          strncpy_webserver_arg(NotificationSettings.Server,   F("server"));
+          strncpy_webserver_arg(NotificationSettings.Sender,   F("sender"));
+          strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
+          strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
+          strncpy_webserver_arg(NotificationSettings.User,     F("user"));
+          strncpy_webserver_arg(NotificationSettings.Pass,     F("pass"));
+          strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
+        }
+      }
+      addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct)));
     }
 
     // Save the settings.
-    addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct)));
     addHtmlError(SaveSettings());
 
     if (hasArg(F("test"))) {
       // Perform tests with the settings in the form.
       nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
-      if (validNProtocolIndex(NotificationProtocolIndex))
+      if (validNProtocolIndex(NotificationProtocolIndex) &&
+          Settings.NotificationEnabled[notificationindex])
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
@@ -125,12 +134,12 @@ void handle_notifications() {
       addHtmlInt(x + 1);
       html_TD();
 
-      if (Settings.Notification[x] != 0)
+      if (Settings.Notification[x] != INVALID_N_PLUGIN_ID.value)
       {
         addEnabled(Settings.NotificationEnabled[x]);
 
         html_TD();
-        uint8_t   NotificationProtocolIndex = getNProtocolIndex(Settings.Notification[x]);
+        uint8_t   NotificationProtocolIndex = getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[x]));
         String NotificationName          = F("(plugin not found?)");
 
         if (validNProtocolIndex(NotificationProtocolIndex))
@@ -182,7 +191,7 @@ void handle_notifications() {
 
     addHelpButton(F("EasyNotifications"));
 
-    if (Settings.Notification[notificationindex])
+    if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {
       MakeNotificationSettings(NotificationSettings);
       LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));

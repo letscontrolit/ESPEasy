@@ -89,7 +89,9 @@ struct P052_data_struct : public PluginTaskData_base {
             const int16_t           serial_rx,
             const int16_t           serial_tx);
 
-  bool                              isInitialized() const;
+  bool                              isInitialized() const {
+      return modbus.isInitialized();
+  }
 
   static const __FlashStringHelper* Plugin_052_valuename(uint8_t value_nr,
                                                          bool    displayString);

@@ -28,7 +28,7 @@ String Command_Settings_Build(struct EventStruct *event, const char* Line)
 	} else {
       return return_result(event, concat(F("Build:"), static_cast<int>(Settings.Build)));
 	}
-	return return_command_success_str();
+	return return_command_success();
 }
 
 String Command_Settings_Unit(struct EventStruct *event, const char* Line)
@@ -39,7 +39,7 @@ String Command_Settings_Unit(struct EventStruct *event, const char* Line)
 	} else {
       return return_result(event, concat(F("Unit:"), static_cast<int>(Settings.Unit)));
 	}
-	return return_command_success_str();
+	return return_command_success();
 }
 
 String Command_Settings_Name(struct EventStruct *event, const char* Line)
@@ -68,23 +68,23 @@ const __FlashStringHelper *  Command_Settings_Password_Clear(struct EventStruct 
 		// There is a password set, so we must check it.
 		const String password = parseStringKeepCase(Line, 2);
 		if (!storedPassword.equals(password)) {
-			return return_command_failed();
+			return return_command_failed_flashstr();
 		}
         ZERO_FILL(SecuritySettings.Password);
 	}
-	return return_command_success();
+	return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Settings_Save(struct EventStruct *event, const char* Line)
 {
 	SaveSettings();
-	return return_command_success();
+	return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Settings_Load(struct EventStruct *event, const char* Line)
 {
 	LoadSettings();
-	return return_command_success();
+	return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, const char* Line)
@@ -107,6 +107,6 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 const __FlashStringHelper * Command_Settings_Reset(struct EventStruct *event, const char* Line)
 {
 	ResetFactory();
-	reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryCommand);
-	return return_command_success();
+	reboot(IntendedRebootReason_e::ResetFactoryCommand);
+	return return_command_success_flashstr();
 }

@@ -129,7 +129,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       // @giig1967g: set current task value for taking actions after changes
-      const uint32_t key = createKey(PLUGIN_ID_019, CONFIG_PORT);
+      const uint32_t key = createKey(PLUGIN_PCF, CONFIG_PORT);
 
       auto it = globalMapPortStatus.find(key);
 
@@ -160,7 +160,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 
       SwitchWebformSave(
         event->TaskIndex,
-        PLUGIN_ID_019,
+        PLUGIN_PCF,
         P019_BOOTSTATE,
         P019_DEBOUNCE,
         P019_DOUBLECLICK,
@@ -179,7 +179,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       if (CONFIG_PORT >= 0)
       {
         portStatusStruct newStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_019, CONFIG_PORT);
+        const uint32_t   key = createKey(PLUGIN_PCF, CONFIG_PORT);
 
         // Read current status or create empty if it does not exist
         newStatus = globalMapPortStatus[key];
@@ -269,7 +269,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
         case PLUGIN_MONITOR:
         {
           // port monitoring, generates an event by rule command 'monitor,gpio,port#'
-          const uint32_t key                   = createKey(PLUGIN_ID_019, event->Par1);
+          const uint32_t key                   = createKey(PLUGIN_PCF, event->Par1);
           const portStatusStruct currentStatus = globalMapPortStatus[key];
 
           //  if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
@@ -327,7 +327,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
          on Button#State=3 do //will fire if doubleclick
       \**************************************************************************/
       portStatusStruct currentStatus;
-      const uint32_t   key = createKey(PLUGIN_ID_019, CONFIG_PORT);
+      const uint32_t   key = createKey(PLUGIN_PCF, CONFIG_PORT);
 
       // WARNING operator [],creates an entry in map if key doesn't exist:
       currentStatus = globalMapPortStatus[key];
@@ -550,7 +550,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
     // giig1967g: Added EXIT function
     case PLUGIN_EXIT:
     {
-      removeTaskFromPort(createKey(PLUGIN_ID_019, CONFIG_PORT));
+      removeTaskFromPort(createKey(PLUGIN_PCF, CONFIG_PORT));
       break;
     }
 
@@ -604,7 +604,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       portStatusStruct tempStatus;
 
       // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_019, event->Par1);
+      const uint32_t key = createKey(PLUGIN_PCF, event->Par1);
       tempStatus = globalMapPortStatus[key];
 
       tempStatus.state = event->Par2;
@@ -681,7 +681,7 @@ boolean Plugin_019_Write(uint8_t Par1, uint8_t Par2)
   uint32_t key;
 
   for (i = 0; i < 8; i++) {
-    key = createKey(PLUGIN_ID_019, unit + i);
+    key = createKey(PLUGIN_PCF, unit + i);
 
     auto it = globalMapPortStatus.find(key);
 
@@ -692,7 +692,7 @@ boolean Plugin_019_Write(uint8_t Par1, uint8_t Par2)
     }
   }
 
-  key = createKey(PLUGIN_ID_019, Par1);
+  key = createKey(PLUGIN_PCF, Par1);
 
   if (Par2 == 1) {
     portmask |= (1 << (port - 1));

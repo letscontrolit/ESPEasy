@@ -22,6 +22,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/_Plugin_init.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
@@ -52,9 +53,9 @@ const __FlashStringHelper * Command_Malloc(struct EventStruct *event, const char
 
   ramtest = (char *)malloc(size);
 
-  if (ramtest == nullptr) { return return_command_failed(); }
+  if (ramtest == nullptr) { return return_command_failed_flashstr(); }
   free(ramtest);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 String Command_SysLoad(struct EventStruct *event, const char *Line)
@@ -72,7 +73,7 @@ const __FlashStringHelper * Command_SerialFloat(struct EventStruct *event, const
   pinMode(1, INPUT);
   pinMode(3, INPUT);
   delay(60000);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_MemInfo(struct EventStruct *event, const char *Line)
@@ -84,7 +85,7 @@ const __FlashStringHelper * Command_MemInfo(struct EventStruct *event, const cha
   serialPrint(F("ExtraTaskSettingsStruct| "));
   serialPrintln(String(sizeof(ExtraTaskSettings)));
   serialPrint(F("DeviceStruct           | "));
-  serialPrintln(String(Device.size()));
+  serialPrintln(String(getNrBuiltInDeviceIndex()));
   return return_see_serial(event);
 }
 
@@ -119,7 +120,7 @@ const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, co
   }
   return return_see_serial(event);
   #else
-  return return_command_failed();
+  return return_command_failed_flashstr();
   #endif // ifndef BUILD_MINIMAL_OTA
 }
 
@@ -161,14 +162,14 @@ const __FlashStringHelper * Command_logentry(struct EventStruct *event, const ch
   #endif
     ) { level = event->Par2; }
   addLog(level, tolerantParseStringKeepCase(Line, 2));
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, const char *Line)
 {
   addLog(LOG_LEVEL_INFO, F("JSON Port Status: Command not implemented yet."));
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
@@ -213,6 +214,6 @@ const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, con
     debugPortStatus(it);
   }
 
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 #endif // BUILD_NO_DIAGNOSTIC_COMMANDS

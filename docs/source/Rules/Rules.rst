@@ -1,3 +1,5 @@
+.. _Rules:
+
 #####
 Rules
 #####
@@ -1521,7 +1523,7 @@ Just create Generic - Dummy Device and variables inside it.
 
 Alternatively, TASKname and/or VARname can be used instead of TASKnr and VARnr:
 
- .. code-block:: html
+.. code-block:: none
 
  TaskValueSet,TASKname,VARname,Value
  TaskValueSet,TASKnr,VARname,Value
@@ -1955,6 +1957,41 @@ Added: 2022/07/23
 * Calls made to a HTTP server can now also follow redirects. (GET and HEAD calls only) This has to be enabled in Tools->Advanced page.
 * Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
 * HTTP user credentials now can handle Basic Auth and Digest Auth.
+
+
+Convert curl POST command to PostToHTTP
+---------------------------------------
+
+Source: The Letscontrolit Forum.
+
+Like the ``SendToHTTP`` command, there are similar ``PostToHTTP`` and ``PutToHTTP`` commands, using the corresponding ``POST`` and ``PUT`` HTTP verbs to transmit data to a remote host.
+
+When translating a known ``curl`` command-line to ``PostToHTTP`` we have this example:
+
+Curl command sending data to Home assistant:
+
+.. code-block:: none
+
+  curl -X POST -H "Authorization: Bearer VERY_LONG_HOME_ASSISTANT_TOKEN_TO_VALORIZE" -H "Content-Type: application/json" -d '{"state": "off"}' http://192.168.1.25:8123/api/states/light.shellyplus1pm_123456abc123_switch_0
+
+Corresponding PostToHTTP command from rules using the 'Format 1' syntax: (formatting Switch State value to on/off in all lowercase)
+
+.. code-block:: none
+
+  PostToHTTP,192.168.1.25,8123,/api/states/light.shellyplus1pm_123456abc123_switch_0,'Authorization: Bearer VERY_LONG_HOME_ASSISTANT_TOKEN_TO_VALORIZE%LF%Content-Type: application/json',`{"state": "[Switch#State#O#l]"}`
+
+Corresponding PostToHTTP command from rules using the 'Format 2' syntax:
+
+.. code-block:: none
+
+  PostToHTTP,http://192.168.1.25:8123/api/states/light.shellyplus1pm_123456abc123_switch_0,'Authorization: Bearer VERY_LONG_HOME_ASSISTANT_TOKEN_TO_VALORIZE%LF%Content-Type: application/json',`{"state": "[Switch#State#O#l]"}`
+
+
+Remarks:
+
+- Multiple headers have to be combined into 1 (quoted) string argument, using ``%LF%`` as a separator.
+- Authorization can, instead of including a ``Authorization`` header, be included in the 'Format 2' syntax like ``http://username:password@url``, this will be transformed to the proper header value.
+- Similarly, a ``PUT`` request can be converted to ``PutToHTTP``.
 
 
 Dew Point for temp/humidity sensors (BME280 for example)

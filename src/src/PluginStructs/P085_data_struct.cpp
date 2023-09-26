@@ -15,10 +15,6 @@ bool P085_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
   return modbus.init(port, serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
 }
 
-bool P085_data_struct::isInitialized() const {
-  return modbus.isInitialized();
-}
-
 const __FlashStringHelper* Plugin_085_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P085_QUERY_V:      return displayString ? F("Voltage (V)") : F("V");

@@ -136,7 +136,7 @@ void handle_settingsarchive() {
     }
   } else if (hasArg(F("reboot"))) {
     showOptions = false;
-    reboot(ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings);
+    reboot(IntendedRebootReason_e::RestoreSettings);
   }
 
   if (showOptions) {

@@ -226,7 +226,7 @@ void handle_setup() {
   TXBuffer.endStream();
   delay(10);
   if (clearWiFiCredentials) {
-    reboot(ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings);
+    reboot(IntendedRebootReason_e::RestoreSettings);
   }
 }
 
