@@ -2975,6 +2975,18 @@ To create/register a plugin, you have to :
   #define FEATURE_PLUGIN_PRIORITY   0 // Disable by default
 #endif
 
+#ifndef FEATURE_INTERNAL_TEMPERATURE
+  #if defined(ESP32) // Feature is only available on (most?) ESP32 chips
+    #define FEATURE_INTERNAL_TEMPERATURE 1
+  #else
+    #define FEATURE_INTERNAL_TEMPERATURE 0 // Not evailable on ESP8266
+  #endif
+#endif
+#if defined(FEATURE_INTERNAL_TEMPERATURE) && defined(ESP8266)
+  #undef FEATURE_INTERNAL_TEMPERATURE
+  #define FEATURE_INTERNAL_TEMPERATURE   0 // Not evailable on ESP8266
+#endif
+
 #ifndef FEATURE_I2C_DEVICE_CHECK
   #ifdef ESP8266_1M
     #define FEATURE_I2C_DEVICE_CHECK  0 // Disabled by default for 1M units

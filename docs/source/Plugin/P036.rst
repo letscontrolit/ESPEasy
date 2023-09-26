@@ -66,16 +66,20 @@ Device Settings
 .. image:: P036_ScrollOptions.png
 
 * **Scroll**: Switching between pages can be "instant", "scrolling" or a "ticker" band. Please note that scrolling will need more resources of the ESP, which can have an effect on other active tasks of the node.
+
 For the ``Ticker`` there are some restrictions:
+
 * Depending on the build used (NORMAL and CUSTOM) this option is available
 * only one line is displaying the ticker string
 * all line contents are parsed and combined to this ticker string, the parsing happens only at each ticker start (using the setting ``Interval``)
 * the optional split token ``<|>`` is replaced by three spaces
-* the gaps between the ticker items must be set by the ``line content`` (tailing spaces)
+* the gaps between the ticker items must be set by the ``line content`` (trailing spaces)
 * the starting alignment (left, center, right) depends on the setting ``Align content (global)``
 * the font is taken from the setting ``Modify font`` of the first line, the ``Alignment`` settings of the lines are ignored (always right aligned)
-* the ticker speed depends on the length of the ticker string and the setting ``Interval`` setting
+* the ticker speed depends on the length of the ticker string and the task ``Interval`` setting
 * the footer is automatically hidden
+
+.. spacer
 
 * **GPIO <- Display button**: Setting up a ``Display Button``, allows to configure a Display Timeout and wake the display on demand, either by a button, or by using some presence detection.
 
@@ -108,7 +112,7 @@ Content
 
 .. image:: P036_HeaderOptions.png
 
-* **Header** / **Header (alternate)**: The plugin allows for a header line, which may show some user selectable information. When using a different setting for **Header (alternate)**, the header will be updated halfway of the Interval time.
+* **Header** / **Header (alternate)**: The plugin allows for a header line, which may show some user selectable information. When using a different setting for **Header (alternate)**, the header will be updated halfway of the Interval time. The **User defined 1/2** options are not available in all builds. If they are available, their content can be set using the ``oledframedcmd,userDef1,'<user Defined Header1>'`` and ``oledframedcmd,userDef2,'<user Defined Header2>'`` commands (by default they are empty), see the command reference below for details.
 
 * **Scroll long lines**: When checked, lines that won't fit on the display will be scrolled to be completely shown.
 
