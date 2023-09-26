@@ -51,7 +51,7 @@ uint32_t createTaskInfoJson(bool send) {
       }
       expected_size += writeToMqtt(concat(F("{\"taskName\":\""), getTaskDeviceName(task)), send);
       expected_size += writeToMqtt(concat(F("\",\"taskIndex\":"), task), send);
-      expected_size += writeToMqtt(concat(F(",\"pluginId\":"), getPluginID_from_TaskIndex(task)), send);
+      expected_size += writeToMqtt(concat(F(",\"pluginId\":"), getPluginID_from_TaskIndex(task).value), send);
       expected_size += writeToMqtt(F(",\"taskValues\":["), send);
     }
 

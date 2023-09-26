@@ -72,13 +72,13 @@ String Command_Wifi_HiddenSSID(struct EventStruct *event, const char *Line)
 const __FlashStringHelper* Command_Wifi_Scan(struct EventStruct *event, const char *Line)
 {
   WiFiScan_log_to_serial();
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_Connect(struct EventStruct *event, const char *Line)
 {
   WiFiEventData.wifiConnectAttemptNeeded = true;
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_Disconnect(struct EventStruct *event, const char *Line)
@@ -86,19 +86,19 @@ const __FlashStringHelper* Command_Wifi_Disconnect(struct EventStruct *event, co
   RTC.clearLastWiFi(); // Force a WiFi scan
   WifiDisconnect();
 
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_APMode(struct EventStruct *event, const char *Line)
 {
   setAP(true);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_STAMode(struct EventStruct *event, const char *Line)
 {
   setSTA(true);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
@@ -127,13 +127,13 @@ String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
   } else {
     return return_result(event, concat(F("WiFi Mode:"),  getWifiModeString(WiFi.getMode())));
   }
-  return return_command_success_str();
+  return return_command_success();
 }
 
 const __FlashStringHelper* Command_Wifi_AllowAP(struct EventStruct *event, const char *Line)
 {
   Settings.DoNotStartAP(false);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 // FIXME: TD-er This is not an erase, but actually storing the current settings
@@ -143,5 +143,5 @@ const __FlashStringHelper* Command_WiFi_Erase(struct EventStruct *event, const c
   WiFi.persistent(true);  // use SDK storage of SSID/WPA parameters
   WifiDisconnect();       // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  return return_command_success();
+  return return_command_success_flashstr();
 }

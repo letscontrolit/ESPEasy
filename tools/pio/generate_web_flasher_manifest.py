@@ -84,6 +84,9 @@ def parse_filename(file, version, variant, file_suffix):
             if '_4M316k' in variant:
                 flash_size = '4M'
                 main_group = '4M Flash'
+            elif '_8M1M' in variant:
+                flash_size = '8M1M'
+                main_group = '8M Flash'
             elif '_16M1M' in variant:
                 flash_size = '16M1M'
                 main_group = '16M Flash'
@@ -264,6 +267,7 @@ def generate_manifest_files(bin_folder, output_prefix):
         '4M Flash',
         '4M Flash ESP32-solo1',
         '4M Flash Collection Builds',
+        '8M Flash',
         '16M Flash',
         '2M Flash',
         '1M Flash',

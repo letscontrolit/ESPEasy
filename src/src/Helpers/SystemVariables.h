@@ -4,7 +4,6 @@
 #include "../../ESPEasy_common.h"
 
 class SystemVariables {
-
 public:
 
   enum Enum : uint8_t {
@@ -13,13 +12,16 @@ public:
     BSSID,
     CR,
     IP,
-    IP4,  // 4th IP octet
+    IP4, // 4th IP octet
     SUBNET,
     GATEWAY,
     DNS,
     DNS_1,
     DNS_2,
     CLIENTIP,
+    #if FEATURE_INTERNAL_TEMPERATURE
+    INTERNAL_TEMPERATURE,
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
     ISMQTT,
     ISMQTTIMP,
     ISNTP,
@@ -85,7 +87,7 @@ public:
     SYS_MONTH_0,
     S_CR,
     S_LF,
-    UNIT_sysvar,   // We already use UNIT as define.
+    UNIT_sysvar, // We already use UNIT as define.
     #if FEATURE_ZEROFILLED_UNITNUMBER
     UNIT_0_sysvar,
     #endif // FEATURE_ZEROFILLED_UNITNUMBER
@@ -96,12 +98,12 @@ public:
     UPTIME_MS,
     VCC,
     WI_CH,
-    FLASH_FREQ,    // Frequency of the flash chip
-    FLASH_SIZE,    // Real size of the flash chip
+    FLASH_FREQ, // Frequency of the flash chip
+    FLASH_SIZE, // Real size of the flash chip
     FLASH_CHIP_VENDOR,
     FLASH_CHIP_MODEL,
-    FS_SIZE,       // Size of the file system
-    FS_FREE,       // Free space (in bytes) on the file system
+    FS_SIZE,    // Size of the file system
+    FS_FREE,    // Free space (in bytes) on the file system
 
     ESP_CHIP_ID,
     ESP_CHIP_FREQ,
@@ -117,18 +119,17 @@ public:
 
   // Find the next thing to replace.
   // Return UNKNOWN when nothing needs to be replaced.
-  static SystemVariables::Enum nextReplacementEnum(const String& str, SystemVariables::Enum last_tested);
+  static SystemVariables::Enum      nextReplacementEnum(const String        & str,
+                                                        SystemVariables::Enum last_tested);
 
-  static String toString(SystemVariables::Enum enumval);
-  static const __FlashStringHelper * toFlashString(SystemVariables::Enum enumval);
+  static String                     toString(SystemVariables::Enum enumval);
+  static const __FlashStringHelper* toFlashString(SystemVariables::Enum enumval);
 
-  static String getSystemVariable(SystemVariables::Enum enumval);
+  static String                     getSystemVariable(SystemVariables::Enum enumval);
 
-  static void parseSystemVariables(String& s, boolean useURLencode);
-
+  static void                       parseSystemVariables(String& s,
+                                                         boolean useURLencode);
 };
-
-
 
 
 #endif // HELPERS_SYSTEMVARIABLES_H

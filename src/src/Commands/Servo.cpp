@@ -60,7 +60,7 @@ const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char 
       tempStatus.command = 0;
       savePortStatus(key, tempStatus);
       addLog(LOG_LEVEL_INFO, concat(log, F(" Servo detached")));
-      return return_command_success();
+      return return_command_success_flashstr();
 
     }
     # ifdef ESP32
@@ -86,10 +86,10 @@ const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char 
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
     // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
-    return return_command_success();
+    return return_command_success_flashstr();
   }
   #else // if FEATURE_SERVO
   addLog(LOG_LEVEL_ERROR, F("SERVO : command not included in build"));
   #endif // FEATURE_SERVO
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }

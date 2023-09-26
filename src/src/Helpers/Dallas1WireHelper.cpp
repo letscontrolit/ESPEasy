@@ -91,12 +91,14 @@ void Dallas_uint64_to_addr(uint64_t value, uint8_t addr[]) {
   while (i > 0) {
     --i;
     addr[i] = static_cast<uint8_t>(value & 0xFF);
-    value  /= 256;
+    value >>= 8;
   }
 }
 
 void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint8_t nrVariables) {
-  if ((gpio_pin_rx == -1) || (gpio_pin_tx == -1)) {
+  if ((gpio_pin_rx == -1) || 
+      (gpio_pin_tx == -1) ||
+      !validTaskIndex(TaskIndex)) {
     return;
   }
 
@@ -104,14 +106,10 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     nrVariables = VARS_PER_TASK;
   }
 
-  if (!validTaskIndex(TaskIndex)) {
-    return;
-  }
-
   std::map<uint64_t, String> addr_task_map;
 
   for (taskIndex_t task = 0; validTaskIndex(task); ++task) {
-    if (Dallas_plugin(Settings.TaskDeviceNumber[task])) {
+    if (Dallas_plugin(Settings.getPluginID_for_task(task))) {
       uint8_t tmpAddress[8] = { 0 };
 
       for (uint8_t var_index = 0; var_index < VARS_PER_TASK; ++var_index) {
@@ -119,17 +117,11 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
         uint64_t tmpAddr_64 = Dallas_addr_to_uint64(tmpAddress);
 
         if (tmpAddr_64 != 0) {
-          String label;
-          label.reserve(32);
-          label  = F(" (task ");
-          label += String(task + 1);
-          label += F(" [");
-          label += getTaskDeviceName(task);
-          label += '#';
-          label += getTaskValueName(task, var_index);
-          label += F("])");
-
-          addr_task_map[tmpAddr_64] = label;
+          addr_task_map[tmpAddr_64] = strformat(
+            F(" (task %d [%s#%s])")
+          , task + 1
+          , getTaskDeviceName(task).c_str()
+          , getTaskValueName(task, var_index).c_str());
         }
       }
     }
@@ -141,7 +133,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
 
   Dallas_reset(gpio_pin_rx, gpio_pin_tx);
   Dallas_reset_search();
-  uint8_t tmpAddress[8];
+  uint8_t tmpAddress[8]{};
 
   while (Dallas_search(tmpAddress, gpio_pin_rx, gpio_pin_tx))
   {
@@ -161,13 +153,13 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     addRowLabel(rowLabel);
     addSelector_Head(concat(F("dallas_addr"), static_cast<int>(var_index)));
     addSelector_Item(F("- None -"), -1, false); // Empty choice
-    uint8_t tmpAddress[8];
 
     // get currently saved address
     uint8_t savedAddress[8];
     Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index); // Need to fetch only once?
 
     for (uint8_t index = 0; index < scan_res.size(); ++index) {
+      uint8_t tmpAddress[8]{};
       Dallas_uint64_to_addr(scan_res[index], tmpAddress);
       String option = Dallas_format_address(tmpAddress, fixed_res[index]);
       auto   it     = addr_task_map.find(scan_res[index]);
@@ -222,11 +214,9 @@ void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
 
 void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint8_t nrVariables)
 {
-  if (gpio_pin_rx == -1) {
-    return;
-  }
-
-  if (gpio_pin_tx == -1) {
+  if (gpio_pin_rx == -1 ||
+      gpio_pin_tx == -1 ||
+      !validTaskIndex(TaskIndex)) {
     return;
   }
 
@@ -234,10 +224,7 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     nrVariables = VARS_PER_TASK;
   }
 
-  if (!validTaskIndex(TaskIndex)) {
-    return;
-  }
-  uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+  uint8_t addr[8]{};
 
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
     const int selection = getFormItemInt(concat(F("dallas_addr"), static_cast<int>(var_index)), -1);
@@ -251,7 +238,13 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx
 
 bool Dallas_plugin(pluginID_t pluginID)
 {
-  return (pluginID == 4) || (pluginID == 80) || (pluginID == 100);
+  constexpr pluginID_t PLUGIN_ID_P004_DALLAS_TEMP(4);
+  constexpr pluginID_t PLUGIN_ID_P080_DALLAS_IBUTTON(80);
+  constexpr pluginID_t PLUGIN_ID_P100_DS2423_COUNTER(100);
+
+  return (pluginID == PLUGIN_ID_P004_DALLAS_TEMP) || 
+         (pluginID == PLUGIN_ID_P080_DALLAS_IBUTTON) || 
+         (pluginID == PLUGIN_ID_P100_DS2423_COUNTER);
 }
 
 void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index)

@@ -236,9 +236,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (Plugin_078_ESPEasySerial->setRS485Mode(P078_DEPIN, P078_GET_FLAG_COLL_DETECT)) {
-        Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate);
+        Plugin_078_SDM = new (std::nothrow) SDM(*Plugin_078_ESPEasySerial, baudrate);
       } else {
-        Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate, P078_DEPIN);
+        Plugin_078_SDM = new (std::nothrow) SDM(*Plugin_078_ESPEasySerial, baudrate, P078_DEPIN);
       }
 
       if (Plugin_078_SDM != nullptr) {

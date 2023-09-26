@@ -14,6 +14,8 @@
 
 #define PLUGIN_011_I2C_ADDRESS 0x7f
 
+constexpr pluginID_t P011_PLUGIN_ID{PLUGIN_ID_011};
+
 boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -103,7 +105,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       {
         success = true;
         portStatusStruct tempStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_011, event->Par1);
+        const uint32_t   key = createKey(P011_PLUGIN_ID, event->Par1);
 
         // WARNING: operator [] creates an entry in the map if key does not exist
         // So the next command should be part of each command:
@@ -139,7 +141,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         Wire.endTransmission();
 
         portStatusStruct tempStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_011, event->Par1);
+        const uint32_t   key = createKey(P011_PLUGIN_ID, event->Par1);
 
         // WARNING: operator [] creates an entry in the map if key does not exist
         // So the next command should be part of each command:
@@ -171,7 +173,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
           Plugin_011_Write(event->Par1, !event->Par2);
 
           portStatusStruct tempStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_011, event->Par1);
+          const uint32_t   key = createKey(P011_PLUGIN_ID, event->Par1);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           // So the next command should be part of each command:
@@ -204,7 +206,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
           Scheduler.setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2);
 
           portStatusStruct tempStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_011, event->Par1);
+          const uint32_t   key = createKey(P011_PLUGIN_ID, event->Par1);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           // So the next command should be part of each command:
@@ -231,7 +233,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         if (equals(parseString(string, 2), F("ext")))
         {
           success = true;
-          const uint32_t key = createKey(PLUGIN_ID_011, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
+          const uint32_t key = createKey(P011_PLUGIN_ID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
           String dummyString;
 
           if (!existPortStatus(key)) {                                // tempStatus.mode == PIN_MODE_OUTPUT) // has been set as output
@@ -266,7 +268,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       portStatusStruct tempStatus;
 
       // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_011, event->Par1);
+      const uint32_t key = createKey(P011_PLUGIN_ID, event->Par1);
       tempStatus = globalMapPortStatus[key];
 
       tempStatus.state = event->Par2;
