@@ -130,7 +130,7 @@ String Command_ETH_Disconnect (struct EventStruct *event, const char* Line)
   setNetworkMedium(NetworkMedium_t::Ethernet);
   ETHConnectRelaxed();
 
-  return return_command_success_str();
+  return return_command_success();
 }
 
 #endif // if FEATURE_ETHERNET

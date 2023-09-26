@@ -1,7 +1,7 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 
 #include "../../ESPEasy_common.h"
-
+/*
 ResetFactoryDefaultPreference_struct::ResetFactoryDefaultPreference_struct(uint32_t preference) : _preference(preference) {}
 
 DeviceModel ResetFactoryDefaultPreference_struct::getDeviceModel() const {
@@ -130,3 +130,4 @@ void ResetFactoryDefaultPreference_struct::fetchProvisioningDat(bool checked) {
 uint32_t ResetFactoryDefaultPreference_struct::getPreference() {
   return _preference;
 }
+*/

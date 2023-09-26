@@ -39,7 +39,7 @@ ESPEasyControllerCache_CSV_dumper::ESPEasyControllerCache_CSV_dumper(bool joinTi
   }
 
   for (size_t task = 0; validTaskIndex(task); ++task) {
-    _includeTask[task] = _onlySetTasks ? validPluginID(Settings.TaskDeviceNumber[task]) : true;
+    _includeTask[task] = _onlySetTasks ? validPluginID(Settings.getPluginID_for_task(task)) : true;
   }
 
   if (_target == Target::CSV_file) {
@@ -159,7 +159,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
         _outputLine.line += _separator;
         _outputLine.line += _element.TaskIndex;
         _outputLine.line += _separator;
-        _outputLine.line += _element.pluginID;
+        _outputLine.line += _element.pluginID.value;
       }
 
       lastTimestamp = static_cast<uint32_t>(_element.unixTime);
@@ -199,7 +199,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
         if (!_pluginID_str.isEmpty()) { _pluginID_str += '/'; }
 
         _taskIndex_str += _element.TaskIndex;
-        _pluginID_str  += _element.pluginID;
+        _pluginID_str  += _element.pluginID.value;
       }
       ++csv_values_left;
     }

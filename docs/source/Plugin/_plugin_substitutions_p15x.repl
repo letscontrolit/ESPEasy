@@ -49,3 +49,16 @@
 .. |P153_maintainer| replace:: `tonhuisman`
 .. |P153_compileinfo| replace:: `.`
 .. |P153_usedlibraries| replace:: `.`
+
+.. |P154_name| replace:: :cyan:`BMP3xx`
+.. |P154_type| replace:: :cyan:`Environment`
+.. |P154_typename| replace:: :cyan:`Environment - BMP3xx`
+.. |P154_porttype| replace:: `.`
+.. |P154_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P154_github| replace:: P154_BMP3xx.ino
+.. _P154_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P154_BMP3xx.ino
+.. |P154_usedby| replace:: `.`
+.. |P154_shortinfo| replace:: `BMP3xx Temperature and Pressure sensors`
+.. |P154_maintainer| replace:: `TD-er`
+.. |P154_compileinfo| replace:: `.`
+.. |P154_usedlibraries| replace:: `Adafruit BMP3XX Library`

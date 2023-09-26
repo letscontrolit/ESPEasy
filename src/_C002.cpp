@@ -29,14 +29,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_002;
-      Protocol[protocolCount].usesMQTT     = true;
-      Protocol[protocolCount].usesTemplate = true;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 1883;
-      Protocol[protocolCount].usesID       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_002;
+      proto.usesMQTT     = true;
+      proto.usesTemplate = true;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 1883;
+      proto.usesID       = true;
       break;
     }
 
@@ -82,11 +82,15 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         if (deserializeDomoticzJson(event->String2, idx, nvalue, nvaluealt, svalue1, switchtype)) {
           for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
             // We need the index of the controller we are: 0...CONTROLLER_MAX
+            constexpr pluginID_t PLUGIN_ID_DOMOTICZ_HELPER(29);
+            # if defined(USES_P088)
+            constexpr pluginID_t PLUGIN_ID_HEATPUMP_IR(88);
+            # endif
             if (Settings.TaskDeviceEnabled[x] &&
                 (Settings.TaskDeviceSendData[ControllerID][x]
-                 || (Settings.TaskDeviceNumber[x] == 29)         // Domoticz helper doesn't have controller checkboxes...
+                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_DOMOTICZ_HELPER)         // Domoticz helper doesn't have controller checkboxes...
                  # if defined(USES_P088)
-                 || (Settings.TaskDeviceNumber[x] == 88)         // Heatpump IR doesn't have controller checkboxes...
+                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_HEATPUMP_IR)         // Heatpump IR doesn't have controller checkboxes...
                  # endif // if defined(USES_P088)
                 ) &&
                 (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
@@ -94,7 +98,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               String action;
               bool   mustSendEvent = false;
 
-              switch (Settings.TaskDeviceNumber[x]) {
+              switch (Settings.getPluginID_for_task(x).value) {
                 case 1: // temp solution, if input switch, update state
                 {
                   action  = F("inputSwitchState,");

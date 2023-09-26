@@ -11,31 +11,39 @@ struct ProtocolStruct
 {
   ProtocolStruct();
 
-  bool useCredentials() const;
+  bool useCredentials() const {
+    return usesAccount || usesPassword;
+  }
 
-  bool useExtendedCredentials() const;
+  bool useExtendedCredentials() const {
+    return usesExtCreds && useCredentials();
+  }
 
-  uint16_t defaultPort;
-  uint8_t     Number;
-  bool     usesMQTT       : 1;
-  bool     usesAccount    : 1;
-  bool     usesPassword   : 1;
-  bool     usesTemplate   : 1; // When set, the protocol will pre-load some templates like default MQTT topics
-  bool     usesID         : 1; // Whether a controller supports sending an IDX value sent along with plugin data
-  bool     Custom         : 1; // When set, the controller has to define all parameters on the controller setup page
-  bool     usesHost       : 1;
-  bool     usesPort       : 1;
-  bool     usesQueue      : 1;
-  bool     usesCheckReply : 1;
-  bool     usesTimeout    : 1;
-  bool     usesSampleSets : 1;
-  bool     usesExtCreds   : 1;
-  bool     needsNetwork   : 1;
-  bool     allowsExpire   : 1;
-  bool     allowLocalSystemTime : 1;
+  uint16_t defaultPort{};
+  union {
+    struct {
+      uint16_t usesMQTT             : 1;
+      uint16_t usesAccount          : 1;
+      uint16_t usesPassword         : 1;
+      uint16_t usesTemplate         : 1; // When set, the protocol will pre-load some templates like default MQTT topics
+      uint16_t usesID               : 1; // Whether a controller supports sending an IDX value sent along with plugin data
+      uint16_t Custom               : 1; // When set, the controller has to define all parameters on the controller setup page
+      uint16_t usesHost             : 1;
+      uint16_t usesPort             : 1;
+      uint16_t usesQueue            : 1;
+      uint16_t usesCheckReply       : 1;
+      uint16_t usesTimeout          : 1;
+      uint16_t usesSampleSets       : 1;
+      uint16_t usesExtCreds         : 1;
+      uint16_t needsNetwork         : 1;
+      uint16_t allowsExpire         : 1;
+      uint16_t allowLocalSystemTime : 1;
+    };
+    uint16_t bits{};
+  };
+
+//  uint8_t Number{};
 };
-
-typedef std::vector<ProtocolStruct> ProtocolVector;
 
 
 #endif // DATASTRUCTS_PROTOCOLSTRUCT_H

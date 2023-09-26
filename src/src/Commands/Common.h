@@ -5,18 +5,30 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataTypes/EventValueSource.h"
+
+
 #include <IPAddress.h>
 
-const __FlashStringHelper * return_command_success();
-const __FlashStringHelper * return_command_failed();
-String return_command_success_str();
-String return_command_failed_str();
+// Simple function to return "Ok", to avoid flash string duplication in the firmware.
+const __FlashStringHelper * return_command_success_flashstr();
+const __FlashStringHelper * return_command_failed_flashstr();
+
+const __FlashStringHelper * return_command_boolean_result_flashstr(bool success);
+
+String return_command_success();
+String return_command_failed();
+
 const __FlashStringHelper * return_incorrect_nr_arguments();
 const __FlashStringHelper * return_incorrect_source();
 const __FlashStringHelper * return_not_connected();
+
 String return_result(struct EventStruct *event,
                      const String      & result);
+
 const __FlashStringHelper * return_see_serial(struct EventStruct *event);
+
 
 String Command_GetORSetIP(struct EventStruct *event,
                           const __FlashStringHelper * targetDescription,

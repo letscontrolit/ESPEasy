@@ -274,7 +274,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   }
 
   #if FEATURE_SD
-  if (Settings.Pin_sd_cs == gpio && includeSDCard) { return F("SD-Card CS"); }
+  if (validGpio(gpio) && Settings.Pin_sd_cs == gpio && includeSDCard) { return F("SD-Card CS"); }
   #endif // if FEATURE_SD
 
 
