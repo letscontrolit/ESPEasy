@@ -59,7 +59,9 @@ struct P085_data_struct : public PluginTaskData_base {
             unsigned int      baudrate,
             uint8_t           modbusAddress);
 
-  bool isInitialized() const;
+  bool isInitialized() const {
+    return modbus.isInitialized();
+  }
 
   ModbusRTU_struct modbus;
 };

@@ -62,7 +62,7 @@ bool ControllerDelayHandlerStruct::readyToProcess(const Queue_element_base& elem
     return false;
   }
 
-  if (Protocol[protocolIndex].needsNetwork) {
+  if (getProtocolStruct(protocolIndex).needsNetwork) {
     return NetworkConnected(10);
   }
   return true;
@@ -258,7 +258,7 @@ void ControllerDelayHandlerStruct::process(
   int                                controller_number,
   do_process_function                func,
   TimingStatsElements                timerstats_id,
-  ESPEasy_Scheduler::IntervalTimer_e timerID) 
+  SchedulerIntervalTimer_e timerID) 
 {
   Queue_element_base *element(static_cast<Queue_element_base *>(getNext()));
 

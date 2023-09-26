@@ -82,20 +82,9 @@ void handle_pinstates() {
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
   {
     html_TR_TD();
-    addHtml('P');
-    const uint16_t plugin = getPluginFromKey(it->first);
+    const pluginID_t plugin = getPluginFromKey(it->first);
     const uint16_t port   = getPortFromKey(it->first);
-
-    if (plugin < 100)
-    {
-      addHtml('0');
-    }
-
-    if (plugin < 10)
-    {
-      addHtml('0');
-    }
-    addHtmlInt(plugin);
+    addHtml(plugin.toDisplayString());
     html_TD();
     addHtmlInt(port);
     html_TD();

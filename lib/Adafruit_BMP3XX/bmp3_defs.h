@@ -413,8 +413,8 @@ extern "C" {
 /* Macro variant to handle the bitname position if it is zero */
 #define BMP3_GET_BITS_POS_0(reg_data, bitname)  (reg_data & (bitname##_MSK))
 
-#define BMP3_GET_LSB(var)                       (uint8_t)(var & BMP3_SET_LOW_BYTE)
-#define BMP3_GET_MSB(var)                       (uint8_t)((var & BMP3_SET_HIGH_BYTE) >> 8)
+#define BMP3_GET_LSB(var)                       (uint8_t)((var) & BMP3_SET_LOW_BYTE)
+#define BMP3_GET_MSB(var)                       (uint8_t)(((var) & BMP3_SET_HIGH_BYTE) >> 8)
 
 /**\name Macros related to size */
 #define BMP3_LEN_CALIB_DATA                     UINT8_C(21)

@@ -12,8 +12,6 @@
 
 #include <GPIO_Direct_Access.h>
 
-#define GPIO_PLUGIN_ID  1
-
 
 const __FlashStringHelper * Internal_GPIO_pulseHelper::toString(GPIOtriggerMode mode)
 {
@@ -60,7 +58,7 @@ Internal_GPIO_pulseHelper::~Internal_GPIO_pulseHelper() {
 
 bool Internal_GPIO_pulseHelper::init()
 {
-  if (checkValidPortRange(GPIO_PLUGIN_ID, config.gpio)) {
+  if (checkValidPortRange(PLUGIN_GPIO, config.gpio)) {
     pinMode(config.gpio, config.pullupPinMode);
 
     pulseModeData.currentStableState = config.interruptPinMode == GPIOtriggerMode::PulseLow ? HIGH : LOW;

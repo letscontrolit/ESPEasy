@@ -9,7 +9,7 @@ String   lowestFreeStackfunction;
 #endif
 
 uint8_t lastBootCause                           = BOOT_CAUSE_MANUAL_REBOOT;
-unsigned long lastMixedSchedulerId_beforereboot = 0;
+SchedulerTimerID lastMixedSchedulerId_beforereboot(0);
 
 unsigned long idle_msec_per_sec = 0;
 unsigned long elapsed10ps       = 0;

@@ -108,7 +108,7 @@ void run_compiletime_checks() {
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          9u>(); // Is not stored
-  check_size<ProtocolStruct,                        6u>();
+  check_size<ProtocolStruct,                        4u>();
   #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif // if FEATURE_NOTIFIER

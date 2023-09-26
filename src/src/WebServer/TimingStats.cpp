@@ -10,10 +10,11 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/RamTracker.h"
 
 #include "../Globals/Device.h"
+
+#include "../Helpers/_Plugin_init.h"
 
 
 #define TIMING_STATS_THRESHOLD 100000
@@ -109,7 +110,7 @@ long stream_timing_statistics(bool clearStats) {
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
-      const deviceIndex_t deviceIndex = static_cast<deviceIndex_t>(x.first / 256);
+      const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(x.first >> 8);
 
       if (validDeviceIndex(deviceIndex)) {
         if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
@@ -118,7 +119,8 @@ long stream_timing_statistics(bool clearStats) {
           html_TR_TD();
         }
         {
-          addHtml(get_formatted_Plugin_number(Device[deviceIndex].Number));
+          const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
+          addHtml(get_formatted_Plugin_number(pluginID));
           addHtml(' ');
           addHtml(getPluginNameFromDeviceIndex(deviceIndex));
         }
@@ -131,7 +133,7 @@ long stream_timing_statistics(bool clearStats) {
 
   for (auto& x: controllerStats) {
     if (!x.second.isEmpty()) {
-      const int ProtocolIndex = x.first / 256;
+      const int ProtocolIndex = x.first >> 8;
 
       if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
         html_TR_TD_highlight();
@@ -139,7 +141,7 @@ long stream_timing_statistics(bool clearStats) {
         html_TR_TD();
       }
       {
-        addHtml(get_formatted_Controller_number(Protocol[ProtocolIndex].Number));
+        addHtml(get_formatted_Controller_number(getCPluginID_from_ProtocolIndex(ProtocolIndex)));
         addHtml(' ');
         addHtml(getCPluginNameFromProtocolIndex(ProtocolIndex));
       }

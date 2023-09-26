@@ -33,7 +33,7 @@ String Command_useNTP(struct EventStruct *event, const char *Line)
   } else {
     return return_result(event, concat(F("UseNTP:"), boolToString(Settings.UseNTP())));
   }
-  return return_command_success_str();
+  return return_command_success();
 }
 
 String Command_TimeZone(struct EventStruct *event, const char *Line)
@@ -43,7 +43,7 @@ String Command_TimeZone(struct EventStruct *event, const char *Line)
   } else {
     return return_result(event, concat(F("TimeZone:"), static_cast<int>(Settings.TimeZone)));
   }
-  return return_command_success_str();
+  return return_command_success();
 }
 
 String Command_DST(struct EventStruct *event, const char *Line)
@@ -53,7 +53,7 @@ String Command_DST(struct EventStruct *event, const char *Line)
   } else  {
     return return_result(event, concat(F("DST:"),  boolToString(Settings.DST)));
   }
-  return return_command_success_str();
+  return return_command_success();
 }
 
 String Command_DateTime(struct EventStruct *event, const char *Line)
@@ -87,5 +87,5 @@ String Command_DateTime(struct EventStruct *event, const char *Line)
     // serialPrintln();
     return return_result(event, concat(F("Datetime:"), node_time.getDateTimeString('-', ':', ' ')));
   }
-  return return_command_success_str();
+  return return_command_success();
 }

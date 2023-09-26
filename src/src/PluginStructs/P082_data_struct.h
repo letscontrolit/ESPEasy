@@ -76,7 +76,9 @@ struct P082_data_struct : public PluginTaskData_base {
             const int16_t     serial_rx,
             const int16_t     serial_tx);
 
-  bool isInitialized() const;
+  bool isInitialized() const {
+    return gps != nullptr && easySerial != nullptr;
+  }
 
   bool loop();
 
