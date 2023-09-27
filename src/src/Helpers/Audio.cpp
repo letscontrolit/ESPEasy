@@ -9,7 +9,7 @@
    Generate a tone of specified frequency on pin
  \*********************************************************************************************/
 bool tone_espEasy(int8_t _pin, unsigned int frequency, unsigned long duration) {
-  if (!validGpio(_pin)) return false;
+  if (!validGpio(_pin)) { return false; }
 
   // Duty cycle can be used as some kind of volume.
   if (!set_Gpio_PWM_pct(_pin, 50, frequency)) { return false; }
@@ -28,6 +28,23 @@ bool tone_espEasy(int8_t _pin, unsigned int frequency, unsigned long duration) {
 # if FEATURE_ANYRTTTL_LIB
 #  include <anyrtttl.h>
 #  include <pitches.h>
+#  if FEATURE_RTTTL_EVENTS
+#   include "../Globals/EventQueue.h"
+#   include "../Globals/Settings.h"
+static bool rtttlPlaying = false;
+#  endif // if FEATURE_RTTTL_EVENTS
+#  if FEATURE_ANYRTTTL_ASYNC
+static String rtttlMelody;
+void set_rtttl_melody(String& melody) {
+  if (melody.isEmpty()) {
+    rtttlMelody = String();
+  } else {
+    rtttlMelody = String(melody);
+  }
+}
+
+#  endif // if FEATURE_ANYRTTTL_ASYNC
+
 
 bool play_rtttl(int8_t _pin, const char *p) {
   if (!validGpio(_pin)) { return false; }
@@ -44,9 +61,28 @@ bool play_rtttl(int8_t _pin, const char *p) {
   if (anyrtttl::nonblocking::isPlaying()) { // If currently playing, cancel that
     addLog(LOG_LEVEL_INFO, F("RTTTL: Cancelling running song..."));
     anyrtttl::nonblocking::stop();
+    #   if FEATURE_RTTTL_EVENTS
+
+    if (Settings.UseRules) {
+      eventQueue.add(F("RTTTL#Cancelled"));
+    }
+    rtttlPlaying = false;
+    #   endif // if FEATURE_RTTTL_EVENTS
   }
-  anyrtttl::nonblocking::begin(_pin, p);
+
+  if (!rtttlMelody.isEmpty()) {
+    anyrtttl::nonblocking::begin(_pin, rtttlMelody.c_str());
+  } else {
+    anyrtttl::nonblocking::begin(_pin, p);
+  }
   anyrtttl::nonblocking::play();
+  #   if FEATURE_RTTTL_EVENTS
+
+  if (Settings.UseRules) {
+    eventQueue.add(F("RTTTL#Started"));
+  }
+  rtttlPlaying = true;
+  #   endif // if FEATURE_RTTTL_EVENTS
   #  else // if FEATURE_ANYRTTTL_ASYNC
   anyrtttl::blocking::play(_pin, p);
   #  endif // if FEATURE_ANYRTTTL_ASYNC
@@ -56,14 +92,26 @@ bool play_rtttl(int8_t _pin, const char *p) {
   return true;
 }
 
+#  if FEATURE_ANYRTTTL_ASYNC
 void update_rtttl() {
-  #  if FEATURE_ANYRTTTL_ASYNC
-
   if (anyrtttl::nonblocking::isPlaying()) {
     anyrtttl::nonblocking::play();
+  } else {
+    #   if FEATURE_RTTTL_EVENTS
+
+    if (rtttlPlaying) {
+      if (Settings.UseRules) {
+        eventQueue.add(F("RTTTL#Finished"));
+      }
+      rtttlPlaying = false;
+    }
+    #   endif // if FEATURE_RTTTL_EVENTS
+    String dummy;
+    set_rtttl_melody(dummy); // Release memory
   }
-  #  endif // if FEATURE_ANYRTTTL_ASYNC
 }
+
+#  endif // if FEATURE_ANYRTTTL_ASYNC
 
 # else // if FEATURE_ANYRTTTL_LIB
 bool play_rtttl(int8_t _pin, const char *p)

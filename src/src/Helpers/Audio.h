@@ -19,6 +19,7 @@ bool play_rtttl(int8_t      _pin,
                 const char *p);
 # if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 void update_rtttl();
+void set_rtttl_melody(String& melody);
 # endif // if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 #endif // if FEATURE_RTTTL
 

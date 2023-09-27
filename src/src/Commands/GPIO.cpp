@@ -385,12 +385,15 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
   // more info.
 
-  String melody = parseStringToEndKeepCase(Line, 2);
+  String melody = parseStringToEndKeepCase(Line, 3);
   melody.replace('-', '#');
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("RTTTL: pin: %d melody: %s"), event->Par1, melody.c_str()));
   }
+  #if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
+  set_rtttl_melody(melody);
+  #endif // if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 
   if (play_rtttl(event->Par1, melody.c_str())) {
     return return_command_success_flashstr();
