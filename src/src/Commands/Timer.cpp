@@ -26,10 +26,10 @@ const __FlashStringHelper * command_setRulesTimer(int msecFromNow, int timerInde
     // Clear timer when msecFromNow == 0
     if (Scheduler.setRulesTimer(msecFromNow, timerIndex, recurringCount))
     { 
-      return return_command_success();
+      return return_command_success_flashstr();
     }
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_Timer_Set(struct EventStruct *event, const char *Line)
@@ -84,9 +84,9 @@ const __FlashStringHelper * Command_Timer_Pause(struct EventStruct *event, const
     String eventName = F("Rules#TimerPause=");
     eventName += event->Par1;
     rulesProcessing(eventName); // TD-er: Process right now
-    return return_command_success();
+    return return_command_success_flashstr();
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_Timer_Resume(struct EventStruct *event, const char *Line)
@@ -95,13 +95,13 @@ const __FlashStringHelper * Command_Timer_Resume(struct EventStruct *event, cons
     String eventName = F("Rules#TimerResume=");
     eventName += event->Par1;
     rulesProcessing(eventName); // TD-er: Process right now
-    return return_command_success();
+    return return_command_success_flashstr();
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_Delay(struct EventStruct *event, const char *Line)
 {
   delayBackground(event->Par1);
-  return return_command_success();
+  return return_command_success_flashstr();
 }

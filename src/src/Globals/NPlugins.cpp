@@ -92,7 +92,7 @@ String getNPluginNameFromNotifierIndex(notifierIndex_t NotifierIndex) {
 nprotocolIndex_t getNProtocolIndex(npluginID_t Number)
 {
   for (uint8_t x = 0; x <= notificationCount; x++) {
-    if (Notification[x].Number == Number) {
+    if (Notification[x].Number == Number.value) {
       return x;
     }
   }
@@ -101,18 +101,18 @@ nprotocolIndex_t getNProtocolIndex(npluginID_t Number)
 
 nprotocolIndex_t getNProtocolIndex_from_NotifierIndex(notifierIndex_t index) {
   if (validNotifierIndex(index)) {
-    return getNProtocolIndex(Settings.Notification[index]);
+    return getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[index]));
   }
   return INVALID_NPROTOCOL_INDEX;
 }
 
-bool addNPlugin(npluginID_t npluginID, nprotocolIndex_t x) {
+bool addNPlugin(/*npluginID_t*/ uint8_t npluginID, nprotocolIndex_t x) {
   if (x < NPLUGIN_MAX) { 
     // FIXME TD-er: Must add lookup for notification plugins too
 //    ProtocolIndex_to_NPlugin_id[x] = npluginID; 
 //    NPlugin_id_to_ProtocolIndex[npluginID] = x;
 
-    NPlugin_id[x] = npluginID;
+    NPlugin_id[x] = npluginID_t::toPluginID(npluginID);
     return true;
   }
   /*
