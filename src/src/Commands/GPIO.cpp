@@ -385,7 +385,7 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
   // more info.
 
-  String melody = parseStringToEndKeepCase(Line, 3);
+  String melody = parseStringToEndKeepCase(Line, 2);
   melody.replace('-', '#');
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
