@@ -385,8 +385,16 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
   // more info.
 
+  // First assume 'old' syntax: rtttl,<gpio><rtttl string>
+  // No comma between the GPIO argument and the melody
   String melody = parseStringToEndKeepCase(Line, 2);
+  if (melody.indexOf(':') == -1) {
+    // Apparently this is now using the 'new' (correct) syntax:
+    // rtttl,<gpio>,<rtttl string>
+    melody = parseStringToEndKeepCase(Line, 3);
+  }
   melody.replace('-', '#');
+  melody.replace('_', '#');
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("RTTTL: pin: %d melody: %s"), event->Par1, melody.c_str()));

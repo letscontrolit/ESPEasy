@@ -35,12 +35,17 @@ static bool rtttlPlaying = false;
 #  endif // if FEATURE_RTTTL_EVENTS
 #  if FEATURE_ANYRTTTL_ASYNC
 static String rtttlMelody;
+
+void clear_rtttl_melody() {
+  // The non-blocking play will read from a char pointer.
+  // So we must stop the playing before changing the string as it could otherwise lead to a crash.
+  anyrtttl::nonblocking::stop();
+  rtttlMelody = String();
+}
+
 void set_rtttl_melody(String& melody) {
-  if (melody.isEmpty()) {
-    rtttlMelody = String();
-  } else {
-    rtttlMelody = String(melody);
-  }
+  clear_rtttl_melody();
+  rtttlMelody = melody;
 }
 
 #  endif // if FEATURE_ANYRTTTL_ASYNC
@@ -106,8 +111,7 @@ void update_rtttl() {
       rtttlPlaying = false;
     }
     #   endif // if FEATURE_RTTTL_EVENTS
-    String dummy;
-    set_rtttl_melody(dummy); // Release memory
+    clear_rtttl_melody(); // Release memory
   }
 }
 
