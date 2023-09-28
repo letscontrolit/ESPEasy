@@ -39,7 +39,18 @@ static String rtttlMelody;
 void clear_rtttl_melody() {
   // The non-blocking play will read from a char pointer.
   // So we must stop the playing before changing the string as it could otherwise lead to a crash.
-  anyrtttl::nonblocking::stop();
+  if (anyrtttl::nonblocking::isPlaying()) { // If currently playing, cancel that
+    addLog(LOG_LEVEL_INFO, F("RTTTL: Cancelling running song..."));
+    anyrtttl::nonblocking::stop();
+    #   if FEATURE_RTTTL_EVENTS
+
+    if (Settings.UseRules) {
+      eventQueue.add(F("RTTTL#Cancelled"));
+    }
+    rtttlPlaying = false;
+    #   endif // if FEATURE_RTTTL_EVENTS
+  }
+
   rtttlMelody = String();
 }
 
@@ -62,18 +73,6 @@ bool play_rtttl(int8_t _pin, const char *p) {
 
   anyrtttl::setNoToneFunction(&setInternalGPIOPullupMode);
   #  if FEATURE_ANYRTTTL_ASYNC
-
-  if (anyrtttl::nonblocking::isPlaying()) { // If currently playing, cancel that
-    addLog(LOG_LEVEL_INFO, F("RTTTL: Cancelling running song..."));
-    anyrtttl::nonblocking::stop();
-    #   if FEATURE_RTTTL_EVENTS
-
-    if (Settings.UseRules) {
-      eventQueue.add(F("RTTTL#Cancelled"));
-    }
-    rtttlPlaying = false;
-    #   endif // if FEATURE_RTTTL_EVENTS
-  }
 
   if (!rtttlMelody.isEmpty()) {
     anyrtttl::nonblocking::begin(_pin, rtttlMelody.c_str());
@@ -130,10 +129,10 @@ bool play_rtttl(int8_t _pin, const char *p)
   // FIXME: Absolutely no error checking in here
 
   const int notes[] = { 0,
-                        262, 277,   294,   311,  330,   349,  370,  392,  415,  440,  466,  494,
-                        523, 554,   587,   622,  659,   698,  740,  784,  831,  880,  932,  988,
-                        1047,1109,  1175,  1245, 1319,  1397, 1480, 1568, 1661, 1760, 1865, 1976,
-                        2093,2217,  2349,  2489, 2637,  2794, 2960, 3136, 3322, 3520, 3729, 3951
+                        262, 277,   294,   311,   330,  349,   370,  392,  415,  440,  466,  494,
+                        523, 554,   587,   622,   659,  698,   740,  784,  831,  880,  932,  988,
+                        1047,1109,  1175,  1245,  1319, 1397,  1480, 1568, 1661, 1760, 1865, 1976,
+                        2093,2217,  2349,  2489,  2637, 2794,  2960, 3136, 3322, 3520, 3729, 3951
   };
 
 

@@ -91,6 +91,11 @@ Commands
 
 .. include:: P001_commands_RTTTL.repl
 
+Events
+------
+
+.. include:: P001_events_RTTTL.repl
+
 Where to buy
 ------------
 
