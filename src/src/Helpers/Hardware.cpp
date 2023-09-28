@@ -1660,7 +1660,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   output = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
   warning = false;
 
-  if (!GPIO_IS_VALID_GPIO(gpio)) return false;
+  if ((gpio < 0) || !(GPIO_IS_VALID_GPIO(gpio))) { return false; }
 
 # ifdef ESP32S2
 
@@ -2041,11 +2041,12 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
 #endif // ifdef ESP8266
 
 bool validGpio(int gpio) {
+  if (gpio < 0) { return false; }
   #ifdef ESP32
   if (!GPIO_IS_VALID_GPIO(gpio)) { return false; }
   #endif
   #ifdef ESP8266
-  if ((gpio < 0) || (gpio > MAX_GPIO)) { return false; }
+  if (gpio > MAX_GPIO) { return false; }
   #endif
   int pinnr;
   bool input;

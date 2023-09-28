@@ -97,8 +97,8 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
-        logPrefix, 
-        strformat(F(" port #%d: added to monitor list."), port)));
+        logPrefix,
+        strformat(F(" port #%d: added to monitor list."), port))); 
     }
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
@@ -143,7 +143,7 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
     removeMonitorFromPort(key);
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
-        logPrefix,  
+        logPrefix,
         strformat(F(" port #%d: removed from monitor list."), port)));
     }
 
@@ -385,12 +385,23 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
   // more info.
 
+  // First assume 'old' syntax: rtttl,<gpio><rtttl string>
+  // No comma between the GPIO argument and the melody
   String melody = parseStringToEndKeepCase(Line, 2);
+  if (melody.indexOf(':') == -1) {
+    // Apparently this is now using the 'new' (correct) syntax:
+    // rtttl,<gpio>,<rtttl string>
+    melody = parseStringToEndKeepCase(Line, 3);
+  }
   melody.replace('-', '#');
+  melody.replace('_', '#');
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("RTTTL: pin: %d melody: %s"), event->Par1, melody.c_str()));
   }
+  #if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
+  set_rtttl_melody(melody);
+  #endif // if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 
   if (play_rtttl(event->Par1, melody.c_str())) {
     return return_command_success_flashstr();
@@ -488,7 +499,7 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
 
         String log = logPrefix;
         log += concat(
-          F(" toggle"), 
+          F(" toggle"),
           strformat(F(": port#%d: set to %d"), event->Par1, static_cast<int>(!state)));
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
@@ -1145,7 +1156,6 @@ bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *ev
 
         createAndSetPortStatus_Mode_State(key, mode, currentState);
 
-
         String log = logPrefix;
         log += strformat(F(" : port#%d: MODE set to "), pin);
         log += logPostfix;
@@ -1302,7 +1312,7 @@ bool getGPIOPinStateValues(String& str) {
           str       = String(tempValue);
           break;
         }
-          #endif
+#endif
         default:
           addLog(LOG_LEVEL_ERROR, F("PLUGIN PINSTATE. Plugin not included in build"));
           return false;
