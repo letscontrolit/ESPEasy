@@ -27,6 +27,9 @@ Supported hardware
 
 |P000_usedby_GPIO|, |P000_usedby_RTTTL|, |P000_usedby_Relay|, |P000_usedby_Servo|, |P000_usedby_LevelConverter|
 
+Servo: :ref:`P000_Servo_motor_page`
+
+RTTTL: :ref:`P000_Buzzer_page`
 
 Commands available
 ------------------
