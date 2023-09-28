@@ -392,7 +392,7 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
 
   // The semicolon may appear several times in a RTTTL melody
   // Thus only check if it is part of the 1st argument.
-  if (parseString(Line, 2).indexOf(':') == -1) {
+  if (parseString(Line, 2).indexOf(':') != -1) {
     // Apparently this is still using the 'old' (incorrect) syntax:
     // rtttl,<gpio><rtttl string>
     melody = parseStringToEndKeepCase(Line, 2);
