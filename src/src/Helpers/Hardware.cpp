@@ -620,7 +620,12 @@ uint8_t temprature_sens_read();
   #include <driver/temp_sensor.h>
   #if ESP_IDF_VERSION_MAJOR < 5 
     // Work-around for bug in ESP-IDF < 5.0
-    #include <esp_efuse_rtc_calib.h>
+    #if defined(ESP32S3) || defined(ESP32C3)
+      #include <esp_efuse_rtc_calib.h>
+    #elif defined(ESP32S2)
+      #include <esp_efuse_rtc_table.h>
+    #endif
+
   #endif
 #endif  // ESP32_CLASSIC
 #endif  // ESP32
@@ -643,6 +648,7 @@ float getInternalTemperature() {
   #endif
   if (raw != 128) {
     result = ESP_OK;
+    // Raw value is in Fahrenheit
     celsius = (raw - 32) / 1.8f;
   }
   #elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
@@ -658,9 +664,18 @@ float getInternalTemperature() {
   // Thus dac_offset can be just about anything
   // dac_offset is used as index in an array without bounds checking
   {
+    #if defined(ESP32S3) || defined(ESP32C3)
     static float s_deltaT = (esp_efuse_rtc_calib_get_ver() == 1) ?
       (esp_efuse_rtc_calib_get_cal_temp(1) / 10.0f) : 
       0.0f;
+    #elif defined(ESP32S2)
+    static uint32_t version = esp_efuse_rtc_table_read_calib_version();
+    static float s_deltaT = (version == 1 || version == 2) ?
+      (esp_efuse_rtc_table_get_parsed_efuse_value(RTCCALIB_IDX_TMPSENSOR, false) / 10.0f) :
+      0.0f;
+    #endif
+
+
 /*
     if (isnan(s_deltaT)) { //suggests that the value is not initialized
       uint32_t version = esp_efuse_rtc_calib_get_ver();
