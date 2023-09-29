@@ -617,16 +617,22 @@ extern "C" {
 uint8_t temprature_sens_read();
 }
 #elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
-#include "driver/temp_sensor.h"
+  #include <driver/temp_sensor.h>
+  #if ESP_IDF_VERSION_MAJOR < 5 
+    // Work-around for bug in ESP-IDF < 5.0
+    #include <esp_efuse_rtc_calib.h>
+  #endif
 #endif  // ESP32_CLASSIC
 #endif  // ESP32
 
 float getInternalTemperature() {
-  static float temperature = -273.15f; // Improbable value
-  int8_t retries = 2;
+  static float temperature_filtered = NAN; // Improbable value
+  float celsius{};
+  esp_err_t result = ESP_FAIL;
   #ifdef ESP32
   #if defined(ESP32_CLASSIC)
   uint8_t raw = 128u;
+  int8_t retries = 2;
   while ((128u == raw) && (0 != retries)) {
     delay(0);
     raw = temprature_sens_read(); // Each reading takes about 112 microseconds
@@ -636,21 +642,71 @@ float getInternalTemperature() {
   addLog(LOG_LEVEL_DEBUG, concat(F("ESP32: Raw temperature value: "), raw));
   #endif
   if (raw != 128) {
-    temperature = (raw - 32) / 1.8f;
+    result = ESP_OK;
+    celsius = (raw - 32) / 1.8f;
   }
   #elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+
   temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
   temp_sensor_set_config(tsens);
-  float tmpTemp = 0.0f;
   temp_sensor_start();
-  esp_err_t result = temp_sensor_read_celsius(&tmpTemp);
-  temp_sensor_stop();
-  if (result == ESP_OK) {
-    temperature = tmpTemp;
+
+  #if ESP_IDF_VERSION_MAJOR < 5 
+  // Work-around for bug in ESP-IDF < 5.0
+  // Seems to be fixed in ESP_IDF5.1 
+  // temp_sensor_get_config always returns ESP_OK
+  // Thus dac_offset can be just about anything
+  // dac_offset is used as index in an array without bounds checking
+  {
+    static float s_deltaT = (esp_efuse_rtc_calib_get_ver() == 1) ?
+      (esp_efuse_rtc_calib_get_cal_temp(1) / 10.0f) : 
+      0.0f;
+/*
+    if (isnan(s_deltaT)) { //suggests that the value is not initialized
+      uint32_t version = esp_efuse_rtc_calib_get_ver();
+      if (version == 1) {
+          // fetch calibration value for temp sensor from eFuse
+          s_deltaT = esp_efuse_rtc_calib_get_cal_temp(version);
+      } else {
+          // no value to fetch, use 0.
+          s_deltaT = 0;
+      }
+    }
+*/
+    #ifndef TSENS_ADC_FACTOR
+    #define TSENS_ADC_FACTOR  (0.4386)
+    #endif
+    #ifndef TSENS_DAC_FACTOR
+    #define TSENS_DAC_FACTOR  (27.88)
+    #endif
+    #ifndef TSENS_SYS_OFFSET
+    #define TSENS_SYS_OFFSET  (20.52)
+    #endif
+    uint32_t tsens_raw{};
+    temp_sensor_read_raw(&tsens_raw);
+    celsius = (TSENS_ADC_FACTOR * tsens_raw) - s_deltaT - TSENS_SYS_OFFSET;
+    result = ESP_OK;
   }
+
+  #else
+
+  result = temp_sensor_read_celsius(&celsius);
+
+  #endif
+
+  temp_sensor_stop();
   #endif  // ESP32_CLASSIC
+  if (result == ESP_OK) {
+    if (isnanf(temperature_filtered)) {
+      temperature_filtered = celsius;
+    } else {
+      constexpr float IIR_FACTOR = 5.0f;
+      constexpr float IIR_DIVIDER = IIR_FACTOR + 1.0f;
+      temperature_filtered = ((IIR_FACTOR * temperature_filtered) + celsius) / IIR_DIVIDER;
+    }
+  }
   #endif  // USE_ESP32
-  return temperature;
+  return temperature_filtered;
 }
 #endif // if FEATURE_INTERNAL_TEMPERATURE
 
