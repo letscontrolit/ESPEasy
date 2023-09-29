@@ -9,6 +9,9 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#if FEATURE_RTTTL && FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
+#include "../Helpers/Audio.h"
+#endif // if FEATURE_RTTTL && FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
@@ -120,6 +123,10 @@ void backgroundtasks()
   #endif // if FEATURE_MDNS
 
   delay(0);
+
+  #if FEATURE_RTTTL && FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
+  update_rtttl();
+  #endif // if FEATURE_RTTTL && FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 
   statusLED(false);
 

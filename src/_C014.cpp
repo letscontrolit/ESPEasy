@@ -165,14 +165,14 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_014;
-      Protocol[protocolCount].usesMQTT     = true;
-      Protocol[protocolCount].usesTemplate = true;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 1883;
-      Protocol[protocolCount].usesID       = false;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_014;
+      proto.usesMQTT     = true;
+      proto.usesTemplate = true;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 1883;
+      proto.usesID       = false;
       break;
     }
 
@@ -384,7 +384,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         // SECOND Plugins
         for (taskIndex_t x = 0; x < TASKS_MAX; x++)
         {
-          if (validPluginID_fullcheck((Settings.TaskDeviceNumber[x])))
+          const pluginID_t pluginID = Settings.getPluginID_for_task(x);
+          if (validPluginID_fullcheck(pluginID))
           {
             LoadTaskSettings(x);
             const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
@@ -399,10 +400,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
               if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
               {
-                if (Device[DeviceIndex].Number == 86)  // Homie receiver
+                constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(86);
+                if (pluginID == HOMIE_RECEIVER_PLUGIN_ID)
                 {
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-                    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
+                    if (validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
                       if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) { // do not send if Value Name is empty!
                         C014_addToList(valuesList, ExtraTaskSettings.TaskDeviceValueNames[varNr]);
 
@@ -494,7 +496,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 { // standard Values
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++)
                   {
-                    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
+                    const pluginID_t pluginID = Settings.getPluginID_for_task(x);
+                    if (validPluginID_fullcheck(pluginID))
                     {
                       if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) // do not send if Value Name is empty!
                       {
@@ -516,7 +519,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                                  F("float"),
                                                  errorCounter);
 
-                        if (Device[DeviceIndex].Number == 33) { // Dummy Device can send AND receive Data
+                        constexpr pluginID_t DUMMY_PLUGIN_ID(33);
+                        if (pluginID == DUMMY_PLUGIN_ID) { // Dummy Device can send AND receive Data
                           CPlugin_014_sendMQTTnode(nodename,
                                                    deviceName,
                                                    ExtraTaskSettings.TaskDeviceValueNames[varNr],
