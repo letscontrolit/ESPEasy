@@ -51,8 +51,6 @@ const __FlashStringHelper* Plugin_026_valuename(uint8_t value_nr, bool displaySt
   return F("");
 }
 
-// Used for testing, just increment every time the task's PLUGIN_READ is called
-static uint32_t p026_read_count = 0;
 
 boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 {
