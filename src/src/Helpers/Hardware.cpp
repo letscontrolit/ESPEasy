@@ -604,6 +604,126 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
 #endif // ifdef ESP32
 
+#if FEATURE_INTERNAL_TEMPERATURE
+
+/**
+ * Code based on: https://github.com/esphome/esphome/blob/518ecb4cc4489c8a76b899bfda7576b05d84c226/esphome/components/internal_temperature/internal_temperature.cpp#L40
+ */
+
+#ifdef ESP32
+#if defined(ESP32_CLASSIC)
+// there is no official API available on the original ESP32
+extern "C" {
+uint8_t temprature_sens_read();
+}
+#elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+  #include <driver/temp_sensor.h>
+  #if ESP_IDF_VERSION_MAJOR < 5 
+    // Work-around for bug in ESP-IDF < 5.0
+    #if defined(ESP32S3) || defined(ESP32C3)
+      #include <esp_efuse_rtc_calib.h>
+    #elif defined(ESP32S2)
+      #include <esp_efuse_rtc_table.h>
+    #endif
+
+  #endif
+#endif  // ESP32_CLASSIC
+#endif  // ESP32
+
+float getInternalTemperature() {
+  static float temperature_filtered = NAN; // Improbable value
+  float celsius{};
+  esp_err_t result = ESP_FAIL;
+  #ifdef ESP32
+  #if defined(ESP32_CLASSIC)
+  uint8_t raw = 128u;
+  int8_t retries = 2;
+  while ((128u == raw) && (0 != retries)) {
+    delay(0);
+    raw = temprature_sens_read(); // Each reading takes about 112 microseconds
+    --retries;
+  }
+  #ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("ESP32: Raw temperature value: "), raw));
+  #endif
+  if (raw != 128) {
+    result = ESP_OK;
+    // Raw value is in Fahrenheit
+    celsius = (raw - 32) / 1.8f;
+  }
+  #elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+
+  temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
+  temp_sensor_set_config(tsens);
+  temp_sensor_start();
+
+  #if ESP_IDF_VERSION_MAJOR < 5 
+  // Work-around for bug in ESP-IDF < 5.0
+  // Seems to be fixed in ESP_IDF5.1 
+  // temp_sensor_get_config always returns ESP_OK
+  // Thus dac_offset can be just about anything
+  // dac_offset is used as index in an array without bounds checking
+  {
+    #if defined(ESP32S3) || defined(ESP32C3)
+    static float s_deltaT = (esp_efuse_rtc_calib_get_ver() == 1) ?
+      (esp_efuse_rtc_calib_get_cal_temp(1) / 10.0f) : 
+      0.0f;
+    #elif defined(ESP32S2)
+    static uint32_t version = esp_efuse_rtc_table_read_calib_version();
+    static float s_deltaT = (version == 1 || version == 2) ?
+      (esp_efuse_rtc_table_get_parsed_efuse_value(RTCCALIB_IDX_TMPSENSOR, false) / 10.0f) :
+      0.0f;
+    #endif
+
+
+/*
+    if (isnan(s_deltaT)) { //suggests that the value is not initialized
+      uint32_t version = esp_efuse_rtc_calib_get_ver();
+      if (version == 1) {
+          // fetch calibration value for temp sensor from eFuse
+          s_deltaT = esp_efuse_rtc_calib_get_cal_temp(version);
+      } else {
+          // no value to fetch, use 0.
+          s_deltaT = 0;
+      }
+    }
+*/
+    #ifndef TSENS_ADC_FACTOR
+    #define TSENS_ADC_FACTOR  (0.4386)
+    #endif
+    #ifndef TSENS_DAC_FACTOR
+    #define TSENS_DAC_FACTOR  (27.88)
+    #endif
+    #ifndef TSENS_SYS_OFFSET
+    #define TSENS_SYS_OFFSET  (20.52)
+    #endif
+    uint32_t tsens_raw{};
+    temp_sensor_read_raw(&tsens_raw);
+    celsius = (TSENS_ADC_FACTOR * tsens_raw) - s_deltaT - TSENS_SYS_OFFSET;
+    result = ESP_OK;
+  }
+
+  #else
+
+  result = temp_sensor_read_celsius(&celsius);
+
+  #endif
+
+  temp_sensor_stop();
+  #endif  // ESP32_CLASSIC
+  if (result == ESP_OK) {
+    if (isnanf(temperature_filtered)) {
+      temperature_filtered = celsius;
+    } else {
+      constexpr float IIR_FACTOR = 5.0f;
+      constexpr float IIR_DIVIDER = IIR_FACTOR + 1.0f;
+      temperature_filtered = ((IIR_FACTOR * temperature_filtered) + celsius) / IIR_DIVIDER;
+    }
+  }
+  #endif  // USE_ESP32
+  return temperature_filtered;
+}
+#endif // if FEATURE_INTERNAL_TEMPERATURE
 
 /********************************************************************************************\
    Hardware information
@@ -1611,7 +1731,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   output = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
   warning = false;
 
-  if (!GPIO_IS_VALID_GPIO(gpio)) return false;
+  if ((gpio < 0) || !(GPIO_IS_VALID_GPIO(gpio))) { return false; }
 
 # ifdef ESP32S2
 
@@ -1992,11 +2112,12 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
 #endif // ifdef ESP8266
 
 bool validGpio(int gpio) {
+  if (gpio < 0) { return false; }
   #ifdef ESP32
   if (!GPIO_IS_VALID_GPIO(gpio)) { return false; }
   #endif
   #ifdef ESP8266
-  if ((gpio < 0) || (gpio > MAX_GPIO)) { return false; }
+  if (gpio > MAX_GPIO) { return false; }
   #endif
   int pinnr;
   bool input;

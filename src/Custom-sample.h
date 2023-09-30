@@ -227,7 +227,9 @@
 // #define FEATURE_I2C_DEVICE_CHECK 0 // Disable the I2C Device check feature
 // #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching the I2C address from I2C plugins. Will be enabled when FEATURE_I2C_DEVICE_CHECK is enabled
 // #define FEATURE_RTTTL 1   // Enable rtttl command
-
+// #define FEATURE_ANYRTTTL_LIB 1 // Use AnyRttl library for RTTTL handling
+// #define FEATURE_ANYRTTTL_ASYNC 1 // When AnyRttl enabled, use Async (nonblocking) mode instead of the default Blocking mode
+// #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
 
 #if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h
