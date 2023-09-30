@@ -259,7 +259,7 @@ private:
   // - PinBootStates_ESP32 (index_high)
   // Returns whether it is a valid index
   bool getPinBootStateIndex(
-    uint8_t gpio_pin, 
+    int8_t gpio_pin, 
     int8_t& index_low
     #ifdef ESP32
     , int8_t& index_high
@@ -268,8 +268,8 @@ private:
   
 public:
 
-  PinBootState getPinBootState(uint8_t gpio_pin) const;
-  void setPinBootState(uint8_t gpio_pin, PinBootState state);
+  PinBootState getPinBootState(int8_t gpio_pin) const;
+  void setPinBootState(int8_t gpio_pin, PinBootState state);
 
   bool getSPI_pins(int8_t spi_gpios[3]) const;
 
