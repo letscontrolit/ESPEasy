@@ -1665,7 +1665,7 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
   if (success &&
       Touch_Settings.logEnabled &&
 
-      // Thisi log is REQUIRED for calibration and setting up objects, so do not make this optional!
+      // This log is REQUIRED for calibration and setting up objects, so do not make this optional!
       loglevelActiveFor(LOG_LEVEL_INFO)) {
     // Space before the logged values for readability. Always log the z value even if not used.
     addLogMove(LOG_LEVEL_INFO, strformat(F("Touch calibration rx= %d, ry= %d; z= %d, x= %d, y= %d; ox= %d, oy= %d"),
