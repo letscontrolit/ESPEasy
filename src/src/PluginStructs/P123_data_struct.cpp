@@ -31,7 +31,7 @@ P123_data_struct::~P123_data_struct() {
  */
 void P123_data_struct::reset() {
   # ifdef PLUGIN_123_DEBUG
-  addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen reset."));
+  addLog(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen reset."));
   # endif // PLUGIN_123_DEBUG
 
   if (nullptr != touchscreen) { delete touchscreen; }
@@ -69,7 +69,8 @@ bool P123_data_struct::init(struct EventStruct *event) {
     }
 
   # ifdef PLUGIN_123_DEBUG
-    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG Plugin"), nullptr != touchscreen ? F(" & touchscreen") : F("")) + F(" initialized."));
+    addLogMove(LOG_LEVEL_INFO,
+               concat(concat(F("P123 DEBUG Plugin"), nullptr != touchscreen ? F(" & touchscreen") : F("")), F(" initialized.")));
   } else {
     addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialization FAILED."));
   # endif // PLUGIN_123_DEBUG
@@ -150,11 +151,8 @@ bool P123_data_struct::plugin_write(struct EventStruct *event,
     # ifdef PLUGIN_123_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log(concat(F("P123 WRITE arguments Par1:"), event->Par1));
-      log += concat(F(", 2: "), event->Par2);
-      log += concat(F(", 3: "), event->Par3);
-      log += concat(F(", 4: "), event->Par4);
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, strformat(F("P123 WRITE arguments Par1: %d, 2: %d, 3: %d, 4: %d"),
+                                       event->Par1, event->Par2, event->Par3, event->Par4));
     }
     # endif // ifdef PLUGIN_123_DEBUG
 
@@ -295,7 +293,7 @@ void P123_data_struct::setRotation(uint8_t n) {
   # ifdef PLUGIN_123_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG Rotation set: "), static_cast<int>(n)));
+    addLogMove(LOG_LEVEL_INFO, strformat(F("P123 DEBUG Rotation set: %d"), _rotation));
   }
   # endif // PLUGIN_123_DEBUG
 }

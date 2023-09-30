@@ -61,7 +61,7 @@ ESPEasy_TouchHandler::~ESPEasy_TouchHandler() {}
  */
 void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
   # ifdef TOUCH_DEBUG
-  addLogMove(LOG_LEVEL_INFO, F("TOUCH DEBUG loadTouchObjects"));
+  addLog(LOG_LEVEL_INFO, F("TOUCH DEBUG loadTouchObjects"));
   # endif // TOUCH_DEBUG
   LoadCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
 
@@ -234,16 +234,14 @@ void ESPEasy_TouchHandler::init(struct EventStruct *event) {
     #  ifdef TOUCH_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = concat(F("TOUCH DEBUG group: "), static_cast<int>(_buttonGroup));
-      log += concat(F(", max group: "), static_cast<int>(*_buttonGroups.crbegin()));
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("TOUCH DEBUG group: %d, max group: %d"), _buttonGroup, *_buttonGroups.crbegin()));
     }
     #  endif // ifdef TOUCH_DEBUG
 
     displayButtonGroup(event, _buttonGroup); // Initialize selected group and group 0
 
     #  ifdef TOUCH_DEBUG
-    addLogMove(LOG_LEVEL_INFO, F("TOUCH DEBUG group done."));
+    addLog(LOG_LEVEL_INFO, F("TOUCH DEBUG group done."));
     #  endif // ifdef TOUCH_DEBUG
   }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
@@ -320,28 +318,18 @@ bool ESPEasy_TouchHandler::isValidAndTouchedTouchObject(const int16_t& x,
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log;
         log.reserve(72);
-        log  = F("TOUCH DEBUG Touched: obj: ");
-        log += TouchObjects[objectNr].objectName;
-        log += ',';
-        log += TouchObjects[objectNr].top_left.x;
-        log += ',';
-        log += TouchObjects[objectNr].top_left.y;
-        log += ',';
-        log += TouchObjects[objectNr].width_height.x;
-        log += ',';
-        log += TouchObjects[objectNr].width_height.y;
-        log += F(" surface:");
-        log += TouchObjects[objectNr].SurfaceAreas;
-        log += F(" x,y:");
-        log += x;
-        log += ',';
-        log += y;
-        log += F(" sel:");
-        log += selectedObjectName;
-        log += '/';
-        log += selectedObjectIndex;
-        log += '/';
-        log += selected ? 'T' : 'f';
+        log = strformat(F("TOUCH DEBUG Touched: obj: %s,%d,%d,%d,%d surface:%d x,y:%d,%d sel:%s/%d/%c"),
+                        TouchObjects[objectNr].objectName.c_str(),
+                        TouchObjects[objectNr].top_left.x,
+                        TouchObjects[objectNr].top_left.y,
+                        TouchObjects[objectNr].width_height.x,
+                        TouchObjects[objectNr].width_height.y,
+                        TouchObjects[objectNr].SurfaceAreas,
+                        x,
+                        y,
+                        selectedObjectName.c_str(),
+                        selectedObjectIndex,
+                        selected ? 'T' : 'f');
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
       # endif // ifdef TOUCH_DEBUG
@@ -445,10 +433,8 @@ bool ESPEasy_TouchHandler::setTouchObjectState(struct EventStruct *event,
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log;
       log.reserve(72);
-      log += F("TOUCH setTouchObjectState: obj: ");
-      log += touchObject;
-      log += '/';
-      log += objectNr;
+      log = strformat(F("TOUCH setTouchObjectState: obj: %s/%d"),
+                      touchObject.c_str(), objectNr);
 
       if (success) {
         log += F(", new state: ");
@@ -511,11 +497,8 @@ bool ESPEasy_TouchHandler::setTouchButtonOnOff(struct EventStruct *event,
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log;
       log.reserve(72);
-      log += F("TOUCH setTouchButtonOnOff: obj: ");
-      log += touchObject;
-      log += '/';
-      log += objectNr;
-      log += F(", new state: ");
+      log = strformat(F("TOUCH setTouchButtonOnOff: obj: %s/%d, new state: "),
+                      touchObject.c_str(), objectNr);
       log += state ? F("on") : F("off");
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
@@ -598,11 +581,8 @@ bool ESPEasy_TouchHandler::setTouchObjectValue(struct EventStruct *event,
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log;
       log.reserve(72);
-      log += F("TOUCH setTouchObjectValue: obj: ");
-      log += touchObject;
-      log += '/';
-      log += objectNr;
-      log += concat(F(", new value: "), static_cast<int>(_value));
+      log = strformat(F("TOUCH setTouchObjectValue: obj: %s/%d, new value: %d"),
+                      touchObject.c_str(), objectNr, _value);
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef TOUCH_DEBUG
@@ -735,14 +715,14 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log.reserve(90);
-    log  = concat(F("TOUCH: button init, state: "), static_cast<int>(state));
-    log += concat(F(", group: "), static_cast<int>(buttonGroup));
-    log += concat(F(", mode: "), static_cast<int>(mode));
-    log += concat(F(", group: "), static_cast<int>(get8BitFromUL(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_GROUP)));
-    log += F(", en: ");
-    log += bitRead(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_BUTTON);
-    log += concat(F(", object: "), static_cast<int>(buttonNr));
-    addLog(LOG_LEVEL_DEBUG, log);
+    log = strformat(F("TOUCH: button init, state: %d, group: %d, mode: %d, group: %d, en: %d, object: %d"),
+                    state,
+                    buttonGroup,
+                    mode,
+                    get8BitFromUL(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_GROUP),
+                    bitRead(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_BUTTON),
+                    buttonNr);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   #  endif // ifdef TOUCH_DEBUG
   return true;
@@ -1447,7 +1427,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
  */
 bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   # ifdef TOUCH_DEBUG
-  addLogMove(LOG_LEVEL_INFO, F("TOUCH DEBUG webform_save start."));
+  addLog(LOG_LEVEL_INFO, F("TOUCH DEBUG webform_save start."));
   # endif // ifdef TOUCH_DEBUG
   String config;
 
@@ -1635,7 +1615,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
     if (loglevelActiveFor(LOG_LEVEL_INFO) &&
         !config.isEmpty()) {
       config.replace(TOUCH_SETTINGS_SEPARATOR, ',');
-      addLogMove(LOG_LEVEL_INFO, strformat(F("Save touch object #%d settings: %s"), objectNr, config));
+      addLogMove(LOG_LEVEL_INFO, strformat(F("Save touch object #%d settings: %s"), objectNr, config.c_str()));
     }
     # endif // ifdef TOUCH_DEBUG
   }
@@ -1685,18 +1665,11 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
   if (success &&
       Touch_Settings.logEnabled &&
 
-      // REQUIRED for calibration and setting up objects, so do not make this optional!
+      // Thisi log is REQUIRED for calibration and setting up objects, so do not make this optional!
       loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(72);
-    log  = concat(F("Touch calibration rx= "), static_cast<int>(rx)); // Space before the logged values for readability
-    log += concat(F(", ry= "), static_cast<int>(ry));
-    log += concat(F("; z= "), static_cast<int>(z));                   // Always log the z value even if not used.
-    log += concat(F(", x= "), static_cast<int>(x));
-    log += concat(F(", y= "), static_cast<int>(y));
-    log += concat(F("; ox= "), static_cast<int>(ox));
-    log += concat(F(", oy= "), static_cast<int>(oy));
-    addLogMove(LOG_LEVEL_INFO, log);
+    // Space before the logged values for readability. Always log the z value even if not used.
+    addLogMove(LOG_LEVEL_INFO, strformat(F("Touch calibration rx= %d, ry= %d; z= %d, x= %d, y= %d; ox= %d, oy= %d"),
+                                         rx, ry, z, x, y, ox, oy));
   }
 
   // No events to handle if rules not enabled
@@ -1706,14 +1679,26 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
 
       // Do NOT send a Z event for each touch?
       if (!bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {
+        // FIXME TD-er: Should not change anything in the Device vector.
+        # ifdef ESP8266
         Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_DUAL;
         Device[DeviceIndex].ValueCount = 2;
+        # else // ifdef ESP8266
+        Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_DUAL;
+        Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 2;
+        # endif // ifdef ESP8266
       }
       sendData(event);                                                                           // Send X/Y(/Z) event
 
       if (!bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Reset device configuration
+        // FIXME TD-er: Should not change anything in the Device vector.
+        # ifdef ESP8266
         Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
         Device[DeviceIndex].ValueCount = 3;
+        # else // ifdef ESP8266
+        Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
+        Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 3;
+        # endif // ifdef ESP8266
       }
     }
 
@@ -1763,10 +1748,8 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log;
             log.reserve(72);
-            log += F("Touch Swiped, direction: ");
-            log += toString(swipe);
-            log += concat(F(", dx: "), static_cast<int>(delta_x));
-            log += concat(F(", dy: "), static_cast<int>(delta_y));
+            log += strformat(F("Touch Swiped, direction: %s, dx: %d, dy: %d"),
+                             String(toString(swipe)).c_str(), delta_x, delta_y);
             addLogMove(LOG_LEVEL_DEBUG, log);
           }
           #  endif // ifdef TOUCH_DEBUG
@@ -1851,9 +1834,7 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               #  ifdef TOUCH_DEBUG
               String log;
               log.reserve(72);
-              log += F("Swiped/touched, object: ");
-              log += _lastObjectName;
-              log += ':';
+              log += strformat(F("Swiped/touched, object: %s:"), _lastObjectName.c_str());
               log += toString(swipe);
               addLogMove(LOG_LEVEL_INFO, log);
               #  endif // ifdef TOUCH_DEBUG
@@ -1947,12 +1928,9 @@ bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log;
       log.reserve(90);
-      log  = concat(F("TOUCH PLUGIN_WRITE arguments Par1:"), event->Par1);
-      log += concat(F(", 2: "), event->Par2);
-      log += concat(F(", 3: "), event->Par3);
-      log += concat(F(", 4: "), event->Par4);
-      log += concat(F(", string: "), string);
-      addLog(LOG_LEVEL_DEBUG, log);
+      log = strformat(F("TOUCH PLUGIN_WRITE arguments Par1: %d, 2: %d, 3: %d, 4: %d, string: %s"),
+                      event->Par1, event->Par2, event->Par3, event->Par4, string.c_str());
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef TOUCH_DEBUG
 
