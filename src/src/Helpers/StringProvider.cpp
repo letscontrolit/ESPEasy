@@ -254,6 +254,10 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ESPEASY_NOW_FORCED_CHANNEL: return F(ESPEASY_NOW_NAME " Forced Channel");
 #endif
 
+#if FEATURE_INTERNAL_TEMPERATURE
+    case LabelType::INTERNAL_TEMPERATURE:   return F("Internal temperature (ESP32)");
+#endif // if FEATURE_INTERNAL_TEMPERATURE
+
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
     case LabelType::ETH_IP_SUBNET:          return F("Eth IP Subnet");
@@ -430,6 +434,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET);
     case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case LabelType::INTERNAL_TEMPERATURE:   return toString(getInternalTemperature());
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
 
     #if FEATURE_MDNS
     case LabelType::M_DNS:                  return NetworkGetHostname() + F(".local");

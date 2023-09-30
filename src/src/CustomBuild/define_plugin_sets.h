@@ -2923,6 +2923,18 @@ To create/register a plugin, you have to :
   #undef FEATURE_RTTTL
   #define FEATURE_RTTTL 1
 #endif
+#if FEATURE_RTTTL && !defined(FEATURE_ANYRTTTL_LIB)
+  #define FEATURE_ANYRTTTL_LIB 1    // Enable AnyRtttl library
+#endif
+#ifndef FEATURE_ANYRTTTL_LIB
+  #define FEATURE_ANYRTTTL_LIB 0
+#endif
+#ifndef FEATURE_ANYRTTTL_ASYNC
+  #define FEATURE_ANYRTTTL_ASYNC 1 // Use Async by default for better (non-blocking) behavior
+#endif
+#if FEATURE_ANYRTTTL_ASYNC && !defined(FEATURE_RTTTL_EVENTS)
+  #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
+#endif
 
 #ifndef FEATURE_SD                         
 #define FEATURE_SD                            0
@@ -2976,6 +2988,18 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_PLUGIN_PRIORITY
   #define FEATURE_PLUGIN_PRIORITY   0 // Disable by default
+#endif
+
+#ifndef FEATURE_INTERNAL_TEMPERATURE
+  #if defined(ESP32) // Feature is only available on (most?) ESP32 chips
+    #define FEATURE_INTERNAL_TEMPERATURE 1
+  #else
+    #define FEATURE_INTERNAL_TEMPERATURE 0 // Not evailable on ESP8266
+  #endif
+#endif
+#if defined(FEATURE_INTERNAL_TEMPERATURE) && defined(ESP8266)
+  #undef FEATURE_INTERNAL_TEMPERATURE
+  #define FEATURE_INTERNAL_TEMPERATURE   0 // Not evailable on ESP8266
 #endif
 
 #ifndef FEATURE_I2C_DEVICE_CHECK

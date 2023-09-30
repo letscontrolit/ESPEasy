@@ -89,6 +89,9 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::DNS_2:             label = LabelType::DNS_2; break;
     case SystemVariables::GATEWAY:           label = LabelType::GATEWAY; break;
     case SystemVariables::CLIENTIP:          label = LabelType::CLIENT_IP; break;
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case SystemVariables::INTERNAL_TEMPERATURE: label = LabelType::INTERNAL_TEMPERATURE; break;
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
 
     #ifdef USES_ESPEASY_NOW
     case SystemVariables::ESPEASY_NOW_ENABLED:  label = LabelType::ESPEASY_NOW_ENABLED; break;
@@ -368,22 +371,26 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::ISNTP:              return F("isntp");
     case Enum::ISWIFI:             return F("iswifi");
 
-    #ifdef USES_ESPEASY_NOW
+#ifdef USES_ESPEASY_NOW
     case Enum::ESPEASY_NOW_ENABLED:         return F("mesh_enabled");
     case Enum::ESPEASY_NOW_CHANNEL:         return F("mesh_ch");
     case Enum::ESPEASY_NOW_MQTT:            return F("mesh_mqtt");
     case Enum::ESPEASY_NOW_DISTANCE:        return F("mesh_dist");
     case Enum::ESPEASY_NOW_FORCED_CHANNEL:  return F("mesh_forced_ch");
-    #endif
+#endif
 
-    #if FEATURE_ETHERNET
+#if FEATURE_INTERNAL_TEMPERATURE
+    case Enum::INTERNAL_TEMPERATURE: return F("inttemp");
+#endif // if FEATURE_INTERNAL_TEMPERATURE
+
+#if FEATURE_ETHERNET
     case Enum::ETHWIFIMODE:        return F("ethwifimode");
     case Enum::ETHCONNECTED:       return F("ethconnected");
     case Enum::ETHDUPLEX:          return F("ethduplex");
     case Enum::ETHSPEED:           return F("ethspeed");
     case Enum::ETHSTATE:           return F("ethstate");
     case Enum::ETHSPEEDSTATE:      return F("ethspeedstate");
-    #endif // if FEATURE_ETHERNET
+#endif // if FEATURE_ETHERNET
     case Enum::LCLTIME:            return F("lcltime");
     case Enum::LCLTIME_AM:         return F("lcltime_am");
     case Enum::LF:                 return F("LF");

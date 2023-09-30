@@ -202,6 +202,9 @@ void runOncePerSecond()
   #endif
   #endif // if FEATURE_MDNS
 
+  #if FEATURE_INTERNAL_TEMPERATURE && defined(ESP32_CLASSIC)
+  getInternalTemperature(); // Just read the value every second to hopefully get a valid next reading on original ESP32
+  #endif // if FEATURE_INTERNAL_TEMPERATURE && defined(ESP32_CLASSIC)
 
   checkResetFactoryPin();
   STOP_TIMER(PLUGIN_CALL_1PS);
