@@ -1369,7 +1369,7 @@ void log_http_result(const HTTPClient& http,
 
   if (loglevelActiveFor(loglevel)) {
     String log = strformat(F("HTTP : %s %s %s"), 
-                          logIdentifier.c_str(), host, HttpMethod);
+                          logIdentifier.c_str(), host.c_str(), HttpMethod.c_str());
 
     if (!success) {
       log += F("failed ");
