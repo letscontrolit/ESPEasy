@@ -1691,8 +1691,6 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
   // No events to handle if rules not enabled
   if (Settings.UseRules) {
     if (success && bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_XY)) { // Send events for each touch
-      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-
       sendData(event);                                                   // Send X/Y(/Z) event
     }
 
