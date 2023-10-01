@@ -2,11 +2,14 @@
 #ifdef USES_P123
 
 // #######################################################################################################
-// #################################### Plugin 123: FT6206 Touchscreen ###################################
+// #################################### Plugin 123: FT62x6 Touchscreen ###################################
 // #######################################################################################################
 
 /**
  * Changelog:
+ * 2023-10-01 tonhuisman: Re-implement (fix) switching of X/Y/Z vs X/Y output values using PLUGIN_GET_DEVICEVALUECOUNT, store (also) in task
+ *                        settings for speed
+ *                        Implement PLUGIN_I2C_GET_ADDRESS function
  * 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings
  * 2022-12-04 tonhuisman: Remove [Testing] tag from plugin name
  * 2022-09-26 tonhuisman: Add nullptr checks, improved log/string handling
@@ -91,7 +94,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
-      success = (event->Par1 == 0x38); // Fixed I2C address
+      success = (event->Par1 == P123_I2C_ADDRESS); // Fixed I2C address
       break;
     }
 
@@ -106,6 +109,23 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
+
+    # if FEATURE_I2C_GET_ADDRESS
+    case PLUGIN_I2C_GET_ADDRESS:
+    {
+      event->Par1 = P123_I2C_ADDRESS;
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_I2C_GET_ADDRESS
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P123_CONFIG_VTYPE;
+      success     = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       # ifdef PLUGIN_123_DEBUG

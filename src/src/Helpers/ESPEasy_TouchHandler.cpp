@@ -848,6 +848,21 @@ bool ESPEasy_TouchHandler::decrementButtonPage(struct EventStruct *event) {
 # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
 /**
+ * Get the PLUGIN_GET_DEVICEVTYPE, based on the user-selected setting for including Z-axis
+ */
+uint8_t ESPEasy_TouchHandler::get_device_valuecount(struct EventStruct *event) {
+  if (!_settingsLoaded) {
+    loadTouchObjects(event);
+    _settingsLoaded = true;
+  }
+
+  if (!bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z)) {
+    return getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_DUAL);
+  }
+  return getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_TRIPLE);
+}
+
+/**
  * Load the settings onto the webpage
  */
 bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
@@ -1653,9 +1668,10 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
                                                    const int16_t     & z) {
   bool success = false;
 
-  // Avoid event-storms by deduplicating coordinates
+  // Avoid event-storms by deduplicating coordinates, ignore z value when no z-event is generated
   if (!_deduplicate ||
-      (_deduplicate && ((TOUCH_VALUE_X != x) || (TOUCH_VALUE_Y != y) || (TOUCH_VALUE_Z != z)))) {
+      (_deduplicate && ((TOUCH_VALUE_X != x) || (TOUCH_VALUE_Y != y) ||
+                        (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z) && (TOUCH_VALUE_Z != z))))) {
     success       = true;
     TOUCH_VALUE_X = x;
     TOUCH_VALUE_Y = y;
@@ -1677,32 +1693,10 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
     if (success && bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_XY)) { // Send events for each touch
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
-      // Do NOT send a Z event for each touch?
-      if (!bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {
-        // FIXME TD-er: Should not change anything in the Device vector.
-        # ifdef ESP8266
-        Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_DUAL;
-        Device[DeviceIndex].ValueCount = 2;
-        # else // ifdef ESP8266
-        Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_DUAL;
-        Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 2;
-        # endif // ifdef ESP8266
-      }
-      sendData(event);                                                                           // Send X/Y(/Z) event
-
-      if (!bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Reset device configuration
-        // FIXME TD-er: Should not change anything in the Device vector.
-        # ifdef ESP8266
-        Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
-        Device[DeviceIndex].ValueCount = 3;
-        # else // ifdef ESP8266
-        Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
-        Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 3;
-        # endif // ifdef ESP8266
-      }
+      sendData(event);                                                   // Send X/Y(/Z) event
     }
 
-    if (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_OBJECTNAME)) { // Send events for objectname if within reach, and swipes
+    if (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_OBJECTNAME)) {    // Send events for objectname if within reach, and swipes
       String selectedObjectName;
       int8_t selectedObjectIndex = -1;
 

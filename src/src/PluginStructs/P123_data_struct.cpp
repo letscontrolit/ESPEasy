@@ -130,7 +130,9 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
  */
 bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
   if (nullptr != touchHandler) {
-    return touchHandler->plugin_webform_save(event);
+    const bool result = touchHandler->plugin_webform_save(event);
+    P123_CONFIG_VTYPE = touchHandler->get_device_valuecount(event); // Store 'locally'
+    return result;
   }
   return false;
 }

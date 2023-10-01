@@ -23,6 +23,7 @@
 #  undef PLUGIN_123_DEBUG
 # endif // if defined(BUILD_NO_DEBUG) && defined(PLUGIN_123_DEBUG)
 
+# define P123_I2C_ADDRESS           (0x38)  // Fixed value
 # define P123_CONFIG_DISPLAY_TASK   PCONFIG(0)
 
 # define P123_COLOR_DEPTH           PCONFIG_LONG(1)
@@ -30,6 +31,7 @@
 # define P123_CONFIG_ROTATION       PCONFIG(2)
 # define P123_CONFIG_X_RES          PCONFIG(3)
 # define P123_CONFIG_Y_RES          PCONFIG(4)
+# define P123_CONFIG_VTYPE          PCONFIG(5)
 
 # define P123_CONFIG_DISPLAY_PREV   PCONFIG(7)
 

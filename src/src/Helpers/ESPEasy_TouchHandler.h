@@ -11,6 +11,8 @@
 
 /*****
  * Changelog:
+ * 2023-10-01 tonhuisman: Re-implement (fix) switching of X/Y/Z vs X/Y output values not by changing the DeviceVector but using
+ *                        PLUGIN_GET_DEVICEVALUECOUNT plugin function.
  * 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings, minor improvements
  * 2022-09-26 tonhuisman: Fix issue with touch-disable option. Code optimizations, improved log/string handling
  *                        Make Swipe feature part of Extended Touch feature
@@ -309,6 +311,7 @@ public:
   bool    setTouchObjectValue(struct EventStruct *event,
                               const String      & touchObject,
                               const int16_t     & value);
+  uint8_t get_device_valuecount(struct EventStruct *event);
   bool    plugin_webform_load(struct EventStruct *event);
   bool    plugin_webform_save(struct EventStruct *event);
   bool    plugin_fifty_per_second(struct EventStruct *event,
