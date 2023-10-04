@@ -2923,6 +2923,18 @@ To create/register a plugin, you have to :
   #undef FEATURE_RTTTL
   #define FEATURE_RTTTL 1
 #endif
+#if FEATURE_RTTTL && !defined(FEATURE_ANYRTTTL_LIB)
+  #define FEATURE_ANYRTTTL_LIB 1    // Enable AnyRtttl library
+#endif
+#ifndef FEATURE_ANYRTTTL_LIB
+  #define FEATURE_ANYRTTTL_LIB 0
+#endif
+#ifndef FEATURE_ANYRTTTL_ASYNC
+  #define FEATURE_ANYRTTTL_ASYNC 1 // Use Async by default for better (non-blocking) behavior
+#endif
+#if FEATURE_ANYRTTTL_ASYNC && !defined(FEATURE_RTTTL_EVENTS)
+  #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
+#endif
 
 #ifndef FEATURE_SD                         
 #define FEATURE_SD                            0

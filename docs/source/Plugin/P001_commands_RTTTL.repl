@@ -43,4 +43,10 @@ Supported hardware: |P000_usedby_RTTTL| (Ringtones etc.)
   ``rtttl,14,test:d=8,o=5,b=180,c6,b,c6,p,g,g-``
 
   `More RTTTL Ringtone Downloads <http://www.picaxe.com/RTTTL-Ringtones-for-Tune-Command/>`_
+
+  Since 2023-09-15:
+
+  The ``rtttl`` command, by default, now uses the `AnyRtttl library <https://github.com/end2endzone/AnyRtttl>`_, allowing asynchronous handling of the command. This has the advantage of being non-blocking, allowing ESPEasy to handle other tasks while the tune is being played, but comes with the disadvantage of the output possibly being interrupted/delayed by other (possibly blocking) tasks and events, so the music may not play continuously.
+
+  Also, the previous implementation may not have stopped sound correctly after playing a song, but as this has been corrected, so there is no longer a need to turn off the GPIO after playing a song.
   "
