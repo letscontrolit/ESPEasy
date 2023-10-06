@@ -666,7 +666,7 @@ int ESPEasy_time::getSecOffset(const String& format) {
     return 0;
   }
 
-  int value;
+  int32_t value;
 
   if (!validIntFromString(format.substring(sign_position, position_percent), value)) {
     return 0;

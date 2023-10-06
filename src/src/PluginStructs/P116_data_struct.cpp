@@ -388,7 +388,7 @@ bool P116_data_struct::plugin_write(struct EventStruct *event,
     }
     else if (equals(arg1, F("backlight"))) {
       String arg2 = parseString(string, 3);
-      int    nArg2;
+      int32_t    nArg2{};
 
       if ((P116_CONFIG_BACKLIGHT_PIN != -1) && // All is valid?
           validIntFromString(arg2, nArg2) &&

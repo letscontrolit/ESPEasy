@@ -730,7 +730,11 @@ int getFormItemInt(const String& key, int defaultValue) {
 bool getCheckWebserverArg_int(const String& key, int& value) {
   const String valueStr = webArg(key);
   if (valueStr.isEmpty()) return false;
-  return validIntFromString(valueStr, value);
+  // FIXME TD-er: Since ESP_IDF 5.1 int32_t != int
+  int32_t tmp{};
+  const bool res = validIntFromString(valueStr, tmp);
+  value = tmp;
+  return res;
 }
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,

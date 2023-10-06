@@ -9,7 +9,7 @@
 // FIXME: change original code so it uses String and String.toInt()
 unsigned long str2int(const char *string)
 {
-  unsigned int temp = 0;
+  uint32_t temp = 0;
 
   validUIntFromString(string, temp);
 

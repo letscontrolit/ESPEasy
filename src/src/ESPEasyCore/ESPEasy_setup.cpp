@@ -44,15 +44,25 @@
 #endif // if FEATURE_ARDUINO_OTA
 
 #ifdef ESP32
+
+#if ESP_IDF_VERSION_MAJOR < 5
+#include <esp_pm.h>
+#include <soc/efuse_reg.h>
 #include <soc/boot_mode.h>
 #include <soc/gpio_reg.h>
-#include <soc/efuse_reg.h>
-
+#else
+#include <hal/efuse_hal.h>
+#include <rom/gpio.h>
 #include <esp_pm.h>
+#endif
 
 #if CONFIG_IDF_TARGET_ESP32
+#if ESP_IDF_VERSION_MAJOR < 5
 # include "hal/efuse_ll.h"
 # include "hal/efuse_hal.h"
+#else
+#include <soc/efuse_defs.h>
+#endif
 #endif
 
 #endif
@@ -132,7 +142,11 @@ void ESPEasy_setup()
   // restore GPIO16/17 if no PSRAM is found
   if (!FoundPSRAM()) {
     // test if the CPU is not pico
+    #if ESP_IDF_VERSION_MAJOR < 5
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    #else
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
+    #endif
     uint32_t pkg_version = chip_ver & 0x7;
     if (pkg_version <= 3) {   // D0WD, S0WD, D2WD
       gpio_reset_pin(GPIO_NUM_16);
@@ -289,6 +303,7 @@ void ESPEasy_setup()
     // Configure dynamic frequency scaling:
     // maximum and minimum frequencies are set in sdkconfig,
     // automatic light sleep is enabled if tickless idle support is enabled.
+#if ESP_IDF_VERSION_MAJOR < 5
 #if CONFIG_IDF_TARGET_ESP32
     esp_pm_config_esp32_t pm_config = {
             .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
@@ -310,6 +325,27 @@ void ESPEasy_setup()
             .light_sleep_enable = true
 #endif
     };
+#else
+  esp_pm_config_t pm_config = {
+#if CONFIG_IDF_TARGET_ESP32
+            .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
+#elif CONFIG_IDF_TARGET_ESP32S2
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32C3
+            .max_freq_mhz = 160,
+#elif CONFIG_IDF_TARGET_ESP32S3
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32C2
+            .max_freq_mhz = 120,
+#endif
+            .min_freq_mhz = 80,
+#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
+            .light_sleep_enable = true
+#else
+            .light_sleep_enable = false
+#endif
+    };
+#endif
     esp_pm_configure(&pm_config);
 #if CONFIG_IDF_TARGET_ESP32
   } else {

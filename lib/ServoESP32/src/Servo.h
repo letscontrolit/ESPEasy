@@ -36,6 +36,10 @@
 
 #include "Arduino.h"
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <driver/ledc.h>
+#endif
+
 class ServoBase {
    protected:
     // The main purpose of ServoBase is to make sure that multiple instances of
@@ -65,7 +69,11 @@ class ServoTemplate : public ServoBase {
 
     static const int DEFAULT_FREQUENCY = 50;
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+    static constexpr int TIMER_RESOLUTION = (16 < SOC_LEDC_TIMER_BIT_WIDTH) ? 16 : SOC_LEDC_TIMER_BIT_WIDTH;
+#else
     static constexpr int TIMER_RESOLUTION = (16 < SOC_LEDC_TIMER_BIT_WIDE_NUM) ? 16 : SOC_LEDC_TIMER_BIT_WIDE_NUM; //   std::min(16, SOC_LEDC_TIMER_BIT_WIDE_NUM);
+#endif
     static constexpr int PERIOD_TICKS = (1 << TIMER_RESOLUTION) - 1;
 
     static const int CHANNEL_NOT_ATTACHED = -1;

@@ -10,7 +10,7 @@ RulesCalculate_t RulesCalculate{};
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
 int CalculateParam(const String& TmpStr) {
-  int returnValue = 0;
+  int32_t returnValue = 0;
 
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it

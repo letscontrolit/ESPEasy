@@ -16,6 +16,13 @@
 
 #if defined(ARDUINO_ARCH_ESP32) 
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <driver/i2s_types.h>
+#ifndef I2S_NUM_MAX
+#define I2S_NUM_MAX SOC_I2S_NUM 
+#endif
+#endif
+
 #include "sdkconfig.h" // this sets useful config symbols, like CONFIG_IDF_TARGET_ESP32C3
 
 // ESP32 C3 & S3 I2S is not supported yet due to significant changes to interface
@@ -99,6 +106,7 @@ typedef struct
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
 // (I2S_NUM_MAX == 2)
+
 static i2s_bus_t I2S[I2S_NUM_MAX] = 
 {
     {&I2S0, -1, -1, -1, -1, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, I2s_Is_Idle},
@@ -110,6 +118,7 @@ static i2s_bus_t I2S[I2S_NUM_MAX] =
     {&I2S0, -1, -1, -1, -1, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, I2s_Is_Idle}
 };
 #endif
+
 
 void IRAM_ATTR i2sDmaISR(void* arg);
 

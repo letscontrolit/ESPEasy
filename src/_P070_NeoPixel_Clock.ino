@@ -146,7 +146,7 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
       P070_data_struct *P070_data = static_cast<P070_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P070_data) && (equals(command, F("clock")))) {
-        int val_Mode;
+        int32_t val_Mode{};
 
         if (validIntFromString(param1, val_Mode)) {
           if ((val_Mode > -1) && (val_Mode < 2)) {
@@ -154,7 +154,7 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG(0)                 = P070_data->display_enabled;
           }
         }
-        int val_Bright;
+        int32_t val_Bright{};
 
         if (validIntFromString(param2, val_Bright)) {
           if ((val_Bright > -1) && (val_Bright < 256)) {
@@ -162,7 +162,7 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG(1)            = P070_data->brightness;
           }
         }
-        int val_Marks;
+        int32_t val_Marks{};
 
         if (validIntFromString(param3, val_Marks)) {
           if ((val_Marks > -1) && (val_Marks < 256)) {

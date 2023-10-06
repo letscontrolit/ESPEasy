@@ -1191,7 +1191,7 @@ bool splitHostPortString(const String& hostPortString, String& host, uint16_t& p
   int index_colon = hostPortString.indexOf(':');
 
   if (index_colon >= 0) {
-    int port_tmp;
+    int32_t port_tmp;
 
     if (!validIntFromString(hostPortString.substring(index_colon + 1), port_tmp)) {
       return false;

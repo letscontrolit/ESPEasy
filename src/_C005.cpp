@@ -175,7 +175,7 @@ bool C005_parse_command(struct EventStruct *event) {
       topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
     }
     if (!topic_folder.isEmpty()) {
-      int cmd_arg_nr = -1;
+      int32_t cmd_arg_nr = -1;
       if (validIntFromString(topic_folder.substring(7), cmd_arg_nr)) {
         int constructed_cmd_arg_nr = 0;
         ++topic_index;
@@ -211,7 +211,7 @@ bool C005_parse_command(struct EventStruct *event) {
     // Full command:  gpio,14,0
     if (lastindex > 0) {
       // Topic has at least one separator
-      int   lastPartTopic_int;
+      int32_t lastPartTopic_int;
       float value_f;
 
       if (validFloatFromString(event->String2, value_f) &&

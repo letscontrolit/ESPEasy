@@ -115,7 +115,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       String param1 = parseString(string, 2);
 
       if (cmd.equalsIgnoreCase(F("senseair_setrelay"))) {
-        int par1;
+        int32_t par1;
 
         if (validIntFromString(param1, par1)) {
           if ((par1 == 0) || (par1 == 1) || (par1 == -1)) {

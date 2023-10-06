@@ -1187,7 +1187,7 @@ bool getGPIOPinStateValues(String& str) {
     String logPrefix;
     #endif
     // returns pin value using syntax: [plugin#xxxxxxx#pinstate#x]
-    int par1;
+    int32_t par1{};
     const bool validArgument = validIntFromString(gpio_descr, par1);
     #if FEATURE_PINSTATE_EXTENDED
     pluginID_t pluginID = INVALID_PLUGIN_ID;
@@ -1236,7 +1236,7 @@ bool getGPIOPinStateValues(String& str) {
         default:
         {
           #if FEATURE_PINSTATE_EXTENDED
-          unsigned int plugin = INVALID_PLUGIN_ID.value;
+          uint32_t plugin = INVALID_PLUGIN_ID.value;
           if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID.value)) { // Valid plugin ID?
             pluginID.value  = plugin;
             #ifndef BUILD_NO_DEBUG
@@ -1276,7 +1276,7 @@ bool getGPIOPinStateValues(String& str) {
     }
   } else if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinrange"))) {
     // returns pin value using syntax: [plugin#xxxxxxx#pinrange#x-y]
-    int  par1, par2;
+    int32_t  par1, par2;
     bool successPar = false;
     int  dashpos    = gpio_descr.indexOf('-');
 

@@ -130,9 +130,13 @@ void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
 void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
 
 #elif defined(ARDUINO_ARCH_ESP32)
-
+#if ESP_IDF_VERSION_MAJOR < 5
 #include <esp32-hal-gpio.h>
 #include <driver/rtc_io.h>
+#else
+#include <soc/gpio_struct.h>
+#include <driver/rtc_io.h>
+#endif
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define IO_REG_TYPE uint32_t
@@ -186,7 +190,7 @@ void directModeInput(IO_REG_TYPE pin)
 #if CONFIG_IDF_TARGET_ESP32C3
     GPIO.enable_w1tc.val = ((uint32_t)1 << (pin));
 #else
-    if ( digitalPinIsValid(pin) )
+    if ( GPIO_IS_VALID_GPIO(pin) )
     {
 #if ESP_IDF_VERSION_MAJOR < 4      // IDF 3.x ESP32/PICO-D4
         uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
@@ -212,7 +216,7 @@ void directModeOutput(IO_REG_TYPE pin)
 #if CONFIG_IDF_TARGET_ESP32C3
     GPIO.enable_w1ts.val = ((uint32_t)1 << (pin));
 #else
-    if ( digitalPinIsValid(pin) && pin <= 33 ) // pins above 33 can be only inputs
+    if ( GPIO_IS_VALID_GPIO(pin) && pin <= 33 ) // pins above 33 can be only inputs
     {
 #if ESP_IDF_VERSION_MAJOR < 4      // IDF 3.x ESP32/PICO-D4
         uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
@@ -244,10 +248,10 @@ void DIRECT_pinWrite(IO_REG_TYPE pin, bool pinstate);
 void DIRECT_PINMODE_OUTPUT(IO_REG_TYPE pin);
 void DIRECT_PINMODE_INPUT(IO_REG_TYPE pin);
 
-IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin) IRAM_ATTR;
-void DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate) IRAM_ATTR;
-void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin) IRAM_ATTR;
-void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin) IRAM_ATTR;
+IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin);
+void  DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate);
+void  DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
+void  DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
 
 /*
 // https://github.com/PaulStoffregen/OneWire/pull/47

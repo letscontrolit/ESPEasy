@@ -838,7 +838,7 @@ String parseHexTextString(const String& argument, int index) {
       size_t j = 2;
 
       while (j < arg.length()) {
-        int hex = -1;
+        int32_t hex = -1;
 
         if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > 0) && (hex < 256)) {
           result += char(hex);
@@ -879,7 +879,7 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
       size_t j = 2;
 
       while (j < arg.length()) {
-        int hex = -1;
+        int32_t hex = -1;
 
         if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > -1) && (hex < 256)) {
           result.push_back(char(hex));

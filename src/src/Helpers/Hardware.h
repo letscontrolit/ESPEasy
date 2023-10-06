@@ -13,6 +13,15 @@
 
 #include "../Helpers/Hardware_defines.h"
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+//#include <esp_adc_cal_internal_legacy.h>
+
+#ifndef ADC_ATTEN_MAX
+#define ADC_ATTEN_MAX  ADC_ATTENDB_MAX
+#endif
+
+#endif
+
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)

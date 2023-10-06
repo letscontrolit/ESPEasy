@@ -58,8 +58,11 @@
       # define HAS_TOUCH_GPIO  0
     #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
       #   include <esp32/rom/spi_flash.h>
+      #if ESP_IDF_VERSION_MAJOR < 5
       #   include <esp32/spiram.h>
+      #else 
       #   include <esp32/rom/rtc.h>
+      #endif
 
     #  else 
       #   error Target CONFIG_IDF_TARGET is not supported
@@ -72,8 +75,26 @@
 #ifndef HAS_HALL_EFFECT_SENSOR
   # define HAS_HALL_EFFECT_SENSOR  1
 #endif
+
 #ifndef HAS_TOUCH_GPIO
 # define HAS_TOUCH_GPIO 1
+#endif
+
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+
+// Support for Hall Effect sensor was removed in ESP_IDF 5.x
+#if HAS_HALL_EFFECT_SENSOR
+#undef HAS_HALL_EFFECT_SENSOR
+#define HAS_HALL_EFFECT_SENSOR 0
+#endif
+
+#include <esp_chip_info.h>
+#include <soc/soc.h>
+#include <driver/ledc.h>
+#include <esp_psram.h>
+//#include <hal/ledc_hal.h>
+
 #endif
 
 #endif       // ifdef ESP32
@@ -1033,7 +1054,11 @@ const __FlashStringHelper* getChipModel() {
             pkg_version += ((word3 >> 2) & 0x1) << 3
             return pkg_version
      */
+#if ESP_IDF_VERSION_MAJOR < 5
     uint32_t chip_ver    = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+#else
+    uint32_t chip_ver    = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
+#endif
     uint32_t pkg_version = chip_ver & 0x7;
 
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
@@ -1222,8 +1247,11 @@ String getChipRevision() {
   if (rev == 0) {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
-
+    #if ESP_IDF_VERSION_MAJOR < 5
     rev = chip_info.full_revision;
+    #else
+    rev = chip_info.revision;
+    #endif
   }
   #endif // ifdef ESP32
   String res;
@@ -1259,11 +1287,15 @@ uint32_t getFreeSketchSpace() {
 // Original Tasmota:
 // https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L470
 bool FoundPSRAM() {
+  #if ESP_IDF_VERSION_MAJOR >= 5
+  return psramFound();
+  #else
 # if CONFIG_IDF_TARGET_ESP32C3
   return psramFound();
 # else // if CONFIG_IDF_TARGET_ESP32C3
   return psramFound() && esp_spiram_is_initialized();
 # endif // if CONFIG_IDF_TARGET_ESP32C3
+  #endif
 }
 
 // new function to check whether PSRAM is present and supported (i.e. required pacthes are present)
@@ -2325,13 +2357,14 @@ bool getDAC_gpio_info(int gpio_pin, int& dac)
 void initAnalogWrite()
 {
   #if defined(ESP32)
-
+  #if ESP_IDF_VERSION_MAJOR < 5
   constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
 
   for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     ledChannelPin[x]  = -1;
     ledChannelFreq[x] = ledcSetup(x, 1000, 10); // Clear the channel
   }
+  #endif
   #endif // if defined(ESP32)
   #ifdef ESP8266
 
@@ -2341,6 +2374,7 @@ void initAnalogWrite()
 }
 
 #if defined(ESP32)
+#if ESP_IDF_VERSION_MAJOR < 5
 int8_t ledChannelPin[16];
 uint32_t ledChannelFreq[16] = { 0 };
 
@@ -2431,6 +2465,20 @@ void detachLedChannel(int pin)
     ledChannelFreq[ledChannel] = 0;
   }
 }
+#else
+// ESP_IDF >= 5.x finally manages the channels in the SDK
+
+int8_t attachLedChannel(int pin, uint32_t frequency)
+{
+  return ledcAttach(pin, frequency, 10) ? 0 : -1;
+}
+
+void detachLedChannel(int pin)
+{
+  ledcDetach(pin);
+}
+
+#endif
 
 uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
 {
@@ -2444,7 +2492,11 @@ uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
 
   if (ledChannel != -1) {
     ledcWrite(ledChannel, value);
+    #if ESP_IDF_VERSION_MAJOR < 5
     return ledChannelFreq[ledChannel];
+    #else
+    return ledcReadFreq(pin);
+    #endif
   }
   return 0;
 }

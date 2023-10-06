@@ -864,7 +864,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   String log;
   std::vector<String> sParams;
-  std::vector<int>    nParams;
+  std::vector<int32_t> nParams;
   uint8_t emptyCount = 0;
   int     argCount   = 0;
   bool    loop       = true;
@@ -1800,8 +1800,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             #  if ADAGFX_ENABLE_BMP_DISPLAY
 
             if (!newString.isEmpty()) {
-              int offX = 0; // Allow optional arguments for x and y offset values, usage:
-              int offY = 0; // [x,[y,]]filename.bmp
+              int32_t offX = 0; // Allow optional arguments for x and y offset values, usage:
+              int32_t offY = 0; // [x,[y,]]filename.bmp
 
               if (newString.indexOf(',') > -1) {
                 String tmp = parseString(newString, 1);
@@ -1952,7 +1952,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     {                                   // iswin: check if windows exists
       #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
       command = parseString(string, 2);
-      int win = 0;
+      int32_t win = 0;
 
       if (validIntFromString(command, win)) {
         string = validWindow(static_cast<uint8_t>(win));

@@ -138,7 +138,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 
         if (param1.isEmpty() ||
             (!param1.isEmpty() && (taskIndex != TASKS_MAX) && (taskIndex == event->TaskIndex))) {
-          int val_new;
+          int32_t val_new{};
 
           if (param1.isEmpty()) {
             param1 = taskName;

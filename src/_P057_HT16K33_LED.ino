@@ -209,7 +209,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
       }
       else if (equals(command, F("mbr"))) {
         String param = parseString(string, 2);
-        int    brightness;
+        int32_t    brightness;
 
         if (validIntFromString(param, brightness)) {
           if ((brightness >= 0) && (brightness <= 255)) {

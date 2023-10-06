@@ -271,7 +271,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
             break;
           }
 
-          int par1 = 0;
+          int32_t par1 = 0;
 
           if (cmd_setpulsecountertotal) {
             if (!validIntFromString(parseString(string, 2), par1)) { break; }

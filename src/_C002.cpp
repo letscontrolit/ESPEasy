@@ -114,7 +114,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                   if (switchtype.equalsIgnoreCase(F("dimmer")))
                   {
                     mustSendEvent = true;
-                    int pwmValue = UserVar[baseVar];
+                    int32_t pwmValue = UserVar[baseVar];
 
                     switch (static_cast<int>(nvalue))
                     {

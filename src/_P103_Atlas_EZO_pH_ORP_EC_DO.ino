@@ -159,7 +159,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
         char *statuschar = strchr(boarddata, ',');
 
-        if (statuschar > 0)
+        if (statuschar != nullptr)
         {
           switch (boarddata[statuschar - boarddata + 1])
           {

@@ -271,7 +271,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
               // returns pin value using syntax: [plugin#gpio#pinstate#xx]
               if ((string.length() >= 13) && string.substring(0, 13).equalsIgnoreCase(F("gpio,pinstate")))
               {
-                int par1;
+                int32_t par1;
 
                 if (validIntFromString(parseString(string, 3), par1)) {
                   string = digitalRead(par1);

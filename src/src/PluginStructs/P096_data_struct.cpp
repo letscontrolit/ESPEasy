@@ -359,7 +359,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
     }
     else if (equals(arg1, F("inv"))) {
       String arg2 = parseString(string, 3);
-      int    nArg2;
+      int32_t    nArg2;
 
       if (validIntFromString(arg2, nArg2) &&
           (nArg2 >= 0) &&
@@ -373,7 +373,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       ///control?cmd=epdcmd,rot,0
       // not working to verify
       String arg2 = parseString(string, 3);
-      int    nArg2;
+      int32_t    nArg2;
 
       if (validIntFromString(arg2, nArg2) &&
           (nArg2 >= 0)) {

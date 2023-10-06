@@ -393,6 +393,26 @@ void addHtml(String&& html) {
   TXBuffer += html;
 }
 
+void addHtmlInt(int8_t int_val) {
+  addHtml(String(int_val));
+}
+
+void addHtmlInt(uint8_t int_val) {
+  addHtml(String(int_val));
+}
+
+void addHtmlInt(int16_t int_val) {
+  addHtml(String(int_val));
+}
+
+void addHtmlInt(int int_val) {
+  addHtml(String(int_val));
+}
+
+void addHtmlInt(unsigned int int_val) {
+  addHtml(String(int_val));
+}
+
 void addHtmlInt(int32_t int_val) {
   addHtml(String(int_val));
 }

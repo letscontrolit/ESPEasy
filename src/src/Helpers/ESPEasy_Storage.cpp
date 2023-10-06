@@ -1847,7 +1847,7 @@ int getCacheFileCountFromFilename(const String& fname) {
   if (endpos < 0) { return -1; }
 
   //  String digits = fname.substring(startpos + 1, endpos);
-  int result;
+  int32_t result;
 
   if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
     return result;

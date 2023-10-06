@@ -183,7 +183,7 @@ void P104_data_struct::loadSettings() {
 
       String   tmp;
       String   fld;
-      int      tmp_int;
+      int32_t  tmp_int;
       uint16_t prev2   = 0;
       int16_t  offset2 = buffer.indexOf(P104_ZONE_SEP);
 
@@ -676,7 +676,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
       if (datapart.isEmpty()) {
         barGraphs[currentBar].direction = 0;
       } else {
-        int value = 0;
+        int32_t value = 0;
         validIntFromString(datapart, value);
         barGraphs[currentBar].direction = value;
       }
@@ -685,7 +685,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
       if (datapart.isEmpty()) {
         barGraphs[currentBar].barType = 0;
       } else {
-        int value = 0;
+        int32_t value = 0;
         validIntFromString(datapart, value);
         barGraphs[currentBar].barType = value;
       }
@@ -832,8 +832,8 @@ void P104_data_struct::displayDots(uint8_t                 zone,
   if ((nullptr == P) || (nullptr == pM) || dots.isEmpty()) { return; }
   {
     uint8_t idx = 0;
-    int     row;
-    int     col;
+    int32_t row;
+    int32_t col;
     String  sRow;
     String  sCol;
     String  sOn_off;
@@ -967,10 +967,10 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
   if ((nullptr != P) && equals(command, F("dotmatrix"))) { // main command: dotmatrix
     const String sub = parseString(string, 2);
 
-    int zoneIndex;
+    int32_t zoneIndex{};
     const String string4 = parseStringKeepCaseNoTrim(string, 4);
     # ifdef P104_USE_COMMANDS
-    int value4;
+    int32_t value4{};
     validIntFromString(string4, value4);
     # endif // ifdef P104_USE_COMMANDS
 

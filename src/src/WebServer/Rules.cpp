@@ -148,7 +148,7 @@ void handle_rules_new() {
 
   // Pagionation of rules list
   const int rulesListPageSize = 25;
-  int startIdx                = 0;
+  int32_t startIdx            = 0;
 
   const String fstart = webArg(F("start"));
 

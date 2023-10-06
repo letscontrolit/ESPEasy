@@ -154,8 +154,8 @@ bool reply_304_not_modified(const String& path) {
     return false;
   }
   const String ifNoneMatch = stripQuotes(web_server.header(F("If-None-Match")));
-  unsigned int etag_num    = 0;
-  bool res                 = false;
+  uint32_t etag_num = 0;
+  bool res          = false;
 
   if (validUIntFromString(ifNoneMatch, etag_num)) {
     if (fileExists(path) || fileIsEmbedded(path)) {

@@ -52,7 +52,7 @@ void handle_filelist_json() {
     # endif // if defined(ESP8266)
   }
 
-  int startIdx       = 0;
+  int32_t startIdx       = 0;
 
   String fstart = webArg(F("start"));
 
@@ -165,7 +165,7 @@ void handle_filelist() {
     }
   }
   # endif // ifdef USES_C016
-  int startIdx       = 0;
+  int32_t startIdx       = 0;
   String fstart      = webArg(F("start"));
 
   if (fstart.length() > 0)

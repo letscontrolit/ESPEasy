@@ -485,7 +485,7 @@ void parse_string_commands(String& line) {
       uint64_t iarg1, iarg2 = 0;
       ESPEASY_RULES_FLOAT_TYPE fresult{};
       int64_t  iresult = 0;
-      int startpos, endpos = -1;
+      int32_t startpos, endpos = -1;
       const bool arg1valid = validIntFromString(arg1, startpos);
       const bool arg2valid = validIntFromString(arg2, endpos);
 
@@ -526,7 +526,7 @@ void parse_string_commands(String& line) {
 
               if (!arg1.isEmpty()
                   && !arg2.isEmpty()) {
-                unsigned int offset = 0;
+                uint32_t offset = 0;
                 validUIntFromString(arg3, offset);
                 if (command == string_commands_e::indexof_ci) {
                   String arg1copy(arg1);
@@ -1120,9 +1120,9 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeStri
   }
 
   time_seconds = -1;
-  int hours   = 0;
-  int minutes = 0;
-  int seconds = 0;
+  int32_t hours   = 0;
+  int32_t minutes = 0;
+  int32_t seconds = 0;
 
   int tmpIndex = 0;
   String hours_str, minutes_str, seconds_str;

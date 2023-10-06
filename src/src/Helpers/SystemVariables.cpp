@@ -268,7 +268,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   int v_index = s.indexOf(F("%v"));
 
   while ((v_index != -1)) {
-    unsigned int i;
+    uint32_t i;
 
     if (validUIntFromString(s.substring(v_index + 2), i)) {
       String key = F("%v");

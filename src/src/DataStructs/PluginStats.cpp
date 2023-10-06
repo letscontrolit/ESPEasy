@@ -157,8 +157,12 @@ bool PluginStats::matchedCommand(const String& command, const __FlashStringHelpe
   if (command.startsWith(cmd_match_str)) {
     nrSamples = 0;
 
-    if (validIntFromString(command.substring(cmd_match_str.length()), nrSamples)) {
-      return nrSamples;
+    // FIXME TD-er: ESP_IDF 5.x needs strict matching thus int32_t != int
+    int32_t tmp{};
+
+    if (validIntFromString(command.substring(cmd_match_str.length()), tmp)) {
+      nrSamples = tmp;
+      return true;
     }
   }
   return false;

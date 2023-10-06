@@ -869,7 +869,7 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
 
   if (!text.isEmpty()) {
     String fontArg = parseString(text, 1);
-    int    fontNr  = -1;
+    int32_t fontNr  = -1;
 
     if ((equals(fontArg, F("default"))) || (equals(fontArg, F("7dgt")))) {
       fontNr = 0;
@@ -913,7 +913,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
 
   if (!text.isEmpty()) {
     String data;
-    int    byteValue;
+    int32_t byteValue{};
     int    arg      = 1;
     String argValue = parseString(text, arg);
 

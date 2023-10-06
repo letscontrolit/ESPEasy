@@ -280,7 +280,7 @@ const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, 
     return F("TASK_NOT_ENABLED");
   }
 
-  unsigned int msecFromNow = 0;
+  uint32_t msecFromNow = 0;
   String par3;
   if (GetArgv(Line, par3, 3)) {
     if (validUIntFromString(par3, msecFromNow)) {
@@ -301,7 +301,7 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
     return F("TASK_NOT_ENABLED");
   }
-  unsigned int unixTime = 0;
+  uint32_t unixTime = 0;
   String par3;
   if (GetArgv(Line, par3, 3)) {
     validUIntFromString(par3, unixTime);
