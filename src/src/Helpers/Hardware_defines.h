@@ -16,7 +16,11 @@
 # if CONFIG_IDF_TARGET_ESP32
   #  define MAX_ADC_VALUE 4095
 # else // if CONFIG_IDF_TARGET_ESP32
+  #if ESP_IDF_VERSION_MAJOR < 5
   #  define MAX_ADC_VALUE ((1 << SOC_ADC_MAX_BITWIDTH) - 1)
+  #else
+  #  define MAX_ADC_VALUE ((1 << SOC_ADC_RTC_MAX_BITWIDTH) - 1)
+  #endif
 # endif  // if CONFIG_IDF_TARGET_ESP32
 #endif  // ifdef ESP32
 #ifdef ESP8266

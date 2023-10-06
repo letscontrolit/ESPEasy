@@ -40,13 +40,17 @@
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
     #  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
       #   include <esp32s3/rom/spi_flash.h>
+      #if ESP_IDF_VERSION_MAJOR < 5
       #   include <esp32s3/spiram.h>
+      #endif
       #   include <esp32s3/rom/rtc.h>
 
       # define HAS_HALL_EFFECT_SENSOR  0
     #  elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
       #   include <esp32s2/rom/spi_flash.h>
+      #if ESP_IDF_VERSION_MAJOR < 5
       #   include <esp32s2/spiram.h>
+      #endif
       #   include <esp32s2/rom/rtc.h>
       
       # define HAS_HALL_EFFECT_SENSOR  0
