@@ -405,6 +405,8 @@ void addHtmlInt(int16_t int_val) {
   addHtml(String(int_val));
 }
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#if defined(ESP32_CLASSIC) || defined(ESP32S2)|| defined(ESP32S3)
 void addHtmlInt(int int_val) {
   addHtml(String(int_val));
 }
@@ -412,6 +414,8 @@ void addHtmlInt(int int_val) {
 void addHtmlInt(unsigned int int_val) {
   addHtml(String(int_val));
 }
+#endif
+#endif
 
 void addHtmlInt(int32_t int_val) {
   addHtml(String(int_val));
