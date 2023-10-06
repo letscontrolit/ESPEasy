@@ -694,7 +694,7 @@ String SettingsStruct_tmpl<N_TASKS>::getName() const {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
-  uint8_t   gpio_pin,
+  int8_t  gpio_pin,
   int8_t& index_low
     # ifdef ESP32
   , int8_t& index_high
@@ -703,17 +703,16 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
   index_low = -1;
 # ifdef ESP32
   index_high = -1;
-
-  if (!GPIO_IS_VALID_GPIO(gpio_pin)) { return false; }
+  if ((gpio_pin < 0) || !(GPIO_IS_VALID_GPIO(gpio_pin))) { return false; }
 # endif // ifdef ESP32
-  constexpr uint8_t maxStates = NR_ELEMENTS(PinBootStates);
+  constexpr int maxStates = NR_ELEMENTS(PinBootStates);
 
   if (gpio_pin < maxStates) {
     index_low = gpio_pin;
     return true;
   }
 # ifdef ESP32
-  constexpr uint8_t maxStatesesp32 = NR_ELEMENTS(PinBootStates_ESP32);
+  constexpr int maxStatesesp32 = NR_ELEMENTS(PinBootStates_ESP32);
 
   index_high = gpio_pin - maxStates;
 
@@ -768,7 +767,8 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
 }
 
 template<unsigned int N_TASKS>
-PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(uint8_t gpio_pin) const {
+PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(int8_t gpio_pin) const {
+  if (gpio_pin < 0) return PinBootState::Default_state;
 # ifdef ESP8266
   int8_t index_low{};
 
@@ -795,7 +795,8 @@ PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(uint8_t gpio_pin) con
 }
 
 template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::setPinBootState(uint8_t gpio_pin, PinBootState state) {
+void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState state) {
+  if (gpio_pin < 0) return;
 # ifdef ESP8266
   int8_t index_low{};
 
