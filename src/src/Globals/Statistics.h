@@ -9,6 +9,10 @@
 
 #include "../DataStructs/SchedulerTimerID.h"
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <atomic>
+#endif
+
 class String;
 
 
@@ -41,7 +45,11 @@ extern unsigned long loopCounter_full;
 extern float loop_usec_duration_total;
 
 extern unsigned long dailyResetCounter;
+#if ESP_IDF_VERSION_MAJOR >= 5
+extern std::atomic<unsigned long> sw_watchdog_callback_count;
+#else
 extern volatile unsigned long sw_watchdog_callback_count;
+#endif
 
 
 extern I2C_bus_state I2C_state;

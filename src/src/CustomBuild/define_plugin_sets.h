@@ -3183,33 +3183,33 @@ To create/register a plugin, you have to :
 
 // Incompatible libs/plugins with ESP_IDF 5.1.x and higher:
 #if ESP_IDF_VERSION_MAJOR >= 5
-// IR library
-#ifdef USES_P016
-#undef USES_P016
-#endif
-#ifdef USES_P035
-#undef USES_P035
-#endif
-#ifdef USES_P088
-#undef USES_P088  // HeatpumpIR
-#endif
+  // IR library
+  #ifdef USES_P016
+    #undef USES_P016
+  #endif
+  #ifdef USES_P035
+    #undef USES_P035
+  #endif
+  #ifdef USES_P088
+    #undef USES_P088  // HeatpumpIR
+  #endif
 
 
-#if FEATURE_SERVO
-#undef FEATURE_SERVO
-#define FEATURE_SERVO 0
-#endif
+  #if FEATURE_SERVO
+    #undef FEATURE_SERVO
+    #define FEATURE_SERVO 0
+  #endif
 
 
-#ifdef USES_P128
-#undef USES_P128 // NeoPixelBusFX
-#endif
+  #ifdef USES_P128
+    #undef USES_P128 // NeoPixelBusFX
+  #endif
 
-// ADC uses legacy ADC calibration driver, needs a lot of work
-// So disable for now.
-#ifdef USES_P002
-#undef USES_P002
-#endif
+  // ADC uses legacy ADC calibration driver, needs a lot of work
+  // So disable for now.
+  #ifdef USES_P002
+    #undef USES_P002
+  #endif
 
 #endif
 

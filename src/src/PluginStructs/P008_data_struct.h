@@ -4,6 +4,10 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P008
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <atomic>
+#endif
+
 # define P008_DATA_BITS       PCONFIG(0)
 # define P008_HEX_AS_DEC      PCONFIG(1)
 # define P008_AUTO_REMOVE     PCONFIG(2)
@@ -28,8 +32,13 @@ public:
   bool plugin_get_config(struct EventStruct *event,
                          String            & string);
 
-  volatile uint8_t  bitCount  = 0u;   // Count the number of bits received.
-  volatile uint64_t keyBuffer = 0ull; // A 64-bit-long keyBuffer into which the number is stored.
+#if ESP_IDF_VERSION_MAJOR >= 5
+  std::atomic<uint8_t>  bitCount{};   // Count the number of bits received.
+  std::atomic<uint64_t> keyBuffer{}; // A 64-bit-long keyBuffer into which the number is stored.
+#else
+  volatile uint8_t  bitCount{};   // Count the number of bits received.
+  volatile uint64_t keyBuffer{}; // A 64-bit-long keyBuffer into which the number is stored.
+#endif
 
 private:
 
