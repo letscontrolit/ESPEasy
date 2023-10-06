@@ -543,10 +543,13 @@ int espeasy_analogRead(int pin) {
 #ifdef ESP32
 
 // ESP32 ADC calibration datatypes.
+#if ESP_IDF_VERSION_MAJOR < 5
 esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
 esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
+#endif
 
 void initADC() {
+#if ESP_IDF_VERSION_MAJOR < 5
   # ifndef DEFAULT_VREF
   #  define DEFAULT_VREF 1100
   # endif // ifndef DEFAULT_VREF
@@ -556,13 +559,19 @@ void initADC() {
     adc1_calibration_type =
       esp_adc_cal_characterize(ADC_UNIT_1, static_cast<adc_atten_t>(atten), adc_bit_width, DEFAULT_VREF, &adc_chars[atten]);
   }
+#endif
 }
 
 bool hasADC_factory_calibration() {
+#if ESP_IDF_VERSION_MAJOR < 5
   return esp_adc_cal_check_efuse(adc1_calibration_type) == ESP_OK;
+#else
+return false;
+#endif
 }
 
 const __FlashStringHelper* getADC_factory_calibration_type() {
+#if ESP_IDF_VERSION_MAJOR < 5
   switch (adc1_calibration_type) {
     case ESP_ADC_CAL_VAL_EFUSE_VREF:   return F("V_ref in eFuse");
     case ESP_ADC_CAL_VAL_EFUSE_TP:     return F("Two Point values in eFuse");
@@ -571,6 +580,7 @@ const __FlashStringHelper* getADC_factory_calibration_type() {
     case ESP_ADC_CAL_VAL_NOT_SUPPORTED:
       break;
   }
+#endif
   return F("Unknown");
 }
 

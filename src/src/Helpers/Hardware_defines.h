@@ -3,11 +3,13 @@
 
 
 #ifdef ESP32
+#if ESP_IDF_VERSION_MAJOR < 5
 # include <driver/adc.h>
 
 // Needed to get ADC Vref
 # include <esp_adc_cal.h>
 # include <driver/adc.h>
+#endif
 #endif // ifdef ESP32
 
 #ifdef ESP32

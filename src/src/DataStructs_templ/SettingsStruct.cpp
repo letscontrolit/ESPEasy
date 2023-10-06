@@ -17,6 +17,12 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringParser.h"
 
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <driver/gpio.h>
+#endif
+
+
 /*
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>

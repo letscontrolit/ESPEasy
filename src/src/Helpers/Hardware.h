@@ -75,8 +75,10 @@ int                        getADC_num_for_gpio(int pin);
 int                        espeasy_analogRead(int  pin,
                                               bool readAsTouch = false);
 
+#if ESP_IDF_VERSION_MAJOR < 5
 // ADC Factory calibration definition
 extern esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
+#endif
 #endif // ifdef ESP32
 
 #if FEATURE_INTERNAL_TEMPERATURE
