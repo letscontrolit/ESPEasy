@@ -127,8 +127,9 @@ void addHtmlInt(int16_t int_val);
 void addHtmlInt(uint8_t int_val);
 
 // FIXME TD-er: ESP_IDF 5.1 for all non-RISC-V treat int as different from int32_t
+// See: esp32x_fixes.h
 #if ESP_IDF_VERSION_MAJOR >= 5
-#if defined(ESP32_CLASSIC) || defined(ESP32S2)|| defined(ESP32S3)
+#ifndef __riscv
 void addHtmlInt(int int_val);
 void addHtmlInt(unsigned int int_val);
 #endif
