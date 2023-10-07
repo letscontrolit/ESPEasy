@@ -27,11 +27,7 @@ float loop_usec_duration_total  = 0.0f;
 
 unsigned long dailyResetCounter                   = 0;
 
-#if ESP_IDF_VERSION_MAJOR >= 5
-std::atomic<unsigned long> sw_watchdog_callback_count{};
-#else
-volatile unsigned long sw_watchdog_callback_count{};
-#endif
+ESPEASY_VOLATILE(unsigned long) sw_watchdog_callback_count{};
 
 
 I2C_bus_state I2C_state = I2C_bus_state::OK;

@@ -138,7 +138,7 @@ private:
   const P098_config_struct         _config;
   volatile P098_limit_switch_state limitA;
   volatile P098_limit_switch_state limitB;
-  volatile int                     position = 0;
+  ESPEASY_VOLATILE(int)            position = 0;
   volatile uint64_t                enc_lastChanged_us = 0;
   uint64_t                         lastVirtualSpeedApplied_us = 0;
   int                              pos_dest = 0;

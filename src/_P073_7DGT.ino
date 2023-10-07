@@ -1301,8 +1301,8 @@ void max7219_spiTransfer(struct EventStruct *event,
                          uint8_t             din_pin,
                          uint8_t             clk_pin,
                          uint8_t             cs_pin,
-                         volatile uint8_t    opcode,
-                         volatile uint8_t    data) {
+                         ESPEASY_VOLATILE(uint8_t) opcode,
+                         ESPEASY_VOLATILE(uint8_t) data) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 

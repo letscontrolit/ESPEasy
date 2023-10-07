@@ -117,10 +117,24 @@ constexpr unsigned CEIL_LOG2(unsigned x)
   portTRY_ENTER_CRITICAL_ISR(&updateMux, 1000);
 
   #  define ISR_interrupts() portEXIT_CRITICAL(&updateMux);
+
+
+#if ESP_IDF_VERSION_MAJOR > 5
+  #include <atomic>
+
+  #define ESPEASY_VOLATILE(T)  std::atomic<T>
+#else
+  #define ESPEASY_VOLATILE(T)  volatile T
+#endif
+  
+
+
 # endif // ifdef ESP32
 # ifdef ESP8266
   #  define ISR_noInterrupts() noInterrupts();
   #  define ISR_interrupts() interrupts();
+
+  #define ESPEASY_VOLATILE(T)  volatile T
 # endif // ifdef ESP8266
 
 
