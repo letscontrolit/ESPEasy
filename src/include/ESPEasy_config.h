@@ -119,7 +119,7 @@ constexpr unsigned CEIL_LOG2(unsigned x)
   #  define ISR_interrupts() portEXIT_CRITICAL(&updateMux);
 
 
-#if ESP_IDF_VERSION_MAJOR > 5
+#if ESP_IDF_VERSION_MAJOR >= 5
   #include <atomic>
 
   #define ESPEASY_VOLATILE(T)  std::atomic<T>
