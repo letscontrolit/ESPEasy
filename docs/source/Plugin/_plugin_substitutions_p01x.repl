@@ -56,8 +56,8 @@
 .. |P014_typename| replace:: :cyan:`Environment - SI7021/HTU21D`
 .. |P014_porttype| replace:: `.`
 .. |P014_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
-.. |P014_github| replace:: P014_SI7021.ino
-.. _P014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P014_SI7021.ino
+.. |P014_github| replace:: P014_SI70xx.ino
+.. _P014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P014_SI70xx.ino
 .. |P014_usedby| replace:: `.`
 .. |P014_shortinfo| replace:: `.`
 .. |P014_maintainer| replace:: `.`
