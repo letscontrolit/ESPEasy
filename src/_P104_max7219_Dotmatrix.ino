@@ -73,6 +73,7 @@
 //                                the coordinate set.
 //
 // History:
+// 2023-10-08 tonhuisman: Disable use of settings-version V3 for backward compatibility
 // 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings, and use that to significantly improve saving the settings on LittleFS by
 //                        a) only storing the settings-version (V3) in regular CustomTaskSettings file, and the rest in the Extended
 //                           CustomTaskSettings file, by using the offset as a starting location for the data elements

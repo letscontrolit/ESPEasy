@@ -37,11 +37,11 @@
 
 # define P104_ADD_SETTINGS_NOTES             // Adds some notes on the Settings page
 
-# if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
-#  define P104_FEATURE_STORAGE_V3     1      // Only enable saving in storage for ESP32
-# else // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+// # if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+// #  define P104_FEATURE_STORAGE_V3     1      // Only enable saving in storage for ESP32
+// # else // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
 #  define P104_FEATURE_STORAGE_V3     0
-# endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+// # endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
 
 // To make it fit in the ESP8266 display build
 # if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
