@@ -89,6 +89,9 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::DNS_2:             label = LabelType::DNS_2; break;
     case SystemVariables::GATEWAY:           label = LabelType::GATEWAY; break;
     case SystemVariables::CLIENTIP:          label = LabelType::CLIENT_IP; break;
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case SystemVariables::INTERNAL_TEMPERATURE: label = LabelType::INTERNAL_TEMPERATURE; break;
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
 
     #if FEATURE_ETHERNET
 
@@ -149,18 +152,17 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case BSSID:             return String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr());
     case CR:                return String('\r');
     case IP4:               return String(static_cast<int>(NetworkLocalIP()[3])); // 4th IP octet
+    case ISMQTT:            return String(
     #if FEATURE_MQTT
-    case ISMQTT:            return String(MQTTclient_connected ? 1 : 0);
-    #else // if FEATURE_MQTT
-    case ISMQTT:            return String('0');
-    #endif // if FEATURE_MQTT
-
+      MQTTclient_connected ? 1 : 
+    #endif
+      0);
+    
+    case ISMQTTIMP:         return String(
     #ifdef USES_P037
-    case ISMQTTIMP:         return String(P037_MQTTImport_connected ? 1 : 0);
-    #else // ifdef USES_P037
-    case ISMQTTIMP:         return String('0');
-    #endif // USES_P037
-
+      P037_MQTTImport_connected ? 1 : 
+    #endif
+      0);
 
     case ISNTP:             return String(statusNTPInitialized ? 1 : 0);
     case ISWIFI:            return String(WiFiEventData.wifiStatus); // 0=disconnected, 1=connected, 2=got ip, 4=services
@@ -360,6 +362,9 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::ISMQTTIMP:          return F("ismqttimp");
     case Enum::ISNTP:              return F("isntp");
     case Enum::ISWIFI:             return F("iswifi");
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case Enum::INTERNAL_TEMPERATURE: return F("inttemp");
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
     #if FEATURE_ETHERNET
     case Enum::ETHWIFIMODE:        return F("ethwifimode");
     case Enum::ETHCONNECTED:       return F("ethconnected");

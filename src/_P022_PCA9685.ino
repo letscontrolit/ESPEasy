@@ -18,6 +18,7 @@
 # define PLUGIN_NAME_022       "Extra IO - PCA9685"
 # define PLUGIN_VALUENAME1_022 "PWM"
 
+constexpr pluginID_t P022_PLUGIN_ID{PLUGIN_ID_022};
 
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
 
@@ -228,8 +229,8 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         success = true;
 
         // "log" is also sent along with the SendStatusOnlyIfNeeded
-        log  = formatToHex(address, F("PCA 0x"), 2);
-        log += F(": PWM ");
+        log  = P022_data_struct::P022_logPrefix(address);
+        log += F("PWM ");
         log += event->Par1;
         const uint32_t dutyCycle       = event->Par2;
         const uint32_t fadeDuration_ms = event->Par3;
@@ -245,9 +246,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
               P022_data->Plugin_022_Frequency(address, freq);
             }
 
-            // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
+            // setPinState(P022_PLUGIN_ID, event->Par1, PIN_MODE_PWM, event->Par2);
             portStatusStruct newStatus;
-            const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+            const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
             // WARNING: operator [] creates an entry in the map if key does not exist
             newStatus = globalMapPortStatus[key];
@@ -268,9 +269,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
                                          static_cast<int32_t>(fadeDuration_ms);
               int32_t curr_value = prev_value * resolution_factor;
 
-              log += F(", fade: ");
-              log += fadeDuration_ms;
-              log += F("ms");
+              log += strformat(F(", fade: %d ms"), fadeDuration_ms);
 
               int i = fadeDuration_ms;
 
@@ -298,7 +297,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           }
           else {
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-              addLog(LOG_LEVEL_ERROR, log + F(" the pwm value ") + String(event->Par2) + F(" is invalid value."));
+              addLog(LOG_LEVEL_ERROR, log + strformat(F(" the pwm value %d  is invalid value."), event->Par2));
             }
           }
         }
@@ -324,7 +323,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, 99);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, 99);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -333,8 +332,8 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           newStatus.state   = event->Par1;
           savePortStatus(key, newStatus);
 
-          log  = formatToHex(address, F("PCA 0x"), 2);
-          log += F(": FREQ ");
+          log  = P022_data_struct::P022_logPrefix(address);
+          log += F("FREQ ");
           log += event->Par1;
           addLog(LOG_LEVEL_INFO, log);
 
@@ -342,9 +341,11 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
-          addLog(LOG_LEVEL_ERROR,
-                 String(F("PCA ")) +
-                 formatToHex(address, 2) + F(" The frequency ") + String(event->Par1) + F(" is out of range."));
+          if (loglevelActiveFor(LOG_LEVEL_ERROR))
+            addLog(LOG_LEVEL_ERROR,
+                  P022_data_struct::P022_logPrefix(address) +
+                  strformat(F("frequency %d out of range."), 
+                    event->Par1));
         }
       }
 
@@ -360,15 +361,15 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
-          log  = formatToHex(address, F("PCA 0x"), 2);
-          log += ':';
-          log += formatToHex(event->Par1, F(" MODE2 0x"), 2);
+          log  = P022_data_struct::P022_logPrefix(address);
+          log += F("MODE2 0x");
+          log += formatToHex(event->Par1, 2);
           addLog(LOG_LEVEL_INFO, log);
         }
         else {
           addLog(LOG_LEVEL_ERROR,
-                 formatToHex(address,     F("PCA 0x"),    2) +
-                 formatToHex(event->Par1, F(" MODE2 0x"), 2) + F(" is out of range."));
+                 P022_data_struct::P022_logPrefix(address) +
+                 concat(formatToHex(event->Par1, F(" MODE2 0x"), 2), F(" is out of range.")));
         }
       }
 
@@ -386,15 +387,15 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           String dummyString;
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
-          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(P022_PLUGIN_ID, event->Par2), dummyString, 0);
         }
       }
 
       if (instanceCommand && (equals(command, F("gpio"))))
       {
         success = true;
-        log     = formatToHex(address, F("PCA 0x"), 2);
-        log    += F(": GPIO ");
+        log  = P022_data_struct::P022_logPrefix(address);
+        log += F(": GPIO ");
         const bool allPins = equals(parseString(string, 2), F("all"));
 
         if (((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS)) ||
@@ -432,7 +433,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, pin, PIN_MODE_OUTPUT, event->Par2);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, pin);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, pin);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -452,9 +453,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       if (instanceCommand && (equals(command, F("pulse"))))
       {
         success = true;
-        log     = formatToHex(address, F("PCA 0x"), 2);
-        log    += F(": GPIO ");
-        log    += event->Par1;
+        log  = P022_data_struct::P022_logPrefix(address);
+        log += F("GPIO ");
+        log += event->Par1;
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
@@ -507,7 +508,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -534,8 +535,8 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P022_data) {
-        String log = formatToHex(address, F("PCA 0x"), 2);
-        log += F(": GPIO ");
+        String log = P022_data_struct::P022_logPrefix(address);
+        log += F("GPIO ");
         log += event->Par1;
         int autoreset = event->Par4;
 
@@ -568,7 +569,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
         // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         portStatusStruct newStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+        const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
         // WARNING: operator [] creates an entry in the map if key does not exist
         newStatus         = globalMapPortStatus[key];

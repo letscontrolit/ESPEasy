@@ -94,10 +94,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         if (i < P082_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
           P082_query    choice       = static_cast<P082_query>(PCONFIG(pconfigIndex));
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_082_valuename(choice, false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_082_valuename(choice, false));
 
           switch (choice) {
             case P082_query::P082_QUERY_LONG:
@@ -109,7 +106,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
               break;
           }
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;

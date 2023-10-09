@@ -16,7 +16,7 @@
 
 struct C013_SensorInfoStruct
 {
-  C013_SensorInfoStruct();
+  C013_SensorInfoStruct() = default;
 
   bool isValid() const;
 
@@ -28,7 +28,7 @@ struct C013_SensorInfoStruct
   taskIndex_t  destTaskIndex   = INVALID_TASK_INDEX;
   pluginID_t   deviceNumber    = INVALID_PLUGIN_ID;
   char         taskName[26]{};
-  char         ValueNames[VARS_PER_TASK][26];
+  char         ValueNames[VARS_PER_TASK][26]{};
   Sensor_VType sensorType = Sensor_VType::SENSOR_TYPE_NONE;
 };
 

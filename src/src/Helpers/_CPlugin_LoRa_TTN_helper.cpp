@@ -24,7 +24,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
   String packed;
 
   packed.reserve(32);
-  packed += LoRa_addInt(Settings.TaskDeviceNumber[event->TaskIndex], PackedData_uint8);
+  packed += LoRa_addInt(Settings.getPluginID_for_task(event->TaskIndex).value, PackedData_uint8);
   packed += LoRa_addInt(event->idx, PackedData_uint16);
   packed += LoRa_addInt(sampleSetCount, PackedData_uint8);
   packed += LoRa_addInt(value_count, PackedData_uint8);

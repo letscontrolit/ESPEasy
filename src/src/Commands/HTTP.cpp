@@ -51,7 +51,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
             host,
             port))
       {
-        return return_command_failed();
+        return return_command_failed_flashstr();
       }
 
       const int port_arg = event->Par2;
@@ -115,14 +115,12 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
       waitForAck);
 
     if ((httpCode >= 100) && (httpCode < 300)) {
-      return return_command_success();
+      return return_command_success_flashstr();
     }
   } else {
-    String log = logIdentifier;
-    log += F(": Not connected to network");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, concat(logIdentifier, F(": Not connected to network")));
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 #endif // if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP

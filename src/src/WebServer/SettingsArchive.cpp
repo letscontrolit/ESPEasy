@@ -61,33 +61,33 @@ void handle_settingsarchive() {
     {
       MakeProvisioningSettings(ProvisioningSettings);
 
-      if (AllocatedProvisioningSettings()) {
-        ProvisioningSettings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+      if (ProvisioningSettings.get()) {
+        ProvisioningSettings->ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
 
-        ProvisioningSettings.allowedFlags.allowFetchFirmware = isFormItemChecked(F("firmware"));
+        ProvisioningSettings->allowedFlags.allowFetchFirmware = isFormItemChecked(F("firmware"));
         for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
           const FileType::Enum ft = static_cast<FileType::Enum>(i);
 
           if (ft == FileType::RULES_TXT) {
             for (int i = 0; i < RULESETS_MAX; ++i) {
-              storeAllowFiletypeCheckbox(ProvisioningSettings, FileType::RULES_TXT, i);
+              storeAllowFiletypeCheckbox(*ProvisioningSettings, FileType::RULES_TXT, i);
             }
           } else {
-            storeAllowFiletypeCheckbox(ProvisioningSettings, ft);
+            storeAllowFiletypeCheckbox(*ProvisioningSettings, ft);
           }
         }
 
 
         if (ResetFactoryDefaultPreference.saveURL()) {
-          ProvisioningSettings.setUrl(webArg(F("url")));
+          ProvisioningSettings->setUrl(webArg(F("url")));
         }
 
         if (ResetFactoryDefaultPreference.storeCredentials()) {
-          ProvisioningSettings.setUser(webArg(F("user")));
-          ProvisioningSettings.setPass(webArg(F("pass")));
+          ProvisioningSettings->setUser(webArg(F("user")));
+          ProvisioningSettings->setPass(webArg(F("pass")));
         }
+        error = saveProvisioningSettings(*ProvisioningSettings);
       }
-      error = saveProvisioningSettings(ProvisioningSettings);
     }
 # endif // if FEATURE_CUSTOM_PROVISIONING
 
@@ -136,7 +136,7 @@ void handle_settingsarchive() {
     }
   } else if (hasArg(F("reboot"))) {
     showOptions = false;
-    reboot(ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings);
+    reboot(IntendedRebootReason_e::RestoreSettings);
   }
 
   if (showOptions) {
@@ -148,11 +148,11 @@ void handle_settingsarchive() {
 # if FEATURE_CUSTOM_PROVISIONING
       MakeProvisioningSettings(ProvisioningSettings);
 
-      if (AllocatedProvisioningSettings()) {
-        loadProvisioningSettings(ProvisioningSettings);
-        url  = ProvisioningSettings.url;
-        user = ProvisioningSettings.user;
-        pass = ProvisioningSettings.pass;
+      if (ProvisioningSettings.get()) {
+        loadProvisioningSettings(*ProvisioningSettings);
+        url  = ProvisioningSettings->url;
+        user = ProvisioningSettings->user;
+        pass = ProvisioningSettings->pass;
       }
 # endif // if FEATURE_CUSTOM_PROVISIONING
       {
@@ -177,24 +177,26 @@ void handle_settingsarchive() {
       addFormTextBox(F("User"), F("user"), user, 64);
       addFormPasswordBox(F("Pass"), F("pass"), pass, 64);
 # if FEATURE_CUSTOM_PROVISIONING
-      addFormCheckBox(F("Store Credentials"), F("savecred"), ResetFactoryDefaultPreference.storeCredentials());
+      if (ProvisioningSettings.get()) {
+        addFormCheckBox(F("Store Credentials"), F("savecred"), ResetFactoryDefaultPreference.storeCredentials());
 
-      addTableSeparator(F("Allow Fetch by Command"), 2, 3);
-      addFormCheckBox(F("Allow Firmware"), F("firmware"), ProvisioningSettings.allowedFlags.allowFetchFirmware);
+        addTableSeparator(F("Allow Fetch by Command"), 2, 3);
+        addFormCheckBox(F("Allow Firmware"), F("firmware"), ProvisioningSettings->allowedFlags.allowFetchFirmware);
 
-      for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
-        const FileType::Enum ft = static_cast<FileType::Enum>(i);
+        for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
+          const FileType::Enum ft = static_cast<FileType::Enum>(i);
 
-        if (ft != FileType::RULES_TXT) {
-          addAllowFiletypeCheckbox(ProvisioningSettings, ft);
+          if (ft != FileType::RULES_TXT) {
+            addAllowFiletypeCheckbox(*ProvisioningSettings, ft);
+          }
         }
-      }
 
-      for (int i = 0; i < RULESETS_MAX; ++i) {
-        addAllowFiletypeCheckbox(ProvisioningSettings, FileType::RULES_TXT, i);
-      }
+        for (int i = 0; i < RULESETS_MAX; ++i) {
+          addAllowFiletypeCheckbox(*ProvisioningSettings, FileType::RULES_TXT, i);
+        }
 
-      addFormNote(F("Fetch files via a command does need stored URL (+ credentials)"));
+        addFormNote(F("Fetch files via a command does need stored URL (+ credentials)"));
+      }
 # endif // if FEATURE_CUSTOM_PROVISIONING
     }
 

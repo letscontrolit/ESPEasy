@@ -6,10 +6,12 @@
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../Globals/Device.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/I2C_access.h"
 #include "../Helpers/StringConverter.h"
 
 
@@ -40,8 +42,9 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
     #endif // if FEATURE_I2CMULTIPLEXER
-      Wire.beginTransmission(address);
-      error = Wire.endTransmission();
+      I2C_wakeup(address); // Wakeup, workaround for slow-responding devices, see https://github.com/letscontrolit/ESPEasy/issues/3781
+      delay(1);
+      error = I2C_wakeup(address); // Get status
       delay(1);
 
       if ((error == 0) || (error == 4))
@@ -150,21 +153,27 @@ String getKnownI2Cdevice(uint8_t address) {
   String result;
 
   #if FEATURE_I2C_DEVICE_SCAN
-  for (uint8_t x = 0; x <= deviceCount; x++) {
-    const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
+  deviceIndex_t x;
+  bool done = false;
+  while (!done) {
+    const deviceIndex_t deviceIndex = getDeviceIndex_sorted(x);
+    if (!validDeviceIndex(deviceIndex)) {
+      done = true;
+    } else {
+      const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
-    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
+      if (validPluginID(pluginID) &&
+          checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
+        result += F("(Device) ");
 
-    if (validPluginID(pluginID) &&
-        checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
-      result += F("(Device) ");
-
-      # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
-      result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
-      # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-      result += getPluginNameFromDeviceIndex(deviceIndex);
-      result += ',';
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
+        result += concat(get_formatted_Plugin_number(pluginID), F(" - "));
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        result += getPluginNameFromDeviceIndex(deviceIndex);
+        result += ',';
+      }
     }
+    ++x;
   }
   #endif // if FEATURE_I2C_DEVICE_SCAN
   #ifndef LIMIT_BUILD_SIZE
@@ -257,10 +266,10 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result +=  F("PCF8591,ADS1115,LM75A,INA219,TMP117");
+      result +=  F("PCF8591,ADS1x15,LM75A,INA219,TMP117");
       break;
     case 0x49:
-      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219,TMP117");
+      result +=  F("PCF8591,ADS1x15,TSL2561,LM75A,INA219,TMP117");
       break;
     case 0x4C:
     case 0x4E:
@@ -286,6 +295,7 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x58:
       result +=  F("SGP30");
+      break;
     case 0x59:
       result +=  F("SGP4x");
       break;
@@ -337,10 +347,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("HT16K33,TCA9546a/8a I2C multiplexer,IP5306");
       break;
     case 0x76:
-      result +=  F("BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result +=  F("BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x77:
-      result +=  F("BMP085,BMP180,BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result +=  F("BMP085,BMP180,BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x7f:
       result +=  F("Arduino PME");
@@ -369,8 +379,9 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
     #endif // if FEATURE_I2CMULTIPLEXER
-      Wire.beginTransmission(address);
-      error = Wire.endTransmission();
+      I2C_wakeup(address); // Wakeup, workaround for slow-responding devices, see https://github.com/letscontrolit/ESPEasy/issues/3781
+      delay(1);
+      error = I2C_wakeup(address); // Get status
       delay(1);
 
       switch (error) {

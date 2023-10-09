@@ -72,13 +72,9 @@ String patch_fname(const String& fname) {
  \*********************************************************************************************/
 String FileError(int line, const char *fname)
 {
-  String err = F("FS   : Error while reading/writing ");
-
-  err += fname;
-  err += F(" in ");
-  err += line;
-  addLog(LOG_LEVEL_ERROR, err);
-  return err;
+  String log = strformat(F("FS   : Error while reading/writing %s in %d"), fname, line);
+  addLog(LOG_LEVEL_ERROR, log);
+  return log;
 }
 
 /********************************************************************************************\
@@ -188,8 +184,7 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
   #  if FEATURE_SD
 
   if (!f && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
-    // FIXME TD-er: Should this fallback to SD only be done on "r" mode?
-    f = SD.open(fname.c_str(), mode.c_str());
+    f = SD.open(patch_fname(fname).c_str(), mode.c_str());
   }
   #  endif // if FEATURE_SD
 
@@ -309,7 +304,7 @@ bool BuildFixes()
     if (validControllerIndex(controller_idx)) {
       MakeControllerSettings(ControllerSettings); //-V522
       if (AllocatedControllerSettings()) {
-        LoadControllerSettings(controller_idx, ControllerSettings);
+        LoadControllerSettings(controller_idx, *ControllerSettings);
 
         String clientid;
         if (Settings.MQTTUseUnitNameAsClientId_unused) {
@@ -321,11 +316,11 @@ bool BuildFixes()
         else {
           clientid  = F("ESPClient_%mac%");
         }
-        safe_strncpy(ControllerSettings.ClientID, clientid, sizeof(ControllerSettings.ClientID));
+        safe_strncpy(ControllerSettings->ClientID, clientid, sizeof(ControllerSettings->ClientID));
 
-        ControllerSettings.mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
-        ControllerSettings.mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
-        SaveControllerSettings(controller_idx, ControllerSettings);
+        ControllerSettings->mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
+        ControllerSettings->mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
+        SaveControllerSettings(controller_idx, *ControllerSettings);
       }
     }
     #endif // if FEATURE_MQTT
@@ -359,7 +354,7 @@ bool BuildFixes()
   }
   if (Settings.Build < 20111) {
     #ifdef ESP32
-    constexpr uint8_t maxStatesesp32 = sizeof(Settings.PinBootStates_ESP32) / sizeof(Settings.PinBootStates_ESP32[0]);
+    constexpr uint8_t maxStatesesp32 = NR_ELEMENTS(Settings.PinBootStates_ESP32);
     for (uint8_t i = 0; i < maxStatesesp32; ++i) {
       Settings.PinBootStates_ESP32[i] = 0;
     }
@@ -375,8 +370,10 @@ bool BuildFixes()
   if (Settings.Build < 20114) {
     #ifdef USES_P003
     // P003_Pulse was always using the pull-up, now it is a setting.
+    constexpr pluginID_t PLUGIN_ID_P003_PULSE(3);
+
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-      if (Settings.TaskDeviceNumber[taskIndex] == 3) {
+      if (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_P003_PULSE) {
         Settings.TaskDevicePin1PullUp[taskIndex] = true;
       }
     }
@@ -392,8 +389,10 @@ bool BuildFixes()
   #ifdef USES_P053
   if (Settings.Build < 20116) {
     // Added PWR button, init to "-none-"
+    constexpr pluginID_t PLUGIN_ID_P053_PMSx003(53);
+
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-      if (Settings.TaskDeviceNumber[taskIndex] == 53) {
+      if (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_P053_PMSx003) {
         Settings.TaskDevicePluginConfig[taskIndex][3] = -1;
       }
     }
@@ -500,6 +499,31 @@ int getPartionCount(uint8_t pType, uint8_t pSubType) {
 
 #endif
 
+ #ifdef ESP8266
+bool clearPartition(ESP8266_partition_type ptype) {
+  uint32_t address;
+  int32_t size;
+  int32_t sector = getPartitionInfo(ESP8266_partition_type::rf_cal, address, size);
+  while (size > 0) {
+    if (!ESP.flashEraseSector(sector)) return false;
+    ++sector;
+    size -= SPI_FLASH_SEC_SIZE;
+
+  }
+  return true;
+}
+
+bool clearRFcalPartition() {
+  return clearPartition(ESP8266_partition_type::rf_cal);
+}
+
+bool clearWiFiSDKpartition() {
+  return clearPartition(ESP8266_partition_type::wifi);
+}
+
+#endif
+
+
 /********************************************************************************************\
    Garbage collection
  \*********************************************************************************************/
@@ -528,7 +552,7 @@ bool GarbageCollection() {
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
-String SaveSettings()
+String SaveSettings(bool forFactoryReset)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveSettings"));
@@ -572,23 +596,27 @@ String SaveSettings()
 
   //  }
 
-  err = SaveSecuritySettings();
+  err = SaveSecuritySettings(forFactoryReset);
 
   return err;
 }
 
-String SaveSecuritySettings() {
+String SaveSecuritySettings(bool forFactoryReset) {
   String     err;
 
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+
+  if (forFactoryReset) {
+    SecuritySettings.forceSave();
+  }
 
   if (SecuritySettings.updateChecksum()) {
     // Settings have changed, save to file.
     err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
     // Security settings are saved, may be update of WiFi settings or hostname.
-    if (!NetworkConnected()) {
+    if (!forFactoryReset && !NetworkConnected()) {
       if (SecuritySettings.hasWiFiCredentials() && active_network_medium == NetworkMedium_t::WIFI) {
         WiFiEventData.wifiConnectAttemptNeeded = true;
         WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
@@ -603,8 +631,14 @@ String SaveSecuritySettings() {
   }
 #endif
 
+  // FIXME TD-er: How to check if these have changed?
+  if (forFactoryReset) {
+    ExtendedControllerCredentials.clear();
+  }
+
   ExtendedControllerCredentials.save();
-  afterloadSettings();
+  if (!forFactoryReset)
+    afterloadSettings();
   return err;
 }
 
@@ -616,10 +650,10 @@ void afterloadSettings() {
   #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
-    if (AllocatedProvisioningSettings()) {
-      loadProvisioningSettings(ProvisioningSettings);
-      if (ProvisioningSettings.matchingFlashSize()) {
-        pref_temp = ProvisioningSettings.ResetFactoryDefaultPreference.getPreference();
+    if (ProvisioningSettings.get()) {
+      loadProvisioningSettings(*ProvisioningSettings);
+      if (ProvisioningSettings->matchingFlashSize()) {
+        pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
       }
     }
   }
@@ -720,6 +754,8 @@ uint8_t disablePlugin(uint8_t bootFailedCount) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
+        // Disable temporarily as unit crashed
+        // FIXME TD-er: Should this be stored?
         Settings.TaskDeviceEnabled[i] = false;
       }
     }
@@ -731,6 +767,8 @@ uint8_t disableAllPlugins(uint8_t bootFailedCount) {
   if (bootFailedCount > 0) {
     --bootFailedCount;
     for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
+        // Disable temporarily as unit crashed
+        // FIXME TD-er: Should this be stored?
         Settings.TaskDeviceEnabled[i] = false;
     }
   }
@@ -1023,6 +1061,8 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   String err;
 
   if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, ExtraTaskSettings.computeChecksum())) {
+    // Clear task device value names before saving, will generate again when loading them later.
+    ExtraTaskSettings.clearDefaultTaskDeviceValueNames();
     ExtraTaskSettings.validate(); // Validate before saving will reduce nr of saves as it is more likely to not have changed the next time it will be saved.
 
     // Call to validate() may have changed the content, so re-compute the checksum.
@@ -1069,7 +1109,11 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (!validDeviceIndex(DeviceIndex)) {
     // No need to load from storage, as there is no plugin assigned to this task.
     ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
-    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
+
+    // FIXME TD-er: Do we need to keep a cache of an empty task?
+    // Maybe better to do this? 
+    Cache.clearTaskCache(TaskIndex); 
+//    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
     return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
@@ -1091,15 +1135,8 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
       ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
     }      
   }
-
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) {
-    // if field set empty, reload defaults
-    struct EventStruct TempEvent(TaskIndex);
-    String tmp;
-
-    // the plugin call should populate ExtraTaskSettings with its default values.
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
-  }
+  loadDefaultTaskValueNames_ifEmpty(TaskIndex);
+  
   ExtraTaskSettings.validate();
   Cache.updateExtraTaskSettingsCache_afterLoad_Save();
   STOP_TIMER(LOAD_TASK_SETTINGS);
@@ -1869,7 +1906,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
           }
 #ifndef BUILD_NO_DEBUG
         } else {
-          addLog(LOG_LEVEL_INFO, String(F("RTC  : Cannot get count from: ")) + fname);
+          addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
 #endif
         }
       }
@@ -2052,16 +2089,16 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
   {
     MakeProvisioningSettings(ProvisioningSettings);
 
-    if (AllocatedProvisioningSettings()) {
-      loadProvisioningSettings(ProvisioningSettings);
+    if (ProvisioningSettings.get()) {
+      loadProvisioningSettings(*ProvisioningSettings);
 
-      if (!ProvisioningSettings.fetchFileTypeAllowed(filetype, filenr)) {
+      if (!ProvisioningSettings->fetchFileTypeAllowed(filetype, filenr)) {
         return F("Not Allowed");
       }
 
-      url  = ProvisioningSettings.url;
-      user = ProvisioningSettings.user;
-      pass = ProvisioningSettings.pass;
+      url  = ProvisioningSettings->url;
+      user = ProvisioningSettings->user;
+      pass = ProvisioningSettings->pass;
     }
   }
   String res = downloadFileType(url, user, pass, filetype, filenr);

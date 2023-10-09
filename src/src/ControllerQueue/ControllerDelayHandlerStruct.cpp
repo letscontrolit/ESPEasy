@@ -13,19 +13,19 @@ ControllerDelayHandlerStruct::ControllerDelayHandlerStruct() :
   deduplicate(false),
   useLocalSystemTime(false) {}
 
-bool ControllerDelayHandlerStruct::configureControllerSettings(controllerIndex_t ControllerIndex)
+bool ControllerDelayHandlerStruct::cacheControllerSettings(controllerIndex_t ControllerIndex)
 {
   MakeControllerSettings(ControllerSettings);
 
   if (!AllocatedControllerSettings()) {
     return false;
   }
-  LoadControllerSettings(ControllerIndex, ControllerSettings);
-  configureControllerSettings(ControllerSettings);
+  LoadControllerSettings(ControllerIndex, *ControllerSettings);
+  cacheControllerSettings(*ControllerSettings);
   return true;
 }
 
-void ControllerDelayHandlerStruct::configureControllerSettings(const ControllerSettingsStruct& settings) {
+void ControllerDelayHandlerStruct::cacheControllerSettings(const ControllerSettingsStruct& settings) {
   minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
   max_queue_depth        = settings.MaxQueueDepth;
   max_retries            = settings.MaxRetry;
@@ -62,7 +62,7 @@ bool ControllerDelayHandlerStruct::readyToProcess(const Queue_element_base& elem
     return false;
   }
 
-  if (Protocol[protocolIndex].needsNetwork) {
+  if (getProtocolStruct(protocolIndex).needsNetwork) {
     return NetworkConnected(10);
   }
   return true;
@@ -258,7 +258,7 @@ void ControllerDelayHandlerStruct::process(
   int                                controller_number,
   do_process_function                func,
   TimingStatsElements                timerstats_id,
-  ESPEasy_Scheduler::IntervalTimer_e timerID) 
+  SchedulerIntervalTimer_e timerID) 
 {
   Queue_element_base *element(static_cast<Queue_element_base *>(getNext()));
 
@@ -268,10 +268,10 @@ void ControllerDelayHandlerStruct::process(
     MakeControllerSettings(ControllerSettings);
 
     if (AllocatedControllerSettings()) {
-      LoadControllerSettings(element->_controller_idx, ControllerSettings);
-      configureControllerSettings(ControllerSettings);
+      LoadControllerSettings(element->_controller_idx, *ControllerSettings);
+      cacheControllerSettings(*ControllerSettings);
       START_TIMER;
-      markProcessed(func(controller_number, *element, ControllerSettings));
+      markProcessed(func(controller_number, *element, *ControllerSettings));
       #if FEATURE_TIMING_STATS
       STOP_TIMER_VAR(timerstats_id);
       #endif

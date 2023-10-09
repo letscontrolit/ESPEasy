@@ -21,9 +21,14 @@ unsigned long str2int(const char *string)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces)
 {
+  /*
   #ifndef LIMIT_BUILD_SIZE
 
   if (decimalPlaces == 0) {
+    if ((value > -2e9f) && (value < 2e9f)) {
+      const int32_t l_value = static_cast<int32_t>(roundf(value));
+      return String(l_value);
+    }
     if ((value > -1e18f) && (value < 1e18f)) {
       // Work-around to perform a faster conversion
       const int64_t ll_value = static_cast<int64_t>(roundf(value));
@@ -31,22 +36,19 @@ String toString(const float& value, unsigned int decimalPlaces)
     }
   }
   #endif // ifndef LIMIT_BUILD_SIZE
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  */
+// #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
   //  #ifdef ESP8266
-  char *buf = (char *)malloc(decimalPlaces + 42);
-
-  if (nullptr == buf) {
-    return F("nan");
-  }
+  char buf[decimalPlaces + 42];
   String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
-  free(buf);
 
+/*
 #else
   String sValue = String(value, decimalPlaces);
 #endif
-
+*/
   sValue.trim();
   return sValue;
 }
@@ -112,6 +114,17 @@ String trimTrailingZeros(const String& value) {
   }
   return res;
 
+}
+
+/**
+ * Helper: Convert an integer to string, but return an empty string for 0, to save a little space in settings
+ */
+String toStringNoZero(int64_t value) {
+  if (value != 0) {
+    return ll2String(value);
+  } else {
+    return EMPTY_STRING;
+  }
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE

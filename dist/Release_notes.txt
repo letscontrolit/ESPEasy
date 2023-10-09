@@ -1,4 +1,626 @@
 -------------------------------------------------
+Changes in release mega-20230930 (since mega-20230822)
+-------------------------------------------------
+
+Release date: za 30 sep 2023 15:46:23 CEST
+
+Adam Groszer (1):
+      added InfluxDB v2 HTTP API docs and some other minors
+
+Fabio Ancona (3):
+      Update README.md adding "Climate"
+      [DOC] Update P014 to avoid to use this Plugin with SHT2x devices
+      Update P014.rst
+
+Michael Schröder (1):
+      Ignore more variants of own Custom.h
+
+TD-er (83):
+      Update issue templates
+      [ADS1x15] Support ADS1015 & add sample rate selector
+      [ADS1x15] Add ADS1015/ADS1115 sensor type detection to task config page
+      [Cleanup] Add macro NR_ELEMENTS for array counting
+      [ADS1x15] Add option to select multiple task value outputs
+      [ADS1x15] Simplify storage of settings
+      [ADS1x15] Update documentation
+      [ADS1x15] Update documentation
+      [ADS1x15] Replace "ADS1115" with "ADS1x15" in docs and I2C scan result
+      [ADS1x15] Fix PBC -> PCB typo in documentation
+      [BMP3xx] Add support for Bosch BMP384/388/390 temp/pressure modules
+      [BMP3xx] Fix saving I2C address
+      [BMP3xx] Perform a few reads after init to initialize the IIR filter
+      [BMP3xx] Add detected chip + altitude compensation
+      [BMP3xx] Document P154 BMP388/BMP390
+      [BME280] Show detected sensor model like is done for ADS1x15 and BMP3xx
+      [Scheduler] Cleanup of Scheduler code
+      [Scheduler] Allow to schedule task calls to specific functions
+      [Scheduler] Split Various Scheduler timer types into separate .cpp files
+      [Cleanup] Fix build issue in WOL plugin
+      [Scheduler] Remove unneeded scheduler call type
+      [Scheduler] Cleanup includes and fix decode()
+      [Documentation] Document ESPEasy Functional Blocks
+      [Documentation] Add ESPEasy Functional block diagram
+      [Docs] Mark arrow between controller and MQTT broker as bidirectional
+      [Docs] Clarify some arrows in ESPEasy block diagram
+      [Task] Revert 'soft disable' task (for now...)
+      [Cleanup] Make deviceIndex_t a strict class
+      [Cleanup] Only allow PLUGIN_ADD to change Device[] vector
+      [Cleanup] Make pluginID_t a strict class
+      [Cleanup] Fix build error on ETH builds with pluginID_t
+      [Cleanup] Partial conversion npluginID_T to class
+      [Cleanup] Complete convert npluginID_t to strict class
+      [Cleanup] Reduce build size on ESP8266 making DeviceVector less strict
+      [Cleanup] Fix crashing compiler on ESP8266 builds
+      [Cleanup] Reduce build size to 'undo' extra added bytes in this cleanup
+      [Cleanup] Further reduction of build size
+      [Cleanup] Fix build on ESP8266 Collection A
+      [Cleanup] Fix build error on ESP8266 Display
+      [Cleanup] Reduce build size by moving small functions to .h files
+      [Cleanup] Use constexpr for static pluginID compares
+      [Cleanup] Use more constexpr for static pluginID compares
+      [Controller] Simplify ESPEasy core administration of CPlugins
+      [Cleanup] Misc code cleanup + add comments from PVS Studio
+      [Plugin] Simplify ESPEasy plugin registration + reduce build size
+      [Cleanup] Simplify code for return values internal ESPEasy commands
+      [Cleanup] Simplify get/set functions of VariousBits1 in SettingsStruct
+      [Cleanup] Remove no longer needed globals/Protocol.h/.cpp
+      [Neopixel] Fix build error signed/unsigned compare
+      [Cleanup] Apply GPIO log optimizations to reduce build size (@Ton)
+      [Cleanup] Fix storing new task (taskenable still doesn't work...)
+      [Cleanup] Fix silly bug setting tasks disabled.
+      [Cleanup] Reduce size of embedded lookup table to only included plugins
+      [Cleanup] Do not use 'Number' in DeviceStruct class
+      [Cleanup] Simplify DeviceIndex_sorted
+      [Cleanup] Fix merge issue
+      [Cleanup] Minor code tweaks to reduce build size
+      [Debug] Add "minimal" special build for analysis
+      [PVS Studio] Fix issues found by PVS Studio
+      [Cleanup] Reduce build size by moving isInitialized() to .h files
+      [Servo] Fix servo for ESP32-S2/C3
+      [Cleanup] Reduce build size for bitlevel access in Controller Settings
+      [Cleanup] Remove code redundancy from DevicesPage and UploadPage
+      [PluginStats] Fix showing stats when using 256 samples buffer
+      [Cleanup] Fix crash when adding new controller
+      [Cleanup] Disable drawing partition layout for limit build size builds
+      [Cleanup] Fix isNaN check in thermocouple plugin
+      [Debug] Add special debug build env for Display builds
+      [Cleanup] Reduce build size making Improv smaller
+      [Debug] Set special debug 'display' build to BUILD_NO_DEBUG
+      [Cleanup] Shorten (very) elaborate notes in P039 ThermoCouple
+      [Cleanup] clarify single event note + reduce GPIO command logs
+      [I2C scanner] Fix missing ++x; causing reboot during I2C scan
+      [ADC] Fix handling negative ADC values from Hall Effect sensor
+      [Notifications] Fix deleting notifier
+      [GPIO] Fix check for valid GPIO
+      [RTTTL] Fix parsing correct command argument
+      [RTTTL] Fix argument index for melody + prevent crash when changing song
+      [RTTTL] Fix stupid mix-up of old/new command argument parsing
+      [RTTTL] Only check for old/new syntax in the 1st argument
+      [RTTTL] I need some coffee....
+      [Internal temp] Fix crashes on ESP32-S2/S3/C3 + filter
+      [ESP32 temp] Fix specific includes for ESP32-S2
+
+Ton Huisman (77):
+      [P036] Show current display content on Devices page
+      [P036] Wrap on-display output in `pre` tag to keep spaces and similar formatting
+      [P036] Remove unreachable code, other optimizations
+      [addHtmlDiv] Add optional `attribute` argument
+      [P036] Reduce Show Display font-size to 75%, code optimizations
+      [P023] Add Show Values for on-Display content, code improvements and optimizations
+      [P036] Make Interval optional
+      [P036] Update documentation
+      [P023] Add documentation
+      [P023] Updated screenshot
+      [P036] Add center/right align in preview, make preview compile-optional, code optimizations
+      [P036] Only disable alignment feature for 1M builds
+      [P036] Add new compile-time directives to Custom-sample.h
+      [Build] Make `Climate` build fit
+      [P036] Code optimizations
+      [P023] Minor code optimizations
+      [P036] Add optional user-defined display headers
+      [P036] Change compile-time defines to bool, change enums to uint8_t type, update changelog
+      [P036] Fix copy/paste error for `userDef2`
+      [P028] Add detection-mode setting
+      [P028] Ignore humidity if Sensor model BMP280 is selected
+      [Devices] Add event PLUGIN_WEBFORM_LOAD_ALWAYS that is also called for remote data-feed devices
+      [P028] Fix VType matching for remote data-feed, implement new WEBFORM_LOAD_ALWAYS event
+      [P028] Update documentation
+      [Controllers] Show correct data (or nothing) for controllers without Host or Port settings
+      [Controllers] Code improvement
+      [P036] Enable Userdefined headers by default for LIMIT_BUILD_SIZE builds
+      [P104] Add Dot subcommand to draw individual dots in a zone
+      [P104] Update documentation
+      [P104] Code improvements and a bugfix
+      [P028] Fix merge conflict
+      [P036] Code improvements using `constexpr`
+      [Rules] Improving removal of comments
+      [Rules] Separate comment removal from reading a line
+      [Release] `release.yml` script improvements
+      [P036] Fix merge conflicts, small source formatting improvements
+      [SD-card] Bugfix: Opening a file from SD-card doesn't always work
+      [SD-browser] Code improvements
+      [P153] Fix incorrect Sensor_VType setting
+      [SD-Card] Show SD-card CS GPIO pin in pin-selection
+      [P036] Bugfix in documentation-syntax
+      [P051] Fix device being automatically disabled and I2C scan issue
+      [I2C Scan] Make I2C scan more robust by adding extra wakeup
+      [Docs] Add I2C Scan documentation
+      [Docs] Additional I2C Scan documentation (mux)
+      [Docs] Rules example for PostToHTTP/PutToHTTP
+      [UI] Bugfix: Don't show - None - [SD-CARD] in GPIO selector when SD-Card is not configured (improves #4780)
+      [Build] Restore RTTTL feature in ESP8266 Climate build
+      [RTTTL] Add Async play and other improvements
+      [RTTTL] update documentation
+      [GPIO] Decrease buildsize by optimizing logging
+      [RTTTL] Add FEATURE_ flags to Custom-sample.h
+      [GPIO] Adopt optimized logging improvements (@gijs)
+      [Build] Add Collection G builds
+      [Build] Move [P154] BMP3xx to Collection G
+      [Build] Add checks for some external defined compiletime settings
+      [P036] Code formatting and optimizations
+      [P037] Build: Include all features in ESP32 builds
+      [P073] Reduce logging for BUILD_NO_DEBUG builds to reduce size
+      [P036] Updates for documentation
+      [P026][Sysvars] Add Internal temperature sensor value for ESP32
+      [P026][Sysvars] Feedback and fixes
+      [P026][Sysvars] Fix typo in comment
+      [P026] Add Get Config feature for all values
+      [P026] Add documentation
+      [Scripts] Handle 8M builds in WebFlasher
+      [P026][Sysvars] Avoid temperature reading errors on ESP32 classic (2 tries only)
+      [P026][Sysvars] Read temperature every second on ESP32 classic for better results
+      [Build] Try to use real branch name on GH Actions builds
+      [Build] Ignore Docs commits to trigger an Actions run
+      [P026][Sysvars] Explicitly disable FEATURE_INTERNAL_TEMPERATURE for ESP8266
+      [P026][Sysvars] Add delay() call
+      [Build][P026] Update documentation (without Actions run...)
+      [P037] Update documentation
+      [RTTTL] Add events for RTTTL play (async only), fix intermitted/skipped async playing
+      [RTTTL] Restore Cancelled event, update documentation
+      [P000 Docs] Update some internal links
+
+chromoxdor (2):
+      Fixed error in section TaskValueSet
+      Update GPIO.cpp
+
+dependabot[bot] (1):
+      Bump actions/checkout from 3 to 4
+
+uwekaditz (9):
+      [P036] Add ticker as scroll option
+      Compiler error if P036_SendEvent was not set
+      Calculation for ticker IdxStart and IdxEnd was wrong for 64x48 display, Start page updates after network has connected in PLUGIN_ONCE_A_SECOND
+      Some bug fixes (only 1 line displayed)
+      Removed unnecessary clear() functions
+      Merged with mega from 2023-08-25
+      Wrong #ifdef P036_SEND_EVENTS
+      CHG: Disable scrolling or ticker if new line content received (PLUGIN_WRITE)
+      CHG: Code reduced if P036_ENABLE_TICKER is not used
+
+
+-------------------------------------------------
+Changes in release mega-20230822 (since mega-20230623)
+-------------------------------------------------
+
+Release date: Tue Aug 22 09:40:44 PM CEST 2023
+
+TD-er (102):
+      [Eastron] Fix merge issues
+      [Eastron] Uncrustify + remove 500 bytes of  duplicate strings
+      [Eastron] Fix merge issues
+      [Cleanup] Reduce bin size by stripping unused code
+      [Cleanup] Reduce bin size by deduplicate factory reset code
+      [Factory Reset] Fix keeping settings (#4263)
+      [RFcal] Fix typo in command "clearwifirfcal"
+      [SendToHTTP] Only include "Authorization" header  when credentials set
+      [ESP32 2.0.5.x] Fix crashes calling noInterrupt() in ISR callback
+      [Adafruit NeoPixel] Update lib to fix noInterrupts
+      [Quad Enc] Fix ESP32 noInterrupts()
+      [Build] Fix merge issues, missing #endif
+      [ESP32-solo1] Add support for single-core ESP32
+      [Web flasher] Split "4M collections builds" in a separate group
+      [release build] Copy ESP32solo1 binaries during release
+      [Crash Analysis] Show controller/plugin name on crash at system event
+      [Build] Fix merge issue with duplicate PlatformIO envs
+      [Build] Fix missing #ifdef check
+      [Devices] Fix showing all included plugins in devices pull-down list
+      [Cleanup] Move plugin function pointer array to PROGMEM
+      [Cleanup] Simplify weblog buffer
+      [Cleanup] Fix build error due to missing defines
+      [Cleanup] Improve web serve speed + value formatting speed
+      [Cleanup] Reduce resouces used on Dallas, Sysinfo and Dummy tasks
+      [Build] Fix missing #ifdef check
+      [Cleanup] Reduce CPU usage only calculate valuecount once
+      [ESPEasy p2p] Remove delay() calls from p2p messaging
+      [Cleanup] Remove unused PLUGIN_EVENT_OUT
+      [Cleanup] Get timing stats for controller function calls
+      [cleanup] Simplify parse controller variables
+      [P2P] unit with latest build not receiving values of shared plugins (#4718)
+      [P2P] Check for unset DeviceNumber in matchesSensorType
+      [Cleanup] Speedup frequent calls + reduce build size
+      [Cleanup] Reduce calls to saveToRTC()
+      [Cleanup] Simplify mustConsiderAsJSONString()
+      [Cleanup] Remove long webserver debug log
+      [Cleanup] Reduce backgroundtasks() frequency
+      [Cleanup] Reduce mem allocs for ADC logs
+      [HLW8012] Improve stability and accuracy
+      [Cleanup] Allow a task to set initial PLUGIN_READ on init
+      [Cleanup] Reduce memory usage when timingstats is disabled (or read)
+      [PlatformIO] Force PIO to 6.1.7
+      [HLW8012] Fix instability due to IRAM
+      [Build] Move "hard_" builds to ESP8266 SDK 3.1.2
+      [Cleanup] Reduce items being logged in TimingStats
+      [Build] Revert switching 'hard_' builds to ESP8266 SDK 2.7.x
+      [HLW8012] Remove IIR filter from interrupt callback function
+      [PlatformIO] Test build with PIO 6.1.9rc1
+      [PlatformIO] Test build PIO 6.1.9rc1 (2nd attempt)
+      [PIO] Set minimal PIO version to 6.1.9
+      [Cleanup] Simplify allocation of ControllerSettings allocation, memleak?
+      [PVS Studio] Fix issues found by PVS Studio
+      [PVS Studio] Fix build error & unsafe macro
+      [PVS Studio] Fix some issues found by PVS Studio
+      [Cleanup] Attempt to fix memory leak in PluginTaskData
+      [ArduinoJSON] Update to ArduinoJson 6.21.2
+      [Cleanup] Simplify PluginStats::getSample
+      [PVS Studio] Fix some issues reported by PVS Studio
+      [MDNS] Disable MDNS for ESP8266 due to memory leak
+      [CSE7766] Improve reliability + fix issue with console port selection
+      [CSE7766] Fix parsing packets with lost bytes
+      [CSE7766] Add output selection of units of measure
+      [WiFi] Fix ESP8266 instability  compiler optimization flag -O2
+      [mDNS] Call MDNS.announce() every second on ESP8266 (mem leak?)
+      [Cleanup] Add strformat function to simplify log line creation
+      [Build] Fix build errors incorrect use of strformat()
+      [Cleanup] Move duplicate oversampling code to helper class
+      [ESP32 Serial] Fix serial tasks not working after save or restart task
+      [ESP32 Serial] Do not cache baud rate between end() and begin()
+      [Cleanup] Replace oversampling code duplication P145
+      [Cleanup] Replace oversampling code duplication P060
+      [Cleanup] Replace oversampling code duplication P067
+      [CSE7766] Update task value with intermediate oversampling value
+      [Oversampling] Add reset + weighted keep last
+      [ESP32 Serial] Fix serial tasks not working after save or restart task
+      [Eastron] Update SDM library to v2.2.2
+      [Eastron] Re-apply ESPEasy specific changes to SDM library
+      [Eastron] Generate all SDM register strings
+      [Eastron] Cleanup showing default taskvalue names + SDM72_V2add
+      [Eastron] Cleanup code duplicates & uncrustify
+      [Eastron] Fix compiler warnings
+      [Eastron] Add support for SDM320C
+      [Eastron] Split 'readVal' function to allow async reads
+      [Eastron] Add "demand" in register description
+      [Eastron] Implement complete async read of Eastron registers
+      [Eastron] Add hardware RTS support for ESP32 (for ~RE/DE pin on RS485)
+      [Eastron] Fix ESP32 hardware RTS flow control
+      [Eastron] improve speed & add commands to set modbusID & baudrate
+      [Eastron] Start documentation
+      [Eastron] Document RS485 specific wiring
+      [Eastron] Complete documentation on Eastron plugin
+      [Eastron] Add support for RS485 collision detection on ESP32
+      [Serial Console] Fix HW Serial0 unusable on ESP8266 limited builds
+      [Eastron] Add delay on first PLUGIN_READ to allow reading registers
+      [Build] Set ESP8266 Energy build to LIMIT_BUILD_SIZE
+      [Build] Change LIMIT_BUILD_SIZE on ESP8266 Energy to BUILD_NO_DEBUG
+      [Eastron] Improve read stability on ESP8266
+      [CSE7766] Fix crash when not all stats are enabled
+      [Settings] Fix setting task var names & load default names
+      [Settings] Fix task value names not being updated on ESP32 (cache)
+      [Settings] Fix setting custom task value name on Eastron task
+      [ADS1115] Retry on error reads within timeout
+
+Ton Huisman (68):
+      [Release][Bugfix] Script should deploy an archive per CPU Architecture
+      [Docs] Describe `Wrk` and `Wkd` indicators for `Clock#Time` event
+      [P153] Remove unused #include
+      [Build] Add support for ESP32-S3 8MB units
+      [Build] Rearrange 8M2M to 8M1M configuration
+      [P118] Fix compilation when suppressing only DEBUG logging
+      [Build] Check all ESP32 builds correctly for factory.bin filesize
+      [Docs] Fix typo on Plugin page
+      [Build] Add `boards` definitions for ESP32-S3 8MB and ESP32-S3 16MB
+      [ETH] Allow Ethernet Power GPIO pin unset (#4724)
+      [P014] Set default output values to Temp/Hum
+      [P118] Fix compilation when included in Custom builds
+      [Build] Update board_name for custom_ESP32_4M2M_NO_OTA_LittleFS
+      [Build] Add missing #undef FEATURE_TIMING_STATS
+      [Rules] Add minHexDigits to toHex function
+      [Docs] Improvements and various fixes
+      [Build] Add some missing defines to MAX build to make them explicitly available
+      [P128] Revert changes after library update (not working with ESP8266)
+      [UI] Add option for disabling Rules auto-completion
+      [P035] Add Inverted output option, as supported by the IRsend library
+      [P035] Code improvements
+      [P035] Add documentation
+      [P009] Small documentation typo
+      [P014] Fix invalid cast
+      [Build] Move ESP32_4M2M settings to own board file
+      [Build] Remove unused board definition files
+      [P118] Allow enable/disable of ORCON feature via Custom.h
+      [P141] Allow enable/disable of Cursor X/Y values feature via Custom.h
+      [Console] Add newline after console command to avoid mixing in with logging
+      [P046] Fix documentation, address some code issues, WiP
+      [P046] Fix compilation issue and include in MAX build
+      [Build] Include IR plugins in MAX builds
+      [P035] Small size reductions, remove some unused commented code
+      [Build] Enable I2C device scan for ESP32 builds
+      [P098] Add documentation
+      [EasyColorCode] Fix typo `7ddt` (was 7dtt)
+      [EasyColorCode] Add some missing commands
+      [P013] Move to category Distance (from position), add missing [P134] to Distance too
+      [Controllers] Fix `validCPluginID` check (initialization and actual check)
+      [P098] Add precaution to documentation for PWM usage
+      [Build] Reduce ENERGY build size by removing DEBUG logging
+      [Build] Fix compiler warnings
+      [EasyColorCode] Fix some auto-complete issues and typos
+      [EasyColorCode] Add few missing commands for P036
+      [Lib] Update NeoPixelBus to current latest
+      [P128] Use customized NeoPixelBus library, upgrading to latest features won't properly work
+      [P113] Fix for shifted I2C address in library, code improvements
+      [P113] Apply the fix at the original crime-scene ;-)
+      [Libs] Update VL53L1X library to current latest v1.2.12 (with fix)
+      [P113] Disable I2C address selection as that seems to mess up the sensor
+      [P113] Update documentation
+      [P122] Uncrustify and move initialization from constructor to .h file
+      [P153] Remove unused variable
+      [P020] Sourcecode formatting for clarification
+      [Docs] Correct some layout issues, causing parts of documentation to disappear
+      [P113] Add a few extra nullptr checks
+      [Core] Fix some string/message inconsistencies
+      [P113] Add a few extra nullptr checks
+      [Converters] Add toStringNoZero() function
+      [Generic] Improvements and fixes part 2, Aug 2023
+      [P113] Fix typo in log statement
+      [AdaGFX] Additional error information for unsupported bmp files, improve docs
+      [UI] Widen `textarea` fields for easier input of larger/wider text
+      [Docs] P002 / P047 Add YT link for selecting a proper (analog) Soil-moisture sensor
+      [Converters] Use the correct conversion
+      [Tools] Remove ESP Easy Flasher, update Espressif Download tool
+      [Tools] Revert esptool to last version
+      [Tools] Add `blank_8MB.bin` for erasing 8MB units, exclude from ESP8266 archive
+
+tomcatxx (3):
+      Update SDM.h
+      Update _P078_Eastron.ino
+      Update SDM.h
+
+
+-------------------------------------------------
+Changes in release mega-20230623 (since mega-20230508)
+-------------------------------------------------
+
+Release date: vr 23 jun 2023 22:56:40 CEST
+
+Florian Binder (3):
+      Enhance P098 to work without encoder and limit sensors
+      remove PLUGIN_TIME_CHANGE
+      use PCONFIG_LONG instead of PCONFIG
+
+Joan Soler Galmes (2):
+      Added Start and End Pixel feature for scan and dualscan modes
+      Modified description of the command
+
+Joan Soler Galmés (1):
+      Replaced all occurences of hex2rrggbb("000000") for hex2rrggbb(F("000000")) and An int doesn't need to be converted to an int. (Thx  TD-er)
+
+TD-er (146):
+      [ESP32-C3 / -S3] Add support for ESP32-C3 & ESP32-S3
+      [ESP32-C3] Disable P097 ESP32Touch for ESP32-C3
+      [GPIO info] Define flash pins for ESP32-C3 and ESP32-S3
+      [GPIO info] Add hardware/GPIO specifics for ESP32-C3/S3
+      [GPIO Boot States] Fix bug storing ESP32-S2 boot states + add ESP32-S3
+      [Build] Fix missing include
+      [Build] Fix build for ESP8266 missing a define macro
+      [NeoPixelBus] Update NeoPixelBus library to 2.7.5
+      [ESP32-S3] Fix board definitions + build errors on ESP32-S3
+      [ESP32-S3] Add 16M max_ESP32s3_16M8M_LittleFS build
+      [ESP32-C3] Fix computing free stack on ESP32-C3
+      [Docs] Document pins to use for ESP32-S2/S3/C3
+      [PSRAM] Fix PSRAM detection on ESP32-S3
+      [Docs] Update documentation regarding supported ESP chips
+      [NeoPixelBus] Work-around to compile on older compilers (ESP8266 2.7.4)
+      [docs] Fix copy/paste error in ESP32-C3 docs
+      [Docs] Update specs of supported (and not yet supported) ESP modules
+      [Docs] Document future ESP32 C2/C6/H2
+      [Cleanup] Simplify detection of active flash mode
+      [p2p] Fix task value data exchange between nodes via p2p (#4649)
+      [p2p] Fix check on received data for matching plugin IDs
+      [p2p] Fix collecting stats + send to controller on p2p received data
+      [p2p] Fix build on LIMIT_BUILD_SIZE builds
+      [p2p] Fix receiving p2p data on another node (stupid copy/paste bug)
+      [ESP32-S2/S3/C3]  Update user configurable SPI bus in ESPEasy.
+      [Build] Fix PlatformIO env definition.
+      [Build] Fix build for ESP8266 due to misplaced #ifdef ESP32
+      [ESP32-S3/C3] Generate web flasher manifest files for all ESP platforms
+      [WiFi] Make Wi-Fi TX power configurable for ESP32-S2/S3/C3
+      [ESP32 SDK] Update to ESP32 SDK 2.0.9 + Enable WiFi TX pwr for ESP32
+      [PIO build] Update build scripts for scons 4.5.x
+      [Build] Fix build error due to strange cast of double type in rules
+      [Build] Work-around for new ESP8266 macro of round()
+      [Build ESP8266] Replace calls to round()
+      [Build] Use HWrandom to overcome build issues
+      [Build] Fix missing include
+      [Build] Remove extern "C" to allow for (C++) function overloading
+      [Build] include ESPEasy_common.h instead of Arduino.h where possible
+      [Cleanup] Moving not commonly needed code out of ESPEasy_common.h
+      [Build] Remove "Helpers" folder from concat script
+      [Build] Include ESPEasy_common.h instead of ESPEasy_config.h
+      [Build] Add Helpers folder to concat .cpp for ESP8266
+      [Build] Add ESPEasyCore to concat cpp & split global RulesCalculate obj
+      [Build test] Disable lots of plugins + not concat Helpers/*.cpp
+      [Build test] Disable P037 to test build failures
+      [Build test] Undef round right after include <Arduino.h>
+      [Build] Revert disabling plugins + concat Helpers/*.cpp
+      [Build] Include cmath after Arduino.h to redefine round()
+      [Build] Fix building ESPEasy in PlatformIO 6.1.7 (#4656)
+      [Cleanup] Fix IP address formatting
+      [Python] Create tool to generate web flasher files from build
+      [Python] Generate index.html for web flasher
+      [Build] Include obviously missing plugins from Climate builds
+      Change jquery CDN URL for China users
+      [Cleanup] Reduce build size by using float instead of double in rules
+      [Cleanup] Fix build, removing double function declaration
+      [Cleanup] Use float version of geometric functions to reduce bin size
+      [Cleanup] Remove duplicate code for leading zeroes formatting int
+      [Cleanup] Keep flags for rules floating point value type in sync
+      [Cleanup] Revert some changes based on review feedback
+      [Custom build] Make it easier for custom builds to force float type
+      [USB CDC] Support USB serial port for ESP32-S2/S3/C3
+      [ESPEasySerial] Split common code to separate .cpp file
+      [ESPEasy Console] Split console to separate class
+      [ESPEasy Console] Fix build error
+      [Build] Fix building on ESP32-S2
+      [ESPEasy Console] Enable USB CDC for ESP32-S2
+      [mDNS] Disable mDNS for ESP32-S2 as it seems to affect WiFi stability
+      [ESPEasySerial] Add platform specific default pins for Serial0 and 1
+      [HWCDC] Add event handling to automatically switch to USB serial
+      [HWCDC] Fix automatic switching to USB console port
+      [USBCDC] Add using USBCDC as console for ESP32-S2
+      [ESPEasySerial] Start adding USB serial to ESPEasySerial
+      [ESPEasySerial] Create wrapper classes for USBCDC and HWCDC
+      [ESPEasySerial] Split files into wrappers and drivers
+      [ESPEasySerial] Cleanup ESPEasySerial class
+      [ESPEasySerial] Fix compile errors
+      [ESPEasySerial] Fix compile errors.
+      [ESPEasySerial] Fix build on ESP32-S2 CDC builds
+      [ESPEasySerial] Fix build errors on ESP8266
+      [ESPEasySerial] Fix (another) build issue on ESP8266 with SWserial disabled
+      [ESPEasySerial] Fix selecting HWCDC on ESP32-C3/S3 for console
+      [ESPEasySerial] Fix Custom ESP32 build
+      [ESPEasySerial] Simplify check availability nr serial ports on SoC
+      [ESPEasySerial] Fix switching HWCDC + dynamically set default pins
+      [ESPEasySerial] Add preliminary support for console serial port fallback
+      [ESPEasySerial] Refactor file names to clarify their use
+      [ESPEasySerial] Fix build issue inconsistent defines
+      [ESPEasySerial] Fix USBCDC on ESP32-S2
+      [ESPEasySerial] Fix fallback USBCDC to Serial0 (input not working yet)
+      [ESPEasySerial] Add separate output buffers for fallback serial
+      [ESPEasySerial] Add setting to enable/disable fallback to serial0
+      [ESPEasySerial] Fix parsing commands via any serial console
+      [ESPEasySerial] Fix crashes on ESP32-C3
+      [USBCDC] Remove 2nd USB CDC port + use USB CDC on ESP32-S3
+      [ESPEasy Console] Show actual serial port config on sysinfo page
+      [Console] Reduce boottime when using CDC as port for console
+      [USB CDC] Add max_ESP32s3_16M8M_LittleFS_CDC  (e.g. for Lilygo T-dongle)
+      [ESP32-S3 CDC] Switch USB serial to HWCDC for ESP32-S3 for web flasher
+      [ESPEasySerial] Fix setting correct baudrate
+      [ESPEasySerial] Fix saving SW serial pins
+      [ESPEasySerial] Get actual baudrate from SW Serial
+      [ESPEasySerial] Add SW Serial support for ESP32
+      [ESPEasySerial] Do not show default GPIO pins on SW Serial
+      [ESPEasySerial] Document new USB serial ports + SWserial for ESP32-xx
+      [ESPEasySerial] Update version nr to v3.0.0
+      [Cleanup] Improve formatting of GPIO description on devices page
+      [HWCDC] Enable HWCDC for all ESP32-C3 builds
+      [USBCDC] Enable USB CDC for all ESP32-S2 builds
+      [HWCDC] Enable HWCDC for all ESP32-S3 builds
+      [Web Flasher] Remove separation of CDC builds in dropdown list
+      [Build] Fix missing include for WiFi.h / ESP8266WiFi.h
+      [Build] Remove confusing custom build env. for ESP32-S2
+      [Build] Fix build not using ESPEasySerial
+      [ESP32 SDK] Update SDK to fixed code for HWCDC.end()
+      [DNS] Fix DNS server corruption by IPv6 global IP prefix
+      [DNS] Allow DNS cache of 0.0.0.0 to be restored
+      [Web flasher] Add link to list of plugins per build to flasher page
+      [Web flasher] Use Tasmota's version of ESP Web Tools JS to flash USBCDC
+      [ESP32-S3] Clarify OPI flash requirements in 16M PSRAM build
+      [Build] Mark P065 as dependency on ESPEasySerial
+      [ESP32-S3] Document SPI mode quirks for ESP32-S3
+      [IMPROV] Implement Improv to ease deployment via web flasher
+      [ESP32-S2] Fix esptool.py upload parameters to help autoreset flashing
+      [Serial Helper] Disable updating GPIOs on switch serial port on webpage
+      [IMPROV] Replace library + modify
+      [IMPROV] Add WiFi scan + board/build identification for web flasher
+      [IMPROV] Fix build on ESP8266
+      [IMPROV] Fix ESP8266
+      [IMPROV] Fix build on ESP8266
+      [IMPROV] Do not include IMPROV in ESP8266 limited build size builds
+      [IMPROV] Fix connect to Wifi + add logging
+      [IMPROV] Clear scan result
+      [IMPROV] Clean up ESPEasy console handling fallback serial
+      [ETH] No DNS entries when using Ethernet (#4702)
+      [IMPROV] Feed invalid IMPROV messages to console input again
+      [IMPROV] Use parse state to check parse result
+      [ESP32 IDF] Update to IDF 4.4.5 (2023-06-14)
+      [ESP32 IDF] Update to IDF 4.4.5 (2023-06-14)
+      [Cleanup] Simplify init plugins
+      [Cleanup] Fix simplify init plugins
+      [Cleanup] Move  Plugin_ptr[] to PROGMEM
+      [Cleanup] Simplify init included controllers
+      [Cleanup] Reduce memory usage on builds with low numbered plugins
+      [Cleanup] Fix missing include
+      [Devices] Fix showing all included plugins in devices pull-down list
+
+Ton Huisman (62):
+      [P152] Add plugin Output - ESP32 DAC
+      [P152] Add plugin to ESP32 and ESP32-S2 Normal (all) builds
+      [Core] Add support for ESP32 DAC GPIO selection, display and checks
+      [P152] Review feedback
+      [Core] ESP32 DAC GPIO review feedback
+      [P152] Add documentation
+      [Core] ESP32 DAC GPIO Show warning for PSRAM pin
+      [P152] Update documentation for PSRAM warning
+      [P153] Add plugin Environment - SHT4x (Temperature Humidity sensor)
+      [P145] Fix compiler warning (unused variable)
+      [P152] Update documentation removing non-existent PSRAM warning (#4624)
+      [P153] Add command support, apply feedback and other improvements
+      [P147] Add plugin Gases - CO2 SGP4x
+      [Helpers] Add `calc_CRC8()` function
+      [P147] Rename plugin Gases - SGP4x VOC(/NOx), add to I2C Scanner
+      [P083] Rename plugin: Gases - SGP30 TVOC/eCO2
+      [Custom] Add P147 options, format some definitions
+      [Lib] Add Sensirion Arduino Gas Index Algorithm library
+      [P147] Implement Sensirion Gas Index lib, finish SGP41 support
+      [P147] Change term Calibration to Compensation
+      [Lib] Revert unsupported sampling frequency from NOxGasIndexAlgorithm
+      [P147] Adjust timing for SGP41, Fix low-power measurement, fix settings-save issue
+      [P147] Include plugin in Collection F build
+      [P152] Minor improvements, add to Custom-sample.h
+      [P153] Minor UI improvements
+      [P153] Add documentation
+      [P147] Make Compensation values each optional, minor UI adjustment
+      [P147] Add documentation
+      [Build] ESP32 derivates available in separate archives
+      [Build] Fix typo in script
+      [Build] Update README.md
+      [Build] Fix quotes in script
+      [Build] Fix quotes in script
+      [Build] Fix wildcards in find command
+      [Build] Fix wildcards in find command
+      [Build] Fix build issue with latest SCons (temp. fix: downgrade)
+      [Build] Fix build issue with latest SCons (copied)
+      [Build] Linux find doesn't like wildcards in variables
+      [Build] Restore for loop and fix silly typo
+      [P152] Apply new CPU defines for enabling plugin
+      [P128] Adjust to latest updates of NeoPixelBuxfx library
+      [P128] Definition improvements for new CPU types, add support for BGR neopixels
+      [C018] Correct include paths (Arduino IDE compilation)
+      [P025] Correct include path (Arduino IDE compilation)
+      [C018][P025] Shorten include paths
+      [P152] Fix typo
+      [SD] Corrections for writing logging to sd-card
+      [SD] Fix SD card filebrowser, add `uploadsd` feature
+      [SD] Fix traversing subdirectories in filebrowser
+      [SD] Corrections for writing logging to sd-card
+      [SD] Fix SD card filebrowser, add `uploadsd` feature
+      [SD] Fix traversing subdirectories in filebrowser
+      [P146] Add documentation
+      [P153] [Bugfix] Using Startup config with Heater enabled causes checksum errors
+      [P153] Return NaN on command-, read- or checksum-error
+      [P146] Clarify setting description
+      [P146] Extend documentation, add example
+      [P146] Extend documentation, fix some typos
+      [Build] Add CONFIGURATION_CODE on System Info page
+      [P037] Remove unsupported Formula fields from settings
+      [C015] Blynk: Fix compile-error when enabling the SSL option
+      [Build] [Bugfix] Typo in enum code for CONFIGURATION_CODE
+
+almirus (3):
+      Plugin P133 (LTR390 UV) was moved from Collection_E to Climate
+      Update define_plugin_sets.h
+      Update doc for P133
+
+
+-------------------------------------------------
 Changes in release mega-20230508 (since mega-20230507)
 -------------------------------------------------
 

@@ -51,15 +51,33 @@ void checkRAM(const String& flashString,
               int           a);
 
 void checkRAM(const __FlashStringHelper * flashString,
+              int           a);
+
+void checkRAM(const __FlashStringHelper * flashString,
               const String& a);
 void checkRAM(const __FlashStringHelper * flashString,
               const __FlashStringHelper * a);
 void checkRAM(const String& flashString,
               const String& a);
-
+void checkRAM_PluginCall_task(uint8_t taskIndex, uint8_t Function);
 
 void checkRAM(const __FlashStringHelper *  descr);
+
 void checkRAM(const String& descr);
+
+struct checkRAM_values {
+
+  checkRAM_values();
+
+  bool mustContinue() const;
+
+
+  uint32_t freeStack;
+  uint32_t freeRAM;
+};
+
+void checkRAM(const checkRAM_values & values, const String& descr);
+
 #endif
 
 

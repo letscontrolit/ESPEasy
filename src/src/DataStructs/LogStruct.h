@@ -4,13 +4,13 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/LogEntry.h"
+
 /*********************************************************************************************\
  * LogStruct
 \*********************************************************************************************/
-#define LOG_STRUCT_MESSAGE_SIZE 128
 #ifdef ESP32
   #define LOG_STRUCT_MESSAGE_LINES 60
-  #define LOG_BUFFER_EXPIRE         30000  // Time after which a buffered log item is considered expired.
 #else
   #ifdef USE_SECOND_HEAP
     #define LOG_STRUCT_MESSAGE_LINES 60
@@ -21,8 +21,14 @@
       #define LOG_STRUCT_MESSAGE_LINES 15
     #endif
   #endif
-  #define LOG_BUFFER_EXPIRE         5000  // Time after which a buffered log item is considered expired.
 #endif
+
+#ifdef ESP32
+  #define LOG_BUFFER_ACTIVE_READ_TIMEOUT 30000
+#else
+  #define LOG_BUFFER_ACTIVE_READ_TIMEOUT 5000
+#endif
+
 
 struct LogStruct {
     
@@ -36,15 +42,17 @@ struct LogStruct {
     // Returns whether a line was retrieved.
     bool getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, uint8_t& loglevel);
 
-    bool isEmpty() const;
+    bool isEmpty() const {
+      return !is_full && (write_idx == read_idx);
+    }
 
-    bool isFull() const;
+    bool isFull() const { return is_full; }
 
     bool logActiveRead();
 
   private:
 
-    void add_end(const uint8_t loglevel);
+    void add_end();
 
     void clearExpiredEntries();
 
@@ -55,14 +63,11 @@ struct LogStruct {
       return (idx + 1) % LOG_STRUCT_MESSAGE_LINES;
     }
 
-    String Message[LOG_STRUCT_MESSAGE_LINES] = {};
-    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES] = {0};
+    LogEntry_t Message[LOG_STRUCT_MESSAGE_LINES];
     int write_idx = 0;
     int read_idx = 0;
     unsigned long lastReadTimeStamp = 0;
-    uint8_t log_level[LOG_STRUCT_MESSAGE_LINES] = {0};
     bool is_full = false;
-
 };
 
 

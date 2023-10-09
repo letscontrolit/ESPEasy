@@ -123,7 +123,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       // @giig1967g: set current task value for taking actions after changes in the task gpio
-      const uint32_t key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
+      const uint32_t key = createKey(PLUGIN_GPIO, CONFIG_PIN1);
 
       auto it = globalMapPortStatus.find(key);
 
@@ -135,11 +135,11 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options[2] = { F("Switch"),  F("Dimmer") };
         int optionValues[2]                   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
         const uint8_t switchtype              = P001_getSwitchType(event);
-        addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
+        addFormSelector(F("Switch Type"), F("type"), 2, options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
-          addFormNumericBox(F("Dim value"), F("p001_dimvalue"), PCONFIG(1), 0, 255);
+          addFormNumericBox(F("Dim value"), F("dimvalue"), PCONFIG(1), 0, 255);
         }
       }
 
@@ -148,7 +148,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *buttonOptions[3] = { F("Normal Switch"), F("Push Button Active Low"),  F("Push Button Active High") };
         int buttonOptionValues[3]                   =
         { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
-        addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
+        addFormSelector(F("Switch Button Type"), F("button"), 3, buttonOptions, buttonOptionValues, choice);
       }
 
       SwitchWebformLoad(
@@ -166,18 +166,18 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p001_type"));
+      PCONFIG(0) = getFormItemInt(F("type"));
 
       if (PCONFIG(0) == PLUGIN_001_TYPE_DIMMER)
       {
-        PCONFIG(1) = getFormItemInt(F("p001_dimvalue"));
+        PCONFIG(1) = getFormItemInt(F("dimvalue"));
       }
 
-      PCONFIG(2) = getFormItemInt(F("p001_button"));
+      PCONFIG(2) = getFormItemInt(F("button"));
 
       SwitchWebformSave(
         event->TaskIndex,
-        PLUGIN_ID_001,
+        PLUGIN_GPIO,
         P001_BOOTSTATE,
         P001_DEBOUNCE,
         P001_DOUBLECLICK,
@@ -196,7 +196,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       if (validGpio(CONFIG_PIN1))
       {
         portStatusStruct newStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
+        const uint32_t   key = createKey(PLUGIN_GPIO, CONFIG_PIN1);
 
         // Read current status or create empty if it does not exist
         newStatus = globalMapPortStatus[key];
@@ -360,7 +360,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
       if (validGpio(CONFIG_PIN1))
       {
-        const uint32_t key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
+        const uint32_t key = createKey(PLUGIN_GPIO, CONFIG_PIN1);
 
         // WARNING operator [],creates an entry in map if key doesn't exist:
         portStatusStruct currentStatus = globalMapPortStatus[key];
@@ -642,7 +642,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      removeTaskFromPort(createKey(PLUGIN_ID_001, CONFIG_PIN1));
+      removeTaskFromPort(createKey(PLUGIN_GPIO, CONFIG_PIN1));
       break;
     }
 
@@ -668,7 +668,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       portStatusStruct tempStatus;
 
       // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_001, event->Par1);
+      const uint32_t key = createKey(PLUGIN_GPIO, event->Par1);
       tempStatus = globalMapPortStatus[key];
 
       tempStatus.state = event->Par2;

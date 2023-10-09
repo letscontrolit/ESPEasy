@@ -1,5 +1,7 @@
 #include "../Helpers/MDNS_Helper.h"
 
+#if FEATURE_MDNS
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -10,6 +12,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/StringProvider.h"
+#endif
 
 void set_mDNS() {
   #if FEATURE_MDNS

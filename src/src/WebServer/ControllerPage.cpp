@@ -14,9 +14,9 @@
 # include "../ESPEasyCore/Controller.h"
 
 # include "../Globals/CPlugins.h"
-# include "../Globals/Protocol.h"
 # include "../Globals/Settings.h"
 
+# include "../Helpers/_CPlugin_init.h"
 # include "../Helpers/_CPlugin_Helper_webform.h"
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/ESPEasy_Storage.h"
@@ -36,15 +36,17 @@ void handle_controllers() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
+  // 'index' value in the URL
   uint8_t controllerindex  = getFormItemInt(F("index"), 0);
   boolean controllerNotSet = controllerindex == 0;
   --controllerindex; // Index in URL is starting from 1, but starting from 0 in the array.
 
-  const int protocol = getFormItemInt(F("protocol"), -1);
+  const int protocol_webarg_value = getFormItemInt(F("protocol"), -1);
 
   // submitted data
-  if ((protocol != -1) && !controllerNotSet)
+  if ((protocol_webarg_value != -1) && !controllerNotSet)
   {
+    const protocolIndex_t protocolIndex = protocol_webarg_value;
     bool mustInit            = false;
     bool mustCallCpluginSave = false;
     {
@@ -56,33 +58,33 @@ void handle_controllers() {
       } else {
         // Need to make sure every byte between the members is also zero
         // Otherwise the checksum will fail and settings will be saved too often.
-        memset(&ControllerSettings, 0, sizeof(ControllerSettingsStruct));
-        ControllerSettings.reset();
-        if (Settings.Protocol[controllerindex] != protocol)
+        ControllerSettings->reset();
+
+        if (Settings.Protocol[controllerindex] != protocolIndex)
         {
           // Protocol has changed.
-          Settings.Protocol[controllerindex] = protocol;
+          Settings.Protocol[controllerindex] = protocolIndex;
 
-          // there is a protocol selected?
-          if (protocol != 0)
+          // there is a protocolIndex selected?
+          if (protocolIndex != 0)
           {
             mustInit = true;
-            handle_controllers_clearLoadDefaults(controllerindex, ControllerSettings);
+            handle_controllers_clearLoadDefaults(controllerindex, *ControllerSettings);
           }
         }
 
-        // subitted same protocol
+        // subitted same protocolIndex
         else
         {
-          // there is a protocol selected
-          if (protocol != 0)
+          // there is a protocolIndex selected
+          if (protocolIndex != 0)
           {
             mustInit = true;
-            handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
+            handle_controllers_CopySubmittedSettings(controllerindex, *ControllerSettings);
             mustCallCpluginSave = true;
           }
         }
-        addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
+        addHtmlError(SaveControllerSettings(controllerindex, *ControllerSettings));
       }
     }
 
@@ -139,16 +141,18 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
     return;
   }
 
+  const ProtocolStruct& proto = getProtocolStruct(ProtocolIndex);
+
   ControllerSettings.reset();
-  ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
+  ControllerSettings.Port = proto.defaultPort;
 
   // Load some templates from the controller.
   struct EventStruct TempEvent;
 
   // Hand over the controller settings in the Data pointer, so the controller can set some defaults.
-  TempEvent.Data = (uint8_t*)(&ControllerSettings);
+  TempEvent.Data = (uint8_t *)(&ControllerSettings);
 
-  if (Protocol[ProtocolIndex].usesTemplate) {
+  if (proto.usesTemplate) {
     String dummy;
     CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummy);
   }
@@ -215,7 +219,7 @@ void handle_controllers_ShowAllControllersTable()
       const bool cplugin_set = Settings.Protocol[x] != INVALID_C_PLUGIN_ID;
 
 
-      LoadControllerSettings(x, ControllerSettings);
+      LoadControllerSettings(x, *ControllerSettings);
       html_TR_TD();
 
       if (cplugin_set && !supportedCPluginID(Settings.Protocol[x])) {
@@ -245,20 +249,23 @@ void handle_controllers_ShowAllControllersTable()
         html_TD();
         addHtml(getCPluginNameFromCPluginID(Settings.Protocol[x]));
         html_TD();
+        const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
         {
-          const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
           String hostDescription;
           CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
 
           if (!hostDescription.isEmpty()) {
             addHtml(hostDescription);
           } else {
-            addHtml(ControllerSettings.getHost());
+            addHtml(ControllerSettings->getHost());
           }
         }
 
         html_TD();
-        addHtmlInt(ControllerSettings.Port);
+        const ProtocolStruct& proto = getProtocolStruct(ProtocolIndex);
+        if ((INVALID_PROTOCOL_INDEX == ProtocolIndex) || proto.usesPort) {
+          addHtmlInt(13 == Settings.Protocol[x] ? Settings.UDPPort : ControllerSettings->Port); // P2P/C013 exception
+        }
       }
       else {
         html_TD(3);
@@ -287,22 +294,26 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addSelector_Head_reloadOnChange(F("protocol"));
   addSelector_Item(F("- Standalone -"), 0, false, false, EMPTY_STRING);
 
-  for (uint8_t x = 0; x <= protocolCount; x++)
+  protocolIndex_t protocolIndex = 0;
+  while (validProtocolIndex(protocolIndex))
   {
+    const cpluginID_t number = getCPluginID_from_ProtocolIndex(protocolIndex);
     boolean disabled = false; // !((controllerindex == 0) || !Protocol[x].usesMQTT);
-    addSelector_Item(getCPluginNameFromProtocolIndex(x),
-                     Protocol[x].Number,
-                     choice == Protocol[x].Number,
+    addSelector_Item(getCPluginNameFromProtocolIndex(protocolIndex),
+                     number,
+                     choice == number,
                      disabled);
+    ++protocolIndex;
   }
   addSelector_Foot();
 
   addHelpButton(F("EasyProtocols"));
 
   const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+  const ProtocolStruct& proto = getProtocolStruct(ProtocolIndex);
 
   # ifndef LIMIT_BUILD_SIZE
-  addRTDControllerButton(Protocol[ProtocolIndex].Number);
+  addRTDControllerButton(getCPluginID_from_ProtocolIndex(ProtocolIndex));
   # endif // ifndef LIMIT_BUILD_SIZE
 
   if (Settings.Protocol[controllerindex])
@@ -313,109 +324,109 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Out of memory, cannot load page"));
       } else {
-        LoadControllerSettings(controllerindex, ControllerSettings);
+        LoadControllerSettings(controllerindex, *ControllerSettings);
 
-        if (!Protocol[ProtocolIndex].Custom)
+        if (!proto.Custom)
         {
-          if (Protocol[ProtocolIndex].usesHost) {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_DNS);
+          if (proto.usesHost) {
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_DNS);
 
-            if (ControllerSettings.UseDNS)
+            if (ControllerSettings->UseDNS)
             {
-              addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_HOSTNAME);
+              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_HOSTNAME);
             }
             else
             {
-              addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
+              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
             }
           }
-          if (Protocol[ProtocolIndex].usesPort) {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
+          if (proto.usesPort) {
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
           }
       # ifdef USES_ESPEASY_NOW
 
-          if (Protocol[ProtocolIndex].usesMQTT) {
+          if (proto.usesMQTT) {
             // FIXME TD-er: Currently only enabled for MQTT protocols, later for more
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK);
           }
       # endif // ifdef USES_ESPEASY_NOW
 
-          if (Protocol[ProtocolIndex].usesQueue) {
+          if (proto.usesQueue) {
             addTableSeparator(F("Controller Queue"), 2, 3);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_RETRIES);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_RETRIES);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION);
 
-            if (Protocol[ProtocolIndex].allowsExpire) {
-              addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE);
+            if (proto.allowsExpire) {
+              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE);
             }
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_DEDUPLICATE);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_DEDUPLICATE);
           }
 
-          if (Protocol[ProtocolIndex].usesCheckReply) {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CHECK_REPLY);
+          if (proto.usesCheckReply) {
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CHECK_REPLY);
           }
 
-          if (Protocol[ProtocolIndex].usesTimeout) {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_TIMEOUT);
+          if (proto.usesTimeout) {
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_TIMEOUT);
           }
 
-          if (Protocol[ProtocolIndex].usesSampleSets) {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
+          if (proto.usesSampleSets) {
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
           }
-          if (Protocol[ProtocolIndex].allowLocalSystemTime) {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME);
+          if (proto.allowLocalSystemTime) {
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME);
           }
 
 
-          if (Protocol[ProtocolIndex].useCredentials()) {
+          if (proto.useCredentials()) {
             addTableSeparator(F("Credentials"), 2, 3);
           }
 
-          if (Protocol[ProtocolIndex].useExtendedCredentials()) {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS);
+          if (proto.useExtendedCredentials()) {
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS);
           }
 
-          if (Protocol[ProtocolIndex].usesAccount)
+          if (proto.usesAccount)
           {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USER);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USER);
           }
 
-          if (Protocol[ProtocolIndex].usesPassword)
+          if (proto.usesPassword)
           {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
           }
           #if FEATURE_MQTT
-          if (Protocol[ProtocolIndex].usesMQTT) {
+          if (proto.usesMQTT) {
             addTableSeparator(F("MQTT"), 2, 3);
 
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLIENT_ID);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLIENT_ID);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT);
             addRowLabel(F("Current Client ID"));
-            addHtml(getMQTTclientID(ControllerSettings));
+            addHtml(getMQTTclientID(*ControllerSettings));
             addFormNote(F("Updated on load of this page"));
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
           }
-          #endif // if FEATURE_MQTT
+          # endif // if FEATURE_MQTT
 
 
-          if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
+          if (proto.usesTemplate || proto.usesMQTT)
           {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
           }
           #if FEATURE_MQTT
-          if (Protocol[ProtocolIndex].usesMQTT)
+          if (proto.usesMQTT)
           {
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SEND_LWT);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SEND_LWT);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
           }
-          #endif // if FEATURE_MQTT
+          # endif // if FEATURE_MQTT
         }
       }
 

@@ -103,6 +103,37 @@ bool ExtraTaskSettingsStruct::validCharForNames(char c) {
   return c != ' ' && getInvalidCharsForNames().indexOf(c) == -1;
 }
 
+void ExtraTaskSettingsStruct::setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const String& str)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    safe_strncpy(
+      TaskDeviceValueNames[taskVarIndex],
+      str,
+      sizeof(TaskDeviceValueNames[taskVarIndex]));
+  }
+}
+
+void ExtraTaskSettingsStruct::setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const __FlashStringHelper * str)
+{
+  setTaskDeviceValueName(taskVarIndex, String(str));
+}
+
+void ExtraTaskSettingsStruct::clearTaskDeviceValueName(taskVarIndex_t taskVarIndex)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    ZERO_FILL(TaskDeviceValueNames[taskVarIndex]);
+  }
+}
+
+void ExtraTaskSettingsStruct::clearDefaultTaskDeviceValueNames()
+{
+  for (int i = 0; i < VARS_PER_TASK; ++i) {
+    if (isDefaultTaskVarName(i)) {
+      clearTaskDeviceValueName(i);
+    }
+  }
+}
+
 void ExtraTaskSettingsStruct::setAllowedRange(taskVarIndex_t taskVarIndex, const float& minValue, const float& maxValue)
 {
   if (validTaskVarIndex(taskVarIndex)) {
@@ -184,6 +215,20 @@ bool ExtraTaskSettingsStruct::anyEnabledPluginStats() const
 }
 
 #endif // if FEATURE_PLUGIN_STATS
+
+bool ExtraTaskSettingsStruct::isDefaultTaskVarName(taskVarIndex_t taskVarIndex) const
+{
+  if (!validTaskVarIndex(taskVarIndex)) { return false; }
+  return bitRead(VariousBits[taskVarIndex], 1);
+}
+
+void ExtraTaskSettingsStruct::isDefaultTaskVarName(taskVarIndex_t taskVarIndex, bool isDefault)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    bitWrite(VariousBits[taskVarIndex], 1, isDefault);
+  }
+}
+
 
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
   const __FlashStringHelper *valuename,

@@ -16,7 +16,7 @@
 #   define PLUGIN_STATS_NR_ELEMENTS 16
 #  endif // ifdef ESP8266
 #  ifdef ESP32
-#   define PLUGIN_STATS_NR_ELEMENTS 64
+#   define PLUGIN_STATS_NR_ELEMENTS 256
 #  endif // ifdef ESP32
 # endif  // ifndef PLUGIN_STATS_NR_ELEMENTS
 
@@ -84,7 +84,7 @@ public:
   float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const;
    
   // Compute sample stored values
-  float getSample(int& lastNrSamples) const;
+  float getSample(int lastNrSamples) const;
   
   float operator[](PluginStatsBuffer_t::index_t index) const;
 
@@ -163,7 +163,7 @@ private:
 class PluginStats_array {
 public:
 
-  PluginStats_array();
+  PluginStats_array() = default;
   ~PluginStats_array();
 
   void    initPluginStats(taskVarIndex_t taskVarIndex);
@@ -172,7 +172,7 @@ public:
   bool    hasStats() const;
   bool    hasPeaks() const;
 
-  uint8_t nrSamplesPresent() const;
+  size_t nrSamplesPresent() const;
 
   void    pushPluginStatsValues(struct EventStruct *event,
                                 bool                trackPeaks);
@@ -196,7 +196,7 @@ public:
 
 private:
 
-  PluginStats *_plugin_stats[VARS_PER_TASK] = { nullptr, };
+  PluginStats *_plugin_stats[VARS_PER_TASK] = {};
 };
 
 #endif // if FEATURE_PLUGIN_STATS

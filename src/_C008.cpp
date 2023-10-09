@@ -18,14 +18,14 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_008;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = true;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 80;
-      Protocol[protocolCount].usesID       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_008;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = true;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 80;
+      proto.usesID       = true;
       break;
     }
 
@@ -73,15 +73,12 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
           addLog(LOG_LEVEL_ERROR, F("C008 : Generic HTTP - Cannot send, out of RAM"));
           break;
         }
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        pubname = ControllerSettings.Publish;
+        LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+        pubname = ControllerSettings->Publish;
       }
 
       
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-
-
-
       std::unique_ptr<C008_queue_element> element(new C008_queue_element(event, valueCount));
       success = C008_DelayHandler->addToQueue(std::move(element));
 
@@ -112,7 +109,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
           }
         }
       }
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C008_DELAY_QUEUE, C008_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C008_DELAY_QUEUE, C008_DelayHandler->getNextScheduleTime());
       break;
     }
 

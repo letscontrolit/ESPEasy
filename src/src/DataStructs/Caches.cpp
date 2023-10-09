@@ -8,8 +8,9 @@
 #include "../Helpers/ESPEasy_Storage.h"
 
 
+#ifdef PLUGIN_USES_SERIAL
 #include <ESPeasySerial.h>
-
+#endif
 
 void Caches::clearAllCaches()
 {
@@ -61,7 +62,8 @@ bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const Checksu
 
 void Caches::updateActiveTaskUseSerial0() {
   activeTaskUseSerial0 = false;
-  if (deviceCount <= 0)
+#ifdef PLUGIN_USES_SERIAL
+  if (getDeviceCount() <= 0)
     return;
 
   // Check to see if a task is enabled and using the pins we also use for receiving commands.
@@ -95,6 +97,7 @@ void Caches::updateActiveTaskUseSerial0() {
       }
     }
   }
+#endif
 }
 
 uint8_t Caches::getTaskDeviceValueDecimals(taskIndex_t TaskIndex, uint8_t rel_index)
@@ -253,6 +256,7 @@ void Caches::updateExtraTaskSettingsCache()
     if (it != extraTaskSettings_cache.end()) {
       // We need to keep the original checksum, from when loaded from storage
       tmp.md5checksum = it->second.md5checksum;
+      tmp.defaultTaskDeviceValueName = it->second.defaultTaskDeviceValueName;
 
       // Now clear it so we can create a fresh copy.
       extraTaskSettings_cache.erase(it);
@@ -309,22 +313,16 @@ void Caches::updateExtraTaskSettingsCache_afterLoad_Save()
     return;
   }
 
-  // Check if we need to update the cache
-  auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
-
-  if (it != extraTaskSettings_cache.end()) {
-    if (ExtraTaskSettings.computeChecksum() == it->second.md5checksum) {
-      return;
-    }
-  }
-
   // First update all other values
   updateExtraTaskSettingsCache();
 
   // Iterator has changed
-  it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
+  auto it = extraTaskSettings_cache.find(ExtraTaskSettings.TaskIndex);
 
   if (it != extraTaskSettings_cache.end()) {
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      bitWrite(it->second.defaultTaskDeviceValueName, i, ExtraTaskSettings.isDefaultTaskVarName(i));
+    }
     it->second.md5checksum = ExtraTaskSettings.computeChecksum();
   }
 }

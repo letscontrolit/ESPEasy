@@ -97,21 +97,25 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Only enable task if it has a Plugin configured
-  if (validPluginID(Settings.TaskDeviceNumber[event->TaskIndex]) || !enabled) {
+  if (validPluginID(Settings.getPluginID_for_task(event->TaskIndex)) || !enabled) {
     String dummy;
 
     if (!enabled) {
       PluginCall(PLUGIN_EXIT, event, dummy);
     }
+    // Toggle enable/disable state via command
+    // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
+    //Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
     Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
 
     if (enabled) {
+      // Schedule the plugin to be read.
+      // Do this before actual init, to allow the plugin to schedule a specific first read.
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+
       if (!PluginCall(PLUGIN_INIT, event, dummy)) {
         return false;
       }
-
-      // Schedule the task to be executed almost immediately
-      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
     }
     return true;
   }
@@ -253,7 +257,7 @@ void emergencyReset()
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
  \*********************************************************************************************/
-void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e reason)
+void delayedReboot(int rebootDelay, IntendedRebootReason_e reason)
 {
   // Direct Serial is allowed here, since this is only an emergency task.
   while (rebootDelay != 0)
@@ -266,7 +270,7 @@ void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e re
   reboot(reason);
 }
 
-void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
+void reboot(IntendedRebootReason_e reason) {
   prepareShutdown(reason);
   #if defined(ESP32)
   ESP.restart();
@@ -303,18 +307,14 @@ void SendValueLogger(taskIndex_t TaskIndex)
 
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
-        logger += node_time.getDateString('-');
-        logger += ' ';
-        logger += node_time.getTimeString(':');
-        logger += ',';
-        logger += Settings.Unit;
-        logger += ',';
-        logger += getTaskDeviceName(TaskIndex);
-        logger += ',';
-        logger += getTaskValueName(TaskIndex, varNr);
-        logger += ',';
-        logger += formatUserVarNoCheck(TaskIndex, varNr);
-        logger += F("\r\n");
+        logger += strformat(F("%s %s,%d,%s,%s,%s\r\n")
+        , node_time.getDateString('-').c_str()
+        , node_time.getTimeString(':').c_str()
+        , Settings.Unit
+        , getTaskDeviceName(TaskIndex).c_str()
+        , getTaskValueName(TaskIndex, varNr).c_str()
+        , formatUserVarNoCheck(TaskIndex, varNr).c_str()
+        );
       }
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, logger);
@@ -324,13 +324,15 @@ void SendValueLogger(taskIndex_t TaskIndex)
 #endif // if !defined(BUILD_NO_DEBUG) || FEATURE_SD
 
 #if FEATURE_SD
-  String   filename = patch_fname(F("VALUES.CSV"));
-  fs::File logFile  = SD.open(filename, "a+");
+  if (!logger.isEmpty()) {
+    String   filename = patch_fname(F("VALUES.CSV"));
+    fs::File logFile  = SD.open(filename, "a+");
 
-  if (logFile) {
-    logFile.print(logger);
+    if (logFile) {
+      logFile.print(logger);
+    }
+    logFile.close();
   }
-  logFile.close();
 #endif // if FEATURE_SD
 }
 
@@ -341,10 +343,18 @@ void SendValueLogger(taskIndex_t TaskIndex)
 // Source https://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
 
 void HSV2RGB(float H, float S, float I, int rgb[3]) {
+  // FIXME TD-er:   Why not just call HSV2RGBW and leave out the W part?
+
+  int rgbw[4]{};
+  HSV2RGBW(H, S, I, rgbw);
+  memcpy(rgb, rgbw, 3 * sizeof(int));
+  /*
+
   int r, g, b;
 
   H = fmod(H, 360);                           // cycle H around to 0-360 degrees
-  H = 3.14159f * H / static_cast<float>(180); // Convert to radians.
+  constexpr float deg2rad = 3.14159f / 180.0f;
+  H *= deg2rad;                               // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
   I = I / 100;
@@ -369,58 +379,67 @@ void HSV2RGB(float H, float S, float I, int rgb[3]) {
   rgb[0] = r;
   rgb[1] = g;
   rgb[2] = b;
+  */
 }
 
 // uses H 0..360 S 1..100 I/V 1..100 (according to homie convention)
 // Source https://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
-
 void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
-  int   r, g, b, w;
-  float cos_h, cos_1047_h;
-
   H = fmod(H, 360);                           // cycle H around to 0-360 degrees
-  H = 3.14159f * H / static_cast<float>(180); // Convert to radians.
+  constexpr float deg2rad = 3.14159f / 180.0f;
+  H *= deg2rad;                               // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
   I = I / 100;
   I = I > 0 ? (I < 1 ? I : 1) : 0;
 
-  if (H < 2.09439f) {
-    cos_h      = cosf(H);
-    cos_1047_h = cosf(1.047196667f - H);
-    r          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
-    g          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
-    b          = 0;
-    w          = 255 * (1 - S) * I;
-  } else if (H < 4.188787f) {
-    H          = H - 2.09439f;
-    cos_h      = cosf(H);
-    cos_1047_h = cosf(1.047196667f - H);
-    g          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
-    b          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
-    r          = 0;
-    w          = 255 * (1 - S) * I;
-  } else {
-    H          = H - 4.188787f;
-    cos_h      = cosf(H);
-    cos_1047_h = cosf(1.047196667f - H);
-    b          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
-    r          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
-    g          = 0;
-    w          = 255 * (1 - S) * I;
-  }
+  #define RGB_ORDER 0
+  #define GBR_ORDER 1
+  #define BRG_ORDER 2
 
-  rgbw[0] = r;
-  rgbw[1] = g;
-  rgbw[2] = b;
-  rgbw[3] = w;
+  int order = RGB_ORDER;
+
+  constexpr float ANGLE_120_DEG = 120.0f * deg2rad;
+  constexpr float ANGLE_240_DEG = 240.0f * deg2rad;
+  constexpr float ANGLE_60_DEG  =  60.0f * deg2rad;
+
+  if (H < ANGLE_120_DEG) {
+    order = RGB_ORDER;
+  } else if (H < ANGLE_240_DEG) {
+    H     = H - ANGLE_120_DEG;
+    order = GBR_ORDER;
+  } else {
+    H     = H - ANGLE_240_DEG;
+    order = BRG_ORDER;
+  }
+  const float cos_h      = cosf(H);
+  const float cos_1047_h = cosf(ANGLE_60_DEG - H);
+
+  const int r = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
+  const int g = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
+  const int b = 0;
+  rgbw[3]     = 255 * (1 - S) * I;
+
+  if (RGB_ORDER == order) {
+    rgbw[0] = r;
+    rgbw[1] = g;
+    rgbw[2] = b;
+  } else if (GBR_ORDER == order) {
+    rgbw[0] = g;
+    rgbw[1] = b;
+    rgbw[2] = r;
+  } else if (BRG_ORDER == order) {
+    rgbw[0] = b;
+    rgbw[1] = r;
+    rgbw[2] = g;
+  }
 }
 
 // Convert RGB Color to HSV Color
 void RGB2HSV(uint8_t r, uint8_t g, uint8_t b, float hsv[3]) {
-  float rf     = static_cast<float>(r) / 255.0f;
-  float gf     = static_cast<float>(g) / 255.0f;
-  float bf     = static_cast<float>(b) / 255.0f;
+  const float rf     = static_cast<float>(r) / 255.0f;
+  const float gf     = static_cast<float>(g) / 255.0f;
+  const float bf     = static_cast<float>(b) / 255.0f;
   float maxval = rf;
 
   if (gf > maxval) { maxval = gf; }
@@ -461,8 +480,8 @@ uint8_t get8BitFromUL(uint32_t number, uint8_t bitnr) {
 }
 
 void set8BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
-  uint32_t mask     = (0xFFUL << bitnr);
-  uint32_t newvalue = ((value << bitnr) & mask);
+  const uint32_t mask     = (0xFFUL << bitnr);
+  const uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
 }
@@ -472,8 +491,8 @@ uint8_t get4BitFromUL(uint32_t number, uint8_t bitnr) {
 }
 
 void set4BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
-  uint32_t mask     = (0x0FUL << bitnr);
-  uint32_t newvalue = ((value << bitnr) & mask);
+  const uint32_t mask     = (0x0FUL << bitnr);
+  const uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
 }
@@ -483,8 +502,8 @@ uint8_t get3BitFromUL(uint32_t number, uint8_t bitnr) {
 }
 
 void set3BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
-  uint32_t mask     = (0x07UL << bitnr);
-  uint32_t newvalue = ((value << bitnr) & mask);
+  const uint32_t mask     = (0x07UL << bitnr);
+  const uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
 }
@@ -494,8 +513,8 @@ uint8_t get2BitFromUL(uint32_t number, uint8_t bitnr) {
 }
 
 void set2BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
-  uint32_t mask     = (0x03UL << bitnr);
-  uint32_t newvalue = ((value << bitnr) & mask);
+  const uint32_t mask     = (0x03UL << bitnr);
+  const uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
 }

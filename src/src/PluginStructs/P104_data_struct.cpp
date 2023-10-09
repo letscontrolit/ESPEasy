@@ -44,12 +44,12 @@ P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
  * Destructor
  ******************************/
 P104_data_struct::~P104_data_struct() {
-  # ifdef P104_USE_BAR_GRAPH
+  # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
 
   if (nullptr != pM) {
     pM = nullptr; // Not created here, only reset
   }
-  # endif // ifdef P104_USE_BAR_GRAPH
+  # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
 
   if (nullptr != P) {
     // P->~MD_Parola(); // Call destructor directly, as delete of the object fails miserably
@@ -73,9 +73,9 @@ bool P104_data_struct::begin() {
     addLog(LOG_LEVEL_INFO, F("dotmatrix: begin() called"));
     # endif // ifdef P104_DEBUG
     P->begin(expectedZones);
-    # ifdef P104_USE_BAR_GRAPH
+    # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
     pM = P->getGraphicObject();
-    # endif // ifdef P104_USE_BAR_GRAPH
+    # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
     return true;
   }
   return false;
@@ -137,17 +137,9 @@ void P104_data_struct::loadSettings() {
     }
     structDataSize = bufferSize;
     # ifdef P104_DEBUG_DEV
-    {
-      String log;
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-          log.reserve(54)) {
-        log  = F("P104: loadSettings stored Size: ");
-        log += structDataSize;
-        log += F(" taskindex: ");
-        log += taskIndex;
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, strformat(F("P104: loadSettings stored Size: %d taskindex: %d"), structDataSize, taskIndex));
     }
     # endif // ifdef P104_DEBUG_DEV
 
@@ -336,11 +328,7 @@ void P104_data_struct::loadSettings() {
     # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("P104: total zones initialized: ");
-      log += zoneIndex;
-      log += F(" expected: ");
-      log += expectedZones;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("P104: total zones initialized: %d expected: %d"), zoneIndex, expectedZones));
     }
     # endif // ifdef P104_DEBUG_DEV
   }
@@ -373,10 +361,10 @@ void P104_data_struct::configureZones() {
     if (it->zone <= expectedZones) {
       zoneOffset += it->offset;
       P->setZone(currentZone, zoneOffset, zoneOffset + it->size - 1);
-      # ifdef P104_USE_BAR_GRAPH
+      # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
       it->_startModule = zoneOffset;
       P->getDisplayExtent(currentZone, it->_lower, it->_upper);
-      # endif // ifdef P104_USE_BAR_GRAPH
+      # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
       zoneOffset += it->size;
 
       switch (it->font) {
@@ -448,13 +436,7 @@ void P104_data_struct::configureZones() {
       # ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("P104: configureZones #");
-        log += (currentZone + 1);
-        log += '/';
-        log += expectedZones;
-        log += F(" offset: ");
-        log += zoneOffset;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, strformat(F("P104: configureZones #%d/%d offset: %d"), currentZone + 1, expectedZones, zoneOffset));
       }
       # endif // ifdef P104_DEBUG_DEV
 
@@ -518,9 +500,7 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
       logAllText &&
       log.reserve(28 + text.length() + sZoneBuffers[zone].length())) {
-    log  = F("dotmatrix: ZoneText: ");
-    log += zone + 1; // UI-number
-    log += F(", '");
+    log  = strformat(F("dotmatrix: ZoneText: %d, '"), zone + 1); // UI-number
     log += text;
     log += F("' -> '");
     log += sZoneBuffers[zone];
@@ -590,7 +570,7 @@ void P104_data_struct::updateZone(uint8_t                 zone,
   }
 }
 
-# ifdef P104_USE_BAR_GRAPH
+# if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
 
 /***********************************************
  * Enable/Disable updating a range of modules
@@ -600,6 +580,10 @@ void P104_data_struct::modulesOnOff(uint8_t start, uint8_t end, MD_MAX72XX::cont
     pM->control(m, MD_MAX72XX::UPDATE, on_off);
   }
 }
+
+# endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
+
+# ifdef P104_USE_BAR_GRAPH
 
 /********************************************************
  * draw a single bar-graph, arguments already adjusted for direction
@@ -652,7 +636,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
   sZoneInitial[zone] = graph; // Keep the original string for future use
 
   #  define NOT_A_COMMA 0x02  // Something else than a comma, or the parseString function will get confused
-  String parsedGraph = graph; // Extra copy created so we don't mess up the incoming String
+  String parsedGraph(graph);  // Extra copy created so we don't mess up the incoming String
   parsedGraph = parseTemplate(parsedGraph);
   parsedGraph.replace(',', NOT_A_COMMA);
 
@@ -841,6 +825,52 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
 
 # endif // ifdef P104_USE_BAR_GRAPH
 
+# ifdef P104_USE_DOT_SET
+void P104_data_struct::displayDots(uint8_t                 zone,
+                                   const P104_zone_struct& zstruct,
+                                   const String          & dots) {
+  if ((nullptr == P) || (nullptr == pM) || dots.isEmpty()) { return; }
+  {
+    uint8_t idx = 0;
+    int     row;
+    int     col;
+    String  sRow;
+    String  sCol;
+    String  sOn_off;
+    bool    on_off = true;
+    modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_OFF); // Stop updates on modules
+    P->setIntensity(zstruct.zone - 1, zstruct.brightness);                                           // don't forget to set the brightness
+    sRow    = parseString(dots, idx + 1);
+    sCol    = parseString(dots, idx + 2);
+    sOn_off = parseString(dots, idx + 3);
+
+    while (!sRow.isEmpty() && !sCol.isEmpty()) {
+      on_off = true; // Default On
+
+      if (validIntFromString(sRow, row) &&
+          validIntFromString(sCol, col) &&
+          (row > 0) && ((row - 1) < 8) &&
+          (col > 0) && ((col - 1) <= (zstruct._upper - zstruct._lower))) { // Valid coordinates?
+        if (equals(sOn_off, F("0"))) {                                     // Dot On is the default
+          on_off = false;
+          idx++;                                                           // 3rd argument used
+        }
+        pM->setPoint(row - 1, zstruct._upper - (col - 1), on_off);         // Reverse layout
+      }
+      idx += 2;                                                            // Skip to next argument set
+
+      if (idx % 16 == 0) { delay(0); }
+      sRow    = parseString(dots, idx + 1);
+      sCol    = parseString(dots, idx + 2);
+      sOn_off = parseString(dots, idx + 3);
+    }
+
+    modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_ON); // Continue updates on modules
+  }
+}
+
+# endif // ifdef P104_USE_DOT_SET
+
 /**************************************************
  * Check if an animation is available in the current build
  *************************************************/
@@ -931,14 +961,14 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
   # ifdef P104_USE_COMMANDS
   bool reconfigure = false;
   # endif // ifdef P104_USE_COMMANDS
-  bool   success = false;
-  String command = parseString(string, 1);
+  bool success         = false;
+  const String command = parseString(string, 1);
 
   if ((nullptr != P) && equals(command, F("dotmatrix"))) { // main command: dotmatrix
-    String sub = parseString(string, 2);
+    const String sub = parseString(string, 2);
 
     int zoneIndex;
-    String string4 = parseStringKeepCaseNoTrim(string, 4);
+    const String string4 = parseStringKeepCaseNoTrim(string, 4);
     # ifdef P104_USE_COMMANDS
     int value4;
     validIntFromString(string4, value4);
@@ -962,10 +992,10 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
     // Zone-specific subcommands
     if (validIntFromString(parseString(string, 3), zoneIndex) &&
         (zoneIndex > 0) &&
-        (static_cast<unsigned int>(zoneIndex) <= zones.size())) {
+        (static_cast<size_t>(zoneIndex) <= zones.size())) {
       // subcommands are processed in the same order as they are presented in the UI
       for (auto it = zones.begin(); it != zones.end() && !success; ++it) {
-        if ((it->zone == zoneIndex)) {  // This zone
+        if ((it->zone == zoneIndex)) {   // This zone
           if (equals(sub, F("clear"))) { // subcommand: clear,<zone>
             P->displayClear(zoneIndex - 1);
             success = true;
@@ -990,11 +1020,11 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           }
           # endif // ifdef P104_USE_COMMANDS
 
-          if ((equals(sub, F("txt")) ||                                                          // subcommand: [set]txt,<zone>,<text> (only
-               equals(sub, F("settxt"))) &&                                                      // allowed for zones with Text content)
+          if ((equals(sub, F("txt")) ||                                                         // subcommand: [set]txt,<zone>,<text> (only
+               equals(sub, F("settxt"))) &&                                                     // allowed for zones with Text content)
               ((it->content == P104_CONTENT_TEXT) || (it->content == P104_CONTENT_TEXT_REV))) { // no length check, so longer than the UI
                                                                                                 // allows is made possible
-            if (equals(sub, F("settxt")) &&                                                      // subcommand: settxt,<zone>,<text> (stores
+            if (equals(sub, F("settxt")) &&                                                     // subcommand: settxt,<zone>,<text> (stores
                 (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) {                          // the text in the settings, is not saved)
               it->text = string4;                                                               // Only if not too long, could 'blow up' the
             }                                                                                   // settings when saved
@@ -1014,7 +1044,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (equals(sub, F("alignment")) &&                             // subcommand: alignment,<zone>,<alignment> (0..3)
+          if (equals(sub, F("alignment")) &&                            // subcommand: alignment,<zone>,<alignment> (0..3)
               (value4 >= 0) &&
               (value4 <= static_cast<int>(textPosition_t::PA_RIGHT))) { // last item in the enum
             it->alignment = value4;
@@ -1128,12 +1158,12 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
               (value4 >= 0) &&
               (value4 <= P104_BRIGHTNESS_MAX)) {
             it->brightness = value4;
-            P->setIntensity(zoneIndex - 1, it->brightness); // Change brightness directly
+            P->setIntensity(zoneIndex - 1, it->brightness); // Change brightness immediately
             success = true;
             break;
           }
 
-          if (equals(sub, F("repeat")) && // subcommand: repeaat,<zone>,<repeat_sec> (-1..86400 = 24h)
+          if (equals(sub, F("repeat")) && // subcommand: repeat,<zone>,<repeat_sec> (-1..86400 = 24h)
               (value4 >= -1) &&
               (value4 <= P104_MAX_REPEATDELAY_VALUE)) {
             it->repeatDelay = value4;
@@ -1144,26 +1174,14 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             }
             break;
           }
-          # else // ifdef P104_USE_COMMANDS
-          {
-            String validCommands = F(
-              "|size|content|alignment|anim.in|speed|anim.out|pause|font|inverted|layout|specialeffect|offset|brightness|repeat|");
-            String testSub = '|';
-            testSub += sub;
-            testSub += '|';
-
-            if (validCommands.indexOf(testSub) > -1) {
-              addLog(LOG_LEVEL_ERROR, F("dotmatrix: subcommand not included in build."));
-            }
-          }
           # endif // ifdef P104_USE_COMMANDS
 
           # ifdef P104_USE_BAR_GRAPH
 
-          if ((equals(sub, F("bar")) ||                                 // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones
-               equals(sub, F("setbar"))) &&                             // with Bargraph content) no length check, so longer than the UI
+          if ((equals(sub, F("bar")) ||                                // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones
+               equals(sub, F("setbar"))) &&                            // with Bargraph content) no length check, so longer than the UI
               (it->content == P104_CONTENT_BAR_GRAPH)) {               // allows is made possible
-            if (equals(sub, F("setbar")) &&                             // subcommand: setbar,<zone>,<graph-string> (stores the graph-string
+            if (equals(sub, F("setbar")) &&                            // subcommand: setbar,<zone>,<graph-string> (stores the graph-string
                 (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) { // in the settings, is not saved)
               it->text = string4;                                      // Only if not too long, could 'blow up' the settings when saved
             }
@@ -1172,6 +1190,15 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
           # endif // ifdef P104_USE_BAR_GRAPH
+
+          # ifdef P104_USE_DOT_SET
+
+          if (equals(sub, F("dot"))) {                                    // subcommand: dot,<zone>,<r>,<c>[,0][,<r>,<c>[,0]...] to draw
+            displayDots(zoneIndex - 1, *it, parseStringToEnd(string, 4)); // dots at row/column, add ,0 to turn a dot off
+            success = true;
+            break;
+          }
+          # endif // ifdef P104_USE_DOT_SET
 
           // FIXME TD-er: success is always false here. Maybe this must be done outside the for-loop?
           if (success) { // Reset the repeat timer
@@ -1704,15 +1731,8 @@ bool P104_data_struct::saveSettings() {
         # ifdef P104_DEBUG_DEV
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          log.reserve(64);
-          log  = F("P104: saveSettings zone: ");
-          log += it->zone;
-          log += F(" bufferSize: ");
-          log += bufferSize;
-          log += F(" offset: ");
-          log += saveOffset;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, strformat(F("P104: saveSettings zone: %d bufferSize: %d offset: %d"),
+                                               it->zone, bufferSize, saveOffset));
           zbuffer.replace(P104_FIELD_SEP, P104_FIELD_DISP);
           addLog(LOG_LEVEL_INFO, zbuffer);
         }
@@ -1780,11 +1800,11 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
   }
 
   {
-    addFormCheckBox(F("Clear display on disable"), F("cleardisable"),
+    addFormCheckBox(F("Clear display on disable"), F("clrdsp"),
                     bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE));
 
     addFormCheckBox(F("Log all displayed text (info)"),
-                    F("logalltext"),
+                    F("logtxt"),
                     bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT));
   }
 
@@ -1792,9 +1812,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
   {
     addFormSubHeader(F("Content options"));
 
-    addFormCheckBox(F("Clock with flashing colon"), F("clockflash"), !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH));
-    addFormCheckBox(F("Clock 12h display"),         F("clock12h"),   bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_12H));
-    addFormCheckBox(F("Clock 12h AM/PM indicator"), F("clockampm"),  bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_AMPM));
+    addFormCheckBox(F("Clock with flashing colon"), F("clkflash"), !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH));
+    addFormCheckBox(F("Clock 12h display"),         F("clk12h"),   bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_12H));
+    addFormCheckBox(F("Clock 12h AM/PM indicator"), F("clkampm"),  bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_AMPM));
   }
   { // Date format
     const __FlashStringHelper *dateFormats[] = {
@@ -1807,7 +1827,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_DATE_FORMAT_US,
       P104_DATE_FORMAT_JP
     };
-    addFormSelector(F("Date format"), F("dateformat"),
+    addFormSelector(F("Date format"), F("datefmt"),
                     3,
                     dateFormats, dateFormatOptions,
                     get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT));
@@ -1825,7 +1845,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_DATE_SEPARATOR_DASH,
       P104_DATE_SEPARATOR_DOT
     };
-    addFormSelector(F("Date separator"), F("dateseparator"),
+    addFormSelector(F("Date separator"), F("datesep"),
                     4,
                     dateSeparators, dateSeparatorOptions,
                     get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR));
@@ -1857,7 +1877,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonetip += F(" will save and reload the page.");
     }
     # endif    // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
-    addFormSelector(F("Zones"), F("zonecount"), P104_MAX_ZONES, zonesList, zonesOptions, nullptr, P104_CONFIG_ZONE_COUNT, true
+    addFormSelector(F("Zones"), F("zonecnt"), P104_MAX_ZONES, zonesList, zonesOptions, nullptr, P104_CONFIG_ZONE_COUNT, true
                     # ifdef P104_USE_TOOLTIPS
                     , zonetip
                     # endif // ifdef P104_USE_TOOLTIPS
@@ -2127,9 +2147,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Clock sec (6 mod)"),
       F("Date (4 mod)"),
       F("Date yr (6/7 mod)"),
-      F("Date/time (9/13 mod)")
+      F("Date/time (9/13 mod)"),
       # ifdef P104_USE_BAR_GRAPH
-      , F("Bar graph")
+      F("Bar graph"),
       # endif // ifdef P104_USE_BAR_GRAPH
     };
     const int contentOptions[] {
@@ -2139,9 +2159,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_CONTENT_TIME_SEC,
       P104_CONTENT_DATE4,
       P104_CONTENT_DATE6,
-      P104_CONTENT_DATE_TIME
+      P104_CONTENT_DATE_TIME,
       # ifdef P104_USE_BAR_GRAPH
-      , P104_CONTENT_BAR_GRAPH
+      P104_CONTENT_BAR_GRAPH,
       # endif // ifdef P104_USE_BAR_GRAPH
     };
     const __FlashStringHelper *invertedTypes[3] = {
@@ -2449,11 +2469,11 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 * webform_save
 **************************************************************/
 bool P104_data_struct::webform_save(struct EventStruct *event) {
-  P104_CONFIG_ZONE_COUNT   = getFormItemInt(F("zonecount"));
+  P104_CONFIG_ZONE_COUNT   = getFormItemInt(F("zonecnt"));
   P104_CONFIG_HARDWARETYPE = getFormItemInt(F("hardware"));
 
-  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE, isFormItemChecked(F("cleardisable")));
-  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT,  isFormItemChecked(F("logalltext")));
+  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE, isFormItemChecked(F("clrdsp")));
+  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT,  isFormItemChecked(F("logtxt")));
 
   # ifdef P104_USE_ZONE_ORDERING
   zoneOrder = getFormItemInt(F("zoneorder")); // Is used in saveSettings()
@@ -2462,12 +2482,12 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
 
   # ifdef P104_USE_DATETIME_OPTIONS
   uint32_t ulDateTime = 0;
-  bitWrite(ulDateTime, P104_CONFIG_DATETIME_FLASH,    !isFormItemChecked(F("clockflash"))); // Inverted flag
-  bitWrite(ulDateTime, P104_CONFIG_DATETIME_12H,      isFormItemChecked(F("clock12h")));
-  bitWrite(ulDateTime, P104_CONFIG_DATETIME_AMPM,     isFormItemChecked(F("clockampm")));
+  bitWrite(ulDateTime, P104_CONFIG_DATETIME_FLASH,    !isFormItemChecked(F("clkflash"))); // Inverted flag
+  bitWrite(ulDateTime, P104_CONFIG_DATETIME_12H,      isFormItemChecked(F("clk12h")));
+  bitWrite(ulDateTime, P104_CONFIG_DATETIME_AMPM,     isFormItemChecked(F("clkampm")));
   bitWrite(ulDateTime, P104_CONFIG_DATETIME_YEAR4DGT, isFormItemChecked(F("year4dgt")));
-  set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_FORMAT,   getFormItemInt(F("dateformat")));
-  set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_SEP_CHAR, getFormItemInt(F("dateseparator")));
+  set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_FORMAT,   getFormItemInt(F("datefmt")));
+  set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_SEP_CHAR, getFormItemInt(F("datesep")));
   P104_CONFIG_DATETIME = ulDateTime;
   # endif // ifdef P104_USE_DATETIME_OPTIONS
 

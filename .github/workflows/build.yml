@@ -8,6 +8,7 @@ on:
     tags-ignore: '**'
     paths-ignore:
       - 'dist/Release_notes.txt'
+      - 'docs/**'
   pull_request:
     branches: [mega]
 
@@ -22,7 +23,7 @@ jobs:
   documentation:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -47,7 +48,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -62,7 +63,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -106,7 +107,7 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -127,11 +128,12 @@ jobs:
           mkdir ESPEasy_dist_ESP82xx
           cd dist
           find . -exec cp -r --parents {} ../ESPEasy_dist_ESP82xx/ \;
+          rm ../ESPEasy_dist_ESP82xx/bin/blank_8MB.bin
           cd ../artifacts/Binaries
           find . -not -name '*ESP32*' -exec mv {} ../../ESPEasy_dist_ESP82xx/bin/ \;
           cd ../..
           # ESP32 and derived cpus, ESP32 (classic) _MUST_ be last in this list!
-          for cpu in ESP32s2 ESP32c3 ESP32s3 ESP32c2 ESP32c6 ESP32h2 ESP32
+          for cpu in ESP32s2 ESP32c3 ESP32s3 ESP32c2 ESP32c6 ESP32h2 ESP32solo1 ESP32
           do
             mkdir ESPEasy_dist_${cpu}
             spec="*${cpu}*"
@@ -140,7 +142,7 @@ jobs:
               cd dist
               find . -exec cp -r --parents {} ../ESPEasy_dist_${cpu}/ \;
               cd ../ESPEasy_dist_${cpu}
-              rm ESP.Easy.Flasher.exe bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
+              rm bin/blank_1MB.bin bin/blank_2MB.bin bin/ESPEasy_2step_UploaderMega_1024.bin
               cd ../artifacts/Binaries
               find . -name "$spec" -exec mv {} ../../ESPEasy_dist_${cpu}/bin/ \;
               cd ../..
@@ -152,6 +154,12 @@ jobs:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32/*
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            ESPEasy_dist_ESP32solo1/*
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v3
         with:

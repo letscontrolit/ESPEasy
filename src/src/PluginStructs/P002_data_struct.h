@@ -3,6 +3,8 @@
 
 #include "../../_Plugin_Helper.h"
 
+#include "../Helpers/OversamplingHelper.h"
+
 #ifdef USES_P002
 
 # include "../Helpers/Hardware.h"
@@ -165,6 +167,8 @@ public:
 
   void          reset();
 
+  uint32_t getOversamplingCount() const;
+
 private:
 
   void resetOversampling();
@@ -235,13 +239,11 @@ public:
 
   bool plugin_set_config(struct EventStruct *event, String& string);
 
-  uint16_t OversamplingCount = 0;
 
 private:
+ 
 
-  int32_t OversamplingValue  = 0;
-  int16_t OversamplingMinVal = MAX_ADC_VALUE;
-  int16_t OversamplingMaxVal = -MAX_ADC_VALUE;
+  OversamplingHelper<int32_t> OverSampling;
 
   int   _calib_adc1 = 0;
   int   _calib_adc2 = 0;

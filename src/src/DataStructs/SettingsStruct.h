@@ -9,6 +9,9 @@
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
+#include "../DataTypes/NPluginID.h"
+#include "../DataTypes/PluginID.h"
+#include "../DataTypes/TaskEnabledState.h"
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 
@@ -59,94 +62,110 @@ class SettingsStruct_tmpl
 //  SettingsStruct_tmpl() = default;
 
   // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
-  bool appendUnitToHostname() const;
-  void appendUnitToHostname(bool value);
+  bool appendUnitToHostname() const { return !VariousBits_1.appendUnitToHostname; }
+  void appendUnitToHostname(bool value) { VariousBits_1.appendUnitToHostname = !value;}
 
-  bool uniqueMQTTclientIdReconnect_unused() const;
-  void uniqueMQTTclientIdReconnect_unused(bool value);
+  bool uniqueMQTTclientIdReconnect_unused() const { return VariousBits_1.unused_02; }
+  void uniqueMQTTclientIdReconnect_unused(bool value) { VariousBits_1.unused_02 = value; }
 
-  bool OldRulesEngine() const;
-  void OldRulesEngine(bool value);
+  bool OldRulesEngine() const { 
+#ifdef WEBSERVER_NEW_RULES
+    return !VariousBits_1.OldRulesEngine;
+#else
+    return true;
+#endif
+  }
+  void OldRulesEngine(bool value) { VariousBits_1.OldRulesEngine = !value; }
 
-  bool ForceWiFi_bg_mode() const;
-  void ForceWiFi_bg_mode(bool value);
+  bool ForceWiFi_bg_mode() const { return VariousBits_1.ForceWiFi_bg_mode; }
+  void ForceWiFi_bg_mode(bool value) { VariousBits_1.ForceWiFi_bg_mode = value; }
 
-  bool WiFiRestart_connection_lost() const;
-  void WiFiRestart_connection_lost(bool value);
+  bool WiFiRestart_connection_lost() const { return VariousBits_1.WiFiRestart_connection_lost; }
+  void WiFiRestart_connection_lost(bool value) { VariousBits_1.WiFiRestart_connection_lost = value; }
 
-  bool EcoPowerMode() const;
-  void EcoPowerMode(bool value);
+  bool EcoPowerMode() const { return VariousBits_1.EcoPowerMode; }
+  void EcoPowerMode(bool value) { VariousBits_1.EcoPowerMode = value; }
 
-  bool WifiNoneSleep() const;
-  void WifiNoneSleep(bool value);
+  bool WifiNoneSleep() const { return VariousBits_1.WifiNoneSleep; }
+  void WifiNoneSleep(bool value) { VariousBits_1.WifiNoneSleep = value; }
 
   // Enable send gratuitous ARP by default, so invert the values (default = 0)
-  bool gratuitousARP() const;
-  void gratuitousARP(bool value);
+  bool gratuitousARP() const { return !VariousBits_1.gratuitousARP; }
+  void gratuitousARP(bool value) { VariousBits_1.gratuitousARP = !value; }
 
   // Be a bit more tolerant when parsing the last argument of a command.
   // See: https://github.com/letscontrolit/ESPEasy/issues/2724
-  bool TolerantLastArgParse() const;
-  void TolerantLastArgParse(bool value);
+  bool TolerantLastArgParse() const { return VariousBits_1.TolerantLastArgParse; }
+  void TolerantLastArgParse(bool value) { VariousBits_1.TolerantLastArgParse = value; }
 
   // SendToHttp command does not wait for ack, with this flag it does wait.
-  bool SendToHttp_ack() const;
-  void SendToHttp_ack(bool value);
+  bool SendToHttp_ack() const { return VariousBits_1.SendToHttp_ack; }
+  void SendToHttp_ack(bool value) { VariousBits_1.SendToHttp_ack = value; }
 
   // Enable/disable ESPEasyNow protocol
-  bool UseESPEasyNow() const;
-  void UseESPEasyNow(bool value);
+  bool UseESPEasyNow() const { 
+#ifdef USES_ESPEASY_NOW
+    return VariousBits_1.UseESPEasyNow; 
+#else
+    return false;
+#endif
+ }
+  void UseESPEasyNow(bool value) { 
+#ifdef USES_ESPEASY_NOW
+    VariousBits_1.UseESPEasyNow = value; 
+#endif
+  }
 
   // Whether to try to connect to a hidden SSID network
-  bool IncludeHiddenSSID() const;
-  void IncludeHiddenSSID(bool value);
+  bool IncludeHiddenSSID() const { return VariousBits_1.IncludeHiddenSSID; }
+  void IncludeHiddenSSID(bool value) { VariousBits_1.IncludeHiddenSSID = value; }
 
   // When sending, the TX power may be boosted to max TX power.
-  bool UseMaxTXpowerForSending() const;
-  void UseMaxTXpowerForSending(bool value);
+  bool UseMaxTXpowerForSending() const { return VariousBits_1.UseMaxTXpowerForSending; }
+  void UseMaxTXpowerForSending(bool value) { VariousBits_1.UseMaxTXpowerForSending = value; }
 
   // When set you can use the Sensor in AP-Mode without beeing forced to /setup
-  bool ApDontForceSetup() const;
-  void ApDontForceSetup(bool value);
+  bool ApDontForceSetup() const { return VariousBits_1.ApDontForceSetup; }
+  void ApDontForceSetup(bool value) { VariousBits_1.ApDontForceSetup = value; }
 
   // When outputting JSON bools use quoted values (on, backward compatible) or use official JSON true/false unquoted
-  bool JSONBoolWithoutQuotes() const;
-  void JSONBoolWithoutQuotes(bool value);
+  bool JSONBoolWithoutQuotes() const { return VariousBits_1.JSONBoolWithoutQuotes; }
+  void JSONBoolWithoutQuotes(bool value) { VariousBits_1.JSONBoolWithoutQuotes = value; }
   
   // Enable timing statistics (may consume a few kB of RAM)
-  bool EnableTimingStats() const;
-  void EnableTimingStats(bool value);
+  bool EnableTimingStats() const { return VariousBits_1.EnableTimingStats; }
+  void EnableTimingStats(bool value) { VariousBits_1.EnableTimingStats = value; }
 
   // Allow to actively reset I2C bus if it appears to be hanging.
-  bool EnableClearHangingI2Cbus() const;
-  void EnableClearHangingI2Cbus(bool value);
+  bool EnableClearHangingI2Cbus() const { return VariousBits_1.EnableClearHangingI2Cbus; }
+  void EnableClearHangingI2Cbus(bool value) { VariousBits_1.EnableClearHangingI2Cbus = value; }
 
   // Enable RAM Tracking (may consume a few kB of RAM and cause some performance hit)
-  bool EnableRAMTracking() const;
-  void EnableRAMTracking(bool value);
+  bool EnableRAMTracking() const { return VariousBits_1.EnableRAMTracking; }
+  void EnableRAMTracking(bool value) { VariousBits_1.EnableRAMTracking = value; }
 
   // Enable caching of rules, to speed up rules processing
-  bool EnableRulesCaching() const;
-  void EnableRulesCaching(bool value);
+  bool EnableRulesCaching() const { return !VariousBits_1.EnableRulesCaching; }
+  void EnableRulesCaching(bool value) { VariousBits_1.EnableRulesCaching = !value; }
 
   // Allow the cached event entries to be sorted based on how frequent they occur.
   // This may speed up rules processing, especially on large rule sets with lots of rules blocks.
-  bool EnableRulesEventReorder() const;
-  void EnableRulesEventReorder(bool value);
+  bool EnableRulesEventReorder() const { return !VariousBits_1.EnableRulesEventReorder; }
+  void EnableRulesEventReorder(bool value) { VariousBits_1.EnableRulesEventReorder = !value; }
 
   // Allow OTA to use 'unlimited' bin sized files, possibly overwriting the file-system, and trashing files
   // Can be used if the configuration is later retrieved/restored manually
-  bool AllowOTAUnlimited() const;
-  void AllowOTAUnlimited(bool value);
+  bool AllowOTAUnlimited() const { return VariousBits_1.AllowOTAUnlimited; }
+  void AllowOTAUnlimited(bool value) { VariousBits_1.AllowOTAUnlimited = value; }
 
   // Default behavior is to not allow following redirects  
-  bool SendToHTTP_follow_redirects() const;
-  void SendToHTTP_follow_redirects(bool value);
+  bool SendToHTTP_follow_redirects() const { return VariousBits_1.SendToHTTP_follow_redirects; }
+  void SendToHTTP_follow_redirects(bool value) { VariousBits_1.SendToHTTP_follow_redirects = value; }
 
   #if FEATURE_I2C_DEVICE_CHECK
   // Check if an I2C device is found at configured address at plugin_INIT and plugin_READ
-  bool CheckI2Cdevice() const;
-  void CheckI2Cdevice(bool value);
+  bool CheckI2Cdevice() const { return !VariousBits_1.CheckI2Cdevice; }
+  void CheckI2Cdevice(bool value) { VariousBits_1.CheckI2Cdevice = !value; }
   #endif // if FEATURE_I2C_DEVICE_CHECK
 
   // Wait for a second after calling WiFi.begin()
@@ -158,19 +177,25 @@ class SettingsStruct_tmpl
   bool SDK_WiFi_autoreconnect() const;
   void SDK_WiFi_autoreconnect(bool value);
 
+  #if FEATURE_RULES_EASY_COLOR_CODE
+  // Inhibit RulesCodeCompletion
+  bool DisableRulesCodeCompletion() const;
+  void DisableRulesCodeCompletion(bool value);
+  #endif // if FEATURE_RULES_EASY_COLOR_CODE
+
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
 
-  bool DoNotStartAP() const;
-  void DoNotStartAP(bool value);
+  bool DoNotStartAP() const  { return VariousBits_1.DoNotStartAP; }
+  void DoNotStartAP(bool value) { VariousBits_1.DoNotStartAP = value; }
 
-  bool UseAlternativeDeepSleep() const;
-  void UseAlternativeDeepSleep(bool value);
+  bool UseAlternativeDeepSleep() const { return VariousBits_1.UseAlternativeDeepSleep; }
+  void UseAlternativeDeepSleep(bool value) { VariousBits_1.UseAlternativeDeepSleep = value; }
 
-  bool UseLastWiFiFromRTC() const;
-  void UseLastWiFiFromRTC(bool value);
+  bool UseLastWiFiFromRTC() const { return VariousBits_1.UseLastWiFiFromRTC; }
+  void UseLastWiFiFromRTC(bool value) { VariousBits_1.UseLastWiFiFromRTC = value; }
 
   ExtTimeSource_e ExtTimeSource() const;
   void ExtTimeSource(ExtTimeSource_e value);
@@ -178,12 +203,12 @@ class SettingsStruct_tmpl
   bool UseNTP() const;
   void UseNTP(bool value);
 
-  bool AllowTaskValueSetAllPlugins() const;
-  void AllowTaskValueSetAllPlugins(bool value);
+  bool AllowTaskValueSetAllPlugins() const { return VariousBits_1.AllowTaskValueSetAllPlugins; }
+  void AllowTaskValueSetAllPlugins(bool value) { VariousBits_1.AllowTaskValueSetAllPlugins = value; }
 
   #if FEATURE_AUTO_DARK_MODE
-  uint8_t getCssMode() const;
-  void    setCssMode(uint8_t value);
+  uint8_t getCssMode() const { return VariousBits_1.CssMode; }
+  void    setCssMode(uint8_t value) { VariousBits_1.CssMode = value; }
   #endif // FEATURE_AUTO_DARK_MODE
 
   bool isTaskEnableReadonly(taskIndex_t taskIndex) const;
@@ -234,7 +259,7 @@ private:
   // - PinBootStates_ESP32 (index_high)
   // Returns whether it is a valid index
   bool getPinBootStateIndex(
-    uint8_t gpio_pin, 
+    int8_t gpio_pin, 
     int8_t& index_low
     #ifdef ESP32
     , int8_t& index_high
@@ -243,8 +268,8 @@ private:
   
 public:
 
-  PinBootState getPinBootState(uint8_t gpio_pin) const;
-  void setPinBootState(uint8_t gpio_pin, PinBootState state);
+  PinBootState getPinBootState(int8_t gpio_pin) const;
+  void setPinBootState(int8_t gpio_pin, PinBootState state);
 
   bool getSPI_pins(int8_t spi_gpios[3]) const;
 
@@ -272,6 +297,8 @@ public:
 
   float getWiFi_TX_power() const;
   void setWiFi_TX_power(float dBm);
+
+  pluginID_t getPluginID_for_task(taskIndex_t taskIndex) const;
 
 
   unsigned long PID = 0;
@@ -319,7 +346,7 @@ public:
   uint8_t       Notification[NOTIFICATION_MAX] = {0}; //notifications, point to a NPLUGIN id
   // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       TaskDeviceNumber[N_TASKS] = {0}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
-  unsigned int  OLD_TaskDeviceID[N_TASKS] = {0};  //UNUSED: this can be removed
+  unsigned int  OLD_TaskDeviceID[N_TASKS] = {0};  //UNUSED: this can be reused
   union {
     struct {
       int8_t        TaskDevicePin1[N_TASKS];
@@ -344,8 +371,8 @@ public:
   boolean       TaskDeviceEnabled[N_TASKS] = {0};
   boolean       ControllerEnabled[CONTROLLER_MAX] = {0};
   boolean       NotificationEnabled[NOTIFICATION_MAX] = {0};
-  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS];        // IDX number (mainly used by Domoticz)
-  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS];
+  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS]{};        // IDX number (mainly used by Domoticz)
+  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS]{};
   boolean       Pin_status_led_Inversed = false;
   boolean       deepSleepOnFail = false;
   boolean       UseValueLogger = false;
@@ -363,7 +390,46 @@ public:
   //TODO: document config.dat somewhere here
   float         Latitude = 0.0f;
   float         Longitude = 0.0f;
-  uint32_t      VariousBits1 = 0;
+  union {
+    // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
+    struct {
+       uint32_t unused_00                    : 1;  // Bit 00
+       uint32_t appendUnitToHostname         : 1;  // Bit 01  Inverted
+       uint32_t unused_02                    : 1;  // Bit 02 uniqueMQTTclientIdReconnect_unused
+       uint32_t OldRulesEngine               : 1;  // Bit 03  Inverted
+       uint32_t ForceWiFi_bg_mode            : 1;  // Bit 04
+       uint32_t WiFiRestart_connection_lost  : 1;  // Bit 05
+       uint32_t EcoPowerMode                 : 1;  // Bit 06
+       uint32_t WifiNoneSleep                : 1;  // Bit 07
+       uint32_t gratuitousARP                : 1;  // Bit 08  Inverted
+       uint32_t TolerantLastArgParse         : 1;  // Bit 09
+       uint32_t SendToHttp_ack               : 1;  // Bit 10
+       uint32_t UseESPEasyNow                : 1;  // Bit 11
+       uint32_t IncludeHiddenSSID            : 1;  // Bit 12
+       uint32_t UseMaxTXpowerForSending      : 1;  // Bit 13
+       uint32_t ApDontForceSetup             : 1;  // Bit 14
+       uint32_t unused_15                    : 1;  // Bit 15   was used by PeriodicalScanWiFi
+       uint32_t JSONBoolWithoutQuotes        : 1;  // Bit 16
+       uint32_t DoNotStartAP                 : 1;  // Bit 17
+       uint32_t UseAlternativeDeepSleep      : 1;  // Bit 18
+       uint32_t UseLastWiFiFromRTC           : 1;  // Bit 19
+       uint32_t EnableTimingStats            : 1;  // Bit 20
+       uint32_t AllowTaskValueSetAllPlugins  : 1;  // Bit 21
+       uint32_t EnableClearHangingI2Cbus     : 1;  // Bit 22
+       uint32_t EnableRAMTracking            : 1;  // Bit 23
+       uint32_t EnableRulesCaching           : 1;  // Bit 24  Inverted
+       uint32_t EnableRulesEventReorder      : 1;  // Bit 25  Inverted
+       uint32_t AllowOTAUnlimited            : 1;  // Bit 26
+       uint32_t SendToHTTP_follow_redirects  : 1;  // Bit 27
+       uint32_t CssMode                      : 2;  // Bit 28
+//       uint32_t unused_29                  : 1;  // Bit 29
+       uint32_t CheckI2Cdevice               : 1;  // Bit 30  Inverted
+       uint32_t DoNotUse_31                  : 1;  // Bit 31  Was used to detect whether various bits were even set
+
+    } VariousBits_1;
+    uint32_t      VariousBits1 = 0;
+  };
+
   uint32_t      ResetFactoryDefaultPreference = 0; // Do not clear this one in the clearAll()
   uint32_t      I2C_clockSpeed = 400000;
   uint16_t      WebserverPort = 80;
@@ -382,7 +448,7 @@ public:
   NetworkMedium_t NetworkMedium = NetworkMedium_t::WIFI;
   int8_t          I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t          I2C_Multiplexer_Addr = -1;
-  int8_t          I2C_Multiplexer_Channel[N_TASKS];
+  int8_t          I2C_Multiplexer_Channel[N_TASKS]{};
   uint8_t         I2C_Flags[N_TASKS] = {0};
   uint32_t        I2C_clockSpeed_Slow = 100000;
   int8_t          I2C_Multiplexer_ResetPin = -1;
@@ -400,7 +466,7 @@ public:
 
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
-  uint8_t       md5[16]; // Store checksum of the settings.
+  uint8_t       md5[16]{}; // Store checksum of the settings.
   uint32_t      VariousBits2 = 0;
 
   uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 

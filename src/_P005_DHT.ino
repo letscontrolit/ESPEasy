@@ -66,7 +66,7 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper * options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021"), F("Sonoff MS01") };
         const int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021, P005_MS01 };
 
-        constexpr size_t nrElements = sizeof(indices) / sizeof(indices[0]);
+        constexpr size_t nrElements = NR_ELEMENTS(indices);
 
         addFormSelector(F("Sensor model"), F("dhttype"), nrElements, options, indices, PCONFIG(0) );
 

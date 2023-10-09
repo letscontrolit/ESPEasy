@@ -51,7 +51,7 @@ uint32_t createTaskInfoJson(bool send) {
       }
       expected_size += writeToMqtt(concat(F("{\"taskName\":\""), getTaskDeviceName(task)), send);
       expected_size += writeToMqtt(concat(F("\",\"taskIndex\":"), task), send);
-      expected_size += writeToMqtt(concat(F(",\"pluginId\":"), getPluginID_from_TaskIndex(task)), send);
+      expected_size += writeToMqtt(concat(F(",\"pluginId\":"), getPluginID_from_TaskIndex(task).value), send);
       expected_size += writeToMqtt(F(",\"taskValues\":["), send);
     }
 
@@ -316,7 +316,7 @@ uint32_t P146_data_struct::sendCSVInBulk(taskIndex_t P146_TaskIndex, uint32_t ma
   }
   writeToMqtt(message, true);
 
-  for (int chunk = 0; chunk < nrChunks; ++chunk) {
+  for (size_t chunk = 0; chunk < nrChunks; ++chunk) {
     dumper->createCSVLine();
     writeToMqtt('\n',               true); // Separator
     writeToMqtt(lines.front().line, true);

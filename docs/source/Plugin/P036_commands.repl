@@ -39,6 +39,7 @@
 
         The updated line text is not stored in the settings itself, but kept in memory.
         After a reboot the stored plugin settings will be used.
+        The line text can also be restored from the settings by the command ``restore``.
 
         All template notations can be used, like system variables, or reference to a task value.
 
@@ -50,6 +51,7 @@
         This command is to display a specific frame (aka page), or the next frame. When reaching the last frame, a 'next' (0) will display the first frame.
 
         The <framenr> parameter corresponds to the desired frame (1..<number of frames>) to display. The number of frames is determined by dividing the lines in use (at least one line in that frame with some data), by the number of Lines per Frame. So practically, the range is 1..3 when all lines are used and 4 Lines per Frame is set, or 1..12 if Line per frames is set to 1. The number of frames is updated if a frame would initially be empty, and an external source places text on a line of that frame (see above).
+        If scroll is set to ``ticker`` only <framenr> = 1 is supported, it starts the ticker from the beginning.
 
         When omitting <framenr>, or providing 0, the next frame is displayed.
 
@@ -59,6 +61,7 @@
         ``oledframedcmd,linecount,<1..4>``
         ","
         This command changes the number of lines in each frame. When the next frame is to be displayed, the frames are recalculated and the sequence is restarted at the first frame.
+        If scroll is set to ``ticker`` this command is not supported.
 
         If Generate events for 'Linecount' is selected, a ``<taskname#linecount=<lines>`` event is generated on initialization of the plugin and when changing the setting.
         "
@@ -72,3 +75,31 @@
         ","
         Set the global align option for content to centre (0), left (1) or right (2).
         "
+        "
+        ``oledframedcmd,userDef1,'<user Defined Header1>'``
+        ","
+        Set the user defined header nr. 1 with any desired text value.
+
+        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
+        "
+        "
+        ``oledframedcmd,userDef2,'<user Defined Header2>'``
+        ","
+        Set the user defined header nr. 2 with any desired text value.
+
+        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
+        "
+        "
+        ``oledframedcmd,restore,<line>``
+        ","
+        If the <line> parameter is set to 0 all line contents will be restored from the settings.
+        Otherwise the <line> parameter corresponds with the same lines as the plugin configuration has,
+        and only the content of this line will be restored from the settings.
+        "
+        "
+        ``oledframedcmd,scroll,<speed>``
+        ","
+        The <speed> parameter corresponds with the line number of the scroll parameter of the settings (1=Very slow ... 6=Ticker).
+        After applying the new scroll speed the display restarts with the first page.
+        "
+

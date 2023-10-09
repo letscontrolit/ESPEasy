@@ -1,5 +1,7 @@
 #include "../Helpers/_Plugin_Helper_serial.h"
 
+#ifdef PLUGIN_USES_SERIAL
+
 
 #include "../../_Plugin_Helper.h"
 
@@ -76,6 +78,20 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pi
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional, bool txOptional) {
   event->String1 = formatGpioName_serialRX(rxOptional);
   event->String2 = formatGpioName_serialTX(txOptional);
+}
+
+void serialHelper_modbus_getGpioNames(struct EventStruct *event,
+                               bool                rxOptional,
+                               bool                txOptional,
+                               bool                DE_RE_optional)
+{
+  serialHelper_getGpioNames(event, rxOptional, txOptional);
+  event->String1.replace(F("TX"), F("TX (RO)"));
+  event->String2.replace(F("RX"), F("RX (DI)"));
+  if (DE_RE_optional)
+    event->String3 = formatGpioName_output_optional(F("~RE/DE"));
+  else 
+    event->String3 = formatGpioName_output(F("~RE/DE"));
 }
 
 int8_t serialHelper_getRxPin(struct EventStruct *event) {
@@ -256,7 +272,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 #endif // if USES_I2C_SC16IS752
   };
 
-  constexpr int NR_ESPEASY_SERIAL_TYPES = sizeof(ids) / sizeof(ids[1]);
+  constexpr int NR_ESPEASY_SERIAL_TYPES = NR_ELEMENTS(ids);
   String options[NR_ESPEASY_SERIAL_TYPES];
 
 //  String attr[NR_ESPEASY_SERIAL_TYPES];
@@ -419,3 +435,5 @@ uint8_t serialHelper_convertOldSerialConfig(uint8_t newLocationConfig) {
   // Must truncate it to 1 uint8_t, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
   return static_cast<uint8_t>(SERIAL_8N1 & 0xFF); // Some default
 }
+
+#endif

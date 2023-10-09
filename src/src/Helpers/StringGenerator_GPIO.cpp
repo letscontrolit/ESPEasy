@@ -207,6 +207,9 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
   bool includeI2C = true;
   bool includeSPI = true;
+  #if FEATURE_SD
+  bool includeSDCard = true;
+  #endif
   #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   // FIXME TD-er: Must check whether this can be a conflict.
   bool includeSerial = false;
@@ -241,6 +244,11 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     case PinSelectPurpose::Generic_bidir:
     case PinSelectPurpose::DAC:
       break;
+    #if FEATURE_SD
+    case PinSelectPurpose::SD_Card:
+      includeSDCard = false;
+      break;
+    #endif
   }
 
   if (includeI2C && Settings.isI2C_pin(gpio)) {
@@ -264,6 +272,10 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
       if (gpio == SOC_RX0) { return F("RX0"); }
     }
   }
+
+  #if FEATURE_SD
+  if (validGpio(gpio) && Settings.Pin_sd_cs == gpio && includeSDCard) { return F("SD-Card CS"); }
+  #endif // if FEATURE_SD
 
 
   #if FEATURE_ETHERNET

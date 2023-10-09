@@ -38,8 +38,8 @@
 .. |P012_usedlibraries| replace:: `.`
 
 .. |P013_name| replace:: :cyan:`HC-SR04/RCW-0001`
-.. |P013_type| replace:: :cyan:`Position`
-.. |P013_typename| replace:: :cyan:`Position - HC-SR04/RCW-0001/etc.`
+.. |P013_type| replace:: :cyan:`Distance`
+.. |P013_typename| replace:: :cyan:`Distance - HC-SR04/RCW-0001/etc.`
 .. |P013_porttype| replace:: `.`
 .. |P013_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P013_github| replace:: P013_HCSR04.ino
@@ -56,8 +56,8 @@
 .. |P014_typename| replace:: :cyan:`Environment - SI7021/HTU21D`
 .. |P014_porttype| replace:: `.`
 .. |P014_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
-.. |P014_github| replace:: P014_SI7021.ino
-.. _P014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P014_SI7021.ino
+.. |P014_github| replace:: P014_SI70xx.ino
+.. _P014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P014_SI70xx.ino
 .. |P014_usedby| replace:: `.`
 .. |P014_shortinfo| replace:: `.`
 .. |P014_maintainer| replace:: `.`

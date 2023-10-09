@@ -247,6 +247,8 @@
 # define LM7x_CONV_RDY               0x02u
 
 
+void P039_AddMainsFrequencyFilterSelection(struct EventStruct *event);
+
 boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -415,7 +417,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
         // TODO: c.k.i.: more detailed inits depending on the sub devices expected , e.g. TMP 122/124
       }
-
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
 
@@ -426,6 +428,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO, log);
         }
       }
+#endif
 
       success = true;
       break;
@@ -440,29 +443,21 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *Foptions[2] = { F("Thermocouple"), F("RTD") };
         const int FoptionValues[2]             = { P039_TC, P039_RTD };
         addFormSelector(F("Sensor Family Type"), F("famtype"), 2, Foptions, FoptionValues, family, true); // auto reload activated
-        # ifndef BUILD_NO_DEBUG
-        addFormNote(F("Set sensor family of connected sensor - thermocouple or RTD."));
-        # endif // ifndef BUILD_NO_DEBUG
       }
 
       const uint8_t choice = P039_MAX_TYPE;
 
+      addFormSubHeader(F("Device Type Settings"));
       if (family == P039_TC) {
-        addFormSubHeader(F("Device Type Settings"));
-
         {
           const __FlashStringHelper *options[3] = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
           const int optionValues[3]             = { P039_MAX6675, P039_MAX31855, P039_MAX31856 };
           addFormSelector(F("Adapter IC"), F("maxtype"), 3, options, optionValues, choice, true); // auto reload activated
-          # ifndef BUILD_NO_DEBUG
-          addFormNote(F("Set adapter IC used."));
-          # endif // ifndef BUILD_NO_DEBUG
         }
 
         if (choice == P039_MAX31856) {
           addFormSubHeader(F("Device Settings"));
           {
-            addFormNote(F("Set Thermocouple type for MAX31856"));
             const __FlashStringHelper *Toptions[10] = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T"), F("VM8"), F("VM32") };
 
             // 2021-05-17: c.k.i.: values are directly written to device register for configuration, therefore no linear values are used
@@ -489,28 +484,16 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             const int CoptionValues[5]             = { 0, 1, 2, 3, 4 };
             addFormSelector(F("Averaging"), F("contype"), 5, Coptions, CoptionValues, P039_CONFIG_4);
             addUnit(F("sample(s)"));
-            addFormNote(F("Set Averaging Type for MAX31856"));
           }
-          {
-            const __FlashStringHelper *FToptions[2] = { F("60"), F("50") };
-            const int FToptionValues[2]             = { 0, 1 };
-            addFormSelector(F("Supply Frequency Filter"), F("filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
-            addUnit(F("Hz"));
-            addFormNote(F("Set filter frequency for supply voltage. Choose appropriate to your power net frequency (50/60 Hz)"));
-          }
+          P039_AddMainsFrequencyFilterSelection(event);
         }
       }
       else {
         {
-          addFormSubHeader(F("Device Type Settings"));
-        }
-
-        {
           const __FlashStringHelper *TPoptions[2] = { F("MAX 31865"), F("LM7x") };
           const int TPoptionValues[2]             = { P039_MAX31865, P039_LM7x };
           addFormSelector(F("Adapter IC"), F("maxtype"), 2, TPoptions, TPoptionValues, choice, true); // auto reload activated
-          addFormNote(F(
-                        "Set used RTD Converter Module. Currently only MAX31865 is fully supported. LM7x derivatives are untested and experimental."));
+          addFormNote(F("LM7x support is experimental."));
         }
 
 
@@ -523,31 +506,27 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             const __FlashStringHelper *PToptions[2] = { F("PT100"), F("PT1000") };
             const int PToptionValues[2]             = { MAX31865_PT100, MAX31865_PT1000 };
             addFormSelector(F("Resistor Type"), F("rtdtype"), 2, PToptions, PToptionValues, P039_RTD_TYPE);
-            addFormNote(F("Set Resistor Type for MAX31865"));
           }
           {
             const __FlashStringHelper *Coptions[2] = { F("2-/4"), F("3") };
             const int CoptionValues[2]             = { 0, 1 };
             addFormSelector(F("Connection Type"), F("contype"), 2, Coptions, CoptionValues, P039_CONFIG_4);
             addUnit(F("wire"));
-            addFormNote(F("Set Connection Type for MAX31865"));
           }
-          {
-            const __FlashStringHelper *FToptions[2] = { F("60"), F("50") };
-            const int FToptionValues[2]             = { 0, 1 };
-            addFormSelector(F("Supply Frequency Filter"), F("filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
-            addUnit(F("Hz"));
-            addFormNote(F("Set filter frequency for supply voltage. Choose appropriate to your power net frequency (50/60 Hz)"));
-          }
+
+          P039_AddMainsFrequencyFilterSelection(event);
+
           {
             addFormNumericBox(F("Reference Resistor"), F("res"), P039_RTD_RES, 0);
             addUnit(F("Ohm"));
-            addFormNote(F("Set reference resistor for MAX31865. PT100: typically 430 [OHM]; PT1000: typically 4300 [OHM]"));
+            addFormNote(F("PT100: typically 430 [OHM]; PT1000: typically 4300 [OHM]"));
           }
           {
-            addFormFloatNumberBox(F("Offset"), F("offset"), P039_RTD_OFFSET, -50.0f, 50.0f, 2, 0.01f);
+            addFormFloatNumberBox(F("Temperature Offset"), F("offset"), P039_RTD_OFFSET, -50.0f, 50.0f, 2, 0.01f);
             addUnit('K');
-            addFormNote(F("Set Offset [K] for MAX31865. Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
+            # ifndef BUILD_NO_DEBUG
+            addFormNote(F("Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
+            #endif
           }
         }
 
@@ -562,13 +541,13 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             { F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125") };
             const int PToptionValues[8] = { LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125 };
             addFormSelector(F("LM7x device details"), F("rtd_lm_type"), 8, PToptions, PToptionValues, P039_RTD_LM_TYPE);
-            addFormNote(F(
-                          "Choose LM7x device details to allow handling of device specifics,TMP122/124 not yet supported with all options -> fixed 12 Bit resolution, no advanced options active"));
+            addFormNote(F("TMP122/124 Limited support -> fixed 12 Bit res, no advanced options"));
           }
           {
             addFormCheckBox(F("Enable Shutdown Mode"), F("rtd_lm_shtdwn"), P039_RTD_LM_SHTDWN);
-            addFormNote(F(
-                          "Enable shutdown mode for LM7x devices. Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\nWithout LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
+            # ifndef BUILD_NO_DEBUG
+            addFormNote(F("Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\nWithout LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
+            #endif
           }
         }
       }
@@ -634,10 +613,11 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           break;
       }
 
-      if (Plugin_039_Celsius != NAN)
+      if (isValidFloat(Plugin_039_Celsius))
       {
         UserVar[event->BaseVarIndex] = Plugin_039_Celsius;
 
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
 
@@ -656,6 +636,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             addLogMove(LOG_LEVEL_INFO, log);
           }
         }
+#endif
 
         if (definitelyGreaterThan(Plugin_039_Celsius, P039_TEMP_THRESHOLD)) {
           success = true;
@@ -666,7 +647,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex]     = NAN;
         UserVar[event->BaseVarIndex + 1] = NAN;
 
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log;
 
           if ((log.reserve(80u))) {                     // reserve value derived from example log file
@@ -674,7 +655,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             log += getTaskDeviceName(event->TaskIndex); // 41 char
             log += F(" : ");                            // 3 char
             log += F("No Sensor attached !");           // 20 char
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_ERROR, log);
           }
         }
         success = false;
@@ -877,6 +858,15 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
+}
+
+void P039_AddMainsFrequencyFilterSelection(struct EventStruct *event)
+{
+  const __FlashStringHelper *FToptions[2] = { F("60"), F("50") };
+  const int FToptionValues[2]             = { 0, 1 };
+  addFormSelector(F("Supply Frequency Filter"), F("filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
+  addUnit(F("Hz"));
+  addFormNote(F("Filter power net frequency (50/60 Hz)"));
 }
 
 float readMax6675(struct EventStruct *event)
@@ -1161,6 +1151,7 @@ float readMax31856(struct EventStruct *event)
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
+      // FIXME TD-er: Part of expression is always false (sr == 0)
       const bool faultResolved = (P039_data->sensorFault) && (sr == 0);
 
       if ((P039_data->sensorFault) || faultResolved) {

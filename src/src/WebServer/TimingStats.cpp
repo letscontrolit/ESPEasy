@@ -10,10 +10,11 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/RamTracker.h"
 
 #include "../Globals/Device.h"
+
+#include "../Helpers/_Plugin_init.h"
 
 
 #define TIMING_STATS_THRESHOLD 100000
@@ -36,7 +37,7 @@ void handle_timingstats() {
   html_table_header(F("Avg (ms)"));
   html_table_header(F("max (ms)"));
 
-  long timeSinceLastReset = stream_timing_statistics(true);
+  const long timeSinceLastReset = stream_timing_statistics(true);
   html_end_table();
 
   html_table_class_normal();
@@ -105,11 +106,11 @@ void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset)
 }
 
 long stream_timing_statistics(bool clearStats) {
-  long timeSinceLastReset = timePassedSince(timingstats_last_reset);
+  const long timeSinceLastReset = timePassedSince(timingstats_last_reset);
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
-      const deviceIndex_t deviceIndex = static_cast<deviceIndex_t>(x.first / 256);
+      const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(x.first >> 8);
 
       if (validDeviceIndex(deviceIndex)) {
         if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
@@ -118,23 +119,21 @@ long stream_timing_statistics(bool clearStats) {
           html_TR_TD();
         }
         {
-          addHtml(F("P_"));
-          addHtmlInt(Device[deviceIndex].Number);
-          addHtml('_');
+          const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
+          addHtml(get_formatted_Plugin_number(pluginID));
+          addHtml(' ');
           addHtml(getPluginNameFromDeviceIndex(deviceIndex));
         }
         html_TD();
         addHtml(getPluginFunctionName(x.first % 256));
         stream_html_timing_stats(x.second, timeSinceLastReset);
       }
-
-      if (clearStats) { x.second.reset(); }
     }
   }
 
   for (auto& x: controllerStats) {
     if (!x.second.isEmpty()) {
-      const int ProtocolIndex = x.first / 256;
+      const int ProtocolIndex = x.first >> 8;
 
       if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
         html_TR_TD_highlight();
@@ -142,16 +141,13 @@ long stream_timing_statistics(bool clearStats) {
         html_TR_TD();
       }
       {
-        addHtml(F("C_"));
-        addHtmlInt(Protocol[ProtocolIndex].Number);
-        addHtml('_');
+        addHtml(get_formatted_Controller_number(getCPluginID_from_ProtocolIndex(ProtocolIndex)));
+        addHtml(' ');
         addHtml(getCPluginNameFromProtocolIndex(ProtocolIndex));
       }
       html_TD();
       addHtml(getCPluginCFunctionName(static_cast<CPlugin::Function>(x.first % 256)));
       stream_html_timing_stats(x.second, timeSinceLastReset);
-
-      if (clearStats) { x.second.reset(); }
     }
   }
 
@@ -165,12 +161,13 @@ long stream_timing_statistics(bool clearStats) {
       addHtml(getMiscStatsName(x.first));
       html_TD();
       stream_html_timing_stats(x.second, timeSinceLastReset);
-
-      if (clearStats) { x.second.reset(); }
     }
   }
 
   if (clearStats) {
+    pluginStats.clear();
+    controllerStats.clear();
+    miscStats.clear();
     timingstats_last_reset = millis();
   }
   return timeSinceLastReset;

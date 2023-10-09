@@ -13,8 +13,8 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
 
 {
   _errorValueIsNaN = isnan(_errorValue);
-  _minValue = std::numeric_limits<float>::max();
-  _maxValue = std::numeric_limits<float>::lowest();
+  _minValue        = std::numeric_limits<float>::max();
+  _maxValue        = std::numeric_limits<float>::lowest();
 }
 
 bool PluginStats::push(float value)
@@ -121,7 +121,7 @@ float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, 
   return res;
 }
 
-float PluginStats::getSample(int& lastNrSamples) const
+float PluginStats::getSample(int lastNrSamples) const
 {
   if ((_samples.size() == 0) || (_samples.size() < abs(lastNrSamples))) { return _errorValue; }
 
@@ -133,7 +133,10 @@ float PluginStats::getSample(int& lastNrSamples) const
     i = abs(lastNrSamples) - 1;
   }
 
-  return _samples[i];
+  if (i < _samples.size()) {
+    return _samples[i];
+  }
+  return _errorValue;
 }
 
 float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
@@ -163,75 +166,101 @@ bool PluginStats::matchedCommand(const String& command, const __FlashStringHelpe
 
 bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String& string) const
 {
-  bool success = false;
-
   // Full value name is something like "taskvaluename.avg"
   const String fullValueName = parseString(string, 1);
   const String command       = parseString(fullValueName, 2, '.');
 
-  float value;
-  int   nrSamples = 0;
-
-  if (matchedCommand(command, F("min"), nrSamples)) {
-    success = nrSamples != 0;
-
-    if (nrSamples < 0) { // [taskname#valuename.min] Lowest value seen since value reset
-      value = getPeakLow();
-    } else {             // Check for "minN", where N is the number of most recent samples to use.
-      if (nrSamples > 0) {
-        value = getSampleExtreme(nrSamples, false);
-      }
-    }
-  } else if (matchedCommand(command, F("max"), nrSamples)) {
-    success = nrSamples != 0;
-
-    if (nrSamples < 0) { // [taskname#valuename.max] Highest value seen since value reset
-      value = getPeakHigh();
-    } else {             // Check for "maxN", where N is the number of most recent samples to use.
-      if (nrSamples > 0) {
-        value = getSampleExtreme(nrSamples, true);
-      }
-    }
-  } else if (matchedCommand(command, F("avg"), nrSamples)) {
-    success = nrSamples != 0;
-
-    if (nrSamples < 0) { // [taskname#valuename.avg] Average value of the last N kept samples
-      value = getSampleAvg();
-    } else {
-      // Check for "avgN", where N is the number of most recent samples to use.
-      if (nrSamples > 0) {
-        // [taskname#valuename.avgN] Average over N most recent samples
-        value = getSampleAvg(nrSamples);
-      }
-    }
-  } else if (matchedCommand(command, F("stddev"), nrSamples)) {
-    success = nrSamples != 0;
-
-    if (nrSamples < 0) { // [taskname#valuename.stddev] Std deviation of the last N kept samples
-      value = getSampleStdDev();
-    } else {
-      // Check for "stddevN", where N is the number of most recent samples to use.
-      if (nrSamples > 0) {
-        // [taskname#valuename.stddevN] Std. deviation over N most recent samples
-        value = getSampleStdDev(nrSamples);
-      }
-    }
-  } else if (matchedCommand(command, F("size"), nrSamples)) {
-    // [taskname#valuename.size] Number of saved samples
-    value   = _samples.size();
-    success = true;
-  } else if (matchedCommand(command, F("sample"), nrSamples)) {
-    success = nrSamples != 0;
-
-    if (nrSamples == INT_MIN) {   // [taskname#valuename.sample] Number of saved samples.
-      value   = _samples.size();
-      success = true;
-    } else {
-      if (nrSamples != 0) { // [taskname#valuename.sampleN] Sample N (1 - last (current), -1 - first of saved sample, abs(N)>[number of examples] - return error value)
-        value = getSample(nrSamples);
-      }
-    }
+  if (command.isEmpty()) {
+    return false;
   }
+
+  float value{};
+  int   nrSamples = 0;
+  bool  success   = false;
+
+  switch (command[0])
+  {
+    case 'a':
+
+      if (matchedCommand(command, F("avg"), nrSamples)) {
+        success = nrSamples != 0;
+
+        if (nrSamples < 0) { // [taskname#valuename.avg] Average value of the last N kept samples
+          value = getSampleAvg();
+        } else {
+          // Check for "avgN", where N is the number of most recent samples to use.
+          if (nrSamples > 0) {
+            // [taskname#valuename.avgN] Average over N most recent samples
+            value = getSampleAvg(nrSamples);
+          }
+        }
+      }
+      break;
+    case 'm':
+
+      if (matchedCommand(command, F("min"), nrSamples)) {
+        success = nrSamples != 0;
+
+        if (nrSamples < 0) { // [taskname#valuename.min] Lowest value seen since value reset
+          value = getPeakLow();
+        } else {             // Check for "minN", where N is the number of most recent samples to use.
+          if (nrSamples > 0) {
+            value = getSampleExtreme(nrSamples, false);
+          }
+        }
+      } else if (matchedCommand(command, F("max"), nrSamples)) {
+        success = nrSamples != 0;
+
+        if (nrSamples < 0) { // [taskname#valuename.max] Highest value seen since value reset
+          value = getPeakHigh();
+        } else {             // Check for "maxN", where N is the number of most recent samples to use.
+          if (nrSamples > 0) {
+            value = getSampleExtreme(nrSamples, true);
+          }
+        }
+      }
+      break;
+    case 's':
+
+      if (matchedCommand(command, F("stddev"), nrSamples)) {
+        success = nrSamples != 0;
+
+        if (nrSamples < 0) { // [taskname#valuename.stddev] Std deviation of the last N kept samples
+          value = getSampleStdDev();
+        } else {
+          // Check for "stddevN", where N is the number of most recent samples to use.
+          if (nrSamples > 0) {
+            // [taskname#valuename.stddevN] Std. deviation over N most recent samples
+            value = getSampleStdDev(nrSamples);
+          }
+        }
+      } else if (matchedCommand(command, F("size"), nrSamples)) {
+        // [taskname#valuename.size] Number of samples in memory
+        value   = _samples.size();
+        success = true;
+      } else if (matchedCommand(command, F("sample"), nrSamples)) {
+        success = nrSamples != 0;
+
+        if (nrSamples == INT_MIN) { 
+          // [taskname#valuename.sample] Number of samples in memory.
+          value   = _samples.size();
+          success = true;
+        } else {
+          if (nrSamples != 0) {
+            // [taskname#valuename.sampleN]
+            // With sample N:
+            //   N > 0: Return N'th most recent sample
+            //   N < 0: Return abs(N)'th sample in memory, starting at the oldest one.
+            //   abs(N) > [number of samples]: return error value
+            value = getSample(nrSamples);
+          }
+        }
+      }
+      break;
+    default:
+      return false;
+  }
+
 
   if (success) {
     string = toString(value, _nrDecimals);
@@ -302,10 +331,10 @@ bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include
 }
 
 void PluginStats::webformLoad_show_val(
-  struct EventStruct *event,
-  const String      & label,
+  struct EventStruct      *event,
+  const String           & label,
   ESPEASY_RULES_FLOAT_TYPE value,
-  const String      & unit) const
+  const String           & unit) const
 {
   addRowLabel(getLabel() + label);
   addHtmlFloat(value, _nrDecimals);
@@ -347,13 +376,6 @@ bool PluginStats::usableValue(float value) const
     }
   }
   return false;
-}
-
-PluginStats_array::PluginStats_array()
-{
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    _plugin_stats[i] = nullptr;
-  }
 }
 
 PluginStats_array::~PluginStats_array()
@@ -416,7 +438,7 @@ bool PluginStats_array::hasPeaks() const
   return false;
 }
 
-uint8_t PluginStats_array::nrSamplesPresent() const
+size_t PluginStats_array::nrSamplesPresent() const
 {
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_plugin_stats[i] != nullptr) {
@@ -431,6 +453,7 @@ void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool tr
   if (validTaskIndex(event->TaskIndex)) {
     const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
     const Sensor_VType sensorType = event->getSensorType();
+
     for (size_t i = 0; i < valueCount; ++i) {
       if (_plugin_stats[i] != nullptr) {
         const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
@@ -451,7 +474,7 @@ bool PluginStats_array::plugin_get_config_value_base(struct EventStruct *event,
   const String fullValueName = parseString(string, 1);
   const String valueName     = parseString(fullValueName, 1, '.');
 
-  for (uint8_t i = 0; i < VARS_PER_TASK; i++)
+  for (taskVarIndex_t i = 0; i < VARS_PER_TASK; i++)
   {
     if (_plugin_stats[i] != nullptr) {
       // Check case insensitive, since the user entered value name can have any case.
@@ -507,7 +530,7 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
 # if FEATURE_CHART_JS
 void PluginStats_array::plot_ChartJS() const
 {
-  const uint8_t nrSamples = nrSamplesPresent();
+  const size_t nrSamples = nrSamplesPresent();
 
   if (nrSamples == 0) { return; }
 

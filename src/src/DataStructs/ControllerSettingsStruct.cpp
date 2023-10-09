@@ -16,10 +16,15 @@
 
 ControllerSettingsStruct::ControllerSettingsStruct()
 {
+  memset(this, 0, sizeof(ControllerSettingsStruct));
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 
 void ControllerSettingsStruct::reset() {
+  // Need to make sure every byte between the members is also zero
+  // Otherwise the checksum will fail and settings will be saved too often.
+  memset(this, 0, sizeof(ControllerSettingsStruct));
+
   UseDNS                     = DEFAULT_SERVER_USEDNS;
   Port                       = DEFAULT_PORT;
   MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
@@ -31,16 +36,6 @@ void ControllerSettingsStruct::reset() {
   SampleSetInitiator         = INVALID_TASK_INDEX;
   VariousFlags               = 0;
 
-  for (uint8_t i = 0; i < 4; ++i) {
-    IP[i] = 0;
-  }
-  ZERO_FILL(HostName);
-  ZERO_FILL(ClientID);
-  ZERO_FILL(Publish);
-  ZERO_FILL(Subscribe);
-  ZERO_FILL(MQTTLwtTopic);
-  ZERO_FILL(LWTMessageConnect);
-  ZERO_FILL(LWTMessageDisconnect);
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 
@@ -77,15 +72,6 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(LWTMessageDisconnect);
 }
 
-ChecksumType ControllerSettingsStruct::computeChecksum() const {
-  return ChecksumType(reinterpret_cast<const uint8_t *>(this), sizeof(ControllerSettingsStruct));
-}
-
-IPAddress ControllerSettingsStruct::getIP() const {
-  IPAddress host(IP[0], IP[1], IP[2], IP[3]);
-
-  return host;
-}
 
 String ControllerSettingsStruct::getHost() const {
   if (UseDNS) {
@@ -192,7 +178,7 @@ bool ControllerSettingsStruct::updateIPcache() {
   }
   return false;
 }
-
+/*
 bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
   return bitRead(VariousFlags, 1);
@@ -292,3 +278,4 @@ void ControllerSettingsStruct::useLocalSystemTime(bool value)
 {
   bitWrite(VariousFlags, 11, value);
 }
+*/

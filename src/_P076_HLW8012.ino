@@ -29,7 +29,7 @@ HLW8012 *Plugin_076_hlw = nullptr;
 
 # define PLUGIN_076
 # define PLUGIN_ID_076 76
-# define PLUGIN_076_DEBUG true // activate extra log info in the debug
+# define PLUGIN_076_DEBUG false // activate extra log info in the debug
 # define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937"
 # define PLUGIN_VALUENAME1_076 "Voltage"
 # define PLUGIN_VALUENAME2_076 "Current"
@@ -44,13 +44,13 @@ HLW8012 *Plugin_076_hlw = nullptr;
 # define HLW_VOLTAGE_RESISTOR_DOWN (1000)     // Real 1.009k
 // -----------------------------------------------------------------------------------------------
 int StoredTaskIndex = -1;
-uint8_t p076_read_stage  = 0;
-unsigned long p076_timer = 0;
+uint8_t p076_read_stage{};
+unsigned long p076_timer{};
 
-float p076_hcurrent = 0.0f;
-float p076_hvoltage = 0.0f;
-float p076_hpower   = 0.0f;
-float p076_hpowfact = 0.0f;
+float p076_hcurrent{};
+float p076_hvoltage{};
+float p076_hpower{};
+float p076_hpowfact{};
 
 # define P076_Custom       0
 
@@ -68,31 +68,9 @@ float p076_hpowfact = 0.0f;
 # define P076_Gosund       9
 # define P076_Shelly_PLUG_S 10
 
-// Keep values as they are stored and increase this when adding new ones.
-# define MAX_P076_DEVICE   11
-
 void IRAM_ATTR p076_hlw8012_cf1_interrupt();
 void IRAM_ATTR p076_hlw8012_cf_interrupt();
 
-
-bool           p076_getDeviceString(int device, String& name) {
-  switch (device) {
-    case P076_Custom: name        = F("Custom");          break;
-    case P076_Sonoff: name        = F("Sonoff Pow (r1)"); break;
-    case P076_Huafan: name        = F("Huafan SS");       break;
-    case P076_KMC: name           = F("KMC 70011");       break;
-    case P076_Aplic: name         = F("Aplic WDP303075"); break;
-    case P076_SK03: name          = F("SK03 Outdoor");    break;
-    case P076_BlitzWolf: name     = F("BlitzWolf SHP");   break;
-    case P076_Teckin: name        = F("Teckin");          break;
-    case P076_TeckinUS: name      = F("Teckin US");       break;
-    case P076_Gosund: name        = F("Gosund SP1 v23");  break;
-    case P076_Shelly_PLUG_S: name = F("Shelly PLUG-S");   break;
-    default:
-      return false;
-  }
-  return true;
-}
 
 bool p076_getDeviceParameters(int      device,
                               uint8_t& SEL_Pin,
@@ -106,13 +84,13 @@ bool p076_getDeviceParameters(int      device,
     case P076_Sonoff: SEL_Pin        =  5; CF_Pin = 14; CF1_Pin = 13; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
     case P076_Huafan: SEL_Pin        = 13; CF_Pin = 14; CF1_Pin = 12; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
     case P076_KMC: SEL_Pin           = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_Aplic: SEL_Pin         = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_Aplic: //SEL_Pin       = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
     case P076_SK03: SEL_Pin          = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_BlitzWolf: SEL_Pin     = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_Teckin: SEL_Pin        = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_TeckinUS: SEL_Pin      = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_Gosund: SEL_Pin        = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_BlitzWolf: //SEL_Pin   = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_TeckinUS: //SEL_Pin    = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_Shelly_PLUG_S: SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Teckin: //SEL_Pin      = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Gosund: SEL_Pin        = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     default:
       return false;
   }
@@ -169,46 +147,61 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
       addFormSubHeader(F("Predefined Pin settings"));
       {
         // Place this in a scope, to keep memory usage low.
-        String predefinedNames[MAX_P076_DEVICE];
-        int    predefinedId[MAX_P076_DEVICE];
-
-        int index = 0;
-
-        for (int i = 0; i < MAX_P076_DEVICE; i++)
-        {
-          if (p076_getDeviceString(i, predefinedNames[index])) {
-            predefinedId[index] = i;
-            ++index;
-          }
-        }
+        const __FlashStringHelper * predefinedNames[] = {
+          F("Custom"),
+          F("Sonoff Pow (r1)"),
+          F("Huafan SS"),
+          F("KMC 70011"),
+          F("Aplic WDP303075"),
+          F("SK03 Outdoor"),
+          F("BlitzWolf SHP"),
+          F("Teckin"),
+          F("Teckin US"),
+          F("Gosund SP1 v23"),
+          F("Shelly PLUG-S")
+        };
+        const int predefinedId[] = {
+          P076_Custom,
+          P076_Sonoff,
+          P076_Huafan,
+          P076_KMC,
+          P076_Aplic,
+          P076_SK03,
+          P076_BlitzWolf,
+          P076_Teckin,
+          P076_TeckinUS,
+          P076_Gosund,
+          P076_Shelly_PLUG_S
+        };
+        constexpr int nrElements = NR_ELEMENTS(predefinedId);
         addFormSelector(F("Device"),
-                        F("preDefDevSel"), index,
+                        F("preDefDevSel"), nrElements,
                         predefinedNames, predefinedId, devicePinSettings);
         addFormNote(F("Enable device and select device type first"));
       }
 
       {
         // Place this in a scope, to keep memory usage low.
-        const __FlashStringHelper *modeRaise[4] = {
+        const __FlashStringHelper *modeRaise[] = {
           F("LOW"),
           F("CHANGE"),
           F("RISING"),
           F("FALLING"),
         };
 
-        const int modeValues[4] = {
+        const int modeValues[] = {
           LOW,
           CHANGE,
           RISING,
           FALLING,
         };
 
-        const __FlashStringHelper *modeCurr[2] = {
+        const __FlashStringHelper *modeCurr[] = {
           F("LOW"),
           F("HIGH"),
         };
 
-        const int modeCurrValues[2] = {
+        const int modeCurrValues[] = {
           LOW,
           HIGH,
         };
@@ -291,12 +284,9 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
       if ((hlwMultipliers[0] > 1.0) && (hlwMultipliers[1] > 1.0) && (hlwMultipliers[2] > 1.0)) {
         SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                                sizeof(hlwMultipliers));
-        # ifndef BUILD_NO_DEBUG
-
-        if (PLUGIN_076_DEBUG) {
+        #if PLUGIN_076_DEBUG
           addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration from Config Page"));
-        }
-        # endif // ifndef BUILD_NO_DEBUG
+        # endif
 
         if (Plugin_076_hlw) {
           Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
@@ -304,17 +294,12 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
         }
 
-        # ifndef BUILD_NO_DEBUG
-
-        if (PLUGIN_076_DEBUG) {
+        #if PLUGIN_076_DEBUG
           addLog(LOG_LEVEL_INFO, F("P076: Multipliers Reassigned"));
-        }
-        # endif // ifndef BUILD_NO_DEBUG
+        #endif
       }
 
-      # ifndef BUILD_NO_DEBUG
-
-      if (PLUGIN_076_DEBUG) {
+      #if PLUGIN_076_DEBUG
         String log = F("P076: PIN Settings ");
 
         log +=  F(" curr_read: ");
@@ -324,8 +309,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
         log +=  F(" cf1_edge: ");
         log +=  PCONFIG(6);
         addLogMove(LOG_LEVEL_INFO, log);
-      }
-      # endif // ifndef BUILD_NO_DEBUG
+      #endif
 
       success = true;
       break;
@@ -334,6 +318,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_TEN_PER_SECOND:
 
       if (Plugin_076_hlw) {
+        bool valid = false;
         switch (p076_read_stage) {
           case 0:
             // The stage where we have to wait for a measurement to be started.
@@ -346,7 +331,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           case 2: // Read current + set mode to read voltage
 
             if (timeOutReached(p076_timer)) {
-              p076_hcurrent = Plugin_076_hlw->getCurrent();
+              p076_hcurrent = Plugin_076_hlw->getCurrent(valid);
               Plugin_076_hlw->setMode(MODE_VOLTAGE);
               p076_timer = millis() + HLW_DELAYREADING;
               ++p076_read_stage;
@@ -355,9 +340,9 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           case 3: // Read voltage + active power + power factor
 
             if (timeOutReached(p076_timer)) {
-              p076_hvoltage = Plugin_076_hlw->getVoltage();
-              p076_hpower   = Plugin_076_hlw->getActivePower();
-              p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
+              p076_hvoltage = Plugin_076_hlw->getVoltage(valid);
+              p076_hpower   = Plugin_076_hlw->getActivePower(valid);
+              p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor(valid));
               ++p076_read_stage;
 
               // Measurement is done, schedule a new PLUGIN_READ call
@@ -379,16 +364,34 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           // Force a measurement start.
           //        ++p076_read_stage;
           //      } else if (p076_read_stage > 3) {
-          p076_hpower   = Plugin_076_hlw->getActivePower();
-          p076_hvoltage = Plugin_076_hlw->getVoltage();
-          p076_hcurrent = Plugin_076_hlw->getCurrent();
-          p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
+          bool valid = false;
+          p076_hpower   = Plugin_076_hlw->getActivePower(valid);
+          if (valid) {
+            success = true;
+          }
+
+          p076_hvoltage = Plugin_076_hlw->getVoltage(valid);
+          if (valid) {
+            success = true;
+          }
+          p076_hcurrent = Plugin_076_hlw->getCurrent(valid);
+          if (valid) {
+            success = true;
+          }
+          p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor(valid));
+          if (valid) {
+            success = true;
+          }
+
+          UserVar[event->BaseVarIndex]     = p076_hvoltage;
+          UserVar[event->BaseVarIndex + 1] = p076_hcurrent;
+          UserVar[event->BaseVarIndex + 2] = p076_hpower;
+          UserVar[event->BaseVarIndex + 3] = p076_hpowfact;
 
           // Measurement is complete.
           p076_read_stage = 0;
-          # ifndef BUILD_NO_DEBUG
 
-          if (PLUGIN_076_DEBUG) {
+          #if PLUGIN_076_DEBUG
             String log = F("P076: Read values");
             log += F(" - V=");
             log += p076_hvoltage;
@@ -399,15 +402,10 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
             log += F(" - Pf%=");
             log += p076_hpowfact;
             addLogMove(LOG_LEVEL_INFO, log);
-          }
-          # endif // ifndef BUILD_NO_DEBUG
-          UserVar[event->BaseVarIndex]     = p076_hvoltage;
-          UserVar[event->BaseVarIndex + 1] = p076_hcurrent;
-          UserVar[event->BaseVarIndex + 2] = p076_hpower;
-          UserVar[event->BaseVarIndex + 3] = p076_hpowfact;
-
+          #endif
+    
           // Plugin_076_hlw->toggleMode();
-          success = true;
+          
         }
       }
       break;
@@ -437,31 +435,22 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           Plugin_076_hlw->begin(CF_PIN, CF1_PIN, SEL_PIN, currentRead,
                                 true); // set use_interrupts to true to use
                                        // interrupts to monitor pulse widths
-          # ifndef BUILD_NO_DEBUG
-
-          if (PLUGIN_076_DEBUG) {
+          #if PLUGIN_076_DEBUG
             addLog(LOG_LEVEL_INFO, F("P076: Init object done"));
-          }
-          # endif // ifndef BUILD_NO_DEBUG
+          #endif
           Plugin_076_hlw->setResistors(HLW_CURRENT_RESISTOR,
                                        HLW_VOLTAGE_RESISTOR_UP,
                                        HLW_VOLTAGE_RESISTOR_DOWN);
-          # ifndef BUILD_NO_DEBUG
-
-          if (PLUGIN_076_DEBUG) {
+          #if PLUGIN_076_DEBUG
             addLog(LOG_LEVEL_INFO, F("P076: Init Basic Resistor Values done"));
-          }
-          # endif // ifndef BUILD_NO_DEBUG
+          #endif
 
           ESPEASY_RULES_FLOAT_TYPE current, voltage, power;
 
           if (Plugin076_LoadMultipliers(event->TaskIndex, current, voltage, power)) {
-            # ifndef BUILD_NO_DEBUG
-
-            if (PLUGIN_076_DEBUG) {
+            #if PLUGIN_076_DEBUG
               addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration after INIT"));
-            }
-            # endif // ifndef BUILD_NO_DEBUG
+            #endif
 
             Plugin_076_hlw->setCurrentMultiplier(current);
             Plugin_076_hlw->setVoltageMultiplier(voltage);
@@ -470,12 +459,10 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
             Plugin076_ResetMultipliers();
           }
 
-          # ifndef BUILD_NO_DEBUG
-
-          if (PLUGIN_076_DEBUG) {
+          #if PLUGIN_076_DEBUG
             addLog(LOG_LEVEL_INFO, F("P076: Applied Calibration after INIT"));
-          }
-          # endif // ifndef BUILD_NO_DEBUG
+          #endif
+
           StoredTaskIndex = event->TaskIndex; // store task index value in order to
                                               // use it in the PLUGIN_WRITE routine
 
@@ -483,6 +470,8 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           attachInterrupt(CF1_PIN, p076_hlw8012_cf1_interrupt, cf1_trigger);
           attachInterrupt(CF_PIN,  p076_hlw8012_cf_interrupt,  cf_trigger);
 
+          // Need a few seconds to read the first sample, so trigger a new read a few seconds after init.
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 5000);
           success = true;
         }
       }
@@ -492,14 +481,14 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_WRITE:
 
       if (Plugin_076_hlw) {
-        String command = parseString(string, 1);
+        const String command = parseString(string, 1);
 
-        if (command.equalsIgnoreCase(F("hlwreset"))) {
+        if (equals(command, F("hlwreset"))) {
           Plugin076_ResetMultipliers();
           success = true;
         }
 
-        if (command.equalsIgnoreCase(F("hlwcalibrate"))) {
+        if (equals(command, F("hlwcalibrate"))) {
           float CalibVolt  = 0.0f;
           float CalibCurr  = 0.0f;
           float CalibAcPwr = 0.0f;
@@ -509,9 +498,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
               validFloatFromString(parseString(string, 4), CalibAcPwr);
             }
           }
-          # ifndef BUILD_NO_DEBUG
-
-          if (PLUGIN_076_DEBUG) {
+          #if PLUGIN_076_DEBUG
             String log = F("P076: Calibration to values");
             log += F(" - Expected-V=");
             log += CalibVolt;
@@ -520,8 +507,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
             log += F(" - Expected-W=");
             log += CalibAcPwr;
             addLogMove(LOG_LEVEL_INFO, log);
-          }
-          # endif // ifndef BUILD_NO_DEBUG
+          #endif
           bool changed = false;
 
           if (CalibVolt != 0) {
@@ -556,12 +542,9 @@ void Plugin076_ResetMultipliers() {
   if (Plugin_076_hlw) {
     Plugin_076_hlw->resetMultipliers();
     Plugin076_SaveMultipliers();
-    # ifndef BUILD_NO_DEBUG
-
-    if (PLUGIN_076_DEBUG) {
+    #if PLUGIN_076_DEBUG
       addLog(LOG_LEVEL_INFO, F("P076: Reset Multipliers to DEFAULT"));
-    }
-    # endif // ifndef BUILD_NO_DEBUG
+    #endif
   }
 }
 

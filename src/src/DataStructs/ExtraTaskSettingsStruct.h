@@ -36,6 +36,12 @@ struct ExtraTaskSettingsStruct
   static bool   validCharForNames(char character);
   static String getInvalidCharsForNames();
 
+  void          setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const String& str);
+  void          setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const __FlashStringHelper * str);
+
+  void          clearTaskDeviceValueName(taskVarIndex_t taskVarIndex);
+  void          clearDefaultTaskDeviceValueNames();
+
   void          setAllowedRange(taskVarIndex_t taskVarIndex,
                                 const float  & minValue,
                                 const float  & maxValue);
@@ -55,24 +61,29 @@ struct ExtraTaskSettingsStruct
   bool          anyEnabledPluginStats() const;
 #endif // if FEATURE_PLUGIN_STATS
 
+  bool          isDefaultTaskVarName(taskVarIndex_t taskVarIndex) const;
+  void          isDefaultTaskVarName(taskVarIndex_t taskVarIndex,
+                                     bool           isDefault);
+
+
   void          populateDeviceValueNamesSeq(const __FlashStringHelper *valuename,
                                             size_t                     nrValues,
                                             uint8_t                    defaultDecimals,
                                             bool                       displayString);
 
   taskIndex_t TaskIndex = INVALID_TASK_INDEX; // Always < TASKS_MAX or INVALID_TASK_INDEX
-  char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
-  char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
-  char        TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
+  char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1]{};
+  char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1]{};
+  char        TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1]{};
   uint8_t     dummy1                                                           = 0;
   uint8_t     version                                                          = 1;
-  long        TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
-  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK];
-  int16_t     TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
-  float       TaskDeviceMinValue[VARS_PER_TASK];
-  float       TaskDeviceMaxValue[VARS_PER_TASK];
-  float       TaskDeviceErrorValue[VARS_PER_TASK];
-  uint32_t    VariousBits[VARS_PER_TASK];
+  long        TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX]{};
+  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK]{};
+  int16_t     TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX]{};
+  float       TaskDeviceMinValue[VARS_PER_TASK]{};
+  float       TaskDeviceMaxValue[VARS_PER_TASK]{};
+  float       TaskDeviceErrorValue[VARS_PER_TASK]{};
+  uint32_t    VariousBits[VARS_PER_TASK]{};
 };
 
 

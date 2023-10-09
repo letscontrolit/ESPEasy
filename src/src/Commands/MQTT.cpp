@@ -48,8 +48,8 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
         return F("MQTT : Cannot publish, out of RAM");
       }
 
-      LoadControllerSettings(enabledMqttController, ControllerSettings);
-      mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+      LoadControllerSettings(enabledMqttController, *ControllerSettings);
+      mqtt_retainFlag = ControllerSettings->mqtt_retainFlag();
     }
 
 
@@ -66,17 +66,17 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
       success = MQTTpublish(enabledMqttController, INVALID_TASK_INDEX,  topic.c_str(), String(event->Par2).c_str(), mqtt_retainFlag);
     }
     if (success) {
-      return return_command_success();
+      return return_command_success_flashstr();
     }
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 
 boolean MQTTsubscribe(controllerIndex_t controller_idx, const char* topic, boolean retained)
 {
   if (MQTTclient.subscribe(topic)) {
-    Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+    Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     scheduleNextMQTTdelayQueue();
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Subscribed to: ");  
@@ -103,15 +103,14 @@ const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, co
           addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot subscribe, out of RAM"));
           return F("MQTT : Cannot subscribe, out of RAM");
         }
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+        LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+        mqtt_retainFlag = ControllerSettings->mqtt_retainFlag();
       }
 
       String eventName = Line;
       String topic = eventName.substring(10);
-      if (!MQTTsubscribe(enabledMqttController, topic.c_str(), mqtt_retainFlag))
-         return return_command_failed();
-      return return_command_success();
+      return return_command_boolean_result_flashstr(
+        MQTTsubscribe(enabledMqttController, topic.c_str(), mqtt_retainFlag));
     }
     return F("No MQTT controller enabled");
   }

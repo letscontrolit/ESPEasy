@@ -10,6 +10,7 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -56,6 +57,7 @@ void ResetFactory(bool formatFS)
   serialPrint(F("RESET: Resetting factory defaults... using "));
   serialPrint(getDeviceModelString(ResetFactoryDefaultPreference.getDeviceModel()));
   serialPrintln(F(" settings"));
+  process_serialWriteBuffer();
   delay(1000);
 
   if (readFromRTC())
@@ -88,6 +90,7 @@ void ResetFactory(bool formatFS)
     serialPrintln(F("RESET: formatting..."));
     FS_format();
     serialPrintln(F("RESET: formatting done..."));
+    process_serialWriteBuffer();
 
     if (!ESPEASY_FS.begin())
     {
@@ -99,12 +102,12 @@ void ResetFactory(bool formatFS)
 #if FEATURE_CUSTOM_PROVISIONING
   {
     MakeProvisioningSettings(ProvisioningSettings);
-    if (AllocatedProvisioningSettings()) {
-      ProvisioningSettings.setUser(F(DEFAULT_PROVISIONING_USER));
-      ProvisioningSettings.setPass(F(DEFAULT_PROVISIONING_PASS));
-      ProvisioningSettings.setUrl(F(DEFAULT_PROVISIONING_URL));
-      ProvisioningSettings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
-      saveProvisioningSettings(ProvisioningSettings);
+    if (ProvisioningSettings.get()) {
+      ProvisioningSettings->setUser(F(DEFAULT_PROVISIONING_USER));
+      ProvisioningSettings->setPass(F(DEFAULT_PROVISIONING_PASS));
+      ProvisioningSettings->setUrl(F(DEFAULT_PROVISIONING_URL));
+      ProvisioningSettings->ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+      saveProvisioningSettings(*ProvisioningSettings);
     }
   }
 #endif
@@ -187,34 +190,20 @@ void ResetFactory(bool formatFS)
   Settings.Build   = get_build_nr();
 
   //  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
-  Settings.Delay                   = DEFAULT_DELAY;
+//  Settings.Delay                   = DEFAULT_DELAY;
   Settings.Pin_i2c_sda             = gpio_settings.i2c_sda;
   Settings.Pin_i2c_scl             = gpio_settings.i2c_scl;
   Settings.Pin_status_led          = gpio_settings.status_led;
-  Settings.Pin_status_led_Inversed = DEFAULT_PIN_STATUS_LED_INVERSED;
+//  Settings.Pin_status_led_Inversed = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs               = -1;
   Settings.Pin_Reset               = DEFAULT_PIN_RESET_BUTTON;
   Settings.Protocol[0]             = DEFAULT_PROTOCOL;
-  Settings.deepSleep_wakeTime      = 0; // Sleep disabled
-  Settings.CustomCSS               = false;
-  Settings.InitSPI                 = DEFAULT_SPI;
-
-  for (taskIndex_t x = 0; x < TASKS_MAX; x++)
-  {
-    Settings.TaskDevicePin1[x]         = -1;
-    Settings.TaskDevicePin2[x]         = -1;
-    Settings.TaskDevicePin3[x]         = -1;
-    Settings.TaskDevicePin1PullUp[x]   = true;
-    Settings.TaskDevicePin1Inversed[x] = false;
-
-    for (controllerIndex_t y = 0; y < CONTROLLER_MAX; y++) {
-      Settings.TaskDeviceSendData[y][x] = true;
-    }
-    Settings.TaskDeviceTimer[x] = Settings.Delay;
-  }
+//  Settings.deepSleep_wakeTime      = 0; // Sleep disabled
+//  Settings.CustomCSS               = false;
+//  Settings.InitSPI                 = DEFAULT_SPI;
 
   // advanced Settings
-  Settings.UseRules                         = DEFAULT_USE_RULES;
+//  Settings.UseRules                         = DEFAULT_USE_RULES;
   Settings.ControllerEnabled[0]             = DEFAULT_CONTROLLER_ENABLED;
   Settings.MQTTRetainFlag_unused            = DEFAULT_MQTT_RETAIN;
   Settings.MessageDelay_unused              = DEFAULT_MQTT_DELAY;
@@ -228,8 +217,8 @@ void ResetFactory(bool formatFS)
   Settings.Longitude = DEFAULT_LONGITUDE;
   #endif // ifdef DEFAULT_LONGITUDE
 
-  Settings.UseSerial = DEFAULT_USE_SERIAL;
-  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
+//  Settings.UseSerial = DEFAULT_USE_SERIAL;
+//  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
 
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
@@ -251,7 +240,7 @@ void ResetFactory(bool formatFS)
           Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
           Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
    */
-  Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+//  Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
 
   Settings.JSONBoolWithoutQuotes(DEFAULT_JSON_BOOL_WITHOUT_QUOTES);
   Settings.EnableTimingStats(DEFAULT_ENABLE_TIMING_STATS);
@@ -271,28 +260,28 @@ void ResetFactory(bool formatFS)
     MakeControllerSettings(ControllerSettings); //-V522
 
     if (AllocatedControllerSettings()) {
-      safe_strncpy(ControllerSettings.Subscribe,            F(DEFAULT_SUB),            sizeof(ControllerSettings.Subscribe));
-      safe_strncpy(ControllerSettings.Publish,              F(DEFAULT_PUB),            sizeof(ControllerSettings.Publish));
-      safe_strncpy(ControllerSettings.MQTTLwtTopic,         F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
-      safe_strncpy(ControllerSettings.LWTMessageConnect,    F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE),
-                   sizeof(ControllerSettings.LWTMessageConnect));
-      safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE),
-                   sizeof(ControllerSettings.LWTMessageDisconnect));
-      str2ip((char *)DEFAULT_SERVER, ControllerSettings.IP);
-      ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
-      ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
-      ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
-      ControllerSettings.Port = DEFAULT_PORT;
-      ControllerSettings.ClientTimeout = DEFAULT_CONTROLLER_TIMEOUT;
-      setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
-      setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
+      safe_strncpy(ControllerSettings->Subscribe,            F(DEFAULT_SUB),            sizeof(ControllerSettings->Subscribe));
+      safe_strncpy(ControllerSettings->Publish,              F(DEFAULT_PUB),            sizeof(ControllerSettings->Publish));
+      safe_strncpy(ControllerSettings->MQTTLwtTopic,         F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings->MQTTLwtTopic));
+      safe_strncpy(ControllerSettings->LWTMessageConnect,    F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE),
+                   sizeof(ControllerSettings->LWTMessageConnect));
+      safe_strncpy(ControllerSettings->LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE),
+                   sizeof(ControllerSettings->LWTMessageDisconnect));
+      str2ip((char *)DEFAULT_SERVER, ControllerSettings->IP);
+      ControllerSettings->setHostname(F(DEFAULT_SERVER_HOST));
+      ControllerSettings->UseDNS = DEFAULT_SERVER_USEDNS;
+      ControllerSettings->useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
+      ControllerSettings->Port = DEFAULT_PORT;
+      ControllerSettings->ClientTimeout = DEFAULT_CONTROLLER_TIMEOUT;
+      setControllerUser(0, *ControllerSettings, F(DEFAULT_CONTROLLER_USER));
+      setControllerPass(0, *ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
 
-      SaveControllerSettings(0, ControllerSettings);
+      SaveControllerSettings(0, *ControllerSettings);
     }
   }
 #endif // if DEFAULT_CONTROLLER
-
-  SaveSettings();
+  const bool forFactoryReset = true;
+  SaveSettings(forFactoryReset);
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory2"));
   #endif
@@ -304,7 +293,7 @@ void ResetFactory(bool formatFS)
   WiFiEventData.intent_to_reboot = true;
   WifiDisconnect();       // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactory);
+  reboot(IntendedRebootReason_e::ResetFactory);
 }
 
 

@@ -9,10 +9,6 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Networking.h"
 
-// Bit numbers for WiFi status
-#define ESPEASY_WIFI_CONNECTED               0
-#define ESPEASY_WIFI_GOT_IP                  1
-#define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 #define WIFI_RECONNECT_WAIT                  30000  // in milliSeconds
 
@@ -119,24 +115,8 @@ void WiFiEventData_t::markWiFiBegin() {
   }
 }
 
-bool WiFiEventData_t::WiFiDisconnected() const {
-  return wifiStatus == ESPEASY_WIFI_DISCONNECTED;
-}
-
-bool WiFiEventData_t::WiFiGotIP() const {
-  return bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP);
-}
-
-bool WiFiEventData_t::WiFiConnected() const {
-  return bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED);
-}
-
-bool WiFiEventData_t::WiFiServicesInitialized() const {
-  return bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
-}
 
 void WiFiEventData_t::setWiFiDisconnected() {
-  wifiConnectInProgress = false;
   wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
   last_wifi_connect_attempt_moment.clear();
   wifiConnectInProgress = false;
@@ -239,9 +219,6 @@ void WiFiEventData_t::markDisconnectedAPmode(const uint8_t mac[6]) {
   processedDisconnectAPmode = false;
 }
 
-void WiFiEventData_t::setAuthMode(uint8_t newMode) {
-  auth_mode = newMode;
-}
 
 
 String WiFiEventData_t::ESPeasyWifiStatusToString() const {

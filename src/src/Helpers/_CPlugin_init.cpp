@@ -6,7 +6,6 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../Globals/CPlugins.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
@@ -16,7 +15,7 @@
 // and initialize the function call pointer into the CCPlugin array
 // ********************************************************************************
 
-const cpluginID_t ProtocolIndex_to_CPlugin_id[] PROGMEM =
+constexpr cpluginID_t ProtocolIndex_to_CPlugin_id[] PROGMEM =
 {
 #ifdef USES_C001
   1,
@@ -1040,10 +1039,11 @@ const cpluginID_t ProtocolIndex_to_CPlugin_id[] PROGMEM =
 };
 
 
-bool (*CPlugin_ptr[])(CPlugin::Function,
+typedef bool (*CPlugin_ptr_t)(CPlugin::Function,
                       struct EventStruct *,
-                      String&) PROGMEM =
+                      String&);
 
+const CPlugin_ptr_t PROGMEM CPlugin_ptr[] =
 {
 #ifdef USES_C001
   &CPlugin_001,
@@ -2067,13 +2067,28 @@ bool (*CPlugin_ptr[])(CPlugin::Function,
 };
 
 
-protocolIndex_t CPlugin_id_to_ProtocolIndex[CPLUGIN_MAX + 1]{};
-
 constexpr size_t ProtocolIndex_to_CPlugin_id_size = sizeof(ProtocolIndex_to_CPlugin_id);
 
-// constexpr size_t Plugin_ptr_size               = sizeof(Plugin_ptr);
-constexpr size_t CPlugin_id_to_ProtocolIndex_size = sizeof(CPlugin_id_to_ProtocolIndex) / sizeof(CPlugin_id_to_ProtocolIndex[0]);
+// Highest CPlugin ID included in the build
+constexpr size_t Highest_CPlugin_id = ProtocolIndex_to_CPlugin_id[ProtocolIndex_to_CPlugin_id_size - 1];
 
+constexpr size_t CPlugin_id_to_ProtocolIndex_size = Highest_CPlugin_id + 1;
+
+// Array filled during init.
+// Valid index: 1 ... Highest_CPlugin_id
+// Returns index to the ProtocolIndex_to_CPlugin_id array
+protocolIndex_t CPlugin_id_to_ProtocolIndex[CPlugin_id_to_ProtocolIndex_size]{};
+
+
+ProtocolStruct ProtocolArray[ProtocolIndex_to_CPlugin_id_size + 1]{};
+
+ProtocolStruct& getProtocolStruct(protocolIndex_t protocolIndex)
+{
+  if (protocolIndex >= ProtocolIndex_to_CPlugin_id_size) {
+    protocolIndex = ProtocolIndex_to_CPlugin_id_size;
+  }
+  return ProtocolArray[protocolIndex];
+}
 
 protocolIndex_t getProtocolIndex_from_CPluginID_(cpluginID_t cpluginID)
 {
@@ -2094,11 +2109,26 @@ cpluginID_t getCPluginID_from_ProtocolIndex_(protocolIndex_t protocolIndex)
   return INVALID_C_PLUGIN_ID;
 }
 
+bool validProtocolIndex_init(protocolIndex_t protocolIndex)
+{
+  return protocolIndex < ProtocolIndex_to_CPlugin_id_size;
+}
+
+cpluginID_t getHighestIncludedCPluginID()
+{ 
+  return Highest_CPlugin_id;
+}
+
+
 bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, struct EventStruct *event, String& string)
 {
   if (protocolIndex < ProtocolIndex_to_CPlugin_id_size)
   {
-    return CPlugin_ptr[protocolIndex](Function, event, string);
+    START_TIMER;
+    CPlugin_ptr_t cplugin_call = (CPlugin_ptr_t)pgm_read_ptr(CPlugin_ptr + protocolIndex);
+    const bool res = cplugin_call(Function, event, string);
+    STOP_TIMER_CONTROLLER(protocolIndex, Function);
+    return res;
   }
   return false;
 }
@@ -2118,9 +2148,10 @@ void CPluginSetup()
   {
     const cpluginID_t cpluginID = getCPluginID_from_ProtocolIndex_(protocolIndex);
 
-    if (validCPluginID(cpluginID)) {
+    if (INVALID_C_PLUGIN_ID != cpluginID) {
       CPlugin_id_to_ProtocolIndex[cpluginID] = protocolIndex;
       struct EventStruct TempEvent;
+      TempEvent.idx = protocolIndex;
       String dummy;
       CPluginCall(protocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_ADD, &TempEvent, dummy);
     }

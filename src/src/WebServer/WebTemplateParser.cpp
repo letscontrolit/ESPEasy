@@ -4,9 +4,9 @@
 
 #include "../DataTypes/ControllerIndex.h"
 
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
 
@@ -213,17 +213,7 @@ void WebTemplateParser::processVarName()
   if (!varName.length()) { return; }
   varName.toLowerCase();
 
-  if (equals(varName, F("error"))) {
-    getErrorNotifications();
-  }
-  else if (equals(varName, F("meta"))) {
-    if (Rebooting) {
-      addHtml(F("<meta http-equiv='refresh' content='10 url=/'>"));
-    }
-  }
-  else {
-    getWebPageTemplateVar(varName);
-  }
+  getWebPageTemplateVar(varName);
 }
 
 void WebTemplateParser::getErrorNotifications() {
@@ -232,9 +222,11 @@ void WebTemplateParser::getErrorNotifications() {
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
     if (Settings.Protocol[x] != 0) {
-      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
 
-      if (validProtocolIndex(ProtocolIndex) && Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
+      if (Settings.ControllerEnabled[x] &&
+          validProtocolIndex(ProtocolIndex) && 
+          getProtocolStruct(ProtocolIndex).usesMQTT) {
         ++nrMQTTenabled;
       }
     }
@@ -250,129 +242,175 @@ void WebTemplateParser::getErrorNotifications() {
 
 void WebTemplateParser::getWebPageTemplateVar(const String& varName)
 {
+  if (varName.length() == 0) { return; }
+
+
   // serialPrint(varName); serialPrint(" : free: "); serialPrint(ESP.getFreeHeap());   serialPrint("var len before:  "); serialPrint
   // (varValue.length()) ;serialPrint("after:  ");
   // varValue = "";
 
-  if (equals(varName, F("name")))
-  {
-    addHtml(Settings.getHostname());
-  }
+  switch (varName[0]) {
+    case 'b':
 
-  else if (equals(varName, F("unit")))
-  {
-    addHtmlInt(Settings.Unit);
-  }
-  
-  else if (equals(varName, F("build")))
-  {
+      if (equals(varName, F("build")))
+      {
     #if BUILD_IN_WEBFOOTER
-    // In the footer, show full build binary name, will be 'firmware.bin' when compiled using Arduino IDE.
-    addHtml(get_binary_filename());
-    #endif
-  }
 
-  else if (equals(varName, F("date")))
-  {
-    #if BUILD_IN_WEBFOOTER
-    // Add the compile-date
-    addHtml(get_build_date());
-    #endif
-  }
-
-  else if (equals(varName, F("menu")))
-  {
-    addHtml(F("<div class='menubar'>"));
-
-    for (uint8_t i = 0; i < 8; i++)
-    {
-      if (!GpMenuVisible(i)) {
-        // hide menu item
-        continue;
+        // In the footer, show full build binary name, will be 'firmware.bin' when compiled using Arduino IDE.
+        addHtml(get_binary_filename());
+    #endif // if BUILD_IN_WEBFOOTER
+        return;
       }
+      break;
+    case 'c':
 
-      if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
-        continue;
-      }
-#if !FEATURE_NOTIFIER
+      if (equals(varName, F("css")))
+      {
+        serve_favicon();
 
-      if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
-        continue;
-      }
-#endif // if !FEATURE_NOTIFIER
+        // if (MENU_INDEX_SETUP == navMenuIndex) {
+        //  // Serve embedded CSS
+        //  serve_CSS_inline();
+        // } else {
+        serve_CSS(CSSfiles_e::ESPEasy_default);
 
-      addHtml(F("<a "));
-      addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
-      addHtmlAttribute(F("href"),  getGpMenuURL(i));
-      addHtml('>');
-      addHtml(getGpMenuIcon(i));
-      addHtml(F("<span class='showmenulabel'>"));
-      addHtml(getGpMenuLabel(i));
-      addHtml(F("</span></a>"));
-    }
-
-    addHtml(F("</div>"));
-  }
-
-  else if (equals(varName, F("logo")))
-  {
-    if (fileExists(F("esp.png")))
-    {
-      addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
-    }
-  }
-
-  else if (equals(varName, F("css")))
-  {
-    serve_favicon();
-    // if (MENU_INDEX_SETUP == navMenuIndex) {
-    //  // Serve embedded CSS
-    //  serve_CSS_inline();
-    // } else {
-      serve_CSS(CSSfiles_e::ESPEasy_default);
-    // }
+        // }
     #if FEATURE_RULES_EASY_COLOR_CODE
-    if (MENU_INDEX_RULES == navMenuIndex ||
-        MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {
-      serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
-    }
+        if (!Settings.DisableRulesCodeCompletion() &&
+          (MENU_INDEX_RULES == navMenuIndex ||
+            MENU_INDEX_CUSTOM_PAGE == navMenuIndex)) {
+          serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
+        }
     #endif
-  }
+        return;
+      }
+      break;
+    case 'd':
 
+      if (equals(varName, F("date")))
+      {
+    #if BUILD_IN_WEBFOOTER
 
-  else if (equals(varName, F("js")))
-  {
-    html_add_JQuery_script();
+        // Add the compile-date
+        addHtml(get_build_date());
+    #endif // if BUILD_IN_WEBFOOTER
+        return;
+      }
+      else if (equals(varName, F("debug")))
+      {
+        // print debug messages - not implemented yet
+        return;
+      }
+
+      break;
+    case 'e':
+
+      if (equals(varName, F("error")))
+      {
+        getErrorNotifications();
+        return;
+      }
+      break;
+    case 'j':
+
+      if (equals(varName, F("js")))
+      {
+        html_add_JQuery_script();
 
     #if FEATURE_CHART_JS
-    html_add_ChartJS_script();
+        html_add_ChartJS_script();
     #endif // if FEATURE_CHART_JS
 
     #if FEATURE_RULES_EASY_COLOR_CODE
-    if (MENU_INDEX_RULES == navMenuIndex ||
-        MENU_INDEX_CUSTOM_PAGE == navMenuIndex) {
-      html_add_Easy_color_code_script();
-    }
-    #endif
-    if (MENU_INDEX_RULES == navMenuIndex) {
-      serve_JS(JSfiles_e::SaveRulesFile);
-    }
-    
-    html_add_autosubmit_form();
-    serve_JS(JSfiles_e::Toasting);
-  }
+        if (!Settings.DisableRulesCodeCompletion() &&
+           (MENU_INDEX_RULES == navMenuIndex ||
+            MENU_INDEX_CUSTOM_PAGE == navMenuIndex)) {
+          html_add_Easy_color_code_script();
+        }
+    #endif // if FEATURE_RULES_EASY_COLOR_CODE
 
-  else if (equals(varName, F("error")))
-  {
-    // print last error - not implemented yet
-  }
+        if (MENU_INDEX_RULES == navMenuIndex) {
+          serve_JS(JSfiles_e::SaveRulesFile);
+        }
 
-  else if (equals(varName, F("debug")))
-  {
-    // print debug messages - not implemented yet
-  }
+        html_add_autosubmit_form();
+        serve_JS(JSfiles_e::Toasting);
+        return;
+      }
+      break;
+    case 'l':
 
-  else
+      if (equals(varName, F("logo")))
+      {
+        if (fileExists(F("esp.png")))
+        {
+          addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
+        }
+        return;
+      }
+      break;
+    case 'm':
+
+      if (equals(varName, F("menu")))
+      {
+        addHtml(F("<div class='menubar'>"));
+
+        for (uint8_t i = 0; i < 8; i++)
+        {
+          if (!GpMenuVisible(i)) {
+            // hide menu item
+            continue;
+          }
+
+          if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
+            continue;
+          }
+#if !FEATURE_NOTIFIER
+
+          if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
+            continue;
+          }
+#endif // if !FEATURE_NOTIFIER
+
+          addHtml(F("<a "));
+          addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
+          addHtmlAttribute(F("href"),  getGpMenuURL(i));
+          addHtml('>');
+          addHtml(getGpMenuIcon(i));
+          addHtml(F("<span class='showmenulabel'>"));
+          addHtml(getGpMenuLabel(i));
+          addHtml(F("</span></a>"));
+        }
+
+        addHtml(F("</div>"));
+        return;
+      }
+      else if (equals(varName, F("meta"))) {
+        if (Rebooting) {
+          addHtml(F("<meta http-equiv='refresh' content='10 url=/'>"));
+        }
+        return;
+      }
+
+      break;
+    case 'n':
+
+      if (equals(varName, F("name")))
+      {
+        addHtml(Settings.getHostname());
+        return;
+      }
+      break;
+    case 'u':
+
+      if (equals(varName, F("unit")))
+      {
+        addHtmlInt(Settings.Unit);
+        return;
+      }
+
+      break;
+  }
   {
     #ifndef BUILD_NO_DEBUG
 

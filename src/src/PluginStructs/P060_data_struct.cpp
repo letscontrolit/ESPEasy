@@ -7,20 +7,13 @@ P060_data_struct::P060_data_struct(uint8_t i2c_addr) : i2cAddress(i2c_addr) {}
 
 void P060_data_struct::overSampleRead()
 {
-  OversamplingValue += readMCP3221();
-  OversamplingCount++;
+  Oversampling.add(readMCP3221());
 }
 
 float P060_data_struct::getValue()
 {
-  float value;
-
-  if (OversamplingCount > 0)
-  {
-    value             = static_cast<float>(OversamplingValue) / OversamplingCount;
-    OversamplingValue = 0;
-    OversamplingCount = 0;
-  } else {
+  float value{};
+  if (!Oversampling.get(value)) {
     value = readMCP3221();
   }
   return value;

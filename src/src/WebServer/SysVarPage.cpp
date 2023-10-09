@@ -91,12 +91,17 @@ void handle_sysvars() {
 #if FEATURE_ADC_VCC
   addSysVar_enum_html(SystemVariables::VCC);
 #endif // if FEATURE_ADC_VCC
+  #if FEATURE_INTERNAL_TEMPERATURE
+  addSysVar_enum_html(SystemVariables::INTERNAL_TEMPERATURE);
+  #endif // if FEATURE_INTERNAL_TEMPERATURE
 
   addTableSeparator(F("Services Status"), 3, 3);
 
   addSysVar_enum_html(SystemVariables::ISWIFI);
   addSysVar_enum_html(SystemVariables::ISNTP);
+#if FEATURE_MQTT
   addSysVar_enum_html(SystemVariables::ISMQTT);
+#endif
 #ifdef USES_P037
   addSysVar_enum_html(SystemVariables::ISMQTTIMP);
 #endif // USES_P037

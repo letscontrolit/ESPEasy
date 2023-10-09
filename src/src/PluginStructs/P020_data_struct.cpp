@@ -232,12 +232,6 @@ void P020_Task::rulesEngine(const String& message) {
       NewLinePos = message.length();
     }
 
-    String eventString;
-
-    if ((NewLinePos - StartPos) + 10 > 12) {
-      eventString.reserve((NewLinePos - StartPos) + 10); // Include the prefix
-    }
-
     // Remove preceeding CR also
     if ((message[NewLinePos] == '\n') && (message[NewLinePos - 1] == '\r')) {
       NewLinePos--;
@@ -247,15 +241,19 @@ void P020_Task::rulesEngine(const String& message) {
       case 0: { break; }
       case 1: { // Generic
         if (NewLinePos > StartPos) {
-          eventString  = F("!Serial#");
-          eventString += message.substring(StartPos, NewLinePos);
+          eventQueue.addMove(std::move(concat(
+            F("!Serial#"), 
+            message.substring(StartPos, NewLinePos))));
         }
         break;
       }
       case 2: {                          // RFLink
         StartPos += 6;                   // RFLink, strip 20;xx; from incoming message
 
-        if (message.substring(StartPos, NewLinePos)
+        String eventString;
+
+        if ((NewLinePos - StartPos) >= 8 && 
+             message.substring(StartPos, StartPos + 8)
             .startsWith(F("ESPEASY"))) { // Special treatment for gpio values, strip unneeded parts...
           StartPos   += 8;               // Strip "ESPEASY;"
           eventString = F("RFLink#");
@@ -266,6 +264,7 @@ void P020_Task::rulesEngine(const String& message) {
         if (NewLinePos > StartPos) {
           eventString += message.substring(StartPos, NewLinePos);
         }
+        eventQueue.addMove(std::move(eventString));
         break;
       }
     } // switch
@@ -277,9 +276,6 @@ void P020_Task::rulesEngine(const String& message) {
       StartPos++;
     }
 
-    if (!eventString.isEmpty()) {
-      eventQueue.add(eventString);
-    }
     NewLinePos = message.indexOf('\n', StartPos);
 
     if (handleMultiLine && (NewLinePos < 0)) {

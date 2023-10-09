@@ -1,5 +1,6 @@
 #include "../DataTypes/TaskValues_Data.h"
 
+#include "../DataStructs/TimingStats.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter_Numerical.h"
 
@@ -223,6 +224,7 @@ bool TaskValues_Data_t::isValid(uint8_t varNr, Sensor_VType  sensorType) const
 String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals) const
 {
   String result;
+  START_TIMER;
 
   if (isFloatOutputDataType(sensorType)) {
     result = toString(getFloat(varNr), nrDecimals);
@@ -246,5 +248,6 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
 #endif
   }
   result.trim();
+  STOP_TIMER(GET_TASKVALUE_AS_STRING);
   return result;
 }

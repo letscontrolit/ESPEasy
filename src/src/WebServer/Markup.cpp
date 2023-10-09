@@ -280,6 +280,9 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       #if FEATURE_ETHERNET
       bool includeEthernet = true;
       #endif // if FEATURE_ETHERNET
+      #if FEATURE_SD
+      bool includeSDCard = true;
+      #endif // if FEATURE_SD
 
       switch (purpose) {
         case PinSelectPurpose::SPI:
@@ -341,6 +344,14 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
+        #if FEATURE_SD
+        case PinSelectPurpose::SD_Card:
+          includeSDCard = false;
+          if (!output) {
+            return;
+          }
+          break;
+        #endif
       }
 
       if (includeI2C && Settings.isI2C_pin(gpio)) {
@@ -361,6 +372,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
         disabled = true;
       }
   #endif // if FEATURE_ETHERNET
+
+      #if FEATURE_SD
+      if (includeSDCard && (Settings.Pin_sd_cs == gpio)) {
+        disabled = true;
+      }
+      #endif
     }
   }
 
@@ -914,7 +931,11 @@ void addRTDPluginButton(pluginID_t pluginID) {
   url += F(".html");
   addRTDHelpButton(url);
 
-  if ((pluginID == 76) || (pluginID == 77)) {
+  constexpr pluginID_t PLUGIN_ID_P076_HLW8012(76);
+  constexpr pluginID_t PLUGIN_ID_P077_CSE7766(77);
+
+  if ((pluginID == PLUGIN_ID_P076_HLW8012) || 
+      (pluginID == PLUGIN_ID_P077_CSE7766)) {
     addHtmlLink(
       F("button help"),
       makeDocLink(F("Reference/Safety.html"), true),

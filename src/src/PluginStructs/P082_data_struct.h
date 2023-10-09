@@ -76,7 +76,9 @@ struct P082_data_struct : public PluginTaskData_base {
             const int16_t     serial_rx,
             const int16_t     serial_tx);
 
-  bool isInitialized() const;
+  bool isInitialized() const {
+    return gps != nullptr && easySerial != nullptr;
+  }
 
   bool loop();
 
@@ -151,7 +153,7 @@ public:
   String _currentSentence;
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)];
+  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)]{};
 };
 
 #endif // ifdef USES_P082

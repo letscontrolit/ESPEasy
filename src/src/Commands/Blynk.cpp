@@ -6,7 +6,6 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -20,7 +19,9 @@ controllerIndex_t firstEnabledBlynk_ControllerIndex() {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
 
     if (validProtocolIndex(ProtocolIndex)) {
-      if ((Protocol[ProtocolIndex].Number == 12) && Settings.ControllerEnabled[i]) {
+      const cpluginID_t number = getCPluginID_from_ProtocolIndex(ProtocolIndex);
+
+      if ((number == 12) && Settings.ControllerEnabled[i]) {
         return i;
       }
     }
@@ -62,7 +63,7 @@ const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event, const c
       }
     }
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *data)
@@ -80,18 +81,18 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       return false;
     }
 
-    LoadControllerSettings(controllerIndex, ControllerSettings);
-    MustCheckReply = ControllerSettings.MustCheckReply;
-    hostname = ControllerSettings.getHost();
-    pass = getControllerPass(controllerIndex, ControllerSettings);
-    ClientTimeout = ControllerSettings.ClientTimeout;
+    LoadControllerSettings(controllerIndex, *ControllerSettings);
+    MustCheckReply = ControllerSettings->MustCheckReply;
+    hostname = ControllerSettings->getHost();
+    pass = getControllerPass(controllerIndex, *ControllerSettings);
+    ClientTimeout = ControllerSettings->ClientTimeout;
 
     if (pass.isEmpty()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
       return false;
     }
 
-    if (!try_connect_host(/* CPLUGIN_ID_012 */ 12, client, ControllerSettings)) {
+    if (!try_connect_host(/* CPLUGIN_ID_012 */ 12, client, *ControllerSettings)) {
       return false;
     }
   }

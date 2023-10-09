@@ -18,10 +18,10 @@ P128_data_struct::P128_data_struct(int8_t   _gpioPin,
   Plugin_128_pixels = new (std::nothrow) NEOPIXEL_LIB<FEATURE, METHOD>(min(pixelCount, static_cast<uint16_t>(ARRAYSIZE)),
                                                                        _gpioPin);
   # endif // ifdef ESP32
-  
+
   if (nullptr != Plugin_128_pixels) {
     Plugin_128_pixels->Begin(); // This initializes the NeoPixelBus library.
-    Plugin_128_pixels->SetLuminance(maxBright);
+    Plugin_128_pixels->SetBrightness(maxBright);
   }
 }
 
@@ -146,7 +146,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     else if (equals(subCommand, F("dim"))) {
       if ((str3i >= 0) && (str3i <= maxBright)) { // Safety check
         success = true;
-        Plugin_128_pixels->SetLuminance(str3i);
+        Plugin_128_pixels->SetBrightness(str3i);
       }
     }
 
@@ -364,9 +364,10 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       _counter_mode_step = 0;
 
       hex2rrggbb(F("000000"));
-    /*CLEAN ALL PIXELS */
+
+      /*CLEAN ALL PIXELS */
       for (int i = 0; i < pixelCount; i++) {
-      Plugin_128_pixels->SetPixelColor(i, rrggbb);
+        Plugin_128_pixels->SetPixelColor(i, rrggbb);
       }
       hex2rgb(str3);
 
@@ -380,8 +381,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
           : str6i;
       ledf = str7.isEmpty()
           ? pixelCount
-          : str7i+1;
-          
+          : str7i + 1;
     }
 
     else if (equals(subCommand, F("dualscan"))) {
@@ -389,10 +389,11 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       mode    = P128_modetype::Dualscan;
 
       _counter_mode_step = 0;
- hex2rrggbb(F("000000"));
-    /*CLEAN ALL PIXELS */
+      hex2rrggbb(F("000000"));
+
+      /*CLEAN ALL PIXELS */
       for (int i = 0; i < pixelCount; i++) {
-      Plugin_128_pixels->SetPixelColor(i, rrggbb);
+        Plugin_128_pixels->SetPixelColor(i, rrggbb);
       }
       hex2rgb(str3);
 
@@ -401,12 +402,12 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       speed = str5.isEmpty()
           ? defaultspeed
           : str5i;
-       ledi = str6.isEmpty()
+      ledi = str6.isEmpty()
           ? 1
           : str6i;
-       ledf = str7.isEmpty()
+      ledf = str7.isEmpty()
           ? pixelCount
-          : str7i+1;
+          : str7i + 1;
     }
 
     else if (equals(subCommand, F("twinkle"))) {
@@ -987,7 +988,7 @@ void P128_data_struct::rainbow(void) {
   float progress = (float)counter / (float)fadetime;
 
   if (fadeIn == true) {
-    Plugin_128_pixels->SetLuminance(progress * maxBright); // Safety check
+    Plugin_128_pixels->SetBrightness(progress * maxBright); // Safety check
     fadeIn = (progress == 1) ? false : true;
   }
 
@@ -1134,20 +1135,19 @@ void P128_data_struct::theatre(void) {
  */
 void P128_data_struct::scan(void) {
   if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
-    if (_counter_mode_step >= uint16_t(((ledf-ledi) * 2) - 2  )) {
+    if (_counter_mode_step >= uint16_t(((ledf - ledi) * 2) - 2)) {
       _counter_mode_step = 0;
-     
     }
     _counter_mode_step++;
 
-    int i = _counter_mode_step - ((ledf-ledi)-1);
+    int i = _counter_mode_step - ((ledf - ledi) - 1);
     i = abs(i);
 
     // Plugin_128_pixels->ClearTo(rrggbb);
-    for (int i = ledi-1; i < ledf-1; i++) {
+    for (int i = ledi - 1; i < ledf - 1; i++) {
       Plugin_128_pixels->SetPixelColor(i, rrggbb);
     }
-    Plugin_128_pixels->SetPixelColor(abs(i+(ledi-1)), rgb);
+    Plugin_128_pixels->SetPixelColor(abs(i + (ledi - 1)), rgb);
   }
 }
 
@@ -1155,24 +1155,20 @@ void P128_data_struct::scan(void) {
  * Runs two pixel back and forth in opposite directions.
  */
 void P128_data_struct::dualscan(void) {
-   if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
-    if (_counter_mode_step >= uint16_t(((ledf-ledi) * 2) - 2  )) {
+  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+    if (_counter_mode_step >= uint16_t(((ledf - ledi) * 2) - 2)) {
       _counter_mode_step = 0;
-     
     }
     _counter_mode_step++;
 
-    int i = _counter_mode_step - ((ledf-ledi)-1);
+    int i = _counter_mode_step - ((ledf - ledi) - 1);
     i = abs(i);
 
-      for (int i = ledi-1; i < ledf-1; i++) {
+    for (int i = ledi - 1; i < ledf - 1; i++) {
       Plugin_128_pixels->SetPixelColor(i, rrggbb);
     }
-    Plugin_128_pixels->SetPixelColor(abs(i+(ledi-1)), rgb);
-    Plugin_128_pixels->SetPixelColor(((ledf-ledi) - (i + 1 ))+ledi-1, rgb);
-    //Plugin_128_pixels->SetPixelColor(abs(i),               rgb);
-    //Plugin_128_pixels->SetPixelColor(pixelCount - (i + 1 ), rgb);
-
+    Plugin_128_pixels->SetPixelColor(abs(i + (ledi - 1)),                  rgb);
+    Plugin_128_pixels->SetPixelColor(((ledf - ledi) - (i + 1)) + ledi - 1, rgb);
   }
 }
 
@@ -1510,40 +1506,40 @@ void P128_data_struct::NeoPixelSendStatus(struct EventStruct *eventSource) {
 
   printToWebJSON = true;
 
-  json += '{'; json += '\n';                                                              // 2
-  json += to_json_object_value(F("plugin"), F("128"));                                    // 12
+  json += '{'; json += '\n';                                                               // 2
+  json += to_json_object_value(F("plugin"), F("128"));                                     // 12
   json += ','; json += '\n';
-  json += to_json_object_value(F("mode"), P128_modeType_toString(mode));                  // 14..23
+  json += to_json_object_value(F("mode"), P128_modeType_toString(mode));                   // 14..23
   json += ','; json += '\n';
-  json += to_json_object_value(F("lastmode"), P128_modeType_toString(savemode));          // 18..27
+  json += to_json_object_value(F("lastmode"), P128_modeType_toString(savemode));           // 18..27
   json += ','; json += '\n';
-  json += to_json_object_value(F("fadetime"), toString(fadetime, 0));                     // 15..19
+  json += to_json_object_value(F("fadetime"), toString(fadetime, 0));                      // 15..19
   json += ','; json += '\n';
-  json += to_json_object_value(F("fadedelay"), toString(fadedelay, 0));                   // 15..19
+  json += to_json_object_value(F("fadedelay"), toString(fadedelay, 0));                    // 15..19
   json += ','; json += '\n';
-  json += to_json_object_value(F("dim"), toString(Plugin_128_pixels->GetLuminance(), 0)); // 8..10
+  json += to_json_object_value(F("dim"), toString(Plugin_128_pixels->GetBrightness(), 0)); // 8..10
   json += ','; json += '\n';
-  json += to_json_object_value(F("rgb"), colorStr, true);                                 // 15..17
+  json += to_json_object_value(F("rgb"), colorStr, true);                                  // 15..17
   json += ','; json += '\n';
 
-  HsbColor hsbColor = HsbColor(RgbColor(rgb.R, rgb.G, rgb.B));                            // Calculate only once
+  HsbColor hsbColor = HsbColor(RgbColor(rgb.R, rgb.G, rgb.B));                             // Calculate only once
 
-  json += to_json_object_value(F("hue"), toString(hsbColor.H * 360.0f, 0));               // 17
+  json += to_json_object_value(F("hue"), toString(hsbColor.H * 360.0f, 0));                // 17
   json += ','; json += '\n';
-  json += to_json_object_value(F("saturation"), toString(hsbColor.S * 100.0f, 0));        // 26?
+  json += to_json_object_value(F("saturation"), toString(hsbColor.S * 100.0f, 0));         // 26?
   json += ','; json += '\n';
-  json += to_json_object_value(F("brightness"), toString(hsbColor.B * 100.0f, 0));        // 26?
+  json += to_json_object_value(F("brightness"), toString(hsbColor.B * 100.0f, 0));         // 26?
   json += ','; json += '\n';
-  json += to_json_object_value(F("bgcolor"), backgroundcolorStr, true);                   // 21..23
+  json += to_json_object_value(F("bgcolor"), backgroundcolorStr, true);                    // 21..23
   json += ','; json += '\n';
-  json += to_json_object_value(F("count"), toString(count, 0));                           // 12..15
+  json += to_json_object_value(F("count"), toString(count, 0));                            // 12..15
   json += ','; json += '\n';
-  json += to_json_object_value(F("speed"), toString(speed, 0));                           // 12..14
+  json += to_json_object_value(F("speed"), toString(speed, 0));                            // 12..14
   json += ','; json += '\n';
-  json += to_json_object_value(F("pixelcount"), toString(pixelCount, 0));                 // 17..19
-  json += '\n'; json += '}'; json += '\n';                                                // 4
+  json += to_json_object_value(F("pixelcount"), toString(pixelCount, 0));                  // 17..19
+  json += '\n'; json += '}'; json += '\n';                                                 // 4
 
-  SendStatus(eventSource, json);                                                          // send http response to controller (JSON format)
+  SendStatus(eventSource, json);                                                           // send http response to controller (JSON format)
   printToWeb = false;
 }
 

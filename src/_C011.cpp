@@ -49,13 +49,13 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_011;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 80;
-      Protocol[protocolCount].usesID       = false;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_011;
+      proto.usesMQTT     = false;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 80;
+      proto.usesID       = false;
       break;
     }
 
@@ -71,8 +71,8 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings); //-V522
 
         if (AllocatedControllerSettings()) {
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          C011_sendBinary = ControllerSettings.sendBinary();
+          LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+          C011_sendBinary = ControllerSettings->sendBinary();
         }
       }
       success = init_c011_delay_queue(event->ControllerIndex);
@@ -128,8 +128,8 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         if (!AllocatedControllerSettings()) {
           addHtmlError(F("Out of memory, cannot load page"));
         } else {
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          addControllerParameterForm(ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
+          LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+          addControllerParameterForm(*ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
           addFormNote(F("Do not 'percent escape' body when send binary checked"));
         }
       }
@@ -297,7 +297,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addLog(LOG_LEVEL_ERROR, F("C011  : Could not add to delay handler"));
   }
 
-  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler->getNextScheduleTime());
+  Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler->getNextScheduleTime());
   return success;
 }
 

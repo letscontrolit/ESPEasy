@@ -20,7 +20,7 @@ void handle_devices();
 // TODO TD-er: Add JavaScript filter:
 //             https://www.w3schools.com/howto/howto_js_filter_dropdown.asp
 // ********************************************************************************
-void addDeviceSelect(const __FlashStringHelper * name,  int choice);
+void addDeviceSelect(const __FlashStringHelper * name,  pluginID_t choice);
 
 // ********************************************************************************
 // Collect all submitted form data and store the task settings
@@ -52,7 +52,9 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page);
 
 void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
+#ifdef PLUGIN_USES_SERIAL
 void devicePage_show_serial_config(taskIndex_t taskIndex);
+#endif
 
 void devicePage_show_I2C_config(taskIndex_t taskIndex);
 

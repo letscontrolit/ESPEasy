@@ -63,14 +63,14 @@
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                               \
     C##NNN####M##_DelayHandler->process(                                                                             \
       M, do_process_c##NNN####M##_delay_queue, TimingStatsElements::C##NNN####M##_DELAY_QUEUE,                                            \
-      ESPEasy_Scheduler::IntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE);                                          \
+      SchedulerIntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE);                                          \
   }                                                                                                                  \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                           \
     if (C##NNN####M##_DelayHandler == nullptr) {                                                                     \
       C##NNN####M##_DelayHandler = new (std::nothrow) (ControllerDelayHandlerStruct);                                \
     }                                                                                                                \
     if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                     \
-    return C##NNN####M##_DelayHandler->configureControllerSettings(ControllerIndex);                                 \
+    return C##NNN####M##_DelayHandler->cacheControllerSettings(ControllerIndex);                                 \
   }                                                                                                                  \
   void exit_c##NNN####M##_delay_queue() {                                                                            \
     if (C##NNN####M##_DelayHandler != nullptr) {                                                                     \

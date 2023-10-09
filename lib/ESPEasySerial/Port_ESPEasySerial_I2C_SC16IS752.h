@@ -44,6 +44,7 @@ public:
 
   size_t setRxBufferSize(size_t new_size);
   size_t setTxBufferSize(size_t new_size);
+  bool setRS485Mode(int8_t rtsPin, bool enableCollisionDetection = false);
 
 private:
 

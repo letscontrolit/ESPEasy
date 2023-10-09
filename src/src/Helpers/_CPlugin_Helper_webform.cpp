@@ -132,12 +132,11 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
   switch (varType) {
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:
     {
-      uint8_t   choice = ControllerSettings.UseDNS;
       const __FlashStringHelper * options[2] = {
         F("Use IP address"),
         F("Use Hostname")
       };
-      addFormSelector(displayName, internalName, 2, options, nullptr, nullptr, choice, true);
+      addFormSelector(displayName, internalName, 2, options, nullptr, nullptr, ControllerSettings.UseDNS, true);
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_HOSTNAME:
@@ -278,12 +277,13 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
 void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSettings,
                                  controllerIndex_t                 controllerindex,
                                  ControllerSettingsStruct::VarType varType) {
-  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+  const protocolIndex_t ProtocolIndex = 
+    getProtocolIndex_from_ControllerIndex(controllerindex);
 
   if (!validProtocolIndex(ProtocolIndex)) {
     return;
   }
-  String internalName = getControllerParameterInternalName(ProtocolIndex, varType);
+  const String internalName = getControllerParameterInternalName(ProtocolIndex, varType);
 
   switch (varType) {
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:  ControllerSettings.UseDNS = getFormItemInt(internalName); break;
@@ -304,8 +304,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
 
       if (!ControllerSettings.UseDNS)
       {
-        String controllerip = webArg(internalName);
-        str2ip(controllerip, ControllerSettings.IP);
+        str2ip(webArg(internalName), ControllerSettings.IP);
       }
       break;
     case ControllerSettingsStruct::CONTROLLER_PORT:

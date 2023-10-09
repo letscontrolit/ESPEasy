@@ -292,13 +292,11 @@ boolean DLBus::Processing(void) {
 
 # ifndef P092_LIMIT_BUILD_SIZE
       if (IsLogLevelInfo) {
-        String  log  = F("# Required bits: ");
-        log += RequiredBitStreamLength;
-        log += F(" StartBit: ");
-        log += StartBit;
-        log += F(" / EndBit: ");
-        log += BitNumber;
-        AddToInfoLog(log);
+        AddToInfoLog(strformat(
+          F("# Required bits: %d StartBit: %d / EndBit: %d"), 
+          RequiredBitStreamLength, 
+          StartBit, 
+          BitNumber));
       }
 #endif // ifndef P092_LIMIT_BUILD_SIZE
       return false;
@@ -307,11 +305,9 @@ boolean DLBus::Processing(void) {
 
 # ifndef P092_LIMIT_BUILD_SIZE
   if (IsLogLevelInfo) {
-    String  log  = F("StartBit: ");
-    log += StartBit;
-    log += F(" / EndBit: ");
-    log += BitNumber;
-    AddToInfoLog(log);
+    AddToInfoLog(strformat(
+      F("StartBit: %d / EndBit: %d"),
+       StartBit, BitNumber));
   }
 #endif // ifndef P092_LIMIT_BUILD_SIZE
   Trim(StartBit);      // remove start and stop bits
@@ -443,11 +439,10 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
 
 # ifndef P092_LIMIT_BUILD_SIZE
   if (IsLogLevelInfo) {
-    String log = F("# Calculated CRC: 0x");
-    log += String(dataSum, HEX);
-    log += F(" Received: 0x");
-    log += String(ByteStream[IdxCRC], HEX);
-    AddToInfoLog(log);
+    AddToInfoLog(strformat(
+      F("# Calculated CRC: 0x%x Received: 0x%x"), 
+      dataSum, 
+      ByteStream[IdxCRC]));
   }
 #endif // ifndef P092_LIMIT_BUILD_SIZE
   return false;

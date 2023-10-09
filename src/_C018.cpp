@@ -19,7 +19,6 @@
 # include "src/Controller_struct/C018_data_struct.h"
 # include "src/DataTypes/ESPEasy_plugin_functions.h"
 # include "src/Globals/CPlugins.h"
-# include "src/Globals/Protocol.h"
 # include "src/Helpers/_Plugin_Helper_serial.h"
 # include "src/Helpers/StringGenerator_GPIO.h"
 # include "src/WebServer/Markup.h"
@@ -51,17 +50,17 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number       = CPLUGIN_ID_018;
-      Protocol[protocolCount].usesMQTT       = false;
-      Protocol[protocolCount].usesAccount    = true;
-      Protocol[protocolCount].usesPassword   = true;
-      Protocol[protocolCount].defaultPort    = 1;
-      Protocol[protocolCount].usesID         = true;
-      Protocol[protocolCount].usesHost       = false;
-      Protocol[protocolCount].usesCheckReply = false;
-      Protocol[protocolCount].usesTimeout    = false;
-      Protocol[protocolCount].usesSampleSets = true;
-      Protocol[protocolCount].needsNetwork   = false;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //        = CPLUGIN_ID_018;
+      proto.usesMQTT       = false;
+      proto.usesAccount    = true;
+      proto.usesPassword   = true;
+      proto.defaultPort    = 1;
+      proto.usesID         = true;
+      proto.usesHost       = false;
+      proto.usesCheckReply = false;
+      proto.usesTimeout    = false;
+      proto.usesSampleSets = true;
+      proto.needsNetwork   = false;
       break;
     }
 
@@ -207,7 +206,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       if (C018_data != nullptr) {
         std::unique_ptr<C018_queue_element> element(new C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
         success = C018_DelayHandler->addToQueue(std::move(element));
-        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C018_DELAY_QUEUE,
+        Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C018_DELAY_QUEUE,
                                          C018_DelayHandler->getNextScheduleTime());
 
         if (!C018_data->isInitialized()) {
@@ -304,12 +303,12 @@ bool C018_init(struct EventStruct *event) {
       return false;
     }
 
-    LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-    C018_DelayHandler->configureControllerSettings(ControllerSettings);
-    AppEUI             = getControllerUser(event->ControllerIndex, ControllerSettings);
-    AppKey             = getControllerPass(event->ControllerIndex, ControllerSettings);
-    SampleSetInitiator = ControllerSettings.SampleSetInitiator;
-    Port               = ControllerSettings.Port;
+    LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+    C018_DelayHandler->cacheControllerSettings(*ControllerSettings);
+    AppEUI             = getControllerUser(event->ControllerIndex, *ControllerSettings);
+    AppKey             = getControllerPass(event->ControllerIndex, *ControllerSettings);
+    SampleSetInitiator = ControllerSettings->SampleSetInitiator;
+    Port               = ControllerSettings->Port;
   }
 
   std::shared_ptr<C018_ConfigStruct> customConfig;

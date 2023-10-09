@@ -22,6 +22,8 @@ For example, it makes perfect sense to have multiple temperature sensors on a si
 The Devices page shows a list of all tasks, including the last task values.
 These task values may be updated live. The update interval depends on the lowest set task interval of any (enabled) task.
 
+.. _Task Config Page:
+
 Task Config Page
 ================
 
@@ -211,21 +213,22 @@ For example, when referring to a task value on a display via ``[bme#temperature]
 See :ref:`Rules: Formatting referred values <Formatting values>` on how this can be customized.
 Just remember such formatting cannot "make up" more decimals than what was set here in the task setup.
 
+.. _Plugin List:
 
 List of official plugins
 ========================
 
 There are different released versions of ESP Easy:
 
-:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
+:green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTTL, DEBUG logging, etc.
 
-:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and some DEBUG logging.
+:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and DEBUG-level logging.
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
 :yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
-:yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
+:yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Available for ESP32 16MB and ESP32-s3 8MB Flash units.
 
 :gray:`RETIRED` plugin has been retired and removed from ESPEasy.
 
@@ -332,6 +335,7 @@ There are different released versions of ESP Easy:
    ":ref:`P094_page`","|P094_status|","P094"
    ":ref:`P095_page`","|P095_status|","P095"
    ":ref:`P097_page`","|P097_status|","P097"
+   ":ref:`P098_page`","|P098_status|","P098"
    ":ref:`P099_page`","|P099_status|","P099"
    ":ref:`P100_page`","|P100_status|","P100"
    ":ref:`P101_page`","|P101_status|","P101"
@@ -380,6 +384,7 @@ There are different released versions of ESP Easy:
    ":ref:`P151_page`","|P151_status|","P151"
    ":ref:`P152_page`","|P152_status|","P152"
    ":ref:`P153_page`","|P153_status|","P153"
+   ":ref:`P154_page`","|P154_status|","P154"
 
 
 Internal GPIO handling

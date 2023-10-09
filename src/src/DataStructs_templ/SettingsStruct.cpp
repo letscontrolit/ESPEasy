@@ -1,18 +1,23 @@
 #include "../DataStructs/SettingsStruct.h"
 
 #include "../../ESPEasy_common.h"
-#include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataStructs/DeviceStruct.h"
-#include "../DataTypes/SPI_options.h"
-#include "../Globals/Plugins.h"
-#include "../Globals/CPlugins.h"
-#include "../Helpers/Misc.h"
-#include "../Helpers/StringParser.h"
 
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
 
 
+#include "../CustomBuild/CompiletimeDefines.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/DeviceStruct.h"
+#include "../DataTypes/SPI_options.h"
+#include "../DataTypes/NPluginID.h"
+#include "../DataTypes/PluginID.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/CPlugins.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringParser.h"
+
+/*
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname()  const {
@@ -177,6 +182,7 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes(bool value) {
   bitWrite(VariousBits1, 16, value);
 }
+*/
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
@@ -192,7 +198,7 @@ void SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t tas
     bitWrite(TaskDeviceSendDataFlags[taskIndex], 0, value);
   }
 }
-
+/*
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::DoNotStartAP() const {
   return bitRead(VariousBits1, 17);
@@ -327,7 +333,7 @@ void SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice(bool value) { // Inverted
   bitWrite(VariousBits1, 30, !value);
 }
 #endif // if FEATURE_I2C_DEVICE_CHECK
-
+*/
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WaitWiFiConnect() const { 
@@ -349,6 +355,19 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::SDK_WiFi_autoreconnect(bool value) { 
   bitWrite(VariousBits2, 1, value);
 }
+
+
+#if FEATURE_RULES_EASY_COLOR_CODE
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::DisableRulesCodeCompletion() const { 
+  return bitRead(VariousBits2, 2);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::DisableRulesCodeCompletion(bool value) { 
+  bitWrite(VariousBits2, 2, value);
+}
+#endif // if FEATURE_RULES_EASY_COLOR_CODE
 
 
 
@@ -488,7 +507,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTimeSettings() {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearNotifications() {
   for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
-    Notification[i]        = 0;
+    Notification[i]        = 0u;// .setInvalid();
     NotificationEnabled[i] = false;
   }
 }
@@ -515,8 +534,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearLogSettings() {
   WebLogLevel    = 0;
   SDLogLevel     = 0;
   SyslogFacility = DEFAULT_SYSLOG_FACILITY;
-
-  for (uint8_t i = 0; i < 4; ++i) {  Syslog_IP[i] = 0; }
+  ZERO_FILL(Syslog_IP);
 }
 
 template<unsigned int N_TASKS>
@@ -530,12 +548,13 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   PID                      = ESP_PROJECT_PID;
   Version                  = VERSION;
-  Build                    = 0;
+  Build                    = get_build_nr();
   IP_Octet                 = 0;
-  Delay                    = 0;
+  Delay                    = DEFAULT_DELAY;
   Pin_i2c_sda              = DEFAULT_PIN_I2C_SDA;
   Pin_i2c_scl              = DEFAULT_PIN_I2C_SCL;
   Pin_status_led           = DEFAULT_PIN_STATUS_LED;
+  Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Pin_sd_cs                = -1;
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
@@ -551,29 +570,20 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   I2C_clockSpeed_Slow      = DEFAULT_I2C_CLOCK_SPEED_SLOW;
   I2C_Multiplexer_Type     = I2C_MULTIPLEXER_NONE;
   I2C_Multiplexer_Addr     = -1;
-  for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
-    I2C_Multiplexer_Channel[x] = -1;
-  }
+  memset(I2C_Multiplexer_Channel, -1, sizeof(I2C_Multiplexer_Channel));
   I2C_Multiplexer_ResetPin = -1;
 
   {
     // Here we initialize all data to 0, so this is the ONLY reason why PinBootStates 
     // can now be directly accessed.
     // In all other use cases, use the get and set functions for it.
-    constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
 
-    for (uint8_t i = 0; i < maxStates; ++i) {
-      PinBootStates[i] = 0;
-    }
+    ZERO_FILL(PinBootStates);
     # ifdef ESP32
-    constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
-
-    for (uint8_t i = 0; i < maxStatesesp32; ++i) {
-      PinBootStates_ESP32[i] = 0;
-    }
+    ZERO_FILL(PinBootStates_ESP32);
     # endif // ifdef ESP32
   }
-  BaudRate                         = 0;
+  BaudRate                         = DEFAULT_SERIAL_BAUD;
   MessageDelay_unused              = 0;
   deepSleep_wakeTime               = 0;
   CustomCSS                        = false;
@@ -582,14 +592,13 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   UseSerial                        = DEFAULT_USE_SERIAL;
   UseSSDP                          = false;
   WireClockStretchLimit            = 0;
-  I2C_clockSpeed                   = 400000;
+  I2C_clockSpeed                   = DEFAULT_I2C_CLOCK_SPEED;
   WebserverPort                    = 80;
   SyslogPort                       = 514;
   GlobalSync                       = false;
   ConnectionFailuresThreshold      = 0;
   MQTTRetainFlag_unused            = false;
   InitSPI                          = DEFAULT_SPI;
-  Pin_status_led_Inversed          = false;
   deepSleepOnFail                  = false;
   UseValueLogger                   = false;
   ArduinoOTAEnable                 = false;
@@ -631,7 +640,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDeviceID[i][task]       = 0u;
     TaskDeviceSendData[i][task] = false;
   }
-  TaskDeviceNumber[task]     = 0u;
+  TaskDeviceNumber[task]     = 0u; //.setInvalid();
   OLD_TaskDeviceID[task]     = 0u; // UNUSED: this can be removed
   TaskDevicePin1[task]       = -1;
   TaskDevicePin2[task]       = -1;
@@ -655,6 +664,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   VariousTaskBits[task]         = 0;
   TaskDeviceDataFeed[task]      = 0u;
   TaskDeviceTimer[task]         = 0u;
+//  TaskDeviceEnabled[task].value = 0u; // Should also clear any temporary flags.
   TaskDeviceEnabled[task]       = false;
   I2C_Multiplexer_Channel[task] = -1;
 }
@@ -684,7 +694,7 @@ String SettingsStruct_tmpl<N_TASKS>::getName() const {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
-  uint8_t   gpio_pin,
+  int8_t  gpio_pin,
   int8_t& index_low
     # ifdef ESP32
   , int8_t& index_high
@@ -693,17 +703,16 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
   index_low = -1;
 # ifdef ESP32
   index_high = -1;
-
-  if (!GPIO_IS_VALID_GPIO(gpio_pin)) { return false; }
+  if ((gpio_pin < 0) || !(GPIO_IS_VALID_GPIO(gpio_pin))) { return false; }
 # endif // ifdef ESP32
-  constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
+  constexpr int maxStates = NR_ELEMENTS(PinBootStates);
 
   if (gpio_pin < maxStates) {
     index_low = gpio_pin;
     return true;
   }
 # ifdef ESP32
-  constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+  constexpr int maxStatesesp32 = NR_ELEMENTS(PinBootStates_ESP32);
 
   index_high = gpio_pin - maxStates;
 
@@ -758,7 +767,8 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
 }
 
 template<unsigned int N_TASKS>
-PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(uint8_t gpio_pin) const {
+PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(int8_t gpio_pin) const {
+  if (gpio_pin < 0) return PinBootState::Default_state;
 # ifdef ESP8266
   int8_t index_low{};
 
@@ -785,7 +795,8 @@ PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(uint8_t gpio_pin) con
 }
 
 template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::setPinBootState(uint8_t gpio_pin, PinBootState state) {
+void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState state) {
+  if (gpio_pin < 0) return;
 # ifdef ESP8266
   int8_t index_low{};
 
@@ -949,6 +960,14 @@ float SettingsStruct_tmpl<N_TASKS>::getWiFi_TX_power() const {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
   WiFi_TX_power = dBm * 4.0f;
+}
+
+template<unsigned int N_TASKS>
+pluginID_t SettingsStruct_tmpl<N_TASKS>::getPluginID_for_task(taskIndex_t taskIndex) const {
+  if (validTaskIndex(taskIndex)) {
+    return pluginID_t::toPluginID(TaskDeviceNumber[taskIndex]);
+  }
+  return INVALID_PLUGIN_ID;
 }
 
 #endif // ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP

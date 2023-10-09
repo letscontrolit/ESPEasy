@@ -7,48 +7,46 @@
 \*********************************************************************************************/
 const __FlashStringHelper * getBearing(int degrees)
 {
-  const int nr_directions = 16;
-  float stepsize      = (360.0f / nr_directions);
+  const __FlashStringHelper* directions[] {
+    F("N"),
+    F("NNE"),
+    F("NE"),
+    F("ENE"),
+    F("E"),
+    F("ESE"),
+    F("SE"),
+    F("SSE"),
+    F("S"),
+    F("SSW"),
+    F("SW"),
+    F("WSW"),
+    F("W"),
+    F("WNW"),
+    F("NW"),
+    F("NNW")
+  };
+  constexpr size_t nrDirections = NR_ELEMENTS(directions);
+  const float stepsize          = (360.0f / nrDirections);
 
   if (degrees < 0) { degrees += 360; } // Allow for bearing -360 .. 359
-  int bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nr_directions;
+  const size_t bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nrDirections;
 
-  if (bearing_idx >= 0) {
-    const __FlashStringHelper* strings[] {
-      F("N"),
-      F("NNE"),
-      F("NE"),
-      F("ENE"),
-      F("E"),
-      F("ESE"),
-      F("SE"),
-      F("SSE"),
-      F("S"),
-      F("SSW"),
-      F("SW"),
-      F("WSW"),
-      F("W"),
-      F("WNW"),
-      F("NW"),
-      F("NNW")
-    };
-    constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
-    if (static_cast<size_t>(bearing_idx) < nrStrings) {
-      return strings[bearing_idx];
-    }
+  if (bearing_idx < nrDirections) {
+    return directions[bearing_idx];
   }
   return F("");
 }
 
 float CelsiusToFahrenheit(float celsius) {
-  return celsius * (9.0f / 5.0f) + 32;
+  constexpr float ratio = 9.0f / 5.0f;
+  return celsius * ratio + 32;
 }
 
 int m_secToBeaufort(float m_per_sec) {
   // Use ints wit 0.1 m/sec resolution to reduce size.
   const uint16_t dm_per_sec = 10 * m_per_sec;
   const uint16_t speeds[]{3, 16, 34, 55, 80, 108, 139, 172, 208, 245, 285, 326};  
-  constexpr int nrElements = sizeof(speeds) / sizeof(speeds[0]);
+  constexpr int nrElements = NR_ELEMENTS(speeds);
   
   for (int bft = 0; bft < nrElements; ++bft) {
     if (dm_per_sec < speeds[bft]) return bft;

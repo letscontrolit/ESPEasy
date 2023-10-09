@@ -44,7 +44,7 @@ bool C018_data_struct::init(const uint8_t port, const int8_t serial_rx, const in
     bool notChanged = true;
     notChanged &= C018_easySerial->getRxPin() == serial_rx;
     notChanged &= C018_easySerial->getTxPin() == serial_tx;
-    notChanged &= C018_easySerial->getBaudRate() == baudrate;
+    notChanged &= C018_easySerial->getBaudRate() == static_cast<int>(baudrate);
     notChanged &= myLora->useOTAA() == joinIsOTAA;
 
     if (notChanged) { return true; }
@@ -76,15 +76,6 @@ bool C018_data_struct::init(const uint8_t port, const int8_t serial_rx, const in
     }
   }
   return isInitialized();
-}
-
-bool C018_data_struct::isInitialized() const {
-  if ((C018_easySerial != nullptr) && (myLora != nullptr)) {
-    if (autobaud_success) {
-      return true;
-    }
-  }
-  return false;
 }
 
 bool C018_data_struct::hasJoined() const {

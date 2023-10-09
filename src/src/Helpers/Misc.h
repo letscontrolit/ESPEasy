@@ -5,8 +5,15 @@
 
 #include "../DataStructs/PinMode.h"
 #include "../DataTypes/ControllerIndex.h"
+#include "../DataTypes/IntendedRebootReason.h"
 #include "../DataTypes/TaskIndex.h"
 #include "../Helpers/Scheduler.h"
+
+
+#define bitSetULL(value, bit) ((value) |= (1ULL << (bit)))
+#define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
+#define bitWriteULL(value, bit, bitvalue) (bitvalue ? bitSetULL(value, bit) : bitClearULL(value, bit))
+
 
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
@@ -118,9 +125,9 @@ void emergencyReset();
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
  \*********************************************************************************************/
-void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e reason = ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot);
+void delayedReboot(int rebootDelay, IntendedRebootReason_e reason = IntendedRebootReason_e::DelayedReboot);
 
-void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason);
+void reboot(IntendedRebootReason_e reason);
 
 void FeedSW_watchdog();
 

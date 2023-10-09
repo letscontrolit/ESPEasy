@@ -7,62 +7,67 @@
 // ********************************************************************************
 //   Plugin (Task) function calls
 // ********************************************************************************
-#define PLUGIN_INIT_ALL                     1 // Not implemented in a plugin, only called during boot
-#define PLUGIN_INIT                         2 // Init the task, called when task is set to enabled (also at boot)
-#define PLUGIN_READ                         3 // This call can yield new data (when success = true) and then send to controllers
-#define PLUGIN_ONCE_A_SECOND                4 // Called once a second
-#define PLUGIN_TEN_PER_SECOND               5 // Called 10x per second (typical for checking new data instead of waiting)
-#define PLUGIN_DEVICE_ADD                   6 // Called at boot for letting a plugin adding itself to list of available plugins/devices
-#define PLUGIN_EVENTLIST_ADD                7 // Not used.
-#define PLUGIN_WEBFORM_SAVE                 8 // Call from web interface to save settings
-#define PLUGIN_WEBFORM_LOAD                 9 // Call from web interface for presenting settings and status of plugin
-#define PLUGIN_WEBFORM_SHOW_VALUES         10 // Call from devices overview page to format values in HTML
-#define PLUGIN_GET_DEVICENAME              11 // Call to get the plugin description (e.g. "Switch input - Switch")
-#define PLUGIN_GET_DEVICEVALUENAMES        12 // Call to let the plugin generate some default value names when not defined.
-#define PLUGIN_GET_DEVICEVALUECOUNT        13 // Optional function call to allow tasks to specify the number of output values (e.g. P026_Sysinfo.ino)
-#define PLUGIN_GET_DEVICEVTYPE             14 // Only needed when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
-#define PLUGIN_WRITE                       15 // Called to allow a task to process a command. Must return success = true when it can handle the command.
-#define PLUGIN_EVENT_OUT                   16 // Does not seem to be used
-#define PLUGIN_WEBFORM_SHOW_CONFIG         17 // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
-#define PLUGIN_SERIAL_IN                   18 // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
-#define PLUGIN_UDP_IN                      19 // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)
-#define PLUGIN_CLOCK_IN                    20 // Called every new minute
-#define PLUGIN_TASKTIMER_IN                21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
-#define PLUGIN_FIFTY_PER_SECOND            22 // Called 50 times per second
-#define PLUGIN_SET_CONFIG                  23 // Counterpart of PLUGIN_GET_CONFIG_VALUE to allow to set a config via a command.
-#define PLUGIN_GET_DEVICEGPIONAMES         24 // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
-#define PLUGIN_EXIT                        25 // Called when a task no longer is enabled (or deleted)
-#define PLUGIN_GET_CONFIG_VALUE            26 // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it can handle the command.  Can also be used to access extra unused task values.
-#define PLUGIN_UNCONDITIONAL_POLL          27 // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different technique.
-#define PLUGIN_REQUEST                     28 // Specific command to fetch a state (FIXME TD-er: Seems very similar to PLUGIN_GET_CONFIG_VALUE)
-#define PLUGIN_TIME_CHANGE                 29 // Called when system time is set (e.g. via NTP)
-#define PLUGIN_MONITOR                     30 // Replaces PLUGIN_UNCONDITIONAL_POLL
-#define PLUGIN_SET_DEFAULTS                31 // Called when assigning a plugin to a task, to set some default config.
-#define PLUGIN_GET_PACKED_RAW_DATA         32 // Return all data in a compact binary format specific for that plugin.
-                                              // Needs FEATURE_PACKED_RAW_DATA
-#define PLUGIN_DEVICETIMER_IN              33 // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
-#define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34 // Show I2C parameters like address.
-#define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
-#define PLUGIN_MQTT_CONNECTION_STATE       36 // Signal when connection to MQTT broker is re-established
-#define PLUGIN_MQTT_IMPORT                 37 // For P037 MQTT import
-#define PLUGIN_FORMAT_USERVAR              38 // Allow plugin specific formatting of a task variable (event->idx = variable)
-#define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
+enum PluginFunctions_e {
+   PLUGIN_INIT_ALL                    , // Not implemented in a plugin, only called during boot
+   PLUGIN_INIT                        , // Init the task, called when task is set to enabled (also at boot)
+   PLUGIN_READ                        , // This call can yield new data (when success = true) and then send to controllers
+   PLUGIN_ONCE_A_SECOND               , // Called once a second
+   PLUGIN_TEN_PER_SECOND              , // Called 10x per second (typical for checking new data instead of waiting)
+   PLUGIN_DEVICE_ADD                  , // Called at boot for letting a plugin adding itself to list of available plugins/devices
+   PLUGIN_EVENTLIST_ADD               , // Not used.
+   PLUGIN_WEBFORM_SAVE                , // Call from web interface to save settings
+   PLUGIN_WEBFORM_LOAD                , // Call from web interface for presenting settings and status of plugin
+   PLUGIN_WEBFORM_SHOW_VALUES         , // Call from devices overview page to format values in HTML
+   PLUGIN_GET_DEVICENAME              , // Call to get the plugin description (e.g. "Switch input - Switch")
+   PLUGIN_GET_DEVICEVALUENAMES        , // Call to let the plugin generate some default value names when not defined.
+   PLUGIN_GET_DEVICEVALUECOUNT        , // Optional function call to allow tasks to specify the number of output values (e.g. P026_Sysinfo.ino)
+   PLUGIN_GET_DEVICEVTYPE             , // Only needed when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
+   PLUGIN_WRITE                       , // Called to allow a task to process a command. Must return success = true when it can handle the command.
+// PLUGIN_EVENT_OUT                   , // Does not seem to be used
+   PLUGIN_WEBFORM_SHOW_CONFIG         , // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
+   PLUGIN_SERIAL_IN                   , // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
+   PLUGIN_UDP_IN                      , // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)
+   PLUGIN_CLOCK_IN                    , // Called every new minute
+   PLUGIN_TASKTIMER_IN                , // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+   PLUGIN_FIFTY_PER_SECOND            , // Called 50 times per second
+   PLUGIN_SET_CONFIG                  , // Counterpart of PLUGIN_GET_CONFIG_VALUE to allow to set a config via a command.
+   PLUGIN_GET_DEVICEGPIONAMES         , // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
+   PLUGIN_EXIT                        , // Called when a task no longer is enabled (or deleted)
+   PLUGIN_GET_CONFIG_VALUE            , // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it can handle the command.  Can also be used to access extra unused task values.
+//   PLUGIN_UNCONDITIONAL_POLL          , // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different technique.
+   PLUGIN_REQUEST                     , // Specific command to fetch a state (FIXME TD-er: Seems very similar to PLUGIN_GET_CONFIG_VALUE)
+   PLUGIN_TIME_CHANGE                 , // Called when system time is set (e.g. via NTP)
+   PLUGIN_MONITOR                     , // Replaces PLUGIN_UNCONDITIONAL_POLL
+   PLUGIN_SET_DEFAULTS                , // Called when assigning a plugin to a task, to set some default config.
+   PLUGIN_GET_PACKED_RAW_DATA         , // Return all data in a compact binary format specific for that plugin.
+                                        // Needs FEATURE_PACKED_RAW_DATA
+   PLUGIN_DEVICETIMER_IN              , // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
+   PLUGIN_WEBFORM_SHOW_I2C_PARAMS     , // Show I2C parameters like address.
+   PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  , // When needed, show additional parameters like baudrate or specific serial config
+   PLUGIN_MQTT_CONNECTION_STATE       , // Signal when connection to MQTT broker is re-established
+   PLUGIN_MQTT_IMPORT                 , // For P037 MQTT import
+   PLUGIN_FORMAT_USERVAR              , // Allow plugin specific formatting of a task variable (event->idx = variable)
+   PLUGIN_WEBFORM_SHOW_GPIO_DESCR     , // Show GPIO description on devices overview tab
 #if FEATURE_PLUGIN_STATS
-#define PLUGIN_WEBFORM_LOAD_SHOW_STATS     40 // Show PluginStats on task config page
+   PLUGIN_WEBFORM_LOAD_SHOW_STATS     , // Show PluginStats on task config page
 #endif // if FEATURE_PLUGIN_STATS
-#define PLUGIN_I2C_HAS_ADDRESS             41 // Check the I2C addresses from the plugin, output in 'success'
-#define PLUGIN_I2C_GET_ADDRESS             42 // Get the current I2C addresses from the plugin, output in 'event->Par1' and 'success'
-#define PLUGIN_GET_DISPLAY_PARAMETERS      43 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
-#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 44 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
-#define PLUGIN_INIT_VALUE_RANGES           45 // Initialize the ranges of values, called just before PLUGIN_INIT
-#define PLUGIN_READ_ERROR_OCCURED          46 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
-#define PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR 47 // Show the configuration for output type and what value to set to which taskvalue
-#define PLUGIN_PROCESS_CONTROLLER_DATA     48 // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
-#define PLUGIN_PRIORITY_INIT_ALL           49 // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
-#define PLUGIN_PRIORITY_INIT               50 // Pre-initialize a singe plugins that is set to PowerManager priority
+   PLUGIN_I2C_HAS_ADDRESS             , // Check the I2C addresses from the plugin, output in 'success'
+   PLUGIN_I2C_GET_ADDRESS             , // Get the current I2C addresses from the plugin, output in 'event->Par1' and 'success'
+   PLUGIN_GET_DISPLAY_PARAMETERS      , // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
+   PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT , // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
+   PLUGIN_INIT_VALUE_RANGES           , // Initialize the ranges of values, called just before PLUGIN_INIT
+   PLUGIN_READ_ERROR_OCCURED          , // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
+   PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR, // Show the configuration for output type and what value to set to which taskvalue
+   PLUGIN_PROCESS_CONTROLLER_DATA     , // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
+   PLUGIN_PRIORITY_INIT_ALL           , // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
+   PLUGIN_PRIORITY_INIT               , // Pre-initialize a singe plugins that is set to PowerManager priority
+   PLUGIN_WEBFORM_LOAD_ALWAYS         , // Loaded *after* PLUGIN_WEBFORM_LOAD, also shown for remote data-feed devices
+
+   PLUGIN_MAX_FUNCTION  // Leave as last one.
+};
 
 
-
+#define NrBitsPluginFunctions   NR_BITS(static_cast<unsigned>(PLUGIN_MAX_FUNCTION))
 
 // ********************************************************************************
 //   CPlugin (Controller) function calls

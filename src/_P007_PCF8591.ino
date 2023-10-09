@@ -178,8 +178,9 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t address = 0x48 + unit;
 
       uint8_t var = 0;
+      const uint8_t valueCount = P007_NR_OUTPUT_VALUES;
 
-      for (; var < P007_NR_OUTPUT_VALUES; ++port, ++var) {
+      for (; var < valueCount; ++port, ++var) {
         if (port <= 4) { // Only read available ports, hardwired limited to 4
           // Setup all required bits to the config register
           uint8_t configRegister = port - 1;

@@ -227,7 +227,9 @@
 // #define FEATURE_I2C_DEVICE_CHECK 0 // Disable the I2C Device check feature
 // #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching the I2C address from I2C plugins. Will be enabled when FEATURE_I2C_DEVICE_CHECK is enabled
 // #define FEATURE_RTTTL 1   // Enable rtttl command
-
+// #define FEATURE_ANYRTTTL_LIB 1 // Use AnyRttl library for RTTTL handling
+// #define FEATURE_ANYRTTTL_ASYNC 1 // When AnyRttl enabled, use Async (nonblocking) mode instead of the default Blocking mode
+// #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
 
 #if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h
@@ -365,7 +367,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P022   // PCA9685
 // #define USES_P023   // OLED
 // #define USES_P024   // MLX90614
-// #define USES_P025   // ADS1115
+// #define USES_P025   // ADS1x15
 // #define USES_P026   // SysInfo
 // #define USES_P027   // INA219
 // #define USES_P028   // BME280
@@ -376,6 +378,9 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P033   // Dummy
 // #define USES_P034   // DHT12
 // #define USES_P036   // FrameOLED
+// #define P036_FEATURE_DISPLAY_PREVIEW   1 // Enable Preview feature, shows on-display content on Devices overview page
+// #define P036_FEATURE_ALIGN_PREVIEW     1 // Enable center/right-align feature when preview is enabled (auto-disabled for 1M builds)
+// #define P036_ENABLE_TICKER   1 // Enable ticker function
 // #define USES_P037   // MQTTImport
 //   #define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
 //   #define P037_FILTER_SUPPORT  1 // Enable filtering support

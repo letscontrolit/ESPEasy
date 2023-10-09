@@ -14,9 +14,6 @@ bool P052_data_struct::init(const ESPEasySerialPort port, const int16_t serial_r
   return modbus.init(port, serial_rx, serial_tx, 9600, P052_MODBUS_SLAVE_ADDRESS);
 }
 
-bool P052_data_struct::isInitialized() const {
-  return modbus.isInitialized();
-}
 
 const __FlashStringHelper * P052_data_struct::Plugin_052_valuename(uint8_t value_nr, bool displayString) {
   const __FlashStringHelper* strings[] {
@@ -30,7 +27,7 @@ const __FlashStringHelper * P052_data_struct::Plugin_052_valuename(uint8_t value
     F("Error Status"),           F("err")
   };
   const size_t index = (2* value_nr) + (displayString ? 0 : 1);
-  constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+  constexpr size_t nrStrings = NR_ELEMENTS(strings);
   if (index < nrStrings) {
     return strings[index];
   }

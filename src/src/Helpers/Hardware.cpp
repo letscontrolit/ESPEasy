@@ -15,6 +15,7 @@
 
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
@@ -101,7 +102,7 @@ void hardwareInit()
     const bool serialPinConflict = isSerialConsolePin(gpio);
 
     if (!serialPinConflict) {
-      const uint32_t key = createKey(1, gpio);
+      const uint32_t key = createKey(PLUGIN_GPIO, gpio);
       #ifdef ESP32
       checkAndClearPWM(key);
       #endif // ifdef ESP32
@@ -135,13 +136,13 @@ void hardwareInit()
             break;
           case PinBootState::Output_low:
             createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, 0);
-            GPIO_Write(GPIO_PLUGIN_ID, gpio, LOW, PIN_MODE_OUTPUT);
+            GPIO_Write(PLUGIN_GPIO, gpio, LOW, PIN_MODE_OUTPUT);
 
             // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
             break;
           case PinBootState::Output_high:
             createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, 0);
-            GPIO_Write(GPIO_PLUGIN_ID, gpio, HIGH, PIN_MODE_OUTPUT);
+            GPIO_Write(PLUGIN_GPIO, gpio, HIGH, PIN_MODE_OUTPUT);
 
             // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
             break;
@@ -496,7 +497,7 @@ void checkResetFactoryPin() {
 
     if (factoryResetCounter > 3) {
       // normal reboot
-      reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryPinActive);
+      reboot(IntendedRebootReason_e::ResetFactoryPinActive);
     }
     factoryResetCounter = 0; // count was < 3, reset counter
   }
@@ -603,10 +604,172 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
 #endif // ifdef ESP32
 
+#if FEATURE_INTERNAL_TEMPERATURE
+
+/**
+ * Code based on: https://github.com/esphome/esphome/blob/518ecb4cc4489c8a76b899bfda7576b05d84c226/esphome/components/internal_temperature/internal_temperature.cpp#L40
+ */
+
+#ifdef ESP32
+#if defined(ESP32_CLASSIC)
+// there is no official API available on the original ESP32
+extern "C" {
+uint8_t temprature_sens_read();
+}
+#elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+  #include <driver/temp_sensor.h>
+  #if ESP_IDF_VERSION_MAJOR < 5 
+    // Work-around for bug in ESP-IDF < 5.0
+    #if defined(ESP32S3) || defined(ESP32C3)
+      #include <esp_efuse_rtc_calib.h>
+    #elif defined(ESP32S2)
+      #include <esp_efuse_rtc_table.h>
+    #endif
+
+  #endif
+#endif  // ESP32_CLASSIC
+#endif  // ESP32
+
+float getInternalTemperature() {
+  static float temperature_filtered = NAN; // Improbable value
+  float celsius{};
+  esp_err_t result = ESP_FAIL;
+  #ifdef ESP32
+  #if defined(ESP32_CLASSIC)
+  uint8_t raw = 128u;
+  int8_t retries = 2;
+  while ((128u == raw) && (0 != retries)) {
+    delay(0);
+    raw = temprature_sens_read(); // Each reading takes about 112 microseconds
+    --retries;
+  }
+  #ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("ESP32: Raw temperature value: "), raw));
+  #endif
+  if (raw != 128) {
+    result = ESP_OK;
+    // Raw value is in Fahrenheit
+    celsius = (raw - 32) / 1.8f;
+  }
+  #elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+
+  temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
+  temp_sensor_set_config(tsens);
+  temp_sensor_start();
+
+  #if ESP_IDF_VERSION_MAJOR < 5 
+  // Work-around for bug in ESP-IDF < 5.0
+  // Seems to be fixed in ESP_IDF5.1 
+  // temp_sensor_get_config always returns ESP_OK
+  // Thus dac_offset can be just about anything
+  // dac_offset is used as index in an array without bounds checking
+  {
+    #if defined(ESP32S3) || defined(ESP32C3)
+    static float s_deltaT = (esp_efuse_rtc_calib_get_ver() == 1) ?
+      (esp_efuse_rtc_calib_get_cal_temp(1) / 10.0f) : 
+      0.0f;
+    #elif defined(ESP32S2)
+    static uint32_t version = esp_efuse_rtc_table_read_calib_version();
+    static float s_deltaT = (version == 1 || version == 2) ?
+      (esp_efuse_rtc_table_get_parsed_efuse_value(RTCCALIB_IDX_TMPSENSOR, false) / 10.0f) :
+      0.0f;
+    #endif
+
+
+/*
+    if (isnan(s_deltaT)) { //suggests that the value is not initialized
+      uint32_t version = esp_efuse_rtc_calib_get_ver();
+      if (version == 1) {
+          // fetch calibration value for temp sensor from eFuse
+          s_deltaT = esp_efuse_rtc_calib_get_cal_temp(version);
+      } else {
+          // no value to fetch, use 0.
+          s_deltaT = 0;
+      }
+    }
+*/
+    #ifndef TSENS_ADC_FACTOR
+    #define TSENS_ADC_FACTOR  (0.4386)
+    #endif
+    #ifndef TSENS_DAC_FACTOR
+    #define TSENS_DAC_FACTOR  (27.88)
+    #endif
+    #ifndef TSENS_SYS_OFFSET
+    #define TSENS_SYS_OFFSET  (20.52)
+    #endif
+    uint32_t tsens_raw{};
+    temp_sensor_read_raw(&tsens_raw);
+    celsius = (TSENS_ADC_FACTOR * tsens_raw) - s_deltaT - TSENS_SYS_OFFSET;
+    result = ESP_OK;
+  }
+
+  #else
+
+  result = temp_sensor_read_celsius(&celsius);
+
+  #endif
+
+  temp_sensor_stop();
+  #endif  // ESP32_CLASSIC
+  if (result == ESP_OK) {
+    if (isnanf(temperature_filtered)) {
+      temperature_filtered = celsius;
+    } else {
+      constexpr float IIR_FACTOR = 5.0f;
+      constexpr float IIR_DIVIDER = IIR_FACTOR + 1.0f;
+      temperature_filtered = ((IIR_FACTOR * temperature_filtered) + celsius) / IIR_DIVIDER;
+    }
+  }
+  #endif  // USE_ESP32
+  return temperature_filtered;
+}
+#endif // if FEATURE_INTERNAL_TEMPERATURE
 
 /********************************************************************************************\
    Hardware information
  \*********************************************************************************************/
+#ifdef ESP8266
+int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_t& size)
+{
+  address = 0;
+  size = -1;
+  const uint32_t addr_offset = 0x40200000;
+  const uint32_t realSize = getFlashRealSizeInBytes();
+  switch(ptype) {
+    case ESP8266_partition_type::sketch:
+      address = 0;
+      size = getSketchSize();
+      break;
+    case ESP8266_partition_type::ota:
+      address = getSketchSize();
+      size = getFreeSketchSpace();
+      break;
+    case ESP8266_partition_type::fs:
+      address = ((uint32_t)&_FS_start - addr_offset);
+      size = ((uint32_t)((uint32_t)&_FS_end - (uint32_t)&_FS_start));
+      break;
+    case ESP8266_partition_type::eeprom:
+      address = ((uint32_t)&_EEPROM_start - addr_offset);
+      size = realSize - address - 16384;
+      break;
+    case ESP8266_partition_type::rf_cal:
+      address = realSize - 16384;
+      size = 4096;
+      break;
+    case ESP8266_partition_type::wifi:
+      address = realSize - 12288;
+      size = 12288;
+      break;
+  }
+  if (size > 0)
+    return address / SPI_FLASH_SEC_SIZE;
+  return -1;
+}
+
+
+#endif
+
+
 uint32_t getFlashChipId() {
   // Cache since size does not change
   static uint32_t flashChipId = 0;
@@ -1494,15 +1657,14 @@ void setFactoryDefault(DeviceModel model) {
    Add pre defined plugins and rules.
  \*********************************************************************************************/
 void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow) {
-  setTaskDevice_to_TaskIndex(1, taskIndex);
+  setTaskDevice_to_TaskIndex(PLUGIN_GPIO, taskIndex);
+  const int pins[] = {gpio, -1, -1};
   setBasicTaskValues(
     taskIndex,
     0,    // taskdevicetimer
     true, // enabled
     name, // name
-    gpio, // pin1
-    -1,   // pin2
-    -1);  // pin3
+    pins);
   Settings.TaskDevicePin1PullUp[taskIndex] = true;
 
   if (activeLow) {
@@ -1569,7 +1731,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   output = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
   warning = false;
 
-  if (!GPIO_IS_VALID_GPIO(gpio)) return false;
+  if ((gpio < 0) || !(GPIO_IS_VALID_GPIO(gpio))) { return false; }
 
 # ifdef ESP32S2
 
@@ -1950,11 +2112,12 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
 #endif // ifdef ESP8266
 
 bool validGpio(int gpio) {
+  if (gpio < 0) { return false; }
   #ifdef ESP32
   if (!GPIO_IS_VALID_GPIO(gpio)) { return false; }
   #endif
   #ifdef ESP8266
-  if ((gpio < 0) || (gpio > MAX_GPIO)) { return false; }
+  if (gpio > MAX_GPIO) { return false; }
   #endif
   int pinnr;
   bool input;
@@ -2163,7 +2326,9 @@ void initAnalogWrite()
 {
   #if defined(ESP32)
 
-  for (uint8_t x = 0; x < 16; x++) {
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     ledChannelPin[x]  = -1;
     ledChannelFreq[x] = ledcSetup(x, 1000, 10); // Clear the channel
   }
@@ -2184,8 +2349,10 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
 {
   static bool initialized = false;
 
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
   if (!initialized) {
-    for (uint8_t x = 0; x < 16; x++) {
+    for (uint8_t x = 0; x < nrLedChannelPins; x++) {
       ledChannelPin[x]  = -1;
       ledChannelFreq[x] = 0;
     }
@@ -2197,7 +2364,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
   int8_t ledChannel = -1;
   bool mustSetup    = false;
 
-  for (uint8_t x = 0; x < 16; x++) {
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     if (ledChannelPin[x] == pin) {
       ledChannel = x;
     }
@@ -2205,7 +2372,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
 
   if (ledChannel == -1)                                    // no channel set for this pin
   {
-    for (uint8_t x = 0; x < 16 && ledChannel == -1; ++x) { // find free channel
+    for (uint8_t x = 0; x < nrLedChannelPins && ledChannel == -1; ++x) { // find free channel
       if (ledChannelPin[x] == -1)
       {
         if (static_cast<uint32_t>(ledcReadFreq(x)) == ledChannelFreq[x]) {
@@ -2249,7 +2416,9 @@ void detachLedChannel(int pin)
 {
   int8_t ledChannel = -1;
 
-  for (uint8_t x = 0; x < 16; x++) {
+  constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
+
+  for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     if (ledChannelPin[x] == pin) {
       ledChannel = x;
     }
@@ -2297,15 +2466,13 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t frequency) {
 bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key)
 {
   // For now, we only support the internal GPIO pins.
-  uint8_t   pluginID = PLUGIN_GPIO;
-
-  if (!checkValidPortRange(pluginID, gpio)) {
+  if (!checkValidPortRange(PLUGIN_GPIO, gpio)) {
     return false;
   }
   portStatusStruct tempStatus;
 
   // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
-  key = createKey(pluginID, gpio);
+  key = createKey(PLUGIN_GPIO, gpio);
 
   // WARNING: operator [] creates an entry in the map if key does not exist
   // So the next command should be part of each command:
@@ -2379,7 +2546,8 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   taskClear(taskIndex, false); // clear settings, but do not save
   ClearCustomTaskSettings(taskIndex);
 
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
+//  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
 
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {
@@ -2400,7 +2568,7 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
 // Initialize task with some default values applicable for almost all tasks
 // ********************************************************************************
 void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
-                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
+                        bool enabled, const String& name, const int pins[3]) {
   if (!validTaskIndex(taskIndex)) { return; }
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
@@ -2419,10 +2587,11 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
     }
   }
   Settings.TaskDeviceEnabled[taskIndex] = enabled;
+  //Settings.TaskDeviceEnabled[taskIndex].enabled = enabled;
   safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 
   // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")
-  Settings.TaskDevicePin1[taskIndex] = pin1;
-  Settings.TaskDevicePin2[taskIndex] = pin2;
-  Settings.TaskDevicePin3[taskIndex] = pin3;
+  Settings.TaskDevicePin1[taskIndex] = pins[0];
+  Settings.TaskDevicePin2[taskIndex] = pins[1];
+  Settings.TaskDevicePin3[taskIndex] = pins[2];
 }

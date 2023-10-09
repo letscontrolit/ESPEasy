@@ -9,13 +9,16 @@
 # include "IthoCC1101.h"
 # include "IthoPacket.h"
 
-# define P118_DEBUG_LOG         // Enable for some (extra) logging
-# define P118_FEATURE_ORCON   1 // Enable use of Orcon commands
+# define P118_DEBUG_LOG          // Enable for some (extra) logging
+# ifndef P118_FEATURE_ORCON
+#  define P118_FEATURE_ORCON   1 // Enable use of Orcon commands
+# endif // ifndef P118_FEATURE_ORCON
 
-# if defined(LIMIT_BUILD_SIZE) && defined(P118_DEBUG_LOG)
+# if (defined(LIMIT_BUILD_SIZE) || defined(BUILD_NO_DEBUG)) && defined(P118_DEBUG_LOG)
 #  undef P118_DEBUG_LOG
-# endif // if defined(LIMIT_BUILD_SIZE) && defined(P118_DEBUG_LOG)
+# endif // if (defined(LIMIT_BUILD_SIZE) || defined(BUILD_NO_DEBUG)) && defined(P118_DEBUG_LOG)
 # ifdef LIMIT_BUILD_SIZE
+
 // #  if P118_FEATURE_ORCON
 // #   undef P118_FEATURE_ORCON
 // #   define P118_FEATURE_ORCON   0

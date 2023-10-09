@@ -2,6 +2,7 @@
 
 #include "../DataStructs/PinMode.h"
 
+
 portStatusStruct::portStatusStruct() : state(-1), output(-1), command(0), init(0), not_used(0), mode(0), task(0), monitor(0), forceMonitor(0),
   forceEvent(0), previousTask(-1), x(INVALID_DEVICE_INDEX) {}
 

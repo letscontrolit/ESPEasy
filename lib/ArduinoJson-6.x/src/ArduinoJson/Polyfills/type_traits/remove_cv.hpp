@@ -1,12 +1,12 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
 #include <ArduinoJson/Namespace.hpp>
 
-namespace ARDUINOJSON_NAMESPACE {
+ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 template <typename T>
 struct remove_cv {
@@ -24,4 +24,5 @@ template <typename T>
 struct remove_cv<const volatile T> {
   typedef T type;
 };
-}  // namespace ARDUINOJSON_NAMESPACE
+
+ARDUINOJSON_END_PRIVATE_NAMESPACE

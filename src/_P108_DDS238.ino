@@ -63,12 +63,9 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
         if (i < P108_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P108_QUERY1_CONFIG_POS;
           uint8_t choice             = PCONFIG(pconfigIndex);
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_108_valuename(choice, false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_108_valuename(choice, false));
         } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
       }
       break;

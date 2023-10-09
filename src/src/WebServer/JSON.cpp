@@ -361,7 +361,7 @@ void handle_json()
   taskIndex_t lastActiveTaskIndex = 0;
 
   for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
-    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[TaskIndex])) {
+    if (validPluginID_fullcheck(Settings.getPluginID_for_task(TaskIndex))) {
       lastActiveTaskIndex = TaskIndex;
     }
   }
@@ -413,7 +413,7 @@ void handle_json()
             nrDecimals = 255;
           }
           stream_next_json_object_value(F("ValueNumber"), x + 1);
-          stream_next_json_object_value(F("Name"),        getTaskValueName(TaskIndex, x));
+          stream_next_json_object_value(F("Name"),        Cache.getTaskDeviceValueName(TaskIndex, x));
           stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
           stream_last_json_object_value(F("Value"), value);
 
@@ -449,7 +449,7 @@ void handle_json()
         stream_next_json_object_value(F("TaskInterval"),     taskInterval);
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
-        stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
+        stream_next_json_object_value(F("TaskDeviceNumber"), Settings.getPluginID_for_task(TaskIndex).value);
         for(int i = 0; i < 3; i++) {
           if (Settings.TaskDevicePin[i][TaskIndex] >= 0) {
             stream_next_json_object_value(concat(F("TaskDeviceGPIO"), i + 1) , String(Settings.TaskDevicePin[i][TaskIndex]));
@@ -484,7 +484,10 @@ void handle_json()
         }
         #endif // if FEATURE_I2CMULTIPLEXER
       }
-      stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
+      stream_next_json_object_value(F("TaskEnabled"), 
+        // jsonBool(Settings.TaskDeviceEnabled[TaskIndex].enabled));
+        jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
+
       stream_last_json_object_value(F("TaskNumber"), TaskIndex + 1);
 
       if (TaskIndex != lastActiveTaskIndex) {
@@ -564,7 +567,7 @@ void handle_buildinfo() {
   {
     json_open(true, F("plugins"));
 
-    for (deviceIndex_t x = 0; x <= deviceCount; x++) {
+    for (deviceIndex_t x; x <= getDeviceCount(); x++) {
       const pluginID_t pluginID = getPluginID_from_DeviceIndex(x);
       if (validPluginID(pluginID)) {
         json_open();
@@ -578,7 +581,7 @@ void handle_buildinfo() {
   {
     json_open(true, F("controllers"));
 
-    for (protocolIndex_t x = 0; x < CPLUGIN_MAX; x++) {
+    for (protocolIndex_t x = 0; x < getHighestIncludedCPluginID(); x++) {
       if (getCPluginID_from_ProtocolIndex(x) != INVALID_C_PLUGIN_ID) {
         json_open();
         json_number(F("id"), String(x + 1));
@@ -694,9 +697,9 @@ void stream_last_json_object_value(const __FlashStringHelper * object, int value
 void stream_json_object_values(const LabelType::Enum labels[])
 {
   size_t i = 0;
+  LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
 
   while (true) {
-    const LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
     const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
     const bool nextIsLast      = next == LabelType::MAX_LABEL;
 
@@ -707,6 +710,7 @@ void stream_json_object_values(const LabelType::Enum labels[])
       stream_next_json_object_value(cur);
     }
     ++i;
+    cur = next;
   }
 }
 

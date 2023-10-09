@@ -124,7 +124,7 @@ void runOncePerSecond()
 
   if (Settings.ConnectionFailuresThreshold)
     if (WiFiEventData.connectionFailures > Settings.ConnectionFailuresThreshold)
-      delayedReboot(60, ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot);
+      delayedReboot(60, IntendedRebootReason_e::DelayedReboot);
 
   if (cmd_within_mainloop != 0)
   {
@@ -137,7 +137,7 @@ void runOncePerSecond()
         }
       case CMD_REBOOT:
         {
-          reboot(ESPEasy_Scheduler::IntendedRebootReason_e::CommandReboot);
+          reboot(IntendedRebootReason_e::CommandReboot);
           break;
         }
     }
@@ -175,6 +175,19 @@ void runOncePerSecond()
   {
     I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
+
+  #if FEATURE_MDNS
+  #ifdef ESP8266
+  // Allow MDNS processing
+  if (NetworkConnected()) {
+    MDNS.announce();
+  }
+  #endif
+  #endif // if FEATURE_MDNS
+
+  #if FEATURE_INTERNAL_TEMPERATURE && defined(ESP32_CLASSIC)
+  getInternalTemperature(); // Just read the value every second to hopefully get a valid next reading on original ESP32
+  #endif // if FEATURE_INTERNAL_TEMPERATURE && defined(ESP32_CLASSIC)
 
   checkResetFactoryPin();
   STOP_TIMER(PLUGIN_CALL_1PS);
@@ -254,7 +267,7 @@ void runEach30Seconds()
 
 void scheduleNextMQTTdelayQueue() {
   if (MQTTDelayHandler != nullptr) {
-    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+    Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
   }
 }
 
@@ -263,10 +276,12 @@ void schedule_all_MQTTimport_tasks() {
 
   if (!validControllerIndex(ControllerIndex)) { return; }
 
-  deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
+  constexpr pluginID_t PLUGIN_MQTT_IMPORT(PLUGIN_ID_MQTT_IMPORT);
+
+  deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
   if (validDeviceIndex(DeviceIndex)) {
     for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
-      if ((Settings.TaskDeviceNumber[task] == PLUGIN_ID_MQTT_IMPORT) &&
+      if ((Settings.getPluginID_for_task(task) == PLUGIN_MQTT_IMPORT) &&
           (Settings.TaskDeviceEnabled[task])) {
         // Schedule a call to each enabled MQTT import plugin to notify the broker connection state
         EventStruct event(task);
@@ -327,7 +342,7 @@ void processMQTTdelayQueue() {
 #endif // ifndef BUILD_NO_DEBUG
     }
   }
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }
@@ -362,7 +377,7 @@ void updateMQTTclient_connected() {
   } else {
     timermqtt_interval = 250;
   }
-  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  Scheduler.setIntervalTimer(SchedulerIntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
 }
 
@@ -470,7 +485,7 @@ void flushAndDisconnectAllClients() {
 }
 
 
-void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
+void prepareShutdown(IntendedRebootReason_e reason)
 {
   WiFiEventData.intent_to_reboot = true;
 #if FEATURE_MQTT
@@ -481,6 +496,7 @@ void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
   saveUserVarToRTC();
   setWifiMode(WIFI_OFF);
   ESPEASY_FS.end();
+  process_serialWriteBuffer();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
   Scheduler.markIntendedReboot(reason);

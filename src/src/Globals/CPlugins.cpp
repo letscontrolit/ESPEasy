@@ -5,7 +5,6 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/_CPlugin_init.h"
 
@@ -161,17 +160,19 @@ controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid) {
 
 bool validProtocolIndex(protocolIndex_t index)
 {
-  return getCPluginID_from_ProtocolIndex(index) != INVALID_C_PLUGIN_ID;
+  return validProtocolIndex_init(index);
 }
 
+/*
 bool validControllerIndex(controllerIndex_t index)
 {
   return index < CONTROLLER_MAX;
 }
+*/
 
 bool validCPluginID(cpluginID_t cpluginID)
 {
-  return getProtocolIndex_from_CPluginID_(cpluginID) != INVALID_C_PLUGIN_ID;
+  return getProtocolIndex_from_CPluginID_(cpluginID) != INVALID_PROTOCOL_INDEX;
 }
 
 bool supportedCPluginID(cpluginID_t cpluginID)

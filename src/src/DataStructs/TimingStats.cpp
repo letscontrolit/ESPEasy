@@ -76,9 +76,13 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
     case PLUGIN_FORMAT_USERVAR:        return F("FORMAT_USERVAR");
     case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME");
     case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
+    case PLUGIN_GET_DEVICEVALUECOUNT:  return F("GET_DEVICEVALUECOUNT");
+    case PLUGIN_GET_DEVICEVTYPE:       return F("GET_DEVICEVTYPE");
     case PLUGIN_WRITE:                 return F("WRITE");
-    case PLUGIN_EVENT_OUT:             return F("EVENT_OUT");
     case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG");
+    #if FEATURE_PLUGIN_STATS
+    case PLUGIN_WEBFORM_LOAD_SHOW_STATS: return F("WEBFORM_LOAD_SHOW_STATS");
+    #endif
     case PLUGIN_SERIAL_IN:             return F("SERIAL_IN");
     case PLUGIN_UDP_IN:                return F("UDP_IN");
     case PLUGIN_CLOCK_IN:              return F("CLOCK_IN");
@@ -88,7 +92,7 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
     case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES");
     case PLUGIN_EXIT:                  return F("EXIT");
     case PLUGIN_GET_CONFIG_VALUE:      return F("GET_CONFIG");
-    case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
+//    case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
     case PLUGIN_PROCESS_CONTROLLER_DATA: return F("PROCESS_CONTROLLER_DATA");
     case PLUGIN_I2C_GET_ADDRESS:       return F("I2C_CHECK_DEVICE");
@@ -100,32 +104,33 @@ bool mustLogFunction(int function) {
   if (!Settings.EnableTimingStats()) { return false; }
 
   switch (function) {
-    case PLUGIN_INIT_ALL:              return false;
-    case PLUGIN_INIT:                  return false;
+//    case PLUGIN_INIT_ALL:              return false;
+//    case PLUGIN_INIT:                  return false;
     case PLUGIN_READ:                  return true;
     case PLUGIN_ONCE_A_SECOND:         return true;
     case PLUGIN_TEN_PER_SECOND:        return true;
-    case PLUGIN_DEVICE_ADD:            return false;
-    case PLUGIN_EVENTLIST_ADD:         return false;
-    case PLUGIN_WEBFORM_SAVE:          return false;
-    case PLUGIN_WEBFORM_LOAD:          return false;
-    case PLUGIN_WEBFORM_SHOW_VALUES:   return false;
-    case PLUGIN_FORMAT_USERVAR:        return false;
-    case PLUGIN_GET_DEVICENAME:        return false;
-    case PLUGIN_GET_DEVICEVALUENAMES:  return false;
+//    case PLUGIN_DEVICE_ADD:            return false;
+//    case PLUGIN_EVENTLIST_ADD:         return false;
+//    case PLUGIN_WEBFORM_SAVE:          return false;
+//    case PLUGIN_WEBFORM_LOAD:          return false;
+//    case PLUGIN_WEBFORM_SHOW_VALUES:   return false;
+    case PLUGIN_FORMAT_USERVAR:        return true;
+    case PLUGIN_GET_DEVICENAME:        return true;
+//    case PLUGIN_GET_DEVICEVALUENAMES:  return false;
+//    case PLUGIN_GET_DEVICEVALUECOUNT:  return false;
+//    case PLUGIN_GET_DEVICEVTYPE:       return false;
     case PLUGIN_WRITE:                 return true;
-    case PLUGIN_EVENT_OUT:             return true;
-    case PLUGIN_WEBFORM_SHOW_CONFIG:   return false;
+//    case PLUGIN_WEBFORM_SHOW_CONFIG:   return false;
     case PLUGIN_SERIAL_IN:             return true;
-    case PLUGIN_UDP_IN:                return true;
-    case PLUGIN_CLOCK_IN:              return false;
+//    case PLUGIN_UDP_IN:                return false;
+//    case PLUGIN_CLOCK_IN:              return false;
     case PLUGIN_TASKTIMER_IN:          return true;
     case PLUGIN_FIFTY_PER_SECOND:      return true;
-    case PLUGIN_SET_CONFIG:            return false;
-    case PLUGIN_GET_DEVICEGPIONAMES:   return false;
-    case PLUGIN_EXIT:                  return false;
-    case PLUGIN_GET_CONFIG_VALUE:      return false;
-    case PLUGIN_UNCONDITIONAL_POLL:    return false;
+//    case PLUGIN_SET_CONFIG:            return false;
+//    case PLUGIN_GET_DEVICEGPIONAMES:   return false;
+//    case PLUGIN_EXIT:                  return false;
+//    case PLUGIN_GET_CONFIG_VALUE:      return false;
+//    case PLUGIN_UNCONDITIONAL_POLL:    return false;
     case PLUGIN_REQUEST:               return true;
     case PLUGIN_I2C_GET_ADDRESS:       return true;
     case PLUGIN_PROCESS_CONTROLLER_DATA: return true;
@@ -242,6 +247,9 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::SAVE_TO_RTC:                return F("saveToRTC()");
     case TimingStatsElements::BACKGROUND_TASKS:           return F("backgroundtasks()");
     case TimingStatsElements::PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
+    case TimingStatsElements::FORMAT_USER_VAR:            return F("doFormatUserVar()");
+    case TimingStatsElements::IS_NUMERICAL:               return F("isNumerical()");
+    case TimingStatsElements::GET_TASKVALUE_AS_STRING:    return F("TaskValueGetAsString()");
     case TimingStatsElements::HANDLE_SCHEDULER_IDLE:      return F("handle_schedule() idle");
     case TimingStatsElements::HANDLE_SCHEDULER_TASK:      return F("handle_schedule() task");
     case TimingStatsElements::PARSE_TEMPLATE_PADDED:      return F("parseTemplate_padded()");
@@ -303,7 +311,7 @@ String getMiscStatsName(TimingStatsElements stat) {
 
 void stopTimerTask(deviceIndex_t T, int F, uint64_t statisticsTimerStart)
 {
-  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
+  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T.value) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
 }
 
 void stopTimerController(protocolIndex_t T, CPlugin::Function F, uint64_t statisticsTimerStart)

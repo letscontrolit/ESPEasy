@@ -70,10 +70,32 @@ int                        espeasy_analogRead(int  pin,
 extern esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
 #endif // ifdef ESP32
 
+#if FEATURE_INTERNAL_TEMPERATURE
+float getInternalTemperature();
+#endif // if FEATURE_INTERNAL_TEMPERATURE
+
 
 /********************************************************************************************\
    Hardware information
  \*********************************************************************************************/
+#ifdef ESP8266
+enum class ESP8266_partition_type {
+  sketch,
+  ota,
+  fs,
+  eeprom,
+  rf_cal,
+  wifi
+};
+
+// Get info on the partition type
+// @retval The flash sector. (negative on unknown ptype)
+int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_t& size);
+
+
+#endif
+
+
 uint32_t                   getFlashChipId();
 
 uint32_t                   getFlashRealSizeInBytes();
@@ -278,8 +300,6 @@ void setBasicTaskValues(taskIndex_t   taskIndex,
                         unsigned long taskdevicetimer,
                         bool          enabled,
                         const String& name,
-                        int           pin1,
-                        int           pin2,
-                        int           pin3);
+                        const int     pins[3]);
 
 #endif // HELPERS_HARDWARE_H

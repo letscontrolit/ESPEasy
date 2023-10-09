@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P153
 
-# include <SparkFun_SCD4x_Arduino_Library.h>
-
 # define P153_I2C_ADDRESS             PCONFIG(0)
 # define P153_STARTUP_CONFIGURATION   PCONFIG(1)
 # define P153_INTERVAL_LOOPS          PCONFIG(2)
@@ -70,7 +68,6 @@ private:
             uint8_t LSB,
             uint8_t CRC);
 
-  uint8_t              _sensorType;
   uint8_t              _address;
   float                _tempOffset;
   P153_configuration_e _startupConfiguration;

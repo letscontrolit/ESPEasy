@@ -351,9 +351,6 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
   }
   
   if (cmd_s_lower.startsWith(F("bit"))) {
-    #define bitSetULL(value, bit) ((value) |= (1ULL << (bit)))
-    #define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
-    #define bitWriteULL(value, bit, bitvalue) (bitvalue ? bitSetULL(value, bit) : bitClearULL(value, bit))
     uint32_t bitnr = 0;
     uint64_t iarg2 = 0;
 
@@ -593,9 +590,12 @@ void parse_string_commands(String& line) {
               break;
             case string_commands_e::tohex:
               // Convert to HEX string
-              // Syntax like 1234{tohex:15}7890
+              // Syntax like 1234{tohex:15[,minHexDigits]}7890
               if (validUInt64FromString(arg1, iarg1)) {
-                replacement = ull2String(iarg1, HEX);
+                if (!validUInt64FromString(arg2, iarg2)) {
+                  iarg2 = 0;
+                }
+                replacement = formatToHex_no_prefix(iarg1, iarg2);
               }
               break;
             case string_commands_e::ord:

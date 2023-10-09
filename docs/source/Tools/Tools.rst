@@ -462,6 +462,13 @@ When using Dark-mode as an Operating System or Web-browser setting, the ESPEasy 
 
 NB: If this option is not available, the regular non-dark mode will be used.
 
+Disable Rules auto-completion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-07-20
+
+When Rules auto-completion, also including syntax highlighting, is available in the build, some users have difficulty working with the auto-completion. This option disables the auto-completion, and that also inhibits the syntax highlighting as these 2 features are closely integrated.
+
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -868,6 +875,27 @@ Then it does not make sense to have the client timeout of that controller set to
 
 System Variables
 ================
+
+
+I2C Scan
+========
+
+To verify if any connected I2C devices are properly detected by the ESP, the I2C Scan is available. This will scan the I2C bus, and, when configured, the additional busses provided via an I2C multiplexer, for available devices.
+
+The scan is performed if the I2C ``SDA`` and ``SCL`` GPIO pins are configured on the Hardware page, and will use the configured ``Slow device Clock Speed`` setting (default: 100 kHz) during the scan, as that should be supported by any I2C device available.
+
+The output is a list of all addresses, in hexadecimal notation, and, when included in the build, the known device name(s) supported at that address. On the same condition, and when the plugin for the detected device is included in the build, the name of the plugin is also listed:
+
+Example scan showing a single device, with the Plugin included in the build:
+
+.. image:: images/Tools_I2Cscan_single_bus.png
+
+Example scan using an I2C multiplexer, showing multiple devices across multiple channels, with the plugins included in the (MAX) build:
+
+.. image:: images/Tools_I2Cscan_multiplexer.png
+
+
+.. note:: On builds that have ``LIMIT_BUILD_SIZE`` set, like the ESP8266 Collection and Display builds, the names of the supported devices and plugins are **not** included in the output, only the address(es) are listed.
 
 
 Factory Reset

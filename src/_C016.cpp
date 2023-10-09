@@ -45,23 +45,23 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number             = CPLUGIN_ID_016;
-      Protocol[protocolCount].usesMQTT             = false;
-      Protocol[protocolCount].usesTemplate         = false;
-      Protocol[protocolCount].usesAccount          = false;
-      Protocol[protocolCount].usesPassword         = false;
-      Protocol[protocolCount].usesExtCreds         = false;
-      Protocol[protocolCount].defaultPort          = 80;
-      Protocol[protocolCount].usesID               = false;
-      Protocol[protocolCount].usesHost             = false;
-      Protocol[protocolCount].usesPort             = false;
-      Protocol[protocolCount].usesQueue            = false;
-      Protocol[protocolCount].usesCheckReply       = false;
-      Protocol[protocolCount].usesTimeout          = false;
-      Protocol[protocolCount].usesSampleSets       = false;
-      Protocol[protocolCount].needsNetwork         = false;
-      Protocol[protocolCount].allowsExpire         = false;
-      Protocol[protocolCount].allowLocalSystemTime = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //              = CPLUGIN_ID_016;
+      proto.usesMQTT             = false;
+      proto.usesTemplate         = false;
+      proto.usesAccount          = false;
+      proto.usesPassword         = false;
+      proto.usesExtCreds         = false;
+      proto.defaultPort          = 80;
+      proto.usesID               = false;
+      proto.usesHost             = false;
+      proto.usesPort             = false;
+      proto.usesQueue            = false;
+      proto.usesCheckReply       = false;
+      proto.usesTimeout          = false;
+      proto.usesSampleSets       = false;
+      proto.needsNetwork         = false;
+      proto.allowsExpire         = false;
+      proto.allowLocalSystemTime = true;
       break;
     }
 
@@ -77,8 +77,8 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings); // -V522
 
         if (AllocatedControllerSettings()) {
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          C016_allowLocalSystemTime = ControllerSettings.useLocalSystemTime();
+          LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+          C016_allowLocalSystemTime = ControllerSettings->useLocalSystemTime();
         }
       }
       success = init_c016_delay_queue(event->ControllerIndex);
@@ -147,6 +147,12 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     {
       C016_flush();
       delay(0);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    {
+      string = F("-");
       break;
     }
 

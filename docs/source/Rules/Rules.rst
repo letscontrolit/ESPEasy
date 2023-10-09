@@ -1,3 +1,5 @@
+.. _Rules:
+
 #####
 Rules
 #####
@@ -1121,9 +1123,10 @@ Convert an integer value into a binary or hexadecimal representation.
 Usage: 
 
 * ``{toBin:<value>}`` Convert the number into binary representation.
-* ``{toHex:<value>}`` Convert the number into hexadecimal representation.
+* ``{toHex:<value>[:<minHexDigits>]}`` Convert the number into hexadecimal representation.
 
 * ``<value>`` The number to convert, if it is representing a valid unsigned integer value.
+* ``<minHexDigits>`` Optional. The minimal number to digits to output the hex value in
 
 
 For example:
@@ -1134,7 +1137,7 @@ For example:
    let,1,%eventvalue1%
    let,2,{bitset:9:%eventvalue1%}
    LogEntry,'Values {tobin:[int#1]} {tohex:[int#1]}'
-   LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]}'
+   LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]:4}'
  endon
 
 
@@ -1146,8 +1149,8 @@ For example:
  320603: ACT : let,2,635
  320612: ACT : LogEntry,'Values 1111011 7b'
  320618: Values 1111011 7b
- 320631: ACT : LogEntry,'Values 1001111011 27b'
- 320635: Values 1001111011 27b
+ 320631: ACT : LogEntry,'Values 1001111011 027b'
+ 320635: Values 1001111011 027b
 
 ord
 ^^^
@@ -1520,7 +1523,7 @@ Just create Generic - Dummy Device and variables inside it.
 
 Alternatively, TASKname and/or VARname can be used instead of TASKnr and VARnr:
 
- .. code-block:: html
+.. code-block:: none
 
  TaskValueSet,TASKname,VARname,Value
  TaskValueSet,TASKnr,VARname,Value
@@ -1954,6 +1957,41 @@ Added: 2022/07/23
 * Calls made to a HTTP server can now also follow redirects. (GET and HEAD calls only) This has to be enabled in Tools->Advanced page.
 * Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
 * HTTP user credentials now can handle Basic Auth and Digest Auth.
+
+
+Convert curl POST command to PostToHTTP
+---------------------------------------
+
+Source: The Letscontrolit Forum.
+
+Like the ``SendToHTTP`` command, there are similar ``PostToHTTP`` and ``PutToHTTP`` commands, using the corresponding ``POST`` and ``PUT`` HTTP verbs to transmit data to a remote host.
+
+When translating a known ``curl`` command-line to ``PostToHTTP`` we have this example:
+
+Curl command sending data to Home assistant:
+
+.. code-block:: none
+
+  curl -X POST -H "Authorization: Bearer VERY_LONG_HOME_ASSISTANT_TOKEN_TO_VALORIZE" -H "Content-Type: application/json" -d '{"state": "off"}' http://192.168.1.25:8123/api/states/light.shellyplus1pm_123456abc123_switch_0
+
+Corresponding PostToHTTP command from rules using the 'Format 1' syntax: (formatting Switch State value to on/off in all lowercase)
+
+.. code-block:: none
+
+  PostToHTTP,192.168.1.25,8123,/api/states/light.shellyplus1pm_123456abc123_switch_0,'Authorization: Bearer VERY_LONG_HOME_ASSISTANT_TOKEN_TO_VALORIZE%LF%Content-Type: application/json',`{"state": "[Switch#State#O#l]"}`
+
+Corresponding PostToHTTP command from rules using the 'Format 2' syntax:
+
+.. code-block:: none
+
+  PostToHTTP,http://192.168.1.25:8123/api/states/light.shellyplus1pm_123456abc123_switch_0,'Authorization: Bearer VERY_LONG_HOME_ASSISTANT_TOKEN_TO_VALORIZE%LF%Content-Type: application/json',`{"state": "[Switch#State#O#l]"}`
+
+
+Remarks:
+
+- Multiple headers have to be combined into 1 (quoted) string argument, using ``%LF%`` as a separator.
+- Authorization can, instead of including a ``Authorization`` header, be included in the 'Format 2' syntax like ``http://username:password@url``, this will be transformed to the proper header value.
+- Similarly, a ``PUT`` request can be converted to ``PutToHTTP``.
 
 
 Dew Point for temp/humidity sensors (BME280 for example)
