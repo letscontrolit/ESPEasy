@@ -113,7 +113,11 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
 # ifdef ESP32
   addRowLabel(F("Analog Pin"));
+  #if HAS_HALL_EFFECT_SENSOR
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
+  #else
+  addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch, F("taskdevicepin1"), CONFIG_PIN1);
+  #endif
 
   addFormNote(F("Do not use ADC2 pins with WiFi active"));
 

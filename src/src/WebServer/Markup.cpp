@@ -1014,7 +1014,10 @@ void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice
   int i    = 0;
   int gpio = -1;
 
-  if ((purpose == AdcPinSelectPurpose::ADC_Touch_HallEffect) ||
+  if (
+#if HAS_HALL_EFFECT_SENSOR
+    (purpose == AdcPinSelectPurpose::ADC_Touch_HallEffect) ||
+#endif
       (purpose == AdcPinSelectPurpose::ADC_Touch_Optional)) {
     addPinSelector_Item(
       PinSelectPurpose::Generic,
