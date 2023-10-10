@@ -545,15 +545,15 @@ int espeasy_analogRead(int pin) {
 #ifdef ESP32
 
 // ESP32 ADC calibration datatypes.
-#if ESP_IDF_VERSION_MAJOR < 5
-esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
-esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
-#else 
+#if ESP_IDF_VERSION_MAJOR >= 5
 #include <esp_adc/adc_cali.h>
 #include <esp_adc/adc_cali_scheme.h>
 
 //esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
 adc_cali_handle_t adc_chars[ADC_ATTENDB_MAX] = {};
+#else
+esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
+esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX]; 
 #endif
 
 void initADC() {

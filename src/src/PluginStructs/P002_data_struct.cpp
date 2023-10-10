@@ -25,11 +25,7 @@ void P002_data_struct::init(struct EventStruct *event)
   const int adc = getADC_num_for_gpio(_pin_analogRead, channel);
 
   if ((adc == 1) || (adc == 2)) {
-    #if ESP_IDF_VERSION_MAJOR < 5
-    analogSetPinAttenuation(_pin_analogRead, static_cast<adc_atten_t>(_attenuation));
-    #else
     analogSetPinAttenuation(_pin_analogRead, static_cast<adc_attenuation_t>(_attenuation));
-    #endif
   }
 
   # endif // ifdef ESP32
