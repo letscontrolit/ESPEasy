@@ -11,10 +11,14 @@
 # include <vector>
 
 # ifdef ESP32
-
 // Needed to get ADC Vref
+#if ESP_IDF_VERSION_MAJOR >= 5
+  #include <esp_adc/adc_oneshot.h>
+
+#else
   #  include <esp_adc_cal.h>
   #  include <driver/adc.h>
+#endif
 # endif // ifdef ESP32
 
 

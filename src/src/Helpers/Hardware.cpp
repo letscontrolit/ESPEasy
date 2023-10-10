@@ -548,6 +548,12 @@ int espeasy_analogRead(int pin) {
 #if ESP_IDF_VERSION_MAJOR < 5
 esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
 esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
+#else 
+#include <esp_adc/adc_cali.h>
+#include <esp_adc/adc_cali_scheme.h>
+
+//esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
+adc_cali_handle_t adc_chars[ADC_ATTENDB_MAX] = {};
 #endif
 
 void initADC() {
@@ -560,6 +566,18 @@ void initADC() {
   for (size_t atten = 0; atten < ADC_ATTEN_MAX; ++atten) {
     adc1_calibration_type =
       esp_adc_cal_characterize(ADC_UNIT_1, static_cast<adc_atten_t>(atten), adc_bit_width, DEFAULT_VREF, &adc_chars[atten]);
+  }
+#else
+  for (uint32_t i = 0; i < ADC_ATTENDB_MAX; ++i) {
+    if (adc_chars[i] == nullptr) {
+      adc_cali_line_fitting_config_t cali_config = {
+        .unit_id = ADC_UNIT_1,
+        .atten = static_cast<adc_atten_t>(i),
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+      };
+
+      adc_cali_create_scheme_line_fitting(&cali_config, &adc_chars[i]);
+    }
   }
 #endif
 }
@@ -587,9 +605,15 @@ const __FlashStringHelper* getADC_factory_calibration_type() {
 }
 
 int getADC_num_for_gpio(int pin) {
-  int adc, ch, t;
+  int ch;
+  return getADC_num_for_gpio(pin, ch);
+}
 
-  if (getADC_gpio_info(pin, adc, ch, t)) {
+int getADC_num_for_gpio(int pin, int& channel)
+{
+  int adc, t;
+
+  if (getADC_gpio_info(pin, adc, channel, t)) {
     return adc;
   }
   return -1;

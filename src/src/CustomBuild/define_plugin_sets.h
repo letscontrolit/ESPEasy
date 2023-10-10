@@ -3208,7 +3208,7 @@ To create/register a plugin, you have to :
   // ADC uses legacy ADC calibration driver, needs a lot of work
   // So disable for now.
   #ifdef USES_P002
-    #undef USES_P002
+//    #undef USES_P002
   #endif
 
 

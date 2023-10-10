@@ -21,10 +21,15 @@ void P002_data_struct::init(struct EventStruct *event)
   _pin_analogRead        = CONFIG_PIN1;
   _useFactoryCalibration = useFactoryCalibration(event);
   _attenuation           = getAttenuation(event);
-  const int adc = getADC_num_for_gpio(_pin_analogRead);
+  int channel{};
+  const int adc = getADC_num_for_gpio(_pin_analogRead, channel);
 
   if ((adc == 1) || (adc == 2)) {
+    #if ESP_IDF_VERSION_MAJOR < 5
+    analogSetPinAttenuation(_pin_analogRead, static_cast<adc_atten_t>(_attenuation));
+    #else
     analogSetPinAttenuation(_pin_analogRead, static_cast<adc_attenuation_t>(_attenuation));
+    #endif
   }
 
   # endif // ifdef ESP32
@@ -167,9 +172,15 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     #  endif // if FEATURE_CHART_JS
     formatADC_statistics(F("Current ADC to mV"), raw_value);
 
-    for (size_t att = 0; att < ADC_ATTEN_MAX; ++att) {
+    for (size_t att = 0; att < NR_ELEMENTS(adc_chars); ++att) {
+      #if ESP_IDF_VERSION_MAJOR >= 5
+      int low, high = 0;
+      adc_cali_raw_to_voltage(adc_chars[att], 0, &low);
+      adc_cali_raw_to_voltage(adc_chars[att], MAX_ADC_VALUE, &high);
+      #else
       const int   low  = esp_adc_cal_raw_to_voltage(0, &adc_chars[att]);
       const int   high = esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[att]);
+      #endif
       const float step = static_cast<float>(high - low) / MAX_ADC_VALUE;
 
       String rowlabel = F("Attenuation @");
@@ -364,9 +375,9 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
 
   size_t current_attenuation = getAttenuation(event);
 
-  if (current_attenuation >= ADC_ATTEN_MAX) { current_attenuation = ADC_ATTEN_DB_11; }
+  if (current_attenuation >= NR_ELEMENTS(adc_chars)) { current_attenuation = ADC_ATTEN_DB_11; }
 
-  for (size_t att = 0; att < ADC_ATTEN_MAX; ++att)
+  for (size_t att = 0; att < NR_ELEMENTS(adc_chars); ++att)
   {
     float values[valueCount];
 
@@ -406,15 +417,21 @@ void P002_data_struct::getInputRange(struct EventStruct *event, int& minInputVal
 {
   minInputValue = 0;
   maxInputValue = MAX_ADC_VALUE;
-  # ifdef ESP32
+# ifdef ESP32
 
   if (useFactoryCalibration(event) && !ignoreCalibration) {
     // reading in mVolt, not ADC
     const size_t attenuation = getAttenuation(event);
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+    adc_cali_raw_to_voltage(adc_chars[attenuation], 0, &minInputValue);
+    adc_cali_raw_to_voltage(adc_chars[attenuation], MAX_ADC_VALUE, &maxInputValue);
+#else
     minInputValue = esp_adc_cal_raw_to_voltage(0, &adc_chars[attenuation]);
     maxInputValue = esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[attenuation]);
+#endif
   }
-  # endif // ifdef ESP32
+# endif // ifdef ESP32
 }
 
 # if FEATURE_CHART_JS
@@ -1056,7 +1073,13 @@ bool P002_data_struct::useFactoryCalibration(struct EventStruct *event) {
 float P002_data_struct::applyFactoryCalibration(float raw_value, adc_atten_t attenuation)
 {
   if (attenuation == adc_atten_t::ADC_ATTEN_DB_11) {
+#if ESP_IDF_VERSION_MAJOR >= 5
+    int res{};
+    adc_cali_raw_to_voltage(adc_chars[attenuation], raw_value, &res);
+    return res;
+#else
     return esp_adc_cal_raw_to_voltage(raw_value, &adc_chars[attenuation]);
+#endif
   }
 
   // All other attenuations do appear to have a straight calibration curve.
@@ -1064,14 +1087,22 @@ float P002_data_struct::applyFactoryCalibration(float raw_value, adc_atten_t att
   // So we interpolate using the calibrated extremes
 
   // Cache the computing of the values.
-  static adc_atten_t last_Attn = ADC_ATTEN_MAX;
+  static adc_atten_t last_Attn = static_cast<adc_atten_t>(NR_ELEMENTS(adc_chars));
   static float last_out1       = 0.0;
   static float last_out2       = MAX_ADC_VALUE;
 
   if (last_Attn != attenuation) {
     last_Attn = attenuation;
+#if ESP_IDF_VERSION_MAJOR >= 5
+    int tmp{};
+    adc_cali_raw_to_voltage(adc_chars[attenuation], 0, &tmp);
+    last_out1 = tmp;
+    adc_cali_raw_to_voltage(adc_chars[attenuation], MAX_ADC_VALUE, &tmp);
+    last_out2 = tmp;
+#else
     last_out1 = esp_adc_cal_raw_to_voltage(0, &adc_chars[attenuation]);
     last_out2 = esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[attenuation]);
+#endif
   }
 
   return mapADCtoFloat(

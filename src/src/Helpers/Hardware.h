@@ -14,11 +14,8 @@
 #include "../Helpers/Hardware_defines.h"
 
 #if ESP_IDF_VERSION_MAJOR >= 5
-//#include <esp_adc_cal_internal_legacy.h>
-
-#ifndef ADC_ATTEN_MAX
-#define ADC_ATTEN_MAX  ADC_ATTENDB_MAX
-#endif
+#include <esp_adc/adc_cali.h>
+#include <esp_adc/adc_cali_scheme.h>
 
 #endif
 
@@ -71,6 +68,7 @@ bool                       hasADC_factory_calibration();
 const __FlashStringHelper* getADC_factory_calibration_type();
 
 int                        getADC_num_for_gpio(int pin);
+int                        getADC_num_for_gpio(int pin, int& channel);
 
 int                        espeasy_analogRead(int  pin,
                                               bool readAsTouch = false);
@@ -79,6 +77,7 @@ int                        espeasy_analogRead(int  pin,
 // ADC Factory calibration definition
 extern esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
 #endif
+extern adc_cali_handle_t adc_chars[ADC_ATTENDB_MAX];
 #endif // ifdef ESP32
 
 #if FEATURE_INTERNAL_TEMPERATURE
