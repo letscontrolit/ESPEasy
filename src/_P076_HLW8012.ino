@@ -68,8 +68,14 @@ float p076_hpowfact{};
 # define P076_Gosund       9
 # define P076_Shelly_PLUG_S 10
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+// FIXME TD-er: Must check if older (and ESP8266) envs need IRAM_ATTR in the function declaration.
+void  p076_hlw8012_cf1_interrupt();
+void  p076_hlw8012_cf_interrupt();
+#else
 void IRAM_ATTR p076_hlw8012_cf1_interrupt();
 void IRAM_ATTR p076_hlw8012_cf_interrupt();
+#endif
 
 
 bool p076_getDeviceParameters(int      device,

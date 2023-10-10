@@ -3211,6 +3211,13 @@ To create/register a plugin, you have to :
     #undef USES_P002
   #endif
 
+
+  // Internal temp sensor causes crashes on ESP32-C3
+  #ifdef FEATURE_INTERNAL_TEMPERATURE
+  # undef FEATURE_INTERNAL_TEMPERATURE
+  # define FEATURE_INTERNAL_TEMPERATURE 0
+  #endif
+
 #endif
 
 
