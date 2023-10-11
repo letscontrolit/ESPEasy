@@ -3213,8 +3213,8 @@ To create/register a plugin, you have to :
 
 
 
-  // RMT driver used in Adafruit_NeoPixel does NOT work on IDF5.1 for RiscV chips
-  #ifdef ESP32C3
+  // RMT driver used in Adafruit_NeoPixel does NOT work on IDF5.1 for ESP32-C3/S3
+  #ifdef ESP32
 
   #ifdef USES_P038
     #undef USES_P038
