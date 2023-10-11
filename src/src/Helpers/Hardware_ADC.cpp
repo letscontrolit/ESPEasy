@@ -6,7 +6,9 @@
 #endif // ifdef ESP32
 
 #ifdef ESP8266
-bool Hardware_ADC_t::init() {}
+bool Hardware_ADC_t::init() {
+  return true;
+}
 
 
 int  Hardware_ADC_t::read() {
@@ -97,10 +99,17 @@ int Hardware_ADC_t::read(bool readAsTouch) {
   }
 # endif // if HAS_HALL_EFFECT_SENSOR
 
+# if ESP_IDF_VERSION_MAJOR >= 5
+  // Starting with IDF 5.x, you can apparently no use ADC2 along with WiFi running.
+  // See: https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32/api-reference/peripherals/adc_oneshot.html#hardware-limitations
+  const bool canread = true;
+#else
+  // ADC2 and WiFi affect each other.
   // See:
-  // https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html#configuration-and-reading-adc
+  // https://docs.espressif.com/projects/esp-idf/en/v4.4.6/esp32/api-reference/peripherals/adc.html#adc-limitations
   // ADC2 is shared with WiFi, so don't read ADC2 when WiFi is on.
   const bool canread = _adc == 1 || WiFi.getMode() == WIFI_OFF;
+#endif
 
   if (canread) {
 # if HAS_TOUCH_GPIO
