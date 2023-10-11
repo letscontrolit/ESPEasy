@@ -70,16 +70,6 @@ private:
     adc_cali_handle_t *out_handle);
 # endif // if ESP_IDF_VERSION_MAJOR >= 5
 
-public:
-
-  static float mapADCtoFloat(float float_value,
-                             float adc1,
-                             float adc2,
-                             float out1,
-                             float out2);
-
-private:
-
   // ADC Factory calibration definition
 # if ESP_IDF_VERSION_MAJOR >= 5
   adc_cali_handle_t _adc_cali_handle = nullptr;

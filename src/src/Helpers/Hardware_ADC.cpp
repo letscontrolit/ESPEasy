@@ -139,14 +139,4 @@ float Hardware_ADC_t::applyFactoryCalibration(float rawValue) {
   return _adc_cali_handle.applyFactoryCalibration(rawValue);
 }
 
-/*
-bool Hardware_ADC_t::hasADC_factory_calibration() {
-# if ESP_IDF_VERSION_MAJOR < 5
-  return esp_adc_cal_check_efuse(_adc_calibration_type) == ESP_OK;
-# else // if ESP_IDF_VERSION_MAJOR < 5
-  return false;
-# endif // if ESP_IDF_VERSION_MAJOR < 5
-}
-*/
-
 #endif // ifdef ESP32

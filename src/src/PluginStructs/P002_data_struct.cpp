@@ -1145,20 +1145,6 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value, bool for
 
 # endif // ifndef LIMIT_BUILD_SIZE
 
-float P002_data_struct::mapADCtoFloat(float float_value,
-                                      float adc1,
-                                      float adc2,
-                                      float out1,
-                                      float out2)
-{
-  if (!approximatelyEqual(adc1, adc2))
-  {
-    const float normalized = static_cast<float>(float_value - adc1) / static_cast<float>(adc2 - adc1);
-    float_value = normalized * (out2 - out1) + out1;
-  }
-  return float_value;
-}
-
 void P002_data_struct::setTwoPointCalibration(
   struct EventStruct *event,
   float               adc1,

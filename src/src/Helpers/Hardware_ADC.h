@@ -40,22 +40,6 @@ public:
 
   float       applyFactoryCalibration(float rawValue);
 
-
-//  bool        hasADC_factory_calibration();
-
-# if ESP_IDF_VERSION_MAJOR >= 5
-  static bool adc_calibration_init(
-    int                pin,
-    adc_atten_t        atten,
-    adc_cali_handle_t *out_handle);
-# endif // if ESP_IDF_VERSION_MAJOR >= 5
-
-  static float mapADCtoFloat(float float_value,
-                             float adc1,
-                             float adc2,
-                             float out1,
-                             float out2);
-
 private:
 
   int _pin = -1;

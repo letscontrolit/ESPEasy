@@ -221,12 +221,6 @@ private:
   float        applyMultiPointInterpolation(float float_value, bool force = false) const;
 # endif // ifndef LIMIT_BUILD_SIZE
 
-  static float mapADCtoFloat(float float_value,
-                             float adc1,
-                             float adc2,
-                             float out1,
-                             float out2);
-
 
   // Map the input "point" values to the nearest int.
   static void setTwoPointCalibration(struct EventStruct *event,
