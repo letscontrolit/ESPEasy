@@ -99,6 +99,8 @@
 
 #endif
 
+#include "../Helpers/Hardware_ADC_cali.h"
+
 #endif       // ifdef ESP32
 
 
@@ -545,63 +547,58 @@ int espeasy_analogRead(int pin) {
 #ifdef ESP32
 
 // ESP32 ADC calibration datatypes.
-#if ESP_IDF_VERSION_MAJOR >= 5
-#include <esp_adc/adc_cali.h>
-#include <esp_adc/adc_cali_scheme.h>
 
-//esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
-adc_cali_handle_t adc_chars[ADC_ATTENDB_MAX] = {};
+
+// FIXME TD-er: For now keep a local array of the adc calibration 
+#if ESP_IDF_VERSION_MAJOR < 5
+Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTEN_MAX];
 #else
-esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
-esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX]; 
+Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTENDB_MAX];
 #endif
+
 
 void initADC() {
-#if ESP_IDF_VERSION_MAJOR < 5
-  # ifndef DEFAULT_VREF
-  #  define DEFAULT_VREF 1100
-  # endif // ifndef DEFAULT_VREF
-  const adc_bits_width_t adc_bit_width = static_cast<adc_bits_width_t>(ADC_WIDTH_MAX - 1);
-
-  for (size_t atten = 0; atten < ADC_ATTEN_MAX; ++atten) {
-    adc1_calibration_type =
-      esp_adc_cal_characterize(ADC_UNIT_1, static_cast<adc_atten_t>(atten), adc_bit_width, DEFAULT_VREF, &adc_chars[atten]);
-  }
-#else
-  for (uint32_t i = 0; i < ADC_ATTENDB_MAX; ++i) {
-    if (adc_chars[i] == nullptr) {
-      adc_cali_line_fitting_config_t cali_config = {
-        .unit_id = ADC_UNIT_1,
-        .atten = static_cast<adc_atten_t>(i),
-        .bitwidth = ADC_BITWIDTH_DEFAULT,
-      };
-
-      adc_cali_create_scheme_line_fitting(&cali_config, &adc_chars[i]);
+  for (size_t atten = 0; atten < NR_ELEMENTS(ESP32_ADC_cali); ++atten) {
+    if (!ESP32_ADC_cali[atten].initialized()) {
+      // FIXME TD-er: For now fake some pin which is connected to ADC1
+      #ifdef ESP32_CLASSIC
+      const int pin = 36;
+      #else 
+      const int pin = 1;
+      #endif
+      ESP32_ADC_cali[atten].init(pin, static_cast<adc_atten_t>(atten));
     }
   }
-#endif
+}
+
+float applyADCFactoryCalibration(float raw_value, adc_atten_t attenuation)
+{
+  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali))
+    return ESP32_ADC_cali[attenuation].applyFactoryCalibration(raw_value);
+  return raw_value;
 }
 
 bool hasADC_factory_calibration() {
-#if ESP_IDF_VERSION_MAJOR < 5
-  return esp_adc_cal_check_efuse(adc1_calibration_type) == ESP_OK;
-#else
-return false;
-#endif
+  return ESP32_ADC_cali[0].useFactoryCalibration();
 }
 
-const __FlashStringHelper* getADC_factory_calibration_type() {
-#if ESP_IDF_VERSION_MAJOR < 5
-  switch (adc1_calibration_type) {
-    case ESP_ADC_CAL_VAL_EFUSE_VREF:   return F("V_ref in eFuse");
-    case ESP_ADC_CAL_VAL_EFUSE_TP:     return F("Two Point values in eFuse");
-    case ESP_ADC_CAL_VAL_DEFAULT_VREF: return F("Default reference voltage");
-    case ESP_ADC_CAL_VAL_EFUSE_TP_FIT: return F("Two Point values and fitting curve in eFuse");
-    case ESP_ADC_CAL_VAL_NOT_SUPPORTED:
-      break;
-  }
-#endif
-  return F("Unknown");
+const __FlashStringHelper* getADC_factory_calibration_type()
+{
+  return ESP32_ADC_cali[0].getADC_factory_calibration_type();
+}
+
+float getADC_factory_calibrated_min(adc_atten_t attenuation)
+{
+  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali))
+    return ESP32_ADC_cali[attenuation].getMinOut();
+  return 0.0f;
+}
+
+float getADC_factory_calibrated_max(adc_atten_t attenuation)
+{
+  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali))
+    return ESP32_ADC_cali[attenuation].getMaxOut();
+  return MAX_ADC_VALUE;
 }
 
 int getADC_num_for_gpio(int pin) {

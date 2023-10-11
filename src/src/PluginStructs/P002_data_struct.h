@@ -213,10 +213,6 @@ public:
 # ifdef ESP32
   static bool  useFactoryCalibration(struct EventStruct *event);
 
-  static float applyFactoryCalibration(float       raw_value,
-                                       adc_atten_t attenuation);
-
-
 # endif // ifdef ESP32
 
 private:
@@ -276,6 +272,7 @@ private:
   bool        _useFactoryCalibration = false;
   adc_atten_t _attenuation           = ADC_ATTEN_DB_11;
 # endif // ifdef ESP32
+
 };
 
 

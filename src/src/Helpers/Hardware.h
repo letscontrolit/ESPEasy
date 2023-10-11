@@ -63,9 +63,15 @@ int espeasy_analogRead(int pin);
 
 #ifdef ESP32
 void                       initADC();
+float                      applyADCFactoryCalibration(
+    float raw_value, 
+    adc_atten_t attenuation);
 
 bool                       hasADC_factory_calibration();
 const __FlashStringHelper* getADC_factory_calibration_type();
+
+float getADC_factory_calibrated_min(adc_atten_t attenuation);
+float getADC_factory_calibrated_max(adc_atten_t attenuation);
 
 int                        getADC_num_for_gpio(int pin);
 int                        getADC_num_for_gpio(int pin, int& channel);
@@ -73,12 +79,6 @@ int                        getADC_num_for_gpio(int pin, int& channel);
 int                        espeasy_analogRead(int  pin,
                                               bool readAsTouch = false);
 
-#if ESP_IDF_VERSION_MAJOR >= 5
-// ADC Factory calibration definition
-extern adc_cali_handle_t adc_chars[ADC_ATTENDB_MAX];
-#else
-extern esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
-#endif
 #endif // ifdef ESP32
 
 #if FEATURE_INTERNAL_TEMPERATURE
