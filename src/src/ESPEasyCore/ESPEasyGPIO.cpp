@@ -426,18 +426,18 @@ void GPIO_Monitor10xSec()
           currentState = GPIO_Read_Switch_State(gpioPort, it->second.mode);
           eventString = F("GPIO");
           break;
-        case PLUGIN_MCP_INT:
 #ifdef USES_P009
+        case PLUGIN_MCP_INT:
           currentState = GPIO_MCP_Read(gpioPort);
           eventString = F("MCP");
-#endif
           break;
-        case PLUGIN_PCF_INT:
+#endif
 #ifdef USES_P019
+        case PLUGIN_PCF_INT:
           currentState = GPIO_PCF_Read(gpioPort);
           eventString = F("PCF");
-#endif
           break;
+#endif
         default:
           caseFound=false;
         break;
