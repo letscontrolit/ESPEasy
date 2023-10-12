@@ -128,11 +128,11 @@ struct ControllerSettingsStruct
   bool         mqtt_cleanSession() const { return VariousBits1.mqtt_cleanSession; }
   void         mqtt_cleanSession(bool value) { VariousBits1.mqtt_cleanSession = value; }
 
-  bool         mqtt_sendLWT() const { return VariousBits1.mqtt_sendLWT; }
-  void         mqtt_sendLWT(bool value) { VariousBits1.mqtt_sendLWT = value; }
+  bool         mqtt_sendLWT() const { return !VariousBits1.mqtt_not_sendLWT; }
+  void         mqtt_sendLWT(bool value) { VariousBits1.mqtt_not_sendLWT = !value; }
 
-  bool         mqtt_willRetain() const { return VariousBits1.mqtt_willRetain; }
-  void         mqtt_willRetain(bool value) { VariousBits1.mqtt_willRetain = value; }
+  bool         mqtt_willRetain() const { return !VariousBits1.mqtt_not_willRetain; }
+  void         mqtt_willRetain(bool value) { VariousBits1.mqtt_not_willRetain = !value; }
 
   bool         mqtt_uniqueMQTTclientIdReconnect() const { return VariousBits1.mqtt_uniqueMQTTclientIdReconnect; }
   void         mqtt_uniqueMQTTclientIdReconnect(bool value) { VariousBits1.mqtt_uniqueMQTTclientIdReconnect = value; }
@@ -176,8 +176,8 @@ struct ControllerSettingsStruct
     struct {
       uint32_t unused_00                        : 1; // Bit 00
       uint32_t mqtt_cleanSession                : 1; // Bit 01
-      uint32_t mqtt_sendLWT                     : 1; // Bit 02
-      uint32_t mqtt_willRetain                  : 1; // Bit 03
+      uint32_t mqtt_not_sendLWT                 : 1; // Bit 02, !value, default enabled
+      uint32_t mqtt_not_willRetain              : 1; // Bit 03, !value, default enabled
       uint32_t mqtt_uniqueMQTTclientIdReconnect : 1; // Bit 04
       uint32_t mqtt_retainFlag                  : 1; // Bit 05
       uint32_t useExtendedCredentials           : 1; // Bit 06
