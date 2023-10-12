@@ -288,6 +288,7 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
 {
   bool sendStatusFlag;
   pluginID_t pluginID;
+  int8_t value = -1;
 
   switch (tolower(parseString(Line, 2).charAt(0)))
   {
@@ -298,13 +299,15 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
 #ifdef USES_P009
     case 'm': // mcp
       pluginID       = PLUGIN_MCP;
-      sendStatusFlag = GPIO_MCP_Read(event->Par2) == -1;
+      value          = GPIO_MCP_Read(event->Par2);
+      sendStatusFlag = value == -1;
       break;
 #endif
 #ifdef USES_P019
     case 'p': // pcf
       pluginID       = PLUGIN_PCF;
-      sendStatusFlag = GPIO_PCF_Read(event->Par2) == -1;
+      value          = GPIO_PCF_Read(event->Par2);
+      sendStatusFlag = value == -1;
       break;
 #endif
     default:
@@ -318,7 +321,7 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
   }
   const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
   String dummy;
-  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
+  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, value);
   return return_command_success_flashstr();
 }
 
