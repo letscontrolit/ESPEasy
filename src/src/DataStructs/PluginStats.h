@@ -173,6 +173,7 @@ public:
   bool    hasPeaks() const;
 
   size_t nrSamplesPresent() const;
+  size_t nrPluginStats() const;
 
   void    pushPluginStatsValues(struct EventStruct *event,
                                 bool                trackPeaks);

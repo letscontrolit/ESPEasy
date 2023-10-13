@@ -5,63 +5,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../WebServer/HTML_wrappers.h"
 
-  ChartJS_title::ChartJS_title() {
-    align = F("center");
-  }
 
-  ChartJS_title::ChartJS_title(const String& titleText) : text(titleText) {
-    align = F("center");
-  }
-
-
-String ChartJS_title::toString() const {
-  String res;
-
-  if (text.isEmpty()) {
-    res = F("title: {display: false}");
-  } else {
-    res  = F("title: {display: true,align: '");
-    res += align;
-    res += F("',text:'");
-    res += text;
-    res += '\'';
-    res += '}';
-  }
-  return res;
-}
-
-String make_ChartJS_scale_options_singleAxis(
-  const String       & AxisType,
-  const ChartJS_title& AxisTitle)
-{
-  String res;
-
-  if (!AxisType.isEmpty()) {
-    res += F("type: '");
-    res += AxisType;
-    res += '\'';
-    res += ',';
-  }
-  res += AxisTitle.toString();
-  return res;
-}
-
-String make_ChartJS_scale_options(
-  const ChartJS_title& xAxisTitle,
-  const ChartJS_title& yAxisTitle,
-  const String       & xAxisType,
-  const String       & yAxisType)
-{
-  String res;
-
-  res  = F("scales: {x: {");
-  res += make_ChartJS_scale_options_singleAxis(xAxisType, xAxisTitle);
-  res += F("}, y: {");
-  res += make_ChartJS_scale_options_singleAxis(yAxisType, yAxisTitle);
-  res += '}';
-  res += '}';
-  return res;
-}
 
 void add_ChartJS_array(int          valueCount,
                        const String array[])
@@ -74,14 +18,15 @@ void add_ChartJS_array(int          valueCount,
   }
 }
 
-void add_ChartJS_array(int         valueCount,
-                       const float array[])
+void add_ChartJS_array(int          valueCount,
+                       const float  array[],
+                       unsigned int nrDecimals)
 {
   for (int i = 0; i < valueCount; ++i) {
     if (i != 0) {
       addHtml(',');
     }
-    addHtmlFloat(array[i], 3);
+    addHtmlFloat(array[i], nrDecimals);
   }
 }
 
@@ -99,18 +44,19 @@ void add_ChartJS_array(int       valueCount,
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
   const __FlashStringHelper *id,
-  const __FlashStringHelper *chartTitle,
+  const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
   const String             & options)
 {
-  add_ChartJS_chart_header(chartType, String(id), String(chartTitle), width, height, options);
+  add_ChartJS_chart_header(chartType, String(id), chartTitle, width, height, options);
 }
+
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
   const String             & id,
-  const String             & chartTitle,
+  const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
   const String             & options)
@@ -131,9 +77,8 @@ void add_ChartJS_chart_header(
   addHtml(F("c,{type:'"));
   addHtml(chartType);
   addHtml('\'', ',');
-  addHtml(F("options:{responsive:false,plugins:{legend:{position:'top',},title:{display:true,text:'"));
-  addHtml(chartTitle);
-  addHtml('\'', '}'); // end title
+  addHtml(F("options:{responsive:false,plugins:{legend:{position:'top',},title:"));
+  addHtml(chartTitle.toString());
   addHtml('}',  ','); // end plugins
 
   if (!options.isEmpty()) {
@@ -160,64 +105,42 @@ void add_ChartJS_chart_labels(
 }
 
 void add_ChartJS_dataset(
-  const __FlashStringHelper *label,
-  const __FlashStringHelper *color,
+  const ChartJS_dataset_config& config,
   const float                values[],
   int                        valueCount,
-  bool                       hidden,
+  unsigned int               nrDecimals,
   const String             & options)
 {
-  add_ChartJS_dataset_header(label, color);
-  add_ChartJS_array(valueCount, values);
-  add_ChartJS_dataset_footer(hidden, options);
-}
-
-void add_ChartJS_dataset(
-  const String&              label,
-  const String&              color,
-  const float                values[],
-  int                        valueCount,
-  bool                       hidden,
-  const String             & options)
-{
-  add_ChartJS_dataset_header(label, color);
-  add_ChartJS_array(valueCount, values);
-  add_ChartJS_dataset_footer(hidden, options);
+  add_ChartJS_dataset_header(config);
+  add_ChartJS_array(valueCount, values, nrDecimals);
+  add_ChartJS_dataset_footer(options);
 }
 
 
-void add_ChartJS_dataset_header(
-  const __FlashStringHelper *label,
-  const __FlashStringHelper *color) 
-{
-  add_ChartJS_dataset_header(String(label), String(color));
-}
-
-void add_ChartJS_dataset_header(
-  const String& label,
-  const String& color) 
+void add_ChartJS_dataset_header(const ChartJS_dataset_config& config)
 {
   addHtml('{');
-  addHtml(F("label:'"));
-  addHtml(label);
-  addHtml('\'', ',');
-  addHtml(F("backgroundColor:'"));
-  addHtml(color);
-  addHtml('\'', ',');
-  addHtml(F("borderColor:'"));
-  addHtml(color);
-  addHtml('\'', ',');
+  if (!config.label.isEmpty())
+    addHtml(strformat(F("label:'%s',"), config.label.c_str()));
+
+  if (!config.color.isEmpty()) {
+    addHtml(strformat(F("backgroundColor:'%s',"), config.color.c_str()));
+    addHtml(strformat(F("borderColor:'%s',"), config.color.c_str()));
+  }
+  if (!config.axisID.isEmpty())
+    addHtml(strformat(F("yAxisID:'%s',"), config.axisID.c_str()));
+
+  if (config.hidden) {
+    addHtml(F("hidden:true,"));
+  }
+
   addHtml(F("data:["));
 }
 
 
 
-void add_ChartJS_dataset_footer(bool hidden, const String& options) {
+void add_ChartJS_dataset_footer(const String& options) {
   addHtml(']', ',');
-
-  if (hidden) {
-    addHtml(F("hidden:true,"));
-  }
 
   if (!options.isEmpty()) {
     addHtml(options);

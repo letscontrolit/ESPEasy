@@ -245,7 +245,7 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
       } else if (matchedCommand(command, F("sample"), nrSamples)) {
         success = nrSamples != 0;
 
-        if (nrSamples == INT_MIN) { 
+        if (nrSamples == INT_MIN) {
           // [taskname#valuename.sample] Number of samples in memory.
           value   = _samples.size();
           success = true;
@@ -351,7 +351,7 @@ void PluginStats::webformLoad_show_val(
 # if FEATURE_CHART_JS
 void PluginStats::plot_ChartJS_dataset() const
 {
-  add_ChartJS_dataset_header(getLabel(), _ChartJS_dataset_config.color);
+  add_ChartJS_dataset_header(_ChartJS_dataset_config);
 
   PluginStatsBuffer_t::index_t i = 0;
 
@@ -367,7 +367,7 @@ void PluginStats::plot_ChartJS_dataset() const
       addHtml(F("null"));
     }
   }
-  add_ChartJS_dataset_footer(_ChartJS_dataset_config.hidden);
+  add_ChartJS_dataset_footer();
 }
 
 # endif // if FEATURE_CHART_JS
@@ -450,6 +450,18 @@ size_t PluginStats_array::nrSamplesPresent() const
     }
   }
   return 0;
+}
+
+size_t PluginStats_array::nrPluginStats() const
+{
+  size_t res{};
+
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (_plugin_stats[i] != nullptr) {
+      ++res;
+    }
+  }
+  return res;
 }
 
 void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
@@ -538,8 +550,43 @@ void PluginStats_array::plot_ChartJS() const
 
   if (nrSamples == 0) { return; }
 
+  const size_t nrStats = nrPluginStats();
+
   // Chart Header
-  add_ChartJS_chart_header(F("line"), F("TaskStatsChart"), F(""), 500, 500);
+  String axisOptions;
+  {
+    ChartJS_options_scales scales;
+    scales.add({ F("x") });
+
+    bool isLeft          = true;
+    // FIXME TD-er: Must count the actual nr of axis being used
+
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      if (_plugin_stats[i] != nullptr) {
+        _plugin_stats[i]->_ChartJS_dataset_config.axisID = concat(F("y"), i);
+        ChartJS_options_scale scaleOption(
+          _plugin_stats[i]->_ChartJS_dataset_config.axisID,
+          _plugin_stats[i]->getLabel());
+        scaleOption.position        = isLeft ? ChartJS_options_scale::Position::Left : ChartJS_options_scale::Position::Right;
+        scaleOption.axisTitle.color = _plugin_stats[i]->_ChartJS_dataset_config.color;
+        isLeft                      = !isLeft;
+
+        if (nrStats > 1) {
+          scaleOption.tickCount = 10;
+        }
+        scales.add(scaleOption);
+      }
+    }
+    axisOptions = scales.toString();
+  }
+
+  add_ChartJS_chart_header(
+    F("line"),
+    F("TaskStatsChart"),
+    {},
+    500 + (70 * (nrStats - 1)),
+    500,
+    axisOptions);
 
   // Add labels
   for (size_t i = 0; i < nrSamples; ++i) {
@@ -548,7 +595,7 @@ void PluginStats_array::plot_ChartJS() const
     }
     addHtmlInt(i);
   }
-  addHtml(F("],datasets: ["));
+  addHtml(F("],datasets:["));
 
 
   // Data sets

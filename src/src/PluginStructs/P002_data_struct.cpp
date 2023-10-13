@@ -359,14 +359,15 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
   String axisOptions;
 
   {
-    const ChartJS_title xAxisTitle(F("ADC Value"));
-    const ChartJS_title yAxisTitle(F("Input Voltage (mV)"));
-    axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+    ChartJS_options_scales scales;
+    scales.add({F("x"), F("ADC Value")});
+    scales.add({F("y"), F("Input Voltage (mV)")});
+    axisOptions = scales.toString();
   }
   add_ChartJS_chart_header(
     F("line"),
     F("fact_cal"),
-    F("Factory Calibration per Attenuation"),
+    {F("Factory Calibration per Attenuation")},
     500,
     500,
     axisOptions);
@@ -389,12 +390,16 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
       values[i] = applyADCFactoryCalibration(xAxisValues[i], static_cast<adc_atten_t>(att));
     }
 
-    add_ChartJS_dataset(
+    ChartJS_dataset_config config(
       AttenuationToString(static_cast<adc_atten_t>(att)),
-      colors[att],
+      colors[att]);
+      config.hidden = att != current_attenuation;
+
+    add_ChartJS_dataset(
+      config,
       values,
       valueCount,
-      att != current_attenuation);
+      Cache.getTaskDeviceValueDecimals(event->TaskIndex, 0));
   }
   add_ChartJS_chart_footer();
 }
@@ -460,16 +465,17 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
   String axisOptions;
 
   {
-    const ChartJS_title xAxisTitle(getChartXaxisLabel(event));
-    const ChartJS_title yAxisTitle(F("Calibrated Output"));
-    axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+    ChartJS_options_scales scales;
+    scales.add({F("x"), getChartXaxisLabel(event)});
+    scales.add({F("y"), F("Calibrated Output")});
+    axisOptions = scales.toString();
   }
 
 
   add_ChartJS_chart_header(
     F("line"),
     F("twoPointCurve"),
-    F("Two Point Calibration Curve"),
+    {F("Two Point Calibration Curve")},
     500,
     500,
     axisOptions);
@@ -485,11 +491,16 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
       values[i] = P002_data_struct::applyCalibration(event, xAxisValues[i]);
     }
 
-    add_ChartJS_dataset(
+    const ChartJS_dataset_config config(
       F("2 Point Calibration"),
-      F("rgb(255, 99, 132)"),
+      F("rgb(255, 99, 132)"));
+
+
+    add_ChartJS_dataset(
+      config,
       values,
-      valueCount);
+      valueCount,
+      Cache.getTaskDeviceValueDecimals(event->TaskIndex, 0));
   }
   add_ChartJS_chart_footer();
 }
@@ -584,15 +595,16 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
     String axisOptions;
 
     {
-      const ChartJS_title xAxisTitle(useBinning ? F("Bin Center Value") : F("Input"));
-      const ChartJS_title yAxisTitle(useBinning ? F("Bin Output Value") : F("Output"));
-      axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+      ChartJS_options_scales scales;
+      scales.add({F("x"), useBinning ? F("Bin Center Value") : F("Input")});
+      scales.add({F("y"), useBinning ? F("Bin Output Value") : F("Output")});
+      axisOptions = scales.toString();
     }
 
     add_ChartJS_chart_header(
       useBinning ? F("bar") : F("line"),
       F("mpcurve"),
-      useBinning ? F("Bin Values") : F("Multipoint Curve"),
+      {useBinning ? F("Bin Values") : F("Multipoint Curve")},
       500,
       500,
       axisOptions);
@@ -604,11 +616,12 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       }
       addHtmlFloat(_multipoint[i]._adc, _nrDecimals);
     }
-    addHtml(F("],datasets: ["));
+    addHtml(F("],datasets:["));
 
     add_ChartJS_dataset_header(
+      {
       useBinning ? F("Bins") : F("Multipoint Values"),
-      F("rgb(255, 99, 132)"));
+      F("rgb(255, 99, 132)")});
 
     for (size_t i = 0; i < _multipoint.size(); ++i) {
       if (i != 0) {
@@ -629,14 +642,15 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       String axisOptions;
 
       {
-        const ChartJS_title xAxisTitle(getChartXaxisLabel(event));
-        const ChartJS_title yAxisTitle(F("Output"));
-        axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+        ChartJS_options_scales scales;
+        scales.add({F("x"), getChartXaxisLabel(event)});
+        scales.add({F("y"), F("Output")});
+        axisOptions = scales.toString();
       }
       add_ChartJS_chart_header(
         F("line"),
         F("mpCurveSimulated"),
-        F("Simulated Input to Output Curve"),
+        {F("Simulated Input to Output Curve")},
         500,
         500,
         axisOptions);
@@ -686,12 +700,16 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
           }
         }
 
-        add_ChartJS_dataset(
+        ChartJS_dataset_config config(
           label,
-          color,
+          color);
+        config.hidden = hidden;
+
+        add_ChartJS_dataset(
+          config,
           values,
           valueCount,
-          hidden);
+          Cache.getTaskDeviceValueDecimals(event->TaskIndex, 0));
       }
       add_ChartJS_chart_footer();
     }

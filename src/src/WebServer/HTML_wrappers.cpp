@@ -294,7 +294,7 @@ void html_add_ChartJS_script() {
   // - Select the chart.js file (may be called chart.umd.min.js) and copy the url
   // - Replace the url in below script src element, keeping the quotes
   #ifndef CDN_URL_CHART_JS
-    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
   #endif // ifndef CDN_URL_CHART_JS
   addHtml(F("<script src=\"" CDN_URL_CHART_JS "\"></script>"));
 }
