@@ -26,6 +26,7 @@ String ChartJS_title::toString() const {
     align == Align::End ? F("end") : F("center");
 
   String colorStr;
+
   if (!color.isEmpty()) {
     colorStr = strformat(F(",color:\"%s\""), color.c_str());
   }

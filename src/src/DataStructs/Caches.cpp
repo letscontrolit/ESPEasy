@@ -9,8 +9,8 @@
 
 
 #ifdef PLUGIN_USES_SERIAL
-#include <ESPeasySerial.h>
-#endif
+# include <ESPeasySerial.h>
+#endif // ifdef PLUGIN_USES_SERIAL
 
 void Caches::clearAllCaches()
 {
@@ -63,8 +63,10 @@ bool Caches::matchChecksumExtraTaskSettings(taskIndex_t TaskIndex, const Checksu
 void Caches::updateActiveTaskUseSerial0() {
   activeTaskUseSerial0 = false;
 #ifdef PLUGIN_USES_SERIAL
-  if (getDeviceCount() <= 0)
+
+  if (getDeviceCount() <= 0) {
     return;
+  }
 
   // Check to see if a task is enabled and using the pins we also use for receiving commands.
   // We're now receiving only from Serial0, so check if an enabled task is also using it.
@@ -76,28 +78,30 @@ void Caches::updateActiveTaskUseSerial0() {
       if ((Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL) ||
           (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1)) {
         const ESPEasySerialPort port = ESPeasySerialType::getSerialType(
-                  static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[task]),
-                  Settings.TaskDevicePin1[task],
-                  Settings.TaskDevicePin2[task]);
+          static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[task]),
+          Settings.TaskDevicePin1[task],
+          Settings.TaskDevicePin2[task]);
 
         // FIXME TD-er: Must not check for conflict with serial0, but for conflict with ESPEasy_Console.
-        #ifdef ESP32
-        if (port == ESPEasySerialPort::serial0) 
+        # ifdef ESP32
+
+        if (port == ESPEasySerialPort::serial0)
         {
           activeTaskUseSerial0 = true;
         }
-        #endif
-        #ifdef ESP8266
-        if (port == ESPEasySerialPort::serial0_swap ||
-            port == ESPEasySerialPort::serial0) 
+        # endif // ifdef ESP32
+        # ifdef ESP8266
+
+        if ((port == ESPEasySerialPort::serial0_swap) ||
+            (port == ESPEasySerialPort::serial0))
         {
           activeTaskUseSerial0 = true;
         }
-        #endif
+        # endif // ifdef ESP8266
       }
     }
   }
-#endif
+#endif // ifdef PLUGIN_USES_SERIAL
 }
 
 uint8_t Caches::getTaskDeviceValueDecimals(taskIndex_t TaskIndex, uint8_t rel_index)
@@ -235,10 +239,22 @@ bool Caches::enabledPluginStats(taskIndex_t TaskIndex, uint8_t rel_index)
     auto it = getExtraTaskSettings(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
-      return bitRead(it->second.enabledPluginStats, rel_index);
+      return it->second.pluginStatsConfig[rel_index].isEnabled();
     }
   }
   return false;
+}
+
+PluginStats_Config_t Caches::getPluginStatsConfig(taskIndex_t TaskIndex, taskVarIndex_t taskVarIndex)
+{
+  if (validTaskIndex(TaskIndex) && (taskVarIndex < VARS_PER_TASK)) {
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return it->second.pluginStatsConfig[taskVarIndex];
+    }
+  }
+  return PluginStats_Config_t(0);
 }
 
 #endif // if FEATURE_PLUGIN_STATS
@@ -255,7 +271,7 @@ void Caches::updateExtraTaskSettingsCache()
 
     if (it != extraTaskSettings_cache.end()) {
       // We need to keep the original checksum, from when loaded from storage
-      tmp.md5checksum = it->second.md5checksum;
+      tmp.md5checksum                = it->second.md5checksum;
       tmp.defaultTaskDeviceValueName = it->second.defaultTaskDeviceValueName;
 
       // Now clear it so we can create a fresh copy.
@@ -264,10 +280,6 @@ void Caches::updateExtraTaskSettingsCache()
     }
 
     tmp.TaskDeviceName = ExtraTaskSettings.TaskDeviceName;
-
-    #if FEATURE_PLUGIN_STATS
-    tmp.enabledPluginStats = 0;
-    #endif // if FEATURE_PLUGIN_STATS
 
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
         #ifdef ESP32
@@ -280,9 +292,7 @@ void Caches::updateExtraTaskSettingsCache()
       tmp.decimals[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
       #if FEATURE_PLUGIN_STATS
 
-      if (ExtraTaskSettings.enabledPluginStats(i)) {
-        bitSet(tmp.enabledPluginStats, i);
-      }
+      tmp.pluginStatsConfig[i] = ExtraTaskSettings.getPluginStatsConfig(i);
       #endif // if FEATURE_PLUGIN_STATS
     }
     #ifdef ESP32

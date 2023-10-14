@@ -6,7 +6,7 @@
 #if FEATURE_PLUGIN_STATS
 
 # include "../DataStructs/ChartJS_dataset_config.h"
-#include "../DataTypes/TaskIndex.h"
+# include "../DataTypes/TaskIndex.h"
 
 
 # include <CircularBuffer.h>
@@ -81,15 +81,19 @@ public:
   float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
   // Compute min/max over last N stored values
-  float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const;
-   
+  float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples,
+                         bool                         getMax) const;
+
   // Compute sample stored values
   float getSample(int lastNrSamples) const;
-  
+
   float operator[](PluginStatsBuffer_t::index_t index) const;
 
 private:
-  static bool matchedCommand(const String& command, const __FlashStringHelper *cmd_match, int& nrSamples);
+
+  static bool matchedCommand(const String             & command,
+                             const __FlashStringHelper *cmd_match,
+                             int                      & nrSamples);
 
 public:
 
@@ -105,10 +109,10 @@ public:
   bool webformLoad_show_peaks(struct EventStruct *event,
                               bool                include_peak_to_peak = true) const;
   void webformLoad_show_val(
-    struct EventStruct *event,
-    const String      & label,
-    ESPEASY_RULES_FLOAT_TYPE              value,
-    const String      & unit) const;
+    struct EventStruct      *event,
+    const String           & label,
+    ESPEASY_RULES_FLOAT_TYPE value,
+    const String           & unit) const;
 
 
   const String& getLabel() const {
@@ -166,28 +170,28 @@ public:
   PluginStats_array() = default;
   ~PluginStats_array();
 
-  void    initPluginStats(taskVarIndex_t taskVarIndex);
-  void    clearPluginStats(taskVarIndex_t taskVarIndex);
+  void   initPluginStats(taskVarIndex_t taskVarIndex);
+  void   clearPluginStats(taskVarIndex_t taskVarIndex);
 
-  bool    hasStats() const;
-  bool    hasPeaks() const;
+  bool   hasStats() const;
+  bool   hasPeaks() const;
 
   size_t nrSamplesPresent() const;
   size_t nrPluginStats() const;
 
-  void    pushPluginStatsValues(struct EventStruct *event,
-                                bool                trackPeaks);
+  void   pushPluginStatsValues(struct EventStruct *event,
+                               bool                trackPeaks);
 
-  bool    plugin_get_config_value_base(struct EventStruct *event,
-                                       String            & string) const;
+  bool   plugin_get_config_value_base(struct EventStruct *event,
+                                      String            & string) const;
 
-  bool    plugin_write_base(struct EventStruct *event,
-                            const String      & string);
+  bool   plugin_write_base(struct EventStruct *event,
+                           const String      & string);
 
-  bool    webformLoad_show_stats(struct EventStruct *event) const;
+  bool   webformLoad_show_stats(struct EventStruct *event) const;
 
 # if FEATURE_CHART_JS
-  void    plot_ChartJS() const;
+  void   plot_ChartJS() const;
 # endif // if FEATURE_CHART_JS
 
 

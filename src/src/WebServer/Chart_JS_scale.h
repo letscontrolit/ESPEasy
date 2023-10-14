@@ -6,18 +6,19 @@
 
 #if FEATURE_CHART_JS
 
-#include "../WebServer/Chart_JS_title.h"
-#include <vector>
+# include "../WebServer/Chart_JS_title.h"
+# include <vector>
 
 // Options for defining chart axis
-struct ChartJS_options_scale{
-  ChartJS_options_scale(const String& id, const String& title = EMPTY_STRING);
+struct ChartJS_options_scale {
+  ChartJS_options_scale(const String& id,
+                        const String& title = EMPTY_STRING);
 
   // ID used along with the data set to indicate which axis should be used
   String axisID;
 
   // Type of scale, like 'linear', 'logarithmic', 'timeseries', 'category'  (etc.)
-  String scaleType;
+  String        scaleType;
   ChartJS_title axisTitle;
 
   enum class Position {
@@ -30,33 +31,31 @@ struct ChartJS_options_scale{
   enum class Display {
     True,
     False,
-    Auto  // the axis is visible only if at least one associated dataset is visible.
+    Auto // the axis is visible only if at least one associated dataset is visible.
   };
   Position position = Position::Left;
-  Display display = Display::Auto;
+  Display  display  = Display::Auto;
 
   int tickCount{};
 
   String toString() const;
 };
 
-struct ChartJS_options_scales{
-
+struct ChartJS_options_scales {
   ChartJS_options_scales() = default;
 
-  void add(const ChartJS_options_scale& scale);
-  void add(ChartJS_options_scale&& scale);
+  void   add(const ChartJS_options_scale& scale);
+  void   add(ChartJS_options_scale&& scale);
 
   String toString() const;
-  
+
 private:
 
-  std::vector<ChartJS_options_scale> _scales;
-
+  std::vector<ChartJS_options_scale>_scales;
 };
 
 
-#endif
+#endif // if FEATURE_CHART_JS
 
 
-#endif
+#endif // ifndef WEBSERVER_CHART_JS_SCALE_H

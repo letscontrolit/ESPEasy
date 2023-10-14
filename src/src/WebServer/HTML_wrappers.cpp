@@ -282,7 +282,7 @@ void html_add_form() {
 
 void html_add_JQuery_script() {
   #ifndef CDN_URL_JQUERY
-    #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.0.min.js"
+    #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.4.min.js"
   #endif // ifndef CDN_URL_JQUERY
   addHtml(F("<script src=\"" CDN_URL_JQUERY "\"></script>"));
 }

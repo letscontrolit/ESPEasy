@@ -19,8 +19,8 @@
 
 #if FEATURE_CHART_JS
 
-#include "../WebServer/Chart_JS_scale.h"
-#include "../DataStructs/ChartJS_dataset_config.h"
+# include "../WebServer/Chart_JS_scale.h"
+# include "../DataStructs/ChartJS_dataset_config.h"
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
@@ -50,10 +50,10 @@ void add_ChartJS_chart_labels(
 
 void add_ChartJS_dataset(
   const ChartJS_dataset_config& config,
-  const float                values[],
-  int                        valueCount,
-  unsigned int               nrDecimals = 3,
-  const String             & options = EMPTY_STRING);
+  const float                   values[],
+  int                           valueCount,
+  unsigned int                  nrDecimals = 3,
+  const String                & options    = EMPTY_STRING);
 
 void add_ChartJS_dataset_header(const ChartJS_dataset_config& config);
 

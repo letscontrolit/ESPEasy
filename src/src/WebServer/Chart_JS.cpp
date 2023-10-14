@@ -2,9 +2,8 @@
 
 #if FEATURE_CHART_JS
 
-#include "../Helpers/StringConverter.h"
-#include "../WebServer/HTML_wrappers.h"
-
+# include "../Helpers/StringConverter.h"
+# include "../WebServer/HTML_wrappers.h"
 
 
 void add_ChartJS_array(int          valueCount,
@@ -51,7 +50,6 @@ void add_ChartJS_chart_header(
 {
   add_ChartJS_chart_header(chartType, String(id), chartTitle, width, height, options);
 }
-
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
@@ -106,38 +104,39 @@ void add_ChartJS_chart_labels(
 
 void add_ChartJS_dataset(
   const ChartJS_dataset_config& config,
-  const float                values[],
-  int                        valueCount,
-  unsigned int               nrDecimals,
-  const String             & options)
+  const float                   values[],
+  int                           valueCount,
+  unsigned int                  nrDecimals,
+  const String                & options)
 {
   add_ChartJS_dataset_header(config);
   add_ChartJS_array(valueCount, values, nrDecimals);
   add_ChartJS_dataset_footer(options);
 }
 
-
 void add_ChartJS_dataset_header(const ChartJS_dataset_config& config)
 {
   addHtml('{');
-  if (!config.label.isEmpty())
+
+  if (!config.label.isEmpty()) {
     addHtml(strformat(F("label:'%s',"), config.label.c_str()));
+  }
 
   if (!config.color.isEmpty()) {
     addHtml(strformat(F("backgroundColor:'%s',"), config.color.c_str()));
     addHtml(strformat(F("borderColor:'%s',"), config.color.c_str()));
   }
-  if (!config.axisID.isEmpty())
-    addHtml(strformat(F("yAxisID:'%s',"), config.axisID.c_str()));
 
-  if (config.hidden) {
+  if (!config.axisID.isEmpty()) {
+    addHtml(strformat(F("yAxisID:'%s',"), config.axisID.c_str()));
+  }
+
+  if (config.hidden || config.displayConfig.showHidden()) {
     addHtml(F("hidden:true,"));
   }
 
   addHtml(F("data:["));
 }
-
-
 
 void add_ChartJS_dataset_footer(const String& options) {
   addHtml(']', ',');
@@ -154,4 +153,5 @@ void add_ChartJS_dataset_footer(const String& options) {
 void add_ChartJS_chart_footer() {
   addHtml(F("]}});</script>"));
 }
+
 #endif // if FEATURE_CHART_JS

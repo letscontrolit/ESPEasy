@@ -9,6 +9,11 @@
 # include "../DataStructs/ControllerSettingsStruct.h"
 # include "../DataTypes/ControllerIndex.h"
 #endif // ifdef ESP32
+
+#if FEATURE_PLUGIN_STATS
+# include "../DataStructs/PluginStats_Config.h"
+#endif // if FEATURE_PLUGIN_STATS
+
 #include "../Globals/Plugins.h"
 
 #include "../Helpers/RulesHelper.h"
@@ -43,7 +48,7 @@ struct ExtraTaskSettings_cache_t {
   uint8_t      decimals[VARS_PER_TASK] = { 0 };
   uint8_t      defaultTaskDeviceValueName{};
   #if FEATURE_PLUGIN_STATS
-  uint8_t enabledPluginStats = 0;
+  PluginStats_Config_t pluginStatsConfig[VARS_PER_TASK] = {};
   #endif // if FEATURE_PLUGIN_STATS
   bool hasFormula = false;
 };
@@ -93,8 +98,12 @@ struct Caches {
                                     uint8_t     rel_index);
 
   #if FEATURE_PLUGIN_STATS
-  bool enabledPluginStats(taskIndex_t TaskIndex,
-                          uint8_t     rel_index);
+  bool                 enabledPluginStats(taskIndex_t TaskIndex,
+                                          uint8_t     rel_index);
+
+  PluginStats_Config_t getPluginStatsConfig(taskIndex_t    TaskIndex,
+                                            taskVarIndex_t taskVarIndex);
+
   #endif // if FEATURE_PLUGIN_STATS
 
 

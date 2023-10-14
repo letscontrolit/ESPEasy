@@ -43,8 +43,9 @@ String ChartJS_options_scale::toString() const
     }
 
     String ticksStr;
+
     if (tickCount > 0) {
-        ticksStr = strformat(F(",ticks:{count:%d}"), tickCount);
+      ticksStr = strformat(F(",ticks:{count:%d}"), tickCount);
     }
 
     return strformat(

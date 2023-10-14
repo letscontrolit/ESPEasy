@@ -9,6 +9,10 @@
 # include "../WebServer/Markup_Forms.h"
 
 # include "../DataStructs/NodeStruct.h"
+#if FEATURE_PLUGIN_STATS
+#include "../DataStructs/PluginStats_Config.h"
+#endif
+
 
 # include "../Globals/CPlugins.h"
 # include "../Globals/Device.h"
@@ -382,7 +386,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     ExtraTaskSettings.enablePluginFilter(varNr, isFormItemChecked(getPluginCustomArgName(F("TDFIL"), varNr)));
 #endif
 #if FEATURE_PLUGIN_STATS
-    ExtraTaskSettings.enablePluginStats(varNr, isFormItemChecked(getPluginCustomArgName(F("TDS"), varNr)));
+    PluginStats_Config_t pluginStats_Config;
+    pluginStats_Config.setEnabled(isFormItemChecked(getPluginCustomArgName(F("TDS"), varNr)));
+    pluginStats_Config.setHidden(isFormItemChecked(getPluginCustomArgName(F("TDSH"), varNr)));
+
+    ExtraTaskSettings.setPluginStatsConfig(varNr, pluginStats_Config);
 #endif
   }
   ExtraTaskSettings.clearUnusedValueNames(valueCount);
@@ -1393,6 +1401,8 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     {
       html_table_header(F("Stats"), 30);
       ++colCount;
+      html_table_header(F("Hide"), 30);
+      ++colCount;
     }
 #endif
 
@@ -1427,9 +1437,16 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 #if FEATURE_PLUGIN_STATS
       if (device.PluginStats)
       {
+        PluginStats_Config_t cachedConfig = Cache.getPluginStatsConfig(taskIndex, varNr);
         html_TD();
-        const String id = getPluginCustomArgName(F("TDS"), varNr); // ="taskdevicestats"
-        addCheckBox(id, Cache.enabledPluginStats(taskIndex, varNr));
+        addCheckBox(
+          getPluginCustomArgName(F("TDS"), varNr), // ="taskdevicestats"
+          cachedConfig.isEnabled());
+
+        html_TD();
+        addCheckBox(
+          getPluginCustomArgName(F("TDSH"), varNr),  // ="taskdevicestats Hidden"
+          cachedConfig.showHidden());
       }
 #endif
 

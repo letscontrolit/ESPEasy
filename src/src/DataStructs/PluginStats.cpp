@@ -407,7 +407,8 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
         _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
         # if FEATURE_CHART_JS
         const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#0F4C5C"), F("#A4BAB7") };
-        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color = colors[taskVarIndex];
+        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color         = colors[taskVarIndex];
+        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.displayConfig = ExtraTaskSettings.getPluginStatsConfig(taskVarIndex);
         # endif // if FEATURE_CHART_JS
       }
     }
@@ -554,11 +555,13 @@ void PluginStats_array::plot_ChartJS() const
 
   // Chart Header
   String axisOptions;
+
   {
     ChartJS_options_scales scales;
     scales.add({ F("x") });
 
-    bool isLeft          = true;
+    bool isLeft = true;
+
     // FIXME TD-er: Must count the actual nr of axis being used
 
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
