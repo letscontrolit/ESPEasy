@@ -389,6 +389,12 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     PluginStats_Config_t pluginStats_Config;
     pluginStats_Config.setEnabled(isFormItemChecked(getPluginCustomArgName(F("TDS"), varNr)));
     pluginStats_Config.setHidden(isFormItemChecked(getPluginCustomArgName(F("TDSH"), varNr)));
+    const int selectedAxis = getFormItemInt(getPluginCustomArgName(F("TDSA"), varNr));
+    pluginStats_Config.setAxisIndex(selectedAxis);
+    pluginStats_Config.setAxisPosition(
+      ((selectedAxis >> 2) == 0) 
+      ? PluginStats_Config_t::AxisPosition::Left 
+      : PluginStats_Config_t::AxisPosition::Right);
 
     ExtraTaskSettings.setPluginStatsConfig(varNr, pluginStats_Config);
 #endif
@@ -1397,6 +1403,12 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
+    if (device.configurableDecimals())
+    {
+      html_table_header(F("Decimals"), 30);
+      ++colCount;
+    }
+
 #if FEATURE_PLUGIN_STATS
     if (device.PluginStats)
     {
@@ -1404,14 +1416,10 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
       html_table_header(F("Hide"), 30);
       ++colCount;
-    }
-#endif
-
-    if (device.configurableDecimals())
-    {
-      html_table_header(F("Decimals"), 30);
+      html_table_header(F("Axis"), 30);
       ++colCount;
     }
+#endif
 
     //placeholder header
     html_table_header(F(""));
@@ -1435,6 +1443,13 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         addTextBox(id, Cache.getTaskDeviceFormula(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
       }
 
+      if (device.configurableDecimals())
+      {
+        html_TD();
+        const String id = getPluginCustomArgName(F("TDVD"), varNr); // ="taskdevicevaluedecimals"
+        addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, 6);
+      }
+
 #if FEATURE_PLUGIN_STATS
       if (device.PluginStats)
       {
@@ -1448,15 +1463,33 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         addCheckBox(
           getPluginCustomArgName(F("TDSH"), varNr),  // ="taskdevicestats Hidden"
           cachedConfig.showHidden());
+
+        html_TD();
+
+        const __FlashStringHelper *chartAxis[] = {
+          F("L1"),
+          F("L2"),
+          F("L3"),
+          F("L4"),
+          F("R1"),
+          F("R2"),
+          F("R3"),
+          F("R4")
+        };
+
+        int selected = cachedConfig.getAxisIndex();
+        if (cachedConfig.getAxisPosition() == PluginStats_Config_t::AxisPosition::Right)
+          selected += 4;
+
+        addSelector(
+          getPluginCustomArgName(F("TDSA"), varNr),
+          NR_ELEMENTS(chartAxis), 
+          chartAxis, 
+          nullptr,
+          nullptr,
+          selected);
       }
 #endif
-
-      if (device.configurableDecimals())
-      {
-        html_TD();
-        const String id = getPluginCustomArgName(F("TDVD"), varNr); // ="taskdevicevaluedecimals"
-        addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, 6);
-      }
     }
     addFormSeparator(colCount);
   }

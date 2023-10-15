@@ -61,8 +61,8 @@ private:
       uint8_t enabled           : 1; // Bit 00
       uint8_t unused_01         : 1; // Bit 01  Used by isDefaultTaskVarName in ExtraTaskSettingsStruct
       uint8_t hidden            : 1; // Bit 02  Hidden/Displayed state on initial showing of the chart
-      uint8_t chartAxisPosition : 1; // Bit 03
-      uint8_t chartAxisIndex    : 2; // Bit 04 ... 05
+      uint8_t chartAxisIndex    : 2; // Bit 03 ... 04
+      uint8_t chartAxisPosition : 1; // Bit 05
       uint8_t unused_06         : 1; // Bit 06
       uint8_t unused_07         : 1; // Bit 07
     }       bits;

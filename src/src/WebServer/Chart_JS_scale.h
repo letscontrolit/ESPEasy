@@ -37,6 +37,7 @@ struct ChartJS_options_scale {
   Display  display  = Display::Auto;
 
   int tickCount{};
+  int weight{};
 
   String toString() const;
 };
@@ -45,9 +46,14 @@ struct ChartJS_options_scales {
   ChartJS_options_scales() = default;
 
   void   add(const ChartJS_options_scale& scale);
-  void   add(ChartJS_options_scale&& scale);
+
+  void   resetTickCount();
 
   String toString() const;
+
+  size_t nrScales() const {
+    return _scales.size();
+  }
 
 private:
 

@@ -47,14 +47,14 @@ String ChartJS_options_scale::toString() const
     if (tickCount > 0) {
       ticksStr = strformat(F(",ticks:{count:%d}"), tickCount);
     }
-
     return strformat(
-      F("\"%s\":{display: %s,type:\"%s\",position:\"%s\",title: %s%s}"),
+      F("\"%s\":{display: %s,type:\"%s\",position:\"%s\",title: %s,weight:%d%s}"),
       axisID.c_str(),
       displayStr.c_str(),
       typeStr.c_str(),
       positionStr.c_str(),
       axisTitle.toString().c_str(),
+      weight,
       ticksStr.c_str());
   }
   return EMPTY_STRING;
@@ -62,12 +62,24 @@ String ChartJS_options_scale::toString() const
 
 void ChartJS_options_scales::add(const ChartJS_options_scale& scale)
 {
+  for (auto it = _scales.begin(); it != _scales.end(); ++it) {
+    if (it->axisID.equals(scale.axisID)) {
+      // Found an axis with same ID.
+      // Combine labels and don't create a new one.
+      it->axisTitle.text += F(" / ");
+      it->axisTitle.text += scale.axisTitle.text;
+      it->axisTitle.color.clear();
+      return;
+    }
+  }
   _scales.push_back(scale);
 }
 
-void ChartJS_options_scales::add(ChartJS_options_scale&& scale)
+void ChartJS_options_scales::resetTickCount()
 {
-  _scales.push_back(std::move(scale));
+  for (auto it = _scales.begin(); it != _scales.end(); ++it) {
+    it->tickCount = 0;
+  }
 }
 
 String ChartJS_options_scales::toString() const
@@ -90,22 +102,6 @@ String ChartJS_options_scales::toString() const
   }
   res += '}';
   res += ',';
-  return res;
-}
-
-String make_ChartJS_scale_options_singleAxis(
-  const String       & AxisType,
-  const ChartJS_title& AxisTitle)
-{
-  String res;
-
-  if (!AxisType.isEmpty()) {
-    res += F("type: '");
-    res += AxisType;
-    res += '\'';
-    res += ',';
-  }
-  res += AxisTitle.toString();
   return res;
 }
 

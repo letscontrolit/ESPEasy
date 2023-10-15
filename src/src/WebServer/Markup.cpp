@@ -745,44 +745,37 @@ void addFloatNumberBox(const String& id, float value, float min, float max, unsi
                        #endif // if FEATURE_TOOLTIPS
                        )
 {
-  String html;
-
-  html.reserve(64 + id.length());
-
-  html += F("<input type='number' name='");
-  html += id;
-  html += '\'';
-  html += F(" min=");
-  html += toString(min, nrDecimals);
-  html += F(" max=");
-  html += toString(max, nrDecimals);
-  html += F(" step=");
+  addHtml(F("<input type='number' name='"));
+  addHtml(id);
+  addHtml(F("' min="));
+  addHtmlFloat(min, nrDecimals);
+  addHtml(F(" max="));
+  addHtmlFloat(max, nrDecimals);
+  addHtml(F(" step="));
 
   if (stepsize <= 0.0f) {
-    html += F("0.");
+    addHtml(F("0."));
 
     for (uint8_t i = 1; i < nrDecimals; ++i) {
-      html += '0';
+      addHtml('0');
     }
-    html += '1';
+    addHtml('1');
   } else {
-    html += toString(stepsize, nrDecimals);
+    addHtmlFloat(stepsize, nrDecimals);
   }
 
-  html += F(" style='width:7em;' value=");
-  html += toString(value, nrDecimals);
+  addHtml(F(" style='width:7em;' value="));
+  addHtmlFloat(value, nrDecimals);
 
   #if FEATURE_TOOLTIPS
 
   if (tooltip.length() > 0) {
-    html += F("title='");
-    html += tooltip;
-    html += F("' ");
+    addHtml(F("title='"));
+    addHtml(tooltip);
+    addHtml(F("' "));
   }
   #endif // if FEATURE_TOOLTIPS
-  html += '>';
-
-  addHtml(html);
+  addHtml('>');
 }
 
 // ********************************************************************************

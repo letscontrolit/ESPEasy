@@ -554,42 +554,60 @@ void PluginStats_array::plot_ChartJS() const
   const size_t nrStats = nrPluginStats();
 
   // Chart Header
-  String axisOptions;
-
   {
+    String axisOptions;
+
+    if (nrSamples > 64) {
+      axisOptions = F("elements:{point:{radius:0}},");
+    }
+
     ChartJS_options_scales scales;
     scales.add({ F("x") });
 
-    bool isLeft = true;
-
-    // FIXME TD-er: Must count the actual nr of axis being used
-
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
       if (_plugin_stats[i] != nullptr) {
-        _plugin_stats[i]->_ChartJS_dataset_config.axisID = concat(F("y"), i);
+        const bool isLeft = _plugin_stats[i]->_ChartJS_dataset_config.displayConfig.getAxisPosition() ==
+                            PluginStats_Config_t::AxisPosition::Left;
+        const int axisIndex = _plugin_stats[i]->_ChartJS_dataset_config.displayConfig.getAxisIndex();
+        _plugin_stats[i]->_ChartJS_dataset_config.axisID =
+          strformat((isLeft
+          ? F("y-left-%d")
+          : F("y-right-%d")),
+                    axisIndex);
+
         ChartJS_options_scale scaleOption(
           _plugin_stats[i]->_ChartJS_dataset_config.axisID,
           _plugin_stats[i]->getLabel());
         scaleOption.position        = isLeft ? ChartJS_options_scale::Position::Left : ChartJS_options_scale::Position::Right;
         scaleOption.axisTitle.color = _plugin_stats[i]->_ChartJS_dataset_config.color;
-        isLeft                      = !isLeft;
+        scaleOption.weight = axisIndex;
 
         if (nrStats > 1) {
-          scaleOption.tickCount = 10;
+          // We want 10 intervals, thus 11 ticks.
+          scaleOption.tickCount = 11;
         }
-        scales.add(scaleOption);
+
+        if (nrSamples) {
+          scales.add(scaleOption);
+        }
       }
     }
-    axisOptions = scales.toString();
+
+    const int nrY_axis = scales.nrScales() - 1;
+
+    if (nrY_axis <= 1) {
+      scales.resetTickCount();
+    }
+    axisOptions += scales.toString();
+    add_ChartJS_chart_header(
+      F("line"),
+      F("TaskStatsChart"),
+      {},
+      500 + (70 * (nrY_axis - 1)),
+      500,
+      axisOptions);
   }
 
-  add_ChartJS_chart_header(
-    F("line"),
-    F("TaskStatsChart"),
-    {},
-    500 + (70 * (nrStats - 1)),
-    500,
-    axisOptions);
 
   // Add labels
   for (size_t i = 0; i < nrSamples; ++i) {
