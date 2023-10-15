@@ -17,13 +17,9 @@
 // ********************************************************************************
 void addFormSeparator(int clspan)
 {
-  String html;
-
-  html.reserve(40);
-  html += F("<TR><TD colspan='");
-  html += clspan;
-  html += F("'><hr>");
-  addHtml(html);
+  addHtml(strformat(
+    F("<TR><TD colspan='%d'><hr>"),
+    clspan));
 }
 
 // ********************************************************************************
@@ -32,10 +28,7 @@ void addFormSeparator(int clspan)
 void addFormNote(const __FlashStringHelper * text)
 {
   addRowLabel_tr_id(EMPTY_STRING, EMPTY_STRING);
-  addHtml(F(" <div "));
-  addHtmlAttribute(F("class"), F("note"));
-  addHtml('>');
-  addHtml(F("Note: "));
+  addHtml(F(" <div class:'note'>Note: "));
   addHtml(text);
   addHtml(F("</div>"));
 }
@@ -44,7 +37,7 @@ void addFormNote(const String& text, const String& id)
 {
   if (text.isEmpty())  return;
   addRowLabel_tr_id(EMPTY_STRING, id);
-  addHtmlDiv(F("note"), String(F("Note: ")) + text);
+  addHtmlDiv(F("note"), concat(F("Note: "), text));
 }
 
 // ********************************************************************************
@@ -356,20 +349,23 @@ void addFormIPBox(const __FlashStringHelper *label,
   addFormIPBox(String(label), String(id), ip);
 }
 
+void addFormTextBox(const String& label, const String& id, const String& value)
+{
+  addRowLabel_tr_id(label, id);
+
+  addHtml(strformat(
+    F("<input class='wide' type='text' name='%s' id='%s' value='%s'>"),
+    id.c_str(),
+    id.c_str(),
+    value.c_str()
+  ));
+}
 
 void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
 {
-  bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
+  const bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
-  addRowLabel_tr_id(label, id);
-
-  addHtml(F("<input "));
-  addHtmlAttribute(F("class"), F("wide"));
-  addHtmlAttribute(F("type"),  F("text"));
-  addHtmlAttribute(F("name"),  id);
-  addHtmlAttribute(F("id"),    id);
-  addHtmlAttribute(F("value"), (empty_IP) ? EMPTY_STRING : formatIP(ip));
-  addHtml('>');
+  addFormTextBox(label, id, (empty_IP) ? EMPTY_STRING : formatIP(ip));
 }
 
 // ********************************************************************************
@@ -377,16 +373,10 @@ void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
 // ********************************************************************************
 void addFormMACBox(const String& label, const String& id, const MAC_address mac)
 {
-  addRowLabel_tr_id(label, id);
-
-  addHtml(F("<input class='wide' type='text' name='"));
-  addHtml(id);
-  addHtml(F("' value='"));
-
-  if (!mac.all_zero()) {
-    addHtml(mac.toString());
-  }
-  addHtml(F("'>"));
+  addFormTextBox(
+    label, 
+    id, 
+    mac.all_zero() ? EMPTY_STRING.c_str() : mac.toString());
 }
 
 // ********************************************************************************
@@ -619,9 +609,7 @@ void addFormSelector_YesNo(const __FlashStringHelper * label,
                            int           selectedIndex,
                            bool       reloadonchange)
 {
-  const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
-  int optionValuesNoYes[2]                   = { 0, 1 };
-  addFormSelector(label, id, 2, optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
+  addFormSelector_YesNo(label, String(id), selectedIndex, reloadonchange);
 }
 
 void addFormSelector_YesNo(const __FlashStringHelper * label,
@@ -655,17 +643,12 @@ void addFormPinStateSelect(int gpio, int choice)
   bool input, output, warning;
 
   if (getGpioInfo(gpio, pinnr, input, output, warning)) {
-    String id;
-    id += 'p';
-    id += gpio;
-    {
-      String label;
-      label.reserve(32);
-      label  = F("Pin mode ");
-      label += createGPIO_label(gpio, pinnr, input, output, warning);
-
-      addRowLabel_tr_id(label, id);
-    }
+    const String id = String('p') + gpio;
+    addRowLabel_tr_id(
+      concat(
+        F("Pin mode "), 
+        createGPIO_label(gpio, pinnr, input, output, warning)), 
+      id);
     bool hasPullUp, hasPullDown;
     getGpioPullResistor(gpio, hasPullUp, hasPullDown);
     int nr_options = 0;

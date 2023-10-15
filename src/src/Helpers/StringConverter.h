@@ -20,6 +20,7 @@
 
 String concat(const __FlashStringHelper * str, const String &val);
 String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
+String concat(const char& str, const String &val);
 
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {

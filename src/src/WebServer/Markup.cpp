@@ -149,47 +149,31 @@ void addSelector(const String  & id,
 
 void addSelector_options(int optionCount, const __FlashStringHelper *options[], const int indices[], const String attr[], int selectedIndex)
 {
-  int index;
-
-  for (uint8_t x = 0; x < optionCount; x++)
+  for (uint8_t x = 0; x < optionCount; ++x)
   {
-    if (indices) {
-      index = indices[x];
-    }
-    else {
-      index = x;
-    }
-    String attr_str;
-
-    if (attr)
-    {
-      attr_str = attr[x];
-    }
-    addSelector_Item(options[x], index, selectedIndex == index, false, attr_str);
-    if (x % 10 == 0) delay(0);
+    const int index = indices ? indices[x] : x;
+    addSelector_Item(
+      options[x], 
+      index, 
+      selectedIndex == index, 
+      false, 
+      attr ? attr[x] : EMPTY_STRING);
+    if ((x & 0x07) == 0) delay(0);
   }
 }
 
 void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex)
 {
-  int index;
-
-  for (uint8_t x = 0; x < optionCount; x++)
+  for (uint8_t x = 0; x < optionCount; ++x)
   {
-    if (indices) {
-      index = indices[x];
-    }
-    else {
-      index = x;
-    }
-    String attr_str;
-
-    if (attr)
-    {
-      attr_str = attr[x];
-    }
-    addSelector_Item(options[x], index, selectedIndex == index, false, attr_str);
-    if (x % 10 == 0) delay(0);
+    const int index = indices ? indices[x] : x;
+    addSelector_Item(
+      options[x], 
+      index, 
+      selectedIndex == index, 
+      false, 
+      attr ? attr[x] : EMPTY_STRING);
+    if ((x & 0x07) == 0) delay(0);
   }
 }
 
@@ -478,19 +462,14 @@ void addRowLabel_tr_id(const String& label, const String& id)
   if (id.isEmpty()) {
     addRowLabel(label);
   } else {
-    String tr_id = F("tr_");
-
-    tr_id += id;
-    addRowLabel(label, tr_id);
+    addRowLabel(label, concat(F("tr_"), id));
   }
 }
 
 void addRowLabel(const __FlashStringHelper *label)
 {
   html_TR_TD();
-  addHtml(label);
-  addHtml(':');
-  addHtml(F("</td>"));
+  addHtml(concat(label, F(":</td>")));
   html_TD();
 }
 
@@ -550,15 +529,13 @@ void addRowLabelValue_copy(LabelType::Enum label) {
 // ********************************************************************************
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size)
 {
-  addHtml(F("<TR><TD colspan="));
-  addHtmlInt(colspan);
-  addHtml(F("><H"));
-  addHtmlInt(h_size);
-  addHtml('>');
+  addHtml(strformat(
+    F("<TR><TD colspan=%d><H%d>"),
+    colspan, h_size));
   addHtml(label);
-  addHtml(F("</H"));
-  addHtmlInt(h_size);
-  addHtml(F("></TD></TR>"));
+  addHtml(strformat(
+    F("</H%d></TD></TR>"),
+    h_size));
 }
 
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size, const __FlashStringHelper *helpButton)
@@ -567,29 +544,17 @@ void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size
 }
 
 void addTableSeparator(const String& label, int colspan, int h_size, const String& helpButton) {
-  {
-    String html;
-    html.reserve(32 + label.length());
-    html += F("<TR><TD colspan=");
-    html += colspan;
-    html += F("><H");
-    html += h_size;
-    html += '>';
-    html += label;
-    addHtml(html);
-  }
+  addHtml(strformat(
+    F("<TR><TD colspan=%d><H%d>"),
+    colspan, h_size));
+  addHtml(label);
 
-  if (helpButton.length() > 0) {
+  if (!helpButton.isEmpty()) {
     addHelpButton(helpButton);
   }
-  {
-    String html;
-    html.reserve(16);
-    html += F("</H");
-    html += h_size;
-    html += F("></TD></TR>");
-    addHtml(html);
-  }
+  addHtml(strformat(
+    F("</H%d></TD></TR>"),
+    h_size));
 }
 
 void addFormHeader(const __FlashStringHelper *header) {
@@ -745,16 +710,16 @@ void addFloatNumberBox(const String& id, float value, float min, float max, unsi
                        #endif // if FEATURE_TOOLTIPS
                        )
 {
-  addHtml(F("<input type='number' name='"));
-  addHtml(id);
-  addHtml(F("' min="));
+  addHtml(strformat(
+      F("<input type='number' name='%s' min="),
+      id.c_str()));
   addHtmlFloat(min, nrDecimals);
   addHtml(F(" max="));
   addHtmlFloat(max, nrDecimals);
   addHtml(F(" step="));
 
   if (stepsize <= 0.0f) {
-    addHtml(F("0."));
+    addHtml('0', '.');
 
     for (uint8_t i = 1; i < nrDecimals; ++i) {
       addHtml('0');
@@ -769,10 +734,9 @@ void addFloatNumberBox(const String& id, float value, float min, float max, unsi
 
   #if FEATURE_TOOLTIPS
 
-  if (tooltip.length() > 0) {
-    addHtml(F("title='"));
-    addHtml(tooltip);
-    addHtml(F("' "));
+  if (!tooltip.isEmpty()) {
+    addHtml(strformat(
+      F("title='%s' "), tooltip.c_str()));
   }
   #endif // if FEATURE_TOOLTIPS
   addHtml('>');
@@ -916,13 +880,10 @@ void addHelpButton(const String& url, bool isRTD)
 }
 
 void addRTDPluginButton(pluginID_t pluginID) {
-  String url;
-
-  url.reserve(16);
-  url = F("Plugin/");
-  url += get_formatted_Plugin_number(pluginID);
-  url += F(".html");
-  addRTDHelpButton(url);
+  addRTDHelpButton(
+    strformat(
+      F("Plugin/%s.html"),
+      get_formatted_Plugin_number(pluginID).c_str()));
 
   constexpr pluginID_t PLUGIN_ID_P076_HLW8012(76);
   constexpr pluginID_t PLUGIN_ID_P077_CSE7766(77);
@@ -938,13 +899,10 @@ void addRTDPluginButton(pluginID_t pluginID) {
 
 # ifndef LIMIT_BUILD_SIZE
 void addRTDControllerButton(cpluginID_t cpluginID) {
-  String url;
-
-  url.reserve(20);
-  url = F("Controller/");
-  url += get_formatted_Controller_number(cpluginID);
-  url += F(".html");
-  addRTDHelpButton(url);
+  addRTDHelpButton(
+    strformat(
+      F("Controller/%s.html"),
+      get_formatted_Controller_number(cpluginID).c_str()));
 }
 # endif // ifndef LIMIT_BUILD_SIZE
 
@@ -983,11 +941,11 @@ void addPinSelect(PinSelectPurpose purpose, const String& id,  int choice)
     const bool UsableGPIO = getGpioInfo(gpio, pinnr, input, output, warning);
 
     if (UsableGPIO || (i == 0)) {
-      String gpio_label = createGPIO_label(gpio, pinnr, input, output, warning);
-      gpio_label += getConflictingUse_wrapped(gpio, purpose);
       addPinSelector_Item(
         purpose,
-        gpio_label,
+        concat(
+          createGPIO_label(gpio, pinnr, input, output, warning),
+          getConflictingUse_wrapped(gpio, purpose)),
         gpio,
         choice == gpio);
 

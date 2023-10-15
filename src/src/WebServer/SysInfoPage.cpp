@@ -310,10 +310,10 @@ void handle_sysinfo_basicInfo() {
 
   if (wdcounter > 0)
   {
-    addHtml(String(getCPUload()));
-    addHtml(F("% (LC="));
-    addHtmlInt(getLoopCountPerSec());
-    addHtml(')');
+    addHtml(strformat(
+      F("%.2f%% (LC=%d)"),
+      getCPUload(),
+      getLoopCountPerSec()));
   }
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
@@ -321,9 +321,8 @@ void handle_sysinfo_basicInfo() {
   addRowLabel(F("Boot"));
   {
     addHtml(getLastBootCauseString());
-    addHtml(F(" ("));
-    addHtmlInt(static_cast<uint32_t>(RTC.bootCounter));
-    addHtml(')');
+    addHtml(strformat(
+      F(" (%d)"), static_cast<uint32_t>(RTC.bootCounter)));
   }
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
@@ -573,12 +572,12 @@ void handle_sysinfo_ESP_Board() {
 
 
   addRowLabel(LabelType::ESP_CHIP_ID);
-  {
-    addHtmlInt(getChipId());
-    addHtml(' ', '(');
-    addHtml(formatToHex(getChipId(), 6));
-    addHtml(')');
-  }
+
+  const uint32_t chipID = getChipId();
+  addHtml(strformat(
+    F("%d (%s)"), 
+    chipID, 
+    formatToHex(chipID, 6).c_str()));
 
   addRowLabelValue(LabelType::ESP_CHIP_FREQ);
   addHtml(F(" MHz"));
@@ -607,9 +606,7 @@ void handle_sysinfo_ESP_Board() {
 void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
-  uint32_t flashChipId = getFlashChipId();
-
-  if (flashChipId != 0) {
+  if (getFlashChipId() != 0) {
     addRowLabel(LabelType::FLASH_CHIP_ID);
 
 
@@ -660,22 +657,18 @@ void handle_sysinfo_Storage() {
   addRowLabelValue(LabelType::FLASH_IDE_MODE);
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
-  {
-    addHtmlInt(RTC.flashDayCounter);
-    addHtml(F(" daily / "));
-    addHtmlInt(static_cast<int>(RTC.flashCounter));
-    addHtml(F(" boot"));
-  }
+  addHtml(strformat(
+    F("%d daily / %d boot"),
+    RTC.flashDayCounter,
+    static_cast<int>(RTC.flashCounter)));
 
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(LabelType::SKETCH_SIZE);
-    {
-      addHtmlInt(getSketchSize() / 1024);
-      addHtml(F(" kB ("));
-      addHtmlInt(getFreeSketchSpace() / 1024);
-      addHtml(F(" kB free)"));
-    }
+    addHtml(strformat(
+      F("%d kB (%d kB free)"),
+      getSketchSize() / 1024,
+      getFreeSketchSpace() / 1024));
 
     uint32_t maxSketchSize;
     bool     use2step;
@@ -684,12 +677,10 @@ void handle_sysinfo_Storage() {
     # endif // if defined(ESP8266)
     OTA_possible(maxSketchSize, use2step);
     addRowLabel(LabelType::MAX_OTA_SKETCH_SIZE);
-    {
-      addHtmlInt(maxSketchSize / 1024);
-      addHtml(F(" kB ("));
-      addHtmlInt(maxSketchSize);
-      addHtml(F(" bytes)"));
-    }
+    addHtml(strformat(
+      F("%d kB (%d bytes)"),
+      maxSketchSize / 1024,
+      maxSketchSize));
 
     # if defined(ESP8266)
     addRowLabel(LabelType::OTA_POSSIBLE);
@@ -701,12 +692,11 @@ void handle_sysinfo_Storage() {
   }
 
   addRowLabel(LabelType::FS_SIZE);
-  {
-    addHtmlInt(SpiffsTotalBytes() / 1024);
-    addHtml(F(" kB ("));
-    addHtmlInt(SpiffsFreeSpace() / 1024);
-    addHtml(F(" kB free)"));
-  }
+  addHtml(strformat(
+    F("%d kB (%d kB free)"),
+    SpiffsTotalBytes() / 1024,
+    SpiffsFreeSpace() / 1024));
+
   # ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
   addHtmlInt(SpiffsPagesize());

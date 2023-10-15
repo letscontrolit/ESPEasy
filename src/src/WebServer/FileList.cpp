@@ -148,9 +148,7 @@ void handle_filelist() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String fdelete = webArg(F("delete"));
-
-  if (tryDeleteFile(fdelete))
+  if (tryDeleteFile(webArg(F("delete"))))
   {
     checkRuleSets();
   }
@@ -166,13 +164,13 @@ void handle_filelist() {
   }
   # endif // ifdef USES_C016
   int32_t startIdx       = 0;
-  String fstart      = webArg(F("start"));
+  const String fstart    = webArg(F("start"));
 
   if (fstart.length() > 0)
   {
     validIntFromString(fstart, startIdx);
   }
-  int endIdx = startIdx + FILES_PER_PAGE - 1;
+  const int endIdx = startIdx + FILES_PER_PAGE - 1;
   html_table_class_multirow();
   html_table_header(F(""),        50);
   html_table_header(F("Filename"));

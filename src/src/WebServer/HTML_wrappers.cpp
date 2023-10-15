@@ -23,23 +23,19 @@ void wrap_html_tag(const __FlashStringHelper * tag, const String& text) {
 }
 
 void wrap_html_tag(const String& tag, const String& text) {
-  addHtml('<');
-  addHtml(tag);
-  addHtml('>');
-  addHtml(text);
-  addHtml('<', '/');
-  addHtml(tag);
-  addHtml('>');
+  addHtml(strformat(
+    F("<%s>%s</%s>"),
+    tag.c_str(),
+    text.c_str(),
+    tag.c_str()));
 }
 
 void wrap_html_tag(char tag, const String& text) {
-  addHtml('<');
-  addHtml(tag);
-  addHtml('>');
-  addHtml(text);
-  addHtml('<', '/');
-  addHtml(tag);
-  addHtml('>');
+  addHtml(strformat(
+    F("<%c>%s</%c>"),
+    tag,
+    text.c_str(),
+    tag));
 }
 
 void html_B(const __FlashStringHelper * text) {
@@ -78,10 +74,8 @@ void html_TR() {
 
 void html_TR_TD_height(int height) {
   html_TR();
-
-  addHtml(F("<TD HEIGHT=\""));
-  addHtmlInt(height);
-  addHtml('"', '>');
+  addHtml(strformat(
+    F("<TD HEIGHT=\"%d\">"), height));
 }
 
 void html_TD() {
@@ -109,9 +103,8 @@ void html_reset_copyTextCounter() {
 void html_copyText_TD() {
   ++copyTextCounter;
 
-  addHtml(F("<TD id='copyText_"));
-  addHtmlInt(copyTextCounter);
-  addHtml('\'', '>');;
+  addHtml(strformat(
+    F("<TD id='copyText_%d'>"), copyTextCounter));
 }
 
 // Add some recognizable token to show which parts will be copied.
@@ -211,9 +204,8 @@ void html_table_header(const String& label, const String& helpButton, const Stri
   addHtml(F("<TH"));
 
   if (width > 0) {
-    addHtml(F(" style='width:"));
-    addHtmlInt(width);
-    addHtml(F("px;'"));
+    addHtml(strformat(
+      F(" style='width:%dpx;'"), width));
   }
   addHtml('>');
   addHtml(label);
@@ -268,12 +260,7 @@ void html_add_wide_button_prefix() {
 }
 
 void html_add_wide_button_prefix(const String& classes, bool enabled) {
-  String wide_classes;
-
-  wide_classes.reserve(classes.length() + 5);
-  wide_classes  = F("wide ");
-  wide_classes += classes;
-  html_add_button_prefix(wide_classes, enabled);
+  html_add_button_prefix(concat(F("wide "), classes), enabled);
 }
 
 void html_add_form() {

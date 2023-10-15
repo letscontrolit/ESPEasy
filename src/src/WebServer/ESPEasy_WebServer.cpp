@@ -160,14 +160,15 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
 }
 
 bool captivePortal() {
-  const bool fromAP = web_server.client().localIP() == apIP;
+  WiFiClient client = web_server.client();
+  const IPAddress client_localIP = client.localIP();
+  const bool fromAP = client_localIP == apIP;
   const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();
   if (hasWiFiCredentials || !fromAP) {
     return false;
   }
   if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
-    String redirectURL = F("http://");
-    redirectURL += formatIP(web_server.client().localIP());
+    String redirectURL = concat(F("http://"), formatIP(client_localIP));
     #ifdef WEBSERVER_SETUP
     if (fromAP && !hasWiFiCredentials) {
       redirectURL += F("/setup");
@@ -175,7 +176,7 @@ bool captivePortal() {
     #endif
     sendHeader(F("Location"), redirectURL, true);
     web_server.send(302, F("text/plain"), EMPTY_STRING);   // Empty content inhibits Content-length header so we have to close the socket ourselves.
-    web_server.client().stop(); // Stop is needed because we sent no content length
+    client.stop(); // Stop is needed because we sent no content length
     return true;
   }
   return false;

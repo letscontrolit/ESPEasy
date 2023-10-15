@@ -38,6 +38,13 @@ String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
   return concat(str, String(val));
 }
 
+String concat(const char& str, const String &val)
+{
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
 bool equals(const String& str, const __FlashStringHelper * f_str) {
   return str.equals(String(f_str));
 }

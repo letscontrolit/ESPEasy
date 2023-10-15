@@ -324,7 +324,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       update_whenset_FormItemInt(concat(F("taskdevicepin"), i + 1), pins[i]);
     }
 
-    bool taskEnabled = isFormItemChecked(F("TDE"));
+    const bool taskEnabled = isFormItemChecked(F("TDE"));
     setBasicTaskValues(taskIndex, taskdevicetimer,
                       taskEnabled, webArg(F("TDN")),
                       pins);
@@ -454,11 +454,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
 
 void html_add_setPage(uint8_t page, bool isLinkToPrev) {
-  addHtml(F("devices?setpage="));
-  addHtmlInt(page);
-  addHtml(F("'>&"));
-  addHtml(isLinkToPrev ? 'l' : 'g');
-  addHtml(F("t;</a>"));
+  addHtml(strformat(
+    F("devices?setpage=%u'>&%ct;</a>"),
+    static_cast<unsigned int>(page),
+    isLinkToPrev ? 'l' : 'g'));
 }
 
 // ********************************************************************************
@@ -504,11 +503,13 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       html_add_button_prefix();
     }
     {
-      addHtml(concat(F("devices?index="), static_cast<int>(x + 1)));
-      addHtml(concat(F("&page="), static_cast<int>(page)));
-      addHtml('\'', '>');
+      const int pageIndex = static_cast<int>(x + 1);
+      addHtml(strformat(
+        F("devices?index=%d&page=%u'>"), 
+        pageIndex,
+        static_cast<unsigned int>(page)));
       addHtml(pluginID_set ? F("Edit") : F("Add"));
-      addHtml(concat(F("</a><TD>"), static_cast<int>(x + 1)));
+      addHtml(concat(F("</a><TD>"), pageIndex));
       html_TD();
     }
 
@@ -584,8 +585,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               if (validProtocolIndex(ProtocolIndex)) {
                 if (getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[controllerNr] != 0))
                 {
-                  addHtml(concat(F(" ("), static_cast<int>(Settings.TaskDeviceID[controllerNr][x])));
-                  addHtml(')');
+                  addHtml(strformat(
+                    F(" (%d)"),
+                    static_cast<int>(Settings.TaskDeviceID[controllerNr][x])));
 
                   if (Settings.TaskDeviceID[controllerNr][x] == 0) {
                     addHtml(' ');
@@ -1203,15 +1205,14 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
       html_end_table();
     } else {
       int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Channel[taskIndex];
-      String  i2c_mux_portoptions[9];
-      int     i2c_mux_portchoices[9];
-      uint8_t mux_opt = 0;
-      i2c_mux_portoptions[mux_opt] = F("(Not connected via multiplexer)");
-      i2c_mux_portchoices[mux_opt] = -1;
-      uint8_t mux_max = I2CMultiplexerMaxChannels();
-
-      for (int x = 0; x < mux_max; x++) {
-        mux_opt++;
+      const uint32_t mux_max = I2CMultiplexerMaxChannels();
+      String  i2c_mux_portoptions[mux_max + 1];
+      int     i2c_mux_portchoices[mux_max + 1];
+      i2c_mux_portoptions[0] = F("(Not connected via multiplexer)");
+      i2c_mux_portchoices[0] = -1;
+      
+      for (uint32_t x = 0; x < mux_max; x++) {
+        const uint32_t mux_opt = x + 1;
         i2c_mux_portoptions[mux_opt] = concat(F("Channel "), x);
         i2c_mux_portchoices[mux_opt] = x;
       }
@@ -1219,7 +1220,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
       if (taskDeviceI2CMuxPort >= mux_max) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
       addFormSelector(F("Connected to"),
                       F("taskdevicei2cmuxport"),
-                      mux_opt + 1,
+                      mux_max + 1,
                       i2c_mux_portoptions,
                       i2c_mux_portchoices,
                       taskDeviceI2CMuxPort);
