@@ -555,57 +555,31 @@ void PluginStats_array::plot_ChartJS() const
 
   // Chart Header
   {
-    String axisOptions;
-
-    if (nrSamples > 64) {
-      axisOptions = F("elements:{point:{radius:0}},");
-    }
-
     ChartJS_options_scales scales;
     scales.add({ F("x") });
 
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
       if (_plugin_stats[i] != nullptr) {
-        const bool isLeft = _plugin_stats[i]->_ChartJS_dataset_config.displayConfig.getAxisPosition() ==
-                            PluginStats_Config_t::AxisPosition::Left;
-        const int axisIndex = _plugin_stats[i]->_ChartJS_dataset_config.displayConfig.getAxisIndex();
-        _plugin_stats[i]->_ChartJS_dataset_config.axisID =
-          strformat((isLeft
-          ? F("y-left-%d")
-          : F("y-right-%d")),
-                    axisIndex);
-
         ChartJS_options_scale scaleOption(
-          _plugin_stats[i]->_ChartJS_dataset_config.axisID,
+          _plugin_stats[i]->_ChartJS_dataset_config.displayConfig,
           _plugin_stats[i]->getLabel());
-        scaleOption.position        = isLeft ? ChartJS_options_scale::Position::Left : ChartJS_options_scale::Position::Right;
         scaleOption.axisTitle.color = _plugin_stats[i]->_ChartJS_dataset_config.color;
-        scaleOption.weight = axisIndex;
+        scales.add(scaleOption);
 
-        if (nrStats > 1) {
-          // We want 10 intervals, thus 11 ticks.
-          scaleOption.tickCount = 11;
-        }
-
-        if (nrSamples) {
-          scales.add(scaleOption);
-        }
+        _plugin_stats[i]->_ChartJS_dataset_config.axisID = scaleOption.axisID;
       }
     }
 
-    const int nrY_axis = scales.nrScales() - 1;
+    scales.update_Yaxis_TickCount();
 
-    if (nrY_axis <= 1) {
-      scales.resetTickCount();
-    }
-    axisOptions += scales.toString();
     add_ChartJS_chart_header(
       F("line"),
       F("TaskStatsChart"),
       {},
-      500 + (70 * (nrY_axis - 1)),
+      500 + (70 * (scales.nr_Y_scales() - 1)),
       500,
-      axisOptions);
+      scales.toString(),
+      nrSamples);
   }
 
 

@@ -22,6 +22,8 @@ struct PluginStats_Config_t {
     return static_cast<AxisPosition>(bits.chartAxisPosition);
   }
 
+  bool isLeft() const { return AxisPosition::Left == getAxisPosition(); }
+
   void setAxisPosition(AxisPosition position) {
     bits.chartAxisPosition = static_cast<uint8_t>(position);
   }

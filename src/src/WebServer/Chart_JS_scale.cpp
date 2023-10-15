@@ -20,6 +20,18 @@ ChartJS_options_scale::ChartJS_options_scale(const String& id, const String& tit
   axisTitle.text = title;
 }
 
+ChartJS_options_scale::ChartJS_options_scale(const PluginStats_Config_t& config, const String& title)
+{
+  const bool isLeft = config.isLeft();
+
+  position = isLeft ? Position::Left : Position::Right;
+  weight   = config.getAxisIndex();
+  axisID   = strformat((isLeft ? F("y-left-%d") : F("y-right-%d")),
+                       weight);
+  axisTitle.text = title;
+  display        = Display::Auto;
+}
+
 String ChartJS_options_scale::toString() const
 {
   if (!axisID.isEmpty()) {
@@ -48,7 +60,7 @@ String ChartJS_options_scale::toString() const
       ticksStr = strformat(F(",ticks:{count:%d}"), tickCount);
     }
     return strformat(
-      F("\"%s\":{display: %s,type:\"%s\",position:\"%s\",title: %s,weight:%d%s}"),
+      F("\"%s\":{display:%s,type:\"%s\",position:\"%s\",title:%s,weight:%d%s}"),
       axisID.c_str(),
       displayStr.c_str(),
       typeStr.c_str(),
@@ -60,25 +72,41 @@ String ChartJS_options_scale::toString() const
   return EMPTY_STRING;
 }
 
+bool ChartJS_options_scale::is_Y_axis() const
+{
+  return position == Position::Left ||
+         position == Position::Right;
+}
+
 void ChartJS_options_scales::add(const ChartJS_options_scale& scale)
 {
   for (auto it = _scales.begin(); it != _scales.end(); ++it) {
     if (it->axisID.equals(scale.axisID)) {
       // Found an axis with same ID.
       // Combine labels and don't create a new one.
-      it->axisTitle.text += F(" / ");
-      it->axisTitle.text += scale.axisTitle.text;
-      it->axisTitle.color.clear();
+      if (!scale.axisTitle.text.isEmpty()) {
+        if (!it->axisTitle.text.isEmpty()) {
+          it->axisTitle.color.clear();
+          it->axisTitle.text += F(" / ");
+        }
+        it->axisTitle.text += scale.axisTitle.text;
+      }
       return;
     }
   }
   _scales.push_back(scale);
 }
 
-void ChartJS_options_scales::resetTickCount()
+void ChartJS_options_scales::update_Yaxis_TickCount()
 {
+  // For single Y-axis, use a dynamic tick count based on the data.
+  // For multiple Y-axis, we want 10 intervals, thus 11 ticks.
+  const int newTickCount = (nr_Y_scales() <= 1) ? 0 : 11;
+
   for (auto it = _scales.begin(); it != _scales.end(); ++it) {
-    it->tickCount = 0;
+    if (it->is_Y_axis()) {
+      it->tickCount = newTickCount;
+    }
   }
 }
 
@@ -103,6 +131,17 @@ String ChartJS_options_scales::toString() const
   res += '}';
   res += ',';
   return res;
+}
+
+size_t ChartJS_options_scales::nr_Y_scales() const
+{
+  size_t count{};
+
+  for (auto it = _scales.begin(); it != _scales.end(); ++it) {
+    if (it->is_Y_axis()) { ++count; }
+  }
+
+  return count;
 }
 
 #endif // if FEATURE_CHART_JS

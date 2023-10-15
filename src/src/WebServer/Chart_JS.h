@@ -28,7 +28,8 @@ void add_ChartJS_chart_header(
   const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options = EMPTY_STRING);
+  const String             & options = EMPTY_STRING,
+  size_t                     nrSamples = 0);
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
@@ -36,7 +37,8 @@ void add_ChartJS_chart_header(
   const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options = EMPTY_STRING);
+  const String             & options = EMPTY_STRING,
+  size_t                     nrSamples = 0);
 
 
 void add_ChartJS_chart_labels(

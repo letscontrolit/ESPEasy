@@ -46,9 +46,10 @@ void add_ChartJS_chart_header(
   const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options)
+  const String             & options,
+  size_t                     nrSamples)
 {
-  add_ChartJS_chart_header(chartType, String(id), chartTitle, width, height, options);
+  add_ChartJS_chart_header(chartType, String(id), chartTitle, width, height, options, nrSamples);
 }
 
 void add_ChartJS_chart_header(
@@ -57,7 +58,8 @@ void add_ChartJS_chart_header(
   const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options)
+  const String             & options,
+  size_t                     nrSamples)
 {
   addHtml(F("<canvas"));
   addHtmlAttribute(F("id"),     id);
@@ -78,6 +80,13 @@ void add_ChartJS_chart_header(
   addHtml(F("options:{responsive:false,plugins:{legend:{position:'top',},title:"));
   addHtml(chartTitle.toString());
   addHtml('}',  ','); // end plugins
+
+  if (nrSamples > 64) {
+    // Default point radius = 3
+    // Typically when having > 64 samples, these points become really cluttered
+    // Thus it is best to remove them by setting the radius to 0.
+    addHtml(F("elements:{point:{radius:0}},"));
+  }
 
   if (!options.isEmpty()) {
     addHtml(options);

@@ -1478,8 +1478,9 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         };
 
         int selected = cachedConfig.getAxisIndex();
-        if (cachedConfig.getAxisPosition() == PluginStats_Config_t::AxisPosition::Right)
+        if (!cachedConfig.isLeft()) {
           selected += 4;
+        }
 
         addSelector(
           getPluginCustomArgName(F("TDSA"), varNr),
