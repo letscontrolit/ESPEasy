@@ -124,7 +124,7 @@ void P104_data_struct::loadSettings() {
   uint16_t bufferSize;
   char    *settingsBuffer;
 
-  if (taskIndex < TASKS_MAX) {
+  if (validTaskIndex(taskIndex)) {
     int loadOffset = 0;
 
     // Read size of the used buffer, could be the settings-version marker
@@ -181,18 +181,14 @@ void P104_data_struct::loadSettings() {
       String log;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P104: loadSettings bufferSize: ");
-        log += bufferSize;
-        log += F(" untrimmed: ");
-        log += buffer.length();
+        log = strformat(F("P104: loadSettings bufferSize: %d untrimmed: %d"), bufferSize, buffer.length());
       }
       # endif // ifdef P104_DEBUG_DEV
       buffer.trim();
       # ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log += F(" trimmed: ");
-        log += buffer.length();
+        log += concat(F(" trimmed: "), buffer.length());
         addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG_DEV
@@ -1777,10 +1773,7 @@ bool P104_data_struct::saveSettings() {
     SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
 
     if (numDevices > 255) {
-      error += F("More than 255 modules configured (");
-      error += numDevices;
-      error += ')';
-      error += '\n';
+      error += strformat(F("More than 255 modules configured (%d)\n"), numDevices);
     }
   } else {
     addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Can't allocate string for saving settings, insufficient memory!"));
@@ -1896,9 +1889,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     String zonetip;
 
     if (zonetip.reserve(90)) {
-      zonetip  = F("Select between 1 and ");
-      zonetip += P104_MAX_ZONES;
-      zonetip += F(" zones, changing");
+      zonetip = strformat(F("Select between 1 and %d zones, changing"), P104_MAX_ZONES);
       #  ifdef P104_USE_ZONE_ORDERING
       zonetip += F(" Zones or Zone order");
       #  endif // ifdef P104_USE_ZONE_ORDERING
@@ -1943,29 +1934,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       static_cast<int>(textPosition_t::PA_CENTER),
       static_cast<int>(textPosition_t::PA_RIGHT)
     };
-    int animationCount = 6;
-    # if ENA_SPRITE
-    animationCount += 1;
-    # endif // ENA_SPRITE
-    # if ENA_MISC
-    animationCount += 6;
-    # endif // ENA_MISC
-    # if ENA_WIPE
-    animationCount += 2;
-    # endif // ENA_WIPE
-    # if ENA_SCAN
-    animationCount += 4;
-    # endif // ENA_SCAN
-    # if ENA_OPNCLS
-    animationCount += 4;
-    # endif // ENA_OPNCLS
-    # if ENA_SCR_DIA
-    animationCount += 4;
-    # endif // ENA_SCR_DIA
-    # if ENA_GROW
-    animationCount += 2;
-    # endif // ENA_GROW
-    String animationTypes[] {
+    String    animationTypes[] {
       F("None")
       , F("Print")
       , F("Scroll up")
@@ -2056,6 +2025,8 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # endif // ENA_GROW
     };
 
+    constexpr int animationCount = NR_ELEMENTS(animationTypes);
+
     // Append the numeric value as a reference for the 'anim.in' and 'anim.out' subcommands
     for (uint8_t a = 0; a < animationCount; a++) {
       animationTypes[a] += F(" (");
@@ -2064,28 +2035,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     }
     delay(0);
 
-    int fontCount = 1;
-    # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-    # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-    # ifdef P104_USE_VERTICAL_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_VERTICAL_FONT
-    # ifdef P104_USE_EXT_ASCII_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_EXT_ASCII_FONT
-    # ifdef P104_USE_ARABIC_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_ARABIC_FONT
-    # ifdef P104_USE_GREEK_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_GREEK_FONT
-    # ifdef P104_USE_KATAKANA_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_KATAKANA_FONT
     const __FlashStringHelper *fontTypes[] = {
       F("Default (0)")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -2134,11 +2083,8 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , P104_KATAKANA_FONT_ID
     # endif   // ifdef P104_USE_KATAKANA_FONT
     };
+    constexpr int fontCount = NR_ELEMENTS(fontTypes);
 
-    int layoutCount = 1;
-    # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
-    layoutCount += 2;
-    # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     const __FlashStringHelper *layoutTypes[] = {
       F("Standard")
     # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
@@ -2153,8 +2099,8 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , P104_LAYOUT_DOUBLE_LOWER
     # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     };
+    constexpr int layoutCount = NR_ELEMENTS(layoutTypes);
 
-    const int specialEffectCount                    = 4;
     const __FlashStringHelper *specialEffectTypes[] = {
       F("None"),
       F("Flip up/down"),
@@ -2167,6 +2113,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_SPECIAL_EFFECT_LEFT_RIGHT,
       P104_SPECIAL_EFFECT_BOTH
     };
+    constexpr int specialEffectCount = NR_ELEMENTS(specialEffectTypes);
 
     const __FlashStringHelper *contentTypes[] = {
       F("Text"),
