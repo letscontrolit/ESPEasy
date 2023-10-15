@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-10-03 tonhuisman: Optimizate alignment of settings struct, exclude some logging if BUILD_NO_DEBUG is defined
  * 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
  * 2022-07-30 tonhuisman: Add commands to set scroll-options (settext, setscroll, setstep, setspeed, setempty, setright)
  *                        Fix issue that on startup the display wasn't cleared (unit reset should turn off the display)
@@ -385,8 +386,10 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         P131_data_struct *P131_data = static_cast<P131_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P131_data) && P131_data->plugin_init(event); // Start the display
+      # ifndef BUILD_NO_DEBUG
       } else {
         addLog(LOG_LEVEL_ERROR, F("NEOMATRIX: No GPIO pin configured, init cancelled."));
+      # endif // ifndef BUILD_NO_DEBUG
       }
 
       break;

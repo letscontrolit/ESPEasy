@@ -1326,7 +1326,8 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         html_TR_TD();
         addHtml(F("Send to Controller "));
         addHtml(getControllerSymbol(controllerNr));
-        addHtmlDiv(F("note"), wrap_braces(getCPluginNameFromCPluginID(Settings.Protocol[controllerNr])));
+        addHtmlDiv(F("note"), wrap_braces(getCPluginNameFromCPluginID(Settings.Protocol[controllerNr]) + F(", ") + // Most compact code...
+                                          (Settings.ControllerEnabled[controllerNr] ? F("enabled") : F("disabled"))));
         html_TD();
 
         addHtml(F("<table style='padding-left:0;'>")); // remove left padding 2x to align vertically with other inputs
