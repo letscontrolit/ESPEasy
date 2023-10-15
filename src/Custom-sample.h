@@ -427,8 +427,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P073   // 7-segment display
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
-// #define USES_P076   // HLW8012/BL0937 (Sonoff POW Rxx)
-// #define USES_P077   // CSE7766
+// #define USES_P076   // HLW8012/BL0937 (Shelly Plug S, Sonoff POW R1, Huafan SS, KMC 70011, Aplic WDP303075, SK03 Outdoor, BlitzWolf SHP, Teckin, Teckin US, Gosund SP1 v23)
+// #define USES_P077   // CSE7766 (Sonoff S31, Sonoff POW R2, Sonoff POW R3xx(D), Sonoff Dual R3)
 // #define USES_P078   // Eastron SDMxxx Modbus
 // #define USES_P079   // Wemos / Lolin Motorshield
 
