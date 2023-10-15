@@ -88,6 +88,10 @@ boolean clientIPallowed()
     return true;
   }
   const IPAddress remoteIP = web_server.client().remoteIP();
+  if (remoteIP == IPAddress(0, 0, 0, 0) || !remoteIP.isV4()) {
+    // FIXME TD-er: Must see what's going on here, why the client doesn't send remote IP for some reason
+    return true;
+  }
 
   if (ipInRange(remoteIP, low, high)) {
     return true;
