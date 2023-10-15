@@ -386,7 +386,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P037_FILTER_SUPPORT  1 // Enable filtering support
 //   #define P037_JSON_SUPPORT    1 // Enable Json support
 // #define USES_P038   // NeoPixel
-// #define USES_P039   // Thermosensors
+// #define USES_P039   // Thermocouple
 
 // #define USES_P040   // RFID - ID12LA/RDM6300
 // #define USES_P041   // NeoPixel (Word Clock)
@@ -427,7 +427,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P073   // 7-segment display
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
-// #define USES_P076   // HLW8012/BL0937
+// #define USES_P076   // HLW8012/BL0937 (Sonoff POW Rxx)
 // #define USES_P077   // CSE7766
 // #define USES_P078   // Eastron SDMxxx Modbus
 // #define USES_P079   // Wemos / Lolin Motorshield
@@ -435,7 +435,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P080   // iButton Sensor  DS1990A
 // #define USES_P081   // Cron
 // #define USES_P082   // GPS
-// #define USES_P083   // SGP30 TVOC/eCO2
+// #define USES_P083   // SGP30 TVOC
 // #define USES_P084   // VEML6070
 // #define USES_P085   // AcuDC24x
 // #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
@@ -443,7 +443,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P088   // HeatpumpIR
 // #define USES_P089   // Ping
 
-// #define USES_P090   // CCS811 TVOC/eCO2
+// #define USES_P090   // CCS811 TVOC
 // #define USES_P091   // Serial MCU controlled switch
 // #define USES_P092   // DLbus
 // #define USES_P093   // Mitsubishi Heat Pump
