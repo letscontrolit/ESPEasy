@@ -262,7 +262,8 @@ void P023_data_struct::StartUp_OLED(struct EventStruct *event) {
 
 bool P023_data_struct::plugin_read(struct EventStruct *event) {
   for (uint8_t x = 0; x < 8; x++) {
-    String newString = parseTemplate(strings[x], 16);
+    String tmp             = strings[x];
+    const String newString = parseTemplate(tmp, 16);
 
     if (strings[x].length()) {
       sendStrXY(newString.c_str(), x, 0);
