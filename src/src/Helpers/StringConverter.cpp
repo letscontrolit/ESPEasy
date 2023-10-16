@@ -152,6 +152,7 @@ String formatIP(const IPAddress& ip) {
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 #endif
 #ifdef ESP32
+/*
   #if LWIP_IPV6
   if (ip.isAny()) {
     IPAddress tmp;
@@ -159,6 +160,7 @@ String formatIP(const IPAddress& ip) {
     return tmp.toString();
   }
   #endif
+*/
   return ip.toString();
 #endif
 }

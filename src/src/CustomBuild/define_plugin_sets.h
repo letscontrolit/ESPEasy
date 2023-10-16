@@ -413,6 +413,11 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_MDNS 0
 
+    #ifdef FEATURE_SSDP
+      #undef FEATURE_SSDP
+    #endif
+    #define FEATURE_SSDP 0
+
     #ifndef DISABLE_SC16IS752_Serial
       #define DISABLE_SC16IS752_Serial
     #endif
@@ -429,6 +434,10 @@ To create/register a plugin, you have to :
 
     #ifndef CONTROLLER_SET_NONE
       #define CONTROLLER_SET_NONE
+    #endif
+
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
     #endif
 
     #define BUILD_MINIMAL_OTA

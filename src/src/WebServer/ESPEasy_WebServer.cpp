@@ -160,8 +160,7 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
 }
 
 bool captivePortal() {
-  WiFiClient client = web_server.client();
-  const IPAddress client_localIP = client.localIP();
+  const IPAddress client_localIP = web_server.client().localIP();
   const bool fromAP = client_localIP == apIP;
   const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();
   if (hasWiFiCredentials || !fromAP) {
@@ -176,7 +175,7 @@ bool captivePortal() {
     #endif
     sendHeader(F("Location"), redirectURL, true);
     web_server.send(302, F("text/plain"), EMPTY_STRING);   // Empty content inhibits Content-length header so we have to close the socket ourselves.
-    client.stop(); // Stop is needed because we sent no content length
+    web_server.client().stop(); // Stop is needed because we sent no content length
     return true;
   }
   return false;
@@ -342,19 +341,17 @@ void WebServerInit()
   if (Settings.UseSSDP)
   {
     web_server.on(F("/ssdp.xml"), HTTP_GET, []() {
-      WiFiClient client(web_server.client());
-
       #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
       // See: https://github.com/espressif/arduino-esp32/pull/6676
-      client.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
-      Client *pClient = &client;
-      pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+      web_server.client().setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
+      Client &pClient = web_server.client();
+      pClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
       #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
       #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-      SSDP_schema(client);
+      SSDP_schema(web_server.client());
     });
     SSDP_begin();
   }
