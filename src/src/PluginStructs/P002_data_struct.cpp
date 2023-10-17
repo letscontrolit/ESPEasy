@@ -610,6 +610,7 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       axisOptions);
 
     // Add labels
+    addHtml(F("labels:["));
     for (size_t i = 0; i < _multipoint.size(); ++i) {
       if (i != 0) {
         addHtml(',');

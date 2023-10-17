@@ -50,6 +50,8 @@ void add_ChartJS_chart_labels(
   const String labels[]);
 
 
+void add_ChartJS_scatter_data_point(float x, float y, int nrDecimals);
+
 void add_ChartJS_dataset(
   const ChartJS_dataset_config& config,
   const float                   values[],

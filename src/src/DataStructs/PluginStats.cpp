@@ -584,6 +584,7 @@ void PluginStats_array::plot_ChartJS() const
 
 
   // Add labels
+  addHtml(F("labels:["));
   for (size_t i = 0; i < nrSamples; ++i) {
     if (i != 0) {
       addHtml(',');

@@ -93,12 +93,14 @@ void add_ChartJS_chart_header(
   }
 
   addHtml(F("},")); // end options
-  addHtml(F("data:{labels:["));
+  addHtml(F("data:{"));
 }
 
 void add_ChartJS_chart_labels(
   int       valueCount,
-  const int labels[]) {
+  const int labels[]) 
+{
+  addHtml(F("labels:["));
   add_ChartJS_array(valueCount, labels);
   addHtml(F("],datasets:["));
 }
@@ -107,8 +109,17 @@ void add_ChartJS_chart_labels(
   int          valueCount,
   const String labels[])
 {
+  addHtml(F("labels:["));
   add_ChartJS_array(valueCount, labels);
   addHtml(F("],datasets:["));
+}
+
+void add_ChartJS_scatter_data_point(float x, float y, int nrDecimals)
+{
+  addHtml(strformat(
+    F("{x:%s,y:%s},"),
+    toString(x, nrDecimals).c_str(),
+    toString(y, nrDecimals).c_str()));
 }
 
 void add_ChartJS_dataset(
