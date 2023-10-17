@@ -1,8 +1,3 @@
-// ----------------------------------------------------------------------------
-// P159 "Dust - PM1006(K) (Vindriktning)"
-// Implementation of sensor abstraction
-// 2022 By flashmark
-// ----------------------------------------------------------------------------
 #include "../PluginStructs/P159_data_struct.h"
 
 #ifdef USES_P159

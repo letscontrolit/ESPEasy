@@ -1,8 +1,3 @@
-// ----------------------------------------------------------------------------
-// P159 "Dust - PM1006(K) (Vindriktning)"
-// Header file for sensor abstraction
-// 2022 By flashmark
-// ----------------------------------------------------------------------------
 #ifndef PLUGINSTRUCTS_P159_DATA_STRUCT_H
 #define PLUGINSTRUCTS_P159_DATA_STRUCT_H
 
