@@ -69,16 +69,21 @@ struct WiFi_AP_Candidate {
   union 
   {
     struct {
-      uint8_t isHidden:1; // Hidden SSID
-      uint8_t lowPriority:1; // Try as last attempt
-      uint8_t isEmergencyFallback:1; 
-      uint8_t phy_11b:1; 
-      uint8_t phy_11g:1; 
-      uint8_t phy_11n:1; 
-      uint8_t wps:1; 
-      uint8_t unused:1;      
+      uint16_t isHidden:1; // Hidden SSID
+      uint16_t lowPriority:1; // Try as last attempt
+      uint16_t isEmergencyFallback:1; 
+      uint16_t phy_11b:1; 
+      uint16_t phy_11g:1; 
+      uint16_t phy_11n:1; 
+      uint16_t phy_lr:1; 
+      uint16_t phy_11ax:1; 
+      uint16_t wps:1; 
+      uint16_t ftm_responder:1; 
+      uint16_t ftm_initiator:1; 
+
+      uint16_t unused:5;      
     };
-    uint8_t flags = 0;
+    uint16_t flags = 0;
   };
   
 };

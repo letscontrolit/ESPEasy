@@ -49,6 +49,10 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
     phy_11b = it->phy_11b;
     phy_11g = it->phy_11g;
     phy_11n = it->phy_11n;
+    phy_lr  = it->phy_lr;
+    phy_11ax = it->phy_11ax;
+    ftm_initiator = it->ftm_initiator;
+    ftm_responder = it->ftm_responder;
     wps = it->wps;
     // FIXME TD-er: Maybe also add other info like 2nd channel, ftm and phy_lr support?
   }
@@ -162,6 +166,12 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
     if (phy_11b) result += 'b';
     if (phy_11g) result += 'g';
     if (phy_11n) result += 'n';
+#ifdef ESP32
+    if (phy_11ax) result += F("/ax");
+    if (phy_lr) result += F("/lr");
+    if (ftm_initiator) result += F("/FTM_i");
+    if (ftm_responder) result += F("/FTM_r");
+#endif
   }
   return result;
 }

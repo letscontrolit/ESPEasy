@@ -28,6 +28,8 @@
 #ifdef ESP32
 #include <WiFiGeneric.h>
 #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
+
+#include <esp_phy_init.h>
 #endif
 
 // FIXME TD-er: Cleanup of WiFi code
@@ -785,10 +787,20 @@ float GetRSSIthreshold(float& maxTXpwr) {
       threshold = WIFI_SENSITIVITY_54g;
       if (maxTXpwr > MAX_TX_PWR_DBM_54g) maxTXpwr = MAX_TX_PWR_DBM_54g;
       break;
+#ifdef ESP8266
     case WiFiConnectionProtocol::WiFi_Protocol_11n:
+#else
+    case WiFiConnectionProtocol::WiFi_Protocol_HT20:
+    case WiFiConnectionProtocol::WiFi_Protocol_HT40:
+    case WiFiConnectionProtocol::WiFi_Protocol_HE20:
+#endif
+
       threshold = WIFI_SENSITIVITY_n;
       if (maxTXpwr > MAX_TX_PWR_DBM_n) maxTXpwr = MAX_TX_PWR_DBM_n;
       break;
+#ifdef ESP32
+    case WiFiConnectionProtocol::WiFi_Protocol_LR:
+#endif
     case WiFiConnectionProtocol::Unknown:
       break;
   }
@@ -808,21 +820,29 @@ WiFiConnectionProtocol getConnectionProtocol() {
     }
     #endif
     #ifdef ESP32
-    uint8_t protocol;
-    esp_wifi_get_protocol(WIFI_IF_STA, &protocol);
-    if (protocol & WIFI_PROTOCOL_11N) {
-      return WiFiConnectionProtocol::WiFi_Protocol_11n;
-    }
-    if (protocol & WIFI_PROTOCOL_11G) {
-      return WiFiConnectionProtocol::WiFi_Protocol_11g;
-    }
-    if (protocol & WIFI_PROTOCOL_11B) {
-      return WiFiConnectionProtocol::WiFi_Protocol_11b;
+
+    wifi_phy_mode_t phymode;
+    esp_wifi_sta_get_negotiated_phymode(&phymode);
+    switch (phymode) {
+      case WIFI_PHY_MODE_11B: return WiFiConnectionProtocol::WiFi_Protocol_11b;
+      case WIFI_PHY_MODE_11G: return WiFiConnectionProtocol::WiFi_Protocol_11g;
+      case WIFI_PHY_MODE_HT20: return WiFiConnectionProtocol::WiFi_Protocol_HT20;
+      case WIFI_PHY_MODE_HT40: return WiFiConnectionProtocol::WiFi_Protocol_HT40;
+      case WIFI_PHY_MODE_HE20: return WiFiConnectionProtocol::WiFi_Protocol_HE20;
+      case WIFI_PHY_MODE_LR: return WiFiConnectionProtocol::WiFi_Protocol_LR;
     }
     #endif
   }
   return WiFiConnectionProtocol::Unknown;
 }
+
+#ifdef ESP32
+int64_t WiFi_get_TSF_time()
+{
+  return esp_wifi_get_tsf_time(WIFI_IF_STA);
+}
+#endif
+
 
 // ********************************************************************************
 // Disconnect from Wifi AP
@@ -1421,6 +1441,15 @@ void setConnectionSpeed() {
 
   // Does not (yet) work, so commented out.
   #ifdef ESP32
+
+  // HT20 = 20 MHz channel width.
+  // HT40 = 40 MHz channel width.
+  // In theory, HT40 can offer upto 150 Mbps connection speed.
+  // However since HT40 is using nearly all channels on 2.4 GHz WiFi,
+  // Thus you are more likely to experience disturbances.
+  // The response speed and stability is better at HT20 for ESP units.
+  esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20);
+
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
 
   if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.connectionFailures > 10)) {
@@ -1429,6 +1458,8 @@ void setConnectionSpeed() {
   }
 
   if (WifiIsSTA(WiFi.getMode())) {
+    // See: https://www.tp-link.com/us/configuration-guides/q_a_basic_wireless_concepts/?configurationId=2958#_idTextAnchor038
+    esp_wifi_config_80211_tx_rate(WIFI_IF_STA, WIFI_PHY_RATE_MCS3_LGI);
     esp_wifi_set_protocol(WIFI_IF_STA, protocol);
   }
 

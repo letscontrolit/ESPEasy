@@ -120,6 +120,12 @@ void SetWiFiTXpower(float dBm, float rssi);
 #endif
 float GetRSSIthreshold(float& maxTXpwr);
 WiFiConnectionProtocol getConnectionProtocol();
+#ifdef ESP32
+// TSF time is 64-bit timer in usec, sent by the AP along with other packets.
+// On tested access points, this seems to be the uptime in usec.
+// Could be used among nodes connected to the same AP to increase time sync accuracy.
+int64_t WiFi_get_TSF_time();
+#endif
 void WifiDisconnect();
 bool WiFiScanAllowed();
 void WifiScan(bool async, uint8_t channel = 0);
