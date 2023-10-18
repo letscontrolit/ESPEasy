@@ -59,6 +59,7 @@
   # else // ESP32 IDF 5.x and later
     #  include <rom/spi_flash.h>
     #  include <rom/rtc.h>
+    #  include <bootloader_common.h>
   # endif // if ESP_IDF_VERSION_MAJOR == 4
 
 
@@ -1094,6 +1095,11 @@ const __FlashStringHelper* getChipModel() {
   uint32_t chip_model    = chip_info.model;
   uint32_t chip_revision = chip_info.revision;
 
+  uint32_t pkg_version = 0;
+#if (ESP_IDF_VERSION_MAJOR >= 5)
+  pkg_version = bootloader_common_get_chip_ver_pkg();
+#endif
+
   //  uint32_t chip_revision = ESP.getChipRevision();
   bool rev3 = (3 == chip_revision);
 
@@ -1115,7 +1121,7 @@ const __FlashStringHelper* getChipModel() {
 #  else // if ESP_IDF_VERSION_MAJOR < 5
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
 #  endif // if ESP_IDF_VERSION_MAJOR < 5
-    uint32_t pkg_version = chip_ver & 0x7;
+    pkg_version = chip_ver & 0x7;
 
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
     // chip_info.cores, chip_ver);
@@ -1170,7 +1176,7 @@ const __FlashStringHelper* getChipModel() {
      */
     uint32_t chip_ver    = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_FLASH_VERSION);
     uint32_t psram_ver   = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PSRAM_VERSION);
-    uint32_t pkg_version = (chip_ver & 0xF) + ((psram_ver & 0xF) * 100);
+    pkg_version = (chip_ver & 0xF) + ((psram_ver & 0xF) * 100);
 
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
     // chip_info.cores, chip_ver);
@@ -1203,9 +1209,9 @@ const __FlashStringHelper* getChipModel() {
             return pkg_version
      */
     uint32_t chip_ver    = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
-    uint32_t pkg_version = chip_ver & 0x7;
+    pkg_version = chip_ver & 0x7;
 
-    //    uint32_t pkg_version = esp_efuse_get_pkg_ver();
+    //    pkg_version = esp_efuse_get_pkg_ver();
 
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
     // chip_info.cores, chip_ver);
@@ -1280,9 +1286,9 @@ const __FlashStringHelper* getChipModel() {
             return pkg_version
      */
     uint32_t chip_ver    = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
-    uint32_t pkg_version = chip_ver & 0x7;
+    pkg_version = chip_ver & 0x7;
 
-    //    uint32_t pkg_version = esp_efuse_get_pkg_ver();
+    //    pkg_version = esp_efuse_get_pkg_ver();
 
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
     // chip_info.cores, chip_ver);
@@ -1308,9 +1314,9 @@ const __FlashStringHelper* getChipModel() {
             return pkg_version
      */
     uint32_t chip_ver    = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
-    uint32_t pkg_version = chip_ver & 0x7;
+    pkg_version = chip_ver & 0x7;
 
-    //    uint32_t pkg_version = esp_efuse_get_pkg_ver();
+    //    pkg_version = esp_efuse_get_pkg_ver();
 
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
     // chip_info.cores, chip_ver);
