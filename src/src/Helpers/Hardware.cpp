@@ -53,55 +53,57 @@
       #   include <esp32/rom/spi_flash.h>
       #   include <esp32/rom/rtc.h>
       #   include <esp32/spiram.h>
-    #  else 
+    #  else // if CONFIG_IDF_TARGET_ESP32S3
       #   error Target CONFIG_IDF_TARGET is not supported
-    #  endif
+    #  endif // if CONFIG_IDF_TARGET_ESP32S3
   # else // ESP32 IDF 5.x and later
     #  include <rom/spi_flash.h>
     #  include <rom/rtc.h>
-  # endif 
+  # endif // if ESP_IDF_VERSION_MAJOR == 4
 
 
-#  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
-  # define HAS_HALL_EFFECT_SENSOR  0
-  # define HAS_TOUCH_GPIO 1
-#  elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
-  # define HAS_HALL_EFFECT_SENSOR  0
-  # define HAS_TOUCH_GPIO 1
-#  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
-  # define HAS_HALL_EFFECT_SENSOR  0
-  # define HAS_TOUCH_GPIO  0
-#  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
-  #if ESP_IDF_VERSION_MAJOR < 5
-  # define HAS_HALL_EFFECT_SENSOR  1
-  #else
-  // Support for Hall Effect sensor was removed in ESP_IDF 5.x
-  # define HAS_HALL_EFFECT_SENSOR  0
-  #endif
-  # define HAS_TOUCH_GPIO 1
-#  else 
-  #   error Target CONFIG_IDF_TARGET is not supported
-#  endif
+# if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
+  #  define HAS_HALL_EFFECT_SENSOR  0
+  #  define HAS_TOUCH_GPIO 1
+# elif CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2
+  #  define HAS_HALL_EFFECT_SENSOR  0
+  #  define HAS_TOUCH_GPIO 1
+# elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
+  #  define HAS_HALL_EFFECT_SENSOR  0
+  #  define HAS_TOUCH_GPIO  0
+# elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
+  #  if ESP_IDF_VERSION_MAJOR < 5
+  #   define HAS_HALL_EFFECT_SENSOR  1
+  #  else // if ESP_IDF_VERSION_MAJOR < 5
+
+// Support for Hall Effect sensor was removed in ESP_IDF 5.x
+  #   define HAS_HALL_EFFECT_SENSOR  0
+  #  endif // if ESP_IDF_VERSION_MAJOR < 5
+  #  define HAS_TOUCH_GPIO 1
+# else // if CONFIG_IDF_TARGET_ESP32S3
+  #  error Target CONFIG_IDF_TARGET is not supported
+# endif // if CONFIG_IDF_TARGET_ESP32S3
 
 
-#ifndef HAS_TOUCH_GPIO
-# define HAS_TOUCH_GPIO 0
-#endif
+# ifndef HAS_TOUCH_GPIO
+#  define HAS_TOUCH_GPIO 0
+# endif // ifndef HAS_TOUCH_GPIO
 
 
-#if ESP_IDF_VERSION_MAJOR >= 5
+# if ESP_IDF_VERSION_MAJOR >= 5
 
-#include <esp_chip_info.h>
-#include <soc/soc.h>
-#include <driver/ledc.h>
-#include <esp_psram.h>
-//#include <hal/ledc_hal.h>
+#  include <esp_chip_info.h>
+#  include <soc/soc.h>
+#  include <driver/ledc.h>
+#  include <esp_psram.h>
 
-#endif
+// #include <hal/ledc_hal.h>
 
-#include "../Helpers/Hardware_ADC_cali.h"
+# endif // if ESP_IDF_VERSION_MAJOR >= 5
 
-#endif       // ifdef ESP32
+# include "../Helpers/Hardware_ADC_cali.h"
+
+#endif // ifdef ESP32
 
 
 #if FEATURE_SD
@@ -588,8 +590,9 @@ void initADC() {
 
 float applyADCFactoryCalibration(float raw_value, adc_atten_t attenuation)
 {
-  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali))
+  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali)) {
     return ESP32_ADC_cali[attenuation].applyFactoryCalibration(raw_value);
+  }
   return raw_value;
 }
 
@@ -604,20 +607,23 @@ const __FlashStringHelper* getADC_factory_calibration_type()
 
 float getADC_factory_calibrated_min(adc_atten_t attenuation)
 {
-  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali))
+  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali)) {
     return ESP32_ADC_cali[attenuation].getMinOut();
+  }
   return 0.0f;
 }
 
 float getADC_factory_calibrated_max(adc_atten_t attenuation)
 {
-  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali))
+  if (attenuation < NR_ELEMENTS(ESP32_ADC_cali)) {
     return ESP32_ADC_cali[attenuation].getMaxOut();
+  }
   return MAX_ADC_VALUE;
 }
 
 int getADC_num_for_gpio(int pin) {
   int ch;
+
   return getADC_num_for_gpio(pin, ch);
 }
 
@@ -640,9 +646,9 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
     switch (adc) {
       case 0:
-      #if HAS_HALL_EFFECT_SENSOR
+      # if HAS_HALL_EFFECT_SENSOR
         value = hallRead();
-      #endif 
+      # endif // if HAS_HALL_EFFECT_SENSOR
         break;
       case 1:
         canread = true;
@@ -660,9 +666,9 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
     if (canread) {
       if (readAsTouch && (t >= 0)) {
-        #if HAS_TOUCH_GPIO
+        # if HAS_TOUCH_GPIO
         value = touchRead(pin);
-        #endif
+        # endif // if HAS_TOUCH_GPIO
       } else {
         value = analogRead(pin);
       }
@@ -883,16 +889,17 @@ uint32_t getXtalFrequencyMHz() {
 esp32_chip_features getChipFeatures() {
   static esp32_chip_features res;
   static bool loaded = false;
+
   if (!loaded) {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
 
-    res.embeddedFlash = chip_info.features & CHIP_FEATURE_EMB_FLASH;
-    res.wifi_bgn      = chip_info.features & CHIP_FEATURE_WIFI_BGN;
-    res.bluetooth_ble = chip_info.features & CHIP_FEATURE_BLE;
+    res.embeddedFlash     = chip_info.features & CHIP_FEATURE_EMB_FLASH;
+    res.wifi_bgn          = chip_info.features & CHIP_FEATURE_WIFI_BGN;
+    res.bluetooth_ble     = chip_info.features & CHIP_FEATURE_BLE;
     res.bluetooth_classic = chip_info.features & CHIP_FEATURE_BT;
-    res.ieee_802_15_4 = chip_info.features & CHIP_FEATURE_IEEE802154;
-    res.embeddedPSRAM = chip_info.features & CHIP_FEATURE_EMB_PSRAM;
+    res.ieee_802_15_4     = chip_info.features & CHIP_FEATURE_IEEE802154;
+    res.embeddedPSRAM     = chip_info.features & CHIP_FEATURE_EMB_PSRAM;
 
     loaded = true;
   }
@@ -1060,7 +1067,8 @@ const __FlashStringHelper* getChipModel() {
         CHIP_ESP32C6    = 13, //!< ESP32-C6
         CHIP_ESP32H2_b1 = 10, //!< ESP32-H2(beta1)
         CHIP_ESP32H2_b2 = 14, //!< ESP32-H2(beta2)
-        CHIP_ESP32H2    = 6,  //!< ESP32-H2
+        CHIP_ESP32H2    = 16, //!< ESP32-H2
+        CHIP_ESP32P4    = 18, //!< ESP32-P4
     } esp_chip_model_t;
 
     // Chip feature flags, used in esp_chip_info_t
@@ -1102,11 +1110,11 @@ const __FlashStringHelper* getChipModel() {
             pkg_version += ((word3 >> 2) & 0x1) << 3
             return pkg_version
      */
-#if ESP_IDF_VERSION_MAJOR < 5
-    uint32_t chip_ver    = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
-#else
-    uint32_t chip_ver    = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
-#endif
+#  if ESP_IDF_VERSION_MAJOR < 5
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+#  else // if ESP_IDF_VERSION_MAJOR < 5
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
+#  endif // if ESP_IDF_VERSION_MAJOR < 5
     uint32_t pkg_version = chip_ver & 0x7;
 
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
@@ -1115,14 +1123,14 @@ const __FlashStringHelper* getChipModel() {
     switch (pkg_version) {
       case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6:
 
-        if (single_core) { return F("ESP32-S0WDQ6"); } // Max 240MHz, Single core, QFN 6*6
-        else if (rev3)   { return F("ESP32-D0WDQ6-V3"); }  // Max 240MHz, Dual core, QFN 6*6
-        else {             return F("ESP32-D0WDQ6"); } // Max 240MHz, Dual core, QFN 6*6
+        if (single_core) { return F("ESP32-S0WDQ6"); }    // Max 240MHz, Single core, QFN 6*6
+        else if (rev3)   { return F("ESP32-D0WDQ6-V3"); } // Max 240MHz, Dual core, QFN 6*6
+        else {             return F("ESP32-D0WDQ6"); }    // Max 240MHz, Dual core, QFN 6*6
       case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5:
 
         if (single_core) { return F("ESP32-S0WD"); }   // Max 160MHz, Single core, QFN 5*5, ESP32-SOLO-1, ESP32-DevKitC
-        else if (rev3)   { return F("ESP32-D0WDQ5-V3"); }  // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32E, ESP32_WROVER-E, ESP32-DevKitC
-        else {             return F("ESP32-D0WDQ5"); } // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32D, ESP32_WROVER-B, ESP32-DevKitC
+        else if (rev3)   { return F("ESP32-D0WDQ5-V3"); } // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32E, ESP32_WROVER-E, ESP32-DevKitC
+        else {             return F("ESP32-D0WDQ5"); }    // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32D, ESP32_WROVER-B, ESP32-DevKitC
       case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:
         return F("ESP32-D2WDQ5");                      // Max 160MHz, Dual core, QFN 5*5, 2MB embedded flash
       case 3:
@@ -1157,30 +1165,31 @@ const __FlashStringHelper* getChipModel() {
         num_word = 3
         block1_addr = self.EFUSE_BASE + 0x044
         word3 = self.read_reg(block1_addr + (4 * num_word))
-        pkg_version = (word3 >> 28) & 0x0F
-        return pkg_version
-*/
-    uint32_t chip_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_FLASH_VERSION);
-    uint32_t psram_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PSRAM_VERSION);
+            pkg_version = (word3 >> 28) & 0x0F
+            return pkg_version
+     */
+    uint32_t chip_ver    = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_FLASH_VERSION);
+    uint32_t psram_ver   = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PSRAM_VERSION);
     uint32_t pkg_version = (chip_ver & 0xF) + ((psram_ver & 0xF) * 100);
 
-//    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision, chip_info.cores, chip_ver);
+    //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
+    // chip_info.cores, chip_ver);
 
     switch (pkg_version) {
-      case 0:              return F("ESP32-S2");           // Max 240MHz, Single core, QFN 7*7, ESP32-S2-WROOM, ESP32-S2-WROVER, ESP32-S2-Saola-1, ESP32-S2-Kaluga-1
-      case 1:              return F("ESP32-S2FH2");        // Max 240MHz, Single core, QFN 7*7, 2MB embedded flash, ESP32-S2-MINI-1, ESP32-S2-DevKitM-1
-      case 2:              return F("ESP32-S2FH4");        // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash
-      case 3:              return F("ESP32-S2FN4R2");      // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash, 2MB embedded PSRAM, , ESP32-S2-MINI-1U, ESP32-S2-DevKitM-1U
+      case 0:              return F("ESP32-S2");      // Max 240MHz, Single core, QFN 7*7, ESP32-S2-WROOM, ESP32-S2-WROVER,
+                                                      // ESP32-S2-Saola-1, ESP32-S2-Kaluga-1
+      case 1:              return F("ESP32-S2FH2");   // Max 240MHz, Single core, QFN 7*7, 2MB embedded flash, ESP32-S2-MINI-1,
+                                                      // ESP32-S2-DevKitM-1
+      case 2:              return F("ESP32-S2FH4");   // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash
+      case 3:              return F("ESP32-S2FN4R2"); // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash, 2MB embedded PSRAM, ,
+                                                      // ESP32-S2-MINI-1U, ESP32-S2-DevKitM-1U
       case 100:            return F("ESP32-S2R2");
-      case 102:            return F("ESP32-S2FNR2");       // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash, 2MB embedded PSRAM, , Lolin S2 mini
+      case 102:            return F("ESP32-S2FNR2");  // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash, 2MB embedded PSRAM, , Lolin
+                                                      // S2 mini
     }
 
 # endif // CONFIG_IDF_TARGET_ESP32S2
     return F("ESP32-S2");
-  }
-  else if (CHIP_ESP32S3 == chip_model || // ESP32-S3
-           4 == chip_model) {            // ESP32-S3(beta2)
-    return F("ESP32-S3");     // Max 240MHz, Dual core, QFN 7*7, ESP32-S3-WROOM-1, ESP32-S3-DevKitC-1
   }
   else if (CHIP_ESP32C3 == chip_model) { // ESP32-C3
 # ifdef CONFIG_IDF_TARGET_ESP32C3
@@ -1203,14 +1212,63 @@ const __FlashStringHelper* getChipModel() {
 
     switch (pkg_version) {
       case 0:              return F("ESP32-C3");    // Max 160MHz, Single core, QFN 5*5, ESP32-C3-WROOM-02, ESP32-C3-DevKitC-02
-      case 1:              return F("ESP32-C3FH4"); // Max 160MHz, Single core, QFN 5*5, 4MB embedded flash, ESP32-C3-MINI-1,
+      //        case 1:              return F("ESP32-C3FH4");        // Max 160MHz, Single core, QFN 5*5, 4MB embedded flash,
+      // ESP32-C3-MINI-1, ESP32-C3-DevKitM-1
+      case 1:              return F("ESP8685");     // Max 160MHz, Single core, QFN 5*5, 4MB embedded flash, ESP32-C3-MINI-1,
                                                     // ESP32-C3-DevKitM-1
+      case 2:              return F("ESP32-C3 AZ"); // QFN32
+      case 3:              return F("ESP8686");     // QFN24
     }
 # endif // CONFIG_IDF_TARGET_ESP32C3
     return F("ESP32-C3");
   }
-  else if (7 == chip_model ||  // ESP32-C6(beta)
-           13 == chip_model) { // ESP32-C6
+  else if ((CHIP_ESP32S3 == chip_model) || // ESP32-S3
+           (4 == chip_model) ||            // ESP32-S3(beta2)
+           (6 == chip_model)) {            // ESP32-S3(beta3)
+    /*
+       ESP32-S3 Series
+       - 32-bit MCU & 2.4 GHz Wi-Fi & Bluetooth 5 (LE)
+       - Xtensa® 32-bit LX7 dual-core processor that operates at up to 240 MHz
+       - 512 KB of SRAM and 384 KB of ROM on the chip, and SPI, Dual SPI, Quad SPI, Octal SPI, QPI, and OPI interfaces that allow connection
+          to flash and external RAM
+       - Additional support for vector instructions in the MCU, which provides acceleration for neural network computing and signal
+          processing workloads
+       - Peripherals include 45 programmable GPIOs, SPI, I2S, I2C, PWM, RMT, ADC and UART, SD/MMC host and TWAITM
+       - Reliable security features ensured by RSA-based secure boot, AES-XTS-based flash encryption, the innovative digital signature and
+          the HMAC peripheral, “World Controller”
+     */
+# ifdef CONFIG_IDF_TARGET_ESP32S3
+#  if (ESP_IDF_VERSION_MAJOR >= 5)
+
+    switch (pkg_version) {
+      case 0:              return F("ESP32-S3");        // QFN56
+      case 1:              return F("ESP32-S3-PICO-1"); // LGA56
+    }
+#  endif // if (ESP_IDF_VERSION_MAJOR >= 5)
+# endif // CONFIG_IDF_TARGET_ESP32S3
+
+    return F("ESP32-S3");      // Max 240MHz, Dual core, QFN 7*7, ESP32-S3-WROOM-1, ESP32-S3-DevKitC-1
+  }
+  else if (12 == chip_model) { // ESP32-C2 = ESP8684 if embedded flash
+    /*
+       ESP32-C2 Series
+       - 32-bit RISC-V MCU & 2.4 GHz Wi-Fi & Bluetooth 5 (LE)
+      - 32-bit RISC-V single-core processor that operates at up to 120 MHz
+      - State-of-the-art power and RF performance
+       - 576 KB ROM, 272 KB SRAM (16 KB for cache) on the chip
+       - 14 programmable GPIOs: SPI, UART, I2C, LED PWM controller, General DMA controller (GDMA), SAR ADC, Temperature sensor
+     */
+# ifdef CONFIG_IDF_TARGET_ESP32C2
+
+    switch (pkg_version) {
+      case 0:              return F("ESP32-C2");
+      case 1:              return F("ESP32-C2");
+    }
+# endif // CONFIG_IDF_TARGET_ESP32C2
+    return F("ESP32-C2");
+  }
+  else if ((7 == chip_model) ||  // ESP32-C6(beta)
+           (13 == chip_model)) { // ESP32-C6
 # ifdef CONFIG_IDF_TARGET_ESP32C6
 
     /* esptool:
@@ -1230,14 +1288,15 @@ const __FlashStringHelper* getChipModel() {
     // chip_info.cores, chip_ver);
 
     switch (pkg_version) {
-      case 0:              return F("ESP32-C6");
+      case 0: return F("ESP32-C6");
+      case 1: return F("ESP32-C6FH4 (QFN32)");
     }
 # endif // CONFIG_IDF_TARGET_ESP32C6
     return F("ESP32-C6");
   }
-  else if (10 == chip_model ||            // ESP32-H2(beta1)
-           14 == chip_model ||            // ESP32-H2(beta2)
-           CHIP_ESP32H2 == chip_model) {  // ESP32-H2
+  else if ((10 == chip_model) ||            // ESP32-H2(beta1)
+           (14 == chip_model) ||           // ESP32-H2(beta2)
+           (CHIP_ESP32H2 == chip_model)) { // ESP32-H2
 # ifdef CONFIG_IDF_TARGET_ESP32H2
 
     /* esptool:
@@ -1262,6 +1321,16 @@ const __FlashStringHelper* getChipModel() {
 # endif // CONFIG_IDF_TARGET_ESP32H2
     return F("ESP32-H2");
   }
+  else if (18 == chip_model) {  // ESP32-P4
+# ifdef CONFIG_IDF_TARGET_ESP32P4
+
+    switch (pkg_version) {
+      case 0:              return F("ESP32-P4");
+    }
+# endif // CONFIG_IDF_TARGET_ESP32P4
+    return F("ESP32-P4");
+  }
+
   return F("ESP32");
 #elif defined(ESP8266)
   return isESP8285() ? F("ESP8285") : F("ESP8266");
@@ -1738,7 +1807,8 @@ void setFactoryDefault(DeviceModel model) {
  \*********************************************************************************************/
 void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow) {
   setTaskDevice_to_TaskIndex(PLUGIN_GPIO, taskIndex);
-  const int pins[] = {gpio, -1, -1};
+  const int pins[] = { gpio, -1, -1 };
+
   setBasicTaskValues(
     taskIndex,
     0,    // taskdevicetimer
@@ -1807,8 +1877,8 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
 
-  input = GPIO_IS_VALID_GPIO(gpio);
-  output = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
+  input   = GPIO_IS_VALID_GPIO(gpio);
+  output  = GPIO_IS_VALID_OUTPUT_GPIO(gpio);
   warning = false;
 
   if ((gpio < 0) || !(GPIO_IS_VALID_GPIO(gpio))) { return false; }
@@ -1852,7 +1922,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   // GPIO 0  State during boot determines boot mode.
-  if (gpio == 0) warning = true;
+  if (gpio == 0) { warning = true; }
 
   if (gpio == 46) {
     // Strapping pin which must be low during flashing
@@ -1879,8 +1949,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
 
-  if (gpio == 19 || gpio == 20) {
-    // USB OTG and USB Serial/JTAG function. USB signal is a differential 
+  if ((gpio == 19) || (gpio == 20)) {
+    // USB OTG and USB Serial/JTAG function. USB signal is a differential
     // signal transmitted over a pair of D+ and D- wires.
     warning = true;
   }
@@ -1903,7 +1973,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   // GPIO 0  State during boot determines boot mode.
-  if (gpio == 0) warning = true;
+  if (gpio == 0) { warning = true; }
 
 
 # elif defined(ESP32C3)
@@ -1944,8 +2014,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-  if (gpio == 18 || gpio == 19) {
-    // USB OTG and USB Serial/JTAG function. USB signal is a differential 
+  if ((gpio == 18) || (gpio == 19)) {
+    // USB OTG and USB Serial/JTAG function. USB signal is a differential
     // signal transmitted over a pair of D+ and D- wires.
     warning = true;
   }
@@ -1994,8 +2064,9 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   // GPIO 0 & 2 can't be used as an input. State during boot is dependent on boot mode.
-  if (gpio == 0 || gpio == 2)
+  if ((gpio == 0) || (gpio == 2)) {
     warning = true;
+  }
 
   if (gpio == 12) {
     // If driven High, flash voltage (VDD_SDIO) is 1.8V not default 3.3V.
@@ -2059,7 +2130,7 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   hasPullDown = false;
   hasPullUp   = false;
 
-  int pinnr;
+  int  pinnr;
   bool input;
   bool output;
   bool warning;
@@ -2075,14 +2146,14 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
     hasPullUp   = true;
     hasPullDown = true;
   }
-#elif defined(ESP32S3)
+# elif defined(ESP32S3)
 
   if (validGpio(gpio)) {
     hasPullUp   = true;
     hasPullDown = true;
   }
 
-#elif defined(ESP32C3)
+# elif defined(ESP32C3)
 
   if (validGpio(gpio)) {
     hasPullUp   = true;
@@ -2208,31 +2279,33 @@ bool validGpio(int gpio) {
 }
 
 bool isSerialConsolePin(int gpio) {
-  if (!Settings.UseSerial) return false;
+  if (!Settings.UseSerial) { return false; }
 
-# ifdef ESP32S2
+#ifdef ESP32S2
+
   // FIXME TD-er: Must check whether USB serial is used
   return gpio == 1 || gpio == 3;
 
 #elif defined(ESP32S3)
+
   // FIXME TD-er: Must check whether USB serial is used
   return gpio == 43 || gpio == 44;
 
 #elif defined(ESP32C3)
+
   // FIXME TD-er: Must check whether USB serial is used
   return gpio == 21 || gpio == 20;
 
-# elif defined(ESP32_CLASSIC)
+#elif defined(ESP32_CLASSIC)
   return gpio == 1 || gpio == 3;
 
-# elif defined(ESP8266)
+#elif defined(ESP8266)
   return gpio == 1 || gpio == 3;
 
-# else
-    static_assert(false, "Implement processor architecture");
-    return false;
-# endif
-
+#else // ifdef ESP32S2
+  static_assert(false, "Implement processor architecture");
+  return false;
+#endif // ifdef ESP32S2
 }
 
 #ifdef ESP32
@@ -2248,7 +2321,7 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   ch  = -1;
   t   = -1;
 
-#if defined(ESP32S2) || defined(ESP32S3)
+# if defined(ESP32S2) || defined(ESP32S3)
 
   switch (gpio_pin) {
     case 1: adc  = 1; ch = 0; t = 1; break;
@@ -2279,12 +2352,12 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
 # elif defined(ESP32C3)
 
   switch (gpio_pin) {
-    case 0: adc  = 1; ch = 0;  break;
-    case 1: adc  = 1; ch = 1;  break;
-    case 2: adc  = 1; ch = 2;  break;
-    case 3: adc  = 1; ch = 3;  break;
-    case 4: adc  = 1; ch = 4;  break;
-    case 5: adc  = 2; ch = 0;  break;
+    case 0: adc = 1; ch = 0;  break;
+    case 1: adc = 1; ch = 1;  break;
+    case 2: adc = 1; ch = 2;  break;
+    case 3: adc = 1; ch = 3;  break;
+    case 4: adc = 1; ch = 4;  break;
+    case 5: adc = 2; ch = 0;  break;
     default:
       return false;
   }
@@ -2405,14 +2478,14 @@ bool getDAC_gpio_info(int gpio_pin, int& dac)
 void initAnalogWrite()
 {
   #if defined(ESP32)
-  #if ESP_IDF_VERSION_MAJOR < 5
+  # if ESP_IDF_VERSION_MAJOR < 5
   constexpr unsigned nrLedChannelPins = NR_ELEMENTS(ledChannelPin);
 
   for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     ledChannelPin[x]  = -1;
     ledChannelFreq[x] = ledcSetup(x, 1000, 10); // Clear the channel
   }
-  #endif
+  # endif // if ESP_IDF_VERSION_MAJOR < 5
   #endif // if defined(ESP32)
   #ifdef ESP8266
 
@@ -2540,11 +2613,11 @@ uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
 
   if (ledChannel != -1) {
     ledcWrite(ledChannel, value);
-    #if ESP_IDF_VERSION_MAJOR < 5
+    # if ESP_IDF_VERSION_MAJOR < 5
     return ledChannelFreq[ledChannel];
-    #else
+    # else // if ESP_IDF_VERSION_MAJOR < 5
     return ledcReadFreq(pin);
-    #endif
+    # endif // if ESP_IDF_VERSION_MAJOR < 5
   }
   return 0;
 }
@@ -2593,7 +2666,7 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
   {
     const int32_t resolution_factor = (1 << 12);
     const uint8_t prev_mode         = tempStatus.mode;
-    int32_t   prev_value            = tempStatus.getDutyCycle();
+    int32_t prev_value              = tempStatus.getDutyCycle();
 
     // getPinState(pluginID, gpio, &prev_mode, &prev_value);
     if (prev_mode != PIN_MODE_PWM) {
