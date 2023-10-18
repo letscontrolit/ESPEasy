@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-10-16 tonhuisman: Bugfix: Template parsing stopped after initial display since previous updates :-(
  * 2023-03-18 tonhuisman: Show current on-display content on Devices page (75% size, omits trailing empty lines)
  *                        Manually set content via command: oled,x,y,<content> is included in the Devices page content
  *                        Make Interval optional
