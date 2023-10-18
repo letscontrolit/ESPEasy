@@ -33,6 +33,7 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_temperature_sensor.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"

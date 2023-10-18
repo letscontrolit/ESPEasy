@@ -88,10 +88,6 @@ int                        espeasy_analogRead(int  pin,
 
 #endif // ifdef ESP32
 
-#if FEATURE_INTERNAL_TEMPERATURE
-float getInternalTemperature();
-#endif // if FEATURE_INTERNAL_TEMPERATURE
-
 
 /********************************************************************************************\
    Hardware information

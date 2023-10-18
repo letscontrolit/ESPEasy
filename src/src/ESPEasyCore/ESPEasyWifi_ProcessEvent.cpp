@@ -37,6 +37,8 @@
 // #include "../Helpers/Misc.h"
 // #include "../Helpers/Scheduler.h"
 
+#include "../WebServer/ESPEasy_WebServer.h"
+
 
 // ********************************************************************************
 // Called from the loop() to make sure events are processed as soon as possible.
@@ -73,7 +75,9 @@ void handle_unprocessedNetworkEvents()
           WiFiEventData.processedDisconnect = true;
         }        
         WiFiEventData.setWiFiServicesInitialized();
-        CheckRunningServices();
+        setWebserverRunning(false);
+        setWebserverRunning(true);
+//        CheckRunningServices();
       }
     }
   }

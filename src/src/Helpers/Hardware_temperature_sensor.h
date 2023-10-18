@@ -1,0 +1,13 @@
+#ifndef HELPERS_HARDWARE_TEMPERATURE_SENSOR_H
+#define HELPERS_HARDWARE_TEMPERATURE_SENSOR_H
+
+#include "../../ESPEasy_common.h"
+
+#if FEATURE_INTERNAL_TEMPERATURE
+
+float getInternalTemperature();
+
+#endif // if FEATURE_INTERNAL_TEMPERATURE
+
+
+#endif // ifndef HELPERS_HARDWARE_TEMPERATURE_SENSOR_H
