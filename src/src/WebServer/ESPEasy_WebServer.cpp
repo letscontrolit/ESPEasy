@@ -348,10 +348,10 @@ void WebServerInit()
       Client &pClient = web_server.client();
       pClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
       #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-      client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
+      web_server.client().setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
       #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-      SSDP_schema(web_server.client());
+      SSDP_schema();
     });
     SSDP_begin();
   }

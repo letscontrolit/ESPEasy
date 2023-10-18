@@ -50,9 +50,11 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
     phy_11g = it->phy_11g;
     phy_11n = it->phy_11n;
     phy_lr  = it->phy_lr;
+#if ESP_IDF_VERSION_MAJOR >= 5
     phy_11ax = it->phy_11ax;
     ftm_initiator = it->ftm_initiator;
     ftm_responder = it->ftm_responder;
+#endif
     wps = it->wps;
     // FIXME TD-er: Maybe also add other info like 2nd channel, ftm and phy_lr support?
   }

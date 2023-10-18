@@ -133,7 +133,7 @@ To create/register a plugin, you have to :
 
 #ifndef PLUGIN_BUILD_CUSTOM
     #ifndef FEATURE_SSDP
-        #define FEATURE_SSDP  1
+        #define FEATURE_SSDP  0
     #endif
     #ifndef FEATURE_TIMING_STATS
         #define FEATURE_TIMING_STATS  1

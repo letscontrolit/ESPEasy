@@ -551,8 +551,6 @@ void PluginStats_array::plot_ChartJS() const
 
   if (nrSamples == 0) { return; }
 
-  const size_t nrStats = nrPluginStats();
-
   // Chart Header
   {
     ChartJS_options_scales scales;

@@ -507,7 +507,7 @@ void sendSysInfoUDP(uint8_t repeats)
 /********************************************************************************************\
    Respond to HTTP XML requests for SSDP information
  \*********************************************************************************************/
-void SSDP_schema(WiFiClient& client) {
+void SSDP_schema() {
   if (!NetworkConnected(10)) {
     return;
   }
@@ -521,7 +521,7 @@ void SSDP_schema(WiFiClient& client) {
             (uint16_t)((chipId >>  8) & 0xff),
             (uint16_t)chipId        & 0xff);
 
-  client.print(F(
+  web_server.client().print(F(
                  "HTTP/1.1 200 OK\r\n"
                  "Content-Type: text/xml\r\n"
                  "Connection: close\r\n"
@@ -535,27 +535,27 @@ void SSDP_schema(WiFiClient& client) {
                  "</specVersion>"
                  "<URLBase>http://"));
 
-  client.print(formatIP(ip));
-  client.print(F(":80/</URLBase>"
+  web_server.client().print(formatIP(ip));
+  web_server.client().print(F(":80/</URLBase>"
                  "<device>"
                  "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
                  "<friendlyName>"));
-  client.print(Settings.getName());
-  client.print(F("</friendlyName>"
+  web_server.client().print(Settings.getName());
+  web_server.client().print(F("</friendlyName>"
                  "<presentationURL>/</presentationURL>"
                  "<serialNumber>"));
-  client.print(String(ESP.getChipId()));
-  client.print(F("</serialNumber>"
+  web_server.client().print(String(ESP.getChipId()));
+  web_server.client().print(F("</serialNumber>"
                  "<modelName>ESP Easy</modelName>"
                  "<modelNumber>"));
-  client.print(getValue(LabelType::GIT_BUILD));
-  client.print(F("</modelNumber>"
+  web_server.client().print(getValue(LabelType::GIT_BUILD));
+  web_server.client().print(F("</modelNumber>"
                  "<modelURL>http://www.letscontrolit.com</modelURL>"
                  "<manufacturer>http://www.letscontrolit.com</manufacturer>"
                  "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
                  "<UDN>uuid:"));
-  client.print(String(uuid));
-  client.print(F("</UDN></device>"
+  web_server.client().print(String(uuid));
+  web_server.client().print(F("</UDN></device>"
                  "</root>\r\n"
                  "\r\n"));
 }

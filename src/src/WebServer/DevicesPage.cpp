@@ -1217,7 +1217,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
         i2c_mux_portchoices[mux_opt] = x;
       }
 
-      if (taskDeviceI2CMuxPort >= mux_max) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
+      if (taskDeviceI2CMuxPort >= static_cast<int>(mux_max)) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
       addFormSelector(F("Connected to"),
                       F("taskdevicei2cmuxport"),
                       mux_max + 1,
