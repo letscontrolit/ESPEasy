@@ -66,6 +66,8 @@ esp_err_t do_read_internal_temperature(float& celsius) {
 esp_err_t do_read_internal_temperature(float& celsius) {
   esp_err_t result = ESP_FAIL;
 
+  celsius = 0.0f; // Make sure it is initialized and within the default range.
+
 #   if ESP_IDF_VERSION_MAJOR < 5
 
   temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
@@ -125,8 +127,15 @@ esp_err_t do_read_internal_temperature(float& celsius) {
 
   static temperature_sensor_handle_t temp_sensor = nullptr;
 
+  // Use range which seems to have the smallest error
+  // See: https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/peripherals/temp_sensor.html
+  static int range_min = -10;
+  static int range_max = 80;
+
+  bool must_reinstall = false;
+
   if (temp_sensor == nullptr) {
-    temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(-10, 70);
+    temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(range_min, range_max);
     result = temperature_sensor_install(&temp_sensor_config, &temp_sensor);
   } else {
     result = ESP_OK;
@@ -134,13 +143,43 @@ esp_err_t do_read_internal_temperature(float& celsius) {
 
   if (ESP_OK == result) {
     result = temperature_sensor_enable(temp_sensor);
+
+    if (result == ESP_ERR_INVALID_STATE) {
+      // Sensor reports to be not enabled
+      must_reinstall = true;
+    }
   }
 
   if (ESP_OK == result) {
     result = temperature_sensor_get_celsius(temp_sensor, &celsius);
+
+    // FIXME TD-er: What to do when result == ESP_FAIL (can be indication of out-of-range)
+    if (celsius < (range_min + 10)) {
+      range_min -= 10;
+
+      if (range_min > celsius) {
+        range_min = celsius - 10;
+      }
+      must_reinstall = true;
+    }
+
+    if (celsius > (range_max - 10)) {
+      range_max += 10;
+
+      if (range_max < celsius) {
+        range_max = celsius + 10;
+      }
+      must_reinstall = true;
+    }
   }
 
   temperature_sensor_disable(temp_sensor);
+
+
+  if (must_reinstall) {
+    temperature_sensor_uninstall(temp_sensor);
+    temp_sensor = nullptr;
+  }
 
 
 #   endif // if ESP_IDF_VERSION_MAJOR < 5
@@ -152,12 +191,12 @@ esp_err_t do_read_internal_temperature(float& celsius) {
 # endif  // ifdef ESP32
 
 
-float getInternalTemperature() {
+bool getInternalTemperature(float& temperatureCelsius) {
   static float temperature_filtered = NAN; // Improbable value
   float celsius{};
   esp_err_t result = do_read_internal_temperature(celsius);
 
-  if (result == ESP_OK) {
+  if (ESP_OK == result) {
     if (isnanf(temperature_filtered)) {
       temperature_filtered = celsius;
     } else {
@@ -166,7 +205,15 @@ float getInternalTemperature() {
       temperature_filtered = ((IIR_FACTOR * temperature_filtered) + celsius) / IIR_DIVIDER;
     }
   }
-  return temperature_filtered;
+  temperatureCelsius = temperature_filtered;
+  return ESP_OK == result;
+}
+
+float getInternalTemperature() {
+  float temperatureCelsius{};
+
+  getInternalTemperature(temperatureCelsius);
+  return temperatureCelsius;
 }
 
 #endif // if FEATURE_INTERNAL_TEMPERATURE
