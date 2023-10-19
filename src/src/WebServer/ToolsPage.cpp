@@ -98,6 +98,7 @@ void handle_tools() {
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
+  addWideButtonPlusDescription(F("setup"),                F("Setup WiFi"), F("WiFi setup page"));
 
   # ifdef WEBSERVER_WIFI_SCANNER
   addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
