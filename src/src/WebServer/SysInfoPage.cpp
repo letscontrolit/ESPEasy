@@ -448,9 +448,12 @@ void handle_sysinfo_Network() {
   } else addHtml('-');
 
   #ifdef ESP32
-  addRowLabel(F("WiFi TSF time"));
-  addHtmlInt(WiFi_get_TSF_time());
-  addUnit(F("usec"));
+  const int64_t tsf_time = WiFi_get_TSF_time();
+  if (tsf_time > 0) {
+    addRowLabel(F("WiFi TSF time"));
+    addHtmlInt(WiFi_get_TSF_time());
+    addUnit(F("usec"));
+  }
   #endif
 
   addRowLabel(getLabel(LabelType::CHANNEL));
