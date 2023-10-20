@@ -6,6 +6,24 @@
 // The other containing an allocatted char array for answer
 // Returns true on success, false otherwise
 
+const __FlashStringHelper* toString(AtlasEZO_Sensors_e sensor) {
+  switch (sensor) {
+    case AtlasEZO_Sensors_e::PH: return F("pH");
+    case AtlasEZO_Sensors_e::ORP: return F("Oxidation Reduction Potential");
+    case AtlasEZO_Sensors_e::EC: return F("Electric conductivity");
+    case AtlasEZO_Sensors_e::DO: return F("Dissolved Oxigen");
+    case AtlasEZO_Sensors_e::HUM: return F("Humidity");
+    # if P103_USE_RTD
+    case AtlasEZO_Sensors_e::RTD: return F("Thermosensor");
+    # endif // if P103_USE_RTD
+    # if P103_USE_FLOW
+    case AtlasEZO_Sensors_e::FLOW: return F("Flow meter");
+    # endif // if P103_USE_FLOW
+    case AtlasEZO_Sensors_e::UNKNOWN: break;
+  }
+  return F("Unknown");
+}
+
 bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensordata)
 {
   sensordata[0] = '\0';
@@ -28,7 +46,14 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
 
   if (error != 0)
   {
-    addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check Atlas shield, pH, ORP, EC and DO are supported."));
+    addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check Atlas shield, pH, ORP, EC, DO, HUM"
+                              # if P103_USE_RTD
+                              ", RTD"
+                              # endif // if P103_USE_RTD
+                              # if P103_USE_FLOW
+                              ", FLOW"
+                              # endif // if P103_USE_FLOW
+                              " are supported."));
     return false;
   }
 

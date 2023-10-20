@@ -2,17 +2,21 @@
 
 #ifdef USES_P103
 
-// ###########################################################################
-// ################## Plugin 103 : Atlas Scientific EZO pH ORP EC DO sensors #
-// ###########################################################################
+// ########################################################################################
+// ################## Plugin 103 : Atlas Scientific EZO pH ORP EC DO HUM RTD FLOW sensors #
+// ########################################################################################
 
-// datasheet at https://atlas-scientific.com/files/pH_EZO_Datasheet.pdf
-// datasheet at https://atlas-scientific.com/files/ORP_EZO_Datasheet.pdf
-// datasheet at https://atlas-scientific.com/files/EC_EZO_Datasheet.pdf
-// datasheet at https://atlas-scientific.com/files/DO_EZO_Datasheet.pdf
+// datasheet at https://atlas-scientific.com/files/pH_EZO_Datasheet.pdf (0x63, pH level)
+// datasheet at https://atlas-scientific.com/files/ORP_EZO_Datasheet.pdf (0x62, Oxidation Reduction Potential)
+// datasheet at https://atlas-scientific.com/files/EC_EZO_Datasheet.pdf (0x64, electric conductivity)
+// datasheet at https://atlas-scientific.com/files/DO_EZO_Datasheet.pdf (0x61, dissolved oxigen)
+// datasheet at https://files.atlas-scientific.com/EZO-HUM-C-Datasheet.pdf (0x6F, humidity)
+// datasheet at https://files.atlas-scientific.com/EZO_RTD_Datasheet.pdf (0x66, thermosensors)
+// datasheet at https://files.atlas-scientific.com/flow_EZO_Datasheet.pdf (0x68, flow meter)
 // only i2c mode is supported
 
 /** Changelog:
+ * 2023-10-17 tonhuisman: Add support for EZO HUM, RTD and FLOW sensor modules (I2C only!) (RTD, FLOW disabled, default to UART mode)
  * 2023-01-08 tonhuisman: Replace ambiguous #define UNKNOWN, move support functions to plugin_struct source
  * 2023-01-07 tonhuisman: Refactored strings (a.o. shorter names for WEBFORM_LOAD and WEBFORM_SAVE events), separate javascript function
  *                        instead of repeated code, extract red/orange/green messages into functions
@@ -22,9 +26,17 @@
 
 # define PLUGIN_103
 # define PLUGIN_ID_103          103
-# define PLUGIN_NAME_103        "Environment - Atlas EZO pH ORP EC DO"
+# define PLUGIN_NAME_103        "Environment - Atlas EZO pH ORP EC DO HUM"
+# if P103_USE_RTD
+" RTD"
+# endif // if P103_USE_RTD
+# if P103_USE_FLOW
+" FLOW"
+# endif // if P103_USE_FLOW
 # define PLUGIN_VALUENAME1_103  "SensorData"
 # define PLUGIN_VALUENAME2_103  "Voltage"
+# define PLUGIN_VALUENAME3_103  "Temperature" // Only used for HUM
+# define PLUGIN_VALUENAME4_103  "Dewpoint"    // Only used for HUM
 
 # include "src/PluginStructs/P103_data_struct.h"
 
@@ -32,7 +44,18 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  AtlasEZO_Sensors_e board_type = AtlasEZO_Sensors_e::UNKNOWN;
+  AtlasEZO_Sensors_e board_type    = AtlasEZO_Sensors_e::UNKNOWN;
+  const uint8_t i2cAddressValues[] = { 0x63, 0x62, 0x64, 0x61, 0x6F
+                                       # if P103_USE_RTD
+                                       ,     0x66
+                                       # endif // if P103_USE_RTD
+                                       # if P103_USE_FLOW
+                                       ,     0x68
+                                       # endif // if P103_USE_FLOW
+  };
+  constexpr int i2c_nr_elements = NR_ELEMENTS(i2cAddressValues);
+
+  char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
 
   switch (function)
   {
@@ -62,21 +85,45 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_103));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_103));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_103)); // Only used for HUM
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_103)); // Only used for HUM
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P103_NR_OUTPUT_VALUES = 2;
+
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P103_NR_OUTPUT_VALUES; // Depends on sensor
+
+      success = true;
+
       break;
     }
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x61, 0x62, 0x63, 0x64 }; // , 0x65, 0x66, 0x67}; // Disabled unsupported devices as discussed
-                                                                     // here: https://github.com/letscontrolit/ESPEasy/pull/3733 (review
-                                                                     // comment by TD-er)
+      // Disabled unsupported devices as discussed
+      // here: https://github.com/letscontrolit/ESPEasy/pull/3733 (review comment by TD-er)
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c"), P103_ATLASEZO_I2C_NB_OPTIONS, i2cAddressValues, P103_I2C_ADDRESS);
-        addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64, DO: 0x61. The plugin is able to detect the type of device automatically."));
+        addFormSelectorI2C(F("i2c"), i2c_nr_elements, i2cAddressValues, P103_I2C_ADDRESS);
+        addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64, DO: 0x61, HUM: 0x6F"
+                      # if P103_USE_RTD
+                      ", RTD: 0x66"
+                      # endif // if P103_USE_RTD
+                      # if P103_USE_FLOW
+                      ", FLOW: 0x68"
+                      # endif // if P103_USE_FLOW
+                      ". The plugin can detect the type of device."));
       } else {
-        success = intArrayContains(P103_ATLASEZO_I2C_NB_OPTIONS, i2cAddressValues, event->Par1);
+        success = intArrayContains(i2c_nr_elements, i2cAddressValues, event->Par1);
       }
       break;
     }
@@ -96,35 +143,69 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
       P103_addDisabler(); // JS function disabler(clear,single,l,h,dry,nul,atm)
 
-      char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+      addFormCheckBox(F("Setup without sensor"), F("uncon"), P103_UNCONNECTED_SETUP == 1);
 
-      if (P103_send_I2C_command(P103_I2C_ADDRESS, F("i"), boarddata))
-      {
-        String boardInfo(boarddata);
+      if (P103_send_I2C_command(P103_I2C_ADDRESS, F("i"), boarddata) || P103_UNCONNECTED_SETUP) {
+        const String boardInfo(boarddata);
         addRowLabel(F("Board type"));
 
-        String board   = boardInfo.substring(boardInfo.indexOf(',') + 1, boardInfo.lastIndexOf(','));
-        String version = boardInfo.substring(boardInfo.lastIndexOf(',') + 1);
-        addHtml(board);
+        String board         = parseStringKeepCase(boardInfo, 2);
+        const String version = parseStringKeepCase(boardInfo, 3);
 
-        String boardTypes             = F("pH  ORP EC  D.O.");
-        AtlasEZO_Sensors_e boardIDs[] = {
+        const String boardTypes             = F("pH  ORP EC  D.O.HUM RTD FLO"); // Unsupported boards are still ignored
+        const AtlasEZO_Sensors_e boardIDs[] = {
           AtlasEZO_Sensors_e::PH,
           AtlasEZO_Sensors_e::ORP,
           AtlasEZO_Sensors_e::EC,
           AtlasEZO_Sensors_e::DO,
+          AtlasEZO_Sensors_e::HUM,
+          # if P103_USE_RTD
+          AtlasEZO_Sensors_e::RTD,
+          # endif // if P103_USE_RTD
+          # if P103_USE_FLOW
+          AtlasEZO_Sensors_e::FLOW,
+          # endif // if P103_USE_FLOW
         };
         int bType = boardTypes.indexOf(board);
 
-        if (bType > -1) {
-          board_type = boardIDs[bType / 4];
+        if ((board.isEmpty() || (bType == -1)) && P103_UNCONNECTED_SETUP) {
+          // Not recognized, lets assume I2C address is correct, so we can setup the options
+          for (uint8_t i = 0; i < i2c_nr_elements; ++i) {
+            if (i2cAddressValues[i] == P103_I2C_ADDRESS) {
+              bType = i * 4; // Divided im the next check
+              break;
+            }
+          }
         }
 
-        P103_BOARD_TYPE = static_cast<uint8_t>(board_type);
+        if (bType > -1) {
+          board_type = boardIDs[bType / 4];
+          board      = toString(board_type);
+        }
 
-        if (board_type == AtlasEZO_Sensors_e::UNKNOWN)
-        {
-          P103_html_red(F("  WARNING : Board type should be 'pH', 'ORP', 'EC' or 'DO', check your i2c address? "));
+        addHtml(board);
+
+        P103_BOARD_TYPE = static_cast<uint8_t>(board_type);
+        const int output_values[] = { 2, 2, 2, 2, 2, 4
+                                      # if P103_USE_RTD
+                                      ,  2
+                                      # endif // if P103_USE_RTD
+                                      # if P103_USE_FLOW
+                                      ,  3
+                                      # endif // if P103_USE_FLOW
+        };
+        P103_NR_OUTPUT_VALUES = output_values[P103_BOARD_TYPE];
+
+
+        if (board_type == AtlasEZO_Sensors_e::UNKNOWN) {
+          P103_html_red(F("  WARNING : Board type should be 'pH', 'ORP', 'EC', 'DO', 'HUM'"
+                          # if P103_USE_RTD
+                          ", 'RTD'"
+                          # endif // if P103_USE_RTD
+                          # if P103_USE_FLOW
+                          ", 'FLOW'"
+                          # endif // if P103_USE_FLOW
+                          ", check your i2c address?"));
         }
         addRowLabel(F("Board version"));
         addHtml(version);
@@ -132,14 +213,18 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         addHtml(F("<input type='hidden' name='sensorVersion' value='"));
         addHtml(version);
         addHtml('\'', '>');
-      }
-      else
-      {
+      } else {
         P103_html_red(F("Unable to send command to device"));
 
-        if (board_type == AtlasEZO_Sensors_e::UNKNOWN)
-        {
-          P103_html_red(F("  WARNING : Board type should be 'pH', 'ORP', 'EC' or 'DO', check your i2c address? "));
+        if (board_type == AtlasEZO_Sensors_e::UNKNOWN) {
+          P103_html_red(F("  WARNING : Board type should be 'pH', 'ORP', 'EC', 'DO', 'HUM'"
+                          # if P103_USE_RTD
+                          ", 'RTD'"
+                          # endif // if P103_USE_RTD
+                          # if P103_USE_FLOW
+                          ", 'FLOW'"
+                          # endif // if P103_USE_FLOW
+                          ", check your i2c address?"));
         }
         success = false;
         break;
@@ -147,87 +232,81 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
       memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
 
-      if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Status"), boarddata))
-      {
+      if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Status"), boarddata) || P103_UNCONNECTED_SETUP) {
         String boardStatus(boarddata);
 
         addRowLabel(F("Board restart code"));
 
-      # ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, boardStatus);
-      # endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef BUILD_NO_DEBUG
 
-        char *statuschar = strchr(boarddata, ',');
+        // FIXME tonhuisman: To improve
+        const String stat = parseStringKeepCase(boardStatus, 2);
 
-        if (statuschar > 0)
-        {
-          switch (boarddata[statuschar - boarddata + 1])
-          {
+        if (!stat.isEmpty()) {
+          switch (stat[0]) {
             case 'P':
-            {
               addHtml(F("powered off"));
               break;
-            }
             case 'S':
-            {
               addHtml(F("software reset"));
               break;
-            }
             case 'B':
-            {
               addHtml(F("brown out"));
               break;
-            }
             case 'W':
-            {
               addHtml(F("watch dog"));
               break;
-            }
             case 'U':
             default:
-            {
               addHtml(F("unknown"));
               break;
-            }
           }
         }
 
         addRowLabel(F("Board voltage"));
-        addHtml(boardStatus.substring(boardStatus.lastIndexOf(',') + 1));
+        addHtml(parseString(boardStatus, 3));
         addUnit('V');
 
         addRowLabel(F("Sensor Data"));
         addHtmlFloat(UserVar[event->BaseVarIndex]);
 
-        switch (board_type)
-        {
+        switch (board_type) {
           case AtlasEZO_Sensors_e::PH:
-          {
             addUnit(F("pH"));
             break;
-          }
           case AtlasEZO_Sensors_e::ORP:
-          {
             addUnit(F("mV"));
             break;
-          }
           case AtlasEZO_Sensors_e::EC:
-          {
             addUnit(F("&micro;S"));
             break;
-          }
           case AtlasEZO_Sensors_e::DO:
-          {
             addUnit(F("mg/L"));
             break;
+          case AtlasEZO_Sensors_e::HUM: // TODO Show Temp & Dew point also
+          {
+            addUnit(F("%RH"));
+            break;
           }
+          # if P103_USE_RTD
+          case AtlasEZO_Sensors_e::RTD:
+          {
+            addUnit(F("&deg;C")); // TODO Read current scale (C/F/K) from device, show flow
+            break;
+          }
+          # endif // if P103_USE_RTD
+          # if P103_USE_FLOW
+          case AtlasEZO_Sensors_e::FLOW:
+            addUnit(F("mL/min"));
+            break;
+          # endif // if P103_USE_FLOW
           case AtlasEZO_Sensors_e::UNKNOWN:
             break;
         }
-      }
-      else
-      {
-        P103_html_red(F("Unable to send status command to device"));
+      } else {
+        P103_html_red(F("Unable to send Status command to device"));
         success = false;
         break;
       }
@@ -236,35 +315,30 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Status LED"), F("status_led"), P103_STATUS_LED);
 
       // Ability to see and change EC Probe Type (e.g., 0.1, 1.0, 10)
-      if (board_type == AtlasEZO_Sensors_e::EC)
-      {
+      if (board_type == AtlasEZO_Sensors_e::EC) {
         memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
 
-        if (P103_send_I2C_command(P103_I2C_ADDRESS, F("K,?"), boarddata))
-        {
+        if (P103_send_I2C_command(P103_I2C_ADDRESS, F("K,?"), boarddata)) {
           String ecProbeType(boarddata);
 
-          addFormTextBox(F("EC Probe Type"), F("ec_probe_type"), ecProbeType.substring(ecProbeType.lastIndexOf(',') + 1), 32);
+          addFormTextBox(F("EC Probe Type"), F("ec_probe_type"), parseString(ecProbeType, 2), 32);
           addFormCheckBox(F("Set Probe Type"), F("en_set_probe_type"), false);
         }
       }
 
       // calibrate
-      switch (board_type)
-      {
+      switch (board_type) {
         case AtlasEZO_Sensors_e::PH:
         {
           addFormSubHeader(F("pH Calibration"));
-          addFormNote(F(
-                        "Calibration for pH-Probe could be 1 (single), 2 (single, low) or 3 point (single, low, high). The sequence is important."));
+          addFormNote(F("Calibration for pH-Probe could be 1 (single), 2 (single, low) or 3 point (single, low, high)."
+                        " The sequence is important."));
           const int nb_calibration_points = P103_addCreate3PointCalibration(board_type, event, P103_I2C_ADDRESS, F("pH"), 0.0, 14.0, 2, 0.01);
 
-          if (nb_calibration_points > 1)
-          {
+          if (nb_calibration_points > 1) {
             memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
 
-            if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Slope,?"), boarddata))
-            {
+            if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Slope,?"), boarddata)) {
               addFormNote(concat(F("Answer to 'Slope' command : "), String(boarddata)));
             }
           }
@@ -272,38 +346,44 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         }
 
         case AtlasEZO_Sensors_e::ORP:
-        {
           addFormSubHeader(F("ORP Calibration"));
           P103_addCreateSinglePointCalibration(board_type, event, P103_I2C_ADDRESS, F("mV"), 0.0, 1500.0, 0, 1.0);
           break;
-        }
 
         case AtlasEZO_Sensors_e::EC:
-        {
           addFormSubHeader(F("EC Calibration"));
           P103_addCreateDryCalibration();
           P103_addCreate3PointCalibration(board_type, event, P103_I2C_ADDRESS, F("&micro;S"), 0.0, 500000.0, 0, 1.0);
           break;
-        }
 
         case AtlasEZO_Sensors_e::DO:
-        {
           addFormSubHeader(F("DO Calibration"));
           P103_addDOCalibration(P103_I2C_ADDRESS);
           break;
-        }
+
+        case AtlasEZO_Sensors_e::HUM:  // No calibration
+        # if P103_USE_RTD
+        case AtlasEZO_Sensors_e::RTD:  // TODO Decide what calibration data to retrieve/store
+        # endif // if P103_USE_RTD
+        # if P103_USE_FLOW
+        case AtlasEZO_Sensors_e::FLOW: // TODO Size/type of flow meter, default: 1/2", Flow rate, Conversion factor, Output values: total,
+                                       // flow rate
+        # endif // if P103_USE_FLOW
         case AtlasEZO_Sensors_e::UNKNOWN:
           break;
       }
 
-      // Clear calibration
-      P103_addClearCalibration();
+      if ((AtlasEZO_Sensors_e::PH == board_type) ||
+          (AtlasEZO_Sensors_e::ORP == board_type) ||
+          (AtlasEZO_Sensors_e::EC == board_type)) {
+        // Clear calibration option, only when using calibration
+        P103_addClearCalibration();
+      }
 
       // Temperature compensation
-      if ((board_type == AtlasEZO_Sensors_e::PH) ||
-          (board_type == AtlasEZO_Sensors_e::EC) ||
-          (board_type == AtlasEZO_Sensors_e::DO))
-      {
+      if ((AtlasEZO_Sensors_e::PH == board_type) ||
+          (AtlasEZO_Sensors_e::ORP == board_type) ||
+          (AtlasEZO_Sensors_e::EC == board_type)) {
         ESPEASY_RULES_FLOAT_TYPE value{};
 
         addFormSubHeader(F("Temperature compensation"));
@@ -311,14 +391,20 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate));
         ZERO_TERMINATE(deviceTemperatureTemplate);
         addFormTextBox(F("Temperature "), F("_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
-        addFormNote(F("You can use a formula and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import),"
-                      " e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' or '25.5'."));
+        addFormNote(F("You can use a formula and idealy refer to a temp sensor"
+                      # ifndef LIMIT_BUILD_SIZE
+                      " (directly, via ESPEasyP2P or MQTT import),"
+                      " e.g. '[Pool#Temperature]'. If you don't have a sensor, you could"
+                      # else // ifndef LIMIT_BUILD_SIZE
+                      " or"
+                      # endif // ifndef LIMIT_BUILD_SIZE
+                      " type a fixed value like '25' or '25.5'."
+                      ));
 
         String deviceTemperatureTemplateString(deviceTemperatureTemplate);
-        String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
+        const String pooltempString(parseTemplate(deviceTemperatureTemplateString));
 
-        if (Calculate(pooltempString, value) != CalculateReturnCode::OK)
-        {
+        if (Calculate(pooltempString, value) != CalculateReturnCode::OK) {
           addFormNote(F("It seems I can't parse your formula. Fixed value will be used!"));
           value = P103_FIXED_TEMP_VALUE;
         }
@@ -334,24 +420,22 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
     {
       board_type = static_cast<AtlasEZO_Sensors_e>(P103_BOARD_TYPE);
 
-      P103_I2C_ADDRESS = getFormItemInt(F("i2c"));
+      P103_I2C_ADDRESS       = getFormItemInt(F("i2c"));
+      P103_UNCONNECTED_SETUP = isFormItemChecked(F("uncon")) ? 1 : 0;
 
       P103_SENSOR_VERSION = getFormItemFloat(F("sensorVersion"));
 
-      char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+      // char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
 
-      if (isFormItemChecked(F("status_led")))
-      {
-        P103_send_I2C_command(P103_I2C_ADDRESS, F("L,1"), boarddata);
-      }
-      else
-      {
-        P103_send_I2C_command(P103_I2C_ADDRESS, F("L,0"), boarddata);
-      }
       P103_STATUS_LED = isFormItemChecked(F("status_led"));
 
-      if ((board_type == AtlasEZO_Sensors_e::EC) && isFormItemChecked(F("en_set_probe_type")))
-      {
+      if (P103_STATUS_LED) {
+        P103_send_I2C_command(P103_I2C_ADDRESS, F("L,1"), boarddata);
+      } else {
+        P103_send_I2C_command(P103_I2C_ADDRESS, F("L,0"), boarddata);
+      }
+
+      if ((board_type == AtlasEZO_Sensors_e::EC) && isFormItemChecked(F("en_set_probe_type"))) {
         # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("isFormItemChecked"));
         # endif // ifndef BUILD_NO_DEBUG
@@ -368,58 +452,46 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       P103_CALIBRATION_LOW    = getFormItemFloat(F("ref_cal_L"));
       P103_CALIBRATION_HIGH   = getFormItemFloat(F("ref_cal_H"));
 
-      if (isFormItemChecked(F("en_cal_clear")))
-      {
+      if (isFormItemChecked(F("en_cal_clear"))) {
         cmd             += F("clear");
         triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("en_cal_dry")))
-      {
+      } else if (isFormItemChecked(F("en_cal_dry"))) {
         cmd             += F("dry");
         triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("en_cal_single")))
-      {
-        if (board_type == AtlasEZO_Sensors_e::PH)
-        {
+      } else if (isFormItemChecked(F("en_cal_single"))) {
+        if (board_type == AtlasEZO_Sensors_e::PH) {
           cmd += F("mid,");
         }
         cmd             += P103_CALIBRATION_SINGLE;
         triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("en_cal_L")))
-      {
+      } else if (isFormItemChecked(F("en_cal_L"))) {
         cmd             += F("low,");
         cmd             += P103_CALIBRATION_LOW;
         triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("en_cal_H")))
-      {
+      } else if (isFormItemChecked(F("en_cal_H"))) {
         cmd             += F("high,");
         cmd             += P103_CALIBRATION_HIGH;
         triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("en_cal_atm")))
-      {
+      } else if (isFormItemChecked(F("en_cal_atm"))) {
         triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("en_cal_0")))
-      {
+      } else if (isFormItemChecked(F("en_cal_0"))) {
         cmd             += '0';
         triggerCalibrate = true;
       }
 
 
-      if (triggerCalibrate)
-      {
+      if (triggerCalibrate &&
+          ((AtlasEZO_Sensors_e::PH == board_type) ||
+           (AtlasEZO_Sensors_e::EC == board_type) ||
+           (AtlasEZO_Sensors_e::DO == board_type))
+          ) {
         memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
         P103_send_I2C_command(P103_I2C_ADDRESS, cmd, boarddata);
       }
 
-      if ((board_type == AtlasEZO_Sensors_e::PH) ||
-          (board_type == AtlasEZO_Sensors_e::EC) ||
-          (board_type == AtlasEZO_Sensors_e::DO))
-      {
+      if ((AtlasEZO_Sensors_e::PH == board_type) ||
+          (AtlasEZO_Sensors_e::EC == board_type) ||
+          (AtlasEZO_Sensors_e::DO == board_type)) {
         char   deviceTemperatureTemplate[40] = { 0 };
         String tmpString                     = webArg(F("_template"));
         safe_strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate) - 1);
@@ -445,9 +517,9 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
       String readCommand;
 
-      if ((board_type == AtlasEZO_Sensors_e::PH) ||
-          (board_type == AtlasEZO_Sensors_e::EC) ||
-          (board_type == AtlasEZO_Sensors_e::DO))
+      if ((AtlasEZO_Sensors_e::PH == board_type) ||
+          (AtlasEZO_Sensors_e::EC == board_type) ||
+          (AtlasEZO_Sensors_e::DO == board_type))
       {
         // first set the temperature of reading
         char deviceTemperatureTemplate[40] = { 0 };
@@ -455,41 +527,59 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         ZERO_TERMINATE(deviceTemperatureTemplate);
 
         String deviceTemperatureTemplateString(deviceTemperatureTemplate);
-        String temperatureString(parseTemplate(deviceTemperatureTemplateString, 40));
+        String temperatureString(parseTemplate(deviceTemperatureTemplateString));
 
         readCommand = F("RT,");
         ESPEASY_RULES_FLOAT_TYPE temperatureReading{};
 
-        if (Calculate(temperatureString, temperatureReading) != CalculateReturnCode::OK)
-        {
+        if (Calculate(temperatureString, temperatureReading) != CalculateReturnCode::OK) {
           temperatureReading = P103_FIXED_TEMP_VALUE;
         }
 
         readCommand += temperatureReading;
       }
-      else if (board_type == AtlasEZO_Sensors_e::ORP)
-      {
+      else if ((AtlasEZO_Sensors_e::ORP == board_type) ||
+               (AtlasEZO_Sensors_e::HUM == board_type)
+               # if P103_USE_RTD
+               || (AtlasEZO_Sensors_e::RTD == board_type)
+               # endif // if P103_USE_RTD
+               # if P103_USE_FLOW
+               || (AtlasEZO_Sensors_e::FLOW == board_type)
+               # endif // if P103_USE_FLOW
+               ) {
         readCommand = F("R,");
       }
 
       // ok, now we can read the sensor data
-      char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
-      UserVar[event->BaseVarIndex] = -1;
+      // char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+      UserVar[event->BaseVarIndex]     = -1;
+      UserVar[event->BaseVarIndex + 1] = -1;
+      UserVar[event->BaseVarIndex + 2] = -1;
 
-      if (P103_send_I2C_command(P103_I2C_ADDRESS, readCommand, boarddata))
-      {
+      if (P103_send_I2C_command(P103_I2C_ADDRESS, readCommand, boarddata)) {
         String sensorString(boarddata);
-        string2float(sensorString, UserVar[event->BaseVarIndex]);
+        string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex]);
+
+        if (board_type == AtlasEZO_Sensors_e::HUM) {
+          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 1]);
+          string2float(parseString(sensorString, 4), UserVar[event->BaseVarIndex + 2]);
+        }
+
+        # if P103_USE_FLOW
+
+        if (board_type == AtlasEZO_Sensors_e::FLOW) {
+          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 1]);
+        }
+        # endif // if P103_USE_FLOW
       }
 
       // we read the voltagedata
       memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
       UserVar[event->BaseVarIndex + 1] = -1;
 
-      if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Status"), boarddata))
-      {
+      if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Status"), boarddata)) {
         String voltage(boarddata);
-        string2float(voltage.substring(voltage.lastIndexOf(',') + 1), UserVar[event->BaseVarIndex + 1]);
+        string2float(parseString(voltage, 2), UserVar[event->BaseVarIndex + 1]);
       }
 
       success = true;
