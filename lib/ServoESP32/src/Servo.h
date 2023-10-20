@@ -136,6 +136,7 @@ class ServoTemplate : public ServoBase {
         if (tempPeriodUs <= maxPulseWidthUs) {
             return false;
         }
+#if ESP_IDF_VERSION_MAJOR < 5
         if (channel == CHANNEL_NOT_ATTACHED) {
             if (channel_next_free == LEDC_CHANNELS) {
                 return false;
@@ -145,6 +146,7 @@ class ServoTemplate : public ServoBase {
         } else {
             _channel = channel;
         }
+#endif
 
         _pin = pin;
         _minAngle = minAngle;
@@ -153,8 +155,12 @@ class ServoTemplate : public ServoBase {
         _maxPulseWidthUs = maxPulseWidthUs;
         _periodUs = tempPeriodUs;
 
+#if ESP_IDF_VERSION_MAJOR < 5
         ledcSetup(_channel, frequency, TIMER_RESOLUTION);
         ledcAttachPin(_pin, _channel);
+#else
+        ledcAttach(_pin, frequency, TIMER_RESOLUTION);
+#endif
         return true;
     }
 
@@ -169,11 +175,14 @@ class ServoTemplate : public ServoBase {
         if (!this->attached()) {
             return false;
         }
-
+#if ESP_IDF_VERSION_MAJOR < 5
         if (_channel == (channel_next_free - 1))
             channel_next_free--;
 
         ledcDetachPin(_pin);
+#else
+        ledcDetach(_pin);
+#endif
         _pin = PIN_NOT_ATTACHED;
         return true;
     }
@@ -208,7 +217,11 @@ class ServoTemplate : public ServoBase {
         }
         pulseWidthUs = constrain(pulseWidthUs, _minPulseWidthUs, _maxPulseWidthUs);
         _pulseWidthTicks = _usToTicks(pulseWidthUs);
+#if ESP_IDF_VERSION_MAJOR < 5
         ledcWrite(_channel, _pulseWidthTicks);
+#else
+        ledcWrite(_pin, _pulseWidthTicks);
+#endif
     }
 
     /**
@@ -229,7 +242,11 @@ class ServoTemplate : public ServoBase {
         if (!this->attached()) {
             return 0;
         }
-        int duty = ledcRead(_channel);
+#if ESP_IDF_VERSION_MAJOR < 5
+        const int duty = ledcRead(_channel);
+#else
+        const int duty = ledcRead(_pin);
+#endif
         return _ticksToUs(duty);
     }
 
@@ -252,7 +269,9 @@ class ServoTemplate : public ServoBase {
     void _resetFields(void) {
         _pin = PIN_NOT_ATTACHED;
         _pulseWidthTicks = 0;
+#if ESP_IDF_VERSION_MAJOR < 5
         _channel = CHANNEL_NOT_ATTACHED;
+#endif
         _minAngle = DEFAULT_MIN_ANGLE;
         _maxAngle = DEFAULT_MAX_ANGLE;
         _minPulseWidthUs = DEFAULT_MIN_PULSE_WIDTH_US;
@@ -281,7 +300,9 @@ class ServoTemplate : public ServoBase {
 
     int _pin;
     int _pulseWidthTicks;
+#if ESP_IDF_VERSION_MAJOR < 5
     int _channel;
+#endif
     int _minPulseWidthUs, _maxPulseWidthUs;
     T _minAngle, _maxAngle;
     int _periodUs;

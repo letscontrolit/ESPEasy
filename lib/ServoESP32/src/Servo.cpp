@@ -33,4 +33,6 @@
 // Implementation is in Servo.h
 #include <Servo.h>
 
+#if ESP_IDF_VERSION_MAJOR < 5
 int ServoBase::channel_next_free = 0;
+#endif

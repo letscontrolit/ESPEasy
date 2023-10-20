@@ -3203,12 +3203,12 @@ To create/register a plugin, you have to :
     #undef USES_P088  // HeatpumpIR
   #endif
 
-
+/*
   #if FEATURE_SERVO
     #undef FEATURE_SERVO
     #define FEATURE_SERVO 0
   #endif
-
+*/
 
   #ifdef USES_P128
     #undef USES_P128 // NeoPixelBusFX
