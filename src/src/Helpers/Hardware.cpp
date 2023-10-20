@@ -2381,12 +2381,24 @@ void initAnalogWrite()
 }
 
 #if defined(ESP32)
-#if ESP_IDF_VERSION_MAJOR < 5
-int8_t ledChannelPin[16];
+
+// Match frequency and resolution and optionally adjust duty accordingly
+// @return adjusted duty cycle
+uint32_t adapt_ledc_frequency_resolution_duty(uint32_t& frequency, uint8_t& resolution, uint32_t duty = 0)
+{
+  while ((40000000u >> resolution) < frequency && resolution > 1) {
+    --resolution;
+    duty >>= 1;
+  }
+  return std::min(duty, static_cast<uint32_t>((1 << resolution) - 1));
+}
+
+# if ESP_IDF_VERSION_MAJOR < 5
+int8_t   ledChannelPin[16];
 uint32_t ledChannelFreq[16] = { 0 };
 
 
-int8_t attachLedChannel(int pin, uint32_t frequency)
+int8_t attachLedChannel(int pin, uint32_t frequency, uint8_t resolution)
 {
   static bool initialized = false;
 
@@ -2403,7 +2415,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
 
   // find existing channel if this pin has been used before
   int8_t ledChannel = -1;
-  bool mustSetup    = false;
+  bool   mustSetup  = false;
 
   for (uint8_t x = 0; x < nrLedChannelPins; x++) {
     if (ledChannelPin[x] == pin) {
@@ -2411,7 +2423,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
     }
   }
 
-  if (ledChannel == -1)                                    // no channel set for this pin
+  if (ledChannel == -1)                                                  // no channel set for this pin
   {
     for (uint8_t x = 0; x < nrLedChannelPins && ledChannel == -1; ++x) { // find free channel
       if (ledChannelPin[x] == -1)
@@ -2443,7 +2455,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
   }
 
   if (mustSetup) {
-    // setup channel to 10 bit and set frequency.
+    // setup channel to resolution nr of bits and set frequency.
     ledChannelFreq[ledChannel] = ledcSetup(ledChannel, ledChannelFreq[ledChannel], 10);
     ledChannelPin[ledChannel]  = pin; // store pin nr
     ledcAttachPin(pin, ledChannel);   // attach to this pin
@@ -2472,14 +2484,17 @@ void detachLedChannel(int pin)
     ledChannelFreq[ledChannel] = 0;
   }
 }
-#else
+
+# else // if ESP_IDF_VERSION_MAJOR < 5
+
 // ESP_IDF >= 5.x finally manages the channels in the SDK
 
-int8_t attachLedChannel(int pin, uint32_t frequency)
+int8_t attachLedChannel(int pin, uint32_t frequency, uint8_t resolution)
 {
-  if (frequency == 0) 
+  if (frequency == 0) {
     frequency = 1000;
-  return ledcAttach(pin, frequency, 10) ? 0 : -1;
+  }
+  return ledcAttach(pin, frequency, resolution) ? 0 : -1;
 }
 
 void detachLedChannel(int pin)
@@ -2487,7 +2502,7 @@ void detachLedChannel(int pin)
   ledcDetach(pin);
 }
 
-#endif
+# endif // if ESP_IDF_VERSION_MAJOR < 5
 
 uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
 {
@@ -2497,14 +2512,17 @@ uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
   }
 
   // find existing channel if this pin has been used before
-  int8_t ledChannel = attachLedChannel(pin, frequency);
+  uint8_t resolution = 10;
+
+  value = adapt_ledc_frequency_resolution_duty(frequency, resolution, value);
+  int8_t ledChannel = attachLedChannel(pin, frequency, resolution);
 
   if (ledChannel != -1) {
     # if ESP_IDF_VERSION_MAJOR < 5
     ledcWrite(ledChannel, value);
     return ledChannelFreq[ledChannel];
     # else // if ESP_IDF_VERSION_MAJOR < 5
-    ledcWrite(pin, value);
+    ledcWrite(pin,        value);
     return ledcReadFreq(pin);
     # endif // if ESP_IDF_VERSION_MAJOR < 5
   }
@@ -2540,26 +2558,73 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
   // So the next command should be part of each command:
   tempStatus = globalMapPortStatus[key];
 
-        #if defined(ESP8266)
+#if defined(ESP8266)
   pinMode(gpio, OUTPUT);
-        #endif // if defined(ESP8266)
-
-  #if defined(ESP8266)
 
   if ((frequency > 0) && (frequency <= 40000)) {
     analogWriteFreq(frequency);
   }
-  #endif // if defined(ESP8266)
+#endif // if defined(ESP8266)
 
-  if (fadeDuration_ms != 0)
+#if ESP_IDF_VERSION_MAJOR >= 5
+
+  if (fadeDuration_ms == 0)
   {
+    analogWriteESP32(gpio, dutyCycle, frequency);
+  } else {
+    uint8_t  resolution  = 10;
+    uint32_t start_duty  = 0;
+    uint32_t target_duty = dutyCycle;
+
+    if (/*(tempStatus.mode == PIN_MODE_PWM) && */ (ledcReadFreq(gpio) != 0)) {
+      start_duty = ledcRead(gpio);
+    } else {
+      // No PWM active, pick proper estimated start_duty based on pin state
+      if (digitalRead(gpio)) {
+        start_duty = (1 << resolution);
+      }
+    }
+
+    if (frequency > 0) {
+      // Adjust the frequency and resolution to keep them in the range of the used timer frequency.
+      while ((40000000u >> resolution) < frequency && resolution > 5) {
+        --resolution;
+        if (start_duty > target_duty) 
+          ++start_duty;
+        else 
+          ++target_duty;
+        start_duty  >>= 1;
+        target_duty >>= 1;
+      }
+    }
+    start_duty  = std::min(start_duty, static_cast<uint32_t>((1 << resolution) - 1));
+    target_duty = std::min(target_duty, static_cast<uint32_t>((1 << resolution) - 1));
+
+    ledcAttach(gpio, frequency, resolution);
+    if (!ledcFade(gpio, start_duty, target_duty, fadeDuration_ms)) {
+      return false;
+    }
+  }
+
+#else // if ESP_IDF_VERSION_MAJOR < 5
+
+  if (fadeDuration_ms == 0)
+  {
+#if defined(ESP8266)
+    analogWrite(gpio, dutyCycle);
+#endif // if defined(ESP8266)
+#if defined(ESP32)
+    frequency = analogWriteESP32(gpio, dutyCycle, frequency);
+#endif // if defined(ESP32)
+  } else {
     const int32_t resolution_factor = (1 << 12);
     const uint8_t prev_mode         = tempStatus.mode;
     int32_t prev_value              = tempStatus.getDutyCycle();
 
-    // getPinState(pluginID, gpio, &prev_mode, &prev_value);
+    // Check to see if pin was already set to PWM.
+    // If not, then set previous duty cycle close to logic pin state.
     if (prev_mode != PIN_MODE_PWM) {
-      prev_value = 0;
+      prev_value = (tempStatus.getValue() == 0) ? 0 : 1023;
     }
 
     const int32_t step_value = ((static_cast<int32_t>(dutyCycle) - prev_value) * resolution_factor) / static_cast<int32_t>(fadeDuration_ms);
@@ -2570,22 +2635,17 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
     while (i--) {
       curr_value += step_value;
       const int16_t new_value = curr_value / resolution_factor;
-            #if defined(ESP8266)
+            # if defined(ESP8266)
       analogWrite(gpio, new_value);
-            #endif // if defined(ESP8266)
-            #if defined(ESP32)
+            # endif // if defined(ESP8266)
+            # if defined(ESP32)
       frequency = analogWriteESP32(gpio, new_value, frequency);
-            #endif // if defined(ESP32)
+            # endif // if defined(ESP32)
       delay(1);
     }
   }
 
-        #if defined(ESP8266)
-  analogWrite(gpio, dutyCycle);
-        #endif // if defined(ESP8266)
-        #if defined(ESP32)
-  frequency = analogWriteESP32(gpio, dutyCycle, frequency);
-        #endif // if defined(ESP32)
+#endif // if ESP_IDF_VERSION_MAJOR >= 5
 
   // setPinState(pluginID, gpio, PIN_MODE_PWM, dutyCycle);
   tempStatus.mode      = PIN_MODE_PWM;

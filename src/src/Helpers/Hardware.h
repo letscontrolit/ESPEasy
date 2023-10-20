@@ -292,7 +292,8 @@ extern int8_t   ledChannelPin[16];
 extern uint32_t ledChannelFreq[16];
 
 int8_t   attachLedChannel(int      pin,
-                          uint32_t frequency = ESPEASY_PWM_DEFAULT_FREQUENCY);
+                          uint32_t frequency = ESPEASY_PWM_DEFAULT_FREQUENCY,
+                          uint8_t  resolution = 10);
 void     detachLedChannel(int pin);
 uint32_t analogWriteESP32(int      pin,
                           int      value,
