@@ -12,7 +12,16 @@
 # define P159_QUERY1_CONFIG_POS   0
 # define P159_SENSOR_TYPE_INDEX   (P159_QUERY1_CONFIG_POS + VARS_PER_TASK)
 # define P159_NR_OUTPUT_VALUES    getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P159_SENSOR_TYPE_INDEX)))
-# define P159_ENGINEERING_MODE    PCONFIG(5)
+
+# define P159_CONFIG_FLAGS        PCONFIG_ULONG(0)
+
+# define P159_FLAG_ENGINEERING_MODE       0
+# define P159_FLAG_UPDATE_DIFF_ONLY       1
+
+# define P159_GET_ENGINEERING_MODE    bitRead(P159_CONFIG_FLAGS, P159_FLAG_ENGINEERING_MODE)
+# define P159_SET_ENGINEERING_MODE(x) bitWrite(P159_CONFIG_FLAGS, P159_FLAG_ENGINEERING_MODE, x)
+# define P159_GET_UPDATE_DIFF_ONLY    bitRead(P159_CONFIG_FLAGS, P159_FLAG_UPDATE_DIFF_ONLY)
+# define P159_SET_UPDATE_DIFF_ONLY(x) bitWrite(P159_CONFIG_FLAGS, P159_FLAG_UPDATE_DIFF_ONLY, x)
 
 # define P159_OUTPUT_PRESENCE             0
 # define P159_OUTPUT_STATIONARY_PRESENCE  1
@@ -51,10 +60,12 @@
 # define P159_DELAY_RESTART                       2500 // milliseconds to 'wait' (ignore) after a device-restart
 
 enum class P159_state_e : uint8_t {
-  Initializing = 0u,
-  Restarting   = 1u,
-  Configuring  = 2u,
-  Running      = 3u,
+  Initializing     = 0u,
+  Restarting       = 1u,
+  GetVersion       = 2u,
+  GetConfiguration = 3u,
+  Engineering      = 4u,
+  Running          = 5u,
 };
 
 const __FlashStringHelper* Plugin_159_valuename(uint8_t value_nr,
@@ -69,9 +80,19 @@ struct P159_data_struct : public PluginTaskData_base {
   void disconnectSerial(); // Disconnect the serial port connected to the sensor
   bool processSensor();    // Process sensor, must be called regularly
   bool plugin_read(struct EventStruct *event);
+  bool plugin_webform_load(struct EventStruct *event);
+  bool plugin_webform_save(struct EventStruct *event);
 
   bool isValid() const {
     return nullptr != easySerial && nullptr != radar;
+  }
+
+  P159_state_e getCurrentState() const {
+    return state;
+  }
+
+  bool isRunning() const {
+    return isValid() && P159_state_e::Running == state;
   }
 
 private:
@@ -81,12 +102,14 @@ private:
                     int16_t             valueIndex,
                     int                 previousValue,
                     bool              & isChanged);
+  void addJavascript();
 
-  ESPeasySerial *easySerial       = nullptr; // Serial port object
-  ld2410        *radar            = nullptr; // Sensor object
-  uint32_t       milestone        = 0;       // When can we do the next phase when not in Running state?
-  P159_state_e   state            = P159_state_e::Initializing;
-  bool           _engineeringMode = false;
+  ESPeasySerial *easySerial         = nullptr; // Serial port object
+  ld2410        *radar              = nullptr; // Sensor object
+  uint32_t       milestone          = 0;       // When can we do the next phase when not in Running state?
+  P159_state_e   state              = P159_state_e::Initializing;
+  bool           _engineeringMode   = false;
+  bool           _configurationRead = false;
 };
 
 #endif  // USES_P159

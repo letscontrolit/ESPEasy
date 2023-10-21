@@ -5,6 +5,10 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-10-21 tonhuisman: Read data at 50/sec instead of 10/sec to catch up with the high speed of output
+ *                        Add/update settings for Sensitivity and nr. of active gates, idle seconds
+ *                        Shorten default value names, (breaking) change setting for Engineering mode
+ *                        Add setting for generating events only when a value has changed
  * 2023-10-14 tonhuisman: Using ld2410 library from https://github.com/ncmreynolds/ld2410, but with PR #3 applied
  *                        including a fix for index/index + 1, mentioned in the comments of that PR and timeout
  *                        extended to 2500 msec
@@ -35,16 +39,17 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     {
       // This case defines the device characteristics
 
-      Device[++deviceCount].Number         = PLUGIN_ID_159;
-      Device[deviceCount].Type             = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].ValueCount       = 4;
-      Device[deviceCount].OutputDataType   = Output_Data_type_t::Simple;
-      Device[deviceCount].FormulaOption    = true;
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].PluginStats      = true;
+      Device[++deviceCount].Number           = PLUGIN_ID_159;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
+      Device[deviceCount].ValueCount         = 4;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      Device[deviceCount].FormulaOption      = true;
+      Device[deviceCount].SendDataOption     = true;
+      Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
 
       break;
     }
@@ -136,7 +141,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     {
-      const uint8_t optionCount = P159_ENGINEERING_MODE == 1 ? P159_NR_ENGINEERING_OUTPUT_OPTIONS : P159_NR_OUTPUT_OPTIONS;
+      const uint8_t optionCount = P159_GET_ENGINEERING_MODE == 1 ? P159_NR_ENGINEERING_OUTPUT_OPTIONS : P159_NR_OUTPUT_OPTIONS;
       String options[optionCount];
 
       for (uint8_t option = 0; option < optionCount; ++option) {
@@ -158,6 +163,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
         const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
         sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, optionCount, options);
       }
+
       success = true;
 
       break;
@@ -165,16 +171,33 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSelector_YesNo(F("Engineering mode"), F("eng"), P159_ENGINEERING_MODE, true);
+      addFormSelector_YesNo(F("Engineering mode"), F("eng"), P159_GET_ENGINEERING_MODE, true);
       addFormNote(F("When changing this setting the page will be reloaded"));
+
+      addFormCheckBox(F("Generate Events only when changed"), F("diff"), P159_GET_UPDATE_DIFF_ONLY);
+
       success = true;
+
+      P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P159_data) {
+        addFormSubHeader(F("Sensitivity settings"));
+        success = P159_data->plugin_webform_load(event);
+      }
 
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P159_ENGINEERING_MODE = getFormItemInt(F("eng"));
+      P159_SET_ENGINEERING_MODE(getFormItemInt(F("eng")));
+      P159_SET_UPDATE_DIFF_ONLY(isFormItemChecked(F("diff")) ? 1 : 0);
+
+      P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P159_data) {
+        P159_data->plugin_webform_save(event);
+      }
 
       success = true;
 
@@ -187,7 +210,10 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       ESPEasySerialPort portType = serialHelper_getSerialType(event);
 
       // Create the P159_data_struct object that will do all the sensor interaction
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P159_data_struct(portType, rxPin, txPin, P159_ENGINEERING_MODE == 1));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P159_data_struct(portType,
+                                                                               rxPin,
+                                                                               txPin,
+                                                                               P159_GET_ENGINEERING_MODE == 1));
       P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = nullptr != P159_data;
@@ -231,8 +257,18 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     {
       P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P159_data) {
-        success = P159_data->processSensor(); // This has 50 msec delays included, so should NOT go in PLUGIN_FIFTY_PER_SECOND !
+      if ((nullptr != P159_data) && !P159_data->isRunning()) {
+        success = P159_data->processSensor(); // Not Running can have 50 msec delays included, so NOT in PLUGIN_FIFTY_PER_SECOND !
+      }
+
+      break;
+    }
+    case PLUGIN_FIFTY_PER_SECOND:
+    {
+      P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P159_data) && P159_data->isRunning()) {
+        success = P159_data->processSensor(); // When running no delays are inserted, so can go in PLUGIN_FIFTY_PER_SECOND
       }
 
       break;
