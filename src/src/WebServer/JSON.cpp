@@ -17,7 +17,6 @@
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"

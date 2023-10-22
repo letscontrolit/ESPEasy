@@ -15,7 +15,6 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/StringConverter.h"

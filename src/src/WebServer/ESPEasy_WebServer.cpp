@@ -61,7 +61,6 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"

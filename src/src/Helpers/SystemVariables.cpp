@@ -24,7 +24,6 @@
 #include "../Globals/Statistics.h"
 
 #include "../Helpers/Convert.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"

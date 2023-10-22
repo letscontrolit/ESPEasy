@@ -2,7 +2,6 @@
 
 #ifdef USES_P096
 
-# include "../Helpers/Hardware.h"
 
 /****************************************************************************
  * EPD_type_toString: Display-value for the device selected

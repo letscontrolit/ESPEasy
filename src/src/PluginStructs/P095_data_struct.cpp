@@ -1,7 +1,6 @@
 #include "../PluginStructs/P095_data_struct.h"
 
 #ifdef USES_P095
-# include "../Helpers/Hardware.h"
 
 /****************************************************************************
  * ILI9xxx_type_toString: Display-value for the device selected

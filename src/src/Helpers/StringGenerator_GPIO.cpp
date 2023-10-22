@@ -1,7 +1,6 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../Globals/Settings.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter.h"

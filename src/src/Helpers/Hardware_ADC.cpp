@@ -2,7 +2,6 @@
 
 
 #ifdef ESP32
-# include "../Helpers/Hardware.h"
 # include "../Helpers/Hardware_GPIO.h"
 #endif // ifdef ESP32
 

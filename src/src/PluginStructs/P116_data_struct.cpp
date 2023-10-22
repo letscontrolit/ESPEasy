@@ -2,8 +2,6 @@
 
 #ifdef USES_P116
 
-# include "../Helpers/Hardware.h"
-
 /****************************************************************************
  * ST77xx_type_toString: Display-value for the device selected
  ***************************************************************************/

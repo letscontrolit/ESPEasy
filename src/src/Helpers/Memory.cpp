@@ -11,7 +11,6 @@ extern "C" {
 
 
 #ifdef ESP32
-#include "../Helpers/Hardware.h"
 #if ESP_IDF_VERSION_MAJOR < 5
 #include <soc/cpu.h>
 #endif

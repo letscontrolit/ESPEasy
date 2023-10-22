@@ -17,7 +17,6 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_defines.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"

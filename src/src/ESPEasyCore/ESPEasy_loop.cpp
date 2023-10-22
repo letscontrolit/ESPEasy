@@ -16,7 +16,6 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/I2C_access.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"

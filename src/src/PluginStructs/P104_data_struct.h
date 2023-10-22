@@ -13,7 +13,6 @@
 # include "../Globals/CPlugins.h"
 # include "../Globals/Plugins.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Hardware.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
 

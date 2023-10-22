@@ -31,7 +31,6 @@
 # include "../Helpers/Convert.h"
 # include "../Helpers/ESPEasyStatistics.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Hardware.h"
 # include "../Helpers/Hardware_device_info.h"
 # include "../Helpers/Memory.h"
 # include "../Helpers/Misc.h"

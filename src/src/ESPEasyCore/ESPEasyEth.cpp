@@ -11,7 +11,6 @@
 #include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/Networking.h"
