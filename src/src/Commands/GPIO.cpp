@@ -14,6 +14,7 @@
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Helpers/Audio.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_PWM.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"

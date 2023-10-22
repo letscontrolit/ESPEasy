@@ -4,6 +4,7 @@
 #include "../Globals/RamTracker.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_PWM.h"
 
 
 /********************************************************************************************\

@@ -28,6 +28,7 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/PortStatus.h"
