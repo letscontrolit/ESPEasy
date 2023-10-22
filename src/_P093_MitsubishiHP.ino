@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-09-21 jfmennedy: Add support for "SetRemoteTemperature" Issue#4711
  * 2023-05-04 tonhuisman: Add support for PLUGIN_GET_CONFIG_VALUE to enable fetching all available values (as included in the json)
  * 2023-05-04 tonhuisman: Start Changelog
  */
@@ -14,6 +15,7 @@
  * Usage: [<taskname>#<configName>]
  * Supported configNames are: (not case-sensitive)
  * - roomTemperature
+ * - remoteTemperature
  * - wideVane
  * - power
  * - mode
