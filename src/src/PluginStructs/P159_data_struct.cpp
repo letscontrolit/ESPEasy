@@ -6,18 +6,16 @@ const __FlashStringHelper* Plugin_159_valuename(uint8_t value_nr,
                                                 bool    displayString) {
   const __FlashStringHelper *strings[] { /*** ATTENTION: Don't change order of values as these are stored as user-selected!!! ***/
     F("Presence"), F("Presence"),
-    F("Stationary Presence"), F("StatPresence"),
-    F("Moving Presence"), F("MovPresence"),
+    F("Stationary Presence"), F("StatPres"),
+    F("Moving Presence"), F("MovPres"),
     F("Object distance"), F("Distance"),
-    F("Stationary Object distance"), F("StatDistance"),
-    F("Moving Object distance"), F("MovDistance"),
+    F("Stationary Object distance"), F("StatDist"),
+    F("Moving Object distance"), F("MovDist"),
     F("Stationary Object energy"), F("StatEnergy"),
     F("Moving Object energy"), F("MovEnergy"),
     F("Ambient light sensor"), F("AmbLight"),
     F("Stationary Object energy gate "), F("StatEnergyGate"),
     F("Moving Object energy gate "), F("MovingEnergyGate"),
-
-    // TODO Add more values
   };
   const size_t index         = (2 * value_nr) + (displayString ? 0 : 1);
   constexpr size_t nrStrings = NR_ELEMENTS(strings);
@@ -144,7 +142,7 @@ bool P159_data_struct::processSensor() {
   } // isValid()
 
   return new_data;
-}   // processSensor()
+} // processSensor()
 
 bool P159_data_struct::plugin_read(struct EventStruct *event) {
   bool result = false;
@@ -220,6 +218,9 @@ bool P159_data_struct::plugin_webform_load(struct EventStruct *event) {
     }
 
     if (_configurationRead) {
+      addRowLabel(F("Firmware version: "));
+      addHtml(radar->cmdFirmwareVersion());
+
       const uint8_t  mGate    = radar->cfgMaxGate();
       const uint8_t  mMvGate  = radar->cfgMaxMovingGate();
       const uint8_t  mStGate  = radar->cfgMaxStationaryGate();
