@@ -92,7 +92,7 @@ void ESPEasy_loop()
     sendSysInfoUDP(1);
     #endif
   }
-
+#if FEATURE_CLEAR_I2C_STUCK
   if (Settings.EnableClearHangingI2Cbus())
   {
     // Check I2C bus to see if it needs to be cleared.
@@ -126,6 +126,7 @@ void ESPEasy_loop()
         break;
     }
   }
+#endif
 
 
   // Work around for nodes that do not have WiFi connection for a long time and may reboot after N unsuccessful connect attempts

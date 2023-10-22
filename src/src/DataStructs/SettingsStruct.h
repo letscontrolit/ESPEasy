@@ -137,7 +137,13 @@ class SettingsStruct_tmpl
   void EnableTimingStats(bool value) { VariousBits_1.EnableTimingStats = value; }
 
   // Allow to actively reset I2C bus if it appears to be hanging.
-  bool EnableClearHangingI2Cbus() const { return VariousBits_1.EnableClearHangingI2Cbus; }
+  bool EnableClearHangingI2Cbus() const { 
+#if FEATURE_CLEAR_I2C_STUCK
+    return VariousBits_1.EnableClearHangingI2Cbus; 
+#else
+    return false;
+#endif
+}
   void EnableClearHangingI2Cbus(bool value) { VariousBits_1.EnableClearHangingI2Cbus = value; }
 
   // Enable RAM Tracking (may consume a few kB of RAM and cause some performance hit)

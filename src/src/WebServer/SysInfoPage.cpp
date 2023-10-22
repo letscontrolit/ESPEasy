@@ -549,11 +549,12 @@ void handle_sysinfo_SystemStatus() {
   addRowLabelValue(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
   addRowLabelValue(LabelType::CONSOLE_FALLBACK_PORT);
 #endif
-
+#if FEATURE_CLEAR_I2C_STUCK
   if (Settings.EnableClearHangingI2Cbus()) {
     addRowLabelValue(LabelType::I2C_BUS_STATE);
     addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
   }
+#endif
 }
 #endif
 

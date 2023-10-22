@@ -3187,7 +3187,19 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-
+#ifndef FEATURE_CLEAR_I2C_STUCK
+  #ifdef ESP8266
+    #define FEATURE_CLEAR_I2C_STUCK 1
+  #endif
+  #ifdef ESP32
+    #if ESP_IDF_VERSION_MAJOR >= 5
+      // Messing with the I2C pin mode doesn't work well on IDF5.x
+      #define FEATURE_CLEAR_I2C_STUCK 0
+    #else
+      #define FEATURE_CLEAR_I2C_STUCK 1
+    #endif
+  #endif
+#endif
 
 
 // Incompatible libs/plugins with ESP_IDF 5.1.x and higher:

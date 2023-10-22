@@ -359,7 +359,9 @@ void I2CSelectClockSpeed(uint32_t clockFreq) {
 }
 
 void I2CForceResetBus_swap_pins(uint8_t address) {
+#if FEATURE_CLEAR_I2C_STUCK
   if (!Settings.EnableClearHangingI2Cbus()) { return; }
+#endif
 
   // As a final work-around, we temporary swap SDA and SCL, perform a scan and return pin order.
   I2CBegin(Settings.Pin_i2c_scl, Settings.Pin_i2c_sda, 100000);
