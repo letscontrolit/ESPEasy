@@ -137,12 +137,13 @@ bool P159_data_struct::processSensor() {
     }
 
     if (P159_state_e::Running != sState) { // FIXME Remove log
-      addLog(LOG_LEVEL_INFO, strformat(F("LD2410: Starting state: %d duration: %d msec."), static_cast<uint8_t>(sState), timePassedSince(iStart)));
+      addLog(LOG_LEVEL_INFO, strformat(F("LD2410: Starting state: %d duration: %d msec."),
+                                       static_cast<uint8_t>(sState), timePassedSince(iStart)));
     }
   } // isValid()
 
   return new_data;
-} // processSensor()
+}   // processSensor()
 
 bool P159_data_struct::plugin_read(struct EventStruct *event) {
   bool result = false;
@@ -297,6 +298,27 @@ bool P159_data_struct::plugin_webform_save(struct EventStruct *event) {
     }
     radar->requestConfigurationModeEnd();
     addLog(LOG_LEVEL_INFO, F("LD2410: Save sensitivity settings to sensor, done."));
+  }
+  return result;
+}
+
+bool P159_data_struct::plugin_write(struct EventStruct *event,
+                                    String            & string) {
+  bool result      = false;
+  const String cmd = parseString(string, 1);
+
+  if (isValid() && equals(cmd, F("ld2410"))) {
+    const String subcmd = parseString(string, 2);
+
+    if (equals(subcmd, F("factoryreset"))) {
+      addLog(LOG_LEVEL_ERROR, F("LD2410: Performing unconditional sensor factory reset!"));
+      result = radar->requestFactoryReset();
+      radar->requestRestart();
+
+      // start initiated, now wait, next step: request configuration
+      milestone = millis();
+      state     = P159_state_e::Restarting;
+    }
   }
   return result;
 }

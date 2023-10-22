@@ -5,6 +5,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-10-22 tonhuisman: Add command handling: ld2410,factoryreset
  * 2023-10-21 tonhuisman: Read data at 50/sec instead of 10/sec to catch up with the high speed of output
  *                        Add/update settings for Sensitivity and nr. of active gates, idle seconds
  *                        Shorten default value names, (breaking) change setting for Engineering mode
@@ -18,6 +19,10 @@
 /** Info:
  * This plugin reads the presence and distance of stationary and moving objects detected by the HiLink LD2410 and LD2420 24 GHz Radar
  * human presence detectors
+ */
+
+/** Commands:
+ * ld2410,factoryreset  : Reset sensor to factory defaults, also restarts the sensor like the task is just started.
  */
 
 #ifdef USES_P159
@@ -235,7 +240,11 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      // TODO
+      P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P159_data) {
+        success = P159_data->plugin_write(event, string);
+      }
 
       break;
     }

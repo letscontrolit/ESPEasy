@@ -82,6 +82,8 @@ struct P159_data_struct : public PluginTaskData_base {
   bool plugin_read(struct EventStruct *event);
   bool plugin_webform_load(struct EventStruct *event);
   bool plugin_webform_save(struct EventStruct *event);
+  bool plugin_write(struct EventStruct *event,
+                    String            & string);
 
   bool isValid() const {
     return nullptr != easySerial && nullptr != radar;
