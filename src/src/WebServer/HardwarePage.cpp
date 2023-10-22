@@ -16,6 +16,7 @@
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 

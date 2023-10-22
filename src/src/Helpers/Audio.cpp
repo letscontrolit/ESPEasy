@@ -3,6 +3,7 @@
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../Globals/RamTracker.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_GPIO.h"
 
 
 /********************************************************************************************\

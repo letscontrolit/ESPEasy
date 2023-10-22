@@ -9,6 +9,7 @@
 
 #include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/StringConverter_Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"

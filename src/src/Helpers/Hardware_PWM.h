@@ -1,5 +1,5 @@
-#ifndef HELPERS_HARDWARE_LEDC_H
-#define HELPERS_HARDWARE_LEDC_H
+#ifndef HELPERS_HARDWARE_PWM_H
+#define HELPERS_HARDWARE_PWM_H
 
 #include "../../ESPEasy_common.h"
 
@@ -49,4 +49,4 @@ bool set_Gpio_PWM(int       gpio,
                   uint32_t& key);
 
 
-#endif // ifndef HELPERS_HARDWARE_LEDC_H
+#endif // ifndef HELPERS_HARDWARE_PWM_H

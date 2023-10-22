@@ -10,6 +10,7 @@
 
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Misc.h"
 
 /********************************************************************************************\

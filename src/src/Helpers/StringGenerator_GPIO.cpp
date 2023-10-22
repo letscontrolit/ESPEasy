@@ -2,6 +2,7 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_common.h"
 

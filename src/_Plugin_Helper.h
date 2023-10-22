@@ -35,6 +35,8 @@
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
 #include "src/Helpers/Hardware.h"
+#include "src/Helpers/Hardware_GPIO.h"
+#include "src/Helpers/Hardware_PWM.h"
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/Numerical.h"
 #include "src/Helpers/PortStatus.h"
