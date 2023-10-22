@@ -16,6 +16,7 @@
 // only i2c mode is supported
 
 /** Changelog:
+ * 2023-10-22 tonhuisman: Fix some irregularities, add logging for status read (UI) and value(s) read (INFO log)
  * 2023-10-17 tonhuisman: Add support for EZO HUM, RTD and FLOW sensor modules (I2C only!) (RTD, FLOW disabled, default to UART mode)
  * 2023-01-08 tonhuisman: Replace ambiguous #define UNKNOWN, move support functions to plugin_struct source
  * 2023-01-07 tonhuisman: Refactored strings (a.o. shorter names for WEBFORM_LOAD and WEBFORM_SAVE events), separate javascript function
@@ -234,6 +235,9 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
       if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Status"), boarddata) || P103_UNCONNECTED_SETUP) {
         String boardStatus(boarddata);
+
+        addRowLabel(F("Board status"));
+        addHtml(boardStatus);
 
         addRowLabel(F("Board restart code"));
 
@@ -553,22 +557,24 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       // ok, now we can read the sensor data
       // char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
       UserVar[event->BaseVarIndex]     = -1;
-      UserVar[event->BaseVarIndex + 1] = -1;
       UserVar[event->BaseVarIndex + 2] = -1;
+      UserVar[event->BaseVarIndex + 3] = -1;
 
       if (P103_send_I2C_command(P103_I2C_ADDRESS, readCommand, boarddata)) {
         String sensorString(boarddata);
+        addLog(LOG_LEVEL_INFO, concat(F("P103: READ result: "), sensorString));
+
         string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex]);
 
         if (board_type == AtlasEZO_Sensors_e::HUM) {
-          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 1]);
-          string2float(parseString(sensorString, 4), UserVar[event->BaseVarIndex + 2]);
+          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 2]);
+          string2float(parseString(sensorString, 4), UserVar[event->BaseVarIndex + 3]);
         }
 
         # if P103_USE_FLOW
 
         if (board_type == AtlasEZO_Sensors_e::FLOW) {
-          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 1]);
+          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 2]);
         }
         # endif // if P103_USE_FLOW
       }
