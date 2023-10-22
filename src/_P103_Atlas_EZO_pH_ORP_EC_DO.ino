@@ -16,6 +16,8 @@
 // only i2c mode is supported
 
 /** Changelog:
+ * 2023-10-22 tonhuisman: Fix more irregularities, read configured EZO-HUM output options, and add options to enable/disable
+ *                        Temperature and Dew point values
  * 2023-10-22 tonhuisman: Fix some irregularities, add logging for status read (UI) and value(s) read (INFO log)
  * 2023-10-17 tonhuisman: Add support for EZO HUM, RTD and FLOW sensor modules (I2C only!) (RTD, FLOW disabled, default to UART mode)
  * 2023-01-08 tonhuisman: Replace ambiguous #define UNKNOWN, move support functions to plugin_struct source
@@ -24,6 +26,8 @@
  *                        Uncrustify source and more optimizations
  *                        Reuse char arrays instead of instantiating a new one
  */
+
+# include "src/PluginStructs/P103_data_struct.h"
 
 # define PLUGIN_103
 # define PLUGIN_ID_103          103
@@ -36,10 +40,8 @@
 # endif // if P103_USE_FLOW
 # define PLUGIN_VALUENAME1_103  "SensorData"
 # define PLUGIN_VALUENAME2_103  "Voltage"
-# define PLUGIN_VALUENAME3_103  "Temperature" // Only used for HUM
+# define PLUGIN_VALUENAME3_103  "Temperature" // TODO Only used for HUM TODO: Fix for EZO-FLOW extra reading
 # define PLUGIN_VALUENAME4_103  "Dewpoint"    // Only used for HUM
-
-# include "src/PluginStructs/P103_data_struct.h"
 
 boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -57,6 +59,10 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
   constexpr int i2c_nr_elements = NR_ELEMENTS(i2cAddressValues);
 
   char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+
+  bool _HUMhasHum  = true; // EZO-HUM options (& defaults)
+  bool _HUMhasTemp = false;
+  bool _HUMhasDew  = false;
 
   switch (function)
   {
@@ -122,7 +128,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
                       # if P103_USE_FLOW
                       ", FLOW: 0x68"
                       # endif // if P103_USE_FLOW
-                      ". The plugin can detect the type of device."));
+                      ". The plugin can recognize the type of device."));
       } else {
         success = intArrayContains(i2c_nr_elements, i2cAddressValues, event->Par1);
       }
@@ -173,7 +179,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
           // Not recognized, lets assume I2C address is correct, so we can setup the options
           for (uint8_t i = 0; i < i2c_nr_elements; ++i) {
             if (i2cAddressValues[i] == P103_I2C_ADDRESS) {
-              bType = i * 4; // Divided im the next check
+              bType = i * 4; // Divided in the next check
               break;
             }
           }
@@ -289,9 +295,27 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
           case AtlasEZO_Sensors_e::DO:
             addUnit(F("mg/L"));
             break;
-          case AtlasEZO_Sensors_e::HUM: // TODO Show Temp & Dew point also
+          case AtlasEZO_Sensors_e::HUM:                        // TODO Show Temp & Dew point also
           {
             addUnit(F("%RH"));
+            memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
+
+            if (P103_getHUMOutputOptions(event,
+                                         _HUMhasHum,
+                                         _HUMhasTemp,
+                                         _HUMhasDew)) {
+              if (_HUMhasTemp) {
+                addRowLabel(F("Temperature"));
+                addHtmlFloat(UserVar[event->BaseVarIndex + 2]);
+                addUnit(F("&deg;C"));
+              }
+
+              if (_HUMhasDew) {
+                addRowLabel(F("Dew point"));
+                addHtmlFloat(UserVar[event->BaseVarIndex + 3]);
+                addUnit(F("&deg;C"));
+              }
+            }
             break;
           }
           # if P103_USE_RTD
@@ -325,7 +349,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         if (P103_send_I2C_command(P103_I2C_ADDRESS, F("K,?"), boarddata)) {
           String ecProbeType(boarddata);
 
-          addFormTextBox(F("EC Probe Type"), F("ec_probe_type"), parseString(ecProbeType, 2), 32);
+          addFormTextBox(F("EC Probe Type"), F("ec_probe_type"), parseStringKeepCase(ecProbeType, 2), 32);
           addFormCheckBox(F("Set Probe Type"), F("en_set_probe_type"), false);
         }
       }
@@ -416,6 +440,12 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(concat(F("Actual value: "), toString(value, 2)));
       }
 
+      if (AtlasEZO_Sensors_e::HUM == board_type) {
+        addFormSubHeader(F("EZO-HUM Options"));
+        addFormCheckBox(F("Enable Temperature reading"), F("hum_temp"), _HUMhasTemp);
+        addFormCheckBox(F("Enable Dew point reading"),   F("hum_dew"),  _HUMhasTemp);
+      }
+
       success = true;
       break;
     }
@@ -428,8 +458,6 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       P103_UNCONNECTED_SETUP = isFormItemChecked(F("uncon")) ? 1 : 0;
 
       P103_SENSOR_VERSION = getFormItemFloat(F("sensorVersion"));
-
-      // char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
 
       P103_STATUS_LED = isFormItemChecked(F("status_led"));
 
@@ -505,6 +533,25 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
                                             sizeof(deviceTemperatureTemplate)));
       }
 
+      if ((AtlasEZO_Sensors_e::HUM == board_type) && P103_getHUMOutputOptions(event,
+                                                                              _HUMhasHum,
+                                                                              _HUMhasTemp,
+                                                                              _HUMhasDew)) {
+        if (!_HUMhasHum) { // If humidity not enabled, then enable it
+          P103_send_I2C_command(P103_I2C_ADDRESS, F("O,Hum,1"), boarddata);
+        }
+        bool _humOpt = isFormItemChecked(F("hum_temp"));
+
+        if (_humOpt != _HUMhasTemp) {
+          P103_send_I2C_command(P103_I2C_ADDRESS, concat(F("O,T,"), _humOpt ? 1 : 0), boarddata);
+        }
+        _humOpt = isFormItemChecked(F("hum_dew"));
+
+        if (_humOpt != _HUMhasDew) {
+          P103_send_I2C_command(P103_I2C_ADDRESS, concat(F("O,Dew,"), _humOpt ? 1 : 0), boarddata);
+        }
+      }
+
       success = true;
       break;
     }
@@ -564,17 +611,17 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         String sensorString(boarddata);
         addLog(LOG_LEVEL_INFO, concat(F("P103: READ result: "), sensorString));
 
-        string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex]);
+        string2float(parseString(sensorString, 1), UserVar[event->BaseVarIndex]);
 
         if (board_type == AtlasEZO_Sensors_e::HUM) {
-          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 2]);
-          string2float(parseString(sensorString, 4), UserVar[event->BaseVarIndex + 3]);
+          string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex + 2]);
+          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 3]);
         }
 
         # if P103_USE_FLOW
 
         if (board_type == AtlasEZO_Sensors_e::FLOW) {
-          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 2]);
+          string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex + 2]);
         }
         # endif // if P103_USE_FLOW
       }

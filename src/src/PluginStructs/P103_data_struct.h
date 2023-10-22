@@ -11,16 +11,16 @@
 # define P103_USE_RTD   0 // Defaults to UART, so disabled for now
 # define P103_USE_FLOW  0 // Defaults to UART, so disabled for now
 
-# ifdef PLUGIN_SET_MAX    // Enable RTD and FLOW for MAX builds
-#  if !P103_USE_RTD
-#   undef P103_USE_RTD
-#   define P103_USE_RTD   1
-#  endif // if !P103_USE_RTD
-#  if !P103_USE_FLOW
-#   undef P103_USE_FLOW
-#   define P103_USE_FLOW  1
-#  endif // if !P103_USE_FLOW
-# endif // ifdef PLUGIN_SET_MAX
+// # ifdef PLUGIN_SET_MAX    // Enable RTD and FLOW for MAX builds
+// #  if !P103_USE_RTD
+// #   undef P103_USE_RTD
+// #   define P103_USE_RTD   1
+// #  endif // if !P103_USE_RTD
+// #  if !P103_USE_FLOW
+// #   undef P103_USE_FLOW
+// #   define P103_USE_FLOW  1
+// #  endif // if !P103_USE_FLOW
+// # endif // ifdef PLUGIN_SET_MAX
 
 enum class AtlasEZO_Sensors_e : uint8_t {
   UNKNOWN = 0u,
@@ -84,6 +84,10 @@ int P103_addCreate3PointCalibration(AtlasEZO_Sensors_e  board_type,
                                     float               max,
                                     uint8_t             nrDecimals,
                                     float               stepsize);
+bool P103_getHUMOutputOptions(struct EventStruct *event,
+                               bool              & _HUMhasHum,
+                               bool              & _HUMhasTemp,
+                               bool              & _HUMhasDew);
 
 #endif  // ifdef USED_P103
 #endif  // ifndef PLUGINSTRUCTS_P103_DATA_STRUCT_H

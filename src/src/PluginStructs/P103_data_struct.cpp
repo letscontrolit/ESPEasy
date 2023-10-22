@@ -336,4 +336,34 @@ int P103_addCreate3PointCalibration(AtlasEZO_Sensors_e  board_type,
   return nb_calibration_points;
 }
 
+bool P103_getHUMOutputOptions(struct EventStruct *event,
+                              bool              & _HUMhasHum,
+                              bool              & _HUMhasTemp,
+                              bool              & _HUMhasDew) {
+  bool result = false;
+
+  char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+
+  if ((result = P103_send_I2C_command(P103_I2C_ADDRESS, F("O,?"), boarddata))) {
+    String outputs(boarddata);
+    int    o      = 2;
+    String outPar = parseString(outputs, o);
+
+    while (!outPar.isEmpty()) {
+      if (equals(outPar, F("hum"))) {
+        _HUMhasHum = true;
+      } else
+      if (equals(outPar, F("t"))) {
+        _HUMhasTemp = true;
+      } else
+      if (equals(outPar, F("dew"))) {
+        _HUMhasDew = true;
+      }
+      o++;
+      outPar = parseString(outputs, o);
+    }
+  }
+  return result;
+}
+
 #endif  // ifdef USES_P103
