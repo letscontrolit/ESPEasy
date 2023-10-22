@@ -230,11 +230,23 @@ bool P159_data_struct::plugin_webform_load(struct EventStruct *event) {
       addFormCheckBox(F("Modify sensor settings"), F("saveSens"), false);
 
       int idx = 0;
-      addFormNumericBox(F("Idle seconds"), getPluginCustomArgName(idx++), idleTime, 0, 65535, EMPTY_STRING, true);
+      addFormNumericBox(F("Idle seconds"), getPluginCustomArgName(idx++), idleTime, 0, 65535,
+                        # if FEATURE_TOOLTIPS
+                        EMPTY_STRING,
+                        # endif // if FEATURE_TOOLTIPS
+                        true);
       addUnit(F("0..65535 sec."));
-      addFormNumericBox(F("Max. Moving gates"), getPluginCustomArgName(idx++), mMvGate, 2, 8, EMPTY_STRING, true);
+      addFormNumericBox(F("Max. Moving gates"), getPluginCustomArgName(idx++), mMvGate, 2, 8,
+                        # if FEATURE_TOOLTIPS
+                        EMPTY_STRING,
+                        # endif // if FEATURE_TOOLTIPS
+                        true);
       addUnit(F("2..8"));
-      addFormNumericBox(F("Max. Stationary gates"), getPluginCustomArgName(idx++), mStGate, 2, 8, EMPTY_STRING, true);
+      addFormNumericBox(F("Max. Stationary gates"), getPluginCustomArgName(idx++), mStGate, 2, 8,
+                        # if FEATURE_TOOLTIPS
+                        EMPTY_STRING,
+                        # endif // if FEATURE_TOOLTIPS
+                        true);
       addUnit(F("2..8"));
 
       addRowLabel(F("Sensitivity"));
