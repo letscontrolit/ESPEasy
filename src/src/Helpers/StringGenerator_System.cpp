@@ -1,6 +1,7 @@
 #include "../Helpers/StringGenerator_System.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter.h"
 
 /*********************************************************************************************\

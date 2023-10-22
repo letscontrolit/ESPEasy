@@ -117,66 +117,6 @@ static_assert(false, "Implement processor architecture");
 #endif
 #endif
 
-#ifndef isFlashInterfacePin
-# if CONFIG_IDF_TARGET_ESP32
-// GPIO-6 ... 11: SPI flash and PSRAM
-// GPIO-16 & 17: CS for PSRAM, thus only unuable when PSRAM is present
-#define isFlashInterfacePin(p)      ((p) >= 6 && (p) <= 11)
-
-# elif CONFIG_IDF_TARGET_ESP32S2
-// GPIO-22 ... 25: SPI flash and PSRAM
-// GPIO-26: CS for PSRAM, thus only unuable when PSRAM is present
-// GPIO-27 ... 32: SPI 8 ­line mode (OPI) pins for flash or PSRAM (e.g. ESP32-S2FH2 and ESP32-S2FH4)
-#define isFlashInterfacePin(p)      ((p) >= 22 && (p) <= 25)
-
-# elif CONFIG_IDF_TARGET_ESP32S3
-// GPIO-26 ... 32: SPI flash and PSRAM
-// GPIO-33 ... 37: SPI 8 ­line mode (OPI) pins for flash or PSRAM, like ESP32-S3R8 / ESP32-S3R8V.
-#define isFlashInterfacePin(p)       ((p) >= 26 && (p) <= 32)
-
-# elif CONFIG_IDF_TARGET_ESP32C3
-// GPIO-11: Flash voltage selector
-// GPIO-12 ... 17: Connected to flash
-#define isFlashInterfacePin(p)      ((p) >= 12 && (p) <= 17)
-
-# elif defined(ESP8266)
-#define isFlashInterfacePin(p)      ((p) == 6 || (p) == 7 || (p) == 8 || (p) == 11)
-
-# endif // if CONFIG_IDF_TARGET_ESP32
-#endif
-
-
-#ifndef isPSRAMInterfacePin
-# if CONFIG_IDF_TARGET_ESP32
-// GPIO-6 ... 11: SPI flash and PSRAM
-// GPIO-16 & 17: CS for PSRAM, thus only unuable when PSRAM is present
-#define isPSRAMInterfacePin(p)      (FoundPSRAM() ? ((p) == 16 || (p) == 17) : false)
-
-# elif CONFIG_IDF_TARGET_ESP32S2
-// GPIO-22 ... 25: SPI flash and PSRAM
-// GPIO-26: CS for PSRAM, thus only unuable when PSRAM is present
-// GPIO-27 ... 32: SPI 8 ­line mode (OPI) pins for flash or PSRAM (e.g. ESP32-S2FH2 and ESP32-S2FH4)
-// GPIO-27 ... 32: are never made accessible
-#define isPSRAMInterfacePin(p)      (FoundPSRAM() ? ((p) >= 26 && (p) <= 32) : false)
-
-# elif CONFIG_IDF_TARGET_ESP32S3
-// GPIO-26 ... 32: SPI flash and PSRAM
-// GPIO-33 ... 37: SPI 8 ­line mode (OPI) pins for flash or PSRAM, like ESP32-S3R8 / ESP32-S3R8V.
-// See Appendix A, page 71: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
-#define isPSRAMInterfacePin(p)      (FoundPSRAM() ? ((p) >= 33 && (p) <= 37) : false)
-
-# elif CONFIG_IDF_TARGET_ESP32C3
-// GPIO-11: Flash voltage selector
-// GPIO-12 ... 17: Connected to flash
-// #define isPSRAMInterfacePin(p)      (false)
-
-# elif defined(ESP8266)
-// #define isPSRAMInterfacePin(p)      (false)
-
-# endif // if CONFIG_IDF_TARGET_ESP32
-#endif
-
-
 
 
 #endif // ifndef HELPERS_HARDWARE_DEFINES_H

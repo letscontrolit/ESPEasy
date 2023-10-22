@@ -5,6 +5,7 @@
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Hardware_device_info.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_System.h"
 

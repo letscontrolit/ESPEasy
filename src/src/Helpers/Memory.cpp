@@ -17,6 +17,7 @@ extern "C" {
 #endif
 #endif
 
+#include "../Helpers/Hardware_device_info.h"
 
 /*********************************************************************************************\
    Memory management

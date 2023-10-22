@@ -3,6 +3,7 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_common.h"
 
@@ -175,11 +176,10 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     return F("Flash");
   }
 
-#ifdef isPSRAMInterfacePin
+#ifdef ESP32
   if (isPSRAMInterfacePin(gpio)) {
     return F("PSRAM");
   }
-
 #endif
 
   # ifdef ESP32S2

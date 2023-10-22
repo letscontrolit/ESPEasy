@@ -3,7 +3,7 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware_defines.h"
-#include "../Helpers/Hardware.h"  //  for FoundPSRAM(), move this to a separate file to prevent include loops
+#include "../Helpers/Hardware_device_info.h"
 
 // ********************************************************************************
 // Get info of a specific GPIO pin
