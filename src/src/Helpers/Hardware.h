@@ -12,6 +12,7 @@
 #include "../Globals/ResetFactoryDefaultPref.h"
 
 #include "../Helpers/Hardware_defines.h"
+#include "../Helpers/Hardware_PWM.h"
 
 #if ESP_IDF_VERSION_MAJOR >= 5
 #include <esp_adc/adc_cali.h>
@@ -269,50 +270,6 @@ bool getDAC_gpio_info(int gpio_pin,
                       int& dac);
 
 #endif // ifdef ESP32
-
-// ********************************************************************************
-// Manage PWM state of GPIO pins.
-// ********************************************************************************
-void initAnalogWrite();
-#ifndef ESPEASY_PWM_DEFAULT_FREQUENCY
-#ifdef ESP32
-#if ESP_IDF_VERSION_MAJOR >= 5
-#define ESPEASY_PWM_DEFAULT_FREQUENCY 1000
-#else
-#define ESPEASY_PWM_DEFAULT_FREQUENCY 0
-#endif
-#endif
-#ifdef ESP8266
-#define ESPEASY_PWM_DEFAULT_FREQUENCY 0
-#endif
-#endif
-
-#if defined(ESP32)
-extern int8_t   ledChannelPin[16];
-extern uint32_t ledChannelFreq[16];
-
-int8_t   attachLedChannel(int      pin,
-                          uint32_t frequency = ESPEASY_PWM_DEFAULT_FREQUENCY,
-                          uint8_t  resolution = 10);
-void     detachLedChannel(int pin);
-uint32_t analogWriteESP32(int      pin,
-                          int      value,
-                          uint32_t frequency = ESPEASY_PWM_DEFAULT_FREQUENCY);
-#endif // if defined(ESP32)
-
-// Duty cycle 0..100%
-bool set_Gpio_PWM_pct(int      gpio,
-                      float    dutyCycle_f,
-                      uint32_t frequency = ESPEASY_PWM_DEFAULT_FREQUENCY);
-
-bool set_Gpio_PWM(int      gpio,
-                  uint32_t dutyCycle,
-                  uint32_t frequency = ESPEASY_PWM_DEFAULT_FREQUENCY);
-bool set_Gpio_PWM(int       gpio,
-                  uint32_t  dutyCycle,
-                  uint32_t  fadeDuration_ms,
-                  uint32_t& frequency,
-                  uint32_t& key);
 
 
 // ********************************************************************************
