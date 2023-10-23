@@ -3223,7 +3223,7 @@ To create/register a plugin, you have to :
 */
 
   #ifdef USES_P128
-    #undef USES_P128 // NeoPixelBusFX
+//    #undef USES_P128 // NeoPixelBusFX
   #endif
 
   // ADC uses legacy ADC calibration driver, needs a lot of work
