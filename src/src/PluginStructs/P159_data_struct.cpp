@@ -14,6 +14,7 @@ const __FlashStringHelper* Plugin_159_valuename(uint8_t value_nr,
     F("Stationary Object energy"), F("StatEnergy"),
     F("Moving Object energy"), F("MovEnergy"),
     F("Ambient light sensor"), F("AmbLight"),
+    F("Output pin state"), F("OutputPin"),
     F("Stationary Object energy gate "), F("StatEnergyGate"),
     F("Moving Object energy gate "), F("MovingEnergyGate"),
   };
@@ -191,8 +192,12 @@ int P159_data_struct::getRadarValue(struct EventStruct *event,
         result = radar->engMovingDistanceGateEnergy(valueIndex - P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1);
       }
       else
-      if (valueIndex == P159_OUTPUT_LIGHT_SENSOR) {
+      if (P159_OUTPUT_LIGHT_SENSOR == valueIndex) {
         result = radar->engLightSensorValue();
+      }
+      else
+      if (P159_OUTPUT_PIN_STATE == valueIndex) {
+        result = radar->engOutputPinState();
       }
     }
     isChanged = result != previousValue;

@@ -5,6 +5,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-10-23 tonhuisman: !! Breaking change: Insert OutputPinState (undocumented) value after AmbientLight value
+ *                        shifting all Sensitivity value offsets by 1 !!
  * 2023-10-22 tonhuisman: Add command handling: ld2410,factoryreset
  * 2023-10-21 tonhuisman: Read data at 50/sec instead of 10/sec to catch up with the high speed of output
  *                        Add/update settings for Sensitivity and nr. of active gates, idle seconds
