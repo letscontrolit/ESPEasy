@@ -1544,6 +1544,11 @@ int http_authenticate(const String& logIdentifier,
     event += '=';
     event += httpCode;
     eventQueue.addMove(std::move(event));
+    String revent = F("reply#");
+    revent += host;
+    revent += '=';
+    revent += http.getString().substring(0, 21);
+    eventQueue.addMove(std::move(revent));
   }
 #ifndef BUILD_NO_DEBUG
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
