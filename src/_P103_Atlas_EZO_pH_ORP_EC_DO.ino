@@ -16,6 +16,9 @@
 // only i2c mode is supported
 
 /** Changelog:
+ * 2023-10-23 tonhuisman: Handle EZO-HUM firmware issue of including 'Dew,' in the result values
+ * // TODO Rewrite plugin using PluginDataStruct so it will allow proper async handling of commands requiring 300 msec delay before reading
+ *         responses
  * 2023-10-22 tonhuisman: Fix more irregularities, read configured EZO-HUM output options, and add options to enable/disable
  *                        Temperature and Dew point values
  * 2023-10-22 tonhuisman: Fix some irregularities, add logging for status read (UI) and value(s) read (INFO log)
@@ -613,9 +616,14 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
         string2float(parseString(sensorString, 1), UserVar[event->BaseVarIndex]);
 
-        if (board_type == AtlasEZO_Sensors_e::HUM) {
+        if (board_type == AtlasEZO_Sensors_e::HUM) { // TODO Fix reading Dew point without Temperature enabled
           string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex + 2]);
-          string2float(parseString(sensorString, 3), UserVar[event->BaseVarIndex + 3]);
+          String dewVal = parseString(sensorString, 3);
+
+          if (equals(dewVal, F("dew"))) { // Handle EZO-HUM firmware bug including 'Dew,' in the result string
+            dewVal = parseString(sensorString, 4);
+          }
+          string2float(dewVal, UserVar[event->BaseVarIndex + 3]);
         }
 
         # if P103_USE_FLOW
