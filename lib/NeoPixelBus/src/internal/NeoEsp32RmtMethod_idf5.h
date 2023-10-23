@@ -29,7 +29,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C2)
+#if defined(ARDUINO_ARCH_ESP32) && ESP_IDF_VERSION_MAJOR >= 5 && !defined(CONFIG_IDF_TARGET_ESP32C2)
 
 /*  General Reference documentation for the APIs used in this implementation
 LOW LEVEL:  (what is actually used)
@@ -367,9 +367,9 @@ class NeoEsp32RmtChannelN
 {
 public:
     NeoEsp32RmtChannelN(NeoBusChannel channel) :
-        RmtChannelNumber(RmtChannelNumber)
+        RmtChannelNumber(nullptr)
     {
-        RmtChannelNumber = NULL;
+        //RmtChannelNumber = NULL;
     };
     NeoEsp32RmtChannelN() = delete; // no default constructor
     rmt_channel_handle_t RmtChannelNumber = NULL;
