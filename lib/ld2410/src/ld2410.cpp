@@ -449,6 +449,7 @@ bool ld2410::parse_data_frame_()
 		max_moving_distance_gate    = radar_data_frame_[17];
 		max_static_distance_gate    = radar_data_frame_[18];
 		light_sensor_data_          = radar_data_frame_[37];
+		output_pin_data_          	= radar_data_frame_[38];
 		
 		uint8_t pos = 19;
 

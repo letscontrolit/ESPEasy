@@ -100,12 +100,13 @@ class ld2410	{
 		
 		/*
 		 * available if engineering mode is active */
-		uint8_t  engMovingDistanceGateEnergy(uint8_t gate){return ((gate <LD2410_MAX_GATES) ? movement_distance_gate_energy[gate] : -1) ;}; //Engineering Reporting Data
-		uint8_t  engStaticDistanceGateEnergy(uint8_t gate){return ((gate <LD2410_MAX_GATES) ? static_distance_gate_engergy[gate] : -1) ;};     //Engineering Reporting Data
+		uint8_t  engMovingDistanceGateEnergy(uint8_t gate){return ((gate <LD2410_MAX_GATES) ? movement_distance_gate_energy[gate] : 255) ;}; //Engineering Reporting Data
+		uint8_t  engStaticDistanceGateEnergy(uint8_t gate){return ((gate <LD2410_MAX_GATES) ? static_distance_gate_engergy[gate] : 255) ;};     //Engineering Reporting Data
 		uint16_t engMaxMovingDistanceGate() {return max_moving_distance_gate;};     //Engineering Reporting Data
 		uint16_t engMaxStaticDistanceGate() {return max_static_distance_gate;};     //Engineering Reporting Data
 		uint16_t engRetainDataValue() {return engineering_retain_data_;};           //Engineering Reporting Data, last value
 		uint8_t  engLightSensorValue() {return light_sensor_data_;};           			//Engineering Reporting Data, light sensor (undocumented)
+		uint8_t  engOutputPinState() {return output_pin_data_;};           					//Engineering Reporting Data, output pin state (undocumented)
 
 		/*
 		 * Commands */
@@ -166,6 +167,7 @@ class ld2410	{
 		uint8_t  static_distance_gate_engergy[LD2410_MAX_GATES]  = {0,0,0,0,0,0,0,0,0}; //Engineering mode info
 		uint16_t engineering_retain_data_ = 0;                           //last value in engineering data frame, extra retain ??
 		uint8_t	 light_sensor_data_              = 0;                    //engineering mode, light sensor (undocumented)
+		uint8_t	 output_pin_data_              	 = 0;                    //engineering mode, output pin state (undocumented)
 
 		/*
 		 * Configuration mode response info */
