@@ -107,10 +107,10 @@ private:
                     bool              & isChanged);
   void addJavascript();
 
+  P159_state_e   state              = P159_state_e::Initializing;
   ESPeasySerial *easySerial         = nullptr; // Serial port object
   ld2410        *radar              = nullptr; // Sensor object
   uint32_t       milestone          = 0;       // When can we do the next phase when not in Running state?
-  P159_state_e   state              = P159_state_e::Initializing;
   bool           _engineeringMode   = false;
   bool           _configurationRead = false;
 };
