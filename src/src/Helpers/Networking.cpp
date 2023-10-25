@@ -1550,7 +1550,7 @@ int http_authenticate(const String& logIdentifier,
       // e.g. (sendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last)
       // where first eventvalue is the channel number, the second the field number
       // and the third is the value received by the request
-      if (equals(host, F("api.thingspeak.com")) && equals(uri.substring(uri.length() - 5, uri.length()), F("/last"))) {
+      if (equals(host, F("api.thingspeak.com")) && equals(uri.substring(uri.length() - 5, uri.length()), F("/last")) && httpCode == 200) {
       String revent = F("reply#");
       revent += host;
       revent += '=';
