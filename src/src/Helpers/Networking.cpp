@@ -1543,12 +1543,13 @@ int http_authenticate(const String& logIdentifier,
     event += host;
     event += '=';
     event += httpCode;
-    // Generate event with the response of a 
+    eventQueue.addMove(std::move(event));
+     // Generate event with the response of a 
     // one value one channel tingspeak request
     // e.g. (sendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last)
     // where first eventvalue is the channel number, the second the field number
     // and the third is the value received by the request
-    eventQueue.addMove(std::move(event));
+    if (equals(host, F("api.thingspeak.com"))) {
     String revent = F("reply#");
     revent += host;
     revent += '=';
@@ -1558,6 +1559,7 @@ int http_authenticate(const String& logIdentifier,
     revent += ',';
     revent += http.getString().substring(0, 21);
     eventQueue.addMove(std::move(revent));
+    }
   }
 #ifndef BUILD_NO_DEBUG
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
