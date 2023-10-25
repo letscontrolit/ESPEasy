@@ -1555,13 +1555,13 @@ int http_authenticate(const String& logIdentifier,
       //                                                   ^    ^   ^
       //                                    channel number ┘    |   └ received value
       //                                                    field number 
+      // In rules you can grep the reply by "On ThingspeakReply# Do ..."
       if (httpCode == 200 && equals(host, F("api.thingspeak.com")) && uri.endsWith(F("/last"))) {
-        String revent = F("reply#thingspeak");
-        //revent += host;
+        String revent = F("ThingspeakReply#");
         revent += '=';
-        revent += uri.substring(10, uri.length() - 14);; //get the channel number
+        revent += parseString(uri.c_str(), 2, '/');; //get the channel number
         revent += ',';
-        revent += uri.substring(uri.length() - 6, uri.length() - 5); //get the field number
+        revent += parseString(uri.c_str(), 4, '/');; //get the field number
         revent += ',';
         revent += http.getString().substring(0, 21);
         eventQueue.addMove(std::move(revent));
