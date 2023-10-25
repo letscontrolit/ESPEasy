@@ -1544,13 +1544,13 @@ int http_authenticate(const String& logIdentifier,
     event += '=';
     event += httpCode;
     eventQueue.addMove(std::move(event));
-     // Generate event with the response of a 
-    // one value one channel tingspeak request
-    // e.g. (sendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last)
-    // where first eventvalue is the channel number, the second the field number
-    // and the third is the value received by the request
     #if FEATURE_THINGSPEAK_EVENT
-      if (equals(host, F("api.thingspeak.com"))) {
+      // Generate event with the response of a 
+      // one value one channel tingspeak request
+      // e.g. (sendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last)
+      // where first eventvalue is the channel number, the second the field number
+      // and the third is the value received by the request
+      if (equals(host, F("api.thingspeak.com")) && equals(uri.substring(uri.length() - 5, uri.length()), F("/last"))) {
       String revent = F("reply#");
       revent += host;
       revent += '=';
