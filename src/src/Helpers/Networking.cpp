@@ -1549,18 +1549,21 @@ int http_authenticate(const String& logIdentifier,
     // e.g. (sendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last)
     // where first eventvalue is the channel number, the second the field number
     // and the third is the value received by the request
-    if (equals(host, F("api.thingspeak.com"))) {
-    String revent = F("reply#");
-    revent += host;
-    revent += '=';
-    revent += uri.substring(0, uri.length() - 14).substring(10, uri.length()); //get the channel number
-    revent += ',';
-    revent += uri.substring(uri.length() - 6, uri.length() - 5); //get the field number
-    revent += ',';
-    revent += http.getString().substring(0, 21);
-    eventQueue.addMove(std::move(revent));
-    }
+    #if FEATURE_THINGSPEAK_EVENT
+      if (equals(host, F("api.thingspeak.com"))) {
+      String revent = F("reply#");
+      revent += host;
+      revent += '=';
+      revent += uri.substring(0, uri.length() - 14).substring(10, uri.length()); //get the channel number
+      revent += ',';
+      revent += uri.substring(uri.length() - 6, uri.length() - 5); //get the field number
+      revent += ',';
+      revent += http.getString().substring(0, 21);
+      eventQueue.addMove(std::move(revent));
+      }
+    #endif
   }
+  
 #ifndef BUILD_NO_DEBUG
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
 #endif
