@@ -1539,11 +1539,9 @@ int http_authenticate(const String& logIdentifier,
   if (Settings.UseRules) {
     // Generate event with the HTTP return code
     // e.g. http#hostname=401
-    String event = F("http#");
-    event += host;
-    event += '=';
-    event += httpCode;
-    eventQueue.addMove(std::move(event));
+    eventQueue.add(strformat(F("http#%s=%s"),
+                        host.c_str(),
+                        httpCode));
     #if FEATURE_THINGSPEAK_EVENT
       // Generate event with the response of a 
       // "last-value-of-field" thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html)
