@@ -1546,8 +1546,8 @@ int http_authenticate(const String& logIdentifier,
     eventQueue.addMove(std::move(event));
     #if FEATURE_THINGSPEAK_EVENT
       // Generate event with the response of a 
-      // "last-value-of-field" tingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html)
-      // e.g. (sendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last)
+      // "last-value-of-field" thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html)
+      // e.g. (sendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last)
       // where first eventvalue is the channel number, the second the field number
       // and the third is the value received by the request
       // Example of received reply: "HTTP : SendToHTTP api.thingspeak.com GETHTTP code: 200 Received reply: 24.2"
@@ -1557,14 +1557,10 @@ int http_authenticate(const String& logIdentifier,
       //                                                   field number 
       // In rules you can grep the reply by "On ThingspeakReply Do ..."
       if (httpCode == 200 && equals(host, F("api.thingspeak.com")) && uri.endsWith(F("/last"))) {
-        String revent = F("ThingspeakReply");
-        revent += '=';
-        revent += parseString(uri.c_str(), 2, '/');; //get the channel number
-        revent += ',';
-        revent += parseString(uri.c_str(), 4, '/');; //get the field number
-        revent += ',';
-        revent += http.getString().substring(0, 21);
-        eventQueue.addMove(std::move(revent));
+        eventQueue.add(strformat(F("ThingspeakReply=%s,%s,%s"),
+                         parseStringKeepCase(uri, 2, '/').c_str(),
+                         parseStringKeepCase(uri, 4, '/').c_str(),
+                         http.getString().substring(0, 21).c_str()));
       }
     #endif
   }
