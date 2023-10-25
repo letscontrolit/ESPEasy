@@ -1551,13 +1551,13 @@ int http_authenticate(const String& logIdentifier,
       // where first eventvalue is the channel number, the second the field number
       // and the third is the value received by the request
       // Example of received reply: "HTTP : SendToHTTP api.thingspeak.com GETHTTP code: 200 Received reply: 24.2"
-      // Example of the event: "EVENT: reply#thingspeak=1637928,5,24.2"
-      //                                                   ^    ^   ^
-      //                                    channel number ┘    |   └ received value
-      //                                                    field number 
-      // In rules you can grep the reply by "On ThingspeakReply# Do ..."
+      // Example of the event: "EVENT: ThingspeakReply=1637928,5,24.2"
+      //                                                  ^    ^   ^
+      //                                   channel number ┘    |   └ received value
+      //                                                   field number 
+      // In rules you can grep the reply by "On ThingspeakReply Do ..."
       if (httpCode == 200 && equals(host, F("api.thingspeak.com")) && uri.endsWith(F("/last"))) {
-        String revent = F("ThingspeakReply#");
+        String revent = F("ThingspeakReply");
         revent += '=';
         revent += parseString(uri.c_str(), 2, '/');; //get the channel number
         revent += ',';
