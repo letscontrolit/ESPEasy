@@ -1546,20 +1546,25 @@ int http_authenticate(const String& logIdentifier,
     eventQueue.addMove(std::move(event));
     #if FEATURE_THINGSPEAK_EVENT
       // Generate event with the response of a 
-      // one value one channel tingspeak request
+      // "last-value-of-field" tingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html)
       // e.g. (sendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last)
       // where first eventvalue is the channel number, the second the field number
       // and the third is the value received by the request
-      if (equals(host, F("api.thingspeak.com")) && equals(uri.substring(uri.length() - 5, uri.length()), F("/last")) && httpCode == 200) {
-      String revent = F("reply#");
-      revent += host;
-      revent += '=';
-      revent += uri.substring(0, uri.length() - 14).substring(10, uri.length()); //get the channel number
-      revent += ',';
-      revent += uri.substring(uri.length() - 6, uri.length() - 5); //get the field number
-      revent += ',';
-      revent += http.getString().substring(0, 21);
-      eventQueue.addMove(std::move(revent));
+      // Example of received reply: "HTTP : SendToHTTP api.thingspeak.com GETHTTP code: 200 Received reply: 24.2"
+      // Example of the event: "EVENT: reply#thingspeak=1637928,5,24.2"
+      //                                                   ^    ^   ^
+      //                                    channel number ┘    |   └ received value
+      //                                                    field number 
+      if (httpCode == 200 && equals(host, F("api.thingspeak.com")) && uri.endsWith(F("/last"))) {
+        String revent = F("reply#thingspeak");
+        //revent += host;
+        revent += '=';
+        revent += uri.substring(10, uri.length() - 14);; //get the channel number
+        revent += ',';
+        revent += uri.substring(uri.length() - 6, uri.length() - 5); //get the field number
+        revent += ',';
+        revent += http.getString().substring(0, 21);
+        eventQueue.addMove(std::move(revent));
       }
     #endif
   }
