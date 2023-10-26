@@ -3,7 +3,7 @@
 //#######################################################################################################
 //#################################### Plugin 041: NeoPixel clock #######################################
 //#######################################################################################################
-#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus_wrapper.h>
 
 
 #define NUM_LEDS      114
@@ -12,7 +12,7 @@ uint8_t Plugin_041_red = 0;
 uint8_t Plugin_041_green = 0;
 uint8_t Plugin_041_blue = 0;
 
-Adafruit_NeoPixel *Plugin_041_pixels;
+NeoPixelBus_wrapper *Plugin_041_pixels;
 
 #define PLUGIN_041
 #define PLUGIN_ID_041         41
@@ -82,7 +82,7 @@ boolean Plugin_041(uint8_t function, struct EventStruct *event, String& string)
       {
         if (Plugin_041_pixels == nullptr)
         {
-          Plugin_041_pixels = new (std::nothrow) Adafruit_NeoPixel(NUM_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+          Plugin_041_pixels = new (std::nothrow) NeoPixelBus_wrapper(NUM_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
           if (Plugin_041_pixels != nullptr) {
             Plugin_041_pixels->begin(); // This initializes the NeoPixel library.
           }

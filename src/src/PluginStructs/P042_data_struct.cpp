@@ -38,7 +38,7 @@ bool P042_data_struct::plugin_init(struct EventStruct *event) {
       if (Candle_pixels) {
         delete Candle_pixels;
       }
-      Candle_pixels = new (std::nothrow) Adafruit_NeoPixel(P042_CONFIG_PIXELCOUNT, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+      Candle_pixels = new (std::nothrow) NeoPixelBus_wrapper(P042_CONFIG_PIXELCOUNT, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
 
       if (Candle_pixels != nullptr) {
         SetPixelsBlack();
