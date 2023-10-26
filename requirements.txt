@@ -1,2 +1,2 @@
 platformio>=6.1.9
-pygit2==1.13.1
+pygit2==1.12.1
