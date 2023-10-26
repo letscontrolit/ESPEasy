@@ -45,13 +45,10 @@ NeoTiles <MyPanelLayout, MyTilesLayout> tiles(
 
 void DumpTopo()
 {
-    int16_t totalWidth = static_cast<int16_t>(tiles.getWidth());
-    int16_t totalHeight = static_cast<int16_t>(tiles.getHeight());
-
     Serial.println();
 
     Serial.print("\t\t");
-    for (int16_t x = 0; x < totalWidth; x++)
+    for (int x = 0; x < tiles.getWidth(); x++)
     {
         Serial.print(x);
         Serial.print("\t");
@@ -59,19 +56,19 @@ void DumpTopo()
     Serial.println();
 
     Serial.print("\t---");
-    for (int16_t x = 0; x < totalWidth; x++)
+    for (int x = 0; x < tiles.getWidth(); x++)
     {
         Serial.print("--------");
     }
     Serial.println();
 
-    for (int16_t y = 0; y < totalHeight; y++)
+    for (int y = 0; y < tiles.getHeight(); y++)
     {
         Serial.print("  ");
         Serial.print(y);
         Serial.print("\t|\t");
 
-        for (int16_t x = 0; x < totalWidth; x++)
+        for (int x = 0; x < tiles.getWidth(); x++)
         {
             NeoTopologyHint hint = tiles.TopologyHint(x, y);
 
