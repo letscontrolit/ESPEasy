@@ -42,6 +42,8 @@
 #include <Adafruit_GFX.h>
 #include <NeoPixelBus_wrapper.h>
 
+// 2023-10-26 tonhuisman: Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
+
 // Matrix layout information is passed in the 'matrixType' parameter for
 // each constructor (the parameter immediately following is the LED type
 // from NeoPixel.h).

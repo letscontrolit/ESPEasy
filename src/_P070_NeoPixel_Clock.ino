@@ -7,6 +7,11 @@
 // #################################### Plugin 070: NeoPixel ring clock #######################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-10-26 tonhuisman: Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
+ * 2023-10 tonhuisman: Add changelog.
+ */
+
 
 // A clock that uses a strip/ring of 60 WS2812 NeoPixel LEDs as display for a classic clock.
 // The hours are RED, the minutes are GREEN, the seconds are BLUE and the hour marks are WHITE.
