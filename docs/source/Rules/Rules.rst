@@ -1960,10 +1960,36 @@ Added: 2022/07/23
 
 Added: 2023/10/26
 
-* ``SendToHTTP`` now generates an event with the response of a "last-value-of-field" thingspeak request (``https://de.mathworks.com/help/thingspeak/readlastfieldentry.html``) where the first eventvalue is the channel number, the second the field number and the third is the value received by the request.
-* Example command: ``SendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last``
-* Example of the resulting event: ``"EVENT: ThingspeakReply=1637928,5,24.2"``
-* Example in Rules:
+* ``SendToHTTP`` now generates an event with the response of a thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html & // https://de.mathworks.com/help/thingspeak/readdata.html)
+* There are two options:
+
+  1. Get the value of a single field: 
+  
+     - Example command:
+     	``SendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last``
+     - Example of the resulting event:
+     	``"EVENT: ThingspeakReply=1637928,5,24.2"``  
+        
+          channel number = ``%eventvalue1%``
+          
+          field number = ``%eventvalue2%``
+          
+          value = ``%eventvalue3%``
+        
+  2. Get the values of all fields:
+  
+     - Example command:
+     	``SendToHTTP,api.thingspeak.com,80,/channels/1637928/feeds/last.csv``
+     - Example of the resulting event:
+     	``"EVENT:ThingspeakReply=1637928,5929,353,42.0,177,19.1,995.6,,"``
+        
+          channel number = ``%eventvalue1%``
+
+          values = ``%eventvalue3%`` to ``%eventvalue9%``
+     
+.. warning:: **Attention!** When using the command for all fields the reply can become extremely big and can lead to memory issues which results in instabilities of your device (especially when all eight fields a filled with very big numbers)
+
+* Example for two single field events in rules:
 
 .. code:: none
 
@@ -1975,6 +2001,7 @@ Added: 2023/10/26
       LogEntry,'%eventvalue3%°C in Paris'
     endif
   endon
+
 
 
 Convert curl POST command to PostToHTTP
