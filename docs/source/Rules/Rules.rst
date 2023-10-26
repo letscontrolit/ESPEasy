@@ -1984,7 +1984,7 @@ Added: 2023/10/26
         | channel number = ``%eventvalue1%``
         | values = ``%eventvalue3%`` to ``%eventvalue9%``
      
-.. warning:: **Attention!** When using the command for all fields the reply can become extremely big and can lead to memory issues which results in instabilities of your device (especially when all eight fields a filled with very big numbers)
+.. warning:: When using the command for all fields, the reply can become extremely big and can lead to memory issues which results in instabilities of your device (especially when all eight fields are filled with very big numbers)
 
 * Example for two single field events in rules:
 
