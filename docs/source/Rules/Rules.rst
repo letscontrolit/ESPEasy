@@ -1958,6 +1958,24 @@ Added: 2022/07/23
 * Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
 * HTTP user credentials now can handle Basic Auth and Digest Auth.
 
+Added: 2023/10/26
+
+* ``SendToHTTP`` now generates an event with the response of a "last-value-of-field" thingspeak request (``https://de.mathworks.com/help/thingspeak/readlastfieldentry.html``) where the first eventvalue is the channel number, the second the field number and the third is the value received by the request.
+* Example: ``SendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last``
+* Example of the resulting event: ``"EVENT: ThingspeakReply=1637928,5,24.2"``
+* Example in Rules:
+
+.. code:: none
+
+  on ThinkspeakReply do
+    LogEntry,'The channel number is: %eventvalue1%'
+    if %eventvalue2% = 5			//when the field number is 5
+      LogEntry,'%eventvalue3%°C in Berlin'
+    elseif %eventvalue2% = 6		//when the field number is 6
+      LogEntry,'%eventvalue3%°C in Paris'
+    endif
+  endon
+
 
 Convert curl POST command to PostToHTTP
 ---------------------------------------
