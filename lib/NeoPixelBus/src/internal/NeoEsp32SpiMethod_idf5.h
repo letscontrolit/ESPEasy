@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32) && ESP_IDF_VERSION_MAJOR >= 5
 
 #if (defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C2) || defined(CONFIG_IDF_TARGET_ESP32C6)) && !defined(HSPI_HOST)
 // HSPI_HOST depreciated in C3
@@ -37,7 +37,7 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-extern void AddLog(uint32_t loglevel, PGM_P formatP, ...); // TODO: Remove all Addlogs
+// extern void AddLog(uint32_t loglevel, PGM_P formatP, ...); // TODO: Remove all Addlogs
 
 extern "C"
 {
@@ -329,7 +329,7 @@ public:
         _spi_strip->bytes_per_pixel = bytes_per_pixel;
         _spi_strip->strip_len = _pixelCount;
 
-        AddLog(2,"SPI:initialized with error code: %u on pin: %u",ret, _pin);
+        // AddLog(2,"SPI:initialized with error code: %u on pin: %u",ret, _pin);
         return;
     err:
         if (_spi_strip) {
@@ -341,7 +341,7 @@ public:
             }
             free(_spi_strip);
         }
-        AddLog(2,"SPI-Error:initialized with error code: %u on pin: %u",ret, _pin);
+        // AddLog(2,"SPI-Error:initialized with error code: %u on pin: %u",ret, _pin);
         return;
     }
 

@@ -1,3 +1,4 @@
+#if ESP_IDF_VERSION_MAJOR >= 5 && defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C2)
 #include "../internal/NeoEsp32RmtMethod_idf5.h"
 
 #if ESP_IDF_VERSION_MAJOR >= 5
