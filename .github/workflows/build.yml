@@ -84,7 +84,7 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt install binutils build-essential libffi-dev libgit2-dev=1.7.1
+          sudo apt install binutils build-essential libffi-dev libgit2-dev
           pip3 install --upgrade pip
           pip install -r requirements.txt
           platformio update
