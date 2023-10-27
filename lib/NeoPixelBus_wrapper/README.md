@@ -2,7 +2,7 @@
 
 **NeoPixelBus_wrapper**: A minimal wrapper to replace Adafruit_NeoPixel API to use Makuna's NeoPixelBus API.
 
-(c) 2023, Ton Huisman for ESPEasy.
+(c) 2023, Ton Huisman for [ESPEasy](https://github.com/letscontrolit/ESPEasy).
 
 ### How to use
 
