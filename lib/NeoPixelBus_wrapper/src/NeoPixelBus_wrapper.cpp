@@ -112,6 +112,8 @@ uint32_t NeoPixelBus_wrapper::getPixelColor(uint16_t n) {
     color = neopixels_grbw->GetPixelColor(n);
     return Color(color.R, color.G, color.B, color.W);
   }
+
+  return 0u; // Fall-through value...
 }
 
 #endif // ifndef _NEOPIXELBUS_WRAPPER_CPP
