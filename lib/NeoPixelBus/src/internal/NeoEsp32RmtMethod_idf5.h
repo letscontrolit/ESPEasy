@@ -799,5 +799,3 @@ typedef NeoEsp32Rmt6400KbpsInvertedMethod Neo400KbpsInvertedMethod;
 #endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6)
 
 #endif
-
-#endif // if ESP_IDF_VERSION_MAJOR >= 5
