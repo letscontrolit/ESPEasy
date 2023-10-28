@@ -16,7 +16,7 @@ const __FlashStringHelper* Plugin_159_valuename(uint8_t value_nr,
     F("Ambient light sensor"), F("AmbLight"),
     F("Output pin state"), F("OutputPin"),
     F("Stationary Object energy gate "), F("StatEnergyGate"),
-    F("Moving Object energy gate "), F("MovingEnergyGate"),
+    F("Moving Object energy gate "), F("MovEnergyGate"),
   };
   const size_t index         = (2 * value_nr) + (displayString ? 0 : 1);
   constexpr size_t nrStrings = NR_ELEMENTS(strings);
@@ -156,7 +156,7 @@ bool P159_data_struct::plugin_read(struct EventStruct *event) {
     for (int8_t i = 0; i < valueCount; ++i) {
       const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
       bool isChanged             = false;
-      UserVar[event->BaseVarIndex + i] = getRadarValue(event, i, PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged);
+      UserVar[event->BaseVarIndex + i] = getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged);
 
       result |= isChanged;
     }
@@ -164,11 +164,9 @@ bool P159_data_struct::plugin_read(struct EventStruct *event) {
   return result;
 } // plugin_read()
 
-int P159_data_struct::getRadarValue(struct EventStruct *event,
-                                    uint8_t             varIndex,
-                                    int16_t             valueIndex,
-                                    int                 previousValue,
-                                    bool              & isChanged) {
+int P159_data_struct::getRadarValue(int16_t valueIndex,
+                                    int     previousValue,
+                                    bool  & isChanged) {
   int result = previousValue;
 
   if (isValid()) {
@@ -184,12 +182,12 @@ int P159_data_struct::getRadarValue(struct EventStruct *event,
     }
 
     if (_engineeringMode) {
-      if ((valueIndex >= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1) && (valueIndex <= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8)) {
-        result = radar->engStaticDistanceGateEnergy(valueIndex - P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1);
+      if ((valueIndex >= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0) && (valueIndex <= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8)) {
+        result = radar->engStaticDistanceGateEnergy(valueIndex - P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0);
       }
       else
-      if ((valueIndex >= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1) && (valueIndex <= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8)) {
-        result = radar->engMovingDistanceGateEnergy(valueIndex - P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1);
+      if ((valueIndex >= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0) && (valueIndex <= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8)) {
+        result = radar->engMovingDistanceGateEnergy(valueIndex - P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0);
       }
       else
       if (P159_OUTPUT_LIGHT_SENSOR == valueIndex) {
@@ -323,6 +321,49 @@ bool P159_data_struct::plugin_write(struct EventStruct *event,
       // start initiated, now wait, next step: request configuration
       milestone = millis();
       state     = P159_state_e::Restarting;
+    } else if (equals(subcmd, F("logall"))) {
+      result = plugin_get_config_value(event, string, true);
+    }
+  }
+  return result;
+}
+
+bool P159_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string,
+                                               bool                logAll) {
+  bool result = false;
+
+  if (isValid()) {
+    const String  cmd   = parseString(string, 1);
+    const int16_t count = logAll && !_engineeringMode ? P159_NR_OUTPUT_OPTIONS : P159_NR_ENGINEERING_OUTPUT_OPTIONS;
+
+    for (int16_t option = 0; option < count; ++option) {
+      int16_t idx  = option;
+      int16_t gate = -1;
+
+      if ((option >= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0) && (option <= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8)) {
+        idx  = P159_OUTPUT_STATIC_DISTANCE_GATE_index;
+        gate = option - P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0;
+      } else
+      if ((option >= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0) && (option <= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8)) {
+        idx  = P159_OUTPUT_MOVING_DISTANCE_GATE_index;
+        gate = option - P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0;
+      }
+
+      if (logAll ||
+          cmd.equalsIgnoreCase(concat(Plugin_159_valuename(idx, false), (gate > -1) ? String(gate) : F("")))) {
+        bool dummy;
+        string = getRadarValue(option, -1, dummy);
+        result = true;
+
+        if (!logAll) {
+          break;
+        } else if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(F("LD2410: %s: %s"),
+                                           concat(Plugin_159_valuename(idx, true), (gate > -1) ? String(gate) : F("")).c_str(),
+                                           string.c_str()));
+        }
+      }
     }
   }
   return result;

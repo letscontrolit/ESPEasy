@@ -35,28 +35,31 @@
 // Engineering mode:
 # define P159_OUTPUT_LIGHT_SENSOR                 8
 # define P159_OUTPUT_PIN_STATE                    9
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1 10
-# define P159_OUTPUT_STATIC_DISTANCE_GATE_index   10
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE2 11
-# define P159_OUTPUT_MOVING_DISTANCE_GATE_index   11
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE3 12
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE4 13
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE5 14
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE6 15
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE7 16
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8 17
 
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1 18
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE2 19
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE3 20
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE4 21
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE5 22
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE6 23
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE7 24
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8 25
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0 10
+# define P159_OUTPUT_STATIC_DISTANCE_GATE_index   10
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1 11
+# define P159_OUTPUT_MOVING_DISTANCE_GATE_index   11
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE2 12
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE3 13
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE4 14
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE5 15
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE6 16
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE7 17
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8 18
+
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0 19
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1 20
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE2 21
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE3 22
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE4 23
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE5 24
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE6 25
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE7 26
+# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8 27
 
 # define P159_NR_OUTPUT_OPTIONS                   8    // Last P159_OUTPUT_* value + 1 (count)
-# define P159_NR_ENGINEERING_OUTPUT_OPTIONS       26   // Last P159_OUTPUT_* value + 1 (count)
+# define P159_NR_ENGINEERING_OUTPUT_OPTIONS       28   // Last P159_OUTPUT_* value + 1 (count)
 
 # define P159_DELAY_RESTART                       2500 // milliseconds to 'wait' (ignore) after a device-restart
 
@@ -85,6 +88,9 @@ struct P159_data_struct : public PluginTaskData_base {
   bool plugin_webform_save(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
                     String            & string);
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string,
+                               bool                logAll = false);
 
   bool isValid() const {
     return nullptr != easySerial && nullptr != radar;
@@ -100,17 +106,15 @@ struct P159_data_struct : public PluginTaskData_base {
 
 private:
 
-  int getRadarValue(struct EventStruct *event,
-                    uint8_t             varIndex,
-                    int16_t             valueIndex,
+  int getRadarValue(int16_t             valueIndex,
                     int                 previousValue,
                     bool              & isChanged);
   void addJavascript();
 
-  P159_state_e   state              = P159_state_e::Initializing;
   ESPeasySerial *easySerial         = nullptr; // Serial port object
   ld2410        *radar              = nullptr; // Sensor object
   uint32_t       milestone          = 0;       // When can we do the next phase when not in Running state?
+  P159_state_e   state              = P159_state_e::Initializing;
   bool           _engineeringMode   = false;
   bool           _configurationRead = false;
 };

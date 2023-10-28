@@ -5,6 +5,12 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-10-28 tonhuisman: !! Breaking change (again): Insert Gate 0 value before Gate 1 value, both for Static and Moving
+ *                        energy, as that was missing until now. This is because of poor documentation, talking about 8 values
+ *                        where there are in fact 9 values, 0..8 !
+ *                        Add support for getting all values (function PLUGIN_GET_CONFIG_VALUE), also when not configured
+ *                        like [<TaskName>#<ValueName>]. Available valuenames: see below.
+ *                        Add command ld2410,logall that writes all available values to the log (depending on Engineering mode)
  * 2023-10-23 tonhuisman: !! Breaking change: Insert OutputPinState (undocumented) value after AmbientLight value
  *                        shifting all Sensitivity value offsets by 1 !!
  * 2023-10-22 tonhuisman: Add command handling: ld2410,factoryreset
@@ -25,6 +31,22 @@
 
 /** Commands:
  * ld2410,factoryreset  : Reset sensor to factory defaults, also restarts the sensor like the task is just started.
+ * ld2410,logall        : Send all available values to the log (INFO level) like: "LD2410: <Display name>: <value>"
+ */
+
+/** ValueNames: (for PLUGIN_GET_CONFIG_VALUE support)
+ * Presence                         : Presence (0/1)
+ * StatPres                         : Stationary presence (0/1)
+ * MovPres                          : Moving presence (0/1)
+ * Distance                         : Distance in cm
+ * StatDist                         : Stationary distance in cm
+ * MovDist                          : Moving distance in cm
+ * StatEnergy                       : Stationary object energy level
+ * MovEnergy                        : Moving object energy level
+ * AmbLight                         : Ambient light level (0..255) (unknown unit)
+ * OutputPin                        : State of the output pin (0/1)
+ * StatEnergyGate0..StatEnergyGate8 : Stationary object energy level for gate 0..8, 75 cm/gate
+ * MovEnergyGate0..MovEnergyGate8   : Moving object energy for gate 0..8, 75 cm/gate
  */
 
 #ifdef USES_P159
@@ -77,13 +99,13 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
           const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
           const uint8_t option       = PCONFIG(pconfigIndex);
 
-          if ((option >= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1) && (option <= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8)) {
+          if ((option >= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0) && (option <= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8)) {
             ExtraTaskSettings.setTaskDeviceValueName(i, concat(Plugin_159_valuename(P159_OUTPUT_STATIC_DISTANCE_GATE_index, false),
-                                                               (option - P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1) + 1));
+                                                               option - P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0));
           } else
-          if ((option >= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1) && (option <= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8)) {
+          if ((option >= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0) && (option <= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8)) {
             ExtraTaskSettings.setTaskDeviceValueName(i, concat(Plugin_159_valuename(P159_OUTPUT_MOVING_DISTANCE_GATE_index, false),
-                                                               (option - P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1) + 1));
+                                                               option - P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0));
           } else {
             ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_159_valuename(option, false));
           }
@@ -152,13 +174,13 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       String options[optionCount];
 
       for (uint8_t option = 0; option < optionCount; ++option) {
-        if ((option >= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1) && (option <= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8)) {
+        if ((option >= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0) && (option <= P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8)) {
           options[option] = concat(Plugin_159_valuename(P159_OUTPUT_STATIC_DISTANCE_GATE_index, true),
-                                   (option - P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1) + 1);
+                                   option - P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0);
         } else
-        if ((option >= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1) && (option <= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8)) {
+        if ((option >= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0) && (option <= P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8)) {
           options[option] = concat(Plugin_159_valuename(P159_OUTPUT_MOVING_DISTANCE_GATE_index, true),
-                                   (option - P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1) + 1);
+                                   option - P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0);
         } else {
           options[option] = Plugin_159_valuename(option, true);
         }
@@ -246,6 +268,17 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P159_data) {
         success = P159_data->plugin_write(event, string);
+      }
+
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P159_data) {
+        success = P159_data->plugin_get_config_value(event, string);
       }
 
       break;
