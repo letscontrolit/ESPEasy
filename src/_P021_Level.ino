@@ -132,7 +132,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_CONFIG:
     {
       const String command      = parseString(string, 1);
-      const bool   isHysteresis =  equals(command, F("hysteresis"));
+      const bool   isHysteresis =  equals(command, F("sethysteresis"));
 
       if (equals(command, F("setlevel")) || isHysteresis) {
         String value = parseString(string, 2);
@@ -186,7 +186,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         success = true;
       }
       else
-      if (equals(command, F("hysteresis"))) {
+      if (equals(command, F("gethysteresis"))) {
         string  = toString(P021_TRIGGER_HYSTERESIS);
         success = true;
       }

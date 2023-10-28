@@ -13,7 +13,7 @@
         Using this command, either from rules, via http or mqtt, the **Set Level** of the plugin can be changed. If the value differs from the currently set value, the settings are saved.
         "
         "
-        ``config,task,<taskname>,Hysteresis,<value|calculation>``
+        ``config,task,<taskname>,SetHysteresis,<value|calculation>``
 
         Value: {Any valid numeric (float) value}
 
@@ -28,7 +28,7 @@
         Not a real command, but this plugin supports the ``GetLevel`` Config function, to retrieve the **Set Value** from the settings, by using the pseudo value ``GetLevel``.
         "
         "
-        ``[<taskname>#Hysteresis]``
+        ``[<taskname>#GetHysteresis]``
         ","
-        Not a real command, but this plugin supports the ``Hysteresis`` Config function, to retrieve the **Hysteresis** from the settings, by using the pseudo value ``Hysteresis``.
+        Not a real command, but this plugin supports the ``SetHysteresis`` Config function, to retrieve the **Hysteresis** from the settings, by using the pseudo value ``GetHysteresis``.
         "
