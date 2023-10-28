@@ -102,14 +102,12 @@ void NeoPixelBus_wrapper::setPixelColor(uint16_t pxl,
 
 uint32_t NeoPixelBus_wrapper::getPixelColor(uint16_t n) {
   if (nullptr != neopixels_grb) {
-    RgbColor color;
-    color = neopixels_grb->GetPixelColor(n);
+    const RgbColor color = neopixels_grb->GetPixelColor(n);
     return Color(color.R, color.G, color.B);
   }
 
   if (nullptr != neopixels_grbw) {
-    RgbwColor color;
-    color = neopixels_grbw->GetPixelColor(n);
+    const RgbwColor color = neopixels_grbw->GetPixelColor(n);
     return Color(color.R, color.G, color.B, color.W);
   }
 
