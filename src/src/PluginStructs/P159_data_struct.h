@@ -36,32 +36,28 @@
 # define P159_OUTPUT_LIGHT_SENSOR                 8
 # define P159_OUTPUT_PIN_STATE                    9
 
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0 10
 # define P159_OUTPUT_STATIC_DISTANCE_GATE_index   10
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE1 11
-# define P159_OUTPUT_MOVING_DISTANCE_GATE_index   11
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE2 12
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE3 13
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE4 14
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE5 15
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE6 16
-# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE7 17
+# define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE0 10
 # define P159_OUTPUT_STATIC_DISTANCE_ENERGY_GATE8 18
 
+# define P159_OUTPUT_MOVING_DISTANCE_GATE_index   11
 # define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE0 19
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE1 20
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE2 21
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE3 22
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE4 23
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE5 24
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE6 25
-# define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE7 26
 # define P159_OUTPUT_MOVING_DISTANCE_ENERGY_GATE8 27
 
-# define P159_NR_OUTPUT_OPTIONS                   8    // Last P159_OUTPUT_* value + 1 (count)
-# define P159_NR_ENGINEERING_OUTPUT_OPTIONS       28   // Last P159_OUTPUT_* value + 1 (count)
+# define P159_OUTPUT_STATIC_SENSOR_GATE_index     12
+# define P159_OUTPUT_STATIC_SENSOR_ENERGY_GATE0   28
+# define P159_OUTPUT_STATIC_SENSOR_ENERGY_GATE8   36
+
+# define P159_OUTPUT_MOVING_SENSOR_GATE_index     13
+# define P159_OUTPUT_MOVING_SENSOR_ENERGY_GATE0   37
+# define P159_OUTPUT_MOVING_SENSOR_ENERGY_GATE8   45
+
+# define P159_NR_OUTPUT_OPTIONS                   8    // Last P159_OUTPUT_*_DISTANCE value + 1 (count)
+# define P159_NR_ENGINEERING_OUTPUT_OPTIONS       28   // Last P159_OUTPUT_*_DISTANCE value + 1 (count) ENGINEERING
+# define P159_NR_MAX_OUTPUT_OPTIONS               46   // Last P159_OUTPUT_*_SENSOR value + 1 (count)
 
 # define P159_DELAY_RESTART                       2500 // milliseconds to 'wait' (ignore) after a device-restart
+# define P159_DELAY_SENDOUT                       100  // Minimal milliseconds between sending data/events
 
 enum class P159_state_e : uint8_t {
   Initializing     = 0u,
@@ -81,8 +77,8 @@ struct P159_data_struct : public PluginTaskData_base {
                    int8_t            txPin,
                    bool              engineeringMode);
   virtual ~P159_data_struct() = default;
-  void disconnectSerial(); // Disconnect the serial port connected to the sensor
-  bool processSensor();    // Process sensor, must be called regularly
+  void disconnectSerial();                       // Disconnect the serial port connected to the sensor
+  bool processSensor(struct EventStruct *event); // Process sensor, must be called regularly
   bool plugin_read(struct EventStruct *event);
   bool plugin_webform_load(struct EventStruct *event);
   bool plugin_webform_save(struct EventStruct *event);
@@ -106,14 +102,15 @@ struct P159_data_struct : public PluginTaskData_base {
 
 private:
 
-  int getRadarValue(int16_t             valueIndex,
-                    int                 previousValue,
-                    bool              & isChanged);
+  int  getRadarValue(int16_t valueIndex,
+                     int     previousValue,
+                     bool  & isChanged);
   void addJavascript();
 
   ESPeasySerial *easySerial         = nullptr; // Serial port object
   ld2410        *radar              = nullptr; // Sensor object
   uint32_t       milestone          = 0;       // When can we do the next phase when not in Running state?
+  uint32_t       lastSent           = 0;       // Last time we sent out data
   P159_state_e   state              = P159_state_e::Initializing;
   bool           _engineeringMode   = false;
   bool           _configurationRead = false;

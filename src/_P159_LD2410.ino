@@ -5,6 +5,10 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-10-29 tonhuisman: Rework processing, allow Interval = 0, as now the events will be generated when a value changes,
+ *                        but at most once per 100 msec, to not overload the ESP. Fixed the LD2410 library to work correctly
+ *                        with the event-driven scheduler model of ESPEasy, instead of the continuous loop() run of Arduino
+ *                        Add getconfig values for configured sensitivity level per gate, see below
  * 2023-10-28 tonhuisman: !! Breaking change (again): Insert Gate 0 value before Gate 1 value, both for Static and Moving
  *                        energy, as that was missing until now. This is because of poor documentation, talking about 8 values
  *                        where there are in fact 9 values, 0..8 !
@@ -47,6 +51,8 @@
  * OutputPin                        : State of the output pin (0/1)
  * StatEnergyGate0..StatEnergyGate8 : Stationary object energy level for gate 0..8, 75 cm/gate
  * MovEnergyGate0..MovEnergyGate8   : Moving object energy for gate 0..8, 75 cm/gate
+ * StatSensGate0..StatSensGate8     : Stationary sensitivity setting gate 0..8
+ * MovSensGate0..MovSensGate8       : Moving sensitivity setting gate 0..8
  */
 
 #ifdef USES_P159
@@ -77,6 +83,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].PluginStats        = true;
       Device[deviceCount].ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
 
@@ -246,7 +253,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = nullptr != P159_data;
-      addLog(LOG_LEVEL_INFO, concat(F("P159: INIT, success: "), success ? 1 : 0));
+      addLog(LOG_LEVEL_INFO, concat(F("P159 : INIT, success: "), success ? 1 : 0));
 
       break;
     }
@@ -302,7 +309,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P159_data) && !P159_data->isRunning()) {
-        success = P159_data->processSensor(); // Not Running can have 50 msec delays included, so NOT in PLUGIN_FIFTY_PER_SECOND !
+        success = P159_data->processSensor(event); // Not Running can have 50 msec delays included, so NOT in PLUGIN_FIFTY_PER_SECOND !
       }
 
       break;
@@ -312,7 +319,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P159_data) && P159_data->isRunning()) {
-        success = P159_data->processSensor(); // When running no delays are inserted, so can go in PLUGIN_FIFTY_PER_SECOND
+        success = P159_data->processSensor(event); // When running no delays are inserted, so can go in PLUGIN_FIFTY_PER_SECOND
       }
 
       break;
