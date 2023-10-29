@@ -6,6 +6,9 @@
 #endif // ifdef ESP32
 
 #ifdef ESP8266
+#include "../Globals/ESPEasyWiFiEvent.h"
+
+
 bool Hardware_ADC_t::init() {
   return true;
 }
