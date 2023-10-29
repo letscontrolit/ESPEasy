@@ -14,7 +14,9 @@
 
 # include "ESPEasy-Globals.h"
 
-
+// Do not change assigned values as they are stored
+// Shown selection and its order can be set in P026_value_option_indices
+// These P026_VALUETYPE_xxx values should represent the index in the p026_valuenames array
 # define P026_VALUETYPE_uptime       0
 # define P026_VALUETYPE_freeheap     1
 # define P026_VALUETYPE_rssi         2
@@ -48,7 +50,11 @@ const __FlashStringHelper* Plugin_026_valuename(uint8_t value_nr, bool displaySt
     F("Free Stack"), F("freestack"),
     F("None"), F(""),
     F("WiFi TX pwr"), F("txpwr"),
+# ifdef USE_SECOND_HEAP
     F("Free 2nd Heap"), F("free2ndheap"),
+# else // ifdef USE_SECOND_HEAP
+    F(""), F(""), // Must keep the same indexes
+# endif // ifdef USE_SECOND_HEAP
 # if FEATURE_INTERNAL_TEMPERATURE
     F("Internal temperature (ESP32)"), F("internaltemp"),
 # else // if FEATURE_INTERNAL_TEMPERATURE
@@ -71,10 +77,9 @@ const __FlashStringHelper* Plugin_026_valuename(uint8_t value_nr, bool displaySt
   return F("");
 }
 
-
 // List of options in the order how they will be shown in the plugin selector.
 const int P026_value_option_indices[] = {
-  P026_VALUETYPE_none,   // Have the "none" option as first option
+  P026_VALUETYPE_none, // Have the "none" option as first option
 
   P026_VALUETYPE_uptime,
   P026_VALUETYPE_load,
@@ -135,7 +140,7 @@ float P026_get_value(uint8_t type)
       res = FreeMem2ndHeap();
       break;
 # endif // ifdef USE_SECOND_HEAP
-      # if FEATURE_INTERNAL_TEMPERATURE
+# if FEATURE_INTERNAL_TEMPERATURE
     case P026_VALUETYPE_internaltemp:
       res = getInternalTemperature();
       break;
@@ -152,7 +157,7 @@ float P026_get_value(uint8_t type)
   return res;
 }
 
-bool P026_data_struct::P026_GetDeviceValueNames(struct EventStruct *event)
+bool P026_data_struct::GetDeviceValueNames(struct EventStruct *event)
 {
   const int valueCount = P026_NR_OUTPUT_VALUES;
 
@@ -167,7 +172,7 @@ bool P026_data_struct::P026_GetDeviceValueNames(struct EventStruct *event)
   return true;
 }
 
-bool P026_data_struct::P026_WebformLoadOutputSelector(struct EventStruct *event)
+bool P026_data_struct::WebformLoadOutputSelector(struct EventStruct *event)
 {
   constexpr size_t NrOptions = NR_ELEMENTS(P026_value_option_indices);
 
@@ -186,7 +191,7 @@ bool P026_data_struct::P026_WebformLoadOutputSelector(struct EventStruct *event)
   return true;
 }
 
-bool P026_data_struct::P026_WebformSave(struct EventStruct *event)
+bool P026_data_struct::WebformSave(struct EventStruct *event)
 {
   // Save output selector parameters.
   const int valueCount = P026_NR_OUTPUT_VALUES;
@@ -199,7 +204,7 @@ bool P026_data_struct::P026_WebformSave(struct EventStruct *event)
   return true;
 }
 
-bool P026_data_struct::P026_Plugin_Read(struct EventStruct *event)
+bool P026_data_struct::Plugin_Read(struct EventStruct *event)
 {
   const int valueCount = P026_NR_OUTPUT_VALUES;
 
@@ -229,7 +234,7 @@ bool P026_data_struct::P026_Plugin_Read(struct EventStruct *event)
 }
 
 # ifndef PLUGIN_BUILD_MINIMAL_OTA
-bool P026_data_struct::P026_Plugin_GetConfigValue(struct EventStruct *event, String& string)
+bool P026_data_struct::Plugin_GetConfigValue(struct EventStruct *event, String& string)
 {
   bool success     = false;
   const String cmd = parseString(string, 1);
@@ -252,7 +257,7 @@ bool P026_data_struct::P026_Plugin_GetConfigValue(struct EventStruct *event, Str
 
 
 # if FEATURE_PACKED_RAW_DATA
-bool P026_data_struct::P026_Plugin_GetPackedRawData(struct EventStruct *event, String& string)
+bool P026_data_struct::Plugin_GetPackedRawData(struct EventStruct *event, String& string)
 {
   // Matching JS code:
   // return decode(bytes,

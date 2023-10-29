@@ -51,7 +51,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      success = P026_data_struct::P026_GetDeviceValueNames(event);
+      success = P026_data_struct::GetDeviceValueNames(event);
       break;
     }
 
@@ -85,7 +85,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     {
-      success = P026_data_struct::P026_WebformLoadOutputSelector(event);
+      success = P026_data_struct::WebformLoadOutputSelector(event);
       break;
     }
 
@@ -96,7 +96,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      success = P026_data_struct::P026_WebformSave(event);
+      success = P026_data_struct::WebformSave(event);
       break;
     }
 
@@ -108,20 +108,20 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      success = P026_data_struct::P026_Plugin_Read(event);
+      success = P026_data_struct::Plugin_Read(event);
       break;
     }
     # ifndef PLUGIN_BUILD_MINIMAL_OTA
     case PLUGIN_GET_CONFIG_VALUE:
     {
-      success = P026_data_struct::P026_Plugin_GetConfigValue(event, string);
+      success = P026_data_struct::Plugin_GetConfigValue(event, string);
       break;
     }
     # endif // ifndef PLUGIN_BUILD_MINIMAL_OTA
 # if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
-      success = P026_data_struct::P026_Plugin_GetPackedRawData(event, string);
+      success = P026_data_struct::Plugin_GetPackedRawData(event, string);
       break;
     }
 # endif // if FEATURE_PACKED_RAW_DATA
