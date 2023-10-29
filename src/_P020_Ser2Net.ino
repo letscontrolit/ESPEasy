@@ -328,8 +328,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         success = true;
       } else if (equals(command, F("serialsendmix"))) {
         std::vector<uint8_t> argument = parseHexTextData(string);
-        task->ser2netSerial->write(&argument[0], argument.size());
-        task->ser2netSerial->flush();
+        if (argument.size() > 0) {
+          task->ser2netSerial->write(&argument[0], argument.size());
+          task->ser2netSerial->flush();
+        }
         success = true;
       } else if ((equals(command, F("ser2netclientsend"))) && (task->hasClientConnected())) {
         task->ser2netClient.print(string.substring(18));

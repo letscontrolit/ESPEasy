@@ -876,7 +876,7 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
 
-  result.reserve(argument.length()); // longer than needed, most likely
+  result.reserve(argument.length() / 2); // longer than needed, most likely
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
 
@@ -891,12 +891,13 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
           result.push_back(char(hex));
         }
         j += 2;
-        int c = skipChars.indexOf(arg.substring(j, j + 1));
 
-        while (j < arg.length() && c > -1) {
-          j++;
-          c = skipChars.indexOf(arg.substring(j, j + 1));
-        }
+        // Skip characters we need to ignore
+        int c = -1;
+        do {
+          ++j;
+          c = (j < arg.length()) ? skipChars.indexOf(arg[j]) : -1;
+        } while (c > -1);
       }
     } else {
       for (size_t s = 0; s < arg.length(); s++) {
