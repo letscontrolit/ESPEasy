@@ -397,13 +397,11 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("No sensor value for TaskIndex: ");
-      log += event->TaskIndex + 1;
-      log += F(" varnumber: ");
-      log += rel_index + 1;
-      log += F(" type: ");
-      log += getSensorTypeLabel(sensorType);
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, strformat(
+        F("No sensor value for TaskIndex: %d varnumber: %d type: %s"),
+        event->TaskIndex + 1,
+        rel_index + 1,
+        String(getSensorTypeLabel(sensorType)).c_str()));
     }
     #endif // ifndef BUILD_NO_DEBUG
     return EMPTY_STRING;
@@ -424,14 +422,13 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 #ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("Invalid float value for TaskIndex: ");
-        log += event->TaskIndex;
-        log += F(" varnumber: ");
-        log += rel_index;
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, strformat(
+          F("Invalid float value for TaskIndex: %d varnumber: %d"),
+          event->TaskIndex + 1,
+          rel_index + 1));
       }
 #endif // ifndef BUILD_NO_DEBUG
-      const float f = 0.0f;
+      const float f{};
       return toString(f, nrDecimals);
     }
   }

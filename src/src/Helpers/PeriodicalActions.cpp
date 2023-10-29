@@ -151,14 +151,11 @@ void runOncePerSecond()
     {
       // FIXME TD-er: What to do when the system time is not (yet) present?
       if (node_time.systemTimePresent()) {
-        String event;
-        event.reserve(21);
-        event += F("Clock#Time=");
-        event += node_time.weekday_str();
-        event += ',';
-        event += node_time.getTimeString(':', false);
-
         // TD-er: Do not add to the eventQueue, but execute right now.
+        const String event = strformat(
+          F("Clock#Time=%s,%s"), 
+          node_time.weekday_str().c_str(),
+          node_time.getTimeString(':', false).c_str());
         rulesProcessing(event);
       }
     }

@@ -1747,7 +1747,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     client.stop();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
+      addLog(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
     }
     return true;
   }
@@ -1846,13 +1846,12 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
     client.stop();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
+      addLog(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
     }
 
     if (Update.end()) {
       if (Settings.UseRules) {
-        String event = concat(F("ProvisionFirmware#success="), file_save);
-        eventQueue.addMove(std::move(event));
+        eventQueue.addMove(concat(F("ProvisionFirmware#success="), file_save));
       }
     }
     return true;

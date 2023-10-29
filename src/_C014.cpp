@@ -929,11 +929,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
 #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("C014 : Sent to ");
-          log += tmppubname;
-          log += ' ';
-          log += value;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, 
+            strformat(F("C014 : Sent to %s %s"),
+            tmppubname.c_str(),
+            value.c_str()));
         }
 #endif
       }

@@ -198,18 +198,11 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + var] = Wire.read(); // now read actual value and store into Value var
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log;
-
-              if (log.reserve(40)) {
-                log += F("PCF  : Analog port: A");
-                log += port - 1;
-                log += F(" value ");
-                log += var + 1;
-                log += ':';
-                log += ' ';
-                log += formatUserVarNoCheck(event->TaskIndex, var);
-                addLogMove(LOG_LEVEL_INFO, log);
-              }
+              addLog(LOG_LEVEL_INFO, strformat(
+                F("PCF  : Analog port: A%d value %d: %s"),
+                port - 1,
+                var + 1,
+                formatUserVarNoCheck(event->TaskIndex, var).c_str()));
             }
             success = true;
           }

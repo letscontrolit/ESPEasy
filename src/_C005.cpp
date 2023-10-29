@@ -105,11 +105,10 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("MQTT : ");
-          log += tmppubname;
-          log += ' ';
-          log += value;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, 
+            strformat(F("MQTT : %s %s"),
+            tmppubname.c_str(),
+            value.c_str()));
         }
 # endif // ifndef BUILD_NO_DEBUG
 

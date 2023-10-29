@@ -651,7 +651,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           clearPluginTaskData(taskIndex);                       // Make sure any task data is actually cleared.
           if (PluginCallForTask(taskIndex, PLUGIN_INIT, &TempEvent, str, event) &&
               loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLogMove(LOG_LEVEL_INFO, strformat(F("INIT : Started Priority task %d, [%s] %s"),
+            addLog(LOG_LEVEL_INFO, strformat(F("INIT : Started Priority task %d, [%s] %s"),
                                        taskIndex + 1,
                                        getTaskDeviceName(taskIndex).c_str(),
                                        getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex)).c_str()));

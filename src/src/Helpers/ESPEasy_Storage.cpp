@@ -277,14 +277,18 @@ bool BuildFixes()
 
   if (Settings.Build < 20101)
   {
+    #ifdef LIMIT_BUILD_SIZE
     serialPrintln(F("Fix reset Pin"));
+    #endif
     Settings.Pin_Reset = -1;
   }
 
   if (Settings.Build < 20102) {
     // Settings were 'mangled' by using older version
     // Have to patch settings to make sure no bogus data is being used.
+    #ifdef LIMIT_BUILD_SIZE
     serialPrintln(F("Fix settings with uninitalized data or corrupted by switching between versions"));
+    #endif
     Settings.UseRTOSMultitasking       = false;
     Settings.Pin_Reset                 = -1;
     Settings.SyslogFacility            = DEFAULT_SYSLOG_FACILITY;
