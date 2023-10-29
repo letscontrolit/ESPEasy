@@ -406,7 +406,7 @@ bool P159_data_struct::plugin_get_config_value(struct EventStruct *event,
       }
 
       if ((idx > -1) && (logAll ||
-                         cmd.equalsIgnoreCase(concat(Plugin_159_valuename(idx, false), (gate > -1) ? String(gate) : F(""))))) {
+                         cmd.equalsIgnoreCase(concat(Plugin_159_valuename(idx, false), (gate > -1) ? String(gate) : EMPTY_STRING)))) {
         bool dummy;
         string = getRadarValue(option, -1, dummy);
         result = true;
@@ -415,7 +415,7 @@ bool P159_data_struct::plugin_get_config_value(struct EventStruct *event,
           break;
         } else if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, strformat(F("LD2410: %s: %s"),
-                                           concat(Plugin_159_valuename(idx, true), (gate > -1) ? String(gate) : F("")).c_str(),
+                                           concat(Plugin_159_valuename(idx, true), (gate > -1) ? String(gate) : EMPTY_STRING).c_str(),
                                            string.c_str()));
         }
       }
