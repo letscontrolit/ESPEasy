@@ -1556,7 +1556,7 @@ int http_authenticate(const String& logIdentifier,
       //                                                   field number (only available for a "single-value-event")
       // In rules you can grep the reply by "On ThingspeakReply Do ..."
      
-    if (httpCode == 200 && equals(host, F("api.thingspeak.com")) && uri.endsWith(F("/last.csv"))) {
+      if (httpCode == 200 && equals(host, F("api.thingspeak.com")) && uri.endsWith(F("/last.csv"))) {
         String result = http.getString(); 
         const int posTimestamp = result.lastIndexOf(':');
         if (posTimestamp >= 0) { 
