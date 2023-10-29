@@ -261,113 +261,132 @@ bool ld2410::read_frame_()
 	{
 		return false;
 	}
-	if(frame_started_ == false)
-	{
-		uint8_t byte_read_ = radar_uart_ -> read();
-		if(byte_read_ == FRAME_PREFIX_REPORTING)
+	const uint32_t _started = millis();
+	int _available = radar_uart_->available();
+	while (_available && (millis() - _started < SERIAL_RECEIVE_MAX_MS)) { // Read for max. N msec
+		yield();
+		if(frame_started_ == false)
 		{
-			radar_data_frame_[radar_data_frame_position_++] = byte_read_;
-			frame_started_ = true;
-			ack_frame_ = false;
-		}
-		else if(byte_read_ == FRAME_PREFIX_PROTOCOL)
-		{
-			radar_data_frame_[radar_data_frame_position_++] = byte_read_;
-			frame_started_ = true;
-			ack_frame_ = true;
-		}
-		#if (defined(LD2410_DEBUG_DATA) || defined(LD2410_DEBUG_COMMANDS)) && defined(LD2410_DEBUG)
-		if(debug_uart_ != nullptr)
-		{
-			debug_uart_->print(F("\nRcvd : 00 "));
-		}
-		#endif
-	}
-	else
-	{
-		if(radar_data_frame_position_ < configuration_buffer_size_)
-		{
+			uint8_t byte_read_ = radar_uart_ -> read();
+			--_available; // 1 down
+			if(byte_read_ == FRAME_PREFIX_REPORTING)
+			{
+				radar_data_frame_[radar_data_frame_position_++] = byte_read_;
+				frame_started_ = true;
+				ack_frame_ = false;
+			}
+			else if(byte_read_ == FRAME_PREFIX_PROTOCOL)
+			{
+				radar_data_frame_[radar_data_frame_position_++] = byte_read_;
+				frame_started_ = true;
+				ack_frame_ = true;
+			}
 			#if (defined(LD2410_DEBUG_DATA) || defined(LD2410_DEBUG_COMMANDS)) && defined(LD2410_DEBUG)
 			if(debug_uart_ != nullptr)
 			{
-				if(radar_data_frame_position_ < 0x10)
-				{
-					debug_uart_->print('0');
-				}
-				debug_uart_->print(radar_data_frame_position_, HEX);
-				debug_uart_->print(' ');
+				debug_uart_->print(F("\nRcvd : 00 "));
 			}
 			#endif
-			radar_data_frame_[radar_data_frame_position_++] = radar_uart_ -> read();
-			if(radar_data_frame_position_ > 7)	//Can check for start and end
-			{
-				if(isReportingDataFrame_())
-				{
-					if(parse_data_frame_())
-					{
-						#if defined(LD2410_DEBUG_DATA) && defined(LD2410_DEBUG)
-						if(debug_uart_ != nullptr)
-						{
-							debug_uart_->print(F(" parsed data OK"));
-						}
-						#endif
-						frame_started_ = false;
-						radar_data_frame_position_ = 0;
-						return true;
-					}
-					else
-					{
-						#if defined(LD2410_DEBUG_DATA) && defined(LD2410_DEBUG)
-						if(debug_uart_ != nullptr)
-						{
-							debug_uart_->print(F(" failed to parse data"));
-						}
-						#endif
-						frame_started_ = false;
-						radar_data_frame_position_ = 0;
-					}
-				}
-				else if(isProtocolDataFrame_())
-				{
-					if(parse_command_frame_())
-					{
-						#if defined(LD2410_DEBUG_COMMANDS) && defined(LD2410_DEBUG)
-						if(debug_uart_ != nullptr)
-						{
-							debug_uart_->print(F(" parsed command OK"));
-						}
-						#endif
-						frame_started_ = false;
-						radar_data_frame_position_ = 0;
-						return true;
-					}
-					else
-					{
-						#if defined(LD2410_DEBUG_COMMANDS) && defined(LD2410_DEBUG)
-						if(debug_uart_ != nullptr)
-						{
-							debug_uart_->print(F(" failed to parse command"));
-						}
-						#endif
-						frame_started_ = false;
-						radar_data_frame_position_ = 0;
-					}
-				}
-			}
 		}
 		else
 		{
-			#if (defined(LD2410_DEBUG_DATA) || defined(LD2410_DEBUG_COMMANDS) || defined(LD2410_DEBUG_PARSE)) && defined(LD2410_DEBUG)
-			if(debug_uart_ != nullptr)
+			if(radar_data_frame_position_ < configuration_buffer_size_)
 			{
-				debug_uart_->print(F("\nLD2410 frame overran"));
+				#if (defined(LD2410_DEBUG_DATA) || defined(LD2410_DEBUG_COMMANDS)) && defined(LD2410_DEBUG)
+				if(debug_uart_ != nullptr)
+				{
+					if(radar_data_frame_position_ < 0x10)
+					{
+						debug_uart_->print('0');
+					}
+					debug_uart_->print(radar_data_frame_position_, HEX);
+					debug_uart_->print(' ');
+				}
+				#endif
+				radar_data_frame_[radar_data_frame_position_++] = radar_uart_ -> read();
+				--_available; // 1 more down
+				if(radar_data_frame_position_ > 7)	//Can check for start and end
+				{
+					if(isReportingDataFrame_())
+					{
+						if(parse_data_frame_())
+						{
+							#if defined(LD2410_DEBUG_DATA) && defined(LD2410_DEBUG)
+							if(debug_uart_ != nullptr)
+							{
+								debug_uart_->print(F(" parsed data OK"));
+							}
+							#endif
+							frame_started_ = false;
+							radar_data_frame_position_ = 0;
+							return true;
+						}
+						else
+						{
+							#if defined(LD2410_DEBUG_DATA) && defined(LD2410_DEBUG)
+							if(debug_uart_ != nullptr)
+							{
+								debug_uart_->print(F(" failed to parse data"));
+							}
+							#endif
+							frame_started_ = false;
+							radar_data_frame_position_ = 0;
+							_errorCount++;
+						}
+					}
+					else if(isProtocolDataFrame_())
+					{
+						if(parse_command_frame_())
+						{
+							#if defined(LD2410_DEBUG_COMMANDS) && defined(LD2410_DEBUG)
+							if(debug_uart_ != nullptr)
+							{
+								debug_uart_->print(F(" parsed command OK"));
+							}
+							#endif
+							frame_started_ = false;
+							radar_data_frame_position_ = 0;
+							return true;
+						}
+						else
+						{
+							#if defined(LD2410_DEBUG_COMMANDS) && defined(LD2410_DEBUG)
+							if(debug_uart_ != nullptr)
+							{
+								debug_uart_->print(F(" failed to parse command"));
+							}
+							#endif
+							frame_started_ = false;
+							radar_data_frame_position_ = 0;
+							_errorCount++;
+						}
+					}
+				}
 			}
-			#endif
-			frame_started_ = false;
-			radar_data_frame_position_ = 0;
+			else
+			{
+				#if (defined(LD2410_DEBUG_DATA) || defined(LD2410_DEBUG_COMMANDS) || defined(LD2410_DEBUG_PARSE)) && defined(LD2410_DEBUG)
+				if(debug_uart_ != nullptr)
+				{
+					debug_uart_->print(F("\nLD2410 frame overran"));
+				}
+				#endif
+				frame_started_ = false;
+				radar_data_frame_position_ = 0;
+				_errorCount++;
+			}
+		}
+		if (!_available && (millis() - _started < SERIAL_RECEIVE_GRACE_MS)) { // Data handled and time left? Read some more
+			_available = radar_uart_->available();
 		}
 	}
 	return false;
+}
+
+uint16_t ld2410::getErrorCountAndReset() {
+	uint16_t result = _errorCount;
+	_errorCount = 0;
+	return result;
 }
 
 void ld2410::print_frame_()
@@ -410,6 +429,7 @@ bool ld2410::parse_data_frame_()
 			debug_uart_->print(intra_frame_data_length_ + 10);
 		}
 		#endif
+		_errorCount++;
 		return false;
 	}
 
@@ -419,6 +439,7 @@ bool ld2410::parse_data_frame_()
 		print_frame_();
 	}
 	#endif
+	data_ready_ = false;
 	if(radar_data_frame_[6] == FRAME_TYPE_REPORTING && radar_data_frame_[7] == FRAME_TYPE_FLAG)	//Engineering mode data
 	{	
 		/*   (Protocol) Target Data Reporting 
@@ -506,6 +527,7 @@ bool ld2410::parse_data_frame_()
 		#endif
 
 		radar_uart_last_packet_ = millis();
+		data_ready_ = true;
 		return true;
 	}
 	else if(radar_data_frame_[6] == FRAME_TYPE_TARGET && radar_data_frame_[7] == FRAME_TYPE_FLAG )	//Normal target data
@@ -556,6 +578,7 @@ bool ld2410::parse_data_frame_()
 		}
 		#endif
 		radar_uart_last_packet_ = millis();
+		data_ready_ = true;
 		return true;
 	}
 	else
@@ -566,6 +589,7 @@ bool ld2410::parse_data_frame_()
 			debug_uart_->print(F("\nUnknown frame type"));
 		}
 		#endif
+		_errorCount++;
 		print_frame_();
 	}
 
@@ -654,6 +678,8 @@ bool ld2410::parse_command_frame_()
 					debug_uart_->print('s');
 				}
 				#endif
+			} else {
+				_errorCount++;
 			}
 			return debug_command_results_("ACK for current configuration");
 		case CMD_ENGINEERING_ENABLE:
@@ -714,6 +740,7 @@ void ld2410::send_command_postamble_()
 	radar_uart_->write((uint8_t)char(0x03));
 	radar_uart_->write((uint8_t)char(0x02));
 	radar_uart_->write((uint8_t)char(0x01));
+	radar_uart_->flush();
 }
 
 /*

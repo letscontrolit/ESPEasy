@@ -14,6 +14,12 @@
 
 #include <Arduino.h>
 
+#if __cplusplus >= 202002L
+#include <atomic>
+typedef std::atomic< bool > atomic_bool;
+#else
+typedef volatile bool atomic_bool;
+#endif
 // #define LD2410_DEBUG											// Send any debug to serial?
 // #define LD2410_DEBUG_DATA                //Debug all Data Frames
 // #define LD2410_DEBUG_COMMANDS            //Debug Command Acks
@@ -63,6 +69,9 @@
 #define TARGET_MOVING_AND_STATIONARY 0x03 
 
 
+#define SERIAL_RECEIVE_MAX_MS     5 // Read for max. N milliseconds, we'd need (64*(8+2))*(1/256000)=2.5msec to read an entire buffer
+#define SERIAL_RECEIVE_GRACE_MS   2 // Read more if still this amount of milliseconds available
+
 class ld2410	{
 
 	public:
@@ -82,6 +91,7 @@ class ld2410	{
 		bool isStationary(){return stationaryTargetDetected();};
 		bool isMoving(){return movingTargetDetected();};
 		uint16_t detectionDistance(){return detection_distance_;};      //Target Reporting Data
+		bool dataReady() {return data_ready_;}
 
 		/*
 		 * Utilities -- depreciation candidates */
@@ -137,6 +147,8 @@ class ld2410	{
 		uint8_t  cfgMovingGateSensitivity(uint8_t gate){return ((gate < LD2410_MAX_GATES) ? motion_sensitivity[gate] : 255) ;};         //Read Parameters command response
 		uint8_t  cfgStationaryGateSensitivity(uint8_t gate){return ((gate < LD2410_MAX_GATES) ? stationary_sensitivity[gate] : 255);}; //Read Parameters command response
 
+		uint16_t getErrorCountAndReset();
+
 	protected:
 		/*
 		 * Request Firmware Version command responses */
@@ -187,6 +199,8 @@ class ld2410	{
 		uint32_t radar_uart_last_command_    = 0;						//Time of the last command sent to the radar
 		uint32_t radar_uart_command_timeout_ = 250;						//Timeout for sending commands
 
+		uint16_t _errorCount = 0; // Internal errorcounter, managed via getErrorCountAndReset()
+
 		uint8_t latest_ack_ = 0;
 		uint8_t target_type_ = 0;
 		uint8_t radar_data_frame_position_ = 0;							//Where in the frame we are currently writing
@@ -198,6 +212,7 @@ class ld2410	{
 		bool engineering_mode_       = false;                           //Wheter engineering mode is active
 		bool latest_command_success_ = false;
 		bool configuration_mode_active = false;                         //Configuration state (multi-mode)
+		atomic_bool data_ready_   	 = false; 													// Can we read the current data?
 
 		/*
 		 * feature management functions */
