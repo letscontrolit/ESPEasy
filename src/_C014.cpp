@@ -16,6 +16,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-10-30 tonhuisman: Fix using getHostname() instead of getName() for %sysname%. This might break some configurations!
+ *                        minor improvements
  * 2023-08-18 tonhuisman: Clean up source to improve resource usage
  * 2023-03-15 tonhuisman: Replace use of deprecated DummyValueSet with TaskValueSet
  * 2023-03 Changelog started
@@ -51,6 +53,7 @@
 # define CPLUGIN_014_SYSTEM_DEVICE   "SYSTEM"              // name for system device Plugin for cmd and GIO values
 # define CPLUGIN_014_CMD_VALUE       "cmd"                 // name for command value
 # define CPLUGIN_014_GPIO_VALUE      "gpio"                // name for gpio value i.e. "gpio1"
+# define CPLUGIN_014_GPIO_VALUE_LEN  4                     // length of GPIO to avoid creating a String to get the length
 # define CPLUGIN_014_CMD_VALUE_NAME  "Command"             // human readabele name for command value
 
 # define CPLUGIN_014_GPIO_COMMAND          "gpio"          // name for gpio command
@@ -63,7 +66,7 @@ String CPlugin_014_pubname;
 bool   CPlugin_014_mqtt_retainFlag = false;
 
 void C014_replaceSysname(String& var) {
-  var.replace(F("%sysname%"), Settings.getName());
+  var.replace(F("%sysname%"), Settings.getHostname()); // Used to be getName(), but that doesn't include the UnitNr when configured
 }
 
 bool CPlugin_014_sendMQTTdevice(String                     tmppubname,
@@ -385,6 +388,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         for (taskIndex_t x = 0; x < TASKS_MAX; x++)
         {
           const pluginID_t pluginID = Settings.getPluginID_for_task(x);
+
           if (validPluginID_fullcheck(pluginID))
           {
             LoadTaskSettings(x);
@@ -401,6 +405,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
               {
                 constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(86);
+
                 if (pluginID == HOMIE_RECEIVER_PLUGIN_ID)
                 {
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
@@ -497,6 +502,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++)
                   {
                     const pluginID_t pluginID = Settings.getPluginID_for_task(x);
+
                     if (validPluginID_fullcheck(pluginID))
                     {
                       if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) // do not send if Value Name is empty!
@@ -520,6 +526,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                                  errorCounter);
 
                         constexpr pluginID_t DUMMY_PLUGIN_ID(33);
+
                         if (pluginID == DUMMY_PLUGIN_ID) { // Dummy Device can send AND receive Data
                           CPlugin_014_sendMQTTnode(nodename,
                                                    deviceName,
@@ -712,17 +719,17 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log = strformat(F("C014 : MQTT received: /set: N: %s V: %s"), nodeName.c_str(), valueName.c_str());
           }
 
-          if (equals(nodeName, F(CPLUGIN_014_SYSTEM_DEVICE)))                                  // msg to a system device
+          if (equals(nodeName, F(CPLUGIN_014_SYSTEM_DEVICE)))                                // msg to a system device
           {
-            if (valueName.startsWith(F(CPLUGIN_014_GPIO_VALUE)))                               // msg to to set gpio values
+            if (valueName.startsWith(F(CPLUGIN_014_GPIO_VALUE)))                             // msg to to set gpio values
             {
-              const size_t gpio_value_tag_length = String(F(CPLUGIN_014_GPIO_VALUE)).length(); // FIXME use fixed length or constexpr
+              constexpr size_t gpio_value_tag_length = CPLUGIN_014_GPIO_VALUE_LEN;           // now uses fixed length or constexpr
 
-              cmd  = concat(F("GPIO,"), valueName.substring(gpio_value_tag_length).toInt());   // get the GPIO
+              cmd  = concat(F("GPIO,"), valueName.substring(gpio_value_tag_length).toInt()); // get the GPIO
               cmd += ',';
 
-              if (equals(event->String2, F("true")) || equals(event->String2, '1')) {          // Homie spec says it should be 'true' or
-                cmd += '1';                                                                    // 'false'...
+              if (equals(event->String2, F("true")) || equals(event->String2, '1')) {        // Homie spec says it should be 'true' or
+                cmd += '1';                                                                  // 'false'...
               } else {
                 cmd += '0';
               }

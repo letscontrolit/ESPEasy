@@ -186,11 +186,10 @@ bool C005_parse_command(struct EventStruct *event) {
         if (validFloatFromString(event->String2, value_f) &&
             validIntFromString(lastPartTopic, lastPartTopic_int)) {
           const int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
-          cmd        = event->String1.substring(prevLastindex + 1, lastindex);
-          cmd       += ',';
-          cmd       += lastPartTopic_int;
-          cmd       += ',';
-          cmd       += event->String2; // Just use the original format
+          cmd = strformat(F("%s,%d,%s"),
+                          event->String1.substring(prevLastindex + 1, lastindex).c_str(),
+                          lastPartTopic_int,
+                          event->String2.c_str()); // Just use the original format
           validTopic = true;
         }
       }
