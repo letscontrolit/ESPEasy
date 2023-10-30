@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release mega-20231013 (since mega-20230930)
+-------------------------------------------------
+
+Release date: Fri Oct 13 06:01:32 PM CEST 2023
+
+Fabio Ancona (1):
+      Fix SI7021/HTU21D DOC links
+
+TD-er (2):
+      [P039_Thermosensors] Fix check for valid value
+      [Controller Settings] Fix inverted Send LWT and Will Retain
+
+Ton Huisman (5):
+      [Networking] Log string and formatting improvements for size
+      [Networking] Fix typo in string argument for strformat
+      [P047] Update address-change documentation
+      [P131] Optimization for build size
+      [UI] Show Controller-state on Device page
+
+dobry kod (3):
+      [GPIO] Fix taking wrong branch in GPIO_Monitor10xSec when MCP/PCF plugin is disabled
+      [GPIO] Fix response to Status command
+      [GPIO] Fix mode reported in response to Status command
+
+
+-------------------------------------------------
 Changes in release mega-20230930 (since mega-20230822)
 -------------------------------------------------
 
