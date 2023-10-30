@@ -59,7 +59,9 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   if (!isInitialized()) {
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("NEOMATRIX: Init start."));
+    # endif // ifndef BUILD_NO_DEBUG
     matrix = new (std::nothrow) Adafruit_NeoMatrix(_matrixWidth,
                                                    _matrixHeight,
                                                    _tileWidth,
@@ -94,9 +96,9 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
       log += _ypix;
       addLogMove(LOG_LEVEL_INFO, log);
     }
-    # endif // ifndef BUILD_NO_DEBUG
   } else {
     addLog(LOG_LEVEL_INFO, F("NEOMATRIX: Init failed."));
+    # endif // ifndef BUILD_NO_DEBUG
   }
 
   if (isInitialized()) {

@@ -1,0 +1,32 @@
+Changes for 2.3
+
+* Fixed issue #2 - Support for PROGMEM / FLASH melodies in non-blocking mode.
+
+
+Changes for 2.2.1:
+
+* Fixed issue #4: error compiling example code.
+* Fixed issue #5: Refactor build process to use Arduino CLI instead of Arduino IDE.
+
+
+Changes for 2.2.0:
+
+* New feature: Build option `ANYRTTTL_BUILD_EXAMPLES` to enable/disable building AnyRtttl examples.
+* New feature: Changed file/folder structure to be compatible with Arduino Library Manager.
+* New feature: Using RapidAssist 0.5.0 and win32Arduino 2.3.1.
+
+
+Changes for 2.1.229:
+
+* New feature: Implemented support for RTTTL in Program Memory (PROGMEM).
+
+
+Changes for 2.0.179:
+
+* Library converted to AnyRtttl.
+* First github release.
+* Code originally release at http://www.end2endzone.com/anyrtttl-a-feature-rich-arduino-library-for-playing-rtttl-melodies/
+
+
+Changes for 1.0.0:
+* Initial release of NonBlockingRtttl.

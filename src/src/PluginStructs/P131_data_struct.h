@@ -84,6 +84,7 @@ struct P131_content_struct {
   int16_t pixelPos    = 0;  // current left-offset on display
   int16_t speed       = 0;  // 0.1 sec. steps
   int16_t loop        = -1; // steps before we go, -1 = restart from speed
+  int16_t _filler1    = 0;  // Filler added to achieve better instance/memory alignment
   int8_t  stepWidth   = 0;  // Nr. of pixels to scroll - 1
   bool    active      = false;
   bool    rightScroll = false;

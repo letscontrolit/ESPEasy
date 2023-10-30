@@ -1,0 +1,14 @@
+#include <stdio.h>
+#include "Arduino.h"
+#include "@SOURCE_INO_FILE@"
+ 
+using namespace testarduino;
+ 
+int main(int argc, char* argv[])
+{
+  printf("Calling setup()...\n");
+  setup();
+ 
+  printf("Calling loop()...\n");
+  loop();
+}

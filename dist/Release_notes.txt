@@ -1,4 +1,230 @@
 -------------------------------------------------
+Changes in release mega-20231013 (since mega-20230930)
+-------------------------------------------------
+
+Release date: Fri Oct 13 06:01:32 PM CEST 2023
+
+Fabio Ancona (1):
+      Fix SI7021/HTU21D DOC links
+
+TD-er (2):
+      [P039_Thermosensors] Fix check for valid value
+      [Controller Settings] Fix inverted Send LWT and Will Retain
+
+Ton Huisman (5):
+      [Networking] Log string and formatting improvements for size
+      [Networking] Fix typo in string argument for strformat
+      [P047] Update address-change documentation
+      [P131] Optimization for build size
+      [UI] Show Controller-state on Device page
+
+dobry kod (3):
+      [GPIO] Fix taking wrong branch in GPIO_Monitor10xSec when MCP/PCF plugin is disabled
+      [GPIO] Fix response to Status command
+      [GPIO] Fix mode reported in response to Status command
+
+
+-------------------------------------------------
+Changes in release mega-20230930 (since mega-20230822)
+-------------------------------------------------
+
+Release date: za 30 sep 2023 15:46:23 CEST
+
+Adam Groszer (1):
+      added InfluxDB v2 HTTP API docs and some other minors
+
+Fabio Ancona (3):
+      Update README.md adding "Climate"
+      [DOC] Update P014 to avoid to use this Plugin with SHT2x devices
+      Update P014.rst
+
+Michael Schröder (1):
+      Ignore more variants of own Custom.h
+
+TD-er (83):
+      Update issue templates
+      [ADS1x15] Support ADS1015 & add sample rate selector
+      [ADS1x15] Add ADS1015/ADS1115 sensor type detection to task config page
+      [Cleanup] Add macro NR_ELEMENTS for array counting
+      [ADS1x15] Add option to select multiple task value outputs
+      [ADS1x15] Simplify storage of settings
+      [ADS1x15] Update documentation
+      [ADS1x15] Update documentation
+      [ADS1x15] Replace "ADS1115" with "ADS1x15" in docs and I2C scan result
+      [ADS1x15] Fix PBC -> PCB typo in documentation
+      [BMP3xx] Add support for Bosch BMP384/388/390 temp/pressure modules
+      [BMP3xx] Fix saving I2C address
+      [BMP3xx] Perform a few reads after init to initialize the IIR filter
+      [BMP3xx] Add detected chip + altitude compensation
+      [BMP3xx] Document P154 BMP388/BMP390
+      [BME280] Show detected sensor model like is done for ADS1x15 and BMP3xx
+      [Scheduler] Cleanup of Scheduler code
+      [Scheduler] Allow to schedule task calls to specific functions
+      [Scheduler] Split Various Scheduler timer types into separate .cpp files
+      [Cleanup] Fix build issue in WOL plugin
+      [Scheduler] Remove unneeded scheduler call type
+      [Scheduler] Cleanup includes and fix decode()
+      [Documentation] Document ESPEasy Functional Blocks
+      [Documentation] Add ESPEasy Functional block diagram
+      [Docs] Mark arrow between controller and MQTT broker as bidirectional
+      [Docs] Clarify some arrows in ESPEasy block diagram
+      [Task] Revert 'soft disable' task (for now...)
+      [Cleanup] Make deviceIndex_t a strict class
+      [Cleanup] Only allow PLUGIN_ADD to change Device[] vector
+      [Cleanup] Make pluginID_t a strict class
+      [Cleanup] Fix build error on ETH builds with pluginID_t
+      [Cleanup] Partial conversion npluginID_T to class
+      [Cleanup] Complete convert npluginID_t to strict class
+      [Cleanup] Reduce build size on ESP8266 making DeviceVector less strict
+      [Cleanup] Fix crashing compiler on ESP8266 builds
+      [Cleanup] Reduce build size to 'undo' extra added bytes in this cleanup
+      [Cleanup] Further reduction of build size
+      [Cleanup] Fix build on ESP8266 Collection A
+      [Cleanup] Fix build error on ESP8266 Display
+      [Cleanup] Reduce build size by moving small functions to .h files
+      [Cleanup] Use constexpr for static pluginID compares
+      [Cleanup] Use more constexpr for static pluginID compares
+      [Controller] Simplify ESPEasy core administration of CPlugins
+      [Cleanup] Misc code cleanup + add comments from PVS Studio
+      [Plugin] Simplify ESPEasy plugin registration + reduce build size
+      [Cleanup] Simplify code for return values internal ESPEasy commands
+      [Cleanup] Simplify get/set functions of VariousBits1 in SettingsStruct
+      [Cleanup] Remove no longer needed globals/Protocol.h/.cpp
+      [Neopixel] Fix build error signed/unsigned compare
+      [Cleanup] Apply GPIO log optimizations to reduce build size (@Ton)
+      [Cleanup] Fix storing new task (taskenable still doesn't work...)
+      [Cleanup] Fix silly bug setting tasks disabled.
+      [Cleanup] Reduce size of embedded lookup table to only included plugins
+      [Cleanup] Do not use 'Number' in DeviceStruct class
+      [Cleanup] Simplify DeviceIndex_sorted
+      [Cleanup] Fix merge issue
+      [Cleanup] Minor code tweaks to reduce build size
+      [Debug] Add "minimal" special build for analysis
+      [PVS Studio] Fix issues found by PVS Studio
+      [Cleanup] Reduce build size by moving isInitialized() to .h files
+      [Servo] Fix servo for ESP32-S2/C3
+      [Cleanup] Reduce build size for bitlevel access in Controller Settings
+      [Cleanup] Remove code redundancy from DevicesPage and UploadPage
+      [PluginStats] Fix showing stats when using 256 samples buffer
+      [Cleanup] Fix crash when adding new controller
+      [Cleanup] Disable drawing partition layout for limit build size builds
+      [Cleanup] Fix isNaN check in thermocouple plugin
+      [Debug] Add special debug build env for Display builds
+      [Cleanup] Reduce build size making Improv smaller
+      [Debug] Set special debug 'display' build to BUILD_NO_DEBUG
+      [Cleanup] Shorten (very) elaborate notes in P039 ThermoCouple
+      [Cleanup] clarify single event note + reduce GPIO command logs
+      [I2C scanner] Fix missing ++x; causing reboot during I2C scan
+      [ADC] Fix handling negative ADC values from Hall Effect sensor
+      [Notifications] Fix deleting notifier
+      [GPIO] Fix check for valid GPIO
+      [RTTTL] Fix parsing correct command argument
+      [RTTTL] Fix argument index for melody + prevent crash when changing song
+      [RTTTL] Fix stupid mix-up of old/new command argument parsing
+      [RTTTL] Only check for old/new syntax in the 1st argument
+      [RTTTL] I need some coffee....
+      [Internal temp] Fix crashes on ESP32-S2/S3/C3 + filter
+      [ESP32 temp] Fix specific includes for ESP32-S2
+
+Ton Huisman (77):
+      [P036] Show current display content on Devices page
+      [P036] Wrap on-display output in `pre` tag to keep spaces and similar formatting
+      [P036] Remove unreachable code, other optimizations
+      [addHtmlDiv] Add optional `attribute` argument
+      [P036] Reduce Show Display font-size to 75%, code optimizations
+      [P023] Add Show Values for on-Display content, code improvements and optimizations
+      [P036] Make Interval optional
+      [P036] Update documentation
+      [P023] Add documentation
+      [P023] Updated screenshot
+      [P036] Add center/right align in preview, make preview compile-optional, code optimizations
+      [P036] Only disable alignment feature for 1M builds
+      [P036] Add new compile-time directives to Custom-sample.h
+      [Build] Make `Climate` build fit
+      [P036] Code optimizations
+      [P023] Minor code optimizations
+      [P036] Add optional user-defined display headers
+      [P036] Change compile-time defines to bool, change enums to uint8_t type, update changelog
+      [P036] Fix copy/paste error for `userDef2`
+      [P028] Add detection-mode setting
+      [P028] Ignore humidity if Sensor model BMP280 is selected
+      [Devices] Add event PLUGIN_WEBFORM_LOAD_ALWAYS that is also called for remote data-feed devices
+      [P028] Fix VType matching for remote data-feed, implement new WEBFORM_LOAD_ALWAYS event
+      [P028] Update documentation
+      [Controllers] Show correct data (or nothing) for controllers without Host or Port settings
+      [Controllers] Code improvement
+      [P036] Enable Userdefined headers by default for LIMIT_BUILD_SIZE builds
+      [P104] Add Dot subcommand to draw individual dots in a zone
+      [P104] Update documentation
+      [P104] Code improvements and a bugfix
+      [P028] Fix merge conflict
+      [P036] Code improvements using `constexpr`
+      [Rules] Improving removal of comments
+      [Rules] Separate comment removal from reading a line
+      [Release] `release.yml` script improvements
+      [P036] Fix merge conflicts, small source formatting improvements
+      [SD-card] Bugfix: Opening a file from SD-card doesn't always work
+      [SD-browser] Code improvements
+      [P153] Fix incorrect Sensor_VType setting
+      [SD-Card] Show SD-card CS GPIO pin in pin-selection
+      [P036] Bugfix in documentation-syntax
+      [P051] Fix device being automatically disabled and I2C scan issue
+      [I2C Scan] Make I2C scan more robust by adding extra wakeup
+      [Docs] Add I2C Scan documentation
+      [Docs] Additional I2C Scan documentation (mux)
+      [Docs] Rules example for PostToHTTP/PutToHTTP
+      [UI] Bugfix: Don't show - None - [SD-CARD] in GPIO selector when SD-Card is not configured (improves #4780)
+      [Build] Restore RTTTL feature in ESP8266 Climate build
+      [RTTTL] Add Async play and other improvements
+      [RTTTL] update documentation
+      [GPIO] Decrease buildsize by optimizing logging
+      [RTTTL] Add FEATURE_ flags to Custom-sample.h
+      [GPIO] Adopt optimized logging improvements (@gijs)
+      [Build] Add Collection G builds
+      [Build] Move [P154] BMP3xx to Collection G
+      [Build] Add checks for some external defined compiletime settings
+      [P036] Code formatting and optimizations
+      [P037] Build: Include all features in ESP32 builds
+      [P073] Reduce logging for BUILD_NO_DEBUG builds to reduce size
+      [P036] Updates for documentation
+      [P026][Sysvars] Add Internal temperature sensor value for ESP32
+      [P026][Sysvars] Feedback and fixes
+      [P026][Sysvars] Fix typo in comment
+      [P026] Add Get Config feature for all values
+      [P026] Add documentation
+      [Scripts] Handle 8M builds in WebFlasher
+      [P026][Sysvars] Avoid temperature reading errors on ESP32 classic (2 tries only)
+      [P026][Sysvars] Read temperature every second on ESP32 classic for better results
+      [Build] Try to use real branch name on GH Actions builds
+      [Build] Ignore Docs commits to trigger an Actions run
+      [P026][Sysvars] Explicitly disable FEATURE_INTERNAL_TEMPERATURE for ESP8266
+      [P026][Sysvars] Add delay() call
+      [Build][P026] Update documentation (without Actions run...)
+      [P037] Update documentation
+      [RTTTL] Add events for RTTTL play (async only), fix intermitted/skipped async playing
+      [RTTTL] Restore Cancelled event, update documentation
+      [P000 Docs] Update some internal links
+
+chromoxdor (2):
+      Fixed error in section TaskValueSet
+      Update GPIO.cpp
+
+dependabot[bot] (1):
+      Bump actions/checkout from 3 to 4
+
+uwekaditz (9):
+      [P036] Add ticker as scroll option
+      Compiler error if P036_SendEvent was not set
+      Calculation for ticker IdxStart and IdxEnd was wrong for 64x48 display, Start page updates after network has connected in PLUGIN_ONCE_A_SECOND
+      Some bug fixes (only 1 line displayed)
+      Removed unnecessary clear() functions
+      Merged with mega from 2023-08-25
+      Wrong #ifdef P036_SEND_EVENTS
+      CHG: Disable scrolling or ticker if new line content received (PLUGIN_WRITE)
+      CHG: Code reduced if P036_ENABLE_TICKER is not used
+
+
+-------------------------------------------------
 Changes in release mega-20230822 (since mega-20230623)
 -------------------------------------------------
 

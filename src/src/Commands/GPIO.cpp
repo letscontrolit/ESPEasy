@@ -97,8 +97,8 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
-        logPrefix, 
-        strformat(F(" port #%d: added to monitor list."), port)));
+        logPrefix,
+        strformat(F(" port #%d: added to monitor list."), port))); 
     }
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
@@ -143,7 +143,7 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
     removeMonitorFromPort(key);
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
-        logPrefix,  
+        logPrefix,
         strformat(F(" port #%d: removed from monitor list."), port)));
     }
 
@@ -288,6 +288,7 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
 {
   bool sendStatusFlag;
   pluginID_t pluginID;
+  int8_t value = -1;
 
   switch (tolower(parseString(Line, 2).charAt(0)))
   {
@@ -298,13 +299,15 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
 #ifdef USES_P009
     case 'm': // mcp
       pluginID       = PLUGIN_MCP;
-      sendStatusFlag = GPIO_MCP_Read(event->Par2) == -1;
+      value          = GPIO_MCP_Read(event->Par2);
+      sendStatusFlag = value == -1;
       break;
 #endif
 #ifdef USES_P019
     case 'p': // pcf
       pluginID       = PLUGIN_PCF;
-      sendStatusFlag = GPIO_PCF_Read(event->Par2) == -1;
+      value          = GPIO_PCF_Read(event->Par2);
+      sendStatusFlag = value == -1;
       break;
 #endif
     default:
@@ -318,7 +321,7 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
   }
   const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
   String dummy;
-  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
+  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, value);
   return return_command_success_flashstr();
 }
 
@@ -385,12 +388,21 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
   // more info.
 
+  // First assume 'new' syntax: rtttl,<gpio>,<rtttl string>
+  // Difference between 'old' and 'new':
+  // Comma between the GPIO argument and the melody
   String melody = parseStringToEndKeepCase(Line, 2);
+  melody = melody.substring(melody.indexOf(':'), melody.length());
+
   melody.replace('-', '#');
+  melody.replace('_', '#');
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("RTTTL: pin: %d melody: %s"), event->Par1, melody.c_str()));
   }
+  #if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
+  set_rtttl_melody(melody);
+  #endif // if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 
   if (play_rtttl(event->Par1, melody.c_str())) {
     return return_command_success_flashstr();
@@ -488,7 +500,7 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
 
         String log = logPrefix;
         log += concat(
-          F(" toggle"), 
+          F(" toggle"),
           strformat(F(": port#%d: set to %d"), event->Par1, static_cast<int>(!state)));
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
@@ -1145,7 +1157,6 @@ bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *ev
 
         createAndSetPortStatus_Mode_State(key, mode, currentState);
 
-
         String log = logPrefix;
         log += strformat(F(" : port#%d: MODE set to "), pin);
         log += logPostfix;
@@ -1302,7 +1313,7 @@ bool getGPIOPinStateValues(String& str) {
           str       = String(tempValue);
           break;
         }
-          #endif
+#endif
         default:
           addLog(LOG_LEVEL_ERROR, F("PLUGIN PINSTATE. Plugin not included in build"));
           return false;

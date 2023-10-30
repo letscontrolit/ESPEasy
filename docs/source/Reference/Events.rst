@@ -14,6 +14,12 @@ Plugin based events
 
 Besides the internal events there's also plugin specific events. These are listed here below.
 
+P000 (core) :ref:`P000_Buzzer_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../Plugin/P001_events_RTTTL.repl
+
+
 .. P001 :ref:`P001_page`
 .. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

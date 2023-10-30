@@ -1,0 +1,81 @@
+#---------------------------------#
+#      general configuration      #
+#---------------------------------#
+
+# version format
+version: "{branch} (#{build})"
+
+# branches to build
+branches:
+  only:
+    - master
+    - /feature-issue.*/
+
+#---------------------------------#
+#    environment configuration    #
+#---------------------------------#
+
+# Build worker image (VM template)
+image: Visual Studio 2019
+
+# scripts that are called at very beginning, before repo cloning
+init:
+  - cmd: git config --global core.autocrlf true
+  - ps: $env:GIT_HASH=$env:APPVEYOR_REPO_COMMIT.Substring(0, 10)
+
+# clone directory
+clone_folder: c:\projects\AnyRtttl
+
+# scripts that run after cloning repository
+install:
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\install_arduinocli.bat
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_install_libraries.bat
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\install_this.bat
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\install_googletest.bat
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\install_rapidassist.bat
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\install_win32arduino.bat
+
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
+
+environment:
+  PlatformToolset: v142
+  
+# build platform, i.e. x86, x64, Any CPU. This setting is optional.
+platform: Win32
+
+# build Configuration, i.e. Debug, Release, etc.
+configuration: Release
+
+build_script:
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\build_library.bat
+- cmd: call %APPVEYOR_BUILD_FOLDER%\external\BitReader\ci\appveyor\arduino_library_install.bat
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat Basic
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat BlockingProgramMemoryRtttl
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat BlockingRtttl
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat BlockingWithNonBlocking
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat NonBlockingProgramMemoryRtttl
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat NonBlockingRtttl
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat NonBlockingStopBeforeEnd
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat Play10Bits
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat Play16Bits
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\arduino_build_sketch.bat Rtttl2Code
+
+
+#---------------------------------#
+#       tests configuration       #
+#---------------------------------#
+
+# to run your custom scripts instead of automatic tests
+test_script:
+- cmd: call %APPVEYOR_BUILD_FOLDER%\ci\appveyor\test_script.bat
+- ps: . "$env:APPVEYOR_BUILD_FOLDER\ci\appveyor\UploadJUnitFiles.ps1" -Path "$env:APPVEYOR_BUILD_FOLDER\build\bin"
+
+#---------------------------------#
+#      artifacts configuration    #
+#---------------------------------#
+
+artifacts:
+- path: build\bin\Release\anyrtttl_unittest.release.xml
+  name: anyrtttl_unittest.release.xml
