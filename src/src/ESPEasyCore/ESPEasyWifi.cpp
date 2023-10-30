@@ -1430,6 +1430,15 @@ void setConnectionSpeed() {
 
   // Does not (yet) work, so commented out.
   #ifdef ESP32
+
+  // HT20 = 20 MHz channel width.
+  // HT40 = 40 MHz channel width.
+  // In theory, HT40 can offer upto 150 Mbps connection speed.
+  // However since HT40 is using nearly all channels on 2.4 GHz WiFi,
+  // Thus you are more likely to experience disturbances.
+  // The response speed and stability is better at HT20 for ESP units.
+  esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20);
+
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
 
   if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.connectionFailures > 10)) {
@@ -1451,6 +1460,9 @@ void setConnectionSpeed() {
 
 
   if (WifiIsSTA(WiFi.getMode())) {
+    // Set to use "Long GI" making it more resilliant to reflections
+    // See: https://www.tp-link.com/us/configuration-guides/q_a_basic_wireless_concepts/?configurationId=2958#_idTextAnchor038
+    esp_wifi_config_80211_tx_rate(WIFI_IF_STA, WIFI_PHY_RATE_MCS3_LGI);
     esp_wifi_set_protocol(WIFI_IF_STA, protocol);
   }
 
