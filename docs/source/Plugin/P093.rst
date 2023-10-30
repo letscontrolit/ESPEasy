@@ -74,7 +74,7 @@ See: :ref:`SerialHelper_page`
 
 Once we hit submit, the plugin will start sending messages through controller, i.e. MQTT with payload:
 
-``{"roomTemperature":25.5,"wideVane":"|","power":"OFF","mode":"COOL","fan":"AUTO","vane":"AUTO","iSee":true,"operating":true,"compressorFrequency":5,"temperature":24.0}``
+``{"roomTemperature":19.5,"wideVane":"|","power":"OFF","mode":"HEAT","fan":"AUTO","vane":"AUTO","iSee":false,"operating":false,"compressorFrequency":2,"temperature":22.0,"remoteTemperature":19.5}``
 
 Message is send every time a change is detected (i.e. one changes settings using IR remote control) and every X seconds, as set in the settings (60 seconds in above screenshot).
 
@@ -126,6 +126,12 @@ Special thanks
 
 Change log
 ----------
+
+.. versionchanged:: 2023/09/25
+  ...
+
+  |added|
+  Set Remote Temperature. (value > 0: Use external temperature sensor, value = 0: Use internal temperature sensor)
 
 .. versionchanged:: 2021/08/03
   ...
