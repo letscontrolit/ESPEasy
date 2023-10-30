@@ -1479,6 +1479,7 @@ void setConnectionSpeed() {
 
 
   if (WifiIsSTA(WiFi.getMode())) {
+    // Set to use "Long GI" making it more resilliant to reflections
     // See: https://www.tp-link.com/us/configuration-guides/q_a_basic_wireless_concepts/?configurationId=2958#_idTextAnchor038
     esp_wifi_config_80211_tx_rate(WIFI_IF_STA, WIFI_PHY_RATE_MCS3_LGI);
     esp_wifi_set_protocol(WIFI_IF_STA, protocol);
