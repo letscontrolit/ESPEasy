@@ -93,7 +93,7 @@ void handle_unprocessedNetworkEvents()
   }
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
-    if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
+    if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents() || WiFiEventData.wifiConnectAttemptNeeded) {
       // WiFi connection is not yet available, so introduce some extra delays to
       // help the background tasks managing wifi connections
       delay(0);
@@ -333,18 +333,17 @@ void processConnect() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
-    String log = F("WIFI : Connected! AP: ");
-    log += WiFi.SSID();
-    log += ' ';
-    log += wrap_braces(WiFi.BSSIDstr());
-    log += F(" Ch: ");
-    log += RTC.lastWiFiChannel;
+    String log = strformat(
+      F("WIFI : Connected! AP: %s (%s) Ch: %d"),
+      WiFi.SSID().c_str(),
+      WiFi.BSSIDstr().c_str(),
+      RTC.lastWiFiChannel);
 
     if ((connect_duration > 0ll) && (connect_duration < 30000000ll)) {
       // Just log times when they make sense.
-      log += F(" Duration: ");
-      log += String(static_cast<int32_t>(connect_duration / 1000));
-      log += F(" ms");
+      log += strformat(
+        F(" Duration: %d ms"),
+        static_cast<int32_t>(connect_duration / 1000));
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }

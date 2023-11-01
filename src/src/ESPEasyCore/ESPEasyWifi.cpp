@@ -506,6 +506,10 @@ void AttemptWiFiConnect() {
 // Set Wifi config
 // ********************************************************************************
 bool prepareWiFi() {
+  #if defined(ESP32)
+  registerWiFiEventHandler();
+  #endif
+
   if (!WiFi_AP_Candidates.hasKnownCredentials()) {
     if (!WiFiEventData.warnedNoValidWiFiSettings) {
       addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
@@ -639,6 +643,10 @@ void initWiFi()
 //  WiFi.~ESP8266WiFiClass();
 //  WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
+#ifdef ESP32
+  removeWiFiEventHandler();
+#endif
+
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
@@ -752,16 +760,12 @@ void SetWiFiTXpower(float dBm, float rssi) {
       static int last_log = -1;
       if (TX_pwr_int != last_log) {
         last_log = TX_pwr_int;
-        String log = F("WiFi : Set TX power to ");
-        log += toString(dBm, 0);
-        log += F("dBm");
-        log += F(" sensitivity: ");
-        log += toString(threshold, 0);
-        log += F("dBm");
+        String log = strformat(
+          F("WiFi : Set TX power to %ddBm sensitivity: %ddBm"),
+          static_cast<int>(dBm),
+          static_cast<int>(threshold));
         if (rssi < 0) {
-          log += F(" RSSI: ");
-          log += toString(rssi, 0);
-          log += F("dBm");
+          log += strformat(F(" RSSI: %ddBm"), static_cast<int>(rssi));
         }
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
@@ -994,10 +998,7 @@ void WifiScan(bool async, uint8_t channel) {
     if (channel == 0) {
       addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan all channels"));
     } else {
-      String log;
-      log = F("WiFi : Start network scan channel ");
-      log += channel;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("WiFi : Start network scan ch: %d "), channel));
     }
   }
   #endif
@@ -1193,21 +1194,18 @@ void setAPinternal(bool enable)
     if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
       eventQueue.add(F("WiFi#APmodeEnabled"));
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log(F("WIFI : AP Mode ssid will be "));
-        log += softAPSSID;
-        log += F(" with address ");
-        log += formatIP(WiFi.softAPIP());
-        log += F(" ch: ");
-        log += channel;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, strformat(
+          F("WIFI : AP Mode enabled. SSID: %s IP: %s ch: %d"),
+          softAPSSID.c_str(),
+          formatIP(WiFi.softAPIP()).c_str(),
+          channel));
       }
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log(F("WIFI : Error while starting AP Mode with SSID: "));
-        log += softAPSSID;
-        log += F(" IP: ");
-        log += formatIP(apIP);
-        addLogMove(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, strformat(
+          F("WIFI : Error while starting AP Mode with SSID: %s IP: %s"),
+          softAPSSID.c_str(),
+          formatIP(apIP).c_str()));
       }
     }
     #ifdef ESP32
@@ -1505,11 +1503,12 @@ void setupStaticIPconfig() {
   WiFi.config(ip, gw, subnet, dns);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("IP   : Static IP : ");
-    log += concat(F(" GW: "), formatIP(gw));
-    log += concat(F(" SN: "), formatIP(subnet));
-    log += concat(F(" DNS: "), getValue(LabelType::DNS));
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("IP   : Static IP : %s GW: %s SN: %s DNS: %s"),
+      formatIP(ip).c_str(),
+      formatIP(gw).c_str(),
+      formatIP(subnet).c_str(),
+      getValue(LabelType::DNS).c_str()));
   }
 }
 

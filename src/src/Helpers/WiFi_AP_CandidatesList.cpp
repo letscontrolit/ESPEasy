@@ -6,6 +6,7 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 
 #if defined(ESP8266)
@@ -277,9 +278,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
     for (auto scan = scanned_new.begin(); scan != scanned_new.end();) {
       #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("WiFi : Scan result: ");
-        log += scan->toString();
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, concat(F("WiFi : Scan result: "), scan->toString()));
       }
       #endif // ifndef BUILD_NO_DEBUG
 
@@ -350,9 +349,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const WiFi_AP_Candidate bestCandidate = getBestCandidate();
     if (bestCandidate.usable()) {
-      String log = F("WiFi : Best AP candidate: ");
-      log += bestCandidate.toString();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("WiFi : Best AP candidate: "), bestCandidate.toString()));
     }
   }
   #endif
