@@ -62,6 +62,10 @@ struct WiFi_AP_Candidate {
 
   unsigned long last_seen = 0u;
   MAC_address   bssid;
+  int8_t        rssi{};
+  uint8_t       channel{};
+  uint8_t       index{};     // Index of the matching credentials
+  uint8_t       enc_type{};     // Encryption used (e.g. WPA2)
   union 
   {
     struct {
@@ -79,12 +83,9 @@ struct WiFi_AP_Candidate {
 
       uint16_t unused:5;      
     };
-    uint16_t flags = 0;
+    uint16_t flags{};
   };
-  int8_t        rssi     = 0;
-  uint8_t       channel  = 0u;
-  uint8_t       index    = 0u;     // Index of the matching credentials
-  uint8_t       enc_type = 0u;     // Encryption used (e.g. WPA2)
+  
 };
 
 #endif // ifndef DATASTRUCTS_WIFI_AP_CANDIDATES_H
