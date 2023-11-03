@@ -3176,13 +3176,13 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_CHART_STORAGE_LAYOUT
   #ifdef ESP32
-    #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 1
+    #define FEATURE_CHART_STORAGE_LAYOUT 1
   #endif
   #ifdef ESP8266
     #ifndef LIMIT_BUILD_SIZE
-      #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 1
+      #define FEATURE_CHART_STORAGE_LAYOUT 1
     #else
-      #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 0
+      #define FEATURE_CHART_STORAGE_LAYOUT 0
     #endif
   #endif
 #endif

@@ -17,7 +17,7 @@
 #ifdef ESP8266
 #define CHUNKED_BUFFER_SIZE         512
 #else 
-#define CHUNKED_BUFFER_SIZE         4096
+#define CHUNKED_BUFFER_SIZE         1400
 #endif
 
 Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),

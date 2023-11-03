@@ -43,7 +43,7 @@ else:
     "-DUSES_P081",  # Cron
     "-DUSES_P082",  # GPS
 #   "-DUSES_P085",  # AcuDC24x
-    "-DUSES_P098",  # PWM motor
+#    "-DUSES_P098",  # PWM motor
 #   "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
 #   "-DUSES_P094",  # CUL Reader
@@ -66,6 +66,9 @@ else:
     "-DFEATURE_DEFINE_SERIAL_CONSOLE_PORT=0",
 
     "-DFEATURE_ESPEASY_P2P=1",
+
+    "-DFEATURE_PLUGIN_STATS=1",
+    "-DFEATURE_CHART_JS=1",
 
     "-DFEATURE_SETTINGS_ARCHIVE=1",
     "-DDISABLE_SC16IS752_SPI"
