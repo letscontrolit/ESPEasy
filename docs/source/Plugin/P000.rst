@@ -27,6 +27,21 @@ Supported hardware
 
 |P000_usedby_GPIO|, |P000_usedby_RTTTL|, |P000_usedby_Relay|, |P000_usedby_Servo|, |P000_usedby_LevelConverter|
 
+Switch: :ref:`P001_Switch_page`
+
+Doorswitch: :ref:`P001_Door_switch_page`
+
+Relay: :ref:`P000_Relay_page`
+
+PIR: :ref:`P001_PIR_sensor_page`
+
+Servo: :ref:`P000_Servo_motor_page`
+
+Buzzer: :ref:`P000_Buzzer_page`
+
+Speaker RTTTL: :ref:`P000_Speaker_page`
+
+Piezo element: :ref:`P000_Piezo_element_page`
 
 Commands available
 ------------------
