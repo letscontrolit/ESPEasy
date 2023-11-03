@@ -3206,10 +3206,10 @@ To create/register a plugin, you have to :
 #if ESP_IDF_VERSION_MAJOR >= 5
   // IR library
   #ifdef USES_P016
-    #undef USES_P016
+//    #undef USES_P016
   #endif
   #ifdef USES_P035
-    #undef USES_P035
+//    #undef USES_P035
   #endif
   #ifdef USES_P088
     #undef USES_P088  // HeatpumpIR
