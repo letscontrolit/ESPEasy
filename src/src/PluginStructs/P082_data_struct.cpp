@@ -563,11 +563,7 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
     axisOptions,
     nrSamples);
 
-  // Do not prepend with "]," as this is the first option for a scatter plot.
-  // No need to add labels for a scatter plot
-//  addHtml(F("datasets:["));
-
-  // Add labels
+  // Add labels, which will be shown in a tooltip when hovering with the mouse over a point.
   addHtml(F("labels:["));
   for (size_t i = 0; i < nrSamples; ++i) {
     if (i != 0) {
