@@ -111,7 +111,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
     } else
 
     if (equals(cmd, F("neopixelline"))) {                     // NeoPixelLine
-      int brightness = 0;
+      int32_t brightness = 0;
       validIntFromString(parseString(string, 7), brightness); // Get 7th argument aka Par6
 
       for (int i = event->Par1 - 1; i < event->Par2; i++) {

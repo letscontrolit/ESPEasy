@@ -3238,19 +3238,19 @@ To create/register a plugin, you have to :
   #ifdef ESP32
 
   #ifdef USES_P038
-    #undef USES_P038
+//    #undef USES_P038
   #endif
   #ifdef USES_P041
-    #undef USES_P041 // NeoClock
+//    #undef USES_P041 // NeoClock
   #endif
   #ifdef USES_P042
-    #undef USES_P042 // Candle
+//    #undef USES_P042 // Candle
   #endif
   #ifdef USES_P070
-    #undef USES_P070
+//    #undef USES_P070
   #endif
   #ifdef USES_P131
-    #undef USES_P131
+//    #undef USES_P131
   #endif
 
   #endif
