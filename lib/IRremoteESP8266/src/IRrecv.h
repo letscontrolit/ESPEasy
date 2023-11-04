@@ -86,6 +86,8 @@ typedef struct {
   uint8_t timeout;   // Nr. of milliSeconds before we give up.
 } irparams_t;
 
+typedef volatile irparams_t atomic_irparams_t;
+
 /// Results from a data match
 typedef struct {
   bool success;   // Was the match successful?
@@ -111,7 +113,7 @@ class decode_results {
     uint8_t state[kStateSizeMax];  // Multi-byte results.
   };
   uint16_t bits;              // Number of bits in decoded value
-  volatile uint16_t *rawbuf;  // Raw intervals in .5 us ticks
+  atomic_uint16_t *rawbuf;    // Raw intervals in .5 us ticks
   uint16_t rawlen;            // Number of records in rawbuf.
   bool overflow;
   bool repeat;  // Is the result a repeat code?
@@ -137,6 +139,7 @@ class IRrecv {
               uint8_t max_skip = 0, uint16_t noise_floor = 0);
   void enableIRIn(const bool pullup = false);
   void disableIRIn(void);
+  void pause(void);
   void resume(void);
   uint16_t getBufSize(void);
 #if DECODE_HASH
@@ -170,11 +173,11 @@ class IRrecv {
   uint16_t _unknown_threshold;
 #endif
 #ifdef UNIT_TEST
-  volatile irparams_t *_getParamsPtr(void);
+  atomic_irparams_t *_getParamsPtr(void);
 #endif  // UNIT_TEST
   // These are called by decode
   uint8_t _validTolerance(const uint8_t percentage);
-  void copyIrParams(volatile irparams_t *src, irparams_t *dst);
+  void copyIrParams(atomic_irparams_t *src, irparams_t *dst);
   uint16_t compare(const uint16_t oldval, const uint16_t newval);
   uint32_t ticksLow(const uint32_t usecs,
                     const uint8_t tolerance = kUseDefTol,
@@ -185,7 +188,7 @@ class IRrecv {
   bool matchAtLeast(const uint32_t measured, const uint32_t desired,
                     const uint8_t tolerance = kUseDefTol,
                     const uint16_t delta = 0);
-  uint16_t _matchGeneric(volatile uint16_t *data_ptr,
+  uint16_t _matchGeneric(atomic_uint16_t *data_ptr,
                          uint64_t *result_bits_ptr,
                          uint8_t *result_ptr,
                          const bool use_bits,
@@ -203,14 +206,14 @@ class IRrecv {
                          const uint8_t tolerance = kUseDefTol,
                          const int16_t excess = kMarkExcess,
                          const bool MSBfirst = true);
-  match_result_t matchData(volatile uint16_t *data_ptr, const uint16_t nbits,
+  match_result_t matchData(atomic_uint16_t *data_ptr, const uint16_t nbits,
                            const uint16_t onemark, const uint32_t onespace,
                            const uint16_t zeromark, const uint32_t zerospace,
                            const uint8_t tolerance = kUseDefTol,
                            const int16_t excess = kMarkExcess,
                            const bool MSBfirst = true,
                            const bool expectlastspace = true);
-  uint16_t matchBytes(volatile uint16_t *data_ptr, uint8_t *result_ptr,
+  uint16_t matchBytes(atomic_uint16_t *data_ptr, uint8_t *result_ptr,
                       const uint16_t remaining, const uint16_t nbytes,
                       const uint16_t onemark, const uint32_t onespace,
                       const uint16_t zeromark, const uint32_t zerospace,
@@ -218,7 +221,7 @@ class IRrecv {
                       const int16_t excess = kMarkExcess,
                       const bool MSBfirst = true,
                       const bool expectlastspace = true);
-  uint16_t matchGeneric(volatile uint16_t *data_ptr,
+  uint16_t matchGeneric(atomic_uint16_t *data_ptr,
                         uint64_t *result_ptr,
                         const uint16_t remaining, const uint16_t nbits,
                         const uint16_t hdrmark, const uint32_t hdrspace,
@@ -229,7 +232,8 @@ class IRrecv {
                         const uint8_t tolerance = kUseDefTol,
                         const int16_t excess = kMarkExcess,
                         const bool MSBfirst = true);
-  uint16_t matchGeneric(volatile uint16_t *data_ptr, uint8_t *result_ptr,
+  uint16_t matchGeneric(atomic_uint16_t *data_ptr,
+                        uint8_t *result_ptr,
                         const uint16_t remaining, const uint16_t nbits,
                         const uint16_t hdrmark, const uint32_t hdrspace,
                         const uint16_t onemark, const uint32_t onespace,
@@ -240,7 +244,7 @@ class IRrecv {
                         const uint8_t tolerance = kUseDefTol,
                         const int16_t excess = kMarkExcess,
                         const bool MSBfirst = true);
-  uint16_t matchGenericConstBitTime(volatile uint16_t *data_ptr,
+  uint16_t matchGenericConstBitTime(atomic_uint16_t *data_ptr,
                                     uint64_t *result_ptr,
                                     const uint16_t remaining,
                                     const uint16_t nbits,
@@ -254,7 +258,7 @@ class IRrecv {
                                     const uint8_t tolerance = kUseDefTol,
                                     const int16_t excess = kMarkExcess,
                                     const bool MSBfirst = true);
-  uint16_t matchManchesterData(volatile const uint16_t *data_ptr,
+  uint16_t matchManchesterData(atomic_const_uint16_t *data_ptr,
                                uint64_t *result_ptr,
                                const uint16_t remaining,
                                const uint16_t nbits,
@@ -264,7 +268,7 @@ class IRrecv {
                                const int16_t excess = kMarkExcess,
                                const bool MSBfirst = true,
                                const bool GEThomas = true);
-  uint16_t matchManchester(volatile const uint16_t *data_ptr,
+  uint16_t matchManchester(atomic_const_uint16_t *data_ptr,
                            uint64_t *result_ptr,
                            const uint16_t remaining,
                            const uint16_t nbits,
@@ -293,6 +297,9 @@ class IRrecv {
 #if DECODE_ARGO
   bool decodeArgo(decode_results *results, uint16_t offset = kStartOffset,
                   const uint16_t nbits = kArgoBits, const bool strict = true);
+  bool decodeArgoWREM3(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kArgo3AcControlStateLength * 8,
+                  const bool strict = true);
 #endif  // DECODE_ARGO
 #if DECODE_ARRIS
   bool decodeArris(decode_results *results, uint16_t offset = kStartOffset,
@@ -579,6 +586,12 @@ class IRrecv {
                          const uint16_t nbits = kCarrierAc40Bits,
                          const bool strict = true);
 #endif  // DECODE_CARRIER_AC40
+#if DECODE_CARRIER_AC84
+  bool decodeCarrierAC84(decode_results *results,
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kCarrierAc84Bits,
+                         const bool strict = true);
+#endif  // DECODE_CARRIER_AC84
 #if DECODE_CARRIER_AC64
   bool decodeCarrierAC64(decode_results *results,
                          uint16_t offset = kStartOffset,
@@ -597,6 +610,11 @@ class IRrecv {
                          const uint16_t nbits = kGoodweatherBits,
                          const bool strict = true);
 #endif  // DECODE_GOODWEATHER
+#if DECODE_GORENJE
+  bool decodeGorenje(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kGorenjeBits,
+                     const bool strict = true);
+#endif  // DECODE_GORENJE
 #if DECODE_GREE
   bool decodeGree(decode_results *results, uint16_t offset = kStartOffset,
                   const uint16_t nbits = kGreeBits,
@@ -856,6 +874,18 @@ class IRrecv {
                       const uint16_t nbits = kBosch144Bits,
                       const bool strict = true);
 #endif  // DECODE_BOSCH144
+#if DECODE_WOWWEE
+  bool decodeWowwee(decode_results *results,
+                    uint16_t offset = kStartOffset,
+                    const uint16_t nbits = kWowweeBits,
+                    const bool strict = true);
+#endif  // DECODE_WOWWEE
+#if DECODE_YORK
+  bool decodeYork(decode_results *results,
+                  uint16_t kStartOffset,
+                  const uint16_t kYorkBits,
+                  const bool strict = true);
+#endif  // DECODE_YORK
 };
 
 #endif  // IRRECV_H_

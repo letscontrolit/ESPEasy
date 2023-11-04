@@ -39,11 +39,11 @@ NeoTiles <MyPanelLayout, MyTilesLayout> tiles(
     TileWidth,
     TileHeight);
 
-NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
-//NeoPixelBus<NeoRgbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
-//NeoPixelBus<NeoRgbwFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+//NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+//NeoPixelBus<NeoRgbwFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 // for esp8266 omit the pin
-//NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount);
+//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
 
 RgbColor red(128, 0, 0);
 RgbColor green(0, 128, 0);

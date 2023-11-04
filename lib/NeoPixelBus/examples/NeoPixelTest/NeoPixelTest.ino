@@ -8,7 +8,7 @@
 // NOTE: You will need to make sure to pick the one for your platform 
 //
 //
-// There is serial output of the current state so you can confirm and follow along.
+// There is serial output of the current state so you can confirm and follow along
 //
 
 #include <NeoPixelBus.h>
@@ -19,35 +19,35 @@ const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignore
 #define colorSaturation 128
 
 // three element pixels, in different order and speeds
-NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod> strip(PixelCount, PixelPin);
 
 // For Esp8266, the Pin is omitted and it uses GPIO3 due to DMA hardware use.  
 // There are other Esp8266 alternative methods that provide more pin options, but also have
 // other side effects.
-// For details see wiki linked here https://github.com/Makuna/NeoPixelBus/wiki/ESP8266-NeoMethods.
+// for details see wiki linked here https://github.com/Makuna/NeoPixelBus/wiki/ESP8266-NeoMethods 
 
 // You can also use one of these for Esp8266, 
-// each having their own restrictions.
+// each having their own restrictions
 //
-// These two are the same as above as the DMA method is the default.
-// NOTE: These will ignore the PIN and use GPI03 pin.
-//NeoPixelBus<NeoGrbFeature, NeoEsp8266DmaWs2812xMethod> strip(PixelCount, PixelPin);
+// These two are the same as above as the DMA method is the default
+// NOTE: These will ignore the PIN and use GPI03 pin
+//NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, NeoEsp8266Dma400KbpsMethod> strip(PixelCount, PixelPin);
 
-// Uart method is good for the Esp-01 or other pin restricted modules.
-// for details see wiki linked here https://github.com/Makuna/NeoPixelBus/wiki/ESP8266-NeoMethods.
-// NOTE: These will ignore the PIN and use GPI02 pin.
-//NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart1Ws2812xMethod> strip(PixelCount, PixelPin);
+// Uart method is good for the Esp-01 or other pin restricted modules
+// for details see wiki linked here https://github.com/Makuna/NeoPixelBus/wiki/ESP8266-NeoMethods 
+// NOTE: These will ignore the PIN and use GPI02 pin
+//NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart1800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, NeoEsp8266Uart1400KbpsMethod> strip(PixelCount, PixelPin);
 
-// The bitbang method is really only good if you are not using WiFi features of the ESP.
-// It works with all but pin 16.
-//NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBangWs2812xMethod> strip(PixelCount, PixelPin);
+// The bitbang method is really only good if you are not using WiFi features of the ESP
+// It works with all but pin 16
+//NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, NeoEsp8266BitBang400KbpsMethod> strip(PixelCount, PixelPin);
 
 // four element pixels, RGBW
-//NeoPixelBus<NeoRgbwFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
+//NeoPixelBus<NeoRgbwFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 
 RgbColor red(colorSaturation, 0, 0);
 RgbColor green(0, colorSaturation, 0);

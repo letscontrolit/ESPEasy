@@ -59,7 +59,9 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   if (!isInitialized()) {
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("NEOMATRIX: Init start."));
+    # endif // ifndef BUILD_NO_DEBUG
     matrix = new (std::nothrow) Adafruit_NeoMatrix(_matrixWidth,
                                                    _matrixHeight,
                                                    _tileWidth,
@@ -94,9 +96,9 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
       log += _ypix;
       addLogMove(LOG_LEVEL_INFO, log);
     }
-    # endif // ifndef BUILD_NO_DEBUG
   } else {
     addLog(LOG_LEVEL_INFO, F("NEOMATRIX: Init failed."));
+    # endif // ifndef BUILD_NO_DEBUG
   }
 
   if (isInitialized()) {
@@ -117,6 +119,7 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
     if (success) {
       gfxHelper->initialize();
       gfxHelper->setRotation(_rotation);
+      matrix->begin();
       matrix->setBrightness(std::min(_maxbright, _brightness)); // Set brightness, so we don't get blinded by the light
       matrix->fillScreen(_bgcolor);                             // fill screen with black color
       matrix->show();                                           // Update the display
@@ -262,8 +265,8 @@ void P131_data_struct::display_content(struct EventStruct *event,
                                        bool                scrollOnly,
                                        uint8_t             line) {
   if (isInitialized() && (nullptr != gfxHelper)) {
-    int16_t yPos   = 0;
-    bool    useVal = gfxHelper->getValidation();
+    int16_t yPos      = 0;
+    const bool useVal = gfxHelper->getValidation();
     gfxHelper->setValidation(false); // Ignore validation to enable scrolling
 
     uint8_t x     = 0;
