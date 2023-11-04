@@ -515,15 +515,17 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
   return somethingAdded;
 }
 
-#if FEATURE_CHART_JS
+
+#  if FEATURE_CHART_JS
 void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct *event)
 {
   const PluginStats *stats_long = nullptr;
-  const PluginStats *stats_lat = nullptr;
+  const PluginStats *stats_lat  = nullptr;
 
   for (uint8_t var_index = 0; var_index < P082_NR_OUTPUT_VALUES; ++var_index) {
     const uint8_t pconfigIndex = var_index + P082_QUERY1_CONFIG_POS;
-    const P082_query query = static_cast<P082_query>(PCONFIG(pconfigIndex));
+    const P082_query query     = static_cast<P082_query>(PCONFIG(pconfigIndex));
+
     switch (query) {
       case P082_query::P082_QUERY_LONG:
         stats_long = getPluginStats(var_index);
@@ -535,7 +537,8 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
         break;
     }
   }
-  if (stats_long == nullptr || stats_lat == nullptr) {
+
+  if ((stats_long == nullptr) || (stats_lat == nullptr)) {
     return;
   }
 
@@ -543,22 +546,42 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
 
   {
     ChartJS_options_scales scales;
-    scales.add({F("x"), F("Longitude")});
-    scales.add({F("y"), F("Latitude")});
+    scales.add({ F("x"), F("Longitude") });
+    scales.add({ F("y"), F("Latitude") });
     axisOptions = scales.toString();
   }
-  
+
 
   const size_t nrSamples = stats_long->getNrSamples();
 
   add_ChartJS_chart_header(
     F("scatter"),
     F("positionscatter"),
-    {F("Position Scatter Plot")},
+    { F("Position Scatter Plot") },
     500,
     500,
-    axisOptions, 
+    axisOptions,
     nrSamples);
+
+  // Do not prepend with "]," as this is the first option for a scatter plot.
+  // No need to add labels for a scatter plot
+//  addHtml(F("datasets:["));
+
+  // Add labels
+  addHtml(F("labels:["));
+  for (size_t i = 0; i < nrSamples; ++i) {
+    if (i != 0) {
+      addHtml(',');
+    }
+    addHtmlInt(i);
+  }
+  addHtml(F("],datasets:["));
+
+  add_ChartJS_dataset_header(
+  {
+    F("Coordinates Scatter Plot"),
+    F("rgb(255, 99, 132)") });
+
 
   // Add scatter data
   for (size_t i = 0; i < nrSamples; ++i) {
@@ -566,13 +589,11 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
     const float latitude  = stats_lat->getSample(i);
     add_ChartJS_scatter_data_point(longitude, latitude, 6);
   }
-  
-  add_ChartJS_chart_footer();  
+
+  add_ChartJS_dataset_footer(F("showLine:true"));
+  add_ChartJS_chart_footer();
 }
-#endif
 
-
+#  endif // if FEATURE_CHART_JS
 # endif // if FEATURE_PLUGIN_STATS
-
-
-#endif // ifdef USES_P082
+#endif  // ifdef USES_P082
